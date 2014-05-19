@@ -51,7 +51,7 @@ public class Layer2Topology extends AbstractNetworkMapView
 	protected void buildMapPage()
 	{
 		if (mapPage == null)
-			mapPage = new NetworkMapPage();
+			mapPage = new NetworkMapPage(ID + rootObject.getObjectName());
 		
 		new ConsoleJob(String.format(Messages.get().Layer2Topology_JobTitle, rootObject.getObjectName()), this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
 			@Override
@@ -65,7 +65,7 @@ public class Layer2Topology extends AbstractNetworkMapView
 			protected void jobFailureHandler()
 			{
 				// On failure, create map with root object only
-				NetworkMapPage page = new NetworkMapPage();
+				NetworkMapPage page = new NetworkMapPage(ID+rootObject.getObjectName());
 				page.addElement(new NetworkMapObject(mapPage.createElementId(), rootObject.getObjectId()));
 				replaceMapPage(page, getDisplay());
 			}

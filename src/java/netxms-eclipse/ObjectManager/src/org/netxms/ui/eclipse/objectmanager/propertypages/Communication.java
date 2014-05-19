@@ -59,6 +59,7 @@ public class Communication extends PropertyPage
 	private LabeledText agentSharedSecret;
 	private Combo agentAuthMethod;
 	private Button agentForceEncryption;
+   private Button agentIsRemote;
 	private ObjectSelector agentProxy;
 	private Combo snmpVersion;
 	private LabeledText snmpPort;
@@ -108,7 +109,15 @@ public class Communication extends PropertyPage
 				primaryNameChanged = true;
 			}
 		});
-		
+
+      agentIsRemote = new Button(generalGroup, SWT.CHECK);
+      agentIsRemote.setText("This is address of remote management node");
+      agentIsRemote.setSelection((node.getFlags() & AbstractNode.NF_REMOTE_AGENT) != 0);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      agentIsRemote.setLayoutData(gd);
+      		
 		// Agent
 		Group agentGroup = new Group(dialogArea, SWT.NONE);
 		agentGroup.setText(Messages.get().Communication_GroupAgent);
@@ -395,6 +404,10 @@ public class Communication extends PropertyPage
 			flags |= AbstractNode.NF_FORCE_ENCRYPTION;
 		else
 			flags &= ~AbstractNode.NF_FORCE_ENCRYPTION;
+      if (agentIsRemote.getSelection())
+         flags |= AbstractNode.NF_REMOTE_AGENT;
+      else
+         flags &= ~AbstractNode.NF_REMOTE_AGENT;
 		md.setObjectFlags(flags);
 
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();

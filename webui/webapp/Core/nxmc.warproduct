@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="NXMC" uid="org.netxms.nxmc" version="1.2.12" useFeatures="false" includeLaunchers="false">
+<product name="NXMC" uid="org.netxms.nxmc" version="1.2.14" useFeatures="false" includeLaunchers="false">
    <plugins>
       <plugin id="com.ibm.icu"/>
       <plugin id="javax.xml"/>
@@ -213,6 +213,7 @@
       <plugin id="org.netxms.ui.eclipse.topology"/>
       <plugin id="org.netxms.ui.eclipse.usermanager"/>
       <plugin id="org.netxms.webui.core"/>
+      <plugin id="org.netxms.webui.mobile"/>
       <plugin id="org.swtchart"/>
    </plugins>
 
@@ -296,6 +297,7 @@
       <plugin id="org.netxms.ui.eclipse.topology" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.ui.eclipse.usermanager" autoStart="true" startLevel="0" />
       <plugin id="org.netxms.webui.core" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.webui.mobile" autoStart="true" startLevel="0" />
       <plugin id="org.swtchart" autoStart="true" startLevel="0" />
    </configurations>
 

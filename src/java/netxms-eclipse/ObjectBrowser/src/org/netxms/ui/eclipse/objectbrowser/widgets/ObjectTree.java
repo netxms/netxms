@@ -22,9 +22,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -58,13 +55,11 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
 import org.netxms.ui.eclipse.objectbrowser.api.SubtreeType;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -74,6 +69,7 @@ import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeComparator
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeContentProvider;
 import org.netxms.ui.eclipse.objectbrowser.widgets.internal.ObjectTreeViewer;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.RefreshTimer;
 import org.netxms.ui.eclipse.widgets.FilterText;
 
 /**
@@ -94,8 +90,8 @@ public class ObjectTree extends Composite
 	private Set<Long> checkedObjects = new HashSet<Long>(0);
 	private NXCListener sessionListener = null;
 	private NXCSession session = null;
+	private RefreshTimer refreshTimer;
 	private TreePath[] expandedPaths = null;
-	private int changeCount = 0;
 	private ObjectStatusIndicator statusIndicator = null;
 	private SelectionListener statusIndicatorSelectionListener = null;
 	private TreeListener statusIndicatorTreeListener;
@@ -110,6 +106,19 @@ public class ObjectTree extends Composite
 		super(parent, style);
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
+      refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), this, new Runnable() {
+         @Override
+         public void run()
+         {
+            objectTree.getTree().setRedraw(false);
+            saveExpandedState();
+            objectTree.refresh();
+            if (statusIndicatorEnabled)
+               updateStatusIndicator();
+            restoreExpandedState();
+            objectTree.getTree().setRedraw(true);
+         }
+      });
 
 		FormLayout formLayout = new FormLayout();
 		setLayout(formLayout);
@@ -250,28 +259,7 @@ public class ObjectTree extends Composite
 			{
 				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) || (n.getCode() == NXCNotification.OBJECT_DELETED))
 				{
-					changeCount++;
-					new UIJob(getDisplay(), Messages.get().ObjectTree_JobTitle) {
-						@Override
-						public IStatus runInUIThread(IProgressMonitor monitor)
-						{
-							if (ObjectTree.this.isDisposed() || objectTree.getControl().isDisposed())
-								return Status.OK_STATUS;
-							
-							changeCount--;
-							if (changeCount <= 0)
-							{
-								objectTree.getTree().setRedraw(false);
-								saveExpandedState();
-								objectTree.refresh();
-								if (statusIndicatorEnabled)
-									updateStatusIndicator();
-								restoreExpandedState();
-								objectTree.getTree().setRedraw(true);
-							}
-							return Status.OK_STATUS;
-						}
-					}.schedule(500);
+				   refreshTimer.execute();
 				}
 			}
 		};
@@ -706,50 +694,36 @@ public class ObjectTree extends Composite
 			@Override
          public boolean validateDrop(Object target, int operation, TransferData transferType)
          {
-            if (!LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
+            if ((target == null) || !LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
                return false;
 
             IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
-            TreePath path = ((TreeSelection)selection).getPaths()[0];
-            
-            long parentId = 0;
-            if (path.getSegmentCount() > 1)
-            {
-               final AbstractObject parent = (AbstractObject)path.getSegment(path.getSegmentCount() - 2);
-               if (parent != null)
-                  parentId = parent.getObjectId();
-            }
-            
-            Iterator<?> it = selection.iterator();
-            if(!it.hasNext())
+            if (selection.isEmpty())
                return false;
             
-            Object object;
-            while (it.hasNext())
+            for(final Object object : selection.toList())
             {
-               object = it.next();
                SubtreeType subtree = null;
-               if ((object instanceof AbstractObject)) {
-                  if(obj.isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
+               if ((object instanceof AbstractObject)) 
+               {
+                  if (obj.isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
                     subtree = SubtreeType.INFRASTRUCTURE;
-                  if(obj.isValidSelectionForMove(SubtreeType.TEMPLATES))
+                  else if (obj.isValidSelectionForMove(SubtreeType.TEMPLATES))
                      subtree = SubtreeType.TEMPLATES;
-                  if(obj.isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
+                  else if (obj.isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
                      subtree = SubtreeType.BUSINESS_SERVICES;
-                  if(obj.isValidSelectionForMove(SubtreeType.DASHBOARDS))
+                  else if (obj.isValidSelectionForMove(SubtreeType.DASHBOARDS))
                      subtree = SubtreeType.DASHBOARDS;
-                  if(obj.isValidSelectionForMove(SubtreeType.MAPS))
+                  else if (obj.isValidSelectionForMove(SubtreeType.MAPS))
                      subtree = SubtreeType.MAPS;
-                  if(obj.isValidSelectionForMove(SubtreeType.POLICIES))
+                  else if (obj.isValidSelectionForMove(SubtreeType.POLICIES))
                      subtree = SubtreeType.POLICIES;
-                  
                }
-               Set<Integer> filter;
                
-               if (subtree==null){
+               if (subtree == null)
                	return false;
-               }
                
+               Set<Integer> filter;
                switch(subtree)
                {
                   case INFRASTRUCTURE:
@@ -775,16 +749,11 @@ public class ObjectTree extends Composite
                      break;
                }
 
-               if(((AbstractObject)object).getParents().next() != parentId)
-                  return false;
-               
-               if(!filter.contains(((AbstractObject)target).getObjectClass()) || target.equals(object)){
+               if ((filter == null) || !filter.contains(((AbstractObject)target).getObjectClass()) || target.equals(object))
                   return false;   
-               }       
             }
             return true;
          }
-
       });
    }
 }

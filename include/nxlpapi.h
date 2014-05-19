@@ -70,37 +70,38 @@
 #define LP_FCP_UCS4     4
 #define LP_FCP_UCS4_LE  5
 
-
-//
-// Callback
-// Parameters:
-//    event id, event name, original text, number of parameters, list of parameters,
-//    object id, user arg
-//
-
-typedef void (* LogParserCallback)(DWORD, const TCHAR *, const TCHAR *, int, TCHAR **, DWORD, void *);
-
-//
-// Log parser rule
-//
+/**
+ * Log parser callback
+ * Parameters:
+ *    NetXMS event code, NetXMS event name, original text, source, 
+ *    original event ID (facility), original severity,
+ *    number of capture groups, list of capture groups,
+ *    object id, user arg
+ */
+typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *, UINT32, UINT32, int, TCHAR **, UINT32, void *);
 
 class LIBNXLP_EXPORTABLE LogParser;
 
+/**
+ * Log parser rule
+ */
 class LIBNXLP_EXPORTABLE LogParserRule
 {
+   friend class LogParser;
+
 private:
 	LogParser *m_parser;
 	regex_t m_preg;
-	DWORD m_eventCode;
+	UINT32 m_eventCode;
 	TCHAR *m_eventName;
 	bool m_isValid;
 	int m_numParams;
 	regmatch_t *m_pmatch;
 	TCHAR *m_regexp;
 	TCHAR *m_source;
-	DWORD m_level;
-	DWORD m_idStart;
-	DWORD m_idEnd;
+	UINT32 m_level;
+	UINT32 m_idStart;
+	UINT32 m_idEnd;
 	TCHAR *m_context;
 	int m_contextAction;
 	TCHAR *m_contextToChange;
@@ -108,20 +109,22 @@ private:
 	bool m_breakOnMatch;
 	TCHAR *m_description;
 
-	void expandMacros(const TCHAR *regexp, String &out);
+	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level,
+	                   const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg); 
+   void expandMacros(const TCHAR *regexp, String &out);
 
 public:
 	LogParserRule(LogParser *parser,
-	              const TCHAR *regexp, DWORD eventCode = 0, const TCHAR *eventName = NULL,
-					  int numParams = 0, const TCHAR *source = NULL, DWORD level = 0xFFFFFFFF,
-					  DWORD idStart = 0, DWORD idEnd = 0xFFFFFFFF);
+	              const TCHAR *regexp, UINT32 eventCode = 0, const TCHAR *eventName = NULL,
+					  int numParams = 0, const TCHAR *source = NULL, UINT32 level = 0xFFFFFFFF,
+					  UINT32 idStart = 0, UINT32 idEnd = 0xFFFFFFFF);
 	LogParserRule(LogParserRule *src, LogParser *parser);
 	~LogParserRule();
 
 	bool isValid() { return m_isValid; }
-	bool match(const TCHAR *line, LogParserCallback cb, DWORD objectId, void *userArg);
-	bool matchEx(const TCHAR *source, DWORD eventId, DWORD level,
-	             const TCHAR *line, LogParserCallback cb, DWORD objectId, void *userArg); 
+	bool match(const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
+	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level,
+	             const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg); 
 	
 	void setContext(const TCHAR *context) { safe_free(m_context); m_context = (context != NULL) ? _tcsdup(context) : NULL; }
 	void setContextToChange(const TCHAR *context) { safe_free(m_contextToChange); m_contextToChange = (context != NULL) ? _tcsdup(context) : NULL; }
@@ -143,24 +146,21 @@ public:
 	void setSource(const TCHAR *source) { safe_free(m_source); m_source = (source != NULL) ? _tcsdup(source) : NULL; }
 	const TCHAR *getSource() { return CHECK_NULL_EX(m_source); }
 
-	void setLevel(DWORD level) { m_level = level; }
-	DWORD getLevel() { return m_level; }
+	void setLevel(UINT32 level) { m_level = level; }
+	UINT32 getLevel() { return m_level; }
 
-	void setIdRange(DWORD start, DWORD end) { m_idStart = start; m_idEnd = end; }
+	void setIdRange(UINT32 start, UINT32 end) { m_idStart = start; m_idEnd = end; }
 	QWORD getIdRange() { return ((QWORD)m_idStart << 32) | (QWORD)m_idEnd; }
 
 	const TCHAR *getRegexpSource() { return CHECK_NULL(m_regexp); }
 };
 
-
-//
-// Log parser class
-//
-
+/**
+ * Log parser class
+ */
 class LIBNXLP_EXPORTABLE LogParser
 {
-	friend bool LogParserRule::match(const TCHAR *, LogParserCallback, DWORD, void *);
-	friend bool LogParserRule::matchEx(const TCHAR *, DWORD, DWORD, const TCHAR *, LogParserCallback, DWORD, void *);
+	friend bool LogParserRule::matchInternal(bool, const TCHAR *, UINT32, UINT32, const TCHAR *, LogParserCallback, UINT32, void *);
 
 private:
 	int m_numRules;
@@ -173,7 +173,7 @@ private:
 	int m_fileEncoding;
 	TCHAR *m_name;
 	CODE_TO_TEXT *m_eventNameList;
-	bool (*m_eventResolver)(const TCHAR *, DWORD *);
+	bool (*m_eventResolver)(const TCHAR *, UINT32 *);
 	THREAD m_thread;	// Associated thread
 	int m_recordsProcessed;
 	int m_recordsMatched;
@@ -184,7 +184,7 @@ private:
 	
 	const TCHAR *checkContext(LogParserRule *rule);
 	void trace(int level, const TCHAR *format, ...);
-	bool matchLogRecord(bool hasAttributes, const TCHAR *source, DWORD eventId, DWORD level, const TCHAR *line, DWORD objectId);
+	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, UINT32 objectId);
 
 public:
 	LogParser();
@@ -192,7 +192,7 @@ public:
 	~LogParser();
 	
 	static ObjectArray<LogParser> *createFromXml(const char *xml, int xmlLen = -1, 
-		TCHAR *errorText = NULL, int errBufSize = 0, bool (*eventResolver)(const TCHAR *, DWORD *) = NULL);
+		TCHAR *errorText = NULL, int errBufSize = 0, bool (*eventResolver)(const TCHAR *, UINT32 *) = NULL);
 
 	void setFileName(const TCHAR *name);
 	const TCHAR *getFileName() { return m_fileName; }
@@ -212,19 +212,19 @@ public:
 	void setProcessAllFlag(bool flag) { m_processAllRules = flag; }
 	bool getProcessAllFlag() { return m_processAllRules; }
 
-	bool addRule(const TCHAR *regexp, DWORD eventCode = 0, const TCHAR *eventName = NULL, int numParams = 0);
+	bool addRule(const TCHAR *regexp, UINT32 eventCode = 0, const TCHAR *eventName = NULL, int numParams = 0);
 	bool addRule(LogParserRule *rule);
 	void setCallback(LogParserCallback cb) { m_cb = cb; }
 	void setUserArg(void *arg) { m_userArg = arg; }
 	void setEventNameList(CODE_TO_TEXT *ctt) { m_eventNameList = ctt; }
-	void setEventNameResolver(bool (*cb)(const TCHAR *, DWORD *)) { m_eventResolver = cb; }
-	DWORD resolveEventName(const TCHAR *name, DWORD defVal = 0);
+	void setEventNameResolver(bool (*cb)(const TCHAR *, UINT32 *)) { m_eventResolver = cb; }
+	UINT32 resolveEventName(const TCHAR *name, UINT32 defVal = 0);
 
 	void addMacro(const TCHAR *name, const TCHAR *value);
 	const TCHAR *getMacro(const TCHAR *name);
 
-	bool matchLine(const TCHAR *line, DWORD objectId = 0);
-	bool matchEvent(const TCHAR *source, DWORD eventId, DWORD level, const TCHAR *line, DWORD objectId = 0);
+	bool matchLine(const TCHAR *line, UINT32 objectId = 0);
+	bool matchEvent(const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, UINT32 objectId = 0);
 
 	int getProcessedRecordsCount() { return m_recordsProcessed; }
 	int getMatchedRecordsCount() { return m_recordsMatched; }

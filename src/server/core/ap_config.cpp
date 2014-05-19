@@ -156,7 +156,7 @@ UINT32 AgentPolicyConfig::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlready
    if (!bAlreadyLocked)
       LockData();
 
-	if (pRequest->IsVariableExist(VID_CONFIG_FILE_DATA))
+	if (pRequest->isFieldExist(VID_CONFIG_FILE_DATA))
 	{
 		safe_free(m_fileContent);
 		m_fileContent = pRequest->GetVariableStr(VID_CONFIG_FILE_DATA);

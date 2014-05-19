@@ -2,6 +2,10 @@
 #include <nms_agent.h>
 #include <netxms-regex.h>
 
+#ifdef _WITH_ENCRYPTION
+#include <openssl/ssl.h>
+#endif
+
 #include "main.h"
 #include "net.h"
 
@@ -22,7 +26,7 @@ static void SaveResponse(char *host, UINT32 ip, char *buffer)
    snprintf(fileName, 2048, "%s%s%s-%d",
          g_szFailedDir, FS_PATH_SEPARATOR_A,
          host != NULL ? host : IpToStrA(ip, tmp),
-         now);
+         (int)now);
    FILE *f = fopen(fileName, "wb");
    if (f != NULL)
    {
@@ -174,7 +178,7 @@ int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI,
 
 int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHost, char *szMatch, UINT32 dwTimeout)
 {
-#ifdef WITH_OPENSSL
+#ifdef _WITH_ENCRYPTION
    if (szMatch[0] == 0)
    {
       strcpy(szMatch, "^HTTP/1.[01] 200 .*");
@@ -201,6 +205,8 @@ int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHo
          {
             BIO_set_ssl(ssl_bio, ssl, BIO_CLOSE);
 
+            ret = PC_ERR_CONNECT;
+
             BIO *out = BIO_new(BIO_s_connect());
             if (out != NULL)
             {
@@ -210,94 +216,106 @@ int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHo
                }
                else
                {
-                  BIO_set_conn_ip(out, htonl(dwAddr));
+                  UINT32 addr = htonl(dwAddr);
+                  BIO_set_conn_ip(out, &addr);
                }
                int intPort = nPort;
                BIO_set_conn_int_port(out, &intPort);
-               BIO_set_nbio(out, 1);
                out = BIO_push(ssl_bio, out);
 
-               ret = PC_ERR_CONNECT;
-
-               bool sendFailed = false;
-               // send request
-               char szHostHeader[256];
-               char szTmp[2048];
-               snprintf(szHostHeader, sizeof(szHostHeader), "Host: %s:%u\r\n", szHost[0] != 0 ? szHost : szAddr, nPort); 
-               snprintf(szTmp, sizeof(szTmp), "GET %s HTTP/1.1\r\nConnection: close\r\nAccept: */*\r\n%s\r\n", szURI, szHostHeader);
-               int len = strlen(szTmp);
-               int offset = 0;
-               while (true)
+               if (BIO_do_connect(out) > 0)
                {
-                  int sent = BIO_write(out, &(szTmp[offset]), len);
-                  if (sent <= 0)
-                  {
-                     if (BIO_should_retry(out))
-                     {
-                        continue;
-                     }
-                     else
-                     {
-                        sendFailed = true;
-                        break;
-                     }
-                  }
-                  offset += sent;
-                  len -= sent;
-                  if (len <= 0)
-                  {
-                     break;
-                  }
-               }
-
-               ret = PC_ERR_HANDSHAKE;
-
-               // read reply
-               if (!sendFailed)
-               {
-#define BUFSIZE (10 * 1024 * 1024)
-                  char *buffer = (char *)malloc(BUFSIZE); // 10Mb
-                  memset(buffer, 0, BUFSIZE);
-
-                  int i;
+                  bool sendFailed = false;
+                  // send request
+                  char szHostHeader[256];
+                  char szTmp[2048];
+                  snprintf(szHostHeader, sizeof(szHostHeader), "Host: %s:%u\r\n", szHost[0] != 0 ? szHost : szAddr, nPort); 
+                  snprintf(szTmp, sizeof(szTmp), "GET %s HTTP/1.1\r\nConnection: close\r\nAccept: */*\r\n%s\r\n", szURI, szHostHeader);
+                  int len = (int)strlen(szTmp);
                   int offset = 0;
-                  while (true)
+                  while(true)
                   {
-                     i = BIO_read(out, buffer + offset, BUFSIZE - offset - 1);
-                     if (i == 0)
-                     {
-                        break;
-                     }
-                     if (i < 0)
+                     int sent = BIO_write(out, &(szTmp[offset]), len);
+                     if (sent <= 0)
                      {
                         if (BIO_should_retry(out))
                         {
                            continue;
                         }
+                        else
+                        {
+                           sendFailed = true;
+                           break;
+                        }
+                     }
+                     offset += sent;
+                     len -= sent;
+                     if (len <= 0)
+                     {
                         break;
                      }
-                     offset += i;
-                  }
-                  if (buffer[0] != 0) {
-                     if (tre_regexec(&preg, buffer, 0, NULL, 0) == 0)
-                     {
-                        ret = PC_ERR_NONE;
-                     }
-                     else
-                     {
-                        SaveResponse(szAddr, dwAddr, buffer);
-                     }
                   }
 
-                  safe_free(buffer);
+                  ret = PC_ERR_HANDSHAKE;
+
+                  // read reply
+                  if (!sendFailed)
+                  {
+#define BUFSIZE (10 * 1024 * 1024)
+                     char *buffer = (char *)malloc(BUFSIZE); // 10Mb
+                     memset(buffer, 0, BUFSIZE);
+
+                     int i;
+                     int offset = 0;
+                     while (true)
+                     {
+                        i = BIO_read(out, buffer + offset, BUFSIZE - offset - 1);
+                        if (i == 0)
+                        {
+                           break;
+                        }
+                        if (i < 0)
+                        {
+                           if (BIO_should_retry(out))
+                           {
+                              continue;
+                           }
+                           break;
+                        }
+                        offset += i;
+                     }
+                     if (buffer[0] != 0) 
+                     {
+                        if (tre_regexec(&preg, buffer, 0, NULL, 0) == 0)
+                        {
+                           ret = PC_ERR_NONE;
+                        }
+                        else
+                        {
+                           SaveResponse(szAddr, dwAddr, buffer);
+                        }
+                     }
+
+                     safe_free(buffer);
+                  }
                }
-
                BIO_free_all(out);
             }
          }
-         //SSL_free(ssl);
+         else
+         {
+            AgentWriteDebugLog(7, _T("PortCheck: BIO_new failed"));
+         }
+      }
+      else
+      {
+         AgentWriteDebugLog(7, _T("PortCheck: SSL_new failed"));
       }
       SSL_CTX_free(ctx);
+   }
+   else
+   {
+      AgentWriteDebugLog(7, _T("PortCheck: SSL_CTX_new failed"));
    }
 
    regfree(&preg);

@@ -183,8 +183,8 @@ void ForwardingDatabase::sort()
  */
 static UINT32 FDBHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
 {
-   SNMP_ObjectId *pOid = pVar->GetName();
-	UINT32 oidLen = pOid->getLength();
+   SNMP_ObjectId *pOid = pVar->getName();
+	size_t oidLen = pOid->getLength();
 	UINT32 oid[MAX_OID_LEN];
 	memcpy(oid, pOid->getValue(), oidLen * sizeof(UINT32));
 
@@ -207,8 +207,8 @@ static UINT32 FDBHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *
       SNMP_Variable *varStatus = pRespPDU->getVariable(1);
       if (varPort != NULL && varStatus != NULL)
       {
-         int port = varPort->GetValueAsInt();
-         int status = varStatus->GetValueAsInt();
+         int port = varPort->getValueAsInt();
+         int status = varStatus->getValueAsInt();
          if ((port > 0) && (status == 3))		// status 3 == learned
          {
             FDB_ENTRY entry;
@@ -232,12 +232,12 @@ static UINT32 FDBHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *
  */
 static UINT32 Dot1qTpFdbHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
 {
-	int port = pVar->GetValueAsInt();
+	int port = pVar->getValueAsInt();
 	if (port == 0)
 		return SNMP_ERR_SUCCESS;
 
-   SNMP_ObjectId *pOid = pVar->GetName();
-	UINT32 oidLen = pOid->getLength();
+   SNMP_ObjectId *pOid = pVar->getName();
+	size_t oidLen = pOid->getLength();
 	UINT32 oid[MAX_OID_LEN];
 	memcpy(oid, pOid->getValue(), oidLen * sizeof(UINT32));
 
@@ -253,14 +253,14 @@ static UINT32 Dot1qTpFdbHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Tran
 
 	if (rcc == SNMP_ERR_SUCCESS)
    {
-		int status = pRespPDU->getVariable(0)->GetValueAsInt();
+		int status = pRespPDU->getVariable(0)->getValueAsInt();
 		if (status == 3)	// status 3 == learned
 		{
 			FDB_ENTRY entry;
 
 			memset(&entry, 0, sizeof(FDB_ENTRY));
 			entry.port = (UINT32)port;
-			for(UINT32 i = oidLen - MAC_ADDR_LENGTH, j = 0; i < oidLen; i++)
+			for(size_t i = oidLen - MAC_ADDR_LENGTH, j = 0; i < oidLen; i++)
 				entry.macAddr[j++] = (BYTE)oid[i];
 			Node *node = FindNodeByMAC(entry.macAddr);
 			entry.nodeObject = (node != NULL) ? node->Id() : 0;
@@ -277,10 +277,10 @@ static UINT32 Dot1qTpFdbHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Tran
  */
 static UINT32 Dot1dPortTableHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
 {
-   SNMP_ObjectId *pOid = pVar->GetName();
+   SNMP_ObjectId *pOid = pVar->getName();
 	PORT_MAPPING_ENTRY pm;
 	pm.port = pOid->getValue()[pOid->getLength() - 1];
-	pm.ifIndex = pVar->GetValueAsUInt();
+	pm.ifIndex = pVar->getValueAsUInt();
 	((ForwardingDatabase *)arg)->addPortMapping(&pm);
 	return SNMP_ERR_SUCCESS;
 }

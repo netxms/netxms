@@ -129,7 +129,7 @@ UINT32 Rack::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    if (!bAlreadyLocked)
       LockData();
 
-	if (pRequest->IsVariableExist(VID_HEIGHT))
+	if (pRequest->isFieldExist(VID_HEIGHT))
 		m_height = (int)pRequest->GetVariableShort(VID_HEIGHT);
 
    return Container::ModifyFromMessage(pRequest, TRUE);

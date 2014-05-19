@@ -26,47 +26,48 @@
 /**
  * Externals
  */
-int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_ceil(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_chr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program);
-int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_exp(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_floor(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_format(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_index(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_log(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_log10(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_ord(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program);
-int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_round(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_sys(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_trace(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
-int F_udpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program);
+int F_abs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_ceil(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_chr(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_exp(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_floor(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_format(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_index(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_inList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_length(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_log(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_log10(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_ord(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_round(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_sys(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_trace(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_udpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 
 /**
  * Default built-in function list
@@ -84,6 +85,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { _T("format"), F_format, -1 },
    { _T("gmtime"), F_gmtime, -1 },
    { _T("index"), F_index, -1 },
+   { _T("inList"), F_inList, 3 },
    { _T("left"), F_left, -1 },
    { _T("length"), F_length, 1 },
    { _T("localtime"), F_localtime, -1 },
@@ -158,14 +160,14 @@ void NXSL_Environment::registerFunctionSet(UINT32 dwNumFunctions, NXSL_ExtFuncti
 }
 
 /**
- * Find module by name
+ * Load module into VM
  */
-BOOL NXSL_Environment::useModule(NXSL_Program *pMain, const TCHAR *pszName)
+bool NXSL_Environment::loadModule(NXSL_VM *vm, const TCHAR *pszName)
 {
    TCHAR *pData, szBuffer[MAX_PATH];
    UINT32 dwSize;
    NXSL_Program *pScript;
-   BOOL bRet = FALSE;
+   bool bRet = false;
 
    // First, try to find module in library
    if (m_pLibrary != NULL)
@@ -173,8 +175,8 @@ BOOL NXSL_Environment::useModule(NXSL_Program *pMain, const TCHAR *pszName)
       pScript = m_pLibrary->findScript(pszName);
       if (pScript != NULL)
       {
-         pMain->useModule(pScript, pszName);
-         bRet = TRUE;
+         vm->loadModule(pScript, pszName);
+         bRet = true;
       }
    }
 
@@ -188,9 +190,9 @@ BOOL NXSL_Environment::useModule(NXSL_Program *pMain, const TCHAR *pszName)
          pScript = (NXSL_Program *)NXSLCompile(pData, NULL, 0);
          if (pScript != NULL)
          {
-            pMain->useModule(pScript, pszName);
+            vm->loadModule(pScript, pszName);
             delete pScript;
-            bRet = TRUE;
+            bRet = true;
          }
          free(pData);
       }

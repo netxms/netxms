@@ -96,6 +96,8 @@ void StringSet::remove(const TCHAR *str)
    if (entry != NULL)
    {
       HASH_DEL(m_data, entry);
+      free(entry->str);
+      free(entry);
    }
 }
 
@@ -140,7 +142,8 @@ void StringSet::forEach(bool (*cb)(const TCHAR *, void *), void *userData)
    StringSetEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      cb(entry->str, userData);
+      if (!cb(entry->str, userData))
+         break;
    }
 }
 
@@ -164,6 +167,16 @@ void StringSet::addAll(TCHAR **strings, int count)
    for(int i = 0; i < count; i++)
       if (strings[i] != NULL)
          add(strings[i]);
+}
+
+/**
+ * Add all entries from TCHAR pointer arrays. Takes ownership of pre-allocated strings.
+ */
+void StringSet::addAllPreallocated(TCHAR **strings, int count)
+{
+   for(int i = 0; i < count; i++)
+      if (strings[i] != NULL)
+         addPreallocated(strings[i]);
 }
 
 /**

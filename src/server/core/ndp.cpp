@@ -41,7 +41,7 @@ static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, UINT32 snmpVer
 	SNMP_PDU *pRespPDU = NULL;
    UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 	delete pRqPDU;
-	if ((rcc == SNMP_ERR_SUCCESS) && (pRespPDU->getNumVariables() > 0) && (pRespPDU->getVariable(0)->GetType() == ASN_OCTET_STRING))
+	if ((rcc == SNMP_ERR_SUCCESS) && (pRespPDU->getNumVariables() > 0) && (pRespPDU->getVariable(0)->getType() == ASN_OCTET_STRING))
    {
 		BYTE eosEntry[128];
 		pRespPDU->getVariable(0)->getRawValue(eosEntry, 128);
@@ -57,7 +57,7 @@ static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, UINT32 snmpVer
 static UINT32 NDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
-	SNMP_ObjectId *oid = var->GetName();
+	SNMP_ObjectId *oid = var->getName();
 
 	// Entries indexed by slot, port, IP address, and segment ID
 	UINT32 slot = oid->getValue()[14];

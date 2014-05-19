@@ -24,8 +24,9 @@
 /**
  * Network path constructor
  */
-NetworkPath::NetworkPath()
+NetworkPath::NetworkPath(UINT32 srcAddr)
 {
+   m_sourceAddress = srcAddr;
 	m_hopCount = 0;
 	m_allocated = 0;
 	m_path = NULL;
@@ -46,7 +47,7 @@ NetworkPath::~NetworkPath()
 /**
  * Add hop to path
  */
-void NetworkPath::addHop(UINT32 nextHop, NetObj *currentObject, UINT32 ifIndex, bool isVpn)
+void NetworkPath::addHop(UINT32 nextHop, NetObj *currentObject, UINT32 ifIndex, bool isVpn, const TCHAR *name)
 {
 	if (m_hopCount == m_allocated)
 	{
@@ -57,6 +58,7 @@ void NetworkPath::addHop(UINT32 nextHop, NetObj *currentObject, UINT32 ifIndex, 
 	m_path[m_hopCount].object = currentObject;
 	m_path[m_hopCount].ifIndex = ifIndex;
 	m_path[m_hopCount].isVpn = isVpn;
+   nx_strncpy(m_path[m_hopCount].name, name, MAX_OBJECT_NAME);
 	m_hopCount++;
 	if (currentObject != NULL)
 		currentObject->incRefCount();
@@ -70,12 +72,13 @@ void NetworkPath::fillMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_HOP_COUNT, (WORD)m_hopCount);
 	msg->SetVariable(VID_IS_COMPLETE, (WORD)(m_complete ? 1 : 0));
 	UINT32 varId = VID_NETWORK_PATH_BASE;
-	for(int i = 0; i < m_hopCount; i++, varId += 6)
+	for(int i = 0; i < m_hopCount; i++, varId += 5)
 	{
 		msg->SetVariable(varId++, m_path[i].object->Id());
 		msg->SetVariable(varId++, m_path[i].nextHop);
 		msg->SetVariable(varId++, m_path[i].ifIndex);
 		msg->SetVariable(varId++, (WORD)(m_path[i].isVpn ? 1 : 0));
+		msg->SetVariable(varId++, m_path[i].name);
 	}
 }
 
@@ -84,19 +87,23 @@ void NetworkPath::fillMessage(CSCPMessage *msg)
  */
 NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
 {
-   UINT32 dwNextHop, dwIfIndex, dwHopCount;
-   Node *pCurr, *pNext;
-   NetworkPath *pTrace;
-   BOOL bIsVPN;
+   UINT32 srcAddr, srcIfIndex;
+   if (!pSrc->getOutwardInterface(pDest->IpAddr(), &srcAddr, &srcIfIndex))
+      srcAddr = pSrc->IpAddr();
 
-   pTrace = new NetworkPath;
-   
-   for(pCurr = pSrc, dwHopCount = 0; (pCurr != pDest) && (pCurr != NULL) && (dwHopCount < 30); pCurr = pNext, dwHopCount++)
+   NetworkPath *path = new NetworkPath(srcAddr);
+
+   int hopCount = 0;
+   Node *pCurr, *pNext;
+   for(pCurr = pSrc; (pCurr != pDest) && (pCurr != NULL) && (hopCount < 30); pCurr = pNext, hopCount++)
    {
-      if (pCurr->getNextHop(pSrc->IpAddr(), pDest->IpAddr(), &dwNextHop, &dwIfIndex, &bIsVPN))
+      UINT32 dwNextHop, dwIfIndex;
+      bool isVpn;
+      TCHAR name[MAX_OBJECT_NAME];
+      if (pCurr->getNextHop(srcAddr, pDest->IpAddr(), &dwNextHop, &dwIfIndex, &isVpn, name))
       {
 			pNext = FindNodeByIP(pSrc->getZoneId(), dwNextHop);
-			pTrace->addHop(dwNextHop, pCurr, dwIfIndex, bIsVPN ? true : false);
+			path->addHop(dwNextHop, pCurr, dwIfIndex, isVpn, name);
          if ((pNext == pCurr) || (dwNextHop == 0))
             pNext = NULL;     // Directly connected subnet or too many hops, stop trace
       }
@@ -107,9 +114,9 @@ NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
    }
 	if (pCurr == pDest)
 	{
-		pTrace->addHop(0, pCurr, 0, false);
-		pTrace->setComplete();
+		path->addHop(0, pCurr, 0, false, _T(""));
+		path->setComplete();
 	}
 
-   return pTrace;
+   return path;
 }

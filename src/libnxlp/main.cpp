@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,13 +23,11 @@
 
 #include "libnxlp.h"
 
-
-//
-// DLL entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
@@ -38,22 +36,3 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 }
 
 #endif   /* _WIN32 */
-
-
-//
-// NetWare library entry point
-//
-
-#ifdef _NETWARE
-
-int _init(void)
-{
-   return 0;
-}
-
-int _fini(void)
-{
-   return 0;
-}
-
-#endif

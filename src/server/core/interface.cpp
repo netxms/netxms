@@ -38,6 +38,7 @@ Interface::Interface() : NetObj()
 	m_portNumber = 0;
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
+   m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
@@ -68,6 +69,7 @@ Interface::Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSynth
 	m_portNumber = 0;
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
+   m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
@@ -101,6 +103,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32
 	m_portNumber = 0;
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
+   m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
    memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
@@ -135,7 +138,8 @@ BOOL Interface::CreateFromDB(UINT32 dwId)
 		_T("SELECT ip_addr,ip_netmask,if_type,if_index,node_id,")
 		_T("mac_addr,flags,required_polls,bridge_port,phy_slot,")
 		_T("phy_port,peer_node_id,peer_if_id,description,")
-		_T("dot1x_pae_state,dot1x_backend_state,admin_state,oper_state FROM interfaces WHERE id=?"));
+		_T("dot1x_pae_state,dot1x_backend_state,admin_state,")
+      _T("oper_state,peer_proto FROM interfaces WHERE id=?"));
 	if (hStmt == NULL)
 		return FALSE;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
@@ -167,6 +171,7 @@ BOOL Interface::CreateFromDB(UINT32 dwId)
 		m_dot1xBackendAuthState = (WORD)DBGetFieldLong(hResult, 0, 15);
 		m_adminState = (WORD)DBGetFieldLong(hResult, 0, 16);
 		m_operState = (WORD)DBGetFieldLong(hResult, 0, 17);
+		m_peerDiscoveryProtocol = DBGetFieldLong(hResult, 0, 18);
 
       // Link interface to node
       if (!m_isDeleted)
@@ -239,15 +244,15 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
          _T("node_id=?,if_type=?,if_index=?,mac_addr=?,flags=?,")
 			_T("required_polls=?,bridge_port=?,phy_slot=?,phy_port=?,")
 			_T("peer_node_id=?,peer_if_id=?,description=?,admin_state=?,")
-			_T("oper_state=?,dot1x_pae_state=?,dot1x_backend_state=? WHERE id=?"));
+			_T("oper_state=?,dot1x_pae_state=?,dot1x_backend_state=?,peer_proto=? WHERE id=?"));
 	}
    else
 	{
 		hStmt = DBPrepare(hdb,
 			_T("INSERT INTO interfaces (ip_addr,ip_netmask,node_id,if_type,if_index,mac_addr,")
 			_T("flags,required_polls,bridge_port,phy_slot,phy_port,peer_node_id,peer_if_id,description,")
-         _T("admin_state,oper_state,dot1x_pae_state,dot1x_backend_state,id) ")
-			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+         _T("admin_state,oper_state,dot1x_pae_state,dot1x_backend_state,peer_proto,id) ")
+			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -273,7 +278,8 @@ BOOL Interface::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (UINT32)m_operState);
 	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xPaeAuthState);
 	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xBackendAuthState);
-	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (INT32)m_peerDiscoveryProtocol);
+	DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_dwId);
 
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -486,7 +492,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 	}
 
 	// Check 802.1x state
-	if ((pNode->getFlags() & NF_IS_8021X) && isPhysicalPort())
+	if ((pNode->getFlags() & NF_IS_8021X) && isPhysicalPort() && (snmpTransport != NULL))
 	{
 		DbgPrintf(5, _T("StatusPoll(%s): Checking 802.1x state for interface %s"), pNode->Name(), m_szName);
 		paeStatusPoll(session, rqId, snmpTransport, pNode);
@@ -548,10 +554,13 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): status changed from %d to %d"), m_dwId, m_szName, m_iStatus, newStatus);
 		m_iStatus = newStatus;
 		m_pendingStatus = -1;	// Invalidate pending status
-		sendPollerMsg(rqId, _T("      Interface status changed to %s\r\n"), g_szStatusText[m_iStatus]);
-		PostEventEx(eventQueue, 
-		            (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_iStatus] : statusToEvent[m_iStatus],
-						pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask, m_dwIfIndex);
+      if (!m_isSystem)
+      {
+		   sendPollerMsg(rqId, _T("      Interface status changed to %s\r\n"), g_szStatusText[m_iStatus]);
+		   PostEventEx(eventQueue, 
+		               (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_iStatus] : statusToEvent[m_iStatus],
+						   pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask, m_dwIfIndex);
+      }
    }
 	else if (expectedState == IF_EXPECTED_STATE_IGNORE)
 	{
@@ -623,32 +632,36 @@ void Interface::paeStatusPoll(ClientSession *pSession, UINT32 rqId, SNMP_Transpo
 	{
 	   sendPollerMsg(rqId, _T("      Port PAE state changed to %s...\r\n"), PAE_STATE_TEXT(paeState));
 		modified = true;
+      if (!m_isSystem)
+      {
+		   PostEvent(EVENT_8021X_PAE_STATE_CHANGED, node->Id(), "dsdsds", paeState, PAE_STATE_TEXT(paeState),
+		             (UINT32)m_dot1xPaeAuthState, PAE_STATE_TEXT(m_dot1xPaeAuthState), m_dwId, m_szName);
 
-		PostEvent(EVENT_8021X_PAE_STATE_CHANGED, node->Id(), "dsdsds", paeState, PAE_STATE_TEXT(paeState),
-		          (UINT32)m_dot1xPaeAuthState, PAE_STATE_TEXT(m_dot1xPaeAuthState), m_dwId, m_szName);
-
-		if (paeState == PAE_STATE_FORCE_UNAUTH)
-		{
-			PostEvent(EVENT_8021X_PAE_FORCE_UNAUTH, node->Id(), "ds", m_dwId, m_szName);
-		}
+		   if (paeState == PAE_STATE_FORCE_UNAUTH)
+		   {
+			   PostEvent(EVENT_8021X_PAE_FORCE_UNAUTH, node->Id(), "ds", m_dwId, m_szName);
+		   }
+      }
 	}
 
 	if (m_dot1xBackendAuthState != (WORD)backendState)
 	{
 	   sendPollerMsg(rqId, _T("      Port backend state changed to %s...\r\n"), BACKEND_STATE_TEXT(backendState));
 		modified = true;
+      if (!m_isSystem)
+      {
+		   PostEvent(EVENT_8021X_BACKEND_STATE_CHANGED, node->Id(), "dsdsds", backendState, BACKEND_STATE_TEXT(backendState),
+		             (UINT32)m_dot1xBackendAuthState, BACKEND_STATE_TEXT(m_dot1xBackendAuthState), m_dwId, m_szName);
 
-		PostEvent(EVENT_8021X_BACKEND_STATE_CHANGED, node->Id(), "dsdsds", backendState, BACKEND_STATE_TEXT(backendState),
-		          (UINT32)m_dot1xBackendAuthState, BACKEND_STATE_TEXT(m_dot1xBackendAuthState), m_dwId, m_szName);
-
-		if (backendState == BACKEND_STATE_FAIL)
-		{
-			PostEvent(EVENT_8021X_AUTH_FAILED, node->Id(), "ds", m_dwId, m_szName);
-		}
-		else if (backendState == BACKEND_STATE_TIMEOUT)
-		{
-			PostEvent(EVENT_8021X_AUTH_TIMEOUT, node->Id(), "ds", m_dwId, m_szName);
-		}
+		   if (backendState == BACKEND_STATE_FAIL)
+		   {
+			   PostEvent(EVENT_8021X_AUTH_FAILED, node->Id(), "ds", m_dwId, m_szName);
+		   }
+		   else if (backendState == BACKEND_STATE_TIMEOUT)
+		   {
+			   PostEvent(EVENT_8021X_AUTH_TIMEOUT, node->Id(), "ds", m_dwId, m_szName);
+		   }
+      }
 	}
 
 	if (modified)
@@ -677,6 +690,7 @@ void Interface::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
 	pMsg->SetVariable(VID_PEER_NODE_ID, m_peerNodeId);
 	pMsg->SetVariable(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
+	pMsg->SetVariable(VID_PEER_PROTOCOL, m_peerDiscoveryProtocol);
 	pMsg->SetVariable(VID_DESCRIPTION, m_description);
 	pMsg->SetVariable(VID_ADMIN_STATE, m_adminState);
 	pMsg->SetVariable(VID_OPER_STATE, m_operState);
@@ -694,11 +708,11 @@ UINT32 Interface::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       LockData();
 
    // Number of required polls
-   if (pRequest->IsVariableExist(VID_REQUIRED_POLLS))
+   if (pRequest->isFieldExist(VID_REQUIRED_POLLS))
       m_requiredPollCount = (int)pRequest->GetVariableShort(VID_REQUIRED_POLLS);
 
 	// Expected interface state
-	if (pRequest->IsVariableExist(VID_EXPECTED_STATE))
+	if (pRequest->isFieldExist(VID_EXPECTED_STATE))
 	{
       UINT32 expectedState = pRequest->GetVariableShort(VID_EXPECTED_STATE);
 		m_flags &= ~IF_EXPECTED_STATE_MASK;
@@ -706,7 +720,7 @@ UINT32 Interface::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	}
 
 	// Flags
-	if (pRequest->IsVariableExist(VID_FLAGS))
+	if (pRequest->isFieldExist(VID_FLAGS))
 	{
       UINT32 newFlags = pRequest->GetVariableLong(VID_FLAGS);
       newFlags &= IF_USER_FLAGS_MASK;
@@ -842,19 +856,24 @@ void Interface::onObjectDelete(UINT32 dwObjectId)
 /**
  * Set peer information
  */
-void Interface::setPeer(Node *node, Interface *iface)
+void Interface::setPeer(Node *node, Interface *iface, int protocol)
 {
-   if ((m_peerNodeId == node->Id()) && (m_peerInterfaceId == iface->Id()))
+   if ((m_peerNodeId == node->Id()) && (m_peerInterfaceId == iface->Id()) && (m_peerDiscoveryProtocol == protocol))
       return;
 
    m_peerNodeId = node->Id();
    m_peerInterfaceId = iface->Id();
+   m_peerDiscoveryProtocol = protocol;
    Modify();
-
-   static const TCHAR *names[] = { _T("localIfId"), _T("localIfIndex"), _T("localIfName"), 
-      _T("localIfIP"), _T("localIfMAC"), _T("remoteNodeId"), _T("remoteNodeName"),
-      _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"), _T("remoteIfMAC") };
-   PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsahdsddsah", names,
-      m_dwId, m_dwIfIndex, m_szName, m_dwIpAddr, m_bMacAddr, node->Id(), node->Name(),
-      iface->Id(), iface->getIfIndex(), iface->Name(), iface->IpAddr(), iface->getMacAddr());
+   if (!m_isSystem)
+   {
+      static const TCHAR *names[] = { _T("localIfId"), _T("localIfIndex"), _T("localIfName"), 
+         _T("localIfIP"), _T("localIfMAC"), _T("remoteNodeId"), _T("remoteNodeName"),
+         _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"), 
+         _T("remoteIfMAC"), _T("protocol") };
+      PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsahdsddsah", names,
+         m_dwId, m_dwIfIndex, m_szName, m_dwIpAddr, m_bMacAddr, node->Id(), node->Name(),
+         iface->Id(), iface->getIfIndex(), iface->Name(), iface->IpAddr(), iface->getMacAddr(),
+         protocol);
+   }
 }

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -365,11 +365,12 @@ UINT32 DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, UINT32 baseId
 /**
  * Process new DCI value
  */
-void DataCollectionTarget::processNewDCValue(DCObject *dco, time_t currTime, void *value)
+bool DataCollectionTarget::processNewDCValue(DCObject *dco, time_t currTime, void *value)
 {
 	lockDciAccess(false);
-	dco->processNewValue(currTime, value);
+	bool result = dco->processNewValue(currTime, value);
 	unlockDciAccess();
+   return result;
 }
 
 /**
@@ -524,9 +525,11 @@ void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, T
             {
                tableData->addRow();
                tableData->set(0, m_szName);
+               tableData->setObjectId(tableData->getNumRows() - 1, m_dwId);
                rowAdded = true;
             }
             tableData->set(i + 1, ((DCItem *)object)->getLastValue());
+            tableData->setStatus(i + 1, ((DCItem *)object)->getThresholdSeverity());
             tableData->getColumnDefinitions()->get(i + 1)->setDataType(((DCItem *)object)->getDataType());
          }
       }

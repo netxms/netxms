@@ -49,7 +49,10 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
+import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
+import org.netxms.client.maps.elements.NetworkMapDCIContainer;
+import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -78,12 +81,16 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 
 	private org.netxms.client.objects.NetworkMap mapObject;
 	private Action actionAddObject;
+	private Action actionAddDCIContainer;
 	private Action actionLinkObjects;
 	private Action actionAddGroupBox;
 	private Action actionAddImage;
 	private Action actionRemove;
+	private Action actionDCIContainerProperties;
+	private Action actionDCIImageProperties;
 	private Action actionMapProperties;
 	private Action actionLinkProperties;
+	private Action actionAddDCIImage;
 	private Color defaultLinkColor = null;
 
 	/**
@@ -109,7 +116,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		mapObject = (org.netxms.client.objects.NetworkMap)rootObject;
 		setPartName(rootObject.getObjectName());
 
-		if (mapObject.getLayout() == org.netxms.client.objects.NetworkMap.LAYOUT_MANUAL)
+		if (mapObject.getLayout() == MapLayoutAlgorithm.MANUAL)
 		{
 			automaticLayoutEnabled = false;
 		}
@@ -139,8 +146,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 		});
 
-		if (mapObject.getMapType() == org.netxms.client.objects.NetworkMap.TYPE_CUSTOM)
-			addDropSupport();
+		addDropSupport();
 			
 		ImageProvider.getInstance().addUpdateListener(this);
 		
@@ -241,6 +247,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	protected void buildMapPage()
 	{
 		mapPage = ((org.netxms.client.objects.NetworkMap)rootObject).createMapPage();
+      addDciToRequestList();
 	}
 
 	/*
@@ -266,6 +273,30 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		final ActionHandler addObjectHandler = new ActionHandler(actionAddObject);
 		handlerService.activateHandler(actionAddObject.getActionDefinitionId(), addObjectHandler);
 
+		actionAddDCIContainer = new Action("Add &DCI Container...") {
+         @Override
+         public void run()
+         {
+            addDCIContainerToMap();
+         }
+      };
+      actionAddDCIContainer.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.AddDCIContainer"); //$NON-NLS-1$
+      actionAddDCIContainer.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddDCIContainer"); //$NON-NLS-1$
+      final ActionHandler addDCIContainerHandler = new ActionHandler(actionAddDCIContainer);
+      handlerService.activateHandler(actionAddDCIContainer.getActionDefinitionId(), addDCIContainerHandler);
+      
+      actionAddDCIImage = new Action("Add &DCI Image...") {
+         @Override
+         public void run()
+         {
+            addDCIImageToMap();
+         }
+      };
+      actionAddDCIImage.setId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddDCIImage"); //$NON-NLS-1$
+      actionAddDCIImage.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddDCIImage"); //$NON-NLS-1$
+      final ActionHandler addDCIImageHandler = new ActionHandler(actionAddDCIImage);
+      handlerService.activateHandler(actionAddDCIImage.getActionDefinitionId(), addDCIImageHandler);
+		
 		actionAddGroupBox = new Action(Messages.get().PredefinedMap_GroupBox) {
 			@Override
 			public void run()
@@ -305,6 +336,22 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		actionRemove.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.Remove"); //$NON-NLS-1$
 		final ActionHandler removeHandler = new ActionHandler(actionRemove);
 		handlerService.activateHandler(actionRemove.getActionDefinitionId(), removeHandler);
+		
+		actionDCIContainerProperties = new Action("Properties") {
+         @Override
+         public void run()
+         {
+            showDCIContainerProperties();
+         }
+      };
+      
+      actionDCIImageProperties = new Action("Properties") {
+         @Override
+         public void run()
+         {
+            showDCIImageProperties();
+         }
+      };
 
 		actionMapProperties = new Action(Messages.get().PredefinedMap_MapProperties) {
 			@Override
@@ -347,6 +394,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	protected void fillMapContextMenu(IMenuManager manager)
 	{
 		manager.add(actionAddObject);
+		manager.add(actionAddDCIContainer);		
+		manager.add(actionAddDCIImage);  
 		manager.add(createDecorationAdditionSubmenu());
 		manager.add(new Separator());
 		super.fillMapContextMenu(manager);
@@ -399,6 +448,11 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	protected void fillElementContextMenu(IMenuManager manager)
 	{
 		manager.add(actionRemove);
+		Object o = ((IStructuredSelection)viewer.getSelection()).getFirstElement();
+		if(o instanceof NetworkMapDCIContainer)
+		   manager.add(actionDCIContainerProperties);
+		if(o instanceof NetworkMapDCIImage)
+         manager.add(actionDCIImageProperties);
 		manager.add(new Separator());
 		super.fillElementContextMenu(manager);
 	}
@@ -460,6 +514,44 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		addObjectsFromList(dlg.getSelectedObjects(), null);
 	}
 
+	/**
+    * Add DCI container to map
+    */
+   private void addDCIContainerToMap()
+   {
+      NetworkMapDCIContainer dciContainer = new NetworkMapDCIContainer(mapPage.createElementId());
+      //runn property page 
+      PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, dciContainer);
+      if (dlg != null)
+      {
+         if (dlg.open() == dlg.OK)
+         {        
+            mapPage.addElement(dciContainer);
+            saveMap();
+            addDciToRequestList();
+         }
+      }      
+   }
+   
+   /**
+    * Add DCI image to map
+    */
+   private void addDCIImageToMap()
+   {
+      NetworkMapDCIImage dciImage = new NetworkMapDCIImage(mapPage.createElementId());
+      //runn property page 
+      PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, dciImage);
+      if (dlg != null)
+      {
+         if (dlg.open() == dlg.OK)
+         {        
+            mapPage.addElement(dciImage);
+            saveMap();
+            addDciToRequestList();
+         }
+      }
+   }
+	
 	/**
 	 * Add objects from list to map
 	 * 
@@ -587,7 +679,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		
 		final NXCObjectModificationData md = new NXCObjectModificationData(rootObject.getObjectId());
 		md.setMapContent(mapPage.getElements(), mapPage.getLinks());
-		md.setMapLayout(automaticLayoutEnabled ? layoutAlgorithm : NetworkMap.LAYOUT_MANUAL);
+		md.setMapLayout(automaticLayoutEnabled ? layoutAlgorithm : MapLayoutAlgorithm.MANUAL);
 		md.setConnectionRouting(routingAlgorithm);
 		
 		int flags = mapObject.getFlags();
@@ -626,6 +718,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 				return Messages.get().PredefinedMap_SaveJobError;
 			}
 		}.start();
+      addDciToRequestList();
 	}
 
 	/**
@@ -648,7 +741,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	protected boolean isSelectableElement(Object element)
 	{
-		return (element instanceof NetworkMapDecoration) || (element instanceof NetworkMapLink);
+		return (element instanceof NetworkMapDecoration) || (element instanceof NetworkMapLink) || (element instanceof NetworkMapDCIContainer) || (element instanceof NetworkMapDCIImage);
 	}
 
 	/* (non-Javadoc)
@@ -758,6 +851,43 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		
 		refreshMap();
 	}
+	
+
+	/**
+	 * Show DCI Container properties
+	 */
+   private void showDCIContainerProperties()
+   {
+      updateObjectPositions();
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDCIContainer))
+         return;
+      NetworkMapDCIContainer container = (NetworkMapDCIContainer)selection.getFirstElement();
+      PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, container);
+      if (dlg != null)
+      {
+         if(dlg.open() == PropertyDialog.OK)         
+            saveMap();
+      }
+   }
+   
+   /**
+    * Show DCI Image properties
+    */
+   private void showDCIImageProperties()
+   {
+      updateObjectPositions();
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if ((selection.size() != 1) || !(selection.getFirstElement() instanceof NetworkMapDCIImage))
+         return;
+      NetworkMapDCIImage container = (NetworkMapDCIImage)selection.getFirstElement();
+      PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, container);
+      if (dlg != null)
+      {
+         if(dlg.open() == PropertyDialog.OK)         
+            saveMap();
+      }
+   }
 	
 	/**
 	 * Show properties for currently selected link

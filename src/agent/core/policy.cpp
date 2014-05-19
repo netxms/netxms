@@ -74,7 +74,7 @@ static int GetPolicyType(uuid_t guid)
 
 	_sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s/type"), uuid_to_string(guid, buffer));
 	Config *registry = OpenRegistry();
-	type = registry->getValueInt(path, -1);
+	type = registry->getValueAsInt(path, -1);
 	CloseRegistry(false);
 	return type;
 }
@@ -254,21 +254,21 @@ UINT32 GetPolicyInventory(CommSession *session, CSCPMessage *msg)
 {
 	Config *registry = OpenRegistry();
 
-	ConfigEntryList *list = registry->getSubEntries(_T("/policyRegistry"), NULL);
+	ObjectArray<ConfigEntry> *list = registry->getSubEntries(_T("/policyRegistry"), NULL);
 	if (list != NULL)
 	{
-		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)list->getSize());
+		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)list->size());
 		UINT32 varId = VID_ELEMENT_LIST_BASE;
-		for(int i = 0; i < list->getSize(); i++, varId += 7)
+		for(int i = 0; i < list->size(); i++, varId += 7)
 		{
-			ConfigEntry *e = list->getEntry(i);
+			ConfigEntry *e = list->get(i);
 			uuid_t guid;
 
 			if (MatchString(_T("policy-*"), e->getName(), TRUE))
 			{
 				uuid_parse(&(e->getName()[7]), guid);
 				msg->SetVariable(varId++, guid, UUID_LENGTH);
-				msg->SetVariable(varId++, (WORD)e->getSubEntryValueInt(_T("type")));
+				msg->SetVariable(varId++, (WORD)e->getSubEntryValueAsInt(_T("type")));
 				msg->SetVariable(varId++, e->getSubEntryValue(_T("server")));
 			}
 		}

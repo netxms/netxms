@@ -67,7 +67,7 @@ public class EditCommentDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().EditCommentDialog_EditComment);
+      newShell.setText(noteID != 0 ? Messages.get().EditCommentDialog_EditComment : Messages.get().AlarmComments_AddCommentLink);
 
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try

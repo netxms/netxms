@@ -29,7 +29,7 @@
 static void (* s_fpWriteLog)(int, int, const TCHAR *) = NULL;
 static void (* s_fpSendTrap1)(UINT32, const TCHAR *, const char *, va_list) = NULL;
 static void (* s_fpSendTrap2)(UINT32, const TCHAR *, int, TCHAR **) = NULL;
-static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long, long) = NULL;
+static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long) = NULL;
 static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32) = NULL;
 
 /**
@@ -38,7 +38,7 @@ static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32) = NULL;
 void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
 														void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
 														void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
-														bool (* sendFile)(void *, UINT32, const TCHAR *, long, long),
+														bool (* sendFile)(void *, UINT32, const TCHAR *, long),
 														bool (* pushData)(const TCHAR *, const TCHAR *, UINT32))
 {
    s_fpWriteLog = writeLog;
@@ -101,11 +101,9 @@ void LIBNETXMS_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va
    }
 }
 
-
-//
-// Send trap from agent to server
-//
-
+/**
+ * Send trap from agent to server
+ */
 void LIBNETXMS_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, const char *pszFormat, ...)
 {
    va_list args;
@@ -118,6 +116,9 @@ void LIBNETXMS_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, 
    }
 }
 
+/**
+ * Send trap from agent to server
+ */
 void LIBNETXMS_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList)
 {
    if (s_fpSendTrap2 != NULL)
@@ -251,11 +252,11 @@ BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, W
 /**
  * Send file to server
  */
-BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, long sizeLimit)
+BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset)
 {
 	if ((s_fpSendFile == NULL) || (session == NULL) || (file == NULL))
 		return FALSE;
-	return s_fpSendFile(session, requestId, file, offset, sizeLimit);
+	return s_fpSendFile(session, requestId, file, offset);
 }
 
 /**

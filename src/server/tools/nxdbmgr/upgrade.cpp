@@ -47,8 +47,7 @@ static BOOL CreateTable(const TCHAR *pszQuery)
 /**
  * Create configuration parameter if it doesn't exist (unless bForceUpdate set to true)
  */
-BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
-                       int iVisible, int iNeedRestart, BOOL bForceUpdate)
+BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue, int iVisible, int iNeedRestart, BOOL bForceUpdate)
 {
    TCHAR szQuery[1024];
    DB_RESULT hResult;
@@ -361,13 +360,285 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V317 to V318
+ */
+static BOOL H_UpgradeFromV317(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_DOWN, _T("SYS_AP_DOWN"), SEVERITY_CRITICAL, EF_LOG,
+      _T("Access point %2 changed state to DOWN"),
+		_T("Generated when access point state changes to DOWN.\r\n")
+		_T("Parameters:\r\n")
+		_T("    1) Access point object ID\r\n")
+		_T("    2) Access point name\r\n")
+		_T("    3) Access point MAC address\r\n")
+		_T("    4) Access point IP address\r\n")
+		_T("    5) Access point vendor name\r\n")
+		_T("    6) Access point model\r\n")
+		_T("    7) Access point serial number")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='318' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V316 to V317
+ */
+static BOOL H_UpgradeFromV316(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("MinViewRefreshInterval"), _T("1000"), 1, 0));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='317' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V315 to V316
+ */
+static BOOL H_UpgradeFromV315(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE access_points ADD ap_state integer\n")
+      _T("UPDATE access_points SET ap_state=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_ADOPTED, _T("SYS_AP_ADOPTED"), SEVERITY_NORMAL, EF_LOG,
+      _T("Access point %2 changed state to ADOPTED"),
+		_T("Generated when access point state changes to ADOPTED.\r\n")
+		_T("Parameters:\r\n")
+		_T("    1) Access point object ID\r\n")
+		_T("    2) Access point name\r\n")
+		_T("    3) Access point MAC address\r\n")
+		_T("    4) Access point IP address\r\n")
+		_T("    5) Access point vendor name\r\n")
+		_T("    6) Access point model\r\n")
+		_T("    7) Access point serial number")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_UNADOPTED, _T("SYS_AP_UNADOPTED"), SEVERITY_MAJOR, EF_LOG,
+      _T("Access point %2 changed state to UNADOPTED"),
+		_T("Generated when access point state changes to UNADOPTED.\r\n")
+		_T("Parameters:\r\n")
+		_T("    1) Access point object ID\r\n")
+		_T("    2) Access point name\r\n")
+		_T("    3) Access point MAC address\r\n")
+		_T("    4) Access point IP address\r\n")
+		_T("    5) Access point vendor name\r\n")
+		_T("    6) Access point model\r\n")
+		_T("    7) Access point serial number")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='316' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V314 to V315
+ */
+static BOOL H_UpgradeFromV314(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE thresholds ADD match_count integer\n")
+      _T("UPDATE thresholds SET match_count=0 WHERE current_state=0\n")
+      _T("UPDATE thresholds SET match_count=1 WHERE current_state<>0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='315' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V313 to V314
+ */
+static BOOL H_UpgradeFromV313(int currVersion, int newVersion)
+{
+   // Replace double backslash with single backslash in all "file download" (code 7) object tools
+   DB_RESULT hResult = SQLSelect(_T("SELECT tool_id, tool_data FROM object_tools WHERE tool_type=7"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         TCHAR* toolData = DBGetField(hResult, i, 1, NULL, 0);
+         TranslateStr(toolData, _T("\\\\"), _T("\\"));
+
+         DB_STATEMENT statment = DBPrepare(g_hCoreDB, _T("UPDATE object_tools SET tool_data=?  WHERE tool_id=?"));
+         if (statment == NULL)
+            return FALSE;
+         DBBind(statment, 1, DB_SQLTYPE_TEXT, toolData, DB_BIND_DYNAMIC);
+         DBBind(statment, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+         if(!DBExecute(statment))
+            return FALSE;
+         DBFreeStatement(statment);
+      }
+      DBFreeResult(hResult);
+   }
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='314' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V312 to V313
+ */
+static BOOL H_UpgradeFromV312(int currVersion, int newVersion)
+{
+   CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("tool_name")));
+   CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("tool_data")));
+   CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("description")));
+   CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("confirmation_text")));
+   CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("matching_oid")));
+   CHK_EXEC(ConvertStrings(_T("object_tools_table_columns"), _T("tool_id"), _T("col_number"), _T("col_name"), false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='313' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V311 to V312
+ */
+static BOOL H_UpgradeFromV311(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("EnableReportingServer"), _T("0"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("ReportingServerHostname"), _T("localhost"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("ReportingServerPort"), _T("4710"), 1, 1));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='312' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V310 to V311
+ */
+static BOOL H_UpgradeFromV310(int currVersion, int newVersion)
+{
+   IntegerArray<UINT32> deleteList;
+
+   // reports
+   DB_RESULT hResult = SQLSelect(_T("SELECT id FROM reports"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+         deleteList.add(DBGetFieldULong(hResult, i, 0));
+      DBFreeResult(hResult);
+   }
+
+   // report groups
+   hResult = SQLSelect(_T("SELECT id FROM containers WHERE object_class=25"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+         deleteList.add(DBGetFieldULong(hResult, i, 0));
+      DBFreeResult(hResult);
+   }
+
+   for(int i = 0; i < deleteList.size(); i++)
+   {
+      TCHAR query[256];
+
+      _sntprintf(query, 256, _T("DELETE FROM object_properties WHERE object_id=%d"), deleteList.get(i));
+      CHK_EXEC(SQLQuery(query));
+
+      _sntprintf(query, 256, _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), deleteList.get(i));
+      CHK_EXEC(SQLQuery(query));
+
+      _sntprintf(query, 256, _T("DELETE FROM acl WHERE object_id=%d"), deleteList.get(i));
+      CHK_EXEC(SQLQuery(query));
+
+      _sntprintf(query, 256, _T("DELETE FROM container_members WHERE object_id=%d OR container_id=%d"), deleteList.get(i), deleteList.get(i));
+      CHK_EXEC(SQLQuery(query));
+   }
+
+   static TCHAR batch[] =
+      _T("DROP TABLE reports\n")
+      _T("DROP TABLE report_results\n")
+      _T("DELETE FROM containers WHERE object_class=25\n")
+      _T("DELETE FROM object_properties WHERE object_id=8\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='311' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V309 to V310
+ */
+static BOOL H_UpgradeFromV309(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE interfaces ADD peer_proto integer\n")
+      _T("UPDATE interfaces SET peer_proto=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='310' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V308 to V309
+ */
+static BOOL H_UpgradeFromV308(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("HelpDeskLink"), _T("none"), 1, 1));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='309' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V307 to V308
+ */
+static BOOL H_UpgradeFromV307(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE network_map_elements ADD flags integer\n")
+      _T("UPDATE network_map_elements SET flags=0\n")  //set all elements like manually generated
+      _T("ALTER TABLE network_map_links ADD element_data $SQL:TEXT\n")
+      _T("ALTER TABLE network_map_links ADD flags integer\n")
+      _T("UPDATE network_map_links SET flags=0\n")  //set all elements like manually generated
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   // it is assumed that now all autogenerated maps contain only autogenerated objects and links
+   // get elements from autogenerated maps and set their flags to AUTO_GENERATED for map elements and map links
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT id FROM network_maps WHERE map_type=%d OR map_type=%d"),
+   MAP_TYPE_LAYER2_TOPOLOGY, MAP_TYPE_IP_TOPOLOGY);
+   DB_RESULT hResult = SQLSelect(query);
+	if (hResult != NULL)
+	{
+		int count = DBGetNumRows(hResult);
+		for(int i = 0; i < count; i++)
+		{
+			_sntprintf(query, 256, _T("UPDATE network_map_elements SET flags='1' WHERE map_id=%d"),
+			           DBGetFieldULong(hResult, i, 0));
+			CHK_EXEC(SQLQuery(query));
+			_sntprintf(query, 256, _T("UPDATE network_map_links SET flags='1' WHERE map_id=%d"),
+			           DBGetFieldULong(hResult, i, 0));
+			CHK_EXEC(SQLQuery(query));
+		}
+		DBFreeResult(hResult);
+	}
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='308' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V306 to V307
+ */
+static BOOL H_UpgradeFromV306(int currVersion, int newVersion)
+{
+	CHK_EXEC(SetColumnNullable(_T("config_clob"), _T("var_value")));
+	CHK_EXEC(ConvertStrings(_T("config_clob"), _T("var_name"), NULL, _T("var_value"), true));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='307' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V305 to V306
  */
 static BOOL H_UpgradeFromV305(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("ExtendedLogQueryAccessControl"), _T("0"), 1, 0));
    CHK_EXEC(CreateConfigParam(_T("EnableTimedAlarmAck"), _T("1"), 1, 1));
-   CHK_EXEC(CreateConfigParam(_T("EnableCheckPointSNMP"), _T("0"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("EnableCheckPointSNMP"), _T("0"), 1, 0));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='306' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -377,7 +648,7 @@ static BOOL H_UpgradeFromV305(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV304(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_IF_PEER_CHANGED, _T("SYS_IF_PEER_CHANGED"), SEVERITY_NORMAL, EF_LOG, 
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_PEER_CHANGED, _T("SYS_IF_PEER_CHANGED"), SEVERITY_NORMAL, EF_LOG,
       _T("New peer for interface %3 is %7 interface %10 (%12)"),
 		_T("Generated when peer information for interface changes.\r\n")
 		_T("Parameters:\r\n")
@@ -1119,9 +1390,6 @@ static BOOL H_UpgradeFromV267(int currVersion, int newVersion)
 	CHK_EXEC(SetColumnNullable(_T("network_services"), _T("check_responce")));
 	CHK_EXEC(ConvertStrings(_T("network_services"), _T("id"), _T("check_request")));
 	CHK_EXEC(ConvertStrings(_T("network_services"), _T("id"), _T("check_responce")));
-
-	CHK_EXEC(SetColumnNullable(_T("config"), _T("var_value")));
-	CHK_EXEC(ConvertStrings(_T("config"), _T("var_name"), NULL, _T("var_value"), true));
 
 	CHK_EXEC(SetColumnNullable(_T("config"), _T("var_value")));
 	CHK_EXEC(ConvertStrings(_T("config"), _T("var_name"), NULL, _T("var_value"), true));
@@ -7417,6 +7685,18 @@ static struct
    { 303, 304, H_UpgradeFromV303 },
    { 304, 305, H_UpgradeFromV304 },
    { 305, 306, H_UpgradeFromV305 },
+   { 306, 307, H_UpgradeFromV306 },
+   { 307, 308, H_UpgradeFromV307 },
+   { 308, 309, H_UpgradeFromV308 },
+   { 309, 310, H_UpgradeFromV309 },
+   { 310, 311, H_UpgradeFromV310 },
+   { 311, 312, H_UpgradeFromV311 },
+   { 312, 313, H_UpgradeFromV312 },
+   { 313, 314, H_UpgradeFromV313 },
+   { 314, 315, H_UpgradeFromV314 },
+   { 315, 316, H_UpgradeFromV315 },
+   { 316, 317, H_UpgradeFromV316 },
+   { 317, 318, H_UpgradeFromV317 },
    { 0, 0, NULL }
 };
 

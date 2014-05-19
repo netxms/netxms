@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Network Maps Library
 ** Copyright (C) 2003-2010 Victor Kirhenshtein
@@ -23,50 +23,126 @@
 
 #include "libnxmap.h"
 
+/**
+ * ObjLink class implementation
+ */
 
-//
-// Constructors
-//
+/**
+ * Constructors
+ */
+
+ObjLink::ObjLink()
+{
+   id1 = 0;
+   id2 = 0;
+   type = LINK_TYPE_NORMAL;
+   port1[0] = 0;
+   port2[0] = 0;
+	portIdCount = 0;
+	config = NULL;
+	flags = 0;
+}
+
+ObjLink::ObjLink(UINT32 id1, UINT32 id2, LONG type, TCHAR* port1, TCHAR* port2, int portIdCount, UINT32* portIdArray1, UINT32* portIdArray2, TCHAR* config, UINT32 flags)
+{
+   this->id1 = id1;
+   this->id2 = id2;
+   this->type = type;
+	_tcscpy(this->port1, port1);
+	_tcscpy(this->port2, port2);
+	this->portIdCount = portIdCount;
+
+	for(int i = 0; i < portIdCount; i++)
+	{
+      this->portIdArray1[i] = portIdArray1[i];
+      this->portIdArray2[i] = portIdArray2[i];
+	}
+
+   if(config != NULL)
+      this->config = _tcsdup(config);
+   else
+      config = NULL;
+	this->flags = flags;
+}
+
+ObjLink::ObjLink(ObjLink* old)
+{
+   id1 = old->id1;
+   id2 = old->id2;
+   type = old->type;
+   _tcscpy(port1, old->port1);
+	_tcscpy(port2, old->port2);
+	portIdCount = old->portIdCount;
+
+	for(int i = 0; i < portIdCount; i++)
+	{
+      this->portIdArray1[i] = old->portIdArray1[i];
+      this->portIdArray2[i] = old->portIdArray2[i];
+	}
+
+   if(old->config != NULL)
+      config = _tcsdup(old->config);
+   else
+      config = NULL;
+	flags = old->flags;
+}
+
+ObjLink::~ObjLink()
+{
+   safe_free(config);
+}
+
+/**
+ * nxmap_ObjList class implementation
+ */
+
+/**
+ * Constructors
+ */
 
 nxmap_ObjList::nxmap_ObjList()
 {
-   m_dwNumObjects = 0;
-	m_allocatedObjects = 0;
-   m_pdwObjectList = NULL;
-   m_dwNumLinks = 0;
-	m_allocatedLinks = 0;
-   m_pLinkList = NULL;
+   m_objectList = new IntegerArray<UINT32>(16, 16);
+   m_linkList = new ObjectArray<ObjLink>(16, 16, true);
 }
 
-nxmap_ObjList::nxmap_ObjList(CSCPMessage *pMsg)
+nxmap_ObjList::nxmap_ObjList(CSCPMessage *msg)
 {
-	UINT32 i, dwId;
+   m_objectList = new IntegerArray<UINT32>(16, 16);
+   m_linkList = new ObjectArray<ObjLink>(16, 16, true);
 
-   m_dwNumObjects = pMsg->GetVariableLong(VID_NUM_OBJECTS);
-	m_allocatedObjects = m_dwNumObjects;
-   m_pdwObjectList = (UINT32 *)malloc(m_dwNumObjects * sizeof(UINT32));
-	pMsg->GetVariableInt32Array(VID_OBJECT_LIST, m_dwNumObjects, m_pdwObjectList);
-   m_dwNumLinks = pMsg->GetVariableLong(VID_NUM_LINKS);
-	m_allocatedLinks = m_dwNumLinks;
-   m_pLinkList = (OBJLINK *)malloc(m_dwNumLinks * sizeof(OBJLINK));
-	for(i = 0, dwId = VID_OBJECT_LINKS_BASE; i < m_dwNumLinks; i++, dwId += 5)
+	msg->getFieldAsInt32Array(VID_OBJECT_LIST, m_objectList);
+
+   int linksCount = msg->getFieldAsInt32(VID_NUM_LINKS);
+	UINT32 dwId = VID_OBJECT_LINKS_BASE;
+	for(int i = 0; i < linksCount; i++, dwId += 3)
 	{
-		m_pLinkList[i].dwId1 = pMsg->GetVariableLong(dwId++);
-		m_pLinkList[i].dwId2 = pMsg->GetVariableLong(dwId++);
-		m_pLinkList[i].nType = (int)pMsg->GetVariableShort(dwId++);
-		pMsg->GetVariableStr(dwId++, m_pLinkList[i].szPort1, MAX_CONNECTOR_NAME);
-		pMsg->GetVariableStr(dwId++, m_pLinkList[i].szPort2, MAX_CONNECTOR_NAME);
+      ObjLink *obj = new ObjLink();
+		obj->id1 = msg->GetVariableLong(dwId++);
+		obj->id2 = msg->GetVariableLong(dwId++);
+		obj->type = (int)msg->GetVariableShort(dwId++);
+		msg->GetVariableStr(dwId++, obj->port1, MAX_CONNECTOR_NAME);
+		msg->GetVariableStr(dwId++, obj->port2, MAX_CONNECTOR_NAME);
+		obj->config = msg->GetVariableStr(dwId++);
+		obj->flags = msg->GetVariableLong(dwId++);
+		m_linkList->add(obj);
 	}
 }
 
-nxmap_ObjList::nxmap_ObjList(nxmap_ObjList *pSrc)
+/**
+ * Copy constructor
+ */
+nxmap_ObjList::nxmap_ObjList(nxmap_ObjList *src)
 {
-   m_dwNumObjects = pSrc->m_dwNumObjects;
-	m_allocatedObjects = m_dwNumObjects;
-   m_pdwObjectList = (UINT32 *)nx_memdup(pSrc->m_pdwObjectList, sizeof(UINT32) * m_dwNumObjects);
-   m_dwNumLinks = pSrc->m_dwNumLinks;
-	m_allocatedLinks = m_dwNumLinks;
-   m_pLinkList = (OBJLINK *)nx_memdup(pSrc->m_pLinkList, sizeof(OBJLINK) * m_dwNumLinks);
+   int i;
+
+   m_objectList = new IntegerArray<UINT32>(src->m_objectList->size(), 16);
+   for(i = 0; i < src->m_objectList->size(); i++)
+      m_objectList->add(src->m_objectList->get(i));
+
+   m_linkList = new ObjectArray<ObjLink>(src->m_linkList->size(), 16, true);
+	for(i = 0; i < src->m_linkList->size(); i++)
+      m_linkList->add(new ObjLink(src->m_linkList->get(i)));
 }
 
 /**
@@ -74,8 +150,8 @@ nxmap_ObjList::nxmap_ObjList(nxmap_ObjList *pSrc)
  */
 nxmap_ObjList::~nxmap_ObjList()
 {
-   safe_free(m_pdwObjectList);
-   safe_free(m_pLinkList);
+   delete m_objectList;
+   delete m_linkList;
 }
 
 /**
@@ -83,12 +159,8 @@ nxmap_ObjList::~nxmap_ObjList()
  */
 void nxmap_ObjList::clear()
 {
-   safe_free_and_null(m_pdwObjectList);
-   safe_free_and_null(m_pLinkList);
-   m_dwNumObjects = 0;
-	m_allocatedObjects = 0;
-   m_dwNumLinks = 0;
-	m_allocatedLinks = 0;
+   m_linkList->clear();
+   m_objectList->clear();
 }
 
 /**
@@ -96,22 +168,9 @@ void nxmap_ObjList::clear()
  */
 void nxmap_ObjList::addObject(UINT32 id)
 {
-   UINT32 i;
-
-   for(i = 0; i < m_dwNumObjects; i++)
+   if (m_objectList->indexOf(id) == -1)
    {
-      if (m_pdwObjectList[i] == id)
-         break;
-   }
-
-   if (i == m_dwNumObjects)
-   {
-		if (m_dwNumObjects == m_allocatedObjects)
-		{
-			m_allocatedObjects += 64;
-	      m_pdwObjectList = (UINT32 *)realloc(m_pdwObjectList, sizeof(UINT32) * m_allocatedObjects);
-		}
-      m_pdwObjectList[m_dwNumObjects++] = id;
+      m_objectList->add(id);
    }
 }
 
@@ -120,22 +179,13 @@ void nxmap_ObjList::addObject(UINT32 id)
  */
 void nxmap_ObjList::removeObject(UINT32 id)
 {
-   for(UINT32 i = 0; i < m_dwNumObjects; i++)
-   {
-      if (m_pdwObjectList[i] == id)
-      {
-         m_dwNumObjects--;
-         memmove(&m_pdwObjectList[i], &m_pdwObjectList[i + 1], (m_dwNumObjects - i) * sizeof(UINT32));
-         break;
-      }
-   }
+   m_objectList->remove(id);
 
-   for(UINT32 i = 0; i < m_dwNumLinks; i++)
+   for(int i = 0; i < m_linkList->size(); i++)
    {
-      if ((m_pLinkList[i].dwId1 == id) || (m_pLinkList[i].dwId2 == id))
+      if ((m_linkList->get(i)->id1 == id) || (m_linkList->get(i)->id2 == id))
       {
-         m_dwNumLinks--;
-         memmove(&m_pLinkList[i], &m_pLinkList[i + 1], (m_dwNumLinks - i) * sizeof(UINT32));
+         m_linkList->remove(i);
          i--;
       }
    }
@@ -144,41 +194,28 @@ void nxmap_ObjList::removeObject(UINT32 id)
 /**
  * Link two objects
  */
-void nxmap_ObjList::linkObjects(UINT32 id1, UINT32 id2)
+void nxmap_ObjList::linkObjects(UINT32 id1, UINT32 id2, int linkType, const TCHAR *linkName)
 {
-   UINT32 i;
-   int nCount;
-
-   // Validate object IDs
-   for(i = 0, nCount = 0; (i < m_dwNumObjects) && (nCount < 2); i++)
-   {
-      if ((m_pdwObjectList[i] == id1) ||
-          (m_pdwObjectList[i] == id2))
-         nCount++;
-   }
-
-   if (nCount == 2)  // Both objects exist?
+   bool linkExists = false;
+   if ((m_objectList->indexOf(id1) != -1) && (m_objectList->indexOf(id2) != -1))  // if both objects exist
    {
       // Check for duplicate links
-      for(i = 0; i < m_dwNumLinks; i++)
+      for(int i = 0; i < m_linkList->size(); i++)
       {
-         if (((m_pLinkList[i].dwId1 == id1) && (m_pLinkList[i].dwId2 == id2)) ||
-             ((m_pLinkList[i].dwId2 == id1) && (m_pLinkList[i].dwId1 == id2)))
+         if (((m_linkList->get(i)->id1 == id1) && (m_linkList->get(i)->id2 == id2)) ||
+             ((m_linkList->get(i)->id2 == id1) && (m_linkList->get(i)->id1 == id2)))
+         {
+            linkExists = true;
             break;
+         }
       }
-      if (i == m_dwNumLinks)
+      if (!linkExists)
       {
-			if (m_dwNumLinks == m_allocatedLinks)
-			{
-				m_allocatedLinks += 64;
-	         m_pLinkList = (OBJLINK *)realloc(m_pLinkList, sizeof(OBJLINK) * m_allocatedLinks);
-			}
-         m_pLinkList[m_dwNumLinks].dwId1 = id1;
-         m_pLinkList[m_dwNumLinks].dwId2 = id2;
-         m_pLinkList[m_dwNumLinks].nType = LINK_TYPE_NORMAL;
-			m_pLinkList[m_dwNumLinks].szPort1[0] = 0;
-			m_pLinkList[m_dwNumLinks].szPort2[0] = 0;
-         m_dwNumLinks++;
+         ObjLink *link = new ObjLink();
+         link->id1 = id1;
+         link->id2 = id2;
+         link->type = linkType;
+			m_linkList->add(link);
       }
    }
 }
@@ -186,12 +223,12 @@ void nxmap_ObjList::linkObjects(UINT32 id1, UINT32 id2)
 /**
  * Update port names on connector
  */
-static void UpdatePortNames(OBJLINK *link, const TCHAR *port1, const TCHAR *port2)
+static void UpdatePortNames(ObjLink *link, const TCHAR *port1, const TCHAR *port2)
 {
-	_tcscat_s(link->szPort1, MAX_CONNECTOR_NAME, _T(", "));
-	_tcscat_s(link->szPort1, MAX_CONNECTOR_NAME, port1);
-	_tcscat_s(link->szPort2, MAX_CONNECTOR_NAME, _T(", "));
-	_tcscat_s(link->szPort2, MAX_CONNECTOR_NAME, port2);
+	_tcscat_s(link->port1, MAX_CONNECTOR_NAME, _T(", "));
+	_tcscat_s(link->port1, MAX_CONNECTOR_NAME, port1);
+	_tcscat_s(link->port2, MAX_CONNECTOR_NAME, _T(", "));
+	_tcscat_s(link->port2, MAX_CONNECTOR_NAME, port2);
 }
 
 /**
@@ -199,77 +236,72 @@ static void UpdatePortNames(OBJLINK *link, const TCHAR *port1, const TCHAR *port
  */
 void nxmap_ObjList::linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *port1, const TCHAR *port2, UINT32 portId1, UINT32 portId2)
 {
-   UINT32 i;
-   int nCount;
-
-   // Validate object IDs
-   for(i = 0, nCount = 0; (i < m_dwNumObjects) && (nCount < 2); i++)
-   {
-      if ((m_pdwObjectList[i] == id1) ||
-          (m_pdwObjectList[i] == id2))
-         nCount++;
-   }
-
-   if (nCount == 2)  // Both objects exist?
+   bool linkExists = false;
+   if ((m_objectList->indexOf(id1) != -1) && (m_objectList->indexOf(id2) != -1))  // if both objects exist
    {
       // Check for duplicate links
-      for(i = 0; i < m_dwNumLinks; i++)
+      for(int i = 0; i < m_linkList->size(); i++)
       {
-			if ((m_pLinkList[i].dwId1 == id1) && (m_pLinkList[i].dwId2 == id2))
+			if ((m_linkList->get(i)->id1 == id1) && (m_linkList->get(i)->id2 == id2))
 			{
 				int j;
-				for(j = 0; j < m_pLinkList[i].portIdCount; j++)
+				for(j = 0; j < m_linkList->get(i)->portIdCount; j++)
 				{
 					// assume point-to-point interfaces, therefore "or" is enough
-					if ((m_pLinkList[i].portId1[j] == portId1) || (m_pLinkList[i].portId2[j] == portId2))
-						break;
+					if ((m_linkList->get(i)->portIdArray1[j] == portId1) || (m_linkList->get(i)->portIdArray2[j] == portId2))
+               {
+                  linkExists = true;
+                  break;
+               }
 				}
-				if ((j == m_pLinkList[i].portIdCount) && (j < MAX_PORT_COUNT))
+				if (!linkExists && (m_linkList->get(i)->portIdCount < MAX_PORT_COUNT))
 				{
-					m_pLinkList[i].portId1[j] = portId1;
-					m_pLinkList[i].portId2[j] = portId2;
-					m_pLinkList[i].portIdCount++;
-					UpdatePortNames(&m_pLinkList[i], port1, port2);
-					m_pLinkList[i].nType = LINK_TYPE_MULTILINK;
+					m_linkList->get(i)->portIdArray1[j] = portId1;
+					m_linkList->get(i)->portIdArray2[j] = portId2;
+					m_linkList->get(i)->portIdCount++;
+					UpdatePortNames(m_linkList->get(i), port1, port2);
+					m_linkList->get(i)->type = LINK_TYPE_MULTILINK;
+               linkExists = true;
 				}
 				break;
 			}
-			if ((m_pLinkList[i].dwId1 == id2) && (m_pLinkList[i].dwId2 == id1))
+			if ((m_linkList->get(i)->id1 == id2) && (m_linkList->get(i)->id2 == id1))
 			{
 				int j;
-				for(j = 0; j < m_pLinkList[i].portIdCount; j++)
+				for(j = 0; j < m_linkList->get(i)->portIdCount; j++)
 				{
 					// assume point-to-point interfaces, therefore or is enough
-					if ((m_pLinkList[i].portId1[j] == portId2) || (m_pLinkList[i].portId2[j] == portId1))
-						break;
+					if ((m_linkList->get(i)->portIdArray1[j] == portId2) || (m_linkList->get(i)->portIdArray2[j] == portId1))
+					{
+                  linkExists = true;
+                  break;
+               }
 				}
-				if ((j == m_pLinkList[i].portIdCount) && (j < MAX_PORT_COUNT))
+				if (!linkExists && (m_linkList->get(i)->portIdCount < MAX_PORT_COUNT))
 				{
-					m_pLinkList[i].portId1[j] = portId2;
-					m_pLinkList[i].portId2[j] = portId1;
-					m_pLinkList[i].portIdCount++;
-					UpdatePortNames(&m_pLinkList[i], port2, port1);
-					m_pLinkList[i].nType = LINK_TYPE_MULTILINK;
+					m_linkList->get(i)->portIdArray1[j] = portId2;
+					m_linkList->get(i)->portIdArray2[j] = portId1;
+					m_linkList->get(i)->portIdCount++;
+					UpdatePortNames(m_linkList->get(i), port2, port1);
+					m_linkList->get(i)->type = LINK_TYPE_MULTILINK;
+               linkExists = true;
 				}
 				break;
 			}
       }
-      if (i == m_dwNumLinks)
+      if (!linkExists)
       {
-			if (m_dwNumLinks == m_allocatedLinks)
-			{
-				m_allocatedLinks += 64;
-	         m_pLinkList = (OBJLINK *)realloc(m_pLinkList, sizeof(OBJLINK) * m_allocatedLinks);
-			}
-         m_pLinkList[m_dwNumLinks].dwId1 = id1;
-         m_pLinkList[m_dwNumLinks].dwId2 = id2;
-         m_pLinkList[m_dwNumLinks].nType = LINK_TYPE_NORMAL;
-			m_pLinkList[m_dwNumLinks].portIdCount = 1;
-			m_pLinkList[m_dwNumLinks].portId1[0] = portId1;
-			m_pLinkList[m_dwNumLinks].portId2[0] = portId2;
-			nx_strncpy(m_pLinkList[m_dwNumLinks].szPort1, port1, MAX_CONNECTOR_NAME);
-			nx_strncpy(m_pLinkList[m_dwNumLinks].szPort2, port2, MAX_CONNECTOR_NAME);
-         m_dwNumLinks++;
+         ObjLink* obj = new ObjLink();
+         obj->id1 = id1;
+         obj->id2 = id2;
+         obj->type = LINK_TYPE_NORMAL;
+			obj->portIdCount = 1;
+			obj->portIdArray1[0] = portId1;
+			obj->portIdArray2[0] = portId2;
+			nx_strncpy(obj->port1, port1, MAX_CONNECTOR_NAME);
+			nx_strncpy(obj->port2, port2, MAX_CONNECTOR_NAME);
+			obj->config = NULL;
+			m_linkList->add(obj);
       }
    }
 }
@@ -277,24 +309,26 @@ void nxmap_ObjList::linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *port1, co
 /**
  * Create NXCP message
  */
-void nxmap_ObjList::createMessage(CSCPMessage *pMsg)
+void nxmap_ObjList::createMessage(CSCPMessage *msg)
 {
-	UINT32 i, dwId;
-
 	// Object list
-	pMsg->SetVariable(VID_NUM_OBJECTS, m_dwNumObjects);
-	if (m_dwNumObjects > 0)
-		pMsg->SetVariableToInt32Array(VID_OBJECT_LIST, m_dwNumObjects, m_pdwObjectList);
+	msg->SetVariable(VID_NUM_OBJECTS, m_objectList->size());
+	if (m_objectList->size() > 0)
+		msg->setFieldInt32Array(VID_OBJECT_LIST, m_objectList);
 
 	// Links between objects
-	pMsg->SetVariable(VID_NUM_LINKS, m_dwNumLinks);
-	for(i = 0, dwId = VID_OBJECT_LINKS_BASE; i < m_dwNumLinks; i++, dwId += 5)
+	msg->SetVariable(VID_NUM_LINKS, m_linkList->size());
+   UINT32 dwId = VID_OBJECT_LINKS_BASE;
+	for(int i = 0; i < m_linkList->size(); i++, dwId += 3)
 	{
-		pMsg->SetVariable(dwId++, m_pLinkList[i].dwId1);
-		pMsg->SetVariable(dwId++, m_pLinkList[i].dwId2);
-		pMsg->SetVariable(dwId++, (WORD)m_pLinkList[i].nType);
-		pMsg->SetVariable(dwId++, m_pLinkList[i].szPort1);
-		pMsg->SetVariable(dwId++, m_pLinkList[i].szPort2);
+      ObjLink *l = m_linkList->get(i);
+		msg->SetVariable(dwId++, l->id1);
+		msg->SetVariable(dwId++, l->id2);
+		msg->SetVariable(dwId++, (WORD)l->type);
+		msg->SetVariable(dwId++, l->port1);
+		msg->SetVariable(dwId++, l->port2);
+		msg->SetVariable(dwId++, CHECK_NULL_EX(m_linkList->get(i)->config));
+		msg->SetVariable(dwId++, m_linkList->get(i)->flags);
 	}
 }
 
@@ -303,9 +337,10 @@ void nxmap_ObjList::createMessage(CSCPMessage *pMsg)
  */
 bool nxmap_ObjList::isLinkExist(UINT32 objectId1, UINT32 objectId2)
 {
-   for(UINT32 i = 0; i < m_dwNumLinks; i++)
+   for(int i = 0; i < m_linkList->size(); i++)
    {
-		if ((m_pLinkList[i].dwId1 == objectId1) && (m_pLinkList[i].dwId2 == objectId2))
+      ObjLink *l = m_linkList->get(i);
+		if ((l->id1 == objectId1) && (l->id2 == objectId2))
 			return true;
 	}
 	return false;
@@ -316,10 +351,5 @@ bool nxmap_ObjList::isLinkExist(UINT32 objectId1, UINT32 objectId2)
  */
 bool nxmap_ObjList::isObjectExist(UINT32 objectId)
 {
-	for(UINT32 i = 0; i < m_dwNumObjects; i++)
-	{
-		if (m_pdwObjectList[i] == objectId)
-			return true;
-	}
-	return false;
+   return !(m_objectList->indexOf(objectId) == -1);
 }

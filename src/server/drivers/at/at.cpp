@@ -81,7 +81,7 @@ bool AlliedTelesisDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *o
  * @param attributes Node's custom attributes
  * @param driverData pointer to pointer to driver-specific data
  */
-void AlliedTelesisDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData)
+void AlliedTelesisDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
 {
    TCHAR buffer[256];
    if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.207.1.4.167.81.1.3.0"), NULL, 0, buffer, 256, 0) == SNMP_ERR_SUCCESS)
@@ -96,7 +96,7 @@ void AlliedTelesisDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, 
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
+InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
    InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
    if (ifList != NULL)
@@ -140,13 +140,13 @@ InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMa
             if (rcc == SNMP_ERR_SUCCESS)
             {
                if ((response->getNumVariables() == 2) && 
-                   (response->getVariable(0)->GetType() != ASN_NO_SUCH_OBJECT) &&
-                   (response->getVariable(0)->GetType() != ASN_NO_SUCH_INSTANCE) &&
-                   (response->getVariable(1)->GetType() != ASN_NO_SUCH_OBJECT) &&
-                   (response->getVariable(1)->GetType() != ASN_NO_SUCH_INSTANCE))
+                   (response->getVariable(0)->getType() != ASN_NO_SUCH_OBJECT) &&
+                   (response->getVariable(0)->getType() != ASN_NO_SUCH_INSTANCE) &&
+                   (response->getVariable(1)->getType() != ASN_NO_SUCH_OBJECT) &&
+                   (response->getVariable(1)->getType() != ASN_NO_SUCH_INSTANCE))
                {
-                  iface->dwSlotNumber = response->getVariable(0)->GetValueAsInt();
-                  iface->dwPortNumber = response->getVariable(1)->GetValueAsInt();
+                  iface->dwSlotNumber = response->getVariable(0)->getValueAsInt();
+                  iface->dwPortNumber = response->getVariable(1)->getValueAsInt();
                   iface->isPhysicalPort = true;
                }
                delete response;
@@ -164,10 +164,10 @@ static UINT32 HandlerVlanList(UINT32 version, SNMP_Variable *var, SNMP_Transport
 {
    VlanList *vlanList = (VlanList *)arg;
 
-	VlanInfo *vlan = new VlanInfo(var->GetName()->getValue()[var->GetName()->getLength() - 1], VLAN_PRM_SLOTPORT);
+	VlanInfo *vlan = new VlanInfo(var->getName()->getValue()[var->getName()->getLength() - 1], VLAN_PRM_SLOTPORT);
 
 	TCHAR buffer[256];
-	vlan->setName(var->GetValueAsString(buffer, 256));
+	vlan->setName(var->getValueAsString(buffer, 256));
 	vlanList->add(vlan);
 
    return SNMP_ERR_SUCCESS;
@@ -214,7 +214,7 @@ static void ParsePortList(TCHAR *ports, VlanInfo *vlan, UINT32 slot)
 /**
  * Get VLANs 
  */
-VlanList *AlliedTelesisDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+VlanList *AlliedTelesisDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    VlanList *list = NetworkDeviceDriver::getVlans(snmp, attributes, driverData);
    if ((list != NULL) && (list->getSize() > 0))
@@ -242,14 +242,14 @@ VlanList *AlliedTelesisDriver::getVlans(SNMP_Transport *snmp, StringMap *attribu
       if (snmp->doRequest(request, &response, g_dwSNMPTimeout, 3) == SNMP_ERR_SUCCESS)
       {
          if ((response->getNumVariables() == 2) && 
-             (response->getVariable(0)->GetType() != ASN_NO_SUCH_OBJECT) &&
-             (response->getVariable(0)->GetType() != ASN_NO_SUCH_INSTANCE) &&
-             (response->getVariable(1)->GetType() != ASN_NO_SUCH_OBJECT) &&
-             (response->getVariable(1)->GetType() != ASN_NO_SUCH_INSTANCE))
+             (response->getVariable(0)->getType() != ASN_NO_SUCH_OBJECT) &&
+             (response->getVariable(0)->getType() != ASN_NO_SUCH_INSTANCE) &&
+             (response->getVariable(1)->getType() != ASN_NO_SUCH_OBJECT) &&
+             (response->getVariable(1)->getType() != ASN_NO_SUCH_INSTANCE))
          {
             TCHAR buffer[1024];
-            ParsePortList(response->getVariable(0)->GetValueAsString(buffer, 1024), vlan, 1);
-            ParsePortList(response->getVariable(1)->GetValueAsString(buffer, 1024), vlan, 1);
+            ParsePortList(response->getVariable(0)->getValueAsString(buffer, 1024), vlan, 1);
+            ParsePortList(response->getVariable(1)->getValueAsString(buffer, 1024), vlan, 1);
          }
          delete response;
       }

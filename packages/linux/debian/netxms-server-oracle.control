@@ -1,9 +1,0 @@
-Package: netxms-server-oracle
-Version: @version@
-Section: net
-Priority: optional
-Architecture: @arch@
-Essential: no
-Depends: netxms-server (= @version@)
-Maintainer: Victor Kirhenshtein <victor@netxms.org>
-Description: Oracle backend for NetXMS server

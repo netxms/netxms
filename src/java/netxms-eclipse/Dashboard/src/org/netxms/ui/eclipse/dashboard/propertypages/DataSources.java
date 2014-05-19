@@ -302,14 +302,18 @@ public class DataSources extends PropertyPage
 		SelectDciDialog dlg = new SelectDciDialog(getShell(), 0);
 		if (dlg.open() == Window.OK)
 		{
-			DciValue selection = dlg.getSelection();
-			ChartDciConfig dci = new ChartDciConfig(selection);
-			
-			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, dci.name);
-			dciList.add(dci);
-			viewer.setInput(dciList.toArray());
-			
-			viewer.setSelection(new StructuredSelection(dci));
+		   List<DciValue> selection = dlg.getSelection();
+		   List<ChartDciConfig> select = new ArrayList<ChartDciConfig>();		   
+			for(DciValue item : selection)
+			{
+			   ChartDciConfig dci = new ChartDciConfig(item);
+			   select.add(dci);
+   			labelProvider.addCacheEntry(dci.nodeId, dci.dciId, dci.name);
+   			
+            dciList.add(dci);
+			}			
+         viewer.setInput(dciList.toArray());         
+         viewer.setSelection(new StructuredSelection(select));
 		}
 	}
 	

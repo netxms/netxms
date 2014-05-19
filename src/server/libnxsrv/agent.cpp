@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Server Library
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
@@ -104,9 +104,10 @@ AgentConnection::AgentConnection(UINT32 ipAddr, WORD port, int authMethod, const
    m_dwRecvTimeout = 420000;  // 7 minutes
    m_nProtocolVersion = NXCP_VERSION;
 	m_hCurrFile = -1;
-	m_deleteFileOnDownloadFailure = true;
+   m_deleteFileOnDownloadFailure = true;
 	m_condFileDownload = ConditionCreate(TRUE);
 	m_fileUploadInProgress = false;
+   m_sendToClientMessageCallback = NULL;
 }
 
 /**
@@ -119,7 +120,7 @@ AgentConnection::~AgentConnection()
 
    // Wait for receiver thread termination
    ThreadJoin(m_hReceiverThread);
-   
+
 	// Close socket if active
 	lock();
    if (m_hSocket != -1)
@@ -214,7 +215,7 @@ void AgentConnection::receiverThread()
       // Check if we get too large message
       if (error == 1)
       {
-         printMsg(_T("Received too large message %s (%d bytes)"), 
+         printMsg(_T("Received too large message %s (%d bytes)"),
                   NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                   ntohl(pRawMsg->dwSize));
          continue;
@@ -252,33 +253,56 @@ void AgentConnection::receiverThread()
          DbgPrintf(6, _T("Received raw message %s from agent at %s"),
 			          NXCPMessageCodeName(pRawMsg->wCode, szBuffer), IpToStr(getIpAddr(), szIpAddr));
 
-			if ((pRawMsg->wCode == CMD_FILE_DATA) &&
-				 (m_hCurrFile != -1) && (pRawMsg->dwId == m_dwDownloadRequestId))
+			if ((pRawMsg->wCode == CMD_FILE_DATA) && (pRawMsg->dwId == m_dwDownloadRequestId))
 			{
-            if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
+            if (m_sendToClientMessageCallback != NULL)
             {
+               pRawMsg->wCode = ntohs(pRawMsg->wCode);
+               pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
+               m_sendToClientMessageCallback(pRawMsg, m_downloadProgressCallbackArg);
+
                if (ntohs(pRawMsg->wFlags) & MF_END_OF_FILE)
                {
-                  close(m_hCurrFile);
-                  m_hCurrFile = -1;
-            
                   onFileDownload(TRUE);
                }
-					else
-					{
-						if (m_downloadProgressCallback != NULL)
-						{
-							m_downloadProgressCallback(_tell(m_hCurrFile), m_downloadProgressCallbackArg);
-						}
-					}
+               else
+               {
+                  if (m_downloadProgressCallback != NULL)
+                  {
+                     m_downloadProgressCallback(pRawMsg->dwSize - (CSCP_HEADER_SIZE + 8), m_downloadProgressCallbackArg);
+                  }
+               }
             }
             else
             {
-               // I/O error
-               close(m_hCurrFile);
-               m_hCurrFile = -1;
-         
-               onFileDownload(FALSE);
+               if (m_hCurrFile != -1)
+               {
+                  if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
+                  {
+                     if (ntohs(pRawMsg->wFlags) & MF_END_OF_FILE)
+                     {
+                        close(m_hCurrFile);
+                        m_hCurrFile = -1;
+
+                        onFileDownload(TRUE);
+                     }
+                     else
+                     {
+                        if (m_downloadProgressCallback != NULL)
+                        {
+                           m_downloadProgressCallback(_tell(m_hCurrFile), m_downloadProgressCallbackArg);
+                        }
+                     }
+                  }
+               }
+               else
+               {
+                  // I/O error
+                  close(m_hCurrFile);
+                  m_hCurrFile = -1;
+
+                  onFileDownload(FALSE);
+               }
             }
 			}
 		}
@@ -321,7 +345,7 @@ void AgentConnection::receiverThread()
 		m_hCurrFile = -1;
 		onFileDownload(FALSE);
 	}
-	
+
 	if (error == 0)
       shutdown(m_hSocket, SHUT_RDWR);
    closesocket(m_hSocket);
@@ -541,7 +565,7 @@ void AgentConnection::disconnect()
  * Set authentication data
  */
 void AgentConnection::setAuthData(int method, const TCHAR *secret)
-{ 
+{
    m_iAuthMethod = method;
 #ifdef UNICODE
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, secret, -1, m_szSecret, MAX_SECRET_LENGTH, NULL, NULL);
@@ -802,16 +826,14 @@ UINT32 AgentConnection::waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
    return dwRetCode;
 }
 
-
-//
-// Send message to agent
-//
-
+/**
+ * Send message to agent
+ */
 BOOL AgentConnection::sendMessage(CSCPMessage *pMsg)
 {
    BOOL bResult;
 
-   CSCP_MESSAGE *pRawMsg = pMsg->CreateMessage();
+   CSCP_MESSAGE *pRawMsg = pMsg->createMessage();
 	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
    if (pCtx != NULL)
    {
@@ -1055,7 +1077,7 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
 
    msg.SetCode(CMD_TRANSFER_FILE);
    msg.SetId(dwRqId);
-   for(i = (int)_tcslen(localFile) - 1; 
+   for(i = (int)_tcslen(localFile) - 1;
        (i >= 0) && (localFile[i] != '\\') && (localFile[i] != '/'); i--);
    msg.SetVariable(VID_FILE_NAME, &localFile[i + 1]);
    if (destinationFile != NULL)
@@ -1076,7 +1098,7 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    {
 		m_fileUploadInProgress = true;
 		NXCPEncryptionContext *ctx = acquireEncryptionContext();
-      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, ctx, 0, 0, progressCallback, cbArg, m_mutexSocketWrite))
+      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite))
          dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;
@@ -1104,7 +1126,7 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
 
    msg.SetCode(CMD_UPGRADE_AGENT);
    msg.SetId(dwRqId);
-   for(i = (int)_tcslen(pszPkgName) - 1; 
+   for(i = (int)_tcslen(pszPkgName) - 1;
        (i >= 0) && (pszPkgName[i] != '\\') && (pszPkgName[i] != '/'); i--);
    msg.SetVariable(VID_FILE_NAME, &pszPkgName[i + 1]);
 
@@ -1120,18 +1142,16 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
    return dwResult;
 }
 
-
-//
-// Check status of network service via agent
-//
-
-UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType, 
-                                           WORD wPort, WORD wProto, 
+/**
+ * Check status of network service via agent
+ */
+UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType,
+                                           WORD wPort, WORD wProto,
                                            const TCHAR *pszRequest, const TCHAR *pszResponse)
 {
    UINT32 dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion), *pResponse;
-   static WORD m_wDefaultPort[] = { 7, 22, 110, 25, 21, 80 };
+   static WORD m_wDefaultPort[] = { 7, 22, 110, 25, 21, 80, 443, 23 };
 
    if (!m_bIsConnected)
       return ERR_NOT_CONNECTED;
@@ -1142,10 +1162,10 @@ UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, 
    msg.SetId(dwRqId);
    msg.SetVariable(VID_IP_ADDRESS, dwIpAddr);
    msg.SetVariable(VID_SERVICE_TYPE, (WORD)iServiceType);
-   msg.SetVariable(VID_IP_PORT, 
-      (wPort != 0) ? wPort : 
-         m_wDefaultPort[((iServiceType >= NETSRV_CUSTOM) && 
-                         (iServiceType <= NETSRV_HTTP)) ? iServiceType : 0]);
+   msg.SetVariable(VID_IP_PORT,
+      (wPort != 0) ? wPort :
+         m_wDefaultPort[((iServiceType >= NETSRV_CUSTOM) &&
+                         (iServiceType <= NETSRV_TELNET)) ? iServiceType : 0]);
    msg.SetVariable(VID_IP_PROTO, (wProto != 0) ? wProto : (WORD)IPPROTO_TCP);
    msg.SetVariable(VID_SERVICE_REQUEST, pszRequest);
    msg.SetVariable(VID_SERVICE_RESPONSE, pszResponse);
@@ -1340,7 +1360,7 @@ UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
 
             // We expect text file, so replace all non-printable characters with spaces
             for(i = 0; i < *pdwSize; i++)
-               if (((*ppszConfig)[i] < _T(' ')) && 
+               if (((*ppszConfig)[i] < _T(' ')) &&
                    ((*ppszConfig)[i] != _T('\t')) &&
                    ((*ppszConfig)[i] != _T('\r')) &&
                    ((*ppszConfig)[i] != _T('\n')))
@@ -1493,7 +1513,7 @@ void AgentConnection::setProxy(UINT32 dwAddr, WORD wPort, int iAuthMethod, const
    if (pszSecret != NULL)
    {
 #ifdef UNICODE
-      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
+      WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                           pszSecret, -1, m_szProxySecret, MAX_SECRET_LENGTH, NULL, NULL);
 #else
       nx_strncpy(m_szProxySecret, pszSecret, MAX_SECRET_LENGTH);
@@ -1527,11 +1547,9 @@ UINT32 AgentConnection::setupProxyConnection()
       return ERR_CONNECTION_BROKEN;
 }
 
-
-//
-// Enable trap receiving on connection
-//
-
+/**
+ * Enable trap receiving on connection
+ */
 UINT32 AgentConnection::enableTraps()
 {
    CSCPMessage msg(m_nProtocolVersion);
@@ -1546,13 +1564,11 @@ UINT32 AgentConnection::enableTraps()
       return ERR_CONNECTION_BROKEN;
 }
 
-
-//
-// Send custom request to agent
-//
-
-CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *recvFile, bool appendFile,
-														  void (*downloadProgressCallback)(size_t, void *), void *cbArg)
+/**
+ * Send custom request to agent
+ */
+CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *recvFile, bool append, void (*downloadProgressCallback)(size_t, void *),
+														  void (*fileResendCallback)(CSCP_MESSAGE*, void *), void *cbArg)
 {
    UINT32 dwRqId, rcc;
 	CSCPMessage *msg = NULL;
@@ -1561,7 +1577,7 @@ CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *
    pRequest->SetId(dwRqId);
 	if (recvFile != NULL)
 	{
-		rcc = prepareFileDownload(recvFile, dwRqId, appendFile, downloadProgressCallback, cbArg);
+		rcc = prepareFileDownload(recvFile, dwRqId, append, downloadProgressCallback, fileResendCallback,cbArg);
 		if (rcc != ERR_SUCCESS)
 		{
 			// Create fake response message
@@ -1597,65 +1613,82 @@ CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *
 				}
 				else
 				{
-					close(m_hCurrFile);
-					m_hCurrFile = -1;
-					_tremove(recvFile);
+               if (fileResendCallback != NULL)
+               {
+                  close(m_hCurrFile);
+                  m_hCurrFile = -1;
+                  _tremove(recvFile);
+               }
 				}
 			}
+
 		}
 	}
 
 	return msg;
 }
 
-
-//
-// Prepare for file upload
-//
-
-UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append,
-														 void (*downloadProgressCallback)(size_t, void *), void *cbArg)
+/**
+ * Prepare for file download
+ */
+UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *),
+                                             void (*fileResendCallback)(CSCP_MESSAGE *, void *), void *cbArg)
 {
-	if (m_hCurrFile != -1)
-		return ERR_RESOURCE_BUSY;
+   if (fileResendCallback == NULL)
+   {
+      if (m_hCurrFile != -1)
+         return ERR_RESOURCE_BUSY;
 
-	nx_strncpy(m_currentFileName, fileName, MAX_PATH);
-	ConditionReset(m_condFileDownload);
-	m_hCurrFile = _topen(fileName, (append ? 0 : (O_CREAT | O_TRUNC)) | O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
-	if (m_hCurrFile == -1)
-	{
-		DbgPrintf(4, _T("AgentConnection::PrepareFileDownload(): cannot open file %s (%s); append=%d rqId=%d"),
-		          fileName, _tcserror(errno), append, rqId);
-	}
-	else 
-	{
-		if (append)
-			lseek(m_hCurrFile, 0, SEEK_END);
-	}
-	m_dwDownloadRequestId = rqId;
-	m_downloadProgressCallback = downloadProgressCallback;
-	m_downloadProgressCallbackArg = cbArg;
-	return (m_hCurrFile != -1) ? ERR_SUCCESS : ERR_FILE_OPEN_ERROR;
+      nx_strncpy(m_currentFileName, fileName, MAX_PATH);
+      ConditionReset(m_condFileDownload);
+      m_hCurrFile = _topen(fileName, (append ? 0 : (O_CREAT | O_TRUNC)) | O_RDWR | O_BINARY, S_IREAD | S_IWRITE);
+      if (m_hCurrFile == -1)
+      {
+         DbgPrintf(4, _T("AgentConnection::PrepareFileDownload(): cannot open file %s (%s); append=%d rqId=%d"),
+                   fileName, _tcserror(errno), append, rqId);
+      }
+      else
+      {
+         if (append)
+            lseek(m_hCurrFile, 0, SEEK_END);
+      }
+
+      m_dwDownloadRequestId = rqId;
+      m_downloadProgressCallback = downloadProgressCallback;
+      m_downloadProgressCallbackArg = cbArg;
+
+      m_sendToClientMessageCallback = NULL;
+
+      return (m_hCurrFile != -1) ? ERR_SUCCESS : ERR_FILE_OPEN_ERROR;
+   }
+   else
+   {
+      ConditionReset(m_condFileDownload);
+
+      m_dwDownloadRequestId = rqId;
+      m_downloadProgressCallback = downloadProgressCallback;
+      m_downloadProgressCallbackArg = cbArg;
+
+      m_sendToClientMessageCallback = fileResendCallback;
+
+      return ERR_SUCCESS;
+   }
 }
 
-
-//
-// File upload completion handler
-//
-
+/**
+ * File upload completion handler
+ */
 void AgentConnection::onFileDownload(BOOL success)
 {
-	if (!success && m_deleteFileOnDownloadFailure)
+   if (!success && m_deleteFileOnDownloadFailure)
 		_tremove(m_currentFileName);
 	m_fileDownloadSucceeded = success;
 	ConditionSet(m_condFileDownload);
 }
 
-
-//
-// Enable trap receiving on connection
-//
-
+/**
+ * Enable trap receiving on connection
+ */
 UINT32 AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
 {
    CSCPMessage msg(m_nProtocolVersion);
@@ -1687,11 +1720,9 @@ UINT32 AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
 	return rcc;
 }
 
-
-//
-// Uninstall policy by GUID
-//
-
+/**
+ * Uninstall policy by GUID
+ */
 UINT32 AgentConnection::uninstallPolicy(uuid_t guid)
 {
 	UINT32 rqId, rcc;

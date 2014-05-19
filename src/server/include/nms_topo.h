@@ -33,6 +33,7 @@ class Interface;
  */
 struct LLDP_LOCAL_PORT_INFO
 {
+   UINT32 portNumber;
 	BYTE localId[256];
 	size_t localIdLen;
 	TCHAR ifDescr[192];
@@ -47,6 +48,7 @@ struct HOP_INFO
    NetObj *object;    // Current hop object
    UINT32 ifIndex;     // Interface index or VPN connector object ID
    bool isVpn;        // TRUE if next hop is behind VPN tunnel
+   TCHAR name[MAX_OBJECT_NAME];
 };
 
 /**
@@ -55,18 +57,20 @@ struct HOP_INFO
 class NetworkPath
 {
 private:
+   UINT32 m_sourceAddress;
 	int m_hopCount;
 	int m_allocated;
 	HOP_INFO *m_path;
 	bool m_complete;
 
 public:
-	NetworkPath();
+	NetworkPath(UINT32 srcAddr);
 	~NetworkPath();
 
-	void addHop(UINT32 nextHop, NetObj *currentObject, UINT32 ifIndex, bool isVpn);
+	void addHop(UINT32 nextHop, NetObj *currentObject, UINT32 ifIndex, bool isVpn, const TCHAR *name);
 	void setComplete() { m_complete = true; }
 
+   UINT32 getSourceAddress() { return m_sourceAddress; }
 	bool isComplete() { return m_complete; }
 	int getHopCount() { return m_hopCount; }
 	HOP_INFO *getHopInfo(int index) { return ((index >= 0) && (index < m_hopCount)) ? &m_path[index] : NULL; }
@@ -135,11 +139,13 @@ public:
  */
 enum LinkLayerProtocol
 {
-   LL_PROTO_FDB  = 0,	/* obtained from switch forwarding database */
-   LL_PROTO_CDP  = 1,	/* Cisco Discovery Protocol */
-   LL_PROTO_LLDP = 2,	/* Link Layer Discovery Protocol */
-   LL_PROTO_NDP  = 3,	/* Nortel Discovery Protocol */
-   LL_PROTO_EDP  = 4		/* Extreme Discovery Protocol */
+   LL_PROTO_UNKNOWN = 0, /* unknown source */
+   LL_PROTO_FDB  = 1,    /* obtained from switch forwarding database */
+   LL_PROTO_CDP  = 2,    /* Cisco Discovery Protocol */
+   LL_PROTO_LLDP = 3,    /* Link Layer Discovery Protocol */
+   LL_PROTO_NDP  = 4,    /* Nortel Discovery Protocol */
+   LL_PROTO_EDP  = 5,    /* Extreme Discovery Protocol */
+   LL_PROTO_STP  = 6     /* Spanning Tree Protocol */
 };
 
 /**
@@ -252,7 +258,7 @@ public:
 NetworkPath *TraceRoute(Node *pSrc, Node *pDest);
 void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth, bool includeEndNodes);
 ForwardingDatabase *GetSwitchForwardingDatabase(Node *node);
-Interface *FindInterfaceConnectionPoint(const BYTE *macAddr, bool *exactMatch);
+NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type);
 
 ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp);
 
@@ -260,6 +266,8 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node);
 void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddNDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddCDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
+void AddSTPNeighbors(Node *node, LinkLayerNeighbors *nbs);
+void BuildLldpId(int type, const BYTE *data, int length, TCHAR *id, int idLen);
 
 void BridgeMapPorts(int snmpVersion, SNMP_Transport *transport, InterfaceList *ifList);
 

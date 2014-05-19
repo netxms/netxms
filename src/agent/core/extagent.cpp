@@ -65,7 +65,7 @@ bool ExternalSubagent::sendMessage(CSCPMessage *msg)
 	TCHAR buffer[256];
 	AgentWriteDebugLog(6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->GetCode(), buffer));
 
-	CSCP_MESSAGE *rawMsg = msg->CreateMessage();
+	CSCP_MESSAGE *rawMsg = msg->createMessage();
 	MutexLock(m_mutexPipeWrite);
    bool success = SendMessageToPipe(m_pipe, rawMsg);
 	MutexUnlock(m_mutexPipeWrite);
@@ -133,6 +133,7 @@ CSCPMessage *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent)
 void ExternalSubagent::connect(HPIPE hPipe)
 {
 	TCHAR buffer[256];
+   UINT32 i;
 
 	m_pipe = hPipe;
 	m_connected = true;
@@ -151,7 +152,7 @@ void ExternalSubagent::connect(HPIPE hPipe)
       {
          case CMD_PUSH_DCI_DATA:
             MutexLock(g_hSessionListAccess);
-            for(DWORD i = 0; i < g_dwMaxSessions; i++)
+            for(i = 0; i < g_dwMaxSessions; i++)
                if (g_pSessionList[i] != NULL)
                   if (g_pSessionList[i]->canAcceptTraps())
                   {

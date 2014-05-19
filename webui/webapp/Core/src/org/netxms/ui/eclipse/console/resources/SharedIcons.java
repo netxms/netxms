@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ public class SharedIcons
 {
 	public static ImageDescriptor ADD_OBJECT;
 	public static ImageDescriptor ALARM;
+   public static ImageDescriptor BROWSER;
 	public static ImageDescriptor CHECKBOX_OFF;
 	public static ImageDescriptor CHECKBOX_ON;
 	public static ImageDescriptor CLEAR;
@@ -63,6 +64,7 @@ public class SharedIcons
 	
 	public static Image IMG_ADD_OBJECT;
 	public static Image IMG_ALARM;
+   public static Image IMG_BROWSER;
 	public static Image IMG_CHECKBOX_OFF;
 	public static Image IMG_CHECKBOX_ON;
 	public static Image IMG_CLEAR;
@@ -101,6 +103,7 @@ public class SharedIcons
 	{
 		ADD_OBJECT = Activator.getImageDescriptor("icons/add_obj.gif"); //$NON-NLS-1$
 		ALARM = Activator.getImageDescriptor("icons/alarm.png"); //$NON-NLS-1$
+      BROWSER = Activator.getImageDescriptor("icons/browser.png"); //$NON-NLS-1$
 		CHECKBOX_OFF = Activator.getImageDescriptor("icons/checkbox_off.png"); //$NON-NLS-1$
 		CHECKBOX_ON = Activator.getImageDescriptor("icons/checkbox_on.png"); //$NON-NLS-1$
 		CLEAR = Activator.getImageDescriptor("icons/clear.gif"); //$NON-NLS-1$
@@ -134,6 +137,7 @@ public class SharedIcons
 
 		IMG_ADD_OBJECT = ADD_OBJECT.createImage(display);
 		IMG_ALARM = ALARM.createImage(display);
+      IMG_BROWSER = BROWSER.createImage(display);
 		IMG_CHECKBOX_OFF = CHECKBOX_OFF.createImage(display);
 		IMG_CHECKBOX_ON = CHECKBOX_ON.createImage(display);
 		IMG_CLEAR = CLEAR.createImage(display);

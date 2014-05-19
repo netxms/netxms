@@ -207,13 +207,13 @@ UINT32 Dashboard::ModifyFromMessage(CSCPMessage *request, BOOL alreadyLocked)
 	if (!alreadyLocked)
 		LockData();
 
-	if (request->IsVariableExist(VID_NUM_COLUMNS))
+	if (request->isFieldExist(VID_NUM_COLUMNS))
 		m_numColumns = (int)request->GetVariableShort(VID_NUM_COLUMNS);
 
-	if (request->IsVariableExist(VID_FLAGS))
+	if (request->isFieldExist(VID_FLAGS))
 		m_options = (int)request->GetVariableLong(VID_FLAGS);
 
-	if (request->IsVariableExist(VID_NUM_ELEMENTS))
+	if (request->isFieldExist(VID_NUM_ELEMENTS))
 	{
 		m_elements->clear();
 

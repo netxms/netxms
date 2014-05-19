@@ -77,7 +77,6 @@ typedef void * NXC_SESSION;
 #define MAX_AGENT_VERSION_LEN    64
 #define MAX_PLATFORM_NAME_LEN    64
 #define MAX_PACKAGE_NAME_LEN     64
-#define MAX_HELPDESK_REF_LEN     64
 #define GROUP_EVERYONE           ((UINT32)0x80000000)
 #define INVALID_UID              ((UINT32)0xFFFFFFFF)
 #define OBJECT_STATUS_COUNT      9
@@ -157,9 +156,6 @@ typedef void * NXC_SESSION;
 #define OBJECT_NETWORKMAP           21
 #define OBJECT_DASHBOARDROOT        22
 #define OBJECT_DASHBOARD            23
-#define OBJECT_REPORTROOT           24
-#define OBJECT_REPORTGROUP          25
-#define OBJECT_REPORT               26
 #define OBJECT_BUSINESSSERVICEROOT  27
 #define OBJECT_BUSINESSSERVICE      28
 #define OBJECT_NODELINK             29
@@ -216,8 +212,8 @@ typedef void * NXC_SESSION;
 /**
  * Node flags
  */
-#define NF_SYSTEM_FLAGS           0x003FFFFF
-#define NF_USER_FLAGS             0xFFC00000
+#define NF_SYSTEM_FLAGS           0x003FFF7F
+#define NF_USER_FLAGS             0xFFC00080
 
 #define NF_IS_SNMP                0x00000001
 #define NF_IS_NATIVE_AGENT        0x00000002
@@ -226,7 +222,7 @@ typedef void * NXC_SESSION;
 #define NF_IS_LOCAL_MGMT          0x00000010
 #define NF_IS_PRINTER             0x00000020
 #define NF_IS_OSPF                0x00000040
-#define NF_BEHIND_NAT             0x00000080
+#define NF_REMOTE_AGENT           0x00000080
 #define NF_IS_CPSNMP              0x00000100  /* CheckPoint SNMP agent on port 260 */
 #define NF_IS_CDP                 0x00000200
 #define NF_IS_NDP                 0x00000400  /* Supports Nortel (Synoptics/Bay Networks) topology discovery */
@@ -320,29 +316,23 @@ typedef void * NXC_SESSION;
 #define SA_PROPAGATE_RELATIVE             3
 #define SA_PROPAGATE_TRANSLATED           4
 
-
-//
-// Network map types
-//
-
+/**
+ * Network map types
+ */
 #define MAP_TYPE_CUSTOM          0
 #define MAP_TYPE_LAYER2_TOPOLOGY 1
 #define MAP_TYPE_IP_TOPOLOGY     2
 
-
-//
-// Components that can be locked by management pack installer
-//
-
+/**
+ * Components that can be locked by management pack installer
+ */
 #define NXMP_LC_EVENTDB    0
 #define NXMP_LC_EPP        1
 #define NXMP_LC_TRAPCFG    2
 
-
-//
-// Service types
-//
-
+/**
+ * Network service types
+ */
 enum
 {
 	NETSRV_CUSTOM,
@@ -355,28 +345,29 @@ enum
 	NETSRV_TELNET
 };
 
-
-//
-// Address list types
-//
-
+/**
+ * Address list types
+ */
 #define ADDR_LIST_DISCOVERY_TARGETS    1
 #define ADDR_LIST_DISCOVERY_FILTER     2
 
-
-//
-// Discovery filter flags
-//
-
+/**
+ * Discovery filter flags
+ */
 #define DFF_ALLOW_AGENT                0x0001
 #define DFF_ALLOW_SNMP                 0x0002
 #define DFF_ONLY_RANGE                 0x0004
 
+/**
+ * Connection point types
+ */
+#define CP_TYPE_INDIRECT      0
+#define CP_TYPE_DIRECT        1
+#define CP_TYPE_WIRELESS      2
 
-//
-// Events
-//
-
+/**
+ * Events
+ */
 #define NXC_EVENT_CONNECTION_BROKEN    1
 #define NXC_EVENT_NEW_ELOG_RECORD      2
 #define NXC_EVENT_USER_DB_CHANGED      3
@@ -426,6 +417,7 @@ enum
 #define NX_NOTIFY_CERTIFICATE_CHANGED        23
 #define NX_NOTIFY_ALARM_STATUS_FLOW_CHANGED  24
 #define NX_NOTIFY_FILE_LIST_CHANGED          25
+#define NX_NOTIFY_FILE_MONITORING_FAILED     26
 
 /**
  * Request completion codes
@@ -538,6 +530,10 @@ enum
 #define RCC_LICENSE_VIOLATION        ((UINT32)105)
 #define RCC_CLIENT_LICENSE_EXCEEDED  ((UINT32)106)
 #define RCC_OBJECT_ALREADY_EXISTS    ((UINT32)107)
+#define RCC_NO_HDLINK                ((UINT32)108)
+#define RCC_HDLINK_COMM_FAILURE      ((UINT32)109)
+#define RCC_HDLINK_ACCESS_DENIED     ((UINT32)110)
+#define RCC_HDLINK_INTERNAL_ERROR    ((UINT32)111)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -626,41 +622,37 @@ enum
 #define SYSTEM_ACCESS_REPORTING_SERVER    0x02000000
 #define SYSTEM_ACCESS_XMPP_COMMANDS       0x04000000
 #define SYSTEM_ACCESS_MANAGE_IMAGE_LIB    0x08000000
+#define SYSTEM_ACCESS_UNLINK_ISSUES       0x10000000
 
-#define SYSTEM_ACCESS_FULL                0x07FFFFFF
+#define SYSTEM_ACCESS_FULL                0x1FFFFFFF
 
 #endif	/* LIBNXCL_CUSTOM_USER_RIGHTS */
 
-
-//
-// Object access rights
-//
-
+/**
+ * Object access rights
+ */
 #define OBJECT_ACCESS_READ          0x00000001
 #define OBJECT_ACCESS_MODIFY        0x00000002
 #define OBJECT_ACCESS_CREATE        0x00000004
 #define OBJECT_ACCESS_DELETE        0x00000008
 #define OBJECT_ACCESS_READ_ALARMS   0x00000010
 #define OBJECT_ACCESS_ACL           0x00000020
-#define OBJECT_ACCESS_ACK_ALARMS    0x00000040
+#define OBJECT_ACCESS_UPDATE_ALARMS 0x00000040
 #define OBJECT_ACCESS_SEND_EVENTS   0x00000080
 #define OBJECT_ACCESS_CONTROL       0x00000100
 #define OBJECT_ACCESS_TERM_ALARMS   0x00000200
 #define OBJECT_ACCESS_PUSH_DATA     0x00000400
+#define OBJECT_ACCESS_CREATE_ISSUE  0x00000800
 
-
-//
-// Object sync flags
-//
-
+/**
+ * Object sync flags
+ */
 #define OBJECT_SYNC_SEND_UPDATES    0x0001
 #define OBJECT_SYNC_DUAL_CONFIRM    0x0002
 
-
-//
-// User/group flags
-//
-
+/**
+ * User/group flags
+ */
 #define UF_MODIFIED                 0x0001
 #define UF_DELETED                  0x0002
 #define UF_DISABLED                 0x0004
@@ -2223,11 +2215,11 @@ void LIBNXCL_EXPORTABLE NXCCopyEventPolicyRuleToBuffer(NXC_EPP_RULE *dst, NXC_EP
 
 /** Alarms **/
 UINT32 LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, UINT32 *pdwNumAlarms, NXC_ALARM **ppAlarmList);
-UINT32 LIBNXCL_EXPORTABLE NXCAcknowledgeAlarm(NXC_SESSION hSession, UINT32 dwAlarmId);
+UINT32 LIBNXCL_EXPORTABLE NXCAcknowledgeAlarm(NXC_SESSION hSession, UINT32 alarmId);
+UINT32 LIBNXCL_EXPORTABLE NXCAcknowledgeAlarmEx(NXC_SESSION hSession, UINT32 alarmId, bool sticky, UINT32 timeout);
 UINT32 LIBNXCL_EXPORTABLE NXCTerminateAlarm(NXC_SESSION hSession, UINT32 dwAlarmId);
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteAlarm(NXC_SESSION hSession, UINT32 dwAlarmId);
-UINT32 LIBNXCL_EXPORTABLE NXCOpenAlarm(NXC_SESSION hSession, UINT32 dwAlarmId, TCHAR *pszHelpdeskRef);
-UINT32 LIBNXCL_EXPORTABLE NXCCloseAlarm(NXC_SESSION hSession, UINT32 dwAlarmId);
+UINT32 LIBNXCL_EXPORTABLE NXCOpenHelpdeskIssue(NXC_SESSION hSession, UINT32 dwAlarmId, TCHAR *pszHelpdeskRef);
 TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *alarm, TCHAR *format);
 
 /** Actions **/

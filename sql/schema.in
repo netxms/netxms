@@ -37,7 +37,7 @@ CREATE TABLE config
 CREATE TABLE config_clob
 (
 	var_name varchar(63) not null,
-	var_value SQL_TEXT not null,
+	var_value SQL_TEXT null,
 	PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 
@@ -185,11 +185,9 @@ CREATE TABLE zones
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Mobile device objects
 */
-
 CREATE TABLE mobile_devices
 (
 	id integer not null,
@@ -204,11 +202,9 @@ CREATE TABLE mobile_devices
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Access point objects
 */
-
 CREATE TABLE access_points
 (
 	id integer not null,
@@ -217,14 +213,13 @@ CREATE TABLE access_points
 	vendor varchar(64) null,
 	model varchar(128) null,
 	serial_number varchar(64) null,
+   ap_state integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
-
 
 /*
 ** Rack objects
 */
-
 CREATE TABLE racks
 (
 	id integer not null,
@@ -232,11 +227,9 @@ CREATE TABLE racks
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Nodes information
 */
-
 CREATE TABLE nodes
 (
 	id integer not null,
@@ -362,6 +355,7 @@ CREATE TABLE interfaces
 	phy_port integer not null,
 	peer_node_id integer not null,
 	peer_if_id integer not null,
+   peer_proto integer not null,
 	mac_addr varchar(12) not null,
 	required_polls integer not null,
 	admin_state integer not null,
@@ -392,11 +386,9 @@ CREATE TABLE network_services
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** VPN connectors
 */
-
 CREATE TABLE vpn_connectors
 (
 	id integer not null,
@@ -405,11 +397,9 @@ CREATE TABLE vpn_connectors
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** VPN connector networks
 */
-
 CREATE TABLE vpn_connector_networks
 (
 	vpn_id integer not null,
@@ -886,6 +876,7 @@ CREATE TABLE thresholds
 	repeat_interval integer not null,
 	current_state integer not null,
 	current_severity integer not null,
+   match_count integer not null,
 	last_event_timestamp integer not null,
 	PRIMARY KEY(threshold_id)
 ) TABLE_TYPE;
@@ -1287,6 +1278,7 @@ CREATE TABLE network_map_elements
 	element_id integer not null,
 	element_type integer not null,
 	element_data SQL_TEXT not null,
+	flags integer not null,
 	PRIMARY KEY(map_id,element_id)
 ) TABLE_TYPE;
 
@@ -1306,6 +1298,8 @@ CREATE TABLE network_map_links
 	status_object integer not null,
 	routing integer not null,
 	bend_points SQL_TEXT4K null,
+	element_data SQL_TEXT null,
+	flags integer not null,
 	PRIMARY KEY(map_id,element1,element2)
 ) TABLE_TYPE;
 
@@ -1479,31 +1473,8 @@ CREATE TABLE job_history
 ) TABLE_TYPE;
 
 /*
-** Reports
-*/
-CREATE TABLE reports
-(
-	id integer not null,
-	definition SQL_TEXT null,
-	PRIMARY KEY(id)
-) TABLE_TYPE;
-
-/*
-** Report Results
-*/
-CREATE TABLE report_results
-(
-	report_id integer not null,
-	generated integer not null,
-	job_id integer not null,
-	PRIMARY KEY(report_id, job_id)
-) TABLE_TYPE;
-
-
-/*
 ** License repository
 */
-
 CREATE TABLE licenses
 (
 	id integer not null,
@@ -1511,11 +1482,9 @@ CREATE TABLE licenses
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Mapping tables
 */
-
 CREATE TABLE mapping_tables
 (
 	id integer not null,
@@ -1525,11 +1494,9 @@ CREATE TABLE mapping_tables
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Mapping tables content
 */
-
 CREATE TABLE mapping_data
 (
 	table_id integer not null,

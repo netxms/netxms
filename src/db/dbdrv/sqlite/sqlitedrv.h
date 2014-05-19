@@ -41,24 +41,9 @@
 #include <nms_util.h>
 #include "sqlite3.h"
 
-
-//
-// Commands for the worker thread
-//
-
-#define SQLITE_DRV_OPEN       1
-#define SQLITE_DRV_CLOSE      2
-#define SQLITE_DRV_QUERY      3
-#define SQLITE_DRV_SELECT     4
-#define SQLITE_DRV_PREPARE    5
-#define SQLITE_DRV_STEP       6
-#define SQLITE_DRV_FINALIZE   7
-
-
-//
-// Structure of synchronous SELECT result
-//
-
+/**
+ * Structure of synchronous SELECT result
+ */
 typedef struct
 {
    int nRows;
@@ -67,11 +52,9 @@ typedef struct
 	char **ppszNames;
 } SQLITE_RESULT;
 
-
-//
-// Structure of DB connection handle
-//
-
+/**
+ * Structure of DB connection handle
+ */
 typedef struct
 {
    sqlite3 *pdb;
@@ -79,6 +62,5 @@ typedef struct
    sqlite3_stmt *pvm;
    int nNumCols;              // Number of columns in async result
 } SQLITE_CONN;
-
 
 #endif   /* _sqlitedrv_h_ */

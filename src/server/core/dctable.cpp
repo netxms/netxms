@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -216,11 +216,11 @@ DCTable::DCTable(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 	ConfigEntry *columnsRoot = config->findEntry(_T("columns"));
 	if (columnsRoot != NULL)
 	{
-		ConfigEntryList *columns = columnsRoot->getSubEntries(_T("column#*"));
-		m_columns = new ObjectArray<DCTableColumn>(columns->getSize(), 8, true);
-		for(int i = 0; i < columns->getSize(); i++)
+		ObjectArray<ConfigEntry> *columns = columnsRoot->getSubEntries(_T("column#*"));
+		m_columns = new ObjectArray<DCTableColumn>(columns->size(), 8, true);
+		for(int i = 0; i < columns->size(); i++)
 		{
-			m_columns->add(new DCTableColumn(columns->getEntry(i)));
+			m_columns->add(new DCTableColumn(columns->get(i)));
 		}
 		delete columns;
 	}
@@ -232,11 +232,11 @@ DCTable::DCTable(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 	ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
 	if (thresholdsRoot != NULL)
 	{
-		ConfigEntryList *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
-		m_thresholds = new ObjectArray<DCTableThreshold>(thresholds->getSize(), 8, true);
-		for(int i = 0; i < thresholds->getSize(); i++)
+		ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
+		m_thresholds = new ObjectArray<DCTableThreshold>(thresholds->size(), 8, true);
+		for(int i = 0; i < thresholds->size(); i++)
 		{
-			m_thresholds->add(new DCTableThreshold(thresholds->getEntry(i)));
+			m_thresholds->add(new DCTableThreshold(thresholds->get(i)));
 		}
 		delete thresholds;
 	}
@@ -295,9 +295,12 @@ bool DCTable::deleteAllData()
 }
 
 /**
- * Process new collected value
+ * Process new collected value. Should return true on success.
+ * If returns false, current poll result will be converted into data collection error.
+ *
+ * @return true on success
  */
-void DCTable::processNewValue(time_t nTimeStamp, void *value)
+bool DCTable::processNewValue(time_t nTimeStamp, void *value)
 {
    lock();
 
@@ -305,14 +308,20 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
    if (m_pNode == NULL)
    {
       unlock();
-      return;
+      return false;
    }
 
    // Transform input value
    // Cluster can have only aggregated data, and transformation
    // should not be used on aggregation
    if ((m_pNode->Type() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
-      transform((Table *)value);
+   {
+      if (!transform((Table *)value))
+      {
+         unlock();
+         return false;
+      }
+   }
 
    m_dwErrorCount = 0;
    if (m_lastValue != NULL)
@@ -336,7 +345,7 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
       if (!DBBegin(hdb))
       {
    	   DBConnectionPoolReleaseConnection(hdb);
-         return;
+         return true;
       }
 
       INT64 recordId = ((INT64)time(NULL) << 30) | (((INT64)tableId & 0xFFFF) << 14);
@@ -420,21 +429,18 @@ void DCTable::processNewValue(time_t nTimeStamp, void *value)
 	   DBConnectionPoolReleaseConnection(hdb);
    }
    checkThresholds((Table *)value);
+   return true;
 }
 
 /**
  * Transform received value
  */
-void DCTable::transform(Table *value)
+bool DCTable::transform(Table *value)
 {
    if (m_transformationScript == NULL)
-      return;
+      return true;
 
-   NXSL_Value *nxslValue;
-   NXSL_ServerEnv *pEnv;
-
-   nxslValue = new NXSL_Value(new NXSL_Object(&g_nxslStaticTableClass, value));
-   pEnv = new NXSL_ServerEnv;
+   NXSL_Value *nxslValue = new NXSL_Value(new NXSL_Object(&g_nxslStaticTableClass, value));
    m_transformationScript->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pNode)));
    if (m_pNode->Type() == OBJECT_NODE)
    {
@@ -443,14 +449,17 @@ void DCTable::transform(Table *value)
    m_transformationScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
    m_transformationScript->setGlobalVariable(_T("$isCluster"), new NXSL_Value((m_pNode->Type() == OBJECT_CLUSTER) ? 1 : 0));
 
-   if (m_transformationScript->run(pEnv, 1, &nxslValue) != 0)
+   bool success = true;
+   if (!m_transformationScript->run(1, &nxslValue))
    {
       TCHAR szBuffer[1024];
 
 		_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::TransformationScript"),
                  (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
       PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, m_transformationScript->getErrorText(), m_dwId);
+      success = false;
    }
+   return success;
 }
 
 /**
@@ -690,7 +699,7 @@ void DCTable::createMessage(CSCPMessage *pMsg)
 		pMsg->SetVariable(varId++, column->getFlags());
 		SNMP_ObjectId *oid = column->getSnmpOid();
 		if (oid != NULL)
-			pMsg->SetVariableToInt32Array(varId++, oid->getLength(), oid->getValue());
+			pMsg->setFieldInt32Array(varId++, (UINT32)oid->getLength(), oid->getValue());
 		else
 			varId++;
 		pMsg->SetVariable(varId++, column->getDisplayName());

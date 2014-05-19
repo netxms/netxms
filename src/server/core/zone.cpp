@@ -185,23 +185,21 @@ void Zone::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_ICMP_PROXY, m_icmpProxy);
 }
 
-
-//
-// Modify object from message
-//
-
+/**
+ * Modify object from message
+ */
 UINT32 Zone::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       LockData();
 
-	if (pRequest->IsVariableExist(VID_AGENT_PROXY))
+	if (pRequest->isFieldExist(VID_AGENT_PROXY))
 		m_agentProxy = pRequest->GetVariableLong(VID_AGENT_PROXY);
 
-	if (pRequest->IsVariableExist(VID_SNMP_PROXY))
+	if (pRequest->isFieldExist(VID_SNMP_PROXY))
 		m_snmpProxy = pRequest->GetVariableLong(VID_SNMP_PROXY);
 
-	if (pRequest->IsVariableExist(VID_ICMP_PROXY))
+	if (pRequest->isFieldExist(VID_ICMP_PROXY))
 		m_icmpProxy = pRequest->GetVariableLong(VID_ICMP_PROXY);
 
    return NetObj::ModifyFromMessage(pRequest, TRUE);

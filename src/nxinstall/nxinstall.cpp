@@ -38,7 +38,6 @@ int main(int argc, char *argv[])
    TCHAR *pszSource, szError[1024];
    UINT32 dwSize;
    NXSL_Program *pScript;
-   NXSL_Environment *pEnv;
    NXSL_Value **ppArgs;
    int i, ch;
    bool dump = false, printResult = false, quiet = false;
@@ -111,7 +110,9 @@ int main(int argc, char *argv[])
 		{
 			if (dump)
 				pScript->dump(stdout);
-			pEnv = new NXSL_InstallerEnvironment;
+
+         // Create VM
+         NXSL_VM *vm = new NXSL_VM(new NXSL_InstallerEnvironment);
 
 			// Prepare arguments
 			if (argc - optind > 1)
@@ -125,17 +126,18 @@ int main(int argc, char *argv[])
 				ppArgs = NULL;
 			}
 
-			if (pScript->run(pEnv, argc - optind - 1, ppArgs) == 0)
+			if (vm->load(pScript) && vm->run(argc - optind - 1, ppArgs))
 			{
-				NXSL_Value *result = pScript->getResult();
+				NXSL_Value *result = vm->getResult();
 				if (printResult)
 					_tprintf(_T("Result = %s\n"), (result != NULL) ? result->getValueAsCString() : _T("(null)"));
 			}
 			else
 			{
-				_tprintf(_T("%s\n"), pScript->getErrorText());
+				_tprintf(_T("%s\n"), vm->getErrorText());
 			}
 			delete pScript;
+         delete vm;
 			safe_free(ppArgs);
 		}
 		else

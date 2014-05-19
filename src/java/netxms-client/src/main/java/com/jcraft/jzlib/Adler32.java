@@ -80,7 +80,6 @@ final public class Adler32 implements Checksum {
     }
 
     int k=len2;
-    len-=k;
     while(k-->0){
       s1+=buf[index++]&0xff; s2+=s1;
     }

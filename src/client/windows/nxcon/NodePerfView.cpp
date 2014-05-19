@@ -300,7 +300,7 @@ void CNodePerfView::CreateCustomGraph(NXC_PERFTAB_DCI *dci, RECT &rect)
 	}
 	free(xml);
 
-	if (!config.getValueBoolean(_T("/enabled"), false))
+	if (!config.getValueAsBoolean(_T("/enabled"), false))
 		return;
 
 
@@ -315,9 +315,9 @@ void CNodePerfView::CreateCustomGraph(NXC_PERFTAB_DCI *dci, RECT &rect)
 	m_pGraphList[m_dwNumGraphs].pWnd->SetColorScheme(GCS_LIGHT);
 	m_pGraphList[m_dwNumGraphs].pWnd->m_rgbBkColor = GetSysColor(COLOR_WINDOW);
 	m_pGraphList[m_dwNumGraphs].pWnd->m_rgbTextColor = GetSysColor(COLOR_WINDOWTEXT);
-	m_pGraphList[m_dwNumGraphs].pWnd->m_graphItemStyles[0].nType = config.getValueInt(_T("/type"), GRAPH_TYPE_LINE);
-	m_pGraphList[m_dwNumGraphs].pWnd->m_graphItemStyles[0].rgbColor = config.getValueUInt(_T("/color"), 0x00C000);
-	m_pGraphList[m_dwNumGraphs].pWnd->m_graphItemStyles[0].bShowThresholds = config.getValueBoolean(_T("/showThresholds"), false);
+	m_pGraphList[m_dwNumGraphs].pWnd->m_graphItemStyles[0].nType = config.getValueAsInt(_T("/type"), GRAPH_TYPE_LINE);
+	m_pGraphList[m_dwNumGraphs].pWnd->m_graphItemStyles[0].rgbColor = config.getValueAsUInt(_T("/color"), 0x00C000);
+	m_pGraphList[m_dwNumGraphs].pWnd->m_graphItemStyles[0].bShowThresholds = config.getValueAsBoolean(_T("/showThresholds"), false);
 	m_pGraphList[m_dwNumGraphs].pWnd->Create(WS_CHILD | WS_VISIBLE, rect, this, m_dwNumGraphs);
 	m_dwNumGraphs++;
 	rect.top += GRAPH_HEIGHT + GRAPH_Y_MARGIN;

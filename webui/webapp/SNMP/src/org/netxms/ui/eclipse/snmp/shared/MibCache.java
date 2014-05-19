@@ -54,7 +54,7 @@ public final class MibCache implements ConsoleLoginListener
 	@Override
 	public void afterLogin(final NXCSession session, Display display)
 	{
-		ConsoleJob job = new ConsoleJob(Messages.get().LoginListener_JobTitle, null, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(Messages.get(display).LoginListener_JobTitle, null, Activator.PLUGIN_ID, null, display) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

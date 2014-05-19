@@ -32,20 +32,16 @@ BOOL EF_SetupSession(ISCSession *, CSCPMessage *request)
 	return TRUE;
 }
 
-
-//
-// Close event forwarding session
-//
-
+/**
+ * Close event forwarding session
+ */
 void EF_CloseSession(ISCSession *)
 {
 }
 
-
-//
-// Process event forwarding session message
-//
-
+/**
+ * Process event forwarding session message
+ */
 BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *response)
 {
 	int i, numArgs;
@@ -96,7 +92,7 @@ BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *r
 				numArgs = 32;
 			for(i = 0; i < numArgs; i++)
 				argList[i] = request->GetVariableStr(VID_EVENT_ARG_BASE + i);
-			tagExist = request->IsVariableExist(VID_USER_TAG);
+			tagExist = request->isFieldExist(VID_USER_TAG);
 			if (tagExist)
 				request->GetVariableStr(VID_USER_TAG, userTag, MAX_USERTAG_LENGTH);
 

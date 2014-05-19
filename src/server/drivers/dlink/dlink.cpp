@@ -23,10 +23,9 @@
 #include "dlink.h"
 
 /**
- * Static data
+ * Driver name
  */
 static TCHAR s_driverName[] = _T("DLINK");
-static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 
 /**
  * Get driver name
@@ -41,7 +40,7 @@ const TCHAR *DLinkDriver::getName()
  */
 const TCHAR *DLinkDriver::getVersion()
 {
-	return s_driverVersion;
+	return NETXMS_VERSION_STRING;
 }
 
 /**
@@ -73,7 +72,7 @@ bool DLinkDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData)
+void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
 {
 	attributes->set(_T(".dlink.slotSize"), 48);
 }
@@ -84,7 +83,7 @@ void DLinkDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMa
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
+InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);

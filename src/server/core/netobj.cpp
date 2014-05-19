@@ -874,7 +874,7 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_SUBMAP_ID, m_submapId);
 	pMsg->SetVariable(VID_NUM_TRUSTED_NODES, m_dwNumTrustedNodes);
 	if (m_dwNumTrustedNodes > 0)
-		pMsg->SetVariableToInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
+		pMsg->setFieldInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
 
 	pMsg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_customAttributes.getSize());
 	for(i = 0, dwId = VID_CUSTOM_ATTRIBUTES_BASE; i < m_customAttributes.getSize(); i++)
@@ -924,34 +924,34 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       LockData();
 
    // Change object's name
-   if (pRequest->IsVariableExist(VID_OBJECT_NAME))
+   if (pRequest->isFieldExist(VID_OBJECT_NAME))
       pRequest->GetVariableStr(VID_OBJECT_NAME, m_szName, MAX_OBJECT_NAME);
 
    // Change object's status calculation/propagation algorithms
-   if (pRequest->IsVariableExist(VID_STATUS_CALCULATION_ALG))
+   if (pRequest->isFieldExist(VID_STATUS_CALCULATION_ALG))
    {
-      m_iStatusCalcAlg = (int)pRequest->GetVariableShort(VID_STATUS_CALCULATION_ALG);
-      m_iStatusPropAlg = (int)pRequest->GetVariableShort(VID_STATUS_PROPAGATION_ALG);
-      m_iFixedStatus = (int)pRequest->GetVariableShort(VID_FIXED_STATUS);
-      m_iStatusShift = pRequest->GetVariableShortAsInt32(VID_STATUS_SHIFT);
-      m_iStatusTranslation[0] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_1);
-      m_iStatusTranslation[1] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_2);
-      m_iStatusTranslation[2] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_3);
-      m_iStatusTranslation[3] = (int)pRequest->GetVariableShort(VID_STATUS_TRANSLATION_4);
-      m_iStatusSingleThreshold = (int)pRequest->GetVariableShort(VID_STATUS_SINGLE_THRESHOLD);
-      m_iStatusThresholds[0] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_1);
-      m_iStatusThresholds[1] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_2);
-      m_iStatusThresholds[2] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_3);
-      m_iStatusThresholds[3] = (int)pRequest->GetVariableShort(VID_STATUS_THRESHOLD_4);
+      m_iStatusCalcAlg = pRequest->getFieldAsInt16(VID_STATUS_CALCULATION_ALG);
+      m_iStatusPropAlg = pRequest->getFieldAsInt16(VID_STATUS_PROPAGATION_ALG);
+      m_iFixedStatus = pRequest->getFieldAsInt16(VID_FIXED_STATUS);
+      m_iStatusShift = pRequest->getFieldAsInt16(VID_STATUS_SHIFT);
+      m_iStatusTranslation[0] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_1);
+      m_iStatusTranslation[1] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_2);
+      m_iStatusTranslation[2] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_3);
+      m_iStatusTranslation[3] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_4);
+      m_iStatusSingleThreshold = pRequest->getFieldAsInt16(VID_STATUS_SINGLE_THRESHOLD);
+      m_iStatusThresholds[0] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_1);
+      m_iStatusThresholds[1] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_2);
+      m_iStatusThresholds[2] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_3);
+      m_iStatusThresholds[3] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_4);
       bRecalcStatus = TRUE;
    }
 
 	// Change image
-	if (pRequest->IsVariableExist(VID_IMAGE))
+	if (pRequest->isFieldExist(VID_IMAGE))
 		pRequest->GetVariableBinary(VID_IMAGE, m_image, UUID_LENGTH);
 
    // Change object's ACL
-   if (pRequest->IsVariableExist(VID_ACL_SIZE))
+   if (pRequest->isFieldExist(VID_ACL_SIZE))
    {
       UINT32 i, dwNumElements;
 
@@ -966,15 +966,15 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    }
 
 	// Change trusted nodes list
-   if (pRequest->IsVariableExist(VID_NUM_TRUSTED_NODES))
+   if (pRequest->isFieldExist(VID_NUM_TRUSTED_NODES))
    {
       m_dwNumTrustedNodes = pRequest->GetVariableLong(VID_NUM_TRUSTED_NODES);
 		m_pdwTrustedNodes = (UINT32 *)realloc(m_pdwTrustedNodes, sizeof(UINT32) * m_dwNumTrustedNodes);
-		pRequest->GetVariableInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
+		pRequest->getFieldAsInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
    }
 
    // Change custom attributes
-   if (pRequest->IsVariableExist(VID_NUM_CUSTOM_ATTRIBUTES))
+   if (pRequest->isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
    {
       UINT32 i, dwId, dwNumElements;
       TCHAR *name, *value;
@@ -991,12 +991,12 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    }
 
 	// Change geolocation
-	if (pRequest->IsVariableExist(VID_GEOLOCATION_TYPE))
+	if (pRequest->isFieldExist(VID_GEOLOCATION_TYPE))
 	{
 		m_geoLocation = GeoLocation(*pRequest);
 	}
 
-	if (pRequest->IsVariableExist(VID_SUBMAP_ID))
+	if (pRequest->isFieldExist(VID_SUBMAP_ID))
 	{
 		m_submapId = pRequest->GetVariableLong(VID_SUBMAP_ID);
 	}

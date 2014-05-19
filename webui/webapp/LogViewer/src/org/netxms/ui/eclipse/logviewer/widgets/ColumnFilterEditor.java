@@ -196,27 +196,39 @@ public class ColumnFilterEditor extends DashboardComposite
 	 */
 	private ConditionEditor createConditionEditor()
 	{
+	   ConditionEditor editor;
 		switch(column.getType())
 		{
 			case LogColumn.LC_ALARM_HD_STATE:
-				return new AlarmHDStateConditionEditor(this, toolkit);
+				editor = new AlarmHDStateConditionEditor(this, toolkit);
+				break;
 			case LogColumn.LC_ALARM_STATE:
-				return new AlarmStateConditionEditor(this, toolkit);
+			   editor = new AlarmStateConditionEditor(this, toolkit);
+            break;
 			case LogColumn.LC_EVENT_CODE:
-				return new EventConditionEditor(this, toolkit);
+			   editor = new EventConditionEditor(this, toolkit);
+            break;
 			case LogColumn.LC_INTEGER:
-				return new IntegerConditionEditor(this, toolkit);
+			   editor = new IntegerConditionEditor(this, toolkit);
+            break;
 			case LogColumn.LC_OBJECT_ID:
-				return new ObjectConditionEditor(this, toolkit);
+			   editor = new ObjectConditionEditor(this, toolkit);
+            break;
 			case LogColumn.LC_SEVERITY:
-				return new SeverityConditionEditor(this, toolkit);
+			   editor = new SeverityConditionEditor(this, toolkit);
+            break;
 			case LogColumn.LC_TIMESTAMP:
-				return new TimestampConditionEditor(this, toolkit);
+			   editor = new TimestampConditionEditor(this, toolkit);
+            break;
 			case LogColumn.LC_USER_ID:
-				return new UserConditionEditor(this, toolkit);
+			   editor = new UserConditionEditor(this, toolkit);
+            break;
 			default:
-				return new TextConditionEditor(this, toolkit);
+			   editor = new TextConditionEditor(this, toolkit);
+            break;
 		}
+		editor.initialize();
+		return editor;
 	}
 
 	/**

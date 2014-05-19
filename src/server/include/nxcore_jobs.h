@@ -190,6 +190,7 @@ private:
 	TCHAR *m_remoteFile;
 	TCHAR *m_info;
 	INT64 m_fileSize;
+	INT64 m_currentSize;
 	SOCKET m_socket;
 	UINT32 m_maxFileSize;
 	bool m_follow;
@@ -200,12 +201,14 @@ protected:
 	virtual const TCHAR *getAdditionalInfo();
 
 	static void progressCallback(size_t size, void *arg);
+	static void fileResendCallback(CSCP_MESSAGE *msg, void *arg);
 
 public:
 	FileDownloadJob(Node *node, const TCHAR *remoteName, UINT32 maxFileSize, bool follow, ClientSession *session, UINT32 requestId);
 	virtual ~FileDownloadJob();
 
 	static TCHAR *buildServerFileName(UINT32 nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);
+	TCHAR *getLocalFileName();
 };
 
 /**

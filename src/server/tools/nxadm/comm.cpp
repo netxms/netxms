@@ -84,11 +84,9 @@ BOOL Connect()
    return TRUE;
 }
 
-
-//
-// Disconnect from server
-//
-
+/**
+ * Disconnect from server
+ */
 void Disconnect()
 {
    if (g_hSocket != -1)
@@ -99,25 +97,21 @@ void Disconnect()
    }
 }
 
-
-//
-// Send message to server
-//
-
+/**
+ * Send message to server
+ */
 void SendMsg(CSCPMessage *pMsg)
 {
    CSCP_MESSAGE *pRawMsg;
 
-   pRawMsg = pMsg->CreateMessage();
+   pRawMsg = pMsg->createMessage();
    SendEx(g_hSocket, pRawMsg, ntohl(pRawMsg->dwSize), 0, NULL);
    free(pRawMsg);
 }
 
-
-//
-// Receive message
-//
-
+/**
+ * Receive message
+ */
 CSCPMessage *RecvMsg()
 {
    int iError;

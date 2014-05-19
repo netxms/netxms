@@ -104,8 +104,10 @@ static char *curr;
 /**
  * Initialize message
  */
-void nxcp_init_message()
+void nxcp_init_message(uint16_t code)
 {
+   ((NXCP_MESSAGE_HEADER *)nxcp_message)->code = htons(code);
+   ((NXCP_MESSAGE_HEADER *)nxcp_message)->flags = 0;
    ((NXCP_MESSAGE_HEADER *)nxcp_message)->numFields = 0;
    curr = nxcp_message + 16;
 }
@@ -212,20 +214,99 @@ uint32_t nxcp_finalize()
 #endif
    return l;
 }
+
+/**
+ * Do preprocessing on message received into nxcp_message array. Returns message ID.
+ */
+uint32_t nxcp_preprocess_message()
+{
+   ((NXCP_MESSAGE_HEADER *)nxcp_message)->code = ntohs(((NXCP_MESSAGE_HEADER *)nxcp_message)->code);
+   ((NXCP_MESSAGE_HEADER *)nxcp_message)->size = ntohl(((NXCP_MESSAGE_HEADER *)nxcp_message)->size);
+   ((NXCP_MESSAGE_HEADER *)nxcp_message)->numFields = ntohl(((NXCP_MESSAGE_HEADER *)nxcp_message)->numFields);
+   ((NXCP_MESSAGE_HEADER *)nxcp_message)->id = ntohl(((NXCP_MESSAGE_HEADER *)nxcp_message)->id);
+   return ((NXCP_MESSAGE_HEADER *)nxcp_message)->id;
+}
+
+/**
+ * Get request completion code. For simplicity function expects RCC to be first data field.
+ */
+uint32_t nxcp_get_rcc()
+{
+   NXCP_DF *field = (NXCP_DF *)(nxcp_message + 16);
+   if ((field->type == CSCP_DT_INTEGER) && (field->id == htonl(28L)))
+   {
+      return ntohl(field->df_int32);
+   }
+   return 0;
+}
  
 #if 0
 
 /**
- * Example
+ * Login
  */
-void example()
+void login(const char *login, const char *passwd, const char *deviceId)
 {
-   nxcp_init_message();
-   nxcp_add_int16(1, 120);
-   nxcp_add_string(2, "test message");
+   nxcp_init_message(0x0001);
+   nxcp_add_string(1, login);
+   nxcp_add_string(2, password);
+   nxcp_add_string(433, deviceId);
    uint32_t l = nxcp_finalize();
    /* now send l bytes from nxcp_message to the network */
    send(sock, nxcp_message, l, 0);
+}
+
+/**
+ * Data push example
+ */
+void data_push()
+{
+   nxcp_init_message(0x00BB);
+
+   uint32_t id = 0x10000000;
+   
+   // first parameter
+   nxcp_add_int32(id++, 0);
+   nxcp_add_string(id++, "Parameter1");
+   nxcp_add_string(id++, "value1");
+
+   // second parameter
+   nxcp_add_int32(id++, 0);
+   nxcp_add_string(id++, "Parameter2");
+   nxcp_add_string(id++, "value2");
+   
+   // parameter count
+   nxcp_add_int32(111, 2);
+   
+   send(sock, nxcp_message, l, 0);
+}
+
+void send_location()
+{
+   nxcp_init_message(0x0109);
+
+   nxcp_add_int16(342, 2); // location type - GPS
+   nxcp_add_int32(343, lat);  // latitude (float value * 1000000)
+   nxcp_add_int32(344, lon);  // longitude (float value * 1000000)
+   nxcp_add_int16(438, 0); // accuracy in meters
+   nxcp_add_int64(439, ts); // timestamp as UNIX time
+   
+   // it is also possible to report battery level if applicable
+   // (if not applicable, do not set this field)
+   nxcp_add_int16(427, 100);  // battery level %
+
+   send(sock, nxcp_message, l, 0);
+}
+
+/**
+ * Check ID and return code in received message
+ */
+void check_result()
+{
+   recv(sock, nxcp_message, MAX_MSG_SIZE, 0);
+   
+   uint32_t id = nxcp_preprocess_message();  // will match request ID
+   uint32_t rcc = nxcp_get_rcc();   // will be 0 for success
 }
 
 #endif

@@ -40,6 +40,7 @@ import org.netxms.api.client.SessionNotification;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -60,12 +61,6 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
  */
 public class NetworkMapWidget extends Composite
 {
-	protected static final int LAYOUT_SPRING = 0;
-	protected static final int LAYOUT_RADIAL = 1;
-	protected static final int LAYOUT_HTREE = 2;
-	protected static final int LAYOUT_VTREE = 3;
-	protected static final int LAYOUT_SPARSE_VTREE = 4;
-	
 	protected ExtendedGraphViewer viewer;
 	protected MapLabelProvider labelProvider;
 	
@@ -198,9 +193,9 @@ public class NetworkMapWidget extends Composite
 	/**
 	 * @param layout
 	 */
-	public void setMapLayout(int layout)
+	public void setMapLayout(MapLayoutAlgorithm layout)
 	{
-		if (layout == org.netxms.client.objects.NetworkMap.LAYOUT_MANUAL)
+		if (layout == MapLayoutAlgorithm.MANUAL)
 		{
 			viewer.setLayoutAlgorithm(new ManualLayout());
 		}
@@ -214,25 +209,25 @@ public class NetworkMapWidget extends Composite
 	 * Set layout algorithm for map
 	 * @param alg
 	 */
-	private void setLayoutAlgorithm(int alg)
+	private void setLayoutAlgorithm(MapLayoutAlgorithm alg)
 	{
 		LayoutAlgorithm algorithm;
 		
 		switch(alg)
 		{
-			case LAYOUT_SPRING:
+			case SPRING:
 				algorithm = new SpringLayoutAlgorithm();
 				break;
-			case LAYOUT_RADIAL:
+			case RADIAL:
 				algorithm = new RadialLayoutAlgorithm();
 				break;
-			case LAYOUT_HTREE:
+			case HTREE:
 				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.LEFT_RIGHT);
 				break;
-			case LAYOUT_VTREE:
+			case VTREE:
 				algorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
 				break;
-			case LAYOUT_SPARSE_VTREE:
+			case SPARSE_VTREE:
 				TreeLayoutAlgorithm mainLayoutAlgorithm = new TreeLayoutAlgorithm(TreeLayoutAlgorithm.TOP_DOWN);
 				viewer.setComparator(new ViewerComparator() {
 					@Override

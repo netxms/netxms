@@ -58,6 +58,7 @@ public class AbstractChart extends PropertyPage
 	private Button checkShowIn3D;
 	private Button checkTranslucent;
 	private Button checkTransposed;
+   private Button checkLogScale;
    private YAxisRangeEditor yAxisRange;
 
 	/* (non-Javadoc)
@@ -126,6 +127,13 @@ public class AbstractChart extends PropertyPage
          gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
          checkExtendedLegend.setLayoutData(gd);
+         
+         checkLogScale = new Button(optionsGroup, SWT.CHECK);
+         checkLogScale.setText(Messages.get().AbstractChart_LogartithmicScale);
+         checkLogScale.setSelection(((LineChartConfig)config).isLogScaleEnabled());
+         gd = new GridData();
+         gd.horizontalSpan = layout.numColumns;
+         checkLogScale.setLayoutData(gd);
       }
       
 		if (config instanceof ComparisonChartConfig)
@@ -267,6 +275,7 @@ public class AbstractChart extends PropertyPage
 			((LineChartConfig)config).setTimeUnits(timeUnits.getSelectionIndex());
 			((LineChartConfig)config).setShowGrid(checkShowGrid.getSelection());
          ((LineChartConfig)config).setExtendedLegend(checkExtendedLegend.getSelection());
+         ((LineChartConfig)config).setLogScaleEnabled(checkLogScale.getSelection());
 		}
 		return true;
 	}

@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -184,4 +185,14 @@ public class LabeledSpinner extends Composite
 	{
 		return spinner.setFocus();
 	}
+
+	/* (non-Javadoc)
+    * @see org.eclipse.swt.widgets.Control#setBackground(org.eclipse.swt.graphics.Color)
+    */
+   @Override
+   public void setBackground(Color color)
+   {
+      super.setBackground(color);
+      label.setBackground(color);
+   }
 }

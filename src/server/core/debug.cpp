@@ -100,7 +100,7 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
 		}
 		else
 		{
-			CSCP_MESSAGE *pRawMsg = pCtx->pMsg->CreateMessage();
+			CSCP_MESSAGE *pRawMsg = pCtx->pMsg->createMessage();
 			SendEx(pCtx->hSocket, pRawMsg, ntohl(pRawMsg->dwSize), 0, pCtx->socketMutex);
 			free(pRawMsg);
 		}

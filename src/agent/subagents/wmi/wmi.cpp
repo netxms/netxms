@@ -138,6 +138,7 @@ IEnumWbemClassObject *DoWMIQuery(WCHAR *ns, WCHAR *query, WMI_QUERY_CONTEXT *ctx
 	                         NULL, EOAC_NONE,	0) != S_OK)
 	{
 		CoUninitialize();
+      AgentWriteDebugLog(6, _T("WMI: call to CoInitializeSecurity failed"));
 		return NULL;
 	}
 
@@ -155,8 +156,20 @@ IEnumWbemClassObject *DoWMIQuery(WCHAR *ns, WCHAR *query, WMI_QUERY_CONTEXT *ctx
 			{
 				//pEnumObject->Reset();
 			}
+         else
+         {
+            AgentWriteDebugLog(6, _T("WMI: call to pWbemServices->ExecQuery failed"));
+         }
 		}
+      else
+      {
+         AgentWriteDebugLog(6, _T("WMI: call to pWbemLocator->ConnectServer failed"));
+      }
 	}
+   else
+   {
+      AgentWriteDebugLog(6, _T("WMI: call to CoCreateInstance failed"));
+   }
 	if (pEnumObject == NULL)
 		CloseWMIQuery(ctx);
 	return pEnumObject;

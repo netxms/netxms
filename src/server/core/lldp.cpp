@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,9 +28,10 @@
 static UINT32 PortLocalInfoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	LLDP_LOCAL_PORT_INFO *port = new LLDP_LOCAL_PORT_INFO;
+   port->portNumber = var->getName()->getValue()[11];
 	port->localIdLen = var->getRawValue(port->localId, 256);
 
-	SNMP_ObjectId *oid = var->GetName();
+	SNMP_ObjectId *oid = var->getName();
 	UINT32 newOid[128];
 	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(UINT32));
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
@@ -43,7 +44,7 @@ static UINT32 PortLocalInfoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_
 	delete pRqPDU;
 	if (rcc == SNMP_ERR_SUCCESS)
    {
-		pRespPDU->getVariable(0)->GetValueAsString(port->ifDescr, 192);
+		pRespPDU->getVariable(0)->getValueAsString(port->ifDescr, 192);
 		delete pRespPDU;
 	}
 	else
@@ -80,6 +81,7 @@ ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp)
  */
 static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_t idLen, LinkLayerNeighbors *nbs)
 {
+   LLDP_LOCAL_PORT_INFO port;
 	TCHAR ifName[130];
 	Interface *ifc;
 
@@ -118,9 +120,14 @@ static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_
 			}
 			return ifc;
 		case 7:	// local identifier
-			if (node->ifDescrFromLldpLocalId(id, idLen, ifName))
+			if (node->getLldpLocalPortInfo(id, idLen, &port))
 			{
-				ifc = node->findInterface(ifName);	/* TODO: find by cached ifName value */
+            if (node->isBridge())
+               ifc = node->findBridgePort(port.portNumber);
+            else
+               ifc = node->findInterface(port.portNumber, INADDR_ANY);
+            if (ifc == NULL)  // unable to find interface by bridge port number or interface index, try description
+               ifc = node->findInterface(port.ifDescr);	/* TODO: find by cached ifName value */
 			}
 			else
 			{
@@ -139,7 +146,7 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 {
 	LinkLayerNeighbors *nbs = (LinkLayerNeighbors *)arg;
 	Node *node = (Node *)nbs->getData();
-	SNMP_ObjectId *oid = var->GetName();
+	SNMP_ObjectId *oid = var->getName();
 
 	// Get additional info for current record
 	UINT32 newOid[128];
@@ -155,6 +162,9 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 	newOid[oid->getLength() - 4] = 6;	// lldpRemPortIdSubtype
 	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
 
+	newOid[oid->getLength() - 4] = 8;	// lldpRemPortDesc
+	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
+
 	SNMP_PDU *pRespPDU = NULL;
    UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 	delete pRqPDU;
@@ -162,9 +172,7 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
    {
 		// Build LLDP ID for remote system
 		TCHAR remoteId[256];
-		_sntprintf(remoteId, 256, _T("%d@"), (int)pRespPDU->getVariable(0)->GetValueAsInt());
-		BinToStr(var->GetValue(), var->GetValueLength(), &remoteId[_tcslen(remoteId)]);
-
+      BuildLldpId(pRespPDU->getVariable(0)->getValueAsInt(), var->getValue(), (int)var->getValueLength(), remoteId, 256);
 		Node *remoteNode = FindNodeByLLDPId(remoteId);
 		if (remoteNode != NULL)
 		{
@@ -172,7 +180,14 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 
 			BYTE remoteIfId[1024];
 			size_t remoteIfIdLen = pRespPDU->getVariable(1)->getRawValue(remoteIfId, 1024);
-			Interface *ifRemote = FindRemoteInterface(remoteNode, pRespPDU->getVariable(2)->GetValueAsUInt(), remoteIfId, remoteIfIdLen, nbs);
+			Interface *ifRemote = FindRemoteInterface(remoteNode, pRespPDU->getVariable(2)->getValueAsUInt(), remoteIfId, remoteIfIdLen, nbs);
+         if (ifRemote == NULL)
+         {
+            // Try to find remote interface by description
+            TCHAR *ifDescr = pRespPDU->getVariable(3)->getValueAsString((TCHAR *)remoteIfId, 1024 / sizeof(TCHAR));
+            if (ifDescr != NULL)
+               ifRemote = remoteNode->findInterface(ifDescr);
+         }
 
 			LL_NEIGHBOR_INFO info;
 
@@ -227,4 +242,74 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 	nbs->setData(1, NULL);	// local port info cache
 	node->callSnmpEnumerate(_T(".1.0.8802.1.1.2.1.4.1.1.5"), LLDPTopoHandler, nbs);
 	DbgPrintf(5, _T("LLDP: finished collecting topology information for node %s [%d]"), node->Name(), node->Id());
+}
+
+/**
+ * Parse MAC address. Could be without separators or with any separator char.
+ */
+static bool ParseMACAddress(const char *text, int length, BYTE *mac, int *macLength)
+{
+   bool withSeparator = false;
+   char separator = 0;
+   int p = 0;
+   bool hi = true;
+   for(int i = 0; (i < length) && (p < 64); i++)
+   {
+      char c = toupper(text[i]);
+      if ((i % 3 == 2) && withSeparator)
+      {
+         if (c != separator)
+            return false;
+         continue;
+      }
+      if (!isdigit(c) && ((c < 'A') || (c > 'F')))
+      {
+         if (i == 2)
+         {
+            withSeparator = true;
+            separator = c;
+            continue;
+         }
+         return false;
+      }
+      if (hi)
+      {
+         mac[p] = (isdigit(c) ? (c - '0') : (c - 'A' + 10)) << 4;
+         hi = false;
+      }
+      else
+      {
+         mac[p] |= (isdigit(c) ? (c - '0') : (c - 'A' + 10));
+         p++;
+         hi = true;
+      }
+   }
+   *macLength = p;
+   return true;
+}
+
+/**
+ * Build LLDP ID for node
+ */
+void BuildLldpId(int type, const BYTE *data, int length, TCHAR *id, int idLen)
+{
+	_sntprintf(id, idLen, _T("%d@"), type);
+   if (type == 4)
+   {
+      // Some D-Link switches returns MAC address for ID type 4 as formatted text instead of raw bytes
+      BYTE macAddr[64];
+      int macLength;
+      if ((length >= MAC_ADDR_LENGTH * 2) && ParseMACAddress((const char *)data, length, macAddr, &macLength))
+      {
+   	   BinToStr(macAddr, macLength, &id[_tcslen(id)]);
+      }
+      else
+      {
+   	   BinToStr(data, length, &id[_tcslen(id)]);
+      }
+   }
+   else
+   {
+	   BinToStr(data, length, &id[_tcslen(id)]);
+   }
 }

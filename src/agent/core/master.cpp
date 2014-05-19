@@ -169,7 +169,7 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 				delete msg;
 
 				// Send response to pipe
-				CSCP_MESSAGE *rawMsg = response.CreateMessage();
+				CSCP_MESSAGE *rawMsg = response.createMessage();
             bool sendSuccess = SendMessageToPipe(s_pipe, rawMsg);
             free(rawMsg);
             if (!sendSuccess)
@@ -206,7 +206,7 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
  */
 bool SendMessageToMasterAgent(CSCPMessage *msg)
 {
-   CSCP_MESSAGE *rawMsg = msg->CreateMessage();
+   CSCP_MESSAGE *rawMsg = msg->createMessage();
    bool success = SendRawMessageToMasterAgent(rawMsg);
    free(rawMsg);
    return success;

@@ -63,13 +63,13 @@ BOOL NXSL_Class::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value 
  * Call method
  * Default implementation calls methods registered with NXSL_REGISTER_METHOD macro.
  */
-BOOL NXSL_Class::callMethod(const TCHAR *name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_Program *program)
+BOOL NXSL_Class::callMethod(const TCHAR *name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
    NXSL_ExtMethod *m = m_methods->get(name);
    if (m != NULL)
    {
       if ((argc == m->numArgs) || (m->numArgs == -1))
-         return m->handler(object, argc, argv, result, program);
+         return m->handler(object, argc, argv, result, vm);
       else
          return NXSL_ERR_INVALID_ARGUMENT_COUNT;
    }

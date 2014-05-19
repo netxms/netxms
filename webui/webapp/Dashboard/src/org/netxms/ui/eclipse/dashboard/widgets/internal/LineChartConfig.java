@@ -39,6 +39,9 @@ public class LineChartConfig extends AbstractChartConfig
 
    @Element(required = false)
    private boolean extendedLegend = false;
+   
+   @Element(required = false)
+   private boolean logScaleEnabled = false;
 
 	/**
 	 * Create line chart settings object from XML document
@@ -134,5 +137,21 @@ public class LineChartConfig extends AbstractChartConfig
    public void setExtendedLegend(boolean extendedLegend)
    {
       this.extendedLegend = extendedLegend;
+   }
+
+   /**
+    * @return the logScaleEnabled
+    */
+   public boolean isLogScaleEnabled()
+   {
+      return logScaleEnabled;
+   }
+
+   /**
+    * @param logScaleEnabled the logScaleEnabled to set
+    */
+   public void setLogScaleEnabled(boolean logScaleEnabled)
+   {
+      this.logScaleEnabled = logScaleEnabled;
    }
 }

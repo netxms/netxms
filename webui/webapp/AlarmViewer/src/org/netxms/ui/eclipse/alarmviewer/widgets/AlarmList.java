@@ -37,6 +37,8 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.UrlLauncher;
 import org.eclipse.rap.rwt.service.ServerPushSession;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -51,6 +53,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.api.client.SessionNotification;
+import org.netxms.api.client.constants.UserAccessRights;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
@@ -67,11 +70,13 @@ import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmComparator;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListFilter;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmListLabelProvider;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.RefreshTimer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -89,13 +94,15 @@ public class AlarmList extends Composite
 	public static final int COLUMN_MESSAGE = 3;
 	public static final int COLUMN_COUNT = 4;
 	public static final int COLUMN_COMMENTS = 5;
-	public static final int COLUMN_ACK_BY = 6;
-	public static final int COLUMN_CREATED = 7;
-	public static final int COLUMN_LASTCHANGE = 8;
+   public static final int COLUMN_HELPDESK_REF = 6;
+	public static final int COLUMN_ACK_BY = 7;
+	public static final int COLUMN_CREATED = 8;
+	public static final int COLUMN_LASTCHANGE = 9;
 	
 	private final IViewPart viewPart;
 	private NXCSession session = null;
 	private NXCListener clientListener = null;
+	private RefreshTimer refreshTimer;
 	private SortableTableViewer alarmViewer;
 	private AlarmListFilter alarmFilter;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
@@ -106,6 +113,9 @@ public class AlarmList extends Composite
 	private Action actionTerminate;
 	private Action actionShowAlarmDetails;
 	private Action actionShowObjectDetails;
+   private Action actionCreateIssue;
+   private Action actionShowIssue;
+   private Action actionUnlinkIssue;
 	private Action actionExportToCsv;
 	private MenuManager timeAcknowledgeMenu;
 	private List<Action> timeAcknowledge;
@@ -126,8 +136,19 @@ public class AlarmList extends Composite
 		this.viewPart = viewPart;	
 		
 		// Setup table columns
-		final String[] names = { Messages.get().AlarmList_ColumnSeverity, Messages.get().AlarmList_ColumnState, Messages.get().AlarmList_ColumnSource, Messages.get().AlarmList_ColumnMessage, Messages.get().AlarmList_ColumnCount, Messages.get().AlarmList_Comments, Messages.get().AlarmList_AckBy, Messages.get().AlarmList_ColumnCreated, Messages.get().AlarmList_ColumnLastChange };
-		final int[] widths = { 100, 100, 150, 300, 70, 70, 100, 100, 100 };
+		final String[] names = { 
+		      Messages.get().AlarmList_ColumnSeverity, 
+		      Messages.get().AlarmList_ColumnState, 
+		      Messages.get().AlarmList_ColumnSource, 
+		      Messages.get().AlarmList_ColumnMessage, 
+		      Messages.get().AlarmList_ColumnCount, 
+		      Messages.get().AlarmList_Comments, 
+            "Helpdesk ID", 
+		      Messages.get().AlarmList_AckBy, 
+		      Messages.get().AlarmList_ColumnCreated, 
+		      Messages.get().AlarmList_ColumnLastChange
+		   };
+		final int[] widths = { 100, 100, 150, 300, 70, 70, 120, 100, 100, 100 };
 		alarmViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 		WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 	
@@ -162,6 +183,17 @@ public class AlarmList extends Composite
 		});
 		
 		refresh();
+		
+		refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), alarmViewer.getControl(), new Runnable() {
+         @Override
+         public void run()
+         {
+            synchronized(alarmList)
+            {
+               alarmViewer.refresh();
+            }
+         }
+      });
 
 		// Add client library listener
 		clientListener = new NXCListener() {
@@ -176,7 +208,7 @@ public class AlarmList extends Composite
 						{
 							alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
 						}
-						scheduleAlarmViewerUpdate();
+						refreshTimer.execute();
 						break;
 					case NXCNotification.ALARM_TERMINATED:
 					case NXCNotification.ALARM_DELETED:
@@ -184,7 +216,7 @@ public class AlarmList extends Composite
 						{
 							alarmList.remove(((Alarm)n.getObject()).getId());
 						}
-						scheduleAlarmViewerUpdate();
+                  refreshTimer.execute();
 						break;
 					default:
 						break;
@@ -242,27 +274,7 @@ public class AlarmList extends Composite
 	{
 		return alarmViewer;
 	}
-		
-	/**
-	 * Schedule alarm viewer update
-	 */
-	private void scheduleAlarmViewerUpdate()
-	{
-		getDisplay().asyncExec(new Runnable() {
-			@Override
-			public void run()
-			{
-				if (!alarmViewer.getControl().isDisposed())
-				{
-					synchronized(alarmList)
-					{
-						alarmViewer.refresh();
-					}
-				}
-			}
-		});
-	}
-	
+
 	/**
 	 * Create actions
 	 */
@@ -322,6 +334,30 @@ public class AlarmList extends Composite
 		};
 		actionTerminate.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Terminate"); //$NON-NLS-1$
 		
+      actionCreateIssue = new Action("Create &ticket in helpdesk system", Activator.getImageDescriptor("icons/helpdesk_ticket.png")) {
+         @Override
+         public void run()
+         {
+            createIssue();
+         }
+      };
+      
+      actionShowIssue = new Action("Show helpdesk ticket in &web browser", SharedIcons.BROWSER) {
+         @Override
+         public void run()
+         {
+            showIssue();
+         }
+      };
+      
+      actionUnlinkIssue = new Action("Unlink from helpdesk ticket") {
+         @Override
+         public void run()
+         {
+            unlinkIssue();
+         }
+      };
+      
 		actionShowObjectDetails = new Action(Messages.get().AlarmList_ActionObjectDetails) {
 			@Override
 			public void run()
@@ -333,12 +369,12 @@ public class AlarmList extends Composite
 		
 		actionExportToCsv = new ExportToCsvAction(viewPart, alarmViewer, true);
 		
-		//time based sticky acknowledgment 	
+		//time based sticky acknowledgement	
 		timeAcknowledgeOther = new Action("Other...", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
          @Override
          public void run()
          {
-            AcknowledgeCustomTimeDialog dlg = new AcknowledgeCustomTimeDialog(viewPart.getSite().getShell());//PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell()
+            AcknowledgeCustomTimeDialog dlg = new AcknowledgeCustomTimeDialog(viewPart.getSite().getShell());
             if (dlg.open() == Window.OK)
             {
                int time = dlg.getTime();
@@ -350,6 +386,9 @@ public class AlarmList extends Composite
       timeAcknowledgeOther.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledgeOther");  //$NON-NLS-1$
 	}
 
+	/**
+	 * 
+	 */
 	private void initializeTimeAcknowledge()
    {
 	   IDialogSettings settings = Activator.getDefault().getDialogSettings();
@@ -362,7 +401,7 @@ public class AlarmList extends Composite
 	   {
 	      settings.put("AlarmList.ackMenuSize", 4); //$NON-NLS-1$
 	      timeAcknowledge = new ArrayList<Action>(4);
-         createDefaultCations();
+         createDefaultIntervals();
          settings.put("AlarmList.ackMenuEntry0", 1 * 60 * 60); //$NON-NLS-1$
          settings.put("AlarmList.ackMenuEntry1", 4 * 60 * 60); //$NON-NLS-1$
          settings.put("AlarmList.ackMenuEntry2", 24 * 60 * 60); //$NON-NLS-1$
@@ -387,7 +426,10 @@ public class AlarmList extends Composite
 	   }
    }
 
-   private void createDefaultCations()
+   /**
+    * 
+    */
+   private void createDefaultIntervals()
    {
       Action act;
       act = new Action("1 hour(s)", Activator.getImageDescriptor("icons/acknowledged.png")) { //$NON-NLS-1$ //$NON-NLS-2$
@@ -471,25 +513,28 @@ public class AlarmList extends Composite
 		
 		int states = getSelectionType(selection.toArray());
 		
-		if(states == 2)
+		if (states == 2)
 		{
    		manager.add(actionAcknowledge);
-   		manager.add(actionStickyAcknowledge);
-   		
-   		initializeTimeAcknowledge();
-         timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge");   //$NON-NLS-2$
-         for(Action act : timeAcknowledge)
-         {
-            timeAcknowledgeMenu.add(act);
-         }
-         timeAcknowledgeMenu.add(new Separator());   
-         timeAcknowledgeMenu.add(timeAcknowledgeOther);
-   		manager.add(timeAcknowledgeMenu);
+		   manager.add(actionStickyAcknowledge);
+
+		   if (session.isTimedAlarmAckEnabled())
+		   {
+      		initializeTimeAcknowledge();
+            timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge");   //$NON-NLS-2$ //$NON-NLS-1$
+            for(Action act : timeAcknowledge)
+            {
+               timeAcknowledgeMenu.add(act);
+            }
+            timeAcknowledgeMenu.add(new Separator());   
+            timeAcknowledgeMenu.add(timeAcknowledgeOther);
+      		manager.add(timeAcknowledgeMenu);
+		   }
 		}
 		
-		if(states < 4)
+		if (states < 4)
 		   manager.add(actionResolve);
-		if (states == 4 || (session.getAlarmStatusFlowStrict() == 0))
+		if (states == 4 || !session.isStrictAlarmStatusFlow())
 		   manager.add(actionTerminate);
 		
 		manager.add(new Separator());
@@ -511,15 +556,48 @@ public class AlarmList extends Composite
 			manager.add(new Separator());
 			manager.add(actionShowAlarmDetails);
 			manager.add(actionComments);
+			if (session.isHelpdeskLinkActive())
+			{
+	         manager.add(new Separator());
+	         if (((Alarm)selection.getFirstElement()).getHelpdeskState() == Alarm.HELPDESK_STATE_IGNORED)
+	         {
+	            manager.add(actionCreateIssue);
+	         }
+	         else
+	         {
+	            manager.add(actionShowIssue);
+	            if ((session.getUserSystemRights() & UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES) != 0)
+	               manager.add(actionUnlinkIssue);
+	         }
+			}
 		}
 	}
 
+   /**
+    * We add 2 to status to give to outstanding status not zero meaning: 
+    * STATE_OUTSTANDING + 2 = 2 
+    * STATE_ACKNOWLEDGED + 2 = 3
+    * STATE_RESOLVED + 2 = 4 
+    * It is needed as we can't move STATE_OUTSTANDING to STATE_TERMINATED in strict flow mode. Number of status should be meaningful.
+    * 
+    * Then we sum all statuses with or command.
+    * To STATE_ACKNOWLEDGED only from STATE_OUTSTANDING = 2, STATE_ACKNOWLEDGED = 2
+    * To STATE_RESOLVED from STATE_OUTSTANDING and STATE_ACKNOWLEDGED = 2 | 3 = 3, STATE_RESOLVED <=3
+    * To STATE_TERMINATED(not strict mode) from any mode(always active)
+    * To STATE_TERMINATED(strict mode) only from STATE_RESOLVED = 4, STATE_TERMINATED = 4
+    * More results after logical or operation
+    * STATE_OUTSTANDING | STATE_RESOLVED = 6
+    * STATE_ACKNOWLEDGED | STATE_RESOLVED = 7
+    * STATE_OUTSTANDING | STATE_ACKNOWLEDGED | STATE_RESOLVED = 7
+    * 
+    * @param array selected objects array
+    */
 	private int getSelectionType(Object[] array)
    {
       int type = 0;
       for(int i = 0; i < array.length; i++)
       {
-         type |= ((Alarm)array[i]).getState()+2;
+         type |= ((Alarm)array[i]).getState() + 2;
       }
       return type;
    }
@@ -645,8 +723,7 @@ public class AlarmList extends Composite
 			}
 		}.start();
 	}
-	
-	
+		
 	/**
 	 * Resolve selected alarms
 	 */
@@ -714,6 +791,89 @@ public class AlarmList extends Composite
 			}
 		}.start();
 	}
+
+   /**
+    * Create helpdesk ticket (issue) from selected alarms
+    */
+   private void createIssue()
+   {
+      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      final long id = ((Alarm)selection.getFirstElement()).getId();
+      new ConsoleJob("Create helpdesk ticket", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.openHelpdeskIssue(id);
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot create helpdesk ticket from alarm";
+         }
+      }.start();
+   }
+
+   /**
+    * Show in web browser helpdesk ticket (issue) linked to selected alarm
+    */
+   private void showIssue()
+   {
+      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      final long id = ((Alarm)selection.getFirstElement()).getId();
+      new ConsoleJob("Show helpdesk ticket", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final String url = session.getHelpdeskIssueUrl(id);
+            runInUIThread(new Runnable() { 
+               @Override
+               public void run()
+               {
+                  UrlLauncher launcher = RWT.getClient().getService(UrlLauncher.class);
+                  launcher.openURL(url);
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot get URL for helpdesk ticket";
+         }
+      }.start();
+   }
+
+   /**
+    * Unlink helpdesk ticket (issue) from selected alarm
+    */
+   private void unlinkIssue()
+   {
+      IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      final long id = ((Alarm)selection.getFirstElement()).getId();
+      new ConsoleJob("Unlink alarm from helpdesk ticket", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.unlinkHelpdeskIssue(id);
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot unlink alarm from helpdesk ticket";
+         }
+      }.start();
+   }
 
 	/**
 	 * Show details for selected object

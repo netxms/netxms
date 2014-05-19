@@ -56,7 +56,7 @@ public class Application implements IApplication
 			timeout = 120;
 		}
 		
-		Display display = PlatformUI.createDisplay();
+		final Display display = PlatformUI.createDisplay();
 		RWT.getUISession().getHttpSession().setMaxInactiveInterval(timeout);
 		display.disposeExec(new Runnable() {
 			public void run()
@@ -68,7 +68,6 @@ public class Application implements IApplication
 		});
 		
 		SharedIcons.init(display);
-		ColorManager.create();
 		WorkbenchAdvisor advisor = new ApplicationWorkbenchAdvisor();
 		return PlatformUI.createAndRunWorkbench(display, advisor);
 	}

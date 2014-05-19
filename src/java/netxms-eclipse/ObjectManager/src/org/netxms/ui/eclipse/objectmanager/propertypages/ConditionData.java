@@ -247,15 +247,21 @@ public class ConditionData extends PropertyPage
 		SelectDciDialog dlg = new SelectDciDialog(getShell(), 0);
 		if (dlg.open() == Window.OK)
 		{
-			DciValue selection = dlg.getSelection();
-			ConditionDciInfo dci = new ConditionDciInfo(selection.getNodeId(), selection.getId(), selection.getDcObjectType(), Threshold.F_LAST, 1);
-			labelProvider.addCacheEntry(dci.getNodeId(), dci.getDciId(), selection.getDescription());
-			dciList.add(dci);
-			viewer.setInput(dciList.toArray());
-			isModified = true;
-			
-			viewer.setSelection(new StructuredSelection(dci));
-			editItem();
+		   List<DciValue> selection = dlg.getSelection();
+		   List<ConditionDciInfo> select = new ArrayList<ConditionDciInfo>();
+			for (DciValue item : selection)
+			{
+   			ConditionDciInfo dci = new ConditionDciInfo(item.getNodeId(), item.getId(), item.getDcObjectType(), Threshold.F_LAST, 1);
+   			labelProvider.addCacheEntry(dci.getNodeId(), dci.getDciId(), item.getDescription());
+   			dciList.add(dci);
+   			select.add(dci);
+   			viewer.setInput(dciList.toArray());
+   			isModified = true;
+   			viewer.setSelection(new StructuredSelection(dci));
+   			
+            editItem();
+			}
+         viewer.setSelection(new StructuredSelection(select));
 		}
 	}
 	

@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
@@ -49,6 +50,7 @@ public class PerfTab extends PropertyPage
 	private DataCollectionItem dci;
 	private PerfTabGraphSettings settings;
 	private Button checkShow;
+	private Button checkLogScale;
 	private LabeledText title;
 	private LabeledText name;
 	private ColorSelector color;
@@ -56,6 +58,8 @@ public class PerfTab extends PropertyPage
 	private Spinner orderNumber;
 	private Button checkShowThresholds;
 	private DciSelector parentDci;
+   private Spinner timeRange;
+   private Combo timeUnits;
 	private YAxisRangeEditor yAxisRange;
 	
 	/* (non-Javadoc)
@@ -132,12 +136,66 @@ public class PerfTab extends PropertyPage
       gd.horizontalSpan = layout.numColumns;
       name.setLayoutData(gd);
       
-      checkShowThresholds = new Button(dialogArea, SWT.CHECK);
+      Group timeGroup = new Group(dialogArea, SWT.NONE);
+      timeGroup.setText(Messages.get().PerfTab_TeimePeriod);
+      GridLayout timeGroupLayout = new GridLayout();
+      timeGroupLayout.marginWidth = WidgetHelper.OUTER_SPACING;
+      timeGroupLayout.marginHeight = WidgetHelper.OUTER_SPACING;
+      timeGroupLayout.horizontalSpacing = 16;
+      timeGroupLayout.makeColumnsEqualWidth = true;
+      timeGroupLayout.numColumns = 1;
+      timeGroup.setLayout(timeGroupLayout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = timeGroupLayout.numColumns;
+      timeGroup.setLayoutData(gd);
+      
+      Composite timeRangeArea = new Composite(timeGroup, SWT.NONE);
+      timeGroupLayout = new GridLayout();
+      timeGroupLayout.numColumns = 2;
+      timeGroupLayout.marginWidth = 0;
+      timeGroupLayout.marginHeight = 0;
+      timeGroupLayout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      timeRangeArea.setLayout(timeGroupLayout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      timeRangeArea.setLayoutData(gd);
+      
+      timeRange = WidgetHelper.createLabeledSpinner(timeRangeArea, SWT.BORDER, Messages.get().PerfTab_TimeInterval, 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeRange.setSelection(settings.getTimeRange());
+      
+      timeUnits = WidgetHelper.createLabeledCombo(timeRangeArea, SWT.READ_ONLY, Messages.get().PerfTab_TimeUnits, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeUnits.add(Messages.get().PerfTab_Minutes);
+      timeUnits.add(Messages.get().PerfTab_Hours);
+      timeUnits.add(Messages.get().PerfTab_Days);
+      timeUnits.select(settings.getTimeUnits());      
+      
+      Group optionsGroup = new Group(dialogArea, SWT.NONE);
+      optionsGroup.setText(Messages.get().PerfTab_Options);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 3;
+      gd.verticalSpan = 2;
+      optionsGroup.setLayoutData(gd);
+      GridLayout optionsLayout = new GridLayout();
+      optionsGroup.setLayout(optionsLayout);
+      
+      checkShowThresholds = new Button(optionsGroup, SWT.CHECK);
       checkShowThresholds.setText(Messages.get().PerfTab_ShowThresholds);
       checkShowThresholds.setSelection(settings.isShowThresholds());
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;
       checkShowThresholds.setLayoutData(gd);
+      
+      checkLogScale = new Button(optionsGroup, SWT.CHECK);
+      checkLogScale.setText(Messages.get().PerfTab_LogarithmicScale);
+      checkLogScale.setSelection(settings.isLogScaleEnabled());
+      gd = new GridData();
+      gd.horizontalSpan = layout.numColumns;
+      checkLogScale.setLayoutData(gd);
       
       yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
       gd = new GridData();
@@ -158,6 +216,7 @@ public class PerfTab extends PropertyPage
 	private void applyChanges(final boolean isApply)
 	{
 		settings.setEnabled(checkShow.getSelection());
+		settings.setLogScaleEnabled(checkLogScale.getSelection());
 		settings.setTitle(title.getText());
 		settings.setName(name.getText());
 		settings.setColor(ColorConverter.rgbToInt(color.getColorValue()));
@@ -170,6 +229,9 @@ public class PerfTab extends PropertyPage
 		settings.setMaxYScaleValue(yAxisRange.getMaxY());
 
 		settings.setParentDciId(parentDci.getDciId());
+		
+		settings.setTimeRange(timeRange.getSelection());
+		settings.setTimeUnits(timeUnits.getSelectionIndex());
 		
 		try
 		{

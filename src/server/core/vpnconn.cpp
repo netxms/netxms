@@ -143,11 +143,9 @@ BOOL VPNConnector::CreateFromDB(UINT32 dwId)
    return bResult;
 }
 
-
-//
-// Save interface object to database
-//
-
+/**
+ * Save VPN connector object to database
+ */
 BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024], szIpAddr[16], szNetMask[16];
@@ -249,11 +247,9 @@ Node *VPNConnector::GetParentNode()
    return pNode;
 }
 
-
-//
-// Create CSCP message with object's data
-//
-
+/**
+ * Create NXCP message with object's data
+ */
 void VPNConnector::CreateMessage(CSCPMessage *pMsg)
 {
    UINT32 i, dwId;
@@ -276,31 +272,29 @@ void VPNConnector::CreateMessage(CSCPMessage *pMsg)
    }
 }
 
-
-//
-// Modify object from message
-//
-
+/**
+ * Modify object from message
+ */
 UINT32 VPNConnector::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
-   UINT32 i, dwId;
-
    if (!bAlreadyLocked)
       LockData();
 
    // Peer gateway
-   if (pRequest->IsVariableExist(VID_PEER_GATEWAY))
+   if (pRequest->isFieldExist(VID_PEER_GATEWAY))
       m_dwPeerGateway = pRequest->GetVariableLong(VID_PEER_GATEWAY);
 
    // Network list
-   if ((pRequest->IsVariableExist(VID_NUM_LOCAL_NETS)) &&
-       (pRequest->IsVariableExist(VID_NUM_REMOTE_NETS)))
+   if ((pRequest->isFieldExist(VID_NUM_LOCAL_NETS)) &&
+       (pRequest->isFieldExist(VID_NUM_REMOTE_NETS)))
    {
+      UINT32 i, dwId = VID_VPN_NETWORK_BASE;
+
       m_dwNumLocalNets = pRequest->GetVariableLong(VID_NUM_LOCAL_NETS);
       if (m_dwNumLocalNets > 0)
       {
          m_pLocalNetList = (IP_NETWORK *)realloc(m_pLocalNetList, sizeof(IP_NETWORK) * m_dwNumLocalNets);
-         for(i = 0, dwId = VID_VPN_NETWORK_BASE; i < m_dwNumLocalNets; i++)
+         for(i = 0; i < m_dwNumLocalNets; i++)
          {
             m_pLocalNetList[i].dwAddr = pRequest->GetVariableLong(dwId++);
             m_pLocalNetList[i].dwMask = pRequest->GetVariableLong(dwId++);
@@ -332,12 +326,10 @@ UINT32 VPNConnector::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocke
    return NetObj::ModifyFromMessage(pRequest, TRUE);
 }
 
-
-//
-// Check if given address falls into one of the local nets
-//
-
-BOOL VPNConnector::IsLocalAddr(UINT32 dwIpAddr)
+/**
+ * Check if given address falls into one of the local nets
+ */
+BOOL VPNConnector::isLocalAddr(UINT32 dwIpAddr)
 {
    UINT32 i;
    BOOL bResult = FALSE;
@@ -355,12 +347,10 @@ BOOL VPNConnector::IsLocalAddr(UINT32 dwIpAddr)
    return bResult;
 }
 
-
-//
-// Check if given address falls into one of the remote nets
-//
-
-BOOL VPNConnector::IsRemoteAddr(UINT32 dwIpAddr)
+/**
+ * Check if given address falls into one of the remote nets
+ */
+BOOL VPNConnector::isRemoteAddr(UINT32 dwIpAddr)
 {
    UINT32 i;
    BOOL bResult = FALSE;
@@ -378,12 +368,10 @@ BOOL VPNConnector::IsRemoteAddr(UINT32 dwIpAddr)
    return bResult;
 }
 
-
-//
-// Get address of peer gateway
-//
-
-UINT32 VPNConnector::GetPeerGatewayAddr(void)
+/**
+ * Get address of peer gateway
+ */
+UINT32 VPNConnector::getPeerGatewayAddr()
 {
    NetObj *pObject;
    UINT32 dwAddr = 0;

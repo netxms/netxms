@@ -44,8 +44,24 @@ static void LogMetadataProperty(EVT_HANDLE pubMetadata, EVT_PUBLISHER_METADATA_P
 	WCHAR buffer[4096];
 	PEVT_VARIANT p = PEVT_VARIANT(buffer);
 	DWORD size;
-	_EvtGetPublisherMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, 0, 4096, p, &size);
-	AgentWriteDebugLog(5, _T("LogWatch: publisher %s: %S"), name, p->StringVal);
+	if (_EvtGetPublisherMetadataProperty(pubMetadata, id, 0, sizeof(buffer), p, &size))
+   {
+      switch(p->Type)
+      {
+         case EvtVarTypeNull:
+      	   AgentWriteDebugLog(5, _T("LogWatch: publisher %s: NULL"), name);
+            break;
+         case EvtVarTypeString:
+      	   AgentWriteDebugLog(5, _T("LogWatch: publisher %s: %ls"), name, p->StringVal);
+            break;
+         case EvtVarTypeAnsiString:
+      	   AgentWriteDebugLog(5, _T("LogWatch: publisher %s: %hs"), name, p->AnsiStringVal);
+            break;
+         default:
+      	   AgentWriteDebugLog(5, _T("LogWatch: publisher %s: (variant type %d)"), name, (int)p->Type);
+            break;
+      }
+   }
 }
 
 /**
@@ -87,11 +103,11 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 #else
 		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, values[0].StringVal, -1, publisherName, MAX_PATH, NULL, NULL);
 #endif
-		AgentWriteDebugLog(5, _T("LogWatch: publisher name is %s"), publisherName);
+		AgentWriteDebugLog(6, _T("LogWatch: publisher name is %s"), publisherName);
 	}
 	else
 	{
-		AgentWriteDebugLog(5, _T("LogWatch: unable to get publisher name from event"));
+		AgentWriteDebugLog(6, _T("LogWatch: unable to get publisher name from event"));
 	}
 
 	// Event id

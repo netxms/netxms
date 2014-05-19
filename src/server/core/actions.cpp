@@ -318,15 +318,13 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 {
 	BOOL success = FALSE;
-	g_pScriptLibrary->lock();
-	NXSL_Program *script = g_pScriptLibrary->findScript(scriptName);
-	if (script != NULL)
+	NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+	if (vm != NULL)
 	{
-		NXSL_ServerEnv *pEnv = new NXSL_ServerEnv;
 		NetObj *object = FindObjectById(event->getSourceId());
 		if ((object != NULL) && (object->Type() == OBJECT_NODE))
-			script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
-		script->setGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)));
+			vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
+		vm->setGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)));
 
 		// Pass event's parameters as arguments
 		NXSL_Value **ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * event->getParametersCount());
@@ -334,30 +332,30 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 		for(UINT32 i = 0; i < event->getParametersCount(); i++)
 			ppValueList[i] = new NXSL_Value(event->getParameter(i));
 
-		if (script->run(pEnv, event->getParametersCount(), ppValueList) == 0)
+		if (vm->run(event->getParametersCount(), ppValueList))
 		{
 			DbgPrintf(4, _T("ExecuteActionScript: script %s successfully executed"), scriptName);
 			success = TRUE;
 		}
 		else
 		{
-			DbgPrintf(4, _T("ExecuteActionScript: Script %s execution error: %s"), scriptName, script->getErrorText());
-			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, script->getErrorText(), 0);
+			DbgPrintf(4, _T("ExecuteActionScript: Script %s execution error: %s"), scriptName, vm->getErrorText());
+			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
 		}
 	   free(ppValueList);
+      delete vm;
 	}
 	else
 	{
 		DbgPrintf(4, _T("ExecuteActionScript(): Cannot find script %s"), scriptName);
 	}
-	g_pScriptLibrary->unlock();
 	return success;
 }
 
 /**
  * Execute action on specific event
  */
-BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
+BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const TCHAR *alarmMsg, const TCHAR *alarmKey)
 {
    static const TCHAR *actionType[] = { _T("EXEC"), _T("REMOTE"), _T("SEND EMAIL"), _T("SEND SMS"), _T("FORWARD EVENT"), _T("NXSL SCRIPT"), _T("XMPP MESSAGE") };
 
@@ -381,10 +379,10 @@ BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
 
          TCHAR *pszExpandedData, *pszExpandedSubject, *pszExpandedRcpt, *curr, *next;
 
-         pszExpandedData = pEvent->expandText(CHECK_NULL_EX(pAction->pszData), pszAlarmMsg);
+         pszExpandedData = pEvent->expandText(CHECK_NULL_EX(pAction->pszData), alarmMsg, alarmKey);
          StrStrip(pszExpandedData);
 
-         pszExpandedRcpt = pEvent->expandText(pAction->szRcptAddr, pszAlarmMsg);
+         pszExpandedRcpt = pEvent->expandText(pAction->szRcptAddr, alarmMsg, alarmKey);
          StrStrip(pszExpandedRcpt);
 
          switch(pAction->iType)
@@ -405,7 +403,7 @@ BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, TCHAR *pszAlarmMsg)
                if (pszExpandedRcpt[0] != 0)
                {
                   DbgPrintf(3, _T("*actions* Sending mail to %s: \"%s\""), pszExpandedRcpt, pszExpandedData);
-                  pszExpandedSubject = pEvent->expandText(pAction->szEmailSubject, pszAlarmMsg);
+                  pszExpandedSubject = pEvent->expandText(pAction->szEmailSubject, alarmMsg, alarmKey);
 					   curr = pszExpandedRcpt;
 					   do
 					   {

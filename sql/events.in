@@ -25,7 +25,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'Node added',
 		'Generated when new node object added to the database.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No message-specific parameters'
+		'   1) "Discovered" flag - set to 1 if this node was added by network discovery process'
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
@@ -818,7 +818,53 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'    9) Peer interface index' CONCAT CRLF CONCAT
 		'   10) Peer interface name' CONCAT CRLF CONCAT
 		'   11) Peer interface IP address' CONCAT CRLF CONCAT
-		'   12) Peer interface MAC address'
+		'   12) Peer interface MAC address' CONCAT CRLF CONCAT
+      '   13) Discovery protocol'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_AP_ADOPTED, 'SYS_AP_ADOPTED',
+		EVENT_SEVERITY_NORMAL, 1,
+		'Access point %2 changed state to ADOPTED',
+		'Generated when access point state changes to ADOPTED.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'    1) Access point object ID' CONCAT CRLF CONCAT
+		'    2) Access point name' CONCAT CRLF CONCAT
+		'    3) Access point MAC address' CONCAT CRLF CONCAT
+		'    4) Access point IP address' CONCAT CRLF CONCAT
+		'    5) Access point vendor name' CONCAT CRLF CONCAT
+		'    6) Access point model' CONCAT CRLF CONCAT
+		'    7) Access point serial number'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_AP_UNADOPTED, 'SYS_AP_UNADOPTED',
+		EVENT_SEVERITY_MAJOR, 1,
+		'Access point %2 changed state to UNADOPTED',
+		'Generated when access point state changes to UNADOPTED.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'    1) Access point object ID' CONCAT CRLF CONCAT
+		'    2) Access point name' CONCAT CRLF CONCAT
+		'    3) Access point MAC address' CONCAT CRLF CONCAT
+		'    4) Access point IP address' CONCAT CRLF CONCAT
+		'    5) Access point vendor name' CONCAT CRLF CONCAT
+		'    6) Access point model' CONCAT CRLF CONCAT
+		'    7) Access point serial number'
+	);
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+	(
+		EVENT_AP_DOWN, 'SYS_AP_DOWN',
+		EVENT_SEVERITY_CRITICAL, 1,
+		'Access point %2 changed state to DOWN',
+		'Generated when access point state changes to DOWN.' CONCAT CRLF CONCAT
+		'Parameters:' CONCAT CRLF CONCAT
+		'    1) Access point object ID' CONCAT CRLF CONCAT
+		'    2) Access point name' CONCAT CRLF CONCAT
+		'    3) Access point MAC address' CONCAT CRLF CONCAT
+		'    4) Access point IP address' CONCAT CRLF CONCAT
+		'    5) Access point vendor name' CONCAT CRLF CONCAT
+		'    6) Access point model' CONCAT CRLF CONCAT
+		'    7) Access point serial number'
 	);
 
 /*

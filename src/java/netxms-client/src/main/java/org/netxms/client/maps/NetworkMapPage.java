@@ -36,26 +36,17 @@ import org.netxms.client.maps.elements.NetworkMapObject;
  */
 public class NetworkMapPage
 {
-	private String name;
+	private String id;
 	private long nextElementId;
 	private Map<Long, NetworkMapElement> elements = new HashMap<Long, NetworkMapElement>(0);
 	private Set<NetworkMapLink> links = new HashSet<NetworkMapLink>(0);
 
 	/**
-	 * Create empty unnamed page
-	 */
-	public NetworkMapPage()
-	{
-		name = "";
-		nextElementId = 1;
-	}
-
-	/**
 	 * Create empty named page
 	 */
-	public NetworkMapPage(final String name)
+	public NetworkMapPage(final String id)
 	{
-		this.name = name;
+		this.id = id;
 		nextElementId = 1;
 	}
 	
@@ -171,17 +162,17 @@ public class NetworkMapPage
 	/**
 	 * @return the name
 	 */
-	public String getName()
+	public String getId()
 	{
-		return name;
+		return id;
 	}
 
 	/**
 	 * @param name the name to set
 	 */
-	public void setName(String name)
+	public void setId(String id)
 	{
-		this.name = name;
+		this.id = id;
 	}
 
 	/**

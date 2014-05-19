@@ -23,9 +23,13 @@
 #include "symbol-ws.h"
 
 /**
- * Static data
+ * Driver name
  */
 static TCHAR s_driverName[] = _T("SYMBOL-WS");
+
+/**
+ * Driver version
+ */
 static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 
 /**
@@ -67,25 +71,13 @@ bool SymbolDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 }
 
 /**
- * Do additional checks on the device required by driver.
- * Driver can set device's custom attributes from within
- * this function.
- *
- * @param snmp SNMP transport
- * @param attributes Node's custom attributes
- */
-void SymbolDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData)
-{
-}
-
-/**
  * Get cluster mode for device (standalone / active / standby)
  *
  * @param snmp SNMP transport
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-int SymbolDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+int SymbolDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    int ret = CLUSTER_MODE_UNKNOWN;
 
@@ -129,7 +121,7 @@ int SymbolDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, vo
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    return true;
 }
@@ -142,8 +134,8 @@ static UINT32 HandlerAccessPointListUnadopted(UINT32 version, SNMP_Variable *var
 {
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
-   SNMP_ObjectId *name = var->GetName();
-   UINT32 nameLen = name->getLength();
+   SNMP_ObjectId *name = var->getName();
+   size_t nameLen = name->getLength();
    UINT32 apIndex = name->getValue()[nameLen - 1];
 
    UINT32 oid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 9, 4, 1, 3, 0 };
@@ -174,7 +166,7 @@ static UINT32 HandlerAccessPointListUnadopted(UINT32 version, SNMP_Variable *var
          break;
    }
 
-   AccessPointInfo *info = new AccessPointInfo((BYTE *)var->GetValue(), AP_UNADOPTED, NULL, model, NULL);
+   AccessPointInfo *info = new AccessPointInfo((BYTE *)var->getValue(), 0, AP_UNADOPTED, NULL, NULL, model, NULL);
    apList->add(info);
 
    return SNMP_ERR_SUCCESS;
@@ -189,11 +181,11 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
 
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
-   SNMP_ObjectId *name = var->GetName();
-   UINT32 nameLen = name->getLength();
+   SNMP_ObjectId *name = var->getName();
+   size_t nameLen = name->getLength();
    UINT32 apIndex = name->getValue()[nameLen - 1];
 
-   UINT32 numberOfRadios;
+   UINT32 numberOfRadios = 0;
    TCHAR serial[128];
 
    UINT32 oid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 9, 2, 1, 3, 0 }; // wsCcRfApModelNumber
@@ -269,7 +261,7 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
    AccessPointInfo *info;
    if (ret == SNMP_ERR_SUCCESS)
    {
-      info = new AccessPointInfo((BYTE *)var->GetValue(), AP_ADOPTED, NULL, model, serial);
+      info = new AccessPointInfo((BYTE *)var->getValue(), 0, AP_ADOPTED, NULL, NULL, model, serial);
       apList->add(info);
    }
 
@@ -337,14 +329,14 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
    return ret;
 }
 
-/*
+/**
  * Get access points
  *
  * @param snmp SNMP transport
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
 
@@ -376,8 +368,8 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
 
    ObjectArray<WirelessStationInfo> *wsList = (ObjectArray<WirelessStationInfo> *)arg;
 
-   SNMP_ObjectId *name = var->GetName();
-   UINT32 nameLen = name->getLength();
+   SNMP_ObjectId *name = var->getName();
+   size_t nameLen = name->getLength();
    const UINT32 *value = name->getValue();
 
    UINT32 oid[32];
@@ -419,12 +411,14 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
    if (ret == SNMP_ERR_SUCCESS)
    {
       WirelessStationInfo *info = new WirelessStationInfo;
+      memset(info, 0, sizeof(WirelessStationInfo));
 
-      memcpy(info->macAddr, var->GetValue(), MAC_ADDR_LENGTH);
+      var->getRawValue(info->macAddr, MAC_ADDR_LENGTH);
       info->ipAddr = ipAddr;
       info->vlan = vlanInfex;
       nx_strncpy(info->ssid, ssid, MAX_OBJECT_NAME);
       info->rfIndex = rfIndex;
+      info->apMatchPolicy = AP_MATCH_BY_RFINDEX;
 
       wsList->add(info);
    }
@@ -432,13 +426,14 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
    return ret;
 }
 
-/*
+/**
+ * Get registered wireless stations (clients)
  *
  * @param snmp SNMP transport
  * @param attributes Node custom attributes
  * @param driverData optional pointer to user data
  */
-ObjectArray<WirelessStationInfo> *SymbolDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+ObjectArray<WirelessStationInfo> *SymbolDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
 

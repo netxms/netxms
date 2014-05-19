@@ -32,6 +32,8 @@ AccessPoint::AccessPoint() : DataCollectionTarget()
 	m_model = NULL;
 	m_serialNumber = NULL;
 	m_radioInterfaces = NULL;
+   m_state = AP_ADOPTED;
+   m_prevState = m_state;
 }
 
 /**
@@ -45,6 +47,8 @@ AccessPoint::AccessPoint(const TCHAR *name, BYTE *macAddr) : DataCollectionTarge
 	m_model = NULL;
 	m_serialNumber = NULL;
 	m_radioInterfaces = NULL;
+   m_state = AP_ADOPTED;
+   m_prevState = m_state;
 	m_isHidden = true;
 }
 
@@ -73,7 +77,7 @@ BOOL AccessPoint::CreateFromDB(UINT32 dwId)
    }
 
 	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT mac_address,vendor,model,serial_number,node_id FROM access_points WHERE id=%d"), (int)m_dwId);
+	_sntprintf(query, 256, _T("SELECT mac_address,vendor,model,serial_number,node_id,ap_state FROM access_points WHERE id=%d"), (int)m_dwId);
 	DB_RESULT hResult = DBSelect(g_hCoreDB, query);
 	if (hResult == NULL)
 		return FALSE;
@@ -82,7 +86,9 @@ BOOL AccessPoint::CreateFromDB(UINT32 dwId)
 	m_vendor = DBGetField(hResult, 0, 1, NULL, 0);
 	m_model = DBGetField(hResult, 0, 2, NULL, 0);
 	m_serialNumber = DBGetField(hResult, 0, 3, NULL, 0);
-	UINT32 nodeId = DBGetFieldULong(hResult, 0, 4);
+	m_nodeId = DBGetFieldULong(hResult, 0, 4);
+   m_state = (DBGetFieldLong(hResult, 0, 5) == AP_ADOPTED) ? AP_ADOPTED : AP_UNADOPTED;
+   m_prevState = (m_state != AP_DOWN) ? m_state : AP_ADOPTED;
 	DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -96,14 +102,14 @@ BOOL AccessPoint::CreateFromDB(UINT32 dwId)
 	BOOL success = FALSE;
    if (!m_isDeleted)
    {
-      NetObj *object = FindObjectById(nodeId);
+      NetObj *object = FindObjectById(m_nodeId);
       if (object == NULL)
       {
-         nxlog_write(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, nodeId);
+         nxlog_write(MSG_INVALID_NODE_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, m_nodeId);
       }
       else if (object->Type() != OBJECT_NODE)
       {
-         nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, nodeId);
+         nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, m_nodeId);
       }
       else
       {
@@ -133,9 +139,9 @@ BOOL AccessPoint::SaveToDB(DB_HANDLE hdb)
    BOOL bResult;
 	DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("access_points"), _T("id"), m_dwId))
-		hStmt = DBPrepare(hdb, _T("UPDATE access_points SET mac_address=?,vendor=?,model=?,serial_number=?,node_id=? WHERE id=?"));
+		hStmt = DBPrepare(hdb, _T("UPDATE access_points SET mac_address=?,vendor=?,model=?,serial_number=?,node_id=?,ap_state=? WHERE id=?"));
 	else
-		hStmt = DBPrepare(hdb, _T("INSERT INTO access_points (mac_address,vendor,model,serial_number,node_id,id) VALUES (?,?,?,?,?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO access_points (mac_address,vendor,model,serial_number,node_id,ap_state,id) VALUES (?,?,?,?,?,?,?)"));
 	if (hStmt != NULL)
 	{
 		TCHAR macStr[16];
@@ -144,7 +150,8 @@ BOOL AccessPoint::SaveToDB(DB_HANDLE hdb)
 		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_model), DB_BIND_STATIC);
 		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_serialNumber), DB_BIND_STATIC);
 		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_nodeId);
-		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_state);
+		DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_dwId);
 
 		bResult = DBExecute(hStmt);
 
@@ -197,6 +204,7 @@ void AccessPoint::CreateMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_VENDOR, CHECK_NULL_EX(m_vendor));
 	msg->SetVariable(VID_MODEL, CHECK_NULL_EX(m_model));
 	msg->SetVariable(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
+   msg->SetVariable(VID_STATE, (UINT16)m_state);
 
    if (m_radioInterfaces != NULL)
    {
@@ -303,6 +311,28 @@ bool AccessPoint::isMyRadio(int rfIndex)
 }
 
 /**
+ * Check if given radio MAC address (BSSID) is on this access point
+ */
+bool AccessPoint::isMyRadio(const BYTE *macAddr)
+{
+	bool result = false;
+	LockData();
+	if (m_radioInterfaces != NULL)
+	{
+		for(int i = 0; i < m_radioInterfaces->size(); i++)
+		{
+         if (!memcmp(m_radioInterfaces->get(i)->macAddr, macAddr, MAC_ADDR_LENGTH))
+			{
+				result = true;
+				break;
+			}
+		}
+	}
+	UnlockData();
+	return result;
+}
+
+/**
  * Get radio name
  */
 void AccessPoint::getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize)
@@ -324,6 +354,14 @@ void AccessPoint::getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize)
 }
 
 /**
+ * Get access point's parent node
+ */
+Node *AccessPoint::getParentNode()
+{
+   return (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
+}
+
+/**
  * Update access point information
  */
 void AccessPoint::updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber)
@@ -341,4 +379,133 @@ void AccessPoint::updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHA
 
 	Modify();
 	UnlockData();
+}
+
+/**
+ * Update access point state
+ */
+void AccessPoint::updateState(AccessPointState state)
+{
+   if (state == m_state)
+      return;
+
+	LockData();
+   if (state == AP_DOWN)
+      m_prevState = m_state;
+   m_state = state;
+   if (m_iStatus != STATUS_UNMANAGED)
+   {
+      m_iStatus = (state == AP_ADOPTED) ? STATUS_NORMAL : ((state == AP_UNADOPTED) ? STATUS_MAJOR : STATUS_CRITICAL);
+   }
+   Modify();
+	UnlockData();
+
+   static const TCHAR *names[] = { _T("id"), _T("name"), _T("macAddr"), _T("ipAddr"), _T("vendor"), _T("model"), _T("serialNumber") };
+   PostEventWithNames((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : ((state == AP_UNADOPTED) ? EVENT_AP_UNADOPTED : EVENT_AP_DOWN), 
+      m_nodeId, "ishasss", names,
+      m_dwId, m_szName, m_macAddr, m_dwIpAddr, 
+      CHECK_NULL_EX(m_vendor), CHECK_NULL_EX(m_model), CHECK_NULL_EX(m_serialNumber));
+}
+
+/**
+ * Do status poll
+ */
+void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller)
+{
+   m_pollRequestor = session;
+   AccessPointState state = m_state;
+
+   sendPollerMsg(rqId, _T("   Starting status poll on access point %s\r\n"), m_szName);
+   sendPollerMsg(rqId, _T("      Current access point status is %s\r\n"), g_szStatusText[m_iStatus]);
+
+   /* TODO: read status from controller via driver and use ping as last resort only */
+
+   if (m_dwIpAddr != 0)
+   {
+		UINT32 icmpProxy = 0;
+
+      if (IsZoningEnabled() && (controller->getZoneId() != 0))
+		{
+			Zone *zone = (Zone *)g_idxZoneByGUID.get(controller->getZoneId());
+			if (zone != NULL)
+			{
+				icmpProxy = zone->getIcmpProxy();
+			}
+		}
+
+		if (icmpProxy != 0)
+		{
+			sendPollerMsg(rqId, _T("      Starting ICMP ping via proxy\r\n"));
+			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): ping via proxy [%u]"), m_dwId, m_szName, icmpProxy);
+			Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
+			if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
+			{
+				DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): proxy node found: %s"), m_dwId, m_szName, proxyNode->Name());
+				AgentConnection *conn = proxyNode->createAgentConnection();
+				if (conn != NULL)
+				{
+					TCHAR parameter[64], buffer[64];
+
+					_sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), IpToStr(m_dwIpAddr, buffer));
+					if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
+					{
+						DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): proxy response: \"%s\""), m_dwId, m_szName, buffer);
+						TCHAR *eptr;
+						long value = _tcstol(buffer, &eptr, 10);
+						if ((*eptr == 0) && (value >= 0))
+						{
+							if (value < 10000)
+                     {
+            				sendPollerMsg(rqId, POLLER_ERROR _T("      responded to ICMP ping\r\n"));
+                        if (state == AP_DOWN)
+                           state = m_prevState;  /* FIXME: get actual AP state here */
+                     }
+                     else
+							{
+            				sendPollerMsg(rqId, POLLER_ERROR _T("      no response to ICMP ping\r\n"));
+                        state = AP_DOWN;
+							}
+						}
+					}
+					conn->disconnect();
+					delete conn;
+				}
+				else
+				{
+					DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): cannot connect to agent on proxy node"), m_dwId, m_szName);
+					sendPollerMsg(rqId, POLLER_ERROR _T("      Unable to establish connection with proxy node\r\n"));
+				}
+			}
+			else
+			{
+				DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): proxy node not available"), m_dwId, m_szName);
+				sendPollerMsg(rqId, POLLER_ERROR _T("      ICMP proxy not available\r\n"));
+			}
+		}
+		else	// not using ICMP proxy
+		{
+			sendPollerMsg(rqId, _T("      Starting ICMP ping\r\n"));
+			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,%d,NULL,%d)"), m_dwId, m_szName, htonl(m_dwIpAddr), g_icmpPingTimeout, g_icmpPingSize);
+			UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, NULL, g_icmpPingSize);
+			if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
+				nxlog_write(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
+			if (dwPingStatus == ICMP_SUCCESS)
+         {
+				sendPollerMsg(rqId, POLLER_ERROR _T("      responded to ICMP ping\r\n"));
+            if (state == AP_DOWN)
+               state = m_prevState;  /* FIXME: get actual AP state here */
+         }
+         else
+			{
+				sendPollerMsg(rqId, POLLER_ERROR _T("      no response to ICMP ping\r\n"));
+            state = AP_DOWN;
+			}
+			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): ping result %d, state=%d"), m_dwId, m_szName, dwPingStatus, state);
+		}
+   }
+
+   updateState(state);
+
+   sendPollerMsg(rqId, _T("      Access point status after poll is %s\r\n"), g_szStatusText[m_iStatus]);
+	sendPollerMsg(rqId, _T("   Finished status poll on access point %s\r\n"), m_szName);
 }

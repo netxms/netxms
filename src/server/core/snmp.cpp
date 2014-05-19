@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,26 +27,26 @@
  */
 static UINT32 HandlerArp(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-   UINT32 oidName[MAX_OID_LEN], dwNameLen, dwIndex = 0;
+   UINT32 oidName[MAX_OID_LEN], dwIndex = 0;
    BYTE bMac[64];
    UINT32 dwResult;
 
-   dwNameLen = pVar->GetName()->getLength();
-   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
+   size_t nameLen = pVar->getName()->getLength();
+   memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
 
-   oidName[dwNameLen - 6] = 1;  // Retrieve interface index
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, &dwIndex, sizeof(UINT32), 0);
+   oidName[nameLen - 6] = 1;  // Retrieve interface index
+   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &dwIndex, sizeof(UINT32), 0);
    if (dwResult != SNMP_ERR_SUCCESS)
       return dwResult;
 
-   oidName[dwNameLen - 6] = 2;  // Retrieve MAC address for this IP
-	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, bMac, 64, SG_RAW_RESULT);
+   oidName[nameLen - 6] = 2;  // Retrieve MAC address for this IP
+	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, bMac, 64, SG_RAW_RESULT);
    if (dwResult == SNMP_ERR_SUCCESS)
    {
       ((ARP_CACHE *)pArg)->dwNumEntries++;
       ((ARP_CACHE *)pArg)->pEntries = (ARP_ENTRY *)realloc(((ARP_CACHE *)pArg)->pEntries,
                sizeof(ARP_ENTRY) * ((ARP_CACHE *)pArg)->dwNumEntries);
-      ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIpAddr = ntohl(pVar->GetValueAsUInt());
+      ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIpAddr = ntohl(pVar->getValueAsUInt());
       memcpy(((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].bMacAddr, bMac, 6);
       ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIndex = dwIndex;
    }
@@ -129,36 +129,36 @@ void SnmpGetInterfaceStatus(UINT32 dwVersion, SNMP_Transport *pTransport, UINT32
  */
 static UINT32 HandlerRoute(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-   UINT32 oidName[MAX_OID_LEN], dwNameLen, dwResult;
+   UINT32 oidName[MAX_OID_LEN], dwResult;
    ROUTE route;
 	ROUTING_TABLE *rt = (ROUTING_TABLE *)pArg;
 
-   dwNameLen = pVar->GetName()->getLength();
-	if ((dwNameLen < 5) || (dwNameLen > MAX_OID_LEN))
+   size_t nameLen = pVar->getName()->getLength();
+	if ((nameLen < 5) || (nameLen > MAX_OID_LEN))
 	{
-		DbgPrintf(4, _T("HandlerRoute(): strange dwNameLen %d (name=%s)"), dwNameLen, pVar->GetName()->getValueAsText());
+		DbgPrintf(4, _T("HandlerRoute(): strange nameLen %d (name=%s)"), nameLen, pVar->getName()->getValueAsText());
 		return SNMP_ERR_SUCCESS;
 	}
-   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
-   route.dwDestAddr = ntohl(pVar->GetValueAsUInt());
+   memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
+   route.dwDestAddr = ntohl(pVar->getValueAsUInt());
 
-   oidName[dwNameLen - 5] = 2;  // Interface index
-   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,
+   oidName[nameLen - 5] = 2;  // Interface index
+   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen,
                            &route.dwIfIndex, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
-   oidName[dwNameLen - 5] = 7;  // Next hop
-   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,
+   oidName[nameLen - 5] = 7;  // Next hop
+   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen,
                            &route.dwNextHop, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
-   oidName[dwNameLen - 5] = 8;  // Route type
-   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,
+   oidName[nameLen - 5] = 8;  // Route type
+   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen,
                            &route.dwRouteType, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
-   oidName[dwNameLen - 5] = 11;  // Destination mask
-   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen,
+   oidName[nameLen - 5] = 11;  // Destination mask
+   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen,
                            &route.dwDestMask, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
@@ -267,8 +267,6 @@ SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *ver
 {
 	int i, count, snmpVer = SNMP_VERSION_2C;
 	TCHAR buffer[1024];
-	char defCommunity[MAX_COMMUNITY_LENGTH];
-	DB_RESULT hResult;
 
 	// Check for V3 USM
 	SNMP_SecurityContext *securityContext = SnmpCheckV3CommSettings(pTransport, originalContext, testOids);
@@ -278,6 +276,7 @@ SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *ver
 		return securityContext;
 	}
 
+	char defCommunity[MAX_COMMUNITY_LENGTH];
 	ConfigReadStrA(_T("DefaultCommunityString"), defCommunity, MAX_COMMUNITY_LENGTH, "public");
 
 restart_check:
@@ -296,21 +295,26 @@ restart_check:
       }
 	}
 
-	// Check default community
-	DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, defCommunity);
-	pTransport->setSecurityContext(new SNMP_SecurityContext(defCommunity));
-   for(int i = 0; i < testOids->getSize(); i++)
+	// Check default community (only if different from current)
+   if ((originalContext == NULL) || 
+       (originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) || 
+       strcmp(defCommunity, originalContext->getCommunity()))
    {
-      if (SnmpGet(snmpVer, pTransport, testOids->getValue(i), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-	   {
-		   *version = snmpVer;
-		   return new SNMP_SecurityContext(defCommunity);
-	   }
+   	DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, defCommunity);
+	   pTransport->setSecurityContext(new SNMP_SecurityContext(defCommunity));
+      for(int i = 0; i < testOids->getSize(); i++)
+      {
+         if (SnmpGet(snmpVer, pTransport, testOids->getValue(i), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
+	      {
+		      *version = snmpVer;
+		      return new SNMP_SecurityContext(defCommunity);
+	      }
+      }
    }
 
 	// Check community from list
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
+	DB_RESULT hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
 	if (hResult != NULL)
 	{
 		char temp[256];
@@ -319,14 +323,19 @@ restart_check:
 		for(i = 0; i < count; i++)
 		{
 			DBGetFieldA(hResult, i, 0, temp, 256);
-			DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, temp);
-			pTransport->setSecurityContext(new SNMP_SecurityContext(temp));
-         for(int j = 0; j < testOids->getSize(); j++)
+         if ((originalContext == NULL) || 
+             (originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) ||
+             strcmp(temp, originalContext->getCommunity()))
          {
-            if (SnmpGet(snmpVer, pTransport, testOids->getValue(j), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-	         {
-   				*version = snmpVer;
-               goto stop_test;
+			   DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, temp);
+			   pTransport->setSecurityContext(new SNMP_SecurityContext(temp));
+            for(int j = 0; j < testOids->getSize(); j++)
+            {
+               if (SnmpGet(snmpVer, pTransport, testOids->getValue(j), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
+	            {
+   				   *version = snmpVer;
+                  goto stop_test;
+               }
             }
          }
 		}

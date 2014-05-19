@@ -11,7 +11,7 @@ public class ReportTreeLabelProvider extends LabelProvider
 
 	public ReportTreeLabelProvider()
 	{
-		icon = Activator.getImageDescriptor("icons/report.png").createImage();
+		icon = Activator.getImageDescriptor("icons/report.png").createImage(); //$NON-NLS-1$
 	}
 
 	@Override

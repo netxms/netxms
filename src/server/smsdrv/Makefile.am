@@ -8,4 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = dummy generic nxagent portech
+SUBDIRS = dummy generic nxagent portech ${SMSDRV_DIRS}

@@ -33,7 +33,7 @@ import org.netxms.ui.eclipse.logviewer.Messages;
  */
 public class SeverityConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { Messages.get().SeverityConditionEditor_Is, Messages.get().SeverityConditionEditor_IsNot, Messages.get().SeverityConditionEditor_Below, Messages.get().SeverityConditionEditor_Above };
+	private final String[] OPERATIONS = { Messages.get().SeverityConditionEditor_Is, Messages.get().SeverityConditionEditor_IsNot, Messages.get().SeverityConditionEditor_Below, Messages.get().SeverityConditionEditor_Above };
 	
 	private Combo severity;
 	

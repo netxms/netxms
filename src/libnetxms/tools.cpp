@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -161,38 +161,34 @@ TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(BYTE *addr, TCHAR *buffer)
 /**
  * Duplicate memory block
  */
-void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, UINT32 dwSize)
+void LIBNETXMS_EXPORTABLE *nx_memdup(const void *data, size_t size)
 {
-   void *pNewData;
+   void *newData;
 
-   pNewData = malloc(dwSize);
-   memcpy(pNewData, pData, dwSize);
-   return pNewData;
+   newData = malloc(size);
+   memcpy(newData, data, size);
+   return newData;
 }
 
-
-//
-// Swap two memory blocks
-//
-
-void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, UINT32 dwSize)
+/**
+ * Swap two memory blocks
+ */
+void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size)
 {
-   void *pTemp;
+   void *temp;
 
-   pTemp = malloc(dwSize);
-   memcpy(pTemp, pBlock1, dwSize);
-   memcpy(pBlock1, pBlock2, dwSize);
-   memcpy(pBlock2, pTemp, dwSize);
-   free(pTemp);
+   temp = malloc(size);
+   memcpy(temp, block1, size);
+   memcpy(block1, block2, size);
+   memcpy(block2, temp, size);
+   free(temp);
 }
-
-
-//
-// Copy string
-//
 
 #if defined(_WIN32) && defined(USE_WIN32_HEAP)
 
+/**
+ * Copy string
+ */
 char LIBNETXMS_EXPORTABLE *nx_strdup(const char *src)
 {
 	char *newStr = (char *)malloc(strlen(src) + 1);
@@ -200,6 +196,9 @@ char LIBNETXMS_EXPORTABLE *nx_strdup(const char *src)
 	return newStr;
 }
 
+/**
+ * Copy string
+ */
 WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
 {
 	WCHAR *newStr = (WCHAR *)malloc((wcslen(src) + 1) * sizeof(WCHAR));
@@ -211,6 +210,9 @@ WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
 
 #if !HAVE_WCSDUP && !defined(_WIN32)
 
+/**
+ * Copy string
+ */
 WCHAR LIBNETXMS_EXPORTABLE *wcsdup(const WCHAR *src)
 {
 	return (WCHAR *)nx_memdup(src, (wcslen(src) + 1) * sizeof(WCHAR));
@@ -429,12 +431,11 @@ void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str)
 	*(p + 1) = 0;
 }
 
-//
-// Expand file name
-// Can be used strftime placeholders and external commands enclosed in ``
-//
-
-const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize)
+/**
+ * Expand file name. Source and destiation may point to same location.
+ * Can be used strftime placeholders and external commands enclosed in ``
+ */
+const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommands)
 {
 	time_t t;
 	struct tm *ltm;
@@ -455,7 +456,7 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 
 	for(int i = 0; (temp[i] != 0) && (outpos < bufSize - 1); i++)
 	{
-		if (temp[i] == _T('`'))
+		if (temp[i] == _T('`') && allowShellCommands)
 		{
 			int j = ++i;
 			while((temp[j] != _T('`')) && (temp[j] != 0))
@@ -491,7 +492,7 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 
 			i = j;
 		}
-      else if (temp[i] == _T('$') && temp[i+1] == _T('{'))
+      else if (temp[i] == _T('$') && temp[i + 1] == _T('{'))
       {
          i += 2;
 			int j = i;
@@ -603,8 +604,8 @@ TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 dwError, TCHAR *pszBuffer,
 {
    TCHAR *msgBuf;
 
-   if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-                     FORMAT_MESSAGE_FROM_SYSTEM | 
+   if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                     FORMAT_MESSAGE_FROM_SYSTEM |
                      FORMAT_MESSAGE_IGNORE_INSERTS,
                      NULL, dwError,
                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
@@ -644,7 +645,7 @@ int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose)
    if (!nochdir)
       chdir("/");
 
-   if (!noclose) 
+   if (!noclose)
    {
       fclose(stdin);          // don't need stdin, stdout, stderr
       fclose(stdout);
@@ -702,12 +703,12 @@ TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr)
 /**
  * Convert byte array to text representation (wide character version)
  */
-WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, UINT32 dwSize, WCHAR *pStr)
+WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, size_t size, WCHAR *pStr)
 {
-   UINT32 i;
+   size_t i;
    WCHAR *pCurr;
 
-   for(i = 0, pCurr = pStr; i < dwSize; i++)
+   for(i = 0, pCurr = pStr; i < size; i++)
    {
       *pCurr++ = bin2hex(pData[i] >> 4);
       *pCurr++ = bin2hex(pData[i] & 15);
@@ -719,12 +720,12 @@ WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, UINT32 dwSize, WCHAR *p
 /**
  * Convert byte array to text representation (multibyte character version)
  */
-char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, UINT32 dwSize, char *pStr)
+char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, size_t size, char *pStr)
 {
-   UINT32 i;
+   size_t i;
    char *pCurr;
 
-   for(i = 0, pCurr = pStr; i < dwSize; i++)
+   for(i = 0, pCurr = pStr; i < size; i++)
    {
       *pCurr++ = bin2hex(pData[i] >> 4);
       *pCurr++ = bin2hex(pData[i] & 15);
@@ -737,13 +738,13 @@ char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, UINT32 dwSize, char *pSt
  * Convert string of hexadecimal digits to byte array (wide character version)
  * Returns number of bytes written to destination
  */
-UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, UINT32 dwSize)
+UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, UINT32 size)
 {
    UINT32 i;
    const WCHAR *pCurr;
 
-   memset(pData, 0, dwSize);
-   for(i = 0, pCurr = pStr; (i < dwSize) && (*pCurr != 0); i++)
+   memset(pData, 0, size);
+   for(i = 0, pCurr = pStr; (i < size) && (*pCurr != 0); i++)
    {
       pData[i] = hex2bin(*pCurr) << 4;
       pCurr++;
@@ -760,13 +761,13 @@ UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, UINT32 dwS
  * Convert string of hexadecimal digits to byte array (multibyte character version)
  * Returns number of bytes written to destination
  */
-UINT32 LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *pData, UINT32 dwSize)
+UINT32 LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *pData, UINT32 size)
 {
    UINT32 i;
    const char *pCurr;
 
-   memset(pData, 0, dwSize);
-   for(i = 0, pCurr = pStr; (i < dwSize) && (*pCurr != 0); i++)
+   memset(pData, 0, size);
+   for(i = 0, pCurr = pStr; (i < size) && (*pCurr != 0); i++)
    {
       pData[i] = hex2bin(*pCurr) << 4;
       pCurr++;
@@ -941,7 +942,7 @@ retry:
 
 /**
  * Extended recv() - receive data with timeout
- * 
+ *
  * @param hSocket socket handle
  * @param data data buffer
  * @param len buffer length in bytes
@@ -1141,68 +1142,49 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
 }
 
 /**
- * Resolve host name to IP address
+ * Resolve host name to IP address (UNICODE version)
  *
- * @param pszName host name or IP address
+ * @param name host name or IP address
  * @return IP address in network byte order
  */
-UINT32 LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName)
+UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameW(const WCHAR *name)
 {
-   UINT32 dwAddr;
-   struct hostent *hs;
-#ifdef UNICODE
-   char szBuffer[256];
+   char mbName[256];
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, name, -1, mbName, 256, NULL, NULL);
+   return ResolveHostNameA(mbName);
+}
 
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pszName, -1, szBuffer, 256, NULL, NULL);
-   dwAddr = inet_addr(szBuffer);
-#else
-   dwAddr = inet_addr(pszName);
-#endif
-   if ((dwAddr == INADDR_NONE) || (dwAddr == INADDR_ANY))
+/**
+ * Resolve host name to IP address (multibyte version)
+ *
+ * @param name host name or IP address
+ * @return IP address in network byte order
+ */
+UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *name)
+{
+   UINT32 addr = inet_addr(name);
+   if ((addr == INADDR_NONE) || (addr == INADDR_ANY))
    {
-#ifdef UNICODE
-      hs = gethostbyname(szBuffer);
+#if HAVE_GETHOSTBYNAME2_R
+      struct hostent h, *hs = NULL;
+      char buffer[1024];
+      int err;
+      gethostbyname2_r(name, AF_INET, &h, buffer, 1024, &hs, &err);
 #else
-      hs = gethostbyname(pszName);
+      struct hostent *hs = gethostbyname(name);
 #endif
       if (hs != NULL)
       {
-         memcpy(&dwAddr, hs->h_addr, sizeof(UINT32));
+         memcpy(&addr, hs->h_addr, sizeof(UINT32));
       }
       else
       {
-         dwAddr = INADDR_NONE;
+         addr = INADDR_NONE;
       }
    }
 
-   return dwAddr;
+   return addr;
 }
-
-#ifdef UNICODE
-
-UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *pszName)
-{
-   UINT32 dwAddr;
-   struct hostent *hs;
-   dwAddr = inet_addr(pszName);
-   if ((dwAddr == INADDR_NONE) || (dwAddr == INADDR_ANY))
-   {
-      hs = gethostbyname(pszName);
-      if (hs != NULL)
-      {
-         memcpy(&dwAddr, hs->h_addr, sizeof(UINT32));
-      }
-      else
-      {
-         dwAddr = INADDR_NONE;
-      }
-   }
-
-   return dwAddr;
-}
-
-#endif
-
 
 #ifndef VER_PLATFORM_WIN32_WINDOWS
 #define VER_PLATFORM_WIN32_WINDOWS 1
@@ -1456,14 +1438,14 @@ bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const
 				break;
 		}
 	}
-	
+
 	if (state == 1)
 	{
 		buffer[pos] = 0;
 		StrStripW(buffer);
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -1512,14 +1494,14 @@ bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueA(const char *optString, const 
 				break;
 		}
 	}
-	
+
 	if (state == 1)
 	{
 		buffer[pos] = 0;
 		StrStripA(buffer);
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -1626,7 +1608,7 @@ BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encry
 	CalculateMD5Hash((BYTE *)mblogin, strlen(mblogin), key);
 	ICEDecryptData(encrypted, 32, decrypted, key);
 	decrypted[31] = 0;
-	
+
 #ifdef UNICODE
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)decrypted, -1, decryptedPasswd, 32);
 	decryptedPasswd[31] = 0;
@@ -1722,8 +1704,8 @@ int LIBNETXMS_EXPORTABLE _topen(TCHAR *pszName, int nFlags, ...)
    HANDLE hFile;
    UINT32 dwAccess, dwDisp;
 
-   dwAccess = (nFlags & O_RDONLY) ? GENERIC_READ : 
-                 (nFlags & O_WRONLY) ? GENERIC_WRITE : 
+   dwAccess = (nFlags & O_RDONLY) ? GENERIC_READ :
+                 (nFlags & O_WRONLY) ? GENERIC_WRITE :
                     (nFlags & O_RDWR) ? (GENERIC_READ | GENERIC_WRITE) : 0;
    if ((nFlags & (O_CREAT | O_TRUNC)) == (O_CREAT | O_TRUNC))
       dwDisp = CREATE_ALWAYS;
@@ -2008,7 +1990,7 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	GetConsoleScreenBufferInfo(out, &csbi);
-	
+
 	const TCHAR *curr = text;
 	while(*curr != 0)
 	{

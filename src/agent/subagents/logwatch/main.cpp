@@ -62,11 +62,9 @@ THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
 	return THREAD_OK;
 }
 
-
-//
-// Get parser statistics
-//
-
+/**
+ * Get parser statistics
+ */
 static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	TCHAR name[256];
@@ -105,11 +103,9 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Get list of configured parsers
-//
-
+/**
+ * Get list of configured parsers
+ */
 static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
 	for(DWORD i = 0; i < m_numParsers; i++)
@@ -117,11 +113,9 @@ static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 	return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Called by master agent at unload
-//
-
+/**
+ * Called by master agent at unload
+ */
 static void SubagentShutdown()
 {
 	DWORD i;
@@ -149,10 +143,31 @@ static void SubagentShutdown()
 /**
  * Callback for matched log records
  */
-static void LogParserMatch(DWORD eventCode, const TCHAR *eventName, const TCHAR *text, int paramCount,
-                           TCHAR **paramList, DWORD objectId, void *userArg)
+static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR *text,
+                           const TCHAR *source, UINT32 eventId, UINT32 severity,
+                           int cgCount, TCHAR **cgList, UINT32 objectId, void *userArg)
 {
-	AgentSendTrap2(eventCode, eventName, paramCount, paramList);
+   if (source != NULL)
+   {
+      TCHAR eventIdText[16], severityText[16];
+      _sntprintf(eventIdText, 16, _T("%u"), eventId);
+      _sntprintf(severityText, 16, _T("%u"), severity);
+
+      int count = cgCount + 3;
+      TCHAR **list = (TCHAR **)malloc(sizeof(TCHAR *) * count);
+      int i;
+      for(i = 0; i < cgCount; i++)
+         list[i] = cgList[i];
+      list[i++] = (TCHAR *)source;
+      list[i++] = eventIdText;
+      list[i++] = severityText;
+	   AgentSendTrap2(eventCode, eventName, count, list);
+      free(list);
+   }
+   else
+   {
+	   AgentSendTrap2(eventCode, eventName, cgCount, cgList);
+   }
 }
 
 /**

@@ -152,7 +152,6 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
    SOCKET s = INVALID_SOCKET;
    int err, b, ret, total;
    struct sockaddr_in sa;
-   struct hostent h, *hp2;
    SSL *ssl = NULL;
    X509 *s_cert = NULL;
    char buf[4096];
@@ -172,11 +171,7 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
 
    memset(&sa, 0, sizeof(sa));
    sa.sin_family = AF_INET;
-   hp2 = gethostbyname(m_host);
-   memcpy(&h, hp2, sizeof(h));
-   //  gethostbyname_r(m_host, &h, buf, sizeof(buf), &hp2, &b);
-
-   memcpy(&(sa.sin_addr.s_addr), h.h_addr_list[0], sizeof(long));
+   sa.sin_addr.s_addr = ResolveHostNameA(m_host);
    sa.sin_port = htons(m_port);
    if (connect(s, (struct sockaddr*) &sa, sizeof(sa)) == -1) 
    {

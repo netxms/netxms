@@ -103,6 +103,12 @@ static void CreateManagementNode(UINT32 ipAddr, UINT32 netMask)
                                  _T("Server.AverageConfigurationPollerQueueSize"), 
                                  DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
                                  _T("Configuration poller queue for last minute")));
+   DCItem *pEventsPerMinuteDCI = new DCItem(CreateUniqueId(IDG_ITEM),
+                                 _T("Server.TotalEventsProcessed"),
+                                 DS_INTERNAL, DCI_DT_UINT, pollingInterval, retentionTime, pNode,
+                                 _T("Events processed for last minute"));
+   pEventsPerMinuteDCI->setDeltaCalcMethod(DCM_AVERAGE_PER_MINUTE);
+   pNode->addDCObject(pEventsPerMinuteDCI);
 }
 
 /**

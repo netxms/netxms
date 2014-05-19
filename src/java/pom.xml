@@ -3,7 +3,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.netxms</groupId>
-  <version>1.2.12</version>
+  <version>1.2.14</version>
   <artifactId>netxms</artifactId>
   <packaging>pom</packaging>
   <name>NetXMS Meta-package</name>
@@ -34,4 +34,33 @@
       <url>https://maven.netxms.org/nexus/content/repositories/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9.1</version>
+        <configuration>
+          <links>
+            <link>http://docs.oracle.com/javase/7/docs/api</link>
+          </links>
+          <bootclasspath>${sun.boot.class.path}</bootclasspath>
+          <additionalJOption>-J-Xmx1024m</additionalJOption>
+          <detectJavaApiLink>true</detectJavaApiLink>
+          <detectLinks>true</detectLinks>
+          <excludePackageNames>*.testing.*:com.jcraft</excludePackageNames>
+        </configuration>
+        <executions>
+          <execution>
+            <id>aggregate</id>
+            <phase>site</phase>
+            <goals>
+              <goal>aggregate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

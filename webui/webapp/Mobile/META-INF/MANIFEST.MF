@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Mobile
+Bundle-SymbolicName: org.netxms.webui.mobile;singleton:=true
+Bundle-Version: 1.2.4
+Bundle-Activator: org.netxms.webui.mobile.Activator
+Bundle-Vendor: Raden Solutions
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.9.0",
+ org.eclipse.rap.ui;bundle-version="2.2.0",
+ org.netxms.webui.core;bundle-version="1.2.12",
+ org.netxms.ui.eclipse.perfview;bundle-version="1.2.11",
+ org.netxms.ui.eclipse.dashboard;bundle-version="1.2.11"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .
+Import-Package: javax.servlet;version="2.6.0",
+ javax.servlet.http;version="2.6.0"

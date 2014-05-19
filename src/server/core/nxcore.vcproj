@@ -577,6 +577,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\hdlink.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\hk.cpp"
 				>
 			</File>
@@ -638,6 +642,10 @@
 			</File>
 			<File
 				RelativePath=".\logs.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\macdb.cpp"
 				>
 			</File>
 			<File
@@ -730,14 +738,6 @@
 			</File>
 			<File
 				RelativePath=".\radius.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\report.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\report_job.cpp"
 				>
 			</File>
 			<File
@@ -871,6 +871,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\hdlink.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\include\ieee8021x.h"
 				>
 			</File>
@@ -980,10 +984,6 @@
 			</File>
 			<File
 				RelativePath="..\include\nxcore_logs.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\nxcore_reports.h"
 				>
 			</File>
 			<File

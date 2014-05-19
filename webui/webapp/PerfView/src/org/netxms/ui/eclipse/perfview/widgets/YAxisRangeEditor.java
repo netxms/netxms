@@ -62,6 +62,7 @@ public class YAxisRangeEditor extends Composite
       radioAuto.setSelection(true);
       
       from = new LabeledSpinner(group, SWT.NONE);
+      from.setRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
       from.setLabel(Messages.get().YAxisRangeEditor_From);
       from.setSelection(0);
       GridData gd = new GridData();
@@ -73,6 +74,7 @@ public class YAxisRangeEditor extends Composite
       from.setLayoutData(gd);
 
       to = new LabeledSpinner(group, SWT.NONE);
+      to.setRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
       to.setLabel(Messages.get().YAxisRangeEditor_To);
       to.setSelection(100);
       gd = new GridData();

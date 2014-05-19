@@ -3,15 +3,11 @@
  */
 package org.netxms.ui.android.service.tasks;
 
-import java.io.IOException;
-
 import org.netxms.base.NXCommon;
-import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
 import org.netxms.ui.android.service.ClientConnectorService.ConnectionStatus;
-
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -86,21 +82,14 @@ public class ConnectTask extends Thread
 					}
 					else
 					{
-						try
+						if (session.checkConnection())
 						{
-							session.checkConnection();
 							service.setConnectionStatus(ConnectionStatus.CS_ALREADYCONNECTED, session.getServerAddress());
 						}
-						catch (NXCException e)
+						else
 						{
-							Log.e(TAG, "NXCException in checking connection", e);
-							service.onError(e.getLocalizedMessage());
-							session = null;
-						}
-						catch (IOException e)
-						{
-							Log.e(TAG, "IOException in checking connection", e);
-							service.onError(e.getLocalizedMessage());
+							Log.e(TAG, "session.checkConnection() failed");
+							service.onError("Connection closed");
 							session = null;
 						}
 					}

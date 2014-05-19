@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,13 +23,16 @@
 #include "nxcore.h"
 
 /**
- * Implementation of "NetXMS object" class
+ * NXSL class NetObj: constructor
  */
 NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
 {
    _tcscpy(m_szName, _T("NetObj"));
 }
 
+/**
+ * NXSL class NetObj: get attribute
+ */
 NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    NetObj *object;
@@ -80,17 +83,90 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
    return pValue;
 }
 
-
-//
-// Implementation of "NetXMS node" class
-//
-
-NXSL_NodeClass::NXSL_NodeClass()
-               :NXSL_Class()
+/**
+ * Generic implementation for flag changing methods
+ */
+static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **result, UINT32 flag)
 {
-   _tcscpy(m_szName, _T("Node"));
+   if (!arg->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   Node *node = (Node *)object->getData();
+   if (arg->getValueAsInt32())
+      node->clearFlag(flag);
+   else
+      node->setFlag(flag);
+
+   *result = new NXSL_Value;
+   return 0;
 }
 
+/**
+ * enableAgent(enabled) method
+ */
+NXSL_METHOD_DEFINITION(enableAgent)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_NXCP);
+}
+
+/**
+ * enableConfigurationPolling(enabled) method
+ */
+NXSL_METHOD_DEFINITION(enableConfigurationPolling)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_CONF_POLL);
+}
+
+/**
+ * enableIcmp(enabled) method
+ */
+NXSL_METHOD_DEFINITION(enableIcmp)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ICMP);
+}
+
+/**
+ * enableSnmp(enabled) method
+ */
+NXSL_METHOD_DEFINITION(enableSnmp)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SNMP);
+}
+
+/**
+ * enableStatusPolling(enabled) method
+ */
+NXSL_METHOD_DEFINITION(enableStatusPolling)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_STATUS_POLL);
+}
+
+/**
+ * enableTopologyPolling(enabled) method
+ */
+NXSL_METHOD_DEFINITION(enableTopologyPolling)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_TOPOLOGY_POLL);
+}
+
+/**
+ * NXSL class Node: constructor
+ */
+NXSL_NodeClass::NXSL_NodeClass() : NXSL_Class()
+{
+   _tcscpy(m_szName, _T("Node"));
+
+   NXSL_REGISTER_METHOD(enableAgent, 1);
+   NXSL_REGISTER_METHOD(enableConfigurationPolling, 1);
+   NXSL_REGISTER_METHOD(enableIcmp, 1);
+   NXSL_REGISTER_METHOD(enableSnmp, 1);
+   NXSL_REGISTER_METHOD(enableStatusPolling, 1);
+   NXSL_REGISTER_METHOD(enableTopologyPolling, 1);
+}
+
+/**
+ * NXSL class Node: get attribute
+ */
 NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    Node *pNode;
@@ -222,13 +298,16 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 }
 
 /**
- * Implementation of "NetXMS interface" class
+ * NXSL class Interface: constructor
  */
 NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_Class()
 {
    _tcscpy(m_szName, _T("Interface"));
 }
 
+/**
+ * NXSL class Interface: get attribute
+ */
 NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    Interface *iface;
@@ -424,13 +503,16 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 }
 
 /**
- * Implementation of NXSL "Event" class
+ * NXSL class Event: constructor
  */
 NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
 {
    _tcscpy(m_szName, _T("Event"));
 }
 
+/**
+ * NXSL class Event: get attribute
+ */
 NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    Event *event;
@@ -514,6 +596,10 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
 		value = new NXSL_Value(dci->getId());
    }
+   else if ((dci->getType() == DCO_TYPE_ITEM) && !_tcscmp(attr, _T("instance")))
+   {
+		value = new NXSL_Value(((DCItem *)dci)->getInstance());
+   }
    else if (!_tcscmp(attr, _T("lastPollTime")))
    {
 		value = new NXSL_Value((INT64)dci->getLastPollTime());
@@ -568,7 +654,7 @@ NXSL_Value *NXSL_SNMPTransportClass::getAttr(NXSL_Object *object, const TCHAR *a
 }
 
 /**
- * Implementation of "SNMP_Transport" class: destructor
+ * Implementation of "SNMP_Transport" class: NXSL object destructor
  */
 void NXSL_SNMPTransportClass::onObjectDelete(NXSL_Object *object)
 {
@@ -576,52 +662,59 @@ void NXSL_SNMPTransportClass::onObjectDelete(NXSL_Object *object)
 }
 
 /**
- * Implementation of "SNMP_VarBind" class
+ * NXSL class SNMP_VarBind: constructor
  */
 NXSL_SNMPVarBindClass::NXSL_SNMPVarBindClass() : NXSL_Class()
 {
 	_tcscpy(m_szName, _T("SNMP_VarBind"));
 }
 
+/**
+ * NXSL class SNMP_VarBind: get attribute
+ */
 NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
 	NXSL_Value *value = NULL;
-	SNMP_Variable *t;
-	TCHAR strValue[1024];
-
-	t = (SNMP_Variable *)object->getData();
+	SNMP_Variable *t = (SNMP_Variable *)object->getData();
 	if (!_tcscmp(attr, _T("type")))
 	{
-		value = new NXSL_Value((UINT32)t->GetType());
+		value = new NXSL_Value((UINT32)t->getType());
 	}
 	else if (!_tcscmp(attr, _T("name")))
 	{
-		value = new NXSL_Value(t->GetName()->getValueAsText());
+		value = new NXSL_Value(t->getName()->getValueAsText());
 	}
 	else if (!_tcscmp(attr, _T("value")))
 	{
-		value = new NXSL_Value(t->GetValueAsString(strValue, 1024));
+   	TCHAR strValue[1024];
+		value = new NXSL_Value(t->getValueAsString(strValue, 1024));
 	}
 	else if (!_tcscmp(attr, _T("printableValue")))
 	{
+   	TCHAR strValue[1024];
 		bool convToHex = true;
 		t->getValueAsPrintableString(strValue, 1024, &convToHex);
-		value = new NXSL_Value(t->GetValueAsString(strValue, 1024));
+		value = new NXSL_Value(strValue);
 	}
 	else if (!_tcscmp(attr, _T("valueAsIp")))
 	{
-		t->GetValueAsIPAddr(strValue);
+   	TCHAR strValue[128];
+		t->getValueAsIPAddr(strValue);
 		value = new NXSL_Value(strValue);
 	}
 	else if (!_tcscmp(attr, _T("valueAsMac")))
 	{
-		t->GetValueAsMACAddr(strValue);
+   	TCHAR strValue[128];
+		t->getValueAsMACAddr(strValue);
 		value = new NXSL_Value(strValue);
 	}
 
 	return value;
 }
 
+/**
+ * NXSL class SNMP_VarBind: NXSL object desctructor
+ */
 void NXSL_SNMPVarBindClass::onObjectDelete(NXSL_Object *object)
 {
 	delete (SNMP_Variable *)object->getData();

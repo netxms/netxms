@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
@@ -32,6 +32,54 @@
 #define MAX_QUERY_NAME_LEN 64
 
 /**
+ * Query definition
+ */
+class Query
+{
+private:
+   MUTEX m_mutex;
+   THREAD m_pollingThread;
+   TCHAR *m_name;
+   TCHAR *m_dbid;
+   TCHAR *m_query;
+   TCHAR *m_description;
+   int m_interval;
+   time_t m_lastPoll;
+   int m_status;
+   TCHAR m_statusText[MAX_RESULT_LENGTH];
+   DB_RESULT m_result;
+   bool m_pollRequired;
+
+   Query();
+
+   void setError(const TCHAR *msg);
+
+public:
+   static Query *createFromConfig(const TCHAR *src);
+   static Query *createConfigurableFromConfig(const TCHAR *src);
+
+   ~Query();
+
+   void lock() { MutexLock(m_mutex); }
+   void unlock() { MutexUnlock(m_mutex); }
+
+   time_t getNextPoll() { return m_lastPoll + m_interval; }
+   void poll();
+   void joinPollingThread() { ThreadJoin(m_pollingThread); }
+
+   LONG getResult(TCHAR *buffer);
+   LONG fillResultTable(Table *table);
+
+   const TCHAR *getName() { return m_name; }
+   int getStatus() { return m_status; }
+   const TCHAR *getStatusText() { return m_statusText; }
+   const TCHAR *getDBid() { return m_dbid; }
+   const TCHAR *getQuery() { return m_query; }
+   const TCHAR *getDescription() { return m_description; }
+   bool isPollRequired() { return m_pollRequired; }
+};
+
+/**
  * Query status codes
  */
 enum QueryStatusCode
@@ -62,7 +110,7 @@ public:
    static DBConnection *createFromConfig(const TCHAR *config);
 
    ~DBConnection();
-   
+
    bool connect();
 
    const TCHAR *getId() { return m_id; }
@@ -74,6 +122,8 @@ public:
  */
 LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value);
 LONG H_DirectQueryTable(const TCHAR *param, const TCHAR *arg, Table *value);
+LONG H_DirectQueryConfigurable(const TCHAR *param, const TCHAR *arg, TCHAR *value);
+LONG H_DirectQueryConfigurableTable(const TCHAR *param, const TCHAR *arg, Table *value);
 LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value);
 LONG H_PollResultTable(const TCHAR *param, const TCHAR *arg, Table *value);
 
@@ -81,12 +131,14 @@ LONG H_PollResultTable(const TCHAR *param, const TCHAR *arg, Table *value);
  * Functions
  */
 bool AddDatabaseFromConfig(const TCHAR *db);
-bool AddQueryFromConfig(const TCHAR *query);
+bool AddQueryFromConfig(const TCHAR *config, Query** createdQuery);
+bool AddConfigurableQueryFromConfig(const TCHAR *config, Query** createdQuery);
 void ShutdownConnections();
 DB_HANDLE GetConnectionHandle(const TCHAR *dbid);
 void StartPollingThreads();
 void StopPollingThreads();
 void DBResultToTable(DB_RESULT hResult, Table *table);
+Query *AcquireQueryObject(const TCHAR *name);
 
 /**
  * Shutdown condition

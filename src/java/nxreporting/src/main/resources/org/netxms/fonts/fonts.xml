@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fontFamilies>
+    <fontFamily name="DejaVu Sans">
+        <normal>org/netxms/fonts/dejavu/DejaVuSans.ttf</normal>
+        <bold>org/netxms/fonts/dejavu/DejaVuSans-Bold.ttf</bold>
+        <italic>org/netxms/fonts/dejavu/DejaVuSans-Oblique.ttf</italic>
+        <boldItalic>org/netxms/fonts/dejavu/DejaVuSans-BoldOblique.ttf</boldItalic>
+        <pdfEncoding>Identity-H</pdfEncoding>
+        <pdfEmbedded>true</pdfEmbedded>
+        <exportFonts>
+            <export key="net.sf.jasperreports.html">'DejaVu Sans', Arial, Helvetica, sans-serif</export>
+            <export key="net.sf.jasperreports.xhtml">'DejaVu Sans', Arial, Helvetica, sans-serif</export>
+        </exportFonts>
+    </fontFamily>
+    <fontFamily name="DejaVu Serif">
+        <normal>org/netxms/fonts/dejavu/DejaVuSerif.ttf</normal>
+        <bold>org/netxms/fonts/dejavu/DejaVuSerif-Bold.ttf</bold>
+        <italic>org/netxms/fonts/dejavu/DejaVuSerif-Italic.ttf</italic>
+        <boldItalic>org/netxms/fonts/dejavu/DejaVuSerif-BoldItalic.ttf</boldItalic>
+        <pdfEncoding>Identity-H</pdfEncoding>
+        <pdfEmbedded>true</pdfEmbedded>
+        <exportFonts>
+            <export key="net.sf.jasperreports.html">'DejaVu Serif', 'Times New Roman', Times, serif</export>
+            <export key="net.sf.jasperreports.xhtml">'DejaVu Serif', 'Times New Roman', Times, serif</export>
+        </exportFonts>
+    </fontFamily>
+    <fontFamily name="DejaVu Sans Mono">
+        <normal>org/netxms/fonts/dejavu/DejaVuSansMono.ttf</normal>
+        <bold>org/netxms/fonts/dejavu/DejaVuSansMono-Bold.ttf</bold>
+        <italic>org/netxms/fonts/dejavu/DejaVuSansMono-Oblique.ttf</italic>
+        <boldItalic>org/netxms/fonts/dejavu/DejaVuSansMono-BoldOblique.ttf</boldItalic>
+        <pdfEncoding>Identity-H</pdfEncoding>
+        <pdfEmbedded>true</pdfEmbedded>
+        <exportFonts>
+            <export key="net.sf.jasperreports.html">'DejaVu Sans Mono', 'Courier New', Courier, monospace</export>
+            <export key="net.sf.jasperreports.xhtml">'DejaVu Sans Mono', 'Courier New', Courier, monospace</export>
+        </exportFonts>
+    </fontFamily>
+
+    <!--
+        Mapping Java logical fonts, for the sake of HTML export only.
+    -->
+    <fontFamily name="SansSerif">
+        <exportFonts>
+            <export key="net.sf.jasperreports.html">'DejaVu Sans', Arial, Helvetica, sans-serif</export>
+            <export key="net.sf.jasperreports.xhtml">'DejaVu Sans', Arial, Helvetica, sans-serif</export>
+        </exportFonts>
+    </fontFamily>
+    <fontFamily name="Serif">
+        <exportFonts>
+            <export key="net.sf.jasperreports.html">'DejaVu Serif', 'Times New Roman', Times, serif</export>
+            <export key="net.sf.jasperreports.xhtml">'DejaVu Serif', 'Times New Roman', Times, serif</export>
+        </exportFonts>
+    </fontFamily>
+    <fontFamily name="Monospaced">
+        <exportFonts>
+            <export key="net.sf.jasperreports.html">'DejaVu Sans Mono', 'Courier New', Courier, monospace</export>
+            <export key="net.sf.jasperreports.xhtml">'DejaVu Sans Mono', 'Courier New', Courier, monospace</export>
+        </exportFonts>
+    </fontFamily>
+</fontFamilies>

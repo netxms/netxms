@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** nxalarm - manage alarms from command line
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,18 +23,14 @@
 
 #include "nxalarm.h"
 
-
-//
-// Static data
-//
-
+/**
+ * Alarm list output format
+ */
 static TCHAR m_outFormat[MAX_DB_STRING] = _T("%I %S %H %m");
 
-
-//
-// List alarms
-//
-
+/**
+ * List alarms
+ */
 static UINT32 ListAlarms(NXC_SESSION session)
 {
 	UINT32 i, numAlarms, rcc;
@@ -63,43 +59,40 @@ static UINT32 ListAlarms(NXC_SESSION session)
 	return rcc;
 }
 
-
-//
-// Callback function for debug printing
-//
-
+/**
+ * Callback function for debug printing
+ */
 static void DebugCallback(TCHAR *pMsg)
 {
    _tprintf(_T("*debug* %s\n"), pMsg);
 }
 
-
-//
-// main
-//
-
+/**
+ * main
+ */
 int main(int argc, char *argv[])
 {
-	TCHAR login[MAX_DB_STRING] = _T("guest"),
-	      password[MAX_DB_STRING] = _T("");
+	TCHAR login[MAX_DB_STRING] = _T("guest");
+   TCHAR password[MAX_DB_STRING] = _T("");
 	char *eptr;
-	BOOL isDebug = FALSE, isEncrypt = FALSE;
-	UINT32 rcc, alarmId, timeout = 3;
+	bool isDebug = false, isEncrypt = false, isSticky = false;
+	UINT32 rcc, alarmId;
+   int timeout = 3, ackTimeout = 0;
    NXC_SESSION session;
 	int ch;
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "Deho:P:u:vw:")) != -1)
+   while((ch = getopt(argc, argv, "Deho:P:sS:u:vw:")) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
             printf("Usage: nxalarm [<options>] <server> <command> [<alarm_id>]\n"
 				       "Possible commands are:\n"
-						 "   ack <id>       : Acknowlege alarm\n"
-						 "   close <id>     : Notify system that incident associated with alarm is closed\n"
+						 "   ack <id>       : Acknowledge alarm\n"
 						 "   list           : List active alarms\n"
+						 "   open <id>      : OPen helpdesk issue from alarm\n"
 						 "   terminate <id> : Terminate alarm\n"
                    "Valid options are:\n"
                    "   -D             : Turn on debug mode.\n"
@@ -107,6 +100,8 @@ int main(int argc, char *argv[])
                    "   -h             : Display help and exit.\n"
 						 "   -o <format>    : Output format for list (see below).\n"
                    "   -P <password>  : Specify user's password. Default is empty password.\n"
+                   "   -s             : Sticky acknowledge (only for \"ack\" command).\n"
+                   "   -S <minutes>   : Sticky acknowledge with timeout (only for \"ack\" command).\n"
                    "   -u <user>      : Login to server as <user>. Default is \"guest\".\n"
                    "   -v             : Display version and exit.\n"
                    "   -w <seconds>   : Specify command timeout (default is 3 seconds).\n"
@@ -127,20 +122,21 @@ int main(int argc, char *argv[])
 						 "   %%x Alarm state as number\n"
 						 "   %%X Alarm state as text\n"
 						 "   %%%% Percent sign\n"
+                   "Default format is %%I %%S %%H %%m\n"
                    "\n");
             return 1;
          case 'D':
-            isDebug = TRUE;
+            isDebug = true;
             break;
          case 'e':
-            isEncrypt = TRUE;
+            isEncrypt = true;
             break;
-         case 'u':
+         case 'o':
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, login, MAX_DB_STRING);
-				login[MAX_DB_STRING - 1] = 0;
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_outFormat, MAX_DB_STRING);
+				m_outFormat[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(login, optarg, MAX_DB_STRING);
+            nx_strncpy(m_outFormat, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'P':
@@ -151,16 +147,28 @@ int main(int argc, char *argv[])
             nx_strncpy(password, optarg, MAX_DB_STRING);
 #endif
             break;
-         case 'o':
+         case 's':
+            isSticky = true;
+            break;
+         case 'S':
+            isSticky = true;
+            ackTimeout = strtol(optarg, NULL, 0);
+            if (ackTimeout < 1)
+            {
+               _tprintf(_T("Invalid timeout %hs\n"), optarg);
+               return 1;
+            }
+            break;
+         case 'u':
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, m_outFormat, MAX_DB_STRING);
-				m_outFormat[MAX_DB_STRING - 1] = 0;
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, login, MAX_DB_STRING);
+				login[MAX_DB_STRING - 1] = 0;
 #else
-            nx_strncpy(m_outFormat, optarg, MAX_DB_STRING);
+            nx_strncpy(login, optarg, MAX_DB_STRING);
 #endif
             break;
          case 'w':
-            timeout = strtoul(optarg, NULL, 0);
+            timeout = strtol(optarg, NULL, 0);
             if ((timeout < 1) || (timeout > 120))
             {
                _tprintf(_T("Invalid timeout %hs\n"), optarg);
@@ -226,7 +234,7 @@ int main(int argc, char *argv[])
 		return 2;
 	}
 
-	NXCSetCommandTimeout(session, timeout * 1000);
+	NXCSetCommandTimeout(session, (UINT32)timeout * 1000);
 
 	// Execute command
 	if (!stricmp(argv[optind + 1], "list"))
@@ -244,15 +252,18 @@ int main(int argc, char *argv[])
 		}
 		if (!stricmp(argv[optind + 1], "ack"))
 		{
-			rcc = NXCAcknowledgeAlarm(session, alarmId);
+		   rcc = NXCAcknowledgeAlarmEx(session, alarmId, isSticky, (UINT32)ackTimeout * 60);
 			if (rcc != RCC_SUCCESS)
 				_tprintf(_T("Cannot acknowledge alarm: %s\n"), NXCGetErrorText(rcc));
 		}
-		else if (!stricmp(argv[optind + 1], "close"))
+		else if (!stricmp(argv[optind + 1], "open"))
 		{
-			rcc = NXCCloseAlarm(session, alarmId);
-			if (rcc != RCC_SUCCESS)
-				_tprintf(_T("Cannot close alarm: %s\n"), NXCGetErrorText(rcc));
+         TCHAR hdref[MAX_HELPDESK_REF_LEN];
+			rcc = NXCOpenHelpdeskIssue(session, alarmId, hdref);
+			if (rcc == RCC_SUCCESS)
+				_tprintf(_T("Helpdesk issue open, reference ID is \"%s\"\n"), hdref);
+         else
+				_tprintf(_T("Cannot open helpdesk issue: %s\n"), NXCGetErrorText(rcc));
 		}
 		else if (!stricmp(argv[optind + 1], "terminate"))
 		{

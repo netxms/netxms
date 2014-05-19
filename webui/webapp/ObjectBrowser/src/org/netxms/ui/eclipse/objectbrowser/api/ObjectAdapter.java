@@ -103,12 +103,6 @@ public class ObjectAdapter implements IWorkbenchAdapter
 				return Activator.getImageDescriptor("icons/dashboard.gif"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_DASHBOARDROOT:
 				return Activator.getImageDescriptor("icons/dashboard_root.gif"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_REPORT:
-				return Activator.getImageDescriptor("icons/report.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_REPORTGROUP:
-				return Activator.getImageDescriptor("icons/report_group.png"); //$NON-NLS-1$
-			case AbstractObject.OBJECT_REPORTROOT:
-				return Activator.getImageDescriptor("icons/report_root.gif"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
 			case AbstractObject.OBJECT_BUSINESSSERVICE:
 				return Activator.getImageDescriptor("icons/business_service.png"); //$NON-NLS-1$
@@ -116,8 +110,10 @@ public class ObjectAdapter implements IWorkbenchAdapter
 				return Activator.getImageDescriptor("icons/node_link.png"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_SLMCHECK:
 				return Activator.getImageDescriptor(((ServiceCheck)object).isTemplate() ? "icons/service_check_template.gif" : "icons/service_check.gif"); //$NON-NLS-1$ //$NON-NLS-2$
+         case AbstractObject.OBJECT_VPNCONNECTOR:
+            return Activator.getImageDescriptor("icons/vpn.png"); //$NON-NLS-1$
 			default:
-				return null;
+				return SharedIcons.UNKNOWN_OBJECT;
 		}
 	}
 

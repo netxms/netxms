@@ -32,6 +32,10 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.draw2d.PositionConstants;
+import org.eclipse.gef4.zest.core.viewers.IFigureProvider;
+import org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider;
+import org.eclipse.gef4.zest.core.widgets.GraphConnection;
+import org.eclipse.gef4.zest.core.widgets.GraphNode;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -42,15 +46,13 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.eclipse.gef4.zest.core.viewers.IFigureProvider;
-import org.eclipse.gef4.zest.core.viewers.ISelfStyleProvider;
-import org.eclipse.gef4.zest.core.widgets.GraphConnection;
-import org.eclipse.gef4.zest.core.widgets.GraphNode;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.NetworkMapLink;
+import org.netxms.client.maps.elements.NetworkMapDCIContainer;
+import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -103,6 +105,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Color defaultLinkColor = null;
 	private ManhattanConnectionRouter manhattanRouter = new ManhattanConnectionRouter();
 	private BendpointConnectionRouter bendpointRouter = new BendpointConnectionRouter();
+	private LinkDciValueProvider dciValueProvider;
 	
 	/**
 	 * Create map label provider
@@ -151,6 +154,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 		enableLongObjectName = ps.getBoolean("ENABLE_LONG_OBJECT_NAME");
+		dciValueProvider = LinkDciValueProvider.getInstance();
 	}
 
 	/*
@@ -268,6 +272,14 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			return new DecorationFigure((NetworkMapDecoration)element, this, viewer);
 		}
+		if (element instanceof NetworkMapDCIContainer)
+      {
+         return new DCIContainerFigure((NetworkMapDCIContainer)element, this, viewer);
+      }
+		if (element instanceof NetworkMapDCIImage)
+      {
+         return new DCIImageFigure((NetworkMapDCIImage)element, this, viewer);
+      }
 		return null;
 	}
 
@@ -405,6 +417,11 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	public void selfStyleConnection(Object element, GraphConnection connection)
 	{
 		NetworkMapLink link = (NetworkMapLink)connection.getData();
+
+		if (link.getType() == NetworkMapLink.VPN)
+		{
+		   connection.setLineStyle(SWT.LINE_DOT);
+		}
 		
 		if (link.hasConnectorName1())
 		{
@@ -422,14 +439,31 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			label.setFont(fontLabel);
 			connection.getConnectionFigure().add(label, targetEndpointLocator);
 		}
-		if (link.hasName())
-		{
-			ConnectionLocator nameLocator = new ConnectionLocator(connection.getConnectionFigure());
-			nameLocator.setRelativePosition(PositionConstants.CENTER);
-			final Label label = new ConnectorLabel(link.getName());
-			label.setFont(fontLabel);
-			connection.getConnectionFigure().add(label, nameLocator);
-		}
+		
+		boolean hasDciData = link.hasDciData();
+      boolean hasName = link.hasName();
+      
+      if (hasName || hasDciData)
+      {
+         ConnectionLocator nameLocator = new ConnectionLocator(connection.getConnectionFigure());
+         nameLocator.setRelativePosition(PositionConstants.CENTER);
+         
+         String labelString = "";
+         if(hasName)
+            labelString += link.getName();
+         
+         if(hasName && hasDciData)
+            labelString +="\n";
+         
+         if(hasDciData)
+         {
+            labelString += dciValueProvider.getDciDataAsString(link);
+         }
+         
+         final Label label = new ConnectorLabel(labelString);
+         label.setFont(fontLabel);
+         connection.getConnectionFigure().add(label, nameLocator);
+      }
 
 		if (link.getStatusObject() != 0)
 		{

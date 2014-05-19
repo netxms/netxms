@@ -1,4 +1,4 @@
-/* 
+/*
  ** NetXMS - Network Management System
  ** NetXMS Foundation Library
  ** Copyright (C) 2003-2013 Raden Solutions
@@ -145,38 +145,40 @@ void ConfigEntry::unlinkEntry(ConfigEntry *entry)
 /**
  * Get all subentries with names matched to mask
  */
-ConfigEntryList* ConfigEntry::getSubEntries(const TCHAR *mask)
+ObjectArray<ConfigEntry> *ConfigEntry::getSubEntries(const TCHAR *mask)
 {
-   ConfigEntry *e, **list = NULL;
-   int count = 0, allocated = 0;
-
-   for(e = m_first; e != NULL; e = e->getNext())
+   ObjectArray<ConfigEntry> *list = new ObjectArray<ConfigEntry>(16, 16, false);
+   for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
       if ((mask == NULL) || MatchString(mask, e->getName(), FALSE))
       {
-         if (count == allocated)
-         {
-            allocated += 10;
-            list = (ConfigEntry **) realloc(list, sizeof(ConfigEntry *) * allocated);
-         }
-         list[count++] = e;
+         list->add(e);
       }
-   return new ConfigEntryList(list, count);
+   return list;
+}
+
+/**
+ * Comparator for ConfigEntryList::sortById()
+ */
+static int CompareById(const void *p1, const void *p2)
+{
+   ConfigEntry *e1 = *((ConfigEntry **)p1);
+   ConfigEntry *e2 = *((ConfigEntry **)p2);
+   return e1->getId() - e2->getId();
 }
 
 /**
  * Get all subentries with names matched to mask ordered by id
  */
-ConfigEntryList* ConfigEntry::getOrderedSubEntries(const TCHAR *mask)
+ObjectArray<ConfigEntry> *ConfigEntry::getOrderedSubEntries(const TCHAR *mask)
 {
-   ConfigEntryList *list = getSubEntries(mask);
-   list->sortById();
+   ObjectArray<ConfigEntry> *list = getSubEntries(mask);
+   list->sort(CompareById);
    return list;
 }
 
-/*
- * Get value
+/**
+ * Get entry value
  */
-
 const TCHAR* ConfigEntry::getValue(int index)
 {
    if ((index < 0) || (index >= m_valueCount))
@@ -184,31 +186,47 @@ const TCHAR* ConfigEntry::getValue(int index)
    return m_values[index];
 }
 
-INT32 ConfigEntry::getValueInt(int index, INT32 defaultValue)
+/**
+ * Get entry value as integer
+ */
+INT32 ConfigEntry::getValueAsInt(int index, INT32 defaultValue)
 {
    const TCHAR *value = getValue(index);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-UINT32 ConfigEntry::getValueUInt(int index, UINT32 defaultValue)
+/**
+ * Get entry value as unsigned integer
+ */
+UINT32 ConfigEntry::getValueAsUInt(int index, UINT32 defaultValue)
 {
    const TCHAR *value = getValue(index);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
-INT64 ConfigEntry::getValueInt64(int index, INT64 defaultValue)
+/**
+ * Get entry value as 64 bit integer
+ */
+INT64 ConfigEntry::getValueAsInt64(int index, INT64 defaultValue)
 {
    const TCHAR *value = getValue(index);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-UINT64 ConfigEntry::getValueUInt64(int index, UINT64 defaultValue)
+/**
+ * Get entry value as 64 bit unsigned integer
+ */
+UINT64 ConfigEntry::getValueAsUInt64(int index, UINT64 defaultValue)
 {
    const TCHAR *value = getValue(index);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
-bool ConfigEntry::getValueBoolean(int index, bool defaultValue)
+/**
+ * Get entry value as boolean
+ * (consider non-zero numerical value or strings "yes", "true", "on" as true)
+ */
+bool ConfigEntry::getValueAsBoolean(int index, bool defaultValue)
 {
    const TCHAR *value = getValue(index);
    if (value != NULL)
@@ -222,7 +240,10 @@ bool ConfigEntry::getValueBoolean(int index, bool defaultValue)
    }
 }
 
-bool ConfigEntry::getValueUUID(int index, uuid_t uuid)
+/**
+ * Get entry value as GUID
+ */
+bool ConfigEntry::getValueAsUUID(int index, uuid_t uuid)
 {
    const TCHAR *value = getValue(index);
    if (value != NULL)
@@ -232,10 +253,9 @@ bool ConfigEntry::getValueUUID(int index, uuid_t uuid)
    return false;
 }
 
-/*
- * Set value
+/**
+ * Set value (replace all existing values)
  */
-
 void ConfigEntry::setValue(const TCHAR *value)
 {
    for(int i = 0; i < m_valueCount; i++)
@@ -245,10 +265,9 @@ void ConfigEntry::setValue(const TCHAR *value)
    m_values[0] = _tcsdup(value);
 }
 
-/*
- *  Add value
+/**
+ * Add value
  */
-
 void ConfigEntry::addValue(const TCHAR *value)
 {
    m_values = (TCHAR **) realloc(m_values, sizeof(TCHAR *) * (m_valueCount + 1));
@@ -256,10 +275,9 @@ void ConfigEntry::addValue(const TCHAR *value)
    m_valueCount++;
 }
 
-/*
+/**
  * Get summary length of all values as if they was concatenated with separator character
  */
-
 int ConfigEntry::getConcatenatedValuesLength()
 {
    int i, len;
@@ -289,37 +307,40 @@ const TCHAR* ConfigEntry::getSubEntryValue(const TCHAR *name, int index, const T
    return (value != NULL) ? value : defaultValue;
 }
 
-INT32 ConfigEntry::getSubEntryValueInt(const TCHAR *name, int index, INT32 defaultValue)
+INT32 ConfigEntry::getSubEntryValueAsInt(const TCHAR *name, int index, INT32 defaultValue)
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-UINT32 ConfigEntry::getSubEntryValueUInt(const TCHAR *name, int index, UINT32 defaultValue)
+UINT32 ConfigEntry::getSubEntryValueAsUInt(const TCHAR *name, int index, UINT32 defaultValue)
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
-INT64 ConfigEntry::getSubEntryValueInt64(const TCHAR *name, int index, INT64 defaultValue)
+INT64 ConfigEntry::getSubEntryValueAsInt64(const TCHAR *name, int index, INT64 defaultValue)
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-UINT64 ConfigEntry::getSubEntryValueUInt64(const TCHAR *name, int index, UINT64 defaultValue)
+UINT64 ConfigEntry::getSubEntryValueAsUInt64(const TCHAR *name, int index, UINT64 defaultValue)
 {
    const TCHAR *value = getSubEntryValue(name, index);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
-bool ConfigEntry::getSubEntryValueBoolean(const TCHAR *name, int index, bool defaultValue)
+/**
+ * Get sub-entry value as boolean
+ * (consider non-zero numerical value or strings "yes", "true", "on" as true)
+ */
+bool ConfigEntry::getSubEntryValueAsBoolean(const TCHAR *name, int index, bool defaultValue)
 {
    const TCHAR *value = getSubEntryValue(name, index);
    if (value != NULL)
    {
-      return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
-         || (_tcstol(value, NULL, 0) != 0);
+      return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on")) || (_tcstol(value, NULL, 0) != 0);
    }
    else
    {
@@ -327,7 +348,10 @@ bool ConfigEntry::getSubEntryValueBoolean(const TCHAR *name, int index, bool def
    }
 }
 
-bool ConfigEntry::getSubEntryValueUUID(const TCHAR *name, uuid_t uuid, int index)
+/**
+ * Get sub-entry value as UUID
+ */
+bool ConfigEntry::getSubEntryValueAsUUID(const TCHAR *name, uuid_t uuid, int index)
 {
    const TCHAR *value = getSubEntryValue(name, index);
    if (value != NULL)
@@ -338,6 +362,107 @@ bool ConfigEntry::getSubEntryValueUUID(const TCHAR *name, uuid_t uuid, int index
    {
       return false;
    }
+}
+
+/**
+ * Get attribute as integer
+ */
+INT32 ConfigEntry::getAttributeAsInt(const TCHAR *name, INT32 defaultValue)
+{
+   const TCHAR *value = getAttribute(name);
+   return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
+}
+
+/**
+ * Get attribute as unsigned integer
+ */
+UINT32 ConfigEntry::getAttributeAsUInt(const TCHAR *name, UINT32 defaultValue)
+{
+   const TCHAR *value = getAttribute(name);
+   return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
+}
+
+/**
+ * Get attribute as 64 bit integer
+ */
+INT64 ConfigEntry::getAttributeAsInt64(const TCHAR *name, INT64 defaultValue)
+{
+   const TCHAR *value = getAttribute(name);
+   return (value != NULL) ? _tcstoll(value, NULL, 0) : defaultValue;
+}
+
+/**
+ * Get attribute as unsigned 64 bit integer
+ */
+UINT64 ConfigEntry::getAttributeAsUInt64(const TCHAR *name, UINT64 defaultValue)
+{
+   const TCHAR *value = getAttribute(name);
+   return (value != NULL) ? _tcstoull(value, NULL, 0) : defaultValue;
+}
+
+/**
+ * Get attribute as boolean
+ * (consider non-zero numerical value or strings "yes", "true", "on" as true)
+ */
+bool ConfigEntry::getAttributeAsBoolean(const TCHAR *name, bool defaultValue)
+{
+   const TCHAR *value = getAttribute(name);
+   if (value != NULL)
+   {
+      return !_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on")) || (_tcstol(value, NULL, 0) != 0);
+   }
+   else
+   {
+      return defaultValue;
+   }
+}
+
+/**
+ * Set attribute
+ */
+void ConfigEntry::setAttribute(const TCHAR *name, INT32 value)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, _T("%d"), (int)value);
+   setAttribute(name, buffer);
+}
+
+/**
+ * Set attribute
+ */
+void ConfigEntry::setAttribute(const TCHAR *name, UINT32 value)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, _T("%u"), (unsigned int)value);
+   setAttribute(name, buffer);
+}
+
+/**
+ * Set attribute
+ */
+void ConfigEntry::setAttribute(const TCHAR *name, INT64 value)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, INT64_FMT, value);
+   setAttribute(name, buffer);
+}
+
+/**
+ * Set attribute
+ */
+void ConfigEntry::setAttribute(const TCHAR *name, UINT64 value)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, UINT64_FMT, value);
+   setAttribute(name, buffer);
+}
+
+/**
+ * Set attribute
+ */
+void ConfigEntry::setAttribute(const TCHAR *name, bool value)
+{
+   setAttribute(name, value ? _T("true") : _T("false"));
 }
 
 /**
@@ -364,9 +489,15 @@ void ConfigEntry::createXml(String &xml, int level)
       *ptr = 0;
 
    if (m_id == 0)
-      xml.addFormattedString(_T("%*s<%s>"), level * 4, _T(""), name);
+      xml.addFormattedString(_T("%*s<%s"), level * 4, _T(""), name);
    else
-      xml.addFormattedString(_T("%*s<%s id=\"%d\">"), level * 4, _T(""), name, m_id);
+      xml.addFormattedString(_T("%*s<%s id=\"%d\""), level * 4, _T(""), name, m_id);
+   for(UINT32 j = 0; j < m_attributes.getSize(); j++)
+   {
+      if (_tcscmp(m_attributes.getKeyByIndex(j), _T("id")))
+         xml.addFormattedString(_T(" %s=\"%s\""), m_attributes.getKeyByIndex(j), m_attributes.getValueByIndex(j));
+   }
+   xml += _T(">");
 
    if (m_first != NULL)
    {
@@ -391,24 +522,6 @@ void ConfigEntry::createXml(String &xml, int level)
    }
 
    free(name);
-}
-
-/**
- * Comparator for ConfigEntryList::sortById()
- */
-static int CompareById(const void *p1, const void *p2)
-{
-   ConfigEntry *e1 = *((ConfigEntry **) p1);
-   ConfigEntry *e2 = *((ConfigEntry **) p2);
-   return e1->getId() - e2->getId();
-}
-
-/**
- *  Sort entry list
- */
-void ConfigEntryList::sortById()
-{
-   qsort(m_list, m_size, sizeof(ConfigEntry *), CompareById);
 }
 
 /**
@@ -557,7 +670,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
 /**
  * Get value
  */
-const TCHAR * Config::getValue(const TCHAR *path, const TCHAR *defaultValue)
+const TCHAR *Config::getValue(const TCHAR *path, const TCHAR *defaultValue)
 {
    const TCHAR *value;
    ConfigEntry *entry = getEntry(path);
@@ -574,31 +687,31 @@ const TCHAR * Config::getValue(const TCHAR *path, const TCHAR *defaultValue)
    return value;
 }
 
-INT32 Config::getValueInt(const TCHAR *path, INT32 defaultValue)
+INT32 Config::getValueAsInt(const TCHAR *path, INT32 defaultValue)
 {
    const TCHAR *value = getValue(path);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-UINT32 Config::getValueUInt(const TCHAR *path, UINT32 defaultValue)
+UINT32 Config::getValueAsUInt(const TCHAR *path, UINT32 defaultValue)
 {
    const TCHAR *value = getValue(path);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
-INT64 Config::getValueInt64(const TCHAR *path, INT64 defaultValue)
+INT64 Config::getValueAsInt64(const TCHAR *path, INT64 defaultValue)
 {
    const TCHAR *value = getValue(path);
    return (value != NULL) ? _tcstol(value, NULL, 0) : defaultValue;
 }
 
-UINT64 Config::getValueUInt64(const TCHAR *path, UINT64 defaultValue)
+UINT64 Config::getValueAsUInt64(const TCHAR *path, UINT64 defaultValue)
 {
    const TCHAR *value = getValue(path);
    return (value != NULL) ? _tcstoul(value, NULL, 0) : defaultValue;
 }
 
-bool Config::getValueBoolean(const TCHAR *path, bool defaultValue)
+bool Config::getValueAsBoolean(const TCHAR *path, bool defaultValue)
 {
    const TCHAR *value = getValue(path);
    if (value != NULL)
@@ -612,7 +725,10 @@ bool Config::getValueBoolean(const TCHAR *path, bool defaultValue)
    }
 }
 
-bool Config::getValueUUID(const TCHAR *path, uuid_t uuid)
+/**
+ * Get value at given path as UUID
+ */
+bool Config::getValueAsUUID(const TCHAR *path, uuid_t uuid)
 {
    const TCHAR *value = getValue(path);
    if (value != NULL)
@@ -625,31 +741,28 @@ bool Config::getValueUUID(const TCHAR *path, uuid_t uuid)
    }
 }
 
-/*
+/**
  * Get subentries
  */
-
-ConfigEntryList * Config::getSubEntries(const TCHAR *path, const TCHAR *mask)
+ObjectArray<ConfigEntry> *Config::getSubEntries(const TCHAR *path, const TCHAR *mask)
 {
    ConfigEntry *entry = getEntry(path);
    return (entry != NULL) ? entry->getSubEntries(mask) : NULL;
 }
 
-/*
+/**
  * Get subentries ordered by id
  */
-
-ConfigEntryList * Config::getOrderedSubEntries(const TCHAR *path, const TCHAR *mask)
+ObjectArray<ConfigEntry> *Config::getOrderedSubEntries(const TCHAR *path, const TCHAR *mask)
 {
    ConfigEntry *entry = getEntry(path);
    return (entry != NULL) ? entry->getOrderedSubEntries(mask) : NULL;
 }
 
-/*
+/**
  * Get entry
  */
-
-ConfigEntry * Config::getEntry(const TCHAR *path)
+ConfigEntry *Config::getEntry(const TCHAR *path)
 {
    const TCHAR *curr, *end;
    TCHAR name[256];
@@ -930,6 +1043,7 @@ typedef struct
    ConfigEntry *stack[MAX_STACK_DEPTH];
    String charData[MAX_STACK_DEPTH];
    bool trimValue[MAX_STACK_DEPTH];
+   bool merge;
 } XML_PARSER_STATE;
 
 /**
@@ -984,10 +1098,22 @@ static void StartElement(void *userData, const char *name, const char **attrs)
          else
             nx_strncpy(entryName, name, MAX_PATH);
 #endif
-         ps->stack[ps->level] = ps->stack[ps->level - 1]->findEntry(entryName);
+         bool merge = XMLGetAttrBoolean(attrs, "merge", ps->merge);
+         ps->stack[ps->level] = merge ? ps->stack[ps->level - 1]->findEntry(entryName) : NULL;
          if (ps->stack[ps->level] == NULL)
-            ps->stack[ps->level] = new ConfigEntry(entryName, ps->stack[ps->level - 1], ps->file,
-               XML_GetCurrentLineNumber(ps->parser), (int) id);
+         {
+            ConfigEntry *e = new ConfigEntry(entryName, ps->stack[ps->level - 1], ps->file, XML_GetCurrentLineNumber(ps->parser), (int)id);
+            ps->stack[ps->level] = e;
+            // add all attributes to the entry
+            for(int i = 0; attrs[i] != NULL; i += 2)
+            {
+#ifdef UNICODE
+               e->setAttributePreallocated(WideStringFromMBString(attrs[i]), WideStringFromMBString(attrs[i + 1]));
+#else
+               e->setAttribute(attrs[i], attrs[i + 1]);
+#endif
+            }
+         }
          ps->charData[ps->level] = _T("");
          ps->trimValue[ps->level] = XMLGetAttrBoolean(attrs, "trim", true);
          ps->level++;
@@ -1033,7 +1159,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
 /**
  * Load config from XML in memory
  */
-bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name, const char *topLevelTag)
+bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *name, const char *topLevelTag, bool merge)
 {
    XML_PARSER_STATE state;
 
@@ -1047,6 +1173,7 @@ bool Config::loadXmlConfigFromMemory(const char *xml, int xmlSize, const TCHAR *
    state.level = 0;
    state.parser = parser;
    state.file = (name != NULL) ? name : _T("<mem>");
+   state.merge = merge;
 
    bool success = (XML_Parse(parser, xml, xmlSize, TRUE) != XML_STATUS_ERROR);
    if (!success)
@@ -1069,13 +1196,13 @@ bool Config::loadXmlConfig(const TCHAR *file, const char *topLevelTag)
    xml = LoadFile(file, &size);
    if (xml != NULL)
    {
-      success = loadXmlConfigFromMemory((char *) xml, (int) size, file, topLevelTag);
+      success = loadXmlConfigFromMemory((char *)xml, (int)size, file, topLevelTag);
+      free(xml);
    }
    else
    {
       success = false;
    }
-
    return success;
 }
 

@@ -49,6 +49,7 @@ Array::Array(int initial, int grow, bool owner)
 	m_data = (m_allocated > 0) ? (void **)malloc(m_elementSize * m_allocated) : NULL;
 	m_objectOwner = owner;
 	m_objectDestructor = ObjectDestructor;
+   m_storePointers = true;
 }
 
 /**
@@ -56,13 +57,18 @@ Array::Array(int initial, int grow, bool owner)
  */
 Array::Array(void *data, int initial, int grow, size_t elementSize)
 {
-	m_size = initial;
+   m_size = (data != NULL) ? initial : 0;
 	m_grow = (grow > 0) ? grow : 16;
 	m_allocated = (initial >= 0) ? initial : 16;
    m_elementSize = elementSize;
-	m_data = (data != NULL) ? (void **)malloc(m_elementSize * m_allocated) : NULL;
+	m_data = (void **)malloc(m_elementSize * m_allocated);
+   if (data != NULL)
+   {
+      memcpy(m_data, data, initial * m_elementSize);
+   }
 	m_objectOwner = false;
 	m_objectDestructor = ObjectDestructor;
+   m_storePointers = false;
 }
 
 /**
@@ -79,7 +85,7 @@ Array::~Array()
 }
 
 /**
- * Add pointer-sized element by value
+ * Add element. Pointer sized elements must be passed by value, larger elements - by pointer.
  */
 int Array::add(void *element)
 {
@@ -88,7 +94,7 @@ int Array::add(void *element)
 		m_allocated += m_grow;
 		m_data = (void **)realloc(m_data, m_elementSize * m_allocated);
 	}
-   if (m_elementSize <= sizeof(void *))
+   if (m_storePointers)
    {
 	   m_data[m_size++] = element;
    }
@@ -127,7 +133,7 @@ void Array::set(int index, void *element)
 		m_size = index + 1;
 	}
 
-   if (m_elementSize <= sizeof(void *))
+   if (m_storePointers)
    	m_data[index] = element;
    else
    	memcpy(ADDR(index), element, m_elementSize);
@@ -145,7 +151,7 @@ void Array::replace(int index, void *element)
 	if (m_objectOwner)
 		destroyObject(m_data[index]);
 
-   if (m_elementSize <= sizeof(void *))
+   if (m_storePointers)
    	m_data[index] = element;
    else
    	memcpy(ADDR(index), element, m_elementSize);
@@ -189,7 +195,7 @@ void Array::clear()
  */
 int Array::indexOf(void *element)
 {
-   if (m_elementSize <= sizeof(void *))
+   if (m_storePointers)
    {
 	   for(int i = 0; i < m_size; i++)
       {
@@ -206,4 +212,12 @@ int Array::indexOf(void *element)
       }
    }
    return -1;
+}
+
+/**
+ * Sort array elements
+ */
+void Array::sort(int (*cb)(const void *, const void *))
+{
+   qsort(m_data, m_size, m_elementSize, cb);
 }

@@ -32,9 +32,13 @@ public class SessionNotification
 	public static final int DBCON_STATUS_CHANGED = 1010;
 	public static final int MAPPING_TABLE_UPDATED = 1019;
 	public static final int MAPPING_TABLE_DELETED = 1020;
-
+	
 	public static final int CUSTOM_MESSAGE = 2000;
 	
+   // Reporting server notification
+   public static final int RS_SCHEDULES_MODIFIED = 3000;
+   public static final int RS_RESULTS_MODIFIED = 3001;
+
 	// Subcodes for user database changes
 	public static final int USER_DB_OBJECT_CREATED = 0;
 	public static final int USER_DB_OBJECT_DELETED = 1;

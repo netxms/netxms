@@ -69,7 +69,7 @@ private:
 
 public:
    Event();
-   Event(EVENT_TEMPLATE *pTemplate, UINT32 dwSourceId, const TCHAR *pszUserTag, const char *szFormat, const TCHAR **names, va_list args);
+   Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, va_list args);
    ~Event();
 
    UINT64 getId() { return m_qwId; }
@@ -88,8 +88,8 @@ public:
    void prepareMessage(CSCPMessage *pMsg);
 
    void expandMessageText();
-   TCHAR *expandText(const TCHAR *szTemplate, const TCHAR *pszAlarmMsg = NULL);
-   static TCHAR *expandText(Event *event, UINT32 sourceObject, const TCHAR *szTemplate, const TCHAR *pszAlarmMsg);
+   TCHAR *expandText(const TCHAR *textTemplate, const TCHAR *alarmMsg = NULL, const TCHAR *alarmKey = NULL);
+   static TCHAR *expandText(Event *event, UINT32 sourceObject, const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey);
 
    UINT32 getParametersCount() { return m_parameters.size(); }
    const TCHAR *getParameter(int index) { return (TCHAR *)m_parameters.get(index); }
@@ -124,7 +124,7 @@ private:
    UINT32 *m_pdwActionList;
    TCHAR *m_pszComment;
    TCHAR *m_pszScript;
-   NXSL_Program *m_pScript;
+   NXSL_VM *m_pScript;
 
    TCHAR m_szAlarmMessage[MAX_EVENT_MSG_LENGTH];
    int m_iAlarmSeverity;
@@ -137,7 +137,7 @@ private:
 	StringMap m_situationAttrList;
 
    bool matchSource(UINT32 dwObjectId);
-   bool matchEvent(UINT32 dwEventCode);
+   bool matchEvent(UINT32 eventCode);
    bool matchSeverity(UINT32 dwSeverity);
    bool matchScript(Event *pEvent);
 
@@ -198,18 +198,18 @@ public:
  */
 BOOL InitEventSubsystem();
 void ShutdownEventSubsystem();
-BOOL PostEvent(UINT32 dwEventCode, UINT32 dwSourceId, const char *pszFormat, ...);
-BOOL PostEventWithNames(UINT32 dwEventCode, UINT32 dwSourceId, const char *pszFormat, const TCHAR **names, ...);
-BOOL PostEventWithTag(UINT32 dwEventCode, UINT32 dwSourceId, const TCHAR *pszUserTag, const char *pszFormat, ...);
-BOOL PostEventEx(Queue *pQueue, UINT32 dwEventCode, UINT32 dwSourceId, const char *pszFormat, ...);
-void ResendEvents(Queue *pQueue);
+BOOL PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
+BOOL PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...);
+BOOL PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...);
+BOOL PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...);
+void ResendEvents(Queue *queue);
 void ReloadEvents();
-void DeleteEventTemplateFromList(UINT32 dwEventCode);
+void DeleteEventTemplateFromList(UINT32 eventCode);
 void CorrelateEvent(Event *pEvent);
-void CreateNXMPEventRecord(String &str, UINT32 dwCode);
-BOOL EventNameFromCode(UINT32 dwCode, TCHAR *pszBuffer);
+void CreateNXMPEventRecord(String &str, UINT32 eventCode);
+BOOL EventNameFromCode(UINT32 eventCode, TCHAR *pszBuffer);
 UINT32 EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);
-EVENT_TEMPLATE *FindEventTemplateByCode(UINT32 dwCode);
+EVENT_TEMPLATE *FindEventTemplateByCode(UINT32 eventCode);
 EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName);
 
 /**

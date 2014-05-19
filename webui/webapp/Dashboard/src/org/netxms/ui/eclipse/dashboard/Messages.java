@@ -15,6 +15,7 @@ public class Messages extends NLS
 	public String AbstractChart_Hours;
 	public String AbstractChart_Left;
 	public String AbstractChart_LegendPosition;
+   public String AbstractChart_LogartithmicScale;
 	public String AbstractChart_Minutes;
 	public String AbstractChart_Options;
 	public String AbstractChart_RefreshInterval;

@@ -107,7 +107,8 @@ BOOL USBInterface::open()
          data.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
          if (!SetupDiEnumDeviceInterfaces(hInfo, NULL, &hidGuid, nIndex, &data))
          {
-            AgentWriteDebugLog(7, _T("UPS: SetupDiEnumDeviceInterfaces failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 256));
+            if (GetLastError() != ERROR_NO_MORE_ITEMS)
+               AgentWriteDebugLog(7, _T("UPS: SetupDiEnumDeviceInterfaces failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 256));
             break;
          }
 
@@ -122,12 +123,12 @@ BOOL USBInterface::open()
          }
 
          // Open USB device
-         m_hDev = CreateFile(pDetails->DevicePath, GENERIC_READ | GENERIC_WRITE,
+         m_hDev = CreateFile(pDetails->DevicePath, GENERIC_READ,
                              FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                              OPEN_EXISTING, 0, NULL);
          if (m_hDev == INVALID_HANDLE_VALUE)
          {
-            AgentWriteDebugLog(7, _T("UPS: CreateFile failed (%s)"), GetSystemErrorText(GetLastError(), errorText, 256));
+            AgentWriteDebugLog(7, _T("UPS: CreateFile failed (%s) for device %s"), GetSystemErrorText(GetLastError(), errorText, 256), pDetails->DevicePath);
             free(pDetails);
             continue;
          }

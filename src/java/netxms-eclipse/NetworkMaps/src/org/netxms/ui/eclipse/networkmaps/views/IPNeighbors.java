@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Subnet;
+import org.netxms.client.objects.VPNConnector;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -32,7 +33,6 @@ import org.netxms.ui.eclipse.networkmaps.Messages;
 
 /**
  * IP neighbors for given node
- *
  */
 public class IPNeighbors extends AbstractNetworkMapView
 {
@@ -53,24 +53,53 @@ public class IPNeighbors extends AbstractNetworkMapView
 	 */
 	protected void buildMapPage()
 	{
-		mapPage = new NetworkMapPage();
+		mapPage = new NetworkMapPage(ID + "." + this.toString());
 
 		long rootElementId = mapPage.createElementId();
 		mapPage.addElement(new NetworkMapObject(rootElementId, rootObject.getObjectId()));
 		
-		Iterator<Long> it = rootObject.getParents();
-		while(it.hasNext())
-		{
-			long objectId = it.next();
-			AbstractObject object = session.findObjectById(objectId);
-			if ((object != null) && (object instanceof Subnet))
-			{
-				long elementId = mapPage.createElementId();
-				mapPage.addElement(new NetworkMapObject(elementId, objectId));
-				mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, rootElementId, elementId));
-				addNodesFromSubnet((Subnet)object, elementId, rootObject.getObjectId());
-			}
-		}
+		addSubnets(rootObject, rootElementId);
+
+      for(long objectId : rootObject.getChildIdList())
+      {
+         AbstractObject object = session.findObjectById(objectId);
+         if ((object != null) && (object instanceof VPNConnector))
+         {
+            AbstractObject peer = session.findObjectById(((VPNConnector)object).getPeerGatewayId());
+            if (peer != null)
+            {
+               long elementId = mapPage.createElementId();
+               mapPage.addElement(new NetworkMapObject(elementId, peer.getObjectId()));
+               NetworkMapLink link = new NetworkMapLink(NetworkMapLink.VPN, rootElementId, elementId);
+               link.setName(object.getObjectName());
+               mapPage.addLink(link);
+               addSubnets(peer, elementId);
+            }
+         }
+      }
+
+		addDciToRequestList();
+	}
+	
+	/**
+	 * Add subnets connected by given node
+	 * 
+	 * @param root
+	 * @param rootElementId
+	 */
+	private void addSubnets(AbstractObject root, long rootElementId)
+	{
+      for(long objectId : root.getParentIdList())
+      {
+         AbstractObject object = session.findObjectById(objectId);
+         if ((object != null) && (object instanceof Subnet))
+         {
+            long elementId = mapPage.createElementId();
+            mapPage.addElement(new NetworkMapObject(elementId, objectId));
+            mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, rootElementId, elementId));
+            addNodesFromSubnet((Subnet)object, elementId, root.getObjectId());
+         }
+      }  
 	}
 
 	/**
@@ -95,5 +124,6 @@ public class IPNeighbors extends AbstractNetworkMapView
 				}
 			}
 		}
+      addDciToRequestList();
 	}
 }

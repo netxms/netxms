@@ -11,7 +11,6 @@ public class Messages extends NLS
    public String AbstractNodePoll_Error;
    public String AbstractNodePoll_ErrorText;
    public String AccessControl_AccessAccessControl;
-   public String AccessControl_AccessAckAlarms;
    public String AccessControl_AccessControl;
    public String AccessControl_AccessCreate;
    public String AccessControl_AccessDelete;
@@ -21,6 +20,7 @@ public class Messages extends NLS
    public String AccessControl_AccessRights;
    public String AccessControl_AccessSendEvents;
    public String AccessControl_AccessTermAlarms;
+   public String AccessControl_AccessUpdateAlarms;
    public String AccessControl_AccessViewAlarms;
    public String AccessControl_Add;
    public String AccessControl_ColLogin;

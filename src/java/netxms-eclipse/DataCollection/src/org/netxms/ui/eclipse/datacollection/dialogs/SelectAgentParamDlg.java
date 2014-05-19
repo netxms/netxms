@@ -190,7 +190,8 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 					@Override
 					public void run()
 					{
-						MessageDialogHelper.openInformation(getShell(), Messages.get().SelectAgentParamDlg_CurrentValueTitle, Messages.get().SelectAgentParamDlg_CurrentValuePrefix + value + Messages.get().SelectAgentParamDlg_CurrentValueSuffix);
+						MessageDialogHelper.openInformation(getShell(), Messages.get().SelectAgentParamDlg_CurrentValueTitle, 
+						      String.format(Messages.get().SelectAgentParamDlg_CurrentValue, value));
 					}
 				});
 			}

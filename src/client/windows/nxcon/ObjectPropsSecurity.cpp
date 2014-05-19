@@ -280,7 +280,7 @@ void CObjectPropsSecurity::OnItemchangedListUsers(NMHDR* pNMHDR, LRESULT* pResul
                   m_wndCheckCreate.SetCheck((dwRights & OBJECT_ACCESS_CREATE) ? BST_CHECKED : BST_UNCHECKED);
                   m_wndCheckDelete.SetCheck((dwRights & OBJECT_ACCESS_DELETE) ? BST_CHECKED : BST_UNCHECKED);
                   m_wndCheckViewAlarms.SetCheck((dwRights & OBJECT_ACCESS_READ_ALARMS) ? BST_CHECKED : BST_UNCHECKED);
-                  m_wndCheckAckAlarms.SetCheck((dwRights & OBJECT_ACCESS_ACK_ALARMS) ? BST_CHECKED : BST_UNCHECKED);
+                  m_wndCheckAckAlarms.SetCheck((dwRights & OBJECT_ACCESS_UPDATE_ALARMS) ? BST_CHECKED : BST_UNCHECKED);
                   m_wndCheckTermAlarms.SetCheck((dwRights & OBJECT_ACCESS_TERM_ALARMS) ? BST_CHECKED : BST_UNCHECKED);
                   m_wndCheckAccess.SetCheck((dwRights & OBJECT_ACCESS_ACL) ? BST_CHECKED : BST_UNCHECKED);
                   m_wndCheckSend.SetCheck((dwRights & OBJECT_ACCESS_SEND_EVENTS) ? BST_CHECKED : BST_UNCHECKED);
@@ -416,9 +416,9 @@ void CObjectPropsSecurity::OnCheckAckAlarms()
    if (m_dwCurrAclEntry != INVALID_INDEX)    // It shouldn't be
    {
       if (m_wndCheckAckAlarms.GetCheck() == BST_CHECKED)
-         m_pAccessList[m_dwCurrAclEntry].dwAccessRights |= OBJECT_ACCESS_ACK_ALARMS;
+         m_pAccessList[m_dwCurrAclEntry].dwAccessRights |= OBJECT_ACCESS_UPDATE_ALARMS;
       else
-         m_pAccessList[m_dwCurrAclEntry].dwAccessRights &= ~OBJECT_ACCESS_ACK_ALARMS;
+         m_pAccessList[m_dwCurrAclEntry].dwAccessRights &= ~OBJECT_ACCESS_UPDATE_ALARMS;
    }
 }
 

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -64,18 +64,17 @@ static struct
  */
 SNMP_PDU::SNMP_PDU()
 {
-   m_dwVersion = SNMP_VERSION_1;
-   m_dwCommand = SNMP_INVALID_PDU;
-   m_dwNumVariables = 0;
-   m_ppVarList = NULL;
+   m_version = SNMP_VERSION_1;
+   m_command = SNMP_INVALID_PDU;
+   m_variables = new ObjectArray<SNMP_Variable>(0, 16, true);
    m_pEnterprise = NULL;
    m_dwErrorCode = 0;
    m_dwErrorIndex = 0;
    m_dwRqId = 0;
 	m_msgId = 0;
 	m_flags = 0;
-   m_iTrapType = 0;
-   m_iSpecificTrap = 0;
+   m_trapType = 0;
+   m_specificTrap = 0;
 	m_contextEngineIdLen = 0;
 	m_contextName[0] = 0;
 	m_msgMaxSize = SNMP_DEFAULT_MSG_MAX_SIZE;
@@ -88,18 +87,17 @@ SNMP_PDU::SNMP_PDU()
  */
 SNMP_PDU::SNMP_PDU(UINT32 dwCommand, UINT32 dwRqId, UINT32 dwVersion)
 {
-   m_dwVersion = dwVersion;
-   m_dwCommand = dwCommand;
-   m_dwNumVariables = 0;
-   m_ppVarList = NULL;
+   m_version = dwVersion;
+   m_command = dwCommand;
+   m_variables = new ObjectArray<SNMP_Variable>(0, 16, true);
    m_pEnterprise = NULL;
    m_dwErrorCode = 0;
    m_dwErrorIndex = 0;
    m_dwRqId = dwRqId;
 	m_msgId = dwRqId;
 	m_flags = 0;
-   m_iTrapType = 0;
-   m_iSpecificTrap = 0;
+   m_trapType = 0;
+   m_specificTrap = 0;
 	m_contextEngineIdLen = 0;
 	m_contextName[0] = 0;
 	m_msgMaxSize = SNMP_DEFAULT_MSG_MAX_SIZE;
@@ -108,36 +106,59 @@ SNMP_PDU::SNMP_PDU(UINT32 dwCommand, UINT32 dwRqId, UINT32 dwVersion)
 }
 
 /**
+ * Copy constructor
+ */
+SNMP_PDU::SNMP_PDU(SNMP_PDU *src) : m_authoritativeEngine(&src->m_authoritativeEngine)
+{
+   m_version = src->m_version;
+   m_command = src->m_command;
+   m_variables = new ObjectArray<SNMP_Variable>(src->m_variables->size(), 16, true);
+   for(int i = 0; i < src->m_variables->size(); i++)
+      m_variables->add(new SNMP_Variable(src->m_variables->get(i)));
+   m_pEnterprise = (src->m_pEnterprise != NULL) ? new SNMP_ObjectId(src->m_pEnterprise) : NULL;
+   m_dwErrorCode = src->m_dwErrorCode;
+   m_dwErrorIndex = src->m_dwErrorIndex;
+   m_dwRqId = src->m_dwRqId;
+	m_msgId = src->m_msgId;
+	m_flags = src->m_flags;
+   m_trapType = src->m_trapType;
+   m_specificTrap = src->m_specificTrap;
+	m_contextEngineIdLen = src->m_contextEngineIdLen;
+   memcpy(m_contextEngineId, src->m_contextEngineId, SNMP_MAX_ENGINEID_LEN); 
+	strcpy(m_contextName, src->m_contextName);
+	m_msgMaxSize = src->m_msgMaxSize;
+   m_authObject = (src->m_authObject != NULL) ? strdup(src->m_authObject) : NULL;
+	m_reportable = src->m_reportable;
+   m_securityModel = src->m_securityModel;
+}
+
+/**
  * SNMP_PDU destructor
  */
 SNMP_PDU::~SNMP_PDU()
 {
-   UINT32 i;
-
    delete m_pEnterprise;
-   for(i = 0; i < m_dwNumVariables; i++)
-      delete m_ppVarList[i];
-   safe_free(m_ppVarList);
+   delete m_variables;
 	safe_free(m_authObject);
 }
 
 /**
  * Parse single variable binding
  */
-BOOL SNMP_PDU::parseVariable(BYTE *pData, UINT32 dwVarLength)
+bool SNMP_PDU::parseVariable(BYTE *pData, size_t varLength)
 {
    SNMP_Variable *var;
-   BOOL success = TRUE;
+   bool success = true;
 
    var = new SNMP_Variable;
-   if (var->Parse(pData, dwVarLength))
+   if (var->parse(pData, varLength))
    {
       bindVariable(var);
    }
    else
    {
       delete var;
-      success = FALSE;
+      success = false;
    }
    return success;
 }
@@ -145,68 +166,70 @@ BOOL SNMP_PDU::parseVariable(BYTE *pData, UINT32 dwVarLength)
 /**
  * Parse variable bindings
  */
-BOOL SNMP_PDU::parseVarBinds(BYTE *pData, UINT32 dwPDULength)
+bool SNMP_PDU::parseVarBinds(BYTE *pData, size_t pduLength)
 {
    BYTE *pbCurrPos;
-   UINT32 dwType, dwLength, dwBindingLength, dwIdLength;
+   UINT32 dwType;
+   size_t dwLength, dwBindingLength, idLength;
 
    // Varbind section should be a SEQUENCE
-   if (!BER_DecodeIdentifier(pData, dwPDULength, &dwType, &dwBindingLength, &pbCurrPos, &dwIdLength))
-      return FALSE;
+   if (!BER_DecodeIdentifier(pData, pduLength, &dwType, &dwBindingLength, &pbCurrPos, &idLength))
+      return false;
    if (dwType != ASN_SEQUENCE)
-      return FALSE;
+      return false;
 
    while(dwBindingLength > 0)
    {
-      if (!BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
-         return FALSE;
+      if (!BER_DecodeIdentifier(pbCurrPos, pduLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+         return false;
       if (dwType != ASN_SEQUENCE)
-         return FALSE;  // Every binding is a sequence
+         return false;  // Every binding is a sequence
       if (dwLength > dwBindingLength)
-         return FALSE;     // Invalid length
+         return false;     // Invalid length
 
       if (!parseVariable(pbCurrPos, dwLength))
-         return FALSE;
-      dwBindingLength -= dwLength + dwIdLength;
+         return false;
+      dwBindingLength -= dwLength + idLength;
       pbCurrPos += dwLength;
    }
 
-   return TRUE;
+   return true;
 }
 
 /**
  * Parse generic PDU content
  */
-BOOL SNMP_PDU::parsePduContent(BYTE *pData, UINT32 dwPDULength)
+bool SNMP_PDU::parsePduContent(BYTE *pData, size_t pduLength)
 {
-   UINT32 dwType, dwLength ,dwIdLength;
+   UINT32 dwType;
+   size_t dwLength, idLength;
    BYTE *pbCurrPos = pData;
-   BOOL bResult = FALSE;
+   bool bResult = false;
 
    // Request ID
-   if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+   if (BER_DecodeIdentifier(pbCurrPos, pduLength, &dwType, &dwLength, &pbCurrPos, &idLength))
    {
       if ((dwType == ASN_INTEGER) &&
           BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_dwRqId))
       {
-         dwPDULength -= dwLength + dwIdLength;
+         pduLength -= dwLength + idLength;
          pbCurrPos += dwLength;
-         bResult = TRUE;
+         bResult = true;
       }
    }
 
    // Error code
    if (bResult)
    {
-      bResult = FALSE;
-      if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+      bResult = false;
+      if (BER_DecodeIdentifier(pbCurrPos, pduLength, &dwType, &dwLength, &pbCurrPos, &idLength))
       {
          if ((dwType == ASN_INTEGER) &&
              BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_dwErrorCode))
          {
-            dwPDULength -= dwLength + dwIdLength;
+            pduLength -= dwLength + idLength;
             pbCurrPos += dwLength;
-            bResult = TRUE;
+            bResult = true;
          }
       }
    }
@@ -214,21 +237,21 @@ BOOL SNMP_PDU::parsePduContent(BYTE *pData, UINT32 dwPDULength)
    // Error index
    if (bResult)
    {
-      bResult = FALSE;
-      if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+      bResult = false;
+      if (BER_DecodeIdentifier(pbCurrPos, pduLength, &dwType, &dwLength, &pbCurrPos, &idLength))
       {
          if ((dwType == ASN_INTEGER) &&
              BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_dwErrorIndex))
          {
-            dwPDULength -= dwLength + dwIdLength;
+            pduLength -= dwLength + idLength;
             pbCurrPos += dwLength;
-            bResult = TRUE;
+            bResult = true;
          }
       }
    }
 
    if (bResult)
-      bResult = parseVarBinds(pbCurrPos, dwPDULength);
+      bResult = parseVarBinds(pbCurrPos, pduLength);
 
    return bResult;
 }
@@ -236,16 +259,17 @@ BOOL SNMP_PDU::parsePduContent(BYTE *pData, UINT32 dwPDULength)
 /**
  * Parse version 1 TRAP PDU
  */
-BOOL SNMP_PDU::parseTrapPDU(BYTE *pData, UINT32 dwPDULength)
+bool SNMP_PDU::parseTrapPDU(BYTE *pData, size_t pduLength)
 {
-   UINT32 dwType, dwLength, dwIdLength;
+   UINT32 dwType;
+   size_t dwLength, idLength;
    BYTE *pbCurrPos = pData;
    SNMP_OID *oid;
    UINT32 dwBuffer;
-   BOOL bResult = FALSE;
+   bool bResult = false;
 
    // Enterprise ID
-   if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+   if (BER_DecodeIdentifier(pbCurrPos, pduLength, &dwType, &dwLength, &pbCurrPos, &idLength))
    {
       if (dwType == ASN_OBJECT_ID)
       {
@@ -253,13 +277,13 @@ BOOL SNMP_PDU::parseTrapPDU(BYTE *pData, UINT32 dwPDULength)
          memset(oid, 0, sizeof(SNMP_OID));
          if (BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)oid))
          {
-            m_pEnterprise = new SNMP_ObjectId(oid->dwLength, oid->pdwValue);
-            dwPDULength -= dwLength + dwIdLength;
+            m_pEnterprise = new SNMP_ObjectId(oid->length, oid->value);
+            pduLength -= dwLength + idLength;
             pbCurrPos += dwLength;
 
-            bResult = TRUE;
+            bResult = true;
          }
-         safe_free(oid->pdwValue);
+         safe_free(oid->value);
          free(oid);
       }
    }
@@ -267,15 +291,15 @@ BOOL SNMP_PDU::parseTrapPDU(BYTE *pData, UINT32 dwPDULength)
    // Agent's address
    if (bResult)
    {
-      bResult = FALSE;
-      if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+      bResult = false;
+      if (BER_DecodeIdentifier(pbCurrPos, pduLength, &dwType, &dwLength, &pbCurrPos, &idLength))
       {
          if ((dwType == ASN_IP_ADDR) && (dwLength == 4) &&
              BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_dwAgentAddr))
          {
-            dwPDULength -= dwLength + dwIdLength;
+            pduLength -= dwLength + idLength;
             pbCurrPos += dwLength;
-            bResult = TRUE;
+            bResult = true;
          }
       }
    }
@@ -283,16 +307,16 @@ BOOL SNMP_PDU::parseTrapPDU(BYTE *pData, UINT32 dwPDULength)
    // Generic trap type
    if (bResult)
    {
-      bResult = FALSE;
-      if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+      bResult = false;
+      if (BER_DecodeIdentifier(pbCurrPos, pduLength, &dwType, &dwLength, &pbCurrPos, &idLength))
       {
          if ((dwType == ASN_INTEGER) &&
              BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&dwBuffer))
          {
-            dwPDULength -= dwLength + dwIdLength;
+            pduLength -= dwLength + idLength;
             pbCurrPos += dwLength;
-            m_iTrapType = (int)dwBuffer;
-            bResult = TRUE;
+            m_trapType = (int)dwBuffer;
+            bResult = true;
          }
       }
    }
@@ -300,16 +324,16 @@ BOOL SNMP_PDU::parseTrapPDU(BYTE *pData, UINT32 dwPDULength)
    // Enterprise trap type
    if (bResult)
    {
-      bResult = FALSE;
-      if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+      bResult = false;
+      if (BER_DecodeIdentifier(pbCurrPos, pduLength, &dwType, &dwLength, &pbCurrPos, &idLength))
       {
          if ((dwType == ASN_INTEGER) &&
              BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&dwBuffer))
          {
-            dwPDULength -= dwLength + dwIdLength;
+            pduLength -= dwLength + idLength;
             pbCurrPos += dwLength;
-            m_iSpecificTrap = (int)dwBuffer;
-            bResult = TRUE;
+            m_specificTrap = (int)dwBuffer;
+            bResult = true;
          }
       }
    }
@@ -317,25 +341,25 @@ BOOL SNMP_PDU::parseTrapPDU(BYTE *pData, UINT32 dwPDULength)
    // Timestamp
    if (bResult)
    {
-      bResult = FALSE;
-      if (BER_DecodeIdentifier(pbCurrPos, dwPDULength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
+      bResult = false;
+      if (BER_DecodeIdentifier(pbCurrPos, pduLength, &dwType, &dwLength, &pbCurrPos, &idLength))
       {
          if ((dwType == ASN_TIMETICKS) &&
              BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_dwTimeStamp))
          {
-            dwPDULength -= dwLength + dwIdLength;
+            pduLength -= dwLength + idLength;
             pbCurrPos += dwLength;
-            bResult = TRUE;
+            bResult = true;
          }
       }
    }
 
    if (bResult)
-      bResult = parseVarBinds(pbCurrPos, dwPDULength);
+      bResult = parseVarBinds(pbCurrPos, pduLength);
 
    if (bResult)
    {
-      if (m_iTrapType < 6)
+      if (m_trapType < 6)
       {
          static UINT32 pdwStdOid[6][10] =
          {
@@ -348,12 +372,12 @@ BOOL SNMP_PDU::parseTrapPDU(BYTE *pData, UINT32 dwPDULength)
          };
 
          // For standard trap types, create standard V2 Enterprise ID
-         m_pEnterprise->setValue(pdwStdOid[m_iTrapType], 10);
+         m_pEnterprise->setValue(pdwStdOid[m_trapType], 10);
       }
       else
       {
          m_pEnterprise->extend(0);
-         m_pEnterprise->extend(m_iSpecificTrap);
+         m_pEnterprise->extend(m_specificTrap);
       }
    }
 
@@ -363,23 +387,22 @@ BOOL SNMP_PDU::parseTrapPDU(BYTE *pData, UINT32 dwPDULength)
 /**
  * Parse version 2 TRAP or INFORM-REQUEST PDU
  */
-BOOL SNMP_PDU::parseTrap2PDU(BYTE *pData, UINT32 dwPDULength)
+bool SNMP_PDU::parseTrap2PDU(BYTE *pData, size_t pduLength)
 {
-   BOOL bResult;
+   bool bResult;
    static UINT32 pdwStdTrapPrefix[9] = { 1, 3, 6, 1, 6, 3, 1, 1, 5 };
 
-   bResult = parsePduContent(pData, dwPDULength);
+   bResult = parsePduContent(pData, pduLength);
    if (bResult)
    {
-      bResult = FALSE;
-      if (m_dwNumVariables >= 2)
+      bResult = false;
+      if (m_variables->size() >= 2)
       {
-         if (m_ppVarList[1]->GetType() == ASN_OBJECT_ID)
+         SNMP_Variable *var = m_variables->get(1);
+         if (var->getType() == ASN_OBJECT_ID)
          {
-            m_pEnterprise = new SNMP_ObjectId(
-               m_ppVarList[1]->GetValueLength() / sizeof(UINT32), 
-               (UINT32 *)m_ppVarList[1]->GetValue());
-            bResult = TRUE;
+            m_pEnterprise = new SNMP_ObjectId(var->getValueLength() / sizeof(UINT32), (UINT32 *)var->getValue());
+            bResult = true;
          }
       }
 
@@ -389,13 +412,13 @@ BOOL SNMP_PDU::parseTrap2PDU(BYTE *pData, UINT32 dwPDULength)
          if ((m_pEnterprise->compare(pdwStdTrapPrefix, 9) == OID_SHORTER) &&
              (m_pEnterprise->getLength() == 10))
          {
-            m_iTrapType = m_pEnterprise->getValue()[9];
-            m_iSpecificTrap = 0;
+            m_trapType = m_pEnterprise->getValue()[9];
+            m_specificTrap = 0;
          }
          else
          {
-            m_iTrapType = 6;
-            m_iSpecificTrap = m_pEnterprise->getValue()[m_pEnterprise->getLength() - 1];
+            m_trapType = 6;
+            m_specificTrap = m_pEnterprise->getValue()[m_pEnterprise->getLength() - 1];
          }
       }
    }
@@ -405,39 +428,40 @@ BOOL SNMP_PDU::parseTrap2PDU(BYTE *pData, UINT32 dwPDULength)
 /**
  * Parse version 3 header
  */
-BOOL SNMP_PDU::parseV3Header(BYTE *header, UINT32 headerLength)
+bool SNMP_PDU::parseV3Header(BYTE *header, size_t headerLength)
 {
-	UINT32 type, length, idLength, remLength = headerLength;
+	UINT32 type;
+   size_t length, idLength, remLength = headerLength;
 	BYTE *currPos = header;
 
    // Message id
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
-      return FALSE;
+      return false;
    if (type != ASN_INTEGER)
-      return FALSE;   // Should be of integer type
+      return false;   // Should be of integer type
    if (!BER_DecodeContent(type, currPos, length, (BYTE *)&m_msgId))
-      return FALSE;   // Error parsing content
+      return false;   // Error parsing content
    currPos += length;
    remLength -= length + idLength;
 
    // Message max size
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
-      return FALSE;
+      return false;
    if (type != ASN_INTEGER)
-      return FALSE;   // Should be of integer type
+      return false;   // Should be of integer type
    if (!BER_DecodeContent(type, currPos, length, (BYTE *)&m_msgMaxSize))
-      return FALSE;   // Error parsing content
+      return false;   // Error parsing content
    currPos += length;
    remLength -= length + idLength;
 
    // Message flags
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
-      return FALSE;
+      return false;
    if ((type != ASN_OCTET_STRING) || (length != 1))
-      return FALSE;
+      return false;
 	BYTE flags;
    if (!BER_DecodeContent(type, currPos, length, &flags))
-      return FALSE;   // Error parsing content
+      return false;   // Error parsing content
 	m_reportable = (flags & SNMP_REPORTABLE_FLAG) ? true : false;
 	m_flags = flags;
    currPos += length;
@@ -445,63 +469,63 @@ BOOL SNMP_PDU::parseV3Header(BYTE *header, UINT32 headerLength)
 
    // Security model
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
-      return FALSE;
+      return false;
    if (type != ASN_INTEGER)
-      return FALSE;   // Should be of integer type
+      return false;   // Should be of integer type
 	UINT32 securityModel;
    if (!BER_DecodeContent(type, currPos, length, (BYTE *)&securityModel))
-      return FALSE;   // Error parsing content
+      return false;   // Error parsing content
 	m_securityModel = (int)securityModel;
 
-	return TRUE;
+	return true;
 }
 
 /**
  * Parse V3 USM security parameters
  */
-BOOL SNMP_PDU::parseV3SecurityUsm(BYTE *data, UINT32 dataLength)
+bool SNMP_PDU::parseV3SecurityUsm(BYTE *data, size_t dataLength)
 {
-	UINT32 type, length, idLength, remLength = dataLength;
+	UINT32 type;
+   size_t length, idLength, engineIdLen, remLength = dataLength;
 	UINT32 engineBoots, engineTime;
 	BYTE *currPos = data;
 	BYTE engineId[SNMP_MAX_ENGINEID_LEN];
-	int engineIdLen;
 
 	// Should be sequence
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
-      return FALSE;
+      return false;
    if (type != ASN_SEQUENCE)
-      return FALSE;
+      return false;
    remLength = length;
 
 	// Engine ID
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
-      return FALSE;
+      return false;
    if (type != ASN_OCTET_STRING)
-      return FALSE;
+      return false;
 	engineIdLen = length;
    if (!BER_DecodeContent(type, currPos, length, engineId))
-      return FALSE;   // Error parsing content
+      return false;   // Error parsing content
    currPos += length;
    remLength -= length + idLength;
 
 	// engine boots
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
-      return FALSE;
+      return false;
    if (type != ASN_INTEGER)
-      return FALSE;
+      return false;
    if (!BER_DecodeContent(type, currPos, length, (BYTE *)&engineBoots))
-      return FALSE;   // Error parsing content
+      return false;   // Error parsing content
    currPos += length;
    remLength -= length + idLength;
 
 	// engine time
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
-      return FALSE;
+      return false;
    if (type != ASN_INTEGER)
-      return FALSE;
+      return false;
    if (!BER_DecodeContent(type, currPos, length, (BYTE *)&engineTime))
-      return FALSE;   // Error parsing content
+      return false;   // Error parsing content
    currPos += length;
    remLength -= length + idLength;
 
@@ -509,15 +533,15 @@ BOOL SNMP_PDU::parseV3SecurityUsm(BYTE *data, UINT32 dataLength)
 
 	// User name
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
-      return FALSE;
+      return false;
    if (type != ASN_OCTET_STRING)
-      return FALSE;
+      return false;
 	m_authObject = (char *)malloc(length + 1);
 	if (!BER_DecodeContent(type, currPos, length, (BYTE *)m_authObject))
 	{
 		free(m_authObject);
 		m_authObject = NULL;
-		return FALSE;
+		return false;
 	}
 	m_authObject[length] = 0;
    currPos += length;
@@ -525,9 +549,9 @@ BOOL SNMP_PDU::parseV3SecurityUsm(BYTE *data, UINT32 dataLength)
 
 	// Message signature
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
-      return FALSE;
+      return false;
    if (type != ASN_OCTET_STRING)
-      return FALSE;
+      return false;
 	memcpy(m_signature, currPos, min(length, 12));
 	memset(currPos, 0, min(length, 12));	// Replace with 0 to generate correct hash in validate method
    currPos += length;
@@ -535,40 +559,41 @@ BOOL SNMP_PDU::parseV3SecurityUsm(BYTE *data, UINT32 dataLength)
 
 	// Encryption salt
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
-      return FALSE;
+      return false;
    if (type != ASN_OCTET_STRING)
-      return FALSE;
+      return false;
 	memcpy(m_salt, currPos, min(length, 8));
 
-	return TRUE;
+	return true;
 }
 
 /**
  * Parse V3 scoped PDU
  */
-BOOL SNMP_PDU::parseV3ScopedPdu(BYTE *data, UINT32 dataLength)
+bool SNMP_PDU::parseV3ScopedPdu(BYTE *data, size_t dataLength)
 {
-	UINT32 type, length, idLength, remLength = dataLength;
+	UINT32 type;
+   size_t length, idLength, remLength = dataLength;
 	BYTE *currPos = data;
 
    // Context engine ID
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
-      return FALSE;
+      return false;
    if ((type != ASN_OCTET_STRING) || (length > SNMP_MAX_ENGINEID_LEN))
-      return FALSE;
+      return false;
 	m_contextEngineIdLen = length;
    if (!BER_DecodeContent(type, currPos, length, m_contextEngineId))
-      return FALSE;   // Error parsing content
+      return false;   // Error parsing content
    currPos += length;
    remLength -= length + idLength;
 	
    // Context name
    if (!BER_DecodeIdentifier(currPos, remLength, &type, &length, &currPos, &idLength))
-      return FALSE;
+      return false;
    if ((type != ASN_OCTET_STRING) || (length >= SNMP_MAX_CONTEXT_NAME))
-      return FALSE;
+      return false;
    if (!BER_DecodeContent(type, currPos, length, (BYTE *)m_contextName))
-      return FALSE;   // Error parsing content
+      return false;   // Error parsing content
 	m_contextName[length] = 0;
    currPos += length;
    remLength -= length + idLength;
@@ -579,11 +604,12 @@ BOOL SNMP_PDU::parseV3ScopedPdu(BYTE *data, UINT32 dataLength)
 /**
  * Parse PDU
  */
-BOOL SNMP_PDU::parsePdu(BYTE *pdu, UINT32 pduLength)
+bool SNMP_PDU::parsePdu(BYTE *pdu, size_t pduLength)
 {
 	BYTE *content;
-	UINT32 length, idLength, type;
-	BOOL success;
+	size_t length, idLength;
+   UINT32 type;
+	bool success;
 
    success = BER_DecodeIdentifier(pdu, pduLength, &type, &length, &content, &idLength);
    if (success)
@@ -591,39 +617,39 @@ BOOL SNMP_PDU::parsePdu(BYTE *pdu, UINT32 pduLength)
       switch(type)
       {
          case ASN_TRAP_V1_PDU:
-            m_dwCommand = SNMP_TRAP;
+            m_command = SNMP_TRAP;
             success = parseTrapPDU(content, length);
             break;
          case ASN_TRAP_V2_PDU:
-            m_dwCommand = SNMP_TRAP;
+            m_command = SNMP_TRAP;
             success = parseTrap2PDU(content, length);
             break;
          case ASN_GET_REQUEST_PDU:
-            m_dwCommand = SNMP_GET_REQUEST;
+            m_command = SNMP_GET_REQUEST;
             success = parsePduContent(content, length);
             break;
          case ASN_GET_NEXT_REQUEST_PDU:
-            m_dwCommand = SNMP_GET_NEXT_REQUEST;
+            m_command = SNMP_GET_NEXT_REQUEST;
             success = parsePduContent(content, length);
             break;
          case ASN_RESPONSE_PDU:
-            m_dwCommand = SNMP_RESPONSE;
+            m_command = SNMP_RESPONSE;
             success = parsePduContent(content, length);
             break;
          case ASN_SET_REQUEST_PDU:
-            m_dwCommand = SNMP_SET_REQUEST;
+            m_command = SNMP_SET_REQUEST;
             success = parsePduContent(content, length);
             break;
          case ASN_INFORM_REQUEST_PDU:
-            m_dwCommand = SNMP_INFORM_REQUEST;
+            m_command = SNMP_INFORM_REQUEST;
             success = parseTrap2PDU(content, length);
             break;
          case ASN_REPORT_PDU:
-            m_dwCommand = SNMP_REPORT;
+            m_command = SNMP_REPORT;
             success = parsePduContent(content, length);
             break;
          default:
-				success = FALSE;
+				success = false;
             break;
       }
    }
@@ -633,13 +659,13 @@ BOOL SNMP_PDU::parsePdu(BYTE *pdu, UINT32 pduLength)
 /**
  * Validate V3 signed message
  */
-BOOL SNMP_PDU::validateSignedMessage(BYTE *msg, UINT32 msgLen, SNMP_SecurityContext *securityContext)
+bool SNMP_PDU::validateSignedMessage(BYTE *msg, size_t msgLen, SNMP_SecurityContext *securityContext)
 {
 	BYTE k1[64], k2[64], hash[20], *buffer;
 	int i;
 
 	if (securityContext == NULL)
-		return FALSE;	// Unable to validate message without security context
+		return false;	// Unable to validate message without security context
 
 	switch(securityContext->getAuthMethod())
 	{
@@ -700,17 +726,17 @@ BOOL SNMP_PDU::validateSignedMessage(BYTE *msg, UINT32 msgLen, SNMP_SecurityCont
 /**
  * Decrypt data in packet
  */
-BOOL SNMP_PDU::decryptData(BYTE *data, UINT32 length, BYTE *decryptedData, SNMP_SecurityContext *securityContext)
+bool SNMP_PDU::decryptData(BYTE *data, size_t length, BYTE *decryptedData, SNMP_SecurityContext *securityContext)
 {
 #ifdef _WITH_ENCRYPTION
 	if (securityContext == NULL)
-		return FALSE;	// Cannot decrypt message without valid security context
+		return false;	// Cannot decrypt message without valid security context
 
 	if (securityContext->getPrivMethod() == SNMP_ENCRYPT_DES)
 	{
 #ifndef OPENSSL_NO_DES
 		if (length % 8 != 0)
-			return FALSE;	// Encrypted data length must be an integral multiple of 8
+			return false;	// Encrypted data length must be an integral multiple of 8
 
 		DES_cblock key;
 		DES_key_schedule schedule;
@@ -722,9 +748,9 @@ BOOL SNMP_PDU::decryptData(BYTE *data, UINT32 length, BYTE *decryptedData, SNMP_
 		for(int i = 0; i < 8; i++)
 			iv[i] ^= m_salt[i];
 
-		DES_ncbc_encrypt(data, decryptedData, length, &schedule, &iv, DES_DECRYPT);
+		DES_ncbc_encrypt(data, decryptedData, (long)length, &schedule, &iv, DES_DECRYPT);
 #else
-		return FALSE;  // Compiled without DES support
+		return false;  // Compiled without DES support
 #endif
 	}
 	else if (securityContext->getPrivMethod() == SNMP_ENCRYPT_AES)
@@ -753,70 +779,71 @@ BOOL SNMP_PDU::decryptData(BYTE *data, UINT32 length, BYTE *decryptedData, SNMP_
 		int num = 0;
 		AES_cfb128_encrypt(data, decryptedData, length, &key, iv, &num, AES_DECRYPT);
 #else
-		return FALSE;  // Compiled without AES support
+		return false;  // Compiled without AES support
 #endif
 	}
 	else
 	{
-		return FALSE;
+		return false;
 	}
-	return TRUE;
+	return true;
 #else
-	return FALSE;	// No encryption support
+	return false;	// No encryption support
 #endif
 }
 
 /**
  * Create PDU from packet
  */
-BOOL SNMP_PDU::parse(BYTE *pRawData, UINT32 dwRawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate)
+bool SNMP_PDU::parse(BYTE *rawData, size_t rawLength, SNMP_SecurityContext *securityContext, bool engineIdAutoupdate)
 {
    BYTE *pbCurrPos;
-   UINT32 dwType, dwLength, dwPacketLength, dwIdLength;
-   BOOL bResult = FALSE;
+   UINT32 dwType;
+   size_t dwLength, dwPacketLength, idLength;
+   bool bResult = false;
 
    // Packet start
-   if (!BER_DecodeIdentifier(pRawData, dwRawLength, &dwType, &dwPacketLength, &pbCurrPos, &dwIdLength))
-      return FALSE;
+   if (!BER_DecodeIdentifier(rawData, rawLength, &dwType, &dwPacketLength, &pbCurrPos, &idLength))
+      return false;
    if (dwType != ASN_SEQUENCE)
-      return FALSE;   // Packet should start with SEQUENCE
+      return false;   // Packet should start with SEQUENCE
 
    // Version
-   if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
-      return FALSE;
+   if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+      return false;
    if (dwType != ASN_INTEGER)
-      return FALSE;   // Version field should be of integer type
-   if (!BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_dwVersion))
-      return FALSE;   // Error parsing content of version field
+      return false;   // Version field should be of integer type
+   if (!BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)&m_version))
+      return false;   // Error parsing content of version field
    pbCurrPos += dwLength;
-   dwPacketLength -= dwLength + dwIdLength;
-   if ((m_dwVersion != SNMP_VERSION_1) && (m_dwVersion != SNMP_VERSION_2C) && ((m_dwVersion != SNMP_VERSION_3)))
-      return FALSE;   // Unsupported SNMP version
+   dwPacketLength -= dwLength + idLength;
+   if ((m_version != SNMP_VERSION_1) && (m_version != SNMP_VERSION_2C) && ((m_version != SNMP_VERSION_3)))
+      return false;   // Unsupported SNMP version
 
-	if (m_dwVersion == SNMP_VERSION_3)
+	if (m_version == SNMP_VERSION_3)
 	{
 		// V3 header
-		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
-			return FALSE;
+		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+			return false;
 		if (dwType != ASN_SEQUENCE)
-			return FALSE;   // Should be sequence
+			return false;   // Should be sequence
 		
 		// We don't need BER_DecodeContent because sequence does not need any special decoding
 		if (!parseV3Header(pbCurrPos, dwLength))
-			return FALSE;
+			return false;
 		pbCurrPos += dwLength;
-		dwPacketLength -= dwLength + dwIdLength;
+		dwPacketLength -= dwLength + idLength;
 
 		// Security parameters
-		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
-			return FALSE;
+		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+			return false;
 		if (dwType != ASN_OCTET_STRING)
-			return FALSE;   // Should be octet string
+			return false;   // Should be octet string
 
 		if (m_securityModel == SNMP_SECURITY_MODEL_USM)
 		{
 			if (!parseV3SecurityUsm(pbCurrPos, dwLength))
-				return FALSE;
+				return false;
 
 			if (engineIdAutoupdate && (m_authoritativeEngine.getIdLen() > 0) && (securityContext != NULL))
 			{
@@ -825,29 +852,29 @@ BOOL SNMP_PDU::parse(BYTE *pRawData, UINT32 dwRawLength, SNMP_SecurityContext *s
 
 			if (m_flags & SNMP_AUTH_FLAG)
 			{
-				if (!validateSignedMessage(pRawData, dwRawLength, securityContext))
-					return FALSE;
+				if (!validateSignedMessage(rawData, rawLength, securityContext))
+					return false;
 			}
 		}
 
 		pbCurrPos += dwLength;
-		dwPacketLength -= dwLength + dwIdLength;
+		dwPacketLength -= dwLength + idLength;
 
 		// Decrypt scoped PDU if needed
 		if ((m_securityModel == SNMP_SECURITY_MODEL_USM) && (m_flags & SNMP_PRIV_FLAG))
 		{
 			BYTE *scopedPduStart = pbCurrPos;
 
-			if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
-				return FALSE;
+			if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+				return false;
 			if (dwType != ASN_OCTET_STRING)
-				return FALSE;   // Should be encoded as octet string
+				return false;   // Should be encoded as octet string
 
 			BYTE *decryptedPdu = (BYTE *)malloc(dwLength);
 			if (!decryptData(pbCurrPos, dwLength, decryptedPdu, securityContext))
 			{
 				free(decryptedPdu);
-				return FALSE;
+				return false;
 			}
 
 			pbCurrPos = scopedPduStart;
@@ -856,29 +883,29 @@ BOOL SNMP_PDU::parse(BYTE *pRawData, UINT32 dwRawLength, SNMP_SecurityContext *s
 		}
 
 		// Scoped PDU
-		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
-			return FALSE;
+		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+			return false;
 		if (dwType != ASN_SEQUENCE)
-			return FALSE;   // Should be sequence
+			return false;   // Should be sequence
 		bResult = parseV3ScopedPdu(pbCurrPos, dwLength);
 	}
 	else
 	{
 		// Community string
-		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &dwIdLength))
-			return FALSE;
+		if (!BER_DecodeIdentifier(pbCurrPos, dwPacketLength, &dwType, &dwLength, &pbCurrPos, &idLength))
+			return false;
 		if (dwType != ASN_OCTET_STRING)
-			return FALSE;   // Community field should be of string type
+			return false;   // Community field should be of string type
 		m_authObject = (char *)malloc(dwLength + 1);
 		if (!BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)m_authObject))
 		{
 			free(m_authObject);
 			m_authObject = NULL;
-			return FALSE;   // Error parsing content of version field
+			return false;   // Error parsing content of version field
 		}
 		m_authObject[dwLength] = 0;
 		pbCurrPos += dwLength;
-		dwPacketLength -= dwLength + dwIdLength;
+		dwPacketLength -= dwLength + idLength;
 
 		bResult = parsePdu(pbCurrPos, dwLength);
 	}
@@ -889,9 +916,11 @@ BOOL SNMP_PDU::parse(BYTE *pRawData, UINT32 dwRawLength, SNMP_SecurityContext *s
 /**
  * Create packet from PDU
  */
-UINT32 SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
+size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 {
-   UINT32 i, dwBufferSize, dwBytes, dwVarBindsSize, dwPDUType, dwPDUSize, dwPacketSize, dwValue;
+   int i;
+   UINT32 dwValue, dwPDUType;
+   size_t dwBufferSize, dwBytes, dwVarBindsSize, dwPDUSize, dwPacketSize;
    BYTE *pbCurrPos, *pBlock, *pVarBinds, *pPacket;
 
 	// Replace context name if defined in security context
@@ -902,25 +931,29 @@ UINT32 SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 	}
 
    // Estimate required buffer size and allocate it
-   for(dwBufferSize = 1024, i = 0; i < m_dwNumVariables; i++)
-      dwBufferSize += m_ppVarList[i]->GetValueLength() + m_ppVarList[i]->GetName()->getLength() * 4 + 16;
+   for(dwBufferSize = 1024, i = 0; i < m_variables->size(); i++)
+   {
+      SNMP_Variable *var = m_variables->get(i);
+      dwBufferSize += var->getValueLength() + var->getName()->getLength() * 4 + 16;
+   }
    pBlock = (BYTE *)malloc(dwBufferSize);
    pVarBinds = (BYTE *)malloc(dwBufferSize);
    pPacket = (BYTE *)malloc(dwBufferSize);
 
    // Encode variables
-   for(i = 0, dwVarBindsSize = 0, pbCurrPos = pVarBinds; i < m_dwNumVariables; i++)
+   for(i = 0, dwVarBindsSize = 0, pbCurrPos = pVarBinds; i < m_variables->size(); i++)
    {
-      dwBytes = m_ppVarList[i]->Encode(pbCurrPos, dwBufferSize - dwVarBindsSize);
+      SNMP_Variable *var = m_variables->get(i);
+      dwBytes = var->encode(pbCurrPos, dwBufferSize - dwVarBindsSize);
       pbCurrPos += dwBytes;
       dwVarBindsSize += dwBytes;
    }
 
    // Determine PDU type
    for(i = 0; PDU_type_to_command[i].dwType != 0; i++)
-      if (((m_dwVersion == (UINT32)PDU_type_to_command[i].iVersion) ||
+      if (((m_version == (UINT32)PDU_type_to_command[i].iVersion) ||
            (PDU_type_to_command[i].iVersion == -1)) &&
-          (PDU_type_to_command[i].dwCommand == m_dwCommand))
+          (PDU_type_to_command[i].dwCommand == m_command))
       {
          dwPDUType = PDU_type_to_command[i].dwType;
          break;
@@ -945,13 +978,13 @@ UINT32 SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
             dwPDUSize += dwBytes;
             pbCurrPos += dwBytes;
 
-            dwValue = (UINT32)m_iTrapType;
+            dwValue = (UINT32)m_trapType;
             dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&dwValue, sizeof(UINT32), 
                                  pbCurrPos, dwBufferSize - dwPDUSize);
             dwPDUSize += dwBytes;
             pbCurrPos += dwBytes;
 
-            dwValue = (UINT32)m_iSpecificTrap;
+            dwValue = (UINT32)m_specificTrap;
             dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&dwValue, sizeof(UINT32), 
                                  pbCurrPos, dwBufferSize - dwPDUSize);
             dwPDUSize += dwBytes;
@@ -981,7 +1014,7 @@ UINT32 SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
       }
 
       // Encode varbinds into PDU
-		if ((m_dwVersion != SNMP_VERSION_3) || ((securityContext != NULL) && (securityContext->getAuthoritativeEngine().getIdLen() != 0)))
+		if ((m_version != SNMP_VERSION_3) || ((securityContext != NULL) && (securityContext->getAuthoritativeEngine().getIdLen() != 0)))
 		{
 			dwBytes = BER_Encode(ASN_SEQUENCE, pVarBinds, dwVarBindsSize, 
 										pbCurrPos, dwBufferSize - dwPDUSize);
@@ -997,12 +1030,12 @@ UINT32 SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
       pbCurrPos = pPacket;
       dwPacketSize = 0;
 
-      dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_dwVersion, sizeof(UINT32), 
+      dwBytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_version, sizeof(UINT32), 
                            pbCurrPos, dwBufferSize);
       dwPacketSize += dwBytes;
       pbCurrPos += dwBytes;
 
-		if (m_dwVersion == SNMP_VERSION_3)
+		if (m_version == SNMP_VERSION_3)
 		{
 			// Generate encryption salt if packet has to be encrypted
 			if (securityContext->needEncryption())
@@ -1026,7 +1059,7 @@ UINT32 SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 				if (securityContext->getPrivMethod() == SNMP_ENCRYPT_DES)
 				{
 #ifndef OPENSSL_NO_DES
-					UINT32 encSize = (dwBytes % 8 == 0) ? dwBytes : (dwBytes + (8 - (dwBytes % 8)));
+					size_t encSize = (dwBytes % 8 == 0) ? dwBytes : (dwBytes + (8 - (dwBytes % 8)));
 					BYTE *encryptedPdu = (BYTE *)malloc(encSize);
 
 					DES_cblock key;
@@ -1039,7 +1072,7 @@ UINT32 SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 					for(int i = 0; i < 8; i++)
 						iv[i] ^= m_salt[i];
 
-					DES_ncbc_encrypt(pbCurrPos, encryptedPdu, dwBytes, &schedule, &iv, DES_ENCRYPT);
+					DES_ncbc_encrypt(pbCurrPos, encryptedPdu, (long)dwBytes, &schedule, &iv, DES_ENCRYPT);
 					dwBytes = BER_Encode(ASN_OCTET_STRING, encryptedPdu, encSize, pbCurrPos, dwBufferSize - dwPacketSize);
 					free(encryptedPdu);
 #else
@@ -1101,7 +1134,7 @@ UINT32 SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
       dwBytes = BER_Encode(ASN_SEQUENCE, pPacket, dwPacketSize, *ppBuffer, dwPacketSize + 6);
 
 		// Sign message
-		if ((m_dwVersion == SNMP_VERSION_3) && securityContext->needAuthentication())
+		if ((m_version == SNMP_VERSION_3) && securityContext->needAuthentication())
 		{
 			signMessage(*ppBuffer, dwBytes, securityContext);
 		}
@@ -1121,11 +1154,8 @@ cleanup:
 /**
  * Encode version 3 header
  */
-UINT32 SNMP_PDU::encodeV3Header(BYTE *buffer, UINT32 bufferSize, SNMP_SecurityContext *securityContext)
+size_t SNMP_PDU::encodeV3Header(BYTE *buffer, size_t bufferSize, SNMP_SecurityContext *securityContext)
 {
-	BYTE header[256];
-	UINT32 bytes, securityModel = securityContext->getSecurityModel();
-
 	BYTE flags = m_reportable ? SNMP_REPORTABLE_FLAG : 0;
 	if (securityContext->getAuthoritativeEngine().getIdLen() != 0)
 	{
@@ -1139,9 +1169,11 @@ UINT32 SNMP_PDU::encodeV3Header(BYTE *buffer, UINT32 bufferSize, SNMP_SecurityCo
 		}
 	}
 
-	bytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_msgId, sizeof(UINT32), header, 256);
+	BYTE header[256];
+	size_t bytes = BER_Encode(ASN_INTEGER, (BYTE *)&m_msgId, sizeof(UINT32), header, 256);
 	bytes += BER_Encode(ASN_INTEGER, (BYTE *)&m_msgMaxSize, sizeof(UINT32), &header[bytes], 256 - bytes);
 	bytes += BER_Encode(ASN_OCTET_STRING, &flags, 1, &header[bytes], 256 - bytes);
+   UINT32 securityModel = securityContext->getSecurityModel();
 	bytes += BER_Encode(ASN_INTEGER, (BYTE *)&securityModel, sizeof(UINT32), &header[bytes], 256 - bytes);
 	return BER_Encode(ASN_SEQUENCE, header, bytes, buffer, bufferSize);
 }
@@ -1149,9 +1181,9 @@ UINT32 SNMP_PDU::encodeV3Header(BYTE *buffer, UINT32 bufferSize, SNMP_SecurityCo
 /**
  * Encode version 3 security parameters
  */
-UINT32 SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, UINT32 bufferSize, SNMP_SecurityContext *securityContext)
+size_t SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, size_t bufferSize, SNMP_SecurityContext *securityContext)
 {
-	UINT32 bytes;
+	size_t bytes;
 
 	if ((securityContext != NULL) && (securityContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM))
 	{
@@ -1215,11 +1247,11 @@ UINT32 SNMP_PDU::encodeV3SecurityParameters(BYTE *buffer, UINT32 bufferSize, SNM
 /**
  * Encode versionj 3 scoped PDU
  */
-UINT32 SNMP_PDU::encodeV3ScopedPDU(UINT32 pduType, BYTE *pdu, UINT32 pduSize, BYTE *buffer, UINT32 bufferSize)
+size_t SNMP_PDU::encodeV3ScopedPDU(UINT32 pduType, BYTE *pdu, size_t pduSize, BYTE *buffer, size_t bufferSize)
 {
-	UINT32 spduLen = pduSize + SNMP_MAX_CONTEXT_NAME + SNMP_MAX_ENGINEID_LEN + 32;
+	size_t spduLen = pduSize + SNMP_MAX_CONTEXT_NAME + SNMP_MAX_ENGINEID_LEN + 32;
 	BYTE *spdu = (BYTE *)malloc(spduLen);
-	UINT32 bytes;
+	size_t bytes;
 
 	bytes = BER_Encode(ASN_OCTET_STRING, m_contextEngineId, (UINT32)m_contextEngineIdLen, spdu, spduLen);
 	bytes += BER_Encode(ASN_OCTET_STRING, (BYTE *)m_contextName, (UINT32)strlen(m_contextName), &spdu[bytes], spduLen - bytes);
@@ -1253,7 +1285,7 @@ UINT32 SNMP_PDU::encodeV3ScopedPDU(UINT32 pduType, BYTE *pdu, UINT32 pduSize, BY
  *   5) Replace the msgAuthenticationParameters field with MAC obtained in
  *      the step 4.
  */
-void SNMP_PDU::signMessage(BYTE *msg, UINT32 msgLen, SNMP_SecurityContext *securityContext)
+void SNMP_PDU::signMessage(BYTE *msg, size_t msgLen, SNMP_SecurityContext *securityContext)
 {
 	int i, hashPos;
 
@@ -1327,15 +1359,13 @@ void SNMP_PDU::signMessage(BYTE *msg, UINT32 msgLen, SNMP_SecurityContext *secur
  */
 void SNMP_PDU::bindVariable(SNMP_Variable *pVar)
 {
-   m_ppVarList = (SNMP_Variable **)realloc(m_ppVarList, sizeof(SNMP_Variable *) * (m_dwNumVariables + 1));
-   m_ppVarList[m_dwNumVariables] = pVar;
-   m_dwNumVariables++;
+   m_variables->add(pVar);
 }
 
 /**
  * Set context engine ID
  */
-void SNMP_PDU::setContextEngineId(BYTE *id, int len)
+void SNMP_PDU::setContextEngineId(BYTE *id, size_t len)
 {
 	m_contextEngineIdLen = min(len, SNMP_MAX_ENGINEID_LEN);
 	memcpy(m_contextEngineId, id, m_contextEngineIdLen);

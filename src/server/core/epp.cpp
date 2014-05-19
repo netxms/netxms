@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,8 +54,8 @@ EPRule::EPRule(UINT32 dwId)
 EPRule::EPRule(ConfigEntry *config)
 {
    m_dwId = 0;
-   config->getSubEntryValueUUID(_T("guid"), m_guid);
-   m_dwFlags = config->getSubEntryValueUInt(_T("flags"));
+   config->getSubEntryValueAsUUID(_T("guid"), m_guid);
+   m_dwFlags = config->getSubEntryValueAsUInt(_T("flags"));
    m_dwNumSources = 0;
    m_pdwSourceList = NULL;
    m_dwNumActions = 0;
@@ -64,12 +64,12 @@ EPRule::EPRule(ConfigEntry *config)
 	ConfigEntry *eventsRoot = config->findEntry(_T("events"));
    if (eventsRoot != NULL)
    {
-		ConfigEntryList *events = eventsRoot->getSubEntries(_T("event#*"));
+		ObjectArray<ConfigEntry> *events = eventsRoot->getSubEntries(_T("event#*"));
       m_dwNumEvents = 0;
-      m_pdwEventList = (UINT32 *)malloc(sizeof(UINT32) * events->getSize());
-      for(int i = 0; i < events->getSize(); i++)
+      m_pdwEventList = (UINT32 *)malloc(sizeof(UINT32) * events->size());
+      for(int i = 0; i < events->size(); i++)
       {
-         EVENT_TEMPLATE *e = FindEventTemplateByName(events->getEntry(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
+         EVENT_TEMPLATE *e = FindEventTemplateByName(events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
          if (e != NULL)
          {
             m_pdwEventList[m_dwNumEvents++] = e->dwCode;
@@ -78,9 +78,9 @@ EPRule::EPRule(ConfigEntry *config)
    }
 
    m_pszComment = _tcsdup(config->getSubEntryValue(_T("comments"), 0, _T("")));
-   m_iAlarmSeverity = config->getSubEntryValueInt(_T("alarmSeverity"));
-	m_dwAlarmTimeout = config->getSubEntryValueUInt(_T("alarmTimeout"));
-	m_dwAlarmTimeoutEvent = config->getSubEntryValueUInt(_T("alarmTimeout"), 0, EVENT_ALARM_TIMEOUT);
+   m_iAlarmSeverity = config->getSubEntryValueAsInt(_T("alarmSeverity"));
+	m_dwAlarmTimeout = config->getSubEntryValueAsUInt(_T("alarmTimeout"));
+	m_dwAlarmTimeoutEvent = config->getSubEntryValueAsUInt(_T("alarmTimeout"), 0, EVENT_ALARM_TIMEOUT);
    nx_strncpy(m_szAlarmKey, config->getSubEntryValue(_T("alarmKey"), 0, _T("")), MAX_DB_STRING);
    nx_strncpy(m_szAlarmMessage, config->getSubEntryValue(_T("alarmMessage"), 0, _T("")), MAX_DB_STRING);
 
@@ -92,7 +92,7 @@ EPRule::EPRule(ConfigEntry *config)
    {
       TCHAR szError[256];
 
-      m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 256);
+      m_pScript = NXSLCompileAndCreateVM(m_pszScript, szError, 256, new NXSL_ServerEnv);
       if (m_pScript != NULL)
       {
       	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
@@ -128,7 +128,7 @@ EPRule::EPRule(DB_RESULT hResult, int iRow)
    {
       TCHAR szError[256];
 
-      m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 256);
+      m_pScript = NXSLCompileAndCreateVM(m_pszScript, szError, 256, new NXSL_ServerEnv);
       if (m_pScript != NULL)
       {
       	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
@@ -164,15 +164,15 @@ EPRule::EPRule(CSCPMessage *pMsg)
 
    m_dwNumActions = pMsg->GetVariableLong(VID_NUM_ACTIONS);
    m_pdwActionList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumActions);
-   pMsg->GetVariableInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
+   pMsg->getFieldAsInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
 
    m_dwNumEvents = pMsg->GetVariableLong(VID_NUM_EVENTS);
    m_pdwEventList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumEvents);
-   pMsg->GetVariableInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
+   pMsg->getFieldAsInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
 
    m_dwNumSources = pMsg->GetVariableLong(VID_NUM_SOURCES);
    m_pdwSourceList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumSources);
-   pMsg->GetVariableInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
+   pMsg->getFieldAsInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
 
    pMsg->GetVariableStr(VID_ALARM_KEY, m_szAlarmKey, MAX_DB_STRING);
    pMsg->GetVariableStr(VID_ALARM_MESSAGE, m_szAlarmMessage, MAX_DB_STRING);
@@ -195,7 +195,7 @@ EPRule::EPRule(CSCPMessage *pMsg)
    {
       TCHAR szError[256];
 
-      m_pScript = (NXSL_Program *)NXSLCompile(m_pszScript, szError, 256);
+      m_pScript = NXSLCompileAndCreateVM(m_pszScript, szError, 256, new NXSL_ServerEnv);
       if (m_pScript != NULL)
       {
       	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value(_T("")));
@@ -417,7 +417,7 @@ bool EPRule::matchScript(Event *pEvent)
 	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value);
 
    // Run script
-   if (m_pScript->run(pEnv, pEvent->getParametersCount(), ppValueList, pLocals, &pGlobals) == 0)
+   if (m_pScript->run(pEvent->getParametersCount(), ppValueList, pLocals, &pGlobals))
    {
       pValue = m_pScript->getResult();
       if (pValue != NULL)
@@ -454,7 +454,6 @@ bool EPRule::processEvent(Event *pEvent)
 {
    bool bStopProcessing = false;
    UINT32 i;
-   TCHAR *pszText;
 
    // Check disable flag
    if (!(m_dwFlags & RF_DISABLED))
@@ -472,10 +471,12 @@ bool EPRule::processEvent(Event *pEvent)
          // Event matched, perform actions
          if (m_dwNumActions > 0)
          {
-            pszText = pEvent->expandText(m_szAlarmMessage);
+            TCHAR *alarmMessage = pEvent->expandText(m_szAlarmMessage);
+            TCHAR *alarmKey = pEvent->expandText(m_szAlarmKey);
             for(i = 0; i < m_dwNumActions; i++)
-               ExecuteAction(m_pdwActionList[i], pEvent, pszText);
-            free(pszText);
+               ExecuteAction(m_pdwActionList[i], pEvent, alarmMessage, alarmKey);
+            free(alarmMessage);
+            free(alarmKey);
          }
 
 			// Update situation of needed
@@ -487,7 +488,7 @@ bool EPRule::processEvent(Event *pEvent)
 				pSituation = FindSituationById(m_dwSituationId);
 				if (pSituation != NULL)
 				{
-					pszText = pEvent->expandText(m_szSituationInstance);
+					TCHAR *pszText = pEvent->expandText(m_szSituationInstance);
 					for(i = 0; i < m_situationAttrList.getSize(); i++)
 					{
 						pszAttr = pEvent->expandText(m_situationAttrList.getKeyByIndex(i));
@@ -521,7 +522,7 @@ void EPRule::generateAlarm(Event *pEvent)
 	{
 		TCHAR *pszAckKey = pEvent->expandText(m_szAlarmKey);
 		if (pszAckKey[0] != 0)
-			g_alarmMgr.resolveByKey(pszAckKey, (m_dwFlags & RF_TERMINATE_BY_REGEXP) ? true : false, m_iAlarmSeverity == SEVERITY_TERMINATE);
+			g_alarmMgr.resolveByKey(pszAckKey, (m_dwFlags & RF_TERMINATE_BY_REGEXP) ? true : false, m_iAlarmSeverity == SEVERITY_TERMINATE, pEvent);
 		free(pszAckKey);
 	}
 	else	// Generate new alarm
@@ -688,11 +689,11 @@ void EPRule::createMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_ALARM_TIMEOUT_EVENT, m_dwAlarmTimeoutEvent);
    pMsg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_pszComment));
    pMsg->SetVariable(VID_NUM_ACTIONS, m_dwNumActions);
-   pMsg->SetVariableToInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
+   pMsg->setFieldInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
    pMsg->SetVariable(VID_NUM_EVENTS, m_dwNumEvents);
-   pMsg->SetVariableToInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
+   pMsg->setFieldInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
    pMsg->SetVariable(VID_NUM_SOURCES, m_dwNumSources);
-   pMsg->SetVariableToInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
+   pMsg->setFieldInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
    pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_pszScript));
 	pMsg->SetVariable(VID_SITUATION_ID, m_dwSituationId);
 	pMsg->SetVariable(VID_SITUATION_INSTANCE, m_szSituationInstance);

@@ -96,11 +96,9 @@ public:
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
-
-//
-// "SNMP_VarBind" class
-//
-
+/**
+ * "SNMP_VarBind" class
+ */
 class NXSL_SNMPVarBindClass : public NXSL_Class
 {
 public:
@@ -110,11 +108,9 @@ public:
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
-
-//
-// Server's default script environment
-//
-
+/**
+ * Server's default script environment
+ */
 class NXSL_ServerEnv : public NXSL_Environment
 {
 protected:

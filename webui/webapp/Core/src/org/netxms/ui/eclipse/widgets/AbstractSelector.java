@@ -23,6 +23,7 @@ import java.util.Set;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.DisposeEvent;
@@ -116,6 +117,7 @@ public class AbstractSelector extends Composite
          wrapper.setLayoutData(gd);
 	      text = new CLabel(wrapper, SWT.NONE);
 		}
+		text.setData(RWT.CUSTOM_VARIANT, "SelectorWidget");
 		
 		if ((options & USE_HYPERLINK) != 0)
 		{

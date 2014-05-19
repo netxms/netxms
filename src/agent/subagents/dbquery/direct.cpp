@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -76,6 +76,61 @@ LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 }
 
 /**
+ * Direct query - single value
+ */
+LONG H_DirectQueryConfigurable(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+{
+   TCHAR bindParam[256];
+   Query *queryObj = AcquireQueryObject(arg);
+
+   if (queryObj == NULL)
+   {
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   const TCHAR *dbid = queryObj->getDBid();
+   const TCHAR *query = queryObj->getQuery();
+
+   DB_HANDLE hdb = GetConnectionHandle(dbid);
+   if (hdb == NULL)
+   {
+      queryObj->unlock();
+      AgentWriteDebugLog(4, _T("DBQUERY: H_DirectQueryConfigurable: no connection handle for database %s"), dbid);
+      return SYSINFO_RC_ERROR;
+   }
+
+   AgentWriteDebugLog(6, _T("DBQUERY: H_DirectQueryConfigurable: Executing query %s in database: %s"), query, dbid);
+
+   DB_STATEMENT hStmt = DBPrepare(hdb, query);
+   if (hStmt != NULL)
+   {
+      int i = 1;
+      AgentGetParameterArg(param, i, bindParam, 256);
+      while(_tcscmp(bindParam, _T("")) != 0)
+      {
+         DBBind(hStmt, i, DB_SQLTYPE_VARCHAR, bindParam, 256);
+         AgentWriteDebugLog(6, _T("DBQUERY: H_DirectQueryConfigurable: Parameter bint %s in pleace %d"), bindParam, i);
+         i++;
+         AgentGetParameterArg(param, i, bindParam, 256);
+      }
+
+   }
+
+   LONG rc = SYSINFO_RC_ERROR;
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != NULL)
+   {
+      *value = 0;
+      DBGetField(hResult, 0, 0, value, MAX_RESULT_LENGTH);
+      DBFreeResult(hResult);
+      rc = SYSINFO_RC_SUCCESS;
+   }
+   DBFreeStatement(hStmt);
+   queryObj->unlock();
+   return rc;
+}
+
+/**
  * Direct query - table
  */
 LONG H_DirectQueryTable(const TCHAR *param, const TCHAR *arg, Table *value)
@@ -99,5 +154,59 @@ LONG H_DirectQueryTable(const TCHAR *param, const TCHAR *arg, Table *value)
       DBFreeResult(hResult);
       rc = SYSINFO_RC_SUCCESS;
    }
+   return rc;
+}
+
+/**
+ * Direct query - table
+ */
+LONG H_DirectQueryConfigurableTable(const TCHAR *param, const TCHAR *arg, Table *value)
+{
+   TCHAR bindParam[256];
+   Query *queryObj = AcquireQueryObject(arg);
+
+   if (queryObj == NULL)
+   {
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   const TCHAR *dbid = queryObj->getDBid();
+   const TCHAR *query = queryObj->getQuery();
+
+   DB_HANDLE hdb = GetConnectionHandle(dbid);
+   if (hdb == NULL)
+   {
+      queryObj->unlock();
+      AgentWriteDebugLog(4, _T("DBQUERY: H_DirectQueryConfigurableTable: no connection handle for database %s"), dbid);
+      return SYSINFO_RC_ERROR;
+   }
+
+   AgentWriteDebugLog(6, _T("DBQUERY: H_DirectQueryConfigurableTable: Executing query %s in database: %s"), query, dbid);
+
+   DB_STATEMENT hStmt = DBPrepare(hdb, query);
+   if (hStmt != NULL)
+   {
+      int i = 1;
+      AgentGetParameterArg(param, i, bindParam, 256);
+      while(_tcscmp(bindParam, _T("")) != 0)
+      {
+         DBBind(hStmt, i, DB_SQLTYPE_VARCHAR, bindParam, 256);
+         AgentWriteDebugLog(6, _T("DBQUERY: H_DirectQueryConfigurableTable: Parameter bint %s in pleace %d"), bindParam, i);
+         i++;
+         AgentGetParameterArg(param, i, bindParam, 256);
+      }
+
+   }
+
+   LONG rc = SYSINFO_RC_ERROR;
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult != NULL)
+   {
+      DBResultToTable(hResult, value);
+      DBFreeResult(hResult);
+      rc = SYSINFO_RC_SUCCESS;
+   }
+   DBFreeStatement(hStmt);
+   queryObj->unlock();
    return rc;
 }

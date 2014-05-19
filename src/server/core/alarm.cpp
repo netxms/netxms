@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -155,6 +155,22 @@ static void FillAlarmEventsMessage(CSCPMessage *msg, UINT32 alarmId)
 		DBFreeStatement(hStmt);
 	}
 	DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
+ * Resolve alarm by helpdesk reference
+ */
+UINT32 ResolveAlarmByHDRef(const TCHAR *hdref)
+{
+   return g_alarmMgr.resolveByHDRef(hdref, NULL, false);
+}
+
+/**
+ * Terminate alarm by helpdesk reference
+ */
+UINT32 TerminateAlarmByHDRef(const TCHAR *hdref)
+{
+   return g_alarmMgr.resolveByHDRef(hdref, NULL, true);
 }
 
 /**
@@ -390,6 +406,30 @@ void AlarmManager::newAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 }
 
 /**
+ * Do acknowledge
+ */
+UINT32 AlarmManager::doAck(NXC_ALARM *alarm, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime)
+{
+   if ((alarm->nState & ALARM_STATE_MASK) != ALARM_STATE_OUTSTANDING)
+      return RCC_ALARM_NOT_OUTSTANDING;
+
+   WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), alarm->dwSourceObject,
+      _T("Acknowledged alarm %d (%s) on object %s"), alarm->dwAlarmId, alarm->szMessage,
+      GetObjectName(alarm->dwSourceObject, _T("")));
+
+   UINT32 endTime = acknowledgmentActionTime != 0 ? (UINT32)time(NULL) + acknowledgmentActionTime : 0;
+   alarm->ackTimeout = endTime;
+   alarm->nState = ALARM_STATE_ACKNOWLEDGED;
+	if (sticky)
+      alarm->nState |= ALARM_STATE_STICKY;
+   alarm->dwAckByUser = session->getUserId();
+   alarm->dwLastChangeTime = (UINT32)time(NULL);
+   notifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
+   updateAlarmInDB(alarm);
+   return RCC_SUCCESS;
+}
+
+/**
  * Acknowledge alarm with given ID
  */
 UINT32 AlarmManager::ackById(UINT32 dwAlarmId, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime)
@@ -400,28 +440,30 @@ UINT32 AlarmManager::ackById(UINT32 dwAlarmId, ClientSession *session, bool stic
    for(int i = 0; i < m_numAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
-         if ((m_pAlarmList[i].nState & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING)
-         {
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), m_pAlarmList[i].dwSourceObject,
-               _T("Acknowledged alarm %d (%s) on object %s"), dwAlarmId, m_pAlarmList[i].szMessage,
-               GetObjectName(m_pAlarmList[i].dwSourceObject, _T("")));
+         dwRet = doAck(&m_pAlarmList[i], session, sticky, acknowledgmentActionTime);
+         dwObject = m_pAlarmList[i].dwSourceObject;
+         break;
+      }
+   unlock();
 
-            UINT32 endTime = acknowledgmentActionTime != 0 ? (UINT32)time(NULL) + acknowledgmentActionTime : 0;
-            m_pAlarmList[i].ackTimeout = endTime;
-            m_pAlarmList[i].nState = ALARM_STATE_ACKNOWLEDGED;
-				if (sticky)
-	            m_pAlarmList[i].nState |= ALARM_STATE_STICKY;
-            m_pAlarmList[i].dwAckByUser = session->getUserId();
-            m_pAlarmList[i].dwLastChangeTime = (UINT32)time(NULL);
-            dwObject = m_pAlarmList[i].dwSourceObject;
-            notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
-            updateAlarmInDB(&m_pAlarmList[i]);
-            dwRet = RCC_SUCCESS;
-         }
-         else
-         {
-            dwRet = RCC_ALARM_NOT_OUTSTANDING;
-         }
+   if (dwRet == RCC_SUCCESS)
+      updateObjectStatus(dwObject);
+   return dwRet;
+}
+
+/**
+ * Acknowledge alarm with given helpdesk reference
+ */
+UINT32 AlarmManager::ackByHDRef(const TCHAR *hdref, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime)
+{
+   UINT32 dwObject, dwRet = RCC_INVALID_ALARM_ID;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (!_tcscmp(m_pAlarmList[i].szHelpDeskRef, hdref))
+      {
+         dwRet = doAck(&m_pAlarmList[i], session, sticky, acknowledgmentActionTime);
+         dwObject = m_pAlarmList[i].dwSourceObject;
          break;
       }
    unlock();
@@ -447,14 +489,17 @@ UINT32 AlarmManager::resolveById(UINT32 dwAlarmId, ClientSession *session, bool 
          if (m_pAlarmList[i].nHelpDeskState != ALARM_HELPDESK_OPEN)
          {
             dwObject = m_pAlarmList[i].dwSourceObject;
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), dwObject,
-               _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
-               dwAlarmId, m_pAlarmList[i].szMessage, GetObjectName(dwObject, _T("")));
+            if (session != NULL)
+            {
+               WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), dwObject,
+                  _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
+                  dwAlarmId, m_pAlarmList[i].szMessage, GetObjectName(dwObject, _T("")));
+            }
 
 				if (terminate)
-               m_pAlarmList[i].dwTermByUser = session->getUserId();
+               m_pAlarmList[i].dwTermByUser = (session != NULL) ? session->getUserId() : 0;
 				else
-               m_pAlarmList[i].dwResolvedByUser = session->getUserId();
+               m_pAlarmList[i].dwResolvedByUser = (session != NULL) ? session->getUserId() : 0;
             m_pAlarmList[i].dwLastChangeTime = (UINT32)time(NULL);
 				m_pAlarmList[i].nState = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
 				m_pAlarmList[i].ackTimeout = 0;
@@ -483,7 +528,7 @@ UINT32 AlarmManager::resolveById(UINT32 dwAlarmId, ClientSession *session, bool 
 /**
  * Resolve and possibly terminate all alarms with given key
  */
-void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool terminate)
+void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool terminate, Event *pEvent)
 {
    UINT32 *pdwObjectList = (UINT32 *)malloc(sizeof(UINT32) * m_numAlarms);
 
@@ -522,6 +567,21 @@ void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool termin
 				memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_numAlarms - i));
 				i--;
 			}
+         else
+         {
+	         // Add record to alarm_events table if alarm is resolved
+	         TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
+	         const TCHAR *values[8] = { valAlarmId, valEventId, valEventCode, pEvent->getName(), valSeverity, valSource, valTimestamp, pEvent->getMessage() };
+	         _sntprintf(valAlarmId, 16, _T("%d"), (int)m_pAlarmList[i].dwAlarmId);
+	         _sntprintf(valEventId, 32, UINT64_FMT, pEvent->getId());
+	         _sntprintf(valEventCode, 16, _T("%d"), (int)pEvent->getCode());
+	         _sntprintf(valSeverity, 16, _T("%d"), (int)pEvent->getSeverity());
+	         _sntprintf(valSource, 16, _T("%d"), pEvent->getSourceId());
+	         _sntprintf(valTimestamp, 16, _T("%u"), (UINT32)pEvent->getTimeStamp());
+	         static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
+	         QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"),
+	                         8, sqlTypes, values);
+         }
       }
    unlock();
 
@@ -529,6 +589,177 @@ void AlarmManager::resolveByKey(const TCHAR *pszKey, bool useRegexp, bool termin
    for(int i = 0; i < numObjects; i++)
       updateObjectStatus(pdwObjectList[i]);
    free(pdwObjectList);
+}
+
+/**
+ * Resolve and possibly terminate alarm with given helpdesk reference.
+ * Auitomatically change alarm's helpdesk state to "closed"
+ */
+UINT32 AlarmManager::resolveByHDRef(const TCHAR *hdref, ClientSession *session, bool terminate)
+{
+   UINT32 objectId = 0;
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (!_tcscmp(m_pAlarmList[i].szHelpDeskRef, hdref))
+      {
+         objectId = m_pAlarmList[i].dwSourceObject;
+         if (session != NULL)
+         {
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), objectId,
+               _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
+               m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage, GetObjectName(objectId, _T("")));
+         }
+
+			if (terminate)
+            m_pAlarmList[i].dwTermByUser = (session != NULL) ? session->getUserId() : 0;
+			else
+            m_pAlarmList[i].dwResolvedByUser = (session != NULL) ? session->getUserId() : 0;
+         m_pAlarmList[i].dwLastChangeTime = (UINT32)time(NULL);
+			m_pAlarmList[i].nState = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
+			m_pAlarmList[i].ackTimeout = 0;
+         if (m_pAlarmList[i].nHelpDeskState != ALARM_HELPDESK_IGNORED)
+            m_pAlarmList[i].nHelpDeskState = ALARM_HELPDESK_CLOSED;
+			notifyClients(terminate ? NX_NOTIFY_ALARM_TERMINATED : NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+         updateAlarmInDB(&m_pAlarmList[i]);
+			if (terminate)
+			{
+				m_numAlarms--;
+				memmove(&m_pAlarmList[i], &m_pAlarmList[i + 1], sizeof(NXC_ALARM) * (m_numAlarms - i));
+			}
+         DbgPrintf(5, _T("Alarm with helpdesk reference \"%s\" %s"), hdref, terminate ? _T("terminated") : _T("resolved"));
+         rcc = RCC_SUCCESS;
+         break;
+      }
+   unlock();
+
+   if (objectId != 0)
+      updateObjectStatus(objectId);
+   return rcc;
+}
+
+/**
+ * Open issue in helpdesk system
+ */
+UINT32 AlarmManager::openHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref)
+{
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
+   *hdref = 0;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == alarmId)
+      {
+         if (m_pAlarmList[i].nHelpDeskState == ALARM_HELPDESK_IGNORED)
+         {
+            /* TODO: unlock alarm list before call */
+            const TCHAR *nodeName = GetObjectName(m_pAlarmList[i].dwSourceObject, _T("[unknown]"));
+            int messageLen = (int)(_tcslen(nodeName) + _tcslen(m_pAlarmList[i].szMessage) + 32) * sizeof(TCHAR);
+            TCHAR *message = (TCHAR *)malloc(messageLen);
+            _sntprintf(message, messageLen, _T("%s: %s"), nodeName, m_pAlarmList[i].szMessage);
+            rcc = CreateHelpdeskIssue(message, m_pAlarmList[i].szHelpDeskRef);
+            free(message);
+            if (rcc == RCC_SUCCESS)
+            {
+               m_pAlarmList[i].nHelpDeskState = ALARM_HELPDESK_OPEN;
+			      notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+               updateAlarmInDB(&m_pAlarmList[i]);
+               nx_strncpy(hdref, m_pAlarmList[i].szHelpDeskRef, MAX_HELPDESK_REF_LEN);
+               DbgPrintf(5, _T("Helpdesk issue created for alarm %d, reference \"%s\""), m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szHelpDeskRef);
+            }
+         }
+         else
+         {
+            rcc = RCC_OUT_OF_STATE_REQUEST;
+         }
+         break;
+      }
+   unlock();
+   return rcc;
+}
+
+/**
+ * Get helpdesk issue URL for given alarm
+ */
+UINT32 AlarmManager::getHelpdeskIssueUrl(UINT32 alarmId, TCHAR *url, size_t size)
+{
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == alarmId)
+      {
+         if ((m_pAlarmList[i].nHelpDeskState != ALARM_HELPDESK_IGNORED) && (m_pAlarmList[i].szHelpDeskRef[0] != 0))
+         {
+            rcc = GetHelpdeskIssueUrl(m_pAlarmList[i].szHelpDeskRef, url, size);
+         }
+         else
+         {
+            rcc = RCC_OUT_OF_STATE_REQUEST;
+         }
+         break;
+      }
+   unlock();
+   return rcc;
+}
+
+/**
+ * Unlink helpdesk issue from alarm
+ */
+UINT32 AlarmManager::unlinkIssueById(UINT32 dwAlarmId, ClientSession *session)
+{
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
+      {
+         if (session != NULL)
+         {
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), m_pAlarmList[i].dwSourceObject,
+               _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"), m_pAlarmList[i].szHelpDeskRef,
+               m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage, 
+               GetObjectName(m_pAlarmList[i].dwSourceObject, _T("")));
+         }
+         m_pAlarmList[i].nHelpDeskState = ALARM_HELPDESK_IGNORED;
+			notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+         updateAlarmInDB(&m_pAlarmList[i]);
+         rcc = RCC_SUCCESS;
+         break;
+      }
+   unlock();
+
+   return rcc;
+}
+
+/**
+ * Unlink helpdesk issue from alarm
+ */
+UINT32 AlarmManager::unlinkIssueByHDRef(const TCHAR *hdref, ClientSession *session)
+{
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (!_tcscmp(m_pAlarmList[i].szHelpDeskRef, hdref))
+      {
+         if (session != NULL)
+         {
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), m_pAlarmList[i].dwSourceObject,
+               _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"), m_pAlarmList[i].szHelpDeskRef,
+               m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage, 
+               GetObjectName(m_pAlarmList[i].dwSourceObject, _T("")));
+         }
+         m_pAlarmList[i].nHelpDeskState = ALARM_HELPDESK_IGNORED;
+			notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
+         updateAlarmInDB(&m_pAlarmList[i]);
+         rcc = RCC_SUCCESS;
+         break;
+      }
+   unlock();
+
+   return rcc;
 }
 
 /**
@@ -767,38 +998,34 @@ UINT32 AlarmManager::getAlarmEvents(UINT32 dwAlarmId, CSCPMessage *msg)
 NetObj *AlarmManager::getAlarmSourceObject(UINT32 dwAlarmId)
 {
    UINT32 dwObjectId = 0;
-   TCHAR szQuery[256];
-   DB_RESULT hResult;
 
-   // First, look at our in-memory list
    lock();
-   int i;
-   for(i = 0; i < m_numAlarms; i++)
+   for(int i = 0; i < m_numAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == dwAlarmId)
       {
          dwObjectId = m_pAlarmList[i].dwSourceObject;
          break;
       }
    unlock();
+   return (dwObjectId != 0) ? FindObjectById(dwObjectId) : NULL;
+}
 
-   // If not found, search database
-   if (i == m_numAlarms)
-   {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT source_object_id FROM alarms WHERE alarm_id=%d"), dwAlarmId);
-      hResult = DBSelect(hdb, szQuery);
-      if (hResult != NULL)
+/**
+ * Get source object for given alarm helpdesk reference
+ */
+NetObj *AlarmManager::getAlarmSourceObject(const TCHAR *hdref)
+{
+   UINT32 dwObjectId = 0;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (!_tcscmp(m_pAlarmList[i].szHelpDeskRef, hdref))
       {
-         if (DBGetNumRows(hResult) > 0)
-         {
-            dwObjectId = DBGetFieldULong(hResult, 0, 0);
-         }
-         DBFreeResult(hResult);
+         dwObjectId = m_pAlarmList[i].dwSourceObject;
+         break;
       }
-      DBConnectionPoolReleaseConnection(hdb);
-   }
-
-   return FindObjectById(dwObjectId);
+   unlock();
+   return (dwObjectId != 0) ? FindObjectById(dwObjectId) : NULL;
 }
 
 /**
@@ -848,7 +1075,7 @@ void AlarmManager::getAlarmStats(CSCPMessage *pMsg)
    for(int i = 0; i < m_numAlarms; i++)
       dwCount[m_pAlarmList[i].nCurrentSeverity]++;
    unlock();
-   pMsg->SetVariableToInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
+   pMsg->setFieldInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
 }
 
 /**
@@ -869,9 +1096,9 @@ void AlarmManager::watchdogThread()
 				 ((m_pAlarmList[i].nState & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING) &&
 				 (((time_t)m_pAlarmList[i].dwLastChangeTime + (time_t)m_pAlarmList[i].dwTimeout) < now))
 			{
-				DbgPrintf(5, _T("Alarm timeout: alarm_id=%d, last_change=%d, timeout=%d, now=%d"),
+				DbgPrintf(5, _T("Alarm timeout: alarm_id=%u, last_change=%u, timeout=%u, now=%u"),
 				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].dwLastChangeTime,
-							 m_pAlarmList[i].dwTimeout, now);
+							 m_pAlarmList[i].dwTimeout, (UINT32)now);
 
 				PostEvent(m_pAlarmList[i].dwTimeoutEvent, m_pAlarmList[i].dwSourceObject, "dssd",
 				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage,
@@ -884,8 +1111,8 @@ void AlarmManager::watchdogThread()
 				 ((m_pAlarmList[i].nState & ALARM_STATE_STICKY) != 0) &&
 				 (((time_t)m_pAlarmList[i].ackTimeout <= now)))
 			{
-				DbgPrintf(5, _T("Alarm aknowledgment timeout: alarm_id=%d, timeout=%d, now=%d"),
-				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].ackTimeout, now);
+				DbgPrintf(5, _T("Alarm aknowledgment timeout: alarm_id=%u, timeout=%u, now=%u"),
+				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].ackTimeout, (UINT32)now);
 
 				PostEvent(m_pAlarmList[i].dwTimeoutEvent, m_pAlarmList[i].dwSourceObject, "dssd",
 				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage,
@@ -901,7 +1128,7 @@ void AlarmManager::watchdogThread()
 }
 
 /**
- * Check if givel alram/note id pair is valid
+ * Check if given alram/note id pair is valid
  */
 static bool IsValidNoteId(UINT32 alarmId, UINT32 noteId)
 {
@@ -925,9 +1152,100 @@ static bool IsValidNoteId(UINT32 alarmId, UINT32 noteId)
 }
 
 /**
- * Update alarm's note
+ * Update alarm's comment
  */
-UINT32 AlarmManager::updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId)
+UINT32 AlarmManager::doUpdateAlarmComment(NXC_ALARM *alarm, UINT32 noteId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk)
+{
+   bool newNote = false;
+   UINT32 rcc;
+
+	if (noteId != 0)
+	{
+      if (IsValidNoteId(alarm->dwAlarmId, noteId))
+		{
+			DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+			DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE alarm_notes SET change_time=?,user_id=?,note_text=? WHERE note_id=?"));
+			if (hStmt != NULL)
+			{
+				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
+				DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, userId);
+				DBBind(hStmt, 3, DB_SQLTYPE_TEXT, text, DB_BIND_STATIC);
+				DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, noteId);
+				rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
+				DBFreeStatement(hStmt);
+			}
+			else
+			{
+				rcc = RCC_DB_FAILURE;
+			}
+			DBConnectionPoolReleaseConnection(hdb);
+		}
+		else
+		{
+			rcc = RCC_INVALID_ALARM_NOTE_ID;
+		}
+	}
+	else
+	{
+		// new note
+		newNote = true;
+		noteId = CreateUniqueId(IDG_ALARM_NOTE);
+		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_notes (note_id,alarm_id,change_time,user_id,note_text) VALUES (?,?,?,?,?)"));
+		if (hStmt != NULL)
+		{
+			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, noteId);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, alarm->dwAlarmId);
+			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
+			DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, userId);
+			DBBind(hStmt, 5, DB_SQLTYPE_TEXT, text, DB_BIND_STATIC);
+			rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
+			DBFreeStatement(hStmt);
+		}
+		else
+		{
+			rcc = RCC_DB_FAILURE;
+		}
+		DBConnectionPoolReleaseConnection(hdb);
+	}
+	if (rcc == RCC_SUCCESS)
+	{
+      if(newNote)
+         alarm->noteCount++;
+		notifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
+      if (syncWithHelpdesk && (alarm->nHelpDeskState == ALARM_HELPDESK_OPEN))
+      {
+         AddHelpdeskIssueComment(alarm->szHelpDeskRef, text);
+      }
+	}
+
+   return rcc;
+}
+
+/**
+ * Add alarm's comment by helpdesk reference
+ */
+UINT32 AlarmManager::addAlarmComment(const TCHAR *hdref, const TCHAR *text, UINT32 userId)
+{
+   UINT32 rcc = RCC_INVALID_ALARM_ID;
+   bool newNote = false;
+
+   lock();
+   for(int i = 0; i < m_numAlarms; i++)
+      if (!_tcscmp(m_pAlarmList[i].szHelpDeskRef, hdref))
+      {
+         rcc = doUpdateAlarmComment(&m_pAlarmList[i], 0, text, userId, false);
+         break;
+      }
+   unlock();
+
+   return rcc;
+}
+
+/**
+ * Update alarm's comment
+ */
+UINT32 AlarmManager::updateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
    bool newNote = false;
@@ -936,61 +1254,7 @@ UINT32 AlarmManager::updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR 
    for(int i = 0; i < m_numAlarms; i++)
       if (m_pAlarmList[i].dwAlarmId == alarmId)
       {
-			if (noteId != 0)
-			{
-				if (IsValidNoteId(alarmId, noteId))
-				{
-					DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-					DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE alarm_notes SET change_time=?,user_id=?,note_text=? WHERE note_id=?"));
-					if (hStmt != NULL)
-					{
-						DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
-						DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, userId);
-						DBBind(hStmt, 3, DB_SQLTYPE_TEXT, text, DB_BIND_STATIC);
-						DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, noteId);
-						rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
-						DBFreeStatement(hStmt);
-					}
-					else
-					{
-						rcc = RCC_DB_FAILURE;
-					}
-					DBConnectionPoolReleaseConnection(hdb);
-				}
-				else
-				{
-					rcc = RCC_INVALID_ALARM_NOTE_ID;
-				}
-			}
-			else
-			{
-				// new note
-				newNote = true;
-				noteId = CreateUniqueId(IDG_ALARM_NOTE);
-				DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-				DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_notes (note_id,alarm_id,change_time,user_id,note_text) VALUES (?,?,?,?,?)"));
-				if (hStmt != NULL)
-				{
-					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, noteId);
-					DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, alarmId);
-					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
-					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, userId);
-					DBBind(hStmt, 5, DB_SQLTYPE_TEXT, text, DB_BIND_STATIC);
-					rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
-					DBFreeStatement(hStmt);
-				}
-				else
-				{
-					rcc = RCC_DB_FAILURE;
-				}
-				DBConnectionPoolReleaseConnection(hdb);
-			}
-			if (rcc == RCC_SUCCESS)
-			{
-            if(newNote)
-               m_pAlarmList[i].noteCount++;
-				notifyClients(NX_NOTIFY_ALARM_CHANGED, &m_pAlarmList[i]);
-			}
+         rcc = doUpdateAlarmComment(&m_pAlarmList[i], noteId, text, userId, true);
          break;
       }
    unlock();
@@ -998,11 +1262,10 @@ UINT32 AlarmManager::updateAlarmNote(UINT32 alarmId, UINT32 noteId, const TCHAR 
    return rcc;
 }
 
-
 /**
- * Delete note
+ * Delete comment
  */
-UINT32 AlarmManager::deleteAlarmNoteByID(UINT32 alarmId, UINT32 noteId)
+UINT32 AlarmManager::deleteAlarmCommentByID(UINT32 alarmId, UINT32 noteId)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
@@ -1042,11 +1305,10 @@ UINT32 AlarmManager::deleteAlarmNoteByID(UINT32 alarmId, UINT32 noteId)
    return rcc;
 }
 
-
 /**
- * Get alarm's notes
+ * Get alarm's comments
  */
-UINT32 AlarmManager::getAlarmNotes(UINT32 alarmId, CSCPMessage *msg)
+UINT32 AlarmManager::getAlarmComments(UINT32 alarmId, CSCPMessage *msg)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	UINT32 rcc = RCC_DB_FAILURE;

@@ -20,13 +20,13 @@ package org.netxms.ui.eclipse.logviewer.views.helpers;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.NXCSession;
+import org.netxms.client.TableRow;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.Log;
@@ -43,13 +43,30 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class LogLabelProvider implements ITableLabelProvider
 {
-	public static final String[] ALARM_STATE_TEXTS = { Messages.get().LogLabelProvider_Outstanding, Messages.get().LogLabelProvider_Acknowledged, Messages.get().LogLabelProvider_Resolved, Messages.get().LogLabelProvider_Terminated };
-	public static final String[] ALARM_HD_STATE_TEXTS = { Messages.get().LogLabelProvider_Ignored, Messages.get().LogLabelProvider_Open, Messages.get().LogLabelProvider_Closed };
+	public final String[] ALARM_STATE_TEXTS = { Messages.get().LogLabelProvider_Outstanding, Messages.get().LogLabelProvider_Acknowledged, Messages.get().LogLabelProvider_Resolved, Messages.get().LogLabelProvider_Terminated };
+	public final String[] ALARM_HD_STATE_TEXTS = { Messages.get().LogLabelProvider_Ignored, Messages.get().LogLabelProvider_Open, Messages.get().LogLabelProvider_Closed };
 	
 	private LogColumn[] columns;
 	private NXCSession session;
 	private Image[] alarmStateImages;
 	private WorkbenchLabelProvider wbLabelProvider;
+	
+	/**
+	 * Get empty instance (not suitable to be real label provider - needed only to provide access to localized texts)
+	 * 
+	 * @return instance of log label provider
+	 */
+	public static LogLabelProvider getEmptyInstance()
+	{
+	   return new LogLabelProvider();
+	}
+	
+	/**
+	 * Private empty constructor 
+	 */
+	private LogLabelProvider()
+	{
+	}
 	
 	/**
 	 * @param logHandle
@@ -72,11 +89,10 @@ public class LogLabelProvider implements ITableLabelProvider
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		final String value = ((List<String>)element).get(columnIndex);
+		final String value = ((TableRow)element).get(columnIndex).getValue();
 		switch(columns[columnIndex].getType())
 		{
 			case LogColumn.LC_SEVERITY:
@@ -129,11 +145,10 @@ public class LogLabelProvider implements ITableLabelProvider
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		final String value = ((List<String>)element).get(columnIndex);
+		final String value = ((TableRow)element).get(columnIndex).getValue();
 		switch(columns[columnIndex].getType())
 		{
 			case LogColumn.LC_TIMESTAMP:

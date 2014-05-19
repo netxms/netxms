@@ -251,9 +251,15 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
             case DCE_SUCCESS:
 					if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
 	               pItem->setStatus(ITEM_STATUS_ACTIVE, true);
-					((DataCollectionTarget *)pItem->getTarget())->processNewDCValue(pItem, currTime, data);
+					if (!((DataCollectionTarget *)pItem->getTarget())->processNewDCValue(pItem, currTime, data))
+               {
+                  // value processing failed, convert to data collection error
+                  pItem->processNewError();
+               }
                break;
             case DCE_COMM_ERROR:
+					if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+	               pItem->setStatus(ITEM_STATUS_ACTIVE, true);
                pItem->processNewError();
                break;
             case DCE_NOT_SUPPORTED:

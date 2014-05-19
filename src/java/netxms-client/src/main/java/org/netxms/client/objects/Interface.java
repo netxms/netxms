@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import org.netxms.base.*;
 import org.netxms.client.MacAddress;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.LinkLayerDiscoveryProtocol;
 
 /**
  * Network interface object
@@ -112,6 +113,7 @@ public class Interface extends GenericObject
 	private int requiredPollCount;
 	private long peerNodeId;
 	private long peerInterfaceId;
+	private LinkLayerDiscoveryProtocol peerDiscoveryProtocol;
 	private long zoneId;
 	private String description;
 	private int adminState;
@@ -136,6 +138,7 @@ public class Interface extends GenericObject
 		requiredPollCount = msg.getVariableAsInteger(NXCPCodes.VID_REQUIRED_POLLS);
 		peerNodeId = msg.getVariableAsInt64(NXCPCodes.VID_PEER_NODE_ID);
 		peerInterfaceId = msg.getVariableAsInt64(NXCPCodes.VID_PEER_INTERFACE_ID);
+		peerDiscoveryProtocol = LinkLayerDiscoveryProtocol.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_PEER_PROTOCOL));
 		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
 		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
 		adminState = msg.getVariableAsInteger(NXCPCodes.VID_ADMIN_STATE);
@@ -401,4 +404,12 @@ public class Interface extends GenericObject
 	{
 		return (flags & IF_EXCLUDE_FROM_TOPOLOGY) != 0;
 	}
+
+   /**
+    * @return the peerDiscoveryProtocol
+    */
+   public LinkLayerDiscoveryProtocol getPeerDiscoveryProtocol()
+   {
+      return peerDiscoveryProtocol;
+   }
 }

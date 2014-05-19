@@ -20,4 +20,5 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
  org.netxms.ui.eclipse.objectview;bundle-version="1.2.10"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: org.netxms.ui.eclipse.dashboard.api
+Export-Package: org.netxms.ui.eclipse.dashboard.api,
+ org.netxms.ui.eclipse.dashboard.widgets

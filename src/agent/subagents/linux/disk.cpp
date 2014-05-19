@@ -85,7 +85,7 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 				case DISK_USED_PERC:
                if (totalBlocks > 0)
                {
-                  ret_double(pValue, (usedBlocks * 100) / totalBlocks);
+                  ret_double(pValue, (usedBlocks * 100.0) / totalBlocks);
                }
                else
                {
@@ -95,7 +95,7 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 				case DISK_AVAIL_PERC:
                if (totalBlocks > 0)
                {
-                  ret_double(pValue, (availableBlocks * 100) / totalBlocks);
+                  ret_double(pValue, (availableBlocks * 100.0) / totalBlocks);
                }
                else
                {
@@ -105,7 +105,7 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 				case DISK_FREE_PERC:
                if (totalBlocks > 0)
                {
-                  ret_double(pValue, (freeBlocks * 100) / totalBlocks);
+                  ret_double(pValue, (freeBlocks * 100.0) / totalBlocks);
                }
                else
                {

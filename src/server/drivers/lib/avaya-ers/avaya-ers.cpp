@@ -43,11 +43,11 @@ static UINT32 HandlerVlanList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transp
    UINT32 oidName[MAX_OID_LEN], dwResult;
    VlanList *vlanList = (VlanList *)pArg;
 
-   UINT32 dwNameLen = pVar->GetName()->getLength();
-	VlanInfo *vlan = new VlanInfo(pVar->GetValueAsInt(), VLAN_PRM_IFINDEX);
+   UINT32 dwNameLen = pVar->getName()->getLength();
+	VlanInfo *vlan = new VlanInfo(pVar->getValueAsInt(), VLAN_PRM_IFINDEX);
 
    // Get VLAN name
-   memcpy(oidName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
+   memcpy(oidName, pVar->getName()->getValue(), dwNameLen * sizeof(UINT32));
    oidName[dwNameLen - 2] = 2;
    TCHAR buffer[256];
 	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, buffer, sizeof(buffer), SG_STRING_RESULT);
@@ -100,7 +100,7 @@ static UINT32 HandlerVlanList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transp
 /**
  * Get VLANs 
  */
-VlanList *AvayaERSDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData)
+VlanList *AvayaERSDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
 	VlanList *list = new VlanList();
 	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)

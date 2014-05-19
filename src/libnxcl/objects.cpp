@@ -208,30 +208,30 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    pObject->iStatus = pMsg->GetVariableShort(VID_OBJECT_STATUS);
    pObject->dwIpAddr = pMsg->GetVariableLong(VID_IP_ADDRESS);
    pObject->bIsDeleted = pMsg->GetVariableShort(VID_IS_DELETED);
-   pObject->iStatusCalcAlg = (int)pMsg->GetVariableShort(VID_STATUS_CALCULATION_ALG);
-   pObject->iStatusPropAlg = (int)pMsg->GetVariableShort(VID_STATUS_PROPAGATION_ALG);
-   pObject->iFixedStatus = (int)pMsg->GetVariableShort(VID_FIXED_STATUS);
-   pObject->iStatusShift = pMsg->GetVariableShortAsInt32(VID_STATUS_SHIFT);
-   pObject->iStatusTrans[0] = (int)pMsg->GetVariableShort(VID_STATUS_TRANSLATION_1);
-   pObject->iStatusTrans[1] = (int)pMsg->GetVariableShort(VID_STATUS_TRANSLATION_2);
-   pObject->iStatusTrans[2] = (int)pMsg->GetVariableShort(VID_STATUS_TRANSLATION_3);
-   pObject->iStatusTrans[3] = (int)pMsg->GetVariableShort(VID_STATUS_TRANSLATION_4);
-   pObject->iStatusSingleTh = (int)pMsg->GetVariableShort(VID_STATUS_SINGLE_THRESHOLD);
-   pObject->iStatusThresholds[0] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_1);
-   pObject->iStatusThresholds[1] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_2);
-   pObject->iStatusThresholds[2] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_3);
-   pObject->iStatusThresholds[3] = (int)pMsg->GetVariableShort(VID_STATUS_THRESHOLD_4);
+   pObject->iStatusCalcAlg = pMsg->getFieldAsInt16(VID_STATUS_CALCULATION_ALG);
+   pObject->iStatusPropAlg = pMsg->getFieldAsInt16(VID_STATUS_PROPAGATION_ALG);
+   pObject->iFixedStatus = pMsg->getFieldAsInt16(VID_FIXED_STATUS);
+   pObject->iStatusShift = pMsg->getFieldAsInt16(VID_STATUS_SHIFT);
+   pObject->iStatusTrans[0] = pMsg->getFieldAsInt16(VID_STATUS_TRANSLATION_1);
+   pObject->iStatusTrans[1] = pMsg->getFieldAsInt16(VID_STATUS_TRANSLATION_2);
+   pObject->iStatusTrans[2] = pMsg->getFieldAsInt16(VID_STATUS_TRANSLATION_3);
+   pObject->iStatusTrans[3] = pMsg->getFieldAsInt16(VID_STATUS_TRANSLATION_4);
+   pObject->iStatusSingleTh = pMsg->getFieldAsInt16(VID_STATUS_SINGLE_THRESHOLD);
+   pObject->iStatusThresholds[0] = pMsg->getFieldAsInt16(VID_STATUS_THRESHOLD_1);
+   pObject->iStatusThresholds[1] = pMsg->getFieldAsInt16(VID_STATUS_THRESHOLD_2);
+   pObject->iStatusThresholds[2] = pMsg->getFieldAsInt16(VID_STATUS_THRESHOLD_3);
+   pObject->iStatusThresholds[3] = pMsg->getFieldAsInt16(VID_STATUS_THRESHOLD_4);
    pObject->pszComments = pMsg->GetVariableStr(VID_COMMENTS);
 
 	pObject->geolocation.type = (int)pMsg->GetVariableShort(VID_GEOLOCATION_TYPE);
-	pObject->geolocation.latitude = pMsg->GetVariableDouble(VID_LATITUDE);
-	pObject->geolocation.longitude = pMsg->GetVariableDouble(VID_LONGITUDE);
+	pObject->geolocation.latitude = pMsg->getFieldAsDouble(VID_LATITUDE);
+	pObject->geolocation.longitude = pMsg->getFieldAsDouble(VID_LONGITUDE);
 
 	pObject->dwNumTrustedNodes = pMsg->GetVariableLong(VID_NUM_TRUSTED_NODES);
 	if (pObject->dwNumTrustedNodes > 0)
 	{
 		pObject->pdwTrustedNodes = (UINT32 *)malloc(sizeof(UINT32) * pObject->dwNumTrustedNodes);
-		pMsg->GetVariableInt32Array(VID_TRUSTED_NODES, pObject->dwNumTrustedNodes, pObject->pdwTrustedNodes);
+		pMsg->getFieldAsInt32Array(VID_TRUSTED_NODES, pObject->dwNumTrustedNodes, pObject->pdwTrustedNodes);
 	}
 
 	// Custom attributes
@@ -377,7 +377,7 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
          pObject->cluster.dwClusterType = pMsg->GetVariableLong(VID_CLUSTER_TYPE);
          pObject->cluster.dwNumSyncNets = pMsg->GetVariableLong(VID_NUM_SYNC_SUBNETS);
          pObject->cluster.pSyncNetList = (IP_NETWORK *)malloc(sizeof(IP_NETWORK) * pObject->cluster.dwNumSyncNets);
-			pMsg->GetVariableInt32Array(VID_SYNC_SUBNETS, pObject->cluster.dwNumSyncNets * 2, (UINT32 *)pObject->cluster.pSyncNetList);
+			pMsg->getFieldAsInt32Array(VID_SYNC_SUBNETS, pObject->cluster.dwNumSyncNets * 2, (UINT32 *)pObject->cluster.pSyncNetList);
 			pObject->cluster.dwNumResources = pMsg->GetVariableLong(VID_NUM_RESOURCES);
 			if (pObject->cluster.dwNumResources > 0)
 			{
@@ -528,7 +528,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCSyncObjectSet(NXC_SESSION hSession, UINT32 *idList,
 	msg.SetVariable(VID_SYNC_COMMENTS, (WORD)(syncComments ? 1 : 0));
 	msg.SetVariable(VID_FLAGS, (WORD)(flags | OBJECT_SYNC_SEND_UPDATES));	// C library requres objects to go in update messages
    msg.SetVariable(VID_NUM_OBJECTS, length);
-	msg.SetVariableToInt32Array(VID_OBJECT_LIST, length, idList);
+	msg.setFieldInt32Array(VID_OBJECT_LIST, length, idList);
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
@@ -994,7 +994,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDAT
    if (pUpdate->qwFlags & OBJ_UPDATE_SYNC_NETS)
    {
       msg.SetVariable(VID_NUM_SYNC_SUBNETS, pUpdate->dwNumSyncNets);
-		msg.SetVariableToInt32Array(VID_SYNC_SUBNETS, pUpdate->dwNumSyncNets * 2, (UINT32 *)pUpdate->pSyncNetList);
+		msg.setFieldInt32Array(VID_SYNC_SUBNETS, pUpdate->dwNumSyncNets * 2, (UINT32 *)pUpdate->pSyncNetList);
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_RESOURCES)
    {
@@ -1009,7 +1009,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDAT
    if (pUpdate->qwFlags & OBJ_UPDATE_TRUSTED_NODES)
    {
       msg.SetVariable(VID_NUM_TRUSTED_NODES, pUpdate->dwNumTrustedNodes);
-		msg.SetVariableToInt32Array(VID_TRUSTED_NODES, pUpdate->dwNumTrustedNodes, pUpdate->pdwTrustedNodes);
+		msg.setFieldInt32Array(VID_TRUSTED_NODES, pUpdate->dwNumTrustedNodes, pUpdate->pdwTrustedNodes);
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_CUSTOM_ATTRS)
    {
@@ -2006,7 +2006,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetDCIEventsList(NXC_SESSION hSession, UINT32 dwObj
          if (*pdwListSize > 0)
          {
             *ppdwList = (UINT32 *)malloc(sizeof(UINT32) * (*pdwListSize));
-            pResponse->GetVariableInt32Array(VID_EVENT_LIST, *pdwListSize, *ppdwList);
+            pResponse->getFieldAsInt32Array(VID_EVENT_LIST, *pdwListSize, *ppdwList);
          }
       }
       delete pResponse;

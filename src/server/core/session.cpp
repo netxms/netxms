@@ -153,13 +153,11 @@ DEFINE_THREAD_STARTER(findMacAddress)
 DEFINE_THREAD_STARTER(findIpAddress)
 DEFINE_THREAD_STARTER(processConsoleCommand)
 DEFINE_THREAD_STARTER(sendMib)
-DEFINE_THREAD_STARTER(getReportResults)
-DEFINE_THREAD_STARTER(deleteReportResults)
-DEFINE_THREAD_STARTER(renderReport)
 DEFINE_THREAD_STARTER(getNetworkPath)
 DEFINE_THREAD_STARTER(queryParameter)
 DEFINE_THREAD_STARTER(queryAgentTable)
 DEFINE_THREAD_STARTER(getAlarmEvents)
+DEFINE_THREAD_STARTER(openHelpdeskIssue)
 DEFINE_THREAD_STARTER(forwardToReportingServer)
 
 /**
@@ -268,6 +266,7 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_dwActiveChannels = 0;
 	m_console = NULL;
    m_loginTime = time(NULL);
+   m_musicTypeList.add(_T("wav"));
 }
 
 /**
@@ -312,6 +311,7 @@ ClientSession::~ClientSession()
 		delete m_console->pMsg;
 		free(m_console);
 	}
+   m_musicTypeList.clear();
 }
 
 /**
@@ -772,7 +772,7 @@ void ClientSession::processingThread()
             sendServerInfo(pMsg->GetId());
             break;
          case CMD_GET_MY_CONFIG:
-            SendConfigForAgent(pMsg);
+            sendConfigForAgent(pMsg);
             break;
          case CMD_GET_OBJECTS:
             sendAllObjects(pMsg);
@@ -899,17 +899,17 @@ void ClientSession::processingThread()
          case CMD_GET_ALL_ALARMS:
             sendAllAlarms(pMsg->GetId());
             break;
-         case CMD_GET_ALARM_NOTES:
-				getAlarmNotes(pMsg);
+         case CMD_GET_ALARM_COMMENTS:
+				getAlarmComments(pMsg);
             break;
          case CMD_SET_ALARM_STATUS_FLOW:
             updateAlarmStatusFlow(pMsg);
             break;
-         case CMD_UPDATE_ALARM_NOTE:
-				updateAlarmNote(pMsg);
+         case CMD_UPDATE_ALARM_COMMENT:
+				updateAlarmComment(pMsg);
             break;
-         case CMD_DELETE_ALARM_NOTE:
-            deleteAlarmNote(pMsg);
+         case CMD_DELETE_ALARM_COMMENT:
+            deleteAlarmComment(pMsg);
             break;
          case CMD_GET_ALARM:
             getAlarm(pMsg);
@@ -928,6 +928,15 @@ void ClientSession::processingThread()
             break;
          case CMD_DELETE_ALARM:
             deleteAlarm(pMsg);
+            break;
+         case CMD_OPEN_HELPDESK_ISSUE:
+            CALL_IN_NEW_THREAD(openHelpdeskIssue, pMsg);
+            break;
+         case CMD_GET_HELPDESK_URL:
+            getHelpdeskUrl(pMsg);
+            break;
+         case CMD_UNLINK_HELPDESK_ISSUE:
+            unlinkHelpdeskIssue(pMsg);
             break;
          case CMD_CREATE_ACTION:
             createAction(pMsg);
@@ -1000,6 +1009,9 @@ void ClientSession::processingThread()
             break;
          case CMD_GET_LAST_VALUES:
             getLastValues(pMsg);
+            break;
+         case CMD_GET_DCI_VALUES:
+            getLastValuesByDciId(pMsg);
             break;
          case CMD_GET_TABLE_LAST_VALUES:
             getTableLastValues(pMsg);
@@ -1304,18 +1316,6 @@ void ClientSession::processingThread()
 			case CMD_GET_VLANS:
 				getVlans(pMsg);
 				break;
-			case CMD_EXECUTE_REPORT:
-				executeReport(pMsg);
-				break;
-			case CMD_GET_REPORT_RESULTS:
-				CALL_IN_NEW_THREAD(getReportResults, pMsg);
-				break;
-			case CMD_DELETE_REPORT_RESULTS:
-				CALL_IN_NEW_THREAD(deleteReportResults, pMsg);
-				break;
-			case CMD_RENDER_REPORT:
-				CALL_IN_NEW_THREAD(renderReport, pMsg);
-				break;
 			case CMD_GET_NETWORK_PATH:
 				CALL_IN_NEW_THREAD(getNetworkPath, pMsg);
 				break;
@@ -1459,7 +1459,7 @@ void ClientSession::sendMessage(CSCPMessage *msg)
 	if (msg->GetCode() != CMD_ADM_MESSAGE)
 		debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
 
-	CSCP_MESSAGE *pRawMsg = msg->CreateMessage();
+	CSCP_MESSAGE *pRawMsg = msg->createMessage();
    if ((g_debugLevel >= 8) && (msg->GetCode() != CMD_ADM_MESSAGE))
    {
       String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
@@ -1528,9 +1528,9 @@ void ClientSession::sendRawMessage(CSCP_MESSAGE *msg)
 /**
  * Send file to client
  */
-BOOL ClientSession::sendFile(const TCHAR *file, UINT32 dwRqId, long sizeLimit)
+BOOL ClientSession::sendFile(const TCHAR *file, UINT32 dwRqId, long ofset)
 {
-	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, 0, sizeLimit, NULL, NULL, m_mutexSocketWrite);
+	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, ofset, NULL, NULL, m_mutexSocketWrite);
 }
 
 /**
@@ -1567,7 +1567,7 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 	WCHAR wst[4], wdt[8], *curr;
 	int i;
 
-	GetTimeZoneInformation(&tz);
+	DWORD tzType = GetTimeZoneInformation(&tz);
 
 	// Create 3 letter abbreviation for standard name
 	for(i = 0, curr = tz.StandardName; (*curr != 0) && (i < 3); curr++)
@@ -1585,38 +1585,43 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 		wdt[i++] = L'X';
 	wdt[i] = 0;
 
+	LONG effectiveBias;
+	switch(tzType)
+	{
+		case TIME_ZONE_ID_STANDARD:
+			effectiveBias = tz.Bias + tz.StandardBias;
+			break;
+		case TIME_ZONE_ID_DAYLIGHT:
+			effectiveBias = tz.Bias + tz.DaylightBias;
+			break;
+		case TIME_ZONE_ID_UNKNOWN:
+			effectiveBias = tz.Bias;
+			break;
+		default:		// error
+			effectiveBias = 0;
+			debugPrintf(4, _T("GetTimeZoneInformation() call failed"));
+			break;
+	}
+
 #ifdef UNICODE
-	swprintf(szBuffer, 1024, L"%s%c%02d%s", wst, (tz.Bias > 0) ? '-' : '+',
-	         abs(tz.Bias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
+	swprintf(szBuffer, 1024, L"%s%c%02d%s", wst, (effectiveBias > 0) ? '-' : '+',
+	         abs(effectiveBias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
 #else
-	sprintf(szBuffer, "%S%c%02d%S", wst, (tz.Bias > 0) ? '-' : '+',
-	        abs(tz.Bias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
+	sprintf(szBuffer, "%S%c%02d%S", wst, (effectiveBias > 0) ? '-' : '+',
+	        abs(effectiveBias) / 60, (tz.DaylightBias != 0) ? wdt : L"");
 #endif
-#elif HAVE_DECL_TIMEZONE
-#ifdef UNICODE
-	swprintf(szBuffer, 1024, L"%hs%hc%02d%hs", tzname[0], (timezone > 0) ? '-' : '+',
-	         (int)(abs(timezone) / 3600), (tzname[1] != NULL) ? tzname[1] : "");
-#else
-	sprintf(szBuffer, "%s%c%02d%s", tzname[0], (timezone > 0) ? '-' : '+',
-	        (int)(abs(timezone) / 3600), (tzname[1] != NULL) ? tzname[1] : "");
-#endif
-#elif HAVE_TM_GMTOFF
-	time_t t;
-	struct tm *loc;
+
+#elif HAVE_TM_GMTOFF  /* not Windows but have tm_gmtoff */
+
+	time_t t = time(NULL);
 	int gmtOffset;
 #if HAVE_LOCALTIME_R
 	struct tm tmbuff;
-#endif
-
-	t = time(NULL);
-#if HAVE_LOCALTIME_R
-	loc = localtime_r(&t, &tmbuff);
+	struct tm *loc = localtime_r(&t, &tmbuff);
 #else
-	loc = localtime(&t);
+	struct tm *loc = localtime(&t);
 #endif
 	gmtOffset = loc->tm_gmtoff / 3600;
-	if (loc->tm_isdst)
-		gmtOffset++;
 #ifdef UNICODE
 	swprintf(szBuffer, 1024, L"%hs%hc%02d%hs", tzname[0], (gmtOffset >= 0) ? '+' : '-',
 	         abs(gmtOffset), (tzname[1] != NULL) ? tzname[1] : "");
@@ -1624,9 +1629,28 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 	sprintf(szBuffer, "%s%c%02d%s", tzname[0], (gmtOffset >= 0) ? '+' : '-',
 	        abs(gmtOffset), (tzname[1] != NULL) ? tzname[1] : "");
 #endif
+
+#else /* not Windows and no tm_gmtoff */
+
+   time_t t = time(NULL);
+#if HAVE_GMTIME_R
+   struct tm tmbuff;
+   struct tm *gmt = gmtime_r(&t, &tmbuff);
 #else
-	szBuffer[0] = 0;
+   struct tm *gmt = gmtime(&t);
 #endif
+   gmt->tm_isdst = -1;
+   int gmtOffset = (int)((t - mktime(gmt)) / 3600);
+#ifdef UNICODE
+	swprintf(szBuffer, 1024, L"%hs%hc%02d%hs", tzname[0], (gmtOffset >= 0) ? '+' : '-',
+	         abs(gmtOffset), (tzname[1] != NULL) ? tzname[1] : "");
+#else
+	sprintf(szBuffer, "%s%c%02d%s", tzname[0], (gmtOffset >= 0) ? '+' : '-',
+	        abs(gmtOffset), (tzname[1] != NULL) ? tzname[1] : "");
+#endif
+
+#endif
+
 	msg.SetVariable(VID_TIMEZONE, szBuffer);
 	debugPrintf(2, _T("Server time zone: %s"), szBuffer);
 
@@ -1665,7 +1689,7 @@ void ClientSession::login(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
 
    // Get client info string
-   if (pRequest->IsVariableExist(VID_CLIENT_INFO))
+   if (pRequest->isFieldExist(VID_CLIENT_INFO))
    {
       TCHAR szClientInfo[32], szOSInfo[32], szLibVersion[16];
 
@@ -1683,7 +1707,7 @@ void ClientSession::login(CSCPMessage *pRequest)
    if (m_clientType == CLIENT_TYPE_WEB)
    {
       _tcscpy(m_webServerAddress, m_workstation);
-      if (pRequest->IsVariableExist(VID_CLIENT_ADDRESS))
+      if (pRequest->isFieldExist(VID_CLIENT_ADDRESS))
       {
          pRequest->GetVariableStr(VID_CLIENT_ADDRESS, m_workstation, 256);
          debugPrintf(5, _T("Real web client address is %s"), m_workstation);
@@ -1775,11 +1799,14 @@ void ClientSession::login(CSCPMessage *pRequest)
          msg.SetVariable(VID_USER_ID, m_dwUserId);
 			msg.SetVariable(VID_SESSION_ID, m_dwIndex);
 			msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
-         msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? 0 : 1));
-			msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_dwFlags & AF_ENABLE_ZONING) ? 1 : 0));
+         msg.SetVariable(VID_DBCONN_STATUS, (UINT16)((g_dwFlags & AF_DB_CONNECTION_LOST) ? 0 : 1));
+			msg.SetVariable(VID_ZONING_ENABLED, (UINT16)((g_dwFlags & AF_ENABLE_ZONING) ? 1 : 0));
 			msg.SetVariable(VID_POLLING_INTERVAL, ConfigReadULong(_T("DefaultDCIPollingInterval"), 60));
 			msg.SetVariable(VID_RETENTION_TIME, ConfigReadULong(_T("DefaultDCIRetentionTime"), 30));
-			msg.SetVariable(VID_ALARM_STATUS_FLOW_STATE, ConfigReadInt(_T("StrictAlarmStatusFlow"), 0));
+			msg.SetVariable(VID_ALARM_STATUS_FLOW_STATE, (UINT16)ConfigReadInt(_T("StrictAlarmStatusFlow"), 0));
+			msg.SetVariable(VID_TIMED_ALARM_ACK_ENABLED, (UINT16)ConfigReadInt(_T("EnableTimedAlarmAck"), 0));
+			msg.SetVariable(VID_VIEW_REFRESH_INTERVAL, (UINT16)ConfigReadInt(_T("MinViewRefreshInterval"), 200));
+			msg.SetVariable(VID_HELPDESK_LINK_ACTIVE, (UINT16)((g_dwFlags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
          debugPrintf(3, _T("User %s authenticated"), m_szUserName);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0,
 			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);
@@ -2129,7 +2156,7 @@ void ClientSession::sendSelectedObjects(CSCPMessage *pRequest)
    UINT32 dwTimeStamp = pRequest->GetVariableLong(VID_TIMESTAMP);
 	UINT32 numObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
 	UINT32 *objects = (UINT32 *)malloc(sizeof(UINT32) * numObjects);
-	pRequest->GetVariableInt32Array(VID_OBJECT_LIST, numObjects, objects);
+	pRequest->getFieldAsInt32Array(VID_OBJECT_LIST, numObjects, objects);
 	UINT32 options = pRequest->GetVariableShort(VID_FLAGS);
 
    MutexLock(m_mutexSendObjects);
@@ -2375,7 +2402,6 @@ void ClientSession::setConfigVariable(CSCPMessage *pRequest)
 void ClientSession::deleteConfigVariable(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   TCHAR szName[MAX_OBJECT_NAME], szQuery[1024];
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -2384,13 +2410,12 @@ void ClientSession::deleteConfigVariable(CSCPMessage *pRequest)
    // Check user rights
    if ((m_dwUserId == 0) || (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
    {
-      pRequest->GetVariableStr(VID_NAME, szName, MAX_OBJECT_NAME);
-      _sntprintf(szQuery, 1024, _T("DELETE FROM config WHERE var_name='%s'"), szName);
-      if (DBQuery(g_hCoreDB, szQuery))
+      TCHAR name[MAX_OBJECT_NAME];
+      pRequest->GetVariableStr(VID_NAME, name, MAX_OBJECT_NAME);
+      if (ConfigDelete(name))
 		{
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
-			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0,
-							  _T("Server configuration variable \"%s\" deleted"), szName);
+			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0, _T("Server configuration variable \"%s\" deleted"), name);
 		}
       else
 		{
@@ -2448,11 +2473,9 @@ void ClientSession::setConfigCLOB(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Get value of configuration clob
-//
-
+/**
+ * Get value of configuration clob
+ */
 void ClientSession::getConfigCLOB(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -2484,11 +2507,9 @@ void ClientSession::getConfigCLOB(CSCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Close session forcibly
-//
-
+/**
+ * Close session
+ */
 void ClientSession::kill()
 {
    // We shutdown socket connection, which will cause
@@ -2568,12 +2589,12 @@ void ClientSession::modifyObject(CSCPMessage *pRequest)
       {
          // If user attempts to change object's ACL, check
          // if he has OBJECT_ACCESS_ACL permission
-         if (pRequest->IsVariableExist(VID_ACL_SIZE))
+         if (pRequest->isFieldExist(VID_ACL_SIZE))
             if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACL))
                dwResult = RCC_ACCESS_DENIED;
 
 			// If user attempts to rename object, check object's name
-			if (pRequest->IsVariableExist(VID_OBJECT_NAME))
+			if (pRequest->isFieldExist(VID_OBJECT_NAME))
 			{
 				TCHAR name[256];
 				pRequest->GetVariableStr(VID_OBJECT_NAME, name, 256);
@@ -2947,11 +2968,11 @@ void ClientSession::setPassword(CSCPMessage *pRequest)
 
 #ifdef UNICODE
       pRequest->GetVariableStr(VID_PASSWORD, newPassword, 256);
-		if (pRequest->IsVariableExist(VID_OLD_PASSWORD))
+		if (pRequest->isFieldExist(VID_OLD_PASSWORD))
 			pRequest->GetVariableStr(VID_OLD_PASSWORD, oldPassword, 256);
 #else
       pRequest->GetVariableStrUTF8(VID_PASSWORD, newPassword, 1024);
-		if (pRequest->IsVariableExist(VID_OLD_PASSWORD))
+		if (pRequest->isFieldExist(VID_OLD_PASSWORD))
 			pRequest->GetVariableStrUTF8(VID_OLD_PASSWORD, oldPassword, 1024);
 #endif
 		else
@@ -3274,7 +3295,7 @@ void ClientSession::changeDCIStatus(CSCPMessage *pRequest)
                iStatus = pRequest->GetVariableShort(VID_DCI_STATUS);
                dwNumItems = pRequest->GetVariableLong(VID_NUM_ITEMS);
                pdwItemList = (UINT32 *)malloc(sizeof(UINT32) * dwNumItems);
-               pRequest->GetVariableInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+               pRequest->getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
                if (((Template *)object)->setItemStatus(dwNumItems, pdwItemList, iStatus))
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
                else
@@ -3401,7 +3422,7 @@ void ClientSession::copyDCI(CSCPMessage *pRequest)
                   // Get list of items to be copied/moved
                   dwNumItems = pRequest->GetVariableLong(VID_NUM_ITEMS);
                   pdwItemList = (UINT32 *)malloc(sizeof(UINT32) * dwNumItems);
-                  pRequest->GetVariableInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+                  pRequest->getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
 
                   // Copy items
                   for(i = 0; i < dwNumItems; i++)
@@ -3612,7 +3633,7 @@ static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxR
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_SQLITE:
 			_sntprintf(query, 1024,
-                    _T("SELECT TOP %d d.tdata_timestamp, r.value FROM tdata_%d d")
+                    _T("SELECT d.tdata_timestamp, r.value FROM tdata_%d d")
                     _T("   INNER JOIN tdata_records_%d rec ON rec.record_id=d.record_id ")
                     _T("   INNER JOIN tdata_rows_%d r ON r.row_id=rec.row_id ")
                     _T("WHERE d.item_id=? AND rec.instance=? AND r.column_id=? %s ")
@@ -3621,7 +3642,7 @@ static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxR
 			break;
 		case DB_SYNTAX_DB2:
 			_sntprintf(query, 1024,
-                    _T("SELECT TOP %d d.tdata_timestamp, r.value FROM tdata_%d d")
+                    _T("SELECT d.tdata_timestamp, r.value FROM tdata_%d d")
                     _T("   INNER JOIN tdata_records_%d rec ON rec.record_id=d.record_id ")
                     _T("   INNER JOIN tdata_rows_%d r ON r.row_id=rec.row_id ")
                     _T("WHERE d.item_id=? AND rec.instance=? AND r.column_id=? %s ")
@@ -3656,7 +3677,7 @@ bool ClientSession::getCollectedDataFromDB(CSCPMessage *request, CSCPMessage *re
 	}
 
 	// Check that all required data present in message
-	if ((dciType == DCO_TYPE_TABLE) && (!request->IsVariableExist(VID_DATA_COLUMN) || !request->IsVariableExist(VID_INSTANCE)))
+	if ((dciType == DCO_TYPE_TABLE) && (!request->isFieldExist(VID_DATA_COLUMN) || !request->isFieldExist(VID_INSTANCE)))
 	{
 		response->SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
 		return false;
@@ -3948,6 +3969,92 @@ void ClientSession::getLastValues(CSCPMessage *pRequest)
 }
 
 /**
+ * Send latest collected values for all DCIs from given list.
+ * Error message will never be returned. Will be returned only
+ * possible DCI values.
+ */
+void ClientSession::getLastValuesByDciId(CSCPMessage *pRequest)
+{
+   CSCPMessage msg;
+   NetObj *object;
+   DCObject *dcoObj;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+   int size = pRequest->getFieldAsInt32(VID_NUM_ITEMS);
+   UINT32 incomingIndex = VID_DCI_VALUES_BASE;
+   UINT32 outgoingIndex = VID_DCI_VALUES_BASE;
+
+   for(int i = 0 ; i < size; i++, incomingIndex+=10)
+   {
+      TCHAR *value;
+      UINT32 type, status;
+
+      object = FindObjectById(pRequest->GetVariableLong(incomingIndex));
+      if (object != NULL)
+      {
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+            if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE) ||
+                (object->Type() == OBJECT_TEMPLATE) || (object->Type() == OBJECT_CLUSTER))
+            {
+               UINT32 dciID = pRequest->GetVariableLong(incomingIndex+1);
+               dcoObj = ((DataCollectionTarget *)object)->getDCObjectById(dciID);
+               if(dcoObj == NULL)
+                  continue;
+
+               if (dcoObj->getType() == DCO_TYPE_TABLE)
+               {
+                  TCHAR * column = pRequest->GetVariableStr(incomingIndex+2);
+                  TCHAR * instance = pRequest->GetVariableStr(incomingIndex+3);
+                  if(column == NULL || instance == NULL || _tcscmp(column, _T("")) == 0 || _tcscmp(instance, _T("")) == 0)
+                  {
+                     continue;
+                  }
+
+                  Table *t = ((DCTable *)dcoObj)->getLastValue();
+                  int columnIndex =  t->getColumnIndex(column);
+                  int rowIndex = t->findRowByInstance(instance);
+                  type = t->getColumnDataType(columnIndex);
+                  value = _tcsdup(t->getAsString(rowIndex, columnIndex));
+                  t->decRefCount();
+
+                  safe_free(column);
+                  safe_free(instance);
+               }
+               else
+               {
+                  if (dcoObj->getType() == DCO_TYPE_ITEM)
+                  {
+                     type = (WORD)((DCItem *)dcoObj)->getDataType();
+                     value = _tcsdup(((DCItem *)dcoObj)->getLastValue());
+                  }
+                  else
+                     continue;
+               }
+
+
+               status = dcoObj->getStatus();
+
+               msg.SetVariable(outgoingIndex, dciID);
+               msg.SetVariable(outgoingIndex+1, value);
+               msg.SetVariable(outgoingIndex+2, type);
+               msg.SetVariable(outgoingIndex+3, status);
+               safe_free(value);
+               outgoingIndex +=10;
+            }
+         }
+      }
+   }
+   // Set result
+   msg.SetVariable(VID_NUM_ITEMS, (outgoingIndex - VID_DCI_VALUES_BASE)/10);
+   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
  * Send latest collected values for given table DCI of given node
  */
 void ClientSession::getTableLastValues(CSCPMessage *pRequest)
@@ -4219,7 +4326,7 @@ void ClientSession::sendMIBTimestamp(UINT32 dwRqId)
 void ClientSession::createObject(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   NetObj *object, *pParent;
+   NetObj *object = NULL, *pParent;
    int iClass, iServiceType;
    TCHAR szObjectName[MAX_OBJECT_NAME], nodePrimaryName[MAX_DNS_NAME], deviceId[MAX_OBJECT_NAME];
    TCHAR *pszRequest, *pszResponse, *pszComments;
@@ -4239,7 +4346,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
    pParent = FindObjectById(pRequest->GetVariableLong(VID_PARENT_ID));
    if (iClass == OBJECT_NODE)
    {
-		if (pRequest->IsVariableExist(VID_PRIMARY_NAME))
+		if (pRequest->isFieldExist(VID_PRIMARY_NAME))
 		{
 			pRequest->GetVariableStr(VID_PRIMARY_NAME, nodePrimaryName, MAX_DNS_NAME);
 			dwIpAddr = ntohl(ResolveHostName(nodePrimaryName));
@@ -4401,15 +4508,6 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 								   {
 									   object = NULL;
 								   }
-								   break;
-							   case OBJECT_REPORTGROUP:
-								   object = new ReportGroup(szObjectName);
-								   NetObjInsert(object, TRUE);
-								   object->calculateCompoundStatus();	// Force status change to NORMAL
-								   break;
-							   case OBJECT_REPORT:
-								   object = new Report(szObjectName);
-								   NetObjInsert(object, TRUE);
 								   break;
 							   case OBJECT_BUSINESSSERVICE:
 								   object = new BusinessService(szObjectName);
@@ -4819,14 +4917,14 @@ void ClientSession::getAlarm(CSCPMessage *request)
    msg.SetId(request->GetId());
 
    // Get alarm id and it's source object
-   UINT32 dwAlarmId = request->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
+   UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
+   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
    if (object != NULL)
    {
       // User should have "view alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-         msg.SetVariable(VID_RCC, g_alarmMgr.getAlarm(dwAlarmId, &msg));
+         msg.SetVariable(VID_RCC, g_alarmMgr.getAlarm(alarmId, &msg));
       }
       else
       {
@@ -4857,15 +4955,15 @@ void ClientSession::getAlarmEvents(CSCPMessage *request)
    msg.SetId(request->GetId());
 
    // Get alarm id and it's source object
-   UINT32 dwAlarmId = request->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
+   UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
+   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
    if (object != NULL)
    {
       // User should have "view alarm" right to the object and
 		// system-wide "view event log" access
       if ((m_dwSystemAccess & SYSTEM_ACCESS_VIEW_EVENT_LOG) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-         msg.SetVariable(VID_RCC, g_alarmMgr.getAlarmEvents(dwAlarmId, &msg));
+         msg.SetVariable(VID_RCC, g_alarmMgr.getAlarmEvents(alarmId, &msg));
       }
       else
       {
@@ -4896,14 +4994,31 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
 
    // Get alarm id and it's source object
-   UINT32 dwAlarmId = pRequest->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
+   UINT32 alarmId;
+   TCHAR hdref[MAX_HELPDESK_REF_LEN];
+   NetObj *object;
+   bool byHelpdeskRef;
+   if (pRequest->isFieldExist(VID_HELPDESK_REF))
+   {
+      pRequest->GetVariableStr(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
+      object = g_alarmMgr.getAlarmSourceObject(hdref);
+      byHelpdeskRef = true;
+   }
+   else
+   {
+      alarmId = pRequest->GetVariableLong(VID_ALARM_ID);
+      object = g_alarmMgr.getAlarmSourceObject(alarmId);
+      byHelpdeskRef = false;
+   }
    if (object != NULL)
    {
       // User should have "acknowledge alarm" right to the object
-      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS))
       {
-			msg.SetVariable(VID_RCC, g_alarmMgr.ackById(dwAlarmId, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)));
+			msg.SetVariable(VID_RCC,
+            byHelpdeskRef ?
+            g_alarmMgr.ackByHDRef(hdref, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)) :
+            g_alarmMgr.ackById(alarmId, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)));
       }
       else
       {
@@ -4934,14 +5049,31 @@ void ClientSession::resolveAlarm(CSCPMessage *pRequest, bool terminate)
    msg.SetId(pRequest->GetId());
 
    // Get alarm id and it's source object
-   UINT32 dwAlarmId = pRequest->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
+   UINT32 alarmId;
+   TCHAR hdref[MAX_HELPDESK_REF_LEN];
+   NetObj *object;
+   bool byHelpdeskRef;
+   if (pRequest->isFieldExist(VID_HELPDESK_REF))
+   {
+      pRequest->GetVariableStr(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
+      object = g_alarmMgr.getAlarmSourceObject(hdref);
+      byHelpdeskRef = true;
+   }
+   else
+   {
+      alarmId = pRequest->GetVariableLong(VID_ALARM_ID);
+      object = g_alarmMgr.getAlarmSourceObject(alarmId);
+      byHelpdeskRef = false;
+   }
    if (object != NULL)
    {
       // User should have "terminate alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS))
       {
-         msg.SetVariable(VID_RCC, g_alarmMgr.resolveById(dwAlarmId, this, terminate));
+         msg.SetVariable(VID_RCC,
+            byHelpdeskRef ?
+            g_alarmMgr.resolveByHDRef(hdref, this, terminate) :
+            g_alarmMgr.resolveById(alarmId, this, terminate));
       }
       else
       {
@@ -4973,8 +5105,8 @@ void ClientSession::deleteAlarm(CSCPMessage *pRequest)
    msg.SetId(pRequest->GetId());
 
    // Get alarm id and it's source object
-   UINT32 dwAlarmId = pRequest->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(dwAlarmId);
+   UINT32 alarmId = pRequest->GetVariableLong(VID_ALARM_ID);
+   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
    if (object != NULL)
    {
       // User should have "terminate alarm" right to the object
@@ -4982,7 +5114,7 @@ void ClientSession::deleteAlarm(CSCPMessage *pRequest)
       if ((object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS)) &&
           (m_dwSystemAccess & SYSTEM_ACCESS_DELETE_ALARMS))
       {
-         g_alarmMgr.deleteAlarm(dwAlarmId, false);
+         g_alarmMgr.deleteAlarm(alarmId, false);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
       }
       else
@@ -5003,9 +5135,145 @@ void ClientSession::deleteAlarm(CSCPMessage *pRequest)
 }
 
 /**
+ * Open issue in helpdesk system from given alarm
+ */
+void ClientSession::openHelpdeskIssue(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get alarm id and it's source object
+   UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
+   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   if (object != NULL)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE_ISSUE))
+      {
+         TCHAR hdref[MAX_HELPDESK_REF_LEN];
+         msg.SetVariable(VID_RCC, g_alarmMgr.openHelpdeskIssue(alarmId, this, hdref));
+         msg.SetVariable(VID_HELPDESK_REF, hdref);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(),
+            _T("Access denied on creating issue from alarm on object %s"), object->Name());
+      }
+   }
+   else
+   {
+      // Normally, for existing alarms object will not be NULL,
+      // so we assume that alarm id is invalid
+      msg.SetVariable(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Get helpdesk URL for given alarm
+ */
+void ClientSession::getHelpdeskUrl(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get alarm id and it's source object
+   UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
+   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   if (object != NULL)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+      {
+         TCHAR url[MAX_PATH];
+         msg.SetVariable(VID_RCC, g_alarmMgr.getHelpdeskIssueUrl(alarmId, url, MAX_PATH));
+         msg.SetVariable(VID_URL, url);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(),
+            _T("Access denied on getting helpdesk URL for alarm on object %s"), object->Name());
+      }
+   }
+   else
+   {
+      // Normally, for existing alarms object will not be NULL,
+      // so we assume that alarm id is invalid
+      msg.SetVariable(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Unlink helpdesk issue from alarm
+ */
+void ClientSession::unlinkHelpdeskIssue(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get alarm id and it's source object
+   UINT32 alarmId;
+   TCHAR hdref[MAX_HELPDESK_REF_LEN];
+   NetObj *object;
+   bool byHelpdeskRef;
+   if (request->isFieldExist(VID_HELPDESK_REF))
+   {
+      request->GetVariableStr(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
+      object = g_alarmMgr.getAlarmSourceObject(hdref);
+      byHelpdeskRef = true;
+   }
+   else
+   {
+      alarmId = request->GetVariableLong(VID_ALARM_ID);
+      object = g_alarmMgr.getAlarmSourceObject(alarmId);
+      byHelpdeskRef = false;
+   }
+   if (object != NULL)
+   {
+      // User should have "update alarms" right to the object and "unlink issues" global right
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS) && checkSysAccessRights(SYSTEM_ACCESS_UNLINK_ISSUES))
+      {
+         msg.SetVariable(VID_RCC,
+            byHelpdeskRef ?
+            g_alarmMgr.unlinkIssueByHDRef(hdref, this) :
+            g_alarmMgr.unlinkIssueById(alarmId, this));
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(),
+            _T("Access denied on unlinking helpdesk issue from alarm on object %s"), object->Name());
+      }
+   }
+   else
+   {
+      // Normally, for existing alarms object will not be NULL,
+      // so we assume that alarm id is invalid
+      msg.SetVariable(VID_RCC, RCC_INVALID_ALARM_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
  * Get comments for given alarm
  */
-void ClientSession::getAlarmNotes(CSCPMessage *request)
+void ClientSession::getAlarmComments(CSCPMessage *request)
 {
    CSCPMessage msg;
 
@@ -5021,7 +5289,7 @@ void ClientSession::getAlarmNotes(CSCPMessage *request)
       // User should have "view alarms" right to the object
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-			msg.SetVariable(VID_RCC, g_alarmMgr.getAlarmNotes(alarmId, &msg));
+			msg.SetVariable(VID_RCC, g_alarmMgr.getAlarmComments(alarmId, &msg));
       }
       else
       {
@@ -5039,11 +5307,10 @@ void ClientSession::getAlarmNotes(CSCPMessage *request)
    sendMessage(&msg);
 }
 
-
 /**
  * Update alarm comment
  */
-void ClientSession::updateAlarmNote(CSCPMessage *request)
+void ClientSession::updateAlarmComment(CSCPMessage *request)
 {
    CSCPMessage msg;
 
@@ -5052,16 +5319,33 @@ void ClientSession::updateAlarmNote(CSCPMessage *request)
    msg.SetId(request->GetId());
 
    // Get alarm id and it's source object
-   UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   UINT32 alarmId;
+   TCHAR hdref[MAX_HELPDESK_REF_LEN];
+   NetObj *object;
+   bool byHelpdeskRef;
+   if (request->isFieldExist(VID_HELPDESK_REF))
+   {
+      request->GetVariableStr(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
+      object = g_alarmMgr.getAlarmSourceObject(hdref);
+      byHelpdeskRef = true;
+   }
+   else
+   {
+      alarmId = request->GetVariableLong(VID_ALARM_ID);
+      object = g_alarmMgr.getAlarmSourceObject(alarmId);
+      byHelpdeskRef = false;
+   }
    if (object != NULL)
    {
-      // User should have "acknowledge alarm" right to the object
-		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+      // User should have "update alarm" right to the object
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS))
       {
-			UINT32 noteId = request->GetVariableLong(VID_NOTE_ID);
+			UINT32 commentId = request->GetVariableLong(VID_COMMENT_ID);
 			TCHAR *text = request->GetVariableStr(VID_COMMENTS);
-			msg.SetVariable(VID_RCC, g_alarmMgr.updateAlarmNote(alarmId, noteId, CHECK_NULL(text), m_dwUserId));
+			msg.SetVariable(VID_RCC,
+            byHelpdeskRef ?
+            g_alarmMgr.addAlarmComment(hdref, CHECK_NULL(text), m_dwUserId) :
+            g_alarmMgr.updateAlarmComment(alarmId, commentId, CHECK_NULL(text), m_dwUserId));
 			safe_free(text);
       }
       else
@@ -5083,7 +5367,7 @@ void ClientSession::updateAlarmNote(CSCPMessage *request)
 /**
  * Delete alarm comment
  */
-void ClientSession::deleteAlarmNote(CSCPMessage *request)
+void ClientSession::deleteAlarmComment(CSCPMessage *request)
 {
    CSCPMessage msg;
 
@@ -5097,10 +5381,10 @@ void ClientSession::deleteAlarmNote(CSCPMessage *request)
    if (object != NULL)
    {
       // User should have "acknowledge alarm" right to the object
-		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_ACK_ALARMS))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS))
       {
-			UINT32 noteId = request->GetVariableLong(VID_NOTE_ID);
-			msg.SetVariable(VID_RCC, g_alarmMgr.deleteAlarmNoteByID(alarmId, noteId));
+			UINT32 commentId = request->GetVariableLong(VID_COMMENT_ID);
+			msg.SetVariable(VID_RCC, g_alarmMgr.deleteAlarmCommentByID(alarmId, commentId));
       }
       else
       {
@@ -5118,6 +5402,9 @@ void ClientSession::deleteAlarmNote(CSCPMessage *request)
    sendMessage(&msg);
 }
 
+/**
+ * Update alarm status flow mode
+ */
 void ClientSession::updateAlarmStatusFlow(CSCPMessage *request)
 {
    CSCPMessage msg;
@@ -5133,10 +5420,10 @@ void ClientSession::updateAlarmStatusFlow(CSCPMessage *request)
    // Send response
    sendMessage(&msg);
 }
-//
-// Create new action
-//
 
+/**
+ * Create new server action
+ */
 void ClientSession::createAction(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -5480,7 +5767,7 @@ void ClientSession::onTrap(CSCPMessage *pRequest)
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_SEND_EVENTS))
       {
          dwEventCode = pRequest->GetVariableLong(VID_EVENT_CODE);
-			if ((dwEventCode == 0) && pRequest->IsVariableExist(VID_EVENT_NAME))
+			if ((dwEventCode == 0) && pRequest->isFieldExist(VID_EVENT_NAME))
 			{
 				TCHAR eventName[256];
 				pRequest->GetVariableStr(VID_EVENT_NAME, eventName, 256);
@@ -6109,7 +6396,7 @@ void ClientSession::DeployPackage(CSCPMessage *pRequest)
                // Create list of nodes to be upgraded
                dwNumObjects = pRequest->GetVariableLong(VID_NUM_OBJECTS);
                pdwObjectList = (UINT32 *)malloc(sizeof(UINT32) * dwNumObjects);
-               pRequest->GetVariableInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
+               pRequest->getFieldAsInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
 					nodeList = new ObjectArray<Node>((int)dwNumObjects);
                for(i = 0; i < dwNumObjects; i++)
                {
@@ -6315,7 +6602,7 @@ void ClientSession::getUserVariable(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   dwUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+   dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
       // Try to read variable from database
@@ -6371,7 +6658,7 @@ void ClientSession::setUserVariable(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   dwUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+   dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
       // Check variable name
@@ -6442,7 +6729,7 @@ void ClientSession::enumUserVariables(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   dwUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+   dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
       pRequest->GetVariableStr(VID_SEARCH_PATTERN, szPattern, MAX_VARIABLE_NAME);
@@ -6491,7 +6778,7 @@ void ClientSession::deleteUserVariable(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
 
-   dwUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+   dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
       // Try to delete variable from database
@@ -6537,7 +6824,7 @@ void ClientSession::copyUserVariable(CSCPMessage *pRequest)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS)
    {
-      dwSrcUserId = pRequest->IsVariableExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
+      dwSrcUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->GetVariableLong(VID_USER_ID) : m_dwUserId;
       dwDstUserId = pRequest->GetVariableLong(VID_DST_USER_ID);
       bMove = (BOOL)pRequest->GetVariableShort(VID_MOVE_FLAG);
       pRequest->GetVariableStr(VID_NAME, szVarName, MAX_VARIABLE_NAME);
@@ -6981,28 +7268,28 @@ void ClientSession::sendObjectTools(UINT32 dwRqId)
 
                // name
                DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING);
-               DecodeSQLStringAndSetVariable(&msg, dwId + 1, szBuffer);
+               msg.SetVariable(dwId + 1, szBuffer);
 
                msg.SetVariable(dwId + 2, (WORD)DBGetFieldLong(hResult, i, 2));
 
                // data
                pszStr = DBGetField(hResult, i, 3, NULL, 0);
-               DecodeSQLStringAndSetVariable(&msg, dwId + 3, pszStr);
+               msg.SetVariable(dwId + 3, pszStr);
                free(pszStr);
 
                msg.SetVariable(dwId + 4, DBGetFieldULong(hResult, i, 4));
 
                // description
                DBGetField(hResult, i, 5, szBuffer, MAX_DB_STRING);
-               DecodeSQLStringAndSetVariable(&msg, dwId + 5, szBuffer);
+               msg.SetVariable(dwId + 5, szBuffer);
 
                // matching OID
                DBGetField(hResult, i, 6, szBuffer, MAX_DB_STRING);
-               DecodeSQLStringAndSetVariable(&msg, dwId + 6, szBuffer);
+               msg.SetVariable(dwId + 6, szBuffer);
 
                // confirmation text
                DBGetField(hResult, i, 7, szBuffer, MAX_DB_STRING);
-               DecodeSQLStringAndSetVariable(&msg, dwId + 7, szBuffer);
+               msg.SetVariable(dwId + 7, szBuffer);
 
                dwNumMsgRec++;
                dwId += 10;
@@ -7037,20 +7324,24 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
    CSCPMessage msg;
    DB_RESULT hResult;
    UINT32 dwToolId, dwId, *pdwAcl;
-   TCHAR *pszStr, szQuery[1024], szBuffer[MAX_DB_STRING];
+   TCHAR *pszStr, szBuffer[MAX_DB_STRING];
    int i, iNumRows, nType;
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
    {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
       dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT tool_name,tool_type,tool_data,description,flags,matching_oid,confirmation_text FROM object_tools WHERE tool_id=%d"), dwToolId);
-      hResult = DBSelect(hdb, szQuery);
+      DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,description,flags,matching_oid,confirmation_text FROM object_tools WHERE tool_id=?"));
+      if (statment == NULL)
+         goto failure;
+      DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+
+      hResult = DBSelectPrepared(statment);
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) > 0)
@@ -7058,31 +7349,36 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
 				msg.SetVariable(VID_TOOL_ID, dwToolId);
 
             DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING);
-            DecodeSQLStringAndSetVariable(&msg, VID_NAME, szBuffer);
+            msg.SetVariable(VID_NAME, szBuffer);
 
             nType = DBGetFieldLong(hResult, 0, 1);
             msg.SetVariable(VID_TOOL_TYPE, (WORD)nType);
 
             pszStr = DBGetField(hResult, 0, 2, NULL, 0);
-            DecodeSQLStringAndSetVariable(&msg, VID_TOOL_DATA, pszStr);
+            msg.SetVariable(VID_TOOL_DATA, pszStr);
             free(pszStr);
 
             DBGetField(hResult, 0, 3, szBuffer, MAX_DB_STRING);
-            DecodeSQLStringAndSetVariable(&msg, VID_DESCRIPTION, szBuffer);
+            msg.SetVariable(VID_DESCRIPTION, szBuffer);
 
             msg.SetVariable(VID_FLAGS, DBGetFieldULong(hResult, 0, 4));
 
             DBGetField(hResult, 0, 5, szBuffer, MAX_DB_STRING);
-            DecodeSQLStringAndSetVariable(&msg, VID_TOOL_OID, szBuffer);
+            msg.SetVariable(VID_TOOL_OID, szBuffer);
 
             DBGetField(hResult, 0, 6, szBuffer, MAX_DB_STRING);
-            DecodeSQLStringAndSetVariable(&msg, VID_CONFIRMATION_TEXT, szBuffer);
+            msg.SetVariable(VID_CONFIRMATION_TEXT, szBuffer);
 
             DBFreeResult(hResult);
 
             // Access list
-            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT user_id FROM object_tools_acl WHERE tool_id=%d"), dwToolId);
-            hResult = DBSelect(hdb, szQuery);
+            DBFreeStatement(statment);
+            statment = DBPrepare(hdb, _T("SELECT user_id FROM object_tools_acl WHERE tool_id=?"));
+            if (statment == NULL)
+               goto failure;
+            DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+
+            hResult = DBSelectPrepared(statment);
             if (hResult != NULL)
             {
                iNumRows = DBGetNumRows(hResult);
@@ -7092,7 +7388,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
                   pdwAcl = (UINT32 *)malloc(sizeof(UINT32) * iNumRows);
                   for(i = 0; i < iNumRows; i++)
                      pdwAcl[i] = DBGetFieldULong(hResult, i, 0);
-                  msg.SetVariableToInt32Array(VID_ACL, iNumRows, pdwAcl);
+                  msg.setFieldInt32Array(VID_ACL, iNumRows, pdwAcl);
                   free(pdwAcl);
                }
                DBFreeResult(hResult);
@@ -7100,10 +7396,15 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
                // Column information for table tools
                if ((nType == TOOL_TYPE_TABLE_SNMP) || (nType == TOOL_TYPE_TABLE_AGENT))
                {
-                  _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT col_name,col_oid,col_format,col_substr ")
-                                     _T("FROM object_tools_table_columns WHERE tool_id=%d ")
-                                     _T("ORDER BY col_number"), dwToolId);
-                  hResult = DBSelect(hdb, szQuery);
+                  DBFreeStatement(statment);
+                  statment = DBPrepare(hdb, _T("SELECT col_name,col_oid,col_format,col_substr ")
+                                                          _T("FROM object_tools_table_columns WHERE tool_id=? ")
+                                                          _T("ORDER BY col_number"));
+                  if (statment == NULL)
+                     goto failure;
+                  DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
+
+                  hResult = DBSelectPrepared(statment);
                   if (hResult != NULL)
                   {
                      iNumRows = DBGetNumRows(hResult);
@@ -7111,7 +7412,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
                      for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < iNumRows; i++)
                      {
                         DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING);
-                        DecodeSQLStringAndSetVariable(&msg, dwId++, szBuffer);
+                        msg.SetVariable(dwId++, szBuffer);
                         msg.SetVariable(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
                         msg.SetVariable(dwId++, (WORD)DBGetFieldLong(hResult, i, 2));
                         msg.SetVariable(dwId++, (WORD)DBGetFieldLong(hResult, i, 3));
@@ -7142,7 +7443,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
       {
          msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
       }
-      DBConnectionPoolReleaseConnection(hdb);
+      DBFreeStatement(statment);
    }
    else
    {
@@ -7151,7 +7452,15 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
    }
 
    // Send response
+   DBConnectionPoolReleaseConnection(hdb);
    sendMessage(&msg);
+   return;
+
+failure:
+   DBConnectionPoolReleaseConnection(hdb);
+   msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+   sendMessage(&msg);
+   return;
 }
 
 /**
@@ -7996,8 +8305,8 @@ static UINT32 WalkerCallback(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpo
 	bool convertToHex = true;
 
 	pVar->getValueAsPrintableString(szBuffer, 4096, &convertToHex);
-   pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, (TCHAR *)pVar->GetName()->getValueAsText());
-	pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, convertToHex ? (UINT32)0xFFFF : pVar->GetType());
+   pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, (TCHAR *)pVar->getName()->getValueAsText());
+	pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, convertToHex ? (UINT32)0xFFFF : pVar->getType());
    pMsg->SetVariable(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, szBuffer);
    ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars++;
    if (((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars == 50)
@@ -8148,8 +8457,8 @@ void ClientSession::resolveDCINames(CSCPMessage *pRequest)
    dwNumDCI = pRequest->GetVariableLong(VID_NUM_ITEMS);
    pdwNodeList = (UINT32 *)malloc(sizeof(UINT32) * dwNumDCI);
    pdwDCIList = (UINT32 *)malloc(sizeof(UINT32) * dwNumDCI);
-   pRequest->GetVariableInt32Array(VID_NODE_LIST, dwNumDCI, pdwNodeList);
-   pRequest->GetVariableInt32Array(VID_DCI_LIST, dwNumDCI, pdwDCIList);
+   pRequest->getFieldAsInt32Array(VID_NODE_LIST, dwNumDCI, pdwNodeList);
+   pRequest->getFieldAsInt32Array(VID_DCI_LIST, dwNumDCI, pdwDCIList);
 
    for(i = 0, dwId = VID_DCI_LIST_BASE; i < dwNumDCI; i++)
    {
@@ -8211,10 +8520,9 @@ void ClientSession::sendAgentCfgList(UINT32 dwRqId)
 }
 
 
-//
-// Open (get all data) server-stored agent's config
-//
-
+/**
+ *  Open (get all data) server-stored agent's config
+ */
 void ClientSession::OpenAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -8265,10 +8573,9 @@ void ClientSession::OpenAgentConfig(CSCPMessage *pRequest)
 }
 
 
-//
-// Save changes to server-stored agent's configuration
-//
-
+/**
+ *  Save changes to server-stored agent's configuration
+ */
 void ClientSession::SaveAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -8365,10 +8672,9 @@ void ClientSession::SaveAgentConfig(CSCPMessage *pRequest)
 }
 
 
-//
-// Delete agent's configuration
-//
-
+/**
+ * Delete agent's configuration
+ */
 void ClientSession::DeleteAgentConfig(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -8418,10 +8724,9 @@ void ClientSession::DeleteAgentConfig(CSCPMessage *pRequest)
 }
 
 
-//
-// Swap sequence numbers of two agent configs
-//
-
+/**
+ * Swap sequence numbers of two agent configs
+ */
 void ClientSession::SwapAgentConfigs(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
@@ -8488,12 +8793,10 @@ void ClientSession::SwapAgentConfigs(CSCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send config to agent on request
-//
-
-void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
+/**
+ * Send config to agent on request
+ */
+void ClientSession::sendConfigForAgent(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
    TCHAR szPlatform[MAX_DB_STRING], szError[256], szBuffer[256], *pszText;
@@ -8544,9 +8847,10 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
 
             // Run script
             DbgPrintf(3, _T("Running configuration matching script %d"), dwCfgId);
-            if (pScript->run(new NXSL_ServerEnv, 5, ppArgList) == 0)
+            NXSL_VM *vm = new NXSL_VM(new NXSL_ServerEnv);
+            if (vm->load(pScript) && vm->run(5, ppArgList))
             {
-               pValue = pScript->getResult();
+               pValue = vm->getResult();
                if (pValue->getValueAsInt32() != 0)
                {
                   DbgPrintf(3, _T("Configuration script %d matched for agent %s, sending config"),
@@ -8567,10 +8871,10 @@ void ClientSession::SendConfigForAgent(CSCPMessage *pRequest)
             else
             {
                _sntprintf(szError, 256, _T("AgentCfg::%d"), dwCfgId);
-               PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szError,
-                         pScript->getErrorText(), 0);
+               PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szError, vm->getErrorText(), 0);
             }
             delete pScript;
+            delete vm;
          }
          else
          {
@@ -8954,7 +9258,7 @@ void ClientSession::sendDCIEventList(CSCPMessage *request)
             if (pdwEventList != NULL)
             {
                msg.SetVariable(VID_NUM_EVENTS, dwCount);
-               msg.SetVariableToInt32Array(VID_EVENT_LIST, dwCount, pdwEventList);
+               msg.setFieldInt32Array(VID_EVENT_LIST, dwCount, pdwEventList);
                free(pdwEventList);
             }
             else
@@ -9000,7 +9304,7 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
       if (dwNumTemplates > 0)
       {
          pdwTemplateList = (UINT32 *)malloc(sizeof(UINT32) * dwNumTemplates);
-         pRequest->GetVariableInt32Array(VID_OBJECT_LIST, dwNumTemplates, pdwTemplateList);
+         pRequest->getFieldAsInt32Array(VID_OBJECT_LIST, dwNumTemplates, pdwTemplateList);
       }
       else
       {
@@ -9048,7 +9352,7 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
          str += _T("\t<events>\n");
          dwCount = pRequest->GetVariableLong(VID_NUM_EVENTS);
          pdwList = (UINT32 *)malloc(sizeof(UINT32) * dwCount);
-         pRequest->GetVariableInt32Array(VID_EVENT_LIST, dwCount, pdwList);
+         pRequest->getFieldAsInt32Array(VID_EVENT_LIST, dwCount, pdwList);
          for(i = 0; i < dwCount; i++)
             CreateNXMPEventRecord(str, pdwList[i]);
          safe_free(pdwList);
@@ -9070,7 +9374,7 @@ void ClientSession::exportConfiguration(CSCPMessage *pRequest)
          str += _T("\t<traps>\n");
          dwCount = pRequest->GetVariableLong(VID_NUM_TRAPS);
          pdwList = (UINT32 *)malloc(sizeof(UINT32) * dwCount);
-         pRequest->GetVariableInt32Array(VID_TRAP_LIST, dwCount, pdwList);
+         pRequest->getFieldAsInt32Array(VID_TRAP_LIST, dwCount, pdwList);
          for(i = 0; i < dwCount; i++)
             CreateNXMPTrapRecord(str, pdwList[i]);
          safe_free(pdwList);
@@ -9286,8 +9590,8 @@ void ClientSession::sendGraphList(UINT32 dwRqId)
 						}
 					}
 					msg.SetVariable(dwId++, dwGraphACLSize);
-					msg.SetVariableToInt32Array(dwId++, dwGraphACLSize, pdwUsers);
-					msg.SetVariableToInt32Array(dwId++, dwGraphACLSize, pdwRights);
+					msg.setFieldInt32Array(dwId++, dwGraphACLSize, pdwUsers);
+					msg.setFieldInt32Array(dwId++, dwGraphACLSize, pdwRights);
 
 					dwId += 3;
 					dwNumGraphs++;
@@ -10215,40 +10519,49 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
 	TCHAR name[MAX_PATH], fname[MAX_PATH];
-	int i;
+	bool musicFile = false;
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
+   pRequest->GetVariableStr(VID_FILE_NAME, name, MAX_PATH);
+   for(int i = 0; i < m_musicTypeList.getSize(); i++)
+   {
+      TCHAR *extension = _tcsrchr(name, _T('.'));
+      if (extension != NULL)
+      {
+         extension++;
+         if(!_tcscmp(extension, m_musicTypeList.getValue(i)))
+         {
+            musicFile = true;
+            break;
+         }
+      }
+   }
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES)
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES) || musicFile)
 	{
-		pRequest->GetVariableStr(VID_FILE_NAME, name, MAX_PATH);
-		for(i = (int)_tcslen(name) - 1; i >= 0; i--)
-			if ((name[i] == _T('\\')) || (name[i] == '/'))
-				break;
-		i++;
       _tcscpy(fname, g_szDataDir);
-      _tcscat(fname, DDIR_SHARED_FILES);
+      _tcscat(fname, DDIR_FILES);
       _tcscat(fname, FS_PATH_SEPARATOR);
-      _tcscat(fname, name);
-		debugPrintf(4, _T("Requested file %s"), name);
+      _tcscat(fname, GetCleanFileName(name));
+		debugPrintf(4, _T("Requested file %s"), fname);
 		if (_taccess(fname, 0) == 0)
 		{
-			debugPrintf(5, _T("Sending file %s"), name);
-			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx, 0, 0, NULL, NULL, m_mutexSocketWrite))
+			debugPrintf(5, _T("Sending file %s"), fname);
+			if (SendFileOverNXCP(m_hSocket, pRequest->GetId(), fname, m_pCtx, 0, NULL, NULL, m_mutexSocketWrite))
 			{
-				debugPrintf(5, _T("File %s was succesfully sent"), name);
+				debugPrintf(5, _T("File %s was succesfully sent"), fname);
 		      msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else
 			{
-				debugPrintf(5, _T("Unable to send file %s: SendFileOverNXCP() failed"), name);
+				debugPrintf(5, _T("Unable to send file %s: SendFileOverNXCP() failed"), fname);
 		      msg.SetVariable(VID_RCC, RCC_IO_ERROR);
 			}
 		}
 		else
 		{
-			debugPrintf(5, _T("Unable to send file %s: access() failed"), name);
+			debugPrintf(5, _T("Unable to send file %s: access() failed"), fname);
 	      msg.SetVariable(VID_RCC, RCC_IO_ERROR);
 		}
 	}
@@ -10266,7 +10579,7 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
 void ClientSession::getAgentFile(CSCPMessage *request)
 {
    CSCPMessage msg;
-	TCHAR remoteFile[MAX_PATH], localFile[MAX_PATH];
+	TCHAR remoteFile[MAX_PATH];
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(request->GetId());
@@ -10279,9 +10592,9 @@ void ClientSession::getAgentFile(CSCPMessage *request)
 			if (object->Type() == OBJECT_NODE)
 			{
 				request->GetVariableStr(VID_FILE_NAME, remoteFile, MAX_PATH);
-				FileDownloadJob::buildServerFileName(object->Id(), remoteFile, localFile, MAX_PATH);
             bool follow = request->GetVariableShort(VID_FILE_FOLLOW) ? true : false;
 				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile, request->GetVariableLong(VID_FILE_SIZE_LIMIT), follow, this, request->GetId());
+				msg.SetVariable(VID_NAME, job->getLocalFileName());
 				msg.SetVariable(VID_RCC, AddJob(job) ? RCC_SUCCESS : RCC_INTERNAL_ERROR);
 			}
 			else
@@ -10303,7 +10616,7 @@ void ClientSession::getAgentFile(CSCPMessage *request)
 }
 
 /**
- * Get file from agent
+ * Cancel file monitoring
  */
 void ClientSession::cancelFileMonitoring(CSCPMessage *request)
 {
@@ -10332,6 +10645,7 @@ void ClientSession::cancelFileMonitoring(CSCPMessage *request)
          Node *node = (Node *)object;
          node->incRefCount();
          AgentConnection *conn = node->createAgentConnection();
+         debugPrintf(6, _T("Cancel file monitoring %s"), remoteFile);
          if(conn != NULL)
          {
             request->SetId(conn->generateRequestId());
@@ -10339,8 +10653,17 @@ void ClientSession::cancelFileMonitoring(CSCPMessage *request)
             if (response != NULL)
             {
                rcc = response->GetVariableLong(VID_RCC);
-               msg.SetVariable(VID_RCC, rcc);
-               debugPrintf(6, _T("File monitoring canceled sucessfully"));
+               if(rcc == RCC_SUCCESS)
+               {
+                  msg.SetVariable(VID_RCC, rcc);
+                  debugPrintf(6, _T("File monitoring cancelled sucessfully"));
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+
+                  debugPrintf(6, _T("Error on agent: %d"), rcc);
+               }
             }
             else
             {
@@ -10850,14 +11173,14 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
 			debugPrintf(5, _T("findNodeConnection: objectId=%d class=%d name=\"%s\""), objectId, object->Type(), object->Name());
-			Interface *iface = NULL;
+			NetObj *cp = NULL;
 			UINT32 localNodeId, localIfId;
 			BYTE localMacAddr[MAC_ADDR_LENGTH];
-			bool exactMatch;
+			int type = 0;
 			if (object->Type() == OBJECT_NODE)
 			{
 				localNodeId = objectId;
-				iface = ((Node *)object)->findConnectionPoint(&localIfId, localMacAddr, &exactMatch);
+				cp = ((Node *)object)->findConnectionPoint(&localIfId, localMacAddr, &type);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else if (object->Type() == OBJECT_INTERFACE)
@@ -10865,7 +11188,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 				localNodeId = ((Interface *)object)->getParentNode()->Id();
 				localIfId = objectId;
 				memcpy(localMacAddr, ((Interface *)object)->getMacAddr(), MAC_ADDR_LENGTH);
-				iface = FindInterfaceConnectionPoint(localMacAddr, &exactMatch);
+				cp = FindInterfaceConnectionPoint(localMacAddr, &type);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
          else if (object->Type() == OBJECT_ACCESSPOINT)
@@ -10873,7 +11196,7 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 				localNodeId = 0;
 				localIfId = 0;
 				memcpy(localMacAddr, ((AccessPoint *)object)->getMacAddr(), MAC_ADDR_LENGTH);
-				iface = FindInterfaceConnectionPoint(localMacAddr, &exactMatch);
+				cp = FindInterfaceConnectionPoint(localMacAddr, &type);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
 			else
@@ -10881,17 +11204,28 @@ void ClientSession::findNodeConnection(CSCPMessage *request)
 				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
 			}
 
-			debugPrintf(5, _T("findNodeConnection: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
-			if (iface != NULL)
+			debugPrintf(5, _T("findNodeConnection: cp=%p type=%d"), cp, type);
+			if (cp != NULL)
 			{
-				msg.SetVariable(VID_OBJECT_ID, iface->getParentNode()->Id());
-				msg.SetVariable(VID_INTERFACE_ID, iface->Id());
-				msg.SetVariable(VID_IF_INDEX, iface->getIfIndex());
-				msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
-				msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
-				msg.SetVariable(VID_MAC_ADDR, localMacAddr, MAC_ADDR_LENGTH);
-				msg.SetVariable(VID_EXACT_MATCH, exactMatch ? (WORD)1 : (WORD)0);
-				debugPrintf(5, _T("findNodeConnection: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
+            Node *node = (cp->Type() == OBJECT_INTERFACE) ? ((Interface *)cp)->getParentNode() : ((AccessPoint *)cp)->getParentNode();
+            if (node != NULL)
+            {
+               msg.SetVariable(VID_OBJECT_ID, node->Id());
+				   msg.SetVariable(VID_INTERFACE_ID, cp->Id());
+               msg.SetVariable(VID_IF_INDEX, (cp->Type() == OBJECT_INTERFACE) ? ((Interface *)cp)->getIfIndex() : (UINT32)0);
+				   msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
+				   msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
+				   msg.SetVariable(VID_MAC_ADDR, localMacAddr, MAC_ADDR_LENGTH);
+				   msg.SetVariable(VID_CONNECTION_TYPE, (UINT16)type);
+               if (cp->Type() == OBJECT_INTERFACE)
+                  debugPrintf(5, _T("findNodeConnection: nodeId=%d ifId=%d ifName=%s ifIndex=%d"), node->Id(), cp->Id(), cp->Name(), ((Interface *)cp)->getIfIndex());
+               else
+                  debugPrintf(5, _T("findNodeConnection: nodeId=%d apId=%d apName=%s"), node->Id(), cp->Id(), cp->Name());
+            }
+            else
+            {
+      			msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+            }
 			}
 		}
 		else
@@ -10919,12 +11253,12 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
 	request->GetVariableBinary(VID_MAC_ADDR, macAddr, 6);
-	bool exactMatch;
-	Interface *iface = FindInterfaceConnectionPoint(macAddr, &exactMatch);
+	int type;
+	NetObj *cp = FindInterfaceConnectionPoint(macAddr, &type);
 	msg.SetVariable(VID_RCC, RCC_SUCCESS);
 
-	debugPrintf(5, _T("findMacAddress: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
-	if (iface != NULL)
+	debugPrintf(5, _T("findMacAddress: cp=%p type=%d"), cp, type);
+	if (cp != NULL)
 	{
 		UINT32 localNodeId, localIfId;
 
@@ -10940,15 +11274,26 @@ void ClientSession::findMacAddress(CSCPMessage *request)
 			localNodeId = 0;
 		}
 
-		msg.SetVariable(VID_OBJECT_ID, iface->getParentNode()->Id());
-		msg.SetVariable(VID_INTERFACE_ID, iface->Id());
-		msg.SetVariable(VID_IF_INDEX, iface->getIfIndex());
-		msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
-		msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
-		msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
-		msg.SetVariable(VID_IP_ADDRESS, (localIf != NULL) ? localIf->IpAddr() : (UINT32)0);
-		msg.SetVariable(VID_EXACT_MATCH, exactMatch ? (WORD)1 : (WORD)0);
-		debugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifIndex=%d"), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
+      Node *node = (cp->Type() == OBJECT_INTERFACE) ? ((Interface *)cp)->getParentNode() : ((AccessPoint *)cp)->getParentNode();
+      if (node != NULL)
+      {
+		   msg.SetVariable(VID_OBJECT_ID, node->Id());
+		   msg.SetVariable(VID_INTERFACE_ID, cp->Id());
+         msg.SetVariable(VID_IF_INDEX, (cp->Type() == OBJECT_INTERFACE) ? ((Interface *)cp)->getIfIndex() : (UINT32)0);
+	      msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
+		   msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
+		   msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+		   msg.SetVariable(VID_IP_ADDRESS, (localIf != NULL) ? localIf->IpAddr() : (UINT32)0);
+		   msg.SetVariable(VID_CONNECTION_TYPE, (UINT16)type);
+         if (cp->Type() == OBJECT_INTERFACE)
+            debugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifName=%s ifIndex=%d"), node->Id(), cp->Id(), cp->Name(), ((Interface *)cp)->getIfIndex());
+         else
+            debugPrintf(5, _T("findMacAddress: nodeId=%d apId=%d apName=%s"), node->Id(), cp->Id(), cp->Name());
+      }
+      else
+      {
+		   msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+      }
 	}
 
 	sendMessage(&msg);
@@ -10997,11 +11342,11 @@ void ClientSession::findIpAddress(CSCPMessage *request)
 	// Find switch port
 	if (found)
 	{
-		bool exactMatch;
-		iface = FindInterfaceConnectionPoint(macAddr, &exactMatch);
+		int type;
+		NetObj *cp = FindInterfaceConnectionPoint(macAddr, &type);
 
-		debugPrintf(5, _T("findIpAddress: iface=%p exact=%c"), iface, exactMatch ? _T('Y') : _T('N'));
-		if (iface != NULL)
+		debugPrintf(5, _T("findIpAddress: cp=%p type=%d"), cp, type);
+		if (cp != NULL)
 		{
 			UINT32 localNodeId, localIfId;
 
@@ -11017,15 +11362,22 @@ void ClientSession::findIpAddress(CSCPMessage *request)
 				localNodeId = 0;
 			}
 
-			msg.SetVariable(VID_OBJECT_ID, iface->getParentNode()->Id());
-			msg.SetVariable(VID_INTERFACE_ID, iface->Id());
-			msg.SetVariable(VID_IF_INDEX, iface->getIfIndex());
-			msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
-			msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
-			msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
-			msg.SetVariable(VID_IP_ADDRESS, ipAddr);
-			msg.SetVariable(VID_EXACT_MATCH, exactMatch ? (WORD)1 : (WORD)0);
-			debugPrintf(5, _T("findIpAddress(%s): nodeId=%d ifId=%d ifIndex=%d"), IpToStr(ipAddr, ipAddrText), iface->getParentNode()->Id(), iface->Id(), iface->getIfIndex());
+         Node *node = (cp->Type() == OBJECT_INTERFACE) ? ((Interface *)cp)->getParentNode() : ((AccessPoint *)cp)->getParentNode();
+         if (node != NULL)
+         {
+		      msg.SetVariable(VID_OBJECT_ID, node->Id());
+			   msg.SetVariable(VID_INTERFACE_ID, cp->Id());
+            msg.SetVariable(VID_IF_INDEX, (cp->Type() == OBJECT_INTERFACE) ? ((Interface *)cp)->getIfIndex() : (UINT32)0);
+			   msg.SetVariable(VID_LOCAL_NODE_ID, localNodeId);
+			   msg.SetVariable(VID_LOCAL_INTERFACE_ID, localIfId);
+			   msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+			   msg.SetVariable(VID_IP_ADDRESS, ipAddr);
+			   msg.SetVariable(VID_CONNECTION_TYPE, (UINT16)type);
+            if (cp->Type() == OBJECT_INTERFACE)
+               debugPrintf(5, _T("findIpAddress(%s): nodeId=%d ifId=%d ifName=%s ifIndex=%d"), IpToStr(ipAddr, ipAddrText), node->Id(), cp->Id(), cp->Name(), ((Interface *)cp)->getIfIndex());
+            else
+               debugPrintf(5, _T("findIpAddress(%s): nodeId=%d apId=%d apName=%s"), IpToStr(ipAddr, ipAddrText), node->Id(), cp->Id(), cp->Name());
+         }
 		}
 	}
 
@@ -11169,7 +11521,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 	TCHAR mimetype[MAX_DB_STRING] = _T("");
 	TCHAR absFileName[MAX_PATH] = _T("");
 
-	if (request->IsVariableExist(VID_GUID))
+	if (request->isFieldExist(VID_GUID))
 	{
 		request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
 	}
@@ -11382,7 +11734,7 @@ void ClientSession::listLibraryImages(CSCPMessage *request)
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	if (request->IsVariableExist(VID_CATEGORY))
+	if (request->isFieldExist(VID_CATEGORY))
 	{
 		request->GetVariableStr(VID_CATEGORY, category, MAX_DB_STRING);
 	}
@@ -11566,60 +11918,106 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
-//
-// Send to client list of files in server's file store
-//
-
+/**
+ * Send to client list of files in server's file store
+ */
 void ClientSession::listServerFileStore(CSCPMessage *request)
 {
 	CSCPMessage msg;
 	TCHAR path[MAX_PATH];
+	StringList extensionList;
 
 	msg.SetId(request->GetId());
 	msg.SetCode(CMD_REQUEST_COMPLETED);
 
-	_tcscpy(path, g_szDataDir);
-	_tcscat(path, DDIR_FILES);
-	_TDIR *dir = _topendir(path);
-	if (dir != NULL)
-	{
-		_tcscat(path, FS_PATH_SEPARATOR);
-		int pos = (int)_tcslen(path);
+	int length = (int)request->GetVariableLong(VID_EXTENSION_COUNT);
+	DbgPrintf(8, _T("ClientSession::listServerFileStore: length of filter type array is %d."), length);
 
-		struct _tdirent *d;
-#ifdef _WIN32
-		struct _stat st;
-#else
-		struct stat st;
-#endif
-		UINT32 count = 0, varId = VID_INSTANCE_LIST_BASE;
-		while((d = _treaddir(dir)) != NULL)
-		{
-			if (_tcscmp(d->d_name, _T(".")) && _tcscmp(d->d_name, _T("..")))
-			{
-				nx_strncpy(&path[pos], d->d_name, MAX_PATH - pos);
-				if (_tstat(path, &st) == 0)
-				{
-					if (S_ISREG(st.st_mode))
-					{
-						msg.SetVariable(varId++, d->d_name);
-						msg.SetVariable(varId++, (QWORD)st.st_size);
-						msg.SetVariable(varId++, (QWORD)st.st_mtime);
-						varId += 7;
-						count++;
-					}
-				}
-			}
-		}
-		_tclosedir(dir);
-		msg.SetVariable(VID_INSTANCE_COUNT, count);
-		msg.SetVariable(VID_RCC, RCC_SUCCESS);
-	}
+   UINT32 varId = VID_EXTENSION_LIST_BASE;
+
+   bool musicFiles = (length > 0);
+	for(int i = 0; i < length; i++)
+   {
+      extensionList.add(request->GetVariableStr(varId++));
+      for(int j = 0; j < m_musicTypeList.getSize(); j++)
+      {
+         if(_tcscmp(extensionList.getValue(i), m_musicTypeList.getValue(j)))
+         {
+            musicFiles = false;
+         }
+      }
+   }
+
+	if (m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES || musicFiles)
+	{
+      _tcscpy(path, g_szDataDir);
+      _tcscat(path, DDIR_FILES);
+      _TDIR *dir = _topendir(path);
+      if (dir != NULL)
+      {
+         _tcscat(path, FS_PATH_SEPARATOR);
+         int pos = (int)_tcslen(path);
+
+         struct _tdirent *d;
+   #ifdef _WIN32
+         struct _stat st;
+   #else
+         struct stat st;
+   #endif
+         UINT32 count = 0, varId = VID_INSTANCE_LIST_BASE;
+         while((d = _treaddir(dir)) != NULL)
+         {
+            if (_tcscmp(d->d_name, _T(".")) && _tcscmp(d->d_name, _T("..")))
+            {
+               if(length != 0)
+               {
+                  bool correctType = false;
+                  TCHAR *extension = _tcsrchr(d->d_name, _T('.'));
+                  if (extension != NULL)
+                  {
+                     extension++;
+                     for(int j = 0; j < extensionList.getSize(); j++)
+                     {
+                        if (!_tcscmp(extension, extensionList.getValue(j)))
+                        {
+                           correctType = true;
+                           break;
+                        }
+                     }
+                  }
+                  if (!correctType)
+                  {
+                     continue;
+                  }
+               }
+               nx_strncpy(&path[pos], d->d_name, MAX_PATH - pos);
+               if (_tstat(path, &st) == 0)
+               {
+                  if (S_ISREG(st.st_mode))
+                  {
+                     msg.SetVariable(varId++, d->d_name);
+                     msg.SetVariable(varId++, (QWORD)st.st_size);
+                     msg.SetVariable(varId++, (QWORD)st.st_mtime);
+                     varId += 7;
+                     count++;
+                  }
+               }
+            }
+         }
+         _tclosedir(dir);
+         msg.SetVariable(VID_INSTANCE_COUNT, count);
+         msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+      }
+   }
 	else
 	{
-		msg.SetVariable(VID_RCC, RCC_IO_ERROR);
+      msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
 	}
+	extensionList.clear();
 
 	sendMessage(&msg);
 }
@@ -11873,272 +12271,9 @@ void ClientSession::deleteFile(CSCPMessage *request)
    sendMessage(&msg);
 }
 
-
-//
-// Execute report
-//
-
-void ClientSession::executeReport(CSCPMessage *request)
-{
-	CSCPMessage msg;
-
-	msg.SetCode(CMD_REQUEST_COMPLETED);
-	msg.SetId(request->GetId());
-
-	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
-	if (object != NULL)
-	{
-		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
-		{
-			if (object->Type() == OBJECT_REPORT)
-			{
-				StringMap *parameters = new StringMap;
-
-				int count = request->GetVariableLong(VID_NUM_PARAMETERS);
-				UINT32 varId = VID_PARAM_LIST_BASE;
-				for(int i = 0; i < count; i++)
-				{
-					TCHAR *name = request->GetVariableStr(varId++);
-					TCHAR *value = request->GetVariableStr(varId++);
-					parameters->setPreallocated(name, value);
-				}
-
-				UINT32 jobId = ((Report *)object)->execute(parameters, m_dwUserId);
-				msg.SetVariable(VID_RCC, RCC_SUCCESS);
-				msg.SetVariable(VID_JOB_ID, jobId);
-			}
-			else
-			{
-				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-			}
-		}
-		else
-		{
-			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-		}
-	}
-	else
-	{
-		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
-	}
-
-	sendMessage(&msg);
-}
-
-
-//
-// Get report execution results
-//
-
-void ClientSession::getReportResults(CSCPMessage *request)
-{
-	CSCPMessage msg;
-
-	msg.SetCode(CMD_REQUEST_COMPLETED);
-	msg.SetId(request->GetId());
-
-	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
-	if (object != NULL)
-	{
-		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
-		{
-			if (object->Type() == OBJECT_REPORT)
-			{
-				DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-				DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT job_id,generated FROM report_results WHERE report_id=?"));
-				if (hStmt != NULL)
-				{
-					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, object->Id());
-					DB_RESULT hResult = DBSelectPrepared(hStmt);
-					if (hResult != NULL)
-					{
-						int count = DBGetNumRows(hResult);
-						msg.SetVariable(VID_NUM_ROWS, (UINT32)count);
-
-						UINT32 varId = VID_ROW_DATA_BASE;
-						for(int i = 0; i < count; i++)
-						{
-							msg.SetVariable(varId++, DBGetFieldULong(hResult, i, 0));
-							msg.SetVariable(varId++, DBGetFieldULong(hResult, i, 1));
-							varId += 8;
-						}
-						DBFreeResult(hResult);
-					}
-					else
-					{
-						msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-					}
-					DBFreeStatement(hStmt);
-				}
-				else
-				{
-					msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-				}
-				DBConnectionPoolReleaseConnection(hdb);
-			}
-			else
-			{
-				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-			}
-		}
-		else
-		{
-			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-		}
-	}
-	else
-	{
-		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
-	}
-
-	sendMessage(&msg);
-}
-
-
-//
-// Delete report execution results
-//
-
-void ClientSession::deleteReportResults(CSCPMessage *request)
-{
-	CSCPMessage msg;
-
-	msg.SetCode(CMD_REQUEST_COMPLETED);
-	msg.SetId(request->GetId());
-
-	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
-	if (object != NULL)
-	{
-		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
-		{
-			if (object->Type() == OBJECT_REPORT)
-			{
-				DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-				DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM report_results WHERE report_id=? AND job_id=?"));
-				if (hStmt != NULL)
-				{
-					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, object->Id());
-					int count = request->GetVariableLong(VID_NUM_RESULTS);
-					if (count > 0)
-					{
-						UINT32 *idList = (UINT32 *)malloc(sizeof(UINT32) * count);
-						request->GetVariableInt32Array(VID_RESULT_ID_LIST, (UINT32)count, idList);
-						for(int i = 0; i < count; i++)
-						{
-							DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, idList[i]);
-							if (DBExecute(hStmt))
-							{
-								TCHAR fileName[MAX_PATH];
-
-								ReportJob::buildDataFileName(idList[i], NULL, fileName, MAX_PATH);
-								_tremove(fileName);
-								ReportJob::buildDataFileName(idList[i], _T(".pdf"), fileName, MAX_PATH);
-								_tremove(fileName);
-								ReportJob::buildDataFileName(idList[i], _T(".html"), fileName, MAX_PATH);  /* FIXME: is it really .html? */
-								_tremove(fileName);
-							}
-						}
-						free(idList);
-					}
-					DBFreeStatement(hStmt);
-					msg.SetVariable(VID_RCC, RCC_SUCCESS);
-				}
-				else
-				{
-					msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
-				}
-				DBConnectionPoolReleaseConnection(hdb);
-			}
-			else
-			{
-				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
-			}
-		}
-		else
-		{
-			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-		}
-	}
-	else
-	{
-		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
-	}
-
-	sendMessage(&msg);
-}
-
 /**
- * Render report execution results into document
+ * Get network path between two nodes
  */
-void ClientSession::renderReport(CSCPMessage *request)
-{
-	CSCPMessage msg;
-
-	msg.SetCode(CMD_REQUEST_COMPLETED);
-	msg.SetId(request->GetId());
-
-	UINT32 jobId = request->GetVariableLong(VID_JOB_ID);
-	UINT32 format = request->GetVariableLong(VID_RENDER_FORMAT);
-
-	TCHAR reportFileName[MAX_PATH];
-	TCHAR outputFileName[MAX_PATH];
-
-	ReportJob::buildDataFileName(jobId, NULL, reportFileName, MAX_PATH);
-	ReportJob::buildDataFileName(jobId, _T(".pdf"), outputFileName, MAX_PATH);
-
-   // TODO: add type handling
-	TCHAR buffer[1024];
-	_sntprintf(buffer, 1024, _T("\"%s\" -cp \"%s") FS_PATH_SEPARATOR _T("report-generator.jar\" org.netxms.report.Exporter \"%s\" \"%s\""),
-			g_szJavaPath,
-			g_szJavaLibDir,
-			reportFileName,
-			outputFileName);
-
-#ifdef _WIN32
-	STARTUPINFO si;
-	PROCESS_INFORMATION pi;
-
-   memset(&si, 0, sizeof(STARTUPINFO));
-   si.cb = sizeof(STARTUPINFO);
-   si.dwFlags = 0;
-
-	int ret = 127;
-	if (CreateProcess(NULL, buffer, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
-	{
-		WaitForSingleObject(pi.hProcess, INFINITE);
-		DWORD ec;
-		GetExitCodeProcess(pi.hProcess, &ec);
-		ret = (int)ec;
-		CloseHandle(pi.hThread);
-		CloseHandle(pi.hProcess);
-	}
-#else
-	int ret = _tsystem(buffer);
-   if ((ret == -1) && (errno == ECHILD))
-      ret = 0;
-#endif
-
-	if (ret == 0)
-	{
-		msg.SetVariable(VID_RCC, RCC_SUCCESS);
-	}
-	else
-	{
-		msg.SetVariable(VID_RCC, RCC_IO_ERROR);
-	}
-	sendMessage(&msg);
-
-	if (ret == 0)
-	{
-		sendFile(outputFileName, request->GetId(), 0);
-	}
-}
-
-
-//
-// Get network path between two nodes
-//
-
 void ClientSession::getNetworkPath(CSCPMessage *request)
 {
 	CSCPMessage msg;
@@ -12650,6 +12785,7 @@ void ClientSession::querySummaryTable(CSCPMessage *request)
                                       m_dwUserId, &rcc);
    if (result != NULL)
    {
+      debugPrintf(6, _T("querySummaryTable: %d rows in resulting table"), result->getNumRows());
       msg.SetVariable(VID_RCC, RCC_SUCCESS);
       result->fillMessage(msg, 0, -1);
       delete result;
@@ -12720,7 +12856,7 @@ void ClientSession::getSubnetAddressMap(CSCPMessage *request)
 			if (map != NULL)
 			{
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            msg.SetVariableToInt32Array(VID_ADDRESS_MAP, (UINT32)length, map);
+            msg.setFieldInt32Array(VID_ADDRESS_MAP, (UINT32)length, map);
             free(map);
 			}
 			else

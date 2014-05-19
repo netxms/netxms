@@ -103,7 +103,7 @@ BOOL DownloadConfig(TCHAR *pszServer)
          msg.SetVariable(VID_VERSION_RELEASE, (WORD)NETXMS_VERSION_BUILD);
 
          // Send request
-         pRawMsg = msg.CreateMessage();
+         pRawMsg = msg.createMessage();
          nLen = ntohl(pRawMsg->dwSize);
          if (SendEx(hSocket, pRawMsg, nLen, 0, NULL) == nLen)
          {

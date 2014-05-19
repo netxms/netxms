@@ -28,7 +28,6 @@
 #include <geolocation.h>
 #include "nxcore_jobs.h"
 #include "nms_topo.h"
-#include "nxcore_reports.h"
 
 /**
  * Forward declarations of classes
@@ -74,7 +73,6 @@ extern UINT32 g_dwConditionPollingInterval;
 #define BUILTIN_OID_POLICYROOT            5
 #define BUILTIN_OID_NETWORKMAPROOT        6
 #define BUILTIN_OID_DASHBOARDROOT         7
-#define BUILTIN_OID_REPORTROOT            8
 #define BUILTIN_OID_BUSINESSSERVICEROOT   9
 
 /**
@@ -276,7 +274,7 @@ private:
    TCHAR m_title[MAX_DB_STRING];
    UINT32 m_flags;
    ObjectArray<SummaryTableColumn> *m_columns;
-   NXSL_Program *m_filter;
+   NXSL_VM *m_filter;
 
    SummaryTable(DB_RESULT hResult);
 
@@ -519,7 +517,7 @@ protected:
    BOOL m_bDCIListModified;
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 	TCHAR *m_applyFilterSource;
-	NXSL_Program *m_applyFilter;
+	NXSL_VM *m_applyFilter;
 	RWLOCK m_dciAccessLock;
 
    virtual void prepareForDeletion();
@@ -603,6 +601,7 @@ protected:
 	UINT32 m_portNumber;				// Vendor/device specific port number
 	UINT32 m_peerNodeId;				// ID of peer node object, or 0 if unknown
 	UINT32 m_peerInterfaceId;		// ID of peer interface object, or 0 if unknown
+   int m_peerDiscoveryProtocol;  // Protocol used to discover peer node
 	WORD m_adminState;				// interface administrative state
 	WORD m_operState;					// interface operational state
 	WORD m_dot1xPaeAuthState;		// 802.1x port auth state
@@ -641,6 +640,7 @@ public:
 	UINT32 getPortNumber() { return m_portNumber; }
 	UINT32 getPeerNodeId() { return m_peerNodeId; }
 	UINT32 getPeerInterfaceId() { return m_peerInterfaceId; }
+   int getPeerDiscoveryProtocol() { return m_peerDiscoveryProtocol; }
 	UINT32 getFlags() { return m_flags; }
 	int getAdminState() { return (int)m_adminState; }
 	int getOperState() { return (int)m_operState; }
@@ -669,9 +669,9 @@ public:
    void setPortNumber(UINT32 port) { m_portNumber = port; Modify(); }
 	void setPhysicalPortFlag(bool isPhysical) { if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; Modify(); }
 	void setManualCreationFlag(bool isManual) { if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; Modify(); }
-	void setPeer(Node *node, Interface *iface);
-   void clearPeer() { m_peerNodeId = 0; m_peerInterfaceId = 0; Modify(); }
-   void setDescription(const TCHAR *descr) { nx_strncpy(m_description, descr, MAX_DB_STRING); Modify(); }
+	void setPeer(Node *node, Interface *iface, int protocol);
+   void clearPeer() { m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; Modify(); }
+   void setDescription(const TCHAR *descr) { LockData(); nx_strncpy(m_description, descr, MAX_DB_STRING); Modify(); UnlockData(); }
 
 	void updateZoneId();
 
@@ -751,9 +751,10 @@ public:
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   BOOL IsLocalAddr(UINT32 dwIpAddr);
-   BOOL IsRemoteAddr(UINT32 dwIpAddr);
-   UINT32 GetPeerGatewayAddr();
+   BOOL isLocalAddr(UINT32 dwIpAddr);
+   BOOL isRemoteAddr(UINT32 dwIpAddr);
+   UINT32 getPeerGatewayId() { return m_dwPeerGateway; }
+   UINT32 getPeerGatewayAddr();
 };
 
 /**
@@ -784,7 +785,7 @@ public:
    void updateDciCache();
    void cleanDCIData();
    void queueItemsForPolling(Queue *pPollerQueue);
-	void processNewDCValue(DCObject *dco, time_t currTime, void *value);
+	bool processNewDCValue(DCObject *dco, time_t currTime, void *value);
 
 	bool applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList);
@@ -843,6 +844,8 @@ protected:
 	TCHAR *m_model;
 	TCHAR *m_serialNumber;
 	ObjectArray<RadioInterfaceInfo> *m_radioInterfaces;
+   AccessPointState m_state;
+   AccessPointState m_prevState;
 
 public:
    AccessPoint();
@@ -858,13 +861,21 @@ public:
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
+   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller);
+
 	BYTE *getMacAddr() { return m_macAddr; }
 	bool isMyRadio(int rfIndex);
+	bool isMyRadio(const BYTE *macAddr);
 	void getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize);
+   AccessPointState getState() { return m_state; }
+   Node *getParentNode();
+
+   void setIpAddr(UINT32 ipAddr) { LockData(); m_dwIpAddr = ipAddr; Modify(); UnlockData(); }
 
 	void attachToNode(UINT32 nodeId);
 	void updateRadioInterfaces(ObjectArray<RadioInterfaceInfo> *ri);
 	void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
+   void updateState(AccessPointState state);
 };
 
 /**
@@ -951,7 +962,7 @@ protected:
 	TCHAR *m_lldpNodeId;			// lldpLocChassisId combined with lldpLocChassisIdSubtype, or NULL for non-LLDP nodes
 	ObjectArray<LLDP_LOCAL_PORT_INFO> *m_lldpLocalPortInfo;
 	NetworkDeviceDriver *m_driver;
-	void *m_driverData;
+	DriverData *m_driverData;
    ObjectArray<AgentParameterDefinition> *m_paramList; // List of supported parameters
    ObjectArray<AgentTableDefinition> *m_tableList; // List of supported tables
    time_t m_lastDiscoveryPoll;
@@ -963,6 +974,7 @@ protected:
    time_t m_failTimeAgent;
 	time_t m_downSince;
    time_t m_bootTime;
+   time_t m_agentUpTime;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_hSmclpAccessMutex;
@@ -1014,7 +1026,6 @@ protected:
    UINT32 getInterfaceCount(Interface **ppInterface);
 
    void checkInterfaceNames(InterfaceList *pIfList);
-	void checkSubnetBinding(InterfaceList *pIfList);
    Subnet *createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask);
 	void checkAgentPolicyBinding(AgentConnection *conn);
 	void updatePrimaryIpAddr();
@@ -1034,7 +1045,7 @@ protected:
 	void updateContainerMembership();
 	BOOL updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask);
 
-	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedSubnet, bool includeEndNodes);
+	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
 
 	virtual bool isDataCollectionDisabled();
 
@@ -1052,13 +1063,15 @@ public:
    virtual bool deleteFromDB(DB_HANDLE hdb);
    virtual BOOL CreateFromDB(UINT32 dwId);
 
-	TCHAR *expandText(const TCHAR *pszTemplate);
+	TCHAR *expandText(const TCHAR *textTemplate);
 
 	Cluster *getMyCluster();
 
+   UINT32 getZoneId() { return m_zoneId; }
    UINT32 getFlags() { return m_dwFlags; }
    UINT32 getRuntimeFlags() { return m_dwDynamicFlags; }
-   UINT32 getZoneId() { return m_zoneId; }
+   void setFlag(UINT32 flag) { LockData(); m_dwFlags |= flag; Modify(); UnlockData(); }
+   void clearFlag(UINT32 flag) { LockData(); m_dwFlags &= ~flag; Modify(); UnlockData(); }
    void setLocalMgmtFlag() { m_dwFlags |= NF_IS_LOCAL_MGMT; }
    void clearLocalMgmtFlag() { m_dwFlags &= ~NF_IS_LOCAL_MGMT; }
 
@@ -1079,6 +1092,7 @@ public:
 	const TCHAR *getSysDescription() { return CHECK_NULL_EX(m_sysDescription); }
    time_t getBootTime() { return m_bootTime; }
 	const TCHAR *getLLDPNodeId() { return m_lldpNodeId; }
+   const BYTE *getBridgeId() { return m_baseBridgeAddress; }
 	const TCHAR *getDriverName() { return (m_driver != NULL) ? m_driver->getName() : _T("GENERIC"); }
 	WORD getAgentPort() { return m_wAgentPort; }
 	WORD getAuthMethod() { return m_wAuthMethod; }
@@ -1108,6 +1122,10 @@ public:
 	Interface *findInterfaceByIP(UINT32 ipAddr);
 	Interface *findInterfaceBySlotAndPort(UINT32 slot, UINT32 port);
 	Interface *findBridgePort(UINT32 bridgePortNumber);
+   AccessPoint *findAccessPointByMAC(const BYTE *macAddr);
+   AccessPoint *findAccessPointByBSSID(const BYTE *bssid);
+   AccessPoint *findAccessPointByRadioId(int rfIndex);
+   ObjectArray<WirelessStationInfo> *getWirelessStations();
 	BOOL isMyIP(UINT32 dwIpAddr);
    void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 dwIndex, int *adminState, int *operState);
    void getInterfaceStatusFromAgent(UINT32 dwIndex, int *adminState, int *operState);
@@ -1115,10 +1133,10 @@ public:
    ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }
 	LinkLayerNeighbors *getLinkLayerNeighbors();
 	VlanList *getVlans();
-   BOOL getNextHop(UINT32 dwSrcAddr, UINT32 dwDestAddr, UINT32 *pdwNextHop,
-                   UINT32 *pdwIfIndex, BOOL *pbIsVPN);
+   bool getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *ifIndex, bool *isVpn, TCHAR *name);
+   bool getOutwardInterface(UINT32 destAddr, UINT32 *srcAddr, UINT32 *srcIfIndex);
 	ComponentTree *getComponents();
-	bool ifDescrFromLldpLocalId(BYTE *id, size_t idLen, TCHAR *ifName);
+   bool getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
 
 	void setRecheckCapsFlag() { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
    void setDiscoveryPollTimeStamp();
@@ -1128,11 +1146,14 @@ public:
 	void resolveVlanPorts(VlanList *vlanList);
 	void updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId);
    void updateRoutingTable();
+	void checkSubnetBinding(InterfaceList *pIfList);
+
    bool isReadyForStatusPoll();
    bool isReadyForConfigurationPoll();
    bool isReadyForDiscoveryPoll();
    bool isReadyForRoutePoll();
    bool isReadyForTopologyPoll();
+
    void lockForStatusPoll();
    void lockForConfigurationPoll();
    void lockForDiscoveryPoll();
@@ -1196,7 +1217,7 @@ public:
 	nxmap_ObjList *getL2Topology();
 	nxmap_ObjList *buildL2Topology(UINT32 *pdwStatus, int radius, bool includeEndNodes);
 	ForwardingDatabase *getSwitchForwardingDatabase();
-	Interface *findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, bool *exactMatch);
+	NetObj *findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *type);
 	void addHostConnections(LinkLayerNeighbors *nbs);
 	void addExistingConnections(LinkLayerNeighbors *nbs);
 
@@ -1205,8 +1226,8 @@ public:
 	ServerJobQueue *getJobQueue() { return m_jobQueue; }
 	int getJobCount(const TCHAR *type = NULL) { return m_jobQueue->getJobCount(type); }
 
-	void *getDriverData() { return m_driverData; }
-	void setDriverData(void *data) { m_driverData = data; }
+	DriverData *getDriverData() { return m_driverData; }
+	void setDriverData(DriverData *data) { m_driverData = data; }
 };
 
 /**
@@ -1330,7 +1351,7 @@ inline void Node::lockForRoutePoll()
  */
 class NXCORE_EXPORTABLE Subnet : public NetObj
 {
-	friend void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedSubnet, bool includeEndNodes);
+	friend void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedSubnet, bool vpnLink, bool includeEndNodes);
 
 protected:
    UINT32 m_dwIpNetMask;
@@ -1423,7 +1444,7 @@ private:
 protected:
 	UINT32 m_flags;
    UINT32 m_dwCategory;
-	NXSL_Program *m_bindFilter;
+	NXSL_VM *m_bindFilter;
 	TCHAR *m_bindFilterSource;
 
 public:
@@ -1576,7 +1597,7 @@ protected:
    UINT32 m_dciCount;
    INPUT_DCI *m_dciList;
    TCHAR *m_scriptSource;
-   NXSL_Program *m_script;
+   NXSL_VM *m_script;
    UINT32 m_activationEventCode;
    UINT32 m_deactivationEventCode;
    UINT32 m_sourceObject;
@@ -1754,7 +1775,7 @@ protected:
 	ObjectArray<NetworkMapElement> *m_elements;
 	ObjectArray<NetworkMapLink> *m_links;
 	TCHAR *m_filterSource;
-	NXSL_Program *m_filter;
+	NXSL_VM *m_filter;
 
 	void updateObjects(nxmap_ObjList *objects);
 	UINT32 objectIdFromElementId(UINT32 eid);
@@ -1842,63 +1863,6 @@ public:
 };
 
 /**
- * Report root
- */
-class NXCORE_EXPORTABLE ReportRoot : public UniversalRoot
-{
-public:
-   ReportRoot();
-   virtual ~ReportRoot();
-
-   virtual int Type() { return OBJECT_REPORTROOT; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
-};
-
-/**
- * Report group object
- */
-class NXCORE_EXPORTABLE ReportGroup : public Container
-{
-public:
-   ReportGroup() : Container() { }
-   ReportGroup(const TCHAR *pszName) : Container(pszName, 0) { }
-   virtual ~ReportGroup() { }
-
-   virtual int Type() { return OBJECT_REPORTGROUP; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
-
-	virtual bool showThresholdSummary();
-};
-
-/**
- * Report object
- */
-class NXCORE_EXPORTABLE Report : public NetObj
-{
-protected:
-	TCHAR *m_definition;
-
-public:
-   Report();
-   Report(const TCHAR *name);
-   virtual ~Report();
-
-   virtual int Type() { return OBJECT_REPORT; }
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
-
-	virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
-
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-
-	const TCHAR *getDefinition() { return CHECK_NULL_EX(m_definition); }
-
-	UINT32 execute(StringMap *parameters, UINT32 userId);
-};
-
-/**
  * SLM check object
  */
 class NXCORE_EXPORTABLE SlmCheck : public NetObj
@@ -1909,7 +1873,7 @@ protected:
 	Threshold *m_threshold;
 	enum CheckType { check_undefined = 0, check_script = 1, check_threshold = 2 } m_type;
 	TCHAR *m_script;
-	NXSL_Program *m_pCompiledScript;
+	NXSL_VM *m_pCompiledScript;
 	TCHAR m_reason[256];
 	bool m_isTemplate;
 	UINT32 m_templateId;
@@ -1964,21 +1928,21 @@ protected:
 	double m_uptimeDay;
 	double m_uptimeWeek;
 	double m_uptimeMonth;
-	LONG m_downtimeDay;
-	LONG m_downtimeWeek;
-	LONG m_downtimeMonth;
-	LONG m_prevDiffDay;
-	LONG m_prevDiffWeek;
-	LONG m_prevDiffMonth;
+	INT32 m_downtimeDay;
+	INT32 m_downtimeWeek;
+	INT32 m_downtimeMonth;
+	INT32 m_prevDiffDay;
+	INT32 m_prevDiffWeek;
+	INT32 m_prevDiffMonth;
 
-	static LONG logRecordId;
-	static LONG getSecondsInMonth();
-	static LONG getSecondsInPeriod(Period period) { return period == MONTH ? getSecondsInMonth() : (period == WEEK ? (3600 * 24 * 7) : (3600 * 24)); }
-	static LONG getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
+	static INT32 logRecordId;
+	static INT32 getSecondsInMonth();
+	static INT32 getSecondsInPeriod(Period period) { return period == MONTH ? getSecondsInMonth() : (period == WEEK ? (3600 * 24 * 7) : (3600 * 24)); }
+	static INT32 getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
 
 	void initServiceContainer();
 	BOOL addHistoryRecord();
-	double getUptimeFromDBFor(Period period, LONG *downtime);
+	double getUptimeFromDBFor(Period period, INT32 *downtime);
 
 public:
 	ServiceContainer();
@@ -2000,11 +1964,9 @@ public:
 	void updateUptimeStats(time_t currentTime = 0, BOOL updateChilds = FALSE);
 };
 
-
-//
-// Business service root
-//
-
+/**
+ * Business service root
+ */
 class NXCORE_EXPORTABLE BusinessServiceRoot : public ServiceContainer
 {
 public:
@@ -2112,6 +2074,12 @@ void NetObjDelete(NetObj *pObject);
 void UpdateInterfaceIndex(UINT32 dwOldIpAddr, UINT32 dwNewIpAddr, Interface *pObject);
 ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp);
 
+void NXCORE_EXPORTABLE MacDbAddAccessPoint(AccessPoint *ap);
+void NXCORE_EXPORTABLE MacDbAddInterface(Interface *iface);
+void NXCORE_EXPORTABLE MacDbAddObject(const BYTE *macAddr, NetObj *object);
+void NXCORE_EXPORTABLE MacDbRemove(const BYTE *macAddr);
+NetObj NXCORE_EXPORTABLE *MacDbFind(const BYTE *macAddr);
+
 NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass = -1);
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass);
@@ -2119,6 +2087,7 @@ const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName)
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, UINT32 ipAddr);
 Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);
+Node NXCORE_EXPORTABLE *FindNodeByBridgeId(const BYTE *bridgeId);
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId);
 Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, UINT32 ipAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr);
@@ -2127,7 +2096,6 @@ Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, UINT32 ipAddr);
 Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneId, UINT32 dwNodeAddr);
 MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId);
 AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr);
-AccessPoint NXCORE_EXPORTABLE *FindAccessPointByRadioId(int rfIndex);
 UINT32 NXCORE_EXPORTABLE FindLocalMgmtNode();
 CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(UINT32 dwId);
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(UINT32 dwZoneGUID);
@@ -2155,7 +2123,6 @@ extern TemplateRoot NXCORE_EXPORTABLE *g_pTemplateRoot;
 extern PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot;
 extern NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot;
 extern DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot;
-extern ReportRoot NXCORE_EXPORTABLE *g_pReportRoot;
 extern BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot;
 
 extern UINT32 NXCORE_EXPORTABLE g_dwMgmtNode;

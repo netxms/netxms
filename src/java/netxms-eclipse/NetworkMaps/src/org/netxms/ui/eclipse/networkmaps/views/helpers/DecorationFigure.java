@@ -40,7 +40,7 @@ import org.netxms.ui.eclipse.tools.ColorConverter;
 /**
  * Map decoration figure
  */
-public class DecorationFigure extends Figure implements MouseListener, MouseMotionListener
+public class DecorationFigure extends DecorationLayerAbstractFigure
 {
 	private static final int MARGIN_X = 4;
 	private static final int MARGIN_Y = 4;
@@ -54,9 +54,7 @@ public class DecorationFigure extends Figure implements MouseListener, MouseMoti
 	
 	private NetworkMapDecoration decoration;
 	private MapLabelProvider labelProvider;
-	private ExtendedGraphViewer viewer;
 	private Label label;
-	private boolean drag = false;
 	private boolean resize = true;
 	private boolean selected = false;
 	private int lastX;
@@ -68,9 +66,10 @@ public class DecorationFigure extends Figure implements MouseListener, MouseMoti
 	 */
 	public DecorationFigure(NetworkMapDecoration decoration, MapLabelProvider labelProvider, ExtendedGraphViewer viewer)
 	{
+	   super(decoration, viewer);
+	   
 		this.decoration = decoration;
 		this.labelProvider = labelProvider;
-		this.viewer = viewer;
 		
 		if (decoration.getDecorationType() == NetworkMapDecoration.GROUP_BOX)
 		{
@@ -101,8 +100,6 @@ public class DecorationFigure extends Figure implements MouseListener, MouseMoti
 				setSize(decoration.getWidth(), decoration.getHeight());
 			}
 		}
-		
-		addMouseListener(this);
 	}
 	
 	/**
@@ -280,124 +277,6 @@ public class DecorationFigure extends Figure implements MouseListener, MouseMoti
 		catch(IllegalArgumentException e)
 		{			
 		}
-	}
-
-	/**
-	 * Stop dragging
-	 */
-	private void stopDragging()
-	{
-		removeMouseMotionListener(this);
-		drag = false;
-		Point loc = getLocation();
-		decoration.setLocation(loc.x, loc.y);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.draw2d.MouseListener#mousePressed(org.eclipse.draw2d.MouseEvent)
-	 */
-	@Override
-	public void mousePressed(MouseEvent me)
-	{
-		if (!selected)
-		{
-			viewer.setDecorationSelection(decoration, (me.button == 1) && ((me.getState() & SWT.MOD1) != 0));
-			setSelected(true);
-		}
-		if ((me.button == 1) && ((me.getState() & SWT.MOD1) == 0))
-		{
-			addMouseMotionListener(this);
-			drag = true;
-			lastX = me.x;
-			lastY = me.y;
-			me.consume();
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.draw2d.MouseListener#mouseReleased(org.eclipse.draw2d.MouseEvent)
-	 */
-	@Override
-	public void mouseReleased(MouseEvent me)
-	{
-		if ((me.button == 1) && drag)
-			stopDragging();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.draw2d.MouseListener#mouseDoubleClicked(org.eclipse.draw2d.MouseEvent)
-	 */
-	@Override
-	public void mouseDoubleClicked(MouseEvent me)
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.draw2d.MouseMotionListener#mouseDragged(org.eclipse.draw2d.MouseEvent)
-	 */
-	@Override
-	public void mouseDragged(MouseEvent me)
-	{
-		if (drag)
-		{
-			Point p = getLocation();
-			p.performTranslate(me.x - lastX, me.y - lastY);
-			setLocation(p);
-			lastX = me.x;
-			lastY = me.y;
-			me.consume();
-		}
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.draw2d.MouseMotionListener#mouseEntered(org.eclipse.draw2d.MouseEvent)
-	 */
-	@Override
-	public void mouseEntered(MouseEvent me)
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.draw2d.MouseMotionListener#mouseExited(org.eclipse.draw2d.MouseEvent)
-	 */
-	@Override
-	public void mouseExited(MouseEvent me)
-	{
-		if (drag)
-			stopDragging();
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.draw2d.MouseMotionListener#mouseHover(org.eclipse.draw2d.MouseEvent)
-	 */
-	@Override
-	public void mouseHover(MouseEvent me)
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.draw2d.MouseMotionListener#mouseMoved(org.eclipse.draw2d.MouseEvent)
-	 */
-	@Override
-	public void mouseMoved(MouseEvent me)
-	{
-	}
-
-	/**
-	 * @return the selected
-	 */
-	public final boolean isSelected()
-	{
-		return selected;
-	}
-
-	/**
-	 * @param selected the selected to set
-	 */
-	public final void setSelected(boolean selected)
-	{
-		this.selected = selected;
-		repaint();
 	}
 	
 	/**

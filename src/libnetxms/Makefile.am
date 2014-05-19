@@ -3,9 +3,9 @@ SOURCES = agent.cpp array.cpp base64.cpp config.cpp crypto.cpp dirw_unix.c \
 	  icmp.cpp log.cpp main.cpp md5.cpp message.cpp msgwq.cpp net.cpp \
 	  nxcp.cpp parisc_atomic.cpp qsort.c queue.cpp rwlock.cpp scandir.c \
 	  serial.cpp sha1.cpp solaris9_atomic.c string.cpp stringlist.cpp \
-	  strmap.cpp strmapbase.cpp strset.cpp strtoll.c strtoull.c table.cpp \
-	  threads.cpp tools.cpp unicode.cpp uuid.c wcstoll.c wcstoull.c \
-	  xml.cpp wcscasecmp.cpp wcsncasecmp.cpp
+	  strmap.cpp strmapbase.cpp strptime.c strset.cpp strtoll.c \
+	  strtoull.c table.cpp threads.cpp timegm.c tools.cpp unicode.cpp \
+	  uuid.c wcstoll.c wcstoull.c xml.cpp wcscasecmp.cpp wcsncasecmp.cpp
 
 lib_LTLIBRARIES = libnetxms.la
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -191,8 +191,9 @@ public class AccessControl extends PropertyPage
       createAccessCheck(rights, Messages.get().AccessControl_AccessControl, UserAccessRights.OBJECT_ACCESS_CONTROL);
       createAccessCheck(rights, Messages.get().AccessControl_AccessSendEvents, UserAccessRights.OBJECT_ACCESS_SEND_EVENTS);
       createAccessCheck(rights, Messages.get().AccessControl_AccessViewAlarms, UserAccessRights.OBJECT_ACCESS_READ_ALARMS);
-      createAccessCheck(rights, Messages.get().AccessControl_AccessAckAlarms, UserAccessRights.OBJECT_ACCESS_ACK_ALARMS);
+      createAccessCheck(rights, Messages.get().AccessControl_AccessUpdateAlarms, UserAccessRights.OBJECT_ACCESS_UPDATE_ALARMS);
       createAccessCheck(rights, Messages.get().AccessControl_AccessTermAlarms, UserAccessRights.OBJECT_ACCESS_TERM_ALARMS);
+      createAccessCheck(rights, "Create helpdesk tickets", UserAccessRights.OBJECT_ACCESS_CREATE_ISSUE);
       createAccessCheck(rights, Messages.get().AccessControl_AccessPushData, UserAccessRights.OBJECT_ACCESS_PUSH_DATA);
       createAccessCheck(rights, Messages.get().AccessControl_AccessAccessControl, UserAccessRights.OBJECT_ACCESS_ACL);
       

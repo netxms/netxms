@@ -20,13 +20,13 @@ package org.netxms.ui.eclipse.logviewer.views.helpers;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.NXCSession;
+import org.netxms.client.TableRow;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.Log;
@@ -72,11 +72,10 @@ public class LogLabelProvider implements ITableLabelProvider
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
-		final String value = ((List<String>)element).get(columnIndex);
+		final String value = ((TableRow)element).get(columnIndex).getValue();
 		switch(columns[columnIndex].getType())
 		{
 			case LogColumn.LC_SEVERITY:
@@ -129,11 +128,10 @@ public class LogLabelProvider implements ITableLabelProvider
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		final String value = ((List<String>)element).get(columnIndex);
+		final String value = ((TableRow)element).get(columnIndex).getValue();
 		switch(columns[columnIndex].getType())
 		{
 			case LogColumn.LC_TIMESTAMP:

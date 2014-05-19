@@ -1,7 +1,7 @@
 [Setup]
 AppName=NetXMS
-AppVerName=NetXMS 1.2.12
-AppVersion=1.2.12
+AppVerName=NetXMS 1.2.14
+AppVersion=1.2.14
 AppPublisher=Raden Solutions
 AppPublisherURL=http://www.radensolutions.com
 AppSupportURL=http://www.netxms.org
@@ -13,4 +13,4 @@ LicenseFile=..\..\..\GPL.txt
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
-
+CloseApplications=no

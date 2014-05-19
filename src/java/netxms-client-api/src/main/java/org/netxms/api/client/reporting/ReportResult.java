@@ -1,20 +1,41 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2014 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.api.client.reporting;
 
 import java.util.Date;
 import java.util.UUID;
 import org.netxms.base.NXCPMessage;
 
+/**
+ * Report execution result
+ */
 public class ReportResult
 {
 	private Date executionTime;
 	private UUID jobId;
-	private String userName;
+	private int userId;
 
-	public ReportResult(Date executionTime, UUID reportId, String userName)
+	public ReportResult(Date executionTime, UUID reportId, int userId)
 	{
 		this.executionTime = executionTime;
 		this.jobId = reportId;
-		this.userName = userName;
+		this.userId = userId;
 	}
 
 	public Date getExecutionTime()
@@ -37,20 +58,20 @@ public class ReportResult
 		this.jobId = reportId;
 	}
 
-	public String getUserName()
+	public int getUserId()
 	{
-		return userName;
+		return userId;
 	}
 
-	public void setUserName(String userName)
+	public void setUserId(int userId)
 	{
-		this.userName = userName;
+		this.userId = userId;
 	}
 
 	@Override
 	public String toString()
 	{
-		return "ReportResult [executionTime=" + executionTime + ", jobId=" + jobId + ", userName=" + userName + "]";
+		return "ReportResult [executionTime=" + executionTime + ", jobId=" + jobId + ", userId=" + userId + "]";
 	}
 
 	public static ReportResult createFromMessage(NXCPMessage response, long base)
@@ -58,7 +79,7 @@ public class ReportResult
 		long id = base;
 		final UUID reportId = response.getVariableAsUUID(id++);
 		final Date date = response.getVariableAsDate(id++);
-		final String userName = response.getVariableAsString(id++);
-		return new ReportResult(date, reportId, userName);
+		final int userId = response.getVariableAsInteger(id++);
+		return new ReportResult(date, reportId, userId);
 	}
 }

@@ -140,7 +140,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetServerStats(NXC_SESSION hSession, NXC_SERVER_STA
       if (dwRetCode == RCC_SUCCESS)
       {
          pStats->dwNumAlarms = pResponse->GetVariableLong(VID_NUM_ALARMS);
-         pResponse->GetVariableInt32Array(VID_ALARMS_BY_SEVERITY, 5, pStats->dwAlarmsBySeverity);
+         pResponse->getFieldAsInt32Array(VID_ALARMS_BY_SEVERITY, 5, pStats->dwAlarmsBySeverity);
          pStats->dwNumClientSessions = pResponse->GetVariableLong(VID_NUM_SESSIONS);
          pStats->dwNumDCI = pResponse->GetVariableLong(VID_NUM_ITEMS);
          pStats->dwNumNodes = pResponse->GetVariableLong(VID_NUM_NODES);

@@ -261,7 +261,7 @@ void Subnet::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32
 	for(int j = 0; j < nodes.size(); j++)
 	{
 		Node *n = nodes.get(j);
-		n->buildIPTopologyInternal(topology, nDepth - 1, m_dwId, includeEndNodes);
+		n->buildIPTopologyInternal(topology, nDepth - 1, m_dwId, false, includeEndNodes);
 		n->decRefCount();
 	}
 }

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Server Library
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
@@ -132,7 +132,7 @@
 #define AF_WRITE_FULL_DUMP                     0x00080000
 #define AF_RESOLVE_NODE_NAMES                  0x00100000
 #define AF_CATCH_EXCEPTIONS                    0x00200000
-#define AF_INTERNAL_CA                         0x00400000
+#define AF_HELPDESK_LINK_ACTIVE                0x00400000
 #define AF_DB_CONNECTION_POOL_READY            0x00800000
 #define AF_DB_LOCKED                           0x01000000
 #define AF_ENABLE_MULTIPLE_DB_CONN             0x02000000
@@ -448,6 +448,7 @@ private:
 	void (*m_downloadProgressCallback)(size_t, void *);
 	void *m_downloadProgressCallbackArg;
 	bool m_deleteFileOnDownloadFailure;
+	void (*m_sendToClientMessageCallback)(CSCP_MESSAGE*, void *);
 	bool m_fileUploadInProgress;
 
    void receiverThread();
@@ -462,7 +463,7 @@ protected:
    UINT32 authenticate(BOOL bProxyData);
    UINT32 setupProxyConnection();
    UINT32 getIpAddr() { return ntohl(m_dwAddr); }
-	UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void *cbArg);
+	UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(CSCP_MESSAGE*, void *), void *cbArg);
 
    virtual void printMsg(const TCHAR *format, ...);
    virtual void onTrap(CSCPMessage *pMsg);
@@ -496,7 +497,7 @@ public:
    UINT32 execAction(const TCHAR *pszAction, int argc, TCHAR **argv);
    UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL);
    UINT32 startUpgrade(const TCHAR *pszPkgName);
-   UINT32 checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType, WORD wPort = 0, 
+   UINT32 checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType, WORD wPort = 0,
                              WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL);
    UINT32 getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);
    UINT32 getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize);
@@ -506,8 +507,8 @@ public:
 	UINT32 uninstallPolicy(uuid_t guid);
 
 	UINT32 generateRequestId() { return m_dwRequestId++; }
-	CSCPMessage *customRequest(CSCPMessage *pRequest, const TCHAR *recvFile = NULL, bool appendFile = false,
-	                           void (*downloadProgressCallback)(size_t, void *) = NULL, void *cbArg = NULL);
+	CSCPMessage *customRequest(CSCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false, void (*downloadProgressCallback)(size_t, void *) = NULL,
+	                           void (*fileResendCallback)(CSCP_MESSAGE*, void *) = NULL, void *cbArg = NULL);
 
    UINT32 getNumDataLines() { return m_dwNumDataLines; }
    const TCHAR *getDataLine(UINT32 dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }
@@ -522,7 +523,7 @@ public:
                  int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
    void setPort(WORD wPort) { m_wPort = wPort; }
    void setAuthData(int method, const TCHAR *secret);
-	void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
+   void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
 };
 
 /**
@@ -580,11 +581,12 @@ protected:
    UINT32 setupEncryption(RSA *pServerKey);
 	UINT32 connectToService(UINT32 service);
 
-   void Lock() { MutexLock(m_mutexDataLock); }
-   void Unlock() { MutexUnlock(m_mutexDataLock); }
+   void lock() { MutexLock(m_mutexDataLock); }
+   void unlock() { MutexUnlock(m_mutexDataLock); }
 
-   virtual void PrintMsg(const TCHAR *format, ...);
+   virtual void printMessage(const TCHAR *format, ...);
    virtual void onBinaryMessage(CSCP_MESSAGE *rawMsg);
+   virtual bool onMessage(CSCPMessage *msg);
 
 public:
    ISC();
@@ -632,9 +634,12 @@ void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
 const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code);
 
 UINT32 LIBNXSRV_EXPORTABLE SnmpNewRequestId();
-UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
-                                  const TCHAR *szOidStr, const UINT32 *oidBinary, UINT32 dwOidLen, void *pValue,
-                                  UINT32 dwBufferSize, UINT32 dwFlags);
+UINT32 LIBNXSRV_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,
+                                  const TCHAR *szOidStr, const UINT32 *oidBinary, size_t oidLen, void *pValue,
+                                  size_t bufferSize, UINT32 dwFlags);
+UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
+                                     const TCHAR *szOidStr, const UINT32 *oidBinary, size_t oidLen, void *pValue,
+                                     size_t bufferSize, UINT32 dwFlags, UINT32 *dataLen);
 UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
 						                 UINT32 (* pHandler)(UINT32, SNMP_Variable *, SNMP_Transport *, void *),
                                    void *pUserArg, BOOL bVerbose);

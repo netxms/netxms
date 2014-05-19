@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -246,14 +246,14 @@ DCTableConditionGroup::DCTableConditionGroup(ConfigEntry *e)
 	ConfigEntry *root = e->findEntry(_T("conditions"));
 	if (root != NULL)
 	{
-		ConfigEntryList *conditions = root->getSubEntries(_T("condition#*"));
-      m_conditions = new ObjectArray<DCTableCondition>(conditions->getSize(), 4, true);
-		for(int i = 0; i < conditions->getSize(); i++)
+		ObjectArray<ConfigEntry> *conditions = root->getSubEntries(_T("condition#*"));
+      m_conditions = new ObjectArray<DCTableCondition>(conditions->size(), 4, true);
+		for(int i = 0; i < conditions->size(); i++)
 		{
-         ConfigEntry *c = conditions->getEntry(i);
+         ConfigEntry *c = conditions->get(i);
          const TCHAR *column = c->getSubEntryValue(_T("column"), 0, _T(""));
          const TCHAR *value = c->getSubEntryValue(_T("value"), 0, _T(""));
-         int op = c->getSubEntryValueInt(_T("operation"));
+         int op = c->getSubEntryValueAsInt(_T("operation"));
 			m_conditions->add(new DCTableCondition(column, op, value));
 		}
 		delete conditions;
@@ -370,11 +370,11 @@ DCTableThreshold::DCTableThreshold(ConfigEntry *e)
 	ConfigEntry *groupsRoot = e->findEntry(_T("groups"));
 	if (groupsRoot != NULL)
 	{
-		ConfigEntryList *groups = groupsRoot->getSubEntries(_T("group#*"));
-      m_groups = new ObjectArray<DCTableConditionGroup>(groups->getSize(), 4, true);
-		for(int i = 0; i < groups->getSize(); i++)
+		ObjectArray<ConfigEntry> *groups = groupsRoot->getSubEntries(_T("group#*"));
+      m_groups = new ObjectArray<DCTableConditionGroup>(groups->size(), 4, true);
+		for(int i = 0; i < groups->size(); i++)
 		{
-			m_groups->add(new DCTableConditionGroup(groups->getEntry(i)));
+			m_groups->add(new DCTableConditionGroup(groups->get(i)));
 		}
 		delete groups;
 	}

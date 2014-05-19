@@ -499,11 +499,16 @@ public class SummaryTableColumns extends PropertyPage
 		dialog.setEnableEmptySelection(false);
 		if (dialog.open() == Dialog.OK)
 		{
-			final DciValue selection = dialog.getSelection();
-			DciSummaryTableColumn column = new DciSummaryTableColumn(selection.getDescription(), selection.getName(), 0);
-			columns.add(column);
-			viewer.setInput(columns.toArray());
-			viewer.setSelection(new StructuredSelection(column));
+			final List<DciValue> selection = dialog.getSelection();
+			List<DciSummaryTableColumn> select = new ArrayList<DciSummaryTableColumn>();
+			for (DciValue item : selection)
+			{
+   			DciSummaryTableColumn column = new DciSummaryTableColumn(item.getDescription(), item.getName(), 0);
+   			select.add(column);
+   			columns.add(column);
+			}
+         viewer.setInput(columns.toArray());
+         viewer.setSelection(new StructuredSelection(select));
 		}
 	}
 }

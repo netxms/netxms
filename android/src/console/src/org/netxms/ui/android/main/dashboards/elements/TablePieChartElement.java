@@ -122,14 +122,14 @@ public class TablePieChartElement extends AbstractDashboardElement
 					
 					for(int i = 0; i < data.getRowCount(); i++)
 					{
-						String instance = data.getCell(i, icIndex);
+						String instance = data.getCell(i, icIndex).getValue();
 						if (instance == null)
 							continue;
 
 						double value;
 						try
 						{
-							value = Double.parseDouble(data.getCell(i, dcIndex));
+							value = Double.parseDouble(data.getCell(i, dcIndex).getValue());
 						}
 						catch(NumberFormatException e)
 						{

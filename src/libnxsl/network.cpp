@@ -59,7 +59,6 @@ NXSL_ConnectorClass::~NXSL_ConnectorClass()
  */
 void NXSL_ConnectorClass::onObjectDelete(NXSL_Object *object)
 {
-   //delete (Table *)object->getData();
 }
 
 /**
@@ -79,7 +78,7 @@ static NXSL_ConnectorClass m_nxslConnectorClass;
 /**
  * Create TCP Connector
  */
-int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	*ppResult = new NXSL_Value(new NXSL_Object(&m_nxslConnectorClass, NULL));
    return 0;
@@ -88,7 +87,7 @@ int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Prog
 /**
  * Create UDP Connector
  */
-int F_udpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+int F_udpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	*ppResult = new NXSL_Value(new NXSL_Object(&m_nxslConnectorClass, NULL));
    return 0;

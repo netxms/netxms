@@ -22,12 +22,10 @@
 
 #include "winperf.h"
 
-
-//
-// Constants
-//
-
-#define MAX_CPU_COUNT                  64
+/**
+ * Constants
+ */
+#define MAX_CPU_COUNT                  256
 
 #define WPF_ENABLE_DEFAULT_COUNTERS    0x0001
 
@@ -61,22 +59,14 @@ static struct
    int iDCIDataType;
 } m_counterList[] =
 {
-   { _T("System.CPU.LoadAvg"), _T("\\System\\Processor Queue Length"), 0,
-     60, COUNTER_TYPE_FLOAT, _T("Average CPU load for last minute"), DCI_DT_FLOAT },
-   { _T("System.CPU.LoadAvg5"), _T("\\System\\Processor Queue Length"), 0,
-     300, COUNTER_TYPE_FLOAT, _T("Average CPU load for last 5 minutes"), DCI_DT_FLOAT },
-   { _T("System.CPU.LoadAvg15"), _T("\\System\\Processor Queue Length"), 0,
-     900, COUNTER_TYPE_FLOAT, _T("Average CPU load for last 15 minutes"), DCI_DT_FLOAT },
-   { _T("System.CPU.Usage"), _T("\\Processor(_Total)\\% Processor Time"), 0,
-     60, COUNTER_TYPE_INT32, _T("Average CPU utilization for last minute"), DCI_DT_INT },
-   { _T("System.CPU.Usage5"), _T("\\Processor(_Total)\\% Processor Time"), 0,
-     300, COUNTER_TYPE_INT32, _T("Average CPU utilization for last 5 minutes"), DCI_DT_INT },
-   { _T("System.CPU.Usage15"), _T("\\Processor(_Total)\\% Processor Time"), 0,
-     900, COUNTER_TYPE_INT32, _T("Average CPU utilization for last 15 minutes"), DCI_DT_INT },
-   { _T("System.IO.DiskQueue"), _T("\\PhysicalDisk(_Total)\\Avg. Disk Queue Length"), 0,
-     60, COUNTER_TYPE_FLOAT, _T("Average disk queue length for last minute"), DCI_DT_FLOAT },
-   { _T("System.IO.DiskTime"), _T("\\PhysicalDisk(_Total)\\% Disk Time"), 0,
-     60, COUNTER_TYPE_FLOAT, _T("Average disk busy time for last minute"), DCI_DT_FLOAT },
+   { _T("System.CPU.LoadAvg"), _T("\\System\\Processor Queue Length"), 0, 60, COUNTER_TYPE_FLOAT, _T("Average CPU load for last minute"), DCI_DT_FLOAT },
+   { _T("System.CPU.LoadAvg5"), _T("\\System\\Processor Queue Length"), 0, 300, COUNTER_TYPE_FLOAT, _T("Average CPU load for last 5 minutes"), DCI_DT_FLOAT },
+   { _T("System.CPU.LoadAvg15"), _T("\\System\\Processor Queue Length"), 0, 900, COUNTER_TYPE_FLOAT, _T("Average CPU load for last 15 minutes"), DCI_DT_FLOAT },
+   { _T("System.CPU.Usage"), _T("\\Processor(_Total)\\% Processor Time"), 0, 60, COUNTER_TYPE_INT32, DCIDESC_SYSTEM_CPU_USAGE, DCI_DT_INT },
+   { _T("System.CPU.Usage5"), _T("\\Processor(_Total)\\% Processor Time"), 0, 300, COUNTER_TYPE_INT32, DCIDESC_SYSTEM_CPU_USAGE5, DCI_DT_INT },
+   { _T("System.CPU.Usage15"), _T("\\Processor(_Total)\\% Processor Time"), 0, 900, COUNTER_TYPE_INT32, DCIDESC_SYSTEM_CPU_USAGE15, DCI_DT_INT },
+   { _T("System.IO.DiskQueue"), _T("\\PhysicalDisk(_Total)\\Avg. Disk Queue Length"), 0, 60, COUNTER_TYPE_FLOAT, DCIDESC_SYSTEM_IO_DISKQUEUE, DCI_DT_FLOAT },
+   { _T("System.IO.DiskTime"), _T("\\PhysicalDisk(_Total)\\% Disk Time"), 0, 60, COUNTER_TYPE_FLOAT, _T("Average disk busy time for last minute"), DCI_DT_FLOAT },
    { NULL, NULL, 0, 0, 0, NULL, 0 }
 };
 
@@ -378,6 +368,27 @@ static LONG H_CounterAlias(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVal
 }
 
 /**
+ * Handler for System.Memory.Physical.FreePerc parameter
+ */
+static LONG H_FreeMemoryPct(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+{
+   TCHAR buffer[MAX_RESULT_LENGTH];
+   LONG rc = H_PdhCounterValue(NULL, pArg, buffer);
+   if (rc != SYSINFO_RC_SUCCESS)
+      return rc;
+
+   UINT64 free = _tcstoull(buffer, NULL, 10);
+
+   MEMORYSTATUSEX mse;
+   mse.dwLength = sizeof(MEMORYSTATUSEX);
+   if (!GlobalMemoryStatusEx(&mse))
+      return SYSINFO_RC_ERROR;
+
+   ret_int(pValue, (int)(free * 100 / mse.ullTotalPhys));
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Initialize subagent
  */
 static BOOL SubAgentInit(Config *config)
@@ -399,7 +410,7 @@ static void SubAgentShutdown()
 }
 
 /**
- * Subagent information
+ * Supported parameters
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
@@ -412,21 +423,28 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.Uptime"), H_CounterAlias, _T("\\System\\System Up Time"), DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME },
    { _T("WinPerf.Features"), H_WinPerfFeatures, NULL, DCI_DT_UINT, _T("Features supported by this WinPerf version") },
 };
-static NETXMS_SUBAGENT_LIST m_enums[] =
+
+/**
+ * Supported lists
+ */
+static NETXMS_SUBAGENT_LIST m_lists[] =
 {
    { _T("PDH.ObjectCounters(*)"), H_PdhObjectItems, _T("C") },
    { _T("PDH.ObjectInstances(*)"), H_PdhObjectItems, _T("I") },
    { _T("PDH.Objects"), H_PdhObjects, NULL }
 };
 
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("WinPerf"), NETXMS_VERSION_STRING,
    SubAgentInit, SubAgentShutdown, NULL,      // handlers
    0, NULL,             // parameters
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
-	m_enums,
+	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+	m_lists,
 	0, NULL,	// tables
    0, NULL,	// actions
 	0, NULL	// push parameters
@@ -435,8 +453,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 /**
  * Add new parameter to list
  */
-BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *),
-                  TCHAR *pArg, int iDataType, TCHAR *pszDescription)
+BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *), TCHAR *pArg, int iDataType, TCHAR *pszDescription)
 {
    DWORD i;
 
@@ -546,6 +563,24 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
 				m_info.parameters[i].arg = newName;
 		}
 	}
+
+   // Add System.Memory.Free* handlers if "\Memory\Free & Zero Page List Bytes" counter is available
+   const TCHAR *counter = _T("\\Memory\\Free & Zero Page List Bytes");
+	CheckCounter(counter, &newName);
+   if (newName != NULL)
+      counter = newName;
+   TCHAR value[MAX_RESULT_LENGTH];
+   if (H_PdhCounterValue(NULL, counter, value) == SYSINFO_RC_SUCCESS)
+   {
+      AgentWriteDebugLog(4, _T("WinPerf: \"\\Memory\\Free & Zero Page List Bytes\" is supported"));
+      AddParameter(_T("System.Memory.Physical.Free"), H_CounterAlias, (TCHAR *)counter, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE);
+      AddParameter(_T("System.Memory.Physical.FreePerc"), H_FreeMemoryPct, (TCHAR *)counter, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT);
+   }
+   else
+   {
+      AgentWriteDebugLog(4, _T("WinPerf: \"\\Memory\\Free & Zero Page List Bytes\" is not supported"));
+      safe_free(newName);
+   }
 
    // Load configuration
 	bool success = config->parseTemplate(_T("WinPerf"), m_cfgTemplate);

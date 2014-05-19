@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -23,47 +23,6 @@
 #include "dbquery.h"
 
 /**
- * Query definition
- */
-class Query
-{
-private:
-   MUTEX m_mutex;
-   THREAD m_pollingThread;
-   TCHAR *m_name;
-   TCHAR *m_dbid;
-   TCHAR *m_query;
-   int m_interval;
-   time_t m_lastPoll;
-   int m_status;
-   TCHAR m_statusText[MAX_RESULT_LENGTH];
-   DB_RESULT m_result;
-
-   Query();
-
-   void setError(const TCHAR *msg);
-
-public:
-   static Query *createFromConfig(const TCHAR *src);
-
-   ~Query();
-
-   void lock() { MutexLock(m_mutex); }
-   void unlock() { MutexUnlock(m_mutex); }
-
-   time_t getNextPoll() { return m_lastPoll + m_interval; }
-   void poll();
-   void joinPollingThread() { ThreadJoin(m_pollingThread); }
-
-   LONG getResult(TCHAR *buffer);
-   LONG fillResultTable(Table *table);
-
-   const TCHAR *getName() { return m_name; }
-   int getStatus() { return m_status; }
-   const TCHAR *getStatusText() { return m_statusText; }
-};
-
-/**
  * Query object constructor
  */
 Query::Query()
@@ -77,6 +36,8 @@ Query::Query()
    m_result = NULL;
    m_pollingThread = INVALID_THREAD_HANDLE;
    m_mutex = MutexCreate();
+   m_pollRequired = false;
+   m_description = _tcsdup(_T(""));
 }
 
 /**
@@ -87,6 +48,7 @@ Query::~Query()
    safe_free(m_name);
    safe_free(m_dbid);
    safe_free(m_query);
+   safe_free(m_description);
    if (m_result != NULL)
       DBFreeResult(m_result);
    MutexDestroy(m_mutex);
@@ -207,11 +169,60 @@ Query *Query::createFromConfig(const TCHAR *src)
 
    // Rest is SQL query
    query->m_query = _tcsdup(curr);
-   free(config);
+   safe_free(config);
+   query->m_pollRequired = true;
    return query;
 
 fail:
-   free(config);
+   safe_free(config);
+   delete query;
+   return NULL;
+}
+
+/**
+ * Create new query object from config
+ * Created query is marked as not polled
+ * Format is following:
+ *    name:dbid:description:query
+ */
+Query *Query::createConfigurableFromConfig(const TCHAR *src)
+{
+   TCHAR *config = _tcsdup(src);
+   TCHAR *curr = config;
+   Query *query = new Query;
+
+   // Name
+   TCHAR *s = _tcschr(config, _T(':'));
+   if (s == NULL)
+      goto fail;
+   *s = 0;
+   query->m_name = _tcsdup(config);
+   curr = s + 1;
+
+   // DB ID
+   s = _tcschr(curr, _T(':'));
+   if (s == NULL)
+      goto fail;
+   *s = 0;
+   query->m_dbid = _tcsdup(curr);
+   curr = s + 1;
+
+   // description
+   s = _tcschr(curr, _T(':'));
+   if (s == NULL)
+      goto fail;
+   *s = 0;
+   query->m_description = _tcsdup(curr);
+   curr = s + 1;
+
+   // Rest is SQL query
+   query->m_query = _tcsdup(curr);
+   safe_free(config);
+   query->m_pollRequired = false;
+   return query;
+
+fail:
+   safe_free(config);
    delete query;
    return NULL;
 }
@@ -224,7 +235,7 @@ static ObjectArray<Query> s_queries;
 /**
  * Acquire query object. Caller must call Query::unlock() to release query object.
  */
-static Query *AcquireQueryObject(const TCHAR *name)
+Query *AcquireQueryObject(const TCHAR *name)
 {
    // It is safe to scan query list without locks because
    // list itself and query names not changing after subagent initialization
@@ -269,7 +280,10 @@ static THREAD_RESULT THREAD_CALL PollingThread(void *arg)
 void StartPollingThreads()
 {
    for(int i = 0; i < s_queries.size(); i++)
-      ThreadCreate(PollingThread, 0, s_queries.get(i));
+   {
+      if(s_queries.get(i)->isPollRequired())
+         ThreadCreate(PollingThread, 0, s_queries.get(i));
+   }
 }
 
 /**
@@ -278,7 +292,12 @@ void StartPollingThreads()
 void StopPollingThreads()
 {
    for(int i = 0; i < s_queries.size(); i++)
-      s_queries.get(i)->joinPollingThread();
+   {
+
+      if(s_queries.get(i)->isPollRequired())
+         s_queries.get(i)->joinPollingThread();
+      delete s_queries.get(i);
+   }
 }
 
 /**
@@ -286,13 +305,32 @@ void StopPollingThreads()
  * Format is following:
  *    name:dbid:interval:query
  */
-bool AddQueryFromConfig(const TCHAR *config)
+bool AddQueryFromConfig(const TCHAR *config, Query **createdQuery)
 {
    Query *query = Query::createFromConfig(config);
    if (query != NULL)
    {
       s_queries.add(query);
+      *createdQuery = query;
       AgentWriteDebugLog(1, _T("DBQuery: query %s added for polling"), query->getName());
+      return true;
+   }
+   return false;
+}
+
+/**
+ * Add configurable query to the list from config
+ * Format is following:
+ *    name:dbid:description:query
+ */
+bool AddConfigurableQueryFromConfig(const TCHAR *config, Query **createdQuery)
+{
+   Query *query = Query::createConfigurableFromConfig(config);
+   if (query != NULL)
+   {
+      s_queries.add(query);
+      *createdQuery = query;
+      AgentWriteDebugLog(1, _T("DBQuery: query %s added to query list"), query->getName());
       return true;
    }
    return false;

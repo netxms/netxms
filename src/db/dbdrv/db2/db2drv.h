@@ -59,10 +59,9 @@
  */
 #undef SQLConnect
 
-//
-// Driver connection handle structure
-//
-
+/**
+ * Driver connection handle structure
+ */
 typedef struct
 {
    MUTEX mutexQuery;
@@ -71,11 +70,9 @@ typedef struct
    SQLHSTMT sqlStatement;
 } DB2DRV_CONN;
 
-
-//
-// Prepared statement structure
-//
-
+/**
+ * Prepared statement structure
+ */
 typedef struct
 {
 	SQLHSTMT handle;

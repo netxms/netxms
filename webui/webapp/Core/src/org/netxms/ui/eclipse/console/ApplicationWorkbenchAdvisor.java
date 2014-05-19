@@ -28,6 +28,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
@@ -35,9 +36,13 @@ import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.eclipse.ui.model.ContributionComparator;
 import org.eclipse.ui.model.IContributionService;
 import org.netxms.api.client.Session;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.api.LoginForm;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
+import org.netxms.ui.eclipse.jobs.LoginJob;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Workbench advisor for NetXMS console application
@@ -70,7 +75,6 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 	public void initialize(IWorkbenchConfigurer configurer)
 	{
 		super.initialize(configurer);
-		BrandingManager.create();
 		configurer.setSaveAndRestore(true);
 	}
 
@@ -116,6 +120,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 		}
 		catch(InvocationTargetException e)
 		{
+		   e.printStackTrace();
 			MessageDialog.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_ConnectionError, e.getCause().getLocalizedMessage());
 		}
 		catch(Exception e)
@@ -190,7 +195,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			Window loginDialog;
 			do
 			{
-				loginDialog = BrandingManager.getInstance().getLoginForm(null, properties);
+				loginDialog = BrandingManager.getInstance().getLoginForm(Display.getCurrent().getActiveShell(), properties);
 				if (loginDialog.open() != Window.OK)
 					continue;
 				password = ((LoginForm)loginDialog).getPassword();
@@ -203,7 +208,30 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 
 		if (success)
 		{
-			final Session session = (Session)RWT.getUISession().getAttribute("netxms.session"); //$NON-NLS-1$
+			final Session session = (Session)RWT.getUISession().getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
+         final Display display = Display.getCurrent();
+         session.addListener(new SessionListener() {
+            @Override
+            public void notificationHandler(final SessionNotification n)
+            {
+               if ((n.getCode() == SessionNotification.CONNECTION_BROKEN) || (n.getCode() == SessionNotification.SERVER_SHUTDOWN))
+               {
+                  display.asyncExec(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        MessageDialog.openError(
+                              PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
+                              Messages.get().ApplicationWorkbenchAdvisor_CommunicationError,
+                              ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? Messages.get().ApplicationWorkbenchAdvisor_ConnectionLostMessage
+                                    : Messages.get().ApplicationWorkbenchAdvisor_ServerShutdownMessage)
+                                    + Messages.get().ApplicationWorkbenchAdvisor_OKToCloseMessage);
+                        PlatformUI.getWorkbench().getActiveWorkbenchWindow().close();
+                     }
+                  });
+               }
+            }
+         });
 			
 			try
 			{
@@ -220,14 +248,13 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 				if (dlg.open() == Window.OK)
 				{
 					final String currentPassword = password;
-					final Display display = Display.getCurrent();
 					IRunnableWithProgress job = new IRunnableWithProgress() {
 						@Override
 						public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException
 						{
 							try
 							{
-								NXCSession session = (NXCSession)RWT.getUISession(display).getAttribute("netxms.session"); //$NON-NLS-1$
+								NXCSession session = (NXCSession)RWT.getUISession(display).getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
 								session.setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
 							}
 							catch(Exception e)

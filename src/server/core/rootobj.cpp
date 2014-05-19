@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -81,30 +81,24 @@ PolicyRoot::PolicyRoot() : UniversalRoot()
 	m_iStatus = STATUS_NORMAL;
 }
 
-
-//
-// Policy root class destructor
-//
-
+/**
+ * Policy root class destructor
+ */
 PolicyRoot::~PolicyRoot()
 {
 }
 
-
-//
-// Redefined status calculation for policy root
-//
-
+/**
+ * Redefined status calculation for policy root
+ */
 void PolicyRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
 
-
-//
-// Network maps root class default constructor
-//
-
+/**
+ * Network maps root class default constructor
+ */
 NetworkMapRoot::NetworkMapRoot() : UniversalRoot()
 {
    m_dwId = BUILTIN_OID_NETWORKMAPROOT;
@@ -112,30 +106,24 @@ NetworkMapRoot::NetworkMapRoot() : UniversalRoot()
 	m_iStatus = STATUS_NORMAL;
 }
 
-
-//
-// Network maps root class destructor
-//
-
+/**
+ * Network maps root class destructor
+ */
 NetworkMapRoot::~NetworkMapRoot()
 {
 }
 
-
-//
-// Redefined status calculation for network maps root
-//
-
+/**
+ * Redefined status calculation for network maps root
+ */
 void NetworkMapRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }
 
-
-//
-// Dashboard tree root class default constructor
-//
-
+/**
+ * Dashboard tree root class default constructor
+ */
 DashboardRoot::DashboardRoot() : UniversalRoot()
 {
    m_dwId = BUILTIN_OID_DASHBOARDROOT;
@@ -143,52 +131,17 @@ DashboardRoot::DashboardRoot() : UniversalRoot()
 	m_iStatus = STATUS_NORMAL;
 }
 
-
-//
-// Dashboard tree root class destructor
-//
-
+/**
+ * Dashboard tree root class destructor
+ */
 DashboardRoot::~DashboardRoot()
 {
 }
 
-
-//
-// Redefined status calculation for dashboard tree root
-//
-
+/**
+ * Redefined status calculation for dashboard tree root
+ */
 void DashboardRoot::calculateCompoundStatus(BOOL bForcedRecalc)
-{
-   m_iStatus = STATUS_NORMAL;
-}
-
-
-//
-// Report tree root class default constructor
-//
-
-ReportRoot::ReportRoot() : UniversalRoot()
-{
-   m_dwId = BUILTIN_OID_REPORTROOT;
-   _tcscpy(m_szName, _T("Reports"));
-	m_iStatus = STATUS_NORMAL;
-}
-
-
-//
-// Report tree root class destructor
-//
-
-ReportRoot::~ReportRoot()
-{
-}
-
-
-//
-// Redefined status calculation for report tree root
-//
-
-void ReportRoot::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    m_iStatus = STATUS_NORMAL;
 }

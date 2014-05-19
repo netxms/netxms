@@ -48,15 +48,15 @@ typedef struct _DatabaseInfo
 
 typedef struct {
 	TCHAR name[MAX_STR];
-	StringMap* attrs;
+	StringMap *attrs;
 } DBParameter;
 
 typedef struct {
 	int version;						// minimum database version in xxx format for this query
-	TCHAR* prefix;						// parameter prefix, e.g. "Oracle.Tablespaces."
-	TCHAR* query;						// the query
+	const TCHAR *prefix;						// parameter prefix, e.g. "Oracle.Tablespaces."
+	const TCHAR *query;						// the query
 	int	 queryColumns;						// number of columns returned by query
-	DBParameter* values[MAX_DATABASES];	// list of values
+	DBParameter *values[MAX_DATABASES];	// list of values
 	int valueCount[MAX_DATABASES];
 } DBParameterGroup;
 

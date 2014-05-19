@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.Interface;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab;
@@ -39,7 +39,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 {
 	private static final String[] ifaceExpectedState = { Messages.get().InterfaceListLabelProvider_StateUp, Messages.get().InterfaceListLabelProvider_StateDown, Messages.get().InterfaceListLabelProvider_StateIgnore };
 	
-	private Node node = null;
+	private AbstractNode node = null;
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	
 	/* (non-Javadoc)
@@ -114,6 +114,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 				return getPeerMacAddress(iface);
 			case InterfacesTab.COLUMN_PEER_IP_ADDRESS:
 				return getPeerIpAddress(iface);
+         case InterfacesTab.COLUMN_PEER_PROTOCOL:
+            return getPeerProtocol(iface);
 		}
 		return null;
 	}
@@ -124,7 +126,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 	 */
 	private String getPeerIpAddress(Interface iface)
 	{
-		Node peer = (Node)session.findObjectById(iface.getPeerNodeId(), Node.class);
+	   AbstractNode peer = (AbstractNode)session.findObjectById(iface.getPeerNodeId(), AbstractNode.class);
 		if (peer == null)
 			return null;
 		if (peer.getPrimaryIP().isAnyLocalAddress())
@@ -142,20 +144,30 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 		return (peer != null) ? peer.getMacAddress().toString() : null;
 	}
 
+   /**
+    * @param iface
+    * @return
+    */
+   private String getPeerProtocol(Interface iface)
+   {
+      Interface peer = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
+      return (peer != null) ? iface.getPeerDiscoveryProtocol().toString() : null;
+   }
+
 	/**
 	 * @param iface
 	 * @return
 	 */
 	private String getPeerName(Interface iface)
 	{
-		Node peer = (Node)session.findObjectById(iface.getPeerNodeId(), Node.class);
+	   AbstractNode peer = (AbstractNode)session.findObjectById(iface.getPeerNodeId(), AbstractNode.class);
 		return (peer != null) ? peer.getObjectName() : null;
 	}
 
 	/**
 	 * @param node the node to set
 	 */
-	public void setNode(Node node)
+	public void setNode(AbstractNode node)
 	{
 		this.node = node;
 	}

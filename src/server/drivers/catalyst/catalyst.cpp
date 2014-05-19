@@ -76,12 +76,12 @@ static UINT32 HandlerPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport
 {
 	InterfaceList *ifList = (InterfaceList *)arg;
 
-	NX_INTERFACE_INFO *iface = ifList->findByIfIndex(var->GetValueAsUInt());
+	NX_INTERFACE_INFO *iface = ifList->findByIfIndex(var->getValueAsUInt());
 	if (iface != NULL)
 	{
-		UINT32 nameLen = var->GetName()->getLength();
+		size_t nameLen = var->getName()->getLength();
 		
-		UINT32 moduleIndex = var->GetName()->getValue()[nameLen - 2];
+		UINT32 moduleIndex = var->getName()->getValue()[nameLen - 2];
 		UINT32 oid[] = { 1, 3, 6, 1, 4, 1, 9, 5, 1, 3, 1, 1, 25, 0 };
 		oid[13] = moduleIndex;
 		UINT32 slot;
@@ -89,7 +89,7 @@ static UINT32 HandlerPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport
 			slot = moduleIndex;	// Assume slot # equal to module index if it cannot be read
 
 		iface->dwSlotNumber = slot;
-		iface->dwPortNumber = var->GetName()->getValue()[nameLen - 1];
+		iface->dwPortNumber = var->getName()->getValue()[nameLen - 1];
 		iface->isPhysicalPort = true;
 	}
 	return SNMP_ERR_SUCCESS;
@@ -101,7 +101,7 @@ static UINT32 HandlerPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *CatalystDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
+InterfaceList *CatalystDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = CiscoDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);

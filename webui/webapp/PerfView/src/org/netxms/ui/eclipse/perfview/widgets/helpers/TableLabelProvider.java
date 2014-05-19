@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.perfview.widgets.helpers;
 
-import java.util.List;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ITableFontProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -29,6 +28,7 @@ import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.TableColumnDefinition;
+import org.netxms.client.TableRow;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -79,16 +79,15 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		List<String> row = (List<String>)element;
+		TableRow row = (TableRow)element;
 		
 		if (columnIndex >= row.size())
 			return null;
 		
-		return WidgetHelper.escapeText(row.get(columnIndex));
+		return WidgetHelper.escapeText(row.get(columnIndex).getValue());
 	}
 
 	/* (non-Javadoc)

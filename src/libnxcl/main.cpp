@@ -379,9 +379,17 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(UINT32 dwError)
       _T("No software package data"),
 		_T("Invalid DCI summary table ID"),
       _T("User is logged in"),
-      _T("Error parsing XML")
+      _T("Error parsing XML"),
+      _T("SQL query cost is too high"),
+      _T("License violation"),
+      _T("Number of client licenses exceeded"),
+      _T("Object already exist"),
+      _T("No helpdesk link"),
+      _T("Helpdesk link communication failure"),
+      _T("Helpdesk link access denied"),
+      _T("Helpdesk link internal error")
    };
-	return (dwError <= RCC_XML_PARSE_ERROR) ? pszErrorText[dwError] : _T("No text message for this error");
+	return (dwError <= RCC_HDLINK_INTERNAL_ERROR) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 #if defined(_WIN32) && !defined(UNDER_CE)

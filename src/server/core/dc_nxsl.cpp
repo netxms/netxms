@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
  * First argument is a node object (usually passed to script via $node variable),
  * and second is DCI ID
  */
-static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -56,7 +56,7 @@ static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 /**
  * Common handler for GetDCIValue and GetDCIRawValue
  */
-static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -99,9 +99,9 @@ static int GetDCIValueImpl(bool rawValue, int argc, NXSL_Value **argv, NXSL_Valu
  * First argument is a node object (passed to script via $node variable),
  * and second is DCI ID
  */
-static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	return GetDCIValueImpl(false, argc, argv, ppResult, program);
+	return GetDCIValueImpl(false, argc, argv, ppResult, vm);
 }
 
 /**
@@ -109,9 +109,9 @@ static int F_GetDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
  * First argument is a node object (passed to script via $node variable),
  * and second is DCI ID
  */
-static int F_GetDCIRawValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetDCIRawValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	return GetDCIValueImpl(true, argc, argv, ppResult, program);
+	return GetDCIValueImpl(true, argc, argv, ppResult, vm);
 }
 
 /**
@@ -160,7 +160,7 @@ static int GetDciValueExImpl(bool byName, int argc, NXSL_Value **argv, NXSL_Valu
  * First argument is a node object (passed to script via $node variable),
  * and second is DCI name
  */
-static int F_GetDCIValueByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetDCIValueByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	return GetDciValueExImpl(true, argc, argv, ppResult);
 }
@@ -170,7 +170,7 @@ static int F_GetDCIValueByName(int argc, NXSL_Value **argv, NXSL_Value **ppResul
  * First argument is a node object (passed to script via $node variable),
  * and second is DCI description
  */
-static int F_GetDCIValueByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetDCIValueByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	return GetDciValueExImpl(false, argc, argv, ppResult);
 }
@@ -178,7 +178,7 @@ static int F_GetDCIValueByDescription(int argc, NXSL_Value **argv, NXSL_Value **
 /**
  * NXSL function: Find DCI by name
  */
-static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -199,7 +199,7 @@ static int F_FindDCIByName(int argc, NXSL_Value **argv, NXSL_Value **ppResult, N
 /**
  * NXSL function: Find DCI by description
  */
-static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -220,7 +220,7 @@ static int F_FindDCIByDescription(int argc, NXSL_Value **argv, NXSL_Value **ppRe
 /**
  * NXSL function: Find all DCIs with matching name or description
  */
-static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
    if ((argc < 1) || (argc > 3))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -263,7 +263,7 @@ static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
  */
 typedef enum { DCI_MIN = 0, DCI_MAX = 1, DCI_AVG = 2, DCI_SUM = 3 } DciSqlFunc_t;
 
-static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program, DciSqlFunc_t sqlFunc)
+static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm, DciSqlFunc_t sqlFunc)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -287,13 +287,19 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 		if (g_nDBSyntax == DB_SYNTAX_ORACLE)
 		{
 			_sntprintf(query, 1024, _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u ")
-				_T("WHERE item_id=? and idata_timestamp between ? and ?"), 
+				_T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"), 
+				functions[sqlFunc], node->Id());
+		}
+		else if (g_nDBSyntax == DB_SYNTAX_MSSQL)
+		{
+			_sntprintf(query, 1024, _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata_%u ")
+				_T("WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)"), 
 				functions[sqlFunc], node->Id());
 		}
 		else if (g_nDBSyntax == DB_SYNTAX_PGSQL)
 		{
 			_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value::double precision,0)) FROM idata_%u ")
-				_T("WHERE item_id=? and idata_timestamp between ? and ?"), 
+				_T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"), 
 				functions[sqlFunc],	node->Id());
 		}
 		else
@@ -343,33 +349,33 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 /**
  * Get min of DCI values for a period
  */
-static int F_GetMinDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetMinDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	return F_GetDCIValueStat(argc, argv, ppResult, program, DCI_MIN);
+	return F_GetDCIValueStat(argc, argv, ppResult, vm, DCI_MIN);
 }
 
 /**
  * Get max of DCI values for a period
  */
-static int F_GetMaxDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetMaxDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	return F_GetDCIValueStat(argc, argv, ppResult, program, DCI_MAX);
+	return F_GetDCIValueStat(argc, argv, ppResult, vm, DCI_MAX);
 }
 
 /**
  * Get average of DCI values for a period
  */
-static int F_GetAvgDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetAvgDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	return F_GetDCIValueStat(argc, argv, ppResult, program, DCI_AVG);
+	return F_GetDCIValueStat(argc, argv, ppResult, vm, DCI_AVG);
 }
 
 /**
  * Get average of DCI values for a period
  */
-static int F_GetSumDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetSumDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	return F_GetDCIValueStat(argc, argv, ppResult, program, DCI_SUM);
+	return F_GetDCIValueStat(argc, argv, ppResult, vm, DCI_SUM);
 }
 
 /**
@@ -377,7 +383,7 @@ static int F_GetSumDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
  * Format: GetDCIValues(node, dciId, startTime, endTime)
  * Returns NULL if DCI not found or array of DCI values (ordered from latest to earliest)
  */
-static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -446,7 +452,7 @@ static int F_GetDCIValues(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
  * Possible dataType values: "int32", "uint32", "int64", "uint64", "float", "string"
  * Returns DCI object on success and NULL of failure
  */
-static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_Program *program)
+static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;

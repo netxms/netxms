@@ -5,6 +5,7 @@ package org.netxms.ui.eclipse.topology.views;
 
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -18,6 +19,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -27,6 +29,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.topology.WirelessStation;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -54,7 +57,7 @@ public class WirelessStations extends ViewPart
 	private long rootObject;
 	private SortableTableViewer viewer;
 	private Action actionRefresh;
-	private Action actionCopy;
+	private Action actionCopyRecord;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
 
@@ -118,6 +121,14 @@ public class WirelessStations extends ViewPart
 				refresh();
 			}
 		};
+		
+      actionCopyRecord = new Action(Messages.get().HostSearchResults_Copy, SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            copyToClipboard(-1);
+         }
+      };
 
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
@@ -187,6 +198,7 @@ public class WirelessStations extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
+      manager.add(actionCopyRecord);
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
@@ -227,4 +239,38 @@ public class WirelessStations extends ViewPart
 			}
 		}.start();
 	}
+
+   /**
+    * Copy content to clipboard
+    * 
+    * @param column column number or -1 to copy all columns
+    */
+   private void copyToClipboard(int column)
+   {
+      final TableItem[] selection = viewer.getTable().getSelection();
+      if (selection.length > 0)
+      {
+         final String newLine = Platform.getOS().equals(Platform.OS_WIN32) ? "\r\n" : "\n"; //$NON-NLS-1$ //$NON-NLS-2$
+         final StringBuilder sb = new StringBuilder();
+         for(int i = 0; i < selection.length; i++)
+         {
+            if (i > 0)
+               sb.append(newLine);
+            if (column == -1)
+            {
+               for(int j = 0; j < viewer.getTable().getColumnCount(); j++)
+               {
+                  if (j > 0)
+                     sb.append('\t');
+                  sb.append(selection[i].getText(j));
+               }
+            }
+            else
+            {
+               sb.append(selection[i].getText(column));
+            }
+         }
+         WidgetHelper.copyToClipboard(sb.toString());
+      }
+   }
 }

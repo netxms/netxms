@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2013 Alex Kirhenshtein
+** Copyright (C) 2003-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -70,13 +70,14 @@ class RSConnector : public ISC
 {
 protected:
    virtual void onBinaryMessage(CSCP_MESSAGE *rawMsg);
+   virtual bool onMessage(CSCPMessage *msg);
 
 public:
    RSConnector(UINT32 addr, WORD port) : ISC(addr, port)
    {
    }
 
-   virtual void PrintMsg(const TCHAR *format, ...)
+   virtual void printMessage(const TCHAR *format, ...)
    {
       va_list args;
       va_start(args, format);
@@ -84,6 +85,27 @@ public:
       va_end(args);
    }
 };
+
+/**
+ * Callback for session enumeration
+ */
+static void NotifyUserSessions(ClientSession *session, void *arg)
+{
+   session->sendMessage((CSCPMessage *)arg);
+}
+
+/**
+ * Custom handler for reporting server messages
+ */
+bool RSConnector::onMessage(CSCPMessage *msg)
+{
+   if (msg->GetCode() == CMD_RS_NOTIFY)
+   {
+      EnumerateClientSessions(NotifyUserSessions, msg);
+      return true;
+   }
+   return false;
+}
 
 /**
  * Custom handler for binary messages
@@ -135,7 +157,7 @@ THREAD_RESULT THREAD_CALL ReportingServerConnector(void *arg)
       {
          if (m_connector->connect(0) == ISC_ERR_SUCCESS)
          {
-            DbgPrintf(6, _T("Connection to Reporting Server restored"));
+            DbgPrintf(2, _T("Connection to Reporting Server restored"));
          }
       }
 	}
@@ -158,6 +180,7 @@ CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request, ClientSession
    UINT32 originalId = request->GetId();
    UINT32 rqId = m_connector->generateMessageId();
    request->SetId(rqId);
+   request->SetVariable(VID_USER_ID, session->getUserId());
 
    // File transfer requests
    if (request->GetCode() == CMD_RS_RENDER_RESULT)

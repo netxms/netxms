@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -98,7 +98,7 @@ Threshold::Threshold(Threshold *src)
  * This constructor assumes that SELECT query look as following:
  * SELECT threshold_id,fire_value,rearm_value,check_function,check_operation,
  *        sample_count,script,event_code,current_state,rearm_event_code,
- *        repeat_interval,current_severity,last_event_timestamp FROM thresholds
+ *        repeat_interval,current_severity,last_event_timestamp,match_count FROM thresholds
  */
 Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 {
@@ -124,7 +124,7 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 	m_repeatInterval = DBGetFieldLong(hResult, iRow, 10);
 	m_currentSeverity = (BYTE)DBGetFieldLong(hResult, iRow, 11);
 	m_lastEventTimestamp = (time_t)DBGetFieldULong(hResult, iRow, 12);
-	m_numMatches = 0;
+	m_numMatches = DBGetFieldLong(hResult, iRow, 13);
 }
 
 /**
@@ -137,18 +137,18 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
    m_targetId = parentItem->getTarget()->Id();
    m_eventCode = EventCodeFromName(config->getSubEntryValue(_T("activationEvent"), 0, _T("SYS_THRESHOLD_REACHED")));
    m_rearmEventCode = EventCodeFromName(config->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_THRESHOLD_REARMED")));
-   m_function = (BYTE)config->getSubEntryValueInt(_T("function"), 0, F_LAST);
-   m_operation = (BYTE)config->getSubEntryValueInt(_T("condition"), 0, OP_EQ);
+   m_function = (BYTE)config->getSubEntryValueAsInt(_T("function"), 0, F_LAST);
+   m_operation = (BYTE)config->getSubEntryValueAsInt(_T("condition"), 0, OP_EQ);
    m_dataType = parentItem->getDataType();
 	m_value = config->getSubEntryValue(_T("value"), 0, _T(""));
-   m_sampleCount = (config->getSubEntryValue(_T("sampleCount")) != NULL) ? config->getSubEntryValueInt(_T("sampleCount"), 0, 1) : config->getSubEntryValueInt(_T("param1"), 0, 1);
+   m_sampleCount = (config->getSubEntryValue(_T("sampleCount")) != NULL) ? config->getSubEntryValueAsInt(_T("sampleCount"), 0, 1) : config->getSubEntryValueAsInt(_T("param1"), 0, 1);
    m_scriptSource = NULL;
    m_script = NULL;
    const TCHAR *script = config->getSubEntryValue(_T("script"));
    setScript((script != NULL) ? _tcsdup(script) : NULL);
    m_isReached = FALSE;
 	m_currentSeverity = SEVERITY_NORMAL;
-	m_repeatInterval = config->getSubEntryValueInt(_T("repeatInterval"), 0, -1);
+	m_repeatInterval = config->getSubEntryValueAsInt(_T("repeatInterval"), 0, -1);
 	m_lastEventTimestamp = 0;
 	m_numMatches = 0;
 }
@@ -183,8 +183,8 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 			_T("INSERT INTO thresholds (item_id,fire_value,rearm_value,")
 			_T("check_function,check_operation,sample_count,script,event_code,")
 			_T("sequence_number,current_state,rearm_event_code,repeat_interval,")
-			_T("current_severity,last_event_timestamp,threshold_id) ")
-			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+			_T("current_severity,last_event_timestamp,match_count,threshold_id) ")
+			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	else
 	{
@@ -192,7 +192,8 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 			_T("UPDATE thresholds SET item_id=?,fire_value=?,rearm_value=?,check_function=?,")
          _T("check_operation=?,sample_count=?,script=?,event_code=?,")
          _T("sequence_number=?,current_state=?,rearm_event_code=?,")
-			_T("repeat_interval=?,current_severity=?,last_event_timestamp=? WHERE threshold_id=?"));
+			_T("repeat_interval=?,current_severity=?,last_event_timestamp=?,")
+         _T("match_count=? WHERE threshold_id=?"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -211,7 +212,8 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (INT32)m_repeatInterval);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (INT32)m_currentSeverity);
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (INT32)m_lastEventTimestamp);
-	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (INT32)m_id);
+	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (INT32)m_numMatches);
+	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (INT32)m_id);
 
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -270,7 +272,6 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
       if (m_script != NULL)
       {
          NXSL_Value *nxslValue = new NXSL_Value(value.getString());
-         NXSL_ServerEnv *env = new NXSL_ServerEnv;
          m_script->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, target)));
          if (target->Type() == OBJECT_NODE)
          {
@@ -278,7 +279,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          }
          m_script->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci)));
          m_script->setGlobalVariable(_T("$isCluster"), new NXSL_Value((target->Type() == OBJECT_CLUSTER) ? 1 : 0));
-         if (m_script->run(env, 1, &nxslValue) == 0)
+         if (m_script->run(1, &nxslValue))
          {
             nxslValue = m_script->getResult();
             if (nxslValue != NULL)
@@ -807,7 +808,7 @@ void Threshold::setScript(TCHAR *script)
       if (m_scriptSource[0] != 0)
       {
 			/* TODO: add compilation error handling */
-         m_script = (NXSL_Program *)NXSLCompile(m_scriptSource, NULL, 0);
+         m_script = NXSLCompileAndCreateVM(m_scriptSource, NULL, 0, new NXSL_ServerEnv);
       }
       else
       {

@@ -142,7 +142,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppE
                   pResponse->GetVariableLong(VID_NUM_ACTIONS);
                (*ppEventPolicy)->pRuleList[i].pdwActionList = 
                   (UINT32 *)malloc(sizeof(UINT32) * (*ppEventPolicy)->pRuleList[i].dwNumActions);
-               pResponse->GetVariableInt32Array(VID_RULE_ACTIONS, 
+               pResponse->getFieldAsInt32Array(VID_RULE_ACTIONS, 
                                                 (*ppEventPolicy)->pRuleList[i].dwNumActions,
                                                 (*ppEventPolicy)->pRuleList[i].pdwActionList);
 
@@ -150,7 +150,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppE
                   pResponse->GetVariableLong(VID_NUM_EVENTS);
                (*ppEventPolicy)->pRuleList[i].pdwEventList = 
                   (UINT32 *)malloc(sizeof(UINT32) * (*ppEventPolicy)->pRuleList[i].dwNumEvents);
-               pResponse->GetVariableInt32Array(VID_RULE_EVENTS, 
+               pResponse->getFieldAsInt32Array(VID_RULE_EVENTS, 
                                                 (*ppEventPolicy)->pRuleList[i].dwNumEvents,
                                                 (*ppEventPolicy)->pRuleList[i].pdwEventList);
 
@@ -158,7 +158,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppE
                   pResponse->GetVariableLong(VID_NUM_SOURCES);
                (*ppEventPolicy)->pRuleList[i].pdwSourceList = 
                   (UINT32 *)malloc(sizeof(UINT32) * (*ppEventPolicy)->pRuleList[i].dwNumSources);
-               pResponse->GetVariableInt32Array(VID_RULE_SOURCES, 
+               pResponse->getFieldAsInt32Array(VID_RULE_SOURCES, 
                                                 (*ppEventPolicy)->pRuleList[i].dwNumSources,
                                                 (*ppEventPolicy)->pRuleList[i].pdwSourceList);
 
@@ -201,7 +201,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppE
       {
          if (dwRetCode == RCC_COMPONENT_LOCKED)
          {
-            if (pResponse->IsVariableExist(VID_LOCKED_BY))
+            if (pResponse->isFieldExist(VID_LOCKED_BY))
             {
                TCHAR szBuffer[MAX_LOCKINFO_LEN];
 
@@ -266,15 +266,15 @@ UINT32 LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEve
          msg.SetVariable(VID_COMMENTS, (TCHAR *)CHECK_NULL_EX(pEventPolicy->pRuleList[i].pszComment));
          msg.SetVariable(VID_SCRIPT, (TCHAR *)CHECK_NULL_EX(pEventPolicy->pRuleList[i].pszScript));
          msg.SetVariable(VID_NUM_ACTIONS, pEventPolicy->pRuleList[i].dwNumActions);
-         msg.SetVariableToInt32Array(VID_RULE_ACTIONS,
+         msg.setFieldInt32Array(VID_RULE_ACTIONS,
                                      pEventPolicy->pRuleList[i].dwNumActions,
                                      pEventPolicy->pRuleList[i].pdwActionList);
          msg.SetVariable(VID_NUM_EVENTS, pEventPolicy->pRuleList[i].dwNumEvents);
-         msg.SetVariableToInt32Array(VID_RULE_EVENTS,
+         msg.setFieldInt32Array(VID_RULE_EVENTS,
                                      pEventPolicy->pRuleList[i].dwNumEvents,
                                      pEventPolicy->pRuleList[i].pdwEventList);
          msg.SetVariable(VID_NUM_SOURCES, pEventPolicy->pRuleList[i].dwNumSources);
-         msg.SetVariableToInt32Array(VID_RULE_SOURCES,
+         msg.setFieldInt32Array(VID_RULE_SOURCES,
                                      pEventPolicy->pRuleList[i].dwNumSources,
                                      pEventPolicy->pRuleList[i].pdwSourceList);
          msg.SetVariable(VID_ALARM_KEY, pEventPolicy->pRuleList[i].szAlarmKey);

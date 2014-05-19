@@ -45,7 +45,6 @@ typedef void *yyscan_t;
 // Various defines
 //
 
-#define INVALID_ADDRESS    ((UINT32)0xFFFFFFFF)
 #define MAX_STRING_SIZE    8192
 
 /**
@@ -118,6 +117,7 @@ typedef void *yyscan_t;
 #define OPCODE_DEC_ELEMENT    64
 #define OPCODE_INCP_ELEMENT   65
 #define OPCODE_DECP_ELEMENT   66
+#define OPCODE_ABORT          67
 
 class NXSL_Compiler;
 
@@ -138,7 +138,6 @@ protected:
    int m_nCommentLevel;
    int m_nStrSize;
    char m_szStr[MAX_STRING_SIZE];
-   BOOL m_bErrorState;
 
 public:
 	NXSL_Lexer(NXSL_Compiler *pCompiler, const TCHAR *pszCode);
@@ -148,16 +147,11 @@ public:
 
 	int getCurrLine() { return m_nCurrLine; }
 	void error(const char *pszText);
-
-   void setErrorState() { m_bErrorState = TRUE; }
-   BOOL isErrorState() { return m_bErrorState; }
 };
 
-
-//
-// Compiler class
-//
-
+/**
+ * Compiler class
+ */
 class NXSL_Compiler
 {
 protected:

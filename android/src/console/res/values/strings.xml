@@ -87,6 +87,8 @@
 	<string name="pref_multipliers">Multipliers</string>
 	<string name="pref_multipliers_summary">Define which multiplier to use in presenting data (last values, graphs, &#8230;)</string>
 	<string name="pref_multiplier_title">Choose multiplier</string>
+	<string name="pref_graph_text_size">Graph text size</string>
+	<string name="pref_graph_text_size_summary">Set the text size to be used for axis labels</string>
 
 	<string name="notification_title">NetXMS</string>
 	<string name="notify_started">NetXMS service started</string>

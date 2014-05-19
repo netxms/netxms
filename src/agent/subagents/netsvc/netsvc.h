@@ -29,13 +29,15 @@ enum
 	PC_ERR_INTERNAL
 };
 
-
-typedef struct
+/**
+ * Request data for cURL call
+ */
+struct RequestData
 {
    size_t size;
    size_t allocated;
    char *data;
-} RequestData;
+};
 
 #define NETSVC_AF_VERIFYPEER 1
 

@@ -67,7 +67,7 @@ public class EditCommentDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().EditCommentDialog_EditComment);
+      newShell.setText(noteID != 0 ? Messages.get().EditCommentDialog_EditComment : Messages.get().AlarmComments_AddCommentLink);
 
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
@@ -93,7 +93,7 @@ public class EditCommentDialog extends Dialog
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
 		textControl = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER | SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-		textControl.setLabel(Messages.get().EditCommentDialog_Comment);
+      textControl.setLabel(Messages.get().EditCommentDialog_Comment);
 		if(noteID != 0)
 		   textControl.setText(text);
 		GridData gd = new GridData();

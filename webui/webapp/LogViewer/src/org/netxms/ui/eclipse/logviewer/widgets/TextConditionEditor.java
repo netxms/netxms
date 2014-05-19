@@ -31,7 +31,7 @@ import org.netxms.ui.eclipse.logviewer.Messages;
  */
 public class TextConditionEditor extends ConditionEditor
 {
-	private static final String[] OPERATIONS = { Messages.get().TextConditionEditor_Like, Messages.get().TextConditionEditor_NotLike };
+	private final String[] OPERATIONS = { Messages.get().TextConditionEditor_Like, Messages.get().TextConditionEditor_NotLike };
 	
 	private Text value;
 	

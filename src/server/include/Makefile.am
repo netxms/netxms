@@ -10,6 +10,7 @@
 
 serverincludedir = $(includedir)/server
 serverinclude_HEADERS = \
+	hdlink.h \
 	local_admin.h \
 	netxms_mt.h \
 	nms_actions.h \
@@ -25,7 +26,6 @@ serverinclude_HEADERS = \
 	nms_users.h \
 	nxcore_jobs.h \
 	nxcore_logs.h \
-	nxcore_reports.h \
 	nxcore_situations.h \
 	nxcore_smclp.h \
 	nxcore_winperf.h \

@@ -30,6 +30,7 @@ import java.util.UUID;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
+import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.objects.ClusterResource;
@@ -41,59 +42,61 @@ import org.netxms.client.objects.ClusterSyncNetwork;
 public class NXCObjectModificationData
 {
 	// Modification flags
-	public static final long MODIFY_NAME               = 0x00000000000001L;
-	public static final long MODIFY_ACL                = 0x00000000000002L;
-	public static final long MODIFY_CUSTOM_ATTRIBUTES  = 0x00000000000004L;
-	public static final long MODIFY_AUTOBIND_FILTER    = 0x00000000000008L;
-	public static final long MODIFY_LINK_COLOR         = 0x00000000000010L;
-	public static final long MODIFY_POLICY_CONFIG      = 0x00000000000020L;
-	public static final long MODIFY_VERSION            = 0x00000000000040L;
-	public static final long MODIFY_DESCRIPTION        = 0x00000000000080L;
-	public static final long MODIFY_AGENT_PORT         = 0x00000000000100L;
-	public static final long MODIFY_AGENT_AUTH         = 0x00000000000200L;
-	public static final long MODIFY_SNMP_VERSION       = 0x00000000000400L;
-	public static final long MODIFY_SNMP_AUTH          = 0x00000000000800L;
-	public static final long MODIFY_AGENT_PROXY        = 0x00000000001000L;
-	public static final long MODIFY_SNMP_PROXY         = 0x00000000002000L;
-	public static final long MODIFY_TRUSTED_NODES      = 0x00000000004000L;
-	public static final long MODIFY_GEOLOCATION        = 0x00000000008000L;
-	public static final long MODIFY_PRIMARY_IP         = 0x00000000010000L;
-	public static final long MODIFY_SNMP_PORT          = 0x00000000020000L;
-	public static final long MODIFY_MAP_LAYOUT         = 0x00000000040000L;
-	public static final long MODIFY_MAP_BACKGROUND     = 0x00000000080000L;
-	public static final long MODIFY_MAP_CONTENT        = 0x00000000100000L;
-	public static final long MODIFY_IMAGE              = 0x00000000200000L;
-	public static final long MODIFY_ICMP_PROXY         = 0x00000000400000L;
-	public static final long MODIFY_COLUMN_COUNT       = 0x00000000800000L;
-	public static final long MODIFY_DASHBOARD_ELEMENTS = 0x00000001000000L;
-	public static final long MODIFY_SCRIPT             = 0x00000002000000L;
-	public static final long MODIFY_ACTIVATION_EVENT   = 0x00000004000000L;
-	public static final long MODIFY_DEACTIVATION_EVENT = 0x00000008000000L;
-	public static final long MODIFY_SOURCE_OBJECT      = 0x00000010000000L;
-	public static final long MODIFY_ACTIVE_STATUS      = 0x00000020000000L;
-	public static final long MODIFY_INACTIVE_STATUS    = 0x00000040000000L;
-	public static final long MODIFY_DCI_LIST           = 0x00000080000000L;
-	public static final long MODIFY_SUBMAP_ID          = 0x00000100000000L;
-	public static final long MODIFY_IP_ADDRESS         = 0x00000200000000L;
-	public static final long MODIFY_IP_PROTOCOL        = 0x00000400000000L;
-	public static final long MODIFY_IP_PORT            = 0x00000800000000L;
-	public static final long MODIFY_SERVICE_TYPE       = 0x00001000000000L;
-	public static final long MODIFY_POLLER_NODE        = 0x00002000000000L;
-	public static final long MODIFY_REQUIRED_POLLS     = 0x00004000000000L;
-	public static final long MODIFY_REQUEST            = 0x00008000000000L;
-	public static final long MODIFY_RESPONSE           = 0x00010000000000L;
-	public static final long MODIFY_OBJECT_FLAGS       = 0x00020000000000L;
-	public static final long MODIFY_IFXTABLE_POLICY    = 0x00040000000000L;
-	public static final long MODIFY_REPORT_DEFINITION  = 0x00080000000000L;
-	public static final long MODIFY_CLUSTER_RESOURCES  = 0x00100000000000L;
-	public static final long MODIFY_PRIMARY_NAME       = 0x00200000000000L;
-	public static final long MODIFY_STATUS_CALCULATION = 0x00400000000000L;
-	public static final long MODIFY_CLUSTER_NETWORKS   = 0x00800000000000L;
-	public static final long MODIFY_EXPECTED_STATE     = 0x01000000000000L;
-	public static final long MODIFY_CONNECTION_ROUTING = 0x02000000000000L;
-	public static final long MODIFY_DISCOVERY_RADIUS   = 0x04000000000000L;
-	public static final long MODIFY_HEIGHT             = 0x08000000000000L;
-	public static final long MODIFY_FILTER             = 0x10000000000000L;
+	public static final long MODIFY_NAME               = 0x0000000000000001L;
+	public static final long MODIFY_ACL                = 0x0000000000000002L;
+	public static final long MODIFY_CUSTOM_ATTRIBUTES  = 0x0000000000000004L;
+	public static final long MODIFY_AUTOBIND_FILTER    = 0x0000000000000008L;
+	public static final long MODIFY_LINK_COLOR         = 0x0000000000000010L;
+	public static final long MODIFY_POLICY_CONFIG      = 0x0000000000000020L;
+	public static final long MODIFY_VERSION            = 0x0000000000000040L;
+	public static final long MODIFY_DESCRIPTION        = 0x0000000000000080L;
+	public static final long MODIFY_AGENT_PORT         = 0x0000000000000100L;
+	public static final long MODIFY_AGENT_AUTH         = 0x0000000000000200L;
+	public static final long MODIFY_SNMP_VERSION       = 0x0000000000000400L;
+	public static final long MODIFY_SNMP_AUTH          = 0x0000000000000800L;
+	public static final long MODIFY_AGENT_PROXY        = 0x0000000000001000L;
+	public static final long MODIFY_SNMP_PROXY         = 0x0000000000002000L;
+	public static final long MODIFY_TRUSTED_NODES      = 0x0000000000004000L;
+	public static final long MODIFY_GEOLOCATION        = 0x0000000000008000L;
+	public static final long MODIFY_PRIMARY_IP         = 0x0000000000010000L;
+	public static final long MODIFY_SNMP_PORT          = 0x0000000000020000L;
+	public static final long MODIFY_MAP_LAYOUT         = 0x0000000000040000L;
+	public static final long MODIFY_MAP_BACKGROUND     = 0x0000000000080000L;
+	public static final long MODIFY_MAP_CONTENT        = 0x0000000000100000L;
+	public static final long MODIFY_IMAGE              = 0x0000000000200000L;
+	public static final long MODIFY_ICMP_PROXY         = 0x0000000000400000L;
+	public static final long MODIFY_COLUMN_COUNT       = 0x0000000000800000L;
+	public static final long MODIFY_DASHBOARD_ELEMENTS = 0x0000000001000000L;
+	public static final long MODIFY_SCRIPT             = 0x0000000002000000L;
+	public static final long MODIFY_ACTIVATION_EVENT   = 0x0000000004000000L;
+	public static final long MODIFY_DEACTIVATION_EVENT = 0x0000000008000000L;
+	public static final long MODIFY_SOURCE_OBJECT      = 0x0000000010000000L;
+	public static final long MODIFY_ACTIVE_STATUS      = 0x0000000020000000L;
+	public static final long MODIFY_INACTIVE_STATUS    = 0x0000000040000000L;
+	public static final long MODIFY_DCI_LIST           = 0x0000000080000000L;
+	public static final long MODIFY_SUBMAP_ID          = 0x0000000100000000L;
+	public static final long MODIFY_IP_ADDRESS         = 0x0000000200000000L;
+	public static final long MODIFY_IP_PROTOCOL        = 0x0000000400000000L;
+	public static final long MODIFY_IP_PORT            = 0x0000000800000000L;
+	public static final long MODIFY_SERVICE_TYPE       = 0x0000001000000000L;
+	public static final long MODIFY_POLLER_NODE        = 0x0000002000000000L;
+	public static final long MODIFY_REQUIRED_POLLS     = 0x0000004000000000L;
+	public static final long MODIFY_REQUEST            = 0x0000008000000000L;
+	public static final long MODIFY_RESPONSE           = 0x0000010000000000L;
+	public static final long MODIFY_OBJECT_FLAGS       = 0x0000020000000000L;
+	public static final long MODIFY_IFXTABLE_POLICY    = 0x0000040000000000L;
+	public static final long MODIFY_REPORT_DEFINITION  = 0x0000080000000000L;
+	public static final long MODIFY_CLUSTER_RESOURCES  = 0x0000100000000000L;
+	public static final long MODIFY_PRIMARY_NAME       = 0x0000200000000000L;
+	public static final long MODIFY_STATUS_CALCULATION = 0x0000400000000000L;
+	public static final long MODIFY_CLUSTER_NETWORKS   = 0x0000800000000000L;
+	public static final long MODIFY_EXPECTED_STATE     = 0x0001000000000000L;
+	public static final long MODIFY_CONNECTION_ROUTING = 0x0002000000000000L;
+	public static final long MODIFY_DISCOVERY_RADIUS   = 0x0004000000000000L;
+	public static final long MODIFY_HEIGHT             = 0x0008000000000000L;
+	public static final long MODIFY_FILTER             = 0x0010000000000000L;
+   public static final long MODIFY_PEER_GATEWAY       = 0x0020000000000000L;
+   public static final long MODIFY_VPN_NETWORKS       = 0x0040000000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -122,7 +125,7 @@ public class NXCObjectModificationData
 	private long[] trustedNodes;
 	private GeoLocation geolocation;
 	private InetAddress primaryIpAddress;
-	private int mapLayout;
+	private MapLayoutAlgorithm mapLayout;
 	private UUID mapBackground;
 	private GeoLocation mapBackgroundLocation;
 	private int mapBackgroundZoom;
@@ -166,6 +169,9 @@ public class NXCObjectModificationData
 	private int discoveryRadius;
 	private int height;
 	private String filter;
+	private long peerGatewayId;
+	private List<IpAddressListElement> localNetworks;
+	private List<IpAddressListElement> remoteNetworks;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -605,7 +611,7 @@ public class NXCObjectModificationData
 	/**
 	 * @return the mapLayout
 	 */
-	public int getMapLayout()
+	public MapLayoutAlgorithm getMapLayout()
 	{
 		return mapLayout;
 	}
@@ -613,7 +619,7 @@ public class NXCObjectModificationData
 	/**
 	 * @param mapLayout the mapLayout to set
 	 */
-	public void setMapLayout(int mapLayout)
+	public void setMapLayout(MapLayoutAlgorithm mapLayout)
 	{
 		this.mapLayout = mapLayout;
 		flags |= MODIFY_MAP_LAYOUT;
@@ -1360,4 +1366,47 @@ public class NXCObjectModificationData
 		this.filter = filter;
 		flags |= MODIFY_FILTER;
 	}
+
+   /**
+    * @return the peerGatewayId
+    */
+   public long getPeerGatewayId()
+   {
+      return peerGatewayId;
+   }
+
+   /**
+    * @param peerGatewayId the peerGatewayId to set
+    */
+   public void setPeerGatewayId(long peerGatewayId)
+   {
+      this.peerGatewayId = peerGatewayId;
+      flags |= MODIFY_PEER_GATEWAY;
+   }
+
+   /**
+    * @return the localNetworks
+    */
+   public List<IpAddressListElement> getLocalNetworks()
+   {
+      return localNetworks;
+   }
+
+   /**
+    * @return the remoteNetworks
+    */
+   public List<IpAddressListElement> getRemoteNetworks()
+   {
+      return remoteNetworks;
+   }
+
+   /**
+    * @param remoteNetworks the remoteNetworks to set
+    */
+   public void setVpnNetworks(List<IpAddressListElement> localNetworks, List<IpAddressListElement> remoteNetworks)
+   {
+      this.localNetworks = localNetworks;
+      this.remoteNetworks = remoteNetworks;
+      flags |= MODIFY_VPN_NETWORKS;
+   }
 }

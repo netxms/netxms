@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,36 +41,63 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpNewRequestId()
  * binary representation from oidBinary and dwOidLen
  * Note: buffer size is in bytes
  */
-UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
-                                  const TCHAR *szOidStr, const UINT32 *oidBinary, UINT32 dwOidLen, void *pValue,
-                                  UINT32 dwBufferSize, UINT32 dwFlags)
+UINT32 LIBNXSRV_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,
+                                   const TCHAR *szOidStr, const UINT32 *oidBinary, size_t dwOidLen, void *pValue,
+                                   size_t bufferSize, UINT32 dwFlags)
+{
+   if (version != transport->getSnmpVersion())
+   {
+      int v = transport->getSnmpVersion();
+      transport->setSnmpVersion(version);
+      DbgPrintf(7, _T("SnmpGet: transport SNMP version %d changed to %d"), v, version);
+      UINT32 rc = SnmpGetEx(transport, szOidStr, oidBinary, dwOidLen, pValue, bufferSize, dwFlags, NULL);
+      transport->setSnmpVersion(v);
+      return rc;
+   }
+   else
+   {
+      return SnmpGetEx(transport, szOidStr, oidBinary, dwOidLen, pValue, bufferSize, dwFlags, NULL);
+   }
+}
+
+/**
+ * Get value for SNMP variable
+ * If szOidStr is not NULL, string representation of OID is used, otherwise -
+ * binary representation from oidBinary and dwOidLen
+ * If SG_RAW_RESULT flag given and dataLen is not NULL actial data length will be stored there
+ * Note: buffer size is in bytes
+ */
+UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
+                                     const TCHAR *szOidStr, const UINT32 *oidBinary, size_t dwOidLen, void *pValue,
+                                     size_t bufferSize, UINT32 dwFlags, UINT32 *dataLen)
 {
    SNMP_PDU *pRqPDU, *pRespPDU;
-   UINT32 dwNameLen, pdwVarName[MAX_OID_LEN], dwResult = SNMP_ERR_SUCCESS;
+   UINT32 pdwVarName[MAX_OID_LEN], dwResult = SNMP_ERR_SUCCESS;
+   size_t nameLength;
 
 	if (pTransport == NULL)
 		return SNMP_ERR_COMM;
 
    // Create PDU and send request
-   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, (UINT32)InterlockedIncrement(&s_requestId), dwVersion);
+   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, (UINT32)InterlockedIncrement(&s_requestId), pTransport->getSnmpVersion());
    if (szOidStr != NULL)
    {
-      dwNameLen = SNMPParseOID(szOidStr, pdwVarName, MAX_OID_LEN);
-      if (dwNameLen == 0)
+      nameLength = SNMPParseOID(szOidStr, pdwVarName, MAX_OID_LEN);
+      if (nameLength == 0)
       {
-         nxlog_write(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szOidStr);
+         nxlog_write(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "ssa", szOidStr, _T("SnmpGet"), pTransport->getPeerIpAddress());
          dwResult = SNMP_ERR_BAD_OID;
       }
    }
    else
    {
       memcpy(pdwVarName, oidBinary, dwOidLen * sizeof(UINT32));
-      dwNameLen = dwOidLen;
+      nameLength = dwOidLen;
    }
 
    if (dwResult == SNMP_ERR_SUCCESS)   // Still no errors
    {
-      pRqPDU->bindVariable(new SNMP_Variable(pdwVarName, dwNameLen));
+      pRqPDU->bindVariable(new SNMP_Variable(pdwVarName, nameLength));
       dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 
       // Analyze response
@@ -81,16 +108,18 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
          {
             SNMP_Variable *pVar = pRespPDU->getVariable(0);
 
-            if ((pVar->GetType() != ASN_NO_SUCH_OBJECT) &&
-                (pVar->GetType() != ASN_NO_SUCH_INSTANCE))
+            if ((pVar->getType() != ASN_NO_SUCH_OBJECT) &&
+                (pVar->getType() != ASN_NO_SUCH_INSTANCE))
             {
                if (dwFlags & SG_RAW_RESULT)
                {
-						pVar->getRawValue((BYTE *)pValue, dwBufferSize);
+						pVar->getRawValue((BYTE *)pValue, bufferSize);
+                  if (dataLen != NULL)
+                     *dataLen = (UINT32)pVar->getValueLength();
                }
                else if (dwFlags & SG_HSTRING_RESULT)
                {
-						int rawLen = (dwBufferSize - sizeof(TCHAR)) / 2 / sizeof(TCHAR);
+						size_t rawLen = (bufferSize - sizeof(TCHAR)) / 2 / sizeof(TCHAR);
 						BYTE *raw = (BYTE *)malloc(rawLen);
 						rawLen = (int)pVar->getRawValue(raw, rawLen);
 						BinToStr(raw, rawLen, (TCHAR *)pValue);
@@ -98,35 +127,35 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGet(UINT32 dwVersion, SNMP_Transport *pTransport,
                }
                else if (dwFlags & SG_STRING_RESULT)
                {
-                  pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize / sizeof(TCHAR));
+                  pVar->getValueAsString((TCHAR *)pValue, bufferSize / sizeof(TCHAR));
                }
                else if (dwFlags & SG_PSTRING_RESULT)
                {
 						bool convert = true;
-                  pVar->getValueAsPrintableString((TCHAR *)pValue, dwBufferSize / sizeof(TCHAR), &convert);
+                  pVar->getValueAsPrintableString((TCHAR *)pValue, bufferSize / sizeof(TCHAR), &convert);
                }
                else
                {
-                  switch(pVar->GetType())
+                  switch(pVar->getType())
                   {
                      case ASN_INTEGER:
                      case ASN_UINTEGER32:
                      case ASN_COUNTER32:
                      case ASN_GAUGE32:
                      case ASN_TIMETICKS:
-                        *((LONG *)pValue) = pVar->GetValueAsInt();
+                        *((LONG *)pValue) = pVar->getValueAsInt();
                         break;
                      case ASN_IP_ADDR:
-                        *((UINT32 *)pValue) = ntohl(pVar->GetValueAsUInt());
+                        *((UINT32 *)pValue) = ntohl(pVar->getValueAsUInt());
                         break;
                      case ASN_OCTET_STRING:
-                        pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize / sizeof(TCHAR));
+                        pVar->getValueAsString((TCHAR *)pValue, bufferSize / sizeof(TCHAR));
                         break;
                      case ASN_OBJECT_ID:
-                        pVar->GetValueAsString((TCHAR *)pValue, dwBufferSize / sizeof(TCHAR));
+                        pVar->getValueAsString((TCHAR *)pValue, bufferSize / sizeof(TCHAR));
                         break;
                      default:
-                        nxlog_write(MSG_SNMP_UNKNOWN_TYPE, EVENTLOG_ERROR_TYPE, "x", pVar->GetType());
+                        nxlog_write(MSG_SNMP_UNKNOWN_TYPE, EVENTLOG_ERROR_TYPE, "x", pVar->getType());
                         dwResult = SNMP_ERR_BAD_TYPE;
                         break;
                   }
@@ -169,27 +198,27 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport
 
    // Get root
 	UINT32 pdwRootName[MAX_OID_LEN];
-   UINT32 dwRootLen = SNMPParseOID(szRootOid, pdwRootName, MAX_OID_LEN);
+   size_t dwRootLen = SNMPParseOID(szRootOid, pdwRootName, MAX_OID_LEN);
    if (dwRootLen == 0)
    {
-      nxlog_write(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "s", szRootOid);
+      nxlog_write(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "ssa", szRootOid, _T("SnmpWalk"), pTransport->getPeerIpAddress());
       return SNMP_ERR_BAD_OID;
    }
 
 	// First OID to request
    UINT32 pdwName[MAX_OID_LEN];
    memcpy(pdwName, pdwRootName, dwRootLen * sizeof(UINT32));
-   UINT32 dwNameLen = dwRootLen;
+   size_t nameLength = dwRootLen;
 
    // Walk the MIB
    UINT32 dwResult;
    BOOL bRunning = TRUE;
    UINT32 firstObjectName[MAX_OID_LEN];
-   UINT32 firstObjectNameLen = 0;
+   size_t firstObjectNameLen = 0;
    while(bRunning)
    {
       SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, (UINT32)InterlockedIncrement(&s_requestId), dwVersion);
-      pRqPDU->bindVariable(new SNMP_Variable(pdwName, dwNameLen));
+      pRqPDU->bindVariable(new SNMP_Variable(pdwName, nameLength));
 	   SNMP_PDU *pRespPDU;
       dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
 
@@ -201,28 +230,28 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport
          {
             SNMP_Variable *pVar = pRespPDU->getVariable(0);
 
-            if ((pVar->GetType() != ASN_NO_SUCH_OBJECT) &&
-                (pVar->GetType() != ASN_NO_SUCH_INSTANCE))
+            if ((pVar->getType() != ASN_NO_SUCH_OBJECT) &&
+                (pVar->getType() != ASN_NO_SUCH_INSTANCE))
             {
                // Should we stop walking?
 					// Some buggy SNMP agents may return first value after last one
 					// (Toshiba Strata CTX do that for example), so last check is here
-               if ((pVar->GetName()->getLength() < dwRootLen) ||
-                   (memcmp(pdwRootName, pVar->GetName()->getValue(), dwRootLen * sizeof(UINT32))) ||
-						 (pVar->GetName()->compare(pdwName, dwNameLen) == OID_EQUAL) ||
-						 (pVar->GetName()->compare(firstObjectName, firstObjectNameLen) == OID_EQUAL))
+               if ((pVar->getName()->getLength() < dwRootLen) ||
+                   (memcmp(pdwRootName, pVar->getName()->getValue(), dwRootLen * sizeof(UINT32))) ||
+						 (pVar->getName()->compare(pdwName, nameLength) == OID_EQUAL) ||
+						 (pVar->getName()->compare(firstObjectName, firstObjectNameLen) == OID_EQUAL))
                {
                   bRunning = FALSE;
                   delete pRespPDU;
                   delete pRqPDU;
                   break;
                }
-               dwNameLen = pVar->GetName()->getLength();
-               memcpy(pdwName, pVar->GetName()->getValue(), dwNameLen * sizeof(UINT32));
+               nameLength = pVar->getName()->getLength();
+               memcpy(pdwName, pVar->getName()->getValue(), nameLength * sizeof(UINT32));
 					if (firstObjectNameLen == 0)
 					{
-						firstObjectNameLen = dwNameLen;
-						memcpy(firstObjectName, pdwName, dwNameLen * sizeof(UINT32));
+						firstObjectNameLen = nameLength;
+						memcpy(firstObjectName, pdwName, nameLength * sizeof(UINT32));
 					}
 
                // Call user's callback function for processing

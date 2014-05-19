@@ -33,7 +33,6 @@ TemplateRoot NXCORE_EXPORTABLE *g_pTemplateRoot = NULL;
 PolicyRoot NXCORE_EXPORTABLE *g_pPolicyRoot = NULL;
 NetworkMapRoot NXCORE_EXPORTABLE *g_pMapRoot = NULL;
 DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot = NULL;
-ReportRoot NXCORE_EXPORTABLE *g_pReportRoot = NULL;
 BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot = NULL;
 
 UINT32 NXCORE_EXPORTABLE g_dwMgmtNode = 0;
@@ -248,10 +247,6 @@ void ObjectsInit()
    g_pDashboardRoot = new DashboardRoot;
    NetObjInsert(g_pDashboardRoot, FALSE);
    
-	// Create "Report Root" object
-   g_pReportRoot = new ReportRoot;
-   NetObjInsert(g_pReportRoot, FALSE);
-
    // Create "Business Service Root" object
    g_pBusinessServiceRoot = new BusinessServiceRoot;
    NetObjInsert(g_pBusinessServiceRoot, FALSE);
@@ -342,9 +337,6 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 			case OBJECT_NETWORKMAPGROUP:
 			case OBJECT_DASHBOARDROOT:
 			case OBJECT_DASHBOARD:
-			case OBJECT_REPORTROOT:
-			case OBJECT_REPORTGROUP:
-			case OBJECT_REPORT:
 			case OBJECT_BUSINESSSERVICEROOT:
 			case OBJECT_BUSINESSSERVICE:
 			case OBJECT_NODELINK:
@@ -352,8 +344,27 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             break;
          case OBJECT_NODE:
 				g_idxNodeById.put(pObject->Id(), pObject);
-				if (pObject->IpAddr() != 0)
-					g_idxNodeByAddr.put(pObject->IpAddr(), pObject);
+            if (!(((Node *)pObject)->getFlags() & NF_REMOTE_AGENT))
+            {
+			      if (IsZoningEnabled())
+			      {
+				      Zone *zone = (Zone *)g_idxZoneByGUID.get(((Node *)pObject)->getZoneId());
+				      if (zone != NULL)
+				      {
+					      zone->addToIndex((Node *)pObject);
+				      }
+				      else
+				      {
+					      DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"),
+					                (int)((Node *)pObject)->getZoneId(), pObject->Name(), (int)pObject->Id());
+				      }
+               }
+               else
+               {
+                  if (pObject->IpAddr() != 0)
+					      g_idxNodeByAddr.put(pObject->IpAddr(), pObject);
+               }
+            }
             break;
 			case OBJECT_CLUSTER:
             g_idxClusterById.put(pObject->Id(), pObject);
@@ -363,6 +374,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             break;
 			case OBJECT_ACCESSPOINT:
 				g_idxAccessPointById.put(pObject->Id(), pObject);
+            MacDbAddAccessPoint((AccessPoint *)pObject);
             break;
          case OBJECT_SUBNET:
             if (pObject->IpAddr() != 0)
@@ -411,6 +423,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 										 pObject->IpAddr(), pObject->Name(), (int)pObject->Id());
 					}
             }
+            MacDbAddInterface((Interface *)pObject);
             break;
          case OBJECT_ZONE:
 				g_idxZoneByGUID.put(((Zone *)pObject)->getZoneId(), pObject);
@@ -480,9 +493,6 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_NETWORKMAPGROUP:
 		case OBJECT_DASHBOARDROOT:
 		case OBJECT_DASHBOARD:
-		case OBJECT_REPORTROOT:
-		case OBJECT_REPORTGROUP:
-		case OBJECT_REPORT:
 		case OBJECT_BUSINESSSERVICEROOT:
 		case OBJECT_BUSINESSSERVICE:
 		case OBJECT_NODELINK:
@@ -490,8 +500,27 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 			break;
       case OBJECT_NODE:
 			g_idxNodeById.remove(pObject->Id());
-			if (pObject->IpAddr() != 0)
-				g_idxNodeByAddr.remove(pObject->IpAddr());
+         if (!(((Node *)pObject)->getFlags() & NF_REMOTE_AGENT))
+         {
+			   if (IsZoningEnabled())
+			   {
+				   Zone *zone = (Zone *)g_idxZoneByGUID.get(((Node *)pObject)->getZoneId());
+				   if (zone != NULL)
+				   {
+					   zone->removeFromIndex((Node *)pObject);
+				   }
+				   else
+				   {
+					   DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"),
+					             (int)((Node *)pObject)->getZoneId(), pObject->Name(), (int)pObject->Id());
+				   }
+            }
+            else
+            {
+			      if (pObject->IpAddr() != 0)
+				      g_idxNodeByAddr.remove(pObject->IpAddr());
+            }
+         }
          break;
 		case OBJECT_CLUSTER:
 			g_idxClusterById.remove(pObject->Id());
@@ -501,6 +530,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          break;
 		case OBJECT_ACCESSPOINT:
 			g_idxAccessPointById.remove(pObject->Id());
+         MacDbRemove(((AccessPoint *)pObject)->getMacAddr());
          break;
       case OBJECT_SUBNET:
          if (pObject->IpAddr() != 0)
@@ -549,6 +579,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 					}
 				}
          }
+         MacDbRemove(((Interface *)pObject)->getMacAddr());
          break;
       case OBJECT_ZONE:
 			g_idxZoneByGUID.remove(((Zone *)pObject)->getZoneId());
@@ -581,15 +612,6 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 }
 
 /**
- * Access point MAC address comparator
- */
-static bool AccessPointMACComparator(NetObj *object, void *macAddr)
-{
-	return ((object->Type() == OBJECT_ACCESSPOINT) && !object->isDeleted() &&
-		     !memcmp(macAddr, ((AccessPoint *)object)->getMacAddr(), 6));
-}
-
-/**
  * Find access point by MAC address
  */
 AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr)
@@ -597,25 +619,8 @@ AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr)
 	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
 		return NULL;
 
-	return (AccessPoint *)g_idxAccessPointById.find(AccessPointMACComparator, (void *)macAddr);
-}
-
-/**
- * Access point radio ID comparator
- */
-static bool AccessPointRfIndexComparator(NetObj *object, void *rfIndex)
-{
-	return (object->Type() == OBJECT_ACCESSPOINT) && 
-		!object->isDeleted() && 
-		((AccessPoint *)object)->isMyRadio(CAST_FROM_POINTER(rfIndex, int));
-}
-
-/**
- * Find access point by radio ID (radio interface index)
- */
-AccessPoint NXCORE_EXPORTABLE *FindAccessPointByRadioId(int rfIndex)
-{
-	return (AccessPoint *)g_idxAccessPointById.find(AccessPointRfIndexComparator, CAST_TO_POINTER(rfIndex, void *));
+	NetObj *object = MacDbFind(macAddr);
+   return ((object != NULL) && (object->Type() == OBJECT_ACCESSPOINT)) ? (AccessPoint *)object : NULL;
 }
 
 /**
@@ -713,15 +718,6 @@ Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr)
 }
 
 /**
- * Interface MAC address comparator
- */
-static bool InterfaceMACComparator(NetObj *object, void *macAddr)
-{
-	return ((object->Type() == OBJECT_INTERFACE) && !object->isDeleted() &&
-		     !memcmp(macAddr, ((Interface *)object)->getMacAddr(), 6));
-}
-
-/**
  * Find interface by MAC address
  */
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
@@ -729,7 +725,8 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
 	if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
 		return NULL;
 
-	return (Interface *)g_idxObjectById.find(InterfaceMACComparator, (void *)macAddr);
+	NetObj *object = MacDbFind(macAddr);
+   return ((object != NULL) && (object->Type() == OBJECT_INTERFACE)) ? (Interface *)object : NULL;
 }
 
 /**
@@ -764,6 +761,22 @@ static bool LldpIdComparator(NetObj *object, void *lldpId)
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId)
 {
 	return (Node *)g_idxNodeById.find(LldpIdComparator, (void *)lldpId);
+}
+
+/**
+ * Bridge ID comparator
+ */
+static bool BridgeIdComparator(NetObj *object, void *bridgeId)
+{
+	return ((Node *)object)->isBridge() && !memcmp(((Node *)object)->getBridgeId(), bridgeId, MAC_ADDR_LENGTH);
+}
+
+/**
+ * Find node by bridge ID (bridge base address)
+ */
+Node NXCORE_EXPORTABLE *FindNodeByBridgeId(const BYTE *bridgeId)
+{
+	return (Node *)g_idxNodeById.find(BridgeIdComparator, (void *)bridgeId);
 }
 
 /**
@@ -1022,7 +1035,6 @@ static void LinkChildObjectsCallback(NetObj *object, void *data)
 		 (object->Type() == OBJECT_POLICYGROUP) ||
 		 (object->Type() == OBJECT_NETWORKMAPGROUP) ||
 		 (object->Type() == OBJECT_DASHBOARD) ||
-		 (object->Type() == OBJECT_REPORTGROUP) ||
 		 (object->Type() == OBJECT_BUSINESSSERVICE) ||
 		 (object->Type() == OBJECT_NODELINK))
 	{
@@ -1070,7 +1082,6 @@ BOOL LoadObjects()
 	g_pPolicyRoot->LoadFromDB();
 	g_pMapRoot->LoadFromDB();
 	g_pDashboardRoot->LoadFromDB();
-	g_pReportRoot->LoadFromDB();
 	g_pBusinessServiceRoot->LoadFromDB();
 
    // Load zones
@@ -1592,53 +1603,6 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
-   // Load report objects
-   DbgPrintf(2, _T("Loading reports..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM reports"));
-   if (hResult != 0)
-   {
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
-      {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         Report *rpt = new Report;
-         if (rpt->CreateFromDB(dwId))
-         {
-            NetObjInsert(rpt, FALSE);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            delete rpt;
-            nxlog_write(MSG_REPORT_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Load report group objects
-   DbgPrintf(2, _T("Loading report groups..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_REPORTGROUP);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult != 0)
-   {
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
-      {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         ReportGroup *pGroup = new ReportGroup;
-         if (pGroup->CreateFromDB(dwId))
-         {
-            NetObjInsert(pGroup, FALSE);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            delete pGroup;
-            nxlog_write(MSG_RG_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
    // Loading business service objects
    DbgPrintf(2, _T("Loading business services..."));
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_BUSINESSSERVICE);
@@ -1727,7 +1691,6 @@ BOOL LoadObjects()
    g_pPolicyRoot->LinkChildObjects();
    g_pMapRoot->LinkChildObjects();
 	g_pDashboardRoot->LinkChildObjects();
-	g_pReportRoot->LinkChildObjects();
 	g_pBusinessServiceRoot->LinkChildObjects();
 
 	// Link custom object classes provided by modules
@@ -1863,7 +1826,8 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
              (iChildClass == OBJECT_NODE) ||
              (iChildClass == OBJECT_CLUSTER) ||
              (iChildClass == OBJECT_MOBILEDEVICE) ||
-             (iChildClass == OBJECT_CONDITION))
+             (iChildClass == OBJECT_CONDITION) ||
+             (iChildClass == OBJECT_SUBNET))
             return true;
          break;
       case OBJECT_RACK:
@@ -1908,12 +1872,6 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
          break;
       case OBJECT_CLUSTER:
          if (iChildClass == OBJECT_NODE)
-            return true;
-         break;
-      case OBJECT_REPORTROOT:
-      case OBJECT_REPORTGROUP:
-         if ((iChildClass == OBJECT_REPORTGROUP) || 
-             (iChildClass == OBJECT_REPORT))
             return true;
          break;
 		case OBJECT_BUSINESSSERVICEROOT:

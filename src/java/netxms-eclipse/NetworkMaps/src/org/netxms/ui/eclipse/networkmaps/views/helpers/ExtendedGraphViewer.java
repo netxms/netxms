@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,7 +55,10 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.base.GeoLocation;
+import org.netxms.client.maps.elements.NetworkMapDCIContainer;
+import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.client.maps.elements.NetworkMapDecoration;
+import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
 import org.netxms.ui.eclipse.networkmaps.Messages;
@@ -90,9 +93,9 @@ public class ExtendedGraphViewer extends GraphViewer
 	private int gridSize = 96;
 	private boolean snapToGrid = false;
 	private MouseListener snapToGridListener;
-	private List<NetworkMapDecoration> mapDecorations;
-	private Set<NetworkMapDecoration> selectedDecorations = new HashSet<NetworkMapDecoration>();
-	private Map<Long, DecorationFigure> decorationFigures = new HashMap<Long, DecorationFigure>();
+	private List<NetworkMapElement> mapDecorations;
+	private Set<NetworkMapElement> selectedDecorations = new HashSet<NetworkMapElement>();
+	private Map<Long, DecorationLayerAbstractFigure> decorationFigures = new HashMap<Long, DecorationLayerAbstractFigure>();
 	private MouseListener backgroundMouseListener;
 	private ColorCache colors;
 	
@@ -204,9 +207,9 @@ public class ExtendedGraphViewer extends GraphViewer
 				org.eclipse.draw2d.geometry.Point mousePoint = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
 				graph.getRootLayer().translateToRelative(mousePoint);
 				IFigure figureUnderMouse = graph.getFigureAt(mousePoint.x, mousePoint.y);
-				if ((figureUnderMouse == null) || (figureUnderMouse == graph))
+				if ((figureUnderMouse == null) || (figureUnderMouse == zestRootLayer) || (figureUnderMouse == graph.getRootLayer()))
 				{
-					if ((me.getState() & SWT.MOD1) == 0)
+					if ((me.getState() & SWT.MOD1) == 0) 
 					{
 						clearDecorationSelection(true);
 					}
@@ -252,9 +255,9 @@ public class ExtendedGraphViewer extends GraphViewer
 	 * 
 	 * @param d map decoration element
 	 */
-	public void updateDecorationFigure(NetworkMapDecoration d)
+	public void updateDecorationFigure(NetworkMapElement d)
 	{
-		DecorationFigure figure = decorationFigures.get(d.getId());
+		DecorationLayerAbstractFigure figure = decorationFigures.get(d.getId());
 		if (figure != null)
 			figure.refresh();
 	}
@@ -278,9 +281,9 @@ public class ExtendedGraphViewer extends GraphViewer
 			if (mapDecorations != null)
 			{
 				MapLabelProvider lp = (MapLabelProvider)getLabelProvider();
-				for(NetworkMapDecoration d : mapDecorations)
+				for(NetworkMapElement d : mapDecorations)
 				{
-					DecorationFigure figure = (DecorationFigure)lp.getFigure(d);
+			      DecorationLayerAbstractFigure figure = (DecorationLayerAbstractFigure)lp.getFigure(d);
 					figure.setLocation(new org.eclipse.draw2d.geometry.Point(d.getX(), d.getY()));
 					decorationLayer.add(figure);
 					decorationFigures.put(d.getId(), figure);
@@ -295,7 +298,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	 * @param d decoartion object
 	 * @param addToExisting if true, add to existing selection
 	 */
-	protected void setDecorationSelection(NetworkMapDecoration d, boolean addToExisting)
+	protected void setDecorationSelection(NetworkMapElement d, boolean addToExisting)
 	{
 		if (!addToExisting)
 		{
@@ -317,9 +320,9 @@ public class ExtendedGraphViewer extends GraphViewer
 		if (selectedDecorations.size() == 0)
 			return;
 		
-		for(NetworkMapDecoration d : selectedDecorations)
+		for(NetworkMapElement d : selectedDecorations)
 		{
-			DecorationFigure f = decorationFigures.get(d.getId());
+		   DecorationLayerAbstractFigure f = decorationFigures.get(d.getId());
 			if (f != null)
 				f.setSelected(false);
 		}
@@ -346,10 +349,10 @@ public class ExtendedGraphViewer extends GraphViewer
 			clearDecorationSelection(false);
 			for(Object o : l)
 			{
-				if (o instanceof NetworkMapDecoration)
+				if ((o instanceof NetworkMapDecoration) || (o instanceof NetworkMapDCIContainer) || (o instanceof NetworkMapDCIImage))
 				{
-					selectedDecorations.add((NetworkMapDecoration)o);
-					DecorationFigure f = decorationFigures.get(((NetworkMapDecoration)o).getId());
+					selectedDecorations.add((NetworkMapElement)o);
+					DecorationLayerAbstractFigure f = decorationFigures.get(((NetworkMapElement)o).getId());
 					if (f != null)
 						f.setSelected(true);
 				}
@@ -366,7 +369,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	protected List getSelectionFromWidget()
 	{
 		List selection = super.getSelectionFromWidget();
-		for(NetworkMapDecoration d : selectedDecorations)
+		for(NetworkMapElement d : selectedDecorations)
 			selection.add(d);
 		return selection;
 	}

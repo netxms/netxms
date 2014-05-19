@@ -38,6 +38,7 @@ public class DefaultPerspective implements IPerspectiveFactory
 		layout.setEditorAreaVisible(false);
 		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.console.DefaultPerspective"); //$NON-NLS-1$
 		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.dashboard.DashboardPerspective"); //$NON-NLS-1$
+      layout.addPerspectiveShortcut("org.netxms.ui.eclipse.reporter.ReportPerspective"); //$NON-NLS-1$
 		
 		final IFolderLayout navigationFolder = layout.createFolder("org.netxms.ui.eclipse.folders.navigation", IPageLayout.LEFT, 0, ""); //$NON-NLS-1$ //$NON-NLS-2$
 		navigationFolder.addView("org.netxms.ui.eclipse.view.navigation.objectbrowser"); //$NON-NLS-1$

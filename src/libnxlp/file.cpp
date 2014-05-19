@@ -228,7 +228,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 
 	while(1)
 	{
-		ExpandFileName(getFileName(), fname, MAX_PATH);
+		ExpandFileName(getFileName(), fname, MAX_PATH, true);
 		if (CALL_STAT(fname, &st) == 0)
 		{
 #ifdef _WIN32
@@ -261,7 +261,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 						goto stop_parser;
 
 					// Check if file name was changed
-					ExpandFileName(getFileName(), temp, MAX_PATH);
+					ExpandFileName(getFileName(), temp, MAX_PATH, true);
 					if (_tcscmp(temp, fname))
 					{
 						if (logger != NULL)
@@ -279,7 +279,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 						readFromStart = true;
 						break;
 					}
-#else					
+#else
 					if (NX_FSTAT(fh, &st) < 0)
 					{
 						if (logger != NULL)
@@ -296,15 +296,25 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 						readFromStart = true;
 						break;
 					}
-					
-					if (st.st_size != stn.st_size)
+
+#ifdef _WIN32
+					if (st.st_size > stn.st_size)
 					{
 						if (logger != NULL)
-							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file size differs for stat(%d) and fstat(%s), assume file rename"), fh, fname);
+							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file size for fstat(%d) is greater then for stat(%s), assume file rename"), fh, fname);
 						readFromStart = true;
 						break;
 					}
-						
+#else
+					if ((st.st_ino != stn.st_ino) || (st.st_dev != stn.st_dev))
+					{
+						if (logger != NULL)
+							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file device or inode differs for stat(%d) and fstat(%s), assume file rename"), fh, fname);
+						readFromStart = true;
+						break;
+					}
+#endif
+
 					if ((size_t)st.st_size != size)
 					{
 						if ((size_t)st.st_size < size)

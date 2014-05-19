@@ -351,7 +351,7 @@ static BOOL Send()
 	}
 
 	// Send response to pipe
-	CSCP_MESSAGE *rawMsg = msg.CreateMessage();
+	CSCP_MESSAGE *rawMsg = msg.createMessage();
 #ifdef _WIN32
 	DWORD bytes;
 	if (!WriteFile(s_hPipe, rawMsg, ntohl(rawMsg->dwSize), &bytes, NULL))

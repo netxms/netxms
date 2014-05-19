@@ -1,6 +1,6 @@
 /*
 ** WMI NetXMS subagent
-** Copyright (C) 2008-2013 Victor Kirhenshtein
+** Copyright (C) 2008-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -60,6 +60,7 @@ LONG H_SecurityCenterDisplayName(const TCHAR *cmd, const TCHAR *arg, TCHAR *valu
 			}
 			else
 			{
+            AgentWriteDebugLog(6, _T("WMI: H_SecurityCenterDisplayName: property \"displayName\" not found"));
 				rc = SYSINFO_RC_UNSUPPORTED;
 			}
 			pClassObject->Release();
@@ -103,6 +104,7 @@ LONG H_SecurityCenterProductState(const TCHAR *cmd, const TCHAR *arg, TCHAR *val
 			}
 			else
 			{
+            AgentWriteDebugLog(6, _T("WMI: H_SecurityCenterProductState: property \"productState\" not found"));
 				rc = SYSINFO_RC_UNSUPPORTED;
 			}
 			pClassObject->Release();

@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <netxmsdb.h>
 #include <netxms_mt.h>
+#include <hdlink.h>
 
 #if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
 #include <readline/readline.h>
@@ -774,6 +775,10 @@ retry_db_lock:
 	if (!g_alarmMgr.init())
 		return FALSE;
 
+   // Initialize helpdesk link
+   SetHDLinkEntryPoints(ResolveAlarmByHDRef, TerminateAlarmByHDRef);
+   LoadHelpDeskLink();
+
 	// Initialize data collection subsystem
 	if (!InitDataCollector())
 		return FALSE;
@@ -990,7 +995,7 @@ void NXCORE_EXPORTABLE FastShutdown()
 /**
  * Compare given string to command template with abbreviation possibility
  */
-static bool IsCommand(const TCHAR *pszTemplate, TCHAR *pszString, int iMinChars)
+static bool IsCommand(const TCHAR *cmdTemplate, TCHAR *pszString, int iMinChars)
 {
 	int i;
 
@@ -998,7 +1003,7 @@ static bool IsCommand(const TCHAR *pszTemplate, TCHAR *pszString, int iMinChars)
 	_tcsupr(pszString);
 
 	for(i = 0; pszString[i] != 0; i++)
-		if (pszString[i] != pszTemplate[i])
+		if (pszString[i] != cmdTemplate[i])
 			return false;
 	if (i < iMinChars)
 		return false;
@@ -1271,7 +1276,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_WRITE_FULL_DUMP));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_RESOLVE_NODE_NAMES));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CATCH_EXCEPTIONS));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_INTERNAL_CA));
+			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_HELPDESK_LINK_ACTIVE));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_LOCKED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_MULTIPLE_DB_CONN));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_CONNECTION_LOST));
@@ -1490,6 +1495,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		pArg = ExtractWord(pArg, szBuffer);
 
 		bool libraryLocked = true;
+      bool destroyCompiledScript = false;
 		g_pScriptLibrary->lock();
 
 		NXSL_Program *compiledScript = g_pScriptLibrary->findScript(szBuffer);
@@ -1497,6 +1503,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		{
 			g_pScriptLibrary->unlock();
 			libraryLocked = false;
+         destroyCompiledScript = true;
 			char *script;
 			UINT32 fileSize;
 			if ((script = (char *)LoadFile(szBuffer, &fileSize)) != NULL)
@@ -1526,27 +1533,44 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		{
 			NXSL_ServerEnv *pEnv = new NXSL_ServerEnv;
 			pEnv->setConsole(pCtx);
-				
-			NXSL_Value *argv[32];
-			int argc = 0;
-			while(argc < 32)
-			{
-				pArg = ExtractWord(pArg, szBuffer);
-				if (szBuffer[0] == 0)
-					break;
-				argv[argc++] = new NXSL_Value(szBuffer);
-			}
 
-			if (compiledScript->run(pEnv, argc, argv) == 0)
-			{
-				NXSL_Value *pValue = compiledScript->getResult();
-				int retCode = pValue->getValueAsInt32();
-				ConsolePrintf(pCtx, _T("INFO: Script finished with rc=%d\n\n"), retCode);
-			}
-			else
-			{
-				ConsolePrintf(pCtx, _T("ERROR: Script finished with error: %s\n\n"), compiledScript->getErrorText());
-			}
+         NXSL_VM *vm = new NXSL_VM(pEnv);
+         if (vm->load(compiledScript))
+         {	
+            if (libraryLocked)
+            {
+      			g_pScriptLibrary->unlock();
+               libraryLocked = false;
+            }
+
+			   NXSL_Value *argv[32];
+			   int argc = 0;
+			   while(argc < 32)
+			   {
+				   pArg = ExtractWord(pArg, szBuffer);
+				   if (szBuffer[0] == 0)
+					   break;
+				   argv[argc++] = new NXSL_Value(szBuffer);
+			   }
+
+			   if (vm->run(argc, argv))
+			   {
+				   NXSL_Value *pValue = vm->getResult();
+				   int retCode = pValue->getValueAsInt32();
+				   ConsolePrintf(pCtx, _T("INFO: Script finished with rc=%d\n\n"), retCode);
+			   }
+			   else
+			   {
+				   ConsolePrintf(pCtx, _T("ERROR: Script finished with error: %s\n\n"), vm->getErrorText());
+			   }
+         }
+         else
+         {
+			   ConsolePrintf(pCtx, _T("ERROR: VM creation failed: %s\n\n"), vm->getErrorText());
+         }
+         delete vm;
+         if (destroyCompiledScript)
+            delete compiledScript;
 		}
 		if (libraryLocked)
 			g_pScriptLibrary->unlock();
@@ -1587,10 +1611,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 						pTrace = TraceRoute((Node *)pObject1, (Node *)pObject2);
 						if (pTrace != NULL)
 						{
-							ConsolePrintf(pCtx, _T("Trace from %s to %s (%d hops, %s):\n"),
+                     TCHAR sourceIp[32];
+							ConsolePrintf(pCtx, _T("Trace from %s to %s (%d hops, %s, source IP %s):\n"),
 									pObject1->Name(), pObject2->Name(), pTrace->getHopCount(),
-									pTrace->isComplete() ? _T("complete") : _T("incomplete"));
-							for(i = 0; i < pTrace->getHopCount(); i++)
+									pTrace->isComplete() ? _T("complete") : _T("incomplete"),
+                           IpToStr(pTrace->getSourceAddress(), sourceIp));
+ 							for(i = 0; i < pTrace->getHopCount(); i++)
 							{
 								HOP_INFO *hop = pTrace->getHopInfo(i);
 								ConsolePrintf(pCtx, _T("[%d] %s %s %s %d\n"),
@@ -1762,7 +1788,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 		   ctx.pMsg = NULL;
 		   ctx.session = NULL;
          ctx.output = NULL;
-		   WriteToTerminal(_T("\nNetXMS Server V") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T(" Ready\n")
+		   WriteToTerminal(_T("\nNetXMS Server V") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING IS_UNICODE_BUILD_STRING _T(" Ready\n")
 				             _T("Enter \"\x1b[1mhelp\x1b[0m\" for command list or \"\x1b[1mdown\x1b[0m\" for server shutdown\n")
 				             _T("System Console\n\n"));
 

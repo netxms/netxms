@@ -27,7 +27,7 @@ public class NXCPCodes
 	public static final int CMD_LOGIN = 0x0001;
 	public static final int CMD_LOGIN_RESP = 0x0002;
 	public static final int CMD_KEEPALIVE = 0x0003;
-	public static final int CMD_SET_ALARM_HD_STATE = 0x0004;
+	public static final int CMD_OPEN_HELPDESK_ISSUE = 0x0004;
 	public static final int CMD_GET_OBJECTS = 0x0005;
 	public static final int CMD_OBJECT = 0x0006;
 	public static final int CMD_DELETE_OBJECT = 0x0007;
@@ -94,7 +94,7 @@ public class NXCPCodes
 	public static final int CMD_GET_CURRENT_USER_ATTR = 0x0044;
 	public static final int CMD_SET_CURRENT_USER_ATTR = 0x0045;
 	public static final int CMD_GET_ALL_ALARMS = 0x0046;
-	public static final int CMD_GET_ALARM_NOTES = 0x0047;
+	public static final int CMD_GET_ALARM_COMMENTS = 0x0047;
 	public static final int CMD_ACK_ALARM = 0x0048;
 	public static final int CMD_ALARM_UPDATE = 0x0049;
 	public static final int CMD_ALARM_DATA = 0x004A;
@@ -244,10 +244,6 @@ public class NXCPCodes
 	public static final int CMD_CREATE_MAP = 0x00DA;
 	public static final int CMD_UPLOAD_FILE = 0x00DB;
 	public static final int CMD_DELETE_FILE = 0x00DC;
-	public static final int CMD_DELETE_REPORT_RESULTS = 0x00DD;
-	public static final int CMD_RENDER_REPORT = 0x00DE;
-	public static final int CMD_EXECUTE_REPORT = 0x00DF;
-	public static final int CMD_GET_REPORT_RESULTS = 0x00E0;
 	public static final int CMD_CONFIG_SET_CLOB = 0x00E1;
 	public static final int CMD_CONFIG_GET_CLOB = 0x00E2;
 	public static final int CMD_RENAME_MAP = 0x00E3;
@@ -281,7 +277,7 @@ public class NXCPCodes
 	public static final int CMD_GET_FILE_DETAILS = 0x00FF;
 	public static final int CMD_IMAGE_LIBRARY_UPDATE = 0x0100;
 	public static final int CMD_GET_NODE_COMPONENTS = 0x0101;
-	public static final int CMD_UPDATE_ALARM_NOTE = 0x0102;
+	public static final int CMD_UPDATE_ALARM_COMMENT = 0x0102;
 	public static final int CMD_GET_ALARM = 0x0103;
 	public static final int CMD_GET_TABLE_LAST_VALUES = 0x0104;
 	public static final int CMD_GET_TABLE_DCI_DATA = 0x0105;
@@ -312,9 +308,12 @@ public class NXCPCodes
 	public static final int CMD_CANCEL_FILE_MONITORING = 0x011E;
 	public static final int CMD_CHANGE_OBJECT_TOOL_STATUS = 0x011F;
 	public static final int CMD_SET_ALARM_STATUS_FLOW = 0x0120;
-	public static final int CMD_DELETE_ALARM_NOTE = 0x0121;
-   public static final int CMD_GET_EFFECTIVE_RIGHTS = 0x0122;
-
+	public static final int CMD_DELETE_ALARM_COMMENT = 0x0121;
+	public static final int CMD_GET_EFFECTIVE_RIGHTS = 0x0122;
+	public static final int CMD_GET_DCI_VALUES = 0x0123;
+	public static final int CMD_GET_HELPDESK_URL = 0x0124;
+	public static final int CMD_UNLINK_HELPDESK_ISSUE = 0x0125;
+	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
 	public static final int CMD_RS_GET_REPORT_DEFINITION = 0x1101;
@@ -322,6 +321,11 @@ public class NXCPCodes
 	public static final int CMD_RS_LIST_RESULTS = 0x1103;
 	public static final int CMD_RS_RENDER_RESULT = 0x1104;
 	public static final int CMD_RS_DELETE_RESULT = 0x1105;
+	public static final int CMD_RS_LIST_SCHEDULES = 0x1106;
+	public static final int CMD_RS_DELETE_SCHEDULE = 0x1107;
+	public static final int CMD_RS_NOTIFY = 0x1108;
+	public static final int CMD_RS_ADD_REPORT_NOTIFY = 0x1109;
+	public static final int CMD_RS_SEND_MAIL_NOTIFY = 0x1110;
 
 	// Variable codes
 	public static final long VID_LOGIN_NAME = 1;
@@ -733,7 +737,7 @@ public class NXCPCodes
 	public static final long VID_IS_PHYS_PORT = 407;
 	public static final long VID_CREATE_STATUS_DCI = 408;
 	public static final long VID_NUM_COMMENTS = 409;
-	public static final long VID_NOTE_ID = 410;
+	public static final long VID_COMMENT_ID = 410;
 	public static final long VID_DCOBJECT_TYPE = 411;
 	public static final long VID_INSTANCE_COLUMN = 412;
 	public static final long VID_DATA_COLUMN = 413;
@@ -741,7 +745,7 @@ public class NXCPCodes
 	public static final long VID_OPER_STATE = 415;
 	public static final long VID_EXPECTED_STATE = 416;
 	public static final long VID_LINK_COLOR = 417;
-	public static final long VID_EXACT_MATCH = 418;
+	public static final long VID_CONNECTION_TYPE = 418;
 	public static final long VID_RESOLVED_BY_USER = 419;
 	public static final long VID_IS_STICKY = 420;
 	public static final long VID_DATE_FORMAT = 421;
@@ -787,6 +791,16 @@ public class NXCPCodes
    public static final long VID_ALARM_STATUS_FLOW_STATE = 461;
    public static final long VID_GROUPS = 462;
    public static final long VID_EFFECTIVE_RIGHTS = 463;
+   public static final long VID_EXTENSION_COUNT = 464;
+   public static final long VID_TIMED_ALARM_ACK_ENABLED = 465;
+   public static final long VID_TABLE_EXTENDED_FORMAT = 466;
+   public static final long VID_RS_JOB_ID = 467;
+   public static final long VID_RS_JOB_TYPE = 468;
+   public static final long VID_RS_REPORT_NAME  = 469;
+   public static final long VID_HELPDESK_LINK_ACTIVE = 470;
+   public static final long VID_URL = 471;
+   public static final long VID_PEER_PROTOCOL = 472;
+   public static final long VID_VIEW_REFRESH_INTERVAL = 473;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -870,4 +884,6 @@ public class NXCPCodes
 	public static final long VID_RADIO_LIST_BASE = 0x30000000L;
 	public static final long VID_UUID_LIST_BASE = 0x10000000L;
 	public static final long VID_RULE_LIST_BASE = 0x10000000L;
+	public static final long VID_EXTENSION_LIST_BASE = 0x10000000L;
+	public static final long VID_DCI_ID_LIST_BASE = 0x10000000L;
 }

@@ -28,7 +28,7 @@
 /**
  * Driver data
  */
-static void *s_driverData = NULL;
+static DriverData *s_driverData = NULL;
 static StringMap s_customAttributes;
 
 /**

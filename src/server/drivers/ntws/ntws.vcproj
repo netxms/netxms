@@ -64,6 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="ws2_32.lib"
 				OutputFile="$(OutDir)\$(ProjectName).ndd"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -142,6 +143,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="ws2_32.lib"
 				OutputFile="$(OutDir)\$(ProjectName).ndd"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -217,6 +219,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="ws2_32.lib"
 				OutputFile="$(OutDir)\$(ProjectName).ndd"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -295,6 +298,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="ws2_32.lib"
 				OutputFile="$(OutDir)\$(ProjectName).ndd"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -352,11 +356,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\nxsrvapi.h"
+				RelativePath=".\ntws.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ntws.h"
+				RelativePath="..\..\include\nxsrvapi.h"
 				>
 			</File>
 		</Filter>

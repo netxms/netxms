@@ -88,12 +88,12 @@ static UINT32 HandlerPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport
 {
 	InterfaceList *ifList = (InterfaceList *)arg;
 
-	NX_INTERFACE_INFO *iface = ifList->findByIfIndex(var->GetValueAsUInt());
+	NX_INTERFACE_INFO *iface = ifList->findByIfIndex(var->getValueAsUInt());
 	if (iface != NULL)
 	{
-		UINT32 nameLen = var->GetName()->getLength();
-		iface->dwSlotNumber = var->GetName()->getValue()[nameLen - 2];
-		iface->dwPortNumber = var->GetName()->getValue()[nameLen - 1];
+		size_t nameLen = var->getName()->getLength();
+		iface->dwSlotNumber = var->getName()->getValue()[nameLen - 2];
+		iface->dwPortNumber = var->getName()->getValue()[nameLen - 1];
 		iface->isPhysicalPort = true;
 	}
 	return SNMP_ERR_SUCCESS;
@@ -105,7 +105,7 @@ static UINT32 HandlerPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *Cat2900Driver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable)
+InterfaceList *Cat2900Driver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = CiscoDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);

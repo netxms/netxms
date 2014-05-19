@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -36,18 +36,18 @@
 #include <nxconfig.h>
 
 
-//
-// Constants
-//
+/**
+ * Constants
+ */
 
 #define MAX_CONNECTOR_NAME		128
 #define MAX_PORT_COUNT			16
 #define MAX_BEND_POINTS       16
 
 
-//
-// User access rights
-//
+/**
+ * User access rights
+ */
 
 #define MAP_ACCESS_READ       0x0001
 #define MAP_ACCESS_WRITE      0x0002
@@ -55,9 +55,9 @@
 #define MAP_ACCESS_DELETE     0x0008
 
 
-//
-// Object link types
-//
+/**
+ * Object link types
+ */
 
 #define LINK_TYPE_NORMAL      0
 #define LINK_TYPE_VPN         1
@@ -67,17 +67,26 @@
 /**
  * Link between objects
  */
-struct OBJLINK
+class ObjLink
 {
-   UINT32 dwId1;
-   UINT32 dwId2;
-   LONG nType;
-	TCHAR szPort1[MAX_CONNECTOR_NAME];
-	TCHAR szPort2[MAX_CONNECTOR_NAME];
+public:
+   UINT32 id1;
+   UINT32 id2;
+   LONG type;
+	TCHAR port1[MAX_CONNECTOR_NAME];
+	TCHAR port2[MAX_CONNECTOR_NAME];
 	int portIdCount;
-	UINT32 portId1[MAX_PORT_COUNT];
-	UINT32 portId2[MAX_PORT_COUNT];
-};
+	UINT32 portIdArray1[MAX_PORT_COUNT];
+	UINT32 portIdArray2[MAX_PORT_COUNT];
+	TCHAR *config;
+	UINT32 flags;
+
+   ObjLink();
+   ObjLink(UINT32 id1, UINT32 id2, LONG type, TCHAR* port1, TCHAR* port2, int portIdCount, UINT32* portIdArray1, UINT32* portIdArray2, TCHAR* config, UINT32 flags);
+   ObjLink(ObjLink* old);
+   ~ObjLink();
+ };
+
 
 /**
  * Connected object list - used as source for nxSubmap::DoLayout
@@ -85,29 +94,25 @@ struct OBJLINK
 class LIBNXMAP_EXPORTABLE nxmap_ObjList
 {
 protected:
-   UINT32 m_dwNumObjects;
-	UINT32 m_allocatedObjects;
-   UINT32 *m_pdwObjectList;
-   UINT32 m_dwNumLinks;
-	UINT32 m_allocatedLinks;
-   OBJLINK *m_pLinkList;
+   IntegerArray<UINT32> *m_objectList;
+   ObjectArray<ObjLink> *m_linkList;
 
 public:
    nxmap_ObjList();
-   nxmap_ObjList(nxmap_ObjList *pSrc);
-   nxmap_ObjList(CSCPMessage *pMsg);
+   nxmap_ObjList(nxmap_ObjList *src);
+   nxmap_ObjList(CSCPMessage *msg);
    ~nxmap_ObjList();
 
    void addObject(UINT32 id);
-   void linkObjects(UINT32 id1, UINT32 id2);
+   void linkObjects(UINT32 id1, UINT32 id2, int linkType = LINK_TYPE_NORMAL, const TCHAR *linkName = NULL);
    void linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *port1, const TCHAR *port2, UINT32 portId1, UINT32 portId2);
    void removeObject(UINT32 id);
    void clear();
 
-   UINT32 getNumObjects() { return m_dwNumObjects; }
-   UINT32 *getObjects() { return m_pdwObjectList; }
-   UINT32 getNumLinks() { return m_dwNumLinks; }
-   OBJLINK *getLinks() { return m_pLinkList; }
+   UINT32 getNumObjects() { return m_objectList->size(); }
+   IntegerArray<UINT32> *getObjects() { return m_objectList; }
+   UINT32 getNumLinks() { return m_linkList->size(); }
+   ObjectArray<ObjLink> *getLinks() { return m_linkList; }
 
 	void createMessage(CSCPMessage *pMsg);
 
@@ -118,9 +123,11 @@ public:
 /**
  * Map element types
  */
-#define MAP_ELEMENT_GENERIC      0
-#define MAP_ELEMENT_OBJECT       1
-#define MAP_ELEMENT_DECORATION   2
+#define MAP_ELEMENT_GENERIC         0
+#define MAP_ELEMENT_OBJECT          1
+#define MAP_ELEMENT_DECORATION      2
+#define MAP_ELEMENT_DCI_CONTAINER   3
+#define MAP_ELEMENT_DCI_IMAGE       4
 
 /**
  * Decoration types
@@ -137,6 +144,11 @@ public:
 #define ROUTING_BENDPOINTS       3
 
 /**
+ * Possible flag values for NetworMapElements
+ */
+#define AUTO_GENERATED           1
+
+/**
  * Generic map element
  */
 class LIBNXMAP_EXPORTABLE NetworkMapElement
@@ -146,10 +158,11 @@ protected:
 	LONG m_type;
 	LONG m_posX;
 	LONG m_posY;
+	UINT32 m_flags;
 
 public:
-	NetworkMapElement(UINT32 id);
-	NetworkMapElement(UINT32 id, Config *config);
+	NetworkMapElement(UINT32 id, UINT32 flags = 0);
+	NetworkMapElement(UINT32 id, Config *config, UINT32 flags = 0);
 	NetworkMapElement(CSCPMessage *msg, UINT32 baseId);
 	virtual ~NetworkMapElement();
 
@@ -160,6 +173,7 @@ public:
 	LONG getType() { return m_type; }
 	LONG getPosX() { return m_posX; }
 	LONG getPosY() { return m_posY; }
+	UINT32 getFlags() { return m_flags; }
 
 	void setPosition(LONG x, LONG y);
 };
@@ -173,8 +187,8 @@ protected:
 	UINT32 m_objectId;
 
 public:
-	NetworkMapObject(UINT32 id, UINT32 objectId);
-	NetworkMapObject(UINT32 id, Config *config);
+	NetworkMapObject(UINT32 id, UINT32 objectId, UINT32 flags = 0);
+	NetworkMapObject(UINT32 id, Config *config, UINT32 flags = 0);
 	NetworkMapObject(CSCPMessage *msg, UINT32 baseId);
 	virtual ~NetworkMapObject();
 
@@ -197,8 +211,8 @@ protected:
 	LONG m_height;
 
 public:
-	NetworkMapDecoration(UINT32 id, LONG decorationType);
-	NetworkMapDecoration(UINT32 id, Config *config);
+	NetworkMapDecoration(UINT32 id, LONG decorationType, UINT32 flags = 0);
+	NetworkMapDecoration(UINT32 id, Config *config, UINT32 flags = 0);
 	NetworkMapDecoration(CSCPMessage *msg, UINT32 baseId);
 	virtual ~NetworkMapDecoration();
 
@@ -211,6 +225,46 @@ public:
 
 	LONG getWidth() { return m_width; }
 	LONG getHeight() { return m_height; }
+};
+
+/**
+ * DCI map conatainer
+ */
+class LIBNXMAP_EXPORTABLE NetworkMapDCIContainer : public NetworkMapElement
+{
+protected:
+	TCHAR* m_xmlDCIList;
+
+public:
+	NetworkMapDCIContainer(UINT32 id, TCHAR* objectDCIList, UINT32 flags = 0);
+	NetworkMapDCIContainer(UINT32 id, Config *config, UINT32 flags = 0);
+	NetworkMapDCIContainer(CSCPMessage *msg, UINT32 baseId);
+	virtual ~NetworkMapDCIContainer();
+
+	virtual void updateConfig(Config *config);
+	virtual void fillMessage(CSCPMessage *msg, UINT32 baseId);
+
+	TCHAR* getObjectDCIList() { return m_xmlDCIList; }
+};
+
+/**
+ * DCI map image
+ */
+class LIBNXMAP_EXPORTABLE NetworkMapDCIImage : public NetworkMapElement
+{
+protected:
+	TCHAR* m_config;
+
+public:
+	NetworkMapDCIImage(UINT32 id, TCHAR* objectDCIList, UINT32 flags = 0);
+	NetworkMapDCIImage(UINT32 id, Config *config, UINT32 flags = 0);
+	NetworkMapDCIImage(CSCPMessage *msg, UINT32 baseId);
+	virtual ~NetworkMapDCIImage();
+
+	virtual void updateConfig(Config *config);
+	virtual void fillMessage(CSCPMessage *msg, UINT32 baseId);
+
+	TCHAR* getObjectDCIList() { return m_config; }
 };
 
 /**
@@ -229,6 +283,8 @@ protected:
 	UINT32 m_statusObject;
 	int m_routing;
 	UINT32 m_bendPoints[MAX_BEND_POINTS * 2];
+	UINT32 m_flags;
+	TCHAR *m_config;
 
 public:
 	NetworkMapLink(UINT32 e1, UINT32 e2, int type);
@@ -248,6 +304,9 @@ public:
 	UINT32 getStatusObject() { return m_statusObject; }
 	int getRouting() { return m_routing; }
 	TCHAR *getBendPoints(TCHAR *buffer);
+	UINT32 getFlags() { return m_flags; }
+	const TCHAR *getConfig() { return CHECK_NULL_EX(m_config); }
+	bool checkFlagSet(UINT32 flag) { return (m_flags & flag) != 0; }
 
 	void setName(const TCHAR *name);
 	void setConnector1Name(const TCHAR *name);
@@ -256,6 +315,8 @@ public:
 	void setStatusObject(UINT32 object) { m_statusObject = object; }
 	void setRouting(int routing) { m_routing = routing; }
 	void parseBendPoints(const TCHAR *data);
+	void setFlags(UINT32 flags) { m_flags = flags; }
+	void setConfig(const TCHAR *name);
 };
 
 

@@ -61,11 +61,11 @@ public class TweakletManager
 	
 	/**
 	 * Call postLogin() method for all tweaklets. This method called from login thread,
-	 * why UI is blocked in wait dialog.
+	 * while UI is blocked in wait dialog.
 	 * 
 	 * @param monitor
 	 */
-	static void postLogin(NXCSession session)
+	public static void postLogin(NXCSession session)
 	{
 		for(ConsoleTweaklet t : tweaklets)
 			t.postLogin(session);

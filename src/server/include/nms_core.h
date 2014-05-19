@@ -171,14 +171,14 @@ typedef void * HSNMPSESSION;
 /**
  * Client session flags
  */
-#define CSF_EPP_LOCKED           ((UINT32)0x0002)
-#define CSF_PACKAGE_DB_LOCKED    ((UINT32)0x0004)
-#define CSF_USER_DB_LOCKED       ((UINT32)0x0008)
-#define CSF_EPP_UPLOAD           ((UINT32)0x0010)
-#define CSF_CONSOLE_OPEN         ((UINT32)0x0020)
-#define CSF_AUTHENTICATED        ((UINT32)0x0080)
-#define CSF_RECEIVING_MAP_DATA   ((UINT32)0x0200)
-#define CSF_SYNC_OBJECT_COMMENTS ((UINT32)0x0400)
+#define CSF_EPP_LOCKED           ((UINT32)0x00000002)
+#define CSF_PACKAGE_DB_LOCKED    ((UINT32)0x00000004)
+#define CSF_USER_DB_LOCKED       ((UINT32)0x00000008)
+#define CSF_EPP_UPLOAD           ((UINT32)0x00000010)
+#define CSF_CONSOLE_OPEN         ((UINT32)0x00000020)
+#define CSF_AUTHENTICATED        ((UINT32)0x00000080)
+#define CSF_RECEIVING_MAP_DATA   ((UINT32)0x00000200)
+#define CSF_SYNC_OBJECT_COMMENTS ((UINT32)0x00000400)
 
 /**
  * Client session states
@@ -338,6 +338,7 @@ private:
    void login(CSCPMessage *pRequest);
    void updateDeviceInfo(CSCPMessage *pRequest);
    void updateDeviceStatus(CSCPMessage *pRequest);
+   void pushData(CSCPMessage *request);
 
 public:
    MobileDeviceSession(SOCKET hSocket, struct sockaddr *addr);
@@ -348,7 +349,7 @@ public:
 
    void run();
 
-   void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
+   void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
    void sendMessage(CSCPMessage *pMsg);
 
 	UINT32 getIndex() { return m_dwIndex; }
@@ -421,6 +422,7 @@ private:
    CONDITION m_condEncryptionSetup;
    UINT32 m_dwActiveChannels;     // Active data channels
 	CONSOLE_CTX m_console;			// Server console context
+	StringList m_musicTypeList;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
@@ -448,11 +450,9 @@ private:
 	DECLARE_THREAD_STARTER(findIpAddress)
 	DECLARE_THREAD_STARTER(processConsoleCommand)
 	DECLARE_THREAD_STARTER(sendMib)
-	DECLARE_THREAD_STARTER(getReportResults)
-	DECLARE_THREAD_STARTER(deleteReportResults)
-	DECLARE_THREAD_STARTER(renderReport)
 	DECLARE_THREAD_STARTER(getNetworkPath)
 	DECLARE_THREAD_STARTER(getAlarmEvents)
+	DECLARE_THREAD_STARTER(openHelpdeskIssue)
 	DECLARE_THREAD_STARTER(forwardToReportingServer)
 
    void readThread();
@@ -497,6 +497,7 @@ private:
 	void clearDCIData(CSCPMessage *pRequest);
    void changeDCIStatus(CSCPMessage *pRequest);
    void getLastValues(CSCPMessage *pRequest);
+   void getLastValuesByDciId(CSCPMessage *pRequest);
    void getTableLastValues(CSCPMessage *pRequest);
 	void getThresholdSummary(CSCPMessage *request);
    void openEPP(CSCPMessage *request);
@@ -513,9 +514,12 @@ private:
    void acknowledgeAlarm(CSCPMessage *request);
    void resolveAlarm(CSCPMessage *request, bool terminate);
    void deleteAlarm(CSCPMessage *request);
-	void getAlarmNotes(CSCPMessage *pRequest);
-	void updateAlarmNote(CSCPMessage *pRequest);
-	void deleteAlarmNote(CSCPMessage *request);
+   void openHelpdeskIssue(CSCPMessage *request);
+   void getHelpdeskUrl(CSCPMessage *request);
+   void unlinkHelpdeskIssue(CSCPMessage *request);
+	void getAlarmComments(CSCPMessage *pRequest);
+	void updateAlarmComment(CSCPMessage *pRequest);
+	void deleteAlarmComment(CSCPMessage *request);
 	void updateAlarmStatusFlow(CSCPMessage *request);
    void createAction(CSCPMessage *pRequest);
    void updateAction(CSCPMessage *pRequest);
@@ -567,7 +571,7 @@ private:
    void StartSnmpWalk(CSCPMessage *pRequest);
    void resolveDCINames(CSCPMessage *pRequest);
    UINT32 resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR **ppszName);
-   void SendConfigForAgent(CSCPMessage *pRequest);
+   void sendConfigForAgent(CSCPMessage *pRequest);
    void sendAgentCfgList(UINT32 dwRqId);
    void OpenAgentConfig(CSCPMessage *pRequest);
    void SaveAgentConfig(CSCPMessage *pRequest);
@@ -638,10 +642,6 @@ private:
 	void getVlans(CSCPMessage *msg);
 	void receiveFile(CSCPMessage *request);
 	void deleteFile(CSCPMessage *request);
-	void executeReport(CSCPMessage *msg);
-	void getReportResults(CSCPMessage *msg);
-	void deleteReportResults(CSCPMessage *msg);
-	void renderReport(CSCPMessage *request);
 	void getNetworkPath(CSCPMessage *request);
 	void getNodeComponents(CSCPMessage *request);
 	void getNodeSoftware(CSCPMessage *request);
@@ -669,11 +669,11 @@ public:
 
    void run();
 
-   void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->CreateMessage()); }
+   void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
    void sendMessage(CSCPMessage *pMsg);
    void sendRawMessage(CSCP_MESSAGE *pMsg);
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
-	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long sizeLimit);
+	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long offset);
 
    UINT32 getIndex() { return m_dwIndex; }
    void setIndex(UINT32 dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
@@ -757,31 +757,27 @@ struct GRAPH_ACL_AND_ID
 /**
  * Functions
  */
-BOOL NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
+bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
 #ifdef UNICODE
-BOOL NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault);
+bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault);
 #else
 #define ConfigReadStrA ConfigReadStr
 #endif
+bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault);
 int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault);
 UINT32 NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, UINT32 dwDefault);
-BOOL NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray,
-                                           int nSize, int nDefault);
-BOOL NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, BOOL bCreate,
-												  BOOL isVisible = TRUE, BOOL needRestart = FALSE);
-BOOL NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, BOOL bCreate,
-												  BOOL isVisible = TRUE, BOOL needRestart = FALSE);
-BOOL NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, UINT32 dwValue, BOOL bCreate,
-													 BOOL isVisible = TRUE, BOOL needRestart = FALSE);
-BOOL NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray,
-                                            int nSize, BOOL bCreate,
-														  BOOL isVisible = TRUE, BOOL needRestart = FALSE);
+bool NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray, int nSize, int nDefault);
+bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, bool bCreate, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteInt(const TCHAR *szVar, int iValue, bool bCreate, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteULong(const TCHAR *szVar, UINT32 dwValue, bool bCreate, bool isVisible = true, bool needRestart = false);
+bool NXCORE_EXPORTABLE ConfigWriteByteArray(const TCHAR *pszVar, int *pnArray, int nSize, bool bCreate, bool isVisible = true, bool needRestart = false);
 TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *var, const TCHAR *defValue);
-BOOL NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, BOOL bCreate);
+bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, bool bCreate);
+bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *name);
 
-BOOL NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
+bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
 
-BOOL NXCORE_EXPORTABLE LoadConfig();
+bool NXCORE_EXPORTABLE LoadConfig();
 
 void NXCORE_EXPORTABLE Shutdown();
 void NXCORE_EXPORTABLE FastShutdown();

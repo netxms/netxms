@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.rap.rwt.SingletonUtil;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -23,6 +22,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
 import org.netxms.ui.eclipse.imagelibrary.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public class ImageProvider
 {
@@ -35,14 +35,15 @@ public class ImageProvider
 	 */
 	public static void createInstance(final Display display, final NXCSession session)
 	{
-		display.syncExec(new Runnable() {
-			@Override
-			public void run()
-			{
-				ImageProvider p = SingletonUtil.getSessionInstance(ImageProvider.class);
-				p.init(display, session);
-			}
-		});
+	   display.syncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            ImageProvider p = new ImageProvider();
+            p.init(display, session);
+            ConsoleSharedData.setProperty("ImageProvider", p);
+         }
+      });
 	}
 
 	/**
@@ -52,25 +53,19 @@ public class ImageProvider
 	 */
 	public static ImageProvider getInstance(Display display)
 	{
-		InstanceQuery q = new InstanceQuery();
-		display.syncExec(q);
-		return q.instance;
+	   return (ImageProvider)ConsoleSharedData.getProperty(display, "ImageProvider");
 	}
+
+   /**
+    * Get image provider's instance for current display
+    * 
+    * @return
+    */
+   public static ImageProvider getInstance()
+   {
+      return (ImageProvider)ConsoleSharedData.getProperty("ImageProvider");
+   }
 	
-	/**
-	 * Helper class for query instance on UI thread
-	 */
-	private static class InstanceQuery implements Runnable
-	{
-		public ImageProvider instance;
-
-		@Override
-		public void run()
-		{
-			instance = SingletonUtil.getSessionInstance(ImageProvider.class);
-		}
-	}
-
 	private Image missingImage;
 	private Set<ImageUpdateListener> updateListeners;
 
@@ -153,6 +148,9 @@ public class ImageProvider
 	 */
 	public Image getImage(final UUID guid)
 	{
+	   if (guid == null)
+	      return missingImage;
+	   
 		final Image image;
 		if (cache.containsKey(guid))
 		{

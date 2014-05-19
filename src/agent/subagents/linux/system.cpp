@@ -94,12 +94,10 @@ LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 		{
 			double dTmp;
 
-			setlocale(LC_NUMERIC, "C");
 			if (sscanf(szTmp, "%lf", &dTmp) == 1)
 			{
 				uUptime = (unsigned int)dTmp;
 			}
-			setlocale(LC_NUMERIC, "");
 		}
 		fclose(hFile);
 	}
@@ -172,7 +170,6 @@ LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 		{
 			double dLoad1, dLoad5, dLoad15;
 
-			setlocale(LC_NUMERIC, "C");
 			if (sscanf(szTmp, "%lf %lf %lf", &dLoad1, &dLoad5, &dLoad15) == 3)
 			{
 				switch (CAST_FROM_POINTER(pArg, int))
@@ -189,7 +186,6 @@ LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 				}
 				nRet = SYSINFO_RC_SUCCESS;
 			}
-			setlocale(LC_NUMERIC, "");
 		}
 
 		fclose(hFile);

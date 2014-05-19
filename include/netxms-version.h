@@ -30,14 +30,20 @@
  */
 #define NETXMS_VERSION_MAJOR        1
 #define NETXMS_VERSION_MINOR        2
-#define NETXMS_VERSION_RELEASE      12
-#define NETXMS_VERSION_STRING       _T("1.2.12")
-#define NETXMS_VERSION_STRING_A     "1.2.12"
+#define NETXMS_VERSION_RELEASE      14
+#define NETXMS_VERSION_STRING       _T("1.2.14")
+#define NETXMS_VERSION_STRING_A     "1.2.14"
+
+#ifdef UNICODE
+#define IS_UNICODE_BUILD_STRING     _T(" (UNICODE)")
+#else
+#define IS_UNICODE_BUILD_STRING     _T(" (NON-UNICODE)")
+#endif
 
 /**
  * Current client-server protocol version
  */
-#define CLIENT_PROTOCOL_VERSION           41
+#define CLIENT_PROTOCOL_VERSION           42
 
 /**
  * Current mobile device protocol version

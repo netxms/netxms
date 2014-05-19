@@ -1,7 +1,28 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2014 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.api.client.reporting;
 
 import org.netxms.base.NXCPMessage;
 
+/**
+ * Report parameter definition
+ */
 public class ReportParameter
 {
 	private int index;
@@ -12,97 +33,82 @@ public class ReportParameter
 	private String defaultValue;
 	private int span;
 
+   /**
+    * Create parameter definition from NXCP message
+    * 
+    * @param msg
+    * @param baseId
+    */
+   public ReportParameter(NXCPMessage msg, long baseId)
+   {
+      index = msg.getVariableAsInteger(baseId);
+      name = msg.getVariableAsString(baseId + 1);
+      description = msg.getVariableAsString(baseId + 2);
+      type = msg.getVariableAsString(baseId + 3);
+      defaultValue = msg.getVariableAsString(baseId + 4);
+      dependsOn = msg.getVariableAsString(baseId + 5);
+      span = msg.getVariableAsInteger(baseId + 6);
+   }
+
+	/**
+	 * @return
+	 */
 	public int getIndex()
 	{
 		return index;
 	}
 
-	public void setIndex(int index)
-	{
-		this.index = index;
-	}
-
+	/**
+	 * @return
+	 */
 	public String getName()
 	{
 		return name;
 	}
 
-	public void setName(String name)
-	{
-		this.name = name;
-	}
-
+	/**
+	 * @return
+	 */
 	public String getDependsOn()
 	{
 		return dependsOn;
 	}
 
-	public void setDependsOn(String dependsOn)
-	{
-		this.dependsOn = dependsOn;
-	}
-
+	/**
+	 * @return
+	 */
 	public String getDescription()
 	{
 		return description;
 	}
 
-	public void setDescription(String description)
-	{
-		this.description = description;
-	}
-
+	/**
+	 * @return
+	 */
 	public String getType()
 	{
 		return type;
 	}
 
-	public void setType(String type)
-	{
-		this.type = type;
-	}
-
+	/**
+	 * @return
+	 */
 	public String getDefaultValue()
 	{
 		return defaultValue;
 	}
 
-	public void setDefaultValue(String defaultValue)
-	{
-		this.defaultValue = defaultValue;
-	}
-
+	/**
+	 * @return
+	 */
 	public int getSpan()
 	{
 		return span;
 	}
 
-	public void setSpan(int span)
-	{
-		if (span < 1 || span > 2)
-		{
-			this.span = 1;
-		}
-		else
-		{
-			this.span = span;
-		}
-	}
-
-	public static ReportParameter createFromMessage(NXCPMessage response, long base)
-	{
-		long id = base;
-		ReportParameter ret = new ReportParameter();
-		ret.setIndex(response.getVariableAsInteger(id++));
-		ret.setName(response.getVariableAsString(id++));
-		ret.setDescription(response.getVariableAsString(id++));
-		ret.setType(response.getVariableAsString(id++));
-		ret.setDefaultValue(response.getVariableAsString(id++));
-		ret.setDependsOn(response.getVariableAsString(id++));
-		ret.setSpan(response.getVariableAsInteger(id++));
-		return ret;
-	}
-
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString()
 	{

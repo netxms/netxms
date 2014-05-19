@@ -126,6 +126,9 @@
 #define EVENT_TABLE_THRESHOLD_ACTIVATED   69
 #define EVENT_TABLE_THRESHOLD_DEACTIVATED 70
 #define EVENT_IF_PEER_CHANGED             71
+#define EVENT_AP_ADOPTED                  72
+#define EVENT_AP_UNADOPTED                73
+#define EVENT_AP_DOWN                     74
 
 #define EVENT_SNMP_UNMATCHED_TRAP         500
 #define EVENT_SNMP_COLD_START             501

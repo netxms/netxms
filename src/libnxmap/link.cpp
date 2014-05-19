@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Network Maps Library
 ** Copyright (C) 2003-2010 Victor Kirhenshtein
@@ -39,6 +39,8 @@ NetworkMapLink::NetworkMapLink(UINT32 e1, UINT32 e2, int type)
 	m_color = 0xFFFFFFFF;
 	m_statusObject = 0;
 	m_routing = ROUTING_DEFAULT;
+	m_config = _tcsdup(_T("\0"));
+	m_flags = 0;
 }
 
 
@@ -57,7 +59,9 @@ NetworkMapLink::NetworkMapLink(CSCPMessage *msg, UINT32 baseId)
 	m_color = msg->GetVariableLong(baseId + 6);
 	m_statusObject = msg->GetVariableLong(baseId + 7);
 	m_routing = msg->GetVariableShort(baseId + 8);
-	msg->GetVariableInt32Array(baseId + 9, MAX_BEND_POINTS * 2, m_bendPoints);
+	msg->getFieldAsInt32Array(baseId + 9, MAX_BEND_POINTS * 2, m_bendPoints);
+   m_config = msg->GetVariableStr(baseId + 10);
+	m_flags = msg->GetVariableLong(baseId + 11);
 }
 
 
@@ -70,6 +74,7 @@ NetworkMapLink::~NetworkMapLink()
 	safe_free(m_name);
 	safe_free(m_connectorName1);
 	safe_free(m_connectorName2);
+	safe_free(m_config);
 }
 
 
@@ -94,11 +99,15 @@ void NetworkMapLink::setConnector1Name(const TCHAR *name)
 	m_connectorName1 = (name != NULL) ? _tcsdup(name) : NULL;
 }
 
+void NetworkMapLink::setConfig(const TCHAR *name)
+{
+	safe_free(m_config);
+	m_config = (name != NULL) ? _tcsdup(name) : NULL;
+}
 
-//
-// Set connector 2 name
-//
-
+/**
+ * Set connector 2 name
+ */
 void NetworkMapLink::setConnector2Name(const TCHAR *name)
 {
 	safe_free(m_connectorName2);
@@ -119,7 +128,9 @@ void NetworkMapLink::fillMessage(CSCPMessage *msg, UINT32 baseId)
 	msg->SetVariable(baseId + 6, m_color);
 	msg->SetVariable(baseId + 7, m_statusObject);
 	msg->SetVariable(baseId + 8, (WORD)m_routing);
-	msg->SetVariableToInt32Array(baseId + 9, MAX_BEND_POINTS *2, m_bendPoints);
+	msg->setFieldInt32Array(baseId + 9, MAX_BEND_POINTS *2, m_bendPoints);
+   msg->SetVariable(baseId + 10, m_config);
+   msg->SetVariable(baseId + 11, m_flags);
 }
 
 /**

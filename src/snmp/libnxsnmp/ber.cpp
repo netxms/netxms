@@ -23,40 +23,37 @@
 
 #include "libnxsnmp.h"
 
-
-//
-// Decode BER-encoded variable
-//
-
-BOOL BER_DecodeIdentifier(BYTE *pRawData, UINT32 dwRawSize, UINT32 *pdwType, 
-                          UINT32 *pdwLength, BYTE **pData, UINT32 *pdwIdLength)
+/**
+ * Decode BER-encoded variable
+ */
+bool BER_DecodeIdentifier(BYTE *rawData, size_t rawSize, UINT32 *type, size_t *dataLength, BYTE **data, size_t *idLength)
 {
-   BOOL bResult = FALSE;
-   BYTE *pbCurrPos = pRawData;
+   bool bResult = false;
+   BYTE *pbCurrPos = rawData;
    UINT32 dwIdLength = 0;
 
-   *pdwType = (UINT32)(*pbCurrPos);
+   *type = (UINT32)(*pbCurrPos);
    pbCurrPos++;
    dwIdLength++;
 
    // Get length
    if ((*pbCurrPos & 0x80) == 0)
    {
-      *pdwLength = (UINT32)(*pbCurrPos);
+      *dataLength = (size_t)(*pbCurrPos);
       pbCurrPos++;
       dwIdLength++;
-      bResult = TRUE;
+      bResult = true;
    }
    else
    {
-      UINT32 dwLength = 0;
+      UINT32 length = 0;
       BYTE *pbTemp;
       int iNumBytes;
 
       iNumBytes = *pbCurrPos & 0x7F;
       pbCurrPos++;
       dwIdLength++;
-      pbTemp = ((BYTE *)&dwLength) + (4 - iNumBytes);
+      pbTemp = ((BYTE *)&length) + (4 - iNumBytes);
       if ((iNumBytes >= 1) && (iNumBytes <= 4))
       {
          while(iNumBytes > 0)
@@ -65,88 +62,86 @@ BOOL BER_DecodeIdentifier(BYTE *pRawData, UINT32 dwRawSize, UINT32 *pdwType,
             dwIdLength++;
             iNumBytes--;
          }
-         *pdwLength = ntohl(dwLength);
-         bResult = TRUE;
+         *dataLength = (size_t)ntohl(length);
+         bResult = true;
       }
    }
 
    // Set pointer to variable's data
-   *pData = pbCurrPos;
-   *pdwIdLength = dwIdLength;
+   *data = pbCurrPos;
+   *idLength = dwIdLength;
    return bResult;
 }
 
-
-//
-// Decode content of specified types
-//
-
-BOOL BER_DecodeContent(UINT32 dwType, BYTE *pData, UINT32 dwLength, BYTE *pBuffer)
+/**
+ * Decode content of specified types
+ */
+bool BER_DecodeContent(UINT32 type, BYTE *data, size_t length, BYTE *buffer)
 {
-   BOOL bResult = TRUE;
+   bool bResult = true;
 
-   switch(dwType)
+   switch(type)
    {
       case ASN_INTEGER:
       case ASN_COUNTER32:
       case ASN_GAUGE32:
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
-         if ((dwLength >= 1) && (dwLength <= 5))
+         if ((length >= 1) && (length <= 5))
          {
             UINT32 dwValue;
             BYTE *pbTemp;
 
             // Pre-fill buffer with 1's for negative values and 0's for positive
-            dwValue = (*pData & 0x80) ? 0xFFFFFFFF : 0;
+            dwValue = (*data & 0x80) ? 0xFFFFFFFF : 0;
 
             // For large unsigned integers, we can have length of 5, and first byte
             // is usually 0. In this case, we skip first byte.
-            if (dwLength == 5)
+            if (length == 5)
             {
-               pData++;
-               dwLength--;
+               data++;
+               length--;
             }
 
-            pbTemp = ((BYTE *)&dwValue) + (4 - dwLength);
-            while(dwLength > 0)
+            pbTemp = ((BYTE *)&dwValue) + (4 - length);
+            while(length > 0)
             {
-               *pbTemp++ = *pData++;
-               dwLength--;
+               *pbTemp++ = *data++;
+               length--;
             }
             dwValue = ntohl(dwValue);
-            memcpy(pBuffer, &dwValue, sizeof(UINT32));
+            memcpy(buffer, &dwValue, sizeof(UINT32));
          }
          else
          {
-            bResult = FALSE;  // We didn't expect more than 32 bit integers
+            bResult = false;  // We didn't expect more than 32 bit integers
          }
          break;
       case ASN_COUNTER64:
-         if ((dwLength >= 1) && (dwLength <= 9))
+         if ((length >= 1) && (length <= 9))
          {
             QWORD qwValue;
             BYTE *pbTemp;
 
             // Pre-fill buffer with 1's for negative values and 0's for positive
-            qwValue = (*pData & 0x80) ? _ULL(0xFFFFFFFFFFFFFFFF) : 0;
+            qwValue = (*data & 0x80) ? _ULL(0xFFFFFFFFFFFFFFFF) : 0;
 
             // For large unsigned integers, we can have length of 9, and first byte
             // is usually 0. In this case, we skip first byte.
-            if (dwLength == 9)
+            if (length == 9)
             {
-               pData++;
-               dwLength--;
+               data++;
+               length--;
             }
 
-            pbTemp = ((BYTE *)&qwValue) + (8 - dwLength);
-            while(dwLength > 0)
+            pbTemp = ((BYTE *)&qwValue) + (8 - length);
+            while(length > 0)
             {
-               *pbTemp++ = *pData++;
-               dwLength--;
+               *pbTemp++ = *data++;
+               length--;
             }
             qwValue = ntohq(qwValue);
-            memcpy(pBuffer, &qwValue, sizeof(QWORD));
+            memcpy(buffer, &qwValue, sizeof(QWORD));
          }
          else
          {
@@ -154,70 +149,69 @@ BOOL BER_DecodeContent(UINT32 dwType, BYTE *pData, UINT32 dwLength, BYTE *pBuffe
          }
          break;
       case ASN_OBJECT_ID:
-         if (dwLength > 0)
+         if (length > 0)
          {
             SNMP_OID *oid;
             UINT32 dwValue;
 
-            oid = (SNMP_OID *)pBuffer;
-            oid->pdwValue = (UINT32 *)malloc(sizeof(UINT32) * (dwLength + 1));
+            oid = (SNMP_OID *)buffer;
+            oid->value = (UINT32 *)malloc(sizeof(UINT32) * (length + 1));
 
             // First octet need special handling
-            oid->pdwValue[0] = *pData / 40;
-            oid->pdwValue[1] = *pData % 40;
-            pData++;
-            oid->dwLength = 2;
-            dwLength--;
+            oid->value[0] = *data / 40;
+            oid->value[1] = *data % 40;
+            data++;
+            oid->length = 2;
+            length--;
 
             // Parse remaining octets
-            while(dwLength > 0)
+            while(length > 0)
             {
                dwValue = 0;
 
                // Loop through octets with 8th bit set to 1
-               while((*pData & 0x80) && (dwLength > 0))
+               while((*data & 0x80) && (length > 0))
                {
-                  dwValue = (dwValue << 7) | (*pData & 0x7F);
-                  pData++;
-                  dwLength--;
+                  dwValue = (dwValue << 7) | (*data & 0x7F);
+                  data++;
+                  length--;
                }
 
                // Last octet in element
-               if (dwLength > 0)
+               if (length > 0)
                {
-                  oid->pdwValue[oid->dwLength++] = (dwValue << 7) | *pData;
-                  pData++;
-                  dwLength--;
+                  oid->value[oid->length++] = (dwValue << 7) | *data;
+                  data++;
+                  length--;
                }
             }
          }
          break;
       default:    // For unknown types, simply move content to buffer
-         memcpy(pBuffer, pData, dwLength);
+         memcpy(buffer, data, length);
          break;
    }
    return bResult;
 }
 
-
-//
-// Encode content
-//
-
-static LONG EncodeContent(UINT32 dwType, BYTE *pData, UINT32 dwDataLength, BYTE *pResult)
+/**
+ * Encode content
+ */
+static size_t EncodeContent(UINT32 type, BYTE *data, size_t dataLength, BYTE *pResult)
 {
-   LONG nBytes = 0;
+   size_t nBytes = 0;
    UINT32 dwTemp;
    QWORD qwTemp;
    BYTE *pTemp, sign;
-   int i, iOidLength;
+   int i;
+   size_t oidLength;
 
-   switch(dwType)
+   switch(type)
    {
       case ASN_NULL:
          break;
       case ASN_INTEGER:
-         dwTemp = htonl(*((UINT32 *)pData));
+         dwTemp = htonl(*((UINT32 *)data));
          pTemp = (BYTE *)&dwTemp;
          sign = (*pTemp & 0x80) ? 0xFF : 0;
          for(nBytes = 4; (*pTemp == sign) && (nBytes > 1); pTemp++, nBytes--);
@@ -236,7 +230,7 @@ static LONG EncodeContent(UINT32 dwType, BYTE *pData, UINT32 dwDataLength, BYTE 
       case ASN_GAUGE32:
       case ASN_TIMETICKS:
       case ASN_UINTEGER32:
-         dwTemp = htonl(*((UINT32 *)pData));
+         dwTemp = htonl(*((UINT32 *)data));
          pTemp = (BYTE *)&dwTemp;
          for(nBytes = 4; (*pTemp == 0) && (nBytes > 1); pTemp++, nBytes--);
          if (*pTemp & 0x80)
@@ -251,7 +245,7 @@ static LONG EncodeContent(UINT32 dwType, BYTE *pData, UINT32 dwDataLength, BYTE 
          }
          break;
       case ASN_COUNTER64:
-         qwTemp = htonq(*((QWORD *)pData));
+         qwTemp = htonq(*((QWORD *)data));
          pTemp = (BYTE *)&qwTemp;
          for(nBytes = 8; (*pTemp == 0) && (nBytes > 1); pTemp++, nBytes--);
          if (*pTemp & 0x80)
@@ -266,11 +260,11 @@ static LONG EncodeContent(UINT32 dwType, BYTE *pData, UINT32 dwDataLength, BYTE 
          }
          break;
       case ASN_OBJECT_ID:
-         iOidLength = dwDataLength / sizeof(UINT32);
-         if (iOidLength > 1)
+         oidLength = dataLength / sizeof(UINT32);
+         if (oidLength > 1)
          {
             BYTE *pbCurrPos = pResult;
-            UINT32 j, dwValue, dwSize, *pdwCurrId = (UINT32 *)pData;
+            UINT32 j, dwValue, dwSize, *pdwCurrId = (UINT32 *)data;
             static UINT32 dwLengthMask[5] = { 0x0000007F, 0x00003FFF, 0x001FFFFF, 0x0FFFFFFF, 0xFFFFFFFF };
 
             // First two ids encoded in one byte
@@ -280,7 +274,7 @@ static LONG EncodeContent(UINT32 dwType, BYTE *pData, UINT32 dwDataLength, BYTE 
             nBytes++;
 
             // Encode other ids
-            for(i = 2; i < iOidLength; i++, pdwCurrId++)
+            for(i = 2; i < oidLength; i++, pdwCurrId++)
             {
                dwValue = *pdwCurrId;
 
@@ -307,49 +301,46 @@ static LONG EncodeContent(UINT32 dwType, BYTE *pData, UINT32 dwDataLength, BYTE 
                nBytes += dwSize;
             }
          }
-			else if (iOidLength == 1)
+			else if (oidLength == 1)
 			{
-				*pResult = (BYTE)(*((UINT32 *)pData)) * 40;
+				*pResult = (BYTE)(*((UINT32 *)data)) * 40;
 				nBytes++;
 			}
          break;
       default:
-         memcpy(pResult, pData, dwDataLength);
-         nBytes = dwDataLength;
+         memcpy(pResult, data, dataLength);
+         nBytes = dataLength;
          break;
    }
    return nBytes;
 }
 
-
-//
-// Encode identifier and content
-// Return value is size of encoded identifier and content in buffer
-// or 0 if there are not enough place in buffer or type is unknown
-//
-
-UINT32 BER_Encode(UINT32 dwType, BYTE *pData, UINT32 dwDataLength,
-                 BYTE *pBuffer, UINT32 dwBufferSize)
+/**
+ * Encode identifier and content
+ * Return value is size of encoded identifier and content in buffer
+ * or 0 if there are not enough place in buffer or type is unknown
+ */
+size_t BER_Encode(UINT32 type, BYTE *data, size_t dataLength, BYTE *buffer, size_t bufferSize)
 {
-   UINT32 dwBytes = 0;
-   BYTE *pbCurrPos = pBuffer, *pEncodedData;
-   LONG nDataBytes;
+   size_t bytes = 0;
+   BYTE *pbCurrPos = buffer, *pEncodedData;
+   size_t nDataBytes;
 
-   if (dwBufferSize < 2)
+   if (bufferSize < 2)
       return 0;
 
-   *pbCurrPos++ = (BYTE)dwType;
-   dwBytes++;
+   *pbCurrPos++ = (BYTE)type;
+   bytes++;
 
    // Encode content
-   pEncodedData = (BYTE *)malloc(dwDataLength);
-   nDataBytes = EncodeContent(dwType, pData, dwDataLength, pEncodedData);
+   pEncodedData = (BYTE *)malloc(dataLength);
+   nDataBytes = EncodeContent(type, data, dataLength, pEncodedData);
 
    // Encode length
    if (nDataBytes < 128)
    {
       *pbCurrPos++ = (BYTE)nDataBytes;
-      dwBytes++;
+      bytes++;
    }
    else
    {
@@ -363,7 +354,7 @@ UINT32 BER_Encode(UINT32 dwType, BYTE *pData, UINT32 dwDataLength,
          memmove(bLength, &bLength[i], nHdrBytes);
 
       // Check for available buffer size
-      if (dwBufferSize < (UINT32)nHdrBytes + dwBytes + 1)
+      if (bufferSize < (UINT32)nHdrBytes + bytes + 1)
       {
          free(pEncodedData);
          return 0;
@@ -373,20 +364,20 @@ UINT32 BER_Encode(UINT32 dwType, BYTE *pData, UINT32 dwDataLength,
       *pbCurrPos++ = (BYTE)(0x80 | nHdrBytes);
       memcpy(pbCurrPos, bLength, nHdrBytes);
       pbCurrPos += nHdrBytes;
-      dwBytes += nHdrBytes + 1;
+      bytes += nHdrBytes + 1;
    }
 
    // Copy encoded data to buffer
-   if (dwBufferSize >= dwBytes + nDataBytes)
+   if (bufferSize >= bytes + nDataBytes)
    {
       memcpy(pbCurrPos, pEncodedData, nDataBytes);
-      dwBytes += nDataBytes;
+      bytes += nDataBytes;
    }
    else
    {
-      dwBytes = 0;   // Buffer is too small
+      bytes = 0;   // Buffer is too small
    }
 
    free(pEncodedData);
-   return dwBytes;
+   return bytes;
 }

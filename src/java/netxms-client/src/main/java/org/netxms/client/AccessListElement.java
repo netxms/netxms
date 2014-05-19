@@ -93,7 +93,7 @@ public class AccessListElement extends AbstractAccessListElement
 	 */
 	public boolean hasAckAlarms()
 	{
-		return (accessRights & UserAccessRights.OBJECT_ACCESS_ACK_ALARMS) != 0;
+		return (accessRights & UserAccessRights.OBJECT_ACCESS_UPDATE_ALARMS) != 0;
 	}
 	
 	/**

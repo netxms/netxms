@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         id="app"
+         name="NetXMS Management Console"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="org.netxms.webui.mobile.MobileApplication">
+         </run>
+      </application>
+   </extension>
+   <extension
+         point="org.eclipse.rap.ui.entrypoint">
+      <entrypoint
+            applicationId="org.netxms.webui.mobile.app"
+            brandingId="org.netxms.webui.design.branding.mobile"
+            id="org.netxms.webui.mobile.entrypoint"
+            path="/mobile">
+      </entrypoint>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="org.netxms.webui.mobile.MobilePerspective"
+            fixed="true"
+            id="org.netxms.webui.mobile.MobilePerspective"
+            name="Mobile UI">
+      </perspective>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="false"
+            class="org.netxms.webui.mobile.MobileView"
+            id="org.netxms.webui.mobile.MobileView"
+            name="Mobile UI"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.rap.ui.themes">
+      <theme
+            file="theme/mobile.css"
+            id="org.netxms.webui.design.theme.mobile"
+            name="Mobile UI Theme">
+      </theme>
+   </extension>
+   <extension
+         point="org.eclipse.rap.ui.branding">
+      <branding
+            favicon="icons/favicon.png"
+            id="org.netxms.webui.design.branding.mobile"
+            themeId="org.netxms.webui.design.theme.mobile"
+            title="NetXMS Management Console">
+      </branding>
+   </extension>
+
+</plugin>

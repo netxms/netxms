@@ -47,60 +47,65 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
 		pNode = FindNodeByIP(0, getIpAddr());
    if (pNode != NULL)
    {
-		// Check for duplicate traps - only accept traps with ID
-		// higher than last received
-		// agents prior to 1.1.6 will not send trap id
-		// we should accept trap in that case to maintain compatibility
-		bool acceptTrap;
-		QWORD trapId = pMsg->GetVariableInt64(VID_TRAP_ID);
-		if (trapId != 0)
-		{
-			acceptTrap = pNode->checkAgentTrapId(trapId);
-			DbgPrintf(5, _T("AgentConnectionEx::onTrap(): trapID is%s valid"), acceptTrap ? _T("") : _T(" not"));
-		}
-		else
-		{
-			acceptTrap = true;
-			DbgPrintf(5, _T("AgentConnectionEx::onTrap(): trap ID not provided"));
-		}
+      if (pNode->Status() != STATUS_UNMANAGED)
+      {
+		   // Check for duplicate traps - only accept traps with ID
+		   // higher than last received
+		   // agents prior to 1.1.6 will not send trap id
+		   // we should accept trap in that case to maintain compatibility
+		   bool acceptTrap;
+		   QWORD trapId = pMsg->GetVariableInt64(VID_TRAP_ID);
+		   if (trapId != 0)
+		   {
+			   acceptTrap = pNode->checkAgentTrapId(trapId);
+			   DbgPrintf(5, _T("AgentConnectionEx::onTrap(): trapID is%s valid"), acceptTrap ? _T("") : _T(" not"));
+		   }
+		   else
+		   {
+			   acceptTrap = true;
+			   DbgPrintf(5, _T("AgentConnectionEx::onTrap(): trap ID not provided"));
+		   }
 
-		if (acceptTrap)
-		{
-			dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
-			if ((dwEventCode == 0) && pMsg->IsVariableExist(VID_EVENT_NAME))
-			{
-				TCHAR eventName[256];
-				pMsg->GetVariableStr(VID_EVENT_NAME, eventName, 256);
-				dwEventCode = EventCodeFromName(eventName, 0);
-			}
-			iNumArgs = (int)pMsg->GetVariableShort(VID_NUM_ARGS);
-			if (iNumArgs > 32)
-				iNumArgs = 32;
-			for(i = 0; i < iNumArgs; i++)
-				pszArgList[i] = pMsg->GetVariableStr(VID_EVENT_ARG_BASE + i);
-			DbgPrintf(3, _T("Event from trap: %d"), dwEventCode);
+		   if (acceptTrap)
+		   {
+			   dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
+			   if ((dwEventCode == 0) && pMsg->isFieldExist(VID_EVENT_NAME))
+			   {
+				   TCHAR eventName[256];
+				   pMsg->GetVariableStr(VID_EVENT_NAME, eventName, 256);
+				   dwEventCode = EventCodeFromName(eventName, 0);
+			   }
+			   iNumArgs = (int)pMsg->GetVariableShort(VID_NUM_ARGS);
+			   if (iNumArgs > 32)
+				   iNumArgs = 32;
+			   for(i = 0; i < iNumArgs; i++)
+				   pszArgList[i] = pMsg->GetVariableStr(VID_EVENT_ARG_BASE + i);
+			   DbgPrintf(3, _T("Event from trap: %d"), dwEventCode);
 
-			// Following call is not very good, but I'm too lazy now
-			// to change PostEvent()
-			szFormat[iNumArgs] = 0;
-			PostEvent(dwEventCode, pNode->Id(), (iNumArgs > 0) ? szFormat : NULL,
-						 pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
-						 pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
-						 pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
-						 pszArgList[12], pszArgList[13], pszArgList[14], pszArgList[15],
-						 pszArgList[16], pszArgList[17], pszArgList[18], pszArgList[19],
-						 pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
-						 pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
-						 pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
+			   szFormat[iNumArgs] = 0;
+			   PostEvent(dwEventCode, pNode->Id(), (iNumArgs > 0) ? szFormat : NULL,
+						    pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
+						    pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
+						    pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
+						    pszArgList[12], pszArgList[13], pszArgList[14], pszArgList[15],
+						    pszArgList[16], pszArgList[17], pszArgList[18], pszArgList[19],
+						    pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
+						    pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
+						    pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
 
-			// Cleanup
-			for(i = 0; i < iNumArgs; i++)
-				free(pszArgList[i]);
-		}
+			   // Cleanup
+			   for(i = 0; i < iNumArgs; i++)
+				   free(pszArgList[i]);
+		   }
+      }
+      else
+      {
+         DbgPrintf(3, _T("AgentConnectionEx::onTrap(): node %s [%d] in in UNMANAGED state - trap ignored"), pNode->Name(), pNode->Id());
+      }
    }
    else
    {
-      DbgPrintf(3, _T("Cannot find node for IP address %s"), IpToStr(getIpAddr(), szBuffer));
+      DbgPrintf(3, _T("AgentConnectionEx::onTrap(): Cannot find node for IP address %s"), IpToStr(getIpAddr(), szBuffer));
    }
 }
 
@@ -201,7 +206,7 @@ void AgentConnectionEx::printMsg(const TCHAR *format, ...)
    va_end(args);
 }
 
-/*
+/**
  * Recieve file monitoring information and resend to all required user sessions
  */
 void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
@@ -219,6 +224,24 @@ void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
       {
          result->get(i)->sendMessage(pMsg);
       }
+      if(result->size() == 0)
+      {
+         DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: unknown subscription will be canceled."));
+         Node *node = (Node *)object;
+         AgentConnection *conn = node->createAgentConnection();
+         if(conn != NULL)
+         {
+            CSCPMessage request;
+            request.SetId(conn->generateRequestId());
+            request.SetCode(CMD_CANCEL_FILE_MONITORING);
+            request.SetVariable(VID_FILE_NAME, remoteFile);
+            request.SetVariable(VID_OBJECT_ID, node->Id());
+            CSCPMessage* response = conn->customRequest(&request);
+            delete response;
+         }
+         delete conn;
+      }
+      delete result;
 	}
 	else
 	{

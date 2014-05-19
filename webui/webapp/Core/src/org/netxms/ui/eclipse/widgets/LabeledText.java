@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -69,8 +70,8 @@ public class LabeledText extends Composite
 	{
 		super(parent, style | SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
 		this.toolkit = toolkit;
-		toolkit.adapt(this);
 		createContent(textStyle);
+      toolkit.adapt(this);
 	}
 	
 	/**
@@ -198,4 +199,14 @@ public class LabeledText extends Composite
 	{
 	   return text.getEditable();
 	}
+
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.widgets.Control#setBackground(org.eclipse.swt.graphics.Color)
+    */
+   @Override
+   public void setBackground(Color color)
+   {
+      super.setBackground(color);
+      label.setBackground(color);
+   }
 }

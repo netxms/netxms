@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +35,9 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -65,12 +65,13 @@ public class InterfacesTab extends ObjectTab
 	public static final int COLUMN_PEER_NAME = 9;
 	public static final int COLUMN_PEER_MAC_ADDRESS = 10;
 	public static final int COLUMN_PEER_IP_ADDRESS = 11;
-	public static final int COLUMN_ADMIN_STATE = 12;
-	public static final int COLUMN_OPER_STATE = 13;
-	public static final int COLUMN_EXPECTED_STATE = 14;
-	public static final int COLUMN_STATUS = 15;
-	public static final int COLUMN_8021X_PAE_STATE = 16;
-	public static final int COLUMN_8021X_BACKEND_STATE = 17;
+   public static final int COLUMN_PEER_PROTOCOL = 12;
+	public static final int COLUMN_ADMIN_STATE = 13;
+	public static final int COLUMN_OPER_STATE = 14;
+	public static final int COLUMN_EXPECTED_STATE = 15;
+	public static final int COLUMN_STATUS = 16;
+	public static final int COLUMN_8021X_PAE_STATE = 17;
+	public static final int COLUMN_8021X_BACKEND_STATE = 18;
 	
 	private SortableTableViewer viewer;
 	private InterfaceListLabelProvider labelProvider;
@@ -100,7 +101,8 @@ public class InterfacesTab extends ObjectTab
 	      Messages.get().InterfacesTab_ColIpAddr, 
 	      Messages.get().InterfacesTab_ColPeerNode, 
 	      Messages.get().InterfacesTab_ColPeerMAC, 
-	      Messages.get().InterfacesTab_ColPeerIP, 
+	      Messages.get().InterfacesTab_ColPeerIP,
+	      "Peer Discovery Protocol",
 	      Messages.get().InterfacesTab_ColAdminState, 
 	      Messages.get().InterfacesTab_ColOperState, 
 	      Messages.get().InterfacesTab_ColExpState, 
@@ -108,7 +110,7 @@ public class InterfacesTab extends ObjectTab
 	      Messages.get().InterfacesTab_Col8021xPAE, 
 	      Messages.get().InterfacesTab_Col8021xBackend 
 		};
-		final int[] widths = { 60, 150, 90, 70, 70, 70, 150, 100, 90, 150, 100, 90, 80, 80, 80, 80, 80, 80 };
+		final int[] widths = { 60, 150, 90, 70, 70, 70, 150, 100, 90, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		labelProvider = new InterfaceListLabelProvider();
 		viewer.setLabelProvider(labelProvider);
@@ -269,7 +271,7 @@ public class InterfacesTab extends ObjectTab
 	@Override
 	public void objectChanged(final AbstractObject object)
 	{
-		labelProvider.setNode((Node)object);
+		labelProvider.setNode((AbstractNode)object);
 		refresh();
 	}
 
@@ -279,7 +281,7 @@ public class InterfacesTab extends ObjectTab
 	@Override
 	public boolean showForObject(AbstractObject object)
 	{
-		return (object instanceof Node);
+		return (object instanceof AbstractNode);
 	}
 
 	/**

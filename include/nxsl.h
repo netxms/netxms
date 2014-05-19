@@ -73,6 +73,7 @@
 #define NXSL_ERR_NO_SUCH_STAT_PARAM       29
 #define NXSL_ERR_NO_SUCH_METHOD           30
 #define NXSL_ERR_NO_SUCH_CONSTANT         31
+#define NXSL_ERR_EXECUTION_ABORTED        32
 
 /**
  * Special return codes for external functions
@@ -96,6 +97,7 @@ extern "C" {
 #endif
 
 NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszError, int nBufSize);
+NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *pszSource, TCHAR *pszError, int nBufSize, NXSL_Environment *env);
 TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize);
 
 #ifdef __cplusplus

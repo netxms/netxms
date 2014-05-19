@@ -37,7 +37,7 @@ SOCKET NetConnectTCP(const char *szHost, UINT32 dwAddr, unsigned short nPort, UI
 		sa.sin_port = htons(nPort);
 		if (szHost != NULL)
 		{
-			sa.sin_addr.s_addr = inet_addr(szHost);
+         sa.sin_addr.s_addr = ResolveHostNameA(szHost);
 		}
 		else
 		{

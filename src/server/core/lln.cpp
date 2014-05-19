@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 LinkLayerNeighbors::LinkLayerNeighbors()
 {
 	m_connections = NULL;
@@ -35,21 +33,17 @@ LinkLayerNeighbors::LinkLayerNeighbors()
 	memset(m_data, 0, sizeof(m_data));
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 LinkLayerNeighbors::~LinkLayerNeighbors()
 {
 	safe_free(m_connections);
 }
 
-
-//
-// Check if given information is duplicate
-//
-
+/**
+ * Check if given information is duplicate
+ */
 bool LinkLayerNeighbors::isDuplicate(LL_NEIGHBOR_INFO *info)
 {
 	for(int i = 0; i < m_count; i++)
@@ -60,11 +54,9 @@ bool LinkLayerNeighbors::isDuplicate(LL_NEIGHBOR_INFO *info)
 	return false;
 }
 
-
-//
-// Add neighbor
-//
-
+/**
+ * Add neighbor
+ */
 void LinkLayerNeighbors::addConnection(LL_NEIGHBOR_INFO *info)
 {
 	if ((info->ifLocal == 0) || (info->ifRemote == 0))
@@ -102,17 +94,17 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node)
 		AddNDPNeighbors(node, nbs);
 	}
 
-	// For bridges, scan forwarding database
+	// For bridges get STP data and scan forwarding database
 	if (node->isBridge())
 	{
+      AddSTPNeighbors(node, nbs);
 		node->addHostConnections(nbs);
 	}
-	else	// try to find switch port for nodes
-	{
-		// interfaces of end nodes should be linked to switches already,
-		// so we just walk node's interfaces and copy connection point information
-		node->addExistingConnections(nbs);
-	}
 
+   // Add existing connections from interfaces. Mostly useful
+   // for end nodes, because interfaces of end nodes should be linked to switches already,
+   // but can be useful in other situations (for example, STP topology data can be obtained only on one side),
+   // so we just walk node's interfaces and copy connection point information
+   node->addExistingConnections(nbs);
 	return nbs;
 }

@@ -1,0 +1,104 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="
+            http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+        "
+        >
+
+    <!-- Autowiring -->
+    <context:annotation-config/>
+    <context:component-scan base-package="com.radensolutions.reporting"/>
+    <bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor"/>
+
+    <!-- Configuration loader -->
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" lazy-init="false">
+        <property name="ignoreUnresolvablePlaceholders" value="true"/>
+        <property name="ignoreResourceNotFound" value="true"/>
+        <property name="locations">
+            <list>
+                <value>classpath:nxreporting_default.properties</value>
+                <value>classpath:nxreporting.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <!--
+        Reporting Server Data Source
+    -->
+    <bean id="dataSource" class="com.radensolutions.reporting.application.ReportingDataSource" destroy-method="close">
+        <property name="driverClassName" value="${system.datasource.driverClassName}"/>
+        <property name="url" value="${system.datasource.url}"/>
+        <property name="username" value="${system.datasource.username}"/>
+        <property name="password" value="${system.datasource.password}"/>
+    </bean>
+    <bean id="sessionFactory"
+          class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation">
+            <value>classpath:hibernate.cfg.xml</value>
+        </property>
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">${system.datasource.dialect}</prop>
+                <prop key="hibernate.show_sql">true</prop>
+                <prop key="hibernate.hbm2ddl.auto">create</prop>
+            </props>
+        </property>
+    </bean>
+    <tx:annotation-driven/>
+    <bean id="transactionManager"
+          class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+
+    <!--
+        Reporting Data Source
+        TODO: Handle multiple reporting data sources
+    -->
+    <bean id="reportingDataSource" class="com.radensolutions.reporting.application.ReportingDataSource" destroy-method="close">
+        <property name="driverClassName" value="${report.datasource.driverClassName}"/>
+        <property name="url" value="${report.datasource.url}"/>
+        <property name="username" value="${report.datasource.username}"/>
+        <property name="password" value="${report.datasource.password}"/>
+        <property name="removeAbandoned" value="true"/>
+        <property name="initialSize" value="5"/>
+        <property name="maxActive" value="30"/>
+    </bean>
+    <bean id="reportingDataSource2" class="com.radensolutions.reporting.application.ReportingDataSource"
+          destroy-method="close">
+        <property name="driverClassName" value="${report.datasource2.driverClassName}"/>
+        <property name="url" value="${report.datasource2.url}"/>
+        <property name="username" value="${report.datasource2.username}"/>
+        <property name="password" value="${report.datasource2.password}"/>
+        <property name="removeAbandoned" value="true"/>
+        <property name="initialSize" value="5"/>
+        <property name="maxActive" value="30"/>
+    </bean>
+
+    <!-- Mail Sender -->
+    <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+        <property name="host" value="${smtp.hostname}"/>
+    </bean>
+
+    <bean id="smtpSender" class="com.radensolutions.reporting.infrastructure.impl.SmtpSenderImpl">
+        <property name="from" value="${smtp.from}"/>
+    </bean>
+
+    <!-- Integration beans -->
+    <bean id="connector" class="com.radensolutions.reporting.infrastructure.impl.TcpConnector" scope="singleton"/>
+    <bean id="reportManager" class="com.radensolutions.reporting.infrastructure.impl.FileSystemReportManager">
+        <property name="workspace" value="${nxreporting.workspace}"/>
+    </bean>
+    <bean id="settingsProvider" class="com.radensolutions.reporting.infrastructure.impl.PropertyFileSettingsProvider"
+          scope="singleton"/>
+
+    <!-- Business logic beans -->
+    <bean id="scheduler" class="com.radensolutions.reporting.application.impl.QuartzReportScheduler" scope="singleton"/>
+    <bean id="session" class="com.radensolutions.reporting.application.impl.SessionImpl" scope="prototype">
+        <constructor-arg ref="connector"/>
+    </bean>
+
+</beans>

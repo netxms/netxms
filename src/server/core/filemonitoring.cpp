@@ -107,6 +107,7 @@ void FileMonitoringList::removeDisconectedNode(UINT32 nodeId)
       m_monitoredFile = m_monitoredFiles.get(i);
       if(m_monitoredFile->nodeID == nodeId)
       {
+         NotifyClientSessions(NX_NOTIFY_FILE_MONITORING_FAILED, nodeId);
          m_monitoredFile->session->decRefCount();
          m_monitoredFiles.remove(i);
       }

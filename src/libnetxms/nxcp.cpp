@@ -39,7 +39,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_LOGIN"),
       _T("CMD_LOGIN_RESP"),
       _T("CMD_KEEPALIVE"),
-      _T("CMD_SET_ALARM_HD_STATE"),
+      _T("CMD_OPEN_HELPDESK_ISSUE"),
       _T("CMD_GET_OBJECTS"),
       _T("CMD_OBJECT"),
       _T("CMD_DELETE_OBJECT"),
@@ -106,7 +106,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_GET_CURRENT_USER_ATTR"),
       _T("CMD_SET_CURRENT_USER_ATTR"),
       _T("CMD_GET_ALL_ALARMS"),
-      _T("CMD_GET_ALARM_NOTES"),
+      _T("CMD_GET_ALARM_COMMENTS"),
       _T("CMD_ACK_ALARM"),
       _T("CMD_ALARM_UPDATE"),
       _T("CMD_ALARM_DATA"),
@@ -279,7 +279,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_DELETE_IMAGE"),
 		_T("CMD_MODIFY_IMAGE"),
 		_T("CMD_LIST_IMAGES"),
-		_T("CMD_UPLOAD_FILE_TO_AGENT"),
+		_T("CMD_LIST_SERVER_FILES"),
 		_T("CMD_GET_TABLE"),
 		_T("CMD_QUERY_TABLE"),
 		_T("CMD_OPEN_CONSOLE"),
@@ -293,7 +293,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
 		_T("CMD_GET_FILE_DETAILS"),
 		_T("CMD_IMAGE_LIBRARY_UPDATE"),
 		_T("CMD_GET_NODE_COMPONENTS"),
-		_T("CMD_UPDATE_ALARM_NOTE"),
+		_T("CMD_UPDATE_ALARM_COMMENT"),
 		_T("CMD_GET_ALARM"),
 		_T("CMD_GET_TABLE_LAST_VALUES"),
 		_T("CMD_GET_TABLE_DCI_DATA"),
@@ -324,11 +324,14 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_CANCEL_FILE_MONITORING"),
       _T("CMD_CHANGE_OBJECT_TOOL_STATUS"),
       _T("CMD_SET_ALARM_STATUS_FLOW"),
-      _T("CMD_DELETE_ALARM_NOTE"),
-      _T("CMD_GET_EFFECTIVE_RIGHTS")
+      _T("CMD_DELETE_ALARM_COMMENT"),
+      _T("CMD_GET_EFFECTIVE_RIGHTS"),
+      _T("CMD_GET_DCI_VALUES"),
+      _T("CMD_GET_HELPDESK_URL"),
+      _T("CMD_UNLINK_HELPDESK_ISSUE")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_EFFECTIVE_RIGHTS))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_UNLINK_HELPDESK_ISSUE))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);
@@ -538,7 +541,7 @@ CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, UINT32 dwId,
  * Send file over CSCP
  */
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TCHAR *pszFile,
-                                           NXCPEncryptionContext *pCtx, long offset, long sizeLimit,
+                                           NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
 														 MUTEX mutex)
 {
@@ -555,14 +558,11 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
       NX_STAT_STRUCT st;
       NX_FSTAT(hFile, &st);
       long fileSize = (long)st.st_size;
-      long bytesToRead = (fileSize - offset) > fileSize ? (0 - offset) : (fileSize - offset);
+      if (labs(offset) > fileSize)
+         offset = 0;
+      long bytesToRead = (offset < 0) ? (0 - offset) : (fileSize - offset);
 
-      if (sizeLimit > 0)
-      {
-         offset = bytesToRead > sizeLimit ?  -sizeLimit : offset;
-      }
-
-		if (lseek(hFile, offset, offset < 0 ? SEEK_END : SEEK_SET) != -1)
+		if (lseek(hFile, offset, (offset < 0) ? SEEK_END : SEEK_SET) != -1)
 		{
 			// Allocate message and prepare it's header
 			pMsg = (CSCP_MESSAGE *)malloc(FILE_BUFFER_SIZE + CSCP_HEADER_SIZE + 8);

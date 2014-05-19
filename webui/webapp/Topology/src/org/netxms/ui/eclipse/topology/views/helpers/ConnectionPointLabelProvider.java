@@ -28,6 +28,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.ConnectionPointType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.ConnectionPoint;
@@ -43,8 +44,10 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 {
 	private static final Color COLOR_FOUND_OBJECT_DIRECT = new Color(Display.getDefault(), 0, 127, 0);
 	private static final Color COLOR_FOUND_OBJECT_INDIRECT = new Color(Display.getDefault(), 136, 160, 52);
+   private static final Color COLOR_FOUND_OBJECT_WIRELESS = new Color(Display.getDefault(), 10, 125, 138);
 	private static final Color COLOR_FOUND_MAC_DIRECT = new Color(Display.getDefault(), 0, 0, 127);
 	private static final Color COLOR_FOUND_MAC_INDIRECT = new Color(Display.getDefault(), 32, 196, 208);
+   private static final Color COLOR_FOUND_MAC_WIRELESS = new Color(Display.getDefault(), 28, 98, 100);
 	private static final Color COLOR_NOT_FOUND = new Color(Display.getDefault(), 127, 0, 0);
 	
 	private Map<Long, String> cachedObjectNames = new HashMap<Long, String>();
@@ -107,7 +110,17 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 			case HostSearchResults.COLUMN_PORT:
 				return getObjectName(cp.getInterfaceId());
 			case HostSearchResults.COLUMN_TYPE:
-				return cp.isDirectlyConnected() ? Messages.get().ConnectionPointLabelProvider_Direct : Messages.get().ConnectionPointLabelProvider_Indirect;
+			   switch(cp.getType())
+			   {
+			      case DIRECT:
+			         return Messages.get().ConnectionPointLabelProvider_Direct;
+               case INDIRECT:
+                  return Messages.get().ConnectionPointLabelProvider_Indirect;
+               case WIRELESS:
+                  return "wireless";
+               default:
+                  return "unknown";
+			   }
 		}
 		return null;
 	}
@@ -122,8 +135,10 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 		if (cp.getNodeId() == 0)
 			return COLOR_NOT_FOUND;
 		if (cp.getLocalNodeId() == 0)
-			return cp.isDirectlyConnected() ? COLOR_FOUND_MAC_DIRECT : COLOR_FOUND_MAC_INDIRECT;
-		return cp.isDirectlyConnected() ? COLOR_FOUND_OBJECT_DIRECT : COLOR_FOUND_OBJECT_INDIRECT;
+			return (cp.getType() == ConnectionPointType.DIRECT) ? COLOR_FOUND_MAC_DIRECT : 
+			   ((cp.getType() == ConnectionPointType.WIRELESS) ? COLOR_FOUND_MAC_WIRELESS : COLOR_FOUND_MAC_INDIRECT);
+		return (cp.getType() == ConnectionPointType.DIRECT) ? COLOR_FOUND_OBJECT_DIRECT : 
+		      ((cp.getType() == ConnectionPointType.WIRELESS) ? COLOR_FOUND_OBJECT_WIRELESS : COLOR_FOUND_OBJECT_INDIRECT);
 	}
 
 	/* (non-Javadoc)

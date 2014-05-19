@@ -42,10 +42,10 @@ DCTableColumn::DCTableColumn(CSCPMessage *msg, UINT32 baseId)
 	m_flags = msg->GetVariableShort(baseId + 1);
    m_displayName = msg->GetVariableStr(baseId + 3);
 
-   if (msg->IsVariableExist(baseId + 2))
+   if (msg->isFieldExist(baseId + 2))
 	{
 		UINT32 oid[256];
-		UINT32 len = msg->GetVariableInt32Array(baseId + 2, 256, oid);
+		UINT32 len = msg->getFieldAsInt32Array(baseId + 2, 256, oid);
 		if (len > 0)
 		{
 			m_snmpOid = new SNMP_ObjectId(len, oid);
@@ -79,7 +79,7 @@ DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
 	if (oid[0] != 0)
 	{
 		UINT32 oidBin[256];
-		UINT32 len = SNMPParseOID(oid, oidBin, 256);
+		size_t len = SNMPParseOID(oid, oidBin, 256);
 		if (len > 0)
 		{
 			m_snmpOid = new SNMP_ObjectId(len, oidBin);
@@ -101,14 +101,14 @@ DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
 DCTableColumn::DCTableColumn(ConfigEntry *e)
 {
    nx_strncpy(m_name, e->getSubEntryValue(_T("name"), 0, _T("")), MAX_COLUMN_NAME);
-   m_flags = (UINT16)e->getSubEntryValueUInt(_T("flags"));
+   m_flags = (UINT16)e->getSubEntryValueAsUInt(_T("flags"));
    m_displayName = _tcsdup(e->getSubEntryValue(_T("displayName"), 0, _T("")));
 
    const TCHAR *oid = e->getSubEntryValue(_T("snmpOid"));
    if ((oid != NULL) && (*oid != 0))
    {
 		UINT32 oidBin[256];
-		UINT32 len = SNMPParseOID(oid, oidBin, 256);
+		size_t len = SNMPParseOID(oid, oidBin, 256);
 		if (len > 0)
 		{
 			m_snmpOid = new SNMP_ObjectId(len, oidBin);

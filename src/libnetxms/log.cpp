@@ -203,14 +203,18 @@ static BOOL RotateLog(BOOL needLock)
 		SetDayStart();
 	}
 
-	// Reopen log
+   // Reopen log
+#if HAVE_FOPEN64
+   m_logFileHandle = _tfopen64(m_logFileName, _T("w"));
+#else
    m_logFileHandle = _tfopen(m_logFileName, _T("w"));
+#endif
    if (m_logFileHandle != NULL)
    {
-		m_flags |= NXLOG_IS_OPEN;
-		TCHAR buffer[32];
+      m_flags |= NXLOG_IS_OPEN;
+      TCHAR buffer[32];
       _ftprintf(m_logFileHandle, _T("%s Log file truncated.\n"), FormatLogTimestamp(buffer));
-	}
+   }
 
 	if (needLock)
 		MutexUnlock(m_mutexLogAccess);
@@ -264,7 +268,11 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
       TCHAR buffer[32];
 
 		nx_strncpy(m_logFileName, logName, MAX_PATH);
+#if HAVE_FOPEN64
+      m_logFileHandle = _tfopen64(logName, _T("a"));
+#else
       m_logFileHandle = _tfopen(logName, _T("a"));
+#endif
       if (m_logFileHandle != NULL)
       {
 			m_flags |= NXLOG_IS_OPEN;

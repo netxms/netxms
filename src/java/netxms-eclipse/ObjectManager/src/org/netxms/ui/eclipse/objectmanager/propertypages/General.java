@@ -77,7 +77,17 @@ public class General extends PropertyPage
 		return dialogArea;
 	}
 	
-	/**
+	/* (non-Javadoc)
+    * @see org.eclipse.jface.preference.PreferencePage#createControl(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   public void createControl(Composite parent)
+   {
+      super.createControl(parent);
+      getDefaultsButton().setVisible(false);
+   }
+
+   /**
 	 * Apply changes
 	 * 
 	 * @param isApply true if update operation caused by "Apply" button

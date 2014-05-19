@@ -34,6 +34,6 @@ public class LoginListener implements ConsoleLoginListener
 	@Override
 	public void afterLogin(NXCSession session, Display display)
 	{
-		ObjectToolsCache.attachSession(session);
+		ObjectToolsCache.attachSession(display, session);
 	}
 }

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.DisposeEvent;
@@ -73,17 +75,22 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	private NXCSession session;
 
 	private Set<String> knownCategories;
+	private List<LibraryImage> imageLibrary;
 
 	protected int currentIconSize = MIN_GRID_ICON_SIZE;
 
-	/*
-	 * (non-Javadoc)
-	 * 
+	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	public void createPartControl(final Composite parent)
 	{
+	   final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
+	   
+	   currentIconSize = ps.getInt("IMAGE_LIBRARY.ZOOM");
+	   if(currentIconSize == 0)
+	      currentIconSize = MIN_GRID_ICON_SIZE;
+	   
 		final FillLayout layout = new FillLayout();
 		parent.setLayout(layout);
 
@@ -94,8 +101,8 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		DefaultGalleryGroupRenderer galleryGroupRenderer = new DefaultGalleryGroupRenderer();
 
 		galleryGroupRenderer.setMinMargin(2);
-		galleryGroupRenderer.setItemHeight(MIN_GRID_ICON_SIZE);
-		galleryGroupRenderer.setItemWidth(MIN_GRID_ICON_SIZE);
+		galleryGroupRenderer.setItemHeight(currentIconSize);
+		galleryGroupRenderer.setItemWidth(currentIconSize);
 		galleryGroupRenderer.setAutoMargin(true);
 		galleryGroupRenderer.setAlwaysExpanded(true);
 		gallery.setGroupRenderer(galleryGroupRenderer);
@@ -129,14 +136,13 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
+			   ps.setValue("IMAGE_LIBRARY.ZOOM", currentIconSize);
 				ImageProvider.getInstance().removeUpdateListener(ImageLibrary.this);
 			}
 		});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
+	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
 	@Override
@@ -153,7 +159,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			public void run()
 			{
-				final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories);
+				final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary);
 				final GalleryItem[] selection = gallery.getSelection();
 				if (selection.length > 0)
 				{
@@ -176,7 +182,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 				final GalleryItem[] selection = gallery.getSelection();
 				if (selection.length == 1)
 				{
-					final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories);
+					final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary);
 					LibraryImage image = (LibraryImage)selection[0].getData();
 					dialog.setName(image.getName());
 					dialog.setDefaultCategory(image.getCategory());
@@ -244,12 +250,12 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 	}
 
-	protected void verifyImageFile(String fileName)
+   /**
+    * Verify if image can be created from given file
+    */
+	protected void verifyImageFile(String fileName) throws Exception
 	{
-		if (fileName != null)
-		{
-			new Image(getSite().getShell().getDisplay(), fileName);
-		}
+		new Image(getSite().getShell().getDisplay(), fileName).dispose();
 	}
 
 	/**
@@ -266,9 +272,9 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
-				verifyImageFile(fileName);
 				if (fileName != null)
 				{
+	            verifyImageFile(fileName);
 					FileInputStream stream = null;
 					try
 					{
@@ -308,7 +314,6 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					}
 				});
 
-				// ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
 				ImageProvider.getInstance().syncMetaData();
 				refreshImages(); /* TODO: update single element */
 
@@ -373,7 +378,6 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					}
 				});
 
-				// /ImageProvider.getInstance().syncMetaData(session, getSite().getShell().getDisplay());
 				// TODO: check
 				ImageProvider.getInstance().syncMetaData();
 				refreshImages(); /* TODO: update local copy */
@@ -494,7 +498,8 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<LibraryImage> imageLibrary = session.getImageLibrary();
+				imageLibrary = session.getImageLibrary();
+				Collections.sort(imageLibrary);
 				for(int i = 0; i < imageLibrary.size(); i++)
 				{
 					LibraryImage image = imageLibrary.get(i);
@@ -567,16 +572,12 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 					catch(SWTException e)
 					{
 						Activator.logError("Exception in ImageLibrary.refreshUI()", e); //$NON-NLS-1$
-						imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show
-																												// as
-																												// "missing"
+						imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show as "missing"
 					}
 				}
 				else
 				{
-					imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show
-																											// as
-																											// "missing"
+					imageItem.setImage(ImageProvider.getInstance().getImage(null)); // show as "missing"
 				}
 				imageItem.setData(image);
 			}

@@ -19,7 +19,7 @@
 
 #include "db2dci.h"
 
-Dci StringToDci(const TCHAR* stringDci)
+Dci StringToDci(const TCHAR *stringDci)
 {
    IfEqualsReturn(stringDci, DCI_DBMS_VERSION)
    IfEqualsReturn(stringDci, DCI_NUM_AVAILABLE)

@@ -61,7 +61,7 @@ public abstract class ConsoleJob extends Job
 		siteService = (wbPart != null) ? 
 					(IWorkbenchSiteProgressService)wbPart.getSite().getService(IWorkbenchSiteProgressService.class) : null;
 		setUser(true);
-		display = PlatformUI.getWorkbench().getDisplay();
+		display = Display.getCurrent();
 		if (display == null)
 			throw new IllegalThreadStateException("ConsoleJob constructor called from non-UI thread");
 	}

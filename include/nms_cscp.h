@@ -201,7 +201,7 @@ typedef struct
 #define CMD_LOGIN                      0x0001
 #define CMD_LOGIN_RESP                 0x0002
 #define CMD_KEEPALIVE                  0x0003
-#define CMD_SET_ALARM_HD_STATE         0x0004
+#define CMD_OPEN_HELPDESK_ISSUE        0x0004
 #define CMD_GET_OBJECTS                0x0005
 #define CMD_OBJECT                     0x0006
 #define CMD_DELETE_OBJECT              0x0007
@@ -268,7 +268,7 @@ typedef struct
 #define CMD_GET_CURRENT_USER_ATTR      0x0044
 #define CMD_SET_CURRENT_USER_ATTR      0x0045
 #define CMD_GET_ALL_ALARMS             0x0046
-#define CMD_GET_ALARM_NOTES            0x0047
+#define CMD_GET_ALARM_COMMENTS         0x0047
 #define CMD_ACK_ALARM                  0x0048
 #define CMD_ALARM_UPDATE               0x0049
 #define CMD_ALARM_DATA                 0x004A
@@ -418,10 +418,6 @@ typedef struct
 #define CMD_CREATE_MAP                 0x00DA
 #define CMD_UPLOAD_FILE                0x00DB
 #define CMD_DELETE_FILE                0x00DC
-#define CMD_DELETE_REPORT_RESULTS      0x00DD
-#define CMD_RENDER_REPORT              0x00DE
-#define CMD_EXECUTE_REPORT             0x00DF
-#define CMD_GET_REPORT_RESULTS         0x00E0
 #define CMD_CONFIG_SET_CLOB            0x00E1
 #define CMD_CONFIG_GET_CLOB            0x00E2
 #define CMD_RENAME_MAP                 0x00E3
@@ -455,7 +451,7 @@ typedef struct
 #define CMD_GET_FILE_DETAILS           0x00FF
 #define CMD_IMAGE_LIBRARY_UPDATE       0x0100
 #define CMD_GET_NODE_COMPONENTS        0x0101
-#define CMD_UPDATE_ALARM_NOTE          0x0102
+#define CMD_UPDATE_ALARM_COMMENT       0x0102
 #define CMD_GET_ALARM                  0x0103
 #define CMD_GET_TABLE_LAST_VALUES      0x0104
 #define CMD_GET_TABLE_DCI_DATA         0x0105
@@ -486,8 +482,11 @@ typedef struct
 #define CMD_CANCEL_FILE_MONITORING     0x011E
 #define CMD_CHANGE_OBJECT_TOOL_STATUS  0x011F
 #define CMD_SET_ALARM_STATUS_FLOW      0x0120
-#define CMD_DELETE_ALARM_NOTE          0x0121
+#define CMD_DELETE_ALARM_COMMENT       0x0121
 #define CMD_GET_EFFECTIVE_RIGHTS       0x0122
+#define CMD_GET_DCI_VALUES             0x0123
+#define CMD_GET_HELPDESK_URL           0x0124
+#define CMD_UNLINK_HELPDESK_ISSUE      0x0125
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -495,6 +494,10 @@ typedef struct
 #define CMD_RS_LIST_RESULTS            0x1103
 #define CMD_RS_RENDER_RESULT           0x1104
 #define CMD_RS_DELETE_RESULT           0x1105
+#define CMD_RS_LIST_SCHEDULES          0x1106
+#define CMD_RS_DELETE_SCHEDULE         0x1107
+#define CMD_RS_NOTIFY                  0x1108
+#define CMD_RS_ADD_REPORT_NOTIFY       0x1109
 
 /**
  * Variable identifiers
@@ -908,7 +911,7 @@ typedef struct
 #define VID_IS_PHYS_PORT            ((UINT32)407)
 #define VID_CREATE_STATUS_DCI       ((UINT32)408)
 #define VID_NUM_COMMENTS            ((UINT32)409)
-#define VID_NOTE_ID                 ((UINT32)410)
+#define VID_COMMENT_ID              ((UINT32)410)
 #define VID_DCOBJECT_TYPE           ((UINT32)411)
 #define VID_INSTANCE_COLUMN         ((UINT32)412)
 #define VID_DATA_COLUMN             ((UINT32)413)
@@ -916,7 +919,7 @@ typedef struct
 #define VID_OPER_STATE              ((UINT32)415)
 #define VID_EXPECTED_STATE          ((UINT32)416)
 #define VID_LINK_COLOR              ((UINT32)417)
-#define VID_EXACT_MATCH             ((UINT32)418)
+#define VID_CONNECTION_TYPE         ((UINT32)418)
 #define VID_RESOLVED_BY_USER        ((UINT32)419)
 #define VID_IS_STICKY               ((UINT32)420)
 #define VID_DATE_FORMAT             ((UINT32)421)
@@ -962,6 +965,16 @@ typedef struct
 #define VID_ALARM_STATUS_FLOW_STATE ((UINT32)461)
 #define VID_GROUPS                  ((UINT32)462)
 #define VID_EFFECTIVE_RIGHTS        ((UINT32)463)
+#define VID_EXTENSION_COUNT         ((UINT32)464)
+#define VID_TIMED_ALARM_ACK_ENABLED ((UINT32)465)
+#define VID_TABLE_EXTENDED_FORMAT   ((UINT32)466)
+#define VID_RS_JOB_ID               ((UINT32)467)
+#define VID_RS_JOB_TYPE             ((UINT32)468)
+#define VID_RS_REPORT_NAME          ((UINT32)469)
+#define VID_HELPDESK_LINK_ACTIVE    ((UINT32)470)
+#define VID_URL                     ((UINT32)471)
+#define VID_PEER_PROTOCOL           ((UINT32)472)
+#define VID_VIEW_REFRESH_INTERVAL   ((UINT32)473)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1126,9 +1139,11 @@ typedef struct
 
 #define VID_RADIO_LIST_BASE         ((UINT32)0x30000000)
 
-#define VID_RADIO_LIST_BASE         ((UINT32)0x30000000)
-
 #define VID_RULE_LIST_BASE          ((UINT32)0x10000000)
+
+#define VID_EXTENSION_LIST_BASE     ((UINT32)0x10000000)
+
+#define VID_DCI_VALUES_BASE         ((UINT32)0x10000000)
 
 //
 // Inline functions

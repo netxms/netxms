@@ -65,7 +65,7 @@ void NXSL_Compiler::error(const char *pszMsg)
    {
       snprintf(szText, 1024, "Error in line %d: %s", m_pLexer->getCurrLine(), pszMsg);
 #ifdef UNICODE
-		m_pszErrorText = WideStringFromMBString(pszMsg);
+		m_pszErrorText = WideStringFromMBString(szText);
 #else
       m_pszErrorText = strdup(szText);
 #endif

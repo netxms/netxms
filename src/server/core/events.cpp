@@ -60,7 +60,7 @@ Event::Event()
 /**
  * Construct event from template
  */
-Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 dwSourceId, const TCHAR *pszUserTag, const char *szFormat, const TCHAR **names, va_list args)
+Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, const char *szFormat, const TCHAR **names, va_list args)
 {
 	_tcscpy(m_szName, pTemplate->szName);
    m_tTimeStamp = time(NULL);
@@ -69,9 +69,11 @@ Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 dwSourceId, const TCHAR *pszUserT
    m_dwCode = pTemplate->dwCode;
    m_dwSeverity = pTemplate->dwSeverity;
    m_dwFlags = pTemplate->dwFlags;
-   m_dwSource = dwSourceId;
+   m_dwSource = sourceId;
    m_pszMessageText = NULL;
-	m_pszUserTag = (pszUserTag != NULL) ? _tcsdup(pszUserTag) : NULL;
+	m_pszUserTag = (userTag != NULL) ? _tcsdup(userTag) : NULL;
+   if ((m_pszUserTag != NULL) && (_tcslen(m_pszUserTag) >= MAX_USERTAG_LENGTH))
+      m_pszUserTag[MAX_USERTAG_LENGTH - 1] = 0;
 	m_pszCustomMessage = NULL;
 	m_parameters.setOwner(true);
 
@@ -173,15 +175,15 @@ void Event::expandMessageText()
 /**
  * Substitute % macros in given text with actual values
  */
-TCHAR *Event::expandText(const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
+TCHAR *Event::expandText(const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey)
 {
-	return Event::expandText(this, m_dwSource, pszTemplate, pszAlarmMsg);
+	return Event::expandText(this, m_dwSource, textTemplate, alarmMsg, alarmKey);
 }
 
 /**
  * Substitute % macros in given text with actual values
  */
-TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemplate, const TCHAR *pszAlarmMsg)
+TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey)
 {
    const TCHAR *pCurr;
    UINT32 dwPos, dwSize, dwParam;
@@ -192,8 +194,8 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemp
 	int i;
 	uuid_t guid;
 
-	DbgPrintf(8, _T("Event::expandText(event=%p sourceObject=%d template='%s' alarmMsg='%s')"),
-	          event, (int)sourceObject, CHECK_NULL(pszTemplate), CHECK_NULL(pszAlarmMsg));
+	DbgPrintf(8, _T("Event::expandText(event=%p sourceObject=%d template='%s' alarmMsg='%s' alarmKey='%s')"),
+	          event, (int)sourceObject, CHECK_NULL(textTemplate), CHECK_NULL(alarmMsg), CHECK_NULL(alarmKey));
 
    pObject = FindObjectById(sourceId);
    if (pObject == NULL)
@@ -202,9 +204,9 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemp
 		if (pObject == NULL)
 			pObject = g_pEntireNet;
    }
-   dwSize = (UINT32)_tcslen(pszTemplate) + 1;
+   dwSize = (UINT32)_tcslen(textTemplate) + 1;
    pText = (TCHAR *)malloc(dwSize * sizeof(TCHAR));
-   for(pCurr = pszTemplate, dwPos = 0; *pCurr != 0; pCurr++)
+   for(pCurr = textTemplate, dwPos = 0; *pCurr != 0; pCurr++)
    {
       switch(*pCurr)
       {
@@ -330,12 +332,21 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemp
                   }
                   break;
                case 'A':   // Associated alarm message
-                  if (pszAlarmMsg != NULL)
+                  if (alarmMsg != NULL)
                   {
-                     dwSize += (UINT32)_tcslen(pszAlarmMsg);
+                     dwSize += (UINT32)_tcslen(alarmMsg);
 	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                     _tcscpy(&pText[dwPos], pszAlarmMsg);
-                     dwPos += (UINT32)_tcslen(pszAlarmMsg);
+                     _tcscpy(&pText[dwPos], alarmMsg);
+                     dwPos += (UINT32)_tcslen(alarmMsg);
+                  }
+                  break;
+               case 'K':   // Associated alarm key
+                  if (alarmKey != NULL)
+                  {
+                     dwSize += (UINT32)_tcslen(alarmKey);
+	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], alarmKey);
+                     dwPos += (UINT32)_tcslen(alarmKey);
                   }
                   break;
                case 'u':	// User tag
@@ -394,9 +405,6 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemp
 						}
 						else
 						{
-							NXSL_Program *script;
-							NXSL_ServerEnv *pEnv;
-
 							scriptName[i] = 0;
 
 							// Entry point can be given in form script/entry_point
@@ -409,20 +417,20 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemp
 							}
 							StrStrip(scriptName);
 
-							g_pScriptLibrary->lock();
-							script = g_pScriptLibrary->findScript(scriptName);
-							if (script != NULL)
+							NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+							if (vm != NULL)
 							{
-								pEnv = new NXSL_ServerEnv;
 								if (pObject->Type() == OBJECT_NODE)
-									script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
-								script->setGlobalVariable(_T("$event"), (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)) : new NXSL_Value);
-								if (pszAlarmMsg != NULL)
-									script->setGlobalVariable(_T("$alarmMessage"), new NXSL_Value(pszAlarmMsg));
+									vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
+								vm->setGlobalVariable(_T("$event"), (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)) : new NXSL_Value);
+								if (alarmMsg != NULL)
+									vm->setGlobalVariable(_T("$alarmMessage"), new NXSL_Value(alarmMsg));
+								if (alarmKey != NULL)
+									vm->setGlobalVariable(_T("$alarmKey"), new NXSL_Value(alarmKey));
 
-								if (script->run(pEnv, 0, NULL, NULL, NULL, NULL, entryPoint) == 0)
+								if (vm->run(0, NULL, NULL, NULL, NULL, entryPoint))
 								{
-									NXSL_Value *result = script->getResult();
+									NXSL_Value *result = vm->getResult();
 									if (result != NULL)
 									{
 										const TCHAR *temp = result->getValueAsCString();
@@ -433,23 +441,22 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *pszTemp
 											_tcscpy(&pText[dwPos], temp);
 											dwPos += (UINT32)_tcslen(temp);
 											DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Script %s executed successfully"),
-												(int)((event != NULL) ? event->m_dwCode : 0), pszTemplate, scriptName);
+												(int)((event != NULL) ? event->m_dwCode : 0), textTemplate, scriptName);
 										}
 									}
 								}
 								else
 								{
 									DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Script %s execution error: %s"),
-												 (int)((event != NULL) ? event->m_dwCode : 0), pszTemplate, scriptName, script->getErrorText());
-									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, script->getErrorText(), 0);
+												 (int)((event != NULL) ? event->m_dwCode : 0), textTemplate, scriptName, vm->getErrorText());
+									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
 								}
 							}
 							else
 							{
 								DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Cannot find script %s"),
-									(int)((event != NULL) ? event->m_dwCode : 0), pszTemplate, scriptName);
+									(int)((event != NULL) ? event->m_dwCode : 0), textTemplate, scriptName);
 							}
-							g_pScriptLibrary->unlock();
 						}
 						break;
 					case '{':	// Custom attribute
@@ -705,14 +712,14 @@ void ReloadEvents()
 /**
  * Delete event template from list
  */
-void DeleteEventTemplateFromList(UINT32 dwEventCode)
+void DeleteEventTemplateFromList(UINT32 eventCode)
 {
    UINT32 i;
 
    RWLockWriteLock(m_rwlockTemplateAccess, INFINITE);
    for(i = 0; i < m_dwNumTemplates; i++)
    {
-      if (m_pEventTemplates[i].dwCode == dwEventCode)
+      if (m_pEventTemplates[i].dwCode == eventCode)
       {
          m_dwNumTemplates--;
          safe_free(m_pEventTemplates[i].pszDescription);
@@ -729,39 +736,41 @@ void DeleteEventTemplateFromList(UINT32 dwEventCode)
  * Perform binary search on event template by id
  * Returns INULL if key not found or pointer to appropriate template
  */
-static EVENT_TEMPLATE *FindEventTemplate(UINT32 dwCode)
+static EVENT_TEMPLATE *FindEventTemplate(UINT32 eventCode)
 {
    UINT32 dwFirst, dwLast, dwMid;
 
    dwFirst = 0;
    dwLast = m_dwNumTemplates - 1;
 
-   if ((dwCode < m_pEventTemplates[0].dwCode) || (dwCode > m_pEventTemplates[dwLast].dwCode))
+   if ((eventCode < m_pEventTemplates[0].dwCode) || (eventCode > m_pEventTemplates[dwLast].dwCode))
       return NULL;
 
    while(dwFirst < dwLast)
    {
       dwMid = (dwFirst + dwLast) / 2;
-      if (dwCode == m_pEventTemplates[dwMid].dwCode)
+      if (eventCode == m_pEventTemplates[dwMid].dwCode)
          return &m_pEventTemplates[dwMid];
-      if (dwCode < m_pEventTemplates[dwMid].dwCode)
+      if (eventCode < m_pEventTemplates[dwMid].dwCode)
          dwLast = dwMid - 1;
       else
          dwFirst = dwMid + 1;
    }
 
-   if (dwCode == m_pEventTemplates[dwLast].dwCode)
+   if (eventCode == m_pEventTemplates[dwLast].dwCode)
       return &m_pEventTemplates[dwLast];
 
    return NULL;
 }
 
 /**
- * Post event to the queue.
- * Arguments:
- * dwEventCode - Event code
- * dwSourceId  - Event source object ID
- * szFormat    - Parameter format string, each parameter represented by one character.
+ * Post event to given event queue.
+ *
+ * @param queue event queue to post events to
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param userTag event's user tag
+ * @param format Parameter format string, each parameter represented by one character.
  *    The following format characters can be used:
  *        s - String
  *        m - Multibyte string
@@ -772,12 +781,11 @@ static EVENT_TEMPLATE *FindEventTemplate(UINT32 dwCode)
  *        a - IP address
  *        h - MAC (hardware) address
  *        i - Object ID
- * names - names for parameters
- * PostEventEx will put events to specified queue, and PostEvent to system
- * event queue. Both functions uses RealPostEvent to do real job.
+ * @param names names for parameters (NULL if parameters are unnamed)
+ * @param args event parameters
  */
-static BOOL RealPostEvent(Queue *pQueue, UINT32 dwEventCode, UINT32 dwSourceId,
-                          const TCHAR *pszUserTag, const char *pszFormat, const TCHAR **names, va_list args)
+static BOOL RealPostEvent(Queue *queue, UINT32 eventCode, UINT32 sourceId,
+                          const TCHAR *userTag, const char *format, const TCHAR **names, va_list args)
 {
    EVENT_TEMPLATE *pEventTemplate;
    Event *pEvent;
@@ -788,14 +796,14 @@ static BOOL RealPostEvent(Queue *pQueue, UINT32 dwEventCode, UINT32 dwSourceId,
    // Find event template
    if (m_dwNumTemplates > 0)    // Is there any templates?
    {
-      pEventTemplate = FindEventTemplate(dwEventCode);
+      pEventTemplate = FindEventTemplate(eventCode);
       if (pEventTemplate != NULL)
       {
          // Template found, create new event
-         pEvent = new Event(pEventTemplate, dwSourceId, pszUserTag, pszFormat, names, args);
+         pEvent = new Event(pEventTemplate, sourceId, userTag, format, names, args);
 
          // Add new event to queue
-         pQueue->Put(pEvent);
+         queue->Put(pEvent);
 
          bResult = TRUE;
       }
@@ -805,46 +813,119 @@ static BOOL RealPostEvent(Queue *pQueue, UINT32 dwEventCode, UINT32 dwSourceId,
    return bResult;
 }
 
-BOOL PostEvent(UINT32 dwEventCode, UINT32 dwSourceId, const char *pszFormat, ...)
+/**
+ * Post event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param format Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IP address
+ *        h - MAC (hardware) address
+ *        i - Object ID
+ */
+BOOL PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {
    va_list args;
    BOOL bResult;
 
-   va_start(args, pszFormat);
-   bResult = RealPostEvent(g_pEventQueue, dwEventCode, dwSourceId, NULL, pszFormat, NULL, args);
+   va_start(args, format);
+   bResult = RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, NULL, args);
    va_end(args);
    return bResult;
 }
 
-BOOL PostEventWithNames(UINT32 dwEventCode, UINT32 dwSourceId, const char *pszFormat, const TCHAR **names, ...)
+/**
+ * Post event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param format Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IP address
+ *        h - MAC (hardware) address
+ *        i - Object ID
+ * @param names names for parameters (NULL if parameters are unnamed)
+ */
+BOOL PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...)
 {
    va_list args;
    BOOL bResult;
 
    va_start(args, names);
-   bResult = RealPostEvent(g_pEventQueue, dwEventCode, dwSourceId, NULL, pszFormat, names, args);
+   bResult = RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, names, args);
    va_end(args);
    return bResult;
 }
 
-BOOL PostEventWithTag(UINT32 dwEventCode, UINT32 dwSourceId, const TCHAR *pszUserTag, const char *pszFormat, ...)
+/**
+ * Post event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param userTag event's user tag
+ * @param format Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IP address
+ *        h - MAC (hardware) address
+ *        i - Object ID
+ * @param names names for parameters (NULL if parameters are unnamed)
+ * @param args event parameters
+ */
+BOOL PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...)
 {
    va_list args;
    BOOL bResult;
 
-   va_start(args, pszFormat);
-   bResult = RealPostEvent(g_pEventQueue, dwEventCode, dwSourceId, pszUserTag, pszFormat, NULL, args);
+   va_start(args, format);
+   bResult = RealPostEvent(g_pEventQueue, eventCode, sourceId, userTag, format, NULL, args);
    va_end(args);
    return bResult;
 }
 
-BOOL PostEventEx(Queue *pQueue, UINT32 dwEventCode, UINT32 dwSourceId, const char *pszFormat, ...)
+/**
+ * Post event to given event queue.
+ *
+ * @param queue event queue to post events to
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param format Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IP address
+ *        h - MAC (hardware) address
+ *        i - Object ID
+ */
+BOOL PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {
    va_list args;
    BOOL bResult;
 
-   va_start(args, pszFormat);
-   bResult = RealPostEvent(pQueue, dwEventCode, dwSourceId, NULL, pszFormat, NULL, args);
+   va_start(args, format);
+   bResult = RealPostEvent(queue, eventCode, sourceId, NULL, format, NULL, args);
    va_end(args);
    return bResult;
 }
@@ -852,11 +933,11 @@ BOOL PostEventEx(Queue *pQueue, UINT32 dwEventCode, UINT32 dwSourceId, const cha
 /**
  * Resend events from specific queue to system event queue
  */
-void ResendEvents(Queue *pQueue)
+void ResendEvents(Queue *queue)
 {
    while(1)
    {
-      void *pEvent = pQueue->Get();
+      void *pEvent = queue->Get();
       if (pEvent == NULL)
          break;
       g_pEventQueue->Put(pEvent);
@@ -866,7 +947,7 @@ void ResendEvents(Queue *pQueue)
 /**
  * Create NXMP record for event
  */
-void CreateNXMPEventRecord(String &str, UINT32 dwCode)
+void CreateNXMPEventRecord(String &str, UINT32 eventCode)
 {
    EVENT_TEMPLATE *p;
    String strText, strDescr;
@@ -876,7 +957,7 @@ void CreateNXMPEventRecord(String &str, UINT32 dwCode)
    // Find event template
    if (m_dwNumTemplates > 0)    // Is there any templates?
    {
-      p = FindEventTemplate(dwCode);
+      p = FindEventTemplate(eventCode);
       if (p != NULL)
       {
          str.addFormattedString(_T("\t\t<event id=\"%d\">\n")
@@ -899,7 +980,7 @@ void CreateNXMPEventRecord(String &str, UINT32 dwCode)
 /**
  * Resolve event name
  */
-BOOL EventNameFromCode(UINT32 dwCode, TCHAR *pszBuffer)
+BOOL EventNameFromCode(UINT32 eventCode, TCHAR *pszBuffer)
 {
    EVENT_TEMPLATE *p;
    BOOL bRet = FALSE;
@@ -909,7 +990,7 @@ BOOL EventNameFromCode(UINT32 dwCode, TCHAR *pszBuffer)
    // Find event template
    if (m_dwNumTemplates > 0)    // Is there any templates?
    {
-      p = FindEventTemplate(dwCode);
+      p = FindEventTemplate(eventCode);
       if (p != NULL)
       {
          _tcscpy(pszBuffer, p->szName);
@@ -929,27 +1010,23 @@ BOOL EventNameFromCode(UINT32 dwCode, TCHAR *pszBuffer)
    return bRet;
 }
 
-
-//
-// Find event template by code - suitable for external call
-//
-
-EVENT_TEMPLATE *FindEventTemplateByCode(UINT32 dwCode)
+/**
+ * Find event template by code - suitable for external call
+ */
+EVENT_TEMPLATE *FindEventTemplateByCode(UINT32 eventCode)
 {
    EVENT_TEMPLATE *p = NULL;
 
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
-   p = FindEventTemplate(dwCode);
+   p = FindEventTemplate(eventCode);
    RWLockUnlock(m_rwlockTemplateAccess);
    return p;
 }
 
-
-//
-// Find event template by name - suitable for external call
-//
-
-EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName)
+/**
+ * Find event template by name - suitable for external call
+ */
+EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *name)
 {
    EVENT_TEMPLATE *p = NULL;
    UINT32 i;
@@ -957,7 +1034,7 @@ EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName)
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
    for(i = 0; i < m_dwNumTemplates; i++)
    {
-      if (!_tcscmp(m_pEventTemplates[i].szName, pszName))
+      if (!_tcscmp(m_pEventTemplates[i].szName, name))
       {
          p = &m_pEventTemplates[i];
          break;

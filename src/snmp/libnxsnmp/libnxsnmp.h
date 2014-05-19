@@ -38,8 +38,8 @@
  */
 typedef struct
 {
-   UINT32 dwLength;
-   UINT32 *pdwValue;
+   UINT32 length;
+   UINT32 *value;
 } SNMP_OID;
 
 /**
@@ -119,10 +119,8 @@ public:
 /**
  * Functions
  */
-BOOL BER_DecodeIdentifier(BYTE *pRawData, UINT32 dwRawSize, UINT32 *pdwType, 
-                          UINT32 *pdwLength, BYTE **pData, UINT32 *pdwIdLength);
-BOOL BER_DecodeContent(UINT32 dwType, BYTE *pData, UINT32 dwLength, BYTE *pBuffer);
-UINT32 BER_Encode(UINT32 dwType, BYTE *pData, UINT32 dwDataLength, 
-                 BYTE *pBuffer, UINT32 dwBufferSize);
+bool BER_DecodeIdentifier(BYTE *rawData, size_t rawSize, UINT32 *type, size_t *length, BYTE **data, size_t *idLength);
+bool BER_DecodeContent(UINT32 type, BYTE *data, size_t length, BYTE *buffer);
+size_t BER_Encode(UINT32 type, BYTE *data, size_t dataLength, BYTE *buffer, size_t bufferSize);
 
 #endif   /* _libnxsnmp_h_ */

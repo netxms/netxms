@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -232,8 +232,8 @@ public:
 	void addString(const TCHAR *pStr, UINT32 dwLen);
 	void addDynamicString(TCHAR *pszStr) { if (pszStr != NULL) { *this += pszStr; free(pszStr); } }
 
-	void addMultiByteString(const char *pStr, UINT32 dwSize, int nCodePage);
-	void addWideCharString(const WCHAR *pStr, UINT32 dwSize);
+	void addMultiByteString(const char *pStr, UINT32 size, int nCodePage);
+	void addWideCharString(const WCHAR *pStr, UINT32 size);
 
    void addFormattedString(const TCHAR *format, ...);
    void addFormattedStringV(const TCHAR *format, va_list args);
@@ -390,6 +390,7 @@ public:
 
    void addAll(StringSet *src);
    void addAll(TCHAR **strings, int count);
+   void addAllPreallocated(TCHAR **strings, int count);
    void forEach(bool (*cb)(const TCHAR *, void *), void *userData);
 
    void fillMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId);
@@ -415,16 +416,18 @@ private:
 	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
 
 protected:
+   bool m_storePointers;
 	void (*m_objectDestructor)(void *);
 
    Array(void *data, int initial, int grow, size_t elementSize);
+   void *__getBuffer() { return m_data; }
 
 public:
 	Array(int initial = 0, int grow = 16, bool owner = false);
 	virtual ~Array();
 
 	int add(void *element);
-   void *get(int index) { return ((index >= 0) && (index < m_size)) ? ((m_elementSize <= sizeof(void *)) ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
+   void *get(int index) { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
    int indexOf(void *element);
 	void set(int index, void *element);
 	void replace(int index, void *element);
@@ -433,6 +436,7 @@ public:
 	void unlink(int index) { internalRemove(index, false); }
 	void unlink(void *element) { internalRemove(indexOf(element), false); }
 	void clear();
+   void sort(int (*cb)(const void *, const void *));
 
 	int size() { return m_size; }
 
@@ -472,13 +476,16 @@ private:
 	static void destructor(void *element) { }
 
 public:
-	IntegerArray(int initial = 0, int grow = 16) : Array(initial, grow, false) { m_objectDestructor = destructor; }
+	IntegerArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
 	virtual ~IntegerArray() { }
 
-	int add(T value) { return Array::add(CAST_TO_POINTER(value, void *)); }
-	T get(int index) { return CAST_FROM_POINTER(Array::get(index), T); }
-	void set(int index, T value) { Array::set(index, CAST_TO_POINTER(value, void *)); }
-	void replace(int index, T value) { Array::replace(index, CAST_TO_POINTER(value, void *)); }
+   int add(T value) { return Array::add(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   T get(int index) { return m_storePointers ? CAST_FROM_POINTER(Array::get(index), T) : *((T*)Array::get(index)); }
+   int indexOf(T value) { return Array::indexOf(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   void set(int index, T value) { Array::set(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   void replace(int index, T value) { Array::replace(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+
+   T *getBuffer() { return (T*)__getBuffer(); }
 };
 
 /**
@@ -503,6 +510,8 @@ public:
    void remove(T *element) { Array::remove((void *)element); }
 	void unlink(int index) { Array::unlink(index); }
    void unlink(T *element) { Array::unlink((void *)element); }
+
+   T *getBuffer() { return (T*)__getBuffer(); }
 };
 
 /**
@@ -565,17 +574,75 @@ public:
 };
 
 /**
+ * Table cell
+ */
+class TableCell
+{
+private:
+   TCHAR *m_value;
+   int m_status;
+
+public:
+   TableCell() { m_value = NULL; m_status = -1; }
+   TableCell(const TCHAR *value) { m_value = (value != NULL) ? _tcsdup(value) : NULL; m_status = -1; }
+   TableCell(const TCHAR *value, int status) { m_value = (value != NULL) ? _tcsdup(value) : NULL; m_status = status; }
+   TableCell(TableCell *src) { m_value = (src->m_value != NULL) ? _tcsdup(src->m_value) : NULL; m_status = src->m_status; }
+   ~TableCell() { safe_free(m_value); }
+
+   void set(const TCHAR *value, int status) { safe_free(m_value); m_value = (value != NULL) ? _tcsdup(value) : NULL; m_status = status; }
+   void setPreallocated(TCHAR *value, int status) { safe_free(m_value); m_value = value; m_status = status; }
+
+   const TCHAR *getValue() { return m_value; }
+   void setValue(const TCHAR *value) { safe_free(m_value); m_value = (value != NULL) ? _tcsdup(value) : NULL; }
+   void setPreallocatedValue(TCHAR *value) { safe_free(m_value); m_value = value; }
+
+   int getStatus() { return m_status; }
+   void setStatus(int status) { m_status = status; }
+};
+
+/**
+ * Table row
+ */
+class TableRow
+{
+private:
+   ObjectArray<TableCell> *m_cells;
+   UINT32 m_objectId;
+
+public:
+   TableRow(int columnCount);
+   TableRow(TableRow *src);
+   ~TableRow() { delete m_cells; }
+
+   void addColumn() { m_cells->add(new TableCell); }
+   void deleteColumn(int index) { m_cells->remove(index); }
+
+   void set(int index, const TCHAR *value, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->set(value, status); }
+   void setPreallocated(int index, TCHAR *value, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocated(value, status); }
+
+   void setValue(int index, const TCHAR *value) { TableCell *c = m_cells->get(index); if (c != NULL) c->setValue(value); }
+   void setPreallocatedValue(int index, TCHAR *value) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocatedValue(value); }
+
+   void setStatus(int index, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->setStatus(status); }
+
+   const TCHAR *getValue(int index) { TableCell *c = m_cells->get(index); return (c != NULL) ? c->getValue() : NULL; }
+   int getStatus(int index) { TableCell *c = m_cells->get(index); return (c != NULL) ? c->getStatus() : -1; }
+
+   UINT32 getObjectId() { return m_objectId; }
+   void setObjectId(UINT32 id) { m_objectId = id; }
+};
+
+/**
  * Class for table data storage
  */
 class LIBNETXMS_EXPORTABLE Table : public RefCountObject
 {
 private:
-   int m_nNumRows;
-   int m_nNumCols;
-   TCHAR **m_data;
+   ObjectArray<TableRow> *m_data;
    ObjectArray<TableColumnDefinition> *m_columns;
 	TCHAR *m_title;
    int m_source;
+   bool m_extendedFormat;
 
 	void createFromMessage(CSCPMessage *msg);
 	void destroy();
@@ -592,10 +659,13 @@ public:
    void addAll(Table *src);
    void copyRow(Table *src, int row);
 
-   int getNumRows() { return m_nNumRows; }
-   int getNumColumns() { return m_nNumCols; }
+   int getNumRows() { return m_data->size(); }
+   int getNumColumns() { return m_columns->size(); }
 	const TCHAR *getTitle() { return CHECK_NULL_EX(m_title); }
    int getSource() { return m_source; }
+
+   bool isExtendedFormat() { return m_extendedFormat; }
+   void setExtendedFormat(bool ext) { m_extendedFormat = ext; }
 
    const TCHAR *getColumnName(int col) { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getName() : NULL; }
    INT32 getColumnDataType(int col) { return ((col >= 0) && (col < m_columns->size())) ? m_columns->get(col)->getDataType() : 0; }
@@ -619,13 +689,16 @@ public:
    void setAt(int nRow, int nCol, const TCHAR *pszData);
    void setPreallocatedAt(int nRow, int nCol, TCHAR *pszData);
 
-   void set(int nCol, INT32 nData) { setAt(m_nNumRows - 1, nCol, nData); }
-   void set(int nCol, UINT32 dwData) { setAt(m_nNumRows - 1, nCol, dwData); }
-   void set(int nCol, double dData) { setAt(m_nNumRows - 1, nCol, dData); }
-   void set(int nCol, INT64 nData) { setAt(m_nNumRows - 1, nCol, nData); }
-   void set(int nCol, UINT64 qwData) { setAt(m_nNumRows - 1, nCol, qwData); }
-   void set(int nCol, const TCHAR *pszData) { setAt(m_nNumRows - 1, nCol, pszData); }
-   void setPreallocated(int nCol, TCHAR *pszData) { setPreallocatedAt(m_nNumRows - 1, nCol, pszData); }
+   void set(int nCol, INT32 nData) { setAt(getNumRows() - 1, nCol, nData); }
+   void set(int nCol, UINT32 dwData) { setAt(getNumRows() - 1, nCol, dwData); }
+   void set(int nCol, double dData) { setAt(getNumRows() - 1, nCol, dData); }
+   void set(int nCol, INT64 nData) { setAt(getNumRows() - 1, nCol, nData); }
+   void set(int nCol, UINT64 qwData) { setAt(getNumRows() - 1, nCol, qwData); }
+   void set(int nCol, const TCHAR *pszData) { setAt(getNumRows() - 1, nCol, pszData); }
+   void setPreallocated(int nCol, TCHAR *pszData) { setPreallocatedAt(getNumRows() - 1, nCol, pszData); }
+
+   void setStatusAt(int row, int col, int status);
+   void setStatus(int col, int status) { setStatusAt(getNumRows() - 1, col, status); }
 
    const TCHAR *getAsString(int nRow, int nCol);
    INT32 getAsInt(int nRow, int nCol);
@@ -634,8 +707,13 @@ public:
    UINT64 getAsUInt64(int nRow, int nCol);
    double getAsDouble(int nRow, int nCol);
 
+   int getStatus(int nRow, int nCol);
+
    void buildInstanceString(int row, TCHAR *buffer, size_t bufLen);
    int findRowByInstance(const TCHAR *instance);
+
+   UINT32 getObjectId(int row) { TableRow *r = m_data->get(row); return (r != NULL) ? r->getObjectId() : 0; }
+   void setObjectId(int row, UINT32 id) { TableRow *r = m_data->get(row); if (r != NULL) r->setObjectId(id); }
 };
 
 /**
@@ -659,7 +737,7 @@ public:
 	bool canRead(UINT32 timeout);
 	virtual int read(char *pBuff, int nSize, UINT32 timeout = INFINITE);
 	bool waitForText(const char *text, int timeout);
-	
+
 	int write(const char *pBuff, int nSize);
 	bool writeLine(const char *line);
 
@@ -727,7 +805,7 @@ typedef struct  __CODE_TO_TEXT
 inline void GetSystemTimeAsFileTime(LPFILETIME pFt)
 {
 	SYSTEMTIME sysTime;
-	
+
 	GetSystemTime(&sysTime);
 	SystemTimeToFileTime(&sysTime, pFt);
 }
@@ -882,10 +960,10 @@ extern "C"
 #if !defined(_WIN32) && !defined(_NETWARE)
 #if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
    void LIBNETXMS_EXPORTABLE wcsupr(WCHAR *in);
-#endif   
+#endif
    void LIBNETXMS_EXPORTABLE strupr(char *in);
 #endif
-   
+
 	void LIBNETXMS_EXPORTABLE QSortEx(void *base, size_t nmemb, size_t size, void *arg,
 												 int (*compare)(const void *, const void *, void *));
 
@@ -909,33 +987,34 @@ extern "C"
 	TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(BYTE *addr, TCHAR *buffer);
 	TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
 
-   UINT32 LIBNETXMS_EXPORTABLE ResolveHostName(const TCHAR *pszName);
+   UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *name);
+   UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameW(const WCHAR *name);
 #ifdef UNICODE
-   UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *pszName);
+#define ResolveHostName ResolveHostNameW
 #else
-#define ResolveHostNameA ResolveHostName
+#define ResolveHostName ResolveHostNameA
 #endif
 
-   void LIBNETXMS_EXPORTABLE *nx_memdup(const void *pData, UINT32 dwSize);
-   void LIBNETXMS_EXPORTABLE nx_memswap(void *pBlock1, void *pBlock2, UINT32 dwSize);
+   void LIBNETXMS_EXPORTABLE *nx_memdup(const void *data, size_t size);
+   void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size);
 
-   WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *pData, UINT32 dwSize, WCHAR *pStr);
-   char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, UINT32 dwSize, char *pStr);
+   WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *data, size_t size, WCHAR *pStr);
+   char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *data, size_t size, char *pStr);
 #ifdef UNICODE
 #define BinToStr BinToStrW
 #else
 #define BinToStr BinToStrA
 #endif
 
-   UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, UINT32 dwSize);
-   UINT32 LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *pData, UINT32 dwSize);
+   UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *data, UINT32 size);
+   UINT32 LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *data, UINT32 size);
 #ifdef UNICODE
 #define StrToBin StrToBinW
 #else
 #define StrToBin StrToBinA
 #endif
-   
-   TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *pData, TCHAR *pStr);
+
+   TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *data, TCHAR *pStr);
 
    void LIBNETXMS_EXPORTABLE StrStripA(char *pszStr);
    void LIBNETXMS_EXPORTABLE StrStripW(WCHAR *pszStr);
@@ -977,7 +1056,7 @@ extern "C"
 #define RegexpMatch RegexpMatchA
 #endif
 
-	const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize);
+	const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommand);
 	void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);
    bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bool matchCase);
 	TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
@@ -996,7 +1075,7 @@ extern "C"
 #define LoadFileA LoadFile
 #endif
 
-   UINT32 LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *pData, UINT32 dwSize, UINT32 dwCRC);
+   UINT32 LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, UINT32 size, UINT32 dwCRC);
    void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nbytes, unsigned char *hash);
 	void LIBNETXMS_EXPORTABLE MD5HashForPattern(const unsigned char *data, size_t patternSize, size_t fullSize, BYTE *hash);
    void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, unsigned char *hash);
@@ -1057,11 +1136,11 @@ extern "C"
 
 #ifndef _WIN32
 	BOOL LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp);
-   int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, UINT32 dwFlags, const WCHAR *pWideCharStr, 
-                                                int cchWideChar, char *pByteStr, int cchByteChar, 
+   int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, UINT32 dwFlags, const WCHAR *pWideCharStr,
+                                                int cchWideChar, char *pByteStr, int cchByteChar,
                                                 char *pDefaultChar, BOOL *pbUsedDefChar);
-   int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, UINT32 dwFlags, const char *pByteStr, 
-                                                int cchByteChar, WCHAR *pWideCharStr, 
+   int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, UINT32 dwFlags, const char *pByteStr,
+                                                int cchByteChar, WCHAR *pWideCharStr,
                                                 int cchWideChar);
 
 #if !defined(UNICODE_UCS2) || !HAVE_WCSLEN
@@ -1099,7 +1178,7 @@ extern "C"
 	WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString);
    char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString);
    char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString);
-   
+
 #ifdef _WITH_ENCRYPTION
 	WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer);
 #endif
@@ -1123,6 +1202,9 @@ extern "C"
 #endif
 #if !HAVE_WFOPEN
 	FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type);
+#endif
+#if HAVE_FOPEN64 && !HAVE_WFOPEN64
+	FILE LIBNETXMS_EXPORTABLE *wfopen64(const WCHAR *_name, const WCHAR *_type);
 #endif
 #if !HAVE_WOPEN
 	int LIBNETXMS_EXPORTABLE wopen(const WCHAR *, int, ...);
@@ -1275,6 +1357,14 @@ int strcat_s(char *dst, size_t dstSize, const char *src);
 int wcscat_s(WCHAR *dst, size_t dstSize, const WCHAR *src);
 #endif
 
+#if !HAVE_STRPTIME
+char LIBNETXMS_EXPORTABLE *strptime(const char *buf, const char *fmt, struct tm *_tm);
+#endif
+
+#if !HAVE_TIMEGM
+time_t LIBNETXMS_EXPORTABLE timegm(struct tm *_tm);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
@@ -1300,7 +1390,7 @@ void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFu
 void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
                                           void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
                                           void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
-                                          bool (* sendFile)(void *, UINT32, const TCHAR *, long, long),
+                                          bool (* sendFile)(void *, UINT32, const TCHAR *, long),
                                           bool (* pushData)(const TCHAR *, const TCHAR *, UINT32));
 
 #endif

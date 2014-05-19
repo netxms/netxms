@@ -84,9 +84,6 @@ public abstract class AbstractObject
 	public static final int OBJECT_NETWORKMAP = 21;
 	public static final int OBJECT_DASHBOARDROOT = 22;
 	public static final int OBJECT_DASHBOARD = 23;
-	public static final int OBJECT_REPORTROOT = 24;
-	public static final int OBJECT_REPORTGROUP = 25;
-	public static final int OBJECT_REPORT = 26;
 	public static final int OBJECT_BUSINESSSERVICEROOT = 27;
 	public static final int OBJECT_BUSINESSSERVICE = 28;
 	public static final int OBJECT_NODELINK = 29;

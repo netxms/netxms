@@ -107,7 +107,7 @@ private:
 	BYTE m_currentSeverity;   // Current everity (NORMAL if threshold is inactive)
    int m_sampleCount;        // Number of samples to calculate function on
    TCHAR *m_scriptSource;
-   NXSL_Program *m_script;
+   NXSL_VM *m_script;
    BOOL m_isReached;
 	int m_numMatches;			// Number of consecutive matches
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
@@ -211,7 +211,7 @@ protected:
 	WORD m_snmpPort;					// Custom SNMP port or 0 for node default
 	TCHAR *m_pszPerfTabSettings;
    TCHAR *m_transformationScriptSource;   // Transformation script (source code)
-   NXSL_Program *m_transformationScript;  // Compiled transformation script
+   NXSL_VM *m_transformationScript;  // Compiled transformation script
 
    void lock() { MutexLock(m_hMutex); }
    void unlock() { MutexUnlock(m_hMutex); }
@@ -241,7 +241,7 @@ public:
    virtual void deleteFromDB();
    virtual bool loadThresholdsFromDB();
 
-   virtual void processNewValue(time_t nTimeStamp, void *value);
+   virtual bool processNewValue(time_t nTimeStamp, void *value);
    virtual void processNewError();
 
 	virtual bool hasValue();
@@ -320,9 +320,9 @@ protected:
 	WORD m_instanceDiscoveryMethod;
 	TCHAR *m_instanceDiscoveryData;
 	TCHAR *m_instanceFilterSource;
-	NXSL_Program *m_instanceFilter;
+	NXSL_VM *m_instanceFilter;
 
-   void transform(ItemValue &value, time_t nElapsedTime);
+   bool transform(ItemValue &value, time_t nElapsedTime);
    void checkThresholds(ItemValue &value);
    void clearCache();
 
@@ -352,17 +352,18 @@ public:
 	bool isInterpretSnmpRawValue() { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }
 	WORD getSnmpRawValueType() { return m_snmpRawValueType; }
 	bool hasActiveThreshold();
+   int getThresholdSeverity();
 	WORD getInstanceDiscoveryMethod() { return m_instanceDiscoveryMethod; }
 	const TCHAR *getInstanceDiscoveryData() { return m_instanceDiscoveryData; }
-	NXSL_Program *getInstanceFilter() { return m_instanceFilter; }
+	NXSL_VM *getInstanceFilter() { return m_instanceFilter; }
 	const TCHAR *getInstance() { return m_instance; }
 	int getSampleCount() { return m_sampleCount; }
 
 	void filterInstanceList(StringList *instances);
 	void expandInstance();
 
-   void processNewValue(time_t nTimeStamp, void *value);
-   void processNewError();
+   virtual bool processNewValue(time_t nTimeStamp, void *value);
+   virtual void processNewError();
 
 	virtual bool hasValue();
 
@@ -535,7 +536,7 @@ protected:
 	static int m_cacheAllocated;
 	static MUTEX m_cacheMutex;
 
-   void transform(Table *value);
+   bool transform(Table *value);
    void checkThresholds(Table *value);
    
    bool loadThresholds();
@@ -557,7 +558,7 @@ public:
    virtual BOOL saveToDB(DB_HANDLE hdb);
    virtual void deleteFromDB();
 
-   virtual void processNewValue(time_t nTimeStamp, void *value);
+   virtual bool processNewValue(time_t nTimeStamp, void *value);
    virtual void processNewError();
 
    virtual void createMessage(CSCPMessage *pMsg);

@@ -42,35 +42,45 @@ static BYTE *FindEndOfQuery(BYTE *pStart, BYTE *pBatchEnd)
 {
    BYTE *ptr;
    int iState;
+   bool proc = false;
+   bool procEnd = false;
 
-	bool inProc = false;
-	bool inCreate = false;
    for(ptr = pStart, iState = 0; (ptr < pBatchEnd) && (iState != -1); ptr++)
    {
       switch(iState)
       {
          case 0:
             if (*ptr == '\'')
+            {
                iState = 1;
-            else if (((*ptr == ';') && !inProc) || (*ptr == '/'))
+            }
+            else if ((*ptr == ';') && !proc && !procEnd)
+            {
                iState = -1;
-				else if (!inCreate && !inProc && ((*ptr == 'c') || (*ptr == 'C')))
-				{
-					if (!strnicmp((char *)ptr, "CREATE", 6))
-						inCreate = true;
-				}
-				else if (inCreate && (*ptr == '('))
-				{
-					inCreate = false;
-				}
-				else if (inCreate && ((*ptr == 'p') || (*ptr == 'P') || (*ptr == 'f') || (*ptr == 'F')))
-				{
-					if (!strnicmp((char *)ptr, "FUNCTION", 8) || !strnicmp((char *)ptr, "PROCEDURE", 9))
-					{
-						inCreate = false;
-						inProc = true;
-					}
-				}
+            }
+            else if ((*ptr == '/') && procEnd)
+            {
+               procEnd = false;
+               iState = -1;
+            }
+            else if ((*ptr == 'C') || (*ptr == 'c'))
+            {
+               if (!strnicmp((char *)ptr, "CREATE FUNCTION", 15) ||
+                   !strnicmp((char *)ptr, "CREATE OR REPLACE FUNCTION", 26) ||
+                   !strnicmp((char *)ptr, "CREATE PROCEDURE", 16) ||
+                   !strnicmp((char *)ptr, "CREATE OR REPLACE PROCEDURE", 27))
+               {
+                  proc = true;
+               }
+            }
+            else if (proc && ((*ptr == 'E') || (*ptr == 'e')))
+            {
+               if (!strnicmp((char *)ptr, "END", 3))
+               {
+                  proc = false;
+                  procEnd = true;
+               }
+            }
 				else if ((*ptr == '\r') || (*ptr == '\n'))
 				{
 					// CR/LF should be replaced with spaces, otherwise at least

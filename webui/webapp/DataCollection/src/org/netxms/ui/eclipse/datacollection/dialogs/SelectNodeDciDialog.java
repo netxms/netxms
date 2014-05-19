@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.datacollection.dialogs;
 
+import java.util.List;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -44,7 +45,7 @@ public class SelectNodeDciDialog extends Dialog
 {
 	private long nodeId;
 	private DciList dciList;
-	private DciValue selection;
+	private List<DciValue> selection;
 	private int dcObjectType = -1;
 	
 	/**
@@ -68,11 +69,13 @@ public class SelectNodeDciDialog extends Dialog
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
-			newShell.setSize(settings.getInt("SelectNodeDciDialog.cx"), settings.getInt("SelectNodeDciDialog.cy")); //$NON-NLS-1$ //$NON-NLS-2$
+			newShell.setSize(settings.getInt("SelectDciDialog.width"), settings.getInt("SelectDciDialog.hight")); //$NON-NLS-1$ //$NON-NLS-2$
+         newShell.setLocation(settings.getInt("SelectDciDialog.cx"), settings.getInt("SelectDciDialog.cy")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		catch(NumberFormatException e)
 		{
 			newShell.setSize(400, 250);
+         newShell.setLocation(100, 100);
 		}
 	}
 
@@ -86,7 +89,7 @@ public class SelectNodeDciDialog extends Dialog
 		
 		dialogArea.setLayout(new FillLayout());
 		
-		dciList = new DciList(null, dialogArea, SWT.BORDER, null, "SelectNodeDciDialog.dciList", dcObjectType);  //$NON-NLS-1$
+		dciList = new DciList(null, dialogArea, SWT.BORDER, null, "SelectNodeDciDialog.dciList", dcObjectType, SWT.SINGLE);  //$NON-NLS-1$
 		dciList.setDcObjectType(dcObjectType);
 		dciList.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
@@ -107,10 +110,13 @@ public class SelectNodeDciDialog extends Dialog
 	private void saveSettings()
 	{
 		Point size = getShell().getSize();
+      Point pleace = getShell().getLocation();
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 
-		settings.put("SelectNodeDciDialog.cx", size.x); //$NON-NLS-1$
-		settings.put("SelectNodeDciDialog.cy", size.y); //$NON-NLS-1$
+		settings.put("SelectDciDialog.cx", pleace.x); //$NON-NLS-1$
+      settings.put("SelectDciDialog.cy", pleace.y); //$NON-NLS-1$
+      settings.put("SelectDciDialog.width", size.x); //$NON-NLS-1$
+      settings.put("SelectDciDialog.hight", size.y); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -130,7 +136,7 @@ public class SelectNodeDciDialog extends Dialog
 	protected void okPressed()
 	{
 		selection = dciList.getSelection();
-		if (selection == null)
+		if (selection == null || selection.size() == 0)
 		{
 			MessageDialogHelper.openWarning(getShell(), Messages.get().SelectNodeDciDialog_Warning, Messages.get().SelectNodeDciDialog_WarningText);
 			return;
@@ -144,7 +150,10 @@ public class SelectNodeDciDialog extends Dialog
 	 */
 	public DciValue getSelection()
 	{
-		return selection;
+	   if(selection.size() > 0)
+	      return selection.get(0);
+	   else
+	      return null;
 	}
 
 	/**

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -119,13 +119,13 @@ ISC::~ISC()
    ThreadJoin(m_hReceiverThread);
    
 	// Close socket if active
-	Lock();
+	lock();
    if (m_socket != -1)
 	{
       closesocket(m_socket);
 		m_socket = -1;
 	}
-	Unlock();
+	unlock();
 
    delete m_msgWaitQueue;
 	if (m_ctx != NULL)
@@ -139,7 +139,7 @@ ISC::~ISC()
  * Print message. This function is virtual and can be overrided in
  * derived classes. Default implementation will print message to stdout.
  */
-void ISC::PrintMsg(const TCHAR *format, ...)
+void ISC::printMessage(const TCHAR *format, ...)
 {
    va_list args;
 
@@ -176,20 +176,19 @@ void ISC::receiverThread()
    while(1)
    {
       // Receive raw message
-      Lock();
+      lock();
 		nSocket = m_socket;
-		Unlock();
-      if ((err = RecvNXCPMessage(nSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE,
-                                 &m_ctx, pDecryptionBuffer, m_recvTimeout)) <= 0)
+		unlock();
+      if ((err = RecvNXCPMessage(nSocket, pRawMsg, pMsgBuffer, RECEIVER_BUFFER_SIZE, &m_ctx, pDecryptionBuffer, m_recvTimeout)) <= 0)
 		{
-			PrintMsg(_T("ISC::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), err, WSAGetLastError());
+			printMessage(_T("ISC::ReceiverThread(): RecvNXCPMessage() failed: error=%d, socket_error=%d"), err, WSAGetLastError());
          break;
 		}
 
       // Check if we get too large message
       if (err == 1)
       {
-         PrintMsg(_T("Received too large message %s (%d bytes)"), 
+         printMessage(_T("Received too large message %s (%d bytes)"), 
                   NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
                   ntohl(pRawMsg->dwSize));
          continue;
@@ -198,21 +197,21 @@ void ISC::receiverThread()
       // Check if we are unable to decrypt message
       if (err == 2)
       {
-         PrintMsg(_T("Unable to decrypt received message"));
+         printMessage(_T("Unable to decrypt received message"));
          continue;
       }
 
       // Check for timeout
       if (err == 3)
       {
-         PrintMsg(_T("Timed out waiting for message"));
+         printMessage(_T("Timed out waiting for message"));
          break;
       }
 
       // Check that actual received packet size is equal to encoded in packet
       if ((int)ntohl(pRawMsg->dwSize) != err)
       {
-         PrintMsg(_T("RecvMsg: Bad packet length [dwSize=%d ActualSize=%d]"), ntohl(pRawMsg->dwSize), err);
+         printMessage(_T("RecvMsg: Bad packet length [dwSize=%d ActualSize=%d]"), ntohl(pRawMsg->dwSize), err);
          continue;   // Bad packet, wait for next
       }
 
@@ -227,12 +226,20 @@ void ISC::receiverThread()
 		{
 			// Create message object from raw message
 			pMsg = new CSCPMessage(pRawMsg, m_protocolVersion);
-			m_msgWaitQueue->put(pMsg);
+         if (onMessage(pMsg))
+         {
+            // message was consumed by handler
+            delete pMsg;
+         }
+         else
+         {
+			   m_msgWaitQueue->put(pMsg);
+         }
 		}
    }
 
    // Close socket and mark connection as disconnected
-   Lock();
+   lock();
    if (err == 0)
       shutdown(m_socket, SHUT_RDWR);
    closesocket(m_socket);
@@ -243,7 +250,7 @@ void ISC::receiverThread()
 		m_ctx = NULL;
 	}
    m_flags &= ~ISCF_IS_CONNECTED;;
-   Unlock();
+   unlock();
 
    free(pRawMsg);
    free(pMsgBuffer);
@@ -284,7 +291,7 @@ UINT32 ISC::connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
    if (m_socket == INVALID_SOCKET)
    {
 		rcc = ISC_ERR_SOCKET_ERROR;
-      PrintMsg(_T("ISC: Call to socket() failed"));
+      printMessage(_T("ISC: Call to socket() failed"));
       goto connect_cleanup;
    }
 
@@ -298,7 +305,7 @@ UINT32 ISC::connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
    if (::connect(m_socket, (struct sockaddr *)&sa, sizeof(sa)) == -1)
    {
 		rcc = ISC_ERR_CONNECT_FAILED;
-      PrintMsg(_T("Cannot establish connection with ISC peer %s"),
+      printMessage(_T("Cannot establish connection with ISC peer %s"),
                IpToStr(ntohl(m_addr), szBuffer));
       goto connect_cleanup;
    }
@@ -309,7 +316,7 @@ UINT32 ISC::connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
    if (!NXCPGetPeerProtocolVersion(m_socket, &m_protocolVersion, m_socketLock))
    {
 		rcc = ISC_ERR_INVALID_NXCP_VERSION;
-      PrintMsg(_T("Cannot detect NXCP version for ISC peer %s"),
+      printMessage(_T("Cannot detect NXCP version for ISC peer %s"),
                IpToStr(ntohl(m_addr), szBuffer));
       goto connect_cleanup;
    }
@@ -317,7 +324,7 @@ UINT32 ISC::connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
    if (m_protocolVersion > NXCP_VERSION)
    {
 		rcc = ISC_ERR_INVALID_NXCP_VERSION;
-      PrintMsg(_T("ISC peer %s uses incompatible NXCP version %d"),
+      printMessage(_T("ISC peer %s uses incompatible NXCP version %d"),
                IpToStr(ntohl(m_addr), szBuffer), m_protocolVersion);
       goto connect_cleanup;
    }
@@ -333,7 +340,7 @@ setup_encryption:
       if ((rcc != ERR_SUCCESS) &&
 			 (m_flags & ISCF_REQUIRE_ENCRYPTION))
 		{
-			PrintMsg(_T("Cannot setup encrypted channel with ISC peer %s"),
+			printMessage(_T("Cannot setup encrypted channel with ISC peer %s"),
 						IpToStr(ntohl(m_addr), szBuffer));
 			goto connect_cleanup;
 		}
@@ -343,7 +350,7 @@ setup_encryption:
       if (m_flags & ISCF_REQUIRE_ENCRYPTION)
       {
 			rcc = ISC_ERR_ENCRYPTION_REQUIRED;
-			PrintMsg(_T("Cannot setup encrypted channel with ISC peer %s"),
+			printMessage(_T("Cannot setup encrypted channel with ISC peer %s"),
 						IpToStr(ntohl(m_addr), szBuffer));
          goto connect_cleanup;
       }
@@ -358,7 +365,7 @@ setup_encryption:
 			m_flags |= ISCF_REQUIRE_ENCRYPTION;
          goto setup_encryption;
       }
-      PrintMsg(_T("Communication with ISC peer %s failed (%s)"), IpToStr(ntohl(m_addr), szBuffer),
+      printMessage(_T("Communication with ISC peer %s failed (%s)"), IpToStr(ntohl(m_addr), szBuffer),
                ISCErrorCodeToText(rcc));
       goto connect_cleanup;
    }
@@ -368,15 +375,15 @@ setup_encryption:
 connect_cleanup:
    if (rcc != ISC_ERR_SUCCESS)
    {
-      Lock();
+      lock();
 		m_flags &= ~ISCF_IS_CONNECTED;
       if (m_socket != -1)
          shutdown(m_socket, SHUT_RDWR);
-      Unlock();
+      unlock();
       ThreadJoin(m_hReceiverThread);
       m_hReceiverThread = INVALID_THREAD_HANDLE;
 
-      Lock();
+      lock();
       if (m_socket != -1)
       {
          closesocket(m_socket);
@@ -389,7 +396,7 @@ connect_cleanup:
 			m_ctx = NULL;
 		}
 
-      Unlock();
+      unlock();
    }
 
    return rcc;
@@ -400,13 +407,13 @@ connect_cleanup:
  */
 void ISC::disconnect()
 {
-   Lock();
+   lock();
    if (m_socket != -1)
    {
       shutdown(m_socket, SHUT_RDWR);
 	   m_flags &= ~ISCF_IS_CONNECTED;;
    }
-   Unlock();
+   unlock();
 }
 
 /**
@@ -426,7 +433,7 @@ BOOL ISC::sendMessage(CSCPMessage *pMsg)
       pMsg->SetId((UINT32)InterlockedIncrement(&m_requestId));
    }
 
-   pRawMsg = pMsg->CreateMessage();
+   pRawMsg = pMsg->createMessage();
    if (m_ctx != NULL)
    {
       pEnMsg = CSCPEncryptMessage(m_ctx, pRawMsg);
@@ -564,4 +571,13 @@ UINT32 ISC::connectToService(UINT32 service)
  */
 void ISC::onBinaryMessage(CSCP_MESSAGE *rawMsg)
 {
+}
+
+/**
+ * Incoming message handler. Default implementation do nothing and return false.
+ * Should return true if message was consumed and shou8ld not be put into wait queue
+ */
+bool ISC::onMessage(CSCPMessage *msg)
+{
+   return false;
 }

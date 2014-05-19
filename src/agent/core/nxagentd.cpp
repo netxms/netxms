@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -291,6 +291,7 @@ static void SaveRegistry()
 #ifdef UNICODE
 		char *utf8xml = UTF8StringFromWideString((const WCHAR *)xml);
 		fputs(utf8xml, f);
+		safe_free(utf8xml);
 #else
 		fputs((const char *)xml, f);
 #endif
@@ -337,7 +338,7 @@ static HWND GetConsoleHWND()
 	   hWnd = FindWindowEx(NULL, NULL, _T("ConsoleWindowClass"), NULL);
       if (hWnd == NULL)
          break;
-	   
+
       GetWindowThreadProcessId(hWnd, &wpid);
 	   if (cpid == wpid)
          break;
@@ -406,13 +407,13 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
    DWORD dwResult;
    STARTUPINFO si;
    PROCESS_INFORMATION pi;
-   
+
    // Fill in process startup info structure
    memset(&si, 0, sizeof(STARTUPINFO));
    si.cb = sizeof(STARTUPINFO);
 
    // Create new process
-   if (!CreateProcess(NULL, szCmdLine, NULL, NULL, FALSE, 
+   if (!CreateProcess(NULL, szCmdLine, NULL, NULL, FALSE,
                       (g_dwFlags & AF_DAEMON) ? (CREATE_NO_WINDOW | DETACHED_PROCESS) : (CREATE_NEW_CONSOLE),
                       NULL, NULL, &si, &pi))
    {
@@ -549,11 +550,11 @@ static void LoadPlatformSubagent()
 /**
  * Send file to server (subagent API)
  */
-static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset, long sizeLimit)
+static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset)
 {
 	if (session == NULL)
 		return false;
-	return ((CommSession *)session)->sendFile(requestId, file, offset, sizeLimit);
+	return ((CommSession *)session)->sendFile(requestId, file, offset);
 }
 
 /**
@@ -645,7 +646,7 @@ BOOL Initialize()
       }
       else
       {
-         nx_strncpy(g_szDataDirectory, PREFIX _T("/var/netxms"), MAX_PATH);
+         nx_strncpy(g_szDataDirectory, _T("/var/netxms"), MAX_PATH);
       }
    }
 #endif
@@ -996,7 +997,7 @@ void Shutdown()
 #ifdef _WIN32
    ConditionSet(m_hCondShutdown);
 #endif
-   
+
    // Remove PID file
 #if !defined(_WIN32)
    _tremove(g_szPidFile);
@@ -1088,7 +1089,7 @@ static void DoRestartActions(UINT32 dwOldPID)
       if (kill(dwOldPID, SIGCONT) == -1)
          break;
    }
-   
+
    // Kill previous instance of agent if it's still running
    if (i == 30)
       kill(dwOldPID, SIGKILL);
@@ -1179,7 +1180,7 @@ int main(int argc, char *argv[])
 #ifdef NETXMS_MEMORY_DEBUG
 	InitMemoryDebugger();
 #endif
-   
+
    // Set locale to C. It shouldn't be needed, according to
    // documentation, but I've seen the cases when agent formats
    // floating point numbers by sprintf inserting comma in place
@@ -1259,7 +1260,7 @@ int main(int argc, char *argv[])
             iAction = ACTION_CHECK_CONFIG;
             break;
          case 'v':   // Print version and exit
-            _tprintf(_T("NetXMS Core Agent Version ") AGENT_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T("\n"));
+            _tprintf(_T("NetXMS Core Agent Version ") AGENT_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING IS_UNICODE_BUILD_STRING _T("\n"));
             iAction = ACTION_NONE;
             break;
          case 'M':
@@ -1508,7 +1509,7 @@ int main(int argc, char *argv[])
 												  _T("nxagentd"), MSG_EXCEPTION, g_dwFlags & AF_WRITE_FULL_DUMP, !(g_dwFlags & AF_DAEMON));
 					__try {
 #endif
-					if ((!_tcsicmp(g_szLogFile, _T("{syslog}"))) || 
+					if ((!_tcsicmp(g_szLogFile, _T("{syslog}"))) ||
 						 (!_tcsicmp(g_szLogFile, _T("{eventlog}"))))
 						g_dwFlags |= AF_USE_SYSLOG;
 
@@ -1552,7 +1553,7 @@ int main(int argc, char *argv[])
 							{
 								_ftprintf(fp, _T("%d"), m_pid);
 								fclose(fp);
-							}   
+							}
 							Main();
 							Shutdown();
 						}

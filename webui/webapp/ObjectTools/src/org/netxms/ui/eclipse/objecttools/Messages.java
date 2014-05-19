@@ -44,6 +44,9 @@ public class Messages extends NLS
    public String FileViewer_ClearOutput;
    public String FileViewer_Download_File_Updates;
    public String FileViewer_InvalidObjectID;
+   public String FileViewer_NotifyFollowConnectionEnabed;
+   public String FileViewer_NotifyFollowConnectionLost;
+   public String FileViewer_RestartFollowingJob;
    public String FileViewer_ScrollLock;
    public String FileViewer_Stop_File_Monitoring;
    public String Filter_AgentNeeded;

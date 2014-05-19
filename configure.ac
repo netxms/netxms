@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.12], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.2.14], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -57,6 +57,8 @@ SUBAGENT_LIBS=""
 SERVER_LIBS=""
 SERVER_TOOLS=""
 SERVER_INCLUDE=""
+SMSDRV_DIRS=""
+HDLINK_DIRS=""
 TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
@@ -68,7 +70,7 @@ ODBC_LIBS=""
 FORCE_INTERNAL_EXPAT="no"
 USE_INTERNAL_LIBTRE="no"
 FORCE_INTERNAL_LIBTRE="no"
-USE_INTERNAL_ZLIB="no"
+FORCE_INTERNAL_JANSSON="no"
 FORCE_INTERNAL_ZLIB="no"
 FORCE_32BIT_BUILD="no"
 FORCE_INTERNAL_GETOPT="no"
@@ -166,6 +168,12 @@ AC_ARG_WITH(mdebug,
 	CPPFLAGS="$CPPFLAGS -DNETXMS_MEMORY_DEBUG"
 ])
 
+AC_ARG_WITH(profiler,
+[AS_HELP_STRING(--with-profiler,link with libprofiler from gperftools)],
+[
+	LDFLAGS="$LDFLAGS -lprofiler"
+])
+
 AC_ARG_WITH(internal-libexpat,
 [AS_HELP_STRING(--with-internal-libexpat,force use of bundled libexpat)],
 [
@@ -176,6 +184,12 @@ AC_ARG_WITH(internal-libtre,
 [AS_HELP_STRING(--with-internal-libtre,force use of bundled libtre)],
 [
 	FORCE_INTERNAL_LIBTRE="yes"
+])
+
+AC_ARG_WITH(internal-libjansson,
+[AS_HELP_STRING(--with-internal-libjansson,force use of bundled libjansson)],
+[
+        FORCE_INTERNAL_JANSSON="yes"
 ])
 
 AC_ARG_WITH(internal-zlib,
@@ -405,8 +419,10 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy tools"
+	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy tools"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2"
+	SMSDRV_DIRS="websms"
+   HDLINK_DIRS="jira"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images"
 	SERVER_INCLUDE="include"
@@ -903,12 +919,18 @@ fi
 
 if test "x$CXX" = "xaCC" ; then
 	if test "x$FORCE_32BIT_BUILD" = "xyes"; then
-		AC_MSG_CHECKING(whether C compiler accepts +DD32)
+		if test "x$HPUX_HPPA" = "xyes"; then
+			ARCHFLAG="+DA1.1"
+		else
+			ARCHFLAG="+DD32"
+		fi
+		AC_MSG_CHECKING(whether C compiler accepts $ARCHFLAG)
 		OLD_CPPFLAGS="$CPPFLAGS"
-		CPPFLAGS="+DD32 $CPPFLAGS"
+		CPPFLAGS="$ARCHFLAG $CPPFLAGS"
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 			[ 
-				LDFLAGS="+DD32 $LDFLAGS"
+				LDFLAGS="$ARCHFLAG $LDFLAGS"
+				CCASFLAGS="$ARCHFLAG $CCASFLAGS"
 				AC_MSG_RESULT(yes) 
 			], 
 			[ 
@@ -916,12 +938,18 @@ if test "x$CXX" = "xaCC" ; then
 				AC_MSG_RESULT(no)
 			])
 	else
-		AC_MSG_CHECKING(whether C compiler accepts +DD64)
+		if test "x$HPUX_HPPA" = "xyes"; then
+			ARCHFLAG="+DA2.0W"
+		else
+			ARCHFLAG="+DD64"
+		fi
+		AC_MSG_CHECKING(whether C compiler accepts $ARCHFLAG)
 		OLD_CPPFLAGS="$CPPFLAGS"
-		CPPFLAGS="+DD64 $CPPFLAGS"
+		CPPFLAGS="$ARCHFLAG $CPPFLAGS"
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 			[ 
-				LDFLAGS="+DD64 $LDFLAGS"
+				LDFLAGS="$ARCHFLAG $LDFLAGS"
+				CCASFLAGS="$ARCHFLAG $CCASFLAGS"
 				AC_MSG_RESULT(yes) 
 			], 
 			[ 
@@ -1217,7 +1245,7 @@ fi
 
 AC_CHECK_HEADERS([sys/types.h sys/stat.h unistd.h stdarg.h fcntl.h alloca.h])
 AC_CHECK_HEADERS([sys/int_types.h time.h sys/time.h sys/utsname.h sys/wait.h])
-AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h net/nh.h sys/socket.h])
+AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h netinet/tcp.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h locale.h])
@@ -1339,6 +1367,17 @@ if test "x$HAVE_LIBTRE" = "xno"; then
 	AC_DEFINE(TRE_APPROX, 1, [ Define if you want to enable approximate matching functionality. ])
 fi
 
+if test "x$FORCE_INTERNAL_JANSSON" = "xyes"; then
+	HAVE_JANSSON=no
+else
+	HAVE_JANSSON=yes
+	AC_CHECK_HEADER(jansson.h,,HAVE_JANSSON=no)
+	AC_CHECK_LIB(jansson, json_object, [ HAVE_JANSSON=yes ], [ HAVE_JANSSON=no ])
+fi
+if test "x$HAVE_JANSSON" = "xno"; then
+	MODULES="jansson $MODULES"
+fi
+
 if test "x$DISABLE_LMSENSORS" = "xno"; then
 	HAVE_LMSENSORS=yes
 	AC_CHECK_HEADER(sensors/sensors.h,,HAVE_LMSENSORS=no)
@@ -1361,6 +1400,8 @@ if test "x$HAVE_LIBCURL" = "xyes"; then
 fi
 if test "x$HAVE_LIBCURL" = "xyes"; then
   SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
+  SMSDRV_DIRS="$SMSDRV_DIRS websms"
+  HDLINK_DIRS="$HDLINK_DIRS jira"
 fi
 
 #--------------------------------------------------------------------
@@ -1407,6 +1448,7 @@ AC_CHECK_FUNCS([gettimeofday memmove memset bcopy strchr strcspn strdup strerror
 AC_CHECK_FUNCS([strrchr strlwr strtol strtoul strtoll strtoull setlocale])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
+AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r])
 
 AC_CHECK_DECLS([nanosleep])
 
@@ -1436,33 +1478,6 @@ if test "$ac_cv_func_strerror_r" = "yes"; then
 	])
 	AC_LANG_POP([C++])
 fi
-
-# Check if timezone is a function
-AC_MSG_CHECKING(for timezone function)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_TIME_H
-#include <time.h>
-#endif
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-]],[[
-   timezone(0, 0);
-]])
-],[
-AC_MSG_RESULT(yes)
-AC_DEFINE(HAVE_TIMEZONE,1,Define to 1 if timezone function is available)
-],[
-AC_MSG_RESULT(no)
-AC_CHECK_DECLS([timezone],,,[
-#if HAVE_TIME_H
-#include <time.h>
-#endif
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-])
-])
 
 # Check if struct tm has tm_gmtoff member
 AC_MSG_CHECKING(for struct tm.tm_gmtoff)
@@ -1767,8 +1782,8 @@ AC_CHECK_SIZEOF(wchar_t,,[
 #endif
 ])
 AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper wcserror wcserror_r])
-AC_CHECK_FUNCS([wfopen fputws putws wopen wstat waccess wgetenv wrename wunlink wremove])
-AC_CHECK_FUNCS([wchdir wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod])
+AC_CHECK_FUNCS([wfopen wfopen64 fputws putws wopen wstat waccess wgetenv wrename wunlink])
+AC_CHECK_FUNCS([wremove wchdir wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod])
 AC_CHECK_FUNCS([vwscanf vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
 
 if test "x$DISABLE_ICONV" != "xyes"; then
@@ -2266,6 +2281,7 @@ AC_DEFINE_UNQUOTED([SHLIB_SUFFIX], _T("$SHLIB_SUFFIX"), [Define to platform's sh
 
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
+AM_CONDITIONAL([USE_INTERNAL_JANSSON], [test "x$HAVE_JANSSON" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$NEED_ZLIB/$HAVE_ZLIB" = "yes/no"])
 AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
@@ -2284,6 +2300,8 @@ AC_SUBST(SUBAGENT_DIRS)
 AC_SUBST(SERVER_INCLUDE)
 AC_SUBST(SERVER_LIBS)
 AC_SUBST(SERVER_TOOLS)
+AC_SUBST(SMSDRV_DIRS)
+AC_SUBST(HDLINK_DIRS)
 AC_SUBST(TOP_LEVEL_MODULES)
 AC_SUBST(CONTRIB_MODULES)
 AC_SUBST(CLIENT_COMPONENTS)
@@ -2371,6 +2389,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/darwin/Makefile
 	src/agent/subagents/db2/Makefile
 	src/agent/subagents/dbquery/Makefile
+   src/agent/subagents/devemu/Makefile
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/hpux/Makefile
@@ -2436,6 +2455,7 @@ AC_CONFIG_FILES([
 	src/db/libnxdb/Makefile
 	src/install/Makefile
 	src/install/windows/Makefile
+	src/jansson/Makefile
 	src/libexpat/Makefile
 	src/libexpat/libexpat/Makefile
 	src/libnetxms/Makefile
@@ -2451,30 +2471,37 @@ AC_CONFIG_FILES([
 	src/server/Makefile
 	src/server/core/Makefile
 	src/server/drivers/Makefile
+	src/server/drivers/airespace/Makefile
 	src/server/drivers/at/Makefile
 	src/server/drivers/baystack/Makefile
 	src/server/drivers/cat2900xl/Makefile
 	src/server/drivers/catalyst/Makefile
 	src/server/drivers/cisco-esw/Makefile
+	src/server/drivers/cisco-sb/Makefile
 	src/server/drivers/dell-pwc/Makefile
 	src/server/drivers/dlink/Makefile
 	src/server/drivers/ers8000/Makefile
 	src/server/drivers/lib/Makefile
 	src/server/drivers/lib/avaya-ers/Makefile
 	src/server/drivers/lib/cisco/Makefile
+	src/server/drivers/mikrotik/Makefile
 	src/server/drivers/netscreen/Makefile
 	src/server/drivers/ntws/Makefile
 	src/server/drivers/ping3/Makefile
 	src/server/drivers/procurve/Makefile
 	src/server/drivers/symbol-ws/Makefile
+	src/server/drivers/ubnt/Makefile
+	src/server/hdlink/Makefile
+	src/server/hdlink/jira/Makefile
 	src/server/include/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
 	src/server/smsdrv/Makefile
+	src/server/smsdrv/dummy/Makefile
 	src/server/smsdrv/generic/Makefile
 	src/server/smsdrv/nxagent/Makefile
 	src/server/smsdrv/portech/Makefile
-	src/server/smsdrv/dummy/Makefile
+	src/server/smsdrv/websms/Makefile
 	src/server/tools/Makefile
 	src/server/tools/nxaction/Makefile
 	src/server/tools/nxadm/Makefile
@@ -2585,6 +2612,11 @@ if test "x${HAVE_LIBTRE}" = "xno"; then
 	echo "Use internal libtre     : YES"
 else
 	echo "Use internal libtre     : NO"
+fi
+if test "x${HAVE_JANSSON}" = "xno"; then
+	echo "Use internal libjansson : YES"
+else
+	echo "Use internal libjansson : NO"
 fi
 if test "x${NEED_ZLIB}" = "xyes"; then
 	if test "x${HAVE_ZLIB}" = "xno"; then

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ public class DashboardPerspective implements IPerspectiveFactory
 		layout.setEditorAreaVisible(false);
 		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.console.DefaultPerspective"); //$NON-NLS-1$
 		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.dashboard.DashboardPerspective"); //$NON-NLS-1$
+      layout.addPerspectiveShortcut("org.netxms.ui.eclipse.reporter.ReportPerspective"); //$NON-NLS-1$
 		
 		layout.addView(DashboardNavigator.ID, IPageLayout.LEFT, 0, null);
 		layout.addView(DashboardDynamicView.ID, IPageLayout.RIGHT, 0.25f, DashboardNavigator.ID);

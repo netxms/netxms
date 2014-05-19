@@ -24,9 +24,11 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.editors.AcknowledgeTimeEditor;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * "Alarms" preference page
@@ -57,6 +59,9 @@ public class Alarms extends FieldEditorPreferencePage implements IWorkbenchPrefe
 		addField(new BooleanFieldEditor("SHOW_TRAY_POPUPS", Messages.get().Alarms_ShowPopup, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new BooleanFieldEditor("OUTSTANDING_ALARMS_REMINDER", Messages.get().Alarms_ShowReminder, getFieldEditorParent())); //$NON-NLS-1$
       addField(new BooleanFieldEditor("SHOW_ALARM_TOOLTIPS", Messages.get().Alarms_ShowDetailedTooltips, getFieldEditorParent())); //$NON-NLS-1$
-      addField(new AcknowledgeTimeEditor("ALARM_TIME_EDITOR", Messages.get().Alarms_AcknowledgeTimeEditor, getFieldEditorParent())); //$NON-NLS-1$
+      if (((NXCSession)ConsoleSharedData.getSession()).isTimedAlarmAckEnabled())
+      {
+         addField(new AcknowledgeTimeEditor("ALARM_TIME_EDITOR", Messages.get().Alarms_AcknowledgeTimeEditor, getFieldEditorParent())); //$NON-NLS-1$
+      }
 	}
 }

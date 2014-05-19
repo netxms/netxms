@@ -35,10 +35,6 @@ public class Messages extends NLS
    public String Capabilities_SNMPVersion;
    public String Capabilities_Title;
    public String Capabilities_Yes;
-   public String ClusterResourceListLabelProvider_None;
-   public String ClusterTab_Owner;
-   public String ClusterTab_Resource;
-   public String ClusterTab_VirtualIP;
    public String Commands_ActionRestartAgent;
    public String Commands_ActionRestartNode;
    public String Commands_ActionShutdown;

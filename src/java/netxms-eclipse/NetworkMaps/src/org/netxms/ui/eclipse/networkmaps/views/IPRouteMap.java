@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
@@ -75,7 +76,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 	public void createPartControl(Composite parent)
 	{
 		super.createPartControl(parent);
-		setLayoutAlgorithm(LAYOUT_HTREE, true);
+		setLayoutAlgorithm(MapLayoutAlgorithm.HTREE, true);
 	}
 
 	/* (non-Javadoc)
@@ -85,7 +86,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 	protected void buildMapPage()
 	{
 		if (mapPage == null)
-			mapPage = new NetworkMapPage();
+			mapPage = new NetworkMapPage(ID+rootObject.getObjectName()+targetObject.getObjectName());
 		
 		new ConsoleJob(String.format(Messages.get().IPRouteMap_JobTitle, rootObject.getObjectName(), targetObject.getObjectName()),
 				this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
@@ -99,7 +100,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 			protected void jobFailureHandler()
 			{
 				// On failure, create map with root object only
-				NetworkMapPage page = new NetworkMapPage();
+				NetworkMapPage page = new NetworkMapPage(ID+rootObject.getObjectName()+targetObject.getObjectName());
 				page.addElement(new NetworkMapObject(mapPage.createElementId(), rootObject.getObjectId()));
 				replaceMapPage(page, getDisplay());
 			}
@@ -120,15 +121,22 @@ public class IPRouteMap extends AbstractNetworkMapView
 	private void getRoute(Display display) throws Exception
 	{
 		final NetworkPath path = session.getNetworkPath(rootObject.getObjectId(), targetObject.getObjectId());
-		final NetworkMapPage page = new NetworkMapPage();
+		final NetworkMapPage page = new NetworkMapPage(ID + "@" + rootObject.getObjectName() + "@" + targetObject.getObjectName());
 		long prevElementId = 0;
+		HopInfo prevHop = null;
 		for(final HopInfo h : path.getPath())
 		{
 			final long elementId = page.createElementId();
 			page.addElement(new NetworkMapObject(elementId, h.getNodeId()));
 			if (prevElementId != 0)
-				page.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, prevElementId, elementId));
+			{
+			   NetworkMapLink link = new NetworkMapLink(prevHop.isVpn() ? NetworkMapLink.VPN : NetworkMapLink.NORMAL, prevElementId, elementId);
+			   if (!prevHop.getName().isEmpty())
+			      link.setName(prevHop.getName());
+				page.addLink(link);
+			}
 			prevElementId = elementId;
+			prevHop = h;
 		}
 		replaceMapPage(page, display);
 	}

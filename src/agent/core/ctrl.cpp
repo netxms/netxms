@@ -272,7 +272,7 @@ reconnect:
 #endif
 
    bool success = false;
-	CSCP_MESSAGE *rawMsg = msg->CreateMessage();
+	CSCP_MESSAGE *rawMsg = msg->createMessage();
 #ifdef _WIN32
 	DWORD bytes;
 	if (!WriteFile(hPipe, rawMsg, ntohl(rawMsg->dwSize), &bytes, NULL))

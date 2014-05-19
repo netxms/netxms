@@ -251,5 +251,12 @@
                value="plugin_customization.ini">
          </property>
       </product>
-   </extension>   
+   </extension>
+   <extension
+         point="org.eclipse.rap.ui.resources">
+      <resource
+            class="org.netxms.ui.eclipse.console.LongTapHandlerScript"
+            id="org.netxms.ui.eclipse.console.LongTapHandlerScript">
+      </resource>
+   </extension>
 </plugin>

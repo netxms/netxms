@@ -29,7 +29,7 @@
 /**
  *API version
  */
-#define NDDRV_API_VERSION           3
+#define NDDRV_API_VERSION           4
 
 /**
  * Driver header
@@ -93,10 +93,11 @@ enum
 /**
  * Access point state
  */
-enum
+enum AccessPointState
 {
    AP_ADOPTED = 0,
-   AP_UNADOPTED = 1
+   AP_UNADOPTED = 1,
+   AP_DOWN = 2
 };
 
 /**
@@ -131,25 +132,35 @@ class LIBNXSRV_EXPORTABLE AccessPointInfo
 {
 private:
    BYTE m_macAddr[MAC_ADDR_LENGTH];
-   int m_state;
+   UINT32 m_ipAddr;
+   AccessPointState m_state;
    TCHAR *m_name;
+   TCHAR *m_vendor;
    TCHAR *m_model;
    TCHAR *m_serial;
 	ObjectArray<RadioInterfaceInfo> *m_radioInterfaces;
 
 public:
-   AccessPointInfo(BYTE *macAddr, int state, const TCHAR *name, const TCHAR *model, const TCHAR *serial);
+   AccessPointInfo(BYTE *macAddr, UINT32 ipAddr, AccessPointState state, const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial);
    ~AccessPointInfo();
 
 	void addRadioInterface(RadioInterfaceInfo *iface);
 
 	BYTE *getMacAddr() { return m_macAddr; }
-	int getState() { return m_state; }
+   UINT32 getIpAddr() { return m_ipAddr; }
+	AccessPointState getState() { return m_state; }
 	const TCHAR *getName() { return m_name; }
+	const TCHAR *getVendor() { return m_vendor; }
 	const TCHAR *getModel() { return m_model; }
 	const TCHAR *getSerial() { return m_serial; }
 	ObjectArray<RadioInterfaceInfo> *getRadioInterfaces() { return m_radioInterfaces; }
 };
+
+/**
+ * Wireless station AP match policy
+ */
+#define AP_MATCH_BY_RFINDEX   0
+#define AP_MATCH_BY_BSSID     1
 
 /**
  * Wireless station information
@@ -160,13 +171,28 @@ struct WirelessStationInfo
    BYTE macAddr[MAC_ADDR_LENGTH];
 	UINT32 ipAddr;	// IP address, must be in host byte order
 	int rfIndex;	// radio interface index
+   BYTE bssid[MAC_ADDR_LENGTH];
+   short apMatchPolicy;
 	TCHAR ssid[MAX_OBJECT_NAME];
    int vlan;
+   int signalStrength;
+   UINT32 txRate;
+   UINT32 rxRate;
 
 	// This part filled by core
 	UINT32 apObjectId;
 	UINT32 nodeId;
    TCHAR rfName[MAX_OBJECT_NAME];
+};
+
+/**
+ * Base class for driver data
+ */
+class LIBNXSRV_EXPORTABLE DriverData
+{
+public:
+   DriverData();
+   virtual ~DriverData();
 };
 
 /**
@@ -184,17 +210,16 @@ public:
    virtual const TCHAR *getCustomTestOID();
    virtual int isPotentialDevice(const TCHAR *oid);
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
-   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, void **driverData);
-   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int useAliases, bool useIfXTable);
-   virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
-   virtual int getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
-   virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, void *driverData, int module, NDD_MODULE_LAYOUT *layout);
-   virtual void destroyDriverData(void *driverData);
+   virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData);
+   virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
+   virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
+   virtual int getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
+   virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);
    virtual bool isPerVlanFdbSupported();
-   virtual int getClusterMode(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
-   virtual bool isWirelessController(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
-   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
-   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, void *driverData);
+   virtual int getClusterMode(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
+   virtual bool isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
+   virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
+   virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
 };
 
 #endif   /* _nddrv_h_ */

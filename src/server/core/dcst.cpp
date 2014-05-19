@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -151,7 +151,7 @@ SummaryTable::SummaryTable(DB_RESULT hResult)
       if (*filterSource != 0)
       {
          TCHAR errorText[1024];
-         m_filter = NXSLCompile(filterSource, errorText, 1024);
+         m_filter = NXSLCompileAndCreateVM(filterSource, errorText, 1024, new NXSL_ServerEnv);
          if (m_filter == NULL)
          {
             DbgPrintf(4, _T("Error compiling filter script for DCI summary table: %s"), errorText);
@@ -239,21 +239,20 @@ bool SummaryTable::filter(DataCollectionTarget *object)
       return true;   // no filtering
 
    bool result = true;
-   NXSL_ServerEnv *env = new NXSL_ServerEnv;
    m_filter->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
    if (object->Type() == OBJECT_NODE)
       m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
-   if (m_filter->run(env) == 0)
+   if (m_filter->run())
    {
       NXSL_Value *value = m_filter->getResult();
       if (value != NULL)
       {
          result = value->getValueAsInt32() ? true : false;
       }
-      else
-      {
-         DbgPrintf(4, _T("Error executing filter script for DCI summary table: %s"), m_filter->getErrorText());
-      }
+   }
+   else
+   {
+      DbgPrintf(4, _T("Error executing filter script for DCI summary table: %s"), m_filter->getErrorText());
    }
    return result;
 }
@@ -265,6 +264,7 @@ Table *SummaryTable::createEmptyResultTable()
 {
    Table *result = new Table();
    result->setTitle(m_title);
+   result->setExtendedFormat(true);
    result->addColumn(_T("Node"), DCI_DT_STRING);
    for(int i = 0; i < m_columns->size(); i++)
    {

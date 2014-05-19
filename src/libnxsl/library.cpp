@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,11 +23,9 @@
 
 #include "libnxsl.h"
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 NXSL_Library::NXSL_Library()
 {
    m_mutex = MutexCreate();
@@ -53,11 +51,9 @@ NXSL_Library::~NXSL_Library()
    MutexDestroy(m_mutex);
 }
 
-
-//
-// Add script to list
-//
-
+/**
+ * Add script to library
+ */
 BOOL NXSL_Library::addScript(UINT32 dwId, const TCHAR *pszName, NXSL_Program *pScript)
 {
    UINT32 i;
@@ -76,11 +72,9 @@ BOOL NXSL_Library::addScript(UINT32 dwId, const TCHAR *pszName, NXSL_Program *pS
    return TRUE;
 }
 
-
-//
-// Delete script from list
-//
-
+/**
+ * Delete script from library
+ */
 void NXSL_Library::deleteInternal(int nIndex)
 {
    delete m_ppScriptList[nIndex];
@@ -121,16 +115,43 @@ void NXSL_Library::deleteScript(UINT32 dwId)
 /**
  * Find script by name
  */
-NXSL_Program *NXSL_Library::findScript(const TCHAR *pszName)
+NXSL_Program *NXSL_Library::findScript(const TCHAR *name)
 {
    UINT32 i;
 
    for(i = 0; i < m_dwNumScripts; i++)
-      if (!_tcsicmp(m_ppszNames[i], pszName))
+      if (!_tcsicmp(m_ppszNames[i], name))
       {
          return m_ppScriptList[i];
       }
    return NULL;
+}
+
+/**
+ * Create ready to run VM for given script. This method will do library lock internally.
+ * VM must be deleted by caller when no longer needed.
+ */
+NXSL_VM *NXSL_Library::createVM(const TCHAR *name, NXSL_Environment *env)
+{
+   NXSL_VM *vm = NULL;
+   lock();
+   NXSL_Program *p = findScript(name);
+   if (p != NULL)
+   {
+      vm = new NXSL_VM(env);
+      if (!vm->load(p))
+      {
+         delete vm;
+         delete env;
+         vm = NULL;
+      }
+   }
+   else
+   {
+      delete env;
+   }
+   unlock();
+   return vm;
 }
 
 /**

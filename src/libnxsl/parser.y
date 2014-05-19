@@ -36,6 +36,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 	NXSL_Instruction *pInstruction;
 }
 
+%token T_ABORT
 %token T_ARRAY
 %token T_BREAK
 %token T_CASE
@@ -100,6 +101,10 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %type <valInt32> ParameterList
 %type <pInstruction> SimpleStatementKeyword
 
+%destructor { free ($$); } <valStr>
+%destructor { delete $$; } <pConstant>
+%destructor { delete $$; } <pInstruction>
+
 %start Script
 
 
@@ -114,7 +119,7 @@ Script:
 	if (!pScript->addFunction("$main", 0, szErrorText))
 	{
 		pCompiler->error(szErrorText);
-		pLexer->setErrorState();
+		YYERROR;
 	}
 	
 	// Implicit return
@@ -131,7 +136,7 @@ Script:
 	if (!pScript->addFunction("$main", 0, szErrorText))
 	{
 		pCompiler->error(szErrorText);
-		pLexer->setErrorState();
+		YYERROR;
 	}
 }
 |
@@ -145,7 +150,7 @@ Script:
 	if (!pScript->addFunction("$main", 0, szErrorText))
 	{
 		pCompiler->error(szErrorText);
-		pLexer->setErrorState();
+		YYERROR;
 	}
 }
 ;
@@ -178,7 +183,7 @@ ConstDefinition:
 	{
 		pCompiler->error("Constant already defined");
 		delete $3;
-		pLexer->setErrorState();
+		YYERROR;
 	}
 	free($1);
 }
@@ -187,7 +192,7 @@ ConstDefinition:
 UseStatement:
 	T_USE AnyIdentifier ';'
 {
-	pScript->addPreload($2);
+	pScript->addRequiredModule($2);
 }
 ;
 
@@ -206,7 +211,7 @@ Function:
 		if (!pScript->addFunction($2, INVALID_ADDRESS, szErrorText))
 		{
 			pCompiler->error(szErrorText);
-			pLexer->setErrorState();
+			YYERROR;
 		}
 		free($2);
 		pCompiler->setIdentifierOperation(OPCODE_BIND);
@@ -589,7 +594,7 @@ BuiltinStatement:
 	else
 	{
 		pCompiler->error("\"break\" statement can be used only within loops and \"switch\" statements");
-		pLexer->setErrorState();
+		YYERROR;
 	}
 }
 |	T_CONTINUE ';'
@@ -602,7 +607,7 @@ BuiltinStatement:
 	else
 	{
 		pCompiler->error("\"continue\" statement can be used only within loops");
-		pLexer->setErrorState();
+		YYERROR;
 	}
 }
 ;
@@ -620,7 +625,11 @@ SimpleStatement:
 ;
 
 SimpleStatementKeyword:
-	T_EXIT
+	T_ABORT
+{
+	$$ = new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_ABORT);
+}
+|	T_EXIT
 {
 	$$ = new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_EXIT);
 }

@@ -154,9 +154,9 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 	nx_strncpy(m_szName, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
    nx_strncpy(m_szDescription, config->getSubEntryValue(_T("description"), 0, m_szName), MAX_DB_STRING);
 	nx_strncpy(m_systemTag, config->getSubEntryValue(_T("systemTag"), 0, _T("")), MAX_DB_STRING);
-	m_source = (BYTE)config->getSubEntryValueInt(_T("origin"));
-   m_iPollingInterval = config->getSubEntryValueInt(_T("interval"));
-   m_iRetentionTime = config->getSubEntryValueInt(_T("retention"));
+	m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
+   m_iPollingInterval = config->getSubEntryValueAsInt(_T("interval"));
+   m_iRetentionTime = config->getSubEntryValueAsInt(_T("retention"));
    m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
 	m_scheduledForDeletion = 0;
@@ -170,7 +170,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 	m_dwProxyNode = 0;
    const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
    m_pszPerfTabSettings = (perfTabSettings != NULL) ? _tcsdup(perfTabSettings) : NULL;
-	m_snmpPort = (WORD)config->getSubEntryValueInt(_T("snmpPort"));
+	m_snmpPort = (WORD)config->getSubEntryValueAsInt(_T("snmpPort"));
    m_dwNumSchedules = 0;
    m_ppScheduleList = NULL;
 
@@ -178,7 +178,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 	m_transformationScript = NULL;
 	setTransformationScript(config->getSubEntryValue(_T("transformation")));
    
-	if (config->getSubEntryValueInt(_T("advancedSchedule")))
+	if (config->getSubEntryValueAsInt(_T("advancedSchedule")))
 		m_flags |= DCF_ADVANCED_SCHEDULE;
 
 	ConfigEntry *schedules = config->findEntry(_T("schedules"));
@@ -330,20 +330,15 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		}
 		else if (!_tcsncmp(macro, _T("script:"), 7))
 		{
-			NXSL_Program *script;
-			NXSL_ServerEnv *pEnv;
-
-	      g_pScriptLibrary->lock();
-			script = g_pScriptLibrary->findScript(&macro[7]);
-			if (script != NULL)
+			NXSL_VM *vm = g_pScriptLibrary->createVM(&macro[7], new NXSL_ServerEnv);
+			if (vm != NULL)
 			{
-				pEnv = new NXSL_ServerEnv;
 				if (m_pNode != NULL)
-					script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+					vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
 
-				if (script->run(pEnv) == 0)
+				if (vm->run(0, NULL))
 				{
-					NXSL_Value *result = script->getResult();
+					NXSL_Value *result = vm->getResult();
 					if (result != NULL)
 						temp += CHECK_NULL_EX(result->getValueAsCString());
 		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s executed successfully"), m_dwId, src, &macro[7]);
@@ -351,16 +346,15 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 				else
 				{
 		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s execution error: %s"),
-					          m_dwId, src, &macro[7], script->getErrorText());
-					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", &macro[7],
-								 script->getErrorText(), m_dwId);
+					          m_dwId, src, &macro[7], vm->getErrorText());
+					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", &macro[7], vm->getErrorText(), m_dwId);
 				}
+            delete vm;
 			}
 			else
 			{
 	         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Cannot find script %s"), m_dwId, src, &macro[7]);
 			}
-	      g_pScriptLibrary->unlock();
 		}
 		temp += rest;
 		
@@ -453,14 +447,42 @@ static int GetStepSize(TCHAR *str)
 }
 
 /**
+ * Get last day of current month
+ */
+static int GetLastMonthDay(struct tm *currTime)
+{
+   switch(currTime->tm_mon)
+   {
+      case 1:  // February
+         if (((currTime->tm_year % 4) == 0) && (((currTime->tm_year % 100) != 0) || (((currTime->tm_year + 1900) % 400) == 0)))
+            return 29;
+         return 28;
+      case 0:  // January
+      case 2:  // March
+      case 4:  // May
+      case 6:  // July
+      case 7:  // August
+      case 9:  // October
+      case 11: // December
+         return 31;
+      default:
+         return 30;
+   }
+}
+
+/**
  * Match schedule element
  * NOTE: We assume that pattern can be modified during processing
  */
-static bool MatchScheduleElement(TCHAR *pszPattern, int nValue, time_t currTime = 0)
+static bool MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime = 0)
 {
    TCHAR *ptr, *curr;
    int nStep, nCurr, nPrev;
    bool bRun = true, bRange = false;
+
+   // Check for "last" pattern
+   if (*pszPattern == _T('L'))
+      return nValue == maxValue;
 
 	// Check if time() step was specified (% - special syntax)
 	ptr = _tcschr(pszPattern, _T('%'));
@@ -485,6 +507,17 @@ static bool MatchScheduleElement(TCHAR *pszPattern, int nValue, time_t currTime 
             bRange = true;
             *ptr = 0;
             nPrev = _tcstol(curr, NULL, 10);
+            break;
+         case 'L':  // special case for last day ow week in a month (like 5L - last Friday)
+            if (bRange || (localTime == NULL))
+               return false;  // Range with L is not supported; nL form supported only for day of week
+            *ptr = 0;
+            nCurr = _tcstol(curr, NULL, 10);
+            if ((nValue == nCurr) && (localTime->tm_mday + 7 > GetLastMonthDay(localTime)))
+               return true;
+            ptr++;
+            if (*ptr != ',')
+               bRun = false;
             break;
          case 0:
             bRun = false;
@@ -530,16 +563,14 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
          {
             *closingBracker = 0;
 
-            g_pScriptLibrary->lock();
-            NXSL_Program *script = g_pScriptLibrary->findScript(scriptName);
-            if (script != NULL)
+            NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+            if (vm != NULL)
             {
-               NXSL_ServerEnv *env = new NXSL_ServerEnv;
-               script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
-               script->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
-               if (script->run(env) == 0)
+               vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
+               vm->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
+               if (vm->run(0, NULL))
                {
-                  NXSL_Value *result = script->getResult();
+                  NXSL_Value *result = vm->getResult();
                   if (result != NULL)
                   {
                      const TCHAR *temp = result->getValueAsCString();
@@ -553,8 +584,9 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
                }
                else
                {
-                  DbgPrintf(4, _T("DCObject::matchSchedule(%%[%s]) script execution failed"), scriptName);
+                  DbgPrintf(4, _T("DCObject::matchSchedule(%%[%s]) script execution failed (%s)"), scriptName, vm->getErrorText());
                }
+               delete vm;
             }
             g_pScriptLibrary->unlock();
          }
@@ -570,22 +602,22 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
 
    // Minute
    const TCHAR *pszCurr = ExtractWord(realSchedule, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_min))
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_min, 59, NULL))
       return false;
 
    // Hour
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_hour))
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_hour, 23, NULL))
       return false;
 
    // Day of month
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_mday))
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_mday, GetLastMonthDay(pCurrTime), NULL))
       return false;
 
    // Month
    pszCurr = ExtractWord(pszCurr, szValue);
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_mon + 1))
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_mon + 1, 12, NULL))
       return false;
 
    // Day of week
@@ -593,7 +625,7 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
    for(int i = 0; szValue[i] != 0; i++)
       if (szValue[i] == _T('7'))
          szValue[i] = _T('0');
-   if (!MatchScheduleElement(szValue, pCurrTime->tm_wday))
+   if (!MatchScheduleElement(szValue, pCurrTime->tm_wday, 7, pCurrTime))
       return false;
 
    // Seconds
@@ -603,7 +635,7 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
    {
       if (bWithSeconds)
          *bWithSeconds = TRUE;
-      return MatchScheduleElement(szValue, pCurrTime->tm_sec, currTimestamp);
+      return MatchScheduleElement(szValue, pCurrTime->tm_sec, 59, NULL, currTimestamp);
    }
 
    return true;
@@ -872,10 +904,14 @@ void DCObject::updateFromTemplate(DCObject *src)
 }
 
 /**
- * Process new collected value
+ * Process new collected value. Should return true on success.
+ * If returns false, current poll result will be converted into data collection error.
+ *
+ * @return true on success
  */
-void DCObject::processNewValue(time_t nTimeStamp, void *value)
+bool DCObject::processNewValue(time_t nTimeStamp, void *value)
 {
+   return false;
 }
 
 /**
@@ -907,7 +943,7 @@ void DCObject::setTransformationScript(const TCHAR *pszScript)
       if (m_transformationScriptSource[0] != 0)
       {
 			/* TODO: add compilation error handling */
-         m_transformationScript = (NXSL_Program *)NXSLCompile(m_transformationScriptSource, NULL, 0);
+         m_transformationScript = NXSLCompileAndCreateVM(m_transformationScriptSource, NULL, 0, new NXSL_ServerEnv);
       }
       else
       {

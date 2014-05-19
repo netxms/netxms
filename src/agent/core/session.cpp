@@ -207,6 +207,12 @@ void CommSession::readThread()
       // Update activity timestamp
       m_ts = time(NULL);
 
+      if (g_debugLevel >= 8)
+      {
+         String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
+         DebugPrintf(m_dwIndex, 8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+      }
+
       if (m_bProxyConnection)
       {
          // Forward received message to remote peer
@@ -719,17 +725,24 @@ void CommSession::getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 	if (m_bMasterServer)
 	{
 		TCHAR fileName[MAX_PATH];
+		TCHAR fileNameCode[MAX_PATH];
 		pRequest->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
+		pRequest->GetVariableStr(VID_NAME, fileNameCode, MAX_PATH);
+		//prepare file name
+		ExpandFileName(fileName, fileName, MAX_PATH, false);
+
 		DebugPrintf(m_dwIndex, 5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s"),
                   fileName, pRequest->GetVariableShort(VID_FILE_FOLLOW) ? _T("true") : _T("false"));
-		bool result = sendFile(pRequest->GetId(), fileName, pRequest->GetVariableLong(VID_FILE_OFFSET), pRequest->GetVariableLong(VID_FILE_SIZE_LIMIT));
+		bool result = sendFile(pRequest->GetId(), fileName, (int)pRequest->GetVariableLong(VID_FILE_OFFSET));
 		if(pRequest->GetVariableShort(VID_FILE_FOLLOW) && result)
       {
-         TCHAR* fName = _tcsdup(fileName);
-         g_monitorFileList.addMonitoringFile(fName);
+         TCHAR* fileID = _tcsdup(fileNameCode);
+         TCHAR* realName = _tcsdup(fileName);
+         g_monitorFileList.addMonitoringFile(fileID);
          FollowData *flData = new FollowData();
-         flData->cbArg = this;
-         flData->pszFile = fName;
+         flData->serverAddress = getServerAddress();
+         flData->pszFile = realName;
+         flData->fileId = fileID;
          flData->offset = 0;
          ThreadCreateEx(SendFileUpdatesOverNXCP, 0, (void*)flData);
       }
@@ -765,10 +778,9 @@ void CommSession::cancelFileMonitoring(CSCPMessage *pRequest, CSCPMessage *pMsg)
 	}
 }
 
-//
-// Get local file details
-//
-
+/**
+ * Get local file details
+ */
 void CommSession::getFileDetails(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
 	if (m_bMasterServer)
@@ -781,6 +793,8 @@ void CommSession::getFileDetails(CSCPMessage *pRequest, CSCPMessage *pMsg)
 #endif
 
 		pRequest->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
+      //prepare file name
+		ExpandFileName(fileName, fileName, MAX_PATH, false);
 		if (_tstat(fileName, &fs) == 0)
 		{
 			pMsg->SetVariable(VID_FILE_SIZE, (QWORD)fs.st_size);
@@ -860,9 +874,9 @@ static void SendFileProgressCallback(INT64 bytesTransferred, void *cbArg)
 	((CommSession *)cbArg)->updateTimeStamp();
 }
 
-bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset, long sizeLimit)
+bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset)
 {
-	return SendFileOverNXCP(m_hSocket, requestId, file, m_pCtx, offset, sizeLimit, SendFileProgressCallback, this, m_socketWriteMutex) ? true : false;
+	return SendFileOverNXCP(m_hSocket, requestId, file, m_pCtx, offset, SendFileProgressCallback, this, m_socketWriteMutex) ? true : false;
 }
 
 
@@ -911,11 +925,9 @@ void CommSession::getConfig(CSCPMessage *pMsg)
    }
 }
 
-
-//
-// Update agent's configuration file
-//
-
+/**
+ * Update agent's configuration file
+ */
 void CommSession::updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
    if (m_bMasterServer)
@@ -924,7 +936,7 @@ void CommSession::updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
       int hFile;
       UINT32 dwSize;
 
-      if (pRequest->IsVariableExist(VID_CONFIG_FILE))
+      if (pRequest->isFieldExist(VID_CONFIG_FILE))
       {
          dwSize = pRequest->GetVariableBinary(VID_CONFIG_FILE, NULL, 0);
          pConfig = (BYTE *)malloc(dwSize);
@@ -1014,7 +1026,7 @@ UINT32 CommSession::setupProxyConnection(CSCPMessage *pRequest)
             msg.SetCode(CMD_REQUEST_COMPLETED);
             msg.SetId(pRequest->GetId());
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            pRawMsg = msg.CreateMessage();
+            pRawMsg = msg.createMessage();
             sendRawMessage(pRawMsg, pSavedCtx);
 				if (pSavedCtx != NULL)
 					pSavedCtx->decRefCount();

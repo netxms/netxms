@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,15 +22,13 @@
 
 #include "nxcore.h"
 
-
-//
-// Map port numbers from dot1dBasePortTable to interface indexes
-//
-
+/**
+ * Map port numbers from dot1dBasePortTable to interface indexes
+ */
 static UINT32 PortMapCallback(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    TCHAR oid[MAX_OID_LEN * 4], suffix[MAX_OID_LEN * 4];
-   SNMP_ObjectId *pOid = var->GetName();
+   SNMP_ObjectId *pOid = var->getName();
    SNMPConvertOIDToText(pOid->getLength() - 11, (UINT32 *)&(pOid->getValue())[11], suffix, MAX_OID_LEN * 4);
 
 	// Get interface index
@@ -45,12 +43,12 @@ static UINT32 PortMapCallback(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 
 	if (rcc == SNMP_ERR_SUCCESS)
    {
-		UINT32 ifIndex = pRespPDU->getVariable(0)->GetValueAsUInt();
+		UINT32 ifIndex = pRespPDU->getVariable(0)->getValueAsUInt();
 		InterfaceList *ifList = (InterfaceList *)arg;
 		for(int i = 0; i < ifList->getSize(); i++)
 			if (ifList->get(i)->dwIndex == ifIndex)
 			{
-				ifList->get(i)->dwBridgePortNumber = var->GetValueAsUInt();
+				ifList->get(i)->dwBridgePortNumber = var->getValueAsUInt();
 				break;
 			}
       delete pRespPDU;

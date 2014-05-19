@@ -111,10 +111,22 @@ BOOL Condition::CreateFromDB(UINT32 dwId)
    DBFreeResult(hResult);
 
    // Compile script
-   m_script = (NXSL_Program *)NXSLCompile(m_scriptSource, szQuery, 512);
-   if (m_script == NULL)
-      nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
-               "dss", m_dwId, m_szName, szQuery);
+   NXSL_Program *p = (NXSL_Program *)NXSLCompile(m_scriptSource, szQuery, 512);
+   if (p != NULL)
+   {
+      m_script = new NXSL_VM(new NXSL_ServerEnv);
+      if (!m_script->load(p))
+      {
+         nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_dwId, m_szName, m_script->getErrorText());
+         delete_and_null(m_script);
+      }
+      delete p;
+   }
+   else
+   {
+      m_script = NULL;
+      nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_dwId, m_szName, szQuery);
+   }
 
    // Load DCI map
    _sntprintf(szQuery, 512, _T("SELECT dci_id,node_id,dci_func,num_polls ")
@@ -263,41 +275,53 @@ UINT32 Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       LockData();
 
    // Change script
-   if (pRequest->IsVariableExist(VID_SCRIPT))
+   if (pRequest->isFieldExist(VID_SCRIPT))
    {
       TCHAR szError[1024];
 
       safe_free(m_scriptSource);
       delete m_script;
       m_scriptSource = pRequest->GetVariableStr(VID_SCRIPT);
-      m_script = (NXSL_Program *)NXSLCompile(m_scriptSource, szError, 1024);
-      if (m_script == NULL)
-         nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
-                  "dss", m_dwId, m_szName, szError);
+      NXSL_Program *p = (NXSL_Program *)NXSLCompile(m_scriptSource, szError, 1024);
+      if (p != NULL)
+      {
+         m_script = new NXSL_VM(new NXSL_ServerEnv);
+         if (!m_script->load(p))
+         {
+            nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_dwId, m_szName, m_script->getErrorText());
+            delete_and_null(m_script);
+         }
+         delete p;
+      }
+      else
+      {
+         m_script = NULL;
+         nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_dwId, m_szName, szError);
+      }
    }
 
    // Change activation event
-   if (pRequest->IsVariableExist(VID_ACTIVATION_EVENT))
+   if (pRequest->isFieldExist(VID_ACTIVATION_EVENT))
       m_activationEventCode = pRequest->GetVariableLong(VID_ACTIVATION_EVENT);
 
    // Change deactivation event
-   if (pRequest->IsVariableExist(VID_DEACTIVATION_EVENT))
+   if (pRequest->isFieldExist(VID_DEACTIVATION_EVENT))
       m_deactivationEventCode = pRequest->GetVariableLong(VID_DEACTIVATION_EVENT);
 
    // Change source object
-   if (pRequest->IsVariableExist(VID_SOURCE_OBJECT))
+   if (pRequest->isFieldExist(VID_SOURCE_OBJECT))
       m_sourceObject = pRequest->GetVariableLong(VID_SOURCE_OBJECT);
 
    // Change active status
-   if (pRequest->IsVariableExist(VID_ACTIVE_STATUS))
+   if (pRequest->isFieldExist(VID_ACTIVE_STATUS))
       m_activeStatus = pRequest->GetVariableShort(VID_ACTIVE_STATUS);
 
    // Change inactive status
-   if (pRequest->IsVariableExist(VID_INACTIVE_STATUS))
+   if (pRequest->isFieldExist(VID_INACTIVE_STATUS))
       m_inactiveStatus = pRequest->GetVariableShort(VID_INACTIVE_STATUS);
 
    // Change DCI list
-   if (pRequest->IsVariableExist(VID_NUM_ITEMS))
+   if (pRequest->isFieldExist(VID_NUM_ITEMS))
    {
       safe_free(m_dciList);
       m_dciCount = pRequest->GetVariableLong(VID_NUM_ITEMS);
@@ -365,7 +389,6 @@ void Condition::endPoll()
  */
 void Condition::check()
 {
-   NXSL_ServerEnv *pEnv;
    NXSL_Value **ppValueList, *pValue;
    NetObj *pObject;
    UINT32 i, dwNumValues;
@@ -373,8 +396,6 @@ void Condition::check()
 
    if ((m_script == NULL) || (m_iStatus == STATUS_UNMANAGED))
       return;
-
-   pEnv = new NXSL_ServerEnv;
 
    LockData();
    ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * m_dciCount);
@@ -418,9 +439,8 @@ void Condition::check()
 	}
    m_script->setGlobalVariable(_T("$values"), new NXSL_Value(array));
 
-   DbgPrintf(6, _T("Running evaluation script for condition %d \"%s\""),
-             m_dwId, m_szName);
-   if (m_script->run(pEnv, dwNumValues, ppValueList) == 0)
+   DbgPrintf(6, _T("Running evaluation script for condition %d \"%s\""), m_dwId, m_szName);
+   if (m_script->run(dwNumValues, ppValueList))
    {
       pValue = m_script->getResult();
       if (pValue->getValueAsInt32() == 0)

@@ -122,7 +122,7 @@ void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 
 	// Update custom attributes only if VID_NUM_CUSTOM_ATTRIBUTES exist -
 	// older client versions may not be aware of custom attributes
-	if ((fields & USER_MODIFY_CUSTOM_ATTRIBUTES) || msg->IsVariableExist(VID_NUM_CUSTOM_ATTRIBUTES))
+	if ((fields & USER_MODIFY_CUSTOM_ATTRIBUTES) || msg->isFieldExist(VID_NUM_CUSTOM_ATTRIBUTES))
 	{
 		UINT32 i, varId, count;
 		TCHAR *name, *value;
@@ -518,7 +518,7 @@ void User::modifyFromMessage(CSCPMessage *msg)
       if (count > 0)
       {
          groups = (UINT32 *)malloc(sizeof(UINT32) * count);
-         msg->GetVariableInt32Array(VID_GROUPS, (UINT32)count, groups);
+         msg->getFieldAsInt32Array(VID_GROUPS, (UINT32)count, groups);
       }
       UpdateGroupMembership(m_id, count, groups);
       safe_free(groups);

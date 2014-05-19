@@ -120,26 +120,25 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **
 	{
 		s_genTrapCount++;
 		s_lastTrapTime = time(NULL);
-      s_trapQueue->Put(msg.CreateMessage());
+      s_trapQueue->Put(msg.createMessage());
 	}
 }
 
-//
-// Send trap - variant 2
-// Arguments:
-// dwEventCode - Event code
-// eventName   - event name; to send event by name, eventCode must be set to 0
-// pszFormat   - Parameter format string, each parameter represented by one character.
-//    The following format characters can be used:
-//        s - String
-//        d - Decimal integer
-//        x - Hex integer
-//        a - IP address
-//        i - Object ID
-//        D - 64-bit decimal integer
-//        X - 64-bit hex integer
-//
-
+/**
+ * Send trap - variant 2
+ * Arguments:
+ * dwEventCode - Event code
+ * eventName   - event name; to send event by name, eventCode must be set to 0
+ * pszFormat   - Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        d - Decimal integer
+ *        x - Hex integer
+ *        a - IP address
+ *        i - Object ID
+ *        D - 64-bit decimal integer
+ *        X - 64-bit hex integer
+ */
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, va_list args)
 {
    int i, iNumArgs;
@@ -217,7 +216,7 @@ void ForwardTrap(CSCPMessage *msg)
 	{
 		s_genTrapCount++;
 		s_lastTrapTime = time(NULL);
-      s_trapQueue->Put(msg->CreateMessage());
+      s_trapQueue->Put(msg->createMessage());
 	}
 }
 

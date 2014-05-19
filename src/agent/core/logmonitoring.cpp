@@ -163,7 +163,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
             pMsg = new CSCPMessage();
             pMsg->SetCode(CMD_FILE_MONITORING);
             pMsg->SetId(0);
-            pMsg->SetVariable(VID_FILE_NAME, flData->pszFile, MAX_PATH);
+            pMsg->SetVariable(VID_FILE_NAME, flData->fileId, MAX_PATH);
 
             lseek(hFile, flData->offset, SEEK_SET);
             readBytes = (BYTE*)malloc(readSize);
@@ -176,17 +176,22 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
 #else
             pMsg->SetVariable(VID_FILE_DATA, (char *)readBytes, readSize);
 #endif
-
             flData->offset = newOffset;
 
             MutexLock(g_hSessionListAccess);
+            bool sent = false;
             for(UINT32 i = 0; i < g_dwMaxSessions; i++)
             {
-               if (g_pSessionList[i] != NULL)
+               if (g_pSessionList[i] != NULL && flData->serverAddress == g_pSessionList[i]->getServerAddress())
                {
                   g_pSessionList[i]->sendMessage(pMsg);
+                  sent = true;
                   break;
                }
+            }
+            if(!sent)
+            {
+               g_monitorFileList.removeMonitoringFile(flData->pszFile);
             }
             MutexUnlock(g_hSessionListAccess);
 
@@ -196,13 +201,14 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
       }
 
       ThreadSleep(threadSleepTime);
-      if(!g_monitorFileList.checkFileMonitored(flData->pszFile))
+      if(!g_monitorFileList.checkFileMonitored(flData->fileId))
       {
          follow = false;
       }
    }
-   delete flData->pszFile;
-   delete flData;
+   delete_and_null(flData->pszFile);
+   delete_and_null(flData->fileId);
+   delete_and_null(flData);
    close(hFile);
    return THREAD_OK;
 };

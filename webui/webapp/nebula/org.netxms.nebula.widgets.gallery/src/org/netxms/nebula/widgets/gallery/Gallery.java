@@ -551,11 +551,13 @@ public class Gallery extends Canvas {
 	 *            SWT.MULTI allows only several items to be selected at the same
 	 *            time.
 	 */
-	public Gallery(Composite parent, int style) {
+	public Gallery(Composite parent, int style) 
+	{
 		super(parent, style | SWT.DOUBLE_BUFFERED);
 		virtual = (style & SWT.VIRTUAL) > 0;
 		vertical = (style & SWT.V_SCROLL) > 0;
 		multi = (style & SWT.MULTI) > 0;
+      setBackground(getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND));
 		setForeground(getDisplay().getSystemColor(SWT.COLOR_LIST_FOREGROUND));
 
 		// Add listeners : redraws, mouse and keyboard

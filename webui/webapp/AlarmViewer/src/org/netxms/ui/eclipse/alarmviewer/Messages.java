@@ -7,12 +7,12 @@ import org.eclipse.swt.widgets.Display;
 
 public class Messages extends NLS
 {
-	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.alarmviewer.messages"; //$NON-NLS-1$
+   private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.alarmviewer.messages"; //$NON-NLS-1$
 
-	public String AcknowledgeAlarm_ErrorMessage;
-	public String AcknowledgeAlarm_JobName;
-	public String AcknowledgeAlarm_TaskName;
-	public String AcknowledgeCustomTimeDialog_ConfigurationInfoLabel;
+   public String AcknowledgeAlarm_ErrorMessage;
+   public String AcknowledgeAlarm_JobName;
+   public String AcknowledgeAlarm_TaskName;
+   public String AcknowledgeCustomTimeDialog_ConfigurationInfoLabel;
    public String AcknowledgeCustomTimeDialog_CustomTimeDialogTitle;
    public String AcknowledgeCustomTimeDialog_Days;
    public String AcknowledgeCustomTimeDialog_Hours;
@@ -28,92 +28,99 @@ public class Messages extends NLS
    public String AlarmAcknowledgeTimeFunctions_ZeroMinutesEntry;
    public String AlarmComments_AckToDeleteComment;
    public String AlarmComments_AddCommentJob;
-	public String AlarmComments_AddCommentLink;
-	public String AlarmComments_AddError;
-	public String AlarmComments_Comments;
+   public String AlarmComments_AddCommentLink;
+   public String AlarmComments_AddError;
+   public String AlarmComments_Comments;
    public String AlarmComments_Confirmation;
-	public String AlarmComments_DeleteCommentJob;
+   public String AlarmComments_DeleteCommentJob;
    public String AlarmComments_Details;
    public String AlarmComments_ErrorDeleteAlarmComment;
-	public String AlarmComments_GetComments;
-	public String AlarmComments_GetError;
-	public String AlarmComments_InternalError;
-	public String AlarmCommentsEditor_DeleteLabel;
+   public String AlarmComments_GetComments;
+   public String AlarmComments_GetError;
+   public String AlarmComments_InternalError;
+   public String AlarmCommentsEditor_DeleteLabel;
    public String AlarmCommentsEditor_Edit;
-	public String AlarmCommentsEditor_Unknown;
-	public String AlarmComparator_Unknown;
-	public String AlarmDetails_Column_Message;
-	public String AlarmDetails_Column_Name;
-	public String AlarmDetails_Column_Severity;
-	public String AlarmDetails_Column_Source;
-	public String AlarmDetails_Column_Timestamp;
-	public String AlarmDetails_LastValues;
-	public String AlarmDetails_Overview;
-	public String AlarmDetails_RefreshJobError;
-	public String AlarmDetails_RefreshJobTitle;
-	public String AlarmDetails_RelatedEvents;
-	public String AlarmDetailsProvider_Error;
-	public String AlarmDetailsProvider_ErrorOpeningView;
-	public String AlarmList_AckBy;
-	public String AlarmList_Acknowledge;
-	public String AlarmList_ActionAlarmDetails;
-	public String AlarmList_ActionObjectDetails;
-	public String AlarmList_CannotResoveAlarm;
-	public String AlarmList_ColumnCount;
-	public String AlarmList_ColumnCreated;
-	public String AlarmList_ColumnLastChange;
-	public String AlarmList_ColumnMessage;
-	public String AlarmList_ColumnSeverity;
-	public String AlarmList_ColumnSource;
-	public String AlarmList_ColumnState;
-	public String AlarmList_Comments;
-	public String AlarmList_CopyMsgToClipboard;
-	public String AlarmList_CopyToClipboard;
-	public String AlarmList_Error;
-	public String AlarmList_ErrorText;
-	public String AlarmList_OpenDetailsError;
-	public String AlarmList_Resolve;
-	public String AlarmList_ResolveAlarm;
-	public String AlarmList_Resolving;
-	public String AlarmList_StickyAck;
-
+   public String AlarmCommentsEditor_Unknown;
+   public String AlarmComparator_Unknown;
+   public String AlarmDetails_Column_Message;
+   public String AlarmDetails_Column_Name;
+   public String AlarmDetails_Column_Severity;
+   public String AlarmDetails_Column_Source;
+   public String AlarmDetails_Column_Timestamp;
+   public String AlarmDetails_LastValues;
+   public String AlarmDetails_Overview;
+   public String AlarmDetails_RefreshJobError;
+   public String AlarmDetails_RefreshJobTitle;
+   public String AlarmDetails_RelatedEvents;
+   public String AlarmDetailsProvider_Error;
+   public String AlarmDetailsProvider_ErrorOpeningView;
+   public String AlarmList_AckBy;
+   public String AlarmList_Acknowledge;
+   public String AlarmList_ActionAlarmDetails;
+   public String AlarmList_ActionObjectDetails;
+   public String AlarmList_CannotResoveAlarm;
+   public String AlarmList_ColumnCount;
+   public String AlarmList_ColumnCreated;
+   public String AlarmList_ColumnLastChange;
+   public String AlarmList_ColumnMessage;
+   public String AlarmList_ColumnSeverity;
+   public String AlarmList_ColumnSource;
+   public String AlarmList_ColumnState;
+   public String AlarmList_Comments;
+   public String AlarmList_CopyMsgToClipboard;
+   public String AlarmList_CopyToClipboard;
+   public String AlarmList_Error;
+   public String AlarmList_ErrorText;
+   public String AlarmList_OpenDetailsError;
+   public String AlarmList_Resolve;
+   public String AlarmList_ResolveAlarm;
+   public String AlarmList_Resolving;
+   public String AlarmList_StickyAck;
    public String AlarmList_StickyAckMenutTitle;
-	public String AlarmList_SyncJobError;
-	public String AlarmList_SyncJobName;
-	public String AlarmList_Terminate;
-	public String AlarmListLabelProvider_AlarmState_Acknowledged;
-	public String AlarmListLabelProvider_AlarmState_Outstanding;
-	public String AlarmListLabelProvider_AlarmState_Resolved;
-	public String AlarmListLabelProvider_AlarmState_Terminated;
-	public String AlarmNotifier_ToolTip_Header;
-	public String AlarmReminderDialog_Dismiss;
-	public String AlarmReminderDialog_OutstandingAlarms;
+   public String AlarmList_SyncJobError;
+   public String AlarmList_SyncJobName;
+   public String AlarmList_Terminate;
+   public String AlarmListLabelProvider_AlarmState_Acknowledged;
+   public String AlarmListLabelProvider_AlarmState_Outstanding;
+   public String AlarmListLabelProvider_AlarmState_Resolved;
+   public String AlarmListLabelProvider_AlarmState_Terminated;
+   public String AlarmMelody_ErrorGettingMelodyList;
+   public String AlarmMelody_ErrorGettingMelodyListDescription;
+   public String AlarmMelody_ErrorMelodyNotExists;
+   public String AlarmMelody_ErrorMelodyNotExistsDescription;
+   public String AlarmMelody_JobGetMelodyList;
+   public String AlarmMelody_SaveClientSelection;
+   public String AlarmNotifier_ErrorMelodynotExists;
+   public String AlarmNotifier_ErrorMelodyNotExistsDescription;
+   public String AlarmNotifier_ErrorPlayingSound;
+   public String AlarmNotifier_ErrorPlayingSoundDescription;
+   public String AlarmNotifier_ToolTip_Header;
+   public String AlarmReminderDialog_Dismiss;
+   public String AlarmReminderDialog_OutstandingAlarms;
    public String Alarms_AcknowledgeTimeEditor;
-
    public String Alarms_Blinking;
-   public String Alarms_SetAlarmFlowToStrict;
-
    public String Alarms_ShowDetailedTooltips;
-	public String Alarms_ShowPopup;
-	public String Alarms_ShowReminder;
-	public String EditCommentDialog_Comment;
-	public String EditCommentDialog_EditComment;
-	public String ObjectAlarmBrowser_TitlePrefix;
-	public String OpenAlarmBrowser_Error;
-	public String OpenAlarmBrowser_ErrorOpeningView;
-	public String ShowObjectAlarms_Error;
-	public String ShowObjectAlarms_ErrorOpeningView;
-	public String Startup_JobName;
-	public String TerminateAlarm_ErrorMessage;
-	public String TerminateAlarm_JobTitle;
-	public String TerminateAlarm_TaskName;
-	static
-	{
-		// initialize resource bundle
-		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
-	}
+   public String Alarms_ShowPopup;
+   public String Alarms_ShowReminder;
+   public String EditCommentDialog_Comment;
+   public String EditCommentDialog_EditComment;
+   public String ObjectAlarmBrowser_TitlePrefix;
+   public String OpenAlarmBrowser_Error;
+   public String OpenAlarmBrowser_ErrorOpeningView;
+   public String ShowObjectAlarms_Error;
+   public String ShowObjectAlarms_ErrorOpeningView;
+   public String Startup_JobName;
+   public String TerminateAlarm_ErrorMessage;
+   public String TerminateAlarm_JobTitle;
+   public String TerminateAlarm_TaskName;
 
-	
+   static
+   {
+      // initialize resource bundle
+      NLS.initializeMessages(BUNDLE_NAME, Messages.class);
+   }
+
+   
 
 private Messages()
 	{

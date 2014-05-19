@@ -128,6 +128,7 @@ public class GeneralInfo extends TableElement
 				break;
 			case AbstractObject.OBJECT_ACCESSPOINT:
 				AccessPoint ap = (AccessPoint)object;
+            addPair("State", ap.getState().toString());
 				addPair(Messages.get().GeneralInfo_Vendor, ap.getVendor());
 				addPair(Messages.get().GeneralInfo_Model, ap.getModel());
 				addPair(Messages.get().GeneralInfo_Serial, ap.getSerialNumber());

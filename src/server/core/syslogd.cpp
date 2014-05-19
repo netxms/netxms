@@ -427,8 +427,9 @@ static void QueueSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
 /**
  * Callback for syslog parser
  */
-static void SyslogParserCallback(DWORD eventCode, const TCHAR *eventName, const TCHAR *line, int paramCount,
-										   TCHAR **params, DWORD objectId, void *userArg)
+static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *line, 
+                                 const TCHAR *source, UINT32 facility, UINT32 severity,
+                                 int paramCount, TCHAR **params, UINT32 objectId, void *userArg)
 {
 	char format[] = "ssssssssssssssssssssssssssssssss";
 	TCHAR *plist[32];
@@ -452,7 +453,7 @@ static void SyslogParserCallback(DWORD eventCode, const TCHAR *eventName, const 
 /**
  * Event name resolver
  */
-static bool EventNameResolver(const TCHAR *name, DWORD *code)
+static bool EventNameResolver(const TCHAR *name, UINT32 *code)
 {
 	EVENT_TEMPLATE *event;
 	bool success = false;

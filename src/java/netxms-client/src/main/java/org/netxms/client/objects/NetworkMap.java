@@ -25,6 +25,7 @@ import org.netxms.base.GeoLocation;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
@@ -41,13 +42,6 @@ public class NetworkMap extends GenericObject
 	public static final int TYPE_LAYER2_TOPOLOGY = 1;
 	public static final int TYPE_IP_TOPOLOGY = 2;
 	
-	public static final int LAYOUT_MANUAL = 0x7FFF;
-	public static final int LAYOUT_SPRING = 0;
-	public static final int LAYOUT_RADIAL = 1;
-	public static final int LAYOUT_HTREE = 2;
-	public static final int LAYOUT_VTREE = 3;
-	public static final int LAYOUT_SPARSE_VTREE = 4;
-	
 	public static final int MF_SHOW_STATUS_ICON  = 0x000001;
 	public static final int MF_SHOW_STATUS_FRAME = 0x000002;
 	public static final int MF_SHOW_STATUS_BKGND = 0x000004;
@@ -55,7 +49,7 @@ public class NetworkMap extends GenericObject
 	public static final int MF_CALCULATE_STATUS  = 0x000010;
 	
 	private int mapType;
-	private int layout;
+	private MapLayoutAlgorithm layout;
 	private int flags;
 	private UUID background;
 	private GeoLocation backgroundLocation;
@@ -77,7 +71,7 @@ public class NetworkMap extends GenericObject
 	{
 		super(msg, session);
 		mapType = msg.getVariableAsInteger(NXCPCodes.VID_MAP_TYPE);
-		layout = msg.getVariableAsInteger(NXCPCodes.VID_LAYOUT);
+		layout = MapLayoutAlgorithm.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_LAYOUT));
 		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
 		background = msg.getVariableAsUUID(NXCPCodes.VID_BACKGROUND);
 		backgroundLocation = new GeoLocation(msg.getVariableAsReal(NXCPCodes.VID_BACKGROUND_LATITUDE), msg.getVariableAsReal(NXCPCodes.VID_BACKGROUND_LONGITUDE));
@@ -104,7 +98,7 @@ public class NetworkMap extends GenericObject
 		for(int i = 0; i < count; i++)
 		{
 			links.add(new NetworkMapLink(msg, varId));
-			varId += 10;
+			varId += 20;
 		}
 	}
 
@@ -137,7 +131,7 @@ public class NetworkMap extends GenericObject
 	/**
 	 * @return the layout
 	 */
-	public int getLayout()
+	public MapLayoutAlgorithm getLayout()
 	{
 		return layout;
 	}

@@ -38,7 +38,6 @@ NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *pCompiler, const TCHAR *pszCode)
    m_nCurrLine = 1;
    m_nSourcePos = 0;
    m_pCompiler = pCompiler;
-   m_bErrorState = FALSE;
 }
 
 /**
@@ -69,11 +68,9 @@ int NXSL_Lexer::lexerInput(char *pBuffer, int nMaxSize)
    return nBytes;
 }
 
-
-//
-// Report error
-//
-
+/**
+ * Report error
+ */
 void NXSL_Lexer::error(const char *pszText)
 {
 	m_pCompiler->error(pszText);

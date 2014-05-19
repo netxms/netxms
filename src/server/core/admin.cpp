@@ -79,7 +79,7 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
       }
 
       response.SetCode(CMD_REQUEST_COMPLETED);
-      pRawMsgOut = response.CreateMessage();
+      pRawMsgOut = response.createMessage();
 		SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0, ctx.socketMutex);
       
       free(pRawMsgOut);
