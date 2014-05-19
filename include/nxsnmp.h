@@ -596,7 +596,7 @@ public:
 	size_t getContextEngineIdLength() { return m_contextEngineIdLen; }
 	BYTE *getContextEngineId() { return m_contextEngineId; }
 
-   void unlinkVariables() { m_variables->clear(); }
+   void unlinkVariables() { m_variables->setOwner(false); m_variables->clear(); m_variables->setOwner(true); }
    void bindVariable(SNMP_Variable *pVar);
 };
 

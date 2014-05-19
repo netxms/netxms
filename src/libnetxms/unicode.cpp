@@ -314,9 +314,9 @@ inline int MultiByteToWideCharIconv(int iCodePage, DWORD dwFlags, const char *pB
 
    inbuf = pByteStr;
    inbytes = (cchByteChar == -1) ? strlen(pByteStr) + 1 : cchByteChar;
-   outbuf = (char *) pWideCharStr;
+   outbuf = (char *)pWideCharStr;
    outbytes = cchWideChar * sizeof(WCHAR);
-   nRet = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
+   nRet = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
    iconv_close(cd);
 
    if (nRet == -1)
