@@ -777,6 +777,28 @@ UINT32 CSCPMessage::GetVariableBinary(UINT32 fieldId, BYTE *pBuffer, UINT32 dwBu
 }
 
 /**
+ * get binary (byte array) field
+ * Returns pointer to internal buffer or NULL if field not found
+ * Data length set in size parameter.
+ */
+BYTE *CSCPMessage::getBinaryFieldPtr(UINT32 fieldId, size_t *size)
+{
+   BYTE *data;
+   void *value = get(fieldId, CSCP_DT_BINARY);
+   if (value != NULL)
+   {
+      *size = (size_t)(*((UINT32 *)value));
+      data = (BYTE *)value + 4;
+   }
+   else
+   {
+      *size = 0;
+      data = NULL;
+   }
+   return data;
+}
+
+/**
  * Build protocol message ready to be send over the wire
  */
 CSCP_MESSAGE *CSCPMessage::createMessage()

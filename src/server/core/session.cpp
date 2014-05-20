@@ -7241,7 +7241,7 @@ void ClientSession::sendObjectTools(UINT32 dwRqId)
       }
       DBFreeResult(hResult);
 
-      hResult = DBSelect(hdb, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,matching_oid,confirmation_text FROM object_tools"));
+      hResult = DBSelect(hdb, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,matching_oid,confirmation_text,command_name,icon FROM object_tools"));
       if (hResult != NULL)
       {
          dwNumTools = DBGetNumRows(hResult);
@@ -7295,6 +7295,26 @@ void ClientSession::sendObjectTools(UINT32 dwRqId)
                DBGetField(hResult, i, 7, szBuffer, MAX_DB_STRING);
                msg.SetVariable(dwId + 7, szBuffer);
 
+               // command name
+               DBGetField(hResult, i, 8, szBuffer, MAX_DB_STRING);
+               msg.SetVariable(dwId + 8, szBuffer);
+
+               // icon
+               TCHAR *imageDataHex = DBGetField(hResult, i, 9, NULL, 0);
+               if (imageDataHex != NULL)
+               {
+                  size_t size = _tcslen(imageDataHex) / 2;
+                  BYTE *imageData = (BYTE *)malloc(size);
+                  size_t bytes = StrToBin(imageDataHex, imageData, size);
+                  msg.SetVariable(dwId + 9, imageData, (UINT32)bytes);
+                  free(imageData);
+                  free(imageDataHex);
+               }
+               else
+               {
+                  msg.SetVariable(dwId + 9, (BYTE *)NULL, 0);
+               }
+
                dwNumMsgRec++;
                dwId += 10;
             }
@@ -7340,7 +7360,7 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
    {
 
       dwToolId = pRequest->GetVariableLong(VID_TOOL_ID);
-      DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,description,flags,matching_oid,confirmation_text FROM object_tools WHERE tool_id=?"));
+      DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,description,flags,matching_oid,confirmation_text,command_name,icon FROM object_tools WHERE tool_id=?"));
       if (statment == NULL)
          goto failure;
       DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
@@ -7372,6 +7392,25 @@ void ClientSession::sendObjectToolDetails(CSCPMessage *pRequest)
 
             DBGetField(hResult, 0, 6, szBuffer, MAX_DB_STRING);
             msg.SetVariable(VID_CONFIRMATION_TEXT, szBuffer);
+
+            DBGetField(hResult, 0, 7, szBuffer, MAX_DB_STRING);
+            msg.SetVariable(VID_COMMAND_NAME, szBuffer);
+
+            // icon
+            TCHAR *imageDataHex = DBGetField(hResult, 0, 8, NULL, 0);
+            if (imageDataHex != NULL)
+            {
+               size_t size = _tcslen(imageDataHex) / 2;
+               BYTE *imageData = (BYTE *)malloc(size);
+               size_t bytes = StrToBin(imageDataHex, imageData, size);
+               msg.SetVariable(VID_IMAGE_DATA, imageData, (UINT32)bytes);
+               free(imageData);
+               free(imageDataHex);
+            }
+            else
+            {
+               msg.SetVariable(VID_IMAGE_DATA, (BYTE *)NULL, 0);
+            }
 
             DBFreeResult(hResult);
 

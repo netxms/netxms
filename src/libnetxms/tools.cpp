@@ -738,9 +738,9 @@ char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, size_t size, char *pStr)
  * Convert string of hexadecimal digits to byte array (wide character version)
  * Returns number of bytes written to destination
  */
-UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, UINT32 size)
+size_t LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, size_t size)
 {
-   UINT32 i;
+   size_t i;
    const WCHAR *pCurr;
 
    memset(pData, 0, size);
@@ -761,9 +761,9 @@ UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, UINT32 siz
  * Convert string of hexadecimal digits to byte array (multibyte character version)
  * Returns number of bytes written to destination
  */
-UINT32 LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *pData, UINT32 size)
+size_t LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *pData, size_t size)
 {
-   UINT32 i;
+   size_t i;
    const char *pCurr;
 
    memset(pData, 0, size);

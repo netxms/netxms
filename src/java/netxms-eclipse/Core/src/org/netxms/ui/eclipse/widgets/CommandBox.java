@@ -40,7 +40,6 @@ import org.netxms.ui.eclipse.console.resources.SharedColors;
 
 /**
  * Implements command box - vertical list of hyperlinks to given actions
- *
  */
 public class CommandBox extends Composite implements DisposeListener
 {

@@ -660,8 +660,6 @@ UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled)
  */
 UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg)
 {
-   DB_RESULT hResult;
-   BOOL bUpdate = FALSE;
    TCHAR szBuffer[MAX_DB_STRING];
    UINT32 i, dwToolId, dwAclSize, *pdwAcl;
    DB_STATEMENT statment;
@@ -676,29 +674,17 @@ UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg)
 
    // Check if tool already exist
    dwToolId = pMsg->GetVariableLong(VID_TOOL_ID);
-   statment = DBPrepare(hdb, _T("SELECT tool_id FROM object_tools WHERE tool_id=?"));
-   if (statment == NULL)
-      return ReturnDBFailure(hdb, statment);
-   DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
-
-   hResult = DBSelectPrepared(statment);
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         bUpdate = TRUE;
-      DBFreeResult(hResult);
-   }
-   DBFreeStatement(statment);
+   bool doUpdate = IsDatabaseRecordExist(hdb, _T("object_tools"), _T("tool_id"), dwToolId);
 
    // Insert or update common properties
    /* prep */
    int nType = pMsg->GetVariableShort(VID_TOOL_TYPE);
    int bindID = 1;
-   if (bUpdate)
+   if (doUpdate)
    {
       statment = DBPrepare(hdb, _T("UPDATE object_tools SET tool_name=?,tool_type=?,")
                              _T("tool_data=?,description=?,flags=?,")
-                             _T("matching_oid=?,confirmation_text=? ")
+                             _T("matching_oid=?,confirmation_text=?,command_name=?,icon=? ")
                              _T("WHERE tool_id=?"));
       if (statment == NULL)
          return ReturnDBFailure(hdb, statment);
@@ -707,8 +693,8 @@ UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg)
    {
       statment = DBPrepare(hdb, _T("INSERT INTO object_tools (tool_id,tool_name,tool_type,")
                              _T("tool_data,description,flags,matching_oid,")
-                             _T("confirmation_text) VALUES ")
-                             _T("(?,?,?,?,?,?,?,?)"));
+                             _T("confirmation_text,command_name,icon) VALUES ")
+                             _T("(?,?,?,?,?,?,?,?,?,?)"));
       if (statment == NULL)
          return ReturnDBFailure(hdb, statment);
       DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, dwToolId);
@@ -721,8 +707,23 @@ UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg)
    DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, pMsg->GetVariableLong(VID_FLAGS));
    DBBind(statment, bindID++, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_TOOL_OID), DB_BIND_DYNAMIC);
    DBBind(statment, bindID++, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_CONFIRMATION_TEXT), DB_BIND_DYNAMIC);
+   DBBind(statment, bindID++, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_COMMAND_NAME), DB_BIND_DYNAMIC);
 
-   if(bUpdate)
+   size_t size;
+   BYTE *imageData = pMsg->getBinaryFieldPtr(VID_IMAGE_DATA, &size);
+   if (size > 0)
+   {
+      pMsg->GetVariableBinary(VID_IMAGE_DATA, imageData, (UINT32)size);
+      TCHAR *imageHexData = (TCHAR *)malloc((size + 1) * sizeof(TCHAR));
+      BinToStr(imageData, size, imageHexData);
+      DBBind(statment, bindID++, DB_SQLTYPE_TEXT, imageHexData, DB_BIND_DYNAMIC);
+   }
+   else
+   {
+      DBBind(statment, bindID++, DB_SQLTYPE_TEXT, _T(""), DB_BIND_STATIC);
+   }
+
+   if(doUpdate)
       DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, dwToolId);
 
    if(!DBExecute(statment))

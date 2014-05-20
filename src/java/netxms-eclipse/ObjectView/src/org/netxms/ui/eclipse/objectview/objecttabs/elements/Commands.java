@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,20 +18,27 @@
  */
 package org.netxms.ui.eclipse.objectview.objecttabs.elements;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
+import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objecttools.api.NodeInfo;
+import org.netxms.ui.eclipse.objecttools.api.ObjectToolExecutor;
+import org.netxms.ui.eclipse.objecttools.api.ObjectToolsCache;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.CommandBox;
 
 /**
@@ -40,9 +47,6 @@ import org.netxms.ui.eclipse.widgets.CommandBox;
 public class Commands extends OverviewPageElement
 {
 	private CommandBox commandBox;
-	private Action actionRestartAgent;
-	private Action actionRestart;
-	private Action actionShutdown;
 	private Action actionWakeup;
 	
 	/**
@@ -82,84 +86,6 @@ public class Commands extends OverviewPageElement
 			}
 		};
 		actionWakeup.setImageDescriptor(Activator.getImageDescriptor("icons/wol.png")); //$NON-NLS-1$
-		
-		actionRestartAgent = new Action(Messages.get().Commands_ActionRestartAgent) {
-			@Override
-			public void run()
-			{
-				final AbstractObject object = getObject();
-				if (MessageDialogHelper.openQuestion(commandBox.getShell(), Messages.get().Commands_Confirmation, 
-				      String.format(Messages.get().Commands_AgentRestartConfirmation, object.getObjectName())))
-				{
-					new ConsoleJob(String.format(Messages.get().Commands_AgentRestartJobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
-						@Override
-						protected void runInternal(IProgressMonitor monitor) throws Exception
-						{
-							session.executeAction(object.getObjectId(), "Agent.Restart"); //$NON-NLS-1$
-						}
-	
-						@Override
-						protected String getErrorMessage()
-						{
-							return String.format(Messages.get().Commands_AgentRestartJobError, object.getObjectName());
-						}
-					}.start();
-				}
-			}
-		};
-		actionRestartAgent.setImageDescriptor(Activator.getImageDescriptor("icons/restart.png")); //$NON-NLS-1$
-		
-		actionRestart = new Action(Messages.get().Commands_ActionRestartNode) {
-			@Override
-			public void run()
-			{
-				final AbstractObject object = getObject();
-				if (MessageDialogHelper.openQuestion(commandBox.getShell(), Messages.get().Commands_Confirmation, 
-                  String.format(Messages.get().Commands_RestartNodeConfirmation, object.getObjectName())))
-				{
-					new ConsoleJob(String.format(Messages.get().Commands_RestartNodeJobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
-						@Override
-						protected void runInternal(IProgressMonitor monitor) throws Exception
-						{
-							session.executeAction(object.getObjectId(), "System.Restart"); //$NON-NLS-1$
-						}
-	
-						@Override
-						protected String getErrorMessage()
-						{
-							return String.format(Messages.get().Commands_RestartNodeJobError, object.getObjectName());
-						}
-					}.start();
-				}
-			}
-		};
-		actionRestart.setImageDescriptor(Activator.getImageDescriptor("icons/restart.png")); //$NON-NLS-1$
-		
-		actionShutdown = new Action(Messages.get().Commands_ActionShutdown) {
-			@Override
-			public void run()
-			{
-				final AbstractObject object = getObject();
-				if (MessageDialogHelper.openQuestion(commandBox.getShell(), Messages.get().Commands_Confirmation, 
-				      String.format(Messages.get().Commands_ShutdownConfirmation, object.getObjectName())))
-				{
-					new ConsoleJob(String.format(Messages.get().Commands_ShutdownJobName, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
-						@Override
-						protected void runInternal(IProgressMonitor monitor) throws Exception
-						{
-							session.executeAction(object.getObjectId(), "System.Shutdown"); //$NON-NLS-1$
-						}
-	
-						@Override
-						protected String getErrorMessage()
-						{
-							return String.format(Messages.get().Commands_ShutdownJobError, object.getObjectName());
-						}
-					}.start();
-				}
-			}
-		};
-		actionShutdown.setImageDescriptor(Activator.getImageDescriptor("icons/shutdown.png")); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -178,14 +104,31 @@ public class Commands extends OverviewPageElement
 	protected void onObjectChange()
 	{
 		commandBox.deleteAll(false);
-		if (getObject() instanceof Node)
+		if (getObject() instanceof AbstractNode)
 		{
-			commandBox.add(actionWakeup, false);
-			if (((Node)getObject()).hasAgent())
-			{
-				commandBox.add(actionRestart, false);
-				commandBox.add(actionShutdown, false);
-			}
+		   ObjectTool[] tools = ObjectToolsCache.getInstance().getTools();
+		   for(final ObjectTool tool : tools)
+		   {
+		      if (((tool.getFlags() & ObjectTool.SHOW_IN_COMMANDS) == 0) || !tool.isApplicableForNode((AbstractNode)getObject()))
+		         continue;
+
+            final Set<NodeInfo> nodes = new HashSet<NodeInfo>(1);
+            nodes.add(new NodeInfo((AbstractNode)getObject(), null));
+            if (!ObjectToolExecutor.isToolAllowed(tool, nodes))
+               continue;
+		      
+		      final Action action = new Action(tool.getCommandDisplayName()) {
+               @Override
+               public void run()
+               {
+                  ObjectToolExecutor.execute(nodes, tool);
+               }
+            };
+            ImageDescriptor icon = ObjectToolsCache.getInstance().findIcon(tool.getId());
+            if (icon != null)
+               action.setImageDescriptor(icon);
+	         commandBox.add(action, false);
+		   }
 		}
 		else if (getObject() instanceof Interface)
 		{

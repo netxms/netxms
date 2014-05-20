@@ -1006,8 +1006,8 @@ extern "C"
 #define BinToStr BinToStrA
 #endif
 
-   UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *data, UINT32 size);
-   UINT32 LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *data, UINT32 size);
+   size_t LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *data, size_t size);
+   size_t LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *data, size_t size);
 #ifdef UNICODE
 #define StrToBin StrToBinW
 #else

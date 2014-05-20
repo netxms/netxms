@@ -30,9 +30,9 @@
  */
 #define NETXMS_VERSION_MAJOR        1
 #define NETXMS_VERSION_MINOR        2
-#define NETXMS_VERSION_RELEASE      14
-#define NETXMS_VERSION_STRING       _T("1.2.14")
-#define NETXMS_VERSION_STRING_A     "1.2.14"
+#define NETXMS_VERSION_RELEASE      15
+#define NETXMS_VERSION_STRING       _T("1.2.15")
+#define NETXMS_VERSION_STRING_A     "1.2.15"
 
 #ifdef UNICODE
 #define IS_UNICODE_BUILD_STRING     _T(" (UNICODE)")

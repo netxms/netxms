@@ -265,5 +265,12 @@
             class="org.netxms.ui.eclipse.objecttools.LoginListener">
       </loginlistener>
    </extension>
+   <extension
+         point="org.netxms.ui.eclipse.objecttools.toolhandlers">
+      <handler
+            class="org.netxms.ui.eclipse.objecttools.WakeupToolHandler"
+            id="wakeup">
+      </handler>
+   </extension>
 
 </plugin>

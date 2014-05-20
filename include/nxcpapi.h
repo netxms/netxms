@@ -112,6 +112,7 @@ public:
    bool getFieldAsBoolean(UINT32 fieldId);
    UINT32 getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer);
    UINT32 getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data);
+   BYTE *getBinaryFieldPtr(UINT32 fieldId, size_t *size);
 
    UINT32 GetVariableLong(UINT32 dwVarId);
    UINT64 GetVariableInt64(UINT32 dwVarId);

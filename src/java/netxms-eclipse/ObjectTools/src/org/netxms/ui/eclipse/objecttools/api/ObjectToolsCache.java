@@ -16,8 +16,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objecttools;
+package org.netxms.ui.eclipse.objecttools.api;
 
+import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,12 +26,14 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.ImageData;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.ObjectTool;
-import org.netxms.ui.eclipse.objecttools.api.ObjectToolHandler;
+import org.netxms.ui.eclipse.objecttools.Activator;
 
 /**
  * Cache for object tools
@@ -41,6 +44,7 @@ public class ObjectToolsCache
    private static ObjectToolsCache instance = null;
    
    private Map<Long, ObjectTool> objectTools = new HashMap<Long, ObjectTool>();
+   private Map<Long, ImageDescriptor> icons = new HashMap<Long, ImageDescriptor>();
 	private NXCSession session = null;
 	
 	/**
@@ -137,11 +141,31 @@ public class ObjectToolsCache
 					objectTools.put(tool.getId(), tool);
 				}
 			}
+			synchronized(icons)
+         {
+			   icons.clear();
+			   
+            for(ObjectTool tool : list)
+            {
+               byte[] imageBytes = tool.getImageData();
+               if ((imageBytes == null) || (imageBytes.length == 0))
+                  continue;
+               
+               ByteArrayInputStream input = new ByteArrayInputStream(imageBytes);
+               try
+               {
+                  icons.put(tool.getId(), ImageDescriptor.createFromImageData(new ImageData(input)));
+               }
+               catch(Exception e)
+               {
+                  Activator.logError("Exception in ObjectToolsCache.reload()", e);
+               }
+            }
+         }
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
-			// TODO: add logging
+		   Activator.logError("Exception in ObjectToolsCache.reload()", e);
 		}
 	}
 	
@@ -172,6 +196,10 @@ public class ObjectToolsCache
 		{
 			objectTools.remove(toolId);
 		}
+		synchronized(icons)
+      {
+		   icons.clear();
+      }
 	}
 	
 	/**
@@ -198,12 +226,22 @@ public class ObjectToolsCache
 	 */
 	public ObjectTool findTool(long toolId)
 	{
-		ObjectTool tool;
 		synchronized(objectTools)
 		{
-			tool = objectTools.get(toolId);
+			return objectTools.get(toolId);
 		}
-		return tool;
+	}
+	
+	/**
+	 * @param toolId
+	 * @return
+	 */
+	public ImageDescriptor findIcon(long toolId)
+	{
+	   synchronized(icons)
+      {
+         return icons.get(toolId);
+      }
 	}
 	
 	/**

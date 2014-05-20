@@ -1004,6 +1004,8 @@ CREATE TABLE object_tools
 	flags integer not null,
 	matching_oid varchar(255) null,
 	confirmation_text varchar(255) null,
+   command_name varchar(255) null,
+   icon SQL_TEXT null,
 	PRIMARY KEY(tool_id)
 ) TABLE_TYPE;
 

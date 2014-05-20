@@ -56,6 +56,8 @@ public class ObjectToolDetails extends ObjectTool
 		confirmationText = "";
 		accessList = new ArrayList<Long>(0);
 		columns = new ArrayList<ObjectToolTableColumn>(0);
+		commandName = "";
+		imageData = null;
 
 		createDisplayName();
 	}
@@ -77,6 +79,8 @@ public class ObjectToolDetails extends ObjectTool
 		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
 		snmpOid = msg.getVariableAsString(NXCPCodes.VID_TOOL_OID);
 		confirmationText = msg.getVariableAsString(NXCPCodes.VID_CONFIRMATION_TEXT);
+		commandName = msg.getVariableAsString(NXCPCodes.VID_COMMAND_NAME);
+		imageData = msg.getVariableAsBinary(NXCPCodes.VID_IMAGE_DATA);
 		
 		Long[] acl = msg.getVariableAsUInt32ArrayEx(NXCPCodes.VID_ACL);
 		accessList = (acl != null) ? new ArrayList<Long>(Arrays.asList(acl)) : new ArrayList<Long>(0);
@@ -108,6 +112,9 @@ public class ObjectToolDetails extends ObjectTool
 		msg.setVariable(NXCPCodes.VID_TOOL_DATA, data);
 		msg.setVariableInt16(NXCPCodes.VID_TOOL_TYPE, type);
 		msg.setVariableInt32(NXCPCodes.VID_FLAGS, flags);
+		msg.setVariable(NXCPCodes.VID_COMMAND_NAME, commandName);
+		if (imageData != null)
+		   msg.setVariable(NXCPCodes.VID_IMAGE_DATA, imageData);
 
 		msg.setVariableInt32(NXCPCodes.VID_ACL_SIZE, accessList.size());
 		msg.setVariable(NXCPCodes.VID_ACL, accessList.toArray(new Long[accessList.size()]));
@@ -237,5 +244,23 @@ public class ObjectToolDetails extends ObjectTool
 	{
 		this.columns = columns;
 		modified = true;
+	}
+	
+	/**
+	 * @param commandName
+	 */
+	public void setCommandName(String commandName)
+	{
+	   this.commandName = commandName;
+	   modified = true;
+	}
+	
+	/**
+	 * @param imageData
+	 */
+	public void setImageData(byte[] imageData)
+	{
+	   this.imageData = imageData;
+	   modified = true;
 	}
 }

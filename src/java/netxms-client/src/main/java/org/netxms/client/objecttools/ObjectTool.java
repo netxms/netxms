@@ -43,6 +43,7 @@ public class ObjectTool
 	public static final int ASK_CONFIRMATION      = 0x00000008;
 	public static final int GENERATES_OUTPUT      = 0x00000010;
 	public static final int DISABLED              = 0x00000020;
+   public static final int SHOW_IN_COMMANDS      = 0x00000040;
 	public static final int SNMP_INDEXED_BY_VALUE = 0x00010000;
 	
 	protected long id;
@@ -54,6 +55,8 @@ public class ObjectTool
 	protected String snmpOid;
 	protected String data;
 	protected String confirmationText;
+	protected String commandName;
+	protected byte[] imageData;
 
 	/**
 	 * Default implicit constructor.
@@ -78,6 +81,8 @@ public class ObjectTool
 		description = msg.getVariableAsString(baseId + 5);
 		snmpOid = msg.getVariableAsString(baseId + 6);
 		confirmationText = msg.getVariableAsString(baseId + 7);
+		commandName = msg.getVariableAsString(baseId + 8);
+		imageData = msg.getVariableAsBinary(baseId + 9);
 		
 		createDisplayName();
 	}
@@ -194,4 +199,30 @@ public class ObjectTool
 	{
 		return displayName;
 	}
+
+   /**
+    * @return the commandName
+    */
+   public String getCommandName()
+   {
+      return commandName;
+   }
+   
+   /**
+    * @return
+    */
+   public String getCommandDisplayName()
+   {
+      if ((commandName != null) && !commandName.isEmpty())
+         return commandName;
+      return displayName;
+   }
+
+   /**
+    * @return the imageData
+    */
+   public byte[] getImageData()
+   {
+      return imageData;
+   }
 }

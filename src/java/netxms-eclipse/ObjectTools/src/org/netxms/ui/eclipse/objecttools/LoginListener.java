@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.objecttools;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
+import org.netxms.ui.eclipse.objecttools.api.ObjectToolsCache;
 
 /**
  * Early startup class
