@@ -855,11 +855,7 @@ retry_db_lock:
 	DbgPrintf(2, _T("LIBDIR: %s"), g_szLibDir);
 
 	// Call startup functions for the modules
-   for(UINT32 i = 0; i < g_dwNumModules; i++)
-	{
-		if (g_pModuleList[i].pfServerStarted != NULL)
-			g_pModuleList[i].pfServerStarted();
-	}
+   CALL_ALL_MODULES(pfServerStarted, ());
 
 #if XMPP_SUPPORTED
    if (ConfigReadInt(_T("EnableXMPPConnector"), 1))
@@ -896,13 +892,6 @@ void NXCORE_EXPORTABLE Shutdown()
 	}
 #endif
 
-	// Call shutdown functions for the modules
-   for(UINT32 i = 0; i < g_dwNumModules; i++)
-	{
-		if (g_pModuleList[i].pfShutdown != NULL)
-			g_pModuleList[i].pfShutdown();
-	}
-
 	// Stop event processor
 	g_pEventQueue->Clear();
 	g_pEventQueue->Put(INVALID_POINTER_VALUE);
@@ -921,6 +910,14 @@ void NXCORE_EXPORTABLE Shutdown()
 #if XMPP_SUPPORTED
    ThreadJoin(m_thXMPPConnector);
 #endif
+
+	// Call shutdown functions for the modules
+   // CALL_ALL_MODULES cannot be used here because it checks for shutdown flag
+   for(UINT32 i = 0; i < g_dwNumModules; i++)
+	{
+		if (g_pModuleList[i].pfShutdown != NULL)
+			g_pModuleList[i].pfShutdown();
+	}
 
 	SaveObjects(g_hCoreDB);
 	DbgPrintf(2, _T("All objects saved to database"));
@@ -946,10 +943,6 @@ void NXCORE_EXPORTABLE Shutdown()
 	CleanupActions();
 	ShutdownEventSubsystem();
 	DbgPrintf(1, _T("Event processing stopped"));
-
-	// Delete all objects
-	//for(i = 0; i < g_dwIdIndexSize; i++)
-	//   delete g_pIndexById[i].pObject;
 
 	delete g_pScriptLibrary;
 

@@ -492,11 +492,7 @@ void NetObj::deleteObject(NetObj *initiator)
 	UnlockData();
 
 	// Notify modules about object deletion
-	for(UINT32 i = 0; i < g_dwNumModules; i++)
-	{
-		if (g_pModuleList[i].pfPreObjectDelete != NULL)
-			g_pModuleList[i].pfPreObjectDelete(this);
-	}
+   CALL_ALL_MODULES(pfPreObjectDelete, (this));
 
    prepareForDeletion();
 
@@ -720,24 +716,21 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
       }
 
       // Query loaded modules for object status
-      for(i = 0; i < g_dwNumModules; i++)
-	   {
-		   if (g_pModuleList[i].pfCalculateObjectStatus != NULL)
-		   {
-			   int moduleStatus = g_pModuleList[i].pfCalculateObjectStatus(this);
-            if (moduleStatus != STATUS_UNKNOWN)
+      ENUMERATE_MODULES(pfCalculateObjectStatus)
+      {
+	      int moduleStatus = g_pModuleList[__i].pfCalculateObjectStatus(this);
+         if (moduleStatus != STATUS_UNKNOWN)
+         {
+            if (m_iStatus == STATUS_UNKNOWN)
             {
-               if (m_iStatus == STATUS_UNKNOWN)
-               {
-                  m_iStatus = moduleStatus;
-               }
-               else
-               {
-                  m_iStatus = max(m_iStatus, moduleStatus);
-               }
+               m_iStatus = moduleStatus;
             }
-		   }
-	   }
+            else
+            {
+               m_iStatus = max(m_iStatus, moduleStatus);
+            }
+         }
+      }
 
       UnlockData();
 

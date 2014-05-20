@@ -319,15 +319,18 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
          UINT32 i;
 
          // Pass trap to loaded modules
-         for(i = 0; i < g_dwNumModules; i++)
+         if (!(g_dwFlags & AF_SHUTDOWN))
          {
-            if (g_pModuleList[i].pfTrapHandler != NULL)
+            for(i = 0; i < g_dwNumModules; i++)
             {
-               if (g_pModuleList[i].pfTrapHandler(pdu, pNode))
-				   {
-					   processed = TRUE;
-                  break;   // Trap was processed by the module
-				   }
+               if (g_pModuleList[i].pfTrapHandler != NULL)
+               {
+                  if (g_pModuleList[i].pfTrapHandler(pdu, pNode))
+				      {
+					      processed = TRUE;
+                     break;   // Trap was processed by the module
+				      }
+               }
             }
          }
 

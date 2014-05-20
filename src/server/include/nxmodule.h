@@ -75,6 +75,22 @@ typedef struct
 } NXMODULE;
 
 /**
+ * Enumerate all modules where given entry point available
+ */
+#define ENUMERATE_MODULES(e) if (!(g_dwFlags & AF_SHUTDOWN)) \
+   for(UINT32 __i = 0; __i < g_dwNumModules; __i++) \
+      if (g_pModuleList[__i]. e != NULL)
+
+/**
+ * Call module entry point for all loaded modules
+ */
+#define CALL_ALL_MODULES(e, p) if (!(g_dwFlags & AF_SHUTDOWN)) { \
+   for(UINT32 __i = 0; __i < g_dwNumModules; __i++) { \
+      if (g_pModuleList[__i]. e != NULL) { g_pModuleList[__i]. e p; } \
+   } \
+}
+
+/**
  * Functions
  */
 bool LoadNetXMSModules();

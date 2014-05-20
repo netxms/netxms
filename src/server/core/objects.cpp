@@ -458,11 +458,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 	// Notify modules about object creation
 	if (bNewObject)
 	{
-		for(UINT32 i = 0; i < g_dwNumModules; i++)
-		{
-			if (g_pModuleList[i].pfPostObjectCreate != NULL)
-				g_pModuleList[i].pfPostObjectCreate(pObject);
-		}
+      CALL_ALL_MODULES(pfPostObjectCreate, (pObject));
 	}
 }
 
@@ -1675,11 +1671,7 @@ BOOL LoadObjects()
    }
 
 	// Load custom object classes provided by modules
-   for(i = 0; i < g_dwNumModules; i++)
-	{
-		if (g_pModuleList[i].pfLoadObjects != NULL)
-			g_pModuleList[i].pfLoadObjects();
-	}
+   CALL_ALL_MODULES(pfLoadObjects, ());
 
    // Link childs to container and template group objects
    DbgPrintf(2, _T("Linking objects..."));
@@ -1694,11 +1686,7 @@ BOOL LoadObjects()
 	g_pBusinessServiceRoot->LinkChildObjects();
 
 	// Link custom object classes provided by modules
-   for(i = 0; i < g_dwNumModules; i++)
-	{
-		if (g_pModuleList[i].pfLinkObjects != NULL)
-			g_pModuleList[i].pfLinkObjects();
-	}
+   CALL_ALL_MODULES(pfLinkObjects, ());
 
    // Allow objects to change it's modification flag
    g_bModificationsLocked = FALSE;
