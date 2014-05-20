@@ -69,6 +69,7 @@ typedef struct
 	BOOL (* pfAcceptNewNode)(UINT32 ipAddr, UINT32 ipNetMask, UINT32 zoneId, BYTE *macAddr);
 	UINT32 (* pfValidateObjectCreation)(int objectClass, const TCHAR *name, UINT32 ipAddr, UINT32 zoneId, CSCPMessage *request);
    UINT32 (* pfAdditionalLoginCheck)(UINT32 userId, CSCPMessage *request);
+   void (* pfClientSessionClose)(ClientSession *session);
    NXCORE_LOG *logs;
    HMODULE hModule;
 } NXMODULE;

@@ -566,7 +566,19 @@ void ClientSession::readThread()
       } while(m_dwRefCount > 0);
    }
 
-	WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0, _T("User logged out (client: %s)"), m_szClientInfo);
+   if (m_dwFlags & CSF_AUTHENTICATED)
+   {
+      // Notify loaded modules about session closure
+      for(i = 0; i < g_dwNumModules; i++)
+		{
+			if (g_pModuleList[i].pfClientSessionClose != NULL)
+			{
+				g_pModuleList[i].pfClientSessionClose(this);
+			}
+		}
+
+	   WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0, _T("User logged out (client: %s)"), m_szClientInfo);
+   }
    debugPrintf(3, _T("Session closed"));
 }
 
