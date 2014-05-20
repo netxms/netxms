@@ -991,29 +991,25 @@ CREATE TABLE agent_pkg
 	PRIMARY KEY(pkg_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Object tools
 */
-
 CREATE TABLE object_tools
 (
 	tool_id integer not null,
-	tool_name varchar(255) not null,
+	tool_name varchar(255) null,
 	tool_type integer not null,
-	tool_data SQL_TEXT not null,
-	description varchar(255) not null,
+	tool_data SQL_TEXT null,
+	description varchar(255) null,
 	flags integer not null,
-	matching_oid varchar(255) not null,
-	confirmation_text varchar(255) not null,
+	matching_oid varchar(255) null,
+	confirmation_text varchar(255) null,
 	PRIMARY KEY(tool_id)
 ) TABLE_TYPE;
-
 
 /*
 ** Access list for object tools
 */
-
 CREATE TABLE object_tools_acl
 (
 	tool_id integer not null,
@@ -1021,17 +1017,15 @@ CREATE TABLE object_tools_acl
 	PRIMARY KEY(tool_id,user_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Configuration of columns for SNMP_TABLE and AGENT_TABLE type of object tools
 */
-
 CREATE TABLE object_tools_table_columns
 (
 	tool_id integer not null,
 	col_number integer not null,
-	col_name varchar(255),
-	col_oid varchar(255),
+	col_name varchar(255) null,
+	col_oid varchar(255) null,
 	col_format integer,	// Column format (integer, string, etc.)
 	col_substr integer,	// Number of matching substring in regexp
 	PRIMARY KEY(tool_id,col_number)

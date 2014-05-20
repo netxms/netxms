@@ -480,6 +480,12 @@ static BOOL H_UpgradeFromV313(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV312(int currVersion, int newVersion)
 {
+   CHK_EXEC(SetColumnNullable(_T("object_tools"), _T("tool_name")));
+   CHK_EXEC(SetColumnNullable(_T("object_tools"), _T("tool_data")));
+   CHK_EXEC(SetColumnNullable(_T("object_tools"), _T("description")));
+   CHK_EXEC(SetColumnNullable(_T("object_tools"), _T("confirmation_text")));
+   CHK_EXEC(SetColumnNullable(_T("object_tools"), _T("matching_oid")));
+   CHK_EXEC(SetColumnNullable(_T("object_tools_table_columns"), _T("col_name")));
    CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("tool_name")));
    CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("tool_data")));
    CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("description")));

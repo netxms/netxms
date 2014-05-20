@@ -201,11 +201,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       CorrelateEvent(pEvent);
 
 		// Pass event to modules
-      for(UINT32 i = 0; i < g_dwNumModules; i++)
-		{
-			if (g_pModuleList[i].pfEventHandler != NULL)
-				g_pModuleList[i].pfEventHandler(pEvent);
-		}
+      CALL_ALL_MODULES(pfEventHandler, (pEvent));
 
       // Send event to all connected clients
       EnumerateClientSessions(BroadcastEvent, pEvent);
