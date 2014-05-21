@@ -187,6 +187,24 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int 
 }
 
 /**
+ * Read integer value from metadata table
+ */
+INT32 NXCORE_EXPORTABLE MetaDataReadInt(const TCHAR *var, UINT32 defaultValue)
+{
+   TCHAR buffer[256];
+   if (MetaDataReadStr(var, buffer, 256, _T("")))
+   {
+      TCHAR *eptr;
+      INT32 value = _tcstol(buffer, &eptr, 0);
+      return (*eptr == 0) ? value : defaultValue;
+   }
+   else
+   {
+      return defaultValue;
+   }
+}
+
+/**
  * Config cache
  */
 static StringMap s_configCache;

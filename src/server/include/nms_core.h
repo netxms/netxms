@@ -776,6 +776,7 @@ bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, boo
 bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *name);
 
 bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
+INT32 NXCORE_EXPORTABLE MetaDataReadInt(const TCHAR *var, UINT32 defaultValue);
 
 bool NXCORE_EXPORTABLE LoadConfig();
 

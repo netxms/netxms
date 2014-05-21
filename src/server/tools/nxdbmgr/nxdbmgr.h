@@ -39,10 +39,9 @@
 #define SQL_TYPE_TEXT4K    1
 #define SQL_TYPE_INT64     2
 
-//
-// Execute with error check
-//
-
+/**
+ * Execute with error check
+ */
 #define CHK_EXEC(x) do { if (!(x)) if (!g_bIgnoreErrors) return FALSE; } while (0)
 
 
