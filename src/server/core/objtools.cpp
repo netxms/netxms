@@ -713,8 +713,7 @@ UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg)
    BYTE *imageData = pMsg->getBinaryFieldPtr(VID_IMAGE_DATA, &size);
    if (size > 0)
    {
-      pMsg->GetVariableBinary(VID_IMAGE_DATA, imageData, (UINT32)size);
-      TCHAR *imageHexData = (TCHAR *)malloc((size + 1) * sizeof(TCHAR));
+      TCHAR *imageHexData = (TCHAR *)malloc((size * 2 + 1) * sizeof(TCHAR));
       BinToStr(imageData, size, imageHexData);
       DBBind(statment, bindID++, DB_SQLTYPE_TEXT, imageHexData, DB_BIND_DYNAMIC);
    }
@@ -734,7 +733,7 @@ UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg)
    statment = DBPrepare(hdb, _T("DELETE FROM object_tools_acl WHERE tool_id=?"));
    if (statment == NULL)
       return ReturnDBFailure(hdb, statment);
-   DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, dwToolId);
+   DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
    if(!DBExecute(statment))
       return ReturnDBFailure(hdb, statment);
    DBFreeStatement(statment);
@@ -761,7 +760,7 @@ UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg)
    statment = DBPrepare(hdb, _T("DELETE FROM object_tools_table_columns WHERE tool_id=?"));
    if (statment == NULL)
       return ReturnDBFailure(hdb, statment);
-   DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, dwToolId);
+   DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
 
    if(!DBExecute(statment))
       return ReturnDBFailure(hdb, statment);
