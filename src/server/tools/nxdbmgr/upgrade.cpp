@@ -360,6 +360,33 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+* Upgrade from V319 to V320
+ */
+static BOOL H_UpgradeFromV319(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("LdapConnectionString"), _T("ldaps://localhost:636 ldaps://127.0.0.1:636 ldap://localhost:389 ldap://127.0.0.1:389"), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("LdapSyncUser"), _T(""), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("LdapSyncUserPassword"), _T(""), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("LdapSearchBase"), _T(""), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("LdapSearchFilter"), _T(""), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("LdapUserDeleteAction"), _T("1"), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("LdapMappingName"), _T("uid"), 0, 1));
+   CHK_EXEC(CreateConfigParam(_T("LdapMappingFullName"), _T("displayName"), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("LdapMappingFullDescription"), _T(""), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("LdapGroupClass"), _T(""), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("LdapUserClass"), _T(""), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("LdapSyncInterval"), _T("0"), 1, 0));
+
+   static TCHAR batch[] =
+      _T("ALTER TABLE users ADD ldap_dn $SQL:TEXT\n")
+      _T("ALTER TABLE user_groups ADD ldap_dn $SQL:TEXT\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='320' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+/*
  * Upgrade from V318 to V319
  */
 static BOOL H_UpgradeFromV318(int currVersion, int newVersion)
@@ -7721,6 +7748,7 @@ static struct
    { 316, 317, H_UpgradeFromV316 },
    { 317, 318, H_UpgradeFromV317 },
    { 318, 319, H_UpgradeFromV318 },
+   { 319, 320, H_UpgradeFromV319 },
    { 0, 0, NULL }
 };
 

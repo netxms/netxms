@@ -1398,10 +1398,20 @@ if test "x$HAVE_LIBCURL" = "xyes"; then
 #endif
 ])
 fi
+
 if test "x$HAVE_LIBCURL" = "xyes"; then
   SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
   SMSDRV_DIRS="$SMSDRV_DIRS websms"
   HDLINK_DIRS="$HDLINK_DIRS jira"
+fi
+
+AC_CHECK_HEADER(ldap.h,HAVE_LDAP=yes,HAVE_LDAP=no)
+if test "x$HAVE_LDAP" = "xyes"; then
+	AC_CHECK_LIB(ldap, ldap_init, [ HAVE_LDAP=yes ], [ HAVE_LDAP=no ])
+	if test "x$HAVE_LDAP" = "xyes"; then
+		SERVER_LIBS="-lldap $SERVER_LIBS"   
+		AC_DEFINE(INCLUDE_LDAP, 1, Define to 1 if you have LDAP librarys and LDAP headers)
+	fi
 fi
 
 #--------------------------------------------------------------------

@@ -41,6 +41,8 @@ public abstract class AbstractUserObject
 	public static final int CANNOT_CHANGE_PASSWORD = 0x0010;
 	public static final int INTRUDER_LOCKOUT = 0x0020;
 	public static final int PASSWORD_NEVER_EXPIRES = 0x0040;
+   public static final int LDAP_USER = 0x0080;
+   public static final int SYNC_EXCEPTION = 0x0100;
 	
 	protected long id;
 	protected String name;

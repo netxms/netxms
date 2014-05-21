@@ -71,8 +71,8 @@ public class UserAdapterFactory implements IAdapterFactory
 
 					@Override
 					public ImageDescriptor getImageDescriptor(Object object)
-					{
-						return Activator.getImageDescriptor("icons/user.png"); //$NON-NLS-1$
+					{					   
+						return (((User)object).getFlags() & (User.DISABLED | User.SYNC_EXCEPTION)) > 0 ? Activator.getImageDescriptor("icons/stop.png") : Activator.getImageDescriptor("icons/user.png"); //$NON-NLS-1$
 					}
 
 					@Override
@@ -106,7 +106,7 @@ public class UserAdapterFactory implements IAdapterFactory
 					@Override
 					public ImageDescriptor getImageDescriptor(Object object)
 					{
-						return Activator.getImageDescriptor("icons/group.png"); //$NON-NLS-1$
+						return (((UserGroup)object).getFlags() & (User.DISABLED | User.SYNC_EXCEPTION)) > 0 ? Activator.getImageDescriptor("icons/stop.png") : Activator.getImageDescriptor("icons/group.png"); //$NON-NLS-1$
 					}
 
 					@Override

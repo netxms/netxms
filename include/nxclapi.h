@@ -534,6 +534,7 @@ enum
 #define RCC_HDLINK_COMM_FAILURE      ((UINT32)109)
 #define RCC_HDLINK_ACCESS_DENIED     ((UINT32)110)
 #define RCC_HDLINK_INTERNAL_ERROR    ((UINT32)111)
+#define RCC_NO_LDAP_CONNECTION       ((UINT32)112)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -660,6 +661,8 @@ enum
 #define UF_CANNOT_CHANGE_PASSWORD   0x0010
 #define UF_INTRUDER_LOCKOUT         0x0020
 #define UF_PASSWORD_NEVER_EXPIRES   0x0040
+#define UF_LDAP_USER                0x0080
+#define UF_SYNC_EXCEPTION           0x0100
 
 /**
  * Fields for NXCModifyUserEx

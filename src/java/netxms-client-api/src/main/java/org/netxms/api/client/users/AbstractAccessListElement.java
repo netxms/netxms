@@ -73,6 +73,8 @@ public abstract class AbstractAccessListElement
 	{
 		return accessRights;
 	}
+	
+	
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)

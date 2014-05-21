@@ -87,6 +87,9 @@ public class UserManagementView extends ViewPart
 	private Action actionEditUser;
 	private Action actionDeleteUser;
 	private Action actionChangePassword;
+	private Action actionEnable;
+	private Action actionDisable;
+	private Action actionDetachUserFromLDAP;
 	private RefreshAction actionRefresh;
 
 	/* (non-Javadoc)
@@ -311,6 +314,33 @@ public class UserManagementView extends ViewPart
 		actionChangePassword.setText(Messages.get().UserManagementView_ChangePassword);
 		actionChangePassword.setImageDescriptor(Activator.getImageDescriptor("icons/change_password.png")); //$NON-NLS-1$
 		actionChangePassword.setEnabled(false);
+		
+		actionEnable = new Action() {
+         @Override
+         public void run()
+         {
+            enableUser();
+         }
+      };      
+      actionEnable.setText("Enable");
+    
+      actionDisable = new Action() {
+         @Override
+         public void run()
+         {
+            disableUser();
+         }
+      };
+      actionDisable.setText("Disable");
+      
+      actionDetachUserFromLDAP = new Action() {
+         @Override
+         public void run()
+         {
+            detachLDAPUser();
+         }
+      };
+      actionDetachUserFromLDAP.setText("Detach user from LDAP");
 	}
 
 	/**
@@ -344,10 +374,29 @@ public class UserManagementView extends ViewPart
 	 */
 	protected void fillContextMenu(final IMenuManager mgr)
 	{
+	   final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+	   boolean containDisabled = false;
+	   boolean containEnabled = false;
+	   boolean containLDAP = false;
+      for(Object object : selection.toList())
+      {
+         if( (((AbstractUserObject)object).getFlags() & AbstractUserObject.DISABLED) > 0 )
+            containDisabled = true;
+         if( (((AbstractUserObject)object).getFlags() & AbstractUserObject.DISABLED) == 0 )
+            containEnabled = true;
+         if( (((AbstractUserObject)object).getFlags() & AbstractUserObject.LDAP_USER) > 0 )
+            containLDAP = true;
+      }
+      if(containDisabled)
+         mgr.add(actionEnable);
+      if(containEnabled)
+         mgr.add(actionDisable);
+      if(containLDAP)
+         mgr.add(actionDetachUserFromLDAP);
+      
 		mgr.add(actionAddUser);
 		mgr.add(actionAddGroup);
 
-		final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 		final Object firstElement = selection.getFirstElement();
 		if (firstElement instanceof User)
 		{
@@ -478,4 +527,83 @@ public class UserManagementView extends ViewPart
 			}
 		}.start();
 	}
+	
+	/**
+    * Enable user/group
+    */
+   private void enableUser()
+   {
+      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+
+      new ConsoleJob(Messages.get().UserManagementView_DeleteJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            for(Object object : selection.toList())
+            {
+               ((AbstractUserObject)object).setFlags(((AbstractUserObject)object).getFlags() & ~AbstractUserObject.DISABLED);
+               userManager.modifyUserDBObject(((AbstractUserObject)object), UserManager.USER_MODIFY_FLAGS);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Error while enable";
+         }
+      }.start();
+   }
+   
+   /**
+    * Disable user/group
+    */
+   private void disableUser()
+   {
+      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+
+      new ConsoleJob(Messages.get().UserManagementView_DeleteJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            for(Object object : selection.toList())
+            {
+               ((AbstractUserObject)object).setFlags(((AbstractUserObject)object).getFlags() | AbstractUserObject.DISABLED);
+               userManager.modifyUserDBObject(((AbstractUserObject)object), UserManager.USER_MODIFY_FLAGS);
+            }
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Error while disable";
+         }
+      }.start();
+   }
+   
+   /**
+    * Set user/group to non LDAP 
+    */
+   private void detachLDAPUser()
+   {
+      final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+
+      new ConsoleJob(Messages.get().UserManagementView_DeleteJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            for(Object object : selection.toList())
+            {                
+               ((AbstractUserObject)object).setFlags(((AbstractUserObject)object).getFlags() & ~AbstractUserObject.LDAP_USER);
+               userManager.modifyUserDBObject(((AbstractUserObject)object), UserManager.USER_MODIFY_FLAGS);
+            }
+            
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Error while detaching LDAP User";
+         }
+      }.start();
+   }
 }

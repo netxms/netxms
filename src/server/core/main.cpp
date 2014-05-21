@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 NetXMS Team
 **
@@ -754,7 +754,7 @@ retry_db_lock:
 	if (!LoadObjects())
 		return FALSE;
 	DbgPrintf(1, _T("Objects loaded and initialized"));
-	
+
 	// Initialize situations
 	if (!SituationsInit())
 		return FALSE;
@@ -832,6 +832,10 @@ retry_db_lock:
 	// Start reporting server connector
 	if (ConfigReadInt(_T("EnableReportingServer"), 0))
 		ThreadCreate(ReportingServerConnector, 0, NULL);
+
+   //Start ldap synchronization
+   if (ConfigReadInt(_T("LdapSyncInterval"), 0))
+		ThreadCreate(SyncLDAPUsers, 0, NULL);
 
 	// Allow clients to connect
 	InitClientListeners();
@@ -1529,7 +1533,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 
          NXSL_VM *vm = new NXSL_VM(pEnv);
          if (vm->load(compiledScript))
-         {	
+         {
             if (libraryLocked)
             {
       			g_pScriptLibrary->unlock();
@@ -1639,6 +1643,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node id(s)\n\n"));
 		}
 	}
+   else if (IsCommand(_T("LDAPSYNC"), szBuffer, 4))
+   {
+      LDAPConnection conn;
+      conn.syncUsers();
+   }
 	else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))
 	{
 		ConsolePrintf(pCtx, _T("Valid commands are:\n")
@@ -1648,6 +1657,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   exit                      - Exit from remote session\n")
 				_T("   get <variable>            - Get value of server configuration variable\n")
 				_T("   help                      - Display this help\n")
+				_T("   ldapsync                  - Synchronize ldap users with local user database\n")
 				_T("   raise <exception>         - Raise exception\n")
 				_T("   set <variable> <value>    - Set value of server configuration variable\n")
 				_T("   show components <node>    - Show physical components of given node\n")
@@ -1668,7 +1678,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("\nAlmost all commands can be abbreviated to 2 or 3 characters\n")
 				_T("\n"));
 	}
-	else
+   else
 	{
 		ConsolePrintf(pCtx, _T("UNKNOWN COMMAND\n\n"));
 	}

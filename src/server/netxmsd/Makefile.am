@@ -10,7 +10,7 @@ netxmsd_LDADD = \
 	../../libnxlp/libnxlp.la \
 	../../db/libnxdb/libnxdb.la \
 	../../libnetxms/libnetxms.la \
-	@SERVER_LIBS@
+   @SERVER_LIBS@
 
 EXTRA_DIST = \
 	netxmsd.vcproj \

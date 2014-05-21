@@ -65,6 +65,7 @@ CREATE TABLE users
 	last_login integer not null,
 	password_history SQL_TEXT null,
    xmpp_id varchar(127) null,
+   ldap_dn SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -81,6 +82,7 @@ CREATE TABLE user_groups
 	system_access integer not null,
 	flags integer not null,
 	description varchar(255) not null,
+   ldap_dn SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

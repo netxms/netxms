@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.usermanager.propertypages;
 
 import java.util.HashMap;
 import java.util.Iterator;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
