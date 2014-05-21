@@ -507,7 +507,7 @@ void NXCORE_EXPORTABLE UpdateLDAPUsers(const TCHAR* dn, Entry *obj)
    bool userModified = false;
    for(int i = 0; i < m_userCount; i++)
    {
-		if (!(m_users[i]->getId() & GROUP_FLAG) && m_users[i]->isLDAPUser() && !_tcscmp(m_users[i]->getDn(), dn))
+		if (!(m_users[i]->getId() & GROUP_FLAG) && m_users[i]->isLDAPUser() && !_tcscmp(CHECK_NULL_EX(m_users[i]->getDn()), dn))
 		{
          User* user = (User *)m_users[i];
          if (!user->isDeleted())
@@ -575,7 +575,7 @@ void RemoveDeletedLDAPEntry(StringObjectMap<Entry>* entryList, UINT32 m_action, 
          checkType = !(m_users[i]->getId() & GROUP_FLAG);
       else
          checkType = (m_users[i]->getId() & GROUP_FLAG) ;
-      if (checkType && (m_users[i]->isLDAPUser() && !m_users[i]->isDeleted()))
+      if (checkType && m_users[i]->isLDAPUser() && !m_users[i]->isDeleted())
 		{
          if(entryList->get(m_users[i]->getDn()) == NULL)
          {
@@ -602,7 +602,7 @@ void NXCORE_EXPORTABLE UpdateLDAPGroups(const TCHAR* dn, Entry *obj) //no full n
    bool userModified = false;
    for(int i = 0; i < m_userCount; i++)
    {
-		if ((m_users[i]->getId() & GROUP_FLAG) && m_users[i]->isLDAPUser() && !_tcscmp(m_users[i]->getDn(), dn))
+		if ((m_users[i]->getId() & GROUP_FLAG) && m_users[i]->isLDAPUser() && !_tcscmp(CHECK_NULL_EX(m_users[i]->getDn()), dn))
 		{
          Group* group = (Group *)m_users[i];
          if(!group->isDeleted())
@@ -678,7 +678,7 @@ void SyncGroupMembers(Group* group, Entry *obj)
          bool found = false;
          for(j = 0; j < newMembers->getSize(); j++)
          {
-            if(!_tcscmp(newMembers->getValue(j), user->getDn()))
+            if(!_tcscmp(newMembers->getValue(j), CHECK_NULL_EX(user->getDn())))
             {
                found = true;
                break;
