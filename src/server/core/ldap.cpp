@@ -79,7 +79,7 @@ void LDAPConnection::getAllSyncParameters()
    m_action = ConfigReadInt(_T("LdapUserDeleteAction"), 1); //default value - to disable user(value=1)
    ConfigReadStrUTF8(_T("LdapMappingName"), m_ldapLoginNameAttr, MAX_DB_STRING, (""));
    ConfigReadStrUTF8(_T("LdapMappingFullName"), m_ldapFullNameAttr, MAX_DB_STRING, (""));
-   ConfigReadStrUTF8(_T("LdapMappingFullDescription"), m_ldapDescriptionAttr, MAX_DB_STRING, (""));
+   ConfigReadStrUTF8(_T("LdapMappingDescription"), m_ldapDescriptionAttr, MAX_DB_STRING, (""));
    ConfigReadStr(_T("LdapGroupClass"), m_groupClass, MAX_DB_STRING, _T(""));
    ConfigReadStr(_T("LdapUserClass"), m_userClass, MAX_DB_STRING, _T(""));
 }
