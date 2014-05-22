@@ -147,6 +147,9 @@ void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 	if (fields & USER_MODIFY_FLAGS)
 	{
 	   flags = msg->GetVariableShort(VID_USER_FLAGS);
+	   //Null dn if user is detached from LDAP
+      if((m_flags & UF_LDAP_USER) && !(flags & UF_LDAP_USER))
+         setDn(NULL);
 		// Modify only UF_DISABLED, UF_CHANGE_PASSWORD, UF_CANNOT_CHANGE_PASSWORD and UF_LDAP_USER flags from message
 		// Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
 		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_LDAP_USER);
@@ -154,6 +157,7 @@ void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 			m_flags |= flags & UF_CHANGE_PASSWORD;
 		else
 			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_LDAP_USER);
+
 	}
 
 	m_flags |= UF_MODIFIED;
