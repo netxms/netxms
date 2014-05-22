@@ -101,7 +101,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %type <valInt32> ParameterList
 %type <pInstruction> SimpleStatementKeyword
 
-%destructor { free ($$); } <valStr>
+%destructor { safe_free($$); } <valStr>
 %destructor { delete $$; } <pConstant>
 %destructor { delete $$; } <pInstruction>
 
@@ -182,10 +182,10 @@ ConstDefinition:
 	if (!pScript->addConstant($1, $3))
 	{
 		pCompiler->error("Constant already defined");
-		delete $3;
+		delete_and_null($3);
 		YYERROR;
 	}
-	free($1);
+	safe_free_and_null($1);
 }
 ;
 
@@ -193,6 +193,7 @@ UseStatement:
 	T_USE AnyIdentifier ';'
 {
 	pScript->addRequiredModule($2);
+	$2 = NULL;
 }
 ;
 
@@ -213,7 +214,7 @@ Function:
 			pCompiler->error(szErrorText);
 			YYERROR;
 		}
-		free($2);
+		safe_free_and_null($2);
 		pCompiler->setIdentifierOperation(OPCODE_BIND);
 	}
 	ParameterDeclaration Block
@@ -718,7 +719,7 @@ ForEachStatement:
 	T_FOREACH '(' T_IDENTIFIER 
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value($3)));
-	free($3);
+	safe_free_and_null($3);
 }
 	':' Expression ')'
 {
@@ -874,7 +875,7 @@ Constant:
 	T_STRING
 {
 	$$ = new NXSL_Value($1);
-	free($1);
+	safe_free_and_null($1);
 }
 |	T_INT32
 {
