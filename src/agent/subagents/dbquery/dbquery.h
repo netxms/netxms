@@ -38,7 +38,7 @@ class Query
 {
 private:
    MUTEX m_mutex;
-   THREAD m_pollingThread;
+   THREAD m_pollerThread;
    TCHAR *m_name;
    TCHAR *m_dbid;
    TCHAR *m_query;
@@ -65,7 +65,8 @@ public:
 
    time_t getNextPoll() { return m_lastPoll + m_interval; }
    void poll();
-   void joinPollingThread() { ThreadJoin(m_pollingThread); }
+   void startPollerThread();
+   void joinPollerThread() { if (m_pollerThread != INVALID_THREAD_HANDLE) ThreadJoin(m_pollerThread); }
 
    LONG getResult(TCHAR *buffer);
    LONG fillResultTable(Table *table);
