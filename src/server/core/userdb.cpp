@@ -584,7 +584,7 @@ void RemoveDeletedLDAPEntry(StringObjectMap<Entry>* entryList, UINT32 m_action, 
             if(m_action == USER_DISABLE)
             {
                m_users[i]->disable();
-               m_users[i]->setDescription(_T("RemoveDeletedLDAPEntry(): LDAP entry was deleted."));
+               m_users[i]->setDescription(_T("LDAP entry was deleted."));
             }
             DbgPrintf(4, _T("RemoveDeletedLDAPEntry(): Ldap %s entry was removed form DB."), m_users[i]->getDn());
          }
