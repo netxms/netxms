@@ -128,19 +128,19 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
                AgentWriteDebugLog(5, _T("Check service: all prepared"));
                if (curl_easy_perform(curl) == 0)
                {
-                  AgentWriteDebugLog(6, _T("Check service: got reply: %d bytes"), data->size);
+                  AgentWriteDebugLog(6, _T("Check service: got reply: %lu bytes"), data->size);
                   if (data->allocated > 0)
                   {
                      data->data[data->size] = 0;
                      AgentWriteDebugLog(9, _T("Check service: data=%hs"), data->data);
                      if (tre_regexec(&compiledPattern, data->data, 0, NULL, 0) == 0)
                      {
-                        AgentWriteDebugLog(5, _T("Check service: matched"), data->size);
+                        AgentWriteDebugLog(5, _T("Check service: matched"));
                         retCode = PC_ERR_NONE;
                      }
                      else
                      {
-                        AgentWriteDebugLog(5, _T("Check service: not matched"), data->size);
+                        AgentWriteDebugLog(5, _T("Check service: not matched"));
                         retCode = PC_ERR_NOMATCH;
                      }
                      // do matching
