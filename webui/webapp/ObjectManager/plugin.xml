@@ -86,9 +86,23 @@
            name="%page.name.TrustedNodes"
 	       class="org.netxms.ui.eclipse.objectmanager.propertypages.TrustedNodes">
           <enabledWhen>
-             <instanceof
-                  value="org.netxms.client.objects.Node">
-             </instanceof>
+             <or>
+                <instanceof
+                      value="org.netxms.client.objects.Node">
+                </instanceof>
+                <instanceof
+                      value="org.netxms.client.objects.Subnet">
+                </instanceof>
+                <instanceof
+                      value="org.netxms.client.objects.Container">
+                </instanceof>
+                <instanceof
+                      value="org.netxms.client.objects.Cluster">
+                </instanceof>
+                <instanceof
+                      value="org.netxms.client.objects.ServiceRoot">
+                </instanceof>
+             </or>
           </enabledWhen>
         </page>
         <page
