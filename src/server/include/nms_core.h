@@ -692,6 +692,7 @@ public:
    const TCHAR *getWebServerAddress() { return m_webServerAddress; }
    UINT32 getUserId() { return m_dwUserId; }
 	UINT32 getSystemRights() { return m_dwSystemAccess; }
+   UINT32 getFlags() { return m_dwFlags; }
    bool isAuthenticated() { return (m_dwFlags & CSF_AUTHENTICATED) ? true : false; }
    bool isConsoleOpen() { return (m_dwFlags & CSF_CONSOLE_OPEN) ? true : false; }
    bool isSubscribed(UINT32 dwChannel) { return (m_dwActiveChannels & dwChannel) ? true : false; }
@@ -704,6 +705,14 @@ public:
    {
       return (m_dwUserId == 0) ? true :
          ((requiredAccess & m_dwSystemAccess) == requiredAccess);
+   }
+
+   void setCustomLock(UINT32 bit, bool value)
+   {
+      if (value)
+         m_dwFlags |= (bit & 0xFF000000);
+      else
+         m_dwFlags &= ~(bit & 0xFF000000);
    }
 
    void kill();
