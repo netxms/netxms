@@ -30,11 +30,9 @@
 #define MAX_OWNER_INFO     256
 #define NUMBER_OF_LOCKS    7
 
-
-//
-// Lock structure
-//
-
+/**
+ * Lock information structure
+ */
 struct LOCK_INFO
 {
    UINT32 dwLockStatus;
@@ -59,12 +57,10 @@ static LOCK_INFO m_locks[NUMBER_OF_LOCKS] =
    { UNLOCKED, _T("deprecated: Object Tools Configuration"), _T("") }
 };
 
-
-//
-// Lock entire database and clear all other locks
-// Will return FALSE if someone already locked database
-//
-
+/**
+ * Lock entire database and clear all other locks
+ * Will return FALSE if someone already locked database
+ */
 BOOL InitLocks(UINT32 *pdwIpAddr, TCHAR *pszInfo)
 {
    BOOL bSuccess = FALSE;
@@ -98,11 +94,9 @@ BOOL InitLocks(UINT32 *pdwIpAddr, TCHAR *pszInfo)
    return bSuccess;
 }
 
-
-//
-// Unlock database
-//
-
+/**
+ * Unlock database
+ */
 void NXCORE_EXPORTABLE UnlockDB()
 {
    ConfigWriteStr(_T("DBLockStatus"), _T("UNLOCKED"), FALSE);
@@ -110,16 +104,13 @@ void NXCORE_EXPORTABLE UnlockDB()
    ConfigWriteULong(_T("DBLockPID"), 0, FALSE);
 }
 
-
-//
-// Lock component
-// Function will try to lock specified component. On success, will return TRUE.
-// On failure, will return FALSE and pdwCurrentOwner will be set to the value of lock_status
-// field, and pszCurrentOwnerInfo will be filled with the value of  owner_info field.
-//
-
-BOOL LockComponent(UINT32 dwId, UINT32 dwLockBy, const TCHAR *pszOwnerInfo, 
-                   UINT32 *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo)
+/**
+ * Lock component
+ * Function will try to lock specified component. On success, will return TRUE.
+ * On failure, will return FALSE and pdwCurrentOwner will be set to the value of lock_status
+ * field, and pszCurrentOwnerInfo will be filled with the value of  owner_info field.
+ */
+BOOL LockComponent(UINT32 dwId, UINT32 dwLockBy, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo)
 {
    TCHAR szBuffer[256];
    BOOL bSuccess = FALSE;
@@ -160,11 +151,9 @@ BOOL LockComponent(UINT32 dwId, UINT32 dwLockBy, const TCHAR *pszOwnerInfo,
    return bSuccess;
 }
 
-
-//
-// Unlock component
-//
-
+/**
+ * Unlock component
+ */
 void UnlockComponent(UINT32 dwId)
 {
    MutexLock(m_hMutexLockerAccess);
@@ -174,11 +163,9 @@ void UnlockComponent(UINT32 dwId)
    DbgPrintf(5, _T("*Locks* Component \"%s\" unlocked"), m_locks[dwId].pszName);
 }
 
-
-//
-// Unlock all locks for specific session
-//
-
+/**
+ * Unlock all locks for specific session
+ */
 void RemoveAllSessionLocks(UINT32 dwSessionId)
 {
    UINT32 i;

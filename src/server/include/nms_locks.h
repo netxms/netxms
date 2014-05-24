@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_locks.h
+** File: nms_locks.h
 **
 **/
 
@@ -26,24 +26,25 @@
 
 #define UNLOCKED           ((UINT32)0xFFFFFFFF)
 
+/**
+ * Component identifiers used for locking
+ */
+enum LockComponents
+{
+   CID_EPP = 0,
+   CID_USER_DB = 1,
+   CID_PACKAGE_DB = 2,
+   CID_CUSTOM_1 = 3,
+   CID_CUSTOM_2 = 4,
+   CID_CUSTOM_3 = 5,
+   CID_CUSTOM_4 = 6,
+   CID_CUSTOM_5 = 7,
+   CID_CUSTOM_6 = 8,
+   CID_CUSTOM_7 = 9,
+   CID_CUSTOM_8 = 10
+};
 
-//
-// Component identifiers used for locking
-//
-
-#define CID_EPP               0
-#define CID_USER_DB           1
-//deprecated: #define CID_EVENT_DB          2
-//deprecated: #define CID_ACTION_DB         3
-//deprecated: #define CID_TRAP_CFG          4
-#define CID_PACKAGE_DB        5
-//deprecated: #define CID_OBJECT_TOOLS      6
-
-
-//
-// Functions
-//
-
+/*** Functions ***/
 #ifndef _NETXMS_DB_SCHEMA_
 
 BOOL InitLocks(UINT32 *pdwIpAddr, TCHAR *pszInfo);

@@ -621,6 +621,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ldap.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\lldp.cpp"
 				>
 			</File>
