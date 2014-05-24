@@ -20,13 +20,13 @@
 **
 **/
 
-#if INCLUDE_LDAP
+#if WITH_LDAP
 #include "ldap.h"
 #endif
-/**
- * LDAP integration
- */
 
+/**
+ * LDAP entry (object)
+ */
 class Entry
 {
 public:
@@ -35,14 +35,18 @@ public:
    TCHAR* m_fullName;
    TCHAR* m_description;
    StringList *m_memberList;
+
    Entry();
    ~Entry();
 };
 
+/**
+ * LDAP connector
+ */
 class LDAPConnection
 {
 private:
-#if INCLUDE_LDAP
+#if WITH_LDAP
    LDAP *m_ldapConn;
    char m_connList[MAX_DB_STRING]; //636
    char m_searchBase[MAX_DB_STRING];
@@ -55,18 +59,7 @@ private:
    char m_ldapLoginNameAttr[MAX_DB_STRING];
    char m_ldapDescriptionAttr[MAX_DB_STRING];
    int m_action;
-#endif
 
-public:
-   void syncUsers();
-   UINT32 ldapUserLogin(const TCHAR *name, const TCHAR *password);
-#if INCLUDE_LDAP
-   ~LDAPConnection();
-   LDAPConnection();
-#endif
-
-#if INCLUDE_LDAP
-private:
    void closeLDAPConnection();
    void initLDAP();
    UINT32 loginLDAP();
@@ -76,6 +69,15 @@ private:
    void compareUserLists(StringObjectMap<Entry>* userEntryList);
    TCHAR *getAttrValue(LDAPMessage *entry, const char *attr, int i = 0);
 #endif
+
+public:
+#if WITH_LDAP
+   LDAPConnection();
+   ~LDAPConnection();
+#endif
+
+   void syncUsers();
+   UINT32 ldapUserLogin(const TCHAR *name, const TCHAR *password);
 };
 
 #ifndef _nms_users_h_

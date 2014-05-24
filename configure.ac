@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.14], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.2.15], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -63,10 +63,6 @@ TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
 BUILD_UNICODE="no"
-ORACLE_LIBS=""
-PGSQL_LIBS=""
-MYSQL_LIBS=""
-ODBC_LIBS=""
 FORCE_INTERNAL_EXPAT="no"
 USE_INTERNAL_LIBTRE="no"
 FORCE_INTERNAL_LIBTRE="no"
@@ -82,6 +78,7 @@ SQLFLAGS=""
 RUNTIME_PREFIX=""
 HPUX_HPPA="no"
 XMPP_SUPPORT="yes"
+LDAP_SUPPORT="yes"
 
 
 #--------------------------------------------------------------------
@@ -238,9 +235,9 @@ AC_ARG_WITH(odbc,
 [AS_HELP_STRING(--with-odbc,build ODBC database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-		LDFLAGS="$LDFLAGS -L${withval}/lib"
-		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		ODBC_LD_RUN_PATH="${withval}/lib"   
+		ODBC_LDFLAGS="-L${withval}/lib"
+		ODBC_CPPFLAGS="-I${withval}/include"
 	fi
 	COMPONENTS="$COMPONENTS odbc"
 	DBDRIVER_SELECTED="yes"
@@ -251,17 +248,17 @@ AC_ARG_WITH(oracle,
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 		if test -x "$withval/lib" ; then
-			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-			LDFLAGS="$LDFLAGS -L${withval}/lib"
+			ORACLE_LD_RUN_PATH="${withval}/lib"   
+			ORACLE_LDFLAGS="-L${withval}/lib"
 		else
-			LD_RUN_PATH="${withval}${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-			LDFLAGS="$LDFLAGS -L${withval}"
+			ORACLE_LD_RUN_PATH="${withval}"   
+			ORACLE_LDFLAGS="-L${withval}"
 		fi
 		if test -x "$withval/include" ; then
-			CPPFLAGS="$CPPFLAGS -I${withval}/include"
+			ORACLE_CPPFLAGS="-I${withval}/include"
 		fi
 		if test -x "$withval/sdk/include" ; then
-			CPPFLAGS="$CPPFLAGS -I${withval}/sdk/include"
+			ORACLE_CPPFLAGS="-I${withval}/sdk/include"
 		fi
 	fi
 	COMPONENTS="$COMPONENTS oracle"
@@ -388,6 +385,12 @@ AC_ARG_ENABLE(xmpp,
 [AS_HELP_STRING(--disable-xmpp,disable XMPP support)],
 [
 	XMPP_SUPPORT="no"
+])
+
+AC_ARG_ENABLE(ldap,
+[AS_HELP_STRING(--disable-ldap,disable LDAP support)],
+[
+	LDAP_SUPPORT="no"
 ])
 
 AC_ARG_ENABLE(unicode,
@@ -1212,7 +1215,7 @@ fi
 if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
 	AC_CHECK_LIB(crypto, RSA_new,
 		[
-			AC_DEFINE(WITH_OPENSSL,,[with openssl])
+			AC_DEFINE(WITH_OPENSSL, 1, Define to 1 if you have OpenSSL library and headers)
 			AC_CHECK_LIB(crypto, EVP_aes_256_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
 			AC_CHECK_LIB(crypto, EVP_bf_cbc,
@@ -1405,13 +1408,16 @@ if test "x$HAVE_LIBCURL" = "xyes"; then
   HDLINK_DIRS="$HDLINK_DIRS jira"
 fi
 
-AC_CHECK_HEADER(ldap.h,HAVE_LDAP=yes,HAVE_LDAP=no)
-if test "x$HAVE_LDAP" = "xyes"; then
-	AC_CHECK_LIB(ldap, ldap_init, [ HAVE_LDAP=yes ], [ HAVE_LDAP=no ])
+if test "x$LDAP_SUPPORT" = "xyes"; then
+	AC_CHECK_HEADER(ldap.h,HAVE_LDAP=yes,HAVE_LDAP=no)
+	if test "x$HAVE_LDAP" = "xyes"; then
+		AC_CHECK_LIB(ldap, ldap_init, [ HAVE_LDAP=yes ], [ HAVE_LDAP=no ])
+	fi
 	if test "x$HAVE_LDAP" = "xyes"; then
 		SERVER_LIBS="-lldap $SERVER_LIBS"   
-		AC_DEFINE(INCLUDE_LDAP, 1, Define to 1 if you have LDAP librarys and LDAP headers)
+		AC_DEFINE(WITH_LDAP, 1, Define to 1 if you have LDAP libraries and headers)
 	fi
+	LDAP_SUPPORT="$HAVE_LDAP"
 fi
 
 #--------------------------------------------------------------------
@@ -2173,7 +2179,7 @@ if test $? = 0; then
 			}
 		]])],[AC_MSG_RESULT(yes)],[
 			AC_MSG_RESULT(no)
-			AC_MSG_ERROR(Your PostgreSQL client libraries aren't properly installed)
+			AC_MSG_ERROR(Your PostgreSQL client libraries are not properly installed)
 		],[])    
 	LIBS="$OLD_LIBS"
 	AC_CHECK_LIB(pq, PQfformat, [ AC_DEFINE(HAVE_PQFFORMAT, 1, PQfformat not exist in 7.3) ])
@@ -2186,12 +2192,26 @@ fi
 
 check_substr "$COMPONENTS" "odbc"
 if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LD_RUN_PATH="$LD_RUN_PATH"
+
+	CPPFLAGS="$CPPFLAGS $ODBC_CPPFLAGS"
+	LDFLAGS="$CPPFLAGS $ODBC_LDFLAGS"
+	if test "x$ODBC_LD_RUN_PATH" != "x"; then
+		LD_RUN_PATH="${ODBC_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+	fi
+
 	AC_CHECK_LIB(odbc, SQLAllocHandle, [ODBC_LIBS="-lodbc"],
 		[AC_MSG_ERROR(libodbc is required for ODBC support)])
 	if test "x$BUILD_STATIC_AGENT" = "xyes"; then
 		SUBAGENT_LIBS="$SUBAGENT_LIBS $ODBC_LIBS"
 		AC_CHECK_LIB(ltdl, lt_dlopen, [SUBAGENT_LIBS="$SUBAGENT_LIBS -lltdl"], [])
 	fi
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LD_RUN_PATH="$OLD_LD_RUN_PATH"
 fi
 
 
@@ -2201,6 +2221,16 @@ fi
 
 check_substr "$COMPONENTS" "oracle"
 if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LD_RUN_PATH="$LD_RUN_PATH"
+
+	CPPFLAGS="$CPPFLAGS $ORACLE_CPPFLAGS"
+	LDFLAGS="$CPPFLAGS $ORACLE_LDFLAGS"
+	if test "x$ORACLE_LD_RUN_PATH" != "x"; then
+		LD_RUN_PATH="${ORACLE_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+	fi
+
 	AC_CHECK_HEADER(oci.h,,AC_MSG_ERROR([*** Cannot find oci.h - check your Oracle client installation ***]))
 	AC_CHECK_LIB(nnz11, nzstrcpy, [NNZ_LIB=-lnnz11],
 		[
@@ -2212,6 +2242,10 @@ if test $? = 0; then
 	if test "x$BUILD_STATIC_AGENT" = "xyes"; then
 		SUBAGENT_LIBS="$SUBAGENT_LIBS $ORACLE_LIBS"
 	fi
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LD_RUN_PATH="$OLD_LD_RUN_PATH"
 fi
 
 #--------------------------------------------------------------------
@@ -2319,11 +2353,23 @@ AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_LIBS)
 AC_SUBST(BUILD_SERVER)
 AC_SUBST(BUILD_SDK)
+AC_SUBST(MYSQL_CPPFLAGS)
+AC_SUBST(MYSQL_LDFLAGS)
 AC_SUBST(MYSQL_LIBS)
+AC_SUBST(PGSQL_CPPFLAGS)
+AC_SUBST(PGSQL_LDFLAGS)
 AC_SUBST(PGSQL_LIBS)
+AC_SUBST(ORACLE_CPPFLAGS)
+AC_SUBST(ORACLE_LDFLAGS)
 AC_SUBST(ORACLE_LIBS)
+AC_SUBST(ODBC_CPPFLAGS)
+AC_SUBST(ODBC_LDFLAGS)
 AC_SUBST(ODBC_LIBS)
+AC_SUBST(DB2_CPPFLAGS)
+AC_SUBST(DB2_LDFLAGS)
 AC_SUBST(DB2_LIBS)
+AC_SUBST(INFORMIX_CPPFLAGS)
+AC_SUBST(INFORMIX_LDFLAGS)
 AC_SUBST(INFORMIX_LIBS)
 AC_SUBST(OBJECT_MODE)
 AC_SUBST(SQLFLAGS)
@@ -2573,6 +2619,11 @@ echo
 if test "x${BUILD_SERVER}" = "xyes"; then
 	echo "Build Server            : YES"
 	echo "Server libs             : ${SERVER_LIBS}"
+	if test "x${LDAP_SUPPORT}" = "xyes"; then
+		echo "LDAP support            : YES"
+	else
+		echo "LDAP support            : NO"
+	fi
 	if test "x${XMPP_SUPPORT}" = "xyes"; then
 		echo "XMPP support            : YES"
 	else
@@ -2649,23 +2700,64 @@ echo "CFLAGS                  : ${CFLAGS}"
 echo "LDFLAGS                 : ${LDFLAGS}"
 echo "LIBS                    : ${LIBS}"
 
+if test "x${MYSQL_CPPFLAGS}" != "x"; then
+	echo "MySQL CPPFLAGS          : ${MYSQL_CPPFLAGS}"
+fi
+if test "x${MYSQL_LDFLAGS}" != "x"; then
+	echo "MySQL LDFLAGS           : ${MYSQL_LDFLAGS}"
+fi
 if test "x${MYSQL_LIBS}" != "x"; then
-	echo "MySQL libs              : ${MYSQL_LIBS}"
+	echo "MySQL LIBS              : ${MYSQL_LIBS}"
+fi
+
+if test "x${PGSQL_CPPFLAGS}" != "x"; then
+	echo "PostgreSQL CPPFLAGS     : ${PGSQL_CPPFLAGS}"
+fi
+if test "x${PGSQL_LDFLAGS}" != "x"; then
+	echo "PostgreSQL LDFLAGS      : ${PGSQL_LDFLAGS}"
 fi
 if test "x${PGSQL_LIBS}" != "x"; then
-	echo "PostgreSQL libs         : ${PGSQL_LIBS}"
+	echo "PostgreSQL LIBS         : ${PGSQL_LIBS}"
+fi
+
+if test "x${ORACLE_CPPFLAGS}" != "x"; then
+	echo "Oracle CPPFLAGS         : ${ORACLE_CPPFLAGS}"
+fi
+if test "x${ORACLE_LDFLAGS}" != "x"; then
+	echo "Oracle LDFLAGS          : ${ORACLE_LDFLAGS}"
 fi
 if test "x${ORACLE_LIBS}" != "x"; then
-	echo "Oracle libs             : ${ORACLE_LIBS}"
+	echo "Oracle LIBS             : ${ORACLE_LIBS}"
+fi
+
+if test "x${ODBC_CPPFLAGS}" != "x"; then
+	echo "ODBC CPPFLAGS           : ${ODBC_CPPFLAGS}"
+fi
+if test "x${ODBC_LDFLAGS}" != "x"; then
+	echo "ODBC LDFLAGS            : ${ODBC_LDFLAGS}"
 fi
 if test "x${ODBC_LIBS}" != "x"; then
-	echo "ODBC libs               : ${ODBC_LIBS}"
+	echo "ODBC LIBS               : ${ODBC_LIBS}"
+fi
+
+if test "x${DB2_CPPFLAGS}" != "x"; then
+	echo "DB2 CPPFLAGS            : ${DB2_CPPFLAGS}"
+fi
+if test "x${DB2_LDFLAGS}" != "x"; then
+	echo "DB2 LDFLAGS             : ${DB2_LDFLAGS}"
 fi
 if test "x${DB2_LIBS}" != "x"; then
-	echo "DB2 libs                : ${DB2_LIBS}"
+	echo "DB2 LIBS                : ${DB2_LIBS}"
+fi
+
+if test "x${INFORMIX_CPPFLAGS}" != "x"; then
+	echo "Informix CPPFLAGS       : ${INFORMIX_CPPFLAGS}"
+fi
+if test "x${INFORMIX_LDFLAGS}" != "x"; then
+	echo "Informix LDFLAGS        : ${INFORMIX_LDFLAGS}"
 fi
 if test "x${INFORMIX_LIBS}" != "x"; then
-	echo "Informix libs           : ${INFORMIX_LIBS}"
+	echo "Informix LIBS           : ${INFORMIX_LIBS}"
 fi
 
 FLAGS_CPP="src/tools/nxdevcfg/flags.cpp"

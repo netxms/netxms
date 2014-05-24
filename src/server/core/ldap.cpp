@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,6 +26,9 @@
 #define LDAP_USER 1
 #define LDAP_GROUP 2
 
+/**
+ * LDAP entry constructor
+ */
 Entry::Entry()
 {
    m_type = LDAP_DEFAULT;
@@ -35,6 +38,9 @@ Entry::Entry()
    m_memberList = new StringList();
 }
 
+/**
+ * LDAP entry destructor
+ */
 Entry::~Entry()
 {
    safe_free(m_loginName);
@@ -43,16 +49,16 @@ Entry::~Entry()
    delete m_memberList;
 }
 
-#if INCLUDE_LDAP
+#if WITH_LDAP
 
 /**
  * Init connection with LDAP(init search line, start checking thread, init check interval)
  */
 void LDAPConnection::initLDAP()
 {
-   DbgPrintf(4, _T("LDAPConnection::initLDAP(): Connect to ldap."));
+   DbgPrintf(4, _T("LDAPConnection::initLDAP(): Connecting to LDAP server"));
    int errorCode = ldap_initialize(&m_ldapConn, m_connList);
-   if(errorCode != LDAP_SUCCESS)
+   if (errorCode != LDAP_SUCCESS)
    {
       TCHAR * error = getErrorString(errorCode);
       DbgPrintf(4, _T("LDAPConnection::initLDAP(): LDAP could not connect to correct server. Error code: %s"), error);
@@ -62,7 +68,6 @@ void LDAPConnection::initLDAP()
    //set all LDAP options
    int version = LDAP_VERSION3;
    int result = ldap_set_option(m_ldapConn, LDAP_OPT_PROTOCOL_VERSION, &version); //default verion 2, it's recomended to use version 3
-
    //reorganize connection list. Set as fist server - just connected server(if is is not so).
 }
 
@@ -369,18 +374,25 @@ LDAPConnection::~LDAPConnection()
 {
 }
 
-#else
+#else	/* WITH_LDAP */
 
+/**
+ * Synchronize users - stub for server without LDAP support
+ */
 void LDAPConnection::syncUsers()
 {
-    DbgPrintf(4, _T("LDAPConnection::syncUsers(): Ldap library is not declared so users woun't be synchronized."));
+    DbgPrintf(4, _T("LDAPConnection::syncUsers(): FAILED - server was compiled without LDAP support"));
 }
 
+/**
+ * Login via LDAP - stub for server without LDAP support
+ */
 UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
 {
-   DbgPrintf(4, _T("LDAPConnection::ldapUserLogin(): Ldap library is not declared so login is not possible."));
+   DbgPrintf(4, _T("LDAPConnection::ldapUserLogin(): FAILED - server was compiled without LDAP support"));
    return RCC_INTERNAL_ERROR;
 }
+
 #endif
 
 /**
@@ -388,15 +400,20 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
  */
 THREAD_RESULT THREAD_CALL SyncLDAPUsers(void *arg)
 {
-   UINT32 timeInMinutes = ConfigReadInt(_T("LdapSyncInterval"), 0);
-   timeInMinutes *= 60;
-   while(!SleepAndCheckForShutdown(timeInMinutes))
+   UINT32 syncInterval = ConfigReadInt(_T("LdapSyncInterval"), 0);
+   if (syncInterval == 0)
+   {
+      DbgPrintf(1, _T("SyncLDAPUsers: sync thread will not start because LDAP sync is disabled"));
+      return THREAD_OK;
+   }
+
+   DbgPrintf(1, _T("SyncLDAPUsers: sync thread started, interval %d minutes"), syncInterval);
+   syncInterval *= 60;
+   while(!SleepAndCheckForShutdown(syncInterval))
    {
       LDAPConnection conn;
       conn.syncUsers();
    }
-
-	return THREAD_OK;
+   DbgPrintf(1, _T("SyncLDAPUsers: sync thread stopped"));
+   return THREAD_OK;
 }
-
-

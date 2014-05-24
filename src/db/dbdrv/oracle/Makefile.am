@@ -2,8 +2,8 @@ DRIVER = oracle
 
 pkglib_LTLIBRARIES = oracle.la
 oracle_la_SOURCES = oracle.cpp
-oracle_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-oracle_la_LDFLAGS = -module -avoid-version
+oracle_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include @ORACLE_CPPFLAGS@
+oracle_la_LDFLAGS = -module -avoid-version @ORACLE_LDFLAGS@
 oracle_la_LIBADD = ../../../libnetxms/libnetxms.la @ORACLE_LIBS@
 
 EXTRA_DIST = \
