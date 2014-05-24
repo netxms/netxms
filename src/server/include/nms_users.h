@@ -21,7 +21,12 @@
 **/
 
 #if WITH_LDAP
-#include "ldap.h"
+#ifdef _WIN32
+#include <winldap.h>
+#include <winber.h>
+#else
+#include <ldap.h>
+#endif
 #endif
 
 /**
@@ -48,16 +53,23 @@ class LDAPConnection
 private:
 #if WITH_LDAP
    LDAP *m_ldapConn;
-   char m_connList[MAX_DB_STRING]; //636
+#ifdef _WIN32
+   TCHAR m_connList[MAX_DB_STRING];
+   TCHAR m_searchBase[MAX_DB_STRING];
+   TCHAR m_searchFilter[MAX_DB_STRING];
+   TCHAR m_userDN[MAX_DB_STRING];
+#else
+   char m_connList[MAX_DB_STRING];
    char m_searchBase[MAX_DB_STRING];
    char m_searchFilter[MAX_DB_STRING];
-   TCHAR m_userClass[MAX_DB_STRING];
-   TCHAR m_groupClass[MAX_DB_STRING];
    char m_userDN[MAX_DB_STRING];
+#endif
    char m_userPassword[MAX_DB_STRING];
    char m_ldapFullNameAttr[MAX_DB_STRING];
    char m_ldapLoginNameAttr[MAX_DB_STRING];
    char m_ldapDescriptionAttr[MAX_DB_STRING];
+   TCHAR m_userClass[MAX_DB_STRING];
+   TCHAR m_groupClass[MAX_DB_STRING];
    int m_action;
 
    void closeLDAPConnection();
@@ -67,7 +79,7 @@ private:
    void getAllSyncParameters();
    void compareGroupList(StringObjectMap<Entry>* groupEntryList);
    void compareUserLists(StringObjectMap<Entry>* userEntryList);
-   TCHAR *getAttrValue(LDAPMessage *entry, const char *attr, int i = 0);
+   TCHAR *getAttrValue(LDAPMessage *entry, const char *attr, UINT32 i = 0);
 #endif
 
 public:

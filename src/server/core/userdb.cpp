@@ -570,18 +570,14 @@ void RemoveDeletedLDAPEntry(StringObjectMap<Entry>* entryList, UINT32 m_action, 
    MutexLock(m_mutexUserDatabaseAccess);
    for(int i = 0; i < m_userCount; i++)
    {
-      bool checkType = false;
-      if(isUser)
-         checkType = !(m_users[i]->getId() & GROUP_FLAG);
-      else
-         checkType = (m_users[i]->getId() & GROUP_FLAG) ;
-      if (checkType && m_users[i]->isLDAPUser() && !m_users[i]->isDeleted())
+      bool validType = isUser ? !(m_users[i]->getId() & GROUP_FLAG) : ((m_users[i]->getId() & GROUP_FLAG) ? true : false);
+      if (validType && m_users[i]->isLDAPUser() && !m_users[i]->isDeleted())
 		{
-         if(entryList->get(m_users[i]->getDn()) == NULL)
+         if (entryList->get(m_users[i]->getDn()) == NULL)
          {
-            if(m_action == USER_DELETE)
+            if (m_action == USER_DELETE)
                DeleteUserDatabaseObject(m_users[i]->getId());
-            if(m_action == USER_DISABLE)
+            if (m_action == USER_DISABLE)
             {
                m_users[i]->disable();
                m_users[i]->setDescription(_T("LDAP entry was deleted."));

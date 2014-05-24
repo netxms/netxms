@@ -22,6 +22,15 @@
 
 #include "nxcore.h"
 
+#ifndef _WIN32
+
+#define ldap_first_attributeA    ldap_first_attribute
+#define ldap_next_attributeA     ldap_next_attribute
+#define ldap_memfreeA            ldap_memfree
+#define ldap_get_values_lenA     ldap_get_values_len
+
+#endif
+
 #define LDAP_DEFAULT 0
 #define LDAP_USER 1
 #define LDAP_GROUP 2
@@ -57,10 +66,15 @@ Entry::~Entry()
 void LDAPConnection::initLDAP()
 {
    DbgPrintf(4, _T("LDAPConnection::initLDAP(): Connecting to LDAP server"));
+#ifdef _WIN32
+   m_ldapConn = ldap_init(m_connList, LDAP_PORT);
+   ULONG errorCode = LdapGetLastError();
+#else
    int errorCode = ldap_initialize(&m_ldapConn, m_connList);
+#endif
    if (errorCode != LDAP_SUCCESS)
    {
-      TCHAR * error = getErrorString(errorCode);
+      TCHAR *error = getErrorString(errorCode);
       DbgPrintf(4, _T("LDAPConnection::initLDAP(): LDAP could not connect to correct server. Error code: %s"), error);
       safe_free(error);
       return;
@@ -76,17 +90,24 @@ void LDAPConnection::initLDAP()
  */
 void LDAPConnection::getAllSyncParameters()
 {
-   ConfigReadStrUTF8(_T("LdapConnectionString"), m_connList, MAX_DB_STRING, (""));
-   ConfigReadStrUTF8(_T("LdapSyncUser"), m_userDN, MAX_DB_STRING, (""));
-   ConfigReadStrUTF8(_T("LdapSyncUserPassword"), m_userPassword, MAX_DB_STRING, (""));
-   ConfigReadStrUTF8(_T("LdapSearchBase"), m_searchBase, MAX_DB_STRING, (""));
-   ConfigReadStrUTF8(_T("LdapSearchFilter"), m_searchFilter, MAX_DB_STRING, (""));
-   m_action = ConfigReadInt(_T("LdapUserDeleteAction"), 1); //default value - to disable user(value=1)
-   ConfigReadStrUTF8(_T("LdapMappingName"), m_ldapLoginNameAttr, MAX_DB_STRING, (""));
-   ConfigReadStrUTF8(_T("LdapMappingFullName"), m_ldapFullNameAttr, MAX_DB_STRING, (""));
-   ConfigReadStrUTF8(_T("LdapMappingDescription"), m_ldapDescriptionAttr, MAX_DB_STRING, (""));
+#ifdef _WIN32
+   ConfigReadStr(_T("LdapConnectionString"), m_connList, MAX_DB_STRING, _T(""));
+   ConfigReadStr(_T("LdapSyncUser"), m_userDN, MAX_DB_STRING, _T(""));
+   ConfigReadStr(_T("LdapSearchBase"), m_searchBase, MAX_DB_STRING, _T(""));
+   ConfigReadStr(_T("LdapSearchFilter"), m_searchFilter, MAX_DB_STRING, _T(""));
+#else
+   ConfigReadStrUTF8(_T("LdapConnectionString"), m_connList, MAX_DB_STRING, "");
+   ConfigReadStrUTF8(_T("LdapSyncUser"), m_userDN, MAX_DB_STRING, "");
+   ConfigReadStrUTF8(_T("LdapSearchBase"), m_searchBase, MAX_DB_STRING, "");
+   ConfigReadStrUTF8(_T("LdapSearchFilter"), m_searchFilter, MAX_DB_STRING, "");
+#endif
+   ConfigReadStrUTF8(_T("LdapSyncUserPassword"), m_userPassword, MAX_DB_STRING, "");
+   ConfigReadStrUTF8(_T("LdapMappingName"), m_ldapLoginNameAttr, MAX_DB_STRING, "");
+   ConfigReadStrUTF8(_T("LdapMappingFullName"), m_ldapFullNameAttr, MAX_DB_STRING, "");
+   ConfigReadStrUTF8(_T("LdapMappingDescription"), m_ldapDescriptionAttr, MAX_DB_STRING, "");
    ConfigReadStr(_T("LdapGroupClass"), m_groupClass, MAX_DB_STRING, _T(""));
    ConfigReadStr(_T("LdapUserClass"), m_userClass, MAX_DB_STRING, _T(""));
+   m_action = ConfigReadInt(_T("LdapUserDeleteAction"), 1); //default value - to disable user(value=1)
 }
 
 /**
@@ -103,7 +124,11 @@ void LDAPConnection::syncUsers()
    }
 
    int rc, i;
-   struct timeval timeOut = {10,0}; // 10 second connecion/search timeout
+#ifdef _WIN32
+   struct l_timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
+#else
+   struct timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
+#endif
    LDAPMessage *searchResult, *entry;
    char *attribute;
    BerElement *ber;
@@ -136,12 +161,16 @@ void LDAPConnection::syncUsers()
    for (entry = ldap_first_entry(m_ldapConn, searchResult); entry != NULL; entry = ldap_next_entry(m_ldapConn, entry))
    {
       Entry *newObj = new Entry();
+#ifdef _WIN32
+      TCHAR *dn = ldap_get_dn(m_ldapConn, entry);
+#else
 #ifdef UNICODE
       char *_dn = ldap_get_dn(m_ldapConn, entry);
       TCHAR *dn = WideStringFromUTF8String(_dn);
 #else
       char *dn = ldap_get_dn(m_ldapConn, entry);
-#endif // UNICODE
+#endif /* UNICODE */
+#endif /* _WIN32 */
       DbgPrintf(4, _T("LDAPConnection::syncUsers(): Found dn: %s"), dn);
       TCHAR *value;
       for(i = 0, value = getAttrValue(entry, "objectClass", i); value != NULL; value = getAttrValue(entry, "objectClass", ++i))
@@ -161,10 +190,10 @@ void LDAPConnection::syncUsers()
          safe_free(value);
       }
 
-      if(newObj->m_type == LDAP_DEFAULT)
+      if (newObj->m_type == LDAP_DEFAULT)
       {
          DbgPrintf(4, _T("LDAPConnection::syncUsers(): %s is not a user nor a group"), dn);
-#ifdef UNICODE
+#if defined(UNICODE) && !defined(_WIN32)
          free(dn);
          ldap_memfree(_dn);
 #else
@@ -173,33 +202,34 @@ void LDAPConnection::syncUsers()
          delete newObj;
          continue;
       }
-      for(attribute = ldap_first_attribute(m_ldapConn, entry, &ber); attribute != NULL; attribute = ldap_next_attribute(m_ldapConn, entry, ber))
+
+      for(attribute = ldap_first_attributeA(m_ldapConn, entry, &ber); attribute != NULL; attribute = ldap_next_attributeA(m_ldapConn, entry, ber))
       {
-         //We get values only for those attributes that are used for user/group creation
-         if(strcmp(attribute, m_ldapFullNameAttr) == 0)
+         // We get values only for those attributes that are used for user/group creation
+         if (!strcmp(attribute, m_ldapFullNameAttr))
          {
             newObj->m_fullName = getAttrValue(entry, attribute);
          }
-         else if(strcmp(attribute, m_ldapLoginNameAttr) == 0)
+         else if (!strcmp(attribute, m_ldapLoginNameAttr))
          {
             newObj->m_loginName = getAttrValue(entry, attribute);
          }
-         else if(strcmp(attribute, m_ldapDescriptionAttr) == 0)
+         else if (!strcmp(attribute, m_ldapDescriptionAttr))
          {
             newObj->m_description = getAttrValue(entry, attribute);
          }
-         else if(strcmp(attribute, "member") == 0)
+         else if (!strcmp(attribute, "member"))
          {
             i = 0;
-            TCHAR* value = getAttrValue(entry, attribute, i);
+            TCHAR *value = getAttrValue(entry, attribute, i);
             do
             {
                DbgPrintf(4, _T("LDAPConnection::syncUsers(): member: %s"), value);
                newObj->m_memberList->addPreallocated(value);
                value = getAttrValue(entry, attribute, ++i);
-            }while(value != NULL);
+            } while(value != NULL);
          }
-         ldap_memfree(attribute);
+         ldap_memfreeA(attribute);
       }
       ber_free(ber, 0);
 
@@ -219,7 +249,7 @@ void LDAPConnection::syncUsers()
          DbgPrintf(4, _T("LDAPConnection::syncUsers(): Unknown object is not added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, newObj->m_fullName, newObj->m_description);
          delete newObj;
       }
-#ifdef UNICODE
+#if defined(UNICODE) && !defined(_WIN32)
       free(dn);
       ldap_memfree(_dn);
 #else
@@ -238,18 +268,20 @@ void LDAPConnection::syncUsers()
    delete groupEntryList;
 }
 
-TCHAR *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, int i)
+/**
+ * Get attribute's value
+ */
+TCHAR *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, UINT32 i)
 {
    TCHAR *result = NULL;
-   berval **values;
-   values = ldap_get_values_len(m_ldapConn, entry, attr);
+   berval **values = ldap_get_values_lenA(m_ldapConn, entry, (char *)attr);   // cast needed for Windows LDAP library
    if (ldap_count_values_len(values) > i)
    {
 #ifdef UNICODE
       result = WideStringFromUTF8String(values[i]->bv_val);
 #else
       result = strdup(values[i]->bv_val);
-#endif // UNICODE
+#endif /* UNICODE */
    }
    ldap_value_free_len(values);
    return result;
@@ -258,9 +290,9 @@ TCHAR *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, int i)
 /**
  * Updates user list according to newly recievd user list
  */
-void LDAPConnection::compareUserLists(StringObjectMap<Entry>* userEntryList)
+void LDAPConnection::compareUserLists(StringObjectMap<Entry> *userEntryList)
 {
-   for(int i = 0; i < userEntryList->getSize(); i++)
+   for(UINT32 i = 0; i < userEntryList->getSize(); i++)
    {
       UpdateLDAPUsers(userEntryList->getKeyByIndex(i), userEntryList->getValueByIndex(i));
    }
@@ -270,9 +302,9 @@ void LDAPConnection::compareUserLists(StringObjectMap<Entry>* userEntryList)
 /**
  * Updates group list according to newly recievd user list
  */
-void LDAPConnection::compareGroupList(StringObjectMap<Entry>* groupEntryList)
+void LDAPConnection::compareGroupList(StringObjectMap<Entry> *groupEntryList)
 {
-   for(int i = 0; i < groupEntryList->getSize(); i++)
+   for(UINT32 i = 0; i < groupEntryList->getSize(); i++)
    {
       UpdateLDAPGroups(groupEntryList->getKeyByIndex(i), groupEntryList->getValueByIndex(i));
    }
@@ -289,9 +321,13 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
    initLDAP();
    UINT32 result;
 #ifdef UNICODE
+#ifdef _WIN32
+   nx_strncpy(m_userDN, name, MAX_DB_STRING);
+#else
    char *utf8Name = UTF8StringFromWideString(name);
    strcpy(m_userDN, utf8Name);
    safe_free(utf8Name);
+#endif
    char *utf8Password = UTF8StringFromWideString(password);
    strcpy(m_userPassword, utf8Password);
    safe_free(utf8Password);
@@ -312,11 +348,15 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
    int ldap_error;
    struct berval cred;
    cred.bv_val = m_userPassword;
-   cred.bv_len = strlen(m_userPassword);
+   cred.bv_len = (int)strlen(m_userPassword);
 
    if(m_ldapConn != NULL)
    {
+#ifdef _WIN32
+      ldap_error = ldap_sasl_bind_s(m_ldapConn, m_userDN, _T(""), &cred, NULL, NULL, NULL);
+#else
       ldap_error = ldap_sasl_bind_s(m_ldapConn, m_userDN, LDAP_SASL_SIMPLE, &cred, NULL, NULL, NULL);
+#endif
       if (ldap_error == LDAP_SUCCESS)
       {
          return RCC_SUCCESS;
@@ -341,11 +381,15 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
   */
 TCHAR *LDAPConnection::getErrorString(int ldap_error)
 {
-   #ifdef UNICODE
+#ifdef _WIN32
+   return _tcsdup(ldap_err2string(ldap_error));
+#else
+#ifdef UNICODE
    return WideStringFromUTF8String(ldap_err2string(ldap_error));
-   #else
+#else
    return strdup(ldap_err2string(ldap_error));
-   #endif // UNICODE
+#endif
+#endif
 }
 
 /**
@@ -355,7 +399,14 @@ void LDAPConnection::closeLDAPConnection()
 {
    DbgPrintf(4, _T("LDAPConnection::closeLDAPConnection(): Disconnect form ldap."));
    if(m_ldapConn != NULL)
+   {
+#ifdef _WIN32
+      ldap_unbind_s(m_ldapConn);
+#else
       ldap_unbind_ext(m_ldapConn, NULL, NULL);
+#endif
+      m_ldapConn = NULL;
+   }
 }
 
 /**

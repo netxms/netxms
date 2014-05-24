@@ -364,7 +364,7 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
  */
 static BOOL H_UpgradeFromV319(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("LdapConnectionString"), _T("ldaps://localhost:636 ldaps://127.0.0.1:636 ldap://localhost:389 ldap://127.0.0.1:389"), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("LdapConnectionString"), _T("ldap://localhost:389"), 1, 0));
    CHK_EXEC(CreateConfigParam(_T("LdapSyncUser"), _T(""), 1, 0));
    CHK_EXEC(CreateConfigParam(_T("LdapSyncUserPassword"), _T(""), 1, 0));
    CHK_EXEC(CreateConfigParam(_T("LdapSearchBase"), _T(""), 1, 0));
