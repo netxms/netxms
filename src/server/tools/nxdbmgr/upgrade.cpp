@@ -359,8 +359,24 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
    return TRUE;
 }
 
+/*
+ * Upgrade from V320 to V321
+ */
+static BOOL H_UpgradeFromV320(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE object_tools ADD command_short_name varchar(31)\n")
+      _T("UPDATE object_tools SET command_short_name='Shutdown' WHERE tool_id=1\n")
+      _T("UPDATE object_tools SET command_short_name='Restart' WHERE tool_id=2\n")
+      _T("UPDATE object_tools SET command_short_name='Wakeup' WHERE tool_id=3\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='321' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
 /**
-* Upgrade from V319 to V320
+ * Upgrade from V319 to V320
  */
 static BOOL H_UpgradeFromV319(int currVersion, int newVersion)
 {
@@ -386,6 +402,7 @@ static BOOL H_UpgradeFromV319(int currVersion, int newVersion)
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='320' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
+
 /*
  * Upgrade from V318 to V319
  */
@@ -7749,6 +7766,7 @@ static struct
    { 317, 318, H_UpgradeFromV317 },
    { 318, 319, H_UpgradeFromV318 },
    { 319, 320, H_UpgradeFromV319 },
+   { 320, 321, H_UpgradeFromV320 },
    { 0, 0, NULL }
 };
 

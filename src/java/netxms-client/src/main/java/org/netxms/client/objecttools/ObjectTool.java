@@ -56,6 +56,7 @@ public class ObjectTool
 	protected String data;
 	protected String confirmationText;
 	protected String commandName;
+   protected String commandShortName;
 	protected byte[] imageData;
 
 	/**
@@ -82,7 +83,8 @@ public class ObjectTool
 		snmpOid = msg.getVariableAsString(baseId + 6);
 		confirmationText = msg.getVariableAsString(baseId + 7);
 		commandName = msg.getVariableAsString(baseId + 8);
-		imageData = msg.getVariableAsBinary(baseId + 9);
+      commandShortName = msg.getVariableAsString(baseId + 9);
+		imageData = msg.getVariableAsBinary(baseId + 10);
 		
 		createDisplayName();
 	}
@@ -216,6 +218,24 @@ public class ObjectTool
       if ((commandName != null) && !commandName.isEmpty())
          return commandName;
       return displayName;
+   }
+
+   /**
+    * @return the commandShortName
+    */
+   public String getCommandShortName()
+   {
+      return commandShortName;
+   }
+
+   /**
+    * @return
+    */
+   public String getCommandShortDisplayName()
+   {
+      if ((commandShortName != null) && !commandShortName.isEmpty())
+         return commandShortName;
+      return getCommandDisplayName();
    }
 
    /**

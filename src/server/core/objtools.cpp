@@ -672,42 +672,39 @@ UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg)
 		return RCC_DB_FAILURE;
 	}
 
-   // Check if tool already exist
-   dwToolId = pMsg->GetVariableLong(VID_TOOL_ID);
-   bool doUpdate = IsDatabaseRecordExist(hdb, _T("object_tools"), _T("tool_id"), dwToolId);
-
    // Insert or update common properties
-   /* prep */
    int nType = pMsg->GetVariableShort(VID_TOOL_TYPE);
-   int bindID = 1;
-   if (doUpdate)
+   dwToolId = pMsg->GetVariableLong(VID_TOOL_ID);
+   if (IsDatabaseRecordExist(hdb, _T("object_tools"), _T("tool_id"), dwToolId))
    {
       statment = DBPrepare(hdb, _T("UPDATE object_tools SET tool_name=?,tool_type=?,")
                              _T("tool_data=?,description=?,flags=?,")
-                             _T("matching_oid=?,confirmation_text=?,command_name=?,icon=? ")
+                             _T("matching_oid=?,confirmation_text=?,command_name=?,")
+                             _T("command_short_name=?,icon=? ")
                              _T("WHERE tool_id=?"));
       if (statment == NULL)
          return ReturnDBFailure(hdb, statment);
    }
    else
    {
-      statment = DBPrepare(hdb, _T("INSERT INTO object_tools (tool_id,tool_name,tool_type,")
+      statment = DBPrepare(hdb, _T("INSERT INTO object_tools (tool_name,tool_type,")
                              _T("tool_data,description,flags,matching_oid,")
-                             _T("confirmation_text,command_name,icon) VALUES ")
-                             _T("(?,?,?,?,?,?,?,?,?,?)"));
+                             _T("confirmation_text,command_name,command_short_name,")
+                             _T("icon,tool_id) VALUES ")
+                             _T("(?,?,?,?,?,?,?,?,?,?,?)"));
       if (statment == NULL)
          return ReturnDBFailure(hdb, statment);
-      DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, dwToolId);
    }
 
-   DBBind(statment, bindID++, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_NAME), DB_BIND_DYNAMIC);
-   DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, nType);
-   DBBind(statment, bindID++, DB_SQLTYPE_TEXT, pMsg->GetVariableStr(VID_TOOL_DATA), DB_BIND_DYNAMIC);
-   DBBind(statment, bindID++, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_DESCRIPTION), DB_BIND_DYNAMIC);
-   DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, pMsg->GetVariableLong(VID_FLAGS));
-   DBBind(statment, bindID++, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_TOOL_OID), DB_BIND_DYNAMIC);
-   DBBind(statment, bindID++, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_CONFIRMATION_TEXT), DB_BIND_DYNAMIC);
-   DBBind(statment, bindID++, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_COMMAND_NAME), DB_BIND_DYNAMIC);
+   DBBind(statment, 1, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_NAME), DB_BIND_DYNAMIC);
+   DBBind(statment, 2, DB_SQLTYPE_INTEGER, nType);
+   DBBind(statment, 3, DB_SQLTYPE_TEXT, pMsg->GetVariableStr(VID_TOOL_DATA), DB_BIND_DYNAMIC);
+   DBBind(statment, 4, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_DESCRIPTION), DB_BIND_DYNAMIC);
+   DBBind(statment, 5, DB_SQLTYPE_INTEGER, pMsg->GetVariableLong(VID_FLAGS));
+   DBBind(statment, 6, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_TOOL_OID), DB_BIND_DYNAMIC);
+   DBBind(statment, 7, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_CONFIRMATION_TEXT), DB_BIND_DYNAMIC);
+   DBBind(statment, 8, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_COMMAND_NAME), DB_BIND_DYNAMIC);
+   DBBind(statment, 9, DB_SQLTYPE_VARCHAR, pMsg->GetVariableStr(VID_COMMAND_SHORT_NAME), DB_BIND_DYNAMIC);
 
    size_t size;
    BYTE *imageData = pMsg->getBinaryFieldPtr(VID_IMAGE_DATA, &size);
@@ -715,15 +712,14 @@ UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg)
    {
       TCHAR *imageHexData = (TCHAR *)malloc((size * 2 + 1) * sizeof(TCHAR));
       BinToStr(imageData, size, imageHexData);
-      DBBind(statment, bindID++, DB_SQLTYPE_TEXT, imageHexData, DB_BIND_DYNAMIC);
+      DBBind(statment, 10, DB_SQLTYPE_TEXT, imageHexData, DB_BIND_DYNAMIC);
    }
    else
    {
-      DBBind(statment, bindID++, DB_SQLTYPE_TEXT, _T(""), DB_BIND_STATIC);
+      DBBind(statment, 10, DB_SQLTYPE_TEXT, _T(""), DB_BIND_STATIC);
    }
 
-   if(doUpdate)
-      DBBind(statment, bindID++, DB_SQLTYPE_INTEGER, dwToolId);
+   DBBind(statment, 11, DB_SQLTYPE_INTEGER, dwToolId);
 
    if(!DBExecute(statment))
       return ReturnDBFailure(hdb, statment);

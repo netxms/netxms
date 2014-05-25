@@ -68,6 +68,7 @@ public class General extends PropertyPage
 	private Button checkFollow;
 	private Button checkCommand;
 	private LabeledText textCommandName;
+   private LabeledText textCommandShortName;
 	private Button radioIndexOID;
 	private Button radioIndexValue;
 	private Label iconLabel;
@@ -283,6 +284,8 @@ public class General extends PropertyPage
       gd.horizontalSpan = 2;
       commandGroup.setLayoutData(gd);
       layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
       commandGroup.setLayout(layout);
       
       checkCommand = new Button(commandGroup, SWT.CHECK);
@@ -293,6 +296,7 @@ public class General extends PropertyPage
          public void widgetSelected(SelectionEvent e)
          {
             textCommandName.setEnabled(checkCommand.getSelection());
+            textCommandShortName.setEnabled(checkCommand.getSelection());
             if (checkCommand.getSelection())
                textCommandName.setFocus();
          }
@@ -303,6 +307,11 @@ public class General extends PropertyPage
             widgetSelected(e);
          }
       });
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      checkCommand.setLayoutData(gd);
       
       textCommandName = new LabeledText(commandGroup, SWT.NONE);
       textCommandName.setLabel("Command name");
@@ -313,6 +322,15 @@ public class General extends PropertyPage
       textCommandName.setText(objectTool.getCommandName());
       textCommandName.setEnabled(checkCommand.getSelection());
 		
+      textCommandShortName = new LabeledText(commandGroup, SWT.NONE);
+      textCommandShortName.setLabel("Command short name");
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      textCommandShortName.setLayoutData(gd);
+      textCommandShortName.setText(objectTool.getCommandShortName());
+      textCommandShortName.setEnabled(checkCommand.getSelection());
+      
 		// Disable option
 		checkDisable = new Button(dialogArea, SWT.CHECK);
 		checkDisable.setText(Messages.get().General_DisableObjectToll);
@@ -494,6 +512,7 @@ public class General extends PropertyPage
          objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.SHOW_IN_COMMANDS);
       }
       objectTool.setCommandName(textCommandName.getText());
+      objectTool.setCommandShortName(textCommandShortName.getText());
       
       if (checkDisable.getSelection())
       {

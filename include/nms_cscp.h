@@ -976,6 +976,7 @@ typedef struct
 #define VID_PEER_PROTOCOL           ((UINT32)472)
 #define VID_VIEW_REFRESH_INTERVAL   ((UINT32)473)
 #define VID_COMMAND_NAME            ((UINT32)474)
+#define VID_COMMAND_SHORT_NAME      ((UINT32)475)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
