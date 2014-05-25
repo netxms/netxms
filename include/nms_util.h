@@ -913,31 +913,36 @@ typedef struct _dir_struc_w
 #endif
 
 #ifdef __cplusplus
-   inline TCHAR *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen)
-   {
+inline TCHAR *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen)
+{
 #if defined(_WIN32) && (_MSC_VER >= 1400)
-		_tcsncpy_s(pszDest, nLen, pszSrc, _TRUNCATE);
+	_tcsncpy_s(pszDest, nLen, pszSrc, _TRUNCATE);
 #else
-      _tcsncpy(pszDest, pszSrc, nLen - 1);
-      pszDest[nLen - 1] = 0;
+   _tcsncpy(pszDest, pszSrc, nLen - 1);
+   pszDest[nLen - 1] = 0;
 #endif
-      return pszDest;
-   }
+   return pszDest;
+}
 
 #ifdef UNICODE
-   inline char *nx_strncpy_mb(char *pszDest, const char *pszSrc, size_t nLen)
-   {
+inline char *nx_strncpy_mb(char *pszDest, const char *pszSrc, size_t nLen)
+{
 #if defined(_WIN32) && (_MSC_VER >= 1400)
-		strncpy_s(pszDest, nLen, pszSrc, _TRUNCATE);
+	strncpy_s(pszDest, nLen, pszSrc, _TRUNCATE);
 #else
-      strncpy(pszDest, pszSrc, nLen - 1);
-      pszDest[nLen - 1] = 0;
+   strncpy(pszDest, pszSrc, nLen - 1);
+   pszDest[nLen - 1] = 0;
 #endif
-      return pszDest;
-   }
+   return pszDest;
+}
 #else
 #define nx_strncpy_mb nx_strncpy
 #endif
+
+inline TCHAR *_tcsdup_ex(const TCHAR *s)
+{
+   return (s != NULL) ? _tcsdup(s) : NULL;
+}
 
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout);
 int LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex);

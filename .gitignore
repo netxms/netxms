@@ -41,6 +41,8 @@ target
 .deps
 .idea
 
+/runtime-nxmc.*
+
 /aclocal.m4
 /android/src/agent/bin
 /android/src/agent/gen

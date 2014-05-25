@@ -48,6 +48,8 @@ class NXCORE_EXPORTABLE ModuleData
 public:
    ModuleData();
    virtual ~ModuleData();
+
+   virtual void fillMessage(CSCPMessage *msg, UINT32 baseId);
 };
 
 /**

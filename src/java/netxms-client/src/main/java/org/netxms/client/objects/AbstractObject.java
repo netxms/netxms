@@ -27,11 +27,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.netxms.api.client.services.ServiceManager;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCommon;
 import org.netxms.client.AccessListElement;
+import org.netxms.client.ModuleDataProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.Severity;
 
@@ -131,6 +133,7 @@ public abstract class AbstractObject
 	protected HashSet<Long> parents = new HashSet<Long>(0);
 	protected HashSet<Long> children = new HashSet<Long>(0);
 	protected Map<String, String> customAttributes = new HashMap<String, String>(0);
+	protected Map<String, Object> moduleData = null;
 	
 	private int effectiveRights = 0;
 	private boolean effectiveRightsCached = false;
@@ -230,7 +233,7 @@ public abstract class AbstractObject
 			parents.add(msg.getVariableAsInt64(id));
 		}
 
-		// Childs
+		// Children
 		count = msg.getVariableAsInteger(NXCPCodes.VID_CHILD_CNT);
 		for(i = 0, id = NXCPCodes.VID_CHILD_ID_BASE; i < count; i++, id++)
 		{
@@ -262,6 +265,22 @@ public abstract class AbstractObject
 		for(i = 0, id = NXCPCodes.VID_ACL_USER_BASE, id2 = NXCPCodes.VID_ACL_RIGHTS_BASE; i < count; i++, id++, id2++)
 		{
 			accessList.add(new AccessListElement(msg.getVariableAsInt64(id), msg.getVariableAsInteger(id2)));
+		}
+		
+		// Module-specific data
+		count = msg.getVariableAsInteger(NXCPCodes.VID_MODULE_DATA_COUNT);
+		if (count > 0)
+		{
+		   moduleData = new HashMap<String, Object>(count);
+		   for(i = 0, id = NXCPCodes.VID_MODULE_DATA_BASE; i < count; i++, id += 0x100000)
+		   {
+		      String module = msg.getVariableAsString(id);
+		      ModuleDataProvider p = (ModuleDataProvider)ServiceManager.getServiceHandler(module, ModuleDataProvider.class);
+		      if (p != null)
+		      {
+		         moduleData.put(module, p.createModuleData(msg, id + 1));
+		      }
+		   }
 		}
 	}
 
@@ -792,5 +811,16 @@ public abstract class AbstractObject
          effectiveRights = 0;
       }
       return effectiveRights;
+   }
+   
+   /**
+    * Get module-specific data
+    * 
+    * @param module
+    * @return
+    */
+   public Object getModuleData(String module)
+   {
+      return (moduleData != null) ? moduleData.get(module) : null;
    }
 }

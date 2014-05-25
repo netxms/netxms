@@ -803,6 +803,7 @@ public class NXCPCodes
    public static final long VID_VIEW_REFRESH_INTERVAL = 473;
    public static final long VID_COMMAND_NAME = 474;
    public static final long VID_COMMAND_SHORT_NAME = 475;
+   public static final long VID_MODULE_DATA_COUNT = 476;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -829,6 +830,7 @@ public class NXCPCodes
 	public static final long VID_CHILD_ID_BASE = 0x80000000L;
 	public static final long VID_CHILD_ID_LAST = 0xFFFFFFFEL;
 	public static final long VID_CUSTOM_ATTRIBUTES_BASE = 0x70000000L;
+   public static final long VID_MODULE_DATA_BASE = 0x71000000L;
 	public static final long VID_RESOURCE_LIST_BASE = 0x20000000L;
 	public static final long VID_ENUM_VALUE_BASE = 0x10000000L;
 	public static final long VID_ACTION_ARG_BASE = 0x10000000L;

@@ -977,6 +977,7 @@ typedef struct
 #define VID_VIEW_REFRESH_INTERVAL   ((UINT32)473)
 #define VID_COMMAND_NAME            ((UINT32)474)
 #define VID_COMMAND_SHORT_NAME      ((UINT32)475)
+#define VID_MODULE_DATA_COUNT       ((UINT32)476)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1024,8 +1025,9 @@ typedef struct
 #define VID_CHILD_ID_BASE           ((UINT32)0x80000000)
 #define VID_CHILD_ID_LAST           ((UINT32)0xFFFFFFFE)
 
-// Base value for custom attributes
+// Base value for custom attributes and module data
 #define VID_CUSTOM_ATTRIBUTES_BASE  ((UINT32)0x70000000)
+#define VID_MODULE_DATA_BASE        ((UINT32)0x71000000)
 
 // Base value for cluster resource list
 #define VID_RESOURCE_LIST_BASE      ((UINT32)0x20000000)
