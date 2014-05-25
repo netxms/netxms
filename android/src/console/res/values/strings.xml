@@ -83,13 +83,16 @@
 	<string name="pref_global_notification_alarm_enabled">Alarm in status bar is enabled</string>
 	<string name="pref_global_notification_alarm_disabled">Alarm in status bar is disabled</string>
 	<string name="pref_interface">Interface</string>
-	<string name="pref_interface_summary">Customize interface parameters (multipliers, &#8230;)</string>
+	<string name="pref_interface_summary">Customize interface parameters (multipliers, text size, legend, &#8230;)</string>
 	<string name="pref_multipliers">Multipliers</string>
 	<string name="pref_multipliers_summary">Define which multiplier to use in presenting data (last values, graphs, &#8230;)</string>
 	<string name="pref_multiplier_title">Choose multiplier</string>
 	<string name="pref_graph_text_size">Graph text size</string>
 	<string name="pref_graph_text_size_summary">Set the text size to be used for axis labels</string>
-
+	<string name="pref_show_legend">Show legend in graphs</string>
+	<string name="pref_show_legend_enabled">Graphs will be with legend</string>
+	<string name="pref_show_legend_disabled">Graphs will be without legend</string>
+	
 	<string name="notification_title">NetXMS</string>
 	<string name="notify_started">NetXMS service started</string>
 	<string name="notify_disconnected">Disconnected from server</string>

@@ -58,7 +58,9 @@ public class LineChartElement extends AbstractDashboardElement
 		graphView.getGraphViewStyle().setTextSize(Integer.parseInt(sp.getString("global.graph.textsize", "10")));
 		graphView.getGraphViewStyle().setLegendWidth(240);
 		graphView.setCustomLabelFormatter(new CustomLabel(Integer.parseInt(sp.getString("global.multipliers", "1"))));
-		graphView.setShowLegend(config.isShowLegend());
+		// TOOD: 2014May25 Find a best way to handle this setting
+		//graphView.setShowLegend(config.isShowLegend());
+		graphView.setShowLegend(sp.getBoolean("global.graph.legend", true));
 		graphView.setScalable(false);
 		graphView.setScrollable(false);
 		graphView.setLegendAlign(LegendAlign.TOP);

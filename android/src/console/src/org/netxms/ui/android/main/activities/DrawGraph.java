@@ -92,7 +92,9 @@ public class DrawGraph extends AbstractClientActivity
 		graphView.getGraphViewStyle().setTextSize(Integer.parseInt(sp.getString("global.graph.textsize", "10")));
 		graphView.getGraphViewStyle().setLegendWidth(240);
 		graphView.setCustomLabelFormatter(new CustomLabel(Integer.parseInt(sp.getString("global.multipliers", "1"))));
-		graphView.setShowLegend(showLegend);
+		// TOOD: 2014May25 Find a best way to handle this setting
+		//graphView.setShowLegend(showLegend);
+		graphView.setShowLegend(sp.getBoolean("global.graph.legend", true));
 		graphView.setLegendAlign(LegendAlign.TOP);
 		graphView.setScalable(true);
 		graphView.setScrollable(true);
