@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	<ListPreference android:dialogTitle="@string/pref_multiplier_title" android:key="global.multipliers" android:title="@string/pref_multipliers" android:summary="@string/pref_multipliers_summary" android:entryValues="@array/multiplier_values" android:entries="@array/multiplier_labels" android:defaultValue="1" />
+	<EditTextPreference android:title="@string/pref_graph_text_size" android:summary="@string/pref_graph_text_size_summary" android:enabled="true" android:defaultValue="10" android:key="global.graph.textsize" android:digits="0123456789"/>
+    <org.netxms.ui.android.main.settings.CustomSwitchPreference android:summaryOff="@string/pref_show_legend_disabled" android:summaryOn="@string/pref_show_legend_enabled" android:key="global.graph.legend" android:enabled="true" android:defaultValue="true" android:title="@string/pref_show_legend"/>
+</PreferenceScreen>
