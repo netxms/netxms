@@ -29,6 +29,9 @@ TCHAR *g_pszModLoadList = NULL;
 UINT32 g_dwNumModules = 0;
 NXMODULE *g_pModuleList = NULL;
 
+/**
+ * Load module
+ */
 static bool LoadNetXMSModule(const TCHAR *name)
 {
 	bool success = false;
@@ -152,4 +155,18 @@ bool LoadNetXMSModules()
       }
    }
 	return success;
+}
+
+/**
+ * Module object data constructor
+ */
+ModuleData::ModuleData()
+{
+}
+
+/**
+ * Module object data destructor
+ */
+ModuleData::~ModuleData()
+{
 }

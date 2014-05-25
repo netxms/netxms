@@ -65,6 +65,7 @@ NetObj::NetObj()
    }
 	uuid_clear(m_image);
 	m_submapId = 0;
+   m_moduleData = NULL;
 }
 
 /**
@@ -82,6 +83,7 @@ NetObj::~NetObj()
    delete m_pAccessList;
 	safe_free(m_pdwTrustedNodes);
    safe_free(m_pszComments);
+   delete m_moduleData;
 }
 
 /**
@@ -1588,4 +1590,27 @@ bool NetObj::showThresholdSummary()
 bool NetObj::isEventSource()
 {
    return false;
+}
+
+/**
+ * Get module data
+ */
+ModuleData *NetObj::getModuleData(const TCHAR *module) 
+{ 
+   LockData();
+   ModuleData *data = (m_moduleData != NULL) ? m_moduleData->get(module) : NULL;
+   UnlockData();
+   return data;
+}
+
+/**
+ * Set module data
+ */
+void NetObj::setModuleData(const TCHAR *module, ModuleData *data)
+{
+   LockData();
+   if (m_moduleData == NULL)
+      m_moduleData = new StringObjectMap<ModuleData>(true);
+   m_moduleData->set(module, data);
+   UnlockData();
 }

@@ -41,6 +41,16 @@ struct NXCORE_LOG;
 #define NXMOD_COMMAND_ACCEPTED_ASYNC   1
 
 /**
+ * Module-specific object data
+ */
+class NXCORE_EXPORTABLE ModuleData
+{
+public:
+   ModuleData();
+   virtual ~ModuleData();
+};
+
+/**
  * Module registration structure
  */
 typedef struct

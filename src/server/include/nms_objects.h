@@ -342,6 +342,7 @@ protected:
 	UINT32 *m_pdwTrustedNodes;
 
 	StringMap m_customAttributes;
+   StringObjectMap<ModuleData> *m_moduleData;
 
    void LockData() { MutexLock(m_mutexData); }
    void UnlockData() { MutexUnlock(m_mutexData); }
@@ -451,6 +452,9 @@ public:
    void setCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.set(name, value); Modify(); }
    void setCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); Modify(); }
    void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); Modify(); }
+
+   ModuleData *getModuleData(const TCHAR *module);
+   void setModuleData(const TCHAR *module, ModuleData *data);
 
 	ObjectArray<NetObj> *getParentList(int typeFilter);
 	ObjectArray<NetObj> *getChildList(int typeFilter);
