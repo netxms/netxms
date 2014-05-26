@@ -1416,6 +1416,9 @@ if test "x$LDAP_SUPPORT" = "xyes"; then
 	if test "x$HAVE_LDAP" = "xyes"; then
 		SERVER_LIBS="-lldap $SERVER_LIBS"   
 		AC_DEFINE(WITH_LDAP, 1, Define to 1 if you have LDAP libraries and headers)
+		AC_CHECK_LIB(ldap, ldap_initialize, [ 
+				AC_DEFINE(HAVE_LDAP_INITIALIZE, 1, Define to 1 if you have ldap_initialize function)
+			], [ ])
 	fi
 	LDAP_SUPPORT="$HAVE_LDAP"
 fi

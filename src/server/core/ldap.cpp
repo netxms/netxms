@@ -66,16 +66,21 @@ Entry::~Entry()
 void LDAPConnection::initLDAP()
 {
    DbgPrintf(4, _T("LDAPConnection::initLDAP(): Connecting to LDAP server"));
-#ifdef _WIN32
+#if HAVE_LDAP_INITIALIZE
+   int errorCode = ldap_initialize(&m_ldapConn, m_connList);
+   if (errorCode != LDAP_SUCCESS)
+#else
    m_ldapConn = ldap_init(m_connList, LDAP_PORT);
+#ifdef _WIN32
    ULONG errorCode = LdapGetLastError();
 #else
-   int errorCode = ldap_initialize(&m_ldapConn, m_connList);
+   int errorCode = errno;
 #endif
-   if (errorCode != LDAP_SUCCESS)
+   if (m_ldapConn == NULL)
+#endif
    {
       TCHAR *error = getErrorString(errorCode);
-      DbgPrintf(4, _T("LDAPConnection::initLDAP(): LDAP could not connect to correct server. Error code: %s"), error);
+      DbgPrintf(4, _T("LDAPConnection::initLDAP(): LDAP session initialization failed. Error code: %s"), error);
       safe_free(error);
       return;
    }
