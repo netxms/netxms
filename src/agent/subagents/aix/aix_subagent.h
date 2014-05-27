@@ -55,7 +55,7 @@ enum
 	INTERVAL_15MIN,
 };
 
-#define MAKE_CPU_USAGE_PARAM(interval, source) (const char *)((((DWORD)(interval)) << 16) | ((DWORD)(source)))
+#define MAKE_CPU_USAGE_PARAM(interval, source) (const TCHAR *)((((DWORD)(interval)) << 16) | ((DWORD)(source)))
 #define CPU_USAGE_PARAM_INTERVAL(p) ((CAST_FROM_POINTER((p), DWORD)) >> 16)
 #define CPU_USAGE_PARAM_SOURCE(p) ((CAST_FROM_POINTER((p), DWORD)) & 0x0000FFFF)
 

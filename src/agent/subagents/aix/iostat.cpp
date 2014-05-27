@@ -24,11 +24,9 @@
 #define MAX_DEVICES		256
 #define SAMPLE_COUNT    60
 
-
-//
-// Disk information structure
-//
-
+/**
+ * Disk information structure
+ */
 struct DISK_INFO
 {
 	char name[IDENTIFIER_LENGTH];
@@ -54,11 +52,9 @@ static THREAD s_collectorThread = INVALID_THREAD_HANDLE;
 static MUTEX s_dataLock = INVALID_MUTEX_HANDLE;
 static CONDITION s_condShutdown = INVALID_CONDITION_HANDLE;
 
-
-//
-// Calculate total values
-//
-
+/**
+ * Calculate total values
+ */
 static void CalculateTotals()
 {
 	s_total.queueLen[s_currSlot] = 0;
@@ -84,11 +80,9 @@ static void CalculateTotals()
 	}
 }
 
-
-//
-// Process stats for single disk
-//
-
+/**
+ * Process stats for single disk
+ */
 static void ProcessDiskStats(perfstat_disk_t *di)
 {
 	DISK_INFO *dev;
@@ -107,7 +101,7 @@ static void ProcessDiskStats(perfstat_disk_t *di)
 			dev = &s_devices[i];
 			strcpy(dev->name, di->name);
 			memcpy(&dev->last, di, sizeof(perfstat_disk_t));
-			AgentWriteDebugLog(4, "AIX: device %s on adapter %s added to I/O stat collection", dev->name, di->adapter);
+			AgentWriteDebugLog(4, _T("AIX: device %hs on adapter %hs added to I/O stat collection"), dev->name, di->adapter);
 			return;  // No prev data for new device, ignore this sample
 		}
 	}
@@ -128,14 +122,12 @@ static void ProcessDiskStats(perfstat_disk_t *di)
 	memcpy(&dev->last, di, sizeof(perfstat_disk_t));
 }
 
-
-//
-// I/O stat collector
-//
-
+/**
+ * I/O stat collector
+ */
 static THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 {
-	AgentWriteDebugLog(1, "AIX: I/O stat collector thread started");
+	AgentWriteDebugLog(1, _T("AIX: I/O stat collector thread started"));
 
 	while(!ConditionWait(s_condShutdown, 1000))
 	{
@@ -162,15 +154,13 @@ static THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 		MutexUnlock(s_dataLock);
 	}
 
-	AgentWriteDebugLog(1, "AIX: I/O stat collector thread stopped");
+	AgentWriteDebugLog(1, _T("AIX: I/O stat collector thread stopped"));
 	return THREAD_OK;
 }
 
-
-//
-// Initialize I/O stat collector
-//
-
+/**
+ * Initialize I/O stat collector
+ */
 void StartIOStatCollector()
 {
 	memset(&s_total, 0, sizeof(s_total));
@@ -180,11 +170,9 @@ void StartIOStatCollector()
 	s_collectorThread = ThreadCreateEx(IOStatCollector, 0, NULL);
 }
 
-
-//
-// Shutdown I/O stat collector
-//
-
+/**
+ * Shutdown I/O stat collector
+ */
 void ShutdownIOStatCollector()
 {
 	ConditionSet(s_condShutdown);
@@ -193,11 +181,9 @@ void ShutdownIOStatCollector()
 	ConditionDestroy(s_condShutdown);
 }
 
-
-//
-// Calculate average value for 32bit series
-//
-
+/**
+ * Calculate average value for 32bit series
+ */
 static double CalculateAverage32(int *series)
 {
 	double sum = 0;
@@ -206,11 +192,9 @@ static double CalculateAverage32(int *series)
 	return sum / (double)SAMPLE_COUNT;
 }
 
-
-//
-// Calculate average value for 64bit series
-//
-
+/**
+ * Calculate average value for 64bit series
+ */
 static QWORD CalculateAverage64(QWORD *series)
 {
 	QWORD sum = 0;
@@ -237,12 +221,10 @@ static DWORD CalculateAverageTime(QWORD *opcount, QWORD *times)
 	return (DWORD)(totalTime / totalOps);
 }
 
-
-//
-// Get total I/O stat value
-//
-
-LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value)
+/**
+ * Get total I/O stat value
+ */
+LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -278,19 +260,17 @@ LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value)
 	return rc;
 }
 
-
-//
-// Get I/O stat for specific device
-//
-
-LONG H_IOStats(const char *cmd, const char *arg, char *value)
+/**
+ * Get I/O stat for specific device
+ */
+LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
 	char device[MAX_PATH];
 	struct stat devInfo;
 	LONG rc = SYSINFO_RC_SUCCESS;
 	int i;
 
-	if (!AgentGetParameterArg(cmd, 1, device, MAX_PATH))
+	if (!AgentGetParameterArgA(cmd, 1, device, MAX_PATH))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	// find device

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for AIX
-** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
+** Copyright (C) 2004-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,13 +24,13 @@
 /**
  * Handler for Disk.xxx parameters
  */
-LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
+LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct statvfs s;
 	char szArg[512] = "";
 
-	if (!AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg)))
+	if (!AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg)))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	if (szArg[0] != 0 && statvfs(szArg, &s) == 0)
@@ -133,46 +133,51 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
       {
          table->addRow();
          char *mountPoint = (char *)vmt2dataptr(curr, VMT_STUB);
+#ifdef UNICODE
+         table->setPreallocated(0, WideStringFromMBString(mountPoint));
+         table->setPreallocated(1, WideStringFromMBString((char *)vmt2dataptr(curr, VMT_OBJECT)));
+#else
          table->set(0, mountPoint);
          table->set(1, (char *)vmt2dataptr(curr, VMT_OBJECT));
+#endif
 
          switch(curr->vmt_gfstype)
          {
             case MNT_CACHEFS:
-               table->set(3, "cachefs");
+               table->set(3, _T("cachefs"));
                break;
             case MNT_CDROM:
-               table->set(3, "cdrom");
+               table->set(3, _T("cdrom"));
                break;
             case MNT_CIFS:
-               table->set(3, "cifs");
+               table->set(3, _T("cifs"));
                break;
             case MNT_J2:
-               table->set(3, "jfs2");
+               table->set(3, _T("jfs2"));
                break;
             case MNT_JFS:
-               table->set(3, "jfs");
+               table->set(3, _T("jfs"));
                break;
             case MNT_NAMEFS:
-               table->set(3, "namefs");
+               table->set(3, _T("namefs"));
                break;
             case MNT_NFS:
-               table->set(3, "nfs");
+               table->set(3, _T("nfs"));
                break;
             case MNT_NFS3:
-               table->set(3, "nfs3");
+               table->set(3, _T("nfs3"));
                break;
             case MNT_NFS4:
-               table->set(3, "nfs4");
+               table->set(3, _T("nfs4"));
                break;
             case MNT_PROCFS:
-               table->set(3, "procfs");
+               table->set(3, _T("procfs"));
                break;
             case MNT_UDF:
-               table->set(3, "udfs");
+               table->set(3, _T("udfs"));
                break;
             case MNT_VXFS:
-               table->set(3, "vxfs");
+               table->set(3, _T("vxfs"));
                break;
             default:
                table->set(3, (DWORD)curr->vmt_gfstype);
@@ -199,7 +204,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
          else
          {
             TCHAR buffer[1024];
-            AgentWriteDebugLog(4, "AIX: H_FileSystems: Call to statvfs(\"%s\") failed (%s)", mountPoint, strerror(errno));
+            AgentWriteDebugLog(4, _T("AIX: H_FileSystems: Call to statvfs(\"%hs\") failed (%s)"), mountPoint, _tcserror(errno));
 
             table->set(4, (QWORD)0);
             table->set(5, (QWORD)0);
@@ -236,7 +241,11 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 	   struct vmount *curr = mountPoints;
 	   for(int i = 0; i < count; i++)
 	   {
+#ifdef UNICODE
+	      value->addPreallocated(WideStringFromMBString((char *)vmt2dataptr(curr, VMT_STUB)));
+#else
 	      value->add((char *)vmt2dataptr(curr, VMT_STUB));
+#endif
 	      curr = (struct vmount *)((char *)curr + curr->vmt_length);
 	   }
 	   free(mountPoints);
