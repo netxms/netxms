@@ -191,9 +191,7 @@ void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size)
  */
 char LIBNETXMS_EXPORTABLE *nx_strdup(const char *src)
 {
-	char *newStr = (char *)malloc(strlen(src) + 1);
-	strcpy(newStr, src);
-	return newStr;
+	return (char *)nx_memdup(src, strlen(src) + 1);
 }
 
 /**
@@ -201,9 +199,7 @@ char LIBNETXMS_EXPORTABLE *nx_strdup(const char *src)
  */
 WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
 {
-	WCHAR *newStr = (WCHAR *)malloc((wcslen(src) + 1) * sizeof(WCHAR));
-	wcscpy(newStr, src);
-	return newStr;
+	return (WCHAR *)nx_memdup(src, (wcslen(src) + 1) * sizeof(WCHAR));
 }
 
 #endif
@@ -214,6 +210,16 @@ WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
  * Copy string
  */
 WCHAR LIBNETXMS_EXPORTABLE *wcsdup(const WCHAR *src)
+{
+	return (WCHAR *)nx_memdup(src, (wcslen(src) + 1) * sizeof(WCHAR));
+}
+
+#elif defined(_AIX)
+
+/**
+ * Copy string
+ */
+WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
 {
 	return (WCHAR *)nx_memdup(src, (wcslen(src) + 1) * sizeof(WCHAR));
 }

@@ -120,7 +120,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-char LIBNETXMS_EXPORTABLE *nx__tcsdup(const char *src);
+char LIBNETXMS_EXPORTABLE *nx_strdup(const char *src);
 WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src);
 #ifdef __cplusplus
 }
@@ -131,6 +131,7 @@ WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src);
  * Custom wcsdup
  */
 #if !HAVE_WCSDUP && !defined(_WIN32)
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -138,6 +139,20 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+#elif defined(_AIX)
+
+// Some AIX versions have broken wcsdup() so we use internal implementation
+#ifdef __cplusplus
+extern "C" {
+#endif
+	WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src);
+#ifdef __cplusplus
+}
+#endif
+
+#define wcsdup nx_wcsdup
+
 #endif
 
 /**
