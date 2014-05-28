@@ -18,48 +18,23 @@
  */
 package org.netxms.api.client.services;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ServiceLoader;
 
 /**
  * Manager for client services
  */
 public final class ServiceManager
 {
-   private static Map<String, ServiceHandler> servicesByName = new HashMap<String, ServiceHandler>();
-   private static Map<Class<? extends ServiceHandler>, ServiceHandler> servicesByClass = new HashMap<Class<? extends ServiceHandler>, ServiceHandler>();
+   private static ServiceLoader<ServiceHandler> serviceLoader = ServiceLoader.load(ServiceHandler.class);
    
    /**
-    * Register service
-    * 
-    * @param name
-    * @param handler
-    * @return
+    * Reload service providers
     */
-   public static synchronized boolean registerService(ServiceHandler handler)
+   public static synchronized void reload(ClassLoader loader)
    {
-      if (servicesByName.containsKey(handler.getServiceName()) || servicesByClass.containsKey(handler.getClass()))
-         return false;
-      servicesByName.put(handler.getServiceName(), handler);
-      servicesByClass.put(handler.getClass(), handler);
-      return true;
+      serviceLoader = ServiceLoader.load(ServiceHandler.class, loader);
    }
    
-   /**
-    * Unregister service
-    * 
-    * @param name
-    */
-   public static synchronized void unregisterService(String name)
-   {
-      ServiceHandler h = servicesByName.get(name);
-      if (h != null)
-      {
-         servicesByName.remove(name);
-         servicesByClass.remove(h.getClass());
-      }
-   }
-
    /**
     * Get service handler by name and check if handler class is correct.
     * 
@@ -69,8 +44,10 @@ public final class ServiceManager
     */
    public static synchronized ServiceHandler getServiceHandler(String name, Class<? extends ServiceHandler> serviceClass)
    {
-      ServiceHandler h = servicesByName.get(name);
-      return serviceClass.isInstance(h) ? h : null;
+      for(ServiceHandler s : serviceLoader)
+         if (s.getServiceName().equals(name) && serviceClass.isInstance(s))
+            return s;
+      return null;
    }
    
    /**
@@ -81,7 +58,10 @@ public final class ServiceManager
     */
    public static synchronized ServiceHandler getServiceHandler(String name)
    {
-      return servicesByName.get(name);
+      for(ServiceHandler s : serviceLoader)
+         if (s.getServiceName().equals(name))
+            return s;
+      return null;
    }
    
    /**
@@ -92,6 +72,18 @@ public final class ServiceManager
     */
    public static synchronized ServiceHandler getServiceHandler(Class<? extends ServiceHandler> serviceClass)
    {
-      return servicesByClass.get(serviceClass);
+      for(ServiceHandler s : serviceLoader)
+         if (serviceClass.isInstance(s))
+            return s;
+      return null;
+   }
+   
+   /**
+    * Debug method to dump all registered services
+    */
+   public static synchronized void dump()
+   {
+      for(ServiceHandler s : serviceLoader)
+         System.out.println(s.getServiceName());
    }
 }

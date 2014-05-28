@@ -27,13 +27,7 @@ Makefile.in
 pom.xml.versionsBackup
 
 Debug
-Debug64
-Debug64_UNICODE
-Debug_UNICODE
 Release
-Release64
-Release64_UNICODE
-Release_UNICODE
 bin
 target
 
@@ -215,4 +209,3 @@ target
 *.jar
 *.war
 *.ear
-

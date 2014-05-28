@@ -98,13 +98,13 @@
         <dependency>
             <groupId>org.netxms</groupId>
             <artifactId>netxms-base</artifactId>
-            <version>1.2.14</version>
+            <version>${version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.netxms</groupId>
             <artifactId>netxms-client-api</artifactId>
-            <version>1.2.14</version>
+            <version>${version}</version>
             <scope>compile</scope>
         </dependency>
 
