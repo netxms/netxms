@@ -881,12 +881,19 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
    m_pAccessList->fillMessage(pMsg);
 	m_geoLocation.fillMessage(*pMsg);
 
-   pMsg->SetVariable(VID_MODULE_DATA_COUNT, (UINT16)m_moduleData->getSize());
-   for(i = 0, dwId = VID_MODULE_DATA_BASE; i < m_moduleData->getSize(); i++, dwId += 0x100000)
+   if (m_moduleData != NULL)
    {
-      pMsg->SetVariable(dwId, m_moduleData->getKeyByIndex(i));
-      ModuleData *d = m_moduleData->getValueByIndex(i);
-      d->fillMessage(pMsg, dwId + 1);
+      pMsg->SetVariable(VID_MODULE_DATA_COUNT, (UINT16)m_moduleData->getSize());
+      for(i = 0, dwId = VID_MODULE_DATA_BASE; i < m_moduleData->getSize(); i++, dwId += 0x100000)
+      {
+         pMsg->SetVariable(dwId, m_moduleData->getKeyByIndex(i));
+         ModuleData *d = m_moduleData->getValueByIndex(i);
+         d->fillMessage(pMsg, dwId + 1);
+      }
+   }
+   else
+   {
+      pMsg->SetVariable(VID_MODULE_DATA_COUNT, (UINT16)0);
    }
 }
 
