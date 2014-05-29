@@ -39,7 +39,7 @@ class Queue;
 class DataCollectionTarget;
 
 /**
- * Global variables used by inline functions
+ * Global variables used by inline methods
  */
 extern UINT32 g_dwDiscoveryPollingInterval;
 extern UINT32 g_dwStatusPollingInterval;
@@ -47,6 +47,11 @@ extern UINT32 g_dwConfigurationPollingInterval;
 extern UINT32 g_dwRoutingTableUpdateInterval;
 extern UINT32 g_dwTopologyPollingInterval;
 extern UINT32 g_dwConditionPollingInterval;
+
+/**
+ * Utility functions used by inline methods
+ */
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, const TCHAR *query);
 
 /**
  * Constants
@@ -373,7 +378,7 @@ protected:
    bool saveCommonProperties(DB_HANDLE hdb);
 	bool loadTrustedNodes();
 	bool saveTrustedNodes(DB_HANDLE hdb);
-   bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query);
+   bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query) { return ExecuteQueryOnObject(hdb, m_dwId, query); }
 
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...);
 

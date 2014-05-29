@@ -181,7 +181,7 @@ void ModuleData::fillMessage(CSCPMessage *msg, UINT32 baseId)
 /**
  * Save module data to database.
  */
-bool ModuleData::saveToDatabase(DB_HANDLE hdb)
+bool ModuleData::saveToDatabase(DB_HANDLE hdb, UINT32 objectId)
 {
    return true;
 }
@@ -189,7 +189,7 @@ bool ModuleData::saveToDatabase(DB_HANDLE hdb)
 /**
  * Delete module data from database.
  */
-bool ModuleData::deleteFromDatabase(DB_HANDLE hdb)
+bool ModuleData::deleteFromDatabase(DB_HANDLE hdb, UINT32 objectId)
 {
    return true;
 }

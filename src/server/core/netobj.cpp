@@ -130,23 +130,9 @@ bool NetObj::deleteFromDB(DB_HANDLE hdb)
    if (success && (m_moduleData != NULL))
    {
       for(UINT32 i = 0; (i < m_moduleData->getSize()) && success; i++)
-         success = m_moduleData->getValueByIndex(i)->deleteFromDatabase(hdb);
+         success = m_moduleData->getValueByIndex(i)->deleteFromDatabase(hdb, m_dwId);
    }
 
-   return success;
-}
-
-/**
- * Prepare and execute SQL query with single binding - object ID.
- */
-bool NetObj::executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query)
-{
-   DB_STATEMENT hStmt = DBPrepare(hdb, query);
-   if (hStmt == NULL)
-      return false;
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
-   bool success = DBExecute(hStmt) ? true : false;
-   DBFreeStatement(hStmt);
    return success;
 }
 
@@ -366,7 +352,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
    if (success && (m_moduleData != NULL))
    {
       for(UINT32 i = 0; (i < m_moduleData->getSize()) && success; i++)
-         success = m_moduleData->getValueByIndex(i)->saveToDatabase(hdb);
+         success = m_moduleData->getValueByIndex(i)->saveToDatabase(hdb, m_dwId);
    }
 
 	if (success)

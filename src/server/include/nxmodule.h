@@ -52,8 +52,8 @@ public:
    virtual ~ModuleData();
 
    virtual void fillMessage(CSCPMessage *msg, UINT32 baseId);
-   virtual bool saveToDatabase(DB_HANDLE hdb);
-   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual bool saveToDatabase(DB_HANDLE hdb, UINT32 objectId);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb, UINT32 objectId);
 };
 
 /**

@@ -244,12 +244,10 @@ BOOL ExecCommand(TCHAR *pszCommand)
    return bSuccess;
 }
 
-
-//
-// Send Wake-on-LAN packet (magic packet) to given IP address
-// with given MAC address inside
-//
-
+/**
+ * Send Wake-on-LAN packet (magic packet) to given IP address
+ * with given MAC address inside
+ */
 BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
 {
    BYTE *pCurr, bPacketData[96];
@@ -327,4 +325,18 @@ bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, 
 		DBFreeStatement(hStmt);
 	}
 	return exist;
+}
+
+/**
+ * Prepare and execute SQL query with single binding - object ID.
+ */
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, const TCHAR *query)
+{
+   DB_STATEMENT hStmt = DBPrepare(hdb, query);
+   if (hStmt == NULL)
+      return false;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
+   bool success = DBExecute(hStmt) ? true : false;
+   DBFreeStatement(hStmt);
+   return success;
 }
