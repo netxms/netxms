@@ -367,12 +367,12 @@ protected:
 
    void Modify();                  // Used to mark object as modified
 
-   BOOL loadACLFromDB();
-   BOOL saveACLToDB(DB_HANDLE hdb);
-   BOOL loadCommonProperties();
-   BOOL saveCommonProperties(DB_HANDLE hdb);
-	BOOL loadTrustedNodes();
-	BOOL saveTrustedNodes(DB_HANDLE hdb);
+   bool loadACLFromDB();
+   bool saveACLToDB(DB_HANDLE hdb);
+   bool loadCommonProperties();
+   bool saveCommonProperties(DB_HANDLE hdb);
+	bool loadTrustedNodes();
+	bool saveTrustedNodes(DB_HANDLE hdb);
    bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query);
 
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...);

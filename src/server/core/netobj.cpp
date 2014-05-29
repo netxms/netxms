@@ -126,6 +126,13 @@ bool NetObj::deleteFromDB(DB_HANDLE hdb)
       success = g_alarmMgr.deleteObjectAlarms(m_dwId, hdb);
    }
 
+   // Delete module data
+   if (success && (m_moduleData != NULL))
+   {
+      for(UINT32 i = 0; (i < m_moduleData->getSize()) && success; i++)
+         success = m_moduleData->getValueByIndex(i)->deleteFromDatabase(hdb);
+   }
+
    return success;
 }
 
@@ -146,9 +153,9 @@ bool NetObj::executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query)
 /**
  * Load common object properties from database
  */
-BOOL NetObj::loadCommonProperties()
+bool NetObj::loadCommonProperties()
 {
-   BOOL bResult = FALSE;
+   bool success = false;
 
    // Load access options
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
@@ -202,7 +209,7 @@ BOOL NetObj::loadCommonProperties()
 				DBGetFieldGUID(hResult, 0, 20, m_image);
 				m_submapId = DBGetFieldULong(hResult, 0, 21);
 
-				bResult = TRUE;
+				success = true;
 			}
 			DBFreeResult(hResult);
 		}
@@ -210,7 +217,7 @@ BOOL NetObj::loadCommonProperties()
 	}
 
 	// Load custom attributes
-	if (bResult)
+	if (success)
 	{
 		hStmt = DBPrepare(g_hCoreDB, _T("SELECT attr_name,attr_value FROM object_custom_attributes WHERE object_id=?"));
 		if (hStmt != NULL)
@@ -239,29 +246,29 @@ BOOL NetObj::loadCommonProperties()
 			}
 			else
 			{
-				bResult = FALSE;
+				success = false;
 			}
 			DBFreeStatement(hStmt);
 		}
 		else
 		{
-			bResult = FALSE;
+			success = false;
 		}
 	}
 
-	if (bResult)
-		bResult = loadTrustedNodes();
+	if (success)
+		success = loadTrustedNodes();
 
-	if (!bResult)
+	if (!success)
 		DbgPrintf(4, _T("NetObj::loadCommonProperties() failed for object %s [%ld] class=%d"), m_szName, (long)m_dwId, Type());
 
-   return bResult;
+   return success;
 }
 
 /**
  * Save common object properties to database
  */
-BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
+bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 {
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("object_properties"), _T("object_id"), m_dwId))
@@ -323,16 +330,16 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_submapId);
 	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_dwId);
 
-	BOOL bResult = DBExecute(hStmt);
+   bool success = DBExecute(hStmt) ? true : false;
 	DBFreeStatement(hStmt);
 
    // Save custom attributes
-   if (bResult)
+   if (success)
    {
 		TCHAR szQuery[512];
 		_sntprintf(szQuery, 512, _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), m_dwId);
-		bResult = DBQuery(hdb, szQuery);
-		if (bResult)
+      success = DBQuery(hdb, szQuery) ? true : false;
+		if (success)
 		{
 			hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"));
 			if (hStmt != NULL)
@@ -342,23 +349,30 @@ BOOL NetObj::saveCommonProperties(DB_HANDLE hdb)
 					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
 					DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_customAttributes.getKeyByIndex(i), DB_BIND_STATIC);
 					DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_customAttributes.getValueByIndex(i), DB_BIND_STATIC);
-					bResult = DBExecute(hStmt);
-					if (!bResult)
+               success = DBExecute(hStmt) ? true : false;
+					if (!success)
 						break;
 				}
 				DBFreeStatement(hStmt);
 			}
 			else
 			{
-				bResult = FALSE;
+				success = false;
 			}
 		}
    }
 
-	if (bResult)
-		bResult = saveTrustedNodes(hdb);
+   // Save module data
+   if (success && (m_moduleData != NULL))
+   {
+      for(UINT32 i = 0; (i < m_moduleData->getSize()) && success; i++)
+         success = m_moduleData->getValueByIndex(i)->saveToDatabase(hdb);
+   }
 
-   return bResult;
+	if (success)
+		success = saveTrustedNodes(hdb);
+
+   return success;
 }
 
 /**
@@ -753,9 +767,9 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Load ACL from database
  */
-BOOL NetObj::loadACLFromDB()
+bool NetObj::loadACLFromDB()
 {
-   BOOL bSuccess = FALSE;
+   bool success = false;
 
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT user_id,access_rights FROM acl WHERE object_id=?"));
 	if (hStmt != NULL)
@@ -771,11 +785,11 @@ BOOL NetObj::loadACLFromDB()
 				m_pAccessList->addElement(DBGetFieldULong(hResult, i, 0),
 												  DBGetFieldULong(hResult, i, 1));
 			DBFreeResult(hResult);
-			bSuccess = TRUE;
+			success = true;
 		}
 		DBFreeStatement(hStmt);
 	}
-   return bSuccess;
+   return success;
 }
 
 /**
@@ -802,10 +816,10 @@ static void EnumerationHandler(UINT32 dwUserId, UINT32 dwAccessRights, void *pAr
 /**
  * Save ACL to database
  */
-BOOL NetObj::saveACLToDB(DB_HANDLE hdb)
+bool NetObj::saveACLToDB(DB_HANDLE hdb)
 {
    TCHAR szQuery[256];
-   BOOL bSuccess = FALSE;
+   bool success = false;
    SAVE_PARAM sp;
 
    // Save access list
@@ -816,10 +830,10 @@ BOOL NetObj::saveACLToDB(DB_HANDLE hdb)
       sp.dwObjectId = m_dwId;
       sp.hdb = hdb;
       m_pAccessList->enumerateElements(EnumerationHandler, &sp);
-      bSuccess = TRUE;
+      success = true;
    }
    unlockACL();
-   return bSuccess;
+   return success;
 }
 
 /**
@@ -1390,7 +1404,7 @@ void NetObj::commentsToMessage(CSCPMessage *pMsg)
 /**
  * Load trusted nodes list from database
  */
-BOOL NetObj::loadTrustedNodes()
+bool NetObj::loadTrustedNodes()
 {
 	DB_RESULT hResult;
 	TCHAR query[256];
@@ -1418,11 +1432,11 @@ BOOL NetObj::loadTrustedNodes()
 /**
  * Save list of trusted nodes to database
  */
-BOOL NetObj::saveTrustedNodes(DB_HANDLE hdb)
+bool NetObj::saveTrustedNodes(DB_HANDLE hdb)
 {
 	TCHAR query[256];
 	UINT32 i;
-	BOOL rc = FALSE;
+	bool rc = false;
 
 	_sntprintf(query, 256, _T("DELETE FROM trusted_nodes WHERE source_object_id=%d"), m_dwId);
 	if (DBQuery(hdb, query))
@@ -1435,7 +1449,7 @@ BOOL NetObj::saveTrustedNodes(DB_HANDLE hdb)
 				break;
 		}
 		if (i == m_dwNumTrustedNodes)
-			rc = TRUE;
+			rc = true;
 	}
 	return rc;
 }

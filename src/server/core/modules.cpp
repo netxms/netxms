@@ -177,3 +177,19 @@ ModuleData::~ModuleData()
 void ModuleData::fillMessage(CSCPMessage *msg, UINT32 baseId)
 {
 }
+
+/**
+ * Save module data to database.
+ */
+bool ModuleData::saveToDatabase(DB_HANDLE hdb)
+{
+   return true;
+}
+
+/**
+ * Delete module data from database.
+ */
+bool ModuleData::deleteFromDatabase(DB_HANDLE hdb)
+{
+   return true;
+}

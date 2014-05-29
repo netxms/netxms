@@ -23,6 +23,8 @@
 #ifndef _nxmodule_h_
 #define _nxmodule_h_
 
+#include <nxdbapi.h>
+
 /**
  * Forward declaration of server classes
  */
@@ -50,6 +52,8 @@ public:
    virtual ~ModuleData();
 
    virtual void fillMessage(CSCPMessage *msg, UINT32 baseId);
+   virtual bool saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
 };
 
 /**
