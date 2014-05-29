@@ -460,6 +460,10 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 	{
       CALL_ALL_MODULES(pfPostObjectCreate, (pObject));
 	}
+   else
+   {
+      CALL_ALL_MODULES(pfPostObjectLoad, (pObject));
+   }
 }
 
 /**
