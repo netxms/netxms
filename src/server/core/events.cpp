@@ -830,7 +830,7 @@ static BOOL RealPostEvent(Queue *queue, UINT32 eventCode, UINT32 sourceId,
  *        h - MAC (hardware) address
  *        i - Object ID
  */
-BOOL PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
+BOOL NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {
    va_list args;
    BOOL bResult;
@@ -859,7 +859,7 @@ BOOL PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
  */
-BOOL PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...)
+BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...)
 {
    va_list args;
    BOOL bResult;
@@ -890,7 +890,7 @@ BOOL PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, c
  * @param names names for parameters (NULL if parameters are unnamed)
  * @param args event parameters
  */
-BOOL PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...)
+BOOL NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...)
 {
    va_list args;
    BOOL bResult;
@@ -919,7 +919,7 @@ BOOL PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, c
  *        h - MAC (hardware) address
  *        i - Object ID
  */
-BOOL PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...)
+BOOL NXCORE_EXPORTABLE PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {
    va_list args;
    BOOL bResult;
@@ -933,7 +933,7 @@ BOOL PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *fo
 /**
  * Resend events from specific queue to system event queue
  */
-void ResendEvents(Queue *queue)
+void NXCORE_EXPORTABLE ResendEvents(Queue *queue)
 {
    while(1)
    {

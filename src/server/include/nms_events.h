@@ -198,19 +198,21 @@ public:
  */
 BOOL InitEventSubsystem();
 void ShutdownEventSubsystem();
-BOOL PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
-BOOL PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...);
-BOOL PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...);
-BOOL PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...);
-void ResendEvents(Queue *queue);
 void ReloadEvents();
 void DeleteEventTemplateFromList(UINT32 eventCode);
 void CorrelateEvent(Event *pEvent);
 void CreateNXMPEventRecord(String &str, UINT32 eventCode);
+
 BOOL EventNameFromCode(UINT32 eventCode, TCHAR *pszBuffer);
 UINT32 EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);
 EVENT_TEMPLATE *FindEventTemplateByCode(UINT32 eventCode);
 EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName);
+
+BOOL NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
+BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...);
+BOOL NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...);
+BOOL NXCORE_EXPORTABLE PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...);
+void NXCORE_EXPORTABLE ResendEvents(Queue *queue);
 
 /**
  * Global variables
