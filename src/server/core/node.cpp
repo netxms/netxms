@@ -1886,7 +1886,8 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 			if (g_pModuleList[i].pfConfPollHook != NULL)
 			{
 				DbgPrintf(5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_szName, m_dwId, g_pModuleList[i].szName);
-				g_pModuleList[i].pfConfPollHook(this, pSession, dwRqId, nPoller);
+				if (g_pModuleList[i].pfConfPollHook(this, pSession, dwRqId, nPoller))
+               hasChanges = true;
 			}
 		}
 

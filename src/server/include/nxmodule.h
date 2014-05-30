@@ -73,7 +73,7 @@ typedef struct
    BOOL (* pfEventHandler)(Event *event);
    void (* pfAlarmChangeHook)(UINT32 changeCode, NXC_ALARM *alarm);
 	void (* pfStatusPollHook)(Node *node, ClientSession *session, UINT32 rqId, int pollerId);
-	void (* pfConfPollHook)(Node *node, ClientSession *session, UINT32 rqId, int pollerId);
+	bool (* pfConfPollHook)(Node *node, ClientSession *session, UINT32 rqId, int pollerId);
 	void (* pfTopologyPollHook)(Node *node, ClientSession *session, UINT32 rqId, int pollerId);
 	int (* pfCalculateObjectStatus)(NetObj *object);
 	BOOL (* pfNetObjInsert)(NetObj *object);
