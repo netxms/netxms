@@ -426,6 +426,7 @@ public:
    bool isHidden() { return m_isHidden; }
    void hide();
    void unhide();
+   void markAsModified() { LockData(); Modify(); UnlockData(); }  // external API to mar object as modified
 
    virtual BOOL SaveToDB(DB_HANDLE hdb);
    virtual bool deleteFromDB(DB_HANDLE hdb);
