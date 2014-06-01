@@ -18,10 +18,12 @@
  */
 package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
 
+import org.eclipse.jface.viewers.IElementComparer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.ViewerRow;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TreeItem;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * Custom extension of tree viewer for object tree
@@ -35,6 +37,21 @@ public class ObjectTreeViewer extends TreeViewer
 	public ObjectTreeViewer(Composite parent, int style)
 	{
 		super(parent, style);
+		setComparer(new IElementComparer() {
+         @Override
+         public int hashCode(Object element)
+         {
+            return (element instanceof AbstractObject) ? (int)((AbstractObject)element).getObjectId() : element.hashCode();
+         }
+         
+         @Override
+         public boolean equals(Object a, Object b)
+         {
+            if ((a instanceof AbstractObject) && (b instanceof AbstractObject))
+               return ((AbstractObject)a).getObjectId() == ((AbstractObject)b).getObjectId();
+            return a.equals(b);
+         }
+      });
 	}
 
 	/**

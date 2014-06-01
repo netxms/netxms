@@ -91,7 +91,6 @@ public class ObjectTree extends Composite
 	private NXCListener sessionListener = null;
 	private NXCSession session = null;
 	private RefreshTimer refreshTimer;
-	private TreePath[] expandedPaths = null;
 	private ObjectStatusIndicator statusIndicator = null;
 	private SelectionListener statusIndicatorSelectionListener = null;
 	private TreeListener statusIndicatorTreeListener;
@@ -111,11 +110,9 @@ public class ObjectTree extends Composite
          public void run()
          {
             objectTree.getTree().setRedraw(false);
-            saveExpandedState();
             objectTree.refresh();
             if (statusIndicatorEnabled)
                updateStatusIndicator();
-            restoreExpandedState();
             objectTree.getTree().setRedraw(true);
          }
       });
@@ -384,38 +381,6 @@ public class ObjectTree extends Composite
 	public Long[] getCheckedObjects()
 	{
 		return checkedObjects.toArray(new Long[checkedObjects.size()]);
-	}
-	
-	/**
-	 * Save expanded elements
-	 */
-	private void saveExpandedState()
-	{
-		expandedPaths = objectTree.getExpandedTreePaths();
-	}
-	
-	/**
-	 * Expand elements that was expanded when saveExpandedState() was called
-	 */
-	private void restoreExpandedState()
-	{
-		if (expandedPaths == null)
-			return;
-		
-		for(int i = 0; i < expandedPaths.length; i++)
-		{
-			TreePath p = expandedPaths[i];
-			Object[] segments = new Object[p.getSegmentCount()];
-			for(int j = 0; j < p.getSegmentCount(); j++)
-			{
-				AbstractObject object = (AbstractObject)p.getSegment(j);
-				segments[j] = session.findObjectById(object.getObjectId());
-				if (segments[j] == null)
-					segments[j] = object;
-			}
-			expandedPaths[i] = new TreePath(segments);
-		}
-		objectTree.setExpandedTreePaths(expandedPaths);
 	}
 	
 	/**

@@ -253,7 +253,7 @@ static BOOL MatchProcess(DWORD pid, HANDLE hProcess, HMODULE hModule, BOOL bExtM
 	int i;
 	BOOL bRet;
 
-   GetModuleBaseName(hProcess, hModule, szBaseName, sizeof(szBaseName));
+   GetModuleBaseName(hProcess, hModule, szBaseName, MAX_PATH);
 	if (bExtMatch)	// Extended version
 	{
 		TCHAR commandLine[MAX_PATH];
@@ -418,11 +418,7 @@ LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
  */
 LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 {
-   DWORD dwSize = 0, *pdwProcList;
-   int i, counter, procCount;
    TCHAR procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
-   HANDLE hProcess;
-   HMODULE modList[MAX_MODULES];
 
    AgentGetParameterArg(cmd, 1, procName, MAX_PATH - 1);
 	if (*arg == 'E')
@@ -435,28 +431,31 @@ LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 			return SYSINFO_RC_UNSUPPORTED;
 	}
 
-   pdwProcList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
-   EnumProcesses(pdwProcList, sizeof(DWORD) * MAX_PROCESSES, &dwSize);
-   procCount = dwSize / sizeof(DWORD);
-   for(i = 0, counter = 0; i < procCount; i++)
+   DWORD *procList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
+   DWORD size = 0;
+   EnumProcesses(procList, sizeof(DWORD) * MAX_PROCESSES, &size);
+   int procCount = (int)(size / sizeof(DWORD));
+   int count = 0;
+   for(int i = 0; i < procCount; i++)
    {
-      hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pdwProcList[i]);
+      HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, procList[i]);
       if (hProcess != NULL)
       {
-         if (EnumProcessModules(hProcess, modList, sizeof(HMODULE) * MAX_MODULES, &dwSize))
+         HMODULE modList[MAX_MODULES];
+         if (EnumProcessModules(hProcess, modList, sizeof(HMODULE) * MAX_MODULES, &size))
          {
-            if (dwSize >= sizeof(HMODULE))     // At least one module exist
+            if (size >= sizeof(HMODULE))     // At least one module exist
             {
-					if (MatchProcess(pdwProcList[i], hProcess, modList[0], *arg == 'E',
+					if (MatchProcess(procList[i], hProcess, modList[0], *arg == 'E',
 					                 procName, cmdLine, windowTitle))
-						counter++;
+						count++;
 				}
          }
          CloseHandle(hProcess);
       }
    }
-   ret_int(value, counter);
-   free(pdwProcList);
+   ret_int(value, count);
+   free(procList);
    return SYSINFO_RC_SUCCESS;
 }
 

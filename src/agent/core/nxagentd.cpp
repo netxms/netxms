@@ -162,7 +162,7 @@ static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
 static THREAD m_thTrapSender = INVALID_THREAD_HANDLE;
 static THREAD m_thMasterAgentListener = INVALID_THREAD_HANDLE;
-static TCHAR m_szProcessToWait[MAX_PATH] = _T("");
+static TCHAR s_processToWaitFor[MAX_PATH] = _T("");
 static TCHAR m_szDumpDir[MAX_PATH] = _T("C:\\");
 static UINT32 m_dwMaxLogSize = 16384 * 1024;
 static UINT32 m_dwLogHistorySize = 4;
@@ -230,7 +230,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay, NULL },
    { _T("SubAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList, NULL },
    { _T("TimeOut"), CT_IGNORE, 0, 0, 0, 0, NULL, NULL },
-   { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, m_szProcessToWait, NULL },
+   { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, s_processToWaitFor, NULL },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
 };
 
@@ -746,11 +746,11 @@ BOOL Initialize()
 	}
 
 	// Wait for external process if requested
-	if (m_szProcessToWait[0] != 0)
+	if (s_processToWaitFor[0] != 0)
 	{
-	   DebugPrintf(INVALID_INDEX, 1, _T("Waiting for process %s"), m_szProcessToWait);
-		if (!WaitForProcess(m_szProcessToWait))
-	      nxlog_write(MSG_WAITFORPROCESS_FAILED, EVENTLOG_ERROR_TYPE, "s", m_szProcessToWait);
+	   DebugPrintf(INVALID_INDEX, 1, _T("Waiting for process %s"), s_processToWaitFor);
+		if (!WaitForProcess(s_processToWaitFor))
+	      nxlog_write(MSG_WAITFORPROCESS_FAILED, EVENTLOG_ERROR_TYPE, "s", s_processToWaitFor);
 	}
 
 	DBSetDebugPrintCallback(DebugPrintfCallback);
