@@ -2,6 +2,8 @@
 * 1.2.15
 *
 
+- LDAP support
+- Event names support in nxevent
 - Management console:
    - "Commands" box on node overview page made configurable
    - Object tools can have icons

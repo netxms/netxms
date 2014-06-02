@@ -2128,8 +2128,8 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetEventName(NXC_SESSION hSession, UINT32 dwI
 BOOL LIBNXCL_EXPORTABLE NXCGetEventNameEx(NXC_SESSION hSession, UINT32 dwId, TCHAR *pszBuffer, UINT32 dwBufSize);
 int LIBNXCL_EXPORTABLE NXCGetEventSeverity(NXC_SESSION hSession, UINT32 dwId);
 BOOL LIBNXCL_EXPORTABLE NXCGetEventText(NXC_SESSION hSession, UINT32 dwId, TCHAR *pszBuffer, UINT32 dwBufSize);
-UINT32 LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, UINT32 dwEventCode, UINT32 dwObjectId,
-												  int iNumArgs, TCHAR **pArgList, TCHAR *pszUserTag);
+UINT32 LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, UINT32 dwEventCode, const TCHAR *eventName, UINT32 dwObjectId,
+												   int iNumArgs, TCHAR **pArgList, TCHAR *pszUserTag);
 
 /** Syslog **/
 UINT32 LIBNXCL_EXPORTABLE NXCSyncSyslog(NXC_SESSION hSession, UINT32 dwMaxRecords);

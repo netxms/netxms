@@ -293,7 +293,7 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 		else if (g_nDBSyntax == DB_SYNTAX_MSSQL)
 		{
 			_sntprintf(query, 1024, _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata_%u ")
-				_T("WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)"), 
+				_T("WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"), 
 				functions[sqlFunc], node->Id());
 		}
 		else if (g_nDBSyntax == DB_SYNTAX_PGSQL)

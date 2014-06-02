@@ -85,14 +85,12 @@ UINT32 LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession, UINT32 dwMaxRecord
    return dwRetCode;
 }
 
-
-//
-// Send event to server
-//
-
-UINT32 LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, UINT32 dwEventCode, 
-                                      UINT32 dwObjectId, int iNumArgs, TCHAR **pArgList,
-												  TCHAR *pszUserTag)
+/**
+ * Send event to server. Event can be identified either by code or by name.
+ * In latter case event code must be set to zero.
+ */
+UINT32 LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, UINT32 dwEventCode, const TCHAR *eventName,
+                                      UINT32 dwObjectId, int iNumArgs, TCHAR **pArgList, TCHAR *pszUserTag)
 {
    CSCPMessage msg;
    UINT32 dwRqId;
@@ -103,6 +101,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, UINT32 dwEventCode,
    msg.SetCode(CMD_TRAP);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_EVENT_CODE, dwEventCode);
+   msg.SetVariable(VID_EVENT_NAME, eventName);
    msg.SetVariable(VID_OBJECT_ID, dwObjectId);
 	msg.SetVariable(VID_USER_TAG, CHECK_NULL_EX(pszUserTag));
    msg.SetVariable(VID_NUM_ARGS, (WORD)iNumArgs);
