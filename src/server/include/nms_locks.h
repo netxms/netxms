@@ -29,20 +29,17 @@
 /**
  * Component identifiers used for locking
  */
-enum LockComponents
-{
-   CID_EPP = 0,
-   CID_USER_DB = 1,
-   CID_PACKAGE_DB = 2,
-   CID_CUSTOM_1 = 3,
-   CID_CUSTOM_2 = 4,
-   CID_CUSTOM_3 = 5,
-   CID_CUSTOM_4 = 6,
-   CID_CUSTOM_5 = 7,
-   CID_CUSTOM_6 = 8,
-   CID_CUSTOM_7 = 9,
-   CID_CUSTOM_8 = 10
-};
+#define CID_EPP 0
+#define CID_USER_DB 1
+#define CID_PACKAGE_DB 2
+#define CID_CUSTOM_1 3
+#define CID_CUSTOM_2 4
+#define CID_CUSTOM_3 5
+#define CID_CUSTOM_4 6
+#define CID_CUSTOM_5 7
+#define CID_CUSTOM_6 8
+#define CID_CUSTOM_7 9
+#define CID_CUSTOM_8 10
 
 /*** Functions ***/
 #ifndef _NETXMS_DB_SCHEMA_
