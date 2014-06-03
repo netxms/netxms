@@ -487,8 +487,6 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 			sendPollerMsg(rqId, _T("      Starting ICMP ping\r\n"));
 			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,%d,NULL,%d)"), m_dwId, m_szName, htonl(m_dwIpAddr), g_icmpPingTimeout, g_icmpPingSize);
 			UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, NULL, g_icmpPingSize);
-			if (dwPingStatus == ICMP_RAW_SOCK_FAILED)
-				nxlog_write(MSG_RAW_SOCK_FAILED, EVENTLOG_WARNING_TYPE, NULL);
 			if (dwPingStatus == ICMP_SUCCESS)
          {
 				sendPollerMsg(rqId, POLLER_ERROR _T("      responded to ICMP ping\r\n"));

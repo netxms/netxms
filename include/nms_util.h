@@ -73,7 +73,7 @@
 #define ICMP_UNREACHEABLE     1
 #define ICMP_TIMEOUT          2
 #define ICMP_RAW_SOCK_FAILED  3
-#define ICMP_API_ERROR        3
+#define ICMP_API_ERROR        4
 
 /**
  * Token types for configuration loader
