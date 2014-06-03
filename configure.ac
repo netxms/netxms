@@ -2526,6 +2526,7 @@ AC_CONFIG_FILES([
 	src/libtre/Makefile
 	src/libtre/win32/Makefile
 	src/nxcproxy/Makefile
+	src/nxlptest/Makefile
 	src/nxscript/Makefile
 	src/server/Makefile
 	src/server/core/Makefile
