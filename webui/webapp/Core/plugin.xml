@@ -173,6 +173,12 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+M3+A">
       </key>
+      <key
+            commandId="org.eclipse.ui.file.closePart"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+W">
+      </key>
       <scheme
             description="%scheme.description"
             id="org.netxms.ui.eclipse.defaultKeyBinding"

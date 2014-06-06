@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchCommandConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
@@ -52,6 +53,7 @@ import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
+import org.eclipse.ui.internal.actions.CommandAction;
 import org.netxms.base.BuildNumber;
 import org.netxms.base.NXCommon;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
@@ -61,6 +63,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 /**
  * Action bar advisor for management console
  */
+@SuppressWarnings("restriction")
 public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 {
 	private IWorkbenchAction actionExit;
@@ -74,6 +77,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	private IWorkbenchAction actionCloseAllPerspectives;
 	private IWorkbenchAction actionMinimize;
 	private IWorkbenchAction actionMaximize;
+   private Action actionClose;
 	private IWorkbenchAction actionPrevView;
 	private IWorkbenchAction actionNextView;
 	private IWorkbenchAction actionQuickAccess;
@@ -152,6 +156,9 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		
 		actionMaximize = ActionFactory.MAXIMIZE.create(window);
 		register(actionMaximize);
+		
+		actionClose = new CommandAction(window, IWorkbenchCommandConstants.WINDOW_CLOSE_PART);
+      register(actionClose);
 		
 		actionPrevView = ActionFactory.PREVIOUS_PART.create(window);
 		register(actionPrevView);
@@ -322,6 +329,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		navMenu.add(new Separator());
 		navMenu.add(actionMaximize);
 		navMenu.add(actionMinimize);
+      navMenu.add(actionClose);
 		navMenu.add(new Separator());
 		navMenu.add(actionNextView);
 		navMenu.add(actionPrevView);
