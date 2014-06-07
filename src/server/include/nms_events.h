@@ -49,7 +49,7 @@ struct EVENT_TEMPLATE
 /**
  * Event
  */
-class Event
+class NXCORE_EXPORTABLE Event
 {
 private:
    UINT64 m_qwId;
