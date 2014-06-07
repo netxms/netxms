@@ -69,6 +69,7 @@ private:
 
 public:
    Event();
+   Event(Event *src);
    Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, va_list args);
    ~Event();
 

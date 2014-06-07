@@ -58,6 +58,31 @@ Event::Event()
 }
 
 /**
+ * Copy constructor for event
+ */
+Event::Event(Event *src)
+{
+   m_qwId = src->m_qwId;
+   _tcscpy(m_szName, src->m_szName);
+   m_qwRootId = src->m_qwRootId;
+   m_dwCode = src->m_dwCode;
+   m_dwSeverity = src->m_dwSeverity;
+   m_dwSource = src->m_dwSource;
+   m_dwFlags = src->m_dwFlags;
+   m_pszMessageText = _tcsdup_ex(src->m_pszMessageText);
+   m_pszMessageTemplate = _tcsdup_ex(src->m_pszMessageTemplate);
+   m_tTimeStamp = src->m_tTimeStamp;
+	m_pszUserTag = _tcsdup_ex(src->m_pszUserTag);
+	m_pszCustomMessage = _tcsdup_ex(src->m_pszCustomMessage);
+	m_parameters.setOwner(true);
+   for(int i = 0; i < src->m_parameters.size(); i++)
+   {
+      m_parameters.add(_tcsdup_ex((TCHAR *)src->m_parameters.get(i)));
+   }
+   m_parameterNames.addAll(&src->m_parameterNames);
+}
+
+/**
  * Construct event from template
  */
 Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, const char *szFormat, const TCHAR **names, va_list args)
