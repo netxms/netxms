@@ -4,13 +4,12 @@ import com.radensolutions.reporting.infrastructure.SmtpSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.io.ByteArrayInputStream;
 
 public class SmtpSenderImpl implements SmtpSender {
 
@@ -34,7 +33,7 @@ public class SmtpSenderImpl implements SmtpSender {
             helper.setTo(to);
             helper.setSubject(subject);
             if (fileName != null && fileContent != null) {
-                helper.addAttachment(fileName, new InputStreamResource(new ByteArrayInputStream(fileContent)));
+                helper.addAttachment(fileName, new ByteArrayResource(fileContent));
             }
             helper.setText(body);
             mailSender.send(message);
