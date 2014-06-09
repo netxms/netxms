@@ -4,6 +4,7 @@
 
 - LDAP support
 - Event names support in nxevent
+- Previous state parameter added to SYS_NODE_UP event 
 - Management console:
    - "Commands" box on node overview page made configurable
    - Object tools can have icons

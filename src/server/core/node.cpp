@@ -1363,8 +1363,9 @@ restart_agent_check:
 			m_downSince = 0;
 		   if (m_dwDynamicFlags & NDF_UNREACHABLE)
 		   {
+            int reason = (m_dwDynamicFlags & NDF_NETWORK_PATH_PROBLEM) ? 1 : 0;
 		      m_dwDynamicFlags &= ~(NDF_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_AGENT_UNREACHABLE | NDF_NETWORK_PATH_PROBLEM);
-		      PostEvent(EVENT_NODE_UP, m_dwId, NULL);
+		      PostEvent(EVENT_NODE_UP, m_dwId, "d", reason);
 		      sendPollerMsg(dwRqId, POLLER_INFO _T("Node recovered from unreachable state\r\n"));
 				goto restart_agent_check;
 		   }

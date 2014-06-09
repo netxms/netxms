@@ -353,7 +353,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'Node down',
 		'Generated when node is not responding to management server.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No event-specific parameters'
+		'   1) Previous state (1 if node was marked as UNREACHABLE, 0 if it was marked as DOWN)'
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
