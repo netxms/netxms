@@ -7,6 +7,8 @@
 - Management console:
    - "Commands" box on node overview page made configurable
    - Object tools can have icons
+- Android Console:
+   - Added option in preference to show/hide legend in graphs 
 
 
 *

@@ -139,6 +139,11 @@ Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, c
                _sntprintf(buffer, 32, INT64_FMT, va_arg(args, INT64));
 					m_parameters.add(buffer);
                break;
+            case 't':
+               buffer = (TCHAR *)malloc(32 * sizeof(TCHAR));
+               _sntprintf(buffer, 32, INT64_FMT, (INT64)va_arg(args, time_t));
+					m_parameters.add(buffer);
+               break;
             case 'x':
             case 'i':
                buffer = (TCHAR *)malloc(16 * sizeof(TCHAR));
@@ -599,6 +604,36 @@ void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
 }
 
 /**
+ * Set value (and optionally name) of parameter at given index.
+ *
+ * @param index 0-based parameter index
+ * @param name parameter name (can be NULL)
+ * @param value new value
+ */
+void Event::setParameter(int index, const TCHAR *name, const TCHAR *value)
+{
+   if (index < 0)
+      return;
+
+   int addup = index - m_parameters.size();
+   for(int i = 0; i < addup; i++)
+   {
+		m_parameters.add(_tcsdup(_T("")));
+		m_parameterNames.add(_T(""));
+   }
+   if (index < m_parameters.size())
+   {
+		m_parameters.replace(index, _tcsdup(value));
+		m_parameterNames.replace(index, CHECK_NULL_EX(name));
+   }
+   else
+   {
+		m_parameters.add(_tcsdup(value));
+		m_parameterNames.add(CHECK_NULL_EX(name));
+   }
+}
+
+/**
  * Fill message with event data
  */
 void Event::prepareMessage(CSCPMessage *pMsg)
@@ -854,6 +889,7 @@ static BOOL RealPostEvent(Queue *queue, UINT32 eventCode, UINT32 sourceId,
  *        a - IP address
  *        h - MAC (hardware) address
  *        i - Object ID
+ *        t - timestamp (time_t) as raw value (seconds since epoch)
  */
 BOOL NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {

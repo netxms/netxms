@@ -4780,7 +4780,7 @@ static BOOL H_UpgradeFromV64(int currVersion, int newVersion)
 					return FALSE;
 			break;
 		case DB_SYNTAX_SQLITE:
-			_tprintf(_T("WARNING: Due to limitations of SQLite requested operation cannot be completed\nYou system will still be limited to use SNMP commonity strings not longer than 32 characters.\n"));
+			_tprintf(_T("WARNING: Due to limitations of SQLite requested operation cannot be completed\nYou system will still be limited to use SNMP community strings not longer than 32 characters.\n"));
 			break;
 		default:
 			_tprintf(_T("INTERNAL ERROR: Unknown database syntax %d\n"), g_iSyntax);

@@ -103,6 +103,7 @@ public:
 
 	void addParameter(const TCHAR *name, const TCHAR *value);
 	void setNamedParameter(const TCHAR *name, const TCHAR *value);
+	void setParameter(int index, const TCHAR *name, const TCHAR *value);
 
    const TCHAR *getCustomMessage() { return CHECK_NULL_EX(m_pszCustomMessage); }
    void setCustomMessage(const TCHAR *message) { safe_free(m_pszCustomMessage); m_pszCustomMessage = (message != NULL) ? _tcsdup(message) : NULL; }
