@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,12 +31,19 @@ import org.eclipse.swt.widgets.Shell;
 public interface BrandingProvider
 {
 	/**
-	 * Get product name.
+	 * Get common product name.
 	 * 
 	 * @return
 	 */
 	public String getProductName();
 	
+   /**
+    * Get product name for management console.
+    * 
+    * @return
+    */
+   public String getConsoleProductName();
+   
 	/**
 	 * Get default perspective. Should return null to use default (or defined by another branding manager)
 	 * 

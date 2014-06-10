@@ -214,17 +214,19 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
             @Override
             public void notificationHandler(final SessionNotification n)
             {
-               if ((n.getCode() == SessionNotification.CONNECTION_BROKEN) || (n.getCode() == SessionNotification.SERVER_SHUTDOWN))
+				if ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ||
+				    (n.getCode() == SessionNotification.SERVER_SHUTDOWN))
                {
                   display.asyncExec(new Runnable() {
                      @Override
                      public void run()
                      {
+                    	String productName = BrandingManager.getInstance().getProductName();
                         MessageDialog.openError(
                               PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
                               Messages.get().ApplicationWorkbenchAdvisor_CommunicationError,
-                              ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? Messages.get().ApplicationWorkbenchAdvisor_ConnectionLostMessage
-                                    : Messages.get().ApplicationWorkbenchAdvisor_ServerShutdownMessage)
+                              ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? String.format(Messages.get().ApplicationWorkbenchAdvisor_ConnectionLostMessage, productName)
+                                    : String.format(Messages.get().ApplicationWorkbenchAdvisor_ServerShutdownMessage, productName))
                                     + Messages.get().ApplicationWorkbenchAdvisor_OKToCloseMessage);
                         PlatformUI.getWorkbench().getActiveWorkbenchWindow().close();
                      }
