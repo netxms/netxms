@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Client Library
 ** Copyright (C) 2003-2010 Victor Kirhenshtein
@@ -32,7 +32,7 @@ void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser)
    pUser->dwId = pMsg->GetVariableLong(VID_USER_ID);
    pMsg->GetVariableStr(VID_USER_NAME, pUser->szName, MAX_USER_NAME);
    pUser->wFlags = pMsg->GetVariableShort(VID_USER_FLAGS);
-   pUser->dwSystemRights = (UINT32)pMsg->GetVariableInt64(VID_USER_SYS_RIGHTS);
+   pUser->dwSystemRights = pMsg->GetVariableInt64(VID_USER_SYS_RIGHTS);
    pMsg->GetVariableStr(VID_USER_DESCRIPTION, pUser->szDescription, MAX_USER_DESCR);
    pMsg->GetVariableBinary(VID_GUID, pUser->guid, UUID_LENGTH);
 
@@ -83,7 +83,7 @@ NXC_USER LIBNXCL_EXPORTABLE *NXCFindUserById(NXC_SESSION hSession, UINT32 dwId)
 // Get pointer to user list and number of users
 //
 
-BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_SESSION hSession, NXC_USER **ppUserList, 
+BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_SESSION hSession, NXC_USER **ppUserList,
                                      UINT32 *pdwNumUsers)
 {
    return ((NXCL_Session *)hSession)->GetUserDB(ppUserList, pdwNumUsers);
@@ -188,7 +188,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyUserEx(NXC_SESSION hSession, NXC_USER *pUserI
    msg.SetVariable(VID_USER_NAME, pUserInfo->szName);
    msg.SetVariable(VID_USER_DESCRIPTION, pUserInfo->szDescription);
    msg.SetVariable(VID_USER_FLAGS, pUserInfo->wFlags);
-   msg.SetVariable(VID_USER_SYS_RIGHTS, (UINT64)pUserInfo->dwSystemRights);
+   msg.SetVariable(VID_USER_SYS_RIGHTS, pUserInfo->dwSystemRights);
 
    // Group-specific fields
    if (pUserInfo->dwId & GROUP_FLAG)
@@ -216,7 +216,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyUserEx(NXC_SESSION hSession, NXC_USER *pUserI
 // Set password for user
 //
 
-UINT32 LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, UINT32 userId, 
+UINT32 LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, UINT32 userId,
                                         const TCHAR *newPassword, const TCHAR *oldPassword)
 {
    CSCPMessage msg;

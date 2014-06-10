@@ -359,7 +359,67 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
    return TRUE;
 }
 
-/*
+/**
+ * Upgrade from V321 to V322
+ */
+static BOOL H_UpgradeFromV321(int currVersion, int newVersion)
+{
+   switch(g_iSyntax)
+	{
+		case DB_SYNTAX_DB2:
+			static TCHAR batch1[] =
+			_T("ALTER TABLE users ALTER COLUMN system_access SET DATA TYPE $SQL:INT64\n")
+			_T("ALTER TABLE user_groups ALTER COLUMN system_access SET DATA TYPE $SQL:INT64\n")
+			_T("<END>");
+         CHK_EXEC(SQLBatch(batch1));
+			break;
+		case DB_SYNTAX_MSSQL:
+			static TCHAR batch2[] =
+			_T("ALTER TABLE users ALTER COLUMN system_access $SQL:INT64\n")
+			_T("ALTER TABLE user_groups ALTER COLUMN system_access $SQL:INT64\n")
+			_T("<END>");
+         CHK_EXEC(SQLBatch(batch2));
+			break;
+		case DB_SYNTAX_PGSQL:
+			static TCHAR batch3[] =
+			_T("ALTER TABLE users ALTERT COLUMN system_access TYPE $SQL:INT64\n")
+			_T("ALTER TABLE user_groups ALTERT COLUMN system_access TYPE $SQL:INT64\n")
+         _T("<END>");
+         CHK_EXEC(SQLBatch(batch3));
+			break;
+		case DB_SYNTAX_SQLITE:
+			static TCHAR batch4[] =
+			_T("CREATE TABLE temp_users AS SELECT * FROM users\n")
+         _T("DROP TABLE users\n")
+         _T("CREATE TABLE users (id integer not null, guid varchar(36) not null, name varchar(63) not null, password varchar(48) not null, system_access $SQL:INT64 not null, flags integer not null,")
+      _T("full_name varchar(127) null, description varchar(255) null, grace_logins integer not null, auth_method integer not null, cert_mapping_method integer not null, cert_mapping_data $SQL:TEXT null,")
+      _T("auth_failures integer not null, last_passwd_change integer not null, min_passwd_length integer not null, disabled_until integer not null, last_login integer not null, password_history $SQL:TEXT null,")
+      _T("xmpp_id varchar(127) null, ldap_dn $SQL:TEXT null, PRIMARY KEY(id))\n")
+         _T("insert into users select * from temp_users\n")
+         _T("DROP TABLE temp_users\n")
+         _T("CREATE TABLE temp_user_groups AS SELECT * FROM user_groups\n")
+         _T("DROP TABLE user_groups\n")
+         _T("create table user_groups (id integer not null, guid varchar(36) not null, name varchar(63) not null, system_access $SQL:INT64 not null, flags integer not null,")
+         _T("description varchar(255) not null, ldap_dn $SQL:TEXT null, PRIMARY KEY(id))\n")
+         _T("insert into user_groups select * from temp_user_groups\n")
+         _T("DROP TABLE temp_user_groups\n")
+         _T("<END>");
+         CHK_EXEC(SQLBatch(batch4));
+			break;
+		default:
+			static TCHAR batch5[] =
+			_T("ALTER TABLE users MODIFY system_access $SQL:INT64\n")
+			_T("ALTER TABLE user_groups MODIFY system_access $SQL:INT64\n")
+			_T("<END>");
+         CHK_EXEC(SQLBatch(batch5));
+			break;
+	}
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='322' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V320 to V321
  */
 static BOOL H_UpgradeFromV320(int currVersion, int newVersion)
@@ -7767,6 +7827,7 @@ static struct
    { 318, 319, H_UpgradeFromV318 },
    { 319, 320, H_UpgradeFromV319 },
    { 320, 321, H_UpgradeFromV320 },
+   { 321, 322, H_UpgradeFromV321 },
    { 0, 0, NULL }
 };
 

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
@@ -188,7 +188,7 @@ void MobileDeviceSession::readThread()
 			   pDecryptionBuffer = (BYTE *)realloc(pDecryptionBuffer, msgBufferSize);
 		}
 
-      if ((iErr = RecvNXCPMessageEx(m_hSocket, &pRawMsg, m_pMsgBuffer, &msgBufferSize, 
+      if ((iErr = RecvNXCPMessageEx(m_hSocket, &pRawMsg, m_pMsgBuffer, &msgBufferSize,
 		                              &m_pCtx, (pDecryptionBuffer != NULL) ? &pDecryptionBuffer : NULL,
 												900000, MAX_MSG_SIZE)) <= 0)  // timeout 15 minutes
 		{
@@ -355,7 +355,7 @@ void MobileDeviceSession::processingThread()
 
       m_wCurrentCmd = pMsg->GetCode();
       debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
-      if (!m_isAuthenticated && 
+      if (!m_isAuthenticated &&
           (m_wCurrentCmd != CMD_LOGIN) &&
 			 (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
           (m_wCurrentCmd != CMD_REQUEST_ENCRYPTION))
@@ -524,7 +524,7 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
    if (pRequest->isFieldExist(VID_CLIENT_INFO))
    {
       TCHAR szClientInfo[32], szOSInfo[32], szLibVersion[16];
-      
+
       pRequest->GetVariableStr(VID_CLIENT_INFO, szClientInfo, 32);
       pRequest->GetVariableStr(VID_OS_INFO, szOSInfo, 32);
       pRequest->GetVariableStr(VID_LIBNXCL_VERSION, szLibVersion, 16);
@@ -536,7 +536,7 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
    {
       pRequest->GetVariableStr(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
 		nAuthType = (int)pRequest->GetVariableShort(VID_AUTH_TYPE);
-		UINT32 userRights;
+		UINT64 userRights;
 		switch(nAuthType)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:

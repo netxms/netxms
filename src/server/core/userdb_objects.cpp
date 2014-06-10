@@ -35,7 +35,7 @@ UserDatabaseObject::UserDatabaseObject(DB_RESULT hResult, int row)
 {
 	m_id = DBGetFieldULong(hResult, row, 0);
 	DBGetField(hResult, row, 1, m_name, MAX_USER_NAME);
-	m_systemRights = DBGetFieldULong(hResult, row, 2);
+	m_systemRights = DBGetFieldUInt64(hResult, row, 2);
 	m_flags = DBGetFieldULong(hResult, row, 3);
 	DBGetField(hResult, row, 4, m_description, MAX_USER_DESCR);
 	DBGetFieldGUID(hResult, row, 5, m_guid);
@@ -98,7 +98,7 @@ void UserDatabaseObject::fillMessage(CSCPMessage *msg)
    msg->SetVariable(VID_USER_ID, m_id);
    msg->SetVariable(VID_USER_NAME, m_name);
    msg->SetVariable(VID_USER_FLAGS, (WORD)m_flags);
-   msg->SetVariable(VID_USER_SYS_RIGHTS, (UINT64)m_systemRights);
+   msg->SetVariable(VID_USER_SYS_RIGHTS, m_systemRights);
    msg->SetVariable(VID_USER_DESCRIPTION, m_description);
    msg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
 	msg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_attributes.getSize());
@@ -142,7 +142,7 @@ void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 	}
 
 	if ((m_id != 0) && (fields & USER_MODIFY_ACCESS_RIGHTS))
-		m_systemRights = (UINT32)msg->GetVariableInt64(VID_USER_SYS_RIGHTS);
+		m_systemRights = msg->GetVariableInt64(VID_USER_SYS_RIGHTS);
 
 	if (fields & USER_MODIFY_FLAGS)
 	{
@@ -422,7 +422,7 @@ bool User::saveToDatabase(DB_HANDLE hdb)
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, password, DB_BIND_STATIC);
-   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_systemRights);
+   DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, m_systemRights);
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_flags);
    DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_fullName, DB_BIND_STATIC);
    DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
@@ -730,7 +730,7 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
       return false;
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_systemRights);
+   DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, m_systemRights);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_flags);
    DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
    DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guidText), DB_BIND_STATIC);

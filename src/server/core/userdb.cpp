@@ -217,7 +217,7 @@ void SaveUsers(DB_HANDLE hdb)
  * count ignored for SSO logins.
  */
 UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigLen, void *pCert,
-                        BYTE *pChallenge, UINT32 *pdwId, UINT32 *pdwSystemRights,
+                        BYTE *pChallenge, UINT32 *pdwId, UINT64 *pdwSystemRights,
 							   bool *pbChangePasswd, bool *pbIntruderLockout, bool ssoAuth)
 {
    int i, j;

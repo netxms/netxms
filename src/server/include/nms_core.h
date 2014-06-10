@@ -388,7 +388,7 @@ private:
    int m_iState;
    WORD m_wCurrentCmd;
    UINT32 m_dwUserId;
-   UINT32 m_dwSystemAccess;    // User's system access rights
+   UINT64 m_dwSystemAccess;    // User's system access rights
    UINT32 m_dwFlags;           // Session flags
 	int m_clientType;				// Client system type - desktop, web, mobile, etc.
    CSCP_BUFFER *m_pMsgBuffer;
@@ -691,7 +691,7 @@ public:
 	const TCHAR *getWorkstation() { return m_workstation; }
    const TCHAR *getWebServerAddress() { return m_webServerAddress; }
    UINT32 getUserId() { return m_dwUserId; }
-	UINT32 getSystemRights() { return m_dwSystemAccess; }
+	UINT64 getSystemRights() { return m_dwSystemAccess; }
    UINT32 getFlags() { return m_dwFlags; }
    bool isAuthenticated() { return (m_dwFlags & CSF_AUTHENTICATED) ? true : false; }
    bool isConsoleOpen() { return (m_dwFlags & CSF_CONSOLE_OPEN) ? true : false; }

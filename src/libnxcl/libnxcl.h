@@ -129,7 +129,7 @@ private:
 	MUTEX m_mutexSendMsg;
 
    UINT32 m_dwUserId;          // Id of logged-in user
-   UINT32 m_dwSystemAccess;    // System access rights for current user
+   UINT64 m_dwSystemAccess;    // System access rights for current user
 
    int m_hCurrFile;
    UINT32 m_dwFileRqId;

@@ -127,7 +127,7 @@ protected:
    uuid_t m_guid;
 	TCHAR m_name[MAX_USER_NAME];
 	TCHAR m_description[MAX_USER_DESCR];
-	UINT32 m_systemRights;
+	UINT64 m_systemRights;
 	UINT32 m_flags;
 	StringMap m_attributes;		// Custom attributes
    TCHAR *m_userDn;
@@ -150,7 +150,7 @@ public:
 	UINT32 getId() { return m_id; }
 	const TCHAR *getName() { return m_name; }
 	const TCHAR *getDescription() { return m_description; }
-	UINT32 getSystemRights() { return m_systemRights; }
+	UINT64 getSystemRights() { return m_systemRights; }
 	UINT32 getFlags() { return m_flags; }
 	TCHAR *getGuidAsText(TCHAR *buffer) { return uuid_to_string(m_guid, buffer); }
    const TCHAR *getDn() { return m_userDn; }
@@ -303,7 +303,7 @@ void SaveUsers(DB_HANDLE hdb);
 void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object);
 void SendUserDBUpdate(int code, UINT32 id);
 UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigLen, void *pCert,
-                        BYTE *pChallenge, UINT32 *pdwId, UINT32 *pdwSystemRights,
+                        BYTE *pChallenge, UINT32 *pdwId, UINT64 *pdwSystemRights,
 							   bool *pbChangePasswd, bool *pbIntruderLockout, bool ssoAuth);
 bool AuthenticateUserForXMPPCommands(const char *xmppId);
 bool AuthenticateUserForXMPPSubscription(const char *xmppId);

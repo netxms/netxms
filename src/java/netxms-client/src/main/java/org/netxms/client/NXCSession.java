@@ -240,7 +240,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    // Information about logged in user
    private int sessionId;
    private int userId;
-   private int userSystemRights;
+   private long userSystemRights;
    private boolean passwordExpired;
 
    // Internal communication data
@@ -1656,7 +1656,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          }
          userId = response.getVariableAsInteger(NXCPCodes.VID_USER_ID);
          sessionId = response.getVariableAsInteger(NXCPCodes.VID_SESSION_ID);
-         userSystemRights = response.getVariableAsInteger(NXCPCodes.VID_USER_SYS_RIGHTS);
+         userSystemRights = response.getVariableAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
          passwordExpired = response.getVariableAsBoolean(NXCPCodes.VID_CHANGE_PASSWD_FLAG);
          zoningEnabled = response.getVariableAsBoolean(NXCPCodes.VID_ZONING_ENABLED);
          helpdeskLinkActive = response.getVariableAsBoolean(NXCPCodes.VID_HELPDESK_LINK_ACTIVE);
