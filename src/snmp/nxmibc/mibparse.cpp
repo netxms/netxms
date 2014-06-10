@@ -420,12 +420,14 @@ int ParseMIBFiles(int nNumFiles, char **ppszFileList, SNMP_MIBObject **ppRoot)
    }
 
    _tprintf(_T("Creating MIB tree:\n"));
+   pModuleList->setOwner(false);
    pRoot = new SNMP_MIBObject;
    for(i = 0; i < pModuleList->size(); i++)
    {
       MP_MODULE *pModule = pModuleList->get(i);
       _tprintf(_T("   %hs\n"), pModule->pszName);
       BuildMIBTree(pRoot, pModule);
+      delete pModule;
    }
 
    *ppRoot = pRoot;
