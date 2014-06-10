@@ -30,6 +30,7 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.DataLine;
+import javax.sound.sampled.Line;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -278,21 +279,16 @@ public class AlarmNotifier
       {
          try
          {
-            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File(workspaceUrl.getPath(), fileName)
-                  .getAbsoluteFile());
-            DataLine.Info info = new DataLine.Info(Clip.class, audioInputStream.getFormat());
-            Clip clip = (Clip)AudioSystem.getLine(info);
-            clip.open(audioInputStream);
-            clip.start();
-            while(!clip.isRunning())
+            Clip sound = (Clip) AudioSystem.getLine(new Line.Info(Clip.class));
+            sound.open(AudioSystem.getAudioInputStream(new File(workspaceUrl.getPath(), fileName).getAbsoluteFile()));
+            sound.start();
+            while(!sound.isRunning())
                Thread.sleep(10);
-            int i = 0;
-            while(clip.isRunning() && i < 1000)
+            while(sound.isRunning())
             {
                Thread.sleep(10);
-               i += 10;
             }
-            clip.close();
+            sound.close();
          }
          catch(final Exception e)
          {
