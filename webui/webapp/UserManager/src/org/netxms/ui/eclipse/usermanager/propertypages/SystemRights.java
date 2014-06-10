@@ -44,7 +44,7 @@ public class SystemRights extends PropertyPage
 {
 	private UserManager userManager;
 	private AbstractUserObject object;
-	private Map<Integer, Button> buttons = new HashMap<Integer, Button>();
+	private Map<Long, Button> buttons = new HashMap<Long, Button>();
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -101,7 +101,7 @@ public class SystemRights extends PropertyPage
 	 * @param access access right
 	 * @param name name
 	 */
-	private void addCheckbox(Composite parent, int access, String name)
+	private void addCheckbox(Composite parent, long access, String name)
 	{
 		Button b = new Button(parent, SWT.CHECK);
 		b.setText(name);
@@ -120,7 +120,7 @@ public class SystemRights extends PropertyPage
 			setValid(false);
 		
 		int systemRights = 0;
-		for(Entry<Integer, Button> e : buttons.entrySet())
+		for(Entry<Long, Button> e : buttons.entrySet())
 			if (e.getValue().getSelection())
 				systemRights |= e.getKey();
 		
