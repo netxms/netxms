@@ -45,17 +45,23 @@ static MP_OBJECT *CreateObject(const char *pszName, DWORD dwId)
 /**
  * Create builtin object
  */
-static MP_OBJECT *CreateBuiltinObject(const char *pszName)
+static MP_OBJECT *GetBuiltinObject(const char *pszName)
 {
    MP_OBJECT *pObject = NULL;
 
    if (!strcmp(pszName, "iso"))
    {
-      pObject = CreateObject("iso", 1);
+      static MP_OBJECT *iso = NULL;
+      if (iso == NULL)
+         iso = CreateObject("iso", 1);
+      pObject = iso;
    }
    else if (!strcmp(pszName, "ccitt"))
    {
-      pObject = CreateObject("ccitt", 0);
+      static MP_OBJECT *ccitt = NULL;
+      if (ccitt == NULL)
+         ccitt = CreateObject("ccitt", 0);
+      pObject = ccitt;
    }
    return pObject;
 }
@@ -201,7 +207,7 @@ static void BuildFullOID(MP_MODULE *pModule, MP_OBJECT *pObject)
             }
             else
             {
-               pParent = CreateBuiltinObject(pSubId->pszName);
+               pParent = GetBuiltinObject(pSubId->pszName);
             }
          }
          if (pParent != NULL)
@@ -381,6 +387,7 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
 int ParseMIBFiles(int nNumFiles, char **ppszFileList, SNMP_MIBObject **ppRoot)
 {
    int i, nRet;
+   SNMP_MIBObject *pRoot;
 
    _tprintf(_T("Parsing source files:\n"));
    ObjectArray<MP_MODULE> *pModuleList = new ObjectArray<MP_MODULE>(16, 16, true);
@@ -413,7 +420,7 @@ int ParseMIBFiles(int nNumFiles, char **ppszFileList, SNMP_MIBObject **ppRoot)
    }
 
    _tprintf(_T("Creating MIB tree:\n"));
-   SNMP_MIBObject *pRoot = new SNMP_MIBObject;
+   pRoot = new SNMP_MIBObject;
    for(i = 0; i < pModuleList->size(); i++)
    {
       MP_MODULE *pModule = pModuleList->get(i);

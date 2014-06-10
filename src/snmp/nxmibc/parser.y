@@ -222,7 +222,7 @@ static int AccessFromText(const char *pszText)
 
 %type <pszString> UCidentifier LCidentifier Identifier
 %type <pszString> ModuleIdentifier DefinedValue SnmpIdentityPart
-%type <pszString> Symbol CharString NumericValue
+%type <pszString> Symbol CharString
 %type <pszString> SnmpDescriptionPart
 
 %type <number> Number
@@ -330,6 +330,7 @@ ObjectIdentifierAssignment:
    $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
+   delete $$->pOID;
    $$->pOID = $3;
 }
 |   LCidentifier AssignedIdentifier
@@ -337,6 +338,7 @@ ObjectIdentifierAssignment:
    $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
+   delete $$->pOID;
    $$->pOID = $2;
 }
 ;
@@ -404,20 +406,14 @@ ObjectIdentifier:
 
 NumericValue:
     NumberOrMinMax
-{
-   $$ = NULL;
-}
 |   DefinedValue
 {
-   $$ = NULL;
+   safe_free($1);
 }
 |   NumberOrMinMax DOT_SYM DOT_SYM NumberOrMinMax 
-{
-   $$ = NULL;
-}
 |   Identifier LEFT_PAREN_SYM NumberOrMinMax RIGHT_PAREN_SYM
 {
-   $$ = NULL;
+   safe_free($1);
 }
 ;
 
@@ -521,6 +517,9 @@ ImportsAssignment:
 
 ExportsAssignment:
     EXPORTS_SYM SymbolList SEMI_COLON_SYM
+{
+   delete $2;
+}
 ;
 
 SnmpRevisionPart:
@@ -536,6 +535,10 @@ SnmpRevisionList:
 SnmpRevisionObject:
     REVISION_SYM CharString
     SnmpDescriptionPart
+{
+   safe_free($2);
+   safe_free($3);
+}
 ;
 
 SnmpIdentityPart:
@@ -547,14 +550,23 @@ SnmpIdentityPart:
 
 SnmpOrganisationPart:
     ORGANIZATION_SYM CharString
+{
+   safe_free($2);
+}
 ;
 
 SnmpContactInfoPart:
     CONTACT_SYM CharString
+{
+   safe_free($2);
+}
 ;
 
 SnmpUpdatePart:
     UPDATE_SYM CharString
+{
+   safe_free($2);
+}
 ;
 
 SnmpDescriptionPart:
@@ -590,14 +602,23 @@ SnmpKeywordAssignment:
 
 SnmpKeywordName:
     KEYWORD_SYM ASSIGNMENT_SYM CharString
+{
+   safe_free($3);
+}
 ;
 
 SnmpKeywordValue:
     KEYWORD_VALUE_SYM ASSIGNMENT_SYM CharString
+{
+   safe_free($3);
+}
 ;
 
 SnmpKeywordBinding:
     KEYWORD_BIND_SYM ASSIGNMENT_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
+{
+   delete $4;
+}
 ;
 
 SnmpSyntax:
@@ -621,6 +642,9 @@ SnmpSyntaxPart:
 
 SnmpUnitsPart:
     UNITS_SYM CharString
+{
+   safe_free($2);
+}
 |
 ;
 
@@ -634,6 +658,9 @@ SnmpWriteSyntaxPart:
 
 SnmpCreationPart:
     CREATION_REQUIRES_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
+{
+   delete $3;
+}
 |
 ;
 
@@ -776,6 +803,7 @@ BuiltInType:
 |   SEQUENCE_SYM OF_SYM NamedType
 {
    $$ = create_std_syntax(MIB_TYPE_SEQUENCE);
+   delete $3;
 }
 |   SnmpTypeTagPart OBJECT_IDENTIFIER_SYM
 {
@@ -837,7 +865,13 @@ BuiltInTypeAssignment:
 
 TypeOrTextualConvention:
 	Type
+{
+   delete $1;
+}
 |	TextualConventionAssignment
+{
+   delete $1;
+}
 ;
 
 MacroAssignment:
@@ -929,6 +963,9 @@ SnmpTrapVariablePart:
 
 SnmpTrapVariableList:
     VARIABLES_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
+{
+   delete $3;
+}
 ;
 
 SnmpMandatoryGroupPart:
@@ -943,6 +980,9 @@ SnmpMandatoryGroupList:
 
 SnmpMandatoryGroup:
     MANDATORY_GROUPS_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
+{
+   delete $3;
+}
 ;
 
 SnmpCompliancePart:
@@ -962,15 +1002,26 @@ SnmpComplianceObject:
     SnmpAccessPart
     SnmpDescriptionPart
 {
-	 safe_free($2);
-	 delete $3;
+   safe_free($2);
+   delete $3;
+   safe_free($6);
 }
 |   GROUP_SYM LCidentifier SnmpDescriptionPart
+{
+   safe_free($2);
+   safe_free($3);
+}
 ;
 
 SnmpObjectsPart:
     OBJECTS_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
+{
+   delete $3;
+}
 |   NOTIFICATIONS_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
+{
+   delete $3;
+}
 |
 ;
 
@@ -1063,8 +1114,9 @@ SnmpVariationPart:
     SnmpDefValPart
     SnmpDescriptionPart
 {
-	safe_free($2);
-	delete $3;
+   safe_free($2);
+   delete $3;
+   safe_free($8);
 }
 ;
 
@@ -1077,10 +1129,12 @@ ModuleCapabilitiesAssignment:
     SUPPORTS_SYM UCidentifier INCLUDES_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM SnmpVariationsListPart
 {
    safe_free($2);
+   delete $5;
 }
 |    ModuleIdentifier INCLUDES_SYM SymbolList SnmpVariationsListPart
 {
    safe_free($1);
+   delete $3;
 }
 ;
 
@@ -1100,6 +1154,7 @@ AgentCapabilitiesAssignment:
    $$->pszDescription = $6;
    delete $$->pOID;
    $$->pOID = $8;
+   safe_free($4);
 }
 ;
 
@@ -1150,6 +1205,9 @@ SnmpStatusPart:
 
 SnmpReferencePart:
     REFERENCE_SYM CharString
+{
+   safe_free($2);
+}
 |
 ;
 
@@ -1163,7 +1221,13 @@ SnmpDisplayHintPart:
 
 SnmpIndexPart:
     INDEX_SYM LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
+{
+   delete $3;
+}
 |   AUGMENTS_SYM LEFT_BRACE_SYM DefinedValue RIGHT_BRACE_SYM
+{
+   safe_free($3);
+}
 |
 ;
 
@@ -1171,8 +1235,14 @@ SnmpDefValPart:
     DEFVAL_SYM LEFT_BRACE_SYM BinaryString RIGHT_BRACE_SYM
 |   DEFVAL_SYM LEFT_BRACE_SYM HexString RIGHT_BRACE_SYM
 |   DEFVAL_SYM LEFT_BRACE_SYM CharString RIGHT_BRACE_SYM
+{
+   safe_free($3);
+}
 |   DEFVAL_SYM LEFT_BRACE_SYM DefValList RIGHT_BRACE_SYM
 |   DEFVAL_SYM AssignedIdentifierList
+{
+   delete $2;
+}
 |
 ;
 
@@ -1183,6 +1253,9 @@ DefValList:
 
 DefValListElement:
 	LEFT_BRACE_SYM SymbolList RIGHT_BRACE_SYM
+{
+   delete $2;
+}
 |	LEFT_BRACE_SYM  RIGHT_BRACE_SYM
 ;
 
@@ -1260,11 +1333,7 @@ SequenceItem:
     Identifier Type
 {
    safe_free($1);
-   if ($2 != NULL)
-   {
-      safe_free($2->pszStr);
-      free($2);
-   }
+   delete $2;
 }
 ;
 
@@ -1289,6 +1358,9 @@ SnmpTypeTagList:
 
 SnmpTypeTagItem:
     LEFT_BRACKET_SYM UCidentifier Number RIGHT_BRACKET_SYM
+{
+   safe_free($2);
+}
 ;
 
 OctetStringType:

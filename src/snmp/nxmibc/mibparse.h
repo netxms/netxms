@@ -117,7 +117,7 @@ public:
    int iType;
    char *pszName;
    char *pszDescription;
-	char *pszTextualConvention;
+   char *pszTextualConvention;
    int iSyntax;
    char *pszDataType;   // For defined types
    int iStatus;
@@ -126,6 +126,10 @@ public:
 
    MP_OBJECT()
    {
+      iType = 0;
+      iSyntax = 0;
+      iStatus = 0;
+      iAccess = 0;
       pszName = NULL;
       pszDescription = NULL;
       pszTextualConvention = NULL;
