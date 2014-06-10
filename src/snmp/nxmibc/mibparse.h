@@ -24,12 +24,9 @@
 #ifndef _mibparse_h_
 #define _mibparse_h_
 
-#include <nms_common.h>
+#include <nms_util.h>
 
 #define YYERROR_VERBOSE
-
-#define CREATE(x) (x *)__zmalloc(sizeof(x));
-
 
 //
 // Internal object types
@@ -44,34 +41,33 @@
 #define MIBC_SEQUENCE               6
 #define MIBC_VALUE                  7
 
-
-//
-// Dynamic array structure
-//
-
-typedef struct
+/**
+ * Object syntax
+ */
+class MP_SYNTAX
 {
-   int nSize;
-   void **ppData;
-} DynArray;
-
-
-//
-// Object syntax
-//
-
-typedef struct mp_syntax
-{
+public:
    int nSyntax;
    char *pszStr;
 	char *pszDescription;
-} MP_SYNTAX;
 
+   MP_SYNTAX()
+   {
+      nSyntax = 0;
+      pszStr = NULL;
+	   pszDescription = NULL;
+   }
 
-//
-// Numeric value
-//
+   ~MP_SYNTAX()
+   {
+      safe_free(pszStr);
+      safe_free(pszDescription);
+   }
+};
 
+/**
+ * Numeric value
+ */
 typedef struct mp_numeric_value
 {
    int nType;
@@ -82,25 +78,42 @@ typedef struct mp_numeric_value
    } value;
 } MP_NUMERIC_VALUE;
 
-
-//
-// SUBID structure
-//
-
-typedef struct mp_subid
+/**
+ * SUBID structure
+ */
+class MP_SUBID
 {
+public:
    DWORD dwValue;
    char *pszName;
    BOOL bResolved;
-} MP_SUBID;
 
+   MP_SUBID()
+   {
+      dwValue = 0;
+      pszName = NULL;
+      bResolved = FALSE;
+   }
 
-//
-// Object structure
-//
+   MP_SUBID(MP_SUBID *src)
+   {
+      dwValue = src->dwValue;
+      pszName = (src->pszName != NULL) ? strdup(src->pszName) : NULL;
+      bResolved = src->bResolved;
+   }
 
-typedef struct mp_object
+   ~MP_SUBID()
+   {
+      safe_free(pszName);
+   }
+};
+
+/**
+ * Object structure
+ */
+class MP_OBJECT
 {
+public:
    int iType;
    char *pszName;
    char *pszDescription;
@@ -109,33 +122,80 @@ typedef struct mp_object
    char *pszDataType;   // For defined types
    int iStatus;
    int iAccess;
-   DynArray *pOID;
-} MP_OBJECT;
+   ObjectArray<MP_SUBID> *pOID;
 
+   MP_OBJECT()
+   {
+      pszName = NULL;
+      pszDescription = NULL;
+      pszTextualConvention = NULL;
+      pszDataType = NULL;
+      pOID = new ObjectArray<MP_SUBID>(0, 16, true);
+   }
 
-//
-// Module structure
-//
+   ~MP_OBJECT()
+   {
+      safe_free(pszName);
+      safe_free(pszDescription);
+      safe_free(pszTextualConvention);
+      safe_free(pszDataType);
+      delete pOID;
+   }
+};
 
-typedef struct mp_module
+class MP_MODULE;
+
+/**
+ * Import structure
+ */
+class MP_IMPORT_MODULE
 {
-   char *pszName;
-   DynArray *pImportList;
-   DynArray *pObjectList;
-} MP_MODULE;
-
-
-//
-// Import structure
-//
-
-typedef struct mp_import
-{
+public:
    char *pszName;
    MP_MODULE *pModule;
-   DynArray *pSymbols;
-   DynArray *pObjects;
-} MP_IMPORT_MODULE;
+   Array *pSymbols;
+   ObjectArray<MP_OBJECT> *pObjects;
+
+   MP_IMPORT_MODULE()
+   {
+      pszName = NULL;
+      pModule = NULL;
+      pSymbols = new Array(0, 16, true);
+      pObjects = new ObjectArray<MP_OBJECT>(0, 16, false);
+   }
+
+   ~MP_IMPORT_MODULE()
+   {
+      safe_free(pszName);
+      delete pSymbols;
+      delete pObjects;
+   }
+};
+
+/**
+ * Module structure
+ */
+class MP_MODULE
+{
+public:
+   char *pszName;
+   ObjectArray<MP_IMPORT_MODULE> *pImportList;
+   ObjectArray<MP_OBJECT> *pObjectList;
+
+   MP_MODULE()
+   {
+      pszName = NULL;
+      pImportList = new ObjectArray<MP_IMPORT_MODULE>(0, 8, true);
+      pObjectList = new ObjectArray<MP_OBJECT>(0, 16, true);
+   }
+
+   ~MP_MODULE()
+   {
+      safe_free(pszName);
+      delete pImportList;
+      delete pObjectList;
+   }
+};
 
 
 //
@@ -148,15 +208,6 @@ extern "C" {
 
 void InitStateStack();
 MP_MODULE *ParseMIB(char *pszFilename);
-
-DynArray *da_create(void);
-void da_add(DynArray *pArray, void *pElement);
-void da_join(DynArray *pArray, DynArray *pSource);
-void *da_get(DynArray *pArray, int nIndex);
-int da_size(DynArray *pArray);
-void da_destroy(DynArray *pArray);
-
-void *__zmalloc(unsigned int nSize);
 
 #ifdef __cplusplus
 }

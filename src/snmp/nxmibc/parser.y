@@ -78,20 +78,8 @@ void ResetScanner();
 
 MP_SYNTAX *create_std_syntax(int nSyntax)
 {
-   MP_SYNTAX *p;
-
-   p = CREATE(MP_SYNTAX);
+   MP_SYNTAX *p = new MP_SYNTAX;
    p->nSyntax = nSyntax;
-   return p;
-}
-
-void *__zmalloc(unsigned int nSize)
-{
-   void *p;
-
-   p = malloc(nSize);
-   if (p != NULL)
-      memset(p, 0, nSize);
    return p;
 }
 
@@ -123,7 +111,9 @@ static int AccessFromText(const char *pszText)
    int nInteger;
    char *pszString;
    MP_NUMERIC_VALUE number;
-   DynArray *pList;
+   Array *pList;
+   ObjectArray<MP_SUBID> *pOID;
+   ObjectArray<MP_IMPORT_MODULE> *pImportList;
    MP_IMPORT_MODULE *pImports;
    MP_OBJECT *pObject;
    MP_SUBID *pSubId;
@@ -237,8 +227,9 @@ static int AccessFromText(const char *pszText)
 
 %type <number> Number
 
-%type <pList> SymbolList SymbolsFromModuleList
-%type <pList> AssignedIdentifierList AssignedIdentifier ObjectIdentifierList
+%type <pList> SymbolList 
+%type <pImportList> SymbolsFromModuleList
+%type <pOID> AssignedIdentifierList AssignedIdentifier ObjectIdentifierList
 %type <pImports> SymbolsFromModule
 %type <pObject> ObjectIdentifierAssignment ObjectIdentityAssignment ObjectTypeAssignment
 %type <pObject> MacroAssignment TypeOrValueAssignment ModuleIdentityAssignment
@@ -270,45 +261,45 @@ AssignmentList:
 Assignment:
     ObjectIdentifierAssignment
 {
-   da_add(m_pModule->pObjectList, $1);
+   m_pModule->pObjectList->add($1);
 }
 |   ObjectIdentityAssignment
 {
-   da_add(m_pModule->pObjectList, $1);
+   m_pModule->pObjectList->add($1);
 }
 |   ObjectTypeAssignment
 {
-   da_add(m_pModule->pObjectList, $1);
+   m_pModule->pObjectList->add($1);
 }
 |   MacroAssignment
 {
-   da_add(m_pModule->pObjectList, $1);
+   m_pModule->pObjectList->add($1);
 }
 |   TypeOrValueAssignment
 {
-   da_add(m_pModule->pObjectList, $1);
+   m_pModule->pObjectList->add($1);
 }
 |   SnmpNotificationTypeAssignment
 {
-   da_add(m_pModule->pObjectList, $1);
+   m_pModule->pObjectList->add($1);
 }
 |   ModuleComplianceAssignment
 |   SnmpNotificationGroupAssignment
 {
-   da_add(m_pModule->pObjectList, $1);
+   m_pModule->pObjectList->add($1);
 }
 |   SnmpObjectGroupAssignment
 {
-   da_add(m_pModule->pObjectList, $1);
+   m_pModule->pObjectList->add($1);
 }
 |   SnmpKeywordAssignment
 |   AgentCapabilitiesAssignment
 {
-   da_add(m_pModule->pObjectList, $1);
+   m_pModule->pObjectList->add($1);
 }
 |   ModuleIdentityAssignment
 {
-   da_add(m_pModule->pObjectList, $1);
+   m_pModule->pObjectList->add($1);
 }
 |   ImportsAssignment
 |   ExportsAssignment
@@ -317,9 +308,8 @@ Assignment:
 ModuleIdentifierAssignment:
     ModuleIdentifier
 {
-   m_pModule = CREATE(MP_MODULE);
+   m_pModule = new MP_MODULE;
    m_pModule->pszName = $1;
-   m_pModule->pObjectList = da_create();
 }
 ;
 
@@ -337,14 +327,14 @@ ModuleIdentifier:
 ObjectIdentifierAssignment:
     LCidentifier OBJECT_IDENTIFIER_SYM AssignedIdentifier
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
    $$->pOID = $3;
 }
 |   LCidentifier AssignedIdentifier
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
    $$->pOID = $2;
@@ -360,12 +350,12 @@ AssignedIdentifier:
 {
    MP_SUBID *subid;
 
-   subid = CREATE(MP_SUBID);
+   subid = new MP_SUBID;
    subid->dwValue = $2.value.nInt32;
    subid->pszName = NULL;
    subid->bResolved = TRUE;
-   $$ = da_create();
-   da_add($$, subid);
+   $$ = new ObjectArray<MP_SUBID>(16, 16, true);
+   $$->add(subid);
 }
 ;
 
@@ -379,33 +369,33 @@ AssignedIdentifierList:
 ObjectIdentifierList:
     ObjectIdentifierList ObjectIdentifier
 {
-   da_add($$, $2);
+   $$->add($2);
 }
 |   ObjectIdentifier
 {
-   $$ = da_create();
-   da_add($$, $1);
+   $$ = new ObjectArray<MP_SUBID>(16, 16, true);
+   $$->add($1);
 }
 ;
 
 ObjectIdentifier:
     Number
 {
-   $$ = CREATE(MP_SUBID);
+   $$ = new MP_SUBID;
    $$->dwValue = $1.value.nInt32;
    $$->pszName = NULL;
    $$->bResolved = TRUE;
 }
 |   DefinedValue
 {
-   $$ = CREATE(MP_SUBID);
+   $$ = new MP_SUBID;
    $$->dwValue = 0;
    $$->pszName = $1;
    $$->bResolved = FALSE;
 }
 |   Identifier LEFT_PAREN_SYM Number RIGHT_PAREN_SYM
 {
-   $$ = CREATE(MP_SUBID);
+   $$ = new MP_SUBID;
    $$->dwValue = $3.value.nInt32;
    $$->pszName = $1;
    $$->bResolved = TRUE;
@@ -465,11 +455,12 @@ ObjectIdentityAssignment:
     SnmpReferencePart
     AssignedIdentifier
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
    $$->iStatus = $3;
    $$->pszDescription = $4;
+   delete $$->pOID;
    $$->pOID = $6;
 }
 ;
@@ -486,15 +477,17 @@ ObjectTypeAssignment:
     SnmpDefValPart
     AssignedIdentifier
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
    $$->iSyntax = $3->nSyntax;
    $$->pszDataType = $3->pszStr;
-   safe_free($3);
+   $3->pszStr = NULL;
+   delete $3;
    $$->iAccess = $5;
    $$->iStatus = $6;
    $$->pszDescription = $7;
+   delete $$->pOID;
    $$->pOID = $11;
 }
 ;
@@ -508,11 +501,12 @@ ModuleIdentityAssignment:
     SnmpRevisionPart
     AssignedIdentifier
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->iSyntax = MIB_TYPE_MODID;
    $$->pszName = $1;
    $$->pszDescription = $5;
+   delete $$->pOID;
    $$->pOID = $7;
 }
 ;
@@ -520,6 +514,7 @@ ModuleIdentityAssignment:
 ImportsAssignment:
     IMPORTS_SYM SymbolsFromModuleList SEMI_COLON_SYM
 {
+	delete m_pModule->pImportList;
    m_pModule->pImportList = $2;
 }
 ;
@@ -619,7 +614,7 @@ SnmpSyntaxPart:
 }
 |
 {
-   $$ = CREATE(MP_SYNTAX);
+   $$ = new MP_SYNTAX;
    $$->nSyntax = MIB_TYPE_OTHER;
 }
 ;
@@ -631,6 +626,9 @@ SnmpUnitsPart:
 
 SnmpWriteSyntaxPart:
     WRITE_SYNTAX_SYM Type
+{
+	delete $2;
+}
 |
 ;
 
@@ -642,19 +640,21 @@ SnmpCreationPart:
 TypeOrValueAssignment:
     BuiltInTypeAssignment
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_TYPEDEF;
    if ($1 != NULL)
    {
       $$->pszName = $1->pszStr;
       $$->iSyntax = $1->nSyntax;
       $$->pszDescription = $1->pszDescription;
-      free($1);
+      $1->pszStr = NULL;
+      $1->pszDescription = NULL;
+      delete $1;
    }
 }
 |   UCidentifier ASSIGNMENT_SYM TextualConventionAssignment
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_TEXTUAL_CONVENTION;
    $$->pszName = $1;
    if ($3 != NULL)
@@ -662,12 +662,14 @@ TypeOrValueAssignment:
       $$->iSyntax = $3->nSyntax;
       $$->pszDataType = $3->pszStr;
       $$->pszDescription = $3->pszDescription;
-      free($3);
+      $3->pszStr = NULL;
+      $3->pszDescription = NULL;
+      delete $3;
    }
 }
 |   UCidentifier ASSIGNMENT_SYM Type
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_TYPEDEF;
    $$->pszName = $1;
    if ($3 != NULL)
@@ -675,30 +677,32 @@ TypeOrValueAssignment:
       $$->iSyntax = $3->nSyntax;
       $$->pszDataType = $3->pszStr;
       $$->pszDescription = $3->pszDescription;
-      free($3);
+      $3->pszStr = NULL;
+      $3->pszDescription = NULL;
+      delete $3;
    }
 }
 |   UCidentifier ASSIGNMENT_SYM SEQUENCE_SYM SequenceAssignment
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_SEQUENCE;
    $$->pszName = $1;
 }
 |   LCidentifier ASSIGNMENT_SYM SEQUENCE_SYM SequenceAssignment
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_SEQUENCE;
    $$->pszName = $1;
 }
 |   UCidentifier ASSIGNMENT_SYM CHOICE_SYM SequenceAssignment
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_CHOICE;
    $$->pszName = $1;
 }
 |   UCidentifier ASSIGNMENT_SYM Value
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_VALUE;
    $$->pszName = $1;
 }
@@ -726,7 +730,7 @@ Type:
 NamedType:
     SnmpTypeTagPart Identifier
 {
-   $$ = CREATE(MP_SYNTAX);
+   $$ = new MP_SYNTAX;
    $$->nSyntax = -1;
    $$->pszStr = $2;
 }
@@ -839,7 +843,7 @@ TypeOrTextualConvention:
 MacroAssignment:
     MACRO_SYM ASSIGNMENT_SYM Begin TokenList End
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_MACRO;
    $$->pszName = $1;
 }
@@ -876,13 +880,14 @@ SnmpNotificationTypeAssignment:
     SnmpReferencePart
     AssignedIdentifier
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
    $$->iSyntax = MIB_TYPE_NOTIFTYPE;
    $$->iAccess = $4;
    $$->iStatus = $5;
    $$->pszDescription = $6;
+   delete $$->pOID;
    $$->pOID = $8;
 }
 |   LCidentifier TRAP_TYPE_SYM
@@ -894,25 +899,26 @@ SnmpNotificationTypeAssignment:
 {
    MP_SUBID *pSubId;
 
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
    $$->iSyntax = MIB_TYPE_TRAPTYPE;
    $$->pszDescription = $6;
 
-   pSubId = CREATE(MP_SUBID);
+   pSubId = new MP_SUBID;
    pSubId->pszName = $4;
-   $$->pOID = da_create();
-   da_add($$->pOID, pSubId);
+   $$->pOID->add(pSubId);
 
-   pSubId = CREATE(MP_SUBID);
+   pSubId = new MP_SUBID;
    pSubId->pszName = (char *)malloc(strlen($4) + 3);
    sprintf(pSubId->pszName, "%s#0", $4);
    pSubId->bResolved = TRUE;
-   da_add($$->pOID, pSubId);
+   $$->pOID->add(pSubId);
 
-   da_join($$->pOID, $8);
-   da_destroy($8);
+   for(int i = 0; i < $8->size(); i++)
+      $$->pOID->add($8->get(i));
+   $8->setOwner(false);
+   delete $8;
 }
 ;
 
@@ -955,6 +961,10 @@ SnmpComplianceObject:
     SnmpWriteSyntaxPart
     SnmpAccessPart
     SnmpDescriptionPart
+{
+	 safe_free($2);
+	 delete $3;
+}
 |   GROUP_SYM LCidentifier SnmpDescriptionPart
 ;
 
@@ -972,12 +982,13 @@ SnmpObjectGroupAssignment:
     SnmpReferencePart
     AssignedIdentifier
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
    $$->iStatus = $4;
    $$->iSyntax = MIB_TYPE_OBJGROUP;
    $$->pszDescription = $5;
+   delete $$->pOID;
    $$->pOID = $7;
 }
 ;
@@ -990,11 +1001,12 @@ SnmpNotificationGroupAssignment:
     SnmpReferencePart
     AssignedIdentifier
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
    $$->iStatus = $4;
    $$->pszDescription = $5;
+   delete $$->pOID;
    $$->pOID = $7;
 }
 ;
@@ -1009,6 +1021,7 @@ ModuleComplianceAssignment:
 {
    free($1);
    safe_free($4);
+   delete $7;
 }
 ;
 
@@ -1049,6 +1062,10 @@ SnmpVariationPart:
     SnmpCreationPart
     SnmpDefValPart
     SnmpDescriptionPart
+{
+	safe_free($2);
+	delete $3;
+}
 ;
 
 ModuleCapabilitiesList:
@@ -1075,12 +1092,13 @@ AgentCapabilitiesAssignment:
     ModuleCapabilitiesList
     AssignedIdentifier
 {
-   $$ = CREATE(MP_OBJECT);
+   $$ = new MP_OBJECT;
    $$->iType = MIBC_OBJECT;
    $$->pszName = $1;
    $$->iStatus = $5;
    $$->iSyntax = MIB_TYPE_AGENTCAP;
    $$->pszDescription = $6;
+   delete $$->pOID;
    $$->pOID = $8;
 }
 ;
@@ -1089,14 +1107,17 @@ SnmpAccessPart:
     ACCESS_SYM LCidentifier
 {
    $$ = AccessFromText($2);
+   free($2);
 }
 |   MAX_ACCESS_SYM LCidentifier
 {
    $$ = AccessFromText($2);
+   free($2);
 }
 |   MIN_ACCESS_SYM LCidentifier
 {
    $$ = AccessFromText($2);
+   free($2);
 }
 |
 {
@@ -1107,8 +1128,7 @@ SnmpAccessPart:
 SnmpStatusPart:
     STATUS_SYM LCidentifier
 {
-   static const char *pStatusText[] = { "mandatory", "optional", "obsolete",
-                                        "deprecated", "current", NULL };
+   static const char *pStatusText[] = { "mandatory", "optional", "obsolete", "deprecated", "current", NULL };
    int i;
 
    for(i = 0; pStatusText[i] != NULL; i++)
@@ -1124,6 +1144,7 @@ SnmpStatusPart:
       sprintf(szBuffer, "Invalid STATUS value \"%s\"", $2);
       mperror(szBuffer);
    }
+   free($2);
 }
 ;
 
@@ -1189,20 +1210,21 @@ CharString:
 SymbolsFromModuleList:
     SymbolsFromModuleList SymbolsFromModule
 {
-   da_add($$, $2);
+   $$->add($2);
 }
 |   SymbolsFromModule
 {
-   $$ = da_create();
-   da_add($$, $1);
+   $$ = new ObjectArray<MP_IMPORT_MODULE>(16, 16, true);
+   $$->add($1);
 }
 ;
 
 SymbolsFromModule:
     SymbolList FROM_SYM UCidentifier
 {
-   $$ = CREATE(MP_IMPORT_MODULE);
+   $$ = new MP_IMPORT_MODULE;
    $$->pszName = $3;
+   delete $$->pSymbols;
    $$->pSymbols = $1;
 }
 ;
@@ -1210,12 +1232,12 @@ SymbolsFromModule:
 SymbolList:
     SymbolList COMMA_SYM Symbol
 {
-   da_add($$, $3);
+   $$->add($3);
 }
 |   Symbol
 {
-   $$ = da_create();
-   da_add($$, $1);
+   $$ = new Array(16, 16, true);
+   $$->add($1);
 }
 ;
 
@@ -1281,8 +1303,6 @@ OctetStringType:
 
 Value:
     Number
-{
-}
 |   HexString
 |   BinaryString
 |   CharString
@@ -1330,7 +1350,7 @@ MP_MODULE *ParseMIB(char *pszFilename)
 {
    m_pModule = NULL;
    mpin = fopen(pszFilename, "r");
-   if(mpin != NULL)
+   if (mpin != NULL)
    {
 	   m_pszCurrentFilename = pszFilename;
       g_nCurrLine = 1;

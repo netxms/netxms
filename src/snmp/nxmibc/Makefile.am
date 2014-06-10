@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 bin_PROGRAMS = nxmibc
-nxmibc_SOURCES = array.cpp lex.parser.cpp mibparse.cpp nxmibc.cpp parser.tab.cpp
+nxmibc_SOURCES = lex.parser.cpp mibparse.cpp nxmibc.cpp parser.tab.cpp
 nxmibc_CPPFLAGS=-I@top_srcdir@/include
 nxmibc_LDADD = ../../libnetxms/libnetxms.la ../libnxsnmp/libnxsnmp.la
 
