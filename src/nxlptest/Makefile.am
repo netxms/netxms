@@ -14,7 +14,3 @@ nxlptest_CPPFLAGS=-I@top_srcdir@/include
 nxlptest_LDADD = ../libnetxms/libnetxms.la ../libnxlp/libnxlp.la
 
 EXTRA_DIST = nxlptest.h nxlptest.vcproj
-
-#.PHONY: install
-#install:
-#
