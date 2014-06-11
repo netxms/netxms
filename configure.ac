@@ -79,6 +79,7 @@ RUNTIME_PREFIX=""
 HPUX_HPPA="no"
 XMPP_SUPPORT="yes"
 LDAP_SUPPORT="yes"
+DISABLE_READLINE="no"
 
 
 #--------------------------------------------------------------------
@@ -366,6 +367,12 @@ AC_ARG_ENABLE(iconv,
 [AS_HELP_STRING(--disable-iconv,do not use iconv() for text conversions)],
 [
 	DISABLE_ICONV="yes"
+])
+
+AC_ARG_ENABLE(readline,
+[AS_HELP_STRING(--disable-readline,do not use libreadline)],
+[
+	DISABLE_READLINE="yes"
 ])
 
 AC_ARG_ENABLE(encryption,
@@ -1277,7 +1284,9 @@ AC_CHECK_LIB(kstat, kstat_open)
 
 if test "x$BUILD_SERVER" = "xyes" ; then
    AC_CHECK_LIB(termcap, tgetstr, [SERVER_LIBS="$SERVER_LIBS -ltermcap"], [AC_CHECK_LIB(ncurses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lncurses"], AC_CHECK_LIB(curses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lcurses"]))])
-   AC_CHECK_LIB(readline, readline, [SERVER_LIBS="$SERVER_LIBS -lreadline"], [AC_CHECK_LIB(edit, readline, [SERVER_LIBS="$SERVER_LIBS -ledit"])])
+   if test "x$DISABLE_READLINE" = "xno"; then
+      AC_CHECK_LIB(readline, readline, [SERVER_LIBS="$SERVER_LIBS -lreadline"], [AC_CHECK_LIB(edit, readline, [SERVER_LIBS="$SERVER_LIBS -ledit"])])
+   fi
    SAVED_LDFLAGS="$LDFLAGS"
    LDFLAGS="$LDFLAGS $SERVER_LIBS"
 
