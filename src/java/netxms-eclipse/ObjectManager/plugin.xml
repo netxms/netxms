@@ -455,6 +455,13 @@
                style="push">
          </action>
          <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateVpnConnector"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createVPNConnector_Node"
+               label="%action.label.CreateVPNConnector"
+               menubarPath="objectcreation">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateNetworkService"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNetworkService_Node"

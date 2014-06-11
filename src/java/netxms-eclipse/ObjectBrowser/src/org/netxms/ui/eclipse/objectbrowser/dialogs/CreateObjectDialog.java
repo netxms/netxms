@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ public class CreateObjectDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().CreateObjectDialog_TitlePrefix + objectClassName);
+		newShell.setText(String.format(Messages.get().CreateObjectDialog_Title, objectClassName));
 	}
 	
 	/* (non-Javadoc)

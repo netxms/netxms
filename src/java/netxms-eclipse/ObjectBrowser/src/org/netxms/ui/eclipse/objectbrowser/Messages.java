@@ -9,7 +9,7 @@ public class Messages extends NLS
 	public static String ChildObjectListDialog_Name;
 	public static String ChildObjectListDialog_SelectSubordinate;
 	public static String CreateObjectDialog_ObjectName;
-	public static String CreateObjectDialog_TitlePrefix;
+	public static String CreateObjectDialog_Title;
 	public static String CreateObjectDialog_Warning;
 	public static String CreateObjectDialog_WarningText;
 	public static String IPAddressSelectionDialog_Interface;
