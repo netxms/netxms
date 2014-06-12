@@ -292,7 +292,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
             addDCIImageToMap();
          }
       };
-      actionAddDCIImage.setId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddDCIImage"); //$NON-NLS-1$
+      actionAddDCIImage.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.AddDCIImage"); //$NON-NLS-1$
       actionAddDCIImage.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddDCIImage"); //$NON-NLS-1$
       final ActionHandler addDCIImageHandler = new ActionHandler(actionAddDCIImage);
       handlerService.activateHandler(actionAddDCIImage.getActionDefinitionId(), addDCIImageHandler);
@@ -524,7 +524,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, dciContainer);
       if (dlg != null)
       {
-         if (dlg.open() == dlg.OK)
+         if (dlg.open() == Window.OK)
          {        
             mapPage.addElement(dciContainer);
             saveMap();
@@ -543,7 +543,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, dciImage);
       if (dlg != null)
       {
-         if (dlg.open() == dlg.OK)
+         if (dlg.open() == Window.OK)
          {        
             mapPage.addElement(dciImage);
             saveMap();

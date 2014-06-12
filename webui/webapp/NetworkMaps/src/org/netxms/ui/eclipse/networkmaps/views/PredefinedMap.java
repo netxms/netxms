@@ -297,7 +297,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
             addDCIImageToMap();
          }
       };
-      actionAddDCIImage.setId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddDCIImage"); //$NON-NLS-1$
+      actionAddDCIImage.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.AddDCIImage"); //$NON-NLS-1$
       actionAddDCIImage.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddDCIImage"); //$NON-NLS-1$
       final ActionHandler addDCIImageHandler = new ActionHandler(actionAddDCIImage);
       handlerService.activateHandler(actionAddDCIImage.getActionDefinitionId(), addDCIImageHandler);
