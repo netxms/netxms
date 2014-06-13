@@ -10637,7 +10637,7 @@ void ClientSession::getAgentFile(CSCPMessage *request)
 	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
 	if (object != NULL)
 	{
-		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_DOWNLOAD))
 		{
 			if (object->Type() == OBJECT_NODE)
 			{
