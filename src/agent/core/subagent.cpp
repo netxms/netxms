@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -62,7 +62,7 @@ BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
 				if (bInitOK)
 				{
 					// Add subagent to subagent's list
-					m_pSubAgentList = (SUBAGENT *)realloc(m_pSubAgentList, 
+					m_pSubAgentList = (SUBAGENT *)realloc(m_pSubAgentList,
 													sizeof(SUBAGENT) * (m_dwNumSubAgents + 1));
 					m_pSubAgentList[m_dwNumSubAgents].hModule = hModule;
 					nx_strncpy(m_pSubAgentList[m_dwNumSubAgents].szName, pszModuleName, MAX_PATH);
@@ -74,7 +74,7 @@ BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
 
 					// Add parameters provided by this subagent to common list
 					for(i = 0; i < pInfo->numParameters; i++)
-						AddParameter(pInfo->parameters[i].name, 
+						AddParameter(pInfo->parameters[i].name,
 										 pInfo->parameters[i].handler,
 										 pInfo->parameters[i].arg,
 										 pInfo->parameters[i].dataType,
@@ -82,19 +82,19 @@ BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
 
 					// Add push parameters provided by this subagent to common list
 					for(i = 0; i < pInfo->numPushParameters; i++)
-						AddPushParameter(pInfo->pushParameters[i].name, 
+						AddPushParameter(pInfo->pushParameters[i].name,
 						                 pInfo->pushParameters[i].dataType,
 					                    pInfo->pushParameters[i].description);
 
 					// Add lists provided by this subagent to common list
 					for(i = 0; i < pInfo->numLists; i++)
-						AddList(pInfo->lists[i].name, 
+						AddList(pInfo->lists[i].name,
 								  pInfo->lists[i].handler,
 								  pInfo->lists[i].arg);
 
 					// Add tables provided by this subagent to common list
 					for(i = 0; i < pInfo->numTables; i++)
-						AddTable(pInfo->tables[i].name, 
+						AddTable(pInfo->tables[i].name,
 								   pInfo->tables[i].handler,
 								   pInfo->tables[i].arg,
 									pInfo->tables[i].instanceColumns,
@@ -187,7 +187,7 @@ BOOL LoadSubAgent(TCHAR *szModuleName)
 
       // Under NetWare, we have slightly different subagent
       // initialization procedure. Because normally two NLMs
-      // cannot export symbols with identical names, we cannot 
+      // cannot export symbols with identical names, we cannot
       // simply export NxSubAgentRegister in each subagent. Instead,
       // agent expect to find symbol called NxSubAgentRegister_<module_file_name>
       // in every subagent. Note that module file name should
@@ -265,11 +265,11 @@ LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
    for(i = 0; i < m_dwNumSubAgents; i++)
    {
 #ifdef __64BIT__
-      _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x") UINT64X_FMT(_T("016")) _T(" %s"), 
+      _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x") UINT64X_FMT(_T("016")) _T(" %s"),
                  m_pSubAgentList[i].pInfo->name, m_pSubAgentList[i].pInfo->version,
                  CAST_FROM_POINTER(m_pSubAgentList[i].hModule, QWORD), m_pSubAgentList[i].szName);
 #else
-      _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x%08X %s"), 
+      _sntprintf(szBuffer, MAX_PATH + 32, _T("%s %s 0x%08X %s"),
                  m_pSubAgentList[i].pInfo->name, m_pSubAgentList[i].pInfo->version,
                  CAST_FROM_POINTER(m_pSubAgentList[i].hModule, UINT32), m_pSubAgentList[i].szName);
 #endif
@@ -299,7 +299,7 @@ LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
 
 /**
  * Handler for Agent.IsSubagentLoaded
- */ 
+ */
 LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 {
 	TCHAR name[256];
@@ -321,7 +321,7 @@ LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Process unknown command by subagents
  */
-BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session)
+BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session, int serverType)
 {
    BOOL bResult = FALSE;
    UINT32 i;
@@ -329,7 +329,7 @@ BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *
    for(i = 0; (i < m_dwNumSubAgents) && (!bResult); i++)
    {
       if (m_pSubAgentList[i].pInfo->commandHandler != NULL)
-         bResult = m_pSubAgentList[i].pInfo->commandHandler(dwCommand, pRequest, pResponse, session);
+         bResult = m_pSubAgentList[i].pInfo->commandHandler(dwCommand, pRequest, pResponse, session, serverType);
    }
    return bResult;
 }

@@ -667,6 +667,7 @@ private:
    void forwardToReportingServer(CSCPMessage *request);
    void getSubnetAddressMap(CSCPMessage *request);
    void getEffectiveRights(CSCPMessage *request);
+   void getAgentFolderContent(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

@@ -6320,6 +6320,34 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       }
       return files;
    }
+   
+   /**
+    * List files on agent file store.
+    * 
+    * @param file parent of new coomming list
+    * @param fullPath path that will be used on an agent to get list of subfiles
+    * @param objectId the ID of the node 
+    * @return will return the list of sub files or the list of allowed folders if full path is set to "/"
+    * @throws IOException if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public ServerFile[] listAgentFiles(ServerFile file, String fullPath, long objectId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_FOLDER_CONTENT);
+      msg.setVariable(NXCPCodes.VID_FILE_NAME, fullPath);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getVariableAsInteger(NXCPCodes.VID_INSTANCE_COUNT);
+      ServerFile[] files = new ServerFile[count];
+      long varId = NXCPCodes.VID_INSTANCE_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         files[i] = new ServerFile(response, varId, file, objectId);
+         varId += 10;
+      }
+      return files;
+   }
 
    /**
     * Start file upload from server's file store to agent. Returns ID of upload
@@ -6441,6 +6469,56 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_FILE);
       msg.setVariable(NXCPCodes.VID_FILE_NAME, serverFileName);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Delete file from agent
+    *
+    * @param serverFileName name of server file
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteAgentFile(long nodeId, String fileName) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMNGR_DELETE_FILE);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setVariable(NXCPCodes.VID_FILE_NAME, fileName);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Rename file from agent
+    *
+    * @param serverFileName name of server file
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void renameAgentFile(long nodeId, String oldName, String newFileName) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMNGR_RENAME_FILE);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setVariable(NXCPCodes.VID_FILE_NAME, oldName);
+      msg.setVariable(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Move file from agent
+    *
+    * @param serverFileName name of server file
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void moveAgentFile(long nodeId, String oldName, String newFileName) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMNGR_MOVE_FILE);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setVariable(NXCPCodes.VID_FILE_NAME, oldName);
+      msg.setVariable(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

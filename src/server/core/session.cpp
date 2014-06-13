@@ -1368,6 +1368,12 @@ void ClientSession::processingThread()
          case CMD_GET_EFFECTIVE_RIGHTS:
             getEffectiveRights(pMsg);
             break;
+         case CMD_GET_FOLDER_CONTENT:
+         case CMD_FILEMNGR_DELETE_FILE:
+         case CMD_FILEMNGR_RENAME_FILE:
+         case CMD_FILEMNGR_MOVE_FILE:
+            getAgentFolderContent(pMsg);
+            break;
          default:
             if ((m_wCurrentCmd >> 8) == 0x11)
             {
@@ -12953,4 +12959,78 @@ void ClientSession::getEffectiveRights(CSCPMessage *request)
 
    // Send response
    sendMessage(&msg);
+}
+
+/**
+ * Get content of folder from agent
+ */
+void ClientSession::getAgentFolderContent(CSCPMessage *request)
+{
+   CSCPMessage msg, *response = NULL, *responseMessage;
+	TCHAR remoteFile[MAX_PATH];
+	UINT32 rcc;
+   responseMessage = &msg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
+	if (object != NULL)
+	{
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+		{
+			if (object->Type() == OBJECT_NODE)
+			{
+            Node *node = (Node *)object;
+            node->incRefCount();
+            AgentConnection *conn = node->createAgentConnection();
+            if(conn != NULL)
+            {
+               request->SetId(conn->generateRequestId());
+               response = conn->customRequest(request);
+               if (response != NULL)
+               {
+                  rcc = response->GetVariableLong(VID_RCC);
+                  if(rcc == RCC_SUCCESS)
+                  {
+                     response->SetId(request->GetId());
+                     response->SetCode(CMD_REQUEST_COMPLETED);
+                     responseMessage = response;
+                     responseMessage->SetId(msg.GetId());
+                  }
+                  else
+                  {
+                     msg.SetVariable(VID_RCC, rcc); // TODO: add transofrmation script
+                     debugPrintf(6, _T("ClientSession::getAgentFolderContent: Error on agent: %d"), rcc);
+                  }
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_TIMEOUT);
+               }
+               delete conn;
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_CONNECTION_BROKEN);
+            }
+            node->decRefCount();
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
+
+   sendMessage(responseMessage);
+   //delete response;
 }

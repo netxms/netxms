@@ -403,6 +403,8 @@ typedef struct
  */
 #define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20110301)
 
+#define MASTER_SERVER                  ((UINT32)1)
+
 class CSCPMessage;
 
 typedef struct
@@ -413,7 +415,7 @@ typedef struct
 	BOOL (* init)(Config *);   // Called to initialize subagent. Can be NULL.
    void (* shutdown)();       // Called at subagent unload. Can be NULL.
    BOOL (* commandHandler)(UINT32 dwCommand, CSCPMessage *pRequest,
-                           CSCPMessage *pResponse, void *session);
+                           CSCPMessage *pResponse, void *session, int serverType);
    UINT32 numParameters;
    NETXMS_SUBAGENT_PARAM *parameters;
    UINT32 numLists;

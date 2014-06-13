@@ -409,7 +409,7 @@ void UnloadAllSubAgents();
 BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
                   BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, Config *),
                   const TCHAR *pszEntryPoint);
-BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session);
+BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session, int serverType);
 BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
                LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
                const TCHAR *pszSubAgent, const TCHAR *pszDescription);

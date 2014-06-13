@@ -487,6 +487,10 @@ typedef struct
 #define CMD_GET_DCI_VALUES             0x0123
 #define CMD_GET_HELPDESK_URL           0x0124
 #define CMD_UNLINK_HELPDESK_ISSUE      0x0125
+#define CMD_GET_FOLDER_CONTENT         0x0126
+#define CMD_FILEMNGR_DELETE_FILE       0x0127
+#define CMD_FILEMNGR_RENAME_FILE       0x0128
+#define CMD_FILEMNGR_MOVE_FILE         0x0129
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -978,6 +982,7 @@ typedef struct
 #define VID_COMMAND_NAME            ((UINT32)474)
 #define VID_COMMAND_SHORT_NAME      ((UINT32)475)
 #define VID_MODULE_DATA_COUNT       ((UINT32)476)
+#define VID_NEW_FILE_NAME           ((UINT32)477)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1148,6 +1153,8 @@ typedef struct
 #define VID_EXTENSION_LIST_BASE     ((UINT32)0x10000000)
 
 #define VID_DCI_VALUES_BASE         ((UINT32)0x10000000)
+
+#define VID_FILE_LIST_BASE          ((UINT32)0x10000000)
 
 //
 // Inline functions

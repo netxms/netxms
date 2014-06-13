@@ -536,7 +536,8 @@ void CommSession::processingThread()
 					break;
             default:
                // Attempt to process unknown command by subagents
-               if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg, this))
+               int serverType = m_bMasterServer ? MASTER_SERVER : 0;
+               if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg, this, serverType))
                   msg.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
                break;
          }
@@ -812,10 +813,9 @@ void CommSession::getFileDetails(CSCPMessage *pRequest, CSCPMessage *pMsg)
 	}
 }
 
-
-//
-// Prepare for receiving file
-//
+/**
+ * Prepare for receiving file
+ */
 
 void CommSession::recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {

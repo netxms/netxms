@@ -2463,6 +2463,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/dbquery/Makefile
    src/agent/subagents/devemu/Makefile
 	src/agent/subagents/ecs/Makefile
+   src/agent/subagents/filemngr/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/hpux/Makefile
 	src/agent/subagents/informix/Makefile

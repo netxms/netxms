@@ -30,21 +30,21 @@ public class ServerFileComparator extends ViewerComparator
 		int rc;
 		switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
 		{
-			case ViewServerFile.COLUMN_NAME:
-				rc = ((ServerFile)e1).getName().compareToIgnoreCase(((ServerFile)e2).getName());
-				break;
-			case ViewServerFile.COLUMN_TYPE:
-				rc = ((ServerFile)e1).getType().compareToIgnoreCase(((ServerFile)e2).getType());
-				break;
-			case ViewServerFile.COLUMN_SIZE:
-				rc = Long.signum(((ServerFile)e1).getSize() - ((ServerFile)e2).getSize());
-				break;
-			case ViewServerFile.COLUMN_MODIFYED:
-				rc = ((ServerFile)e1).getModifyicationTime().compareTo(((ServerFile)e2).getModifyicationTime());
-				break;
-			default:
-				rc = 0;
-				break;
+		   case ViewServerFile.COLUMN_NAME:
+            rc = ((ServerFile)e1).getName().compareToIgnoreCase(((ServerFile)e2).getName());
+            break;
+         case ViewServerFile.COLUMN_TYPE:
+            rc = ((ServerFile)e1).getExtension().compareToIgnoreCase(((ServerFile)e2).getExtension());
+            break;
+         case ViewServerFile.COLUMN_SIZE:
+            rc = Long.signum(((ServerFile)e1).getSize() - ((ServerFile)e2).getSize());
+            break;
+         case ViewServerFile.COLUMN_MODIFYED:
+            rc = ((ServerFile)e1).getModifyicationTime().compareTo(((ServerFile)e2).getModifyicationTime());
+            break;
+         default:
+            rc = 0;
+            break;
 		}
 		int dir = ((TableViewer)viewer).getTable().getSortDirection();
 		return (dir == SWT.UP) ? rc : -rc;

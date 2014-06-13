@@ -11,6 +11,15 @@
             name="%view.ServerFileList.name"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.filemanager.views.ViewAgentFiles"
+            icon="icons/file.png"
+            id="org.netxms.ui.eclipse.usermanager.view.agent_files"
+            name="Agent File List"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.core.runtime.adapters">
@@ -33,6 +42,14 @@
                enablesFor="+"
                id="org.netxms.ui.eclipse.filemanager.popupActions.UploadFileToAgent_Node"
                label="%action.label.UploadFile"
+               menubarPath="objectmgmt"
+               style="push">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.filemanager.actions.GetAgentFileList"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.filemanager.popupActions.U_Node"
+               label="Get file list"
                menubarPath="objectmgmt"
                style="push">
          </action>

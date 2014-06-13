@@ -328,10 +328,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_GET_EFFECTIVE_RIGHTS"),
       _T("CMD_GET_DCI_VALUES"),
       _T("CMD_GET_HELPDESK_URL"),
-      _T("CMD_UNLINK_HELPDESK_ISSUE")
+      _T("CMD_UNLINK_HELPDESK_ISSUE"),
+      _T("CMD_GET_FOLDER_CONTENT")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_UNLINK_HELPDESK_ISSUE))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_FOLDER_CONTENT))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);
