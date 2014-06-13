@@ -133,6 +133,10 @@ AC_ARG_WITH(static-agent,
 [AS_HELP_STRING(--with-static-agent,build statically linked agent)],
 [
 	COMPONENTS="$COMPONENTS sqlite static-agent"
+	FORCE_INTERNAL_EXPAT="yes"
+	FORCE_INTERNAL_LIBTRE="yes"
+	FORCE_INTERNAL_JANSSON="yes"
+	FORCE_INTERNAL_ZLIB="yes"
 ])
 
 AC_ARG_WITH(ipso-agent,
