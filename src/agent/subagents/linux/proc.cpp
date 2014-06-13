@@ -161,10 +161,22 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 				hFile = fopen(szFileName, "r");
 				if (hFile != NULL)
 				{
-					char processCmdLine[1024];
-					memset(processCmdLine, 0, sizeof(processCmdLine));
-
-					int len = fread(processCmdLine, 1, sizeof(processCmdLine) - 1, hFile);
+               size_t len = 0, pos = 0;
+					char *processCmdLine = (char *)malloc(1024);
+               while(true)
+               {
+					   int bytes = fread(&processCmdLine[pos], 1, 1024, hFile);
+                  if (bytes < 0)
+                     bytes = 0;
+                  len += bytes;
+                  if (bytes < 1024)
+                  {
+                     processCmdLine[len] = 0;
+                     break;
+                  }
+                  pos += bytes;
+                  processCmdLine = (char *)realloc(processCmdLine, pos + 1024);
+               }
 					if (len > 0)
 					{
 						// got a valid record in format: argv[0]\x00argv[1]\x00...
@@ -185,6 +197,7 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 						bCmdFound = RegexpMatchA("", szCmdLine, TRUE);
 					}
 					fclose(hFile);
+               free(processCmdLine);
 				} // hFile != NULL
 				else
 				{
