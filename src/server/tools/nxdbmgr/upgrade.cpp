@@ -380,8 +380,8 @@ static BOOL H_UpgradeFromV321(int currVersion, int newVersion)
 			break;
 		case DB_SYNTAX_PGSQL:
          CHK_EXEC(SQLBatch(
-			   _T("ALTER TABLE users ALTERT COLUMN system_access TYPE $SQL:INT64\n")
-			   _T("ALTER TABLE user_groups ALTERT COLUMN system_access TYPE $SQL:INT64\n")
+			   _T("ALTER TABLE users ALTER COLUMN system_access TYPE $SQL:INT64\n")
+			   _T("ALTER TABLE user_groups ALTER COLUMN system_access TYPE $SQL:INT64\n")
             _T("<END>")));
 			break;
 		case DB_SYNTAX_SQLITE:
