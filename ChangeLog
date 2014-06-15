@@ -9,7 +9,7 @@
    - "Commands" box on node overview page made configurable
    - Object tools can have icons
 - Android Console:
-   - Fixed issue #898   
+   - Fixed issue #598   
    - Added option in preference to show/hide legend in graphs
 - Fixed issues: #597
 
