@@ -230,6 +230,7 @@ public class LastValuesAdapter extends BaseAdapter
 
 		return view;
 	}
+
 	/**
 	 * Get formatted value (using multiplier as necessary)
 	 * 

@@ -23,8 +23,8 @@ public class SafeParser
 		}
 		catch (NumberFormatException e)
 		{
+			return (int)parseFloat(text, defVal);	// Try to parse as float and truncate decimal part
 		}
-		return defVal;
 	}
 
 	/**
@@ -41,8 +41,8 @@ public class SafeParser
 		}
 		catch (NumberFormatException e)
 		{
+			return (long)parseFloat(text, defVal);	// Try to parse as float and truncate decimal part
 		}
-		return defVal;
 	}
 
 	/**
