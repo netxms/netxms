@@ -94,29 +94,96 @@ DECLARE_SUBAGENT_ENTRY_POINT(NXVSCE)
    return TRUE;
 }
 
+TCHAR *getLinuxRealPath(TCHAR *path)
+{
+   if(path == NULL || path[0] == 0)
+      return NULL;
+   TCHAR *result = (TCHAR*)malloc(sizeof(TCHAR)*MAX_PATH);
+   _tcscpy(result,path);
+   TCHAR *current = result;
+
+   //just remove all dots before path
+   if(!_tcsncmp(current,_T("../"),3))
+      _tcscat(current, current+3);
+
+   if(!_tcsncmp(current,_T("./"),2))
+      _tcscat(current, current+2);
+
+   while(current[0] != 0)
+   {
+      if(current[0] == '/')
+      {
+         if(current[1] != 0)
+         {
+            switch(current[1])
+            {
+               case '/':
+                  _tcscat(current, current+1);
+                  break;
+               case '.':
+                  if(current[2] != 0)
+                  {
+                     if(current[2] == '.' && (current[3] == 0 || current[3] == '/'))
+                     {
+                        //move to previousX2 '/' symbol
+                        if(current == result) //should be adress compare
+                        {
+                           _tcscat(current, current+3);
+                        }
+                        else
+                        {
+                           TCHAR *tmp = current;
+                           do
+                           {
+                              tmp--;
+                              if(tmp[0] == '/')
+                              {
+                                 break;
+                              }
+                           } while(result != tmp); //should be adress compare
+                           _tcscat(tmp, current+3);
+                        }
+                     }
+                  }
+                  else
+                  {
+                     _tcscat(current, current+2);
+                  }
+               default:
+                  current++;
+            }
+         }
+         else
+         {
+            current++;
+         }
+      }
+      else
+      {
+         current++;
+      }
+   }
+   return result;
+}
+
+/**
+ * Takes folder/file path - make it absalute(result will be again set to the folder variable)
+ * and check that this folder/file is under allowd path.
+ * If second parameter is set to true - then request is fror getting content and "/" path should be acepted
+ * and afterwards treatet as: "give list of all allowd folders".
+ */
 BOOL checkFullPath(TCHAR *folder, bool withHomeDir)
 {
    char* fullPath;
    TCHAR *fullPathT = NULL;
+   AgentWriteDebugLog(3, _T("filemngr getFolderContent: Previous path %s"), folder);
 
 #ifdef _WIN32
    fullPathT = _tfullpath(NULL, folder, MAX_PATH);
 #else
-   #ifdef UNICODE
-   char *ptr;
-   char *path;
-   path = UTF8StringFromWideString(folder);
-   ptr = realpath(path, NULL);
-   if(ptr != NULL)
-   {
-      fullPathT = WideStringFromUTF8String(ptr);
-      safe_free(ptr);
-   }
-   safe_free(path);
-   #else
-   fullPathT = realpath(NULL, folder);
-   #endif
+   fullPathT = getLinuxRealPath(folder);
 #endif
+   AgentWriteDebugLog(3, _T("filemngr getFolderContent: Full path %s"), fullPathT);
    if(fullPathT != NULL)
    {
       _tcscpy(folder, fullPathT);
@@ -128,11 +195,6 @@ BOOL checkFullPath(TCHAR *folder, bool withHomeDir)
    }
    for(int i = 0; i < g_rootFileManagerFolders->getSize(); i++)
    {
-      AgentWriteDebugLog(6, _T("filemngr getFolderContent:  %s , %s, %d, %d"), folder,
-      g_rootFileManagerFolders->getValue(i),
-      !_tcsncmp(g_rootFileManagerFolders->getValue(i), folder, _tcslen(g_rootFileManagerFolders->getValue(i))) ||
-      (_tcscmp(folder, _T("/")) && withHomeDir),
-      _tcslen(g_rootFileManagerFolders->getValue(i)));
       if(!_tcsncmp(g_rootFileManagerFolders->getValue(i), folder, _tcslen(g_rootFileManagerFolders->getValue(i))) || (!_tcscmp(folder, _T("/")) && withHomeDir))
          return TRUE;
    }
@@ -145,7 +207,7 @@ BOOL checkFullPath(TCHAR *folder, bool withHomeDir)
 #define SYMLINC         4
 
 /**
- * Puts in response list of
+ * Puts in response list of containing files
  */
 void getFolderContent(TCHAR* folder, CSCPMessage *msg)
 {
@@ -450,6 +512,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
             return TRUE;
          }
 
+         AgentWriteDebugLog(6, _T("filemngr ProcessCommands(): %d %d ."), checkFullPath(directory, true), serverType == MASTER_SERVER);
          if(checkFullPath(directory, true) && serverType == MASTER_SERVER)
          {
             getFolderContent(directory, response);

@@ -285,8 +285,8 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
 	{
 		manager.add(actionShowFilter);
 		manager.add(new Separator());
-		manager.add(actionUpload);
-		manager.add(actionDelete);
+		//manager.add(actionUpload);
+		//manager.add(actionDelete);
 		manager.add(new Separator());
 		manager.add(actionRefreshAll);
 	}
@@ -301,8 +301,8 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
 	{
 		manager.add(actionShowFilter);
 		manager.add(new Separator());
-		manager.add(actionUpload);
-		manager.add(actionDelete);
+		//manager.add(actionUpload);
+		//manager.add(actionDelete);
 		manager.add(new Separator());
 		manager.add(actionRefreshAll);
 	}
@@ -483,13 +483,13 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
 				for(int i = 0; i < objects.length; i++)
 				{
 				   final ServerFile sf = (ServerFile)objects[i];
-					session.deleteAgentFile(objectId, sf.getName());
-					sf.getParent().removeChield(sf);
+					session.deleteAgentFile(objectId, sf.getFullName());
 					
 					runInUIThread(new Runnable() {
 	               @Override
 	               public void run()
 	               {
+	                  sf.getParent().removeChield(sf);
 	                  viewer.refresh(sf.getParent());
 	               }
 	            });
@@ -527,14 +527,14 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             final ServerFile sf = (ServerFile)objects[0];
-            System.out.println(sf.getFullName() + " " + sf.getParent().getFullName()+"/"+newName);
             session.renameAgentFile(objectId, sf.getFullName(), sf.getParent().getFullName()+"/"+newName);
             
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  viewer.refresh(sf.getParent(), true);
+                  sf.setName(newName);
+                  viewer.refresh(sf, true);
                }
             });
          }
