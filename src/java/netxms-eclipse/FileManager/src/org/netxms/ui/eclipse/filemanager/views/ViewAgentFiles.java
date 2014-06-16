@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.filemanager.views;
 
+import java.util.List;
+import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -27,11 +29,20 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TreePath;
+import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.DragSourceAdapter;
+import org.eclipse.swt.dnd.DragSourceEvent;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -171,7 +182,8 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
 				WidgetHelper.saveTreeViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 			}
 		});
-		
+		enableDragSupport();
+		enableDropSupport();
 		
 		// Setup layout
 		FormData fd = new FormData();
@@ -202,6 +214,82 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
 		
 		refreshFileList();
 	}
+	
+	/**
+    * Enable drag support in object tree
+    */
+   public void enableDragSupport()
+   {
+      Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
+      viewer.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new DragSourceAdapter() {
+         @Override
+         public void dragStart(DragSourceEvent event)
+         {
+            LocalSelectionTransfer.getTransfer().setSelection(viewer.getSelection());
+            event.doit = true;
+         }
+
+         @Override
+         public void dragSetData(DragSourceEvent event)
+         {
+            event.data = LocalSelectionTransfer.getTransfer().getSelection();
+         }
+      });
+   }
+   
+   /**
+    * Enable drop support in object tree
+    */
+   public void enableDropSupport()//SubtreeType infrastructure
+   {      
+      final Transfer[] transfers = new Transfer[] { LocalSelectionTransfer.getTransfer() };
+      viewer.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers, new ViewerDropAdapter(viewer) {
+         
+         @Override
+         public boolean performDrop(Object data) 
+         {
+            IStructuredSelection selection = (IStructuredSelection)data;
+            List<?> movableSelection = selection.toList();
+            for (int i = 0; i < movableSelection.size(); i++)
+            {
+               ServerFile movableObject = (ServerFile)movableSelection.get(i);     
+               
+               moveFile((ServerFile)getCurrentTarget(), movableObject);
+               
+            }
+            return true;
+         }
+
+         @Override
+         public boolean validateDrop(Object target, int operation, TransferData transferType)
+         {
+            if ((target == null) || !LocalSelectionTransfer.getTransfer().isSupportedType(transferType))
+               return false;
+
+            IStructuredSelection selection = (IStructuredSelection)LocalSelectionTransfer.getTransfer().getSelection();
+            if (selection.isEmpty())
+               return false;
+            
+            for(final Object object : selection.toList())
+            {
+               if(!(object instanceof ServerFile))
+                  return false;
+            }
+            if(!(target instanceof ServerFile))
+            {
+               return false;
+            }
+            else
+            {
+               if(!((ServerFile)target).isDirectory())
+               {
+                  return false;
+               }
+            }
+            return true;
+         }
+      });
+   }
 
 	/**
 	 * Create actions
@@ -541,7 +629,37 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
       }.start();
    }
    
-   //add drag&drop support
+   /**
+    * Move selected file
+    */
+   private void moveFile(final ServerFile target, final ServerFile object)
+   {               
+      new ConsoleJob(Messages.get().ViewServerFile_DeletFileFromServerJob, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Error while move file job";
+         }
+
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.renameAgentFile(objectId, object.getFullName(), target.getFullName()+"/"+object.getName());
+            
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  object.getParent().removeChield(object);                  
+                  viewer.refresh(object.getParent(), true);
+                  object.setParent(target);
+                  target.addChield(object);               
+                  viewer.refresh(object.getParent(), true);                  
+               }
+            });
+         }
+      }.start();
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
