@@ -207,7 +207,7 @@ void NXSL_Program::dump(FILE *pFile)
    for(int i = 0; i < m_instructionSet->size(); i++)
    {
       NXSL_Instruction *instr = m_instructionSet->get(i);
-      fprintf(pFile, "%04X  %-6s  ", i, g_nxslCommandMnemonic[instr->m_nOpCode]);
+      _ftprintf(pFile, _T("%04X  %-6hs  "), i, g_nxslCommandMnemonic[instr->m_nOpCode]);
       switch(instr->m_nOpCode)
       {
          case OPCODE_CALL_EXTERNAL:

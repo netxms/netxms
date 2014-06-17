@@ -87,12 +87,12 @@ int main(int argc, char *argv[])
 
    if (argc - optind < 1)
    {
-      printf("Usage: nxscript [options] script [arg1 [... argN]]\n\n"
-             "Valid options are:\n"
-             "   -d         Dump compiled script code\n"
-				 "   -e <name>  Entry point\n"
-             "   -r         Print script return value\n"
-             "\n");
+      _tprintf(_T("Usage: nxscript [options] script [arg1 [... argN]]\n\n")
+               _T("Valid options are:\n")
+               _T("   -d         Dump compiled script code\n")
+				   _T("   -e <name>  Entry point\n")
+               _T("   -r         Print script return value\n")
+               _T("\n"));
       return 127;
    }
 
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		printf("Error: cannot load input file \"%s\"\n", argv[optind]);
+		_tprintf(_T("Error: cannot load input file \"%hs\"\n"), argv[optind]);
 	}
    return 0;
 }
