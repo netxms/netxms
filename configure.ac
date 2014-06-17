@@ -2339,6 +2339,10 @@ else
 fi
 AC_DEFINE_UNQUOTED([SHLIB_SUFFIX], _T("$SHLIB_SUFFIX"), [Define to platform's shared library suffix])
 
+if test "x$ENABLE_DEBUG" = "xno"; then
+	CPPFLAGS="$CPPFLAGS -DNDEBUG"
+fi
+
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_JANSSON], [test "x$HAVE_JANSSON" = "xno"])
