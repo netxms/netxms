@@ -18,8 +18,14 @@
  */
 package org.netxms.ui.eclipse.filemanager.views;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.URLEncoder;
 import java.util.List;
-import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -33,8 +39,6 @@ import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.TreePath;
-import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -51,19 +55,26 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.ProgressListener;
 import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
+import org.netxms.client.AgentFile;
+import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerFile;
+import org.netxms.client.ServerJob;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -76,6 +87,7 @@ import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileFilter;
 import org.netxms.ui.eclipse.filemanager.views.helpers.ServerFileLabelProvider;
 import org.netxms.ui.eclipse.filemanager.views.helpers.ViewAgentFilesProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objecttools.views.FileViewer;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -111,7 +123,11 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
    private Action actionRename;
    private Action actionRefreshDirectory;
    private Action actionShowFilter;
+   private Action actionDownloadFile;
+   private Action actionTailFile;
    private long objectId = 0;
+   AbstractObject object = null;
+   private static NXCListener listener = null;
 
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -123,7 +139,7 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
       
       session = (NXCSession)ConsoleSharedData.getSession();
       objectId = Long.parseLong(site.getSecondaryId());
-      AbstractObject object = session.findObjectById(objectId);
+      object = session.findObjectById(objectId);
       setPartName("File list " + ((object != null) ? object.getObjectName() : ("[" + Long.toString(objectId) + "]")));  //$NON-NLS-1$//$NON-NLS-2$
    }
    
@@ -317,7 +333,7 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
 			@Override
 			public void run()
 			{
-				createFile();
+				uploadFile();
 			}
 		};
 		actionUpload.setImageDescriptor(SharedIcons.ADD_OBJECT);
@@ -351,6 +367,24 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
 	    actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
 		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
+				
+		actionDownloadFile = new Action("Download file from agent") {
+         @Override
+         public void run()
+         {
+            downloadFile();
+         }
+      };
+      //actionUpload.setImageDescriptor(SharedIcons.ADD_OBJECT); //green arrow
+      
+      actionTailFile = new Action("Tail file") {
+         @Override
+         public void run()
+         {
+            tailFile();
+         }
+      };
+      //actionUpload.setImageDescriptor(SharedIcons.ADD_OBJECT); //???
 	}
 
 	/**
@@ -430,6 +464,14 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
 		mgr.add(actionUpload);
 		mgr.add(actionDelete);
       mgr.add(actionRename);
+      
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (!selection.isEmpty() && selection.size() == 1)
+         if(!((ServerFile)selection.toArray()[0]).isDirectory())
+         {
+            mgr.add(actionTailFile);
+            mgr.add(actionDownloadFile);
+         }
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		mgr.add(new Separator());
@@ -505,15 +547,22 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
    }
 	
 	/**
-	 * Create new file
+	 * Upload file from agent to server
 	 */
-	private void createFile()
+	private void uploadFile()
 	{
+	   IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.isEmpty())
+         return;
+      
+      final Object[] objects = selection.toArray();
+      final ServerFile upladFolder = ((ServerFile)objects[0]).isDirectory() ? ((ServerFile)objects[0]) : ((ServerFile)objects[0]).getParent();      
+      
 		final StartClientToServerFileUploadDialog dlg = new StartClientToServerFileUploadDialog(getSite().getShell());
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.get().UploadFileToServer_JobTitle, null, Activator.PLUGIN_ID, null) {
+			new ConsoleJob("Upload file to agent", null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(final IProgressMonitor monitor) throws Exception
 				{
@@ -534,6 +583,46 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
 						}
 					});
 					monitor.done();
+					final long id = session.uploadFileToAgent(objectId, dlg.getRemoteFileName(), upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), false);
+					final String name = dlg.getRemoteFileName();
+					
+					listener = new NXCListener() {			         
+			         @Override
+			         public void notificationHandler(SessionNotification n)
+			         {
+			            if ((n.getCode() == NXCNotification.JOB_CHANGE) && ((ServerJob)n.getObject()).getId() == id)
+			            {
+			               ServerJob job = ((ServerJob)n.getObject());
+			               if(job.getStatus() == ServerJob.COMPLETED || job.getStatus() == ServerJob.FAILED || job.getStatus() == ServerJob.CANCELLED)
+			               {
+			                  new ConsoleJob("Upload file to agent", null, Activator.PLUGIN_ID, null) {
+			                     @Override
+			                     protected void runInternal(final IProgressMonitor monitor) throws Exception
+			                     {
+		                           session.deleteServerFile(name);
+		                           session.removeListener(listener);
+		                           upladFolder.setChildren(session.listAgentFiles(upladFolder, upladFolder.getFullName(), objectId));
+		                           runInUIThread(new Runnable() {
+		                              @Override
+		                              public void run()
+		                              {		       
+		                                 
+		                                 viewer.refresh(upladFolder, true);		                                 
+		                              }
+		                           });
+			                     }
+
+                              @Override
+                              protected String getErrorMessage()
+                              {
+                                 return "Error while deleting temporary file file from server";
+                              }
+			                  }.start();
+			               }
+			            }
+			         }
+			      };
+			      session.addListener(listener);
 				}
 				
 				@Override
@@ -585,6 +674,112 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
 			}
 		}.start();
 	}
+	
+	private void tailFile()
+	{
+	   IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.isEmpty())
+         return; 
+	  
+      final Object[] objects = selection.toArray();
+      
+      if(((ServerFile)objects[0]).isDirectory())
+         return;
+      
+
+      final ServerFile sf = ((ServerFile)objects[0]);
+      
+      ConsoleJob job = new ConsoleJob("Download file from agent", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format("Error while downloading %s file from %d node.", sf.getFullName(), objectId);
+         }
+
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final AgentFile file = session.downloadFileFromAgent(objectId, sf.getFullName(), 0, true);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+                  try
+                  {
+                     String secondaryId = Long.toString(object.getObjectId()) + "&" + URLEncoder.encode(sf.getName(), "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
+                     FileViewer view = (FileViewer)window.getActivePage().showView(FileViewer.ID, secondaryId,
+                           IWorkbenchPage.VIEW_ACTIVATE);
+                     view.showFile(file.getFile(), true, file.getId(), 0);
+                  }
+                  catch(Exception e)
+                  {
+                     MessageDialogHelper.openError(window.getShell(), "Error opening view.", String.format("Error opening view: %s", e.getLocalizedMessage()));
+                  }
+               }
+            });
+         }
+      };
+      job.start();
+	}
+	
+	private void downloadFile()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.isEmpty())
+         return; 
+     
+      final Object[] objects = selection.toArray();
+      
+      if(((ServerFile)objects[0]).isDirectory())
+         return;      
+
+      final ServerFile sf = ((ServerFile)objects[0]);
+      String selected;
+      do
+      {
+         FileDialog fd = new FileDialog(getSite().getShell(), SWT.SAVE);
+         fd.setText("Select how to save file");
+         String[] filterExtensions = { "*.*" };
+         fd.setFilterExtensions(filterExtensions);
+         String[] filterNames = { "ALL" };
+         fd.setFilterNames(filterNames);
+         fd.setFileName(sf.getName());
+         selected = fd.open();
+
+         if(selected == null)
+            return;
+      }while (selected.isEmpty());
+      
+      final String name = selected;
+      
+      ConsoleJob job = new ConsoleJob("Download file from agent", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format("Error while downloading %s file from %d node.", sf.getFullName(), objectId);
+         }
+
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final AgentFile file = session.downloadFileFromAgent(objectId, sf.getFullName(), 0, false);
+            File outputFile = new File(name);
+            outputFile.createNewFile();
+            InputStream in = new FileInputStream(file.getFile());
+            OutputStream out = new FileOutputStream(outputFile);
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0){
+              out.write(buf, 0, len);
+            }
+            in.close();
+            out.close();
+            //save localy file
+         }
+      };
+      job.start();
+   }
 	
 	/**
     * Rename selected file
@@ -676,10 +871,7 @@ public class ViewAgentFiles extends ViewPart implements SessionListener
 	@Override
 	public void notificationHandler(final SessionNotification n)
 	{
-	   if(n.getCode() == NXCNotification.FILE_LIST_CHANGED)
-	   {
-	      refreshFileList();
-	   }
+	   //do nothing(no notificatrions required)
 	}
 
 	/* (non-Javadoc)

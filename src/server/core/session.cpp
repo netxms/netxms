@@ -11900,9 +11900,9 @@ void ClientSession::executeServerCommand(CSCPMessage *request)
 }
 
 
-//
-// Upload file from server to agent
-//
+/**
+ * Upload file from server to agent
+ */
 
 void ClientSession::uploadFileToAgent(CSCPMessage *request)
 {

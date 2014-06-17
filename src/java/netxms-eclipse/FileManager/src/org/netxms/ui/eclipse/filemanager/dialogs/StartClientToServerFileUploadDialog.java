@@ -106,6 +106,8 @@ public class StartClientToServerFileUploadDialog extends Dialog
 			return;
 		}
 		remoteFileName = textRemoteFile.getText().trim();
+		if(remoteFileName.isEmpty())
+		   remoteFileName = localFile.getName();
 		super.okPressed();
 	}
 
