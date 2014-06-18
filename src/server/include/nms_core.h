@@ -702,7 +702,7 @@ public:
 	int getClientType() { return m_clientType; }
    time_t getLoginTime() { return m_loginTime; }
 
-	bool checkSysAccessRights(UINT32 requiredAccess)
+	bool checkSysAccessRights(UINT64 requiredAccess)
    {
       return (m_dwUserId == 0) ? true :
          ((requiredAccess & m_dwSystemAccess) == requiredAccess);
