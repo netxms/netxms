@@ -1,7 +1,7 @@
-SUBAGENT = filemngr
+SUBAGENT = filemgr
 
-pkglib_LTLIBRARIES = filemngr.la
-filemngr_la_SOURCES = filemngr.cpp
+pkglib_LTLIBRARIES = filemgr.la
+filemngr_la_SOURCES = filemgr.cpp
 filemngr_la_CPPFLAGS=-I@top_srcdir@/include
 filemngr_la_LDFLAGS = -module -avoid-version
 filemngr_la_LIBADD = ../../../libnetxms/libnetxms.la
