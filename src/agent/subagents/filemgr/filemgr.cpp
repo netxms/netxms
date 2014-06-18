@@ -350,7 +350,7 @@ static BOOL Delete(const TCHAR *name)
 #ifdef _WIN32
       return RemoveDirectory(name);
 #else
-      return rmdir(name) == 0;
+      return _trmdir(name) == 0;
 #endif
    }
 #ifdef _WIN32
