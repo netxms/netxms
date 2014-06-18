@@ -1,10 +1,10 @@
 SUBAGENT = filemgr
 
 pkglib_LTLIBRARIES = filemgr.la
-filemngr_la_SOURCES = filemgr.cpp
-filemngr_la_CPPFLAGS=-I@top_srcdir@/include
-filemngr_la_LDFLAGS = -module -avoid-version
-filemngr_la_LIBADD = ../../../libnetxms/libnetxms.la
+filemgr_la_SOURCES = filemgr.cpp
+filemgr_la_CPPFLAGS=-I@top_srcdir@/include
+filemgr_la_LDFLAGS = -module -avoid-version
+filemgr_la_LIBADD = ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = filemgr.vcproj
 
