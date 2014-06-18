@@ -24,6 +24,8 @@
 
 DECLARE_DRIVER_HEADER("ORACLE")
 
+extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText);
+
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
@@ -228,6 +230,9 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 						OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
 									  (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_CURRENT_SCHEMA, pConn->handleError);
 					}
+
+               // Setup session
+               DrvQuery(pConn, L"ALTER SESSION SET NLS_LANGUAGE='AMERICAN' NLS_NUMERIC_CHARACTERS='.,'", NULL);
 				}
 				else
 				{
@@ -1182,13 +1187,11 @@ extern "C" DWORD EXPORT DrvRollback(ORACLE_CONN *pConn)
 	return dwResult;
 }
 
-
-//
-// DLL Entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL Entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
