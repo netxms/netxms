@@ -6,6 +6,7 @@ filemngr_la_CPPFLAGS=-I@top_srcdir@/include
 filemngr_la_LDFLAGS = -module -avoid-version
 filemngr_la_LIBADD = ../../../libnetxms/libnetxms.la
 
+EXTRA_DIST = filemgr.vcproj
 
 if !STATIC_BUILD
 install-exec-hook:

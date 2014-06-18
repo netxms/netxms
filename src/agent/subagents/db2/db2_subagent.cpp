@@ -413,7 +413,7 @@ static NETXMS_SUBAGENT_INFO m_agentInfo =
    NETXMS_SUBAGENT_INFO_MAGIC,
    SUBAGENT_NAME,
    NETXMS_VERSION_STRING,
-   DB2Init, DB2Shutdown, DB2CommandHandler,
+   DB2Init, DB2Shutdown, NULL,
    (sizeof(m_agentParams) / sizeof(NETXMS_SUBAGENT_PARAM)), m_agentParams,
    0, NULL,
    0, NULL,
@@ -652,11 +652,6 @@ static void DB2Shutdown()
    s_threads = NULL;
 
    AgentWriteDebugLog(3, _T("%s: terminated"), SUBAGENT_NAME);
-}
-
-static BOOL DB2CommandHandler(UINT32 dwCommand, CSCPMessage* pRequest, CSCPMessage* pResponse, void* session)
-{
-   return FALSE;
 }
 
 static THREAD_RESULT THREAD_CALL RunMonitorThread(void* info)

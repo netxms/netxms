@@ -1,5 +1,5 @@
 /*
- ** Device Emulation subagent
+ ** File management subagent
  ** Copyright (C) 2014 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -21,44 +21,48 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <nxclapi.h>
-
-#ifdef _WIN32
-#define FILEMNGR_EXPORTABLE __declspec(dllexport) __cdecl
-#else
-#define FILEMNGR_EXPORTABLE
-#endif
-
-
+#include <nxstat.h>
 
 /**
- * Variables
+ * Root folders
  */
 static StringList *g_rootFileManagerFolders;
 
-/**
- * Functions
- */
-static BOOL SubagentInit(Config *config);
-static void SubagentShutdown();
-static void SubagentShutdown();
-static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *response, void *session, int serverType);
+#ifdef _WIN32
 
 /**
- * Subagent information
+ * Convert path from UNIX to local format
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static void ConvertPathToHost(TCHAR *path)
 {
-   NETXMS_SUBAGENT_INFO_MAGIC,
-   _T("FILEMNGR"), NETXMS_VERSION_STRING,
-   SubagentInit, SubagentShutdown, ProcessCommands,
-   0, NULL, // parameters
-   0, NULL, //enums
-   0, NULL, // tables
-   0, NULL, // actions
-   0, NULL  // push parameters
-};
+   for(int i = 0; path[i] != 0; i++)
+      if (path[i] == _T('/'))
+         path[i] = _T('\\');
+}
 
+#else
 
+#define ConvertPathToHost(x)
+
+#endif
+
+#ifdef _WIN32
+
+/**
+ * Convert path from local to UNIX format
+ */
+static void ConvertPathToNetwork(TCHAR *path)
+{
+   for(int i = 0; path[i] != 0; i++)
+      if (path[i] == _T('\\'))
+         path[i] = _T('/');
+}
+
+#else
+
+#define ConvertPathToNetwork(x)
+
+#endif
 
 /**
  * Subagent initialization
@@ -66,14 +70,16 @@ static NETXMS_SUBAGENT_INFO m_info =
 static BOOL SubagentInit(Config *config)
 {
    g_rootFileManagerFolders = new StringList();
-   ConfigEntry *root = config->getEntry(_T("/filemngr/FileManagerRootFolder"));
+   ConfigEntry *root = config->getEntry(_T("/filemgr/RootFolder"));
    if (root != NULL)
    {
       for(int i = 0; i < root->getValueCount(); i++)
       {
          g_rootFileManagerFolders->add(root->getValue(i));
+         AgentWriteDebugLog(5, _T("FILEMGR: added root folder %s"), root->getValue(i));
       }
    }
+   AgentWriteDebugLog(2, _T("FILEMGR: subagent initialized"));
    return TRUE;
 }
 
@@ -85,16 +91,9 @@ static void SubagentShutdown()
    delete g_rootFileManagerFolders;
 }
 
-/**
- * Entry point for NetXMS agent
- */
-DECLARE_SUBAGENT_ENTRY_POINT(NXVSCE)
-{
-   *ppInfo = &m_info;
-   return TRUE;
-}
+#ifndef _WIN32
 
-TCHAR *getLinuxRealPath(TCHAR *path)
+static TCHAR *getLinuxRealPath(TCHAR *path)
 {
    if(path == NULL || path[0] == 0)
       return NULL;
@@ -166,25 +165,29 @@ TCHAR *getLinuxRealPath(TCHAR *path)
    return result;
 }
 
+#endif
+
 /**
- * Takes folder/file path - make it absalute(result will be again set to the folder variable)
- * and check that this folder/file is under allowd path.
- * If second parameter is set to true - then request is fror getting content and "/" path should be acepted
+ * Takes folder/file path - make it absolute (result will be written back to the folder variable)
+ * and check that this folder/file is under allowed root path.
+ * If second parameter is set to true - then request is for getting content and "/" path should be acepted
  * and afterwards treatet as: "give list of all allowd folders".
  */
-BOOL checkFullPath(TCHAR *folder, bool withHomeDir)
+static BOOL CheckFullPath(TCHAR *folder, bool withHomeDir)
 {
-   char* fullPath;
-   TCHAR *fullPathT = NULL;
-   AgentWriteDebugLog(3, _T("filemngr getFolderContent: Previous path %s"), folder);
+   AgentWriteDebugLog(3, _T("FILEMGR: CheckFullPath: input is %s"), folder);
+   if (withHomeDir && !_tcscmp(folder, FS_PATH_SEPARATOR))
+   {
+      return TRUE;
+   }
 
 #ifdef _WIN32
-   fullPathT = _tfullpath(NULL, folder, MAX_PATH);
+   TCHAR *fullPathT = _tfullpath(NULL, folder, MAX_PATH);
 #else
-   fullPathT = getLinuxRealPath(folder);
+   TCHAR *fullPathT = getLinuxRealPath(folder);
 #endif
-   AgentWriteDebugLog(3, _T("filemngr getFolderContent: Full path %s"), fullPathT);
-   if(fullPathT != NULL)
+   AgentWriteDebugLog(3, _T("FILEMGR: CheckFullPath: Full path %s"), fullPathT);
+   if (fullPathT != NULL)
    {
       _tcscpy(folder, fullPathT);
       safe_free(fullPathT);
@@ -195,7 +198,7 @@ BOOL checkFullPath(TCHAR *folder, bool withHomeDir)
    }
    for(int i = 0; i < g_rootFileManagerFolders->getSize(); i++)
    {
-      if(!_tcsncmp(g_rootFileManagerFolders->getValue(i), folder, _tcslen(g_rootFileManagerFolders->getValue(i))) || (!_tcscmp(folder, _T("/")) && withHomeDir))
+      if (!_tcsncmp(g_rootFileManagerFolders->getValue(i), folder, _tcslen(g_rootFileManagerFolders->getValue(i))))
          return TRUE;
    }
 
@@ -209,28 +212,27 @@ BOOL checkFullPath(TCHAR *folder, bool withHomeDir)
 /**
  * Puts in response list of containing files
  */
-void getFolderContent(TCHAR* folder, CSCPMessage *msg)
+static void GetFolderContent(TCHAR* folder, CSCPMessage *msg)
 {
-   msg->SetVariable(VID_RCC, ERR_SUCCESS);
-   #ifdef _WIN32
-         struct _stat st;
-   #else
-         struct stat st;
-   #endif
-   UINT32 count = 0, varId = VID_INSTANCE_LIST_BASE;
+   NX_STAT_STRUCT st;
 
-   if(!_tcscmp(folder, _T("/")))
+   msg->SetVariable(VID_RCC, ERR_SUCCESS);
+   UINT32 count = 0;
+   UINT32 varId = VID_INSTANCE_LIST_BASE;
+
+   if (!_tcscmp(folder, FS_PATH_SEPARATOR))
    {
       for(int i = 0; i < g_rootFileManagerFolders->getSize(); i++)
       {
-
-         if (_tstat(g_rootFileManagerFolders->getValue(i), &st) == 0)
+         if (CALL_STAT(g_rootFileManagerFolders->getValue(i), &st) == 0)
          {
             msg->SetVariable(varId++, g_rootFileManagerFolders->getValue(i));
             msg->SetVariable(varId++, (QWORD)st.st_size);
             msg->SetVariable(varId++, (QWORD)st.st_mtime);
             UINT32 type = 0;
+#ifndef _WIN32
             type |= (st.st_mode & S_IFLNK) > 0 ? SYMLINC : 0;
+#endif
             type |= (st.st_mode & S_IFREG) > 0 ? REGULAR_FILE : 0;
             type |= (st.st_mode & S_IFDIR) > 0 ? DIRECTORY : 0;
             msg->SetVariable(varId++, type); //add converation
@@ -243,7 +245,7 @@ void getFolderContent(TCHAR* folder, CSCPMessage *msg)
          }
          else
          {
-            AgentWriteDebugLog(3, _T("filemngr getFolderContent: Not possible to get folder %s"), g_rootFileManagerFolders->getValue(i));
+            AgentWriteDebugLog(3, _T("FILEMGR: GetFolderContent: Not possible to get folder %s"), g_rootFileManagerFolders->getValue(i));
          }
       }
       msg->SetVariable(VID_INSTANCE_COUNT, count);
@@ -263,19 +265,22 @@ void getFolderContent(TCHAR* folder, CSCPMessage *msg)
 
          TCHAR fullName[MAX_PATH];
          _tcscpy(fullName, folder);
-         _tcscat(fullName, _T("/"));
+         _tcscat(fullName, FS_PATH_SEPARATOR);
          _tcscat(fullName, d->d_name);
 
-         if (_tstat(fullName, &st) == 0)
+         if (CALL_STAT(fullName, &st) == 0)
          {
             msg->SetVariable(varId++, d->d_name);
             msg->SetVariable(varId++, (QWORD)st.st_size);
             msg->SetVariable(varId++, (QWORD)st.st_mtime);
             UINT32 type = 0;
+#ifndef _WIN32
             type |= (st.st_mode & S_IFLNK) > 0 ? SYMLINC : 0;
+#endif
             type |= (st.st_mode & S_IFREG) > 0 ? REGULAR_FILE : 0;
             type |= (st.st_mode & S_IFDIR) > 0 ? DIRECTORY : 0;
             msg->SetVariable(varId++, type); //add converation
+            ConvertPathToNetwork(fullName);
             msg->SetVariable(varId++, fullName);
 
             /*
@@ -295,7 +300,7 @@ void getFolderContent(TCHAR* folder, CSCPMessage *msg)
          }
          else
          {
-             AgentWriteDebugLog(6, _T("filemngr getFolderContent: Not possible to get folder %s"), fullName);
+             AgentWriteDebugLog(6, _T("FILEMGR: GetFolderContent: Not possible to get folder %s"), fullName);
          }
       }
       msg->SetVariable(VID_INSTANCE_COUNT, count);
@@ -306,24 +311,23 @@ void getFolderContent(TCHAR* folder, CSCPMessage *msg)
    }
 }
 
-static BOOL DeleteFile(TCHAR* name)
+/**
+ * Delete file
+ */
+static BOOL Delete(const TCHAR *name)
 {
-   #ifdef _WIN32
-         struct _stat st;
-   #else
-         struct stat st;
-   #endif
+   NX_STAT_STRUCT st;
 
-   if(_tstat(name, &st) != 0)
+   if (CALL_STAT(name, &st) != 0)
    {
       return FALSE;
    }
 
    bool result = true;
 
-   if(S_ISDIR(st.st_mode))
+   if (S_ISDIR(st.st_mode))
    {
-      //get element list and for each element run DeleteFile
+      // get element list and for each element run Delete
       _TDIR *dir = _topendir(name);
       if (dir != NULL)
       {
@@ -338,47 +342,27 @@ static BOOL DeleteFile(TCHAR* name)
             _tcscpy(newName, name);
             _tcscat(newName, FS_PATH_SEPARATOR);
             _tcscat(newName, d->d_name);
-            result &= DeleteFile(newName);
+            result = result && Delete(newName);
          }
+         _tclosedir(dir);
       }
       //remove directory
-      #ifdef _WIN32
-         #ifdef UNICODE
-            if(RemoveDirectoryW(name))
-         #else
-            if(RemoveDirectory(name))
-         #endif
-         {
-            return result & TRUE;
-         }
-         else
-         {
-            return FALSE;
-         }
-      #else
-         #ifdef UNICODE
-            char *cName = UTF8StringFromWideString(name);
-            result &= rmdir(cName) == 0 ? true : false;
-            safe_free(cName);
-         #else
-            result &= rmdir(name) == 0 ? true : false;
-         #endif
-         return result;
-      #endif
+#ifdef _WIN32
+      return RemoveDirectory(name);
+#else
+      return rmdir(name) == 0;
+#endif
    }
-   else
-   {
-      if (_tremove(name) == 0)
-      {
-         return TRUE;
-      }
-      else
-      {
-         return FALSE;
-      }
-   }
+#ifdef _WIN32
+   return DeleteFile(name);
+#else
+   return _tremove(name) == 0;
+#endif
 }
 
+/**
+ * Rename file
+ */
 static BOOL Rename(TCHAR* oldName, TCHAR * newName)
 {
    if (_trename(oldName, newName) == 0)
@@ -391,7 +375,12 @@ static BOOL Rename(TCHAR* oldName, TCHAR * newName)
    }
 }
 
-static BOOL copyLinuxFile(struct stat *st, TCHAR* oldName, TCHAR* newName)
+#ifndef _WIN32
+
+/**
+ * Copy file
+ */
+static BOOL CopyFile(NX_STAT_STRUCT *st, TCHAR* oldName, TCHAR* newName)
 {
    int oldFile, newFile;
    oldFile = _topen(oldName, O_RDONLY | O_BINARY);
@@ -422,35 +411,29 @@ static BOOL copyLinuxFile(struct stat *st, TCHAR* oldName, TCHAR* newName)
     return TRUE;
 }
 
+#endif
+
+/**
+ * Move file
+ */
 static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
 {
-   #ifdef _WIN32
-   #ifdef UNICODE
-   if(MoveFileExW(oldName, newName, MOVEFILE_COPY_ALLOWED) != 0)
-   #else
-   if(MoveFileEx(oldName, newName, MOVEFILE_COPY_ALLOWED) != 0)
-   #endif
-   {
-      return TRUE;
-   }
-   else
-   {
-      return FALSE;
-   }
-   #else
-   if(Rename(oldName, newName))
+#ifdef _WIN32
+   return MoveFileEx(oldName, newName, MOVEFILE_COPY_ALLOWED);
+#else
+   if (Rename(oldName, newName))
    {
       return TRUE;
    }
 
-   struct stat st;
+   NX_STAT_STRUCT st;
 
-   if(_tstat(oldName, &st) != 0)
+   if (CALL_STAT(oldName, &st) != 0)
    {
       return FALSE;
    }
 
-   if(S_ISDIR(st.st_mode))
+   if (S_ISDIR(st.st_mode))
    {
       _tmkdir(newName, st.st_mode);
       _TDIR *dir = _topendir(oldName);
@@ -475,22 +458,17 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
 
             MoveFile(nextOldaName, nextNewName);
          }
+         _tclosedir(dir);
       }
-      #ifdef UNICODE
-         char *cName = UTF8StringFromWideString(oldName);
-         rmdir(cName);
-         safe_free(cName);
-      #else
-         rmdir(oldName);
-      #endif
+      _trmdir(oldName);
    }
    else
    {
-      if (!copyLinuxFile(&st, oldName, newName))
+      if (!CopyFile(&st, oldName, newName))
          return false;
    }
    return TRUE;
-   #endif
+#endif /* _WIN32 */
 }
 
 /**
@@ -505,21 +483,21 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          TCHAR directory[MAX_PATH];
          request->GetVariableStr(VID_FILE_NAME, directory, MAX_PATH);
          response->SetId(request->GetId());
-         if(directory == NULL)
+         if (directory == NULL)
          {
             response->SetVariable(VID_RCC, RCC_IO_ERROR);
-            AgentWriteDebugLog(6, _T("filemngr ProcessCommands(): File name should be set."));
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): File name should be set."));
             return TRUE;
          }
+         ConvertPathToHost(directory);
 
-         AgentWriteDebugLog(6, _T("filemngr ProcessCommands(): %d %d ."), checkFullPath(directory, true), serverType == MASTER_SERVER);
-         if(checkFullPath(directory, true) && serverType == MASTER_SERVER)
+         if (CheckFullPath(directory, true) && (serverType == MASTER_SERVER))
          {
-            getFolderContent(directory, response);
+            GetFolderContent(directory, response);
          }
          else
          {
-            AgentWriteDebugLog(6, _T("filemngr ProcessCommands(): Acess denid."));
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Acess denid."));
             response->SetVariable(VID_RCC, RCC_ACCESS_DENIED);
          }
          return TRUE;
@@ -532,13 +510,14 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          if(file == NULL)
          {
             response->SetVariable(VID_RCC, RCC_IO_ERROR);
-            AgentWriteDebugLog(6, _T("filemngr ProcessCommands(): File name should be set."));
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): File name should be set."));
             return TRUE;
          }
+         ConvertPathToHost(file);
 
-         if(checkFullPath(file, false) && serverType == MASTER_SERVER)
+         if(CheckFullPath(file, false) && serverType == MASTER_SERVER)
          {
-            if(DeleteFile(file))
+            if (Delete(file))
             {
                response->SetVariable(VID_RCC, ERR_SUCCESS);
             }
@@ -549,7 +528,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          else
          {
-            AgentWriteDebugLog(6, _T("filemngr ProcessCommands(): Acess denid."));
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Acess denid."));
             response->SetVariable(VID_RCC, RCC_ACCESS_DENIED);
          }
          return TRUE;
@@ -564,15 +543,15 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          if(oldName == NULL && newName == NULL)
          {
             response->SetVariable(VID_RCC, RCC_IO_ERROR);
-            AgentWriteDebugLog(6, _T("filemngr ProcessCommands(): File names should be set."));
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): File names should be set."));
             return TRUE;
          }
+         ConvertPathToHost(oldName);
+         ConvertPathToHost(newName);
 
-
-         AgentWriteDebugLog(6, _T("filemngr ProcessCommands(): %d, %d, %d."), checkFullPath(oldName, false), checkFullPath(newName, false), serverType == MASTER_SERVER);
-         if(checkFullPath(oldName, false) && checkFullPath(newName, false) && serverType == MASTER_SERVER)
+         if (CheckFullPath(oldName, false) && CheckFullPath(newName, false) && serverType == MASTER_SERVER)
          {
-            if(Rename(oldName, newName))
+            if (Rename(oldName, newName))
             {
                response->SetVariable(VID_RCC, ERR_SUCCESS);
             }
@@ -583,7 +562,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          else
          {
-            AgentWriteDebugLog(6, _T("filemngr ProcessCommands(): Acess denid."));
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Access denied"));
             response->SetVariable(VID_RCC, RCC_ACCESS_DENIED);
          }
          return TRUE;
@@ -598,11 +577,13 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          if(oldName == NULL && newName == NULL)
          {
             response->SetVariable(VID_RCC, RCC_IO_ERROR);
-            AgentWriteDebugLog(6, _T("filemngr ProcessCommands(): File names should be set."));
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): File names should be set."));
             return TRUE;
          }
+         ConvertPathToHost(oldName);
+         ConvertPathToHost(newName);
 
-         if(checkFullPath(oldName, false) && checkFullPath(newName, false) && serverType == MASTER_SERVER)
+         if (CheckFullPath(oldName, false) && CheckFullPath(newName, false) && serverType == MASTER_SERVER)
          {
             if(MoveFile(oldName, newName))
             {
@@ -615,15 +596,38 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          else
          {
-            AgentWriteDebugLog(6, _T("filemngr ProcessCommands(): Acess denid."));
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Access denied"));
             response->SetVariable(VID_RCC, RCC_ACCESS_DENIED);
          }
          return TRUE;
-
       }
       default:
          return FALSE;
    }
+}
+
+/**
+ * Subagent information
+ */
+static NETXMS_SUBAGENT_INFO m_info =
+{
+   NETXMS_SUBAGENT_INFO_MAGIC,
+   _T("FILEMGR"), NETXMS_VERSION_STRING,
+   SubagentInit, SubagentShutdown, ProcessCommands,
+   0, NULL, // parameters
+   0, NULL, //enums
+   0, NULL, // tables
+   0, NULL, // actions
+   0, NULL  // push parameters
+};
+
+/**
+ * Entry point for NetXMS agent
+ */
+DECLARE_SUBAGENT_ENTRY_POINT(FILEMGR)
+{
+   *ppInfo = &m_info;
+   return TRUE;
 }
 
 #ifdef _WIN32
