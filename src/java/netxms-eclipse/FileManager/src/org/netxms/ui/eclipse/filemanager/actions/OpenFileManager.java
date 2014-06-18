@@ -27,13 +27,13 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.filemanager.views.ViewAgentFiles;
+import org.netxms.ui.eclipse.filemanager.views.AgentFileManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Show alarms for given object
  */
-public class GetAgentFileList implements IObjectActionDelegate
+public class OpenFileManager implements IObjectActionDelegate
 {
    private IWorkbenchWindow window;
    private AbstractObject object;
@@ -57,7 +57,7 @@ public class GetAgentFileList implements IObjectActionDelegate
       {
          try
          {
-            window.getActivePage().showView(ViewAgentFiles.ID, Long.toString(object.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
+            window.getActivePage().showView(AgentFileManager.ID, Long.toString(object.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
          }
          catch(PartInitException e)
          {

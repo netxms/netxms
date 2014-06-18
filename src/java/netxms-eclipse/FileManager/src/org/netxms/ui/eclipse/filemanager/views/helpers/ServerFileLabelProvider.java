@@ -27,7 +27,6 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.ServerFile;
 import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.filemanager.views.ViewServerFile;
 
@@ -70,7 +69,7 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
 			case ViewServerFile.COLUMN_SIZE:
 				return (((ServerFile)element).isDirectory() || ((ServerFile)element).isPlaceholder()) ? "" : Long.toString(((ServerFile)element).getSize());
 			case ViewServerFile.COLUMN_MODIFYED:
-				return ((ServerFile)element).isPlaceholder() ? "" : RegionalSettings.getDateTimeFormat().format(((ServerFile)element).getModifyicationTime());
+				return (((ServerFile)element).isPlaceholder() || ((ServerFile)element).getModifyicationTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(((ServerFile)element).getModifyicationTime());
 		}
 		return null;
 	}

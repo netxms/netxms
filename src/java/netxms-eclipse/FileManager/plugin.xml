@@ -14,10 +14,10 @@
       <view
             allowMultiple="true"
             category="org.netxms.ui.eclipse.viewcategory.config"
-            class="org.netxms.ui.eclipse.filemanager.views.ViewAgentFiles"
+            class="org.netxms.ui.eclipse.filemanager.views.AgentFileManager"
             icon="icons/file.png"
-            id="org.netxms.ui.eclipse.usermanager.view.agent_files"
-            name="Agent File List"
+            id="org.netxms.ui.eclipse.filemanager.views.AgentFileManager"
+            name="File Manager"
             restorable="true">
       </view>
    </extension>
@@ -46,10 +46,10 @@
                style="push">
          </action>
          <action
-               class="org.netxms.ui.eclipse.filemanager.actions.GetAgentFileList"
+               class="org.netxms.ui.eclipse.filemanager.actions.OpenFileManager"
                enablesFor="+"
-               id="org.netxms.ui.eclipse.filemanager.popupActions.U_Node"
-               label="Get file list"
+               id="org.netxms.ui.eclipse.filemanager.popupActions.FileManager_Node"
+               label="&amp;File manager"
                menubarPath="objectmgmt"
                style="push">
          </action>
