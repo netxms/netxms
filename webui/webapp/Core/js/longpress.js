@@ -22,7 +22,7 @@
 		// cancel after too long wait
 		var timeout = setTimeout(function() {
 			e.target.removeEventListener('touchend', touchEndCallback);
-		}, duration);
+		}, duration * 4);
 
 		function touchEndCallback(e) {
 			var tapDuration = new Date().getTime() - startTime;
