@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,23 @@
  */
 package org.netxms.ui.eclipse.filemanager.views.helpers;
 
+import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.ServerFile;
+import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.filemanager.views.ViewServerFile;
 
 /**
  * Label provider for ServerFile objects
  *
  */
-public class ServerFileLabelProvider extends LabelProvider implements ITableLabelProvider
+public class ServerFileLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
 	private WorkbenchLabelProvider wbLabelProvider;
 	
@@ -61,11 +65,11 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
 			case ViewServerFile.COLUMN_NAME:
 				return getText(element);
 			case ViewServerFile.COLUMN_TYPE:
-				return ((ServerFile)element).getType();
+				return ((ServerFile)element).getExtension();
 			case ViewServerFile.COLUMN_SIZE:
-				return Long.toString(((ServerFile)element).getSize());
+				return (((ServerFile)element).isDirectory() || ((ServerFile)element).isPlaceholder()) ? "" : Long.toString(((ServerFile)element).getSize());
 			case ViewServerFile.COLUMN_MODIFYED:
-				return RegionalSettings.getDateTimeFormat().format(((ServerFile)element).getModifyicationTime());
+				return (((ServerFile)element).isPlaceholder() || ((ServerFile)element).getModifyicationTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(((ServerFile)element).getModifyicationTime());
 		}
 		return null;
 	}
@@ -97,4 +101,24 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
 		wbLabelProvider.dispose();
 		super.dispose();
 	}
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
+    */
+   @Override
+   public Color getForeground(Object element)
+   {
+      if (((ServerFile)element).isPlaceholder())
+         return StatusDisplayInfo.getStatusColor(Severity.DISABLED);
+      return null;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+    */
+   @Override
+   public Color getBackground(Object element)
+   {
+      return null;
+   }
 }

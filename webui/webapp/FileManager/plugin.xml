@@ -6,9 +6,18 @@
       <view
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.filemanager.views.ViewServerFile"
-            icon="icons/file.png"
+            icon="icons/types/unknown.png"
             id="org.netxms.ui.eclipse.usermanager.view.server_files"
             name="%view.ServerFileList.name"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.filemanager.views.AgentFileManager"
+            icon="icons/folder.gif"
+            id="org.netxms.ui.eclipse.filemanager.views.AgentFileManager"
+            name="File Manager"
             restorable="true">
       </view>
    </extension>
@@ -33,6 +42,14 @@
                enablesFor="+"
                id="org.netxms.ui.eclipse.filemanager.popupActions.UploadFileToAgent_Node"
                label="%action.label.UploadFile"
+               menubarPath="objectmgmt"
+               style="push">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.filemanager.actions.OpenFileManager"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.filemanager.popupActions.FileManager_Node"
+               label="&amp;File manager"
                menubarPath="objectmgmt"
                style="push">
          </action>
@@ -121,7 +138,7 @@
          <action
                class="org.netxms.ui.eclipse.filemanager.actions.GetServerFileList"
                definitionId="org.netxms.ui.eclipse.console.category.views.open_server_file_list"
-               icon="icons/file.png"
+               icon="icons/types/unknown.png"
                id="org.netxms.ui.eclipse.usermanager.view.server_files"
                label="%action.label.ServerFileList"
                menubarPath="config/additions"

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ import org.netxms.client.ServerFile;
 
 /**
  * Adapter factory for ServerFile objects
- *
  */
 public class ServerFileAdapterFactory implements IAdapterFactory
 {
@@ -64,28 +63,49 @@ public class ServerFileAdapterFactory implements IAdapterFactory
 				@Override
 				public ImageDescriptor getImageDescriptor(Object object)
 				{
+               if (((ServerFile)object).isPlaceholder())
+                  return null;
+               
+				   if (((ServerFile)object).isDirectory())
+				      return Activator.getImageDescriptor("icons/folder.gif"); //$NON-NLS-1$
+				   
 					String[] parts = ((ServerFile)object).getName().split("\\."); //$NON-NLS-1$
 					if (parts.length < 2)
-						return Activator.getImageDescriptor("icons/file.png"); //$NON-NLS-1$
+						return Activator.getImageDescriptor("icons/types/unknown.png"); //$NON-NLS-1$
 
 					String ext = parts[parts.length - 1];
 					
 					if (ext.equalsIgnoreCase("exe")) //$NON-NLS-1$
-						return Activator.getImageDescriptor("icons/exec.png"); //$NON-NLS-1$
+						return Activator.getImageDescriptor("icons/types/exec.png"); //$NON-NLS-1$
 					
 					if (ext.equalsIgnoreCase("pdf")) //$NON-NLS-1$
-						return Activator.getImageDescriptor("icons/pdf.png"); //$NON-NLS-1$
+						return Activator.getImageDescriptor("icons/types/pdf.png"); //$NON-NLS-1$
+					
+               if (ext.equalsIgnoreCase("xls") || ext.equalsIgnoreCase("xlsx")) //$NON-NLS-1$ //$NON-NLS-2$
+                  return Activator.getImageDescriptor("icons/types/excel.png"); //$NON-NLS-1$
+               
+               if (ext.equalsIgnoreCase("ppt") || ext.equalsIgnoreCase("pptx")) //$NON-NLS-1$ //$NON-NLS-2$
+                  return Activator.getImageDescriptor("icons/types/powerpoint.png"); //$NON-NLS-1$
+               
+               if (ext.equalsIgnoreCase("html") || ext.equalsIgnoreCase("htm")) //$NON-NLS-1$ //$NON-NLS-2$
+                  return Activator.getImageDescriptor("icons/types/html.png"); //$NON-NLS-1$
+               
+               if (ext.equalsIgnoreCase("txt") || ext.equalsIgnoreCase("log") || ext.equalsIgnoreCase("jrn")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                  return Activator.getImageDescriptor("icons/types/text.png"); //$NON-NLS-1$
 					
 					if (ext.equalsIgnoreCase("avi") || ext.equalsIgnoreCase("mkv") || ext.equalsIgnoreCase("mov") || ext.equalsIgnoreCase("wma")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-						return Activator.getImageDescriptor("icons/video.png"); //$NON-NLS-1$
+						return Activator.getImageDescriptor("icons/types/video.png"); //$NON-NLS-1$
+					
+               if (ext.equalsIgnoreCase("ac3") || ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                  return Activator.getImageDescriptor("icons/types/audio.png"); //$NON-NLS-1$
 					
 					if (ext.equalsIgnoreCase("tar") || ext.equalsIgnoreCase("gz") ||  //$NON-NLS-1$ //$NON-NLS-2$
 					    ext.equalsIgnoreCase("tgz") || ext.equalsIgnoreCase("zip") || //$NON-NLS-1$ //$NON-NLS-2$
 					    ext.equalsIgnoreCase("rar") || ext.equalsIgnoreCase("7z") || //$NON-NLS-1$ //$NON-NLS-2$
 					    ext.equalsIgnoreCase("bz2") || ext.equalsIgnoreCase("lzma")) //$NON-NLS-1$ //$NON-NLS-2$
-						return Activator.getImageDescriptor("icons/archive.png"); //$NON-NLS-1$
+						return Activator.getImageDescriptor("icons/types/archive.png"); //$NON-NLS-1$
 					
-					return Activator.getImageDescriptor("icons/file.png"); //$NON-NLS-1$
+					return Activator.getImageDescriptor("icons/types/unknown.png"); //$NON-NLS-1$
 				}
 
 				@Override

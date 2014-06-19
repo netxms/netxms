@@ -34,7 +34,7 @@ public class ServerFileComparator extends ViewerComparator
 				rc = ((ServerFile)e1).getName().compareToIgnoreCase(((ServerFile)e2).getName());
 				break;
 			case ViewServerFile.COLUMN_TYPE:
-				rc = ((ServerFile)e1).getType().compareToIgnoreCase(((ServerFile)e2).getType());
+            rc = ((ServerFile)e1).getExtension().compareToIgnoreCase(((ServerFile)e2).getExtension());
 				break;
 			case ViewServerFile.COLUMN_SIZE:
 				rc = Long.signum(((ServerFile)e1).getSize() - ((ServerFile)e2).getSize());
