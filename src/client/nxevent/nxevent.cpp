@@ -206,8 +206,12 @@ int main(int argc, char *argv[])
          {
             // assume that event is specified by name
             m_dwEventCode = 0;
+#ifdef UNICODE
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind + 1], -1, m_eventName, MAX_EVENT_NAME);
-            m_szServer[MAX_EVENT_NAME - 1] = 0;
+            m_eventName[MAX_EVENT_NAME - 1] = 0;
+#else
+            nx_strncpy(m_eventName, argv[optind + 1], MAX_EVENT_NAME);
+#endif
          }
 
          rcc = (int)SendEvent(argc - optind - 2, &argv[optind + 2], bEncrypt);
