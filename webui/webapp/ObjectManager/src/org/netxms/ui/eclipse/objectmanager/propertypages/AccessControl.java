@@ -196,6 +196,9 @@ public class AccessControl extends PropertyPage
       createAccessCheck(rights, "Create helpdesk tickets", UserAccessRights.OBJECT_ACCESS_CREATE_ISSUE);
       createAccessCheck(rights, Messages.get().AccessControl_AccessPushData, UserAccessRights.OBJECT_ACCESS_PUSH_DATA);
       createAccessCheck(rights, Messages.get().AccessControl_AccessAccessControl, UserAccessRights.OBJECT_ACCESS_ACL);
+      createAccessCheck(rights, "Download file", UserAccessRights.OBJECT_ACCESS_DOWNLOAD);
+      createAccessCheck(rights, "Upload file", UserAccessRights.OBJECT_ACCESS_UPLOAD);
+      createAccessCheck(rights, "Manage files(move, rename, delete)", UserAccessRights.OBJECT_ACCESS_MANAGE_FILES);
       
       userList.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override

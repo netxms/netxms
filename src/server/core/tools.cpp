@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -255,7 +255,7 @@ BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
    struct sockaddr_in addr;
    BOOL bResult = TRUE;
    int i;
-   
+
    // Create data area
    for(i = 0, pCurr = bPacketData; i < 16; i++, pCurr += 6)
       memcpy(pCurr, pbMacAddr, 6);
@@ -311,7 +311,7 @@ bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, 
 
 	TCHAR query[256];
 	_sntprintf(query, 256, _T("SELECT %s FROM %s WHERE %s=?"), idColumn, table, idColumn);
-	
+
 	DB_STATEMENT hStmt = DBPrepare(hdb, query);
 	if (hStmt != NULL)
 	{

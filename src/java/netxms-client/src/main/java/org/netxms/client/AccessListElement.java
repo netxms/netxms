@@ -26,7 +26,7 @@ import org.netxms.api.client.users.AbstractAccessListElement;
  *
  */
 public class AccessListElement extends AbstractAccessListElement
-{
+{ 
 	/**
 	 * Create new ACL element with given user ID and rights
 	 * 
@@ -135,4 +135,36 @@ public class AccessListElement extends AbstractAccessListElement
 	{
 		return (accessRights & UserAccessRights.OBJECT_ACCESS_PUSH_DATA) != 0;
 	}
+	
+	/**
+    * @return true if CREATE ISSUE access granted
+    */
+   public boolean hasCreateIssue()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_CREATE_ISSUE) != 0;
+   }
+   
+   /**
+    * @return true if DOWNLOAD access granted
+    */
+   public boolean hasDownload()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_DOWNLOAD) != 0;
+   }
+   
+   /**
+    * @return true if UPLOAD access granted
+    */
+   public boolean hasUpload()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_UPLOAD) != 0;
+   }
+   
+   /**
+    * @return true if MANAGE FILES access granted
+    */
+   public boolean hasManage()
+   {
+      return (accessRights & UserAccessRights.OBJECT_ACCESS_MANAGE_FILES) != 0;
+   }
 }

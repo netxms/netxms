@@ -23,7 +23,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URLEncoder;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -59,21 +58,14 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.ProgressListener;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
 import org.netxms.client.AgentFile;
 import org.netxms.client.NXCListener;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerFile;
-import org.netxms.client.ServerJob;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.filemanager.Activator;
@@ -95,7 +87,7 @@ import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 /**
  * Editor for server files
  */
-public class AgentFileManager extends ViewPart implements SessionListener
+public class AgentFileManager extends ViewPart
 {
    public static final String ID = "org.netxms.ui.eclipse.filemanager.views.AgentFileManager"; //$NON-NLS-1$
 
@@ -216,7 +208,6 @@ public class AgentFileManager extends ViewPart implements SessionListener
       createActions();
       contributeToActionBars();
       createPopupMenu();
-      session.addListener(this);
 
       filterText.setCloseAction(actionShowFilter);
 
@@ -539,7 +530,7 @@ public class AgentFileManager extends ViewPart implements SessionListener
          }
       }.start();
    }
-
+   
    /**
     * Upload file from agent to server
     */
@@ -561,13 +552,14 @@ public class AgentFileManager extends ViewPart implements SessionListener
             @Override
             protected void runInternal(final IProgressMonitor monitor) throws Exception
             {
-               session.uploadFileToServer(dlg.getLocalFile(), dlg.getRemoteFileName(), new ProgressListener() {
+               session.uploadLocalFileToAgent(dlg.getLocalFile(), upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), objectId, new ProgressListener() {
                   private long prevWorkDone = 0;
 
                   @Override
                   public void setTotalWorkAmount(long workTotal)
                   {
-                     monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + dlg.getLocalFile().getAbsolutePath(),
+                           monitor.beginTask(Messages.get(getDisplay()).UploadFileToServer_TaskNamePrefix
+                                 + dlg.getLocalFile().getAbsolutePath(),
                            (int)workTotal);
                   }
 
@@ -578,49 +570,17 @@ public class AgentFileManager extends ViewPart implements SessionListener
                      prevWorkDone = workDone;
                   }
                });
-               monitor.done();
-               final long id = session.uploadFileToAgent(objectId, dlg.getRemoteFileName(),
-                     upladFolder.getFullName() + "/" + dlg.getRemoteFileName(), false);
-               final String name = dlg.getRemoteFileName();
-
-               listener = new NXCListener() {
+               monitor.done(); 
+               
+               upladFolder.setChildren(session.listAgentFiles(upladFolder, upladFolder.getFullName(), objectId));
+               runInUIThread(new Runnable() {
                   @Override
-                  public void notificationHandler(SessionNotification n)
+                  public void run()
                   {
-                     if ((n.getCode() == NXCNotification.JOB_CHANGE) && ((ServerJob)n.getObject()).getId() == id)
-                     {
-                        ServerJob job = ((ServerJob)n.getObject());
-                        if (job.getStatus() == ServerJob.COMPLETED || job.getStatus() == ServerJob.FAILED
-                              || job.getStatus() == ServerJob.CANCELLED)
-                        {
-                           new ConsoleJob("Upload file to agent", null, Activator.PLUGIN_ID, null) {
-                              @Override
-                              protected void runInternal(final IProgressMonitor monitor) throws Exception
-                              {
-                                 session.deleteServerFile(name);
-                                 session.removeListener(listener);
-                                 upladFolder.setChildren(session.listAgentFiles(upladFolder, upladFolder.getFullName(), objectId));
-                                 runInUIThread(new Runnable() {
-                                    @Override
-                                    public void run()
-                                    {
 
-                                       viewer.refresh(upladFolder, true);
-                                    }
-                                 });
-                              }
-
-                              @Override
-                              protected String getErrorMessage()
-                              {
-                                 return "Error while deleting temporary file file from server";
-                              }
-                           }.start();
-                        }
-                     }
+                     viewer.refresh(upladFolder, true);
                   }
-               };
-               session.addListener(listener);
+               });
             }
 
             @Override
@@ -772,7 +732,6 @@ public class AgentFileManager extends ViewPart implements SessionListener
             }
             in.close();
             out.close();
-            // save localy file
          }
       };
       job.start();
@@ -861,29 +820,6 @@ public class AgentFileManager extends ViewPart implements SessionListener
    public void setFocus()
    {
       viewer.getControl().setFocus();
-   }
-
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
-    */
-   @Override
-   public void notificationHandler(final SessionNotification n)
-   {
-      // do nothing(no notificatrions required)
-   }
-
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      session.removeListener(this);
-      super.dispose();
    }
 
    /**

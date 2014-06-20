@@ -314,9 +314,10 @@ public class NXCPCodes
 	public static final int CMD_GET_HELPDESK_URL = 0x0124;
 	public static final int CMD_UNLINK_HELPDESK_ISSUE = 0x0125;
 	public static final int CMD_GET_FOLDER_CONTENT = 0x0126;
-   public static final int CMD_FILEMNGR_DELETE_FILE = 0x0127;
-   public static final int CMD_FILEMNGR_RENAME_FILE = 0x0128;
-   public static final int CMD_FILEMNGR_MOVE_FILE = 0x0129;
+   public static final int CMD_FILEMGR_DELETE_FILE = 0x0127;
+   public static final int CMD_FILEMGR_RENAME_FILE = 0x0128;
+   public static final int CMD_FILEMGR_MOVE_FILE = 0x0129;
+   public static final int CMD_FILEMGR_UPLOAD = 0x0130;
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

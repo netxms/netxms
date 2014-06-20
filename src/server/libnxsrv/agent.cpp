@@ -858,6 +858,36 @@ BOOL AgentConnection::sendMessage(CSCPMessage *pMsg)
 }
 
 /**
+ * Send raw message to agent
+ */
+BOOL AgentConnection::sendRawMessage(CSCP_MESSAGE *pMsg)
+{
+   BOOL bResult;
+
+   CSCP_MESSAGE *pRawMsg = pMsg;
+	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
+   if (pCtx != NULL)
+   {
+      CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(pCtx, pRawMsg);
+      if (pEnMsg != NULL)
+      {
+         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));
+         free(pEnMsg);
+      }
+      else
+      {
+         bResult = FALSE;
+      }
+		pCtx->decRefCount();
+   }
+   else
+   {
+      bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->dwSize));
+   }
+   return bResult;
+}
+
+/**
  * Trap handler. Should be overriden in derived classes to implement
  * actual trap processing. Default implementation do nothing.
  */

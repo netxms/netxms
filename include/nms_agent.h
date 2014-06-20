@@ -403,8 +403,6 @@ typedef struct
  */
 #define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20110301)
 
-#define MASTER_SERVER                  ((UINT32)1)
-
 class CSCPMessage;
 
 typedef struct
@@ -415,7 +413,7 @@ typedef struct
 	BOOL (* init)(Config *);   // Called to initialize subagent. Can be NULL.
    void (* shutdown)();       // Called at subagent unload. Can be NULL.
    BOOL (* commandHandler)(UINT32 dwCommand, CSCPMessage *pRequest,
-                           CSCPMessage *pResponse, void *session, int serverType);
+                           CSCPMessage *pResponse, void *session);
    UINT32 numParameters;
    NETXMS_SUBAGENT_PARAM *parameters;
    UINT32 numLists;
@@ -536,4 +534,13 @@ BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, IN
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, QWORD value);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, double value);
 
+/**
+ * Api for CommSession
+ */
+class AbstractCommSession
+{
+public:
+   virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
+   virtual BOOL isMasterServer() = 0;
+};
 #endif   /* _nms_agent_h_ */
