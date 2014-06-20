@@ -1085,7 +1085,7 @@ BOOL LoadObjects()
 	g_pBusinessServiceRoot->LoadFromDB();
 
    // Load zones
-   if (g_dwFlags & AF_ENABLE_ZONING)
+   if (g_flags & AF_ENABLE_ZONING)
    {
       Zone *pZone;
 
@@ -1164,7 +1164,7 @@ BOOL LoadObjects()
          {
             if (!pSubnet->isDeleted())
             {
-               if (g_dwFlags & AF_ENABLE_ZONING)
+               if (g_flags & AF_ENABLE_ZONING)
                {
                   Zone *pZone;
 
@@ -1704,7 +1704,7 @@ BOOL LoadObjects()
    g_pBusinessServiceRoot->calculateCompoundStatus();
 
    // Recalculate status for zone objects
-   if (g_dwFlags & AF_ENABLE_ZONING)
+   if (g_flags & AF_ENABLE_ZONING)
    {
 		g_idxZoneByGUID.forEach(RecalcStatusCallback, NULL);
    }
@@ -1808,7 +1808,7 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
    switch(iParentClass)
    {
 		case OBJECT_NETWORK:
-			if ((iChildClass == OBJECT_ZONE) && (g_dwFlags & AF_ENABLE_ZONING))
+			if ((iChildClass == OBJECT_ZONE) && (g_flags & AF_ENABLE_ZONING))
 				return true;
 			break;
       case OBJECT_SERVICEROOT:

@@ -62,25 +62,25 @@ static THREAD_RESULT THREAD_CALL EventStormDetector(void *arg)
 	duration = ConfigReadInt(_T("EventStormDuraction"), 15);
 
 	prevEvents = g_totalEventsProcessed;	
-	while(!(g_dwFlags & AF_SHUTDOWN))
+	while(!(g_flags & AF_SHUTDOWN))
 	{
 		ThreadSleepMs(1000);
 		numEvents = g_totalEventsProcessed - prevEvents;
 		prevEvents = g_totalEventsProcessed;
-		if ((numEvents >= eventsPerSecond) && (!(g_dwFlags & AF_EVENT_STORM_DETECTED)))
+		if ((numEvents >= eventsPerSecond) && (!(g_flags & AF_EVENT_STORM_DETECTED)))
 		{
 			actualDuration++;
 			if (actualDuration >= duration)
 			{
-				g_dwFlags |= AF_EVENT_STORM_DETECTED;
+				g_flags |= AF_EVENT_STORM_DETECTED;
 				DbgPrintf(2, _T("Event storm detected: threshold=") INT64_FMT _T(" eventsPerSecond=") INT64_FMT, eventsPerSecond, numEvents);
 				PostEvent(EVENT_EVENT_STORM_DETECTED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
 			}
 		}
-		else if ((numEvents < eventsPerSecond) && (g_dwFlags & AF_EVENT_STORM_DETECTED))
+		else if ((numEvents < eventsPerSecond) && (g_flags & AF_EVENT_STORM_DETECTED))
 		{
 			actualDuration = 0;
-			g_dwFlags &= ~AF_EVENT_STORM_DETECTED;
+			g_flags &= ~AF_EVENT_STORM_DETECTED;
 		   DbgPrintf(2, _T("Event storm condition cleared"));
 			PostEvent(EVENT_EVENT_STORM_ENDED, g_dwMgmtNode, "DdD", numEvents, duration, eventsPerSecond);
 		}
@@ -185,7 +185,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       if (pEvent == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-		if (g_dwFlags & AF_EVENT_STORM_DETECTED)
+		if (g_flags & AF_EVENT_STORM_DETECTED)
 		{
 	      delete pEvent;
 	      g_totalEventsProcessed++;

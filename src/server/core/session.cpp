@@ -1873,14 +1873,14 @@ void ClientSession::login(CSCPMessage *pRequest)
          msg.SetVariable(VID_USER_ID, m_dwUserId);
 			msg.SetVariable(VID_SESSION_ID, m_dwIndex);
 			msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
-         msg.SetVariable(VID_DBCONN_STATUS, (UINT16)((g_dwFlags & AF_DB_CONNECTION_LOST) ? 0 : 1));
-			msg.SetVariable(VID_ZONING_ENABLED, (UINT16)((g_dwFlags & AF_ENABLE_ZONING) ? 1 : 0));
+         msg.SetVariable(VID_DBCONN_STATUS, (UINT16)((g_flags & AF_DB_CONNECTION_LOST) ? 0 : 1));
+			msg.SetVariable(VID_ZONING_ENABLED, (UINT16)((g_flags & AF_ENABLE_ZONING) ? 1 : 0));
 			msg.SetVariable(VID_POLLING_INTERVAL, ConfigReadULong(_T("DefaultDCIPollingInterval"), 60));
 			msg.SetVariable(VID_RETENTION_TIME, ConfigReadULong(_T("DefaultDCIRetentionTime"), 30));
 			msg.SetVariable(VID_ALARM_STATUS_FLOW_STATE, (UINT16)ConfigReadInt(_T("StrictAlarmStatusFlow"), 0));
 			msg.SetVariable(VID_TIMED_ALARM_ACK_ENABLED, (UINT16)ConfigReadInt(_T("EnableTimedAlarmAck"), 0));
 			msg.SetVariable(VID_VIEW_REFRESH_INTERVAL, (UINT16)ConfigReadInt(_T("MinViewRefreshInterval"), 200));
-			msg.SetVariable(VID_HELPDESK_LINK_ACTIVE, (UINT16)((g_dwFlags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
+			msg.SetVariable(VID_HELPDESK_LINK_ACTIVE, (UINT16)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
          debugPrintf(3, _T("User %s authenticated"), m_szUserName);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0,
 			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);
@@ -1922,7 +1922,7 @@ void ClientSession::sendEventDB(UINT32 dwRqId)
 
    if (checkSysAccessRights(SYSTEM_ACCESS_VIEW_EVENT_DB) || checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) || checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
-      if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
+      if (!(g_flags & AF_DB_CONNECTION_LOST))
       {
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
          sendMessage(&msg);
@@ -3924,7 +3924,7 @@ void ClientSession::getCollectedData(CSCPMessage *request)
 		{
 			if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE) || (object->Type() == OBJECT_CLUSTER))
 			{
-				if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
+				if (!(g_flags & AF_DB_CONNECTION_LOST))
 				{
 					success = getCollectedDataFromDB(request, &msg, (DataCollectionTarget *)object, DCO_TYPE_ITEM);
 				}
@@ -3972,7 +3972,7 @@ void ClientSession::getTableCollectedData(CSCPMessage *request)
 		{
 			if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE) || (object->Type() == OBJECT_CLUSTER))
 			{
-				if (!(g_dwFlags & AF_DB_CONNECTION_LOST))
+				if (!(g_flags & AF_DB_CONNECTION_LOST))
 				{
 					success = getCollectedDataFromDB(request, &msg, (DataCollectionTarget *)object, DCO_TYPE_TABLE);
 				}
@@ -13031,7 +13031,6 @@ void ClientSession::getEffectiveRights(CSCPMessage *request)
 void ClientSession::getAgentFolderContent(CSCPMessage *request)
 {
    CSCPMessage msg, *response = NULL, *responseMessage;
-	TCHAR remoteFile[MAX_PATH];
 	UINT32 rcc;
    responseMessage = &msg;
 
@@ -13165,7 +13164,6 @@ void ClientSession::getAgentFolderContent(CSCPMessage *request)
 void ClientSession::uploadUserFileToAgent(CSCPMessage *request)
 {
    CSCPMessage msg, *response = NULL, *responseMessage;
-	TCHAR remoteFile[MAX_PATH];
 	UINT32 rcc = RCC_INTERNAL_ERROR;
    responseMessage = &msg;
 

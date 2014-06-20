@@ -423,7 +423,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 		Interface *peerIface = (Interface *)FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE);
 		if (peerIface != NULL)
 		{
-			if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
+			if (g_flags & AF_CHECK_TRUSTED_NODES)
 			{
 				Node *parentNode = iface->getParentNode();
 				Node *peerNode = peerIface->getParentNode();
@@ -462,7 +462,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 		Node *peerNode = (Node *)FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
 		if (peerNode != NULL)
 		{
-			if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
+			if (g_flags & AF_CHECK_TRUSTED_NODES)
 			{
 				Node *parentNode = iface->getParentNode();
 				if ((parentNode != NULL) && (peerNode->isTrustedNode(parentNode->Id())))

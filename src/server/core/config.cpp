@@ -47,7 +47,7 @@ static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("CodePage"), CT_MB_STRING, 0, 0, 256, 0, g_szCodePage, NULL },
-   { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags, NULL },
+   { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_flags, NULL },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDailyLogFileSuffix, NULL },
    { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDir, NULL },
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver, NULL },
@@ -60,12 +60,12 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer, NULL },
    { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel, &g_debugLevel },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, NULL },
-   { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags, NULL },
+   { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, NULL },
    { _T("JavaLibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szJavaLibDir, NULL },
    { _T("JavaPath"), CT_STRING, 0, 0, MAX_PATH, 0, g_szJavaPath, NULL },
    { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLibDir, NULL },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, NULL },
-   { _T("LogFailedSQLQueries"), CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_dwFlags, NULL },
+   { _T("LogFailedSQLQueries"), CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_flags, NULL },
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, NULL },
    { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &g_dwLogHistorySize, NULL },
    { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &g_dwLogRotationMode, NULL },
@@ -136,11 +136,11 @@ stop_search:
       if ((!_tcsicmp(g_szLogFile, _T("{EventLog}"))) ||
           (!_tcsicmp(g_szLogFile, _T("{syslog}"))))
       {
-         g_dwFlags |= AF_USE_SYSLOG;
+         g_flags |= AF_USE_SYSLOG;
       }
       else
       {
-         g_dwFlags &= ~AF_USE_SYSLOG;
+         g_flags &= ~AF_USE_SYSLOG;
       }
       bSuccess = true;
    }
@@ -256,7 +256,7 @@ bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
       return true;
    }
 
-   DB_HANDLE hdb = (g_dwFlags & AF_DB_CONNECTION_POOL_READY) ? DBConnectionPoolAcquireConnection() : g_hCoreDB;
+   DB_HANDLE hdb = (g_flags & AF_DB_CONNECTION_POOL_READY) ? DBConnectionPoolAcquireConnection() : g_hCoreDB;
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
 	if (hStmt != NULL)
 	{
@@ -274,7 +274,7 @@ bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
 		}
 		DBFreeStatement(hStmt);
 	}
-   if (g_dwFlags & AF_DB_CONNECTION_POOL_READY)
+   if (g_flags & AF_DB_CONNECTION_POOL_READY)
       DBConnectionPoolReleaseConnection(hdb);
 
    if (bSuccess)
@@ -323,7 +323,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *szVar, char *szBuffer, int
    if (_tcslen(szVar) > 127)
       return false;
 
-   DB_HANDLE hdb = (g_dwFlags & AF_DB_CONNECTION_POOL_READY) ? DBConnectionPoolAcquireConnection() : g_hCoreDB;
+   DB_HANDLE hdb = (g_flags & AF_DB_CONNECTION_POOL_READY) ? DBConnectionPoolAcquireConnection() : g_hCoreDB;
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
 	if (hStmt != NULL)
 	{
@@ -340,7 +340,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *szVar, char *szBuffer, int
 		}
 		DBFreeStatement(hStmt);
 	}
-   if (g_dwFlags & AF_DB_CONNECTION_POOL_READY)
+   if (g_flags & AF_DB_CONNECTION_POOL_READY)
       DBConnectionPoolReleaseConnection(hdb);
 
    return bSuccess;

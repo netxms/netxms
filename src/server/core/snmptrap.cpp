@@ -314,12 +314,12 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
    if (pNode != NULL)
    {
       DbgPrintf(4, _T("ProcessTrap: trap matched to node %s [%d]"), pNode->Name(), pNode->Id());
-      if (pNode->Status() != STATUS_UNMANAGED)
+      if ((pNode->Status() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
       {
          UINT32 i;
 
          // Pass trap to loaded modules
-         if (!(g_dwFlags & AF_SHUTDOWN))
+         if (!(g_flags & AF_SHUTDOWN))
          {
             for(i = 0; i < g_dwNumModules; i++)
             {
@@ -395,7 +395,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
          DbgPrintf(4, _T("ProcessTrap: Node %s [%d] is in UNMANAGED state, trap ignored"), pNode->Name(), pNode->Id());
       }
    }
-   else if (g_dwFlags & AF_SNMP_TRAP_DISCOVERY)  // unknown node, discovery enabled
+   else if (g_flags & AF_SNMP_TRAP_DISCOVERY)  // unknown node, discovery enabled
    {
       DbgPrintf(4, _T("ProcessTrap: trap not matched to node, adding new IP address %s for discovery"), IpToStr(dwOriginAddr, szBuffer));
       Subnet *subnet = FindSubnetForNode(0, dwOriginAddr);

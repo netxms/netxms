@@ -151,7 +151,7 @@ void DumpProcess(CONSOLE_CTX pCtx)
 	memset(&si, 0, sizeof(STARTUPINFO));
 	si.cb = sizeof(STARTUPINFO);
 	if (CreateProcessA(NULL, cmdLine, NULL, NULL, FALSE,
-	                   (g_dwFlags & AF_DAEMON) ? CREATE_NO_WINDOW : 0, NULL, NULL, &si, &pi))
+	                   (g_flags & AF_DAEMON) ? CREATE_NO_WINDOW : 0, NULL, NULL, &si, &pi))
 	{
 		WaitForSingleObject(pi.hProcess, INFINITE);
 		CloseHandle(pi.hThread);

@@ -702,7 +702,7 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
       if (SleepAndCheckForShutdown(nInterval))
          break;
 
-      if (!(g_dwFlags & AF_ACTIVE_NETWORK_DISCOVERY))
+      if (!(g_flags & AF_ACTIVE_NETWORK_DISCOVERY))
          continue;
 
       SetPollerState((long)arg, _T("check"));
@@ -942,17 +942,17 @@ void ResetDiscoveryPoller()
    // Reload discovery parameters
    g_dwDiscoveryPollingInterval = ConfigReadInt(_T("DiscoveryPollingInterval"), 900);
    if (ConfigReadInt(_T("RunNetworkDiscovery"), 0))
-      g_dwFlags |= AF_ENABLE_NETWORK_DISCOVERY;
+      g_flags |= AF_ENABLE_NETWORK_DISCOVERY;
    else
-      g_dwFlags &= ~AF_ENABLE_NETWORK_DISCOVERY;
+      g_flags &= ~AF_ENABLE_NETWORK_DISCOVERY;
 
    if (ConfigReadInt(_T("ActiveNetworkDiscovery"), 0))
-      g_dwFlags |= AF_ACTIVE_NETWORK_DISCOVERY;
+      g_flags |= AF_ACTIVE_NETWORK_DISCOVERY;
    else
-      g_dwFlags &= ~AF_ACTIVE_NETWORK_DISCOVERY;
+      g_flags &= ~AF_ACTIVE_NETWORK_DISCOVERY;
 
    if (ConfigReadInt(_T("UseSNMPTrapsForDiscovery"), 0))
-      g_dwFlags |= AF_SNMP_TRAP_DISCOVERY;
+      g_flags |= AF_SNMP_TRAP_DISCOVERY;
    else
-      g_dwFlags &= ~AF_SNMP_TRAP_DISCOVERY;
+      g_flags &= ~AF_SNMP_TRAP_DISCOVERY;
 }

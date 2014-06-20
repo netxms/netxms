@@ -784,15 +784,15 @@ void DumpUsers(CONSOLE_CTX pCtx)
    {
 		if (!(m_users[i]->getId() & GROUP_FLAG))
       {
-			DWORD dwSystemRights = m_users[i]->getSystemRights();
+			UINT64 systemRights = m_users[i]->getSystemRights();
 			for(int j = 0; j < m_userCount; j++)
          {
 				if ((m_users[j]->getId() & GROUP_FLAG) && (((Group *) m_users[j])->isMember(m_users[i]->getId())))
-					dwSystemRights |= ((Group *)m_users[j])->getSystemRights();
+					systemRights |= ((Group *)m_users[j])->getSystemRights();
 			}
 
          TCHAR szGUID[64];
-			ConsolePrintf(pCtx, _T("%-20s %-36s 0x%08X\n"), m_users[i]->getName(), m_users[i]->getGuidAsText(szGUID), dwSystemRights);
+         ConsolePrintf(pCtx, _T("%-20s %-36s 0x") UINT64X_FMT(_T("016")) _T("\n"), m_users[i]->getName(), m_users[i]->getGuidAsText(szGUID), systemRights);
 		}
 	}
    MutexUnlock(m_mutexUserDatabaseAccess);
@@ -1265,7 +1265,7 @@ bool AuthenticateUserForXMPPCommands(const char *xmppId)
           !m_users[i]->isDisabled() && !m_users[i]->isDeleted() &&
 			 !_tcsicmp(_xmppId, ((User *)m_users[i])->getXmppId()))
       {
-         UINT32 systemRights = m_users[i]->getSystemRights();
+         UINT64 systemRights = m_users[i]->getSystemRights();
 
          // Collect system rights from groups this user belongs to
          for(int j = 0; j < m_userCount; j++)

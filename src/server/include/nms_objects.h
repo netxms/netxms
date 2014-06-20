@@ -1288,7 +1288,7 @@ inline bool Node::isReadyForDiscoveryPoll()
 {
 	if (m_isDeleted)
 		return false;
-   return (g_dwFlags & AF_ENABLE_NETWORK_DISCOVERY) &&
+   return (g_flags & AF_ENABLE_NETWORK_DISCOVERY) &&
           (m_iStatus != STATUS_UNMANAGED) &&
 			 (!(m_dwFlags & NF_DISABLE_DISCOVERY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&

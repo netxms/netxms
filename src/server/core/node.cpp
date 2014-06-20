@@ -1814,7 +1814,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 		// Check node name
 		sendPollerMsg(dwRqId, _T("Checking node name\r\n"));
 		UINT32 dwAddr = ntohl(_t_inet_addr(m_szName));
-		if ((g_dwFlags & AF_RESOLVE_NODE_NAMES) &&
+		if ((g_flags & AF_RESOLVE_NODE_NAMES) &&
 			 (dwAddr != INADDR_NONE) &&
 			 (dwAddr != INADDR_ANY) &&
 			 isMyIP(dwAddr))
@@ -1833,7 +1833,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 		}
 		else
 		{
-			if (g_dwFlags & AF_SYNC_NODE_NAMES_WITH_DNS)
+			if (g_flags & AF_SYNC_NODE_NAMES_WITH_DNS)
 			{
 				sendPollerMsg(dwRqId, _T("Syncing node name with DNS\r\n"));
 		      SetPollerInfo(nPoller, _T("resolving name"));
@@ -4874,7 +4874,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 #else
 		nx_strncpy(m_szName, hs->h_name, MAX_OBJECT_NAME);
 #endif
-		if (!(g_dwFlags & AF_USE_FQDN_FOR_NODE_NAMES))
+		if (!(g_flags & AF_USE_FQDN_FOR_NODE_NAMES))
 		{
 			TCHAR *pPoint = _tcschr(m_szName, _T('.'));
 			if (pPoint != NULL)
@@ -5427,7 +5427,7 @@ Subnet *Node::createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask)
    ipAddr = ipAddr & netMask;
    Subnet *s = new Subnet(ipAddr, netMask, m_zoneId, syntheticMask);
    NetObjInsert(s, TRUE);
-   if (g_dwFlags & AF_ENABLE_ZONING)
+   if (g_flags & AF_ENABLE_ZONING)
    {
 	   Zone *zone = FindZoneByGUID(m_zoneId);
 	   if (zone != NULL)

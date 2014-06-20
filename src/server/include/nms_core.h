@@ -61,7 +61,7 @@
 #include <openssl/ssl.h>
 #endif
 
-#define SHOW_FLAG_VALUE(x) _T("  %-32s = %d\n"), _T(#x), (g_dwFlags & x) ? 1 : 0
+#define SHOW_FLAG_VALUE(x) _T("  %-32s = %d\n"), _T(#x), (g_flags & x) ? 1 : 0
 
 //
 // Common includes

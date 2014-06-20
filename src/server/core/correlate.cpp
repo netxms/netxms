@@ -65,7 +65,7 @@ static bool CheckAgentDown(Node *currNode, Event *pEvent, UINT32 nodeId, const T
 static void C_SysNodeDown(Node *pNode, Event *pEvent)
 {
 	// Check for NetXMS server netwok connectivity
-	if (g_dwFlags & AF_NO_NETWORK_CONNECTIVITY)
+	if (g_flags & AF_NO_NETWORK_CONNECTIVITY)
 	{
 		pEvent->setRootId(m_networkLostEventId);
 		return;

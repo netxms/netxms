@@ -121,7 +121,7 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 {
    DB_HANDLE hdb;
 
-   if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
+   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
    {
 		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
       hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
@@ -162,7 +162,7 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
       free(rq);
    }
 
-   if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
+   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
    {
       DBDisconnect(hdb);
    }
@@ -176,7 +176,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 {
    DB_HANDLE hdb;
 
-   if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
+   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
    {
 		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
       hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
@@ -240,7 +240,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 	}
 
 stop:
-   if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
+   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
    {
       DBDisconnect(hdb);
    }
@@ -256,7 +256,7 @@ void StartDBWriter()
 {
    int i;
 
-   if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
+   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
    {
       m_iNumWriters = ConfigReadInt(_T("NumberOfDatabaseWriters"), 1);
       if (m_iNumWriters < 1)

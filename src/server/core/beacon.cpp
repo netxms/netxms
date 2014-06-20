@@ -78,22 +78,22 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *arg)
 	}
 
 	DbgPrintf(1, _T("Beacon poller thread started"));
-	while(!(g_dwFlags & AF_SHUTDOWN))
+	while(!(g_flags & AF_SHUTDOWN))
 	{
 		for(i = 0; i < hostCount; i++)
 		{
 			if (IcmpPing(hostList[i], 1, timeout, NULL, packetSize) == ICMP_SUCCESS)
 				break;	// At least one beacon responds, no need to check others
 		}
-		if ((i == hostCount) && (!(g_dwFlags & AF_NO_NETWORK_CONNECTIVITY)))
+		if ((i == hostCount) && (!(g_flags & AF_NO_NETWORK_CONNECTIVITY)))
 		{
 			// All beacons are lost, consider NetXMS server network conectivity loss
-			g_dwFlags |= AF_NO_NETWORK_CONNECTIVITY;
+			g_flags |= AF_NO_NETWORK_CONNECTIVITY;
 			PostEvent(EVENT_NETWORK_CONNECTION_LOST, g_dwMgmtNode, "d", hostCount);
 		}
-		else if ((i < hostCount) && (g_dwFlags & AF_NO_NETWORK_CONNECTIVITY))
+		else if ((i < hostCount) && (g_flags & AF_NO_NETWORK_CONNECTIVITY))
 		{
-			g_dwFlags &= ~AF_NO_NETWORK_CONNECTIVITY;
+			g_flags &= ~AF_NO_NETWORK_CONNECTIVITY;
 			PostEvent(EVENT_NETWORK_CONNECTION_RESTORED, g_dwMgmtNode, "d", hostCount);
 		}
 		ThreadSleepMs(interval);

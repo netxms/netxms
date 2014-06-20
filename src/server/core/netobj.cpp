@@ -1448,7 +1448,7 @@ bool NetObj::isTrustedNode(UINT32 id)
 {
 	bool rc;
 
-	if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
+	if (g_flags & AF_CHECK_TRUSTED_NODES)
 	{
 		UINT32 i;
 

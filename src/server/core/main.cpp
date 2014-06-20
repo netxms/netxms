@@ -301,13 +301,15 @@ static void LoadGlobalConfig()
 	g_dwConditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
 	g_slmPollingInterval = ConfigReadInt(_T("SlmPollingInterval"), 60);
 	if (ConfigReadInt(_T("DeleteEmptySubnets"), 1))
-		g_dwFlags |= AF_DELETE_EMPTY_SUBNETS;
+		g_flags |= AF_DELETE_EMPTY_SUBNETS;
 	if (ConfigReadInt(_T("EnableSNMPTraps"), 1))
-		g_dwFlags |= AF_ENABLE_SNMP_TRAPD;
+		g_flags |= AF_ENABLE_SNMP_TRAPD;
+	if (ConfigReadInt(_T("ProcessTrapsFromUnmanagedNodes"), 0))
+		g_flags |= AF_TRAPS_FROM_UNMANAGED_NODES;
 	if (ConfigReadInt(_T("EnableZoning"), 0))
-		g_dwFlags |= AF_ENABLE_ZONING;
+		g_flags |= AF_ENABLE_ZONING;
 	if (ConfigReadInt(_T("EnableObjectTransactions"), 0))
-		g_dwFlags |= AF_ENABLE_OBJECT_TRANSACTIONS;
+		g_flags |= AF_ENABLE_OBJECT_TRANSACTIONS;
 	if (ConfigReadInt(_T("EnableMultipleDBConnections"), 1))
 	{
 		// SQLite has troubles with multiple connections to the same database
@@ -315,7 +317,7 @@ static void LoadGlobalConfig()
 		// anyway, so we will not enable multiple connections for SQLite
 		if (g_nDBSyntax != DB_SYNTAX_SQLITE)
 		{
-			g_dwFlags |= AF_ENABLE_MULTIPLE_DB_CONN;
+			g_flags |= AF_ENABLE_MULTIPLE_DB_CONN;
 		}
 		else
 		{
@@ -323,23 +325,23 @@ static void LoadGlobalConfig()
 		}
 	}
 	if (ConfigReadInt(_T("RunNetworkDiscovery"), 0))
-		g_dwFlags |= AF_ENABLE_NETWORK_DISCOVERY;
+		g_flags |= AF_ENABLE_NETWORK_DISCOVERY;
 	if (ConfigReadInt(_T("ActiveNetworkDiscovery"), 0))
-		g_dwFlags |= AF_ACTIVE_NETWORK_DISCOVERY;
+		g_flags |= AF_ACTIVE_NETWORK_DISCOVERY;
    if (ConfigReadInt(_T("UseSNMPTrapsForDiscovery"), 0))
-      g_dwFlags |= AF_SNMP_TRAP_DISCOVERY;
+      g_flags |= AF_SNMP_TRAP_DISCOVERY;
 	if (ConfigReadInt(_T("ResolveNodeNames"), 1))
-		g_dwFlags |= AF_RESOLVE_NODE_NAMES;
+		g_flags |= AF_RESOLVE_NODE_NAMES;
 	if (ConfigReadInt(_T("SyncNodeNamesWithDNS"), 0))
-		g_dwFlags |= AF_SYNC_NODE_NAMES_WITH_DNS;
+		g_flags |= AF_SYNC_NODE_NAMES_WITH_DNS;
 	if (ConfigReadInt(_T("CheckTrustedNodes"), 1))
-		g_dwFlags |= AF_CHECK_TRUSTED_NODES;
+		g_flags |= AF_CHECK_TRUSTED_NODES;
 	if (ConfigReadInt(_T("EnableNXSLContainerFunctions"), 1))
-		g_dwFlags |= AF_ENABLE_NXSL_CONTAINER_FUNCS;
+		g_flags |= AF_ENABLE_NXSL_CONTAINER_FUNCS;
    if (ConfigReadInt(_T("UseFQDNForNodeNames"), 1))
-      g_dwFlags |= AF_USE_FQDN_FOR_NODE_NAMES;
+      g_flags |= AF_USE_FQDN_FOR_NODE_NAMES;
    if (ConfigReadInt(_T("ApplyDCIFromTemplateToDisabledDCI"), 0))
-      g_dwFlags |= AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE;
+      g_flags |= AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE;
 
    if (g_szDataDir[0] == 0)
    {
@@ -480,19 +482,19 @@ static BOOL IsNetxmsdProcess(UINT32 dwPID)
  */
 static void DBEventHandler(DWORD dwEvent, const WCHAR *pszArg1, const WCHAR *pszArg2, void *userArg)
 {
-	if (!(g_dwFlags & AF_SERVER_INITIALIZED))
+	if (!(g_flags & AF_SERVER_INITIALIZED))
 		return;     // Don't try to do anything if server is not ready yet
 
 	switch(dwEvent)
 	{
 		case DBEVENT_CONNECTION_LOST:
 			PostEvent(EVENT_DB_CONNECTION_LOST, g_dwMgmtNode, NULL);
-			g_dwFlags |= AF_DB_CONNECTION_LOST;
+			g_flags |= AF_DB_CONNECTION_LOST;
 			NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, FALSE);
 			break;
 		case DBEVENT_CONNECTION_RESTORED:
 			PostEvent(EVENT_DB_CONNECTION_RESTORED, g_dwMgmtNode, NULL);
-			g_dwFlags &= ~AF_DB_CONNECTION_LOST;
+			g_flags &= ~AF_DB_CONNECTION_LOST;
 			NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, TRUE);
 			break;
 		case DBEVENT_QUERY_FAILED:
@@ -548,14 +550,14 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	g_serverStartTime = time(NULL);
 	srand((unsigned int)g_serverStartTime);
 
-	if (!(g_dwFlags & AF_USE_SYSLOG))
+	if (!(g_flags & AF_USE_SYSLOG))
 	{
 		if (!nxlog_set_rotation_policy((int)g_dwLogRotationMode, (int)g_dwMaxLogSize, (int)g_dwLogHistorySize, g_szDailyLogFileSuffix))
-			if (!(g_dwFlags & AF_DAEMON))
+			if (!(g_flags & AF_DAEMON))
 				_tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
 	}
-   if (!nxlog_open((g_dwFlags & AF_USE_SYSLOG) ? NETXMSD_SYSLOG_NAME : g_szLogFile,
-	                ((g_dwFlags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) | ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
+   if (!nxlog_open((g_flags & AF_USE_SYSLOG) ? NETXMSD_SYSLOG_NAME : g_szLogFile,
+	                ((g_flags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) | ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
                    _T("LIBNXSRV.DLL"),
 #ifdef _WIN32
 				       0, NULL))
@@ -609,7 +611,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	// Initialize database driver and connect to database
 	DBSetDebugPrintCallback(DbgPrintf2);
-	if (!DBInit(MSG_OTHER, (g_dwFlags & AF_LOG_SQL_ERRORS) ? MSG_SQL_ERROR : 0))
+	if (!DBInit(MSG_OTHER, (g_flags & AF_LOG_SQL_ERRORS) ? MSG_SQL_ERROR : 0))
 		return FALSE;
 	g_dbDriver = DBLoadDriver(g_szDbDriver, g_szDbDrvParams, (g_debugLevel >= 9), DBEventHandler, NULL);
 	if (g_dbDriver == NULL)
@@ -643,7 +645,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	int maxSize = ConfigReadInt(_T("ConnectionPoolMaxSize"), 20);
 	int cooldownTime = ConfigReadInt(_T("ConnectionPoolCooldownTime"), 300);
 	DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, baseSize, maxSize, cooldownTime, 0, g_hCoreDB);
-   g_dwFlags |= AF_DB_CONNECTION_POOL_READY;
+   g_flags |= AF_DB_CONNECTION_POOL_READY;
 
 	// Read database syntax
 	g_nDBSyntax = DBGetSyntax(g_hCoreDB);
@@ -690,7 +692,7 @@ retry_db_lock:
 		}
 		return FALSE;
 	}
-	g_dwFlags |= AF_DB_LOCKED;
+	g_flags |= AF_DB_LOCKED;
 
 	// Load global configuration parameters
 	LoadGlobalConfig();
@@ -868,7 +870,7 @@ retry_db_lock:
    }
 #endif
 
-	g_dwFlags |= AF_SERVER_INITIALIZED;
+	g_flags |= AF_SERVER_INITIALIZED;
 	DbgPrintf(1, _T("Server initialization completed"));
 	return TRUE;
 }
@@ -882,7 +884,7 @@ void NXCORE_EXPORTABLE Shutdown()
 	NotifyClientSessions(NX_NOTIFY_SHUTDOWN, 0);
 
 	nxlog_write(MSG_SERVER_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
-	g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag
+	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
 	ConditionSet(m_condShutdown);
 
 #if XMPP_SUPPORTED
@@ -959,7 +961,7 @@ void NXCORE_EXPORTABLE Shutdown()
 
 	// Terminate process
 #ifdef _WIN32
-	if (!(g_dwFlags & AF_DAEMON))
+	if (!(g_flags & AF_DAEMON))
 		ExitProcess(0);
 #else
 	exit(0);
@@ -971,7 +973,7 @@ void NXCORE_EXPORTABLE Shutdown()
  */
 void NXCORE_EXPORTABLE FastShutdown()
 {
-	g_dwFlags |= AF_SHUTDOWN;     // Set shutdown flag
+	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
 	ConditionSet(m_condShutdown);
 
 	SaveObjects(g_hCoreDB);
@@ -1254,7 +1256,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		}
 		else if (IsCommand(_T("FLAGS"), szBuffer, 1))
 		{
-			ConsolePrintf(pCtx, _T("Flags: 0x%08X\n"), g_dwFlags);
+         ConsolePrintf(pCtx, _T("Flags: 0x") UINT64X_FMT(_T("016")) _T("\n"), g_flags);
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DAEMON));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_USE_SYSLOG));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_NETWORK_DISCOVERY));
@@ -1280,6 +1282,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_NO_NETWORK_CONNECTIVITY));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_EVENT_STORM_DETECTED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SNMP_TRAP_DISCOVERY));
+			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_TRAPS_FROM_UNMANAGED_NODES));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
 			ConsolePrintf(pCtx, _T("\n"));
@@ -1747,7 +1750,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 						;
 					break;
 				case SIGUSR1:
-					if (g_dwFlags & AF_SHUTDOWN)
+					if (g_flags & AF_SHUTDOWN)
 						goto stop_handler;
 					break;
 				default:
@@ -1778,7 +1781,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 
 	if (IsStandalone())
    {
-      if (!(g_dwFlags & AF_DEBUG_CONSOLE_DISABLED))
+      if (!(g_flags & AF_DEBUG_CONSOLE_DISABLED))
 	   {
 		   char *ptr, szCommand[256];
 		   struct __console_ctx ctx;

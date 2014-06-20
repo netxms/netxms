@@ -178,7 +178,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		}
 
 		// Delete empty subnets if needed
-		if (g_dwFlags & AF_DELETE_EMPTY_SUBNETS)
+		if (g_flags & AF_DELETE_EMPTY_SUBNETS)
 			DeleteEmptySubnets();
 
 		// Remove expired DCI data

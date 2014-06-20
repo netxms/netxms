@@ -360,6 +360,16 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables)
 }
 
 /**
+ * Upgrade from V322 to V323
+ */
+static BOOL H_UpgradeFromV322(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("ProcessTrapsFromUnmanagedNodes"), _T("0"), 1, 1));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='323' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V321 to V322
  */
 static BOOL H_UpgradeFromV321(int currVersion, int newVersion)
@@ -7823,6 +7833,7 @@ static struct
    { 319, 320, H_UpgradeFromV319 },
    { 320, 321, H_UpgradeFromV320 },
    { 321, 322, H_UpgradeFromV321 },
+   { 322, 323, H_UpgradeFromV322 },
    { 0, 0, NULL }
 };
 

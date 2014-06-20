@@ -83,7 +83,7 @@ void LoadHelpDeskLink()
                if (s_link->init())
                {
 					   nxlog_write(MSG_HDLINK_LOADED, EVENTLOG_INFORMATION_TYPE, "ss", s_link->getName(), s_link->getVersion());
-                  g_dwFlags |= AF_HELPDESK_LINK_ACTIVE;
+                  g_flags |= AF_HELPDESK_LINK_ACTIVE;
                }
 				   else
 				   {

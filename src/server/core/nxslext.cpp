@@ -202,7 +202,7 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
 	if (node != NULL)
 	{
-		if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
+		if (g_flags & AF_CHECK_TRUSTED_NODES)
 		{
 			if ((currNode != NULL) && (node->isTrustedNode(currNode->Id())))
 			{
@@ -261,7 +261,7 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 
 	if (object != NULL)
 	{
-		if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
+		if (g_flags & AF_CHECK_TRUSTED_NODES)
 		{
 			Node *currNode = NULL;
 			if ((argc == 2) && !argv[1]->isNull())
@@ -1295,7 +1295,7 @@ NXSL_ServerEnv::NXSL_ServerEnv() : NXSL_Environment()
 	registerFunctionSet(sizeof(m_nxslServerFunctions) / sizeof(NXSL_ExtFunction), m_nxslServerFunctions);
 	RegisterDCIFunctions(this);
 	registerFunctionSet(g_nxslNumSituationFunctions, g_nxslSituationFunctions);
-	if (g_dwFlags & AF_ENABLE_NXSL_CONTAINER_FUNCS)
+	if (g_flags & AF_ENABLE_NXSL_CONTAINER_FUNCS)
 		registerFunctionSet(sizeof(m_nxslServerFunctionsForContainers) / sizeof(NXSL_ExtFunction), m_nxslServerFunctionsForContainers);
 }
 

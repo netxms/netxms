@@ -189,7 +189,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
    {
       // Update existing item unless it is disabled
       DCObject *curr = m_dcObjects->get(i);
-		if (curr->getStatus() != ITEM_STATUS_DISABLED || (g_dwFlags & AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE))
+		if (curr->getStatus() != ITEM_STATUS_DISABLED || (g_flags & AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE))
 		{
 			curr->updateFromTemplate(dcObject);
 			DbgPrintf(9, _T("DCO \"%s\" NOT disabled or ApplyDCIFromTemplateToDisabledDCI set, updated (%d)"), 

@@ -591,8 +591,8 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
 					msg.SetVariable(VID_USER_SYS_RIGHTS, userRights);
 					msg.SetVariable(VID_USER_ID, m_dwUserId);
 					msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
-					msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? 0 : 1));
-					msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_dwFlags & AF_ENABLE_ZONING) ? 1 : 0));
+					msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_flags & AF_DB_CONNECTION_LOST) ? 0 : 1));
+					msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_flags & AF_ENABLE_ZONING) ? 1 : 0));
 					debugPrintf(3, _T("User %s authenticated as mobile device"), m_szUserName);
 					WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szHostName, 0,
 									  _T("Mobile device logged in as user \"%s\" (client info: %s)"), szLogin, m_szClientInfo);
