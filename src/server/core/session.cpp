@@ -113,6 +113,14 @@ typedef struct
 } LIBRARY_IMAGE_UPDATE_INFO;
 
 /**
+ * Callback to delete agent connections for loading files in distructor
+ */
+static void DeleteCallback(NetObj* obj, void *data)
+{
+   delete (AgentConnection *)obj;
+}
+
+/**
  * Additional message processing thread starters
  */
 #define CALL_IN_NEW_THREAD(func, msg) \
@@ -159,6 +167,8 @@ DEFINE_THREAD_STARTER(queryAgentTable)
 DEFINE_THREAD_STARTER(getAlarmEvents)
 DEFINE_THREAD_STARTER(openHelpdeskIssue)
 DEFINE_THREAD_STARTER(forwardToReportingServer)
+DEFINE_THREAD_STARTER(getAgentFolderContent)
+DEFINE_THREAD_STARTER(uploadUserFileToAgent)
 
 /**
  * Client communication read thread starter
@@ -312,6 +322,10 @@ ClientSession::~ClientSession()
 		free(m_console);
 	}
    m_musicTypeList.clear();
+   if(m_agentConn.getSize() > 0)
+   {
+      m_agentConn.forEach(&DeleteCallback, NULL);
+   }
 }
 
 /**
@@ -424,19 +438,19 @@ void ClientSession::readThread()
       if (wFlags & MF_BINARY)
       {
          // Convert message header to host format
-         pRawMsg->dwId = ntohl(pRawMsg->dwId);
-         pRawMsg->wCode = ntohs(pRawMsg->wCode);
-         pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-         debugPrintf(6, _T("Received raw message %s"), NXCPMessageCodeName(pRawMsg->wCode, szBuffer));
+         UINT32 id = ntohl(pRawMsg->dwId);
+         UINT16 code = ntohs(pRawMsg->wCode);
+         UINT32 numVars = ntohl(pRawMsg->dwNumVars);
+         debugPrintf(6, _T("Received raw message %s"), NXCPMessageCodeName(code, szBuffer));
 
-         if ((pRawMsg->wCode == CMD_FILE_DATA) ||
-             (pRawMsg->wCode == CMD_ABORT_FILE_TRANSFER))
+         if ((code == CMD_FILE_DATA) ||
+             (code == CMD_ABORT_FILE_TRANSFER))
          {
-            if ((m_hCurrFile != -1) && (m_dwFileRqId == pRawMsg->dwId))
+            if ((m_hCurrFile != -1) && (m_dwFileRqId == id))
             {
-               if (pRawMsg->wCode == CMD_FILE_DATA)
+               if (code == CMD_FILE_DATA)
                {
-                  if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
+                  if (write(m_hCurrFile, pRawMsg->df, numVars) == (int)numVars)
                   {
                      if (wFlags & MF_END_OF_FILE)
                      {
@@ -447,7 +461,7 @@ void ClientSession::readThread()
                         m_hCurrFile = -1;
 
                         msg.SetCode(CMD_REQUEST_COMPLETED);
-                        msg.SetId(pRawMsg->dwId);
+                        msg.SetId(id);
                         msg.SetVariable(VID_RCC, RCC_SUCCESS);
                         sendMessage(&msg);
 
@@ -464,7 +478,7 @@ void ClientSession::readThread()
                      m_hCurrFile = -1;
 
                      msg.SetCode(CMD_REQUEST_COMPLETED);
-                     msg.SetId(pRawMsg->dwId);
+                     msg.SetId(id);
                      msg.SetVariable(VID_RCC, RCC_IO_ERROR);
                      sendMessage(&msg);
 
@@ -482,7 +496,54 @@ void ClientSession::readThread()
             }
             else
             {
-               debugPrintf(4, _T("Out of state message (ID: %d)"), pRawMsg->dwId);
+               AgentConnection *conn = (AgentConnection *)m_agentConn.get(id);
+               if(conn != NULL)
+               {
+                  if (code == CMD_FILE_DATA)
+                  {
+
+                     if (conn->sendRawMessage(pRawMsg))//send raw message
+                     {
+                        if (wFlags & MF_END_OF_FILE)
+                        {
+                           debugPrintf(6, _T("Got end of file marker"));
+                           //get response with specific ID if ok< then send ok, else send error
+                           m_agentConn.remove(id);
+                           delete conn;
+                           CSCPMessage msg;
+
+                           msg.SetCode(CMD_REQUEST_COMPLETED);
+                           msg.SetId(id);
+                           msg.SetVariable(VID_RCC, RCC_SUCCESS);
+                           sendMessage(&msg);
+                        }
+                     }
+                     else
+                     {
+                        debugPrintf(6, _T("Error while sending to agent"));
+                        // I/O error
+                        CSCPMessage msg;
+                        m_agentConn.remove(id);
+                        delete conn;
+
+                        msg.SetCode(CMD_REQUEST_COMPLETED);
+                        msg.SetId(id);
+                        msg.SetVariable(VID_RCC, RCC_IO_ERROR); //set result that came from agent
+                        sendMessage(&msg);
+                     }
+                  }
+                  else
+                  {
+                     // Resend abort message
+                     conn->sendRawMessage(pRawMsg);
+                     m_agentConn.remove(id);
+                     delete conn;
+                  }
+               }
+               else
+               {
+                  debugPrintf(4, _T("Out of state message (ID: %d)"), id);
+               }
             }
          }
       }
@@ -1369,10 +1430,13 @@ void ClientSession::processingThread()
             getEffectiveRights(pMsg);
             break;
          case CMD_GET_FOLDER_CONTENT:
-         case CMD_FILEMNGR_DELETE_FILE:
-         case CMD_FILEMNGR_RENAME_FILE:
-         case CMD_FILEMNGR_MOVE_FILE:
-            getAgentFolderContent(pMsg);
+         case CMD_FILEMGR_DELETE_FILE:
+         case CMD_FILEMGR_RENAME_FILE:
+         case CMD_FILEMGR_MOVE_FILE:
+            CALL_IN_NEW_THREAD(getAgentFolderContent, pMsg);
+            break;
+         case CMD_FILEMGR_UPLOAD:
+            CALL_IN_NEW_THREAD(uploadUserFileToAgent, pMsg);
             break;
          default:
             if ((m_wCurrentCmd >> 8) == 0x11)
@@ -12974,10 +13038,13 @@ void ClientSession::getAgentFolderContent(CSCPMessage *request)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(request->GetId());
 
-	NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
+   TCHAR fileName[MAX_PATH];
+   request->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
+   UINT32 objectId = request->GetVariableLong(VID_OBJECT_ID);
+	NetObj *object = FindObjectById(objectId);
 	if (object != NULL)
 	{
-		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MANAGE_FILES))
 		{
 			if (object->Type() == OBJECT_NODE)
 			{
@@ -12993,10 +13060,38 @@ void ClientSession::getAgentFolderContent(CSCPMessage *request)
                   rcc = response->GetVariableLong(VID_RCC);
                   if(rcc == RCC_SUCCESS)
                   {
-                     response->SetId(request->GetId());
+                     response->SetId(msg.GetId());
                      response->SetCode(CMD_REQUEST_COMPLETED);
                      responseMessage = response;
-                     responseMessage->SetId(msg.GetId());
+
+                     //Add line in audit log
+                     switch(request->GetCode())
+                     {
+                        case CMD_GET_FOLDER_CONTENT:
+                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, objectId,
+                              _T("Get content of agents folder \"%s\""), fileName);
+                           break;
+                        case CMD_FILEMGR_DELETE_FILE:
+                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, objectId,
+                              _T("Delete agents file/folder \"%s\""), fileName);
+                           break;
+                        case CMD_FILEMGR_RENAME_FILE:
+                        {
+                           TCHAR newFileName[MAX_PATH];
+                           request->GetVariableStr(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
+                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, objectId,
+                              _T("Rename agents file/folder \"%s\" to \"%s\""), fileName, newFileName);
+                           break;
+                        }
+                        case CMD_FILEMGR_MOVE_FILE:
+                        {
+                           TCHAR newFileName[MAX_PATH];
+                           request->GetVariableStr(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
+                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, objectId,
+                              _T("Move agents file/folder from \"%s\" to \"%s\""), fileName, newFileName);
+                           break;
+                        }
+                     }
                   }
                   else
                   {
@@ -13031,6 +13126,125 @@ void ClientSession::getAgentFolderContent(CSCPMessage *request)
 		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
+	if(rcc == RCC_ACCESS_DENIED)
+	{
+      switch(request->GetCode())
+      {
+         case CMD_GET_FOLDER_CONTENT:
+            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, objectId,
+               _T("Acess denied to get content of agents folder \"%s\""), fileName);
+               break;
+         case CMD_FILEMGR_DELETE_FILE:
+            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, objectId,
+               _T("Acess denied to delete agents file/folder \"%s\""), fileName);
+               break;
+         case CMD_FILEMGR_RENAME_FILE:
+         {
+            TCHAR newFileName[MAX_PATH];
+            request->GetVariableStr(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
+            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, objectId,
+               _T("Acess denied to rename agents file/folder \"%s\" to \"%s\""), fileName, newFileName);
+            break;
+         }
+         case CMD_FILEMGR_MOVE_FILE:
+         {
+            TCHAR newFileName[MAX_PATH];
+            request->GetVariableStr(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
+            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, objectId,
+               _T("Acess denied to move agents file/folder from \"%s\" to \"%s\""), fileName, newFileName);
+            break;
+         }
+      }
+	}
+
    sendMessage(responseMessage);
-   //delete response;
+   if(response != NULL)
+      delete response;
 }
+
+void ClientSession::uploadUserFileToAgent(CSCPMessage *request)
+{
+   CSCPMessage msg, *response = NULL, *responseMessage;
+	TCHAR remoteFile[MAX_PATH];
+	UINT32 rcc = RCC_INTERNAL_ERROR;
+   responseMessage = &msg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   TCHAR fileName[MAX_PATH];
+   request->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
+   UINT32 objectId = request->GetVariableLong(VID_OBJECT_ID);
+	NetObj *object = FindObjectById(objectId);
+	if (object != NULL)
+	{
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPLOAD))
+		{
+			if (object->Type() == OBJECT_NODE)
+			{
+            Node *node = (Node *)object;
+            node->incRefCount();
+            AgentConnection *conn = node->createAgentConnection();
+            node->decRefCount();
+            if(conn != NULL)
+            {
+               conn->sendMessage(request);
+               response = conn->waitForMessage(CMD_REQUEST_COMPLETED, request->GetId(), 10000);
+               if (response != NULL)
+               {
+                  rcc = response->GetVariableLong(VID_RCC);
+                  if(rcc == RCC_SUCCESS)
+                  {
+                     response->SetCode(CMD_REQUEST_COMPLETED);
+                     responseMessage = response;
+
+                     //Add line in audit log
+                     WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, objectId,
+                        _T("Started direct upload of file \"%s\" to agent"), fileName);
+                     //Set all required for file download
+                     m_agentConn.put((QWORD)request->GetId(),(NetObj *)conn);
+                  }
+                  else
+                  {
+                     msg.SetVariable(VID_RCC, rcc);
+                     debugPrintf(6, _T("ClientSession::getAgentFolderContent: Error on agent: %d"), rcc);
+                  }
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_TIMEOUT);
+               }
+               if(rcc != RCC_SUCCESS)
+               {
+                  delete conn;
+               }
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_CONNECTION_BROKEN);
+            }
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
+
+	if(rcc == RCC_ACCESS_DENIED)
+      WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, objectId,
+         _T("Access denied for direct upload of file \"%s\" to agent"), fileName);
+
+   sendMessage(responseMessage);
+   if(response != NULL)
+      delete response;
+}
+

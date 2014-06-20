@@ -431,6 +431,7 @@ private:
    UINT32 m_dwActiveChannels;     // Active data channels
 	CONSOLE_CTX m_console;			// Server console context
 	StringList m_musicTypeList;
+	ObjectIndex m_agentConn;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
@@ -462,6 +463,8 @@ private:
 	DECLARE_THREAD_STARTER(getAlarmEvents)
 	DECLARE_THREAD_STARTER(openHelpdeskIssue)
 	DECLARE_THREAD_STARTER(forwardToReportingServer)
+   DECLARE_THREAD_STARTER(getAgentFolderContent)
+   DECLARE_THREAD_STARTER(uploadUserFileToAgent)
 
    void readThread();
    void writeThread();
@@ -668,6 +671,7 @@ private:
    void getSubnetAddressMap(CSCPMessage *request);
    void getEffectiveRights(CSCPMessage *request);
    void getAgentFolderContent(CSCPMessage *request);
+   void uploadUserFileToAgent(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

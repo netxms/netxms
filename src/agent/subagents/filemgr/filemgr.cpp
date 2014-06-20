@@ -93,6 +93,9 @@ static void SubagentShutdown()
 
 #ifndef _WIN32
 
+/**
+ * Converts path to absolute removing "//", "../", "./" ...
+ */
 static TCHAR *getLinuxRealPath(TCHAR *path)
 {
    if(path == NULL || path[0] == 0)
@@ -124,8 +127,7 @@ static TCHAR *getLinuxRealPath(TCHAR *path)
                   {
                      if(current[2] == '.' && (current[3] == 0 || current[3] == '/'))
                      {
-                        //move to previousX2 '/' symbol
-                        if(current == result) //should be adress compare
+                        if(current == result)
                         {
                            _tcscat(current, current+3);
                         }
@@ -139,7 +141,7 @@ static TCHAR *getLinuxRealPath(TCHAR *path)
                               {
                                  break;
                               }
-                           } while(result != tmp); //should be adress compare
+                           } while(result != tmp);
                            _tcscat(tmp, current+3);
                         }
                      }
@@ -235,7 +237,7 @@ static void GetFolderContent(TCHAR* folder, CSCPMessage *msg)
 #endif
             type |= (st.st_mode & S_IFREG) > 0 ? REGULAR_FILE : 0;
             type |= (st.st_mode & S_IFDIR) > 0 ? DIRECTORY : 0;
-            msg->SetVariable(varId++, type); //add converation
+            msg->SetVariable(varId++, type);
             TCHAR fullName[MAX_PATH];
             _tcscpy(fullName, g_rootFileManagerFolders->getValue(i));
             msg->SetVariable(varId++, fullName);
@@ -279,7 +281,7 @@ static void GetFolderContent(TCHAR* folder, CSCPMessage *msg)
 #endif
             type |= (st.st_mode & S_IFREG) > 0 ? REGULAR_FILE : 0;
             type |= (st.st_mode & S_IFDIR) > 0 ? DIRECTORY : 0;
-            msg->SetVariable(varId++, type); //add converation
+            msg->SetVariable(varId++, type);
             ConvertPathToNetwork(fullName);
             msg->SetVariable(varId++, fullName);
 
@@ -304,6 +306,7 @@ static void GetFolderContent(TCHAR* folder, CSCPMessage *msg)
          }
       }
       msg->SetVariable(VID_INSTANCE_COUNT, count);
+      _tclosedir(dir);
    }
    else
    {
@@ -312,7 +315,7 @@ static void GetFolderContent(TCHAR* folder, CSCPMessage *msg)
 }
 
 /**
- * Delete file
+ * Delete file/folder
  */
 static BOOL Delete(const TCHAR *name)
 {
@@ -361,7 +364,7 @@ static BOOL Delete(const TCHAR *name)
 }
 
 /**
- * Rename file
+ * Rename file/folder
  */
 static BOOL Rename(TCHAR* oldName, TCHAR * newName)
 {
@@ -378,7 +381,7 @@ static BOOL Rename(TCHAR* oldName, TCHAR * newName)
 #ifndef _WIN32
 
 /**
- * Copy file
+ * Copy file/folder
  */
 static BOOL CopyFile(NX_STAT_STRUCT *st, TCHAR* oldName, TCHAR* newName)
 {
@@ -414,7 +417,7 @@ static BOOL CopyFile(NX_STAT_STRUCT *st, TCHAR* oldName, TCHAR* newName)
 #endif
 
 /**
- * Move file
+ * Move file/folder
  */
 static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
 {
@@ -472,9 +475,9 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
 }
 
 /**
- * Process commands like get files in folder, delete file/folder, create folder, copy file/folder, create file
+ * Process commands like get files in folder, delete file/folder, copy file/folder, move file/folder
  */
-static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *response, void *session, int serverType)
+static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *response, void *session)
 {
    switch(command)
    {
@@ -491,7 +494,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          ConvertPathToHost(directory);
 
-         if (CheckFullPath(directory, true) && (serverType == MASTER_SERVER))
+         if (CheckFullPath(directory, true) && ((AbstractCommSession *)session)->isMasterServer())
          {
             GetFolderContent(directory, response);
          }
@@ -502,7 +505,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          return TRUE;
       }
-      case CMD_FILEMNGR_DELETE_FILE:
+      case CMD_FILEMGR_DELETE_FILE:
       {
          TCHAR file[MAX_PATH];
          request->GetVariableStr(VID_FILE_NAME, file, MAX_PATH);
@@ -515,7 +518,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          ConvertPathToHost(file);
 
-         if(CheckFullPath(file, false) && serverType == MASTER_SERVER)
+         if(CheckFullPath(file, false) && ((AbstractCommSession *)session)->isMasterServer())
          {
             if (Delete(file))
             {
@@ -533,7 +536,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          return TRUE;
       }
-      case CMD_FILEMNGR_RENAME_FILE:
+      case CMD_FILEMGR_RENAME_FILE:
       {
          TCHAR oldName[MAX_PATH];
          request->GetVariableStr(VID_FILE_NAME, oldName, MAX_PATH);
@@ -549,7 +552,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          ConvertPathToHost(oldName);
          ConvertPathToHost(newName);
 
-         if (CheckFullPath(oldName, false) && CheckFullPath(newName, false) && serverType == MASTER_SERVER)
+         if (CheckFullPath(oldName, false) && CheckFullPath(newName, false) && ((AbstractCommSession *)session)->isMasterServer())
          {
             if (Rename(oldName, newName))
             {
@@ -567,7 +570,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          return TRUE;
       }
-      case CMD_FILEMNGR_MOVE_FILE:
+      case CMD_FILEMGR_MOVE_FILE:
       {
          TCHAR oldName[MAX_PATH];
          request->GetVariableStr(VID_FILE_NAME, oldName, MAX_PATH);
@@ -583,7 +586,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          ConvertPathToHost(oldName);
          ConvertPathToHost(newName);
 
-         if (CheckFullPath(oldName, false) && CheckFullPath(newName, false) && serverType == MASTER_SERVER)
+         if (CheckFullPath(oldName, false) && CheckFullPath(newName, false) && ((AbstractCommSession *)session)->isMasterServer())
          {
             if(MoveFile(oldName, newName))
             {
@@ -597,6 +600,30 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          else
          {
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Access denied"));
+            response->SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+         return TRUE;
+      }
+      case CMD_FILEMGR_UPLOAD:
+      {
+         TCHAR name[MAX_PATH];
+         request->GetVariableStr(VID_FILE_NAME, name, MAX_PATH);
+         response->SetId(request->GetId());
+         if (name == NULL)
+         {
+            response->SetVariable(VID_RCC, RCC_IO_ERROR);
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): File name should be set."));
+            return TRUE;
+         }
+         ConvertPathToHost(name);
+
+         if (CheckFullPath(name, true) && ((AbstractCommSession *)session)->isMasterServer())
+         {
+            response->SetVariable(VID_RCC, ((AbstractCommSession *)session)->openFile(name, request->GetId()));
+         }
+         else
+         {
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Acess denid."));
             response->SetVariable(VID_RCC, RCC_ACCESS_DENIED);
          }
          return TRUE;

@@ -6396,6 +6396,29 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       waitForRCC(msg.getMessageId());
       sendFile(msg.getMessageId(), localFile, listener);
    }
+   
+   /**
+    * Upload local file to server's file store
+    *
+    * @param localFile      local file
+    * @param serverFileName name under which file will be stored on server
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void uploadLocalFileToAgent(File localFile, String agentFileName, long nodeId, ProgressListener listener)
+      throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_UPLOAD);
+      if(agentFileName.equals(""))
+      {
+         agentFileName = localFile.getName();
+      }
+      msg.setVariable(NXCPCodes.VID_FILE_NAME, agentFileName);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+      sendFile(msg.getMessageId(), localFile, listener);
+   }
 
    /**
     * Download file from remote host via agent.
@@ -6482,7 +6505,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     */
    public void deleteAgentFile(long nodeId, String fileName) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMNGR_DELETE_FILE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_DELETE_FILE);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setVariable(NXCPCodes.VID_FILE_NAME, fileName);
       sendMessage(msg);
@@ -6498,7 +6521,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     */
    public void renameAgentFile(long nodeId, String oldName, String newFileName) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMNGR_RENAME_FILE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_RENAME_FILE);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setVariable(NXCPCodes.VID_FILE_NAME, oldName);
       msg.setVariable(NXCPCodes.VID_NEW_FILE_NAME, newFileName);
@@ -6515,7 +6538,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     */
    public void moveAgentFile(long nodeId, String oldName, String newFileName) throws IOException, NXCException
    {
-      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMNGR_MOVE_FILE);
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_MOVE_FILE);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setVariable(NXCPCodes.VID_FILE_NAME, oldName);
       msg.setVariable(NXCPCodes.VID_NEW_FILE_NAME, newFileName);

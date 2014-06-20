@@ -321,7 +321,7 @@ LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Process unknown command by subagents
  */
-BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session, int serverType)
+BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session)
 {
    BOOL bResult = FALSE;
    UINT32 i;
@@ -329,7 +329,7 @@ BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *
    for(i = 0; (i < m_dwNumSubAgents) && (!bResult); i++)
    {
       if (m_pSubAgentList[i].pInfo->commandHandler != NULL)
-         bResult = m_pSubAgentList[i].pInfo->commandHandler(dwCommand, pRequest, pResponse, session, serverType);
+         bResult = m_pSubAgentList[i].pInfo->commandHandler(dwCommand, pRequest, pResponse, session);
    }
    return bResult;
 }

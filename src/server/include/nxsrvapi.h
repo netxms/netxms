@@ -456,8 +456,6 @@ private:
 
 protected:
    void destroyResultData();
-   BOOL sendMessage(CSCPMessage *pMsg);
-   CSCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut) { return m_pMsgWaitQueue->waitForMessage(wCode, dwId, dwTimeOut); }
    UINT32 waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut);
    UINT32 setupEncryption(RSA *pServerKey);
    UINT32 authenticate(BOOL bProxyData);
@@ -477,6 +475,8 @@ protected:
 	NXCPEncryptionContext *acquireEncryptionContext();
 
 public:
+   BOOL sendMessage(CSCPMessage *pMsg);
+   CSCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut) { return m_pMsgWaitQueue->waitForMessage(wCode, dwId, dwTimeOut); }
    AgentConnection(UINT32 ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
    virtual ~AgentConnection();
 
@@ -524,6 +524,7 @@ public:
    void setPort(WORD wPort) { m_wPort = wPort; }
    void setAuthData(int method, const TCHAR *secret);
    void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
+   BOOL sendRawMessage(CSCP_MESSAGE *pMsg);
 };
 
 /**

@@ -536,8 +536,7 @@ void CommSession::processingThread()
 					break;
             default:
                // Attempt to process unknown command by subagents
-               int serverType = m_bMasterServer ? MASTER_SERVER : 0;
-               if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg, this, serverType))
+               if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg, this))
                   msg.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
                break;
          }
@@ -819,49 +818,45 @@ void CommSession::getFileDetails(CSCPMessage *pRequest, CSCPMessage *pMsg)
 
 void CommSession::recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
-	TCHAR szFileName[MAX_PATH], szFullPath[MAX_PATH], szDestinationFileName[MAX_PATH];
+	TCHAR szFileName[MAX_PATH], szFullPath[MAX_PATH];
 
 	if (m_bMasterServer)
 	{
 		szFileName[0] = 0;
-		szDestinationFileName[0] = 0;
 		pRequest->GetVariableStr(VID_FILE_NAME, szFileName, MAX_PATH);
 		DebugPrintf(m_dwIndex, 5, _T("CommSession::recvFile(): Preparing for receiving file \"%s\""), szFileName);
-		pRequest->GetVariableStr(VID_DESTINATION_FILE_NAME, szDestinationFileName, MAX_PATH);
-		if (szDestinationFileName[0] == 0 || !(g_dwFlags & AF_ARBITRARY_FILE_UPLOAD))
-		{
-			BuildFullPath(szFileName, szFullPath);
-		}
-		else
-		{
-			_tcscpy(szFullPath, szDestinationFileName);
-		}
+      BuildFullPath(szFileName, szFullPath);
 
 		// Check if for some reason we have already opened file
-		if (m_hCurrFile != -1)
-		{
-			pMsg->SetVariable(VID_RCC, ERR_RESOURCE_BUSY);
-		}
-		else
-		{
-			DebugPrintf(m_dwIndex, 5, _T("CommSession::recvFile(): Writing to local file \"%s\""), szFullPath);
-			m_hCurrFile = _topen(szFullPath, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, 0600);
-			if (m_hCurrFile == -1)
-			{
-				DebugPrintf(m_dwIndex, 2, _T("CommSession::recvFile(): Error opening file \"%s\" for writing (%s)"), szFullPath, _tcserror(errno));
-				pMsg->SetVariable(VID_RCC, ERR_IO_FAILURE);
-			}
-			else
-			{
-				m_dwFileRqId = pRequest->GetId();
-				pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
-			}
-		}
+      pMsg->SetVariable(VID_RCC, openFile(szFullPath, pRequest->GetId()));
 	}
 	else
 	{
 		pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
 	}
+}
+
+UINT32 CommSession::openFile(TCHAR* szFullPath, UINT32 requestId)
+{
+   if (m_hCurrFile != -1)
+   {
+      return ERR_RESOURCE_BUSY;
+   }
+   else
+   {
+      DebugPrintf(m_dwIndex, 5, _T("CommSession::recvFile(): Writing to local file \"%s\""), szFullPath);
+      m_hCurrFile = _topen(szFullPath, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, 0600);
+      if (m_hCurrFile == -1)
+      {
+         DebugPrintf(m_dwIndex, 2, _T("CommSession::recvFile(): Error opening file \"%s\" for writing (%s)"), szFullPath, _tcserror(errno));
+         return ERR_IO_FAILURE;
+      }
+      else
+      {
+         m_dwFileRqId = requestId;
+         return  ERR_SUCCESS;
+      }
+   }
 }
 
 

@@ -37,7 +37,7 @@ Query::Query()
    m_pollerThread = INVALID_THREAD_HANDLE;
    m_mutex = MutexCreate();
    m_pollRequired = false;
-   m_description = _tcsdup(_T(""));
+   m_description = NULL;
 }
 
 /**

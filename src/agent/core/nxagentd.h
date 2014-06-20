@@ -294,7 +294,7 @@ struct SERVER_INFO
 /**
  * Communication session
  */
-class CommSession
+class CommSession : public AbstractCommSession
 {
 private:
    SOCKET m_hSocket;
@@ -363,6 +363,9 @@ public:
 	void updateTimeStamp() { m_ts = time(NULL); }
 
    BOOL canAcceptTraps() { return m_bAcceptTraps; }
+
+   BOOL isMasterServer() { return m_bMasterServer; }
+   UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId);
 };
 
 /**
@@ -409,7 +412,7 @@ void UnloadAllSubAgents();
 BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
                   BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, Config *),
                   const TCHAR *pszEntryPoint);
-BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session, int serverType);
+BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session);
 BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
                LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
                const TCHAR *pszSubAgent, const TCHAR *pszDescription);
