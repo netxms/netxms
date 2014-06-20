@@ -153,8 +153,7 @@ public class LoginJob implements IRunnableWithProgress
          callLoginListeners(session);
          monitor.worked(1);
 
-         Runnable keepAliveTimer = new KeepAliveTimer();
-         final Thread thread = new Thread(null, keepAliveTimer, "KeepAliveTimer");
+         final Thread thread = new Thread(null, new KeepAliveTimer(), "KeepAliveTimer");
          thread.setDaemon(true);
          thread.start();
       }

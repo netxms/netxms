@@ -198,7 +198,7 @@ public class MobileApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 					continue;
 				password = ((LoginForm)loginDialog).getPassword();
 				
-				success = connectToServer(properties.getProperty("server", "10.5.0.111"),  //$NON-NLS-1$ //$NON-NLS-2$ 
+				success = connectToServer(properties.getProperty("server", "127.0.0.1"),  //$NON-NLS-1$ //$NON-NLS-2$ 
 				                          ((LoginForm)loginDialog).getLogin(),
 				                          password);
 			} while(!success);
