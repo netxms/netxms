@@ -104,7 +104,14 @@ static void AddDCIParam(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Query *q
    param->handler = H_DirectQueryConfigurable;
    param->arg = query->getName();
    param->dataType = DCI_DT_STRING;
-   _tcscpy(param->description,  query->getDescription());
+   if(query->getDescription() != NULL)
+   {
+      _tcscpy(param->description, query->getDescription());
+   }
+   else
+   {
+      _tcscpy(param->description, _T(""));
+   }
 
    parameters->add(param);
 
@@ -121,7 +128,14 @@ static void AddDCIParamTable(StructArray<NETXMS_SUBAGENT_TABLE> *parametersTable
    param->handler = H_DirectQueryConfigurableTable;
    param->arg = query->getName();
    _tcscpy(param->instanceColumns, _T(""));
-   _tcscpy(param->description,  query->getDescription());
+   if(query->getDescription() != NULL)
+   {
+      _tcscpy(param->description, query->getDescription());
+   }
+   else
+   {
+      _tcscpy(param->description, _T(""));
+   }
 
    parametersTable->add(param);
 
