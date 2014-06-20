@@ -216,6 +216,10 @@ bool FileDownloadJob::run()
 		{
          g_monitoringList.addMonitoringFile(newFile);
 		}
+		else
+		{
+         delete newFile;
+		}
 	}
 	else
 	{

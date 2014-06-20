@@ -306,6 +306,7 @@ static void GetFolderContent(TCHAR* folder, CSCPMessage *msg)
          }
       }
       msg->SetVariable(VID_INSTANCE_COUNT, count);
+      _tclosedir(dir);
    }
    else
    {
