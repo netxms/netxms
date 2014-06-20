@@ -114,7 +114,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 							for(int i = 0; i < data.length; i++)
 							{
 								DciDataRow lastValue = data[i].getLastValue();
-								chart.updateParameter(i, (lastValue != null) ? lastValue.getValueAsDouble() : 0.0, false);
+								chart.updateParameter(i, lastValue, data[i].getDataType(), false);
 							}
 							chart.refresh();
 							chart.clearErrors();

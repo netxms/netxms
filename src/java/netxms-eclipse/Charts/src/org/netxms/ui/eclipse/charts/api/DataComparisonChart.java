@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.charts.api;
 
+import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
 
@@ -50,6 +51,16 @@ public interface DataComparisonChart extends DataChart
 	 * @param updateChart if tru, chart will be updated (repainted)
 	 */
 	public abstract void updateParameter(int index, double value, boolean updateChart);
+
+   /**
+    * Update value for parameter
+    * 
+    * @param index parameter's index (0 .. MAX_CHART_ITEMS-1)
+    * @param value parameter's value
+    * @param dataType DCI data type
+    * @param updateChart if true, chart will be updated (repainted)
+    */
+   public abstract void updateParameter(int index, DciDataRow value, int dataType, boolean updateChart);
 	
 	/**
 	 * Update thresholds for parameter

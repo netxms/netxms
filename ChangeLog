@@ -8,10 +8,10 @@
 - Management console:
    - "Commands" box on node overview page made configurable
    - Object tools can have icons
+   - "Last value" type gauge can show non-numeric values
 - Android Console:
-   - Fixed issue #598   
    - Added option in preference to show/hide legend in graphs
-- Fixed issues: #597
+- Fixed issues: #597, #598
 
 
 *
