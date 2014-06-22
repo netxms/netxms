@@ -665,7 +665,8 @@ void DCTable::deleteFromDB()
 
 	DCObject::deleteFromDB();
 
-   deleteAllData();
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM tdata_%d WHERE item_id=%d"), m_pNode->Id(), (int)m_dwId);
+   QueueSQLRequest(szQuery);
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dc_tables WHERE item_id=%d"), (int)m_dwId);
    QueueSQLRequest(szQuery);
