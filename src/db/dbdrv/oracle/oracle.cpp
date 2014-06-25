@@ -625,20 +625,33 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 				}
 
 				// Data size
-				OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &nWidth, NULL, OCI_ATTR_DATA_SIZE, pConn->handleError);
-				/* FIXME: find a way to determine real CLOB size */
-				if (nWidth == 4000)
-					nWidth = 32737;  // CLOB up to 32K
-				pBuffers[i].pData = (UCS2CHAR *)malloc((nWidth + 31) * sizeof(UCS2CHAR));
-				handleDefine = NULL;
-				if ((nStatus = OCIDefineByPos(handleStmt, &handleDefine, pConn->handleError, i + 1,
-				                              pBuffers[i].pData, (nWidth + 31) * sizeof(UCS2CHAR),
-				                              SQLT_CHR, &pBuffers[i].isNull, &pBuffers[i].nLength,
-				                              &pBuffers[i].nCode, OCI_DEFAULT)) != OCI_SUCCESS)
-				{
-					SetLastErrorText(pConn);
-					*pdwError = IsConnectionError(pConn);
-				}
+            ub2 type = 0;
+				OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &type, NULL, OCI_ATTR_DATA_TYPE, pConn->handleError);
+            if (type == OCI_TYPECODE_CLOB)
+            {
+               pBuffers[i].pData = NULL;
+               OCIDescriptorAlloc(pConn->handleEnv, (void **)&pBuffers[i].lobLocator, OCI_DTYPE_LOB, 0, NULL);
+				   handleDefine = NULL;
+				   nStatus = OCIDefineByPos(handleStmt, &handleDefine, pConn->handleError, i + 1,
+                                        &pBuffers[i].lobLocator, 0, SQLT_CLOB, &pBuffers[i].isNull, 
+                                        NULL, NULL, OCI_DEFAULT);
+            }
+            else
+            {
+               pBuffers[i].lobLocator = NULL;
+				   OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &nWidth, NULL, OCI_ATTR_DATA_SIZE, pConn->handleError);
+				   pBuffers[i].pData = (UCS2CHAR *)malloc((nWidth + 31) * sizeof(UCS2CHAR));
+				   handleDefine = NULL;
+				   nStatus = OCIDefineByPos(handleStmt, &handleDefine, pConn->handleError, i + 1,
+                                        pBuffers[i].pData, (nWidth + 31) * sizeof(UCS2CHAR),
+				                            SQLT_CHR, &pBuffers[i].isNull, &pBuffers[i].nLength,
+				                            &pBuffers[i].nCode, OCI_DEFAULT);
+            }
+            if (nStatus != OCI_SUCCESS)
+			   {
+				   SetLastErrorText(pConn);
+				   *pdwError = IsConnectionError(pConn);
+			   }
 				OCIDescriptorFree(handleParam, OCI_DTYPE_PARAM);
 			}
 			else
@@ -676,6 +689,24 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 					{
 						pResult->pData[nPos] = (WCHAR *)nx_memdup("\0\0\0", sizeof(WCHAR));
 					}
+               else if (pBuffers[i].lobLocator != NULL)
+               {
+                  ub4 length = 0;
+                  ub4 amount = length;
+                  OCILobGetLength(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &length);
+						pResult->pData[nPos] = (WCHAR *)malloc((length + 1) * sizeof(WCHAR));
+#if UNICODE_UCS4
+                  UCS2CHAR *ucs2buffer = (UCS2CHAR *)malloc(sizeof(UCS2CHAR) * length);
+                  OCILobRead(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &amount, 1, 
+                             ucs2buffer, length * sizeof(UCS2CHAR), NULL, NULL, OCI_UCS2ID, SQLCS_IMPLICIT);
+						ucs2_to_ucs4(ucs2buffer, length, pResult->pData[nPos], length + 1);
+                  free(ucs2buffer);
+#else
+                  OCILobRead(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &amount, 1, 
+                             pResult->pData[nPos], (length + 1) * sizeof(WCHAR), NULL, NULL, OCI_UCS2ID, SQLCS_IMPLICIT);
+#endif
+						pResult->pData[nPos][length] = 0;
+               }
 					else
 					{
 						int length = pBuffers[i].nLength / sizeof(UCS2CHAR);
@@ -694,7 +725,13 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 
 		// Cleanup
 		for(int i = 0; i < pResult->nCols; i++)
+      {
 			safe_free(pBuffers[i].pData);
+         if (pBuffers[i].lobLocator != NULL)
+         {
+            OCIDescriptorFree(pBuffers[i].lobLocator, OCI_DTYPE_LOB);
+         }
+      }
 		free(pBuffers);
 
 		// Destroy results in case of error
@@ -825,31 +862,25 @@ extern "C" WCHAR EXPORT *DrvGetField(ORACLE_RESULT *pResult, int nRow, int nColu
    return pValue;
 }
 
-
-//
-// Get number of rows in result
-//
-
+/**
+ * Get number of rows in result
+ */
 extern "C" int EXPORT DrvGetNumRows(ORACLE_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->nRows : 0;
 }
 
-
-//
-// Get column count in query result
-//
-
+/**
+ * Get column count in query result
+ */
 extern "C" int EXPORT DrvGetColumnCount(ORACLE_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->nCols : 0;
 }
 
-
-//
-// Get column name in query result
-//
-
+/**
+ * Get column name in query result
+ */
 extern "C" const char EXPORT *DrvGetColumnName(ORACLE_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->nCols)) ? pResult->columnNames[column] : NULL;
@@ -919,24 +950,40 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *p
 							pConn->columnNames[i] = strdup("");
 						}
 
-						// Data size
-						OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &nWidth, NULL, OCI_ATTR_DATA_SIZE, pConn->handleError);
-						pConn->pBuffers[i].pData = (UCS2CHAR *)malloc((nWidth + 31) * sizeof(UCS2CHAR));
-						handleDefine = NULL;
-						if (OCIDefineByPos(pConn->handleStmt, &handleDefine, pConn->handleError, i + 1,
-						                   pConn->pBuffers[i].pData, (nWidth + 31) * sizeof(UCS2CHAR),
-						                   SQLT_CHR, &pConn->pBuffers[i].isNull, &pConn->pBuffers[i].nLength,
-						                   &pConn->pBuffers[i].nCode, OCI_DEFAULT) == OCI_SUCCESS)
-						{
+				      // Data size
+                  sword nStatus;
+                  ub2 type = 0;
+				      OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &type, NULL, OCI_ATTR_DATA_TYPE, pConn->handleError);
+                  if (type == OCI_TYPECODE_CLOB)
+                  {
+                     pConn->pBuffers[i].pData = NULL;
+                     OCIDescriptorAlloc(pConn->handleEnv, (void **)&pConn->pBuffers[i].lobLocator, OCI_DTYPE_LOB, 0, NULL);
+				         handleDefine = NULL;
+				         nStatus = OCIDefineByPos(pConn->handleStmt, &handleDefine, pConn->handleError, i + 1,
+                                              &pConn->pBuffers[i].lobLocator, 0, SQLT_CLOB, &pConn->pBuffers[i].isNull, 
+                                              NULL, NULL, OCI_DEFAULT);
+                  }
+                  else
+                  {
+                     pConn->pBuffers[i].lobLocator = NULL;
+				         OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &nWidth, NULL, OCI_ATTR_DATA_SIZE, pConn->handleError);
+				         pConn->pBuffers[i].pData = (UCS2CHAR *)malloc((nWidth + 31) * sizeof(UCS2CHAR));
+				         handleDefine = NULL;
+				         nStatus = OCIDefineByPos(pConn->handleStmt, &handleDefine, pConn->handleError, i + 1,
+                                              pConn->pBuffers[i].pData, (nWidth + 31) * sizeof(UCS2CHAR),
+				                                  SQLT_CHR, &pConn->pBuffers[i].isNull, &pConn->pBuffers[i].nLength,
+				                                  &pConn->pBuffers[i].nCode, OCI_DEFAULT);
+                  }
+                  if (nStatus == OCI_SUCCESS)
+                  {
 							*pdwError = DBERR_SUCCESS;
-						}
-						else
-						{
-							SetLastErrorText(pConn);
-							*pdwError = IsConnectionError(pConn);
-						}
-
-						OCIDescriptorFree(handleParam, OCI_DTYPE_PARAM);
+                  }
+                  else
+			         {
+				         SetLastErrorText(pConn);
+				         *pdwError = IsConnectionError(pConn);
+			         }
+				      OCIDescriptorFree(handleParam, OCI_DTYPE_PARAM);
 					}
 					else
 					{
@@ -979,11 +1026,9 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *p
 	return NULL;
 }
 
-
-//
-// Fetch next result line from asynchronous SELECT results
-//
-
+/**
+ * Fetch next result line from asynchronous SELECT results
+ */
 extern "C" BOOL EXPORT DrvFetch(ORACLE_CONN *pConn)
 {
 	BOOL success;
@@ -1004,11 +1049,9 @@ extern "C" BOOL EXPORT DrvFetch(ORACLE_CONN *pConn)
 	return success;
 }
 
-
-//
-// Get field length from current row in async query result
-//
-
+/**
+ * Get field length from current row in async query result
+ */
 extern "C" LONG EXPORT DrvGetFieldLengthAsync(ORACLE_CONN *pConn, int nColumn)
 {
 	if (pConn == NULL)
@@ -1020,16 +1063,20 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(ORACLE_CONN *pConn, int nColumn)
 	if (pConn->pBuffers[nColumn].isNull)
 		return 0;
 
+   if (pConn->pBuffers[nColumn].lobLocator != NULL)
+   {
+      ub4 length = 0;
+      OCILobGetLength(pConn->handleService, pConn->handleError, pConn->pBuffers[nColumn].lobLocator, &length);
+      return (LONG)length;
+   }
+
 	return (LONG)(pConn->pBuffers[nColumn].nLength / sizeof(UCS2CHAR));
 }
 
-
-//
-// Get field from current row in async query result
-//
-
-extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn,
-                                          WCHAR *pBuffer, int nBufSize)
+/**
+ * Get field from current row in async query result
+ */
+extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn, WCHAR *pBuffer, int nBufSize)
 {
 	int nLen;
 
@@ -1043,6 +1090,25 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn,
 	{
 		*pBuffer = 0;
 	}
+   else if (pConn->pBuffers[nColumn].lobLocator != NULL)
+   {
+      ub4 length = 0;
+      OCILobGetLength(pConn->handleService, pConn->handleError, pConn->pBuffers[nColumn].lobLocator, &length);
+
+		nLen = min(nBufSize - 1, ((int)(length / sizeof(UCS2CHAR))));
+      ub4 amount = nLen;
+#if UNICODE_UCS4
+      UCS2CHAR *ucs2buffer = (UCS2CHAR *)malloc(nLen * sizeof(UCS2CHAR));
+      OCILobRead(pConn->handleService, pConn->handleError, pConn->pBuffers[nColumn].lobLocator, &amount, 1, 
+                 ucs2buffer, nLen * sizeof(UCS2CHAR), NULL, NULL, OCI_UCS2ID, SQLCS_IMPLICIT);
+		ucs2_to_ucs4(ucs2buffer, nLen, pBuffer, nLen);
+      free(ucs2buffer);
+#else
+      OCILobRead(pConn->handleService, pConn->handleError, pConn->pBuffers[nColumn].lobLocator, &amount, 1, 
+                 pBuffer, nBufSize * sizeof(WCHAR), NULL, NULL, OCI_UCS2ID, SQLCS_IMPLICIT);
+#endif
+		pBuffer[nLen] = 0;
+   }
 	else
 	{
 		nLen = min(nBufSize - 1, ((int)(pConn->pBuffers[nColumn].nLength / sizeof(UCS2CHAR))));
@@ -1057,31 +1123,25 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn,
 	return pBuffer;
 }
 
-
-//
-// Get column count in async query result
-//
-
+/**
+ * Get column count in async query result
+ */
 extern "C" int EXPORT DrvGetColumnCountAsync(ORACLE_CONN *pConn)
 {
 	return (pConn != NULL) ? pConn->nCols : 0;
 }
 
-
-//
-// Get column name in async query result
-//
-
+/**
+ * Get column name in async query result
+ */
 extern "C" const char EXPORT *DrvGetColumnNameAsync(ORACLE_CONN *pConn, int column)
 {
 	return ((pConn != NULL) && (column >= 0) && (column < pConn->nCols)) ? pConn->columnNames[column] : NULL;
 }
 
-
-//
-// Destroy result of async query
-//
-
+/**
+ * Destroy result of async query
+ */
 extern "C" void EXPORT DrvFreeAsyncResult(ORACLE_CONN *pConn)
 {
 	int i;
@@ -1092,7 +1152,13 @@ extern "C" void EXPORT DrvFreeAsyncResult(ORACLE_CONN *pConn)
 	OCIStmtRelease(pConn->handleStmt, pConn->handleError, NULL, 0, OCI_DEFAULT);
 
 	for(i = 0; i < pConn->nCols; i++)
+   {
 		safe_free(pConn->pBuffers[i].pData);
+      if (pConn->pBuffers[i].lobLocator != NULL)
+      {
+         OCIDescriptorFree(pConn->pBuffers[i].lobLocator, OCI_DTYPE_LOB);
+      }
+   }
 	safe_free_and_null(pConn->pBuffers);
 
 	for(i = 0; i < pConn->nCols; i++)
@@ -1103,11 +1169,9 @@ extern "C" void EXPORT DrvFreeAsyncResult(ORACLE_CONN *pConn)
 	MutexUnlock(pConn->mutexQueryLock);
 }
 
-
-//
-// Begin transaction
-//
-
+/**
+ * Begin transaction
+ */
 extern "C" DWORD EXPORT DrvBegin(ORACLE_CONN *pConn)
 {
 	if (pConn == NULL)
@@ -1119,11 +1183,9 @@ extern "C" DWORD EXPORT DrvBegin(ORACLE_CONN *pConn)
 	return DBERR_SUCCESS;
 }
 
-
-//
-// Commit transaction
-//
-
+/**
+ * Commit transaction
+ */
 extern "C" DWORD EXPORT DrvCommit(ORACLE_CONN *pConn)
 {
 	DWORD dwResult;
@@ -1153,11 +1215,9 @@ extern "C" DWORD EXPORT DrvCommit(ORACLE_CONN *pConn)
 	return dwResult;
 }
 
-
-//
-// Rollback transaction
-//
-
+/**
+ * Rollback transaction
+ */
 extern "C" DWORD EXPORT DrvRollback(ORACLE_CONN *pConn)
 {
 	DWORD dwResult;

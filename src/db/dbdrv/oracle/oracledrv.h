@@ -44,6 +44,7 @@
 typedef struct
 {
 	UCS2CHAR *pData;
+   OCILobLocator *lobLocator;
 	ub2 nLength;
 	ub2 nCode;
 	sb2 isNull;
