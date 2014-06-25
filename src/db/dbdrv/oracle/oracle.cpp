@@ -24,7 +24,7 @@
 
 DECLARE_DRIVER_HEADER("ORACLE")
 
-extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText);
+extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCHAR *errorText);
 
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
@@ -538,7 +538,7 @@ extern "C" void EXPORT DrvFreeStatement(ORACLE_STATEMENT *stmt)
 /**
  * Perform non-SELECT query
  */
-extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCHAR *errorText)
 {
 	OCIStmt *handleStmt;
 	DWORD dwResult;
@@ -546,7 +546,7 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, WCHAR *er
 #if UNICODE_UCS4
 	UCS2CHAR *ucs2Query = UCS2StringFromUCS4String(pwszQuery);
 #else
-	UCS2CHAR *ucs2Query = pwszQuery;
+	const UCS2CHAR *ucs2Query = pwszQuery;
 #endif
 
 	MutexLock(pConn->mutexQueryLock);
