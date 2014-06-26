@@ -159,7 +159,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			public void run()
 			{
-				final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary);
+				final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary, false);
 				final GalleryItem[] selection = gallery.getSelection();
 				if (selection.length > 0)
 				{
@@ -182,7 +182,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 				final GalleryItem[] selection = gallery.getSelection();
 				if (selection.length == 1)
 				{
-					final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary);
+					final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary, true);
 					LibraryImage image = (LibraryImage)selection[0].getData();
 					dialog.setName(image.getName());
 					dialog.setDefaultCategory(image.getCategory());

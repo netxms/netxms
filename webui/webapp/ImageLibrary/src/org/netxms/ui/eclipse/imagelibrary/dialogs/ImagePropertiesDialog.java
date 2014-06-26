@@ -34,17 +34,19 @@ public class ImagePropertiesDialog extends Dialog
 	private Set<String> categories;
 	private Shell shell;
 	private List<LibraryImage> imageLibrary;
+	private boolean editDialog = false;
 
 	/**
 	 * @param parentShell
 	 * @param knownCategories
 	 */
-	public ImagePropertiesDialog(Shell parentShell, Set<String> knownCategories, List<LibraryImage> imageLibrary)
+	public ImagePropertiesDialog(Shell parentShell, Set<String> knownCategories, List<LibraryImage> imageLibrary, boolean editDialog)
 	{
 		super(parentShell);
 		this.shell = parentShell;
 		this.categories = knownCategories;
 		this.imageLibrary = imageLibrary;
+		this.editDialog = editDialog;
 	}
 
 	/* (non-Javadoc)
@@ -147,16 +149,16 @@ public class ImagePropertiesDialog extends Dialog
 		category = categoryCombo.getText();
 		name = nameInputField.getText();
 
-
-      for(int i=0; i < imageLibrary.size(); i++)
-      {
-         LibraryImage image = imageLibrary.get(i);
-         if(name.compareTo(image.getName()) == 0 && category.compareTo(image.getCategory()) == 0)
+		if(!editDialog)
+         for(int i=0; i < imageLibrary.size(); i++)
          {
-            MessageDialogHelper.openError(getShell(), "Image already exists", String.format("Image %s in %s category already exists.", name, category));
-            return;
+            LibraryImage image = imageLibrary.get(i);
+            if(name.compareTo(image.getName()) == 0 && category.compareTo(image.getCategory()) == 0)
+            {
+               MessageDialogHelper.openError(getShell(), "Image already exists", String.format("Image %s in %s category already exists.", name, category));
+               return;
+            }
          }
-      }
 		
 		super.okPressed();
 	}
