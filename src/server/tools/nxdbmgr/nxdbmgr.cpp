@@ -390,6 +390,19 @@ BOOL MetaDataReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const 
 }
 
 /**
+ * Read integer value from configuration table
+ */
+int MetaDataReadInt(const TCHAR *pszVar, int iDefault)
+{
+   TCHAR szBuffer[64];
+
+   if (MetaDataReadStr(pszVar, szBuffer, 64, _T("")))
+      return _tcstol(szBuffer, NULL, 0);
+   else
+      return iDefault;
+}
+
+/**
  * Read string value from configuration table
  */
 BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault)

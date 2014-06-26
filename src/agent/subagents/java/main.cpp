@@ -337,9 +337,9 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
 
    static NX_CFG_TEMPLATE configTemplate[] =
    {
-      { _T("jvm"), CT_STRING, 0, 0, MAX_PATH, 0,  szJvm },
-      { _T("jvmOptions"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &szJvmOptions },
-      { _T("Classpath"), CT_STRING, 0, 0, MAX_LONG_STR, 0,  szClasspath },
+      { _T("Jvm"), CT_STRING, 0, 0, MAX_PATH, 0,  szJvm },
+      { _T("JvmOptions"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &szJvmOptions },
+      { _T("ClassPath"), CT_STRING, 0, 0, MAX_LONG_STR, 0,  szClasspath },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
    };
 

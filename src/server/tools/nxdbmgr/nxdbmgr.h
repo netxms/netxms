@@ -72,6 +72,7 @@ BOOL ValidateDatabase();
 BOOL IsNodeExist(DWORD dwId);
 
 BOOL MetaDataReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
+int MetaDataReadInt(const TCHAR *pszVar, int iDefault);
 BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
 int ConfigReadInt(const TCHAR *pszVar, int iDefault);
 DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault);
