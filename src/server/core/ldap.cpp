@@ -60,6 +60,80 @@ Entry::~Entry()
 
 #if WITH_LDAP
 
+#ifdef _WIN32
+void LDAPConnection::prepareStringForInit(TCHAR *connectionLine)
+{
+   TCHAR *coma;
+   TCHAR *lastSlash;
+   TCHAR *nearestSpace;
+
+   coma=_tcschr(connectionLine,_T(','));
+   while(coma != NULL)
+   {
+      *coma = _T(' ');
+      coma=_tcschr(connectionLine,_T(','));
+   }
+
+   lastSlash=_tcsrchr(connectionLine, _T('/'));
+   while(lastSlash != NULL)
+   {
+      *lastSlash = 0;
+      lastSlash++;
+
+      nearestSpace=_tcsrchr(connectionLine,_T(' '));
+      if(nearestSpace == NULL)
+      {
+         nearestSpace = connectionLine;
+      }
+      else
+      {
+         nearestSpace++;
+      }
+      *nearestSpace = 0;
+      _tcscat(connectionLine, lastSlash);
+
+      lastSlash=_tcsrchr(connectionLine, _T('/'));
+   }
+}
+#else
+void LDAPConnection::prepareStringForInit(char *connectionLine)
+{
+   char *coma;
+   char *lastSlash;
+   char *nearestSpace;
+
+   coma=strchr(connectionLine,_T(','));
+   while(coma != NULL)
+   {
+      *coma = _T(' ');
+      coma=strchr(connectionLine,_T(','));
+   }
+
+   lastSlash=strrchr(connectionLine, _T('/'));
+   while(lastSlash != NULL)
+   {
+      *lastSlash = 0;
+      lastSlash++;
+
+      nearestSpace=strrchr(connectionLine,_T(' '));
+      if(nearestSpace == NULL)
+      {
+         nearestSpace = connectionLine;
+      }
+      else
+      {
+         nearestSpace++;
+      }
+      *nearestSpace = 0;
+      strcat(connectionLine, lastSlash);
+
+      lastSlash=strrchr(connectionLine, _T('/'));
+   }
+}
+#endif // _WIN32
+
+
+
 /**
  * Init connection with LDAP(init search line, start checking thread, init check interval)
  */
@@ -70,7 +144,20 @@ void LDAPConnection::initLDAP()
    int errorCode = ldap_initialize(&m_ldapConn, m_connList);
    if (errorCode != LDAP_SUCCESS)
 #else
+   prepareStringForInit(m_connList);
+#ifdef _WIN32
+   if(!_tcscmp(m_connList, _T(""))
+   {
+      m_ldapConn = ldap_init(NULL, LDAP_PORT);
+   }
+   else
+   {
+      m_ldapConn = ldap_init(m_connList, LDAP_PORT);
+   }
+#else
    m_ldapConn = ldap_init(m_connList, LDAP_PORT);
+#endif // _WIN32
+
 #ifdef _WIN32
    ULONG errorCode = LdapGetLastError();
 #else

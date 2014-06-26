@@ -80,6 +80,11 @@ private:
    void compareGroupList(StringObjectMap<Entry>* groupEntryList);
    void compareUserLists(StringObjectMap<Entry>* userEntryList);
    TCHAR *getAttrValue(LDAPMessage *entry, const char *attr, UINT32 i = 0);
+#ifdef _WIN32
+   void prepareStringForInit(TCHAR *connectionLine);
+#else
+   void prepareStringForInit(char *connectionLine);
+#endif // _WIN32
 #endif
 
 public:
