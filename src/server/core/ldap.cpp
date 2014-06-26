@@ -63,15 +63,15 @@ Entry::~Entry()
 #ifdef _WIN32
 void LDAPConnection::prepareStringForInit(TCHAR *connectionLine)
 {
-   TCHAR *coma;
+   TCHAR *comma;
    TCHAR *lastSlash;
    TCHAR *nearestSpace;
 
-   coma=_tcschr(connectionLine,_T(','));
-   while(coma != NULL)
+   comma=_tcschr(connectionLine,_T(','));
+   while(comma != NULL)
    {
-      *coma = _T(' ');
-      coma=_tcschr(connectionLine,_T(','));
+      *comma = _T(' ');
+      comma=_tcschr(connectionLine,_T(','));
    }
 
    lastSlash=_tcsrchr(connectionLine, _T('/'));
@@ -98,24 +98,24 @@ void LDAPConnection::prepareStringForInit(TCHAR *connectionLine)
 #else
 void LDAPConnection::prepareStringForInit(char *connectionLine)
 {
-   char *coma;
+   char *comma;
    char *lastSlash;
    char *nearestSpace;
 
-   coma=strchr(connectionLine,_T(','));
-   while(coma != NULL)
+   comma=strchr(connectionLine,',');
+   while(comma != NULL)
    {
-      *coma = _T(' ');
-      coma=strchr(connectionLine,_T(','));
+      *comma = ' ';
+      comma=strchr(connectionLine,',');
    }
 
-   lastSlash=strrchr(connectionLine, _T('/'));
+   lastSlash=strrchr(connectionLine, '/');
    while(lastSlash != NULL)
    {
       *lastSlash = 0;
       lastSlash++;
 
-      nearestSpace=strrchr(connectionLine,_T(' '));
+      nearestSpace=strrchr(connectionLine,' ');
       if(nearestSpace == NULL)
       {
          nearestSpace = connectionLine;
@@ -127,7 +127,7 @@ void LDAPConnection::prepareStringForInit(char *connectionLine)
       *nearestSpace = 0;
       strcat(connectionLine, lastSlash);
 
-      lastSlash=strrchr(connectionLine, _T('/'));
+      lastSlash=strrchr(connectionLine, '/');
    }
 }
 #endif // _WIN32
@@ -162,9 +162,9 @@ void LDAPConnection::initLDAP()
    ULONG errorCode = LdapGetLastError();
 #else
    int errorCode = errno;
-#endif
+#endif // _WIN32
    if (m_ldapConn == NULL)
-#endif
+#endif // HAVE_LDAP_INITIALIZE
    {
       TCHAR *error = getErrorString(errorCode);
       DbgPrintf(4, _T("LDAPConnection::initLDAP(): LDAP session initialization failed. Error code: %s"), error);
