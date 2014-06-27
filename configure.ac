@@ -256,20 +256,20 @@ AC_ARG_WITH(oracle,
 		ORABASE="$withval"
 	fi
 	if test "x$ORABASE" != "x"; then
-		if test -x "$withval/lib" ; then
+		if test -x "$ORABASE/lib" ; then
 			ORACLE_LD_RUN_PATH="${ORABASE}/lib"   
 			ORACLE_LDFLAGS="-L${ORABASE}/lib"
 		else
 			ORACLE_LD_RUN_PATH="${ORABASE}"   
 			ORACLE_LDFLAGS="-L${ORABASE}"
 		fi
-		if test -x "$withval/include" ; then
+		if test -x "$ORABASE/include" ; then
 			ORACLE_CPPFLAGS="-I${ORABASE}/include"
 		fi
-		if test -x "$withval/sdk/include" ; then
+		if test -x "$ORABASE/sdk/include" ; then
 			ORACLE_CPPFLAGS="-I${ORABASE}/sdk/include"
 		fi
-		if test -x "$withval/rdbms/public" ; then
+		if test -x "$ORABASE/rdbms/public" ; then
 			ORACLE_CPPFLAGS="-I${ORABASE}/rdbms/public"
 		fi
 	fi
