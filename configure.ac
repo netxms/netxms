@@ -265,6 +265,9 @@ AC_ARG_WITH(oracle,
 		if test -x "$withval/sdk/include" ; then
 			ORACLE_CPPFLAGS="-I${withval}/sdk/include"
 		fi
+		if test -x "$withval/rdbms/public" ; then
+			ORACLE_CPPFLAGS="-I${withval}/rdbms/public"
+		fi
 	fi
 	COMPONENTS="$COMPONENTS oracle"
 	DBDRIVER_SELECTED="yes"
