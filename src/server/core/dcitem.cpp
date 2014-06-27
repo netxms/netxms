@@ -1512,14 +1512,20 @@ BOOL DCItem::enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), vo
 /**
  * Test DCI's transformation script
  */
-bool DCItem::testTransformation(Node *node, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
+bool DCItem::testTransformation(DataCollectionTarget *object, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize)
 {
 	bool success = false;
 	NXSL_VM *vm = NXSLCompileAndCreateVM(script, buffer, (int)bufSize, new NXSL_ServerEnv);
    if (vm != NULL)
    {
       NXSL_Value *pValue = new NXSL_Value(value);
-      vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
+      vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
+      if (object->Type() == OBJECT_NODE)
+      {
+         vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
+      }
+      //vm->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
+      vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((object->Type() == OBJECT_CLUSTER) ? 1 : 0));
 
 		if (vm->run(1, &pValue))
       {

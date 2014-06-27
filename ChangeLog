@@ -12,7 +12,7 @@
    - "Trusted Nodes" property page shown for condition objects
 - Android Console:
    - Added option in preference to show/hide legend in graphs
-- Fixed issues: #597, #598
+- Fixed issues: #597, #598, #606
 
 
 *

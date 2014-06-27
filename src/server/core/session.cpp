@@ -10827,7 +10827,7 @@ void ClientSession::testDCITransformation(CSCPMessage *pRequest)
    object = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (object != NULL)
    {
-      if (object->Type() == OBJECT_NODE)
+      if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_CLUSTER) || (object->Type() == OBJECT_MOBILEDEVICE))
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
@@ -10838,7 +10838,7 @@ void ClientSession::testDCITransformation(CSCPMessage *pRequest)
 				if (script != NULL)
 				{
 					pRequest->GetVariableStr(VID_VALUE, value, sizeof(value) / sizeof(TCHAR));
-               success = DCItem::testTransformation((Node *)object, script, value, result, sizeof(result) / sizeof(TCHAR));
+               success = DCItem::testTransformation((DataCollectionTarget *)object, script, value, result, sizeof(result) / sizeof(TCHAR));
 					free(script);
 					msg.SetVariable(VID_RCC, RCC_SUCCESS);
 					msg.SetVariable(VID_EXECUTION_STATUS, (WORD)success);
