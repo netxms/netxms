@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -41,27 +41,31 @@
 
 #define NX_STAT lstat64
 #define NX_FSTAT fstat64
+#define NX_STAT_FOLLOW_SYMLINK stat64
 #define NX_STAT_STRUCT struct stat64
 
 #else
 
 #define NX_STAT lstat
 #define NX_FSTAT fstat
+#define NX_STAT_FOLLOW_SYMLINK stat
 #define NX_STAT_STRUCT struct stat
 
 #endif
 
 #if defined(UNICODE) && !defined(_WIN32)
-inline int __call_stat(const WCHAR *f, NX_STAT_STRUCT *s)
+inline int __call_stat(const WCHAR *f, NX_STAT_STRUCT *s, bool follow)
 {
 	char *mbf = MBStringFromWideString(f);
-	int rc = NX_STAT(mbf, s);
+	int rc = follow ? NX_STAT_FOLLOW_SYMLINK(mbf, s) : NX_STAT(mbf, s);
 	free(mbf);
 	return rc;
 }
-#define CALL_STAT(f, s) __call_stat(f, s)
+#define CALL_STAT(f, s) __call_stat(f, s, false)
+#define CALL_STAT_FOLLOW_SYMLINK(f, s) __call_stat(f, s, true)
 #else
 #define CALL_STAT(f, s) NX_STAT(f, s)
+#define CALL_STAT_FOLLOW_SYMLINK(f, s) NX_STAT_FOLLOW_SYMLINK(f, s)
 #endif
 
 #endif

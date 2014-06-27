@@ -233,10 +233,19 @@ static void GetFolderContent(TCHAR* folder, CSCPMessage *msg)
             msg->SetVariable(varId++, (QWORD)st.st_mtime);
             UINT32 type = 0;
 #ifndef _WIN32
-            type |= (st.st_mode & S_IFLNK) > 0 ? SYMLINC : 0;
+            if(S_ISLNK(st.st_mode))
+            {
+               type |= SYMLINC;
+               NX_STAT_STRUCT symlincSt;
+               if (CALL_STAT_FOLLOW_SYMLINK(g_rootFileManagerFolders->getValue(i), &symlincSt) == 0)
+               {
+                  type |= S_ISDIR(symlincSt.st_mode) ? DIRECTORY : 0;
+
+               }
+            }
 #endif
-            type |= (st.st_mode & S_IFREG) > 0 ? REGULAR_FILE : 0;
-            type |= (st.st_mode & S_IFDIR) > 0 ? DIRECTORY : 0;
+            type |= S_ISREG(st.st_mode) ? REGULAR_FILE : 0;
+            type |= S_ISDIR(st.st_mode) ? DIRECTORY : 0;
             msg->SetVariable(varId++, type);
             TCHAR fullName[MAX_PATH];
             _tcscpy(fullName, g_rootFileManagerFolders->getValue(i));
@@ -277,10 +286,19 @@ static void GetFolderContent(TCHAR* folder, CSCPMessage *msg)
             msg->SetVariable(varId++, (QWORD)st.st_mtime);
             UINT32 type = 0;
 #ifndef _WIN32
-            type |= (st.st_mode & S_IFLNK) > 0 ? SYMLINC : 0;
+            if(S_ISLNK(st.st_mode))
+            {
+               type |= SYMLINC;
+               NX_STAT_STRUCT symlincSt;
+               if (CALL_STAT_FOLLOW_SYMLINK(d->d_name, &symlincSt) == 0)
+               {
+                  type |= S_ISDIR(symlincSt.st_mode) ? DIRECTORY : 0;
+
+               }
+            }
 #endif
-            type |= (st.st_mode & S_IFREG) > 0 ? REGULAR_FILE : 0;
-            type |= (st.st_mode & S_IFDIR) > 0 ? DIRECTORY : 0;
+            type |= S_ISREG(st.st_mode) ? REGULAR_FILE : 0;
+            type |= S_ISDIR(st.st_mode) ? DIRECTORY : 0;
             msg->SetVariable(varId++, type);
             ConvertPathToNetwork(fullName);
             msg->SetVariable(varId++, fullName);
