@@ -251,22 +251,26 @@ fi ])
 AC_ARG_WITH(oracle,
 [AS_HELP_STRING(--with-oracle,build Oracle database driver)],
 [ if test "x$withval" != "xno" ; then
+	ORABASE="$ORACLE_HOME"
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		ORABASE="$withval"
+	fi
+	if test "x$ORABASE" != "x"; then
 		if test -x "$withval/lib" ; then
-			ORACLE_LD_RUN_PATH="${withval}/lib"   
-			ORACLE_LDFLAGS="-L${withval}/lib"
+			ORACLE_LD_RUN_PATH="${ORABASE}/lib"   
+			ORACLE_LDFLAGS="-L${ORABASE}/lib"
 		else
-			ORACLE_LD_RUN_PATH="${withval}"   
-			ORACLE_LDFLAGS="-L${withval}"
+			ORACLE_LD_RUN_PATH="${ORABASE}"   
+			ORACLE_LDFLAGS="-L${ORABASE}"
 		fi
 		if test -x "$withval/include" ; then
-			ORACLE_CPPFLAGS="-I${withval}/include"
+			ORACLE_CPPFLAGS="-I${ORABASE}/include"
 		fi
 		if test -x "$withval/sdk/include" ; then
-			ORACLE_CPPFLAGS="-I${withval}/sdk/include"
+			ORACLE_CPPFLAGS="-I${ORABASE}/sdk/include"
 		fi
 		if test -x "$withval/rdbms/public" ; then
-			ORACLE_CPPFLAGS="-I${withval}/rdbms/public"
+			ORACLE_CPPFLAGS="-I${ORABASE}/rdbms/public"
 		fi
 	fi
 	COMPONENTS="$COMPONENTS oracle"
