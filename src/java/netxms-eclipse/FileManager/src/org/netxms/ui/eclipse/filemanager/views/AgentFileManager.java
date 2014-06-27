@@ -323,7 +323,7 @@ public class AgentFileManager extends ViewPart
          @Override
          public void run()
          {
-            refreshFileOrDirectory();
+            refreshFileList();
          }
       };
 
@@ -487,6 +487,7 @@ public class AgentFileManager extends ViewPart
                public void run()
                {
                   viewer.setInput(files);
+                  viewer.refresh();
                }
             });
          }

@@ -226,6 +226,9 @@ static void GetFolderContent(TCHAR* folder, CSCPMessage *msg)
    {
       for(int i = 0; i < g_rootFileManagerFolders->getSize(); i++)
       {
+         if(_taccess(g_rootFileManagerFolders->getValue(i), R_OK))
+            continue;
+
          if (CALL_STAT(g_rootFileManagerFolders->getValue(i), &st) == 0)
          {
             msg->SetVariable(varId++, g_rootFileManagerFolders->getValue(i));
@@ -278,6 +281,9 @@ static void GetFolderContent(TCHAR* folder, CSCPMessage *msg)
          _tcscpy(fullName, folder);
          _tcscat(fullName, FS_PATH_SEPARATOR);
          _tcscat(fullName, d->d_name);
+
+         if(_taccess(fullName, R_OK))
+            continue;
 
          if (CALL_STAT(fullName, &st) == 0)
          {

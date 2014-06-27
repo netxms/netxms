@@ -314,7 +314,7 @@ public class AgentFileManager extends ViewPart
          @Override
          public void run()
          {
-            refreshFileOrDirectory();
+            refreshFileList();
          }
       };
 

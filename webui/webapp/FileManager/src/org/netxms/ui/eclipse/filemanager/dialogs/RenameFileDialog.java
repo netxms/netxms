@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.filemanager.Messages;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -101,6 +102,12 @@ public class RenameFileDialog extends Dialog
 	protected void okPressed()
 	{
 	   newFileName = textNewFileName.getText();
+	   if(newFileName.contains("/") || newFileName.contains("\\"))
+	   {
+	      MessageDialogHelper.openWarning(getShell(), "Rename file error", "File name should not contain '/' and '\\' symbols");
+	      return;
+	   }
+	      
 		super.okPressed();
 	}
 

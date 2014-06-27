@@ -305,6 +305,26 @@ void AgentConnection::receiverThread()
                }
             }
 			}
+
+			if((pRawMsg->wCode == CMD_ABORT_FILE_TRANSFER) && (pRawMsg->dwId == m_dwDownloadRequestId))
+			{
+            if (m_sendToClientMessageCallback != NULL)
+            {
+               pRawMsg->wCode = ntohs(pRawMsg->wCode);
+               pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
+               m_sendToClientMessageCallback(pRawMsg, m_downloadProgressCallbackArg);
+
+               onFileDownload(FALSE);
+            }
+            else
+            {
+               //error on agent side
+               close(m_hCurrFile);
+               m_hCurrFile = -1;
+
+               onFileDownload(FALSE);
+            }
+			}
 		}
 		else
 		{
