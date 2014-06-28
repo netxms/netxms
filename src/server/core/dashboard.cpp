@@ -110,57 +110,59 @@ BOOL Dashboard::CreateFromDB(UINT32 dwId)
  */
 BOOL Dashboard::SaveToDB(DB_HANDLE hdb)
 {
-	TCHAR query[256];
-
 	LockData();
 
 	// Check for object's existence in database
-	bool isNewObject = true;
-   _sntprintf(query, 256, _T("SELECT id FROM dashboards WHERE id=%d"), (int)m_dwId);
-   DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   DB_STATEMENT hStmt;
+	if (IsDatabaseRecordExist(hdb, _T("dashboards"), _T("id"), m_dwId))
    {
-      if (DBGetNumRows(hResult) > 0)
-         isNewObject = false;
-      DBFreeResult(hResult);
+      hStmt = DBPrepare(hdb, _T("UPDATE dashboards SET num_columns=?,options=? WHERE id=?"));
    }
-
-	if (isNewObject)
-      _sntprintf(query, 256,
-                 _T("INSERT INTO dashboards (id,num_columns,options) VALUES (%d,%d,%d)"),
-					  (int)m_dwId, m_numColumns, (int)m_options);
    else
-      _sntprintf(query, 256,
-                 _T("UPDATE dashboards SET num_columns=%d,options=%d WHERE id=%d"),
-					  m_numColumns, (int)m_options, (int)m_dwId);
-   if (!DBQuery(hdb, query))
+   {
+      hStmt = DBPrepare(hdb, _T("INSERT INTO dashboards (num_columns,options,id) VALUES (?,?,?)"));
+   }
+   if (hStmt == NULL)
+      goto fail;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_numColumns);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_options);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_dwId);
+   if (!DBExecute(hStmt))
 		goto fail;
+   DBFreeStatement(hStmt);
 
    // Save elements
-   _sntprintf(query, 256, _T("DELETE FROM dashboard_elements WHERE dashboard_id=%d"), (int)m_dwId);
-   if (!DBQuery(hdb, query))
+   hStmt = DBPrepare(hdb, _T("DELETE FROM dashboard_elements WHERE dashboard_id=?"));
+   if (hStmt == NULL)
 		goto fail;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+   if (!DBExecute(hStmt))
+		goto fail;
+   DBFreeStatement(hStmt);
+
+   hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_elements (dashboard_id,element_id,element_type,element_data,layout_data) VALUES (?,?,?,?,?)"));
+   if (hStmt == NULL)
+		goto fail;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
    for(int i = 0; i < m_elements->size(); i++)
    {
 		DashboardElement *element = m_elements->get(i);
-		String data = DBPrepareString(hdb, element->m_data);
-		String layout = DBPrepareString(hdb, element->m_layout);
-		int len = data.getSize() + layout.getSize() + 256;
-		TCHAR *eq = (TCHAR *)malloc(len * sizeof(TCHAR));
-      _sntprintf(eq, len, _T("INSERT INTO dashboard_elements (dashboard_id,element_id,element_type,element_data,layout_data) VALUES (%d,%d,%d,%s,%s)"),
-		           (int)m_dwId, i, element->m_type, (const TCHAR *)data, (const TCHAR *)layout);
-      if (!DBQuery(hdb, eq))
-		{
-			free(eq);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)i);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)element->m_type);
+      DBBind(hStmt, 4, DB_SQLTYPE_TEXT, element->m_data, DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_TEXT, element->m_layout, DB_BIND_STATIC);
+      if (!DBExecute(hStmt))
 			goto fail;
-		}
-		free(eq);
    }
 
+   DBFreeStatement(hStmt);
 	UnlockData();
 	return Container::SaveToDB(hdb);
 
 fail:
+   if (hStmt != NULL)
+      DBFreeStatement(hStmt);
 	UnlockData();
 	return FALSE;
 }

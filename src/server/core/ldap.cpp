@@ -146,7 +146,7 @@ void LDAPConnection::initLDAP()
 #else
    prepareStringForInit(m_connList);
 #ifdef _WIN32
-   if(!_tcscmp(m_connList, _T(""))
+   if (m_connList[0] == 0)
    {
       m_ldapConn = ldap_init(NULL, LDAP_PORT);
    }
