@@ -641,7 +641,7 @@ void NXCORE_EXPORTABLE UpdateLDAPGroups(const TCHAR* dn, Entry *obj) //no full n
          m_users[m_userCount] = group;
          m_userCount++;
          SyncGroupMembers(group , obj);
-         DbgPrintf(4, _T("UpdateLDAPGroups(): Group added: %dn: %s, login name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
+         DbgPrintf(4, _T("UpdateLDAPGroups(): Group added: dn: %s, login name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
       }
       else
       {
