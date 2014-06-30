@@ -412,8 +412,7 @@ typedef struct
    TCHAR version[32];
 	BOOL (* init)(Config *);   // Called to initialize subagent. Can be NULL.
    void (* shutdown)();       // Called at subagent unload. Can be NULL.
-   BOOL (* commandHandler)(UINT32 dwCommand, CSCPMessage *pRequest,
-                           CSCPMessage *pResponse, void *session);
+   BOOL (* commandHandler)(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session);
    UINT32 numParameters;
    NETXMS_SUBAGENT_PARAM *parameters;
    UINT32 numLists;
