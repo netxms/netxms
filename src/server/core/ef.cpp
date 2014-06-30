@@ -22,11 +22,9 @@
 
 #include "nxcore.h"
 
-
-//
-// Setup event forwarding session
-//
-
+/**
+ * Setup event forwarding session
+ */
 BOOL EF_SetupSession(ISCSession *, CSCPMessage *request)
 {
 	return TRUE;
