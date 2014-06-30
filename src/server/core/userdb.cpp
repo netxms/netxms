@@ -526,7 +526,7 @@ void NXCORE_EXPORTABLE UpdateLDAPUsers(const TCHAR* dn, Entry *obj)
                user->setName(obj->m_loginName);
                user->setFullName(obj->m_fullName);
                user->setDescription(obj->m_description);
-               DbgPrintf(4, _T("UpdateLDAPUsers(): User updated: dn: %s, login name: %s, full name: %s, description: %s"), dn, obj->m_loginName, obj->m_fullName, obj->m_description);
+               DbgPrintf(4, _T("UpdateLDAPUsers(): User updated: dn: %s, login name: %s, full name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
             }
             if(user->isModified())
             {
@@ -551,7 +551,7 @@ void NXCORE_EXPORTABLE UpdateLDAPUsers(const TCHAR* dn, Entry *obj)
          m_users[m_userCount] = user;
          m_userCount++;
          SendUserDBUpdate(USER_DB_CREATE, user->getId(), user);
-         DbgPrintf(4, _T("UpdateLDAPUsers(): User added: dn: %s, login name: %s, full name: %s, description: %s"), dn, obj->m_loginName, obj->m_fullName, obj->m_description);
+         DbgPrintf(4, _T("UpdateLDAPUsers(): User added: dn: %s, login name: %s, full name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
       }
       else
       {
@@ -616,7 +616,7 @@ void NXCORE_EXPORTABLE UpdateLDAPGroups(const TCHAR* dn, Entry *obj) //no full n
             {
                group->setName(obj->m_loginName);
                group->setDescription(obj->m_description);
-               DbgPrintf(4, _T("UpdateLDAPGroups(): Group updated: dn: %s, login name: %s, description: %s"), dn, obj->m_loginName, obj->m_description);
+               DbgPrintf(4, _T("UpdateLDAPGroups(): Group updated: dn: %s, login name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
             }
             if(group->isModified())
             {
@@ -641,7 +641,7 @@ void NXCORE_EXPORTABLE UpdateLDAPGroups(const TCHAR* dn, Entry *obj) //no full n
          m_users[m_userCount] = group;
          m_userCount++;
          SyncGroupMembers(group , obj);
-         DbgPrintf(4, _T("UpdateLDAPGroups(): Group added: %dn: %s, login name: %s, description: %s"), dn, obj->m_loginName, obj->m_description);
+         DbgPrintf(4, _T("UpdateLDAPGroups(): Group added: %dn: %s, login name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
       }
       else
       {

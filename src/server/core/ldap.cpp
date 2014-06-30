@@ -328,17 +328,17 @@ void LDAPConnection::syncUsers()
       //entry is added only if it was of a correct type
       if(newObj->m_type == LDAP_USER && newObj->m_loginName != NULL)
       {
-         DbgPrintf(4, _T("LDAPConnection::syncUsers(): User added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, newObj->m_fullName, newObj->m_description);
+         DbgPrintf(4, _T("LDAPConnection::syncUsers(): User added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
          userEntryList->set(dn, newObj);
       }
       else if(newObj->m_type == LDAP_GROUP && newObj->m_loginName != NULL)
       {
-         DbgPrintf(4, _T("LDAPConnection::syncUsers(): Group added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, newObj->m_fullName, newObj->m_description);
+         DbgPrintf(4, _T("LDAPConnection::syncUsers(): Group added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
          groupEntryList->set(dn, newObj);
       }
       else
       {
-         DbgPrintf(4, _T("LDAPConnection::syncUsers(): Unknown object is not added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, newObj->m_fullName, newObj->m_description);
+         DbgPrintf(4, _T("LDAPConnection::syncUsers(): Unknown object is not added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
          delete newObj;
       }
 #if defined(UNICODE) && !defined(_WIN32)
