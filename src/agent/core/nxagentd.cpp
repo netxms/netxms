@@ -194,7 +194,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 	{ _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel, &g_debugLevel },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, m_szDumpDir, NULL },
    { _T("EnableActions"), CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags, NULL },
-   { _T("EnableArbitraryFileUpload"), CT_BOOLEAN, 0, 0, AF_ARBITRARY_FILE_UPLOAD, 0, &g_dwFlags, NULL },
    { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers, NULL },
    { _T("EnableControlConnector"), CT_BOOLEAN, 0, 0, AF_ENABLE_CONTROL_CONNECTOR, 0, &g_dwFlags, NULL },
    { _T("EnableProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags, NULL },
