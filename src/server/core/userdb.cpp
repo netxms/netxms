@@ -684,7 +684,8 @@ void SyncGroupMembers(Group* group, Entry *obj)
          {
             DbgPrintf(4, _T("SyncGroupMembers: Remove from %s group deleted user: %s"), group->getDn(), user->getDn());
             group->deleteUser(user->getId());
-            int count = group->getMembers(&oldMembers);
+            count = group->getMembers(&oldMembers);
+            i--;
          }
       }
    }
@@ -713,7 +714,7 @@ void SyncGroupMembers(Group* group, Entry *obj)
          {
             DbgPrintf(4, _T("SyncGroupMembers: %s user added to %s group"), newMembers->getValue(i), group->getDn());
             group->addUser(userNew->getId());
-            int count = group->getMembers(&oldMembers);
+            count = group->getMembers(&oldMembers);
          }
       }
    }
