@@ -5,20 +5,22 @@
 - LDAP support
 - Event names support in nxevent
 - Previous state parameter added to SYS_NODE_UP event 
+- Added file management subagent (filemgr.nsm) 
+- Removed agent configuration parameter EnableArbitraryFileUpload
+- New NXSL class "Zone"
+- New attributes "zone" and "zoneId" in NXSL classes "Node" and "Interface"
+- New access rights for nodes: 
+   - Download File (download file from agent to local workstation)
+   - Upload File (upload file from local workstation to remote node) 
+   - Manage Files (move, rename and delete files on remote node)
 - Management console:
    - "Commands" box on node overview page made configurable
    - Object tools can have icons
    - "Last value" type gauge can show non-numeric values
    - "Trusted Nodes" property page shown for condition objects
-   - Added file management subagent (filemgr.nsm) 
-   - New access rights for nodes: 
-      - Download File (download file from agent to local workstation)
-      - Upload File (upload file from local workstation to remote node) 
-      - Manage Files (move, rename and delete files on remote node)
-   - Removed agent configuration parameter EnableArbitraryFileUpload
 - Android Console:
    - Added option in preference to show/hide legend in graphs
-- Fixed issues: #597, #598, #605, #606, #607
+- Fixed issues: #586, #597, #598, #605, #606, #607
 
 
 *

@@ -1093,6 +1093,7 @@ BOOL LoadObjects()
 
       // Load (or create) default zone
       pZone = new Zone;
+      pZone->generateGuid();
       pZone->CreateFromDB(BUILTIN_OID_ZONE0);
       NetObjInsert(pZone, FALSE);
       g_pEntireNet->AddZone(pZone);

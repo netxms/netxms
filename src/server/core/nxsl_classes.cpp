@@ -35,11 +35,8 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
  */
 NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
-   NetObj *object;
    NXSL_Value *pValue = NULL;
-   TCHAR szBuffer[256];
-
-   object = (NetObj *)pObject->getData();
+   NetObj *object = (NetObj *)pObject->getData();
    if (!_tcscmp(pszAttr, _T("name")))
    {
       pValue = new NXSL_Value(object->Name());
@@ -61,6 +58,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
    }
    else if (!_tcscmp(pszAttr, _T("ipAddr")))
    {
+      TCHAR szBuffer[32];
       IpToStr(object->IpAddr(), szBuffer);
       pValue = new NXSL_Value(szBuffer);
    }
@@ -75,6 +73,71 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
 	else
 	{
 		const TCHAR *attrValue = object->getCustomAttribute(pszAttr);
+		if (attrValue != NULL)
+		{
+			pValue = new NXSL_Value(attrValue);
+		}
+	}
+   return pValue;
+}
+
+/**
+ * NXSL class Zone: constructor
+ */
+NXSL_ZoneClass::NXSL_ZoneClass() : NXSL_Class()
+{
+   _tcscpy(m_szName, _T("Zone"));
+}
+
+/**
+ * NXSL class Zone: get attribute
+ */
+NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+{
+   NXSL_Value *pValue = NULL;
+   Zone *zone = (Zone *)pObject->getData();
+   if (!_tcscmp(pszAttr, _T("agentProxy")))
+   {
+      pValue = new NXSL_Value(zone->getAgentProxy());
+   }
+   else if (!_tcscmp(pszAttr, _T("comments")))
+   {
+      pValue = new NXSL_Value(zone->getComments());
+   }
+   else if (!_tcscmp(pszAttr, _T("guid")))
+   {
+		uuid_t guid;
+		zone->getGuid(guid);
+		TCHAR buffer[128];
+		pValue = new NXSL_Value(uuid_to_string(guid, buffer));
+   }
+   else if (!_tcscmp(pszAttr, _T("icmpProxy")))
+   {
+      pValue = new NXSL_Value(zone->getIcmpProxy());
+   }
+   else if (!_tcscmp(pszAttr, _T("id")))
+   {
+      pValue = new NXSL_Value(zone->Id());
+   }
+   else if (!_tcscmp(pszAttr, _T("name")))
+   {
+      pValue = new NXSL_Value(zone->Name());
+   }
+   else if (!_tcscmp(pszAttr, _T("snmpProxy")))
+   {
+      pValue = new NXSL_Value(zone->getSnmpProxy());
+   }
+   else if (!_tcscmp(pszAttr, _T("status")))
+   {
+      pValue = new NXSL_Value((LONG)zone->Status());
+   }
+   else if (!_tcscmp(pszAttr, _T("zoneId")))
+   {
+      pValue = new NXSL_Value(zone->getZoneId());
+   }
+	else
+	{
+		const TCHAR *attrValue = zone->getCustomAttribute(pszAttr);
 		if (attrValue != NULL)
 		{
 			pValue = new NXSL_Value(attrValue);
@@ -286,6 +349,29 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value(pNode->getSysDescription());
    }
+   else if (!_tcscmp(pszAttr, _T("zone")))
+	{
+      if (g_flags & AF_ENABLE_ZONING)
+      {
+         Zone *zone = FindZoneByGUID(pNode->getZoneId());
+		   if (zone != NULL)
+		   {
+			   pValue = new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, zone));
+		   }
+		   else
+		   {
+			   pValue = new NXSL_Value;
+		   }
+	   }
+	   else
+	   {
+		   pValue = new NXSL_Value;
+	   }
+	}
+   else if (!_tcscmp(pszAttr, _T("zoneId")))
+	{
+      pValue = new NXSL_Value(pNode->getZoneId());
+   }
 	else
 	{
 		const TCHAR *attrValue = pNode->getCustomAttribute(pszAttr);
@@ -490,6 +576,29 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    else if (!_tcscmp(pszAttr, _T("status")))
    {
       pValue = new NXSL_Value((LONG)iface->Status());
+   }
+   else if (!_tcscmp(pszAttr, _T("zone")))
+	{
+      if (g_flags & AF_ENABLE_ZONING)
+      {
+         Zone *zone = FindZoneByGUID(iface->getZoneId());
+		   if (zone != NULL)
+		   {
+			   pValue = new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, zone));
+		   }
+		   else
+		   {
+			   pValue = new NXSL_Value;
+		   }
+	   }
+	   else
+	   {
+		   pValue = new NXSL_Value;
+	   }
+	}
+   else if (!_tcscmp(pszAttr, _T("zoneId")))
+	{
+      pValue = new NXSL_Value(iface->getZoneId());
    }
 	else
 	{
@@ -723,10 +832,11 @@ void NXSL_SNMPVarBindClass::onObjectDelete(NXSL_Object *object)
 /**
  * Class objects
  */
+NXSL_DciClass g_nxslDciClass;
+NXSL_EventClass g_nxslEventClass;
+NXSL_InterfaceClass g_nxslInterfaceClass;
 NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NodeClass g_nxslNodeClass;
-NXSL_InterfaceClass g_nxslInterfaceClass;
-NXSL_EventClass g_nxslEventClass;
-NXSL_DciClass g_nxslDciClass;
-NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
+NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
+NXSL_ZoneClass g_nxslZoneClass;
