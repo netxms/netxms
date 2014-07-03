@@ -48,7 +48,6 @@ LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 /**
  * Optional imports
  */
-DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD) = NULL;
 DWORD (__stdcall *imp_GetIfEntry2)(PMIB_IF_ROW2) = NULL;
 
 /**
@@ -57,18 +56,6 @@ DWORD (__stdcall *imp_GetIfEntry2)(PMIB_IF_ROW2) = NULL;
 static void ImportSymbols()
 {
    HMODULE hModule;
-
-   // NETMAN.DLL
-   hModule = LoadLibrary(_T("NETMAN.DLL"));
-   if (hModule != NULL)
-   {
-      imp_HrLanConnectionNameFromGuidOrPath = 
-         (DWORD (__stdcall *)(LPWSTR, LPWSTR, LPWSTR, LPDWORD))GetProcAddress(hModule, "HrLanConnectionNameFromGuidOrPath");
-   }
-   else
-   {
-		AgentWriteLog(NXLOG_WARNING, _T("Unable to load NETMAN.DLL"));
-   }
 
    // IPHLPAPI.DLL
    hModule = LoadLibrary(_T("IPHLPAPI.DLL"));

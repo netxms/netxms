@@ -96,7 +96,6 @@ struct WINDOW_LIST
 /**
  * Optional imports
  */
-extern DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD);
 extern DWORD (__stdcall *imp_GetIfEntry2)(PMIB_IF_ROW2);
 
 #endif   /* _winnt_subagent_h_ */

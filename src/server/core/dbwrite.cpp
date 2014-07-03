@@ -247,11 +247,9 @@ stop:
    return THREAD_OK;
 }
 
-
-//
-// Start writer thread
-//
-
+/**
+ * Start writer thread
+ */
 void StartDBWriter()
 {
    int i;
@@ -271,11 +269,9 @@ void StartDBWriter()
 	m_hIDataWriterThread = ThreadCreateEx(IDataWriteThread, 0, NULL);
 }
 
-
-//
-// Stop writer thread and wait while all queries will be executed
-//
-
+/**
+ * Stop writer thread and wait while all queries will be executed
+ */
 void StopDBWriter()
 {
    int i;
