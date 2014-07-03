@@ -10,19 +10,15 @@
    - Object tools can have icons
    - "Last value" type gauge can show non-numeric values
    - "Trusted Nodes" property page shown for condition objects
-   - Added "filemgr" subagent that provides ability to manage files on nodes 
-     where subagent is enabled
-   - Added new rights to acess control of node(used by "filemgr" subagent): 
-      - Download File(Ability to download file from agent to local PC)
-      - Upload file(Ability to upload file from local PC to agent, only under 
-        defind by subagent paths)
-      - Manage files(Ability to move, rename and delete files on agent, only 
-        under defind by subagent paths)
-   - Removed agent configuration parameter EnableArbitraryFileUpload. For 
-     now all file manupulations are controled by "filemgr" subagent.
+   - Added file management subagent (filemgr.nsm) 
+   - New access rights for nodes: 
+      - Download File (download file from agent to local workstation)
+      - Upload File (upload file from local workstation to remote node) 
+      - Manage Files (move, rename and delete files on remote node)
+   - Removed agent configuration parameter EnableArbitraryFileUpload
 - Android Console:
    - Added option in preference to show/hide legend in graphs
-- Fixed issues: #597, #598, #606, #607
+- Fixed issues: #597, #598, #605, #606, #607
 
 
 *

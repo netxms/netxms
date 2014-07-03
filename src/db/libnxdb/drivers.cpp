@@ -43,13 +43,13 @@ static bool s_logSqlErrors = false;
 /**
  * Get symbol address and log errors
  */
-static void *DLGetSymbolAddrEx(HMODULE hModule, const char *pszSymbol)
+static void *DLGetSymbolAddrEx(HMODULE hModule, const char *pszSymbol, bool mandatory = true)
 {
    void *pFunc;
    TCHAR szErrorText[256];
 
    pFunc = DLGetSymbolAddr(hModule, pszSymbol, szErrorText);
-   if ((pFunc == NULL) && s_writeLog)
+   if ((pFunc == NULL) && mandatory && s_writeLog)
       __DBWriteLog(EVENTLOG_WARNING_TYPE, _T("Unable to resolve symbol \"%hs\": %s"), pszSymbol, szErrorText);
    return pFunc;
 }
@@ -194,7 +194,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    driver->m_fpDrvGetFieldLength = (LONG (*)(DBDRV_RESULT, int, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetFieldLength");
    driver->m_fpDrvGetFieldLengthAsync = (LONG (*)(DBDRV_RESULT, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetFieldLengthAsync");
    driver->m_fpDrvGetField = (WCHAR* (*)(DBDRV_RESULT, int, int, WCHAR *, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetField");
-   driver->m_fpDrvGetFieldUTF8 = (char* (*)(DBDRV_RESULT, int, int, char *, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetFieldUTF8"); // optional entry point
+   driver->m_fpDrvGetFieldUTF8 = (char* (*)(DBDRV_RESULT, int, int, char *, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetFieldUTF8", false); // optional entry point
    driver->m_fpDrvGetFieldAsync = (WCHAR* (*)(DBDRV_ASYNC_RESULT, int, WCHAR *, int))DLGetSymbolAddrEx(driver->m_handle, "DrvGetFieldAsync");
    driver->m_fpDrvGetNumRows = (int (*)(DBDRV_RESULT))DLGetSymbolAddrEx(driver->m_handle, "DrvGetNumRows");
    driver->m_fpDrvGetColumnCount = (int (*)(DBDRV_RESULT))DLGetSymbolAddrEx(driver->m_handle, "DrvGetColumnCount");
