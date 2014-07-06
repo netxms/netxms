@@ -112,6 +112,7 @@ target
 /src/agent/subagents/portCheck/x64
 /src/agent/tools/nxappget/nxappget
 /src/agent/tools/nxapush/nxapush
+/src/client/install/Output
 /src/client/nxalarm/nxalarm
 /src/client/nxevent/nxevent
 /src/client/nxpush/nxpush
