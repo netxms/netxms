@@ -330,7 +330,7 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
             DB_RESULT hResultCount = SQLSelect(query);
             if (hResultCount != NULL)
             {
-               recreateTables = (DBGetFieldLong(hResult, 0, 0) == 0);
+               recreateTables = (DBGetFieldLong(hResultCount, 0, 0) == 0);
                DBFreeResult(hResultCount);
             }
 
