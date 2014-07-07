@@ -20,21 +20,26 @@ package org.netxms.base;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 /**
  * Message receiver for NXCP protocol
  */
 public class NXCPMessageReceiver
 {
+   private int defaultBufferSize;
+   private int maxBufferSize;
 	private byte[] recvBuffer;
 	private int bufferPos = 0;
 	
 	/**
 	 * @param bufferSize Size of receive buffer in bytes
 	 */
-	public NXCPMessageReceiver(final int bufferSize)
+	public NXCPMessageReceiver(int defaultBufferSize, int maxBufferSize)
 	{
-		recvBuffer = new byte[bufferSize];
+	   this.defaultBufferSize = defaultBufferSize;
+	   this.maxBufferSize = maxBufferSize;
+		recvBuffer = new byte[defaultBufferSize];
 	}
 	
 	/**
@@ -77,11 +82,24 @@ public class NXCPMessageReceiver
 				{
 					System.arraycopy(recvBuffer, (int)size, recvBuffer, 0, bufferPos - (int)size);
 					bufferPos -= size;
+					
+					// Shrink buffer if possible
+					if ((recvBuffer.length > defaultBufferSize) && (bufferPos < defaultBufferSize))
+					{
+					   recvBuffer = Arrays.copyOf(recvBuffer, defaultBufferSize);
+					}
 				}
 			}
 			else if (size > recvBuffer.length)
 			{
-				throw new NXCPException(NXCPException.MESSAGE_TOO_LARGE);
+			   if (size <= maxBufferSize)
+			   {
+			      recvBuffer = Arrays.copyOf(recvBuffer, (int)size);
+			   }
+			   else
+			   {
+			      throw new NXCPException(NXCPException.MESSAGE_TOO_LARGE);
+			   }
 			}
 		}
 		return msg;

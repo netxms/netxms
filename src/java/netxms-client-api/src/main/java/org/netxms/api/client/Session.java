@@ -118,20 +118,27 @@ public interface Session
 	public abstract void disconnect();
 
 	/**
-	 * Get receiver buffer size.
+	 * Get default receiver buffer size.
 	 * 
-	 * @return Current receiver buffer size in bytes.
+	 * @return Default receiver buffer size in bytes.
 	 */
-	public abstract int getRecvBufferSize();
+	public abstract int getDefaultRecvBufferSize();
+
+   /**
+    * Get max receiver buffer size.
+    * 
+    * @return Max receiver buffer size in bytes.
+    */
+   public abstract int getMaxRecvBufferSize();
 
 	/**
 	 * Set receiver buffer size. This method should be called before connect(). It will not have any effect after
 	 * connect().
 	 * 
-	 * @param recvBufferSize
-	 *           Size of receiver buffer in bytes.
+	 * @param defaultBufferSize default size of receiver buffer in bytes.
+    * @param maxBufferSize max size of receiver buffer in bytes.
 	 */
-	public abstract void setRecvBufferSize(int recvBufferSize);
+	public abstract void setRecvBufferSize(int defaultBufferSize, int maxBufferSize);
 
 	/**
 	 * Get server address

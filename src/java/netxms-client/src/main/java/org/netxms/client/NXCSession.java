@@ -254,7 +254,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private EncryptionContext encryptionContext = null;
 
    // Communication parameters
-   private int recvBufferSize = 4194304; // Default is 4MB
+   private int defaultRecvBufferSize = 4194304; // Default is 4MB
+   private int maxRecvBufferSize = 33554432;    // Max is 32MB
    private int commandTimeout = 30000; // Default is 30 sec
 
    // Notification listeners and queue
@@ -548,7 +549,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       @Override
       public void run()
       {
-         final NXCPMessageReceiver receiver = new NXCPMessageReceiver(recvBufferSize);
+         final NXCPMessageReceiver receiver = new NXCPMessageReceiver(defaultRecvBufferSize, maxRecvBufferSize);
          InputStream in;
 
          try
@@ -1777,33 +1778,37 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       this.ignoreProtocolVersion = ignoreProtocolVersion;
    }
 
-   /*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.netxms.api.client.Session#getRecvBufferSize()
-	 */
+   /* (non-Javadoc)
+    * @see org.netxms.api.client.Session#getDefaultRecvBufferSize()
+    */
    @Override
-   public int getRecvBufferSize()
+   public int getDefaultRecvBufferSize()
    {
-      return recvBufferSize;
+      return defaultRecvBufferSize;
    }
 
-   /*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.netxms.api.client.Session#setRecvBufferSize(int)
-	 */
+   /* (non-Javadoc)
+    * @see org.netxms.api.client.Session#getMaxRecvBufferSize()
+    */
    @Override
-   public void setRecvBufferSize(int recvBufferSize)
+   public int getMaxRecvBufferSize()
    {
-      this.recvBufferSize = recvBufferSize;
+      return maxRecvBufferSize;
    }
 
-   /*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.netxms.api.client.Session#getServerAddress()
-	 */
+   /* (non-Javadoc)
+    * @see org.netxms.api.client.Session#setRecvBufferSize(int, int)
+    */
+   @Override
+   public void setRecvBufferSize(int defaultBufferSize, int maxBufferSize)
+   {
+      this.defaultRecvBufferSize = defaultBufferSize;
+      this.maxRecvBufferSize = maxBufferSize;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.api.client.Session#getServerAddress()
+    */
    @Override
    public String getServerAddress()
    {
