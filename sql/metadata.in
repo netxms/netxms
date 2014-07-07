@@ -40,3 +40,5 @@ INSERT INTO metadata (var_name,var_value)
 #endif
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('TDataIndexCreationCommand_1','CREATE INDEX idx_tdata_rec_%d_instance ON tdata_records_%d(instance)');
+INSERT INTO metadata (var_name,var_value)
+	VALUES ('TDataIndexCreationCommand_2','CREATE INDEX idx_tdata_rec_%d_id ON tdata_records_%d(record_id)');

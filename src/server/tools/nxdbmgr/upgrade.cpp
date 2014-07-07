@@ -336,7 +336,7 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 
             if (!recreateTables)
             {
-               _sntprintf(query, 256, _T("CREATE INDEX idx_tdata_recid_%d ON tdata_records_%d(record_id)"), id, id);
+               _sntprintf(query, 256, _T("CREATE INDEX idx_tdata_rec_%d_id ON tdata_records_%d(record_id)"), id, id);
                if (!SQLQuery(query))
                {
                   if (!g_bIgnoreErrors)
@@ -392,20 +392,18 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
  */
 static BOOL H_UpgradeFromV323(int currVersion, int newVersion)
 {
-   if (!MetaDataReadInt(_T("ValidTDataPK"), 0))  // check if schema is already correct
+   if (!MetaDataReadInt(_T("ValidTDataIndex"), 0))  // check if schema is already correct
    {
-      TCHAR query[1024];
-      _sntprintf(query, 1024, 
-         _T("UPDATE metadata SET var_value='CREATE TABLE tdata_records_%%d (record_id %s not null,row_id %s not null,instance varchar(255) null,PRIMARY KEY(record_id),FOREIGN KEY (record_id) REFERENCES tdata_%%d(record_id) ON DELETE CASCADE)' WHERE var_name='TDataTableCreationCommand_1'"),
-         g_pszSqlType[g_iSyntax][SQL_TYPE_INT64], g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
-      CHK_EXEC(SQLQuery(query));
+      CHK_EXEC(SQLQuery(
+         _T("INSERT INTO metadata (var_name,var_value)")
+         _T("   VALUES ('TDataIndexCreationCommand_2','CREATE INDEX idx_tdata_rec_%d_id ON tdata_records_%d(record_id)')")));
 
       RecreateTData(_T("nodes"), true, true);
       RecreateTData(_T("clusters"), true, true);
       RecreateTData(_T("mobile_devices"), true, true);
    }
 
-   CHK_EXEC(SQLQuery(_T("DELETE FROM metadata WHERE var_name='ValidTDataPK'")));
+   CHK_EXEC(SQLQuery(_T("DELETE FROM metadata WHERE var_name='ValidTDataIndex'")));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='324' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -1018,9 +1016,11 @@ static BOOL H_UpgradeFromV293(int currVersion, int newVersion)
       _T("INSERT INTO metadata (var_name,var_value)")
       _T("   VALUES ('TDataTableCreationCommand_0','CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp integer not null,record_id $SQL:INT64 not null,UNIQUE(record_id))')\n")
       _T("INSERT INTO metadata (var_name,var_value)")
-	   _T("   VALUES ('TDataTableCreationCommand_1','CREATE TABLE tdata_records_%d (record_id $SQL:INT64 not null,row_id $SQL:INT64 not null,instance varchar(255) null,PRIMARY KEY(record_id),FOREIGN KEY (record_id) REFERENCES tdata_%d(record_id) ON DELETE CASCADE)')\n")
+	   _T("   VALUES ('TDataTableCreationCommand_1','CREATE TABLE tdata_records_%d (record_id $SQL:INT64 not null,row_id $SQL:INT64 not null,instance varchar(255) null,PRIMARY KEY(row_id),FOREIGN KEY (record_id) REFERENCES tdata_%d(record_id) ON DELETE CASCADE)')\n")
       _T("INSERT INTO metadata (var_name,var_value)")
 	   _T("   VALUES ('TDataTableCreationCommand_2','CREATE TABLE tdata_rows_%d (row_id $SQL:INT64 not null,column_id integer not null,value varchar(255) null,PRIMARY KEY(row_id,column_id),FOREIGN KEY (row_id) REFERENCES tdata_records_%d(row_id) ON DELETE CASCADE)')\n")
+      _T("INSERT INTO metadata (var_name,var_value)")
+      _T("   VALUES ('TDataIndexCreationCommand_2','CREATE INDEX idx_tdata_rec_%d_id ON tdata_records_%d(record_id)')\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
@@ -1028,7 +1028,7 @@ static BOOL H_UpgradeFromV293(int currVersion, int newVersion)
    RecreateTData(_T("clusters"), true, false);
    RecreateTData(_T("mobile_devices"), true, false);
 
-   CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('ValidTDataPK','1')")));
+   CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('ValidTDataIndex','1')")));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='294' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
