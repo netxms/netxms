@@ -141,8 +141,9 @@ void __DBDbgPrintf(int level, const TCHAR *format, ...);
 // Global variables
 //
 
-extern DWORD g_logMsgCode;
-extern DWORD g_sqlErrorMsgCode;
+extern UINT32 g_logMsgCode;
+extern UINT32 g_sqlErrorMsgCode;
+extern UINT32 g_sqlQueryExecTimeThreshold;
 
 
 #endif   /* _libnxsrv_h_ */

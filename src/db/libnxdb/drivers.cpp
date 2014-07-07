@@ -25,8 +25,13 @@
 /**
  * Log message codes
  */
-DWORD g_logMsgCode = 0;
-DWORD g_sqlErrorMsgCode = 0;
+UINT32 g_logMsgCode = 0;
+UINT32 g_sqlErrorMsgCode = 0;
+
+/**
+ * Long-running query threshold
+ */
+UINT32 g_sqlQueryExecTimeThreshold = 0xFFFFFFFF;
 
 /**
  * Loaded drivers

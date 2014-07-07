@@ -23,18 +23,14 @@
 
 #include "libnxdb.h"
 
-
-//
-// Static data
-//
-
+/**
+ * Debug log callback
+ */
 static void (*s_dbgPrintCb)(int, const TCHAR *, va_list) = NULL;
 
-
-//
-// Write log
-//
-
+/**
+ * Write log
+ */
 void __DBWriteLog(WORD level, const TCHAR *format, ...)
 {
 	TCHAR buffer[4096];
@@ -46,11 +42,9 @@ void __DBWriteLog(WORD level, const TCHAR *format, ...)
 	nxlog_write(g_logMsgCode, level, "s", buffer);
 }
 
-
-//
-// Debug output
-//
-
+/**
+ * Debug output
+ */
 void __DBDbgPrintf(int level, const TCHAR *format, ...)
 {
 	if (s_dbgPrintCb != NULL)
@@ -63,24 +57,29 @@ void __DBDbgPrintf(int level, const TCHAR *format, ...)
 	}
 }
 
-
-//
-// Set debug print callback
-//
-
+/**
+ * Set debug print callback
+ */
 void LIBNXDB_EXPORTABLE DBSetDebugPrintCallback(void (*cb)(int, const TCHAR *, va_list))
 {
 	s_dbgPrintCb = cb;
 	__DBDbgPrintf(1, _T("Debug callback set for DB library"));
 }
 
-
-//
-// DLL entry point
-//
+/**
+ * Set long running query threshold (milliseconds)
+ */
+void LIBNXDB_EXPORTABLE DBSetLongRunningThreshold(UINT32 threshold)
+{
+	g_sqlQueryExecTimeThreshold = threshold;
+   __DBDbgPrintf(3, _T("DB Library: long running query threshold set to %u"), threshold);
+}
 
 #ifdef _WIN32
 
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)

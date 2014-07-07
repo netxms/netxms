@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -190,7 +190,6 @@ static void DBReconnect(DB_HANDLE hConn)
 BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
 {
    DWORD dwResult;
-   INT64 ms;
 #ifdef UNICODE
 #define pwszQuery szQuery
 #define wcErrorText errorText
@@ -200,8 +199,7 @@ BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
 #endif
 
    MutexLock(hConn->m_mutexTransLock);
-   if (hConn->m_driver->m_dumpSql)
-      ms = GetCurrentTimeMs();
+   INT64 ms = GetCurrentTimeMs();
 
    dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, wcErrorText);
    if ((dwResult == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
@@ -210,10 +208,14 @@ BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
       dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, wcErrorText);
    }
 
+   ms = GetCurrentTimeMs() - ms;
    if (hConn->m_driver->m_dumpSql)
    {
-      ms = GetCurrentTimeMs() - ms;
       __DBDbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), szQuery, ms);
+   }
+   if ((dwResult == DBERR_SUCCESS) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
+   {
+      __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
    }
    
    MutexUnlock(hConn->m_mutexTransLock);
@@ -255,7 +257,6 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
    DBDRV_RESULT hResult;
 	DB_RESULT result = NULL;
    DWORD dwError = DBERR_OTHER_ERROR;
-   INT64 ms;
 #ifdef UNICODE
 #define pwszQuery szQuery
 #define wcErrorText errorText
@@ -265,8 +266,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
 #endif
    
    MutexLock(hConn->m_mutexTransLock);
-   if (hConn->m_driver->m_dumpSql)
-      ms = GetCurrentTimeMs();
+   INT64 ms = GetCurrentTimeMs();
    hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
@@ -274,10 +274,14 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
       hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    }
 
+   ms = GetCurrentTimeMs() - ms;
    if (hConn->m_driver->m_dumpSql)
    {
-      ms = GetCurrentTimeMs() - ms;
-      __DBDbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
+      __DBDbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (int)ms);
+   }
+   if ((hResult != NULL) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
+   {
+      __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
    }
    MutexUnlock(hConn->m_mutexTransLock);
 
@@ -710,7 +714,6 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
    DBDRV_ASYNC_RESULT hResult;
 	DB_ASYNC_RESULT result = NULL;
    DWORD dwError = DBERR_OTHER_ERROR;
-   INT64 ms;
 #ifdef UNICODE
 #define pwszQuery szQuery
 #define wcErrorText errorText
@@ -720,8 +723,7 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
 #endif
    
    MutexLock(hConn->m_mutexTransLock);
-	if (hConn->m_driver->m_dumpSql)
-      ms = GetCurrentTimeMs();
+   INT64 ms = GetCurrentTimeMs();
    hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
@@ -729,10 +731,14 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
       hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    }
 
+   ms = GetCurrentTimeMs() - ms;
    if (hConn->m_driver->m_dumpSql)
    {
-      ms = GetCurrentTimeMs() - ms;
-      __DBDbgPrintf(9, _T("%s async query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
+      __DBDbgPrintf(9, _T("%s async query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (int)ms);
+   }
+   if ((hResult != NULL) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
+   {
+      __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
    }
    if (hResult == NULL)
    {
@@ -1226,18 +1232,20 @@ BOOL LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 #else
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
-	UINT64 ms;
 
 	DB_HANDLE hConn = hStmt->m_connection;
 	MutexLock(hConn->m_mutexTransLock);
-   if (hConn->m_driver->m_dumpSql)
-      ms = GetCurrentTimeMs();
+   UINT64 ms = GetCurrentTimeMs();
 
 	DWORD dwResult = hConn->m_driver->m_fpDrvExecute(hConn->m_connection, hStmt->m_statement, wcErrorText);
+   ms = GetCurrentTimeMs() - ms;
    if (hConn->m_driver->m_dumpSql)
    {
-      ms = GetCurrentTimeMs() - ms;
-      __DBDbgPrintf(9, _T("%s prepared sync query: \"%s\" [%d ms]"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), hStmt->m_query, ms);
+      __DBDbgPrintf(9, _T("%s prepared sync query: \"%s\" [%d ms]"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), hStmt->m_query, (int)ms);
+   }
+   if ((dwResult == DBERR_SUCCESS) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
+   {
+      __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), hStmt->m_query, (int)ms);
    }
 
    // Do reconnect if needed, but don't retry statement execution
@@ -1304,17 +1312,19 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 	DB_HANDLE hConn = hStmt->m_connection;
    MutexLock(hConn->m_mutexTransLock);
 
-   INT64 ms;
-   if (hConn->m_driver->m_dumpSql)
-      ms = GetCurrentTimeMs();
+   INT64 ms = GetCurrentTimeMs();
    DWORD dwError = DBERR_OTHER_ERROR;
 	DBDRV_RESULT hResult = hConn->m_driver->m_fpDrvSelectPrepared(hConn->m_connection, hStmt->m_statement, &dwError, wcErrorText);
 
+   ms = GetCurrentTimeMs() - ms;
    if (hConn->m_driver->m_dumpSql)
    {
-      ms = GetCurrentTimeMs() - ms;
       __DBDbgPrintf(9, _T("%s prepared sync query: \"%s\" [%d ms]"), 
-		              (hResult != NULL) ? _T("Successful") : _T("Failed"), hStmt->m_query, (DWORD)ms);
+		              (hResult != NULL) ? _T("Successful") : _T("Failed"), hStmt->m_query, (int)ms);
+   }
+   if ((hResult != NULL) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
+   {
+      __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), hStmt->m_query, (int)ms);
    }
 
    // Do reconnect if needed, but don't retry statement execution

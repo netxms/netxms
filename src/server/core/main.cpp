@@ -647,6 +647,10 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, baseSize, maxSize, cooldownTime, 0, g_hCoreDB);
    g_flags |= AF_DB_CONNECTION_POOL_READY;
 
+   UINT32 lrt = ConfigReadULong(_T("LongRunningQueryThreshold"), 0);
+   if (lrt != 0)
+      DBSetLongRunningThreshold(lrt);
+
 	// Read database syntax
 	g_nDBSyntax = DBGetSyntax(g_hCoreDB);
 
