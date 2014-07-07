@@ -1110,10 +1110,9 @@ UINT32 AgentConnection::execAction(const TCHAR *pszAction, int argc, TCHAR **arg
 }
 
 
-//
-// Upload file to agent
-//
-
+/**
+ * Upload file to agent
+ */
 UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, void (* progressCallback)(INT64, void *), void *cbArg)
 {
    UINT32 dwRqId, dwResult;
@@ -1125,14 +1124,21 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
 
    dwRqId = m_dwRequestId++;
 
-   msg.SetCode(CMD_TRANSFER_FILE);
+   if(destinationFile == NULL)
+   {
+      msg.SetCode(CMD_TRANSFER_FILE);
+   }
+   else
+   {
+      msg.SetCode(CMD_FILEMGR_UPLOAD);
+   }
    msg.SetId(dwRqId);
    for(i = (int)_tcslen(localFile) - 1;
        (i >= 0) && (localFile[i] != '\\') && (localFile[i] != '/'); i--);
    msg.SetVariable(VID_FILE_NAME, &localFile[i + 1]);
    if (destinationFile != NULL)
    {
-		msg.SetVariable(VID_DESTINATION_FILE_NAME, destinationFile);
+		msg.SetVariable(VID_FILE_NAME, destinationFile);
    }
 
    if (sendMessage(&msg))

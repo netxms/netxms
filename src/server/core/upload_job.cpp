@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
@@ -23,19 +23,17 @@
 #include "nxcore.h"
 
 
-//
-// Static members
-//
-
+/**
+ * Static members
+ */
 int FileUploadJob::m_activeJobs = 0;
 int FileUploadJob::m_maxActiveJobs = 10;
 MUTEX FileUploadJob::m_sharedDataMutex = INVALID_MUTEX_HANDLE;
 
 
-//
-// Static initializer
-//
-
+/**
+ * Static initializer
+ */
 void FileUploadJob::init()
 {
 	m_sharedDataMutex = MutexCreate();
@@ -43,9 +41,9 @@ void FileUploadJob::init()
 }
 
 
-//
-// Constructor
-//
+/**
+ * Constructor
+ */
 
 FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, UINT32 userId, bool createOnHold)
               : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node->Id(), userId, createOnHold)
@@ -65,10 +63,9 @@ FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *re
 }
 
 
-//
-// Destructor
-//
-
+/**
+ *  Destructor
+ */
 FileUploadJob::~FileUploadJob()
 {
 	m_node->decRefCount();
@@ -78,14 +75,13 @@ FileUploadJob::~FileUploadJob()
 }
 
 
-//
-// Run job
-//
-
+/**
+ * Run job
+ */
 bool FileUploadJob::run()
 {
 	bool success = false;
-	
+
 	while(true)
 	{
 		MutexLock(m_sharedDataMutex);
@@ -117,7 +113,7 @@ bool FileUploadJob::run()
 	{
 		setFailureMessage(_T("Agent connection not available"));
 	}
-	
+
 	MutexLock(m_sharedDataMutex);
 	m_activeJobs--;
 	MutexUnlock(m_sharedDataMutex);
@@ -126,10 +122,9 @@ bool FileUploadJob::run()
 }
 
 
-//
-// Upload progress callback
-//
-
+/**
+ * Upload progress callback
+ */
 void FileUploadJob::uploadCallback(INT64 size, void *arg)
 {
 	if (((FileUploadJob *)arg)->m_fileSize > 0)
@@ -139,10 +134,9 @@ void FileUploadJob::uploadCallback(INT64 size, void *arg)
 }
 
 
-//
-// Get additional info for logging
-//
-
+/**
+ *  Get additional info for logging
+ */
 const TCHAR *FileUploadJob::getAdditionalInfo()
 {
 	return m_info;
