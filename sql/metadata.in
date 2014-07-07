@@ -25,7 +25,7 @@ INSERT INTO metadata (var_name,var_value)
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('TDataTableCreationCommand_0','CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp integer not null,record_id ' CONCAT SQL_INT64_TEXT CONCAT ' not null,UNIQUE(record_id))');
 INSERT INTO metadata (var_name,var_value)
-	VALUES ('TDataTableCreationCommand_1','CREATE TABLE tdata_records_%d (record_id ' CONCAT SQL_INT64_TEXT CONCAT ' not null,row_id ' CONCAT SQL_INT64_TEXT CONCAT ' not null,instance varchar(255) null,PRIMARY KEY(record_id),FOREIGN KEY (record_id) REFERENCES tdata_%d(record_id) ON DELETE CASCADE)');
+	VALUES ('TDataTableCreationCommand_1','CREATE TABLE tdata_records_%d (record_id ' CONCAT SQL_INT64_TEXT CONCAT ' not null,row_id ' CONCAT SQL_INT64_TEXT CONCAT ' not null,instance varchar(255) null,PRIMARY KEY(row_id),FOREIGN KEY (record_id) REFERENCES tdata_%d(record_id) ON DELETE CASCADE)');
 INSERT INTO metadata (var_name,var_value)
 	VALUES ('TDataTableCreationCommand_2','CREATE TABLE tdata_rows_%d (row_id ' CONCAT SQL_INT64_TEXT CONCAT ' not null,column_id integer not null,value varchar(255) null,PRIMARY KEY(row_id,column_id),FOREIGN KEY (row_id) REFERENCES tdata_records_%d(row_id) ON DELETE CASCADE)');
 #if defined(DB_POSTGRESQL)
