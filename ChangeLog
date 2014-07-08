@@ -9,6 +9,7 @@
 - Removed agent configuration parameter EnableArbitraryFileUpload
 - New NXSL class "Zone"
 - New attributes "zone" and "zoneId" in NXSL classes "Node" and "Interface"
+- Syslog records from unmanaged nodes do not generate events
 - New access rights for nodes: 
    - Download File (download file from agent to local workstation)
    - Upload File (upload file from local workstation to remote node) 
