@@ -63,6 +63,10 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.ImageTransfer;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -164,6 +168,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionAlignToGrid;
 	protected Action actionSnapToGrid;
 	protected Action actionShowObjectDetails;
+	protected Action actionCopyImage;
 
 	private String viewId;
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
@@ -761,6 +766,17 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				showObjectDetails();
 			}
 		};
+		
+		actionCopyImage = new Action("Copy map image to clipboard", SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            Image image = viewer.takeSnapshot();
+            ImageTransfer imageTransfer = ImageTransfer.getInstance();
+            final Clipboard clipboard = new Clipboard(viewer.getControl().getDisplay());
+            clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+         }
+		};
 	}
 
 	/**
@@ -837,6 +853,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionAlignToGrid);
 		manager.add(actionSnapToGrid);
 		manager.add(actionShowGrid);
+      manager.add(new Separator());
+      manager.add(actionCopyImage);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -859,6 +877,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		{
 			manager.add(actionSaveLayout);
 		}
+      manager.add(actionCopyImage);
+      manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
