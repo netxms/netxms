@@ -255,6 +255,13 @@ static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
    if ((dwIpAddr != INADDR_NONE) && (pNode == NULL))
       pNode = FindNodeByIP(0, dwIpAddr);
 
+   // Try source IP if provided hostname/IP cannot be found
+   if ((pNode == NULL) && (dwIpAddr != dwSourceIP))
+   {
+		dwIpAddr = dwSourceIP;
+      pNode = FindNodeByIP(0, dwIpAddr);
+   }
+
 	if (pNode != NULL)
    {
       pRec->dwSourceObject = pNode->Id();
