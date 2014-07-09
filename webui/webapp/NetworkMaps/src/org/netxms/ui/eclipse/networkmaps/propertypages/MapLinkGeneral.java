@@ -19,7 +19,6 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
@@ -156,7 +155,7 @@ public class MapLinkGeneral extends PropertyPage
       add.setText("Add");
       gd = new GridData();
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-      gd.verticalAlignment = SWT.BOTTOM;
+      gd.verticalAlignment = SWT.TOP;
       add.setLayoutData(gd);
       add.addSelectionListener(new SelectionListener() {
          @Override
@@ -168,7 +167,7 @@ public class MapLinkGeneral extends PropertyPage
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            selectionButtonHandler();
+            addObject();
          }
       });
       add.setEnabled(radioColorObject.getSelection());
@@ -176,7 +175,7 @@ public class MapLinkGeneral extends PropertyPage
       remove = new Button(nodeSelectionGroup, SWT.PUSH);
       remove.setText("Delete");
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-      gd.verticalAlignment = SWT.BOTTOM;
+      gd.verticalAlignment = SWT.TOP;
       remove.setLayoutData(gd);
       remove.addSelectionListener(new SelectionListener() {
          @Override
@@ -188,7 +187,7 @@ public class MapLinkGeneral extends PropertyPage
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            clearButtonHandler();
+            removeObject();
          }
       });
       remove.setEnabled(radioColorObject.getSelection());
@@ -220,31 +219,36 @@ public class MapLinkGeneral extends PropertyPage
 		return dialogArea;
 	}
 	
-	  protected void selectionButtonHandler()
-	   {
-	      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, null);
-	      dlg.enableMultiSelection(false);
-	      if (dlg.open() == Window.OK)
-	      {
-	         AbstractObject[] objects = dlg.getSelectedObjects(Node.class);
-	         if (objects.length > 0)
-	         {
-	            for(AbstractObject obj : objects)
-	            {
-	               object.addStatusObject(obj.getObjectId());	 
-	               list.add((obj != null) ? obj.getObjectName() : ("<" + Long.toString(obj.getObjectId()) + ">"));
-	            }
-	         }
-	      }
-	   }
+   /**
+    * Add object to status source list
+    */
+   private void addObject()
+   {
+      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, null);
+      dlg.enableMultiSelection(false);
+      if (dlg.open() == Window.OK)
+      {
+         AbstractObject[] objects = dlg.getSelectedObjects(AbstractObject.class);
+         if (objects.length > 0)
+         {
+            for(AbstractObject obj : objects)
+            {
+               object.addStatusObject(obj.getObjectId());
+               list.add((obj != null) ? obj.getObjectName() : ("<" + Long.toString(obj.getObjectId()) + ">"));
+            }
+         }
+      }
+   }
 
-
-	   protected void clearButtonHandler()
-	   {
-	      int index = list.getSelectionIndex();
-	      list.remove(index);
-	      object.removeStatusObjectByIndex(index);
-	   }
+   /**
+    * Remove object from status source list
+    */
+   private void removeObject()
+   {
+      int index = list.getSelectionIndex();
+      list.remove(index);
+      object.removeStatusObjectByIndex(index);
+   }
 	  
 	/**
 	 * Apply changes
