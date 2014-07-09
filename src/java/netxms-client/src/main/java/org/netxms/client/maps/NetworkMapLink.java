@@ -21,7 +21,7 @@ package org.netxms.client.maps;
 import java.util.ArrayList;
 import java.util.List;
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.maps.configs.DciListConfig;
+import org.netxms.client.maps.configs.LinkConfig;
 import org.netxms.client.maps.configs.SingleDciConfig;
 
 /**
@@ -46,13 +46,8 @@ public class NetworkMapLink
 	private long element2;
 	private String connectorName1;
 	private String connectorName2;
-	private int color;
-	private long statusObject;
-	private int routing;
-	private long[] bendPoints;
-	private String config;
+	private LinkConfig config = new LinkConfig();
 	private int flags;
-	private SingleDciConfig[] dciList;
 
 	/**
 	 * 
@@ -67,18 +62,8 @@ public class NetworkMapLink
 	 */
 	public NetworkMapLink(String name, int type, long element1, long element2, String connectorName1, String connectorName2, SingleDciConfig[] dciList, int flags)
 	{		
-		try
-		{
-		   DciListConfig conf = new DciListConfig();
-		   conf.setDciList(dciList);
-         config = conf.createXml();
-		}
-		catch (Exception e)
-		{
-		   System.out.println("Impossible to create data from giver sources");
-		}
-		
-		initData(name, type, element1, element2, connectorName1, connectorName2, config, flags);
+	   config.setDciList(dciList);
+	   initData(name, type, element1, element2, connectorName1, connectorName2, flags);
 	}
 
    /**
@@ -89,12 +74,11 @@ public class NetworkMapLink
     * @param element2
     * @param connectorName1
     * @param connectorName2
-    * @param config
     * @param flags
     */
-   public NetworkMapLink(String name, int type, long element1, long element2, String connectorName1, String connectorName2, String config, int flags)
+   public NetworkMapLink(String name, int type, long element1, long element2, String connectorName1, String connectorName2, int flags)
    {
-      initData(name, type, element1, element2, connectorName1, connectorName2, config, flags);
+      initData(name, type, element1, element2, connectorName1, connectorName2, flags);
    }
    
    /**
@@ -105,10 +89,9 @@ public class NetworkMapLink
     * @param element2
     * @param connectorName1
     * @param connectorName2
-    * @param config
     * @param flags
     */
-   public void initData(String name, int type, long element1, long element2, String connectorName1, String connectorName2, String config, int flags)
+   public void initData(String name, int type, long element1, long element2, String connectorName1, String connectorName2, int flags)
    {
       this.name = name;
       this.type = type;
@@ -116,21 +99,7 @@ public class NetworkMapLink
       this.element2 = element2;
       this.connectorName1 = connectorName1;
       this.connectorName2 = connectorName2;
-      this.color = -1;
-      this.statusObject = 0;
-      this.routing = ROUTING_DEFAULT;
-      bendPoints = null;
-      this.config = config;
       this.flags = flags;
-      
-      try
-      {
-         this.dciList = DciListConfig.createFromXml(config).getDciList();
-      }
-      catch(Exception e1)
-      {
-         this.dciList = null;
-      }
    }
 
 	/**
@@ -147,13 +116,7 @@ public class NetworkMapLink
 		this.element2 = element2;
 		this.connectorName1 = "";
 		this.connectorName2 = "";
-		this.color = -1;
-		this.statusObject = 0;
-		this.routing = ROUTING_DEFAULT;
-		bendPoints = null;
-      this.config = "";
       this.flags = 0;
-      dciList = null;
 	}
 	
 	/**
@@ -164,28 +127,25 @@ public class NetworkMapLink
 	 */
 	public NetworkMapLink(NXCPMessage msg, long baseId)
 	{
+	   String xml = "";
 		name = msg.getVariableAsString(baseId + 1);
 		type = msg.getVariableAsInteger(baseId);
 		element1 = msg.getVariableAsInt64(baseId + 4);
 		element2 = msg.getVariableAsInt64(baseId + 5);
 		connectorName1 = msg.getVariableAsString(baseId + 2);
 		connectorName2 = msg.getVariableAsString(baseId + 3);
-		color = msg.getVariableAsInteger(baseId + 6);
-		statusObject = msg.getVariableAsInt64(baseId + 7);
-		routing = msg.getVariableAsInteger(baseId + 8);
-		bendPoints = msg.getVariableAsUInt32Array(baseId + 9);
-		config = msg.getVariableAsString(baseId + 10);
-		flags = msg.getVariableAsInteger(baseId + 11);
+		xml = msg.getVariableAsString(baseId + 6);
+		flags = msg.getVariableAsInteger(baseId + 7);
 		
 		try
       {
-         dciList = DciListConfig.createFromXml(config).getDciList();
+		   config = LinkConfig.createFromXml(xml);
       }
-      catch(Exception e1)
+      catch(Exception e)
       {
-         dciList = null;
-      }
-
+         System.out.println("Impossible to create data from giver sources: " + xml);
+         config = new LinkConfig();
+      }		
 	}
 	
 	/**
@@ -195,19 +155,26 @@ public class NetworkMapLink
 	 * @param baseId base variable ID
 	 */
 	public void fillMessage(NXCPMessage msg, long baseId)
-	{
+	{     
+	   String xml = "";
+      try
+      {
+         xml = config.createXml();
+      }
+      catch(Exception e)
+      {
+         // TODO Auto-generated catch block
+         System.out.println("Impossible to create data from giver sources");         
+      }
+	   
 		msg.setVariableInt16(baseId, type);
 		msg.setVariable(baseId + 1, name);
 		msg.setVariable(baseId + 2, connectorName1);
 		msg.setVariable(baseId + 3, connectorName2);
 		msg.setVariableInt32(baseId + 4, (int)element1);
 		msg.setVariableInt32(baseId + 5, (int)element2);
-		msg.setVariableInt32(baseId + 6, color);
-		msg.setVariableInt32(baseId + 7, (int)statusObject);
-		msg.setVariableInt16(baseId + 8, routing);
-		msg.setVariable(baseId + 9, (bendPoints != null) ? bendPoints : new long[] { 0x7FFFFFFF, 0x7FFFFFFF });
-		msg.setVariable(baseId + 10, config);
-		msg.setVariableInt32(baseId + 11, flags);
+		msg.setVariable(baseId + 6, xml);
+		msg.setVariableInt32(baseId + 7, flags);
 	}
 
 	/**
@@ -358,7 +325,7 @@ public class NetworkMapLink
 	 */
 	public int getColor()
 	{
-		return color;
+		return config.getColor();
 	}
 
 	/**
@@ -366,23 +333,30 @@ public class NetworkMapLink
 	 */
 	public void setColor(int color)
 	{
-		this.color = color;
+	   config.setColor(color);
 	}
 
 	/**
 	 * @return the statusObject
 	 */
-	public long getStatusObject()
+	public List<Long> getStatusObject()
 	{
-		return statusObject;
+	   Long [] statusObject = config.getObjectStatusList();
+	   List<Long> result = new ArrayList<Long>();
+	   if(statusObject == null)
+	      return result;
+	   for(int i = 0; i < statusObject.length; i++)
+	      result.add(statusObject[i]);
+		return result;
 	}
 
 	/**
 	 * @param statusObject the statusObject to set
 	 */
-	public void setStatusObject(long statusObject)
+	public void setStatusObject(List<Long> statusObject)
 	{
-		this.statusObject = statusObject;
+	   if(statusObject != null)
+	      config.setObjectStatusList(statusObject.toArray(new Long[statusObject.size()]));
 	}
 
 	/**
@@ -390,7 +364,7 @@ public class NetworkMapLink
 	 */
 	public int getRouting()
 	{
-		return routing;
+		return config.getRouting();
 	}
 
 	/**
@@ -398,7 +372,7 @@ public class NetworkMapLink
 	 */
 	public void setRouting(int routing)
 	{
-		this.routing = routing;
+		config.setRouting(routing);
 	}
 
 	/**
@@ -406,7 +380,7 @@ public class NetworkMapLink
 	 */
 	public long[] getBendPoints()
 	{
-		return bendPoints;
+		return config.getBendPoints();
 	}
 
 	/**
@@ -414,24 +388,8 @@ public class NetworkMapLink
 	 */
 	public void setBendPoints(long[] bendPoints)
 	{
-		this.bendPoints = bendPoints;
+		config.setBendPoints(bendPoints);
 	}
-
-   /**
-    * @return the config
-    */
-   public String getConfig()
-   {
-      return config;
-   }
-
-   /**
-    * @param config the config to set
-    */
-   public void setConfig(String config)
-   {
-      this.config = config;
-   }
 
    /**
     * @return the flags
@@ -454,6 +412,7 @@ public class NetworkMapLink
     */
    public boolean hasDciData()
    {
+      SingleDciConfig[] dciList = config.getDciList();
       if(dciList != null && dciList.length > 0)
          return true;
       return false;
@@ -466,7 +425,7 @@ public class NetworkMapLink
    {
       if(hasDciData())
       {
-         return dciList;
+         return config.getDciList();
       }
       else 
       {
@@ -519,7 +478,7 @@ public class NetworkMapLink
    public String toString()
    {
       return "NetworkMapLink [name=" + name + ", type=" + type + ", element1=" + element1 + ", element2=" + element2
-            + ", connectorName1=" + connectorName1 + ", connectorName2=" + connectorName2 + ", color=" + color + ", statusObject="
-            + statusObject + ", routing=" + routing + ", flags=" + flags + "]";
+            + ", connectorName1=" + connectorName1 + ", connectorName2=" + connectorName2 + ", color=" + config.getColor() + ", statusObject="
+            + config.getObjectStatusList() + ", routing=" + config.getRouting() + ", flags=" + flags + "]";
    }
 }

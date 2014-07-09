@@ -4367,11 +4367,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          int type = response.getVariableAsInteger(varId++);
          String port1 = response.getVariableAsString(varId++);
          String port2 = response.getVariableAsString(varId++);
-         String config = response.getVariableAsString(varId++);
          int flags = response.getVariableAsInteger(varId++);
          if ((obj1 != null) && (obj2 != null))
          {
-            page.addLink(new NetworkMapLink("", type, obj1.getId(), obj2.getId(), port1, port2, config, flags));
+            page.addLink(new NetworkMapLink("", type, obj1.getId(), obj2.getId(), port1, port2, flags));
          }
       }
       return page;

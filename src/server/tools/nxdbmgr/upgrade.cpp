@@ -388,6 +388,100 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Upgrade from V325 to V326
+ */
+static BOOL H_UpgradeFromV325(int currVersion, int newVersion)
+{
+   //Remove unused columns
+   static TCHAR batch[] =
+      _T("ALTER TABLE network_map_links DROP COLUMN color\n")
+      _T("ALTER TABLE network_map_links DROP COLUMN status_object\n")
+      _T("ALTER TABLE network_map_links DROP COLUMN routing\n")
+      _T("ALTER TABLE network_map_links DROP COLUMN bend_points\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='326' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V324 to V325
+ */
+static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
+{
+   //move map link configuration to xml
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT map_id, element1, element2, element_data, color, status_object, routing, bend_points FROM network_map_links"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         TCHAR* config = DBGetField(hResult, i, 3, NULL, 0);
+         UINT32 color = DBGetFieldULong(hResult, i, 4);
+         UINT32 statusObject = DBGetFieldULong(hResult, i, 5);
+         UINT32 routing = DBGetFieldULong(hResult, i, 6);
+         TCHAR bendPoints[1024];
+         DBGetField(hResult, i, 7, bendPoints, 1024);
+
+         TCHAR newConfig[4048];
+         _tcscpy(newConfig, _T("<config>"));
+         TCHAR* c1 = _tcsstr(config, _T("<dciList"));
+         TCHAR* c2 = _tcsstr(config, _T("</dciList>"));
+         if(c1 != NULL && c2!= NULL)
+         {
+            *c2 = 0;
+            _tcscat(newConfig, c1);
+            _tcscat(newConfig, _T("</dciList>"));
+         }
+
+         TCHAR tmp[2048];
+         _sntprintf(tmp, 2048, _T("<color>%d</color>"), color),
+         _tcscat(newConfig, tmp);
+
+         if(statusObject != 0)
+         {
+            _sntprintf(tmp, 2048, _T("<objectStatusList length=\"1\"><long>%d</long></objectStatusList>"), statusObject);
+            _tcscat(newConfig, tmp);
+         }
+
+         _sntprintf(tmp, 2048, _T("<routing>%d</routing>"), routing);
+         _tcscat(newConfig, tmp);
+
+         if(routing == 3 && bendPoints != NULL)
+         {
+            count = 1;
+            for(int j = 0; j < _tcslen(bendPoints); j++)
+            {
+               if(bendPoints[j] == _T(','))
+                  count++;
+            }
+            _sntprintf(tmp, 2048, _T("<bendPoints length=\"%d\">%s</bendPoints>"), count, bendPoints);
+            _tcscat(newConfig, tmp);
+         }
+         _tcscat(newConfig, _T("</config>"));
+
+         safe_free(config);
+         DB_STATEMENT statment = DBPrepare(g_hCoreDB, _T("UPDATE network_map_links SET element_data=? WHERE map_id=? AND element1=? AND element2=?"));
+         if (statment == NULL)
+            return FALSE;
+         DBBind(statment, 1, DB_SQLTYPE_TEXT, newConfig, DB_BIND_STATIC);
+         DBBind(statment, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+         DBBind(statment, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
+         DBBind(statment, 4, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 2));
+         if(!DBExecute(statment))
+            return FALSE;
+         DBFreeStatement(statment);
+      }
+      DBFreeResult(hResult);
+   }
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='325' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V323 to V324
  */
 static BOOL H_UpgradeFromV323(int currVersion, int newVersion)
@@ -395,7 +489,7 @@ static BOOL H_UpgradeFromV323(int currVersion, int newVersion)
    if (!MetaDataReadInt(_T("ValidTDataPK"), 0))  // check if schema is already correct
    {
       TCHAR query[1024];
-      _sntprintf(query, 1024, 
+      _sntprintf(query, 1024,
          _T("UPDATE metadata SET var_value='CREATE TABLE tdata_records_%%d (record_id %s not null,row_id %s not null,instance varchar(255) null,PRIMARY KEY(record_id),FOREIGN KEY (record_id) REFERENCES tdata_%%d(record_id) ON DELETE CASCADE)' WHERE var_name='TDataTableCreationCommand_1'"),
          g_pszSqlType[g_iSyntax][SQL_TYPE_INT64], g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
       CHK_EXEC(SQLQuery(query));
@@ -7887,6 +7981,8 @@ static struct
    { 321, 322, H_UpgradeFromV321 },
    { 322, 323, H_UpgradeFromV322 },
    { 323, 324, H_UpgradeFromV323 },
+   { 324, 325, H_UpgradeFromV324 },
+   { 325, 326, H_UpgradeFromV325 },
    { 0, 0, NULL }
 };
 

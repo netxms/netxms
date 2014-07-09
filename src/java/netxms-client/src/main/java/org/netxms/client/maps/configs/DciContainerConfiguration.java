@@ -30,7 +30,7 @@ import org.simpleframework.xml.core.Persister;
  * Base class for all DCI configuration for line
  */
 @Root(name="config")
-public class DciListConfig
+public class DciContainerConfiguration
 {
    @ElementArray(required = true)
    private SingleDciConfig[] dciList = new SingleDciConfig[0];
@@ -54,10 +54,10 @@ public class DciListConfig
     * @return deserialized object
     * @throws Exception if the object cannot be fully deserialized
     */
-   public static DciListConfig createFromXml(final String xml) throws Exception
+   public static DciContainerConfiguration createFromXml(final String xml) throws Exception
    {
       Serializer serializer = new Persister();
-      return serializer.read(DciListConfig.class, xml);
+      return serializer.read(DciContainerConfiguration.class, xml);
    }
    
    /**

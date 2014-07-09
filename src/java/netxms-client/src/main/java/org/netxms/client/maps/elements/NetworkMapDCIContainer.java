@@ -21,7 +21,7 @@ package org.netxms.client.maps.elements;
 import java.util.ArrayList;
 import java.util.List;
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.maps.configs.DciListConfig;
+import org.netxms.client.maps.configs.DciContainerConfiguration;
 import org.netxms.client.maps.configs.SingleDciConfig;
 
 /**
@@ -47,7 +47,7 @@ public class NetworkMapDCIContainer  extends NetworkMapElement
 		DCIListXml = msg.getVariableAsString(baseId+10);
 		try
       {
-		   DciListConfig conf = DciListConfig.createFromXml(DCIListXml);
+		   DciContainerConfiguration conf = DciContainerConfiguration.createFromXml(DCIListXml);
 		   backgroundColor = conf.getBackgroundColor();
 		   textColor = conf.getTextColor();
 		   borderColor = conf.getBorderColor();
@@ -112,7 +112,7 @@ public class NetworkMapDCIContainer  extends NetworkMapElement
 	public void fillMessage(NXCPMessage msg, long baseId)
 	{
 		super.fillMessage(msg, baseId);
-		DciListConfig dciList = new DciListConfig();
+		DciContainerConfiguration dciList = new DciContainerConfiguration();
 		dciList.setDciList(dciArray);
 		dciList.setBackgroundColor(backgroundColor);
       dciList.setTextColor(textColor);

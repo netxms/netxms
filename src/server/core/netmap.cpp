@@ -303,7 +303,7 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
    _sntprintf(query, 256, _T("DELETE FROM network_map_links WHERE map_id=%d"), m_dwId);
    if (!DBQuery(hdb, query))
 		goto fail;
-	hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,color,status_object,routing,bend_points,element_data,flags) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+	hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags) VALUES (?,?,?,?,?,?,?,?,?)"));
 	if (hStmt == NULL)
 		goto fail;
 	for(int i = 0; i < m_links->size(); i++)
@@ -316,12 +316,8 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 		DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, l->getName(), DB_BIND_STATIC);
 		DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, l->getConnector1Name(), DB_BIND_STATIC);
 		DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, l->getConnector2Name(), DB_BIND_STATIC);
-		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, l->getColor());
-		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, l->getStatusObject());
-		DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (LONG)l->getRouting());
-		DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, l->getBendPoints(query), DB_BIND_STATIC);
-		DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, l->getConfig(), DB_BIND_STATIC);
-		DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, l->getFlags());
+		DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, l->getConfig(), DB_BIND_STATIC);
+		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, l->getFlags());
 		DBExecute(hStmt);
    }
 	DBFreeStatement(hStmt);
@@ -447,25 +443,21 @@ BOOL NetworkMap::CreateFromDB(UINT32 dwId)
       }
 
 		// Load links
-      _sntprintf(query, 256, _T("SELECT element1,element2,link_type,link_name,connector_name1,connector_name2,color,status_object,routing,bend_points,element_data,flags FROM network_map_links WHERE map_id=%d"), m_dwId);
+      _sntprintf(query, 256, _T("SELECT element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags FROM network_map_links WHERE map_id=%d"), m_dwId);
       hResult = DBSelect(g_hCoreDB, query);
       if (hResult != NULL)
       {
          int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
 			{
-				TCHAR buffer[1024];
+				TCHAR buffer[4096];
 
 				NetworkMapLink *l = new NetworkMapLink(DBGetFieldLong(hResult, i, 0), DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2));
 				l->setName(DBGetField(hResult, i, 3, buffer, 256));
 				l->setConnector1Name(DBGetField(hResult, i, 4, buffer, 256));
 				l->setConnector2Name(DBGetField(hResult, i, 5, buffer, 256));
-				l->setColor(DBGetFieldULong(hResult, i, 6));
-				l->setStatusObject(DBGetFieldULong(hResult, i, 7));
-				l->setRouting(DBGetFieldULong(hResult, i, 8));
-				l->parseBendPoints(DBGetField(hResult, i, 9, buffer, 1024));
-				l->setConfig(DBGetField(hResult, i, 10, buffer, 1024));
-				l->setFlags(DBGetFieldULong(hResult, i, 11));
+				l->setConfig(DBGetField(hResult, i, 6, buffer, 4096));
+				l->setFlags(DBGetFieldULong(hResult, i, 7));
 				m_links->add(l);
 			}
          DBFreeResult(hResult);

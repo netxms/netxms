@@ -158,7 +158,7 @@ public class VlanMap extends AbstractNetworkMapView
 					{
 						Interface peerIf = (Interface)session.findObjectById(iface.getPeerInterfaceId(), Interface.class);
 						page.addLink(new NetworkMapLink(null, NetworkMapLink.NORMAL, rootElementId, nodeElementId,
-								       iface.getObjectName(), (peerIf != null) ? peerIf.getObjectName() : "???", "", 0)); //$NON-NLS-1$ //$NON-NLS-2$
+								       iface.getObjectName(), (peerIf != null) ? peerIf.getObjectName() : "???", 0)); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 				}
 				catch(NXCException e)

@@ -466,17 +466,25 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
          connection.getConnectionFigure().add(label, nameLocator);
       }
 
-		if (link.getStatusObject() != 0)
+		if (link.getStatusObject() != null && link.getStatusObject().size() != 0)
 		{
-			AbstractObject object = session.findObjectById(link.getStatusObject());
-			if (object != null)
-			{
-				connection.setLineColor(StatusDisplayInfo.getStatusColor(object.getStatus()));
-			}
-			else
-			{
-				connection.setLineColor(StatusDisplayInfo.getStatusColor(Severity.UNKNOWN));
-			}
+		   int severity = -1;
+		   for(Long id : link.getStatusObject())
+		   {
+   			AbstractObject object = session.findObjectById(id);
+   			if (object != null)
+            {
+   			   int stat = object.getStatus();
+   			   severity = stat < Severity.UNKNOWN && severity < stat ? stat : severity;
+   			   if(severity == Severity.CRITICAL)
+   			   {
+   			      break;
+   			   }
+            } 
+         }
+		   if(severity == -1)
+		      severity = Severity.UNKNOWN;
+		   connection.setLineColor(StatusDisplayInfo.getStatusColor(severity));   			
 		}
 		else if (link.getColor() >= 0)
 		{

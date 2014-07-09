@@ -241,7 +241,8 @@ public class NetworkMapPage
 		List<NetworkMapLink> list = null;
 		for(NetworkMapLink l : links)
 		{
-			if (l.getStatusObject() == objectId)
+		   for(Long obj : l.getStatusObject())
+			if (obj == objectId)
 			{
 				if (list == null)
 					list = new ArrayList<NetworkMapLink>();

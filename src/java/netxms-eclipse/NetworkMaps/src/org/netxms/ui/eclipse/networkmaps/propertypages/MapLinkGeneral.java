@@ -4,6 +4,7 @@
 package org.netxms.ui.eclipse.networkmaps.propertypages;
 
 import org.eclipse.jface.preference.ColorSelector;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -14,11 +15,15 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.List;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
-import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -36,7 +41,9 @@ public class MapLinkGeneral extends PropertyPage
 	private Button radioColorObject;
 	private Button radioColorCustom;
 	private ColorSelector color;
-	private ObjectSelector statusObject;
+	private List list;
+	private Button add;
+	private Button remove;
 	private Combo routingAlgorithm;
 	
 	/* (non-Javadoc)
@@ -95,7 +102,9 @@ public class MapLinkGeneral extends PropertyPage
 			public void widgetSelected(SelectionEvent e)
 			{
 				color.setEnabled(radioColorCustom.getSelection());
-				statusObject.setEnabled(radioColorObject.getSelection());
+				list.setEnabled(radioColorObject.getSelection()); 
+				add.setEnabled(radioColorObject.getSelection());
+				remove.setEnabled(radioColorObject.getSelection());
 			}
 			
 			@Override
@@ -107,28 +116,86 @@ public class MapLinkGeneral extends PropertyPage
 		
 		radioColorDefault = new Button(colorGroup, SWT.RADIO);
 		radioColorDefault.setText(Messages.get().MapLinkGeneral_DefColor);
-		radioColorDefault.setSelection((object.getColor() < 0) && (object.getStatusObject() == 0));
+		radioColorDefault.setSelection((object.getColor() < 0) && (object.getStatusObject().size() == 0));
 		radioColorDefault.addSelectionListener(listener);
 
 		radioColorObject = new Button(colorGroup, SWT.RADIO);
 		radioColorObject.setText(Messages.get().MapLinkGeneral_BasedOnObjStatus);
-		radioColorObject.setSelection(object.getStatusObject() != 0);
+		radioColorObject.setSelection(object.getStatusObject().size() != 0);
 		radioColorObject.addSelectionListener(listener);
+		
+		final Composite nodeSelectionGroup = new Composite(colorGroup, SWT.NONE);
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      nodeSelectionGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      nodeSelectionGroup.setLayoutData(gd);
+		
+		list = new List(nodeSelectionGroup, SWT.BORDER | SWT.SINGLE | SWT.V_SCROLL | SWT.H_SCROLL );
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalSpan = 2;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalIndent = 20;
+      list.setLayoutData(gd);
+		if(object.getStatusObject() != null)
+		{
+		   for(int i = 0; i < object.getStatusObject().size(); i++)
+		   {
+		      final AbstractObject obj = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(object.getStatusObject().get(i));
+	         list.add((obj != null) ? obj.getObjectName() : ("<" + Long.toString(object.getStatusObject().get(i)) + ">"));
+		   }
+		}
+      list.setEnabled(radioColorObject.getSelection());
+      
+      add = new Button(nodeSelectionGroup, SWT.PUSH);
+      add.setText("Add");
+      gd = new GridData();
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      gd.verticalAlignment = SWT.BOTTOM;
+      add.setLayoutData(gd);
+      add.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
 
-		statusObject = new ObjectSelector(colorGroup, SWT.NONE, true);
-		statusObject.setLabel(Messages.get().MapLinkGeneral_StatusObject);
-		statusObject.setObjectClass(AbstractObject.class);
-		statusObject.setObjectId(object.getStatusObject());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalIndent = 20;
-		statusObject.setLayoutData(gd);
-		statusObject.setEnabled(radioColorObject.getSelection());
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            selectionButtonHandler();
+         }
+      });
+      add.setEnabled(radioColorObject.getSelection());
+      
+      remove = new Button(nodeSelectionGroup, SWT.PUSH);
+      remove.setText("Delete");
+      gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
+      gd.verticalAlignment = SWT.BOTTOM;
+      remove.setLayoutData(gd);
+      remove.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            clearButtonHandler();
+         }
+      });
+      remove.setEnabled(radioColorObject.getSelection());
 
 		radioColorCustom = new Button(colorGroup, SWT.RADIO);
 		radioColorCustom.setText(Messages.get().MapLinkGeneral_CustomColor);
-		radioColorCustom.setSelection((object.getColor() >= 0) && (object.getStatusObject() == 0));
+		radioColorCustom.setSelection((object.getColor() >= 0) && (object.getStatusObject().size() == 0));
 		radioColorCustom.addSelectionListener(listener);
 
 		color = new ColorSelector(colorGroup);
@@ -152,7 +219,33 @@ public class MapLinkGeneral extends PropertyPage
 		
 		return dialogArea;
 	}
+	
+	  protected void selectionButtonHandler()
+	   {
+	      ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, null);
+	      dlg.enableMultiSelection(false);
+	      if (dlg.open() == Window.OK)
+	      {
+	         AbstractObject[] objects = dlg.getSelectedObjects(Node.class);
+	         if (objects.length > 0)
+	         {
+	            for(AbstractObject obj : objects)
+	            {
+	               object.addStatusObject(obj.getObjectId());	 
+	               list.add((obj != null) ? obj.getObjectName() : ("<" + Long.toString(obj.getObjectId()) + ">"));
+	            }
+	         }
+	      }
+	   }
 
+
+	   protected void clearButtonHandler()
+	   {
+	      int index = list.getSelectionIndex();
+	      list.remove(index);
+	      object.removeStatusObjectByIndex(index);
+	   }
+	  
 	/**
 	 * Apply changes
 	 * 
@@ -166,17 +259,17 @@ public class MapLinkGeneral extends PropertyPage
 		if (radioColorCustom.getSelection())
 		{
 			object.setColor(ColorConverter.rgbToInt(color.getColorValue()));
-			object.setStatusObject(0);
+			object.setStatusObject(null);
 		}
 		else if (radioColorObject.getSelection())
 		{
 			object.setColor(-1);
-			object.setStatusObject(statusObject.getObjectId());
+			//status object already set
 		}
 		else
 		{
 			object.setColor(-1);
-			object.setStatusObject(0);
+			object.setStatusObject(null);
 		}
 		object.setRoutingAlgorithm(routingAlgorithm.getSelectionIndex());
 		object.update();

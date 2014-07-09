@@ -279,10 +279,6 @@ protected:
 	TCHAR *m_name;
 	TCHAR *m_connectorName1;
 	TCHAR *m_connectorName2;
-	UINT32 m_color;
-	UINT32 m_statusObject;
-	int m_routing;
-	UINT32 m_bendPoints[MAX_BEND_POINTS * 2];
 	UINT32 m_flags;
 	TCHAR *m_config;
 
@@ -300,10 +296,6 @@ public:
 	const TCHAR *getConnector1Name() { return CHECK_NULL_EX(m_connectorName1); }
 	const TCHAR *getConnector2Name() { return CHECK_NULL_EX(m_connectorName2); }
 	int getType() { return m_type; }
-	UINT32 getColor() { return m_color; }
-	UINT32 getStatusObject() { return m_statusObject; }
-	int getRouting() { return m_routing; }
-	TCHAR *getBendPoints(TCHAR *buffer);
 	UINT32 getFlags() { return m_flags; }
 	const TCHAR *getConfig() { return CHECK_NULL_EX(m_config); }
 	bool checkFlagSet(UINT32 flag) { return (m_flags & flag) != 0; }
@@ -311,10 +303,6 @@ public:
 	void setName(const TCHAR *name);
 	void setConnector1Name(const TCHAR *name);
 	void setConnector2Name(const TCHAR *name);
-	void setColor(UINT32 color) { m_color = color; }
-	void setStatusObject(UINT32 object) { m_statusObject = object; }
-	void setRouting(int routing) { m_routing = routing; }
-	void parseBendPoints(const TCHAR *data);
 	void setFlags(UINT32 flags) { m_flags = flags; }
 	void setConfig(const TCHAR *name);
 };

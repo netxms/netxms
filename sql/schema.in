@@ -1293,10 +1293,6 @@ CREATE TABLE network_map_links
 	link_name varchar(255) null,
 	connector_name1 varchar(63) null,
 	connector_name2 varchar(63) null,
-	color integer not null,
-	status_object integer not null,
-	routing integer not null,
-	bend_points SQL_TEXT4K null,
 	element_data SQL_TEXT null,
 	flags integer not null,
 	PRIMARY KEY(map_id,element1,element2)
