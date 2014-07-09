@@ -63,7 +63,8 @@ public class Session
 	private EncryptionContext encryptionContext = null;
 
 	// Communication parameters
-	private int recvBufferSize = 65536; // Default is 64KB
+	private int defaultRecvBufferSize = 65536; // Default is 64KB
+   private int maxRecvBufferSize = 262144;    // Max is 256KB
 	private int commandTimeout = 30000; // Default is 30 sec
 	
 	/**
@@ -110,7 +111,7 @@ public class Session
 		@Override
 		public void run()
 		{
-			final NXCPMessageReceiver receiver = new NXCPMessageReceiver(recvBufferSize);
+			final NXCPMessageReceiver receiver = new NXCPMessageReceiver(defaultRecvBufferSize, maxRecvBufferSize);
 			InputStream in;
 
 			try

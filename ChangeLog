@@ -9,6 +9,7 @@
 - Removed agent configuration parameter EnableArbitraryFileUpload
 - New NXSL class "Zone"
 - New attributes "zone" and "zoneId" in NXSL classes "Node" and "Interface"
+- Syslog records from unmanaged nodes do not generate events
 - New access rights for nodes: 
    - Download File (download file from agent to local workstation)
    - Upload File (upload file from local workstation to remote node) 
@@ -18,6 +19,7 @@
    - Object tools can have icons
    - "Last value" type gauge can show non-numeric values
    - "Trusted Nodes" property page shown for condition objects
+   - Network map content can be copied to clipboard
 - Android Console:
    - Added option in preference to show/hide legend in graphs
 - Fixed issues: #586, #597, #598, #605, #606, #607

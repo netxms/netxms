@@ -222,7 +222,7 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_SYSLOG_RECORD *pRec)
  * Bind syslog message to NetXMS node object
  * dwSourceIP is an IP address from which we receive message
  */
-static void BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
+static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
 {
    Node *pNode = NULL;
    UINT32 dwIpAddr;
@@ -273,6 +273,8 @@ static void BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
       if (pRec->szHostName[0] == 0)
          IpToStrA(dwSourceIP, pRec->szHostName);
    }
+
+   return pNode;
 }
 
 /**
@@ -358,7 +360,7 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
    if (ParseSyslogMessage(psMsg, nMsgLen, &record))
    {
       record.qwMsgId = s_msgId++;
-      BindMsgToNode(&record, dwSourceIP);
+      Node *node = BindMsgToNode(&record, dwSourceIP);
 
       s_syslogWriteQueue.Put(nx_memdup(&record, sizeof(NX_SYSLOG_RECORD)));
 
@@ -370,7 +372,8 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
 		          IpToStr(dwSourceIP, ipAddr), record.dwSourceObject, record.szTag, record.szMessage);
 
 		MutexLock(s_parserLock);
-		if ((record.dwSourceObject != 0) && (s_parser != NULL))
+		if ((record.dwSourceObject != 0) && (s_parser != NULL) &&
+          ((node->Status() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES)))
 		{
 #ifdef UNICODE
 			WCHAR wtag[MAX_SYSLOG_TAG_LEN];
