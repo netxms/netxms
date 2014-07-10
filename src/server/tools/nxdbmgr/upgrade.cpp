@@ -425,7 +425,7 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
          TCHAR bendPoints[1024];
          DBGetField(hResult, i, 7, bendPoints, 1024);
 
-         TCHAR *newConfig = (TCHAR*) malloc(_tcslen(config)*sizeof(TCHAR)+4000);
+         TCHAR *newConfig = (TCHAR *)malloc((_tcslen(config) + 4096) *sizeof(TCHAR));
          _tcscpy(newConfig, _T("<config>"));
          TCHAR* c1 = _tcsstr(config, _T("<dciList"));
          TCHAR* c2 = _tcsstr(config, _T("</dciList>"));
