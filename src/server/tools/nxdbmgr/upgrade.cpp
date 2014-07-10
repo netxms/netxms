@@ -425,7 +425,7 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
          TCHAR bendPoints[1024];
          DBGetField(hResult, i, 7, bendPoints, 1024);
 
-         TCHAR newConfig[4048];
+         TCHAR *newConfig = (TCHAR*) malloc(_tcslen(config)*sizeof(TCHAR)+4000);
          _tcscpy(newConfig, _T("<config>"));
          TCHAR* c1 = _tcsstr(config, _T("<dciList"));
          TCHAR* c2 = _tcsstr(config, _T("</dciList>"));
@@ -472,6 +472,7 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
          DBBind(statment, 4, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 2));
          if(!DBExecute(statment))
             return FALSE;
+         safe_free(newConfig);
          DBFreeStatement(statment);
       }
       DBFreeResult(hResult);
