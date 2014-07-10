@@ -464,16 +464,21 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
 
          safe_free(config);
          DB_STATEMENT statment = DBPrepare(g_hCoreDB, _T("UPDATE network_map_links SET element_data=? WHERE map_id=? AND element1=? AND element2=?"));
-         if (statment == NULL)
-            return FALSE;
-         DBBind(statment, 1, DB_SQLTYPE_TEXT, newConfig, DB_BIND_STATIC);
-         DBBind(statment, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
-         DBBind(statment, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
-         DBBind(statment, 4, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 2));
-         if(!DBExecute(statment))
-            return FALSE;
+         if (statment != NULL)
+         {
+            DBBind(statment, 1, DB_SQLTYPE_TEXT, newConfig, DB_BIND_STATIC);
+            DBBind(statment, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+            DBBind(statment, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 1));
+            DBBind(statment, 4, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 2));
+            CHK_EXEC(DBExecute(statment));
+            DBFreeStatement(statment);
+         }
+         else
+         {
+            if (!g_bIgnoreErrors)
+               return FALSE;
+         }
          safe_free(newConfig);
-         DBFreeStatement(statment);
       }
       DBFreeResult(hResult);
    }
