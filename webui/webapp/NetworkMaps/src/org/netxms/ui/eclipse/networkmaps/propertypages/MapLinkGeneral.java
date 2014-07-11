@@ -218,7 +218,7 @@ public class MapLinkGeneral extends PropertyPage
 		
 		return dialogArea;
 	}
-	
+
    /**
     * Add object to status source list
     */

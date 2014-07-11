@@ -58,7 +58,7 @@ public class DCIContainerFigure extends DecorationLayerAbstractFigure
       final Color textColor = labelProvider.getColors().create(ColorConverter.rgbFromInt(container.getTextColor()));
       borderColor = labelProvider.getColors().create(ColorConverter.rgbFromInt(container.getBorderColor()));
 	
-		label = new Label(text.isEmpty() ? "Empty DCI container" : text);
+		label = new Label(text.isEmpty() ? "No value" : text);
 		label.setFont(labelProvider.getTitleFont());
 		add(label);
 			
@@ -100,7 +100,7 @@ public class DCIContainerFigure extends DecorationLayerAbstractFigure
    {
       //Set new label text   
       String text = dciValueProvider.getDciDataAsString(container.getDciAsList());      
-      label.setText(text.isEmpty() ? "Empty DCI container" : text);
+      label.setText(text.isEmpty() ? "No value" : text);
       
       //Recalculate figure size
       Dimension d = label.getPreferredSize();
