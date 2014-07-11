@@ -384,6 +384,21 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
       if (!g_bIgnoreErrors)
          return FALSE;
    }
+   return TRUE;}
+
+/**
+ * Upgrade from V326 to V327
+ */
+static BOOL H_UpgradeFromV326(int currVersion, int newVersion)
+{
+   //Remove unused columns
+   static TCHAR batch[] =
+      _T("ALTER TABLE network_map_links DROP PRIMARY KEY\n")
+      _T("CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id)\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='327' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
 
@@ -7991,6 +8006,7 @@ static struct
    { 323, 324, H_UpgradeFromV323 },
    { 324, 325, H_UpgradeFromV324 },
    { 325, 326, H_UpgradeFromV325 },
+   { 326, 327, H_UpgradeFromV326 },
    { 0, 0, NULL }
 };
 
