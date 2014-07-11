@@ -2910,17 +2910,38 @@ StringList *Node::getInstanceList(DCItem *dci)
 	if (dci->getInstanceDiscoveryData() == NULL)
 		return NULL;
 
+   Node *node;
+   if (dci->getProxyNode() != 0)
+   {
+      node = (Node *)FindObjectById(dci->getProxyNode(), OBJECT_NODE);
+      if (node == NULL)
+      {
+         DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): proxy node [%d] not found"), dci->getName(), dci->getId(), dci->getProxyNode());
+         return NULL;
+      }
+      if (!node->isTrustedNode(m_dwId))
+      {
+         DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by proxy node %s [%d] not found"), 
+                   dci->getName(), dci->getId(), m_szName, m_dwId, node->Name(), node->Id());
+         return NULL;
+      }
+   }
+   else
+   {
+      node = this;
+   }
+
 	StringList *instances;
 	switch(dci->getInstanceDiscoveryMethod())
 	{
 		case IDM_AGENT_LIST:
-			getListFromAgent(dci->getInstanceDiscoveryData(), &instances);
+			node->getListFromAgent(dci->getInstanceDiscoveryData(), &instances);
 			break;
 		case IDM_SNMP_WALK_VALUES:
-		   getListFromSNMP(dci->getSnmpPort(), dci->getInstanceDiscoveryData(), &instances);
+		   node->getListFromSNMP(dci->getSnmpPort(), dci->getInstanceDiscoveryData(), &instances);
 		   break;
       case IDM_SNMP_WALK_OIDS:
-         getOIDSuffixListFromSNMP(dci->getSnmpPort(), dci->getInstanceDiscoveryData(), &instances);
+         node->getOIDSuffixListFromSNMP(dci->getSnmpPort(), dci->getInstanceDiscoveryData(), &instances);
          break;
 		default:
 			instances = NULL;
