@@ -39,7 +39,7 @@ public class NetworkMapPage
 	private String id;
 	private long nextElementId;
 	private Map<Long, NetworkMapElement> elements = new HashMap<Long, NetworkMapElement>(0);
-	private List<NetworkMapLink> links = new ArrayList<NetworkMapLink>(0);
+	private Set<NetworkMapLink> links = new HashSet<NetworkMapLink>(0);
 
 	/**
 	 * Create empty named page
@@ -215,18 +215,19 @@ public class NetworkMapPage
 	}
 	
 	/**
-	 * Find link from source to destination
+	 * Find links from source to destination
 	 * 
 	 * @param source source element
 	 * @param destination destination element
 	 * @return link between source and destination or null if there are no such link 
 	 */
-	public NetworkMapLink findLink(NetworkMapElement source, NetworkMapElement destination)
+	public List<NetworkMapLink> findLinks(NetworkMapElement source, NetworkMapElement destination)
 	{
+	   List<NetworkMapLink> result = new ArrayList<NetworkMapLink>();
 		for(NetworkMapLink l : links)
 			if ((l.getElement1() == source.getId()) && (l.getElement2() == destination.getId()))
-				return l;
-		return null;
+				result.add(l);
+		return result;
 	}
 	
 	/**

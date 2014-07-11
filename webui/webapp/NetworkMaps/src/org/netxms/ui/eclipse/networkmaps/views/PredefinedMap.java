@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -596,11 +596,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		Object[] objects = selection.toArray();
 		long id1 = ((NetworkMapObject)objects[0]).getId();
 		long id2 = ((NetworkMapObject)objects[1]).getId();
-		if (!mapPage.areObjectsConnected(id1, id2))
-		{
-			mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, id1, id2));
-			saveMap();
-		}
+   	mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, id1, id2));
+		saveMap();
 	}
 
 	/**

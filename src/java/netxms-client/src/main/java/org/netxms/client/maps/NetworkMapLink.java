@@ -299,27 +299,6 @@ public class NetworkMapLink
 		       ((connectorName2 == null) || connectorName2.isEmpty());
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj)
-	{
-		if (obj instanceof NetworkMapLink)
-			return (((NetworkMapLink)obj).element1 == this.element1) &&
-			       (((NetworkMapLink)obj).element2 == this.element2);
-		return super.equals(obj);
-	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode()
-	{
-		return (int)((element1 << 16) | (element2 & 0xFFFF));
-	}
-
 	/**
 	 * @return the color
 	 */
