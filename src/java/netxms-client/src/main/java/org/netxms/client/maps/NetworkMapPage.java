@@ -39,7 +39,7 @@ public class NetworkMapPage
 	private String id;
 	private long nextElementId;
 	private Map<Long, NetworkMapElement> elements = new HashMap<Long, NetworkMapElement>(0);
-	private Set<NetworkMapLink> links = new HashSet<NetworkMapLink>(0);
+	private List<NetworkMapLink> links = new ArrayList<NetworkMapLink>(0);
 
 	/**
 	 * Create empty named page
