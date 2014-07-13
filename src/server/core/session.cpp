@@ -167,7 +167,7 @@ DEFINE_THREAD_STARTER(queryAgentTable)
 DEFINE_THREAD_STARTER(getAlarmEvents)
 DEFINE_THREAD_STARTER(openHelpdeskIssue)
 DEFINE_THREAD_STARTER(forwardToReportingServer)
-DEFINE_THREAD_STARTER(getAgentFolderContent)
+DEFINE_THREAD_STARTER(fileManagerControl)
 DEFINE_THREAD_STARTER(uploadUserFileToAgent)
 
 /**
@@ -1433,7 +1433,7 @@ void ClientSession::processingThread()
          case CMD_FILEMGR_DELETE_FILE:
          case CMD_FILEMGR_RENAME_FILE:
          case CMD_FILEMGR_MOVE_FILE:
-            CALL_IN_NEW_THREAD(getAgentFolderContent, pMsg);
+            CALL_IN_NEW_THREAD(fileManagerControl, pMsg);
             break;
          case CMD_FILEMGR_UPLOAD:
             CALL_IN_NEW_THREAD(uploadUserFileToAgent, pMsg);
@@ -13026,9 +13026,9 @@ void ClientSession::getEffectiveRights(CSCPMessage *request)
 }
 
 /**
- * Get content of folder from agent
+ * File manager control calls
  */
-void ClientSession::getAgentFolderContent(CSCPMessage *request)
+void ClientSession::fileManagerControl(CSCPMessage *request)
 {
    CSCPMessage msg, *response = NULL, *responseMessage;
 	UINT32 rcc;

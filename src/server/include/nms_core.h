@@ -463,7 +463,7 @@ private:
 	DECLARE_THREAD_STARTER(getAlarmEvents)
 	DECLARE_THREAD_STARTER(openHelpdeskIssue)
 	DECLARE_THREAD_STARTER(forwardToReportingServer)
-   DECLARE_THREAD_STARTER(getAgentFolderContent)
+   DECLARE_THREAD_STARTER(fileManagerControl)
    DECLARE_THREAD_STARTER(uploadUserFileToAgent)
 
    void readThread();
@@ -670,7 +670,7 @@ private:
    void forwardToReportingServer(CSCPMessage *request);
    void getSubnetAddressMap(CSCPMessage *request);
    void getEffectiveRights(CSCPMessage *request);
-   void getAgentFolderContent(CSCPMessage *request);
+   void fileManagerControl(CSCPMessage *request);
    void uploadUserFileToAgent(CSCPMessage *request);
 
 public:
