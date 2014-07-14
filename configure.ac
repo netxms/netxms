@@ -1440,7 +1440,7 @@ if test "x$LDAP_SUPPORT" = "xyes"; then
 				AC_DEFINE(HAVE_LDAP_INITIALIZE, 1, Define to 1 if you have ldap_initialize function)
 			])
 		AC_CHECK_LIB(ldap, ldapssl_init, [ 
-				AC_DEFINE(HAVE_LDAP_INITIALIZE, 1, Define to 1 if you have ldapssl_init function)
+				AC_DEFINE(HAVE_LDAPSSL_INIT, 1, Define to 1 if you have ldapssl_init function)
 			])
 	fi
 	LDAP_SUPPORT="$HAVE_LDAP"
