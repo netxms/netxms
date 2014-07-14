@@ -13051,7 +13051,8 @@ void ClientSession::fileManagerControl(CSCPMessage *request)
 	NetObj *object = FindObjectById(objectId);
 	if (object != NULL)
 	{
-		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MANAGE_FILES))
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MANAGE_FILES) ||
+         (request->GetCode() == CMD_GET_FOLDER_CONTENT && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ)))
 		{
 			if (object->Type() == OBJECT_NODE)
 			{

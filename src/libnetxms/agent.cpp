@@ -22,6 +22,7 @@
 **/
 
 #include "libnetxms.h"
+#include <nms_agent.h>
 
 /**
  * Static data
@@ -29,6 +30,7 @@
 static void (* s_fpWriteLog)(int, int, const TCHAR *) = NULL;
 static void (* s_fpSendTrap1)(UINT32, const TCHAR *, const char *, va_list) = NULL;
 static void (* s_fpSendTrap2)(UINT32, const TCHAR *, int, TCHAR **) = NULL;
+static bool (* s_fpEnumerateSessions)(bool (*)(AbstractCommSession *, void *), void *) = NULL;
 static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long) = NULL;
 static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32) = NULL;
 
@@ -38,12 +40,14 @@ static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32) = NULL;
 void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
 														void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
 														void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
+														bool (* enumerateSessions)(bool (*)(AbstractCommSession *, void *), void*),
 														bool (* sendFile)(void *, UINT32, const TCHAR *, long),
 														bool (* pushData)(const TCHAR *, const TCHAR *, UINT32))
 {
    s_fpWriteLog = writeLog;
 	s_fpSendTrap1 = sendTrap1;
 	s_fpSendTrap2 = sendTrap2;
+	s_fpEnumerateSessions = enumerateSessions;
 	s_fpSendFile = sendFile;
 	s_fpPushData = pushData;
 }
@@ -123,6 +127,19 @@ void LIBNETXMS_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName,
 {
    if (s_fpSendTrap2 != NULL)
       s_fpSendTrap2(dwEvent, eventName, nCount, ppszArgList);
+}
+
+/**
+ * Goes throught all sessions and executes
+ */
+bool LIBNETXMS_EXPORTABLE EnumerateSessions(bool (* callback)(AbstractCommSession *, void *), void *data)
+{
+   if (s_fpEnumerateSessions != NULL)
+   {
+      return s_fpEnumerateSessions(callback, data);
+   }
+   else
+      return false;
 }
 
 /**

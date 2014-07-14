@@ -18,15 +18,17 @@
  **
  **/
 
-#include <nms_common.h>
-#include <nms_agent.h>
-#include <nxclapi.h>
-#include <nxstat.h>
+#include "filemgr.h"
 
 /**
  * Root folders
  */
 static StringList *g_rootFileManagerFolders;
+
+/**
+ * Monitored file list
+ */
+MonitoredFileList g_monitorFileList;
 
 #ifdef _WIN32
 
@@ -641,7 +643,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          ConvertPathToHost(name);
 
-         if (CheckFullPath(name, true) && ((AbstractCommSession *)session)->isMasterServer())
+         if (CheckFullPath(name, false) && ((AbstractCommSession *)session)->isMasterServer())
          {
             response->SetVariable(VID_RCC, ((AbstractCommSession *)session)->openFile(name, request->GetId()));
          }
@@ -649,6 +651,99 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          {
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Acess denid."));
             response->SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+         return TRUE;
+      }
+      case CMD_GET_FILE_DETAILS:
+      {
+         TCHAR fileName[MAX_PATH];
+         request->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
+         ExpandFileName(fileName, fileName, MAX_PATH, false);
+         response->SetId(request->GetId());
+
+      	if (((AbstractCommSession *)session)->isMasterServer() && CheckFullPath(fileName, false))
+         {
+      #ifdef _WIN32
+            struct _stat fs;
+      #else
+            struct stat fs;
+      #endif
+
+            //prepare file name
+            if (_tstat(fileName, &fs) == 0)
+            {
+               response->SetVariable(VID_FILE_SIZE, (QWORD)fs.st_size);
+               response->SetVariable(VID_MODIFY_TIME, (QWORD)fs.st_mtime);
+               response->SetVariable(VID_RCC, ERR_SUCCESS);
+            }
+            else
+            {
+               response->SetVariable(VID_RCC, ERR_FILE_STAT_FAILED);
+            }
+         }
+         else
+         {
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Acess denid."));
+            response->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+         }
+         return TRUE;
+      }
+      case CMD_GET_AGENT_FILE:
+      {
+         response->SetId(request->GetId());
+         TCHAR fileName[MAX_PATH];
+         request->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
+         ExpandFileName(fileName, fileName, MAX_PATH, false);
+
+         if (((AbstractCommSession *)session)->isMasterServer() && CheckFullPath(fileName, false))
+         {
+            TCHAR fileNameCode[MAX_PATH];
+            request->GetVariableStr(VID_NAME, fileNameCode, MAX_PATH);
+            //prepare file name
+
+            AgentWriteDebugLog(5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s"),
+                        fileName, request->GetVariableShort(VID_FILE_FOLLOW) ? _T("true") : _T("false"));
+            bool result = AgentSendFileToServer(session, request->GetId(), fileName, (int)request->GetVariableLong(VID_FILE_OFFSET));
+            if(request->GetVariableShort(VID_FILE_FOLLOW) && result)
+            {
+               TCHAR* fileID = _tcsdup(fileNameCode);
+               TCHAR* realName = _tcsdup(fileName);
+               g_monitorFileList.addMonitoringFile(fileID);
+               FollowData *flData = new FollowData();
+               flData->serverAddress = ((AbstractCommSession *)session)->getServerAddress();
+               flData->pszFile = realName;
+               flData->fileId = fileID;
+               flData->offset = 0;
+               flData->session = ((AbstractCommSession *)session);
+               ThreadCreateEx(SendFileUpdatesOverNXCP, 0, (void*)flData);
+            }
+            response->SetVariable(VID_RCC, ERR_SUCCESS);
+         }
+         else
+         {
+            response->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+         }
+         return TRUE;
+      }
+      case CMD_CANCEL_FILE_MONITORING:
+      {
+         response->SetId(request->GetId());
+         if (((AbstractCommSession *)session)->isMasterServer())
+         {
+            TCHAR fileName[MAX_PATH];
+            request->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
+            if(g_monitorFileList.removeMonitoringFile(fileName))
+            {
+               response->SetVariable(VID_RCC, ERR_SUCCESS);
+            }
+            else
+            {
+               response->SetVariable(VID_RCC, ERR_BAD_ARGUMENTS);
+            }
+         }
+         else
+         {
+            response->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
          }
          return TRUE;
       }

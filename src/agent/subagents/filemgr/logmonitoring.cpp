@@ -20,8 +20,7 @@
 **
 **/
 
-#include "nxagentd.h"
-#include <nxstat.h>
+#include "filemgr.h"
 
 #ifdef _WIN32
 #include <share.h>
@@ -107,7 +106,7 @@ bool MonitoredFileList::removeMonitoringFile(const TCHAR *fileName)
 
    if(!alreadyMonitored)
    {
-      DebugPrintf(INVALID_INDEX, 6, _T("MonitoredFileList::removeMonitoringFile: attempt to delete non-existing file %s"), fileName);
+      AgentWriteDebugLog(6, _T("MonitoredFileList::removeMonitoringFile: attempt to delete non-existing file %s"), fileName);
    }
    Unlock();
    return alreadyMonitored;
@@ -121,6 +120,22 @@ void MonitoredFileList::Lock()
 void MonitoredFileList::Unlock()
 {
    MutexUnlock(m_mutex);
+};
+
+struct DataStruct
+{
+   UINT32 ip;
+   CSCPMessage *pMsg;
+};
+
+bool SendMessage(AbstractCommSession * session, void *data)
+{
+   if (session != NULL && ((DataStruct*)data)->ip == session->getServerAddress())
+   {
+      session->sendMessage(((DataStruct*)data)->pMsg);
+      return FALSE;
+   }
+   return TRUE;
 };
 
 THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
@@ -142,7 +157,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
 
    if (hFile == -1)
    {
-      DebugPrintf(INVALID_INDEX, 6, _T("SendFileUpdatesOverNXCP: File does not exists or couldn't be opened. File: %s."), flData->pszFile);
+      AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: File does not exists or couldn't be opened. File: %s."), flData->pszFile);
       g_monitorFileList.removeMonitoringFile(flData->pszFile);
       return THREAD_OK;
    }
@@ -168,7 +183,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
             lseek(hFile, flData->offset, SEEK_SET);
             readBytes = (BYTE*)malloc(readSize);
             readSize = read(hFile, readBytes, readSize);
-            DebugPrintf(INVALID_INDEX, 6, _T("SendFileUpdatesOverNXCP: %d bytes will be sent."), readSize);
+            AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: %d bytes will be sent."), readSize);
 #ifdef UNICODE
             TCHAR *text = WideStringFromMBString((char *)readBytes);
             pMsg->SetVariable(VID_FILE_DATA, text, readSize);
@@ -178,22 +193,17 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
 #endif
             flData->offset = newOffset;
 
-            MutexLock(g_hSessionListAccess);
-            bool sent = false;
-            for(UINT32 i = 0; i < g_dwMaxSessions; i++)
-            {
-               if (g_pSessionList[i] != NULL && flData->serverAddress == g_pSessionList[i]->getServerAddress())
-               {
-                  g_pSessionList[i]->sendMessage(pMsg);
-                  sent = true;
-                  break;
-               }
-            }
+            DataStruct data;
+            data.ip = flData->serverAddress;
+            data.pMsg = pMsg;
+
+            bool sent = EnumerateSessions(&SendMessage, &data);
+
             if(!sent)
             {
                g_monitorFileList.removeMonitoringFile(flData->pszFile);
             }
-            MutexUnlock(g_hSessionListAccess);
+
 
             safe_free(readBytes);
             delete pMsg;

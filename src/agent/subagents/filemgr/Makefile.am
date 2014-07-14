@@ -1,12 +1,12 @@
 SUBAGENT = filemgr
 
 pkglib_LTLIBRARIES = filemgr.la
-filemgr_la_SOURCES = filemgr.cpp
+filemgr_la_SOURCES = filemgr.cpp logmonitoring.cpp
 filemgr_la_CPPFLAGS=-I@top_srcdir@/include
 filemgr_la_LDFLAGS = -module -avoid-version
 filemgr_la_LIBADD = ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = filemgr.vcproj
+EXTRA_DIST = filemgr.vcproj filemgr.h
 
 if !STATIC_BUILD
 install-exec-hook:

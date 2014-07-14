@@ -328,7 +328,6 @@ private:
    void recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
    void cancelFileMonitoring(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   void getFileDetails(CSCPMessage *pRequest, CSCPMessage *pMsg);
    UINT32 upgrade(CSCPMessage *pRequest);
    UINT32 setupProxyConnection(CSCPMessage *pRequest);
 
@@ -465,44 +464,6 @@ void StartStorageDiscoveryConnector();
 void StartControlConnector();
 bool SendControlMessage(CSCPMessage *msg);
 
-/**
- * File monitoring
- */
-struct MONITORED_FILE
-{
-   TCHAR fileName[MAX_PATH];
-   int monitoringCount;
-};
-
-struct FollowData
-{
-   const TCHAR *pszFile;
-   const TCHAR *fileId;
-   long offset;
-	UINT32 serverAddress;
-};
-
-class MonitoredFileList
-{
-private:
-   MUTEX m_mutex;
-   ObjectArray<MONITORED_FILE>  m_monitoredFiles;
-   MONITORED_FILE* m_newFile;
-
-public:
-   MonitoredFileList();
-   ~MonitoredFileList();
-   void addMonitoringFile(const TCHAR *fileName);
-   bool checkFileMonitored(const TCHAR *fileName);
-   bool removeMonitoringFile(const TCHAR *fileName);
-
-private:
-   void Lock();
-   void Unlock();
-};
-
-THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *arg);
-
 #ifdef _WIN32
 
 void InitService();
@@ -553,7 +514,6 @@ extern UINT32 g_dwRejectedConnections;
 
 extern CommSession **g_pSessionList;
 extern MUTEX g_hSessionListAccess;
-extern MonitoredFileList g_monitorFileList;
 
 #ifdef _WIN32
 extern TCHAR g_windowsEventSourceName[];

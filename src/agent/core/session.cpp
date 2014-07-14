@@ -444,15 +444,6 @@ void CommSession::processingThread()
             case CMD_TRANSFER_FILE:
                recvFile(pMsg, &msg);
                break;
-            case CMD_GET_AGENT_FILE:
-               getLocalFile(pMsg, &msg);
-               break;
-            case CMD_CANCEL_FILE_MONITORING:
-               cancelFileMonitoring(pMsg, &msg);
-               break;
-            case CMD_GET_FILE_DETAILS:
-               getFileDetails(pMsg, &msg);
-               break;
             case CMD_UPGRADE_AGENT:
                msg.SetVariable(VID_RCC, upgrade(pMsg));
                break;
@@ -715,101 +706,6 @@ void CommSession::action(CSCPMessage *pRequest, CSCPMessage *pMsg)
    {
       pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
    }
-}
-
-/**
- * Send local file to server
- */
-void CommSession::getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
-{
-	if (m_bMasterServer)
-	{
-		TCHAR fileName[MAX_PATH];
-		TCHAR fileNameCode[MAX_PATH];
-		pRequest->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
-		pRequest->GetVariableStr(VID_NAME, fileNameCode, MAX_PATH);
-		//prepare file name
-		ExpandFileName(fileName, fileName, MAX_PATH, false);
-
-		DebugPrintf(m_dwIndex, 5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s"),
-                  fileName, pRequest->GetVariableShort(VID_FILE_FOLLOW) ? _T("true") : _T("false"));
-		bool result = sendFile(pRequest->GetId(), fileName, (int)pRequest->GetVariableLong(VID_FILE_OFFSET));
-		if(pRequest->GetVariableShort(VID_FILE_FOLLOW) && result)
-      {
-         TCHAR* fileID = _tcsdup(fileNameCode);
-         TCHAR* realName = _tcsdup(fileName);
-         g_monitorFileList.addMonitoringFile(fileID);
-         FollowData *flData = new FollowData();
-         flData->serverAddress = getServerAddress();
-         flData->pszFile = realName;
-         flData->fileId = fileID;
-         flData->offset = 0;
-         ThreadCreateEx(SendFileUpdatesOverNXCP, 0, (void*)flData);
-      }
-		pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
-	}
-	else
-	{
-		pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
-	}
-}
-
-/**
- * Cancel file monitoring
- */
-void CommSession::cancelFileMonitoring(CSCPMessage *pRequest, CSCPMessage *pMsg)
-{
-	if (m_bMasterServer)
-	{
-		TCHAR fileName[MAX_PATH];
-		pRequest->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
-      if(g_monitorFileList.removeMonitoringFile(fileName))
-      {
-         pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
-      }
-      else
-      {
-         pMsg->SetVariable(VID_RCC, ERR_BAD_ARGUMENTS);
-      }
-	}
-	else
-	{
-		pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
-	}
-}
-
-/**
- * Get local file details
- */
-void CommSession::getFileDetails(CSCPMessage *pRequest, CSCPMessage *pMsg)
-{
-	if (m_bMasterServer)
-	{
-		TCHAR fileName[MAX_PATH];
-#ifdef _WIN32
-		struct _stat fs;
-#else
-		struct stat fs;
-#endif
-
-		pRequest->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
-      //prepare file name
-		ExpandFileName(fileName, fileName, MAX_PATH, false);
-		if (_tstat(fileName, &fs) == 0)
-		{
-			pMsg->SetVariable(VID_FILE_SIZE, (QWORD)fs.st_size);
-			pMsg->SetVariable(VID_MODIFY_TIME, (QWORD)fs.st_mtime);
-			pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
-		}
-		else
-		{
-			pMsg->SetVariable(VID_RCC, ERR_FILE_STAT_FAILED);
-		}
-	}
-	else
-	{
-		pMsg->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
-	}
 }
 
 /**

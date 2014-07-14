@@ -131,7 +131,6 @@ UINT32 g_dwStartupDelay = 0;
 UINT32 g_dwMaxSessions = 32;
 UINT32 g_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
 Config *g_config;
-MonitoredFileList g_monitorFileList;
 #ifdef _WIN32
 UINT32 g_dwIdleTimeout = 60;   // Session idle timeout
 #else
@@ -557,6 +556,21 @@ static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file,
 }
 
 /**
+ * Goes throught sesion list and executs on each object handler while it returns true
+ */
+static bool EnumerateSessionsBySubagent(bool (* pHandler)(AbstractCommSession *, void* ), void *data)
+{
+   MutexLock(g_hSessionListAccess);
+   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   {
+      if(!pHandler(g_pSessionList[i], data))
+         return true;
+   }
+   MutexUnlock(g_hSessionListAccess);
+   return false;
+}
+
+/**
  * Parser server list
  */
 static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
@@ -705,7 +719,7 @@ BOOL Initialize()
 #endif
 
    // Initialize API for subagents
-   InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, SendFileToServer, PushData);
+   InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, EnumerateSessionsBySubagent, SendFileToServer, PushData);
    DebugPrintf(INVALID_INDEX, 1, _T("Subagent API initialized"));
 
    // Initialize cryptografy

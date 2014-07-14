@@ -498,11 +498,21 @@ inline void ret_uint64(TCHAR *rbuf, QWORD value)
 #endif   /* _WIN32 */
 }
 
+/**
+ * Api for CommSession
+ */
+class AbstractCommSession
+{
+public:
+   virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
+   virtual BOOL isMasterServer() = 0;
+   virtual UINT32 getServerAddress() = 0;
+   virtual void sendMessage(CSCPMessage *pMsg) = 0;
+};
 
 //
 // API for subagents
 //
-
 BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, int maxSize);
 BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, WCHAR *arg, int maxSize);
 #ifdef UNICODE
@@ -525,6 +535,7 @@ void LIBNETXMS_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ...
 void LIBNETXMS_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va_list args);
 void LIBNETXMS_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, const char *pszFormat, ...);
 void LIBNETXMS_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList);
+bool LIBNETXMS_EXPORTABLE EnumerateSessions(bool (* callback)(AbstractCommSession *, void *), void *data);
 BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LONG value);
@@ -533,13 +544,11 @@ BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, IN
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, QWORD value);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, double value);
 
-/**
- * Api for CommSession
- */
-class AbstractCommSession
-{
-public:
-   virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
-   virtual BOOL isMasterServer() = 0;
-};
+void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
+                                          void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
+                                          void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
+														bool (* enumerateSessions)(bool (*)(AbstractCommSession *, void *), void *),
+                                          bool (* sendFile)(void *, UINT32, const TCHAR *, long),
+                                          bool (* pushData)(const TCHAR *, const TCHAR *, UINT32));
+
 #endif   /* _nms_agent_h_ */
