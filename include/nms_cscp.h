@@ -491,7 +491,8 @@ typedef struct
 #define CMD_FILEMGR_DELETE_FILE        0x0127
 #define CMD_FILEMGR_RENAME_FILE        0x0128
 #define CMD_FILEMGR_MOVE_FILE          0x0129
-#define CMD_FILEMGR_UPLOAD             0x0130
+#define CMD_FILEMGR_UPLOAD             0x012A
+#define CMD_GET_SWITCH_FDB             0x012B
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

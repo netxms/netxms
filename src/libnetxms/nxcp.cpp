@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -333,10 +333,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_FILEMGR_DELETE_FILE"),
       _T("CMD_FILEMGR_RENAME_FILE"),
       _T("CMD_FILEMGR_MOVE_FILE"),
-      _T("CMD_FILEMGR_UPLOAD")
+      _T("CMD_FILEMGR_UPLOAD"),
+      _T("CMD_GET_SWITCH_FDB")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_FILEMGR_UPLOAD))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_SWITCH_FDB))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);

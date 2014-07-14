@@ -388,9 +388,10 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(UINT32 dwError)
       _T("Helpdesk link communication failure"),
       _T("Helpdesk link access denied"),
       _T("Helpdesk link internal error"),
-      _T("LDAP connection error")
+      _T("LDAP connection error"),
+      _T("Routing table unavailable")
    };
-	return (dwError <= RCC_NO_LDAP_CONNECTION) ? pszErrorText[dwError] : _T("No text message for this error");
+	return (dwError <= RCC_NO_ROUTING_TABLE) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 #if defined(_WIN32) && !defined(UNDER_CE)

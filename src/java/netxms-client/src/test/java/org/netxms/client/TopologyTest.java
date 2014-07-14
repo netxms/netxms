@@ -18,9 +18,11 @@
  */
 package org.netxms.client;
 
+import java.util.List;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
+import org.netxms.client.topology.Route;
 
 
 /**
@@ -29,7 +31,7 @@ import org.netxms.client.maps.elements.NetworkMapElement;
 public class TopologyTest extends SessionTest
 {
    private static final long SUBNET_ID = 796;
-   private static final long NODE_ID = 603;
+   private static final long NODE_ID = 100;
    
    public void testAddressMap() throws Exception
    {
@@ -51,6 +53,17 @@ public class TopologyTest extends SessionTest
          System.out.println(e.toString());
       for(NetworkMapLink l : page.getLinks())
          System.out.println(l.toString());
+      
+      session.disconnect();
+   }
+
+   public void testRoutingTable() throws Exception
+   {
+      final NXCSession session = connect();
+
+      List<Route> rt = session.getRoutingTable(NODE_ID);
+      for(Route r : rt)
+         System.out.println(r.toString());
       
       session.disconnect();
    }

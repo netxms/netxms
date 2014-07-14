@@ -535,6 +535,7 @@ enum
 #define RCC_HDLINK_ACCESS_DENIED     ((UINT32)110)
 #define RCC_HDLINK_INTERNAL_ERROR    ((UINT32)111)
 #define RCC_NO_LDAP_CONNECTION       ((UINT32)112)
+#define RCC_NO_ROUTING_TABLE         ((UINT32)113)
 
 /**
  * Mask bits for NXCModifyEventTemplate()

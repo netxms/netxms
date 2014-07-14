@@ -169,6 +169,8 @@ DEFINE_THREAD_STARTER(openHelpdeskIssue)
 DEFINE_THREAD_STARTER(forwardToReportingServer)
 DEFINE_THREAD_STARTER(fileManagerControl)
 DEFINE_THREAD_STARTER(uploadUserFileToAgent)
+DEFINE_THREAD_STARTER(getSwitchForwardingDatabase)
+DEFINE_THREAD_STARTER(getRoutingTable)
 
 /**
  * Client communication read thread starter
@@ -1437,6 +1439,12 @@ void ClientSession::processingThread()
             break;
          case CMD_FILEMGR_UPLOAD:
             CALL_IN_NEW_THREAD(uploadUserFileToAgent, pMsg);
+            break;
+         case CMD_GET_SWITCH_FDB:
+            CALL_IN_NEW_THREAD(getSwitchForwardingDatabase, pMsg);
+            break;
+         case CMD_GET_ROUTING_TABLE:
+            CALL_IN_NEW_THREAD(getRoutingTable, pMsg);
             break;
          default:
             if ((m_wCurrentCmd >> 8) == 0x11)
@@ -13246,3 +13254,88 @@ void ClientSession::uploadUserFileToAgent(CSCPMessage *request)
       delete response;
 }
 
+/**
+ * Get switch forwarding database
+ */
+void ClientSession::getSwitchForwardingDatabase(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get node id and check object class and access rights
+   Node *node = (Node *)FindObjectById(request->GetVariableLong(VID_OBJECT_ID), OBJECT_NODE);
+   if (node != NULL)
+   {
+      if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, node->Id(), _T("Access denied on reading FDB"));
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Get switch forwarding database
+ */
+void ClientSession::getRoutingTable(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get node id and check object class and access rights
+   Node *node = (Node *)FindObjectById(request->GetVariableLong(VID_OBJECT_ID), OBJECT_NODE);
+   if (node != NULL)
+   {
+      if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         ROUTING_TABLE *rt = node->getRoutingTable();
+         if (rt != NULL)
+         {
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            msg.SetVariable(VID_NUM_ELEMENTS, (UINT32)rt->iNumEntries);
+            UINT32 id = VID_ELEMENT_LIST_BASE;
+            for(int i = 0; i < rt->iNumEntries; i++)
+            {
+               msg.SetVariable(id++, rt->pRoutes[i].dwDestAddr);
+               msg.SetVariable(id++, (UINT32)BitsInMask(rt->pRoutes[i].dwDestMask));
+               msg.SetVariable(id++, rt->pRoutes[i].dwNextHop);
+               msg.SetVariable(id++, rt->pRoutes[i].dwIfIndex);
+               msg.SetVariable(id++, rt->pRoutes[i].dwRouteType);
+               id += 5;
+            }
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_NO_ROUTING_TABLE);
+         }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, node->Id(), _T("Access denied on reading routing table"));
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}

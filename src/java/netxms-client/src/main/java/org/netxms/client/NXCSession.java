@@ -164,6 +164,7 @@ import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.client.topology.NetworkPath;
+import org.netxms.client.topology.Route;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.client.topology.WirelessStation;
 
@@ -174,7 +175,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 {
    // Various public constants
    public static final int DEFAULT_CONN_PORT = 4701;
-   public static final int CLIENT_PROTOCOL_VERSION = 43;
+   public static final int CLIENT_PROTOCOL_VERSION = 44;
 
    // Authentication types
    public static final int AUTH_TYPE_PASSWORD = 0;
@@ -6759,6 +6760,31 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return new NetworkPath(response);
+   }
+   
+   /**
+    * Get routing table from node
+    * 
+    * @param nodeId
+    * @return
+    * @throws IOException
+    * @throws NXCException
+    */
+   public List<Route> getRoutingTable(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ROUTING_TABLE);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
+      List<Route> rt = new ArrayList<Route>(count);
+      long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         rt.add(new Route(response, varId));
+         varId += 10;
+      }
+      return rt;
    }
 
    /**

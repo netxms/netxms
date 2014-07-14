@@ -465,6 +465,8 @@ private:
 	DECLARE_THREAD_STARTER(forwardToReportingServer)
    DECLARE_THREAD_STARTER(fileManagerControl)
    DECLARE_THREAD_STARTER(uploadUserFileToAgent)
+   DECLARE_THREAD_STARTER(getSwitchForwardingDatabase)
+   DECLARE_THREAD_STARTER(getRoutingTable)
 
    void readThread();
    void writeThread();
@@ -672,6 +674,8 @@ private:
    void getEffectiveRights(CSCPMessage *request);
    void fileManagerControl(CSCPMessage *request);
    void uploadUserFileToAgent(CSCPMessage *request);
+   void getSwitchForwardingDatabase(CSCPMessage *request);
+   void getRoutingTable(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);
