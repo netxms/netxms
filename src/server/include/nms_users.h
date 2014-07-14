@@ -71,6 +71,7 @@ private:
    TCHAR m_userClass[MAX_DB_STRING];
    TCHAR m_groupClass[MAX_DB_STRING];
    int m_action;
+   int m_secure;
 
    void closeLDAPConnection();
    void initLDAP();

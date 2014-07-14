@@ -74,6 +74,11 @@ void LDAPConnection::prepareStringForInit(TCHAR *connectionLine)
       comma=_tcschr(connectionLine,_T(','));
    }
 
+   if(_tcsstr(connectionLine,_T("ldaps://")))
+   {
+      m_secure = 1;
+   }
+
    lastSlash=_tcsrchr(connectionLine, _T('/'));
    while(lastSlash != NULL)
    {
@@ -107,6 +112,11 @@ void LDAPConnection::prepareStringForInit(char *connectionLine)
    {
       *comma = ' ';
       comma=strchr(connectionLine,',');
+   }
+
+   if(_tcsstr(connectionLine,_T("ldaps://")))
+   {
+      m_secure = 1;
    }
 
    lastSlash=strrchr(connectionLine, '/');
@@ -146,16 +156,28 @@ void LDAPConnection::initLDAP()
 #else
    prepareStringForInit(m_connList);
 #ifdef _WIN32
+   int port = m_secure ? LDAP_SSL_PORT : LDAP_PORT;
    if (m_connList[0] == 0)
    {
-      m_ldapConn = ldap_init(NULL, LDAP_PORT);
+      m_ldapConn = ldap_sslinit(NULL, port, m_secure);
    }
    else
    {
-      m_ldapConn = ldap_init(m_connList, LDAP_PORT);
+      m_ldapConn = ldap_sslinit(m_connList, port, m_secure);
    }
 #else
-   m_ldapConn = ldap_init(m_connList, LDAP_PORT);
+   if(m_secure)
+   {
+#if HAVE_LDAPSSL_INIT
+      ldapssl_init(m_connList, port, m_secure);
+#else
+      DbgPrintf(4, _T("LDAPConnection::initLDAP(): Your LDAP library does not support secure connection."));
+#endif //HAVE_LDAPSSL_INIT
+   }
+   else
+   {
+      m_ldapConn = ldap_init(m_connList, LDAP_PORT, m_secure);
+   }
 #endif // _WIN32
 
 #ifdef _WIN32
@@ -508,6 +530,7 @@ LDAPConnection::LDAPConnection()
 {
    m_ldapConn = NULL;
    m_action = 1;
+   m_secure = 0;
 }
 
 /**
