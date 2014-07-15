@@ -392,7 +392,7 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
  */
 static BOOL H_UpgradeFromV327(int currVersion, int newVersion)
 {
-   if (!CreateConfigParam(_T("ResolveDNSToIPOnStatusPool"), _T("0"), 1, 1))
+   if (!CreateConfigParam(_T("ResolveDNSToIPOnStatusPoll"), _T("0"), 1, 1))
    if (!g_bIgnoreErrors)
       return FALSE;
 
