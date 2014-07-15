@@ -1104,8 +1104,13 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
    tExpire = (time_t)ConfigReadULong(_T("CapabilityExpirationTime"), 604800);
    tNow = time(NULL);
 
-   // Check SNMP agent connectivity
 restart_agent_check:
+   if(g_flags & AF_RESOLVE_IP_FOR_EACH_STATUS_POLL)
+   {
+      updatePrimaryIpAddr();
+   }
+
+   // Check SNMP agent connectivity
    if ((m_dwFlags & NF_IS_SNMP) && (!(m_dwFlags & NF_DISABLE_SNMP)) && (m_dwIpAddr != 0))
    {
       TCHAR szBuffer[256];
@@ -2921,7 +2926,7 @@ StringList *Node::getInstanceList(DCItem *dci)
       }
       if (!node->isTrustedNode(m_dwId))
       {
-         DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by proxy node %s [%d] not found"), 
+         DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by proxy node %s [%d] not found"),
                    dci->getName(), dci->getId(), m_szName, m_dwId, node->Name(), node->Id());
          return NULL;
       }

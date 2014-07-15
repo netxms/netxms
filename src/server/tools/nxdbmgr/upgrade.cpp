@@ -384,7 +384,21 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
       if (!g_bIgnoreErrors)
          return FALSE;
    }
-   return TRUE;}
+   return TRUE;
+}
+
+/**
+ * Upgrade from V327 to V328
+ */
+static BOOL H_UpgradeFromV327(int currVersion, int newVersion)
+{
+   if (!CreateConfigParam(_T("ResolveDNSToIPOnStatusPool"), _T("0"), 1, 1))
+   if (!g_bIgnoreErrors)
+      return FALSE;
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='328' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
 
 /**
  * Upgrade from V326 to V327
@@ -8007,6 +8021,7 @@ static struct
    { 324, 325, H_UpgradeFromV324 },
    { 325, 326, H_UpgradeFromV325 },
    { 326, 327, H_UpgradeFromV326 },
+   { 327, 328, H_UpgradeFromV327 },
    { 0, 0, NULL }
 };
 

@@ -342,6 +342,8 @@ static void LoadGlobalConfig()
       g_flags |= AF_USE_FQDN_FOR_NODE_NAMES;
    if (ConfigReadInt(_T("ApplyDCIFromTemplateToDisabledDCI"), 0))
       g_flags |= AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE;
+   if (ConfigReadInt(_T("ResolveDNSToIPOnStatusPool"), 0))
+      g_flags |= AF_RESOLVE_IP_FOR_EACH_STATUS_POLL;
 
    if (g_szDataDir[0] == 0)
    {

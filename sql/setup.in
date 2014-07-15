@@ -121,6 +121,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('RADIUSServer','none',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('RADIUSTimeout','3',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ReceiveForwardedEvents','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ResolveDNSToIPOnStatusPool','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ResolveNodeNames','1',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('RoutingTableUpdateInterval','300',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('RunNetworkDiscovery','0',1,1);
