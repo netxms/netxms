@@ -8032,6 +8032,7 @@ static struct
    { 325, 326, H_UpgradeFromV325 },
    { 326, 327, H_UpgradeFromV326 },
    { 327, 328, H_UpgradeFromV327 },
+   { 327, 328, H_UpgradeFromV328 },
    { 0, 0, NULL }
 };
 
