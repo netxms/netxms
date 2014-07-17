@@ -392,11 +392,8 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
  */
 static BOOL H_UpgradeFromV328(int currVersion, int newVersion)
 {
-	//Add column comments to table
-	if (!SQLQuery(_T("ALTER TABLE items ADD comments $SQL:TEXT")))
-      if (!g_bIgnoreErrors)
-         return FALSE;
-
+	CHK_EXEC(SQLQuery(_T("ALTER TABLE items ADD comments $SQL:TEXT")));
+	CHK_EXEC(SQLQuery(_T("ALTER TABLE dc_tables ADD comments $SQL:TEXT")));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='329' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }

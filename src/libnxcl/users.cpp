@@ -468,13 +468,13 @@ UINT32 LIBNXCL_EXPORTABLE NXCKillSession(NXC_SESSION hSession, UINT32 dwSessionI
  */
 UINT32 LIBNXCL_EXPORTABLE NXCGetCurrentUserId(NXC_SESSION hSession)
 {
-   return ((NXCL_Session *)hSession)->GetCurrentUserId();
+   return ((NXCL_Session *)hSession)->getCurrentUserId();
 }
 
 /**
  * Get system access rights of currently logged in user
  */
-UINT32 LIBNXCL_EXPORTABLE NXCGetCurrentSystemAccess(NXC_SESSION hSession)
+UINT64 LIBNXCL_EXPORTABLE NXCGetCurrentSystemAccess(NXC_SESSION hSession)
 {
-   return ((NXCL_Session *)hSession)->GetCurrentSystemAccess();
+   return ((NXCL_Session *)hSession)->getCurrentSystemAccess();
 }

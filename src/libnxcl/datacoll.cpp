@@ -63,6 +63,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCCloseNodeDCIList(NXC_SESSION hSession, NXC_DCI_LIST
          safe_free(pItemList->pItems[i].pszFormula);
 			safe_free(pItemList->pItems[i].pszCustomUnitName);
 			safe_free(pItemList->pItems[i].pszPerfTabSettings);
+			safe_free(pItemList->pItems[i].comments);
       }
       safe_free(pItemList->pItems);
       free(pItemList);
@@ -256,6 +257,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItem
             safe_free(pItemList->pItems[i].pszFormula);
 				safe_free(pItemList->pItems[i].pszCustomUnitName);
 				safe_free(pItemList->pItems[i].pszPerfTabSettings);
+				safe_free(pItemList->pItems[i].comments);
             pItemList->dwNumItems--;
             memmove(&pItemList->pItems[i], &pItemList->pItems[i + 1],
                     sizeof(NXC_DCI) * (pItemList->dwNumItems - i));

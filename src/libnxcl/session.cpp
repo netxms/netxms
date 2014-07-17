@@ -937,12 +937,10 @@ UINT32 NXCL_Session::WaitForFileTransfer(UINT32 dwTimeout)
    return dwResult;
 }
 
-
-//
-// Abort file transfer
-//
-
-void NXCL_Session::AbortFileTransfer(void)
+/**
+ * Abort file transfer
+ */
+void NXCL_Session::abortFileTransfer()
 {
    MutexLock(m_mutexFileRq);
    if (m_hCurrFile != -1)
@@ -974,10 +972,10 @@ UINT32 NXCL_Session::SimpleCommand(WORD wCmd)
 /**
  * Parse login response message
  */
-void NXCL_Session::ParseLoginMessage(CSCPMessage *pMsg)
+void NXCL_Session::parseLoginMessage(CSCPMessage *pMsg)
 {
    m_dwUserId = pMsg->GetVariableLong(VID_USER_ID);
-   m_dwSystemAccess = pMsg->GetVariableInt64(VID_USER_SYS_RIGHTS);
+   m_systemAccess = pMsg->GetVariableInt64(VID_USER_SYS_RIGHTS);
    if (pMsg->GetVariableShort(VID_CHANGE_PASSWD_FLAG))
       m_dwFlags |= NXC_SF_CHANGE_PASSWD;
    if (!pMsg->GetVariableShort(VID_DBCONN_STATUS))
@@ -1046,12 +1044,10 @@ void NXCL_Session::watchdogThread()
    }
 }
 
-
-//
-// Handler for CMD_NOTIFY message
-//
-
-void NXCL_Session::OnNotify(CSCPMessage *pMsg)
+/**
+ * Handler for CMD_NOTIFY message
+ */
+void NXCL_Session::onNotify(CSCPMessage *pMsg)
 {
    UINT32 dwCode;
 

@@ -610,6 +610,7 @@ CREATE TABLE dc_tables
 	proxy_node integer not null,   	// ID of proxy node (for SNMP and agent items)
 	perftab_settings SQL_TEXT null,			// Settings for displaying graph on performance tab
 	transformation_script SQL_TEXT null,
+	comments SQL_TEXT null,
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 

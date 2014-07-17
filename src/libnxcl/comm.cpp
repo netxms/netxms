@@ -201,7 +201,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
                ProcessEventDBUpdate(pSession, pMsg);
                break;
             case CMD_NOTIFY:
-               pSession->OnNotify(pMsg);
+               pSession->onNotify(pMsg);
                break;
 				case CMD_SITUATION_CHANGE:
 					ProcessSituationChange(pSession, pMsg);
@@ -388,7 +388,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCConnect(UINT32 dwFlags, const TCHAR *pszServer, con
                         {
                            dwRetCode = pResp->GetVariableLong(VID_RCC);
                            if (dwRetCode == RCC_SUCCESS)
-                              pSession->ParseLoginMessage(pResp);
+                              pSession->parseLoginMessage(pResp);
                            delete pResp;
                         }
                         else

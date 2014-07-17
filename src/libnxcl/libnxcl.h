@@ -129,7 +129,7 @@ private:
 	MUTEX m_mutexSendMsg;
 
    UINT32 m_dwUserId;          // Id of logged-in user
-   UINT64 m_dwSystemAccess;    // System access rights for current user
+   UINT64 m_systemAccess;    // System access rights for current user
 
    int m_hCurrFile;
    UINT32 m_dwFileRqId;
@@ -233,17 +233,17 @@ public:
 
    UINT32 PrepareFileTransfer(const TCHAR *pszFile, UINT32 dwRqId);
    UINT32 WaitForFileTransfer(UINT32 dwTimeout);
-   void AbortFileTransfer(void);
+   void abortFileTransfer();
 
-   void SetClientData(void *pData) { m_pClientData = pData; }
-   void *GetClientData(void) { return m_pClientData; }
+   void setClientData(void *pData) { m_pClientData = pData; }
+   void *getClientData() { return m_pClientData; }
 
-   void OnNotify(CSCPMessage *pMsg);
-   void ParseLoginMessage(CSCPMessage *pMsg);
-   UINT32 GetCurrentUserId(void) { return m_dwUserId; }
-   UINT32 GetCurrentSystemAccess(void) { return m_dwSystemAccess; }
-   BOOL NeedPasswordChange(void) { return (m_dwFlags & NXC_SF_CHANGE_PASSWD) ? TRUE : FALSE; }
-   BOOL IsDBConnLost() { return (m_dwFlags & NXC_SF_BAD_DBCONN) ? TRUE : FALSE; }
+   void onNotify(CSCPMessage *pMsg);
+   void parseLoginMessage(CSCPMessage *pMsg);
+   UINT32 getCurrentUserId() { return m_dwUserId; }
+   UINT64 getCurrentSystemAccess() { return m_systemAccess; }
+   BOOL needPasswordChange() { return (m_dwFlags & NXC_SF_CHANGE_PASSWD) ? TRUE : FALSE; }
+   BOOL isDBConnLost() { return (m_dwFlags & NXC_SF_BAD_DBCONN) ? TRUE : FALSE; }
 
    void setLastLock(const TCHAR *pszLock) { nx_strncpy(m_szLastLock, pszLock, MAX_LOCKINFO_LEN); }
    const TCHAR *getLastLock() { return m_szLastLock; }

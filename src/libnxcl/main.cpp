@@ -136,7 +136,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCUnsubscribe(NXC_SESSION hSession, UINT32 dwChannels
 void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData)
 {
 	if (hSession != NULL)
-		((NXCL_Session *)hSession)->SetClientData(pData);
+		((NXCL_Session *)hSession)->setClientData(pData);
 }
 
 /**
@@ -144,7 +144,7 @@ void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData)
  */
 void LIBNXCL_EXPORTABLE *NXCGetClientData(NXC_SESSION hSession)
 {
-	return (hSession != NULL) ? ((NXCL_Session *)hSession)->GetClientData() : NULL;
+	return (hSession != NULL) ? ((NXCL_Session *)hSession)->getClientData() : NULL;
 }
 
 /**
@@ -152,7 +152,7 @@ void LIBNXCL_EXPORTABLE *NXCGetClientData(NXC_SESSION hSession)
  */
 BOOL LIBNXCL_EXPORTABLE NXCNeedPasswordChange(NXC_SESSION hSession)
 {
-   return ((NXCL_Session *)hSession)->NeedPasswordChange();
+   return ((NXCL_Session *)hSession)->needPasswordChange();
 }
 
 /**
@@ -160,7 +160,7 @@ BOOL LIBNXCL_EXPORTABLE NXCNeedPasswordChange(NXC_SESSION hSession)
  */
 BOOL LIBNXCL_EXPORTABLE NXCIsDBConnLost(NXC_SESSION hSession)
 {
-   return ((NXCL_Session *)hSession)->IsDBConnLost();
+   return ((NXCL_Session *)hSession)->isDBConnLost();
 }
 
 /**

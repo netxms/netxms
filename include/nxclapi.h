@@ -2167,7 +2167,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetSessionList(NXC_SESSION hSession, UINT32 *pdwNum
                                            NXC_CLIENT_SESSION_INFO **ppList);
 UINT32 LIBNXCL_EXPORTABLE NXCKillSession(NXC_SESSION hSession, UINT32 dwSessionId);
 UINT32 LIBNXCL_EXPORTABLE NXCGetCurrentUserId(NXC_SESSION hSession);
-UINT32 LIBNXCL_EXPORTABLE NXCGetCurrentSystemAccess(NXC_SESSION hSession);
+UINT64 LIBNXCL_EXPORTABLE NXCGetCurrentSystemAccess(NXC_SESSION hSession);
 
 /** Data collection **/
 UINT32 LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(NXC_SESSION hSession, UINT32 dwNodeId, NXC_DCI_LIST **ppItemList);

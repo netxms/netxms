@@ -375,7 +375,8 @@ void Template::loadItemsFromDB()
 	hStmt = DBPrepare(g_hCoreDB,
 	           _T("SELECT item_id,template_id,template_item_id,name,")
 				  _T("description,flags,source,snmp_port,polling_interval,retention_time,")
-              _T("status,system_tag,resource_id,proxy_node,perftab_settings,transformation_script,comments FROM dc_tables WHERE node_id=?"));
+              _T("status,system_tag,resource_id,proxy_node,perftab_settings,")
+              _T("transformation_script,comments FROM dc_tables WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
