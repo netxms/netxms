@@ -19,10 +19,12 @@
 package org.netxms.ui.eclipse.widgets;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-
+import java.util.Set;
 import org.eclipse.jface.action.Action;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -50,6 +52,9 @@ public class FilterText extends Composite
 	private List<Button> attrButtons = new ArrayList<Button>(4);
 	private Label closeButton;
 	private Action closeAction = null;
+	private int delay = 300;
+	private Set<ModifyListener> modifyListeners = new HashSet<ModifyListener>();
+	private ModifyEvent lastModifyEvent = null;
 	
 	/**
 	 * @param parent
@@ -76,6 +81,28 @@ public class FilterText extends Composite
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.CENTER;
 		text.setLayoutData(gd);
+		text.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(final ModifyEvent e)
+         {
+            if (delay > 0)
+            {
+               lastModifyEvent = e;
+               getDisplay().timerExec(delay, new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     if (lastModifyEvent == e)
+                        callModifyListeners(e);
+                  }
+               });
+            }
+            else
+            {
+               callModifyListeners(e);
+            }
+         }
+      });
 		
 		buttonArea = new Composite(this, SWT.NONE);
 		RowLayout buttonLayout = new RowLayout();
@@ -184,7 +211,6 @@ public class FilterText extends Composite
 	 */
 	private void onAttrButtonSelection(Button b)
 	{
-		
 	}
 	
 	/**
@@ -194,7 +220,7 @@ public class FilterText extends Composite
 	 */
 	public void addModifyListener(ModifyListener listener)
 	{
-		text.addModifyListener(listener);
+	   modifyListeners.add(listener);
 	}
 	
 	/**
@@ -204,7 +230,16 @@ public class FilterText extends Composite
 	 */
 	public void removeModifyListener(ModifyListener listener)
 	{
-		text.removeModifyListener(listener);
+	   modifyListeners.remove(listener);
+	}
+	
+	/**
+	 * @param e
+	 */
+	private void callModifyListeners(ModifyEvent e)
+	{
+	   for(ModifyListener l : modifyListeners)
+	      l.modifyText(e);
 	}
 	
 	/**
@@ -251,4 +286,20 @@ public class FilterText extends Composite
 	{
 		return text.setFocus();
 	}
+
+   /**
+    * @return the delay
+    */
+   public int getDelay()
+   {
+      return delay;
+   }
+
+   /**
+    * @param delay the delay to set
+    */
+   public void setDelay(int delay)
+   {
+      this.delay = delay;
+   }
 }

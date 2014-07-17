@@ -63,7 +63,6 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.ProgressListener;
 import org.netxms.client.AgentFile;
-import org.netxms.client.NXCListener;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerFile;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -115,8 +114,6 @@ public class AgentFileManager extends ViewPart
    private Action actionDownloadFile;
    private Action actionTailFile;
    private long objectId = 0;
-   // AbstractObject object = null;
-   private static NXCListener listener = null;
 
    /*
     * (non-Javadoc)
