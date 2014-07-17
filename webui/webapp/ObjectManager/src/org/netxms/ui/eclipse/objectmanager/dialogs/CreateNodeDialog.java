@@ -143,26 +143,6 @@ public class CreateNodeDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		hostNameField.setLayoutData(gd);
 		
-		final Button resolve = new Button(ipAddrGroup, SWT.PUSH);
-		resolve.setText(Messages.get().CreateNodeDialog_Resolve);
-		gd = new GridData();
-		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-		gd.verticalAlignment = SWT.BOTTOM;
-		resolve.setLayoutData(gd);
-		resolve.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				resolveName();
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
-		
 		agentPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().CreateNodeDialog_AgentPort, 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		agentPortField.setSelection(4700);
 		
@@ -270,34 +250,6 @@ public class CreateNodeDialog extends Dialog
 		}
 		
 		super.okPressed();
-	}
-	
-	/**
-	 * Resolve entered name to IP address
-	 */
-	private void resolveName()
-	{
-		final String name = objectNameField.getText();
-		new ConsoleJob(Messages.get().CreateNodeDialog_ResolveJobName, null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				final InetAddress addr = Inet4Address.getByName(name);
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-					@Override
-					public void run()
-					{
-						hostNameField.setText(addr.getHostAddress());
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return String.format(Messages.get().CreateNodeDialog_ResolveJobError, name);
-			}
-		}.start();
 	}
 
 	/**
