@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -138,7 +138,7 @@ public:
 	int getSampleCount() { return m_sampleCount; }
    const TCHAR *getStringValue() { return m_value.getString(); }
    BOOL isReached() { return m_isReached; }
-	
+
 	int getRepeatInterval() { return m_repeatInterval; }
 	time_t getLastEventTimestamp() { return m_lastEventTimestamp; }
 	int getCurrentSeverity() { return m_currentSeverity; }
@@ -212,6 +212,7 @@ protected:
 	TCHAR *m_pszPerfTabSettings;
    TCHAR *m_transformationScriptSource;   // Transformation script (source code)
    NXSL_VM *m_transformationScript;  // Compiled transformation script
+	TCHAR *m_comments;
 
    void lock() { MutexLock(m_hMutex); }
    void unlock() { MutexUnlock(m_hMutex); }
@@ -271,7 +272,7 @@ public:
    void setLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
    void setStatus(int status, bool generateEvent);
    void setBusyFlag(BOOL busy) { m_busy = (BYTE)busy; }
-   void setTemplateId(UINT32 dwTemplateId, UINT32 dwItemId) 
+   void setTemplateId(UINT32 dwTemplateId, UINT32 dwItemId)
          { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
 
    virtual void createMessage(CSCPMessage *pMsg);
@@ -332,7 +333,7 @@ public:
    DCItem();
    DCItem(const DCItem *pItem);
    DCItem(DB_RESULT hResult, int iRow, Template *pNode);
-   DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType, 
+   DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
           int iPollingInterval, int iRetentionTime, Template *pNode,
           const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
 	DCItem(ConfigEntry *config, Template *owner);
@@ -538,7 +539,7 @@ protected:
 
    bool transform(Table *value);
    void checkThresholds(Table *value);
-   
+
    bool loadThresholds();
    bool saveThresholds(DB_HANDLE hdb);
 

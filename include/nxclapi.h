@@ -1508,6 +1508,7 @@ typedef struct
 	TCHAR *pszPerfTabSettings;
 	WORD nSnmpPort;
 	WORD wSnmpRawType;
+	TCHAR *comments;
 } NXC_DCI;
 
 

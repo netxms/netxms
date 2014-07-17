@@ -419,6 +419,7 @@ void NXCL_Session::processDCI(CSCPMessage *pMsg)
 		m_pItemList->pItems[i].pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
 		m_pItemList->pItems[i].nSnmpPort = pMsg->GetVariableShort(VID_SNMP_PORT);
       m_pItemList->pItems[i].dwNumSchedules = pMsg->GetVariableLong(VID_NUM_SCHEDULES);
+      m_pItemList->pItems[i].comments = pMsg->GetVariableStr(VID_COMMENTS);
       m_pItemList->pItems[i].ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_pItemList->pItems[i].dwNumSchedules);
       for(j = 0, dwId = VID_DCI_SCHEDULE_BASE; j < m_pItemList->pItems[i].dwNumSchedules; j++, dwId++)
          m_pItemList->pItems[i].ppScheduleList[j] = pMsg->GetVariableStr(dwId);

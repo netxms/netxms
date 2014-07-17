@@ -238,9 +238,19 @@
               class="org.netxms.ui.eclipse.datacollection.propertypages.GeneralTable"
               id="org.netxms.ui.eclipse.datacollection.propertypages.GeneralTable#1"
               name="%page.name.General">
+            <enabledWhen>
+               <instanceof
+                    value="org.netxms.client.datacollection.DataCollectionTable">
+               </instanceof>
+            </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.datacollection.propertypages.Comments"
+              id="org.netxms.ui.eclipse.datacollection.propertypages.Comments"
+              name="Comments">
            <enabledWhen>
               <instanceof
-                    value="org.netxms.client.datacollection.DataCollectionTable">
+                    value="org.netxms.client.datacollection.DataCollectionObject">
               </instanceof>
            </enabledWhen>
         </page>

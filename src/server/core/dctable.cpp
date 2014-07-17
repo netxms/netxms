@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -94,7 +94,7 @@ INT32 DCTable::columnIdFromName(const TCHAR *name)
 						DBFreeStatement(hStmt2);
 					}
 				}
-				
+
 				DBFreeResult(hResult);
 
 				// Add to cache
@@ -160,7 +160,7 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
  *    item_id,template_id,template_item_id,name,
  *    description,flags,source,snmp_port,polling_interval,retention_time,
  *    status,system_tag,resource_id,proxy_node,perftab_settings,
- *    transformation_script
+ *    transformation_script,comments
  */
 DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
@@ -180,6 +180,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	m_dwProxyNode = DBGetFieldULong(hResult, iRow, 13);
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 14, NULL, 0);
    TCHAR *pszTmp = DBGetField(hResult, iRow, 15, NULL, 0);
+   m_comments = DBGetField(hResult, iRow, 16, NULL, 0);
    setTransformationScript(pszTmp);
    free(pszTmp);
 
@@ -518,14 +519,14 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 		hStmt = DBPrepare(hdb, _T("UPDATE dc_tables SET node_id=?,template_id=?,template_item_id=?,name=?,")
 		                       _T("description=?,flags=?,source=?,snmp_port=?,polling_interval=?,")
                              _T("retention_time=?,status=?,system_tag=?,resource_id=?,proxy_node=?,")
-									  _T("perftab_settings=?,transformation_script=? WHERE item_id=?"));
+									  _T("perftab_settings=?,transformation_script=?,comments=? WHERE item_id=?"));
 	}
 	else
 	{
 		hStmt = DBPrepare(hdb, _T("INSERT INTO dc_tables (node_id,template_id,template_item_id,name,")
 		                       _T("description,flags,source,snmp_port,polling_interval,")
 		                       _T("retention_time,status,system_tag,resource_id,proxy_node,perftab_settings,")
-									  _T("transformation_script,item_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+									  _T("transformation_script,comments,item_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -548,7 +549,8 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_dwProxyNode);
 	DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
    DBBind(hStmt, 16, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
-	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_dwId);
+   DBBind(hStmt, 17, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
+	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_dwId);
 
 	BOOL result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -800,7 +802,7 @@ int DCTable::getColumnDataType(const TCHAR *name)
 {
    int dt = DCI_DT_STRING;
    bool found = false;
-   
+
    lock();
 
    // look in column definition first
@@ -986,7 +988,7 @@ void DCTable::createNXMPRecord(String &str)
 	UINT32 i;
 
    lock();
-   
+
    str.addFormattedString(_T("\t\t\t\t<dctable id=\"%d\">\n")
                           _T("\t\t\t\t\t<name>%s</name>\n")
                           _T("\t\t\t\t\t<description>%s</description>\n")
@@ -1002,7 +1004,7 @@ void DCTable::createNXMPRecord(String &str)
                           (int)m_source, m_iPollingInterval, m_iRetentionTime,
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
 								  (m_flags & DCF_ADVANCED_SCHEDULE) ? 1 : 0,
-								  (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? 1 : 0, 
+								  (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? 1 : 0,
 								  (int)m_snmpPort);
 
 	if (m_transformationScriptSource != NULL)

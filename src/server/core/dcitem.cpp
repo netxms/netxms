@@ -93,7 +93,7 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
  *    delta_calculation,transformation,template_id,description,instance,
  *    template_item_id,flags,resource_id,proxy_node,base_units,unit_multiplier,
  *    custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,
- *    instd_method,instd_data,instd_filter,samples
+ *    instd_method,instd_data,instd_filter,samples,comments
  */
 DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
@@ -136,6 +136,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	setInstanceFilter(pszTmp);
    free(pszTmp);
 	m_sampleCount = DBGetFieldLong(hResult, iRow, 26);
+   m_comments = DBGetField(hResult, iRow, 27, NULL, 0);
 
    // Load last raw value from database
 	TCHAR szQuery[256];
@@ -322,7 +323,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
                  _T("resource_id=?,proxy_node=?,base_units=?,")
 		           _T("unit_multiplier=?,custom_units_name=?,perftab_settings=?,")
 	              _T("system_tag=?,snmp_port=?,snmp_raw_value_type=?,")
-					  _T("instd_method=?,instd_data=?,instd_filter=?,samples=? WHERE item_id=?"));
+					  _T("instd_method=?,instd_data=?,instd_filter=?,samples=?,comments=? WHERE item_id=?"));
 	}
    else
 	{
@@ -332,8 +333,8 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
                  _T("transformation,description,instance,template_item_id,flags,")
                  _T("resource_id,proxy_node,base_units,unit_multiplier,")
 		           _T("custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,")
-					  _T("instd_method,instd_data,instd_filter,samples,item_id) VALUES ")
-		           _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+					  _T("instd_method,instd_data,instd_filter,samples,comments,item_id) VALUES ")
+		           _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -367,7 +368,8 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_instanceDiscoveryData, DB_BIND_STATIC);
 	DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_instanceFilterSource, DB_BIND_STATIC);
 	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (INT32)m_sampleCount);
-	DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_comments, DB_BIND_STATIC);
+	DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_dwId);
 
    BOOL bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);

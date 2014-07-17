@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -167,7 +167,7 @@ Threshold::~Threshold()
  */
 void Threshold::createId()
 {
-   m_id = CreateUniqueId(IDG_THRESHOLD); 
+   m_id = CreateUniqueId(IDG_THRESHOLD);
 }
 
 /**
@@ -179,7 +179,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 	DB_STATEMENT hStmt;
 	if (!IsDatabaseRecordExist(hdb, _T("thresholds"), _T("threshold_id"), m_id))
 	{
-		hStmt = DBPrepare(hdb, 		              
+		hStmt = DBPrepare(hdb,
 			_T("INSERT INTO thresholds (item_id,fire_value,rearm_value,")
 			_T("check_function,check_operation,sample_count,script,event_code,")
 			_T("sequence_number,current_state,rearm_event_code,repeat_interval,")
@@ -188,7 +188,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 	}
 	else
 	{
-		hStmt = DBPrepare(hdb, 		              
+		hStmt = DBPrepare(hdb,
 			_T("UPDATE thresholds SET item_id=?,fire_value=?,rearm_value=?,check_function=?,")
          _T("check_operation=?,sample_count=?,script=?,event_code=?,")
          _T("sequence_number=?,current_state=?,rearm_event_code=?,")

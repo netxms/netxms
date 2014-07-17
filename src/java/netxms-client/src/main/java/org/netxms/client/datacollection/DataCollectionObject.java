@@ -80,6 +80,7 @@ public abstract class DataCollectionObject
 	protected int snmpPort;
 	protected ArrayList<String> schedules;
 	protected Object userData;
+	private String comments;
 
 	/**
 	 * Create data collection object from NXCP message
@@ -105,6 +106,7 @@ public abstract class DataCollectionObject
 		systemTag = msg.getVariableAsString(NXCPCodes.VID_SYSTEM_TAG);
 		perfTabSettings = msg.getVariableAsString(NXCPCodes.VID_PERFTAB_SETTINGS);
 		snmpPort = msg.getVariableAsInteger(NXCPCodes.VID_SNMP_PORT);
+		comments = msg.getVariableAsString(NXCPCodes.VID_COMMENTS);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_SCHEDULES);
 		schedules = new ArrayList<String>(count);
@@ -140,6 +142,7 @@ public abstract class DataCollectionObject
 		systemTag = "";
 		snmpPort = 0;
 		schedules = new ArrayList<String>(0);
+		comments = "";
 	}
 	
 	/**
@@ -164,6 +167,7 @@ public abstract class DataCollectionObject
 		if (perfTabSettings != null)
 			msg.setVariable(NXCPCodes.VID_PERFTAB_SETTINGS, perfTabSettings);
 		msg.setVariableInt16(NXCPCodes.VID_SNMP_PORT, snmpPort);
+		msg.setVariable(NXCPCodes.VID_COMMENTS, comments);
 		
 		msg.setVariableInt32(NXCPCodes.VID_NUM_SCHEDULES, schedules.size());
 		long varId = NXCPCodes.VID_DCI_SCHEDULE_BASE;
@@ -522,5 +526,21 @@ public abstract class DataCollectionObject
          flags |= DCF_TRANSFORM_AGGREGATED;
       else
          flags &= ~DCF_TRANSFORM_AGGREGATED;
+   }
+
+   /**
+    * @return the comments
+    */
+   public String getComments()
+   {
+      return comments;
+   }
+
+   /**
+    * @param comments the comments to set
+    */
+   public void setComments(String comments)
+   {
+      this.comments = comments;
    }
 }

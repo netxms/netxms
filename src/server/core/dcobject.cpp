@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -53,6 +53,7 @@ DCObject::DCObject()
 	m_snmpPort = 0;	// use default
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
+   m_comments = NULL;
 }
 
 /**
@@ -84,6 +85,7 @@ DCObject::DCObject(const DCObject *pSrc)
 	m_dwProxyNode = pSrc->m_dwProxyNode;
 	m_pszPerfTabSettings = (pSrc->m_pszPerfTabSettings != NULL) ? _tcsdup(pSrc->m_pszPerfTabSettings) : NULL;
 	m_snmpPort = pSrc->m_snmpPort;
+	m_comments = (pSrc->m_comments != NULL) ? _tcsdup(pSrc->m_comments) : NULL;
 
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
@@ -108,7 +110,7 @@ DCObject::DCObject(const DCObject *pSrc)
 /**
  * Constructor for creating new DCObject from scratch
  */
-DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource, 
+DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
                int iPollingInterval, int iRetentionTime, Template *pNode,
                const TCHAR *pszDescription, const TCHAR *systemTag)
 {
@@ -141,6 +143,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
 	m_snmpPort = 0;	// use default
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
+   m_comments = NULL;
 }
 
 /**
@@ -176,8 +179,9 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 
 	m_transformationScriptSource = NULL;
 	m_transformationScript = NULL;
+	m_comments = NULL;
 	setTransformationScript(config->getSubEntryValue(_T("transformation")));
-   
+
 	if (config->getSubEntryValueAsInt(_T("advancedSchedule")))
 		m_flags |= DCF_ADVANCED_SCHEDULE;
 
@@ -214,6 +218,7 @@ DCObject::~DCObject()
       safe_free(m_ppScheduleList);
    }
 	safe_free(m_pszPerfTabSettings);
+	safe_free(m_comments);
    MutexDestroy(m_hMutex);
 }
 
@@ -357,7 +362,7 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 			}
 		}
 		temp += rest;
-		
+
 		free(head);
 		free(rest);
 		free(macro);
@@ -740,6 +745,8 @@ void DCObject::createMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_RESOURCE_ID, m_dwResourceId);
 	pMsg->SetVariable(VID_AGENT_PROXY, m_dwProxyNode);
 	pMsg->SetVariable(VID_SNMP_PORT, m_snmpPort);
+	if (m_comments != NULL)
+		pMsg->SetVariable(VID_COMMENTS, m_comments);
 	if (m_pszPerfTabSettings != NULL)
 		pMsg->SetVariable(VID_PERFTAB_SETTINGS, m_pszPerfTabSettings);
    pMsg->SetVariable(VID_NUM_SCHEDULES, m_dwNumSchedules);
@@ -769,6 +776,7 @@ void DCObject::updateFromMessage(CSCPMessage *pMsg)
 	m_pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
 	m_snmpPort = pMsg->GetVariableShort(VID_SNMP_PORT);
    TCHAR *pszStr = pMsg->GetVariableStr(VID_TRANSFORMATION_SCRIPT);
+   m_comments = pMsg->GetVariableStr(VID_COMMENTS);
    setTransformationScript(pszStr);
    safe_free(pszStr);
 

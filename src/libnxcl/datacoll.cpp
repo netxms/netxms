@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Client Library
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
@@ -27,7 +27,7 @@
  * Load data collection items list for specified node
  * This function is NOT REENTRANT
  */
-UINT32 LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(NXC_SESSION hSession, UINT32 dwNodeId, 
+UINT32 LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(NXC_SESSION hSession, UINT32 dwNodeId,
                                             NXC_DCI_LIST **ppItemList)
 {
    return ((NXCL_Session *)hSession)->OpenNodeDCIList(dwNodeId, ppItemList);
@@ -99,7 +99,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCCreateNewDCI(NXC_SESSION hSession, NXC_DCI_LIST *pI
          *pdwItemId = pResponse->GetVariableLong(VID_DCI_ID);
 
          // Create new entry in list
-         pItemList->pItems = (NXC_DCI *)realloc(pItemList->pItems, 
+         pItemList->pItems = (NXC_DCI *)realloc(pItemList->pItems,
                                                    sizeof(NXC_DCI) * (pItemList->dwNumItems + 1));
          memset(&pItemList->pItems[pItemList->dwNumItems], 0, sizeof(NXC_DCI));
          pItemList->pItems[pItemList->dwNumItems].dwId = *pdwItemId;
@@ -159,6 +159,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCUpdateDCI(NXC_SESSION hSession, UINT32 dwNodeId, NX
 	msg.SetVariable(VID_BASE_UNITS, (WORD)pItem->nBaseUnits);
 	msg.SetVariable(VID_MULTIPLIER, (UINT32)pItem->nMultiplier);
 	msg.SetVariable(VID_SNMP_PORT, (WORD)pItem->nSnmpPort);
+   msg.SetVariable(VID_COMMENTS, (pItem->comments));
 	if (pItem->pszCustomUnitName != NULL)
 		msg.SetVariable(VID_CUSTOM_UNITS_NAME, pItem->pszCustomUnitName);
 	if (pItem->pszPerfTabSettings)
@@ -256,7 +257,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItem
 				safe_free(pItemList->pItems[i].pszCustomUnitName);
 				safe_free(pItemList->pItems[i].pszPerfTabSettings);
             pItemList->dwNumItems--;
-            memmove(&pItemList->pItems[i], &pItemList->pItems[i + 1], 
+            memmove(&pItemList->pItems[i], &pItemList->pItems[i + 1],
                     sizeof(NXC_DCI) * (pItemList->dwNumItems - i));
          }
          break;
@@ -267,7 +268,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteDCI(NXC_SESSION hSession, NXC_DCI_LIST *pItem
 /**
  * Set status for multiple DCIs
  */
-UINT32 LIBNXCL_EXPORTABLE NXCSetDCIStatus(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwNumItems, 
+UINT32 LIBNXCL_EXPORTABLE NXCSetDCIStatus(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwNumItems,
                                          UINT32 *pdwItemList, int iStatus)
 {
    CSCPMessage msg;
@@ -303,8 +304,8 @@ UINT32 LIBNXCL_EXPORTABLE NXCItemIndex(NXC_DCI_LIST *pItemList, UINT32 dwItemId)
 /**
  * Retrieve collected data from server
  */
-UINT32 LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwItemId, 
-                                       UINT32 dwMaxRows, UINT32 dwTimeFrom, UINT32 dwTimeTo, 
+UINT32 LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwItemId,
+                                       UINT32 dwMaxRows, UINT32 dwTimeFrom, UINT32 dwTimeTo,
                                        NXC_DCI_DATA **ppData)
 {
 	return NXCGetDCIDataEx(hSession, dwNodeId, dwItemId, dwMaxRows, dwTimeFrom, dwTimeTo, ppData, NULL, NULL);
@@ -313,8 +314,8 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetDCIData(NXC_SESSION hSession, UINT32 dwNodeId, U
 /**
  * Retrieve collected data from server
  */
-UINT32 LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwItemId, 
-                                         UINT32 dwMaxRows, UINT32 dwTimeFrom, UINT32 dwTimeTo, 
+UINT32 LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, UINT32 dwNodeId, UINT32 dwItemId,
+                                         UINT32 dwMaxRows, UINT32 dwTimeFrom, UINT32 dwTimeTo,
                                          NXC_DCI_DATA **ppData, NXC_DCI_THRESHOLD **thresholds, UINT32 *numThresholds)
 {
    CSCPMessage msg, *response;
@@ -430,7 +431,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetDCIDataEx(NXC_SESSION hSession, UINT32 dwNodeId,
                      ucs2_to_ucs4(pSrc->value.string, -1, pDst->value.szString, MAX_STRING_VALUE);
 #else
                      wcscpy(pDst->value.szString, pSrc->value.string);
-#endif                     
+#endif
 #else
                      ucs2_to_mb(pSrc->value.string, -1, pDst->value.szString, MAX_STRING_VALUE);
 #endif
@@ -566,7 +567,7 @@ BOOL LIBNXCL_EXPORTABLE NXCSwapThresholds(NXC_DCI *pItem, UINT32 dwIndex1, UINT3
 /**
  * Copy data collection items from one node to another
  */
-UINT32 LIBNXCL_EXPORTABLE NXCCopyDCI(NXC_SESSION hSession, UINT32 dwSrcNodeId, UINT32 dwDstNodeId, 
+UINT32 LIBNXCL_EXPORTABLE NXCCopyDCI(NXC_SESSION hSession, UINT32 dwSrcNodeId, UINT32 dwDstNodeId,
                                     UINT32 dwNumItems, UINT32 *pdwItemList, BOOL bMove)
 {
    CSCPMessage msg;
@@ -591,8 +592,8 @@ UINT32 LIBNXCL_EXPORTABLE NXCCopyDCI(NXC_SESSION hSession, UINT32 dwSrcNodeId, U
 /**
  * Query value of specific parameter from node
  */
-UINT32 LIBNXCL_EXPORTABLE NXCQueryParameter(NXC_SESSION hSession, UINT32 dwNodeId, int iOrigin, 
-                                           TCHAR *pszParameter, TCHAR *pszBuffer, 
+UINT32 LIBNXCL_EXPORTABLE NXCQueryParameter(NXC_SESSION hSession, UINT32 dwNodeId, int iOrigin,
+                                           TCHAR *pszParameter, TCHAR *pszBuffer,
                                            UINT32 dwBufferSize)
 {
    CSCPMessage msg, *pResponse;

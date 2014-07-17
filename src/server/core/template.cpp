@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -351,13 +351,13 @@ bool Template::deleteFromDB(DB_HANDLE hdb)
  */
 void Template::loadItemsFromDB()
 {
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, 
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
 	           _T("SELECT item_id,name,source,datatype,polling_interval,retention_time,")
               _T("status,delta_calculation,transformation,template_id,description,")
               _T("instance,template_item_id,flags,resource_id,")
               _T("proxy_node,base_units,unit_multiplier,custom_units_name,")
 	           _T("perftab_settings,system_tag,snmp_port,snmp_raw_value_type,")
-				  _T("instd_method,instd_data,instd_filter,samples FROM items WHERE node_id=?"));
+				  _T("instd_method,instd_data,instd_filter,samples,comments FROM items WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
@@ -372,10 +372,10 @@ void Template::loadItemsFromDB()
 		DBFreeStatement(hStmt);
 	}
 
-	hStmt = DBPrepare(g_hCoreDB, 
+	hStmt = DBPrepare(g_hCoreDB,
 	           _T("SELECT item_id,template_id,template_item_id,name,")
 				  _T("description,flags,source,snmp_port,polling_interval,retention_time,")
-              _T("status,system_tag,resource_id,proxy_node,perftab_settings,transformation_script FROM dc_tables WHERE node_id=?"));
+              _T("status,system_tag,resource_id,proxy_node,perftab_settings,transformation_script,comments FROM dc_tables WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
@@ -406,7 +406,7 @@ bool Template::addDCObject(DCObject *object, bool alreadyLocked)
    for(i = 0; i < m_dcObjects->size(); i++)
       if (m_dcObjects->get(i)->getId() == object->getId())
          break;   // Object with specified id already exist
-   
+
    if (i == m_dcObjects->size())     // Add new item
    {
 		m_dcObjects->add(object);
@@ -1019,7 +1019,7 @@ void Template::prepareForDeletion()
 	if (Type() == OBJECT_TEMPLATE)
 	{
 		UINT32 i;
-	
+
 		LockChildList(FALSE);
 		for(i = 0; i < m_dwChildCount; i++)
 		{
@@ -1061,7 +1061,7 @@ bool Template::isApplicable(Node *node)
 }
 
 /**
- * Get last (current) DCI values. Moved to Template from DataCollectionTarget to allow 
+ * Get last (current) DCI values. Moved to Template from DataCollectionTarget to allow
  * simplified creation of DCI selection dialog in management console. For classes not
  * derived from DataCollectionTarget actual values will always be empty strings
  * with data type DCI_DT_NULL.
@@ -1074,7 +1074,7 @@ UINT32 Template::getLastValues(CSCPMessage *msg, bool objectTooltipOnly)
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-		if (object->hasValue() && 
+		if (object->hasValue() &&
           _tcsnicmp(object->getDescription(), _T("@system."), 8) &&
           (!objectTooltipOnly || object->isShowOnObjectTooltip()))
 		{
