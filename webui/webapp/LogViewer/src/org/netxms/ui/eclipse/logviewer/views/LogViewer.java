@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.logviewer.views;
 
 import java.util.Collection;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
@@ -32,6 +31,7 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -221,7 +221,7 @@ public class LogViewer extends ViewPart
 	/**
 	 * Estimate required column width
 	 */
-	private int estimateColumnWidth(final LogColumn lc)
+	protected int estimateColumnWidth(final LogColumn lc)
 	{
 		switch(lc.getType())
 		{
@@ -255,8 +255,18 @@ public class LogViewer extends ViewPart
 			column.setWidth(estimateColumnWidth(lc));
 		}
 		WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), "LogViewer." + logHandle.getName()); //$NON-NLS-1$
-		viewer.setLabelProvider(new LogLabelProvider(logHandle));
+		viewer.setLabelProvider(createLabelProvider(logHandle));
 		filterBuilder.setLogHandle(logHandle);
+	}
+
+	/**
+	 * Create label provider
+	 * 
+	 * @return
+	 */
+	protected ITableLabelProvider createLabelProvider(Log logHandle)
+	{
+	   return new LogLabelProvider(logHandle);
 	}
 
 	/**
