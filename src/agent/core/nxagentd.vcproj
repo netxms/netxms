@@ -393,10 +393,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\logmonitoring.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\master.cpp"
 				>
 			</File>

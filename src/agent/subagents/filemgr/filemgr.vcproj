@@ -345,6 +345,10 @@
 				RelativePath=".\filemgr.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\logmonitoring.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
