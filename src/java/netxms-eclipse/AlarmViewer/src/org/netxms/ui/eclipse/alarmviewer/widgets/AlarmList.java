@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.alarmviewer.widgets;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +88,7 @@ import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.RefreshTimer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.views.Limitable;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -116,6 +119,7 @@ public class AlarmList extends Composite
 	private Point toolTipLocation;
 	private Alarm toolTipObject;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
+   private List<Alarm> filteredAlarmList = new ArrayList<>();
 	private Action actionCopy;
 	private Action actionCopyMessage;
 	private Action actionComments;
@@ -132,6 +136,7 @@ public class AlarmList extends Composite
 	private MenuManager timeAcknowledgeMenu;
 	private List<Action> timeAcknowledge;
 	private Action timeAcknowledgeOther;
+   private Limitable limitable;
 	
 	/**
 	 * Create alarm list widget
@@ -141,11 +146,12 @@ public class AlarmList extends Composite
 	 * @param style widget style
 	 * @param configPrefix prefix for saving/loading widget configuration
 	 */
-	public AlarmList(IViewPart viewPart, Composite parent, int style, final String configPrefix)
+   public AlarmList(IViewPart viewPart, Composite parent, int style, final String configPrefix, Limitable limitable)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		this.viewPart = viewPart;	
+      this.limitable = limitable;
 		
 		// Setup table columns
 		final String[] names = { 
@@ -168,7 +174,6 @@ public class AlarmList extends Composite
 		alarmViewer.setContentProvider(new ArrayContentProvider());
 		alarmViewer.setComparator(new AlarmComparator());
 		alarmFilter = new AlarmListFilter();
-		alarmViewer.addFilter(alarmFilter);
 		alarmViewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -256,6 +261,7 @@ public class AlarmList extends Composite
 						synchronized(alarmList)
 						{
 							alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
+                     filterAndLimit();
 						}
 						refreshTimer.execute();
 						break;
@@ -264,6 +270,7 @@ public class AlarmList extends Composite
 						synchronized(alarmList)
 						{
 							alarmList.remove(((Alarm)n.getObject()).getId());
+                     filterAndLimit();
 						}
                   refreshTimer.execute();
 						break;
@@ -516,8 +523,9 @@ public class AlarmList extends Composite
          return;
 	   }
 	   timeAcknowledge = new ArrayList<Action>(menuSize);
-	   for (int i = 0; i<menuSize ; i++){
-	      final int time = settings.getInt("AlarmList.ackMenuEntry"+Integer.toString(i)); //$NON-NLS-1$
+      for(int i = 0; i < menuSize; i++)
+      {
+         final int time = settings.getInt("AlarmList.ackMenuEntry" + Integer.toString(i)); //$NON-NLS-1$
 	      if (time == 0)
 	         continue;
 	      String title = AlarmAcknowledgeTimeFunctions.timeToString(time);
@@ -528,7 +536,7 @@ public class AlarmList extends Composite
 	            acknowledgeAlarms(true, time);
 	         }
 	      };
-	      action.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledge"+Integer.toString(i)+"ID"); //$NON-NLS-1$ //$NON-NLS-2$
+         action.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledge" + Integer.toString(i) + "ID"); //$NON-NLS-1$ //$NON-NLS-2$
 	      timeAcknowledge.add(action);
 	   }
    }
@@ -543,7 +551,7 @@ public class AlarmList extends Composite
          @Override
          public void run()
          {
-            int time = 1*60*60; //hour to minutes, seconds
+            int time = 1 * 60 * 60; // hour to minutes, seconds
             acknowledgeAlarms(true, time);
          }
       };
@@ -554,7 +562,7 @@ public class AlarmList extends Composite
          @Override
          public void run()
          {
-            int time = 4*60*60; //hour to minutes, seconds
+            int time = 4 * 60 * 60; // hour to minutes, seconds
             acknowledgeAlarms(true, time); 
          }
       };
@@ -565,7 +573,7 @@ public class AlarmList extends Composite
          @Override
          public void run()
          {
-            int time = 24*60*60; //day to hours, minutes, seconds
+            int time = 24 * 60 * 60; // day to hours, minutes, seconds
             acknowledgeAlarms(true, time);
          }
       };
@@ -576,7 +584,7 @@ public class AlarmList extends Composite
          @Override
          public void run()
          {
-            int time = 2*24*60*60; //day to hours, minutes, seconds
+            int time = 2 * 24 * 60 * 60; // day to hours, minutes, seconds
             acknowledgeAlarms(true, time);
          }
       };
@@ -610,6 +618,7 @@ public class AlarmList extends Composite
 	
 	/**
 	 * Fill context menu
+    * 
 	 * @param mgr Menu manager
 	 */
 	protected void fillContextMenu(IMenuManager manager)
@@ -721,9 +730,57 @@ public class AlarmList extends Composite
 		alarmFilter.setRootObject(objectId);
 		synchronized(alarmList)
 		{
-			alarmViewer.refresh();
+	      filterAndLimit();
 		}
 	}
+
+   /**
+    * Filter all alarms (e.g. by chosen object), sort them by last change and reduce the size to maximum as it is set in
+    * configuration parameter <code>AlarmListDisplayLimit</code>.
+    */
+   private void filterAndLimit()
+   {
+      // filter
+      filteredAlarmList.clear();
+      for(Alarm alarm : alarmList.values())
+      {
+         if (alarmFilter.select(alarm))
+         {
+            filteredAlarmList.add(alarm);
+         }
+      }
+      
+      // sort by last change newest first
+      Collections.sort(filteredAlarmList, new Comparator<Alarm>() {
+         @Override
+         public int compare(Alarm alarm1, Alarm alarm2)
+         {
+            return -(alarm1.getLastChangeTime().compareTo(alarm2.getLastChangeTime()));
+         }
+      });
+      
+      // limit if the feature is not disabled
+      if (session.getAlarmListDisplayLimit() > 0)
+      {
+         filteredAlarmList = filteredAlarmList.subList(0,
+               Math.min(session.getAlarmListDisplayLimit(), filteredAlarmList.size()));
+      }
+
+      alarmViewer.getControl().getDisplay().asyncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            if (!alarmViewer.getControl().isDisposed())
+            {
+               synchronized(alarmList)
+               {
+                  alarmViewer.setInput(filteredAlarmList);
+               }
+               limitable.showLimitWarning((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() >= session.getAlarmListDisplayLimit()));
+            }
+         }
+      });
+   }
 
 	/**
 	 * Refresh alarm list
@@ -734,22 +791,13 @@ public class AlarmList extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final HashMap<Long, Alarm> list = session.getAlarms();
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						if (!alarmViewer.getControl().isDisposed())
-						{
-							synchronized(alarmList)
-							{
-								alarmList.clear();
-								alarmList.putAll(list);
-								alarmViewer.setInput(alarmList.values());
-							}
-						}
-					}
-				});
+			   HashMap<Long, Alarm> alarms = session.getAlarms();
+      		synchronized(alarmList)
+      		{
+      		   alarmList.clear();
+      		   alarmList.putAll(alarms);
+               filterAndLimit();
+      		}
 			}
 
 			@Override
@@ -777,7 +825,8 @@ public class AlarmList extends Composite
 		}
 		catch(PartInitException e)
 		{
-			MessageDialogHelper.openError(getShell(), Messages.get().AlarmList_Error, Messages.get().AlarmList_ErrorText + e.getLocalizedMessage());
+         MessageDialogHelper.openError(getShell(), Messages.get().AlarmList_Error,
+               Messages.get().AlarmList_ErrorText + e.getLocalizedMessage());
 		}
 	}
 	
@@ -1011,7 +1060,8 @@ public class AlarmList extends Composite
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(getShell(), Messages.get().AlarmList_Error, Messages.get().AlarmList_OpenDetailsError + e.getLocalizedMessage());
+            MessageDialogHelper.openError(getShell(), Messages.get().AlarmList_Error,
+                  Messages.get().AlarmList_OpenDetailsError + e.getLocalizedMessage());
 			}
 		}
 	}

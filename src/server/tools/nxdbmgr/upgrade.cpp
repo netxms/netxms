@@ -388,6 +388,16 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Upgrade from V329 to V330
+ */
+static BOOL H_UpgradeFromV329(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("AlarmListDisplayLimit"), _T("4096"), 1, 0));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='330' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V328 to V329
  */
 static BOOL H_UpgradeFromV328(int currVersion, int newVersion)
@@ -8034,6 +8044,7 @@ static struct
    { 326, 327, H_UpgradeFromV326 },
    { 327, 328, H_UpgradeFromV327 },
    { 328, 329, H_UpgradeFromV328 },
+   { 329, 330, H_UpgradeFromV329 },
    { 0, 0, NULL }
 };
 

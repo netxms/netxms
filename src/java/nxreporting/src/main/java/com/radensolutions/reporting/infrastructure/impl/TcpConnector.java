@@ -213,7 +213,6 @@ public class TcpConnector implements Connector
 
 			boolean success = false;
 			final byte[] buffer = new byte[FILE_BUFFER_SIZE];
-			long bytesSent = 0;
 			final ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
 			while (true)
 			{

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,6 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.widgets.helpers;
 
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
@@ -28,11 +26,12 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Filter for alarm list
  */
-public class AlarmListFilter extends ViewerFilter
+public class AlarmListFilter
 {
 	private long rootObject = 0;
 	private int stateFilter = -1;
 	private int severityFilter = 0xFF;
+	private NXCSession session;
 	
 	/**
 	 * 
@@ -40,24 +39,24 @@ public class AlarmListFilter extends ViewerFilter
 	public AlarmListFilter()
 	{
 		rootObject = 0;
+      session = (NXCSession)ConsoleSharedData.getSession();
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
+
+	/**
+	 * @return true if alarm should be displayed
 	 */
-	@Override
-	public boolean select(Viewer viewer, Object parentElement, Object element)
-	{
-		if ((stateFilter != -1) && (((Alarm)element).getState() != stateFilter))
+   public boolean select(Alarm alarm)
+   {
+		if ((stateFilter != -1) && (alarm.getState() != stateFilter))
 			return false;
 		
-		if (((1 << ((Alarm)element).getCurrentSeverity()) & severityFilter) == 0)
+		if (((1 << alarm.getCurrentSeverity()) & severityFilter) == 0)
 			return false;
 				
-		if ((rootObject == 0) || (rootObject == ((Alarm)element).getSourceObjectId()))
+		if ((rootObject == 0) || (rootObject == alarm.getSourceObjectId()))
 			return true;	// No filtering by object ID or root object is a source
 		
-		AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(((Alarm)element).getSourceObjectId());
+		AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
 		if (object != null)
 			return object.isChildOf(rootObject);
 		return false;

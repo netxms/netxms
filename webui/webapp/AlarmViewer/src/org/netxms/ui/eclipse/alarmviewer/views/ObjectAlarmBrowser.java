@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,124 +38,131 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.views.Limitable;
 
 /**
  * Alarm browser view - alarms for specific object
  */
-public class ObjectAlarmBrowser extends ViewPart
+public class ObjectAlarmBrowser extends ViewPart implements Limitable
 {
-	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.views.ObjectAlarmBrowser"; //$NON-NLS-1$
-	
-	private AlarmList alarmView;
-	private Action actionRefresh;
-	private Action actionExportToCsv;
-	private long objectId = 0;
+   public static final String ID = "org.netxms.ui.eclipse.alarmviewer.views.ObjectAlarmBrowser"; //$NON-NLS-1$
+
+   private AlarmList alarmView;
+   private Action actionRefresh;
+   private Action actionExportToCsv;
+   private long objectId = 0;
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
-	@Override
-	public void init(IViewSite site) throws PartInitException
-	{
-		super.init(site);
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
+   @Override
+   public void init(IViewSite site) throws PartInitException
+   {
+      super.init(site);
 		
-		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		objectId = Long.parseLong(site.getSecondaryId());
-		AbstractObject object = session.findObjectById(objectId);
+      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      objectId = Long.parseLong(site.getSecondaryId());
+      AbstractObject object = session.findObjectById(objectId);
 		setPartName(Messages.get().ObjectAlarmBrowser_TitlePrefix + ((object != null) ? object.getObjectName() : ("[" + Long.toString(objectId) + "]")));  //$NON-NLS-1$//$NON-NLS-2$
-	}
+   }
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	public void createPartControl(Composite parent)
-	{
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   public void createPartControl(Composite parent)
+   {
       FormLayout formLayout = new FormLayout();
-		parent.setLayout(formLayout);
-		
-		alarmView = new AlarmList(this, parent, SWT.NONE, "ObjectAlarmBrowser"); //$NON-NLS-1$
-		FormData fd = new FormData();
-		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(0, 0);
-		fd.right = new FormAttachment(100, 0);
-		fd.bottom = new FormAttachment(100, 0);
-		alarmView.setLayoutData(fd);
-		alarmView.setRootObject(objectId);
-		
-		createActions();
-		contributeToActionBars();
-		
-		getSite().setSelectionProvider(alarmView.getSelectionProvider());
-	}
+      parent.setLayout(formLayout);
 
-	/**
-	 * Create actions
-	 */
-	private void createActions()
-	{
-		actionRefresh = new RefreshAction() {
-			@Override
-			public void run()
-			{
-				alarmView.refresh();
-			}
-		};
-		
-		actionExportToCsv = new ExportToCsvAction(this, alarmView.getViewer(), false);
-	}
-	
-	/**
-	 * Contribute actions to action bar
-	 */
-	private void contributeToActionBars()
-	{
-		IActionBars bars = getViewSite().getActionBars();
-		fillLocalPullDown(bars.getMenuManager());
-		fillLocalToolBar(bars.getToolBarManager());
-	}
+      alarmView = new AlarmList(this, parent, SWT.NONE, "ObjectAlarmBrowser", this); //$NON-NLS-1$
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      alarmView.setLayoutData(fd);
+      alarmView.setRootObject(objectId);
 
-	/**
-	 * Fill local pull-down menu
-	 * 
-	 * @param manager
-	 *           Menu manager for pull-down menu
-	 */
-	private void fillLocalPullDown(IMenuManager manager)
-	{
-		manager.add(actionExportToCsv);
-		manager.add(new Separator());
-		manager.add(actionRefresh);
-	}
+      createActions();
+      contributeToActionBars();
 
-	/**
-	 * Fill local tool bar
-	 * 
-	 * @param manager
-	 *           Menu manager for local toolbar
-	 */
-	private void fillLocalToolBar(IToolBarManager manager)
-	{
-		manager.add(actionExportToCsv);
-		manager.add(actionRefresh);
-	}
+      getSite().setSelectionProvider(alarmView.getSelectionProvider());
+   }
+
+   /**
+    * Create actions
+    */
+   private void createActions()
+   {
+      actionRefresh = new RefreshAction() {
+         @Override
+         public void run()
+         {
+            alarmView.refresh();
+         }
+      };
+
+      actionExportToCsv = new ExportToCsvAction(this, alarmView.getViewer(), false);
+   }
+
+   /**
+    * Contribute actions to action bar
+    */
+   private void contributeToActionBars()
+   {
+      IActionBars bars = getViewSite().getActionBars();
+      fillLocalPullDown(bars.getMenuManager());
+      fillLocalToolBar(bars.getToolBarManager());
+   }
+
+   /**
+    * Fill local pull-down menu
+    * 
+    * @param manager Menu manager for pull-down menu
+    */
+   private void fillLocalPullDown(IMenuManager manager)
+   {
+      manager.add(actionExportToCsv);
+      manager.add(new Separator());
+      manager.add(actionRefresh);
+   }
+
+   /**
+    * Fill local tool bar
+    * 
+    * @param manager Menu manager for local toolbar
+    */
+   private void fillLocalToolBar(IToolBarManager manager)
+   {
+      manager.add(actionExportToCsv);
+      manager.add(actionRefresh);
+   }
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
-	 */
-	@Override
-	public void setFocus()
-	{
-		alarmView.setFocus();
-	}
+    * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
+    */
+   @Override
+   public void setFocus()
+   {
+      alarmView.setFocus();
+   }
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-		alarmView.dispose();
-		super.dispose();
-	}
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      alarmView.dispose();
+      super.dispose();
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.views.Limitable#showLimitWarning(boolean)
+    */
+   @Override
+   public void showLimitWarning(boolean show)
+   {
+   }
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,11 +38,12 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.views.Limitable;
 
 /**
  * Alarm browser view - alarms for specific object
  */
-public class ObjectAlarmBrowser extends ViewPart
+public class ObjectAlarmBrowser extends ViewPart implements Limitable
 {
 	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.views.ObjectAlarmBrowser"; //$NON-NLS-1$
 	
@@ -74,7 +75,7 @@ public class ObjectAlarmBrowser extends ViewPart
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		alarmView = new AlarmList(this, parent, SWT.NONE, "ObjectAlarmBrowser"); //$NON-NLS-1$
+      alarmView = new AlarmList(this, parent, SWT.NONE, "ObjectAlarmBrowser", this); //$NON-NLS-1$
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
@@ -118,8 +119,7 @@ public class ObjectAlarmBrowser extends ViewPart
 	/**
 	 * Fill local pull-down menu
 	 * 
-	 * @param manager
-	 *           Menu manager for pull-down menu
+    * @param manager Menu manager for pull-down menu
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
@@ -131,8 +131,7 @@ public class ObjectAlarmBrowser extends ViewPart
 	/**
 	 * Fill local tool bar
 	 * 
-	 * @param manager
-	 *           Menu manager for local toolbar
+    * @param manager Menu manager for local toolbar
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
@@ -158,4 +157,12 @@ public class ObjectAlarmBrowser extends ViewPart
 		alarmView.dispose();
 		super.dispose();
 	}
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.views.Limitable#showLimitWarning(boolean)
+    */
+   @Override
+   public void showLimitWarning(boolean show)
+   {
+   }
 }

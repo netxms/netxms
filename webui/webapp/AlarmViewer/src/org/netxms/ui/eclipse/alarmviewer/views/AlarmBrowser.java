@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,18 +32,19 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
+import org.netxms.ui.eclipse.views.Limitable;
 
 /**
  * Alarm browser view
  */
-public class AlarmBrowser extends ViewPart
+public class AlarmBrowser extends ViewPart implements Limitable
 {
 	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.view.alarm_browser"; //$NON-NLS-1$
 	
 	private AlarmList alarmView;
 	private Action actionRefresh;
 	private Action actionExportToCsv;
-
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
@@ -53,7 +54,7 @@ public class AlarmBrowser extends ViewPart
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		alarmView = new AlarmList(this, parent, SWT.NONE, "AlarmBrowser"); //$NON-NLS-1$
+		alarmView = new AlarmList(this, parent, SWT.NONE, "AlarmBrowser", this); //$NON-NLS-1$
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
@@ -136,4 +137,12 @@ public class AlarmBrowser extends ViewPart
 		alarmView.dispose();
 		super.dispose();
 	}
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.views.Limitable#showLimitWarning(boolean)
+    */
+   @Override
+   public void showLimitWarning(boolean show)
+   {
+   }
 }

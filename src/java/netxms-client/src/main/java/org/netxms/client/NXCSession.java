@@ -288,6 +288,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private int minViewRefreshInterval;
    private long serverTime = System.currentTimeMillis();
    private long serverTimeRecvTime = System.currentTimeMillis();
+   private int alarmListDisplayLimit;
 
    // Objects
    private Map<Long, AbstractObject> objectList = new HashMap<Long, AbstractObject>();
@@ -1677,7 +1678,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
          strictAlarmStatusFlow = response.getVariableAsBoolean(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE);
          timedAlarmAckEnabled = response.getVariableAsBoolean(NXCPCodes.VID_TIMED_ALARM_ACK_ENABLED);
-         
+
+         alarmListDisplayLimit = response.getVariableAsInteger(NXCPCodes.VID_ALARM_LIST_DISP_LIMIT);
+         Logger.info("NXCSession.connect", "alarmListDisplayLimit = " + alarmListDisplayLimit);
+
          Logger.info("NXCSession.connect", "succesfully connected and logged in, userId=" + userId);
          isConnected = true;
       }
@@ -1967,6 +1971,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    public boolean isPasswordExpired()
    {
       return passwordExpired;
+   }
+   
+   /**
+    * Get maximum number of records allowed to be displayed in alarm list
+    */
+   public int getAlarmListDisplayLimit()
+   {
+		return alarmListDisplayLimit;
    }
 
    /**

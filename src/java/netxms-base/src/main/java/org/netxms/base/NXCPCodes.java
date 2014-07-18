@@ -811,6 +811,7 @@ public class NXCPCodes
    public static final long VID_COMMAND_SHORT_NAME = 475;
    public static final long VID_MODULE_DATA_COUNT = 476;
    public static final long VID_NEW_FILE_NAME = 477;
+   public static final long VID_ALARM_LIST_DISP_LIMIT = 478;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

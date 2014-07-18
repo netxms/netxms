@@ -1889,6 +1889,7 @@ void ClientSession::login(CSCPMessage *pRequest)
 			msg.SetVariable(VID_TIMED_ALARM_ACK_ENABLED, (UINT16)ConfigReadInt(_T("EnableTimedAlarmAck"), 0));
 			msg.SetVariable(VID_VIEW_REFRESH_INTERVAL, (UINT16)ConfigReadInt(_T("MinViewRefreshInterval"), 200));
 			msg.SetVariable(VID_HELPDESK_LINK_ACTIVE, (UINT16)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
+			msg.SetVariable(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("AlarmListDisplayLimit"), 4096));
          debugPrintf(3, _T("User %s authenticated"), m_szUserName);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0,
 			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);

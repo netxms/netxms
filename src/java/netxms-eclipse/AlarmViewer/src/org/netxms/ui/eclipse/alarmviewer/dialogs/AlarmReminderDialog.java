@@ -14,11 +14,12 @@ import org.netxms.client.events.Alarm;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.views.Limitable;
 
 /**
  * Outstanding alarm reminder
  */
-public class AlarmReminderDialog extends Dialog
+public class AlarmReminderDialog extends Dialog implements Limitable
 {
 	/**
 	 * @param parentShell
@@ -53,7 +54,7 @@ public class AlarmReminderDialog extends Dialog
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		dialogArea.setLayout(layout);
 		
-		AlarmList list = new AlarmList(null, dialogArea, SWT.BORDER, "AlarmReminderDialog"); //$NON-NLS-1$
+		AlarmList list = new AlarmList(null, dialogArea, SWT.BORDER, "AlarmReminderDialog", this); //$NON-NLS-1$
 		list.setStateFilter(Alarm.STATE_OUTSTANDING);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -73,4 +74,12 @@ public class AlarmReminderDialog extends Dialog
 	{
 		createButton(parent, CANCEL, Messages.get().AlarmReminderDialog_Dismiss, false);
 	}
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.views.Limitable#showLimitWarning(boolean)
+    */
+   @Override
+   public void showLimitWarning(boolean show)
+   {
+   }
 }
