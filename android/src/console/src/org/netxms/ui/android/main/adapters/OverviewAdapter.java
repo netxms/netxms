@@ -91,6 +91,7 @@ public class OverviewAdapter extends BaseAdapter
 					break;
 			}
 			addPair(r.getString(R.string.overview_location), obj.getGeolocation());
+			addPair(r.getString(R.string.overview_comments), obj.getComments());
 		}
 	}
 

@@ -170,6 +170,7 @@
 	<string name="overview_provider">Source: %1$s</string>
 	<string name="overview_accuracy">Accuracy: %1$s meters</string>
 	<string name="overview_timestamp">Timestamp: %1$s</string>
+	<string name="overview_comments">Comments</string>
 
 	<string name="provider_manual">Manual</string>
 	<string name="provider_network">Network</string>
