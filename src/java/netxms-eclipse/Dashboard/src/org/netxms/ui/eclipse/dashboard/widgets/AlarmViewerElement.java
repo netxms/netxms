@@ -24,12 +24,11 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AlarmViewerConfig;
-import org.netxms.ui.eclipse.views.Limitable;
 
 /**
  * Alarm viewer element for dashboard
  */
-public class AlarmViewerElement extends ElementWidget implements Limitable
+public class AlarmViewerElement extends ElementWidget
 {
 	private AlarmList viewer;
 	private AlarmViewerConfig config;
@@ -57,16 +56,8 @@ public class AlarmViewerElement extends ElementWidget implements Limitable
 		layout.marginWidth = 0;
 		setLayout(layout);
 
-      viewer = new AlarmList(viewPart, this, SWT.NONE, "Dashboard.AlarmList", this); //$NON-NLS-1$
+      viewer = new AlarmList(viewPart, this, SWT.NONE, "Dashboard.AlarmList"); //$NON-NLS-1$
 		viewer.setRootObject(config.getObjectId());
 		viewer.setSeverityFilter(config.getSeverityFilter());
 	}
-
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.views.Limitable#showLimitWarning(boolean)
-    */
-   @Override
-   public void showLimitWarning(boolean warning)
-   {
-   }
 }

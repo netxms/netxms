@@ -31,12 +31,11 @@ import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
-import org.netxms.ui.eclipse.views.Limitable;
 
 /**
  * Alarm tab
  */
-public class AlarmTab extends ObjectTab implements Limitable
+public class AlarmTab extends ObjectTab
 {
 	private AlarmList alarmList;
 	
@@ -46,7 +45,7 @@ public class AlarmTab extends ObjectTab implements Limitable
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-      alarmList = new AlarmList(getViewPart(), parent, SWT.NONE, getConfigPrefix(), this);
+      alarmList = new AlarmList(getViewPart(), parent, SWT.NONE, getConfigPrefix());
 	}
 	
 	/**
@@ -108,12 +107,4 @@ public class AlarmTab extends ObjectTab implements Limitable
 			alarmList.dispose();
 		super.dispose();
 	}
-
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.views.Limitable#showLimitWarning(boolean)
-    */
-   @Override
-   public void showLimitWarning(boolean show)
-   {
-   }
 }

@@ -51,8 +51,6 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IViewPart;
@@ -88,13 +86,13 @@ import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.RefreshTimer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.views.Limitable;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Alarm list widget
  */
-public class AlarmList extends Composite
+public class AlarmList extends CompositeWithMessageBar
 {
 	public static final String JOB_FAMILY = "AlarmViewJob"; //$NON-NLS-1$
 	
@@ -136,7 +134,6 @@ public class AlarmList extends Composite
 	private MenuManager timeAcknowledgeMenu;
 	private List<Action> timeAcknowledge;
 	private Action timeAcknowledgeOther;
-   private Limitable limitable;
 	
 	/**
 	 * Create alarm list widget
@@ -146,12 +143,11 @@ public class AlarmList extends Composite
 	 * @param style widget style
 	 * @param configPrefix prefix for saving/loading widget configuration
 	 */
-   public AlarmList(IViewPart viewPart, Composite parent, int style, final String configPrefix, Limitable limitable)
+   public AlarmList(IViewPart viewPart, Composite parent, int style, final String configPrefix)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		this.viewPart = viewPart;	
-      this.limitable = limitable;
 		
 		// Setup table columns
 		final String[] names = { 
@@ -167,7 +163,7 @@ public class AlarmList extends Composite
 		      Messages.get().AlarmList_ColumnLastChange
 		   };
 		final int[] widths = { 100, 100, 150, 300, 70, 70, 120, 100, 100, 100 };
-		alarmViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
+		alarmViewer = new SortableTableViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 		WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 	
 		alarmViewer.setLabelProvider(new AlarmListLabelProvider());
@@ -229,13 +225,6 @@ public class AlarmList extends Composite
 		createActions();
 		createPopupMenu();
 
-		addListener(SWT.Resize, new Listener() {
-			public void handleEvent(Event e)
-			{
-				alarmViewer.getControl().setBounds(AlarmList.this.getClientArea());
-			}
-		});
-		
 		refresh();
 		
 		refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), alarmViewer.getControl(), new Runnable() {
@@ -332,7 +321,7 @@ public class AlarmList extends Composite
 		});
 	}
 	
-	/**
+   /**
 	 * Get selection provider of alarm list
 	 * 
 	 * @return
@@ -762,8 +751,7 @@ public class AlarmList extends Composite
       // limit if the feature is not disabled
       if (session.getAlarmListDisplayLimit() > 0)
       {
-         filteredAlarmList = filteredAlarmList.subList(0,
-               Math.min(session.getAlarmListDisplayLimit(), filteredAlarmList.size()));
+         filteredAlarmList = filteredAlarmList.subList(0, Math.min(session.getAlarmListDisplayLimit(), filteredAlarmList.size()));
       }
 
       alarmViewer.getControl().getDisplay().asyncExec(new Runnable() {
@@ -776,7 +764,14 @@ public class AlarmList extends Composite
                {
                   alarmViewer.setInput(filteredAlarmList);
                }
-               limitable.showLimitWarning((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() >= session.getAlarmListDisplayLimit()));
+               if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() >= session.getAlarmListDisplayLimit()))
+               {
+                  showMessage(INFORMATION, String.format("Only %d most recent alarms shown", filteredAlarmList.size()));
+               }
+               else
+               {
+                  hideMessage();
+               }
             }
          }
       });

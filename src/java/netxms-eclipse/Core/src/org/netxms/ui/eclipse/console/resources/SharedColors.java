@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,6 +51,8 @@ public class SharedColors
 	public static final String MAP_GROUP_BOX_TITLE = "Map.GroupBox.Title";  //$NON-NLS-1$
 	public static final String MAP_LAST_VALUES_TEXT = "Map.LastValues.Text";  //$NON-NLS-1$
 	public static final String MAP_SMALL_LABEL_BACKGROUND = "Map.ObjectFigure.SmallLabel.Background";  //$NON-NLS-1$
+   public static final String MESSAGE_BAR_BACKGROUND = "MessageBar.Background";  //$NON-NLS-1$
+   public static final String MESSAGE_BAR_TEXT = "MessageBar.Text";  //$NON-NLS-1$
 	public static final String MIB_EXPLORER_HEADER_BACKGROUND = "MibExplorer.Header.Background";  //$NON-NLS-1$
 	public static final String MIB_EXPLORER_HEADER_TEXT = "MibExplorer.Header.Text";  //$NON-NLS-1$
 	public static final String OBJECT_TAB_BACKGROUND = "ObjectTab.Background";  //$NON-NLS-1$
@@ -104,6 +106,8 @@ public class SharedColors
 		defaultColors.put(MAP_GROUP_BOX_TITLE, new RGB(255, 255, 255));
 		defaultColors.put(MAP_LAST_VALUES_TEXT, new RGB(0, 64, 0));
 		defaultColors.put(MAP_SMALL_LABEL_BACKGROUND, new RGB(255, 255, 255));
+      defaultColors.put(MESSAGE_BAR_BACKGROUND, new RGB(255, 252, 192));
+      defaultColors.put(MESSAGE_BAR_TEXT, new RGB(0, 0, 0));
 		defaultColors.put(MIB_EXPLORER_HEADER_BACKGROUND, new RGB(153, 180, 209));
 		defaultColors.put(MIB_EXPLORER_HEADER_TEXT, new RGB(255, 255, 255));
 		defaultColors.put(OBJECT_TAB_BACKGROUND, new RGB(255, 255, 255));

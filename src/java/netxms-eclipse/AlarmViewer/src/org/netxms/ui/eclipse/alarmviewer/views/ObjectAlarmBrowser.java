@@ -38,12 +38,11 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.views.Limitable;
 
 /**
  * Alarm browser view - alarms for specific object
  */
-public class ObjectAlarmBrowser extends ViewPart implements Limitable
+public class ObjectAlarmBrowser extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.views.ObjectAlarmBrowser"; //$NON-NLS-1$
 	
@@ -75,7 +74,7 @@ public class ObjectAlarmBrowser extends ViewPart implements Limitable
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-      alarmView = new AlarmList(this, parent, SWT.NONE, "ObjectAlarmBrowser", this); //$NON-NLS-1$
+      alarmView = new AlarmList(this, parent, SWT.NONE, "ObjectAlarmBrowser"); //$NON-NLS-1$
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
@@ -157,12 +156,4 @@ public class ObjectAlarmBrowser extends ViewPart implements Limitable
 		alarmView.dispose();
 		super.dispose();
 	}
-
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.views.Limitable#showLimitWarning(boolean)
-    */
-   @Override
-   public void showLimitWarning(boolean show)
-   {
-   }
 }
