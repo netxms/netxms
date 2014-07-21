@@ -163,6 +163,7 @@ import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.client.snmp.SnmpValue;
 import org.netxms.client.snmp.SnmpWalkListener;
 import org.netxms.client.topology.ConnectionPoint;
+import org.netxms.client.topology.FdbEntry;
 import org.netxms.client.topology.NetworkPath;
 import org.netxms.client.topology.Route;
 import org.netxms.client.topology.VlanInfo;
@@ -6777,10 +6778,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    /**
     * Get routing table from node
     * 
-    * @param nodeId
-    * @return
-    * @throws IOException
-    * @throws NXCException
+    * @param nodeId node object ID
+    * @return list of routing table entries
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public List<Route> getRoutingTable(long nodeId) throws IOException, NXCException
    {
@@ -6797,6 +6798,31 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          varId += 10;
       }
       return rt;
+   }
+
+   /**
+    * Get switch forwarding database (MAC address table) from node
+    * 
+    * @param nodeId node object ID
+    * @return list of switch forwarding database entries
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<FdbEntry> getSwitchForwardingDatabase(long nodeId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SWITCH_FDB);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
+      List<FdbEntry> fdb = new ArrayList<FdbEntry>(count);
+      long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         fdb.add(new FdbEntry(response, varId));
+         varId += 10;
+      }
+      return fdb;
    }
 
    /**

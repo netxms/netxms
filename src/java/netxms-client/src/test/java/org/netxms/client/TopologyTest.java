@@ -22,6 +22,7 @@ import java.util.List;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
+import org.netxms.client.topology.FdbEntry;
 import org.netxms.client.topology.Route;
 
 
@@ -64,6 +65,17 @@ public class TopologyTest extends SessionTest
       List<Route> rt = session.getRoutingTable(NODE_ID);
       for(Route r : rt)
          System.out.println(r.toString());
+      
+      session.disconnect();
+   }
+
+   public void testSwitchForwardingTable() throws Exception
+   {
+      final NXCSession session = connect();
+
+      List<FdbEntry> fdb = session.getSwitchForwardingDatabase(NODE_ID);
+      for(FdbEntry e : fdb)
+         System.out.println(e.toString());
       
       session.disconnect();
    }

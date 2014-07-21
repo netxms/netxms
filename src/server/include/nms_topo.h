@@ -87,6 +87,8 @@ struct FDB_ENTRY
 	UINT32 ifIndex;                 // Interface index
 	BYTE macAddr[MAC_ADDR_LENGTH]; // MAC address
 	UINT32 nodeObject;              // ID of node object or 0 if not found
+   UINT16 vlanId;
+   UINT16 type;
 };
 
 /**
@@ -111,6 +113,7 @@ private:
 	int m_pmAllocated;
 	PORT_MAPPING_ENTRY *m_portMap;
 	time_t m_timestamp;
+   UINT16 m_currentVlanId;
 
 	UINT32 ifIndexFromPort(UINT32 port);
 
@@ -127,11 +130,15 @@ public:
 	int getSize() { return m_fdbSize; }
 	FDB_ENTRY *getEntry(int index) { return ((index >= 0) && (index < m_fdbSize)) ? &m_fdb[index] : NULL; }
 
+   void setCurrentVlanId(UINT16 vlanId) { m_currentVlanId = vlanId; }
+   UINT16 getCurrentVlanId() { return m_currentVlanId; }
+
 	UINT32 findMacAddress(const BYTE *macAddr);
 	bool isSingleMacOnPort(UINT32 ifIndex, BYTE *macAddr = NULL);
 	int getMacCountOnPort(UINT32 ifIndex);
 
    void print(CONSOLE_CTX ctx, Node *owner);
+   void fillMessage(CSCPMessage *msg);
 };
 
 /**

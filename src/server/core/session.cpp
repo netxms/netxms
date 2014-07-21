@@ -13273,6 +13273,17 @@ void ClientSession::getSwitchForwardingDatabase(CSCPMessage *request)
    {
       if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
+         ForwardingDatabase *fdb = node->getSwitchForwardingDatabase();
+         if (fdb != NULL)
+         {
+            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            fdb->fillMessage(&msg);
+   			fdb->decRefCount();
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_NO_FDB);
+         }
       }
       else
       {
@@ -13321,6 +13332,7 @@ void ClientSession::getRoutingTable(CSCPMessage *request)
                msg.SetVariable(id++, rt->pRoutes[i].dwRouteType);
                id += 5;
             }
+   			DestroyRoutingTable(rt);
          }
          else
          {

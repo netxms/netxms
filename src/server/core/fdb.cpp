@@ -171,6 +171,25 @@ void ForwardingDatabase::print(CONSOLE_CTX ctx, Node *owner)
 }
 
 /**
+ * Fill NXCP message with FDB data
+ */
+void ForwardingDatabase::fillMessage(CSCPMessage *msg)
+{
+   msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_fdbSize);
+   UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+	for(int i = 0; i < m_fdbSize; i++)
+   {
+      msg->SetVariable(fieldId++, m_fdb[i].macAddr, MAC_ADDR_LENGTH);
+      msg->SetVariable(fieldId++, m_fdb[i].ifIndex);
+      msg->SetVariable(fieldId++, m_fdb[i].port);
+      msg->SetVariable(fieldId++, m_fdb[i].nodeObject);
+      msg->SetVariable(fieldId++, m_fdb[i].vlanId);
+      msg->SetVariable(fieldId++, m_fdb[i].type);
+      fieldId += 4;
+   }
+}
+
+/**
  * Sort FDB
  */
 void ForwardingDatabase::sort()
@@ -209,7 +228,7 @@ static UINT32 FDBHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *
       {
          int port = varPort->getValueAsInt();
          int status = varStatus->getValueAsInt();
-         if ((port > 0) && (status == 3))		// status 3 == learned
+         if ((port > 0) && (status == 3))  // status: 3 == learned
          {
             FDB_ENTRY entry;
 
@@ -218,6 +237,8 @@ static UINT32 FDBHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *
             pVar->getRawValue(entry.macAddr, MAC_ADDR_LENGTH);
             Node *node = FindNodeByMAC(entry.macAddr);
             entry.nodeObject = (node != NULL) ? node->Id() : 0;
+            entry.vlanId = ((ForwardingDatabase *)arg)->getCurrentVlanId();
+            entry.type = (UINT16)status;
             ((ForwardingDatabase *)arg)->addEntry(&entry);
          }
       }
@@ -254,7 +275,7 @@ static UINT32 Dot1qTpFdbHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Tran
 	if (rcc == SNMP_ERR_SUCCESS)
    {
 		int status = pRespPDU->getVariable(0)->getValueAsInt();
-		if (status == 3)	// status 3 == learned
+		if (status == 3) // status: 3 == learned
 		{
 			FDB_ENTRY entry;
 
@@ -264,6 +285,8 @@ static UINT32 Dot1qTpFdbHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Tran
 				entry.macAddr[j++] = (BYTE)oid[i];
 			Node *node = FindNodeByMAC(entry.macAddr);
 			entry.nodeObject = (node != NULL) ? node->Id() : 0;
+         entry.vlanId = (UINT16)oid[oidLen - MAC_ADDR_LENGTH - 1];
+         entry.type = (UINT16)status;
 			((ForwardingDatabase *)arg)->addEntry(&entry);
 		}
       delete pRespPDU;
@@ -299,6 +322,7 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 	int size = fdb->getSize();
 	DbgPrintf(5, _T("FDB: %d entries read from dot1qTpFdbTable"), size);
 
+   fdb->setCurrentVlanId(1);
 	node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb);
 	DbgPrintf(5, _T("FDB: %d entries read from dot1dTpFdbTable"), fdb->getSize() - size);
 	size = fdb->getSize();
@@ -312,6 +336,7 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 			{
 				TCHAR context[16];
 				_sntprintf(context, 16, _T("%s%d"), (node->getSNMPVersion() < SNMP_VERSION_3) ? _T("") : _T("vlan-"), vlans->get(i)->getVlanId());
+            fdb->setCurrentVlanId((UINT16)vlans->get(i)->getVlanId());
 				node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.4.3.1.1"), FDBHandler, fdb, context);
 				DbgPrintf(5, _T("FDB: %d entries read from dot1dTpFdbTable in context %s"), fdb->getSize() - size, context);
 				size = fdb->getSize();

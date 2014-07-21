@@ -102,6 +102,7 @@ public final class RCC extends CommonRCC
    public static final int HDLINK_INTERNAL_ERROR = 111;
    public static final int NO_LDAP_CONNECTION = 112;
    public static final int NO_ROUTING_TABLE = 113;
+   public static final int NO_FDB = 114;
 	
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;
