@@ -13330,7 +13330,18 @@ void ClientSession::getRoutingTable(CSCPMessage *request)
                msg.SetVariable(id++, rt->pRoutes[i].dwNextHop);
                msg.SetVariable(id++, rt->pRoutes[i].dwIfIndex);
                msg.SetVariable(id++, rt->pRoutes[i].dwRouteType);
-               id += 5;
+               Interface *iface = node->findInterface(rt->pRoutes[i].dwIfIndex, INADDR_ANY);
+               if (iface != NULL)
+               {
+                  msg.SetVariable(id++, iface->Name());
+               }
+               else
+               {
+                  TCHAR buffer[32];
+                  _sntprintf(buffer, 32, _T("[%d]"), rt->pRoutes[i].dwIfIndex);
+                  msg.SetVariable(id++, buffer);
+               }
+               id += 4;
             }
    			DestroyRoutingTable(rt);
          }

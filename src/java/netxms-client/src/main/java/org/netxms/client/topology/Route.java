@@ -31,6 +31,7 @@ public class Route
    private InetAddress nextHop;
    private int ifIndex;
    private int type;
+   private String ifName;
    
    /**
     * Create route object from NXCP message
@@ -45,6 +46,7 @@ public class Route
       nextHop = msg.getVariableAsInetAddress(baseId + 2);
       ifIndex = msg.getVariableAsInteger(baseId + 3);
       type = msg.getVariableAsInteger(baseId + 4);
+      ifName = msg.getVariableAsString(baseId + 5);
    }
 
    /**
@@ -94,5 +96,13 @@ public class Route
    public String toString()
    {
       return "Route [" + destination.getHostAddress() + "/" + prefixLength + " gw=" + nextHop.getHostAddress() + " iface=" + ifIndex + " type=" + type + "]";
+   }
+
+   /**
+    * @return the ifName
+    */
+   public String getIfName()
+   {
+      return ifName;
    }
 }

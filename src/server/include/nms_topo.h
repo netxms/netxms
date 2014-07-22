@@ -106,6 +106,7 @@ struct PORT_MAPPING_ENTRY
 class ForwardingDatabase : public RefCountObject
 {
 private:
+   UINT32 m_nodeId;
 	int m_fdbSize;
 	int m_fdbAllocated;
 	FDB_ENTRY *m_fdb;
@@ -118,7 +119,7 @@ private:
 	UINT32 ifIndexFromPort(UINT32 port);
 
 public:
-	ForwardingDatabase();
+	ForwardingDatabase(UINT32 nodeId);
 	virtual ~ForwardingDatabase();
 
 	void addEntry(FDB_ENTRY *entry);

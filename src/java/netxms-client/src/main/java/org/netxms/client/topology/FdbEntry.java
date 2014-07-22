@@ -28,6 +28,7 @@ public class FdbEntry
 {
    private MacAddress address;
    private int interfaceIndex;
+   private String interfaceName;
    private int port;
    private long nodeId;
    private int vlanId;
@@ -47,6 +48,7 @@ public class FdbEntry
       nodeId = msg.getVariableAsInt64(baseId + 3);
       vlanId = msg.getVariableAsInteger(baseId + 4);
       type = msg.getVariableAsInteger(baseId + 5);
+      interfaceName = msg.getVariableAsString(baseId + 6);
    }
 
    /**
@@ -105,5 +107,13 @@ public class FdbEntry
    {
       return "FdbEntry [address=" + address + ", interfaceIndex=" + interfaceIndex + ", port=" + port + ", nodeId=" + nodeId
             + ", vlanId=" + vlanId + ", type=" + type + "]";
+   }
+
+   /**
+    * @return the interfaceName
+    */
+   public String getInterfaceName()
+   {
+      return interfaceName;
    }
 }

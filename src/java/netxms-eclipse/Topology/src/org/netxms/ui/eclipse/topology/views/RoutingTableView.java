@@ -18,8 +18,8 @@
  */
 package org.netxms.ui.eclipse.topology.views;
 
-import java.util.ArrayList;
 import java.util.List;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -39,38 +39,28 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.AccessPoint;
-import org.netxms.client.objects.Node;
-import org.netxms.client.topology.RadioInterface;
+import org.netxms.client.topology.Route;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.topology.Activator;
-import org.netxms.ui.eclipse.topology.Messages;
-import org.netxms.ui.eclipse.topology.views.helpers.RadioInterfaceComparator;
-import org.netxms.ui.eclipse.topology.views.helpers.RadioInterfaceLabelProvider;
+import org.netxms.ui.eclipse.topology.views.helpers.RoutingTableComparator;
+import org.netxms.ui.eclipse.topology.views.helpers.RoutingTableLabelProvider;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
- * List of radio interfaces
+ * List of IP routes
  */
-public class RadioInterfaces extends ViewPart
+public class RoutingTableView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.topology.views.RadioInterfaces"; //$NON-NLS-1$
+	public static final String ID = "org.netxms.ui.eclipse.topology.views.RoutingTableView"; //$NON-NLS-1$
 	
-	public static final int COLUMN_AP_NAME = 0;
-	public static final int COLUMN_AP_MAC_ADDR = 1;
-	public static final int COLUMN_AP_VENDOR = 2;
-	public static final int COLUMN_AP_MODEL = 3;
-	public static final int COLUMN_AP_SERIAL = 4;
-	public static final int COLUMN_INDEX = 5;
-	public static final int COLUMN_NAME = 6;
-	public static final int COLUMN_MAC_ADDR = 7;
-	public static final int COLUMN_CHANNEL = 8;
-	public static final int COLUMN_TX_POWER_DBM = 9;
-	public static final int COLUMN_TX_POWER_MW = 10;
+	public static final int COLUMN_DESTINATION = 0;
+	public static final int COLUMN_NEXT_HOP = 1;
+	public static final int COLUMN_INTERFACE = 2;
+	public static final int COLUMN_TYPE = 3;
 	
 	private NXCSession session;
 	private long rootObject;
@@ -96,7 +86,7 @@ public class RadioInterfaces extends ViewPart
 		}
 
 		session = (NXCSession)ConsoleSharedData.getSession();
-		setPartName(String.format(Messages.get().RadioInterfaces_PartName, session.getObjectName(rootObject)));
+		setPartName(String.format("Routing Table - %s", session.getObjectName(rootObject)));
 	}
 
 	/* (non-Javadoc)
@@ -105,19 +95,19 @@ public class RadioInterfaces extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { Messages.get().RadioInterfaces_ColApName, Messages.get().RadioInterfaces_ColApMac, Messages.get().RadioInterfaces_ColApVendor, Messages.get().RadioInterfaces_ColApModel, Messages.get().RadioInterfaces_ColApSerial, Messages.get().RadioInterfaces_ColRadioIndex, Messages.get().RadioInterfaces_ColRadioName, Messages.get().RadioInterfaces_ColRadioMac, Messages.get().RadioInterfaces_ColChannel, Messages.get().RadioInterfaces_ColTxPowerDbm, Messages.get().RadioInterfaces_ColTxPowerMw };
-		final int[] widths = { 120, 100, 140, 140, 100, 90, 120, 100, 90, 90, 90 };
-		viewer = new SortableTableViewer(parent, names, widths, 1, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+		final String[] names = { "Destination", "Next hop", "Interface", "Type" };
+		final int[] widths = { 180, 140, 200, 140 };
+		viewer = new SortableTableViewer(parent, names, widths, COLUMN_DESTINATION, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new RadioInterfaceLabelProvider());
-		viewer.setComparator(new RadioInterfaceComparator());
+		viewer.setLabelProvider(new RoutingTableLabelProvider());
+		viewer.setComparator(new RoutingTableComparator());
 		
-		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "RadioInterfaces"); //$NON-NLS-1$
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "RoutingTable"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "RadioInterfaces"); //$NON-NLS-1$
+				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "RoutingTable"); //$NON-NLS-1$
 			}
 		});
 
@@ -227,20 +217,25 @@ public class RadioInterfaces extends ViewPart
 	 */
 	private void refresh()
 	{
-		Node node = (Node)session.findObjectById(rootObject, Node.class);
-		if (node == null)
-			return;
-		
-		List<RadioInterface> list = new ArrayList<RadioInterface>();
-		for(AbstractObject o : node.getAllChilds(AbstractObject.OBJECT_ACCESSPOINT))
-		{
-			if (o instanceof AccessPoint)
-			{
-				for(RadioInterface rif : ((AccessPoint)o).getRadios())
-					list.add(rif);
-			}
-		}
-		
-		viewer.setInput(list.toArray());
+	   new ConsoleJob("Read routing table", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final List<Route> rt = session.getRoutingTable(rootObject);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.setInput(rt.toArray());
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format("Cannot get routing table for node %s", session.getObjectName(rootObject));
+         }
+      }.start();
 	}
 }

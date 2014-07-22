@@ -25,8 +25,9 @@
 /**
  * Constructor
  */
-ForwardingDatabase::ForwardingDatabase()
+ForwardingDatabase::ForwardingDatabase(UINT32 nodeId)
 {
+   m_nodeId = nodeId;
 	m_fdb = NULL;
 	m_fdbSize = 0;
 	m_fdbAllocated = 0;
@@ -175,6 +176,7 @@ void ForwardingDatabase::print(CONSOLE_CTX ctx, Node *owner)
  */
 void ForwardingDatabase::fillMessage(CSCPMessage *msg)
 {
+   Node *node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
    msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_fdbSize);
    UINT32 fieldId = VID_ELEMENT_LIST_BASE;
 	for(int i = 0; i < m_fdbSize; i++)
@@ -185,7 +187,18 @@ void ForwardingDatabase::fillMessage(CSCPMessage *msg)
       msg->SetVariable(fieldId++, m_fdb[i].nodeObject);
       msg->SetVariable(fieldId++, m_fdb[i].vlanId);
       msg->SetVariable(fieldId++, m_fdb[i].type);
-      fieldId += 4;
+      Interface *iface = (node != NULL) ? node->findInterface(m_fdb[i].ifIndex, INADDR_ANY) : NULL;
+      if (iface != NULL)
+      {
+         msg->SetVariable(fieldId++, iface->Name());
+      }
+      else
+      {
+         TCHAR buffer[32];
+         _sntprintf(buffer, 32, _T("[%d]"), m_fdb[i].ifIndex);
+         msg->SetVariable(fieldId++, buffer);
+      }
+      fieldId += 3;
    }
 }
 
@@ -316,7 +329,7 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 	if (!node->isBridge())
 		return NULL;
 
-	ForwardingDatabase *fdb = new ForwardingDatabase();
+	ForwardingDatabase *fdb = new ForwardingDatabase(node->Id());
 	node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.1.4.1.2"), Dot1dPortTableHandler, fdb);
 	node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.7.1.2.2.1.2"), Dot1qTpFdbHandler, fdb);
 	int size = fdb->getSize();

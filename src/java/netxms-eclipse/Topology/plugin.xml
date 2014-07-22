@@ -47,6 +47,14 @@
                label="%menu.topology"
                path="topology">
          </menu>
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.ShowRoutingTable"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.topology.popupActions.RoutingTable"
+               label="%action.label.RoutingTable"
+               menubarPath="TopologySubmenu/ip"
+               style="push">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"
@@ -151,6 +159,15 @@
             icon="icons/radio_interfaces.png"
             id="org.netxms.ui.eclipse.topology.views.RadioInterfaces"
             name="%view.name.RadioIfs"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.viewcategory.tools"
+            class="org.netxms.ui.eclipse.topology.views.RoutingTableView"
+            icon="icons/routing_table.gif"
+            id="org.netxms.ui.eclipse.topology.views.RoutingTableView"
+            name="Routing Table"
             restorable="true">
       </view>
    </extension>
