@@ -114,7 +114,7 @@ void LDAPConnection::prepareStringForInit(char *connectionLine)
       comma=strchr(connectionLine,',');
    }
 
-   if(_tcsstr(connectionLine,_T("ldaps://")))
+   if(strstr(connectionLine,"ldaps://"))
    {
       m_secure = 1;
    }
