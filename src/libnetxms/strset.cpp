@@ -127,6 +127,23 @@ bool StringSet::contains(const TCHAR *str)
 }
 
 /**
+ * Check if two given sets are equal
+ */
+bool StringSet::equals(StringSet *s)
+{
+   if (s->size() != size())
+      return false;
+
+   StringSetEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (!s->contains(entry->str))
+         return false;
+   }
+   return true;
+}
+
+/**
  * Get set size
  */
 int StringSet::size()

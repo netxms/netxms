@@ -402,6 +402,7 @@ public:
 
    int size();
    bool contains(const TCHAR *str);
+   bool equals(StringSet *s);
 
    void addAll(StringSet *src);
    void addAll(TCHAR **strings, int count);
