@@ -426,13 +426,8 @@ static BOOL H_UpgradeFromV327(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV326(int currVersion, int newVersion)
 {
-   //Remove unused columns
-   static TCHAR batch[] =
-      _T("ALTER TABLE network_map_links DROP PRIMARY KEY\n")
-      _T("CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id)\n")
-      _T("<END>");
-   CHK_EXEC(SQLBatch(batch));
-
+   CHK_EXEC(DropPrimaryKey(_T("network_map_links")));
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id)")));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='327' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
