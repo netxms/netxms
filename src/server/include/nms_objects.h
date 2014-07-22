@@ -175,7 +175,7 @@ public:
 	NetObj *find(bool (*comparator)(NetObj *, void *), void *data);
 
 	int getSize();
-	ObjectArray<NetObj> *getObjects(bool updateRefCount);
+	ObjectArray<NetObj> *getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *) = NULL, void *userData = NULL);
 
 	void forEach(void (*callback)(NetObj *, void *), void *data);
 };

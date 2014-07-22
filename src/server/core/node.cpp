@@ -2824,36 +2824,11 @@ void Node::applyUserTemplates()
 }
 
 /**
- * Callback: update container membership
+ * Filter for selecting containers from objects
  */
-static void UpdateContainerBinding(NetObj *object, void *node)
+static bool ContainerSelectionFilter(NetObj *object, void *userData)
 {
-   if ((object->Type() == OBJECT_CONTAINER) && !object->isDeleted())
-   {
-      Container *pContainer = (Container *)object;
-		if (pContainer->isSuitableForNode((Node *)node))
-		{
-			if (!pContainer->isChild(((Node *)node)->Id()))
-			{
-				DbgPrintf(4, _T("Node::UpdateContainerMembership(): binding node %d \"%s\" to container %d \"%s\""),
-				          ((Node *)node)->Id(), ((Node *)node)->Name(), pContainer->Id(), pContainer->Name());
-				pContainer->AddChild((Node *)node);
-				((Node *)node)->AddParent(pContainer);
-				PostEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", ((Node *)node)->Id(), ((Node *)node)->Name(), pContainer->Id(), pContainer->Name());
-			}
-		}
-		else
-		{
-			if (pContainer->isAutoUnbindEnabled() && pContainer->isChild(((Node *)node)->Id()))
-			{
-				DbgPrintf(4, _T("Node::UpdateContainerMembership(): removing node %d \"%s\" from container %d \"%s\""),
-				          ((Node *)node)->Id(), ((Node *)node)->Name(), pContainer->Id(), pContainer->Name());
-				pContainer->DeleteChild((Node *)node);
-				((Node *)node)->DeleteParent(pContainer);
-				PostEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", ((Node *)node)->Id(), ((Node *)node)->Name(), pContainer->Id(), pContainer->Name());
-			}
-		}
-   }
+   return (object->Type() == OBJECT_CONTAINER) && !object->isDeleted() && ((Container *)object)->isAutoBindEnabled();
 }
 
 /**
@@ -2861,7 +2836,35 @@ static void UpdateContainerBinding(NetObj *object, void *node)
  */
 void Node::updateContainerMembership()
 {
-	g_idxObjectById.forEach(UpdateContainerBinding, this);
+   ObjectArray<NetObj> *containers = g_idxObjectById.getObjects(true, ContainerSelectionFilter);
+   for(int i = 0; i < containers->size(); i++)
+   {
+      Container *pContainer = (Container *)containers->get(i);
+		if (pContainer->isSuitableForNode(this))
+		{
+			if (!pContainer->isChild(m_dwId))
+			{
+				DbgPrintf(4, _T("Node::updateContainerMembership(): binding node %d \"%s\" to container %d \"%s\""),
+				          m_dwId, m_szName, pContainer->Id(), pContainer->Name());
+				pContainer->AddChild(this);
+				AddParent(pContainer);
+				PostEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", m_dwId, m_szName, pContainer->Id(), pContainer->Name());
+			}
+		}
+		else
+		{
+			if (pContainer->isAutoUnbindEnabled() && pContainer->isChild(m_dwId))
+			{
+				DbgPrintf(4, _T("Node::updateContainerMembership(): removing node %d \"%s\" from container %d \"%s\""),
+				          m_dwId, m_szName, pContainer->Id(), pContainer->Name());
+				pContainer->DeleteChild(this);
+				DeleteParent(pContainer);
+				PostEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_dwId, m_szName, pContainer->Id(), pContainer->Name());
+			}
+		}
+      pContainer->decRefCount();
+   }
+   delete containers;
 }
 
 /**
