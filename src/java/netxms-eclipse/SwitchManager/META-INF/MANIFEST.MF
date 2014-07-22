@@ -2,11 +2,11 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Switch Management Plug-In for NXMC
 Bundle-SymbolicName: org.netxms.ui.eclipse.switchmanager;singleton:=true
-Bundle-Version: 1.2.8
+Bundle-Version: 1.2.15
 Bundle-Activator: org.netxms.ui.eclipse.switchmanager.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- org.netxms.ui.eclipse.console;bundle-version="1.2.7"
+ org.netxms.ui.eclipse.console;bundle-version="1.2.15"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

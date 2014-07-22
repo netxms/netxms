@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.networkmaps.actions;
 
-import java.util.List;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -36,13 +35,12 @@ import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
- * Show IP route between two nodes
+ * Show IP route between two nodes (selection as source)
  */
-public class ShowIPRoute implements IObjectActionDelegate
+public class ShowIPRouteTo implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private Node sourceNode;
-	private Node targetNode;
+	private Node node;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -59,31 +57,27 @@ public class ShowIPRoute implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		if ((sourceNode != null) && (targetNode == null))
+	   if (node == null)
+	      return;
+	   
+		ObjectSelectionDialog dlg = new ObjectSelectionDialog(window.getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(false));
+		if (dlg.open() != Window.OK)
+			return;
+		
+		AbstractObject[] selection = dlg.getSelectedObjects(Node.class);
+		if (selection.length == 0)
 		{
-			ObjectSelectionDialog dlg = new ObjectSelectionDialog(window.getShell(), null, ObjectSelectionDialog.createNodeSelectionFilter(false));
-			if (dlg.open() != Window.OK)
-				return;
-			
-			AbstractObject[] selection = dlg.getSelectedObjects(Node.class);
-			if (selection.length == 0)
-			{
-				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowIPRoute_Error, Messages.get().ShowIPRoute_InvalidTarget);
-				return;
-			}
-			targetNode = (Node)selection[0];
+			MessageDialogHelper.openError(window.getShell(), Messages.get().ShowIPRoute_Error, Messages.get().ShowIPRoute_InvalidTarget);
+			return;
 		}
 		
-		if ((sourceNode != null) && (targetNode != null))
+		try
 		{
-			try
-			{
-				window.getActivePage().showView(IPRouteMap.ID, Long.toString(sourceNode.getObjectId()) + "&" + Long.toString(targetNode.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
-			}
-			catch(PartInitException e)
-			{
-				MessageDialogHelper.openError(window.getShell(), Messages.get().ShowIPRoute_Error, String.format(Messages.get().ShowIPRoute_ErrorOpenView, e.getLocalizedMessage()));
-			}
+			window.getActivePage().showView(IPRouteMap.ID, Long.toString(node.getObjectId()) + "&" + Long.toString(selection[0].getObjectId()), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
+		}
+		catch(PartInitException e)
+		{
+			MessageDialogHelper.openError(window.getShell(), Messages.get().ShowIPRoute_Error, String.format(Messages.get().ShowIPRoute_ErrorOpenView, e.getLocalizedMessage()));
 		}
 	}
 
@@ -93,23 +87,13 @@ public class ShowIPRoute implements IObjectActionDelegate
 	@Override
 	public void selectionChanged(IAction action, ISelection selection)
 	{
-		sourceNode = null;
-		targetNode = null;
-		
-		if (selection instanceof IStructuredSelection)
+		if ((selection instanceof IStructuredSelection) && !selection.isEmpty() && ((IStructuredSelection)selection).getFirstElement() instanceof Node)
 		{
-			List<?> l = ((IStructuredSelection)selection).toList();
-			if (l.size() > 0)
-			{
-				if (l.get(0) instanceof Node)
-				{
-					sourceNode = (Node)l.get(0);
-					if ((l.size() > 1) && (l.get(1) instanceof Node))
-					{
-						targetNode = (Node)l.get(1);
-					}
-				}
-			}
+		   node = (Node)((IStructuredSelection)selection).getFirstElement();
+		}
+		else
+		{
+	      node = null;      
 		}
 	}
 }

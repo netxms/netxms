@@ -21,7 +21,7 @@
                icon="icons/vlanview.gif"
                id="org.netxms.ui.eclipse.topology.popupActions.VlanView"
                label="%action.label.ShowVlans"
-               menubarPath="topology"
+               menubarPath="TopologySubmenu/mac"
                style="push">
          </action>
          <action
@@ -30,7 +30,7 @@
                icon="icons/wireless_stations.png"
                id="org.netxms.ui.eclipse.topology.popupActions.WirelessStations"
                label="%action.label.WirelessStations"
-               menubarPath="topology"
+               menubarPath="TopologySubmenu/wlan"
                style="push">
          </action>
          <action
@@ -39,9 +39,14 @@
                icon="icons/radio_interfaces.png"
                id="org.netxms.ui.eclipse.topology.popupActions.RadioInterfaces"
                label="%action.label.RadioIfs"
-               menubarPath="topology"
+               menubarPath="TopologySubmenu/wlan"
                style="push">
          </action>
+         <menu
+               id="TopologySubmenu"
+               label="%menu.topology"
+               path="topology">
+         </menu>
       </objectContribution>
       <objectContribution
             adaptable="false"
