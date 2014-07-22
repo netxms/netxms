@@ -49,7 +49,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 {
-   private static final String PERSPECTIVE_ID = "org.netxms.ui.eclipse.console.DefaultPerspective"; //$NON-NLS-1$
+   private static final String PERSPECTIVE_ID = "org.netxms.ui.eclipse.console.ManagementPerspective"; //$NON-NLS-1$
    
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.application.WorkbenchAdvisor#createWorkbenchWindowAdvisor(org.eclipse.ui.application.IWorkbenchWindowConfigurer)

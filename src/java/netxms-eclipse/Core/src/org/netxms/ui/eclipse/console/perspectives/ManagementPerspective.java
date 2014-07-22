@@ -27,7 +27,7 @@ import org.eclipse.ui.IPlaceholderFolderLayout;
  * Default perspective
  *
  */
-public class DefaultPerspective implements IPerspectiveFactory
+public class ManagementPerspective implements IPerspectiveFactory
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IPerspectiveFactory#createInitialLayout(org.eclipse.ui.IPageLayout)
@@ -36,7 +36,7 @@ public class DefaultPerspective implements IPerspectiveFactory
 	public void createInitialLayout(IPageLayout layout)
 	{
 		layout.setEditorAreaVisible(false);
-		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.console.DefaultPerspective"); //$NON-NLS-1$
+		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.console.ManagementPerspective"); //$NON-NLS-1$
 		layout.addPerspectiveShortcut("org.netxms.ui.eclipse.dashboard.DashboardPerspective"); //$NON-NLS-1$
       layout.addPerspectiveShortcut("org.netxms.ui.eclipse.reporter.ReportPerspective"); //$NON-NLS-1$
 		
