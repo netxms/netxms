@@ -35,6 +35,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -168,6 +169,8 @@ import org.netxms.client.topology.NetworkPath;
 import org.netxms.client.topology.Route;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.client.topology.WirelessStation;
+import org.netxms.client.agent.config.ConfigContent;
+import org.netxms.client.agent.config.ConfigListElement;
 
 /**
  * Communication session with NetXMS server.
@@ -7611,4 +7614,92 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getVariableAsUInt32Array(NXCPCodes.VID_ADDRESS_MAP);
    }
+   
+   /**
+    * Gets the list of configuration files.(Config id, name and sequence number)
+    * 
+    * @return the list of configuration files in correct sequence
+    * @throws NXCException
+    * @throws IOException
+    */
+   public List <ConfigListElement> getConfigList() throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_CFG_LIST);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int size = response.getVariableAsInteger(NXCPCodes.VID_NUM_RECORDS);
+      List <ConfigListElement> elements = new ArrayList<ConfigListElement>();
+      long i, base;
+      for(i = 0, base = NXCPCodes.VID_AGENT_CFG_LIST_BASE; i < size; i++, base += 10) //TODO:change
+      {
+         elements.add(new ConfigListElement(base, response));
+      }
+      Collections.sort(elements);
+      return elements;
+   }
+   
+   /**
+    * Saves existing config 
+    *  
+    * @param id config id
+    * @return content of requested by id configurations file
+    * @throws NXCException
+    * @throws IOException
+    */
+   public ConfigContent getConfigContent(long id) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_AGENT_CONFIG);
+      msg.setVariableInt32(NXCPCodes.VID_CONFIG_ID, (int)id);
+      sendMessage(msg);
+      
+      NXCPMessage response = waitForRCC(msg.getMessageId());      
+      ConfigContent content = new ConfigContent(id, response);
+      return content;
+   }
+   
+   /**
+    * Saves or creates new agent's config 
+    * 
+    * @param conf contents of config
+    * @throws NXCException
+    * @throws IOException
+    */
+   public void saveAgentConfig(ConfigContent conf) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SAVE_AGENT_CONFIG);
+      conf.fillMessage(msg);
+      sendMessage(msg);
+   }
+   
+   /**
+    * Seletes config by given id. Does not chenge sequence nuber of elements
+    * going after it.
+    * 
+    * @param id
+    * @throws NXCException
+    * @throws IOException
+    */
+   public void deleteAgentConfig(long id) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AGENT_CONFIG);
+      msg.setVariableInt32(NXCPCodes.VID_CONFIG_ID, (int)id);
+      sendMessage(msg);
+   }
+   
+   /**
+    * Swaps 2 configs sequence numbers
+    * 
+    * @param id1
+    * @param id2
+    * @throws NXCException
+    * @throws IOException
+    */
+   public void swapAgentConfigs(long id1, long id2) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_SWAP_AGENT_CONFIGS);
+      msg.setVariableInt32(NXCPCodes.VID_CONFIG_ID, (int)id1);
+      msg.setVariableInt32(NXCPCodes.VID_CONFIG_ID_2, (int)id2);
+      sendMessage(msg);
+   }
+   
 }
