@@ -55,6 +55,14 @@
                menubarPath="TopologySubmenu/ip"
                style="push">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.topology.actions.ShowSwitchForwardingDatabase"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.topology.popupActions.SwitchForwardingDatabase"
+               label="%action.label.SwitchForwardingDatabase"
+               menubarPath="TopologySubmenu/mac"
+               style="push">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"
@@ -168,6 +176,15 @@
             icon="icons/routing_table.gif"
             id="org.netxms.ui.eclipse.topology.views.RoutingTableView"
             name="Routing Table"
+            restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.viewcategory.tools"
+            class="org.netxms.ui.eclipse.topology.views.SwitchForwardingDatabaseView"
+            icon="icons/routing_table.gif"
+            id="org.netxms.ui.eclipse.topology.views.SwitchForwardingDatabaseView"
+            name="MAC Address Table"
             restorable="true">
       </view>
    </extension>

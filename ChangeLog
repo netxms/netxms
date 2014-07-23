@@ -22,10 +22,13 @@
    - "Trusted Nodes" property page shown for condition objects
    - Network map content can be copied to clipboard
    - Perspectives export/import
+   - Topology related options in node's context menu grouped in "Topology" submenu
+   - Added specialized view for IP routing table
+   - Added specialized view for switch forwarding database
 - Android Console:
    - Added option in preference to show/hide legend in graphs
    - Object comments displayed
-- Fixed issues: #555, #564, #566, #586, #594, #597, #598, #605, #606, #607, #608, #610, #612, #614
+- Fixed issues: #555, #564, #566, #586, #594, #596, #597, #598, #605, #606, #607, #608, #610, #612, #614
 
 
 *
