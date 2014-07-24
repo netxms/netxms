@@ -113,22 +113,13 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
    @Override
    public void createPartControl(Composite parent)
    {
-      GridLayout gridLayout = new GridLayout();
-      parent.setLayout(gridLayout);
+      parent.setLayout(new FillLayout());
 
       SashForm splitter = new SashForm(parent, SWT.HORIZONTAL);
-      splitter.setLayout(new FillLayout());
-      splitter.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
       configList = new TableViewer(splitter, SWT.FULL_SELECTION | SWT.SINGLE);
-      GridData gridData = new GridData();
-      gridData.verticalAlignment = GridData.FILL;
-      gridData.grabExcessVerticalSpace = true;
-      configList.getTable().setLayoutData(gridData);
       configList.setContentProvider(new ArrayContentProvider());
-
       configList.addSelectionChangedListener(new ISelectionChangedListener() {
-
          @Override
          public void selectionChanged(SelectionChangedEvent event)
          {
@@ -142,7 +133,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       final Composite editGroup = new Composite(splitter, SWT.NONE);
       GridLayout layout = new GridLayout();
       editGroup.setLayout(layout);
-      gridData = new GridData();
+      GridData gridData = new GridData();
       gridData.horizontalAlignment = SWT.FILL;
       gridData.grabExcessHorizontalSpace = true;
       editGroup.setLayoutData(gridData);
@@ -154,6 +145,8 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       gridData.horizontalAlignment = SWT.FILL;
       gridData.grabExcessHorizontalSpace = true;
       nameGroup.setLayoutData(gridData);
+      
+      splitter.setWeights(new int[] { 30, 70 });      
 
       nameLabel = new Label(nameGroup, SWT.NONE);
       nameLabel.setText("Name");
@@ -240,6 +233,9 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       getConfigList();
    }
 
+   /**
+    * @param event
+    */
    private void onSelectionChange(SelectionChangedEvent event)
    {
       if (reselection)
@@ -300,6 +296,9 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       }.start();
    }
 
+   /**
+    * 
+    */
    private void onTextModify()
    {
       if (!modified)
@@ -321,9 +320,10 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       menuMgr.addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager mgr)
          {
-            mgr.add(actionDelete);
             mgr.add(actionMoveUp);
             mgr.add(actionMoveDown);
+            mgr.add(new Separator());
+            mgr.add(actionDelete);
          }
       });
 
@@ -359,7 +359,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          }
       };
 
-      actionSave = new Action() {
+      actionSave = new Action(Messages.get().AgentConfigEditorView_Save, SharedIcons.SAVE) {
          @Override
          public void run()
          {
@@ -368,50 +368,43 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
             modified = false;
          }
       };
-      actionSave.setText(Messages.get().AgentConfigEditorView_Save);
-      actionSave.setImageDescriptor(SharedIcons.SAVE);
 
-      actionCreate = new Action() {
+      actionCreate = new Action("Create new configuration", SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
             createNewConfig();
          }
       };
-      actionCreate.setText("Create new config");
-      actionCreate.setImageDescriptor(SharedIcons.ADD_OBJECT);
 
-      actionDelete = new Action() {
+      actionDelete = new Action("Delete", SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
             deleteConfig();
          }
       };
-      actionDelete.setText("Delete config");
-      actionDelete.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 
-      actionMoveUp = new Action() {
+      actionMoveUp = new Action("Move up", SharedIcons.UP) {
          @Override
          public void run()
          {
             moveUp();
          }
       };
-      actionMoveUp.setText("Move up");
-      actionMoveUp.setImageDescriptor(SharedIcons.DELETE_OBJECT);
 
-      actionMoveDown = new Action() {
+      actionMoveDown = new Action("Move down", SharedIcons.DOWN) {
          @Override
          public void run()
          {
             moveDown();
          }
       };
-      actionMoveDown.setText("Move down");
-      actionMoveDown.setImageDescriptor(SharedIcons.DELETE_OBJECT);
    }
 
+   /**
+    * Move selected item up
+    */
    private void moveUp()
    {
       IStructuredSelection selection = (IStructuredSelection)configList.getSelection();
@@ -449,6 +442,9 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       }.start();
    }
 
+   /**
+    * Move selected item down
+    */
    private void moveDown()
    {
       IStructuredSelection selection = (IStructuredSelection)configList.getSelection();
@@ -486,6 +482,9 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       }.start();
    }
 
+   /**
+    * Delete selected configuration
+    */
    private void deleteConfig()
    {
       IStructuredSelection selection = (IStructuredSelection)configList.getSelection();
