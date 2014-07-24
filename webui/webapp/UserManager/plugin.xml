@@ -155,4 +155,21 @@
           <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
         </factory>
   </extension>
+  <extension
+        point="org.eclipse.ui.decorators">
+     <decorator
+           class="org.netxms.ui.eclipse.usermanager.UserDecorator"
+           id="org.netxms.ui.eclipse.decorators.AbstractUserObject"
+           label="%decorator.AbstractUserObject.label"
+           lightweight="true"
+           state="true">
+        <enablement>
+           <objectClass
+                 name="org.netxms.api.client.users.AbstractUserObject">
+           </objectClass></enablement>
+        <description>
+           %decorator.AbstractUserObject.description
+        </description>
+     </decorator>
+  </extension>
 </plugin>

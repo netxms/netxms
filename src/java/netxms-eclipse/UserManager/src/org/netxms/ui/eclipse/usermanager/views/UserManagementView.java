@@ -50,15 +50,16 @@ import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
 import org.netxms.api.client.users.UserManager;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.Messages;
-import org.netxms.ui.eclipse.usermanager.UserComparator;
-import org.netxms.ui.eclipse.usermanager.UserLabelProvider;
 import org.netxms.ui.eclipse.usermanager.dialogs.ChangePasswordDialog;
 import org.netxms.ui.eclipse.usermanager.dialogs.CreateObjectDialog;
+import org.netxms.ui.eclipse.usermanager.views.helpers.UserComparator;
+import org.netxms.ui.eclipse.usermanager.views.helpers.UserLabelProvider;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -107,8 +108,7 @@ public class UserManagementView extends ViewPart
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new UserLabelProvider());
 		viewer.setComparator(new UserComparator());
-		viewer.addSelectionChangedListener(new ISelectionChangedListener()
-		{
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
@@ -214,9 +214,6 @@ public class UserManagementView extends ViewPart
 	{
 		manager.add(actionAddUser);
 		manager.add(actionAddGroup);
-		manager.add(actionChangePassword);
-		manager.add(actionDeleteUser);
-		manager.add(actionEditUser);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -231,8 +228,6 @@ public class UserManagementView extends ViewPart
 	{
 		manager.add(actionAddUser);
 		manager.add(actionAddGroup);
-		manager.add(actionDeleteUser);
-		manager.add(actionEditUser);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -250,43 +245,37 @@ public class UserManagementView extends ViewPart
 			}
 		};
 
-		actionAddUser = new Action() {
+		actionAddUser = new Action(Messages.get().UserManagementView_CreateNewUser, Activator.getImageDescriptor("icons/user_add.png")) {  //$NON-NLS-1$
 			@Override
 			public void run()
 			{
 				addUser();
 			}
 		};
-		actionAddUser.setText(Messages.get().UserManagementView_CreateNewUser);
-		actionAddUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_add.png")); //$NON-NLS-1$
 
-		actionAddGroup = new Action() {
+		actionAddGroup = new Action(Messages.get().UserManagementView_CreateNewGroup, Activator.getImageDescriptor("icons/group_add.png")) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
 				addGroup();
 			}
 		};
-		actionAddGroup.setText(Messages.get().UserManagementView_CreateNewGroup);
-		actionAddGroup.setImageDescriptor(Activator.getImageDescriptor("icons/group_add.png")); //$NON-NLS-1$
 
 		actionEditUser = new PropertyDialogAction(getSite(), viewer);
 		actionEditUser.setText(Messages.get().UserManagementView_Properties);
-		actionEditUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_edit.png")); //$NON-NLS-1$
+		actionEditUser.setImageDescriptor(SharedIcons.EDIT);
 		actionEditUser.setEnabled(false);
 
-		actionDeleteUser = new Action() {
+		actionDeleteUser = new Action(Messages.get().UserManagementView_Delete, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
 				deleteUser();
 			}
 		};
-		actionDeleteUser.setText(Messages.get().UserManagementView_Delete);
-		actionDeleteUser.setImageDescriptor(Activator.getImageDescriptor("icons/user_delete.png")); //$NON-NLS-1$
 		actionDeleteUser.setEnabled(false);
 
-		actionChangePassword = new Action() {
+		actionChangePassword = new Action(Messages.get().UserManagementView_ChangePassword, Activator.getImageDescriptor("icons/change_password.png")) {  //$NON-NLS-1$
 			@Override
 			public void run()
 			{
@@ -311,36 +300,31 @@ public class UserManagementView extends ViewPart
 				}
 			}
 		};
-		actionChangePassword.setText(Messages.get().UserManagementView_ChangePassword);
-		actionChangePassword.setImageDescriptor(Activator.getImageDescriptor("icons/change_password.png")); //$NON-NLS-1$
 		actionChangePassword.setEnabled(false);
 		
-		actionEnable = new Action() {
+		actionEnable = new Action("Enable") {
          @Override
          public void run()
          {
             enableUser();
          }
       };      
-      actionEnable.setText("Enable");
     
-      actionDisable = new Action() {
+      actionDisable = new Action("Disable") {
          @Override
          public void run()
          {
             disableUser();
          }
       };
-      actionDisable.setText("Disable");
       
-      actionDetachUserFromLDAP = new Action() {
+      actionDetachUserFromLDAP = new Action("Detach user from LDAP") {
          @Override
          public void run()
          {
             detachLDAPUser();
          }
       };
-      actionDetachUserFromLDAP.setText("Detach user from LDAP");
 	}
 
 	/**
@@ -351,8 +335,7 @@ public class UserManagementView extends ViewPart
 		// Create menu manager
 		MenuManager menuMgr = new MenuManager();
 		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener()
-		{
+		menuMgr.addMenuListener(new IMenuListener() {
 			public void menuAboutToShow(IMenuManager mgr)
 			{
 				fillContextMenu(mgr);
@@ -375,28 +358,30 @@ public class UserManagementView extends ViewPart
 	protected void fillContextMenu(final IMenuManager mgr)
 	{
 	   final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+
+      mgr.add(actionAddUser);
+      mgr.add(actionAddGroup);
+      mgr.add(new Separator());
+	   
 	   boolean containDisabled = false;
 	   boolean containEnabled = false;
 	   boolean containLDAP = false;
       for(Object object : selection.toList())
       {
-         if( (((AbstractUserObject)object).getFlags() & AbstractUserObject.DISABLED) > 0 )
+         if (((AbstractUserObject)object).isDisabled())
             containDisabled = true;
-         if( (((AbstractUserObject)object).getFlags() & AbstractUserObject.DISABLED) == 0 )
+         if (!((AbstractUserObject)object).isDisabled())
             containEnabled = true;
-         if( (((AbstractUserObject)object).getFlags() & AbstractUserObject.LDAP_USER) > 0 )
+         if ((((AbstractUserObject)object).getFlags() & AbstractUserObject.LDAP_USER) != 0)
             containLDAP = true;
       }
-      if(containDisabled)
+      if (containDisabled)
          mgr.add(actionEnable);
-      if(containEnabled)
+      if (containEnabled)
          mgr.add(actionDisable);
-      if(containLDAP)
+      if (containLDAP)
          mgr.add(actionDetachUserFromLDAP);
       
-		mgr.add(actionAddUser);
-		mgr.add(actionAddGroup);
-
 		final Object firstElement = selection.getFirstElement();
 		if (firstElement instanceof User)
 		{

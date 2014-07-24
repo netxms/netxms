@@ -42,7 +42,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Messages;
-import org.netxms.ui.eclipse.usermanager.UserComparator;
+import org.netxms.ui.eclipse.usermanager.views.helpers.UserComparator;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**

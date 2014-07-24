@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,20 +16,19 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.usermanager;
+package org.netxms.ui.eclipse.usermanager.views.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.api.client.users.AbstractUserObject;
-import org.netxms.api.client.users.User;
-import org.netxms.ui.eclipse.usermanager.views.UserManagementView;
+import org.netxms.api.client.users.AuthCertificate;
+import org.netxms.ui.eclipse.usermanager.Messages;
+import org.netxms.ui.eclipse.usermanager.views.CertificateView;
 
 /**
- * Label provider for user manager
- * 
+ * Label provider for certificate manager
  */
-public class UserLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
+public class CertificateLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -48,16 +47,14 @@ public class UserLabelProvider extends WorkbenchLabelProvider implements ITableL
 	{
 		switch(columnIndex)
 		{
-			case UserManagementView.COLUMN_NAME:
-				return getText(element);
-			case UserManagementView.COLUMN_TYPE:
-				return (element instanceof User) ? Messages.get().UserLabelProvider_User : Messages.get().UserLabelProvider_Group;
-			case UserManagementView.COLUMN_FULLNAME:
-				return (element instanceof User) ? ((User) element).getFullName() : null;
-			case UserManagementView.COLUMN_DESCRIPTION:
-				return ((AbstractUserObject)element).getDescription();
-			case UserManagementView.COLUMN_GUID:
-				return ((AbstractUserObject)element).getGuid().toString();
+		   case CertificateView.COLUMN_ID:
+				return (element instanceof AuthCertificate) ? Long.toString(((AuthCertificate)element).getId()) : null;
+		   case CertificateView.COLUMN_TYPE:
+				return Messages.get().CertificateLabelProvider_CERT_TYPE_TRUSTED_CA;
+		   case CertificateView.COLUMN_COMMENTS:
+				return (element instanceof AuthCertificate) ? ((AuthCertificate) element).getComments() : null;
+		   case CertificateView.COLUMN_SUBJECT:
+				return (element instanceof AuthCertificate) ? ((AuthCertificate) element).getSubject() : null;
 		}
 		return null;
 	}

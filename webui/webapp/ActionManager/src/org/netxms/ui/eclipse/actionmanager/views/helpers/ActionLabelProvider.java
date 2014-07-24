@@ -18,10 +18,10 @@
  */
 package org.netxms.ui.eclipse.actionmanager.views.helpers;
 
-import org.eclipse.jface.viewers.ILabelProvider;
-import org.eclipse.jface.viewers.ILabelProviderListener;
+import org.eclipse.jface.viewers.DecoratingLabelProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.ServerAction;
 import org.netxms.ui.eclipse.actionmanager.Messages;
@@ -31,7 +31,7 @@ import org.netxms.ui.eclipse.actionmanager.views.ActionManager;
  * Label provider for action list 
  *
  */
-public class ActionLabelProvider implements ITableLabelProvider
+public class ActionLabelProvider extends DecoratingLabelProvider implements ITableLabelProvider
 {
 	private final String[] ACTION_TYPE = { 
    	   Messages.get().ActionLabelProvider_ActionTypeExecute, 
@@ -43,14 +43,12 @@ public class ActionLabelProvider implements ITableLabelProvider
    	   Messages.get().ActionLabelProvider_ActionTypeXMPP 
 	   };
 	
-	private ILabelProvider workbenchLabelProvider;
-	
 	/**
 	 * The constructor
 	 */
 	public ActionLabelProvider()
 	{
-		workbenchLabelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
+      super(new WorkbenchLabelProvider(), PlatformUI.getWorkbench().getDecoratorManager().getLabelDecorator());
 	}
 	
 	/* (non-Javadoc)
@@ -60,7 +58,7 @@ public class ActionLabelProvider implements ITableLabelProvider
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		if (columnIndex == ActionManager.COLUMN_NAME)
-			return workbenchLabelProvider.getImage(element);
+			return getImage(element);
 		return null;
 	}
 
@@ -92,38 +90,5 @@ public class ActionLabelProvider implements ITableLabelProvider
 				return action.getData();
 		}
 		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
-	@Override
-	public void addListener(ILabelProviderListener listener)
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
-	 */
-	@Override
-	public boolean isLabelProperty(Object element, String property)
-	{
-		return false;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
-	@Override
-	public void removeListener(ILabelProviderListener listener)
-	{
 	}
 }

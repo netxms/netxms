@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -72,7 +72,7 @@ public class UserAdapterFactory implements IAdapterFactory
 					@Override
 					public ImageDescriptor getImageDescriptor(Object object)
 					{					   
-						return (((User)object).getFlags() & (User.DISABLED | User.SYNC_EXCEPTION)) > 0 ? Activator.getImageDescriptor("icons/stop.png") : Activator.getImageDescriptor("icons/user.png"); //$NON-NLS-1$
+					   return Activator.getImageDescriptor("icons/user.png"); //$NON-NLS-1$
 					}
 
 					@Override
@@ -106,7 +106,7 @@ public class UserAdapterFactory implements IAdapterFactory
 					@Override
 					public ImageDescriptor getImageDescriptor(Object object)
 					{
-						return (((UserGroup)object).getFlags() & (User.DISABLED | User.SYNC_EXCEPTION)) > 0 ? Activator.getImageDescriptor("icons/stop.png") : Activator.getImageDescriptor("icons/group.png"); //$NON-NLS-1$
+						return Activator.getImageDescriptor("icons/group.png"); //$NON-NLS-1$
 					}
 
 					@Override
