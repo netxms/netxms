@@ -45,12 +45,23 @@ public class AgentConfigEditor extends Composite
 	 * @param style
 	 * @param editorStyle
 	 */
-	public AgentConfigEditor(Composite parent, int style, int editorStyle)
+   public AgentConfigEditor(Composite parent, int style, int editorStyle)
+   {
+      this(parent, style, editorStyle, 20);
+   }
+   
+	/**
+	 * @param parent
+	 * @param style
+	 * @param editorStyle
+	 * @param rulerWidth
+	 */
+	public AgentConfigEditor(Composite parent, int style, int editorStyle, int rulerWidth)
 	{
 		super(parent, style);
 		
 		setLayout(new FillLayout());
-		editor = new SourceViewer(this, new VerticalRuler(20), editorStyle);
+		editor = new SourceViewer(this, (rulerWidth > 0) ? new VerticalRuler(rulerWidth) : null, editorStyle);
 		editor.configure(new AgentConfigSourceViewerConfiguration());
 
 		final TextViewerUndoManager undoManager = new TextViewerUndoManager(50);

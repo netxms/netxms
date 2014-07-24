@@ -41,6 +41,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
@@ -77,6 +78,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
    private boolean modified = false;
    private boolean reselection = false;
 
+   private ScrolledForm form;
    private AgentConfigEditor configEditor;
    private ScriptEditor filterEditor;
    private Text nameField;
@@ -114,8 +116,17 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       parent.setLayout(new FillLayout());
 
       SashForm splitter = new SashForm(parent, SWT.HORIZONTAL);
+      splitter.setSashWidth(3);
+      
+      Composite listContainer = new Composite(splitter, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.numColumns = 2;
+      layout.horizontalSpacing = 0;
+      listContainer.setLayout(layout);
 
-      configList = new TableViewer(splitter, SWT.FULL_SELECTION | SWT.SINGLE);
+      configList = new TableViewer(listContainer, SWT.FULL_SELECTION | SWT.SINGLE);
       configList.setContentProvider(new ArrayContentProvider());
       configList.addSelectionChangedListener(new ISelectionChangedListener() {
          @Override
@@ -124,22 +135,35 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
             onSelectionChange(event);
          }
       });
-
-      createPopupMenu();
-
-      //edit section
-      FormToolkit toolkit = new FormToolkit(getSite().getShell().getDisplay());
-      ScrolledForm form = toolkit.createScrolledForm(splitter);
-      form.setText("Config content");
+      configList.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       
-      GridLayout layout = new GridLayout();
+      new Label(listContainer, SWT.SEPARATOR | SWT.VERTICAL).setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, true));
+
+      /**** editor section ****/
+      FormToolkit toolkit = new FormToolkit(getSite().getShell().getDisplay());
+
+      Composite formContainer = new Composite(splitter, SWT.NONE);
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.numColumns = 2;
+      layout.horizontalSpacing = 0;
+      formContainer.setLayout(layout);      
+
+      new Label(formContainer, SWT.SEPARATOR | SWT.VERTICAL).setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, true));
+      
+      form = toolkit.createScrolledForm(formContainer);
+      form.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+      form.setText("noname");
+      
+      layout = new GridLayout();
       form.getBody().setLayout(layout);
       GridData gridData = new GridData();
       gridData.horizontalAlignment = SWT.FILL;
       gridData.grabExcessHorizontalSpace = true;
       form.getBody().setLayoutData(gridData);   
 
-      splitter.setWeights(new int[] { 30, 70 });       
+      splitter.setWeights(new int[] { 20, 80 });       
       
       Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
       section.setText("Name");
@@ -150,13 +174,9 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       gridData.grabExcessHorizontalSpace = true;
       section.setLayoutData(gridData);
       
-      Composite clientArea = toolkit.createComposite(section);
-      layout = new GridLayout();
-      clientArea.setLayout(layout);
-      section.setClient(clientArea);
-          
-      
-      nameField = new Text(clientArea, SWT.BORDER);
+      /**** Name ****/
+      nameField = new Text(section, SWT.BORDER);
+      section.setClient(nameField);
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.FILL;
       gridData.grabExcessHorizontalSpace = true;
@@ -169,6 +189,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          }
       });
 
+      /**** Filter ****/
       section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
       section.setText("Filter");
       section.setLayout(layout);
@@ -179,23 +200,8 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       gridData.grabExcessVerticalSpace = true;
       section.setLayoutData(gridData);
       
-      clientArea = toolkit.createComposite(section);
-      layout = new GridLayout();
-      clientArea.setLayout(layout);
-      gridData = new GridData();
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.verticalAlignment = SWT.FILL;
-      gridData.grabExcessVerticalSpace = true;
-      clientArea.setLayoutData(gridData);
-      section.setClient(clientArea);
-
-      gridData = new GridData();
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.verticalAlignment = SWT.FILL;
-      gridData.grabExcessVerticalSpace = true;
-      filterEditor = new ScriptEditor(clientArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
+      filterEditor = new ScriptEditor(section, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, 0);
+      section.setClient(filterEditor);
       filterEditor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -210,10 +216,9 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       gridData.grabExcessVerticalSpace = true;
       filterEditor.setLayoutData(gridData);
 
-      
-      
+      /**** Config ****/
       section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-      section.setText("Config");
+      section.setText("Configuration File");
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
@@ -221,24 +226,8 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       gridData.grabExcessVerticalSpace = true;
       section.setLayoutData(gridData);
       
-      clientArea = toolkit.createComposite(section);
-      layout = new GridLayout();
-      clientArea.setLayout(layout);
-      gridData = new GridData();
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.verticalAlignment = SWT.FILL;
-      gridData.grabExcessVerticalSpace = true;
-      clientArea.setLayoutData(gridData);
-      section.setClient(clientArea);
-
-      gridData = new GridData();
-      gridData.horizontalSpan = 2;
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.verticalAlignment = SWT.FILL;
-      gridData.grabExcessVerticalSpace = true;
-      configEditor = new AgentConfigEditor(clientArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
+      configEditor = new AgentConfigEditor(section, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, 0);
+      section.setClient(configEditor);
       configEditor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -247,7 +236,6 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          }
       });
       gridData = new GridData();
-      gridData.horizontalSpan = 2;
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
       gridData.verticalAlignment = SWT.FILL;
@@ -256,6 +244,8 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
 
       createActions();
       contributeToActionBars();
+      createPopupMenu();
+      
       actionSave.setEnabled(false);
       getConfigList();
    }
@@ -575,8 +565,12 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       updateContent();
    }
 
+   /**
+    * Update editor content
+    */
    private void updateContent()
    {
+      form.setText(content.getName());
       nameField.setText(content.getName());
       configEditor.setText(content.getConfig());
       filterEditor.setText(content.getFilter());
