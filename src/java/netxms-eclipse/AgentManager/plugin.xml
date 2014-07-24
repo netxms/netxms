@@ -31,7 +31,7 @@
       <view
             allowMultiple="false"
             class="org.netxms.ui.eclipse.agentmanager.views.ServerStoredAgentConfigEditorView"
-            icon="icons/unsaved_config.png"
+            icon="icons/config_manager.gif"
             id="org.netxms.ui.eclipse.agentmanager.views.ServerStoredAgentConfigEditorView"
             name="Agent Config Manager"
             restorable="true">
@@ -61,25 +61,20 @@
             label="%actionSet.AgentManagement"
             visible="true">
          <action
+               class="org.netxms.ui.eclipse.agentmanager.actions.OpenAgentConfigManager"
+               definitionId="org.netxms.ui.eclipse.agentmanager.commands.open_agent_configuration_manager"
+               icon="icons/config_manager.gif"
+               id="org.netxms.ui.eclipse.agentmanager.actions.open_agent_config_manager"
+               label="%action.openAgentConfigManager"
+               menubarPath="config/additions"
+               toolbarPath="config/additions"
+               tooltip="%actionDescription.openAgentConfigManager">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.agentmanager.actions.OpenPackageManager"
                definitionId="org.netxms.ui.eclipse.agentmanager.commands.open_package_manager"
                icon="icons/package.gif"
                id="org.netxms.ui.eclipse.agentmanager.actions.open_package_manager"
-               label="%action.openPackageManager"
-               menubarPath="config/additions"
-               toolbarPath="config/additions"
-               tooltip="%actionDescription.openPackageManager">
-         </action>
-      </actionSet>
-      <actionSet
-            id="org.netxms.ui.eclipse.action_set.agent_config_management"
-            label="Agent Config Managment"
-            visible="true">
-         <action
-               class="org.netxms.ui.eclipse.agentmanager.actions.OpenAgentConfigManager"
-               definitionId="org.netxms.ui.eclipse.agentmanager.commands.open_agent_config_manager"
-               icon="icons/unsaved_config.png"
-               id="org.netxms.ui.eclipse.agentmanager.actions.open_agent_config_manager"
                label="%action.openPackageManager"
                menubarPath="config/additions"
                toolbarPath="config/additions"
