@@ -41,14 +41,15 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart2;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.eclipse.ui.forms.widgets.ScrolledForm;
+import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.agent.config.ConfigContent;
@@ -64,8 +65,6 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.tools.WidgetFactory;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Sored on server agent's configuration editor
@@ -80,7 +79,6 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
 
    private AgentConfigEditor configEditor;
    private ScriptEditor filterEditor;
-   private Label nameLabel;
    private Text nameField;
    private TableViewer configList;
    private RefreshAction actionRefresh;
@@ -129,28 +127,36 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
 
       createPopupMenu();
 
-      // edit part
-      final Composite editGroup = new Composite(splitter, SWT.NONE);
+      //edit section
+      FormToolkit toolkit = new FormToolkit(getSite().getShell().getDisplay());
+      ScrolledForm form = toolkit.createScrolledForm(splitter);
+      form.setText("Config content");
+      
       GridLayout layout = new GridLayout();
-      editGroup.setLayout(layout);
+      form.getBody().setLayout(layout);
       GridData gridData = new GridData();
       gridData.horizontalAlignment = SWT.FILL;
       gridData.grabExcessHorizontalSpace = true;
-      editGroup.setLayoutData(gridData);
+      form.getBody().setLayoutData(gridData);   
 
-      final Composite nameGroup = new Composite(editGroup, SWT.BORDER);
+      splitter.setWeights(new int[] { 30, 70 });       
+      
+      Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+      section.setText("Name");
       layout = new GridLayout();
-      nameGroup.setLayout(layout);
+      section.setLayout(layout);
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.FILL;
       gridData.grabExcessHorizontalSpace = true;
-      nameGroup.setLayoutData(gridData);
+      section.setLayoutData(gridData);
       
-      splitter.setWeights(new int[] { 30, 70 });      
-
-      nameLabel = new Label(nameGroup, SWT.NONE);
-      nameLabel.setText("Name");
-      nameField = new Text(nameGroup, SWT.NONE);
+      Composite clientArea = toolkit.createComposite(section);
+      layout = new GridLayout();
+      clientArea.setLayout(layout);
+      section.setClient(clientArea);
+          
+      
+      nameField = new Text(clientArea, SWT.BORDER);
       gridData = new GridData();
       gridData.horizontalAlignment = SWT.FILL;
       gridData.grabExcessHorizontalSpace = true;
@@ -163,25 +169,33 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          }
       });
 
-      splitter = new SashForm(editGroup, SWT.VERTICAL);
-      splitter.setLayout(new FillLayout());
-      splitter.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-
-      final WidgetFactory filterFactory = new WidgetFactory() {
-         @Override
-         public Control createControl(Composite parent, int style)
-         {
-            return new ScriptEditor(parent, style, SWT.H_SCROLL | SWT.V_SCROLL);
-         }
-      };
-
+      section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+      section.setText("Filter");
+      section.setLayout(layout);
       gridData = new GridData();
-      gridData.horizontalSpan = 2;
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
       gridData.verticalAlignment = SWT.FILL;
       gridData.grabExcessVerticalSpace = true;
-      filterEditor = (ScriptEditor)WidgetHelper.createLabeledControl(splitter, SWT.BORDER, filterFactory, "Filter", gridData);
+      section.setLayoutData(gridData);
+      
+      clientArea = toolkit.createComposite(section);
+      layout = new GridLayout();
+      clientArea.setLayout(layout);
+      gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      gridData.verticalAlignment = SWT.FILL;
+      gridData.grabExcessVerticalSpace = true;
+      clientArea.setLayoutData(gridData);
+      section.setClient(clientArea);
+
+      gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      gridData.verticalAlignment = SWT.FILL;
+      gridData.grabExcessVerticalSpace = true;
+      filterEditor = new ScriptEditor(clientArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
       filterEditor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -190,20 +204,33 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          }
       });
       gridData = new GridData();
-      gridData.horizontalSpan = 2;
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
       gridData.verticalAlignment = SWT.FILL;
       gridData.grabExcessVerticalSpace = true;
       filterEditor.setLayoutData(gridData);
 
-      final WidgetFactory configFactory = new WidgetFactory() {
-         @Override
-         public Control createControl(Composite parent, int style)
-         {
-            return new AgentConfigEditor(parent, style, SWT.H_SCROLL | SWT.V_SCROLL);
-         }
-      };
+      
+      
+      section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+      section.setText("Config");
+      gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      gridData.verticalAlignment = SWT.FILL;
+      gridData.grabExcessVerticalSpace = true;
+      section.setLayoutData(gridData);
+      
+      clientArea = toolkit.createComposite(section);
+      layout = new GridLayout();
+      clientArea.setLayout(layout);
+      gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      gridData.verticalAlignment = SWT.FILL;
+      gridData.grabExcessVerticalSpace = true;
+      clientArea.setLayoutData(gridData);
+      section.setClient(clientArea);
 
       gridData = new GridData();
       gridData.horizontalSpan = 2;
@@ -211,7 +238,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       gridData.grabExcessHorizontalSpace = true;
       gridData.verticalAlignment = SWT.FILL;
       gridData.grabExcessVerticalSpace = true;
-      configEditor = (AgentConfigEditor)WidgetHelper.createLabeledControl(splitter, SWT.BORDER, configFactory, "Config", gridData);
+      configEditor = new AgentConfigEditor(clientArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
       configEditor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
