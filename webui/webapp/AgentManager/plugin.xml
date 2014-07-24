@@ -28,6 +28,14 @@
             name="%view.PackageDeploymentMonitor"
             restorable="false">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.agentmanager.views.ServerStoredAgentConfigEditorView"
+            icon="icons/config_manager.gif"
+            id="org.netxms.ui.eclipse.agentmanager.views.ServerStoredAgentConfigEditorView"
+            name="Agent Config Manager"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.popupMenus">
@@ -53,6 +61,16 @@
             label="%actionSet.AgentManagement"
             visible="true">
          <action
+               class="org.netxms.ui.eclipse.agentmanager.actions.OpenAgentConfigManager"
+               definitionId="org.netxms.ui.eclipse.agentmanager.commands.open_agent_configuration_manager"
+               icon="icons/config_manager.gif"
+               id="org.netxms.ui.eclipse.agentmanager.actions.open_agent_config_manager"
+               label="%action.openAgentConfigManager"
+               menubarPath="config/additions"
+               toolbarPath="config/additions"
+               tooltip="%actionDescription.openAgentConfigManager">
+         </action>
+         <action
                class="org.netxms.ui.eclipse.agentmanager.actions.OpenPackageManager"
                definitionId="org.netxms.ui.eclipse.agentmanager.commands.open_package_manager"
                icon="icons/package.gif"
@@ -71,6 +89,12 @@
             description="%actionDescription.openPackageManager"
             id="org.netxms.ui.eclipse.agentmanager.commands.open_package_manager"
             name="%action.openPackageManager">
+      </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open agent configuration manager"
+            id="org.netxms.ui.eclipse.agentmanager.commands.open_agent_configuration_manager"
+            name="Agent configuration manager">
       </command>
    </extension>
 

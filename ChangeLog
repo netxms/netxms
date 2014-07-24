@@ -25,6 +25,7 @@
    - Topology related options in node's context menu grouped in "Topology" submenu
    - Added specialized view for IP routing table
    - Added specialized view for switch forwarding database
+   - Agent configurations manager implemented
 - Android Console:
    - Added option in preference to show/hide legend in graphs
    - Object comments displayed

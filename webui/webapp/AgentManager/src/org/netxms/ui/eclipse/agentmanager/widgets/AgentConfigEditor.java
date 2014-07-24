@@ -41,6 +41,17 @@ public class AgentConfigEditor extends Composite
 	 */
 	public AgentConfigEditor(Composite parent, int style, int editorStyle)
 	{
+      this(parent, style, editorStyle, 20);
+   }
+   
+	/**
+	 * @param parent
+	 * @param style
+	 * @param editorStyle
+	 * @param rulerWidth
+	 */
+	public AgentConfigEditor(Composite parent, int style, int editorStyle, int rulerWidth)
+	{
 		super(parent, style);
 		
 		setLayout(new FillLayout());

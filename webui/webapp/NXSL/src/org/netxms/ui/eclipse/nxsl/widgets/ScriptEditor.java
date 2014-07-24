@@ -38,15 +38,25 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ScriptEditor extends Composite
 {
-	private static final long serialVersionUID = 1L;
-
 	private Text editor;
 
+   /**
+    * @param parent
+    * @param style
+    * @param editorStyle
+    */
+   public ScriptEditor(Composite parent, int style, int editorStyle)
+   {
+      this(parent, style, editorStyle, 20);
+   }
+   
 	/**
 	 * @param parent
 	 * @param style
+	 * @param editorStyle
+	 * @param rulerWidth
 	 */
-	public ScriptEditor(Composite parent, int style, int editorStyle)
+	public ScriptEditor(Composite parent, int style, int editorStyle, int rulerWidth)
 	{
 		super(parent, style);
 		
