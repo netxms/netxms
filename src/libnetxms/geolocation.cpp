@@ -250,8 +250,9 @@ double GeoLocation::parse(const TCHAR *str, bool isLat, bool *isValid)
 	else   // If not a valid double, check if it's in DMS form
 	{
 		// Check for invalid characters
-		if (_tcsspn(in, isLat ? _T("0123456789.'\" NS") DEGREE_SIGN_STR : _T("0123456789.'\" EW") DEGREE_SIGN_STR) == _tcslen(in))
+		if (_tcsspn(in, isLat ? _T("0123456789.,'\" NS") DEGREE_SIGN_STR : _T("0123456789.,'\" EW") DEGREE_SIGN_STR) == _tcslen(in))
 		{
+         TranslateStr(in, _T(","), _T("."));
 			TCHAR *curr = in;
 
 			int sign = 0;
