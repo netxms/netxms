@@ -13,4 +13,5 @@
             <item android:id="@+id/poll_interfaces" android:title="@string/menu_poll_interfaces"/>
         </menu>
     </item>
+    <item android:id="@+id/navigate_to" android:enabled="true" android:visible="true" android:title="@string/navigate_to"></item>
 </menu>

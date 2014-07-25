@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
+import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.NodePoller;
 import org.netxms.client.objects.AbstractObject;
@@ -22,10 +23,12 @@ import org.netxms.ui.android.main.fragments.NodeInfoFragment;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -39,6 +42,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * Node browser
@@ -79,8 +83,7 @@ public class NodeBrowser extends AbstractClientActivity
 
 		listView = (ListView)findViewById(R.id.NodeList);
 		listView.setAdapter(adapter);
-		listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
-		{
+		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 			@Override
 			@SuppressWarnings("rawtypes")
 			public void onItemClick(AdapterView parent, View v, int position, long id)
@@ -171,6 +174,12 @@ public class NodeBrowser extends AbstractClientActivity
 
 		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
 		selectedObject = (AbstractObject)adapter.getItem(info.position);
+		
+		GeoLocation gl = selectedObject.getGeolocation();
+		if ((gl == null) || (gl.getType() == GeoLocation.UNSET))
+		{
+			hideMenuItem(menu, R.id.navigate_to);
+		}
 
 		if (selectedObject instanceof Node)
 		{
@@ -218,99 +227,101 @@ public class NodeBrowser extends AbstractClientActivity
 		if (selectedObject == null)
 			return super.onContextItemSelected(item);
 
-		if (item.getItemId() == R.id.find_switch_port)
+		switch(item.getItemId())
 		{
-			Intent fspIntent = new Intent(this, ConnectionPointBrowser.class);
-			fspIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-			startActivity(fspIntent);
-			return true;
-		}
-		else if (item.getItemId() == R.id.view_alarms)
-		{
-			new SyncMissingChildsTask().execute(new Integer[] { (int)selectedObject.getObjectId() });
-			return true;
-		}
-		else if (item.getItemId() == R.id.unmanage)
-		{
-			service.setObjectMgmtState(selectedObject.getObjectId(), false);
-			refreshList();
-			return true;
-		}
-		else if (item.getItemId() == R.id.manage)
-		{
-			service.setObjectMgmtState(selectedObject.getObjectId(), true);
-			refreshList();
-			return true;
-		}
-		else if (item.getItemId() == R.id.poll_status)
-		{
-			Intent psIntent = new Intent(this, NodePollerActivity.class);
-			psIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-			psIntent.putExtra("pollType", NodePoller.STATUS_POLL);
-			startActivity(psIntent);
-			return true;
-		}
-		else if (item.getItemId() == R.id.poll_configuration)
-		{
-			Intent pcIntent = new Intent(this, NodePollerActivity.class);
-			pcIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-			pcIntent.putExtra("pollType", NodePoller.CONFIGURATION_POLL);
-			startActivity(pcIntent);
-			return true;
-		}
-		else if (item.getItemId() == R.id.poll_topology)
-		{
-			Intent ptIntent = new Intent(this, NodePollerActivity.class);
-			ptIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-			ptIntent.putExtra("pollType", NodePoller.TOPOLOGY_POLL);
-			startActivity(ptIntent);
-			return true;
-		}
-		else if (item.getItemId() == R.id.poll_interfaces)
-		{
-			Intent piIntent = new Intent(this, NodePollerActivity.class);
-			piIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-			piIntent.putExtra("pollType", NodePoller.INTERFACE_POLL);
-			startActivity(piIntent);
-			return true;
-		}
-
-		// if we didn't match static menu, check if it was some of tools
-		List<ObjectTool> tools = service.getTools();
-		if (tools != null)
-		{
-			for (final ObjectTool tool : tools)
-			{
-				if ((int)tool.getId() == item.getItemId())
+			case R.id.find_switch_port:
+				Intent fspIntent = new Intent(this, ConnectionPointBrowser.class);
+				fspIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+				startActivity(fspIntent);
+				break;
+			case R.id.view_alarms:
+				new SyncMissingChildsTask().execute(new Integer[] { (int)selectedObject.getObjectId() });
+				break;
+			case R.id.unmanage:
+				service.setObjectMgmtState(selectedObject.getObjectId(), false);
+				refreshList();
+				break;
+			case R.id.manage:
+				service.setObjectMgmtState(selectedObject.getObjectId(), true);
+				refreshList();
+				break;
+			case R.id.poll_status:
+				Intent psIntent = new Intent(this, NodePollerActivity.class);
+				psIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+				psIntent.putExtra("pollType", NodePoller.STATUS_POLL);
+				startActivity(psIntent);
+				break;
+			case R.id.poll_configuration:
+				Intent pcIntent = new Intent(this, NodePollerActivity.class);
+				pcIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+				pcIntent.putExtra("pollType", NodePoller.CONFIGURATION_POLL);
+				startActivity(pcIntent);
+				break;
+			case R.id.poll_topology:
+				Intent ptIntent = new Intent(this, NodePollerActivity.class);
+				ptIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+				ptIntent.putExtra("pollType", NodePoller.TOPOLOGY_POLL);
+				startActivity(ptIntent);
+				break;
+			case R.id.poll_interfaces:
+				Intent piIntent = new Intent(this, NodePollerActivity.class);
+				piIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+				piIntent.putExtra("pollType", NodePoller.INTERFACE_POLL);
+				startActivity(piIntent);
+				break;
+			case R.id.navigate_to:
+				GeoLocation gl = selectedObject.getGeolocation();
+				Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("google.navigation:q=" + gl.getLatitude() + ","
+						+ gl.getLongitude()));
+				intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+				try
 				{
-					if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
-					{
-						String message = tool.getConfirmationText()
-								.replaceAll("%OBJECT_NAME%", selectedObject.getObjectName())
-								.replaceAll("%OBJECT_IP_ADDR%", selectedObject.getPrimaryIP().getHostAddress());
-						new AlertDialog.Builder(this)
-								.setIcon(android.R.drawable.ic_dialog_alert)
-								.setTitle(R.string.confirm_tool_execution)
-								.setMessage(message)
-								.setCancelable(true)
-								.setPositiveButton(R.string.yes, new OnClickListener()
-								{
-									@Override
-									public void onClick(DialogInterface dialog, int which)
-									{
-										service.executeAction(selectedObject.getObjectId(), tool.getData());
-									}
-								})
-								.setNegativeButton(R.string.no, null)
-								.show();
-						return true;
-					}
-					service.executeAction(selectedObject.getObjectId(), tool.getData());
-					return true;
+					startActivity(intent);
 				}
-			}
+				catch(ActivityNotFoundException e)
+				{
+					Toast.makeText(getApplicationContext(), "Navigation unavailable", Toast.LENGTH_LONG);
+				}
+				break;
+			default:
+				// if we didn't match static menu, check if it was some of tools
+				List<ObjectTool> tools = service.getTools();
+				if (tools != null)
+				{
+					for (final ObjectTool tool : tools)
+					{
+						if ((int)tool.getId() == item.getItemId())
+						{
+							if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
+							{
+								String message = tool.getConfirmationText()
+										.replaceAll("%OBJECT_NAME%", selectedObject.getObjectName())
+										.replaceAll("%OBJECT_IP_ADDR%", selectedObject.getPrimaryIP().getHostAddress());
+								new AlertDialog.Builder(this)
+										.setIcon(android.R.drawable.ic_dialog_alert)
+										.setTitle(R.string.confirm_tool_execution)
+										.setMessage(message)
+										.setCancelable(true)
+										.setPositiveButton(R.string.yes, new OnClickListener()
+										{
+											@Override
+											public void onClick(DialogInterface dialog, int which)
+											{
+												service.executeAction(selectedObject.getObjectId(), tool.getData());
+											}
+										})
+										.setNegativeButton(R.string.no, null)
+										.show();
+								break;
+							}
+							service.executeAction(selectedObject.getObjectId(), tool.getData());
+							break;
+						}
+					}
+				}
+				break;
 		}
-
+		
 		return super.onContextItemSelected(item);
 	}
 

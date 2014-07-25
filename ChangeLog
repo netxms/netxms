@@ -29,6 +29,7 @@
 - Android Console:
    - Added option in preference to show/hide legend in graphs
    - Object comments displayed
+   - Added "Navigate to" option for objects with geolocation set
 - Fixed issues: #555, #564, #566, #586, #594, #596, #597, #598, #605, #606, #607, #608, #610, #612, #614
 
 

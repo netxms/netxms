@@ -247,4 +247,5 @@
 	<string name="menu_poll_configuration">Configuration</string>
 	<string name="menu_poll_topology">Topology</string>
 	<string name="menu_poll_interfaces">Interface names</string>
+	<string name="navigate_to">Navigate to</string>
 </resources>
