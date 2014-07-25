@@ -1,6 +1,6 @@
 @echo off
 call set_build_number.cmd
-set version=1.2.15-M1
+set version=1.2.15
 rem set version=1.2.14
 
 cd win32.win32.x86

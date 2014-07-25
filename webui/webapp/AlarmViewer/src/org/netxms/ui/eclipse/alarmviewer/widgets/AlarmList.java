@@ -109,7 +109,7 @@ public class AlarmList extends CompositeWithMessageBar
    private SortableTableViewer alarmViewer;
    private AlarmListFilter alarmFilter;
    private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
-   private List<Alarm> filteredAlarmList = new ArrayList<>();
+   private List<Alarm> filteredAlarmList = new ArrayList<Alarm>();
    private Action actionComments;
    private Action actionAcknowledge;
    private Action actionResolve;

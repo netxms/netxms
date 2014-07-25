@@ -117,7 +117,7 @@ public class AlarmList extends CompositeWithMessageBar
 	private Point toolTipLocation;
 	private Alarm toolTipObject;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
-   private List<Alarm> filteredAlarmList = new ArrayList<>();
+   private List<Alarm> filteredAlarmList = new ArrayList<Alarm>();
 	private Action actionCopy;
 	private Action actionCopyMessage;
 	private Action actionComments;
