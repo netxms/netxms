@@ -35,6 +35,10 @@
 #define LDAP_USER 1
 #define LDAP_GROUP 2
 
+#ifndef LDAP_SSL_PORT
+#define LDAP_SSL_PORT 636
+#endif
+
 /**
  * LDAP entry constructor
  */
@@ -155,8 +159,8 @@ void LDAPConnection::initLDAP()
    if (errorCode != LDAP_SUCCESS)
 #else
    prepareStringForInit(m_connList);
-#ifdef _WIN32
    int port = m_secure ? LDAP_SSL_PORT : LDAP_PORT;
+#ifdef _WIN32
    if (m_connList[0] == 0)
    {
       m_ldapConn = ldap_sslinit(NULL, port, m_secure);
@@ -176,7 +180,7 @@ void LDAPConnection::initLDAP()
    }
    else
    {
-      m_ldapConn = ldap_init(m_connList, LDAP_PORT, m_secure);
+      m_ldapConn = ldap_init(m_connList, LDAP_PORT);
    }
 #endif // _WIN32
 
