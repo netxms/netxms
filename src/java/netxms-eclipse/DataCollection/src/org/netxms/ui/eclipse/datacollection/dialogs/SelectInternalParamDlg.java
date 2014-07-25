@@ -67,6 +67,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 			list.add(new AgentParameter("Server.AverageDCIQueuingTime", Messages.get().SelectInternalParamDlg_DCI_AvgDCIQueueTime, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
 			list.add(new AgentParameter("Server.AverageDCPollerQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgDCQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
 			list.add(new AgentParameter("Server.AverageStatusPollerQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgStatusPollerQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AverageSyslogProcessingQueueSize", "Syslog processing queue for last minute", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AverageSyslogWriterQueueSize", "Syslog writer queue for last minute", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
 			list.add(new AgentParameter("Server.TotalEventsProcessed", Messages.get().SelectInternalParamDlg_DCI_TotalEventsProcessed, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
 		}
 

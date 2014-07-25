@@ -40,11 +40,15 @@ struct QUEUED_SYSLOG_MESSAGE
 };
 
 /**
+ * Queues
+ */
+Queue g_syslogProcessingQueue(1000, 100);
+Queue g_syslogWriteQueue(1000, 100);
+
+/**
  * Static data
  */
 static UINT64 s_msgId = 1;
-static Queue s_syslogProcessingQueue(1000, 100);
-static Queue s_syslogWriteQueue(1000, 100);
 static LogParser *s_parser = NULL;
 static MUTEX s_parserLock = INVALID_MUTEX_HANDLE;
 
@@ -301,7 +305,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
    DbgPrintf(1, _T("Syslog writer thread started"));
    while(true)
    {
-      NX_SYSLOG_RECORD *r = (NX_SYSLOG_RECORD *)s_syslogWriteQueue.GetOrBlock();
+      NX_SYSLOG_RECORD *r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.GetOrBlock();
       if (r == INVALID_POINTER_VALUE)
          break;
 
@@ -342,7 +346,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
          count++;
          if (count == 1000)
             break;
-         r = (NX_SYSLOG_RECORD *)s_syslogWriteQueue.Get();
+         r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.Get();
          if ((r == NULL) || (r == INVALID_POINTER_VALUE))
             break;
       }
@@ -369,7 +373,7 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
       record.qwMsgId = s_msgId++;
       Node *node = BindMsgToNode(&record, dwSourceIP);
 
-      s_syslogWriteQueue.Put(nx_memdup(&record, sizeof(NX_SYSLOG_RECORD)));
+      g_syslogWriteQueue.Put(nx_memdup(&record, sizeof(NX_SYSLOG_RECORD)));
 
       // Send message to all connected clients
       EnumerateClientSessions(BroadcastSyslogMessage, &record);
@@ -409,7 +413,7 @@ static THREAD_RESULT THREAD_CALL SyslogProcessingThread(void *pArg)
 
    while(1)
    {
-      pMsg = (QUEUED_SYSLOG_MESSAGE *)s_syslogProcessingQueue.GetOrBlock();
+      pMsg = (QUEUED_SYSLOG_MESSAGE *)g_syslogProcessingQueue.GetOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)
          break;
 
@@ -431,7 +435,7 @@ static void QueueSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
    pMsg->dwSourceIP = dwSourceIP;
    pMsg->nBytes = nMsgLen;
    pMsg->psMsg = (char *)nx_memdup(psMsg, nMsgLen + 1);
-   s_syslogProcessingQueue.Put(pMsg);
+   g_syslogProcessingQueue.Put(pMsg);
 }
 
 /**
@@ -616,11 +620,11 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    }
 
    // Stop processing thread
-   s_syslogProcessingQueue.Put(INVALID_POINTER_VALUE);
+   g_syslogProcessingQueue.Put(INVALID_POINTER_VALUE);
    ThreadJoin(hProcessingThread);
 
    // Stop writer thread - it must be done after processing thread already finished
-   s_syslogWriteQueue.Put(INVALID_POINTER_VALUE);
+   g_syslogWriteQueue.Put(INVALID_POINTER_VALUE);
    ThreadJoin(hWriterThread);
 
 	delete s_parser;

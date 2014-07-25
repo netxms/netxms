@@ -3717,6 +3717,14 @@ UINT32 Node::getInternalItem(const TCHAR *param, UINT32 bufSize, TCHAR *buffer)
       {
          _sntprintf(buffer, bufSize, _T("%u"), g_dwAvgDCIQueuingTime);
       }
+      else if (!_tcsicmp(param, _T("Server.AverageSyslogProcessingQueueSize")))
+      {
+         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgSyslogProcessingQueueSize);
+      }
+      else if (!_tcsicmp(param, _T("Server.AverageSyslogWriterQueueSize")))
+      {
+         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgSyslogWriterQueueSize);
+      }
       else if (!_tcsicmp(param, _T("Server.TotalEventsProcessed")))
       {
          _sntprintf(buffer, bufSize, INT64_FMT, g_totalEventsProcessed);

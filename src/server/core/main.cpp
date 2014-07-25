@@ -69,6 +69,8 @@ extern Queue g_discoveryPollQueue;
 extern Queue g_nodePollerQueue;
 extern Queue g_conditionPollerQueue;
 extern Queue *g_pItemQueue;
+extern Queue g_syslogProcessingQueue;
+extern Queue g_syslogWriteQueue;
 
 void InitClientListeners();
 void InitMobileDeviceListeners();
@@ -1364,6 +1366,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ShowQueueStats(pCtx, &g_nodePollerQueue, _T("Node poller"));
 			ShowQueueStats(pCtx, &g_routePollQueue, _T("Routing table poller"));
 			ShowQueueStats(pCtx, &g_statusPollQueue, _T("Status poller"));
+			ShowQueueStats(pCtx, &g_syslogProcessingQueue, _T("Syslog processing"));
+			ShowQueueStats(pCtx, &g_syslogWriteQueue, _T("Syslog writer"));
 			ConsolePrintf(pCtx, _T("\n"));
 		}
 		else if (IsCommand(_T("ROUTING-TABLE"), szBuffer, 1))
