@@ -290,7 +290,7 @@ public class GeoLocation
 		{
 		}
 		
-		Pattern p = Pattern.compile((isLat ? "([NS]*)" : "([EW]*)") + "\\s*([0-9]+(?:\\.[0-9]+)*)\u00b0?\\s*([0-9]+(?:\\.[0-9]+)*)?\\'?\\s*([0-9]+(?:\\.[0-9]+)*)?\\\"?\\s*" + (isLat ? "([NS]*)" : "([EW]*)"));
+		Pattern p = Pattern.compile((isLat ? "([NS]*)" : "([EW]*)") + "\\s*([0-9]+(?:[.,][0-9]+)*)\u00b0?\\s*([0-9]+(?:[.,][0-9]+)*)?\\'?\\s*([0-9]+(?:[.,][0-9]+)*)?\\\"?\\s*" + (isLat ? "([NS]*)" : "([EW]*)"));
 		Matcher m = p.matcher(in);
 		if (m.matches())
 		{
@@ -306,9 +306,9 @@ public class GeoLocation
 			
 			try
 			{
-				double deg = Double.parseDouble(m.group(2));
-				double min = (m.group(3) != null) ? Double.parseDouble(m.group(3)) : 0.0;
-				double sec = (m.group(4) != null) ? Double.parseDouble(m.group(4)) : 0.0;
+				double deg = Double.parseDouble(m.group(2).replace(',', '.'));
+				double min = (m.group(3) != null) ? Double.parseDouble(m.group(3).replace(',', '.')) : 0.0;
+				double sec = (m.group(4) != null) ? Double.parseDouble(m.group(4).replace(',', '.')) : 0.0;
 				
 				value = sign * (deg + min / 60.0 + sec / 3600.0);
 				if ((value < -180.0) || (value > 180.0))
