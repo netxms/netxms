@@ -21,7 +21,7 @@ package org.netxms.client.agent.config;
 import org.netxms.base.NXCPMessage;
 
 
-public class ConfigListElement implements Comparable
+public class ConfigListElement implements Comparable<ConfigListElement>
 {
    private long id;
    private String name;
@@ -100,12 +100,13 @@ public class ConfigListElement implements Comparable
       this.sequenceNumber = sequenceNumber;
    } 
 
+   /* (non-Javadoc)
+    * @see java.lang.Comparable#compareTo(java.lang.Object)
+    */
    @Override
-   public int compareTo(Object arg0)
+   public int compareTo(ConfigListElement e)
    {
-      long otherValue = ((ConfigListElement)arg0).getSequenceNumber();
-      int result = new Long(sequenceNumber).compareTo(new Long(otherValue));
-      return result;
+      return Long.signum(sequenceNumber - e.sequenceNumber);
    }
    
 }

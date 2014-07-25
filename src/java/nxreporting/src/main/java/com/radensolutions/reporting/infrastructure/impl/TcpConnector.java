@@ -2,16 +2,14 @@ package com.radensolutions.reporting.infrastructure.impl;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-
-import org.netxms.base.CompatTools;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPException;
 import org.netxms.base.NXCPMessage;
@@ -19,7 +17,6 @@ import org.netxms.base.NXCPMessageReceiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
-
 import com.radensolutions.reporting.application.ReportingServer;
 import com.radensolutions.reporting.application.ReportingServerFactory;
 import com.radensolutions.reporting.application.Session;
@@ -32,14 +29,17 @@ import com.radensolutions.reporting.infrastructure.Connector;
 @Scope(value = "singleton")
 public class TcpConnector implements Connector
 {
-
 	public static final int PORT = 4710;
-	private static final int FILE_BUFFER_SIZE = 128 * 1024; // 128k
+	
 	private static final Logger logger = LoggerFactory.getLogger(TcpConnector.class);
+
 	private final List<SessionWorker> workers = new ArrayList<SessionWorker>();
 	private ServerSocket serverSocket;
 	private Thread listenerThread;
 
+	/* (non-Javadoc)
+	 * @see com.radensolutions.reporting.infrastructure.Connector#start()
+	 */
 	@Override
 	public void start() throws IOException
 	{
@@ -70,6 +70,9 @@ public class TcpConnector implements Connector
 		listenerThread.start();
 	}
 
+	/* (non-Javadoc)
+	 * @see com.radensolutions.reporting.infrastructure.Connector#stop()
+	 */
 	@Override
 	public void stop()
 	{
@@ -81,7 +84,8 @@ public class TcpConnector implements Connector
 		try
 		{
 			listenerThread.join();
-		} catch (InterruptedException e)
+		} 
+		catch (InterruptedException e)
 		{
 			// ignore
 		}
@@ -109,6 +113,9 @@ public class TcpConnector implements Connector
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString()
 	{
@@ -117,8 +124,7 @@ public class TcpConnector implements Connector
 
 	private class SessionWorker implements Runnable
 	{
-		public static final int BUFFER_SIZE = 4096;
-		final NXCPMessageReceiver messageReceiver = new NXCPMessageReceiver(BUFFER_SIZE);
+		final NXCPMessageReceiver messageReceiver = new NXCPMessageReceiver(262144, 4194304);   // 256KB, 4MB
 		private final Socket socket;
 		private final Session session;
 		private final BufferedInputStream inputStream;
@@ -135,6 +141,9 @@ public class TcpConnector implements Connector
 			session = app.getSession(TcpConnector.this);
 		}
 
+		/* (non-Javadoc)
+		 * @see java.lang.Runnable#run()
+		 */
 		@Override
 		public void run()
 		{
@@ -198,7 +207,8 @@ public class TcpConnector implements Connector
 				outputStream.write(message.createNXCPMessage());
 				outputStream.flush();
 				return true;
-			} catch (IOException e)
+			} 
+			catch (IOException e)
 			{
 				logger.error("Communication failure", e);
 				stop();
@@ -206,39 +216,22 @@ public class TcpConnector implements Connector
 			return false;
 		}
 
+		/**
+		 * @param requestId
+		 * @param data
+		 * @throws IOException
+		 */
 		private void sendFileData(final long requestId, final byte[] data) throws IOException
 		{
 			NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_FILE_DATA, requestId);
 			msg.setBinaryMessage(true);
 
-			boolean success = false;
-			final byte[] buffer = new byte[FILE_BUFFER_SIZE];
-			final ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
-			while (true)
+			for(int pos = 0; pos < data.length; pos += 16384)
 			{
-				final int bytesRead = inputStream.read(buffer);
-				if (bytesRead < FILE_BUFFER_SIZE)
-				{
-					msg.setEndOfFile(true);
-				}
-
-				msg.setBinaryData(CompatTools.arrayCopy(buffer, bytesRead));
+			   int len = Math.min(16384, data.length - pos);
+				msg.setBinaryData(Arrays.copyOfRange(data, pos, len));
 				sendMessage(msg);
-
-				if (bytesRead < FILE_BUFFER_SIZE)
-				{
-					success = true;
-					break;
-				}
 			}
-
-//			if (!success)
-//			{
-//				NXCPMessage abortMessage = new NXCPMessage(NXCPCodes.CMD_ABORT_FILE_TRANSFER, requestId);
-//				abortMessage.setBinaryMessage(true);
-//				sendMessage(abortMessage);
-//				waitForRCC(abortMessage.getMessageId());
-//			}
 		}
 
 		private boolean isActive()

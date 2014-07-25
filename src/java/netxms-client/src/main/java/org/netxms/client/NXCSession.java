@@ -7628,9 +7628,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());
       int size = response.getVariableAsInteger(NXCPCodes.VID_NUM_RECORDS);
-      List <ConfigListElement> elements = new ArrayList<ConfigListElement>();
+      List <ConfigListElement> elements = new ArrayList<ConfigListElement>(size);
       long i, base;
-      for(i = 0, base = NXCPCodes.VID_AGENT_CFG_LIST_BASE; i < size; i++, base += 10) //TODO:change
+      for(i = 0, base = NXCPCodes.VID_AGENT_CFG_LIST_BASE; i < size; i++, base += 10)
       {
          elements.add(new ConfigListElement(base, response));
       }

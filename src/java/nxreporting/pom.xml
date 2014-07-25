@@ -6,7 +6,7 @@
 
     <groupId>com.radensolutions</groupId>
     <artifactId>nxreporting</artifactId>
-    <version>1.2.14</version>
+    <version>1.2.15</version>
 
     <properties>
         <spring.version>4.0.4.RELEASE</spring.version>

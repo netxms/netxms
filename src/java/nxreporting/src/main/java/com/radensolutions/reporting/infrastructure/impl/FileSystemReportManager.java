@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListResourceBundle;
@@ -32,7 +31,6 @@ import net.sf.jasperreports.engine.JRParameter;
 import net.sf.jasperreports.engine.JRPropertiesMap;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
-import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
 import net.sf.jasperreports.engine.export.JRXlsExporter;
@@ -56,6 +54,7 @@ import com.radensolutions.reporting.infrastructure.SmtpSender;
 import com.radensolutions.reporting.service.NotificationService;
 import com.radensolutions.reporting.service.ReportResultService;
 
+@SuppressWarnings("deprecation")
 public class FileSystemReportManager implements ReportManager
 {
    public static final String SUBREPORT_DIR_KEY = "SUBREPORT_DIR";
@@ -115,6 +114,9 @@ public class FileSystemReportManager implements ReportManager
       return reports;
    }
 
+   /* (non-Javadoc)
+    * @see com.radensolutions.reporting.infrastructure.ReportManager#getReportDefinition(java.util.UUID, java.util.Locale)
+    */
    @Override
    public ReportDefinition getReportDefinition(UUID reportId, Locale locale)
    {
@@ -308,7 +310,6 @@ public class FileSystemReportManager implements ReportManager
          final File reportDirectory = getReportDirectory(reportId);
 
          final ResourceBundle translations = loadReportTranslation(reportDirectory, locale);
-         final Enumeration<String> keys = translations.getKeys();
 
          // fill report parameters
          final HashMap<String, Object> localParameters = new HashMap<String, Object>(parameters);
@@ -323,10 +324,9 @@ public class FileSystemReportManager implements ReportManager
          try
          {
             JasperFillManager.fillReportToFile(report, outputFile, localParameters, connection);
-            final JasperPrint print = JasperFillManager.fillReport(report, localParameters, connection);
+            JasperFillManager.fillReport(report, localParameters, connection);
             reportResultService.save(new ReportResult(new Date(), reportId, jobId, userId));
 
-            // JasperViewer.viewReport(print);
             ret = true;
 
             Session session = ReportingServerFactory.getApp().getSession(ReportingServerFactory.getApp().getConnector());
@@ -486,6 +486,7 @@ public class FileSystemReportManager implements ReportManager
       return file.delete();
    }
 
+   @SuppressWarnings("rawtypes")
    @Override
    public byte[] renderResult(UUID reportId, UUID jobId, ReportRenderFormat format)
    {
