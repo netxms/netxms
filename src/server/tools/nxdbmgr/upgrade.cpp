@@ -541,7 +541,7 @@ static BOOL H_UpgradeFromV323(int currVersion, int newVersion)
    {
       TCHAR query[1024];
       _sntprintf(query, 1024,
-         _T("UPDATE metadata SET var_value='CREATE TABLE tdata_records_%%d (record_id %s not null,row_id %s not null,instance varchar(255) null,PRIMARY KEY(record_id),FOREIGN KEY (record_id) REFERENCES tdata_%%d(record_id) ON DELETE CASCADE)' WHERE var_name='TDataTableCreationCommand_1'"),
+         _T("UPDATE metadata SET var_value='CREATE TABLE tdata_records_%%d (record_id %s not null,row_id %s not null,instance varchar(255) null,PRIMARY KEY(row_id),FOREIGN KEY (record_id) REFERENCES tdata_%%d(record_id) ON DELETE CASCADE)' WHERE var_name='TDataTableCreationCommand_1'"),
          g_pszSqlType[g_iSyntax][SQL_TYPE_INT64], g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
       CHK_EXEC(SQLQuery(query));
 
