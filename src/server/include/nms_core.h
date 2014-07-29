@@ -117,6 +117,9 @@ typedef __console_ctx * CONSOLE_CTX;
 #define CHECKPOINT_SNMP_PORT     260
 #define DEFAULT_AFFINITY_MASK    0xFFFFFFFF
 
+#define MAX_CLIENT_SESSIONS   128
+#define MAX_DEVICE_SESSIONS   256
+
 typedef void * HSNMPSESSION;
 
 /**
@@ -222,6 +225,8 @@ typedef void * HSNMPSESSION;
 #define AUDIT_SYSCFG       _T("SYSCFG")
 #define AUDIT_CONSOLE      _T("CONSOLE")
 
+#define AUDIT_SYSTEM_SID   (-1)
+
 /**
  * Event handling subsystem definitions
  */
@@ -310,8 +315,8 @@ private:
    SOCKET m_hSocket;
    Queue *m_pSendQueue;
    Queue *m_pMessageQueue;
-   UINT32 m_dwIndex;
-   int m_iState;
+   int m_id;
+   int m_state;
    WORD m_wCurrentCmd;
    UINT32 m_dwUserId;
 	UINT32 m_deviceObjectId;
@@ -360,9 +365,9 @@ public:
    void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
    void sendMessage(CSCPMessage *pMsg);
 
-	UINT32 getIndex() { return m_dwIndex; }
-   void setIndex(UINT32 dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
-   int getState() { return m_iState; }
+	int getId() { return m_id; }
+   void setId(int id) { if (m_id == -1) m_id = id; }
+   int getState() { return m_state; }
    const TCHAR *getUserName() { return m_szUserName; }
    const TCHAR *getClientInfo() { return m_szClientInfo; }
 	const TCHAR *getHostName() { return m_szHostName; }
@@ -384,8 +389,8 @@ private:
    Queue *m_pSendQueue;
    Queue *m_pMessageQueue;
    Queue *m_pUpdateQueue;
-   UINT32 m_dwIndex;
-   int m_iState;
+   int m_id;
+   int m_state;
    WORD m_wCurrentCmd;
    UINT32 m_dwUserId;
    UINT64 m_dwSystemAccess;    // User's system access rights
@@ -412,6 +417,7 @@ private:
    TCHAR m_webServerAddress[256]; // IP address or name of web server for web sessions
    TCHAR m_szUserName[MAX_SESSION_NAME];   // String in form login_name@host
    TCHAR m_szClientInfo[96];  // Client app info string
+   TCHAR m_language[8];       // Client's desired language
    time_t m_loginTime;
    UINT32 m_dwOpenDCIListSize; // Number of open DCI lists
    UINT32 *m_pOpenDCIList;     // List of nodes with DCI lists open
@@ -692,9 +698,9 @@ public:
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
 	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long offset);
 
-   UINT32 getIndex() { return m_dwIndex; }
-   void setIndex(UINT32 dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
-   int getState() { return m_iState; }
+   int getId() { return m_id; }
+   void setId(int id) { if (m_id == -1) m_id = id; }
+   int getState() { return m_state; }
    const TCHAR *getUserName() { return m_szUserName; }
    const TCHAR *getClientInfo() { return m_szClientInfo; }
 	const TCHAR *getWorkstation() { return m_workstation; }
@@ -916,7 +922,7 @@ void EscapeString(String &str);
 
 void InitAuditLog();
 void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32 userId,
-                                     const TCHAR *workstation, UINT32 objectId,
+                                     const TCHAR *workstation, int sessionId, UINT32 objectId,
                                      const TCHAR *format, ...);
 
 bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTextLen);
@@ -1026,7 +1032,7 @@ extern DB_HANDLE NXCORE_EXPORTABLE g_hCoreDB;
 extern Queue *g_pLazyRequestQueue;
 extern Queue *g_pIDataInsertQueue;
 
-extern int NXCORE_EXPORTABLE g_nDBSyntax;
+extern int NXCORE_EXPORTABLE g_dbSyntax;
 extern FileMonitoringList g_monitoringList;
 
 #endif   /* _nms_core_h_ */

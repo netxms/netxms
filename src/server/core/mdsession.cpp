@@ -46,7 +46,7 @@
 /**
  * Externals
  */
-void UnregisterMobileDeviceSession(UINT32 dwIndex);
+void UnregisterMobileDeviceSession(int id);
 
 /**
  * Client communication read thread starter
@@ -58,7 +58,7 @@ THREAD_RESULT THREAD_CALL MobileDeviceSession::readThreadStarter(void *pArg)
    // When MobileDeviceSession::readThread exits, all other session
    // threads are already stopped, so we can safely destroy
    // session object
-   UnregisterMobileDeviceSession(((MobileDeviceSession *)pArg)->getIndex());
+   UnregisterMobileDeviceSession(((MobileDeviceSession *)pArg)->getId());
    delete (MobileDeviceSession *)pArg;
    return THREAD_OK;
 }
@@ -89,8 +89,8 @@ MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, struct sockaddr *addr)
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
    m_hSocket = hSocket;
-   m_dwIndex = INVALID_INDEX;
-   m_iState = SESSION_STATE_INIT;
+   m_id = -1;
+   m_state = SESSION_STATE_INIT;
    m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
    m_pCtx = NULL;
    m_hWriteThread = INVALID_THREAD_HANDLE;
@@ -154,7 +154,7 @@ void MobileDeviceSession::debugPrintf(int level, const TCHAR *format, ...)
       va_start(args, format);
       _vsntprintf(buffer, 4096, format, args);
       va_end(args);
-		DbgPrintf(level, _T("[MDSN-%d] %s"), m_dwIndex, buffer);
+		DbgPrintf(level, _T("[MDSN-%d] %s"), m_id, buffer);
    }
 }
 
@@ -286,7 +286,7 @@ void MobileDeviceSession::readThread()
       } while(m_dwRefCount > 0);
    }
 
-	WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szHostName, 0, _T("Mobile device logged out (client: %s)"), m_szClientInfo);
+	WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szHostName, m_id, 0, _T("Mobile device logged out (client: %s)"), m_szClientInfo);
    debugPrintf(3, _T("Session closed"));
 }
 
@@ -364,7 +364,7 @@ void MobileDeviceSession::processingThread()
          continue;
       }
 
-      m_iState = SESSION_STATE_PROCESSING;
+      m_state = SESSION_STATE_PROCESSING;
       switch(m_wCurrentCmd)
       {
          case CMD_GET_SERVER_INFO:
@@ -415,7 +415,7 @@ void MobileDeviceSession::processingThread()
             break;
       }
       delete pMsg;
-      m_iState = m_isAuthenticated ? SESSION_STATE_IDLE : SESSION_STATE_INIT;
+      m_state = m_isAuthenticated ? SESSION_STATE_IDLE : SESSION_STATE_INIT;
    }
 }
 
@@ -594,14 +594,14 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
 					msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_flags & AF_DB_CONNECTION_LOST) ? 0 : 1));
 					msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_flags & AF_ENABLE_ZONING) ? 1 : 0));
 					debugPrintf(3, _T("User %s authenticated as mobile device"), m_szUserName);
-					WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szHostName, 0,
+					WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szHostName, m_id, 0,
 									  _T("Mobile device logged in as user \"%s\" (client info: %s)"), szLogin, m_szClientInfo);
 				}
 				else
 				{
 					debugPrintf(3, _T("Mobile device object with device ID \"%s\" not found"), deviceId);
 					msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-					WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, 0,
+					WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, m_id, 0,
 									  _T("Mobile device login as user \"%s\" failed - mobile device object not found (client info: %s)"),
 									  szLogin, m_szClientInfo);
 				}
@@ -609,7 +609,7 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
 			else
 			{
 				msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, 0,
+				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, m_id, 0,
 								  _T("Mobile device login as user \"%s\" failed - user does not have mobile device login rights (client info: %s)"),
 								  szLogin, m_szClientInfo);
 			}
@@ -617,12 +617,12 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
       else
       {
          msg.SetVariable(VID_RCC, dwResult);
-			WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, 0,
+			WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, m_id, 0,
 			              _T("Mobile device login as user \"%s\" failed with error code %d (client info: %s)"),
 							  szLogin, dwResult, m_szClientInfo);
 			if (intruderLockout)
 			{
-				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, 0,
+				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, m_id, 0,
 								  _T("User account \"%s\" temporary disabled due to excess count of failed authentication attempts"), szLogin);
 			}
       }

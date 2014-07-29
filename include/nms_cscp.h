@@ -986,6 +986,7 @@ typedef struct
 #define VID_MODULE_DATA_COUNT       ((UINT32)476)
 #define VID_NEW_FILE_NAME           ((UINT32)477)
 #define VID_ALARM_LIST_DISP_LIMIT   ((UINT32)478)
+#define VID_LANGUAGE                ((UINT32)479)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

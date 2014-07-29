@@ -284,19 +284,19 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 		TCHAR query[1024];
       static const TCHAR *functions[] = { _T("min"), _T("max"), _T("avg"), _T("sum") };
 
-		if (g_nDBSyntax == DB_SYNTAX_ORACLE)
+		if (g_dbSyntax == DB_SYNTAX_ORACLE)
 		{
 			_sntprintf(query, 1024, _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u ")
 				_T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"), 
 				functions[sqlFunc], node->Id());
 		}
-		else if (g_nDBSyntax == DB_SYNTAX_MSSQL)
+		else if (g_dbSyntax == DB_SYNTAX_MSSQL)
 		{
 			_sntprintf(query, 1024, _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata_%u ")
 				_T("WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"), 
 				functions[sqlFunc], node->Id());
 		}
-		else if (g_nDBSyntax == DB_SYNTAX_PGSQL)
+		else if (g_dbSyntax == DB_SYNTAX_PGSQL)
 		{
 			_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value::double precision,0)) FROM idata_%u ")
 				_T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"), 

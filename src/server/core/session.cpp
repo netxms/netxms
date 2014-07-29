@@ -69,7 +69,7 @@ extern Queue g_nodePollerQueue;
 extern Queue g_conditionPollerQueue;
 extern Queue *g_pItemQueue;
 
-void UnregisterClientSession(UINT32 dwIndex);
+void UnregisterClientSession(int id);
 void ResetDiscoveryPoller();
 CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request, ClientSession *session);
 void RemovePendingFileTransferRequests(ClientSession *session);
@@ -182,7 +182,7 @@ THREAD_RESULT THREAD_CALL ClientSession::readThreadStarter(void *pArg)
    // When ClientSession::ReadThread exits, all other session
    // threads are already stopped, so we can safely destroy
    // session object
-   UnregisterClientSession(((ClientSession *)pArg)->getIndex());
+   UnregisterClientSession(((ClientSession *)pArg)->getId());
    delete (ClientSession *)pArg;
    return THREAD_OK;
 }
@@ -237,8 +237,8 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_pMessageQueue = new Queue;
    m_pUpdateQueue = new Queue;
    m_hSocket = hSocket;
-   m_dwIndex = INVALID_INDEX;
-   m_iState = SESSION_STATE_INIT;
+   m_id = -1;
+   m_state = SESSION_STATE_INIT;
    m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
    m_pCtx = NULL;
    m_hWriteThread = INVALID_THREAD_HANDLE;
@@ -279,6 +279,7 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
 	m_console = NULL;
    m_loginTime = time(NULL);
    m_musicTypeList.add(_T("wav"));
+   _tcscpy(m_language, _T("en"));
 }
 
 /**
@@ -354,7 +355,7 @@ void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
       va_start(args, format);
       _vsntprintf(buffer, 4096, format, args);
       va_end(args);
-		DbgPrintf(level, _T("[CLSN-%d] %s"), m_dwIndex, buffer);
+		DbgPrintf(level, _T("[CLSN-%d] %s"), m_id, buffer);
    }
 }
 
@@ -608,7 +609,7 @@ void ClientSession::readThread()
    RemovePendingFileTransferRequests(this);
 
    // Remove all locks created by this session
-   RemoveAllSessionLocks(m_dwIndex);
+   RemoveAllSessionLocks(m_id);
    for(i = 0; i < m_dwOpenDCIListSize; i++)
    {
       object = FindObjectById(m_pOpenDCIList[i]);
@@ -616,7 +617,7 @@ void ClientSession::readThread()
          if ((object->Type() == OBJECT_NODE) ||
              (object->Type() == OBJECT_CLUSTER) ||
              (object->Type() == OBJECT_TEMPLATE))
-            ((Template *)object)->unlockDCIList(m_dwIndex);
+            ((Template *)object)->unlockDCIList(m_id);
    }
 
    // Waiting while reference count becomes 0
@@ -632,7 +633,7 @@ void ClientSession::readThread()
    if (m_dwFlags & CSF_AUTHENTICATED)
    {
       CALL_ALL_MODULES(pfClientSessionClose, (this));
-	   WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0, _T("User logged out (client: %s)"), m_szClientInfo);
+	   WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("User logged out (client: %s)"), m_szClientInfo);
    }
    debugPrintf(3, _T("Session closed"));
 }
@@ -829,7 +830,7 @@ void ClientSession::processingThread()
          continue;
       }
 
-      m_iState = SESSION_STATE_PROCESSING;
+      m_state = SESSION_STATE_PROCESSING;
       switch(m_wCurrentCmd)
       {
          case CMD_LOGIN:
@@ -1483,7 +1484,7 @@ void ClientSession::processingThread()
             break;
       }
       delete pMsg;
-      m_iState = (m_dwFlags & CSF_AUTHENTICATED) ? SESSION_STATE_IDLE : SESSION_STATE_INIT;
+      m_state = (m_dwFlags & CSF_AUTHENTICATED) ? SESSION_STATE_IDLE : SESSION_STATE_INIT;
    }
 }
 
@@ -1796,6 +1797,11 @@ void ClientSession::login(CSCPMessage *pRequest)
       }
    }
 
+   if (pRequest->isFieldExist(VID_LANGUAGE))
+   {
+      pRequest->GetVariableStr(VID_LANGUAGE, m_language, 8);
+   }
+
    if (!(m_dwFlags & CSF_AUTHENTICATED))
    {
       pRequest->GetVariableStr(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
@@ -1879,7 +1885,7 @@ void ClientSession::login(CSCPMessage *pRequest)
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
          msg.SetVariable(VID_USER_SYS_RIGHTS, m_dwSystemAccess);
          msg.SetVariable(VID_USER_ID, m_dwUserId);
-			msg.SetVariable(VID_SESSION_ID, m_dwIndex);
+			msg.SetVariable(VID_SESSION_ID, (UINT32)m_id);
 			msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
          msg.SetVariable(VID_DBCONN_STATUS, (UINT16)((g_flags & AF_DB_CONNECTION_LOST) ? 0 : 1));
 			msg.SetVariable(VID_ZONING_ENABLED, (UINT16)((g_flags & AF_ENABLE_ZONING) ? 1 : 0));
@@ -1890,19 +1896,19 @@ void ClientSession::login(CSCPMessage *pRequest)
 			msg.SetVariable(VID_VIEW_REFRESH_INTERVAL, (UINT16)ConfigReadInt(_T("MinViewRefreshInterval"), 200));
 			msg.SetVariable(VID_HELPDESK_LINK_ACTIVE, (UINT16)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
 			msg.SetVariable(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("AlarmListDisplayLimit"), 4096));
-         debugPrintf(3, _T("User %s authenticated"), m_szUserName);
-			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0,
-			              _T("User \"%s\" logged in (client info: %s)"), szLogin, m_szClientInfo);
+         debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_szUserName, m_language, m_szClientInfo);
+			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0,
+            _T("User \"%s\" logged in (language: %s; client info: %s)"), szLogin, m_language, m_szClientInfo);
       }
       else
       {
          msg.SetVariable(VID_RCC, dwResult);
-			WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_workstation, 0,
+			WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_workstation, m_id, 0,
 			              _T("User \"%s\" login failed with error code %d (client info: %s)"),
 							  szLogin, dwResult, m_szClientInfo);
 			if (intruderLockout)
 			{
-				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_workstation, 0,
+				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_workstation, m_id, 0,
 								  _T("User account \"%s\" temporary disabled due to excess count of failed authentication attempts"), szLogin);
 			}
       }
@@ -2114,8 +2120,7 @@ void ClientSession::deleteEventTemplate(CSCPMessage *pRequest)
 
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
 
-			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0,
-							  _T("Event template %d deleted"), dwEventCode);
+			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("Event template %d deleted"), dwEventCode);
       }
       else
       {
@@ -2296,7 +2301,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
 
    dwRqId = pRequest->GetId();
    dwMaxRecords = pRequest->GetVariableLong(VID_MAX_RECORDS);
-   wRecOrder = ((g_nDBSyntax == DB_SYNTAX_MSSQL) || (g_nDBSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
+   wRecOrder = ((g_dbSyntax == DB_SYNTAX_MSSQL) || (g_dbSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
 
    // Prepare confirmation message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -2306,7 +2311,7 @@ void ClientSession::sendEventLog(CSCPMessage *pRequest)
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    // Retrieve events from database
-   switch(g_nDBSyntax)
+   switch(g_dbSyntax)
    {
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
@@ -2462,7 +2467,7 @@ void ClientSession::setConfigVariable(CSCPMessage *pRequest)
       if (ConfigWriteStr(szName, szValue, TRUE))
 		{
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
-			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0,
+			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0,
 							  _T("Server configuration variable \"%s\" set to \"%s\""), szName, szValue);
 		}
       else
@@ -2498,7 +2503,7 @@ void ClientSession::deleteConfigVariable(CSCPMessage *pRequest)
       if (ConfigDelete(name))
 		{
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
-			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0, _T("Server configuration variable \"%s\" deleted"), name);
+			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("Server configuration variable \"%s\" deleted"), name);
 		}
       else
 		{
@@ -2534,7 +2539,7 @@ void ClientSession::setConfigCLOB(CSCPMessage *pRequest)
 			if (ConfigWriteCLOB(name, value, TRUE))
 			{
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
-				WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0,
+				WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0,
 								  _T("Server configuration variable \"%s\" set to \"%s\""), name, value);
 				free(value);
 			}
@@ -2698,19 +2703,19 @@ void ClientSession::modifyObject(CSCPMessage *pRequest)
 
 			if (dwResult == RCC_SUCCESS)
 			{
-				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, dwObjectId,
+				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, dwObjectId,
 								  _T("Object %s modified from client"), object->Name());
 			}
 			else
 			{
-				WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, dwObjectId,
+				WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, dwObjectId,
 								  _T("Failed to modify object from client - error %d"), dwResult);
 			}
       }
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, dwObjectId,
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, dwObjectId,
 							  _T("Failed to modify object from client - access denied"), dwResult);
       }
    }
@@ -2792,7 +2797,7 @@ void ClientSession::createUser(CSCPMessage *pRequest)
          if (dwResult == RCC_SUCCESS)
          {
             msg.SetVariable(VID_USER_ID, dwUserId);   // Send id of new user to client
-            WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, dwUserId, _T("%s %s created"), bIsGroup ? _T("Group") : _T("User"), szUserName);
+            WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, dwUserId, _T("%s %s created"), bIsGroup ? _T("Group") : _T("User"), szUserName);
          }
       }
       else
@@ -2835,7 +2840,7 @@ void ClientSession::updateUser(CSCPMessage *pRequest)
          TCHAR name[MAX_DB_STRING];
          UINT32 id = pRequest->GetVariableLong(VID_USER_ID);
          ResolveUserId(id, name, MAX_DB_STRING);
-         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, id,
+         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, id,
             _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), name);
       }
       msg.SetVariable(VID_RCC, result);
@@ -2883,7 +2888,7 @@ void ClientSession::deleteUser(CSCPMessage *pRequest)
             msg.SetVariable(VID_RCC, rcc);
             if(rcc == RCC_SUCCESS)
             {
-               WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, dwUserId,
+               WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, dwUserId,
                              _T("%s %s [%d] deleted"), (dwUserId & GROUP_FLAG) ? _T("Group") : _T("User"), name, dwUserId);
             }
          }
@@ -2920,7 +2925,7 @@ void ClientSession::lockUserDB(UINT32 dwRqId, BOOL bLock)
    {
       if (bLock)
       {
-         if (!LockComponent(CID_USER_DB, m_dwIndex, m_szUserName, NULL, szBuffer))
+         if (!LockComponent(CID_USER_DB, m_id, m_szUserName, NULL, szBuffer))
          {
             msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
             msg.SetVariable(VID_LOCKED_BY, szBuffer);
@@ -3006,7 +3011,7 @@ void ClientSession::changeObjectMgmtStatus(CSCPMessage *pRequest)
 				BOOL bIsManaged = (BOOL)pRequest->GetVariableShort(VID_MGMT_STATUS);
 				object->setMgmtStatus(bIsManaged);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, object->Id(),
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->Id(),
                _T("Object %s set to %s state"), object->Name(), bIsManaged ? _T("managed") : _T("unmanaged"));
 			}
 			else
@@ -3067,7 +3072,7 @@ void ClientSession::setPassword(CSCPMessage *pRequest)
       {
          TCHAR userName[MAX_DB_STRING];
          ResolveUserId(dwUserId, userName, MAX_DB_STRING);
-         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, 0, _T("Changed password for user %s"), userName);
+         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("Changed password for user %s"), userName);
       }
    }
    else
@@ -3108,7 +3113,7 @@ void ClientSession::openNodeDCIList(CSCPMessage *pRequest)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             // Try to lock DCI list
-            if (((Template *)object)->lockDCIList(m_dwIndex, m_szUserName, szLockInfo))
+            if (((Template *)object)->lockDCIList(m_id, m_szUserName, szLockInfo))
             {
                bSuccess = TRUE;
                msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -3175,7 +3180,7 @@ void ClientSession::closeNodeDCIList(CSCPMessage *pRequest)
             BOOL bSuccess;
 
             // Try to unlock DCI list
-            bSuccess = ((Template *)object)->unlockDCIList(m_dwIndex);
+            bSuccess = ((Template *)object)->unlockDCIList(m_id);
             msg.SetVariable(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_OUT_OF_STATE_REQUEST);
 
             // Modify list of open nodes DCI lists
@@ -3238,7 +3243,7 @@ void ClientSession::modifyNodeDCI(CSCPMessage *pRequest)
           (object->Type() == OBJECT_MOBILEDEVICE) ||
           (object->Type() == OBJECT_TEMPLATE))
       {
-         if (((Template *)object)->isLockedBySession(m_dwIndex))
+         if (((Template *)object)->isLockedBySession(m_id))
          {
             if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
@@ -3368,7 +3373,7 @@ void ClientSession::changeDCIStatus(CSCPMessage *pRequest)
           (object->Type() == OBJECT_MOBILEDEVICE) ||
           (object->Type() == OBJECT_TEMPLATE))
       {
-         if (((Template *)object)->isLockedBySession(m_dwIndex))
+         if (((Template *)object)->isLockedBySession(m_id))
          {
             if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
             {
@@ -3486,7 +3491,7 @@ void ClientSession::copyDCI(CSCPMessage *pRequest)
       if (((pSource->Type() == OBJECT_NODE) || (pSource->Type() == OBJECT_MOBILEDEVICE) || (pSource->Type() == OBJECT_TEMPLATE) || (pSource->Type() == OBJECT_CLUSTER)) &&
 		    ((pDestination->Type() == OBJECT_NODE) || (pDestination->Type() == OBJECT_MOBILEDEVICE) || (pDestination->Type() == OBJECT_TEMPLATE) || (pDestination->Type() == OBJECT_CLUSTER)))
       {
-         if (((Template *)pSource)->isLockedBySession(m_dwIndex))
+         if (((Template *)pSource)->isLockedBySession(m_id))
          {
             bMove = pRequest->GetVariableShort(VID_MOVE_FLAG);
             // Check access rights
@@ -3495,7 +3500,7 @@ void ClientSession::copyDCI(CSCPMessage *pRequest)
             {
                // Attempt to lock destination's DCI list
                if ((pDestination->Id() == pSource->Id()) ||
-                   (((Template *)pDestination)->lockDCIList(m_dwIndex, m_szUserName, szLockInfo)))
+                   (((Template *)pDestination)->lockDCIList(m_id, m_szUserName, szLockInfo)))
                {
                   UINT32 i, *pdwItemList, dwNumItems;
                   const DCObject *pSrcItem;
@@ -3562,7 +3567,7 @@ void ClientSession::copyDCI(CSCPMessage *pRequest)
                   // Cleanup
                   free(pdwItemList);
                   if (pDestination->Id() != pSource->Id())
-                     ((Template *)pDestination)->unlockDCIList(m_dwIndex);
+                     ((Template *)pDestination)->unlockDCIList(m_id);
                   msg.SetVariable(VID_RCC, (iErrors == 0) ? RCC_SUCCESS : RCC_DCI_COPY_ERRORS);
 
                   // Queue template update
@@ -3656,7 +3661,7 @@ static DB_STATEMENT PrepareIDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxR
 {
 	TCHAR query[512];
 
-	switch(g_nDBSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
 			_sntprintf(query, 512, _T("SELECT TOP %d idata_timestamp,idata_value FROM idata_%d WHERE item_id=?%s ORDER BY idata_timestamp DESC"),
@@ -3690,7 +3695,7 @@ static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxR
 {
 	TCHAR query[1024];
 
-	switch(g_nDBSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
 			_sntprintf(query, 1024,
@@ -4195,7 +4200,7 @@ void ClientSession::openEPP(CSCPMessage *request)
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
       TCHAR buffer[256];
-      if (!readOnly && !LockComponent(CID_EPP, m_dwIndex, m_szUserName, NULL, buffer))
+      if (!readOnly && !LockComponent(CID_EPP, m_id, m_szUserName, NULL, buffer))
       {
          msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
          msg.SetVariable(VID_LOCKED_BY, buffer);
@@ -4643,7 +4648,7 @@ void ClientSession::createObject(CSCPMessage *pRequest)
 						   // If creation was successful do binding and set comments if needed
 						   if (object != NULL)
 						   {
-							   WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, object->Id(), _T("Object %s created"), object->Name());
+							   WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->Id(), _T("Object %s created"), object->Name());
 							   if ((pParent != NULL) &&          // parent can be NULL for nodes
 							       (iClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
 							   {
@@ -4764,14 +4769,14 @@ void ClientSession::addClusterNode(CSCPMessage *request)
 					((Node *)node)->forceConfigurationPoll();
 
 					msg.SetVariable(VID_RCC, RCC_SUCCESS);
-					WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, cluster->Id(),
+					WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, cluster->Id(),
 									  _T("Node %s [%d] added to cluster %s [%d]"),
 									  node->Name(), node->Id(), cluster->Name(), cluster->Id());
 				}
 				else
 				{
 					msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-					WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, cluster->Id(),
+					WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, cluster->Id(),
 									  _T("Access denied on adding node %s [%d] to cluster %s [%d]"),
 									  node->Name(), node->Id(), cluster->Name(), cluster->Id());
 				}
@@ -4927,7 +4932,7 @@ void ClientSession::deleteObject(CSCPMessage *pRequest)
 				{
 					ThreadCreate(DeleteObjectWorker, 0, object);
 					msg.SetVariable(VID_RCC, RCC_SUCCESS);
-               WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, object->Id(), _T("Object %s deleted"), object->Name());
+               WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->Id(), _T("Object %s deleted"), object->Name());
 				}
 				else
 				{
@@ -4937,13 +4942,13 @@ void ClientSession::deleteObject(CSCPMessage *pRequest)
          else
          {
             msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-            WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(), _T("Access denied on delete object %s"), object->Name());
+            WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->Id(), _T("Access denied on delete object %s"), object->Name());
          }
       }
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(), _T("Access denied on delete object %s"), object->Name());
+         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->Id(), _T("Access denied on delete object %s"), object->Name());
       }
    }
    else
@@ -5012,7 +5017,7 @@ void ClientSession::getAlarm(CSCPMessage *request)
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(), _T("Access denied on get alarm for object %s"), object->Name());
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->Id(), _T("Access denied on get alarm for object %s"), object->Name());
       }
    }
    else
@@ -5051,7 +5056,7 @@ void ClientSession::getAlarmEvents(CSCPMessage *request)
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(), _T("Access denied on get alarm events for object %s"), object->Name());
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->Id(), _T("Access denied on get alarm events for object %s"), object->Name());
       }
    }
    else
@@ -5106,7 +5111,7 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(), _T("Access denied on acknowledged alarm on object %s"), object->Name());
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->Id(), _T("Access denied on acknowledged alarm on object %s"), object->Name());
       }
    }
    else
@@ -5161,7 +5166,7 @@ void ClientSession::resolveAlarm(CSCPMessage *pRequest, bool terminate)
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(),
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->Id(),
             _T("Access denied on %s alarm on object %s"), terminate ? _T("terminate") : _T("resolve"), object->Name());
       }
    }
@@ -5203,7 +5208,7 @@ void ClientSession::deleteAlarm(CSCPMessage *pRequest)
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(), _T("Access denied on delete alarm on object %s"), object->Name());
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->Id(), _T("Access denied on delete alarm on object %s"), object->Name());
       }
    }
    else
@@ -5242,7 +5247,7 @@ void ClientSession::openHelpdeskIssue(CSCPMessage *request)
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(),
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->Id(),
             _T("Access denied on creating issue from alarm on object %s"), object->Name());
       }
    }
@@ -5282,7 +5287,7 @@ void ClientSession::getHelpdeskUrl(CSCPMessage *request)
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(),
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->Id(),
             _T("Access denied on getting helpdesk URL for alarm on object %s"), object->Name());
       }
    }
@@ -5338,7 +5343,7 @@ void ClientSession::unlinkHelpdeskIssue(CSCPMessage *request)
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, object->Id(),
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->Id(),
             _T("Access denied on unlinking helpdesk issue from alarm on object %s"), object->Name());
       }
    }
@@ -6158,7 +6163,7 @@ void ClientSession::LockPackageDB(UINT32 dwRqId, BOOL bLock)
    {
       if (bLock)
       {
-         if (!LockComponent(CID_PACKAGE_DB, m_dwIndex, m_szUserName, NULL, szBuffer))
+         if (!LockComponent(CID_PACKAGE_DB, m_id, m_szUserName, NULL, szBuffer))
          {
             msg.SetVariable(VID_RCC, RCC_COMPONENT_LOCKED);
             msg.SetVariable(VID_LOCKED_BY, szBuffer);
@@ -6612,9 +6617,9 @@ void ClientSession::applyTemplate(CSCPMessage *pRequest)
          BOOL bLockSucceed = FALSE;
 
          // Acquire DCI lock if needed
-         if (!((Template *)pSource)->isLockedBySession(m_dwIndex))
+         if (!((Template *)pSource)->isLockedBySession(m_id))
          {
-            bLockSucceed = ((Template *)pSource)->lockDCIList(m_dwIndex, m_szUserName, szLockInfo);
+            bLockSucceed = ((Template *)pSource)->lockDCIList(m_id, m_szUserName, szLockInfo);
          }
          else
          {
@@ -6628,14 +6633,14 @@ void ClientSession::applyTemplate(CSCPMessage *pRequest)
                 (pDestination->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
             {
                // Attempt to lock destination's DCI list
-               if (((DataCollectionTarget *)pDestination)->lockDCIList(m_dwIndex, m_szUserName, szLockInfo))
+               if (((DataCollectionTarget *)pDestination)->lockDCIList(m_id, m_szUserName, szLockInfo))
                {
                   BOOL bErrors;
 
                   ObjectTransactionStart();
                   bErrors = ((Template *)pSource)->applyToTarget((DataCollectionTarget *)pDestination);
                   ObjectTransactionEnd();
-                  ((Template *)pDestination)->unlockDCIList(m_dwIndex);
+                  ((Template *)pDestination)->unlockDCIList(m_id);
                   msg.SetVariable(VID_RCC, bErrors ? RCC_DCI_COPY_ERRORS : RCC_SUCCESS);
                }
                else  // Destination's DCI list already locked by someone else
@@ -6649,7 +6654,7 @@ void ClientSession::applyTemplate(CSCPMessage *pRequest)
                msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
             }
 
-            ((Template *)pSource)->unlockDCIList(m_dwIndex);
+            ((Template *)pSource)->unlockDCIList(m_id);
          }
          else  // Source node DCI list not locked by this session
          {
@@ -8095,7 +8100,7 @@ static void CopySessionData(ClientSession *pSession, void *pArg)
    ((CSCPMessage *)pArg)->SetVariable(VID_NUM_SESSIONS, dwIndex + 1);
 
    dwId = VID_SESSION_DATA_BASE + dwIndex * 100;
-   ((CSCPMessage *)pArg)->SetVariable(dwId++, pSession->getIndex());
+   ((CSCPMessage *)pArg)->SetVariable(dwId++, (UINT32)pSession->getId());
    ((CSCPMessage *)pArg)->SetVariable(dwId++, (WORD)pSession->getCipher());
    ((CSCPMessage *)pArg)->SetVariable(dwId++, (TCHAR *)pSession->getUserName());
    ((CSCPMessage *)pArg)->SetVariable(dwId++, (TCHAR *)pSession->getClientInfo());
@@ -8172,7 +8177,7 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
    TCHAR szQuery[1024], szBuffer[1024];
    WORD wRecOrder;
 
-   wRecOrder = ((g_nDBSyntax == DB_SYNTAX_MSSQL) || (g_nDBSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
+   wRecOrder = ((g_dbSyntax == DB_SYNTAX_MSSQL) || (g_dbSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
    dwMaxRecords = pRequest->GetVariableLong(VID_MAX_RECORDS);
 
    // Prepare confirmation message
@@ -8182,7 +8187,7 @@ void ClientSession::sendSyslog(CSCPMessage *pRequest)
    MutexLock(m_mutexSendSyslog);
 
    // Retrieve events from database
-   switch(g_nDBSyntax)
+   switch(g_dbSyntax)
    {
       case DB_SYNTAX_MYSQL:
       case DB_SYNTAX_PGSQL:
@@ -8300,7 +8305,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
    DB_ASYNC_RESULT hResult;
    WORD wRecOrder;
 
-   wRecOrder = ((g_nDBSyntax == DB_SYNTAX_MSSQL) || (g_nDBSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
+   wRecOrder = ((g_dbSyntax == DB_SYNTAX_MSSQL) || (g_dbSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
    dwMaxRecords = pRequest->GetVariableLong(VID_MAX_RECORDS);
 
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -8316,7 +8321,7 @@ void ClientSession::SendTrapLog(CSCPMessage *pRequest)
       MutexLock(m_mutexSendTrapLog);
 
       // Retrieve trap log records from database
-      switch(g_nDBSyntax)
+      switch(g_dbSyntax)
       {
          case DB_SYNTAX_MYSQL:
          case DB_SYNTAX_PGSQL:
@@ -9560,7 +9565,7 @@ void ClientSession::importConfiguration(CSCPMessage *pRequest)
          if (config->loadXmlConfigFromMemory(content, (int)strlen(content), NULL, "configuration"))
          {
             // Lock all required components
-            if (LockComponent(CID_EPP, m_dwIndex, m_szUserName, NULL, szLockInfo))
+            if (LockComponent(CID_EPP, m_id, m_szUserName, NULL, szLockInfo))
             {
                m_dwFlags |= CSF_EPP_LOCKED;
 
@@ -11949,7 +11954,7 @@ void ClientSession::executeServerCommand(CSCPMessage *request)
 				TCHAR *cmd = request->GetVariableStr(VID_COMMAND);
 				TCHAR *expCmd = ((Node *)object)->expandText(cmd);
 				free(cmd);
-				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, nodeId, _T("Server command executed: %s"), expCmd);
+				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, nodeId, _T("Server command executed: %s"), expCmd);
 				ThreadCreate(RunCommand, 0, expCmd);
 				msg.SetVariable(VID_RCC, RCC_SUCCESS);
 			}
@@ -11961,7 +11966,7 @@ void ClientSession::executeServerCommand(CSCPMessage *request)
 		else
 		{
 			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, nodeId, _T("Access denied on server command execution"));
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, nodeId, _T("Access denied on server command execution"));
 		}
 	}
 	else
@@ -12010,7 +12015,7 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 					                                   request->GetVariableShort(VID_CREATE_JOB_ON_HOLD) ? true : false);
 					if (AddJob(job))
 					{
-						WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, nodeId,
+						WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, nodeId,
 										  _T("File upload to agent initiated, local='%s' remote='%s'"), CHECK_NULL(localFile), CHECK_NULL(remoteFile));
 						msg.SetVariable(VID_JOB_ID, job->getId());
 						msg.SetVariable(VID_RCC, RCC_SUCCESS);
@@ -12036,7 +12041,7 @@ void ClientSession::uploadFileToAgent(CSCPMessage *request)
 		else
 		{
 			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, nodeId, _T("Access denied on file upload"));
+			WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, nodeId, _T("Access denied on file upload"));
 		}
 	}
 	else
@@ -12333,7 +12338,7 @@ void ClientSession::receiveFile(CSCPMessage *request)
             m_dwFileRqId = request->GetId();
             m_dwUploadCommand = CMD_UPLOAD_FILE;
             msg.SetVariable(VID_RCC, RCC_SUCCESS);
-            WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, 0,
+            WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0,
                _T("Started upload of file \"%s\" to server"), fileName);
             NotifyClientSessions(NX_NOTIFY_FILE_LIST_CHANGED, 0);
          }
@@ -12952,7 +12957,7 @@ void ClientSession::forwardToReportingServer(CSCPMessage *request)
    }
    else
    {
-	   WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_workstation, 0, _T("Reporting server access denied"));
+	   WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_workstation, m_id, 0, _T("Reporting server access denied"));
 	   msg = new CSCPMessage();
 	   msg->SetCode(CMD_REQUEST_COMPLETED);
 	   msg->SetId(request->GetId());
@@ -13077,18 +13082,18 @@ void ClientSession::fileManagerControl(CSCPMessage *request)
                      switch(request->GetCode())
                      {
                         case CMD_GET_FOLDER_CONTENT:
-                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, objectId,
+                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
                               _T("Get content of agents folder \"%s\""), fileName);
                            break;
                         case CMD_FILEMGR_DELETE_FILE:
-                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, objectId,
+                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
                               _T("Delete agents file/folder \"%s\""), fileName);
                            break;
                         case CMD_FILEMGR_RENAME_FILE:
                         {
                            TCHAR newFileName[MAX_PATH];
                            request->GetVariableStr(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
-                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, objectId,
+                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
                               _T("Rename agents file/folder \"%s\" to \"%s\""), fileName, newFileName);
                            break;
                         }
@@ -13096,7 +13101,7 @@ void ClientSession::fileManagerControl(CSCPMessage *request)
                         {
                            TCHAR newFileName[MAX_PATH];
                            request->GetVariableStr(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
-                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, objectId,
+                           WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
                               _T("Move agents file/folder from \"%s\" to \"%s\""), fileName, newFileName);
                            break;
                         }
@@ -13140,18 +13145,18 @@ void ClientSession::fileManagerControl(CSCPMessage *request)
       switch(request->GetCode())
       {
          case CMD_GET_FOLDER_CONTENT:
-            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, objectId,
+            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
                _T("Acess denied to get content of agents folder \"%s\""), fileName);
                break;
          case CMD_FILEMGR_DELETE_FILE:
-            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, objectId,
+            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
                _T("Acess denied to delete agents file/folder \"%s\""), fileName);
                break;
          case CMD_FILEMGR_RENAME_FILE:
          {
             TCHAR newFileName[MAX_PATH];
             request->GetVariableStr(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
-            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, objectId,
+            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
                _T("Acess denied to rename agents file/folder \"%s\" to \"%s\""), fileName, newFileName);
             break;
          }
@@ -13159,7 +13164,7 @@ void ClientSession::fileManagerControl(CSCPMessage *request)
          {
             TCHAR newFileName[MAX_PATH];
             request->GetVariableStr(VID_NEW_FILE_NAME, newFileName, MAX_PATH);
-            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, objectId,
+            WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
                _T("Acess denied to move agents file/folder from \"%s\" to \"%s\""), fileName, newFileName);
             break;
          }
@@ -13207,7 +13212,7 @@ void ClientSession::uploadUserFileToAgent(CSCPMessage *request)
                      responseMessage = response;
 
                      //Add line in audit log
-                     WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, objectId,
+                     WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
                         _T("Started direct upload of file \"%s\" to agent"), fileName);
                      //Set all required for file download
                      m_agentConn.put((QWORD)request->GetId(),(NetObj *)conn);
@@ -13248,7 +13253,7 @@ void ClientSession::uploadUserFileToAgent(CSCPMessage *request)
 	}
 
 	if(rcc == RCC_ACCESS_DENIED)
-      WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, objectId,
+      WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, objectId,
          _T("Access denied for direct upload of file \"%s\" to agent"), fileName);
 
    sendMessage(responseMessage);
@@ -13288,7 +13293,7 @@ void ClientSession::getSwitchForwardingDatabase(CSCPMessage *request)
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, node->Id(), _T("Access denied on reading FDB"));
+         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, node->Id(), _T("Access denied on reading FDB"));
       }
    }
    else  // No object with given ID
@@ -13353,7 +13358,7 @@ void ClientSession::getRoutingTable(CSCPMessage *request)
       else
       {
          msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, node->Id(), _T("Access denied on reading routing table"));
+         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, node->Id(), _T("Access denied on reading routing table"));
       }
    }
    else  // No object with given ID

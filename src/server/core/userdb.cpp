@@ -76,14 +76,14 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 			{
 				// Re-enable temporary disabled user
 				user->enable();
-            WriteAuditLog(AUDIT_SECURITY, TRUE, user->getId(), _T(""), 0, _T("Temporary disabled user account \"%s\" re-enabled by system"), user->getName());
+            WriteAuditLog(AUDIT_SECURITY, TRUE, user->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("Temporary disabled user account \"%s\" re-enabled by system"), user->getName());
 				DbgPrintf(3, _T("Temporary disabled user account \"%s\" re-enabled"), user->getName());
 			}
 
 			if (!user->isDisabled() && (blockInactiveAccounts > 0) && (user->getLastLoginTime() > 0) && (user->getLastLoginTime() + blockInactiveAccounts < now))
 			{
 				user->disable();
-            WriteAuditLog(AUDIT_SECURITY, TRUE, user->getId(), _T(""), 0, _T("User account \"%s\" disabled by system due to inactivity"), user->getName());
+            WriteAuditLog(AUDIT_SECURITY, TRUE, user->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("User account \"%s\" disabled by system due to inactivity"), user->getName());
 				DbgPrintf(3, _T("User account \"%s\" disabled due to inactivity"), user->getName());
 			}
 		}
@@ -1227,7 +1227,7 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId)
 			 !_tcsicmp(_xmppId, ((User *)m_users[i])->getXmppId()))
       {
          DbgPrintf(4, _T("User %s authenticated for XMPP subscription"), m_users[i]->getName());
-         WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), NULL, 0, _T("User authenticated for XMPP subscription"));
+         WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP subscription"));
          success = true;
          break;
       }
@@ -1277,13 +1277,13 @@ bool AuthenticateUserForXMPPCommands(const char *xmppId)
          if (systemRights & SYSTEM_ACCESS_XMPP_COMMANDS)
          {
             DbgPrintf(4, _T("User %s authenticated for XMPP commands"), m_users[i]->getName());
-            WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), NULL, 0, _T("User authenticated for XMPP commands"));
+            WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP commands"));
             success = true;
          }
          else
          {
             DbgPrintf(4, _T("Access to XMPP commands denied for user %s"), m_users[i]->getName());
-            WriteAuditLog(AUDIT_SECURITY, FALSE, m_users[i]->getId(), NULL, 0, _T("Access to XMPP commands denied"));
+            WriteAuditLog(AUDIT_SECURITY, FALSE, m_users[i]->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("Access to XMPP commands denied"));
          }
          break;
       }

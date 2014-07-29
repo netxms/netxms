@@ -212,7 +212,7 @@ bool LogHandle::queryInternal(INT64 *rowCount, const UINT32 userId)
 {
 	QWORD qwTimeStart = GetCurrentTimeMs();
 	String query;
-	switch(g_nDBSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
 			query.addFormattedString(_T("SELECT TOP %u %s FROM %s "), m_rowCountLimit, (const TCHAR *)m_queryColumns, m_log->table);
@@ -259,7 +259,7 @@ bool LogHandle::queryInternal(INT64 *rowCount, const UINT32 userId)
 	query += m_filter->buildOrderClause();
 
 	// Limit record count
-	switch(g_nDBSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MYSQL:
 		case DB_SYNTAX_PGSQL:

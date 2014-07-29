@@ -96,7 +96,7 @@ extern bool g_isGuiMode;
 extern bool g_checkData;
 extern bool g_dataOnlyMigration;
 extern bool g_skipDataMigration;
-extern int g_iSyntax;
+extern int g_dbSyntax;
 extern const TCHAR *g_pszTableSuffix;
 extern const TCHAR *g_pszSqlType[6][3];
 

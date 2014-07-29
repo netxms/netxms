@@ -1172,6 +1172,7 @@ CREATE TABLE audit_log
 	success integer not null,
 	user_id integer not null,	// 0x7FFFFFFF for system
 	workstation varchar(63) not null,
+   session_id integer not null,
 	object_id integer not null,
 	message SQL_TEXT null,
 	PRIMARY KEY(record_id)

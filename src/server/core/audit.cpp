@@ -25,7 +25,7 @@
 /**
  * Static data
  */
-static UINT32 m_dwRecordId = 1;
+static VolatileCounter m_recordId = 1;
 static UINT32 m_auditServerAddr = 0;
 static WORD m_auditServerPort;
 static int m_auditFacility;
@@ -87,7 +87,7 @@ void InitAuditLog()
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         m_dwRecordId = DBGetFieldULong(hResult, 0, 0) + 1;
+         m_recordId = DBGetFieldULong(hResult, 0, 0) + 1;
       DBFreeResult(hResult);
    }
 
@@ -138,7 +138,7 @@ static void SendNewRecord(ClientSession *pSession, void *pArg)
  * Write audit record
  */
 void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32 userId,
-                                     const TCHAR *workstation, UINT32 objectId,
+                                     const TCHAR *workstation, int sessionId, UINT32 objectId,
                                      const TCHAR *format, ...)
 {
 	String text, query;
@@ -149,9 +149,9 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32
 	text.addFormattedStringV(format, args);
 	va_end(args);
 
-	query.addFormattedString(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,object_id,message) VALUES(%d,") TIME_T_FMT _T(",%s,%d,%d,%s,%d,%s)"),
-		       m_dwRecordId++, time(NULL), (const TCHAR *)DBPrepareString(g_hCoreDB, subsys), isSuccess ? 1 : 0, 
-		       userId, (const TCHAR *)DBPrepareString(g_hCoreDB, workstation), objectId, (const TCHAR *)DBPrepareString(g_hCoreDB, text));
+	query.addFormattedString(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message) VALUES(%d,") TIME_T_FMT _T(",%s,%d,%d,%s,%d,%d,%s)"),
+      InterlockedIncrement(&m_recordId), time(NULL), (const TCHAR *)DBPrepareString(g_hCoreDB, subsys), isSuccess ? 1 : 0, 
+		userId, (const TCHAR *)DBPrepareString(g_hCoreDB, workstation), sessionId, objectId, (const TCHAR *)DBPrepareString(g_hCoreDB, text));
 	QueueSQLRequest(query);
 
 	msg.SetCode(CMD_AUDIT_RECORD);
@@ -159,6 +159,7 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32
 	msg.SetVariable(VID_SUCCESS_AUDIT, (WORD)isSuccess);
 	msg.SetVariable(VID_USER_ID, userId);
 	msg.SetVariable(VID_WORKSTATION, workstation);
+   msg.SetVariable(VID_SESSION_ID, sessionId);
 	msg.SetVariable(VID_OBJECT_ID, objectId);
 	msg.SetVariable(VID_MESSAGE, (const TCHAR *)text);
 	EnumerateClientSessions(SendNewRecord, &msg);

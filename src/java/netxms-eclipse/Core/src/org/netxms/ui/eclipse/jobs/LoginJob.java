@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.jobs;
 import java.lang.reflect.InvocationTargetException;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.util.Locale;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -102,6 +103,7 @@ public class LoginJob implements IRunnableWithProgress
          }
 
          NXCSession session = createSession(hostName, port);
+         session.setClientLanguage(Locale.getDefault().getLanguage());
          
          session.setAuthType(authMethod);
          switch(authMethod)

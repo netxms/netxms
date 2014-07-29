@@ -45,11 +45,11 @@
 #ifndef _NETXMS_DB_SCHEMA_
 
 BOOL InitLocks(UINT32 *pdwIpAddr, TCHAR *pszInfo);
-BOOL LockComponent(UINT32 dwId, UINT32 dwLockBy, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo);
+BOOL LockComponent(UINT32 dwId, int sessionId, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo);
 void UnlockComponent(UINT32 dwId);
-void RemoveAllSessionLocks(UINT32 dwSessionId);
-BOOL LockLPP(UINT32 dwPolicyId, UINT32 dwSessionId);
-void UnlockLPP(UINT32 dwPolicyId, UINT32 dwSessionId);
+void RemoveAllSessionLocks(int sessionId);
+BOOL LockLPP(UINT32 dwPolicyId, int sessionId);
+void UnlockLPP(UINT32 dwPolicyId, int sessionId);
 void NXCORE_EXPORTABLE UnlockDB();
 
 #endif

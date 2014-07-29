@@ -241,6 +241,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private boolean ignoreProtocolVersion = false;
    private Certificate connCertificate = null;
    private Signature connSignature = null;
+   private String clientLanguage = "en";
 
    // Information about logged in user
    private int sessionId;
@@ -1648,10 +1649,12 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
          request.setVariable(NXCPCodes.VID_LIBNXCL_VERSION, NXCommon.VERSION);
          request.setVariable(NXCPCodes.VID_CLIENT_INFO, connClientInfo);
-         request
-            .setVariable(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
+         request.setVariable(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
          request.setVariableInt16(NXCPCodes.VID_CLIENT_TYPE, clientType);
-         if (clientAddress != null) request.setVariable(NXCPCodes.VID_CLIENT_ADDRESS, clientAddress);
+         if (clientAddress != null) 
+            request.setVariable(NXCPCodes.VID_CLIENT_ADDRESS, clientAddress);
+         if (clientLanguage != null)
+            request.setVariable(NXCPCodes.VID_LANGUAGE, clientLanguage);
          sendMessage(request);
          response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
          int rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
@@ -7596,6 +7599,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       return signed;
    }
    
+   /**
+    * @return the clientLanguage
+    */
+   public String getClientLanguage()
+   {
+      return clientLanguage;
+   }
+
+   /**
+    * @param clientLanguage the clientLanguage to set
+    */
+   public void setClientLanguage(String clientLanguage)
+   {
+      this.clientLanguage = clientLanguage;
+   }
+
    /**
     * Get address map for subnet. Returned array contains one entry for each IP address
     * in a subnet. Element value could be eithet ID of the node with that IP address,

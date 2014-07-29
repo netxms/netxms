@@ -83,7 +83,7 @@ static UINT32 GetCorrelatedEvents(QWORD eventId, CSCPMessage *msg, UINT32 baseId
 {
 	UINT32 varId = baseId;
 	DB_STATEMENT hStmt = DBPrepare(hdb,
-		(g_nDBSyntax == DB_SYNTAX_ORACLE) ?
+		(g_dbSyntax == DB_SYNTAX_ORACLE) ?
 			_T("SELECT e.event_id,e.event_code,c.event_name,e.event_severity,e.event_source,e.event_timestamp,e.event_message ")
 			_T("FROM event_log e,event_cfg c WHERE zero_to_null(e.root_event_id)=? AND c.event_code=e.event_code")
 		:
@@ -117,7 +117,7 @@ static void FillAlarmEventsMessage(CSCPMessage *msg, UINT32 alarmId)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	const TCHAR *query;
-	switch(g_nDBSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_ORACLE:
 			query = _T("SELECT * FROM (SELECT event_id,event_code,event_name,severity,source_object_id,event_timestamp,message FROM alarm_events WHERE alarm_id=? ORDER BY event_timestamp DESC) WHERE ROWNUM<=200");
@@ -413,7 +413,7 @@ UINT32 AlarmManager::doAck(NXC_ALARM *alarm, ClientSession *session, bool sticky
    if ((alarm->nState & ALARM_STATE_MASK) != ALARM_STATE_OUTSTANDING)
       return RCC_ALARM_NOT_OUTSTANDING;
 
-   WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), alarm->dwSourceObject,
+   WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), alarm->dwSourceObject,
       _T("Acknowledged alarm %d (%s) on object %s"), alarm->dwAlarmId, alarm->szMessage,
       GetObjectName(alarm->dwSourceObject, _T("")));
 
@@ -491,7 +491,7 @@ UINT32 AlarmManager::resolveById(UINT32 dwAlarmId, ClientSession *session, bool 
             dwObject = m_pAlarmList[i].dwSourceObject;
             if (session != NULL)
             {
-               WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), dwObject,
+               WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), dwObject,
                   _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
                   dwAlarmId, m_pAlarmList[i].szMessage, GetObjectName(dwObject, _T("")));
             }
@@ -607,7 +607,7 @@ UINT32 AlarmManager::resolveByHDRef(const TCHAR *hdref, ClientSession *session, 
          objectId = m_pAlarmList[i].dwSourceObject;
          if (session != NULL)
          {
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), objectId,
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), objectId,
                _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
                m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage, GetObjectName(objectId, _T("")));
          }
@@ -717,9 +717,9 @@ UINT32 AlarmManager::unlinkIssueById(UINT32 dwAlarmId, ClientSession *session)
       {
          if (session != NULL)
          {
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), m_pAlarmList[i].dwSourceObject,
-               _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"), m_pAlarmList[i].szHelpDeskRef,
-               m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage, 
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), 
+               m_pAlarmList[i].dwSourceObject, _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"), 
+               m_pAlarmList[i].szHelpDeskRef, m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage, 
                GetObjectName(m_pAlarmList[i].dwSourceObject, _T("")));
          }
          m_pAlarmList[i].nHelpDeskState = ALARM_HELPDESK_IGNORED;
@@ -746,9 +746,9 @@ UINT32 AlarmManager::unlinkIssueByHDRef(const TCHAR *hdref, ClientSession *sessi
       {
          if (session != NULL)
          {
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), m_pAlarmList[i].dwSourceObject,
-               _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"), m_pAlarmList[i].szHelpDeskRef,
-               m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage, 
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(),
+               m_pAlarmList[i].dwSourceObject, _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"),
+               m_pAlarmList[i].szHelpDeskRef, m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].szMessage, 
                GetObjectName(m_pAlarmList[i].dwSourceObject, _T("")));
          }
          m_pAlarmList[i].nHelpDeskState = ALARM_HELPDESK_IGNORED;

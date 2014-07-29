@@ -37,7 +37,7 @@ bool g_isGuiMode = false;
 bool g_checkData = false;
 bool g_dataOnlyMigration = false;
 bool g_skipDataMigration = false;
-int g_iSyntax;
+int g_dbSyntax;
 const TCHAR *g_pszTableSuffix = _T("");
 const TCHAR *g_pszSqlType[6][3] = 
 {
@@ -213,9 +213,9 @@ BOOL SQLQuery(const TCHAR *pszQuery)
 
 	String query(pszQuery);
 
-   query.replace(_T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
-   query.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
-   query.replace(_T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
+   query.replace(_T("$SQL:TEXT"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT]);
+   query.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT4K]);
+   query.replace(_T("$SQL:INT64"), g_pszSqlType[g_dbSyntax][SQL_TYPE_INT64]);
 
    if (g_bTrace)
       ShowQuery(query);
@@ -237,9 +237,9 @@ BOOL SQLBatch(const TCHAR *pszBatch)
    BOOL bRet = TRUE;
 	TCHAR table[128], column[128];
 
-   batch.replace(_T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
-   batch.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
-   batch.replace(_T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
+   batch.replace(_T("$SQL:TEXT"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT]);
+   batch.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT4K]);
+   batch.replace(_T("$SQL:INT64"), g_pszSqlType[g_dbSyntax][SQL_TYPE_INT64]);
 
    pszQuery = pszBuffer = batch.getBuffer();
    while(1)
@@ -293,7 +293,7 @@ BOOL SQLDropColumn(const TCHAR *table, const TCHAR *column)
 	DB_RESULT hResult;
 	BOOL success = FALSE;
 
-	if (g_iSyntax != DB_SYNTAX_SQLITE)
+	if (g_dbSyntax != DB_SYNTAX_SQLITE)
 	{
 		_sntprintf(query, 1024, _T("ALTER TABLE %s DROP COLUMN %s"), table, column);
 		success = SQLQuery(query);
@@ -751,8 +751,8 @@ stop_search:
    else
    {
       // Get database syntax
-		g_iSyntax = DBGetSyntax(g_hCoreDB);
-		if (g_iSyntax == DB_SYNTAX_UNKNOWN)
+		g_dbSyntax = DBGetSyntax(g_hCoreDB);
+		if (g_dbSyntax == DB_SYNTAX_UNKNOWN)
 		{
          _tprintf(_T("Unable to determine database syntax\n"));
          DBDisconnect(g_hCoreDB);

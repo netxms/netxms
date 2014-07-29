@@ -138,7 +138,7 @@ TCHAR g_szDataDir[MAX_PATH] = _T("");
 TCHAR g_szLibDir[MAX_PATH] = DEFAULT_LIBDIR;
 TCHAR g_szJavaLibDir[MAX_PATH] = DEFAULT_JAVA_LIBDIR;
 TCHAR NXCORE_EXPORTABLE g_szJavaPath[MAX_DB_NAME] = _T("java");
-int g_nDBSyntax = DB_SYNTAX_UNKNOWN;
+int g_dbSyntax = DB_SYNTAX_UNKNOWN;
 UINT32 NXCORE_EXPORTABLE g_processAffinityMask = DEFAULT_AFFINITY_MASK;
 QWORD g_qwServerId;
 RSA *g_pServerKey = NULL;
@@ -317,7 +317,7 @@ static void LoadGlobalConfig()
 		// SQLite has troubles with multiple connections to the same database
 		// from different threads, and it does not speed up database access
 		// anyway, so we will not enable multiple connections for SQLite
-		if (g_nDBSyntax != DB_SYNTAX_SQLITE)
+		if (g_dbSyntax != DB_SYNTAX_SQLITE)
 		{
 			g_flags |= AF_ENABLE_MULTIPLE_DB_CONN;
 		}
@@ -656,7 +656,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
       DBSetLongRunningThreshold(lrt);
 
 	// Read database syntax
-	g_nDBSyntax = DBGetSyntax(g_hCoreDB);
+	g_dbSyntax = DBGetSyntax(g_hCoreDB);
 
 	// Read server ID
 	ConfigReadStr(_T("ServerID"), szInfo, 256, _T(""));

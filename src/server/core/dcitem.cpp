@@ -1015,7 +1015,7 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
          TCHAR szBuffer[MAX_DB_STRING];
          BOOL bHasData;
 
-         switch(g_nDBSyntax)
+         switch(g_dbSyntax)
          {
             case DB_SYNTAX_MSSQL:
                _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT TOP %d idata_value,idata_timestamp FROM idata_%d ")

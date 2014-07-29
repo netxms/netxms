@@ -44,7 +44,7 @@ bool TemplateGroup::showThresholdSummary()
 Template::Template() : NetObj()
 {
 	m_dcObjects = new ObjectArray<DCObject>(8, 16, true);
-   m_dwDCILockStatus = INVALID_INDEX;
+   m_dciLockStatus = -1;
 	m_flags = 0;
    m_dwVersion = 0x00010000;  // Initial version is 1.0
 	m_applyFilter = NULL;
@@ -60,7 +60,7 @@ Template::Template(const TCHAR *pszName) : NetObj()
 {
    nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME);
 	m_dcObjects = new ObjectArray<DCObject>(8, 16, true);
-   m_dwDCILockStatus = INVALID_INDEX;
+   m_dciLockStatus = -1;
 	m_flags = 0;
    m_dwVersion = 0x00010000;  // Initial version is 1.0
 	m_applyFilter = NULL;
@@ -76,7 +76,7 @@ Template::Template(const TCHAR *pszName) : NetObj()
 Template::Template(ConfigEntry *config) : NetObj()
 {
    m_isHidden = true;
-   m_dwDCILockStatus = INVALID_INDEX;
+   m_dciLockStatus = -1;
    m_iStatus = STATUS_NORMAL;
    m_dciAccessLock = RWLockCreate();
 
@@ -555,14 +555,14 @@ bool Template::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus
 /**
  * Lock data collection items list
  */
-BOOL Template::lockDCIList(UINT32 dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner)
+BOOL Template::lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner)
 {
    BOOL bSuccess;
 
    LockData();
-   if (m_dwDCILockStatus == INVALID_INDEX)
+   if (m_dciLockStatus == -1)
    {
-      m_dwDCILockStatus = dwSessionId;
+      m_dciLockStatus = sessionId;
       m_bDCIListModified = FALSE;
       nx_strncpy(m_szCurrDCIOwner, pszNewOwner, MAX_SESSION_NAME);
       bSuccess = TRUE;
@@ -580,14 +580,14 @@ BOOL Template::lockDCIList(UINT32 dwSessionId, const TCHAR *pszNewOwner, TCHAR *
 /**
  * Unlock data collection items list
  */
-BOOL Template::unlockDCIList(UINT32 dwSessionId)
+BOOL Template::unlockDCIList(int sessionId)
 {
    BOOL bSuccess = FALSE;
 
    LockData();
-   if (m_dwDCILockStatus == dwSessionId)
+   if (m_dciLockStatus == sessionId)
    {
-      m_dwDCILockStatus = INVALID_INDEX;
+      m_dciLockStatus = -1;
       if (m_bDCIListModified && (Type() == OBJECT_TEMPLATE))
       {
          m_dwVersion++;

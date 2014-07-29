@@ -49,7 +49,7 @@ public class NXCException extends NetXMSClientException
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.api.client.NetXMSClientException#getErrorMessage(int)
+	 * @see org.netxms.api.client.NetXMSClientException#getErrorMessage(int, java.lang.String)
 	 */
 	@Override
 	protected String getErrorMessage(int code, String lang)

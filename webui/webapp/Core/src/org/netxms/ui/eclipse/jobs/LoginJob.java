@@ -55,6 +55,7 @@ public class LoginJob implements IRunnableWithProgress
    private Certificate certificate;
    private Signature signature;
    private String clientAddress;
+   private String language;
 
    /**
     * @param display
@@ -71,6 +72,7 @@ public class LoginJob implements IRunnableWithProgress
       this.ignoreProtocolVersion = ignoreProtocolVersion;
       authMethod = NXCSession.AUTH_TYPE_PASSWORD;
       clientAddress = RWT.getRequest().getRemoteAddr();
+      language = RWT.getLocale().getLanguage();
    }
 
    /*
@@ -105,6 +107,7 @@ public class LoginJob implements IRunnableWithProgress
          }
 
          NXCSession session = createSession(hostName, port);
+         session.setClientLanguage(language);
          
          session.setAuthType(authMethod);
          switch(authMethod)

@@ -23,11 +23,6 @@
 #include "nxcore.h"
 
 /**
- * Constants
- */
-#define MAX_DEVICE_SESSIONS   256
-
-/**
  * Static data
  */
 static MobileDeviceSession *m_pSessionList[MAX_DEVICE_SESSIONS];
@@ -45,7 +40,7 @@ static BOOL RegisterMobileDeviceSession(MobileDeviceSession *pSession)
       if (m_pSessionList[i] == NULL)
       {
          m_pSessionList[i] = pSession;
-         pSession->setIndex(i);
+         pSession->setId(i + MAX_CLIENT_SESSIONS);
          RWLockUnlock(m_rwlockSessionListAccess);
          return TRUE;
       }
@@ -58,10 +53,10 @@ static BOOL RegisterMobileDeviceSession(MobileDeviceSession *pSession)
 /**
  * Unregister session
  */
-void UnregisterMobileDeviceSession(UINT32 dwIndex)
+void UnregisterMobileDeviceSession(int id)
 {
    RWLockWriteLock(m_rwlockSessionListAccess, INFINITE);
-   m_pSessionList[dwIndex] = NULL;
+   m_pSessionList[id - MAX_CLIENT_SESSIONS] = NULL;
    RWLockUnlock(m_rwlockSessionListAccess);
 }
 

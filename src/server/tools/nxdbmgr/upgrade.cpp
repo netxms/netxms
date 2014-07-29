@@ -35,10 +35,10 @@ static BOOL CreateTable(const TCHAR *pszQuery)
    BOOL bResult;
 	String query(pszQuery);
 
-   query.replace(_T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
-   query.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
-   query.replace(_T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
-   if (g_iSyntax == DB_SYNTAX_MYSQL)
+   query.replace(_T("$SQL:TEXT"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT]);
+   query.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT4K]);
+   query.replace(_T("$SQL:INT64"), g_pszSqlType[g_dbSyntax][SQL_TYPE_INT64]);
+   if (g_dbSyntax == DB_SYNTAX_MYSQL)
       query += g_pszTableSuffix;
    bResult = SQLQuery(query);
    return bResult;
@@ -87,7 +87,7 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 {
 	TCHAR query[4096];
 
-	if (g_iSyntax == DB_SYNTAX_SQLITE)
+	if (g_dbSyntax == DB_SYNTAX_SQLITE)
 		return TRUE;	// SQLite does not support adding constraints
 
 	_sntprintf(query, 4096, _T("ALTER TABLE %s ADD PRIMARY KEY (%s)"), table, key);
@@ -103,7 +103,7 @@ static BOOL DropPrimaryKey(const TCHAR *table)
 	DB_RESULT hResult;
 	BOOL success;
 
-	switch(g_iSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_ORACLE:
 		case DB_SYNTAX_MYSQL:
@@ -150,7 +150,7 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 
 	query = (TCHAR *)malloc(queryLen * sizeof(TCHAR));
 
-	switch(g_iSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
 			_sntprintf(query, queryLen, _T("UPDATE %s SET %s='' WHERE CAST(%s AS nvarchar(4000))=N'#00'"), table, column, column);
@@ -247,7 +247,7 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column)
 {
 	TCHAR query[1024] = _T("");
 
-	switch(g_iSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_ORACLE:
 			_sntprintf(query, 1024, _T("DECLARE already_null EXCEPTION; ")
@@ -272,7 +272,7 @@ static BOOL ResizeColumn(const TCHAR *table, const TCHAR *column, int newSize)
 {
 	TCHAR query[1024];
 
-	switch(g_iSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_DB2:
 			_sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET DATA TYPE varchar(%d)"), table, column, newSize);
@@ -388,6 +388,23 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Upgrade from V330 to V331
+ */
+static BOOL H_UpgradeFromV330(int currVersion, int newVersion)
+{
+   if (g_dbSyntax == DB_SYNTAX_ORACLE)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE audit_log ADD session_id integer DEFAULT 0 NOT NULL")));
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE audit_log ADD session_id integer NOT NULL DEFAULT 0")));
+   }
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='331' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V329 to V330
  */
 static BOOL H_UpgradeFromV329(int currVersion, int newVersion)
@@ -437,7 +454,6 @@ static BOOL H_UpgradeFromV326(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV325(int currVersion, int newVersion)
 {
-   //Remove unused columns
    static TCHAR batch[] =
       _T("ALTER TABLE network_map_links DROP COLUMN color\n")
       _T("ALTER TABLE network_map_links DROP COLUMN status_object\n")
@@ -542,7 +558,7 @@ static BOOL H_UpgradeFromV323(int currVersion, int newVersion)
       TCHAR query[1024];
       _sntprintf(query, 1024,
          _T("UPDATE metadata SET var_value='CREATE TABLE tdata_records_%%d (record_id %s not null,row_id %s not null,instance varchar(255) null,PRIMARY KEY(row_id),FOREIGN KEY (record_id) REFERENCES tdata_%%d(record_id) ON DELETE CASCADE)' WHERE var_name='TDataTableCreationCommand_1'"),
-         g_pszSqlType[g_iSyntax][SQL_TYPE_INT64], g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
+         g_pszSqlType[g_dbSyntax][SQL_TYPE_INT64], g_pszSqlType[g_dbSyntax][SQL_TYPE_INT64]);
       CHK_EXEC(SQLQuery(query));
 
       RecreateTData(_T("nodes"), true, true);
@@ -570,7 +586,7 @@ static BOOL H_UpgradeFromV322(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV321(int currVersion, int newVersion)
 {
-   switch(g_iSyntax)
+   switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_DB2:
          CHK_EXEC(SQLBatch(
@@ -1750,7 +1766,7 @@ static BOOL H_UpgradeFromV266(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV265(int currVersion, int newVersion)
 {
 	// create index on root event ID in event log
-	switch(g_iSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
 		case DB_SYNTAX_PGSQL:
@@ -2177,7 +2193,7 @@ static BOOL CreateTData(DWORD nodeId)
 	_sntprintf(query, 256, TDATA_CREATE_QUERY, (int)nodeId);
 	CHK_EXEC(SQLQuery(query));
 
-	switch(g_iSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
 			_sntprintf(query, 256, TDATA_INDEX_MSSQL, (int)nodeId, (int)nodeId);
@@ -2198,7 +2214,7 @@ static BOOL H_UpgradeFromV248(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataTableCreationCommand','") TDATA_CREATE_QUERY _T("')")));
 
-	switch(g_iSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
 			CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataIndexCreationCommand_0','") TDATA_INDEX_MSSQL _T("')")));
@@ -3291,7 +3307,7 @@ static BOOL H_UpgradeFromV215(int currVersion, int newVersion)
 	CHK_EXEC(SetColumnNullable(_T("ap_common"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("ap_common"), _T("id"), _T("description")));
 
-	if (g_iSyntax != DB_SYNTAX_SQLITE)
+	if (g_dbSyntax != DB_SYNTAX_SQLITE)
 		CHK_EXEC(SQLQuery(_T("ALTER TABLE ap_config_files DROP COLUMN file_name")));
 
 	CHK_EXEC(SetColumnNullable(_T("ap_config_files"), _T("file_content")));
@@ -3496,7 +3512,7 @@ static BOOL H_UpgradeFromV209(int currVersion, int newVersion)
 			return FALSE;
 
 	const TCHAR *query;
-	switch(g_iSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_PGSQL:
 			query = _T("INSERT INTO metadata (var_name,var_value)	VALUES ('IDataIndexCreationCommand_0','CREATE INDEX idx_idata_%d_timestamp_id ON idata_%d(idata_timestamp,item_id)')");
@@ -3647,7 +3663,7 @@ static BOOL H_UpgradeFromV206(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV205(int currVersion, int newVersion)
 {
-	if (g_iSyntax == DB_SYNTAX_ORACLE)
+	if (g_dbSyntax == DB_SYNTAX_ORACLE)
 	{
 		static TCHAR oraBatch[] =
 			_T("ALTER TABLE audit_log MODIFY message null\n")
@@ -3775,7 +3791,7 @@ static BOOL H_UpgradeFromV203(int currVersion, int newVersion)
 		if (!g_bIgnoreErrors)
 			return FALSE;
 
-	if (g_iSyntax == DB_SYNTAX_ORACLE)
+	if (g_dbSyntax == DB_SYNTAX_ORACLE)
 	{
 		if (!SQLQuery(_T("ALTER TABLE object_properties MODIFY comments null\n")))
 			if (!g_bIgnoreErrors)
@@ -3836,7 +3852,7 @@ static BOOL H_UpgradeFromV202(int currVersion, int newVersion)
 
 static BOOL H_UpgradeFromV201(int currVersion, int newVersion)
 {
-	if (g_iSyntax == DB_SYNTAX_ORACLE)
+	if (g_dbSyntax == DB_SYNTAX_ORACLE)
 	{
 		static TCHAR oraBatch[] =
 			_T("ALTER TABLE alarms MODIFY message null\n")
@@ -4519,7 +4535,7 @@ static BOOL H_UpgradeFromV78(int currVersion, int newVersion)
 		if (!g_bIgnoreErrors)
 			return FALSE;
 
-	if (g_iSyntax == DB_SYNTAX_MYSQL)
+	if (g_dbSyntax == DB_SYNTAX_MYSQL)
 	{
 		if (!SQLBatch(m_szMySQLBatch))
 			if (!g_bIgnoreErrors)
@@ -5018,7 +5034,7 @@ static BOOL H_UpgradeFromV64(int currVersion, int newVersion)
 		_T("ALTER TABLE nodes ALTER COLUMN community SET NOT NULL\n")
       _T("<END>");
 
-	switch(g_iSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MYSQL:
 		case DB_SYNTAX_ORACLE:
@@ -5047,7 +5063,7 @@ static BOOL H_UpgradeFromV64(int currVersion, int newVersion)
 			_tprintf(_T("WARNING: Due to limitations of SQLite requested operation cannot be completed\nYou system will still be limited to use SNMP community strings not longer than 32 characters.\n"));
 			break;
 		default:
-			_tprintf(_T("INTERNAL ERROR: Unknown database syntax %d\n"), g_iSyntax);
+			_tprintf(_T("INTERNAL ERROR: Unknown database syntax %d\n"), g_dbSyntax);
 			break;
 	}
 
@@ -5615,7 +5631,7 @@ static BOOL H_UpgradeFromV52(int currVersion, int newVersion)
       DBQuery(g_hCoreDB, szQuery);
 
       // Create new index
-      _sntprintf(szQuery, 1024, pszNewIdx[g_iSyntax], dwId, dwId);
+      _sntprintf(szQuery, 1024, pszNewIdx[g_dbSyntax], dwId, dwId);
       SQLQuery(szQuery);
    }
 
@@ -5623,7 +5639,7 @@ static BOOL H_UpgradeFromV52(int currVersion, int newVersion)
 
    // Update index creation command
    DBQuery(g_hCoreDB, _T("DELETE FROM config WHERE var_name='IDataIndexCreationCommand_1'"));
-   if (!CreateConfigParam(_T("IDataIndexCreationCommand_1"), pszNewIdx[g_iSyntax], 0, 1))
+   if (!CreateConfigParam(_T("IDataIndexCreationCommand_1"), pszNewIdx[g_dbSyntax], 0, 1))
       if (!g_bIgnoreErrors)
          return FALSE;
 
@@ -7594,7 +7610,7 @@ static BOOL H_UpgradeFromV17(int currVersion, int newVersion)
       _T("CREATE TABLE event_cfg (event_code integer not null,")
 	      _T("event_name varchar(63) not null,severity integer,flags integer,")
 	      _T("message varchar(255),description %s,PRIMARY KEY(event_code))"),
-              g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
+              g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT]);
    if (!SQLQuery(szQuery))
       if (!g_bIgnoreErrors)
          return FALSE;
@@ -7608,7 +7624,7 @@ static BOOL H_UpgradeFromV17(int currVersion, int newVersion)
 	      _T("module_name varchar(63),exec_name varchar(255),")
 	      _T("module_flags integer not null default 0,description %s,")
 	      _T("license_key varchar(255),PRIMARY KEY(module_id))"),
-              g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
+              g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT]);
    if (!SQLQuery(szQuery))
       if (!g_bIgnoreErrors)
          return FALSE;
@@ -8040,6 +8056,7 @@ static struct
    { 327, 328, H_UpgradeFromV327 },
    { 328, 329, H_UpgradeFromV328 },
    { 329, 330, H_UpgradeFromV329 },
+   { 330, 331, H_UpgradeFromV330 },
    { 0, 0, NULL }
 };
 

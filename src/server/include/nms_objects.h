@@ -521,7 +521,7 @@ class NXCORE_EXPORTABLE Template : public NetObj
 {
 protected:
 	ObjectArray<DCObject> *m_dcObjects;
-   UINT32 m_dwDCILockStatus;
+   int m_dciLockStatus;
    UINT32 m_dwVersion;
 	UINT32 m_flags;
    BOOL m_bDCIListModified;
@@ -571,11 +571,11 @@ public:
    DCObject *getDCObjectByName(const TCHAR *name);
    DCObject *getDCObjectByDescription(const TCHAR *description);
    NXSL_Value *getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description);
-   BOOL lockDCIList(UINT32 dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
-   BOOL unlockDCIList(UINT32 dwSessionId);
+   BOOL lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
+   BOOL unlockDCIList(int sessionId);
    void setDCIModificationFlag() { m_bDCIListModified = TRUE; }
    void sendItemsToClient(ClientSession *pSession, UINT32 dwRqId);
-   BOOL isLockedBySession(UINT32 dwSessionId) { return m_dwDCILockStatus == dwSessionId; }
+   BOOL isLockedBySession(int sessionId) { return m_dciLockStatus == sessionId; }
    UINT32 *getDCIEventsList(UINT32 *pdwCount);
 
    BOOL applyToTarget(DataCollectionTarget *pNode);

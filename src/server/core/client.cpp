@@ -23,11 +23,6 @@
 #include "nxcore.h"
 
 /**
- * Constants
- */
-#define MAX_CLIENT_SESSIONS   128
-
-/**
  * Static data
  */
 static ClientSession *m_pSessionList[MAX_CLIENT_SESSIONS];
@@ -45,7 +40,7 @@ static BOOL RegisterClientSession(ClientSession *pSession)
       if (m_pSessionList[i] == NULL)
       {
          m_pSessionList[i] = pSession;
-         pSession->setIndex(i);
+         pSession->setId(i);
          RWLockUnlock(m_rwlockSessionListAccess);
          return TRUE;
       }
@@ -58,10 +53,10 @@ static BOOL RegisterClientSession(ClientSession *pSession)
 /**
  * Unregister session
  */
-void UnregisterClientSession(UINT32 dwIndex)
+void UnregisterClientSession(int id)
 {
    RWLockWriteLock(m_rwlockSessionListAccess, INFINITE);
-   m_pSessionList[dwIndex] = NULL;
+   m_pSessionList[id] = NULL;
    RWLockUnlock(m_rwlockSessionListAccess);
 }
 
