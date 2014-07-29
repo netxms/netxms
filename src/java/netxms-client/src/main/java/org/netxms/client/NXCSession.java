@@ -1413,7 +1413,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       {
          if ((rcc == RCC.COMPONENT_LOCKED) && (msg.findVariable(NXCPCodes.VID_LOCKED_BY) != null))
          {
-            throw new NXCException(rcc, "locked by " + msg.getVariableAsString(NXCPCodes.VID_LOCKED_BY));
+            throw new NXCException(rcc, msg.getVariableAsString(NXCPCodes.VID_LOCKED_BY));
          }
          else if (msg.findVariable(NXCPCodes.VID_ERROR_TEXT) != null)
          {
