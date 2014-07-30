@@ -56,7 +56,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin, NULL },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName, NULL },
    { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword, NULL },
-   { _T("DBSchema"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbSchema, NULL },
+   { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbSchema, NULL },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer, NULL },
    { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel, &g_debugLevel },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, NULL },

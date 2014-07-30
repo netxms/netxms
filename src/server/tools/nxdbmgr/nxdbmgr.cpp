@@ -70,7 +70,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
    { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbPassword },
-   { _T("DBSchema"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbSchema },
+   { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
