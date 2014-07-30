@@ -275,8 +275,11 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
       dwTimeOut -= min(sleepTime, dwTimeOut);
    } while(dwTimeOut > 0);
 
+#ifdef _WIN32
    if (slot != -1)
       m_waiters[slot] = 0;    // release waiter slot
+#endif
+
    unlock();
    return NULL;
 }
