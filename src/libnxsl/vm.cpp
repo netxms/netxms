@@ -1163,10 +1163,12 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
    if ((pVal1 != NULL) && (pVal2 != NULL))
    {
       if ((!pVal1->isNull() && !pVal2->isNull()) ||
-          (nOpCode == OPCODE_EQ) || (nOpCode == OPCODE_NE) || (nOpCode == OPCODE_CASE) || (nOpCode == OPCODE_CASE_CONST))
+          (nOpCode == OPCODE_EQ) || (nOpCode == OPCODE_NE) || (nOpCode == OPCODE_CASE) || (nOpCode == OPCODE_CASE_CONST) || (nOpCode == OPCODE_CONCAT))
       {
          if (pVal1->isNumeric() && pVal2->isNumeric() &&
-             (nOpCode != OPCODE_CONCAT) && (nOpCode != OPCODE_LIKE))
+             (nOpCode != OPCODE_CONCAT) && 
+             (nOpCode != OPCODE_LIKE) && (nOpCode != OPCODE_ILIKE) &&
+             (nOpCode != OPCODE_MATCH) && (nOpCode != OPCODE_IMATCH))
          {
             nType = SelectResultType(pVal1->getDataType(), pVal2->getDataType(), nOpCode);
             if (nType != NXSL_DT_NULL)
@@ -1301,21 +1303,18 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                   pRes = new NXSL_Value((nOpCode == OPCODE_NE) ? !nResult : nResult);
                   break;
                case OPCODE_CONCAT:
-                  if (pVal1->isNull() || pVal2->isNull())
+                  if (pVal1->isString())
                   {
-                     error(NXSL_ERR_NULL_VALUE);
-                  }
-                  else if (pVal1->isObject() || pVal2->isObject())
-                  {
-                     error(NXSL_ERR_INVALID_OBJECT_OPERATION);
+                     pRes = pVal1;
+                     pVal1 = NULL;
                   }
                   else
                   {
-                     pRes = pVal1;
-                     pszText2 = pVal2->getValueAsString(&dwLen2);
-                     pRes->concatenate(pszText2, dwLen2);
-                     pVal1 = NULL;
+                     pszText1 = pVal2->getValueAsString(&dwLen1);
+                     pRes = new NXSL_Value(pszText1, dwLen1);
                   }
+                  pszText2 = pVal2->getValueAsString(&dwLen2);
+                  pRes->concatenate(pszText2, dwLen2);
                   break;
                case OPCODE_LIKE:
                case OPCODE_ILIKE:

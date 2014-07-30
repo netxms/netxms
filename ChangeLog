@@ -1,4 +1,11 @@
 *
+* 1.2.16
+*
+
+- NXSL: string concatenation operation interprets NULL value as empty string instead of throwing runtime error
+
+
+*
 * 1.2.15
 *
 

@@ -442,6 +442,18 @@ void NXSL_Value::updateString()
       case NXSL_DT_REAL:
          _sntprintf(szBuffer, 64, _T("%f"), m_value.dReal);
          break;
+      case NXSL_DT_NULL:
+         _tcscpy(szBuffer, _T(""));
+         break;
+      case NXSL_DT_OBJECT:
+         _sntprintf(szBuffer, 64, _T("%s@%p"), m_value.pObject->getClass()->getName(), m_value.pObject);
+         break;
+      case NXSL_DT_ARRAY:
+         _sntprintf(szBuffer, 64, _T("[A@%p]"), m_value.pArray);
+         break;
+      case NXSL_DT_ITERATOR:
+         _sntprintf(szBuffer, 64, _T("[I@%p]"), m_value.pIterator);
+         break;
       default:
          szBuffer[0] = 0;
          break;
@@ -561,12 +573,6 @@ const char *NXSL_Value::getValueAsMBString()
  */
 const TCHAR *NXSL_Value::getValueAsString(UINT32 *pdwLen)
 {
-   if (isNull() || isObject() || isArray())
-	{
-		*pdwLen = 0;
-      return NULL;
-	}
-
    if (!m_bStringIsValid)
       updateString();
    *pdwLen = m_dwStrLen;
