@@ -136,12 +136,17 @@ public:
  */
 typedef struct
 {
-   WORD wCode;       // Message code
-   WORD wIsBinary;   // 1 for binary (raw) messages
-   UINT32 dwId;       // Message ID
-   UINT32 dwTTL;      // Message time-to-live in milliseconds
-   void *pMsg;       // Pointer to message, either to CSCPMessage object or raw message
+   void *msg;         // Pointer to message, either to CSCPMessage object or raw message
+   UINT32 id;         // Message ID
+   UINT32 ttl;        // Message time-to-live in milliseconds
+   UINT16 code;       // Message code
+   UINT16 isBinary;   // 1 for binary (raw) messages
 } WAIT_QUEUE_ELEMENT;
+
+/**
+ * Max number of waiting threads in message queue
+ */
+#define MAX_MSGQUEUE_WAITERS     32
 
 /**
  * Message waiting queue class
@@ -149,18 +154,41 @@ typedef struct
 class LIBNETXMS_EXPORTABLE MsgWaitQueue
 {
 private:
-   MUTEX m_mutexDataAccess;
-   CONDITION m_condStop;
-   CONDITION m_condNewMsg;
-   UINT32 m_dwMsgHoldTime;
-   UINT32 m_dwNumElements;
-   WAIT_QUEUE_ELEMENT *m_pElements;
+#ifdef _WIN32
+   CRITICAL_SECTION m_mutex;
+   HANDLE m_wakeupEvents[MAX_MSGQUEUE_WAITERS];
+   BYTE m_waiters[MAX_MSGQUEUE_WAITERS];
+#else
+   pthread_mutex_t m_mutex;
+   pthread_cond_t m_wakeupCondition;
+#endif
+   CONDITION m_stopCondition;
+   UINT32 m_holdTime;
+   int m_size;
+   int m_allocated;
+   WAIT_QUEUE_ELEMENT *m_elements;
    THREAD m_hHkThread;
 
-   void lock() { MutexLock(m_mutexDataAccess); }
-   void unlock() { MutexUnlock(m_mutexDataAccess); }
    void housekeeperThread();
-   void *waitForMessageInternal(UINT16 wIsBinary, UINT16 wCode, UINT32 dwId, UINT32 dwTimeOut);
+   void *waitForMessageInternal(UINT16 isBinary, UINT16 code, UINT32 id, UINT32 timeout);
+
+   void lock()
+   {
+#ifdef _WIN32
+      EnterCriticalSection(&m_mutex);
+#else
+      pthread_mutex_lock(&m_mutex);
+#endif
+   }
+
+   void unlock()
+   {
+#ifdef _WIN32
+      LeaveCriticalSection(&m_mutex);
+#else
+      pthread_mutex_unlock(&m_mutex);
+#endif
+   }
 
    static THREAD_RESULT THREAD_CALL mwqThreadStarter(void *);
 
@@ -180,7 +208,7 @@ public:
    }
 
    void clear();
-   void setHoldTime(UINT32 dwHoldTime) { m_dwMsgHoldTime = dwHoldTime; }
+   void setHoldTime(UINT32 holdTime) { m_holdTime = holdTime; }
 };
 
 /**

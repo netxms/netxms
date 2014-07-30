@@ -29,16 +29,29 @@
 #define TTL_CHECK_INTERVAL    200
 
 /**
+ * Buffer allocation step
+ */
+#define ALLOCATION_STEP       16
+
+/**
  * Constructor
  */
 MsgWaitQueue::MsgWaitQueue()
 {
-   m_dwMsgHoldTime = 30000;      // Default message TTL is 30 seconds
-   m_dwNumElements = 0;
-   m_pElements = NULL;
-   m_mutexDataAccess = MutexCreate();
-   m_condStop = ConditionCreate(FALSE);
-   m_condNewMsg = ConditionCreate(TRUE);
+   m_holdTime = 30000;      // Default message TTL is 30 seconds
+   m_size = 0;
+   m_allocated = 0;
+   m_elements = NULL;
+   m_stopCondition = ConditionCreate(FALSE);
+#ifdef _WIN32
+   InitializeCriticalSectionAndSpinCount(&m_mutex, 4000);
+   memset(m_wakeupEvents, 0, MAX_MSGQUEUE_WAITERS * sizeof(HANDLE));
+   m_wakeupEvents[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
+   memset(m_waiters, 0, MAX_MSGQUEUE_WAITERS);
+#else
+   pthread_mutex_init(&m_mutex, NULL);
+   pthread_cond_init(&m_wakeupCondition, NULL);
+#endif
    m_hHkThread = ThreadCreateEx(mwqThreadStarter, 0, this);
 }
 
@@ -47,17 +60,25 @@ MsgWaitQueue::MsgWaitQueue()
  */
 MsgWaitQueue::~MsgWaitQueue()
 {
-   ConditionSet(m_condStop);
+   ConditionSet(m_stopCondition);
 
    // Wait for housekeeper thread to terminate
    ThreadJoin(m_hHkThread);
 
    // Housekeeper thread stopped, proceed with object destruction
    clear();
-   safe_free(m_pElements);
-   MutexDestroy(m_mutexDataAccess);
-   ConditionDestroy(m_condStop);
-   ConditionDestroy(m_condNewMsg);
+   safe_free(m_elements);
+   ConditionDestroy(m_stopCondition);
+
+#ifdef _WIN32
+   DeleteCriticalSection(&m_mutex);
+   for(int i = 0; i < MAX_MSGQUEUE_WAITERS; i++)
+      if (m_wakeupEvents[i] != NULL)
+         CloseHandle(m_wakeupEvents[i]);
+#else
+   pthread_mutex_destroy(&m_mutex);
+   pthread_cond_destroy(&m_wakeupCondition);
+#endif
 }
 
 /**
@@ -65,68 +86,102 @@ MsgWaitQueue::~MsgWaitQueue()
  */
 void MsgWaitQueue::clear()
 {
-   UINT32 i;
-
    lock();
 
-   for(i = 0; i < m_dwNumElements; i++)
-      if (m_pElements[i].wIsBinary)
+   for(int i = 0; i < m_allocated; i++)
+   {
+      if (m_elements[i].msg == NULL)
+         continue;
+
+      if (m_elements[i].isBinary)
       {
-         safe_free(m_pElements[i].pMsg);
+         safe_free(m_elements[i].msg);
       }
       else
       {
-         delete (CSCPMessage *)(m_pElements[i].pMsg);
+         delete (CSCPMessage *)(m_elements[i].msg);
       }
-   m_dwNumElements = 0;
+   }
+   m_size = 0;
+   m_allocated = 0;
+   safe_free_and_null(m_elements);
    unlock();
 }
 
-
-//
-// Put message into queue
-//
-
+/**
+ * Put message into queue
+ */
 void MsgWaitQueue::put(CSCPMessage *pMsg)
 {
    lock();
 
-	// FIXME possible memory leak/fault
-   m_pElements = (WAIT_QUEUE_ELEMENT *)realloc(m_pElements,
-			sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements + 1));
+   int pos;
+   if (m_size == m_allocated)
+   {
+      pos = m_allocated;
+      m_allocated += ALLOCATION_STEP;
+      m_elements = (WAIT_QUEUE_ELEMENT *)realloc(m_elements, sizeof(WAIT_QUEUE_ELEMENT) * m_allocated);
+      memset(&m_elements[pos], 0, sizeof(WAIT_QUEUE_ELEMENT) * ALLOCATION_STEP);
+   }
+   else
+   {
+      for(pos = 0; m_elements[pos].msg != NULL; pos++);
+   }
 	
-   m_pElements[m_dwNumElements].wCode = pMsg->GetCode();
-   m_pElements[m_dwNumElements].wIsBinary = 0;
-   m_pElements[m_dwNumElements].dwId = pMsg->GetId();
-   m_pElements[m_dwNumElements].dwTTL = m_dwMsgHoldTime;
-   m_pElements[m_dwNumElements].pMsg = pMsg;
-   m_dwNumElements++;
+   m_elements[pos].code = pMsg->GetCode();
+   m_elements[pos].isBinary = 0;
+   m_elements[pos].id = pMsg->GetId();
+   m_elements[pos].ttl = m_holdTime;
+   m_elements[pos].msg = pMsg;
+   m_size++;
+
+#ifdef _WIN32
+   for(int i = 0; i < MAX_MSGQUEUE_WAITERS; i++)
+      if (m_waiters[i])
+         SetEvent(m_wakeupEvents[i]);
+#else
+   pthread_cond_broadcast(&m_wakeupCondition);
+#endif
 
    unlock();
-
-   ConditionPulse(m_condNewMsg);
 }
 
-
-//
-// Put raw message into queue
-//
-
+/**
+ * Put raw message into queue
+ */
 void MsgWaitQueue::put(CSCP_MESSAGE *pMsg)
 {
    lock();
 
-   m_pElements = (WAIT_QUEUE_ELEMENT *)realloc(m_pElements, 
-                              sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements + 1));
-   m_pElements[m_dwNumElements].wCode = pMsg->wCode;
-   m_pElements[m_dwNumElements].wIsBinary = 1;
-   m_pElements[m_dwNumElements].dwId = pMsg->dwId;
-   m_pElements[m_dwNumElements].dwTTL = m_dwMsgHoldTime;
-   m_pElements[m_dwNumElements].pMsg = pMsg;
-   m_dwNumElements++;
-   unlock();
+   int pos;
+   if (m_size == m_allocated)
+   {
+      pos = m_allocated;
+      m_allocated += ALLOCATION_STEP;
+      m_elements = (WAIT_QUEUE_ELEMENT *)realloc(m_elements, sizeof(WAIT_QUEUE_ELEMENT) * m_allocated);
+      memset(&m_elements[pos], 0, sizeof(WAIT_QUEUE_ELEMENT) * ALLOCATION_STEP);
+   }
+   else
+   {
+      for(pos = 0; m_elements[pos].msg != NULL; pos++);
+   }
 
-   ConditionPulse(m_condNewMsg);
+   m_elements[pos].code = pMsg->wCode;
+   m_elements[pos].isBinary = 1;
+   m_elements[pos].id = pMsg->dwId;
+   m_elements[pos].ttl = m_holdTime;
+   m_elements[pos].msg = pMsg;
+   m_size++;
+
+#ifdef _WIN32
+   for(int i = 0; i < MAX_MSGQUEUE_WAITERS; i++)
+      if (m_waiters[i])
+         SetEvent(m_wakeupEvents[i]);
+#else
+   pthread_cond_broadcast(&m_wakeupCondition);
+#endif
+
+   unlock();
 }
 
 /**
@@ -134,88 +189,138 @@ void MsgWaitQueue::put(CSCP_MESSAGE *pMsg)
  * Function return pointer to the message on success or
  * NULL on timeout or error
  */
-void *MsgWaitQueue::waitForMessageInternal(UINT16 wIsBinary, UINT16 wCode, UINT32 dwId, UINT32 dwTimeOut)
+void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32 dwId, UINT32 dwTimeOut)
 {
-   UINT32 i, dwSleepTime;
-   QWORD qwStartTime;
+   lock();
+
+#ifdef _WIN32
+   int slot = -1;
+#endif
 
    do
    {
-      lock();
-      for(i = 0; i < m_dwNumElements; i++)
+      for(int i = 0; i < m_allocated; i++)
 		{
-         if ((m_pElements[i].dwId == dwId) &&
-             (m_pElements[i].wCode == wCode) &&
-             (m_pElements[i].wIsBinary == wIsBinary))
+         if ((m_elements[i].msg != NULL) && 
+             (m_elements[i].id == dwId) &&
+             (m_elements[i].code == wCode) &&
+             (m_elements[i].isBinary == isBinary))
          {
-            void *pMsg;
-
-            pMsg = m_pElements[i].pMsg;
-            m_dwNumElements--;
-            memmove(&m_pElements[i], &m_pElements[i + 1],
-						sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements - i));
+            void *msg = m_elements[i].msg;
+            m_elements[i].msg = NULL;
+            m_size--;
+#ifdef _WIN32
+            if (slot != -1)
+               m_waiters[slot] = 0;    // release waiter slot
+#endif
             unlock();
-            return pMsg;
+            return msg;
          }
 		}
-      unlock();
 
-      qwStartTime = GetCurrentTimeMs();
-      ConditionWait(m_condNewMsg, min(dwTimeOut, 100));
-      dwSleepTime = (UINT32)(GetCurrentTimeMs() - qwStartTime);
-      dwTimeOut -= min(dwSleepTime, dwTimeOut);
+      INT64 startTime = GetCurrentTimeMs();
+       
+#ifdef _WIN32
+      // Find free slot if needed
+      if (slot == -1)
+      {
+         for(slot = 0; slot < MAX_MSGQUEUE_WAITERS; slot++)
+            if (!m_waiters[slot])
+            {
+               m_waiters[slot] = 1;
+               if (m_wakeupEvents[slot] == NULL)
+                  m_wakeupEvents[slot] = CreateEvent(NULL, FALSE, FALSE, NULL);
+               break;
+            }
+
+         if (slot == MAX_MSGQUEUE_WAITERS)
+         {
+            slot = -1;
+         }
+      }
+
+      LeaveCriticalSection(&m_mutex);
+      if (slot != -1)
+         WaitForSingleObject(m_wakeupEvents[slot], dwTimeOut);
+      else
+         Sleep(50);  // Just sleep if there are no waiter slots (highly unlikely during normal operation)
+      EnterCriticalSection(&m_mutex);
+#else
+#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP || defined(_NETWARE)
+	   struct timespec ts;
+
+	   ts.tv_sec = dwTimeOut / 1000;
+	   ts.tv_nsec = (dwTimeOut % 1000) * 1000000;
+#ifdef _NETWARE
+	   pthread_cond_timedwait(&m_wakeupCondition, &m_mutex, &ts);
+#else
+      pthread_cond_reltimedwait_np(&m_wakeupCondition, &m_mutex, &ts);
+#endif
+#else
+	   struct timeval now;
+	   struct timespec ts;
+
+	   gettimeofday(&now, NULL);
+	   ts.tv_sec = now.tv_sec + (dwTimeOut / 1000);
+
+	   now.tv_usec += (dwTimeOut % 1000) * 1000;
+	   ts.tv_sec += now.tv_usec / 1000000;
+	   ts.tv_nsec = (now.tv_usec % 1000000) * 1000;
+
+	   pthread_cond_timedwait(&m_wakeupCondition, &m_mutex, &ts);
+#endif   /* HAVE_PTHREAD_COND_RELTIMEDWAIT_NP */
+#endif   /* _WIN32 */
+
+      UINT32 sleepTime = (UINT32)(GetCurrentTimeMs() - startTime);
+      dwTimeOut -= min(sleepTime, dwTimeOut);
    } while(dwTimeOut > 0);
 
+   if (slot != -1)
+      m_waiters[slot] = 0;    // release waiter slot
+   unlock();
    return NULL;
 }
 
-
-//
-// Housekeeping thread
-//
-
+/**
+ * Housekeeping thread
+ */
 void MsgWaitQueue::housekeeperThread()
 {
-   UINT32 i;
-
-   while(1)
+   while(!ConditionWait(m_stopCondition, TTL_CHECK_INTERVAL))
    {
-      if (ConditionWait(m_condStop, TTL_CHECK_INTERVAL))
-         break;
-
       lock();
-      for(i = 0; i < m_dwNumElements; i++)
+      for(int i = 0; i < m_allocated; i++)
 		{
-         if (m_pElements[i].dwTTL <= TTL_CHECK_INTERVAL)
+         if (m_elements[i].msg == NULL)
+            continue;
+
+         if (m_elements[i].ttl <= TTL_CHECK_INTERVAL)
          {
-            if (m_pElements[i].wIsBinary)
+            if (m_elements[i].isBinary)
             {
-               safe_free(m_pElements[i].pMsg);
+               safe_free(m_elements[i].msg);
             }
             else
             {
-               delete (CSCPMessage *)(m_pElements[i].pMsg);
+               delete (CSCPMessage *)(m_elements[i].msg);
             }
-            m_dwNumElements--;
-            memmove(&m_pElements[i], &m_pElements[i + 1], sizeof(WAIT_QUEUE_ELEMENT) * (m_dwNumElements - i));
-            i--;
+            m_elements[i].msg = NULL;
+            m_size--;
          }
          else
          {
-            m_pElements[i].dwTTL -= TTL_CHECK_INTERVAL;
+            m_elements[i].ttl -= TTL_CHECK_INTERVAL;
          }
 		}
       unlock();
    }
 }
 
-
-//
-// Housekeeper thread starter
-//
-
-THREAD_RESULT THREAD_CALL MsgWaitQueue::mwqThreadStarter(void *pArg)
+/**
+ * Housekeeper thread starter
+ */
+THREAD_RESULT THREAD_CALL MsgWaitQueue::mwqThreadStarter(void *arg)
 {
-   ((MsgWaitQueue *)pArg)->housekeeperThread();
+   ((MsgWaitQueue *)arg)->housekeeperThread();
    return THREAD_OK;
 }
