@@ -4385,7 +4385,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
       count = response.getVariableAsInteger(NXCPCodes.VID_NUM_LINKS);
       long varId = NXCPCodes.VID_OBJECT_LINKS_BASE;
-      for(int i = 0; i < count; i++, varId += 3)
+      for(int i = 0; i < count; i++, varId += 4)
       {
          NetworkMapObject obj1 = page.findObjectElement(response.getVariableAsInt64(varId++));
          NetworkMapObject obj2 = page.findObjectElement(response.getVariableAsInt64(varId++));
