@@ -49,7 +49,7 @@ const char *g_nxslCommandMnemonic[] =
 	"ESET", "ASET", "NAME", "FOREACH", "NEXT",
 	"GLOBAL", "GARRAY", "JZP", "JNZP", "ADDARR",
 	"AGETS", "CALL", "CASE", "EINC", "EDEC",
-   "EINCP", "EDECP", "ABORT"
+   "EINCP", "EDECP", "ABORT", "CATCH"
 };
 
 /**
@@ -223,6 +223,7 @@ void NXSL_Program::dump(FILE *pFile)
             _ftprintf(pFile, _T("@%s, %d\n"), instr->m_operand.m_pszString,
                       instr->m_nStackItems);
             break;
+         case OPCODE_CATCH:
          case OPCODE_JMP:
          case OPCODE_JZ:
          case OPCODE_JNZ:

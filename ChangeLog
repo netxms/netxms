@@ -2,7 +2,10 @@
 * 1.2.16
 *
 
-- NXSL: string concatenation operation interprets NULL value as empty string instead of throwing runtime error
+- NXSL:
+   - String concatenation operation interprets NULL value as empty string instead of throwing runtime error
+   - Fixed incorrect processing of ilike, match, and imatch operators
+   - Added try / catch operator
 
 
 *

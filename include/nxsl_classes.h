@@ -530,6 +530,16 @@ public:
 };
 
 /**
+ * Catch point information
+ */
+struct NXSL_CatchPoint
+{
+   UINT32 addr;
+   UINT32 subLevel;
+   int dataStackSize;
+};
+
+/**
  * NXSL virtual machine
  */
 class LIBNXSL_EXPORTABLE NXSL_VM
@@ -542,8 +552,9 @@ protected:
    UINT32 m_cp;
 
    UINT32 m_dwSubLevel;
-   NXSL_Stack *m_pDataStack;
-   NXSL_Stack *m_pCodeStack;
+   NXSL_Stack *m_dataStack;
+   NXSL_Stack *m_codeStack;
+   NXSL_Stack *m_catchStack;
    int m_nBindPos;
 
    NXSL_VariableSystem *m_pConstants;
@@ -554,10 +565,12 @@ protected:
    ObjectArray<NXSL_Module> *m_modules;
 
    NXSL_Value *m_pRetValue;
-   int m_nErrorCode;
-   TCHAR *m_pszErrorText;
+   int m_errorCode;
+   int m_errorLine;
+   TCHAR *m_errorText;
 
    void execute();
+   bool unwind();
    void callFunction(int nArgCount);
    void doUnaryOperation(int nOpCode);
    void doBinaryOperation(int nOpCode);
@@ -589,7 +602,9 @@ public:
 
 	void trace(int level, const TCHAR *text);
    void dump(FILE *pFile);
-   const TCHAR *getErrorText() { return CHECK_NULL_EX(m_pszErrorText); }
+   int getErrorCode() { return m_errorCode; }
+   int getErrorLine() { return m_errorLine; }
+   const TCHAR *getErrorText() { return CHECK_NULL_EX(m_errorText); }
    NXSL_Value *getResult() { return m_pRetValue; }
 
 	void *getUserData() { return m_userData; }

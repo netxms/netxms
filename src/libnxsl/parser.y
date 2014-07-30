@@ -40,6 +40,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_ARRAY
 %token T_BREAK
 %token T_CASE
+%token T_CATCH
 %token T_CONST
 %token T_CONTINUE
 %token T_DEFAULT
@@ -58,6 +59,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_SUB
 %token T_SWITCH
 %token T_TRUE
+%token T_TRY
 %token T_TYPE_INT32
 %token T_TYPE_INT64
 %token T_TYPE_REAL
@@ -253,6 +255,23 @@ StatementList:
 StatementOrBlock:
 	Statement
 |	Block
+|	TryCatchBlock
+;
+
+TryCatchBlock:
+	T_TRY 
+	{
+		pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CATCH, INVALID_ADDRESS));
+	} 
+	Block T_CATCH 
+	{
+		pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
+		pScript->resolveLastJump(OPCODE_CATCH);
+	} 
+	Block
+	{
+		pScript->resolveLastJump(OPCODE_JMP);
+	}
 ;
 
 Statement:
