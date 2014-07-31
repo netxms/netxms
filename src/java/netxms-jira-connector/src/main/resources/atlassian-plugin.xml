@@ -1,0 +1,51 @@
+<atlassian-plugin key="${project.groupId}.${project.artifactId}" name="${project.name}" plugins-version="2">
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="${project.organization.name}" url="${project.organization.url}"/>
+        <param name="plugin-icon">images/pluginIcon.png</param>
+        <param name="plugin-logo">images/pluginLogo.png</param>
+        <param name="configure.url">/secure/admin/netxms!default.jspa</param>
+    </plugin-info>
+
+    <resource type="i18n" name="i18n" location="netxms-connector"/>
+
+    <component-import key="pluginSettingsFactory"
+                      interface="com.atlassian.sal.api.pluginsettings.PluginSettingsFactory"/>
+    <component-import key="eventPublisher" interface="com.atlassian.event.api.EventPublisher"/>
+
+    <component key="nxEventListener" class="com.radensolutions.jira.NetxmsEventListener">
+        <description>Class that processes the incoming JIRA issue events.</description>
+    </component>
+
+    <component key="nxSettingManager" class="com.radensolutions.jira.SettingsManagerImpl" public="true">
+        <interface>com.radensolutions.jira.SettingsManager</interface>
+    </component>
+
+    <webwork1 key="netxms-actions" class="java.lang.Object">
+        <actions>
+            <action name="com.radensolutions.jira.admin.ConfigurationAction"
+                    alias="netxms">
+                <view name="success">/templates/admin/configure.vm</view>
+                <view name="input">/templates/admin/configure.vm</view>
+            </action>
+        </actions>
+    </webwork1>
+
+    <web-item name="NetXMS Integration" i18n-name-key="nx.admin.title" key="netxms-config"
+              section="advanced_menu_section/advanced_section" weight="150" application="jira">
+        <description key="nx.admin.title">NetXMS Integration</description>
+        <label key="nx.admin.title">NetXMS Integration</label>
+        <link linkId="nx.admin.link">/secure/admin/netxms!default.jspa</link>
+    </web-item>
+
+    <workflow-function key="netxms-alarm-post-function" name="NetXMS Modify Alarm"
+                       i18n-name-key="nx.alarm-post-function.name"
+                       class="com.radensolutions.jira.workflow.UpdateAlarmFunctionFactory">
+        <description key="nx.alarm-post-function.description">Modify status of related NetXMS alarm</description>
+        <function-class>com.radensolutions.jira.workflow.UpdateAlarmFunction</function-class>
+        <resource type="velocity" name="view" location="templates/workflow/view.vm"/>
+        <resource type="velocity" name="input-parameters" location="templates/workflow/input.vm"/>
+        <resource type="velocity" name="edit-parameters" location="templates/workflow/edit.vm"/>
+    </workflow-function>
+</atlassian-plugin>
