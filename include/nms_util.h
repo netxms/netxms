@@ -156,6 +156,14 @@ extern "C" {
 #endif
 
 /**
+ * Extended tcsdup: returns NULL if NULL pointer passed
+ */
+inline TCHAR *_tcsdup_ex(const TCHAR *s)
+{
+   return (s != NULL) ? _tcsdup(s) : NULL;
+}
+
+/**
  * Class for serial communications
  */
 #ifdef __cplusplus
@@ -600,16 +608,16 @@ private:
 
 public:
    TableCell() { m_value = NULL; m_status = -1; }
-   TableCell(const TCHAR *value) { m_value = (value != NULL) ? _tcsdup(value) : NULL; m_status = -1; }
-   TableCell(const TCHAR *value, int status) { m_value = (value != NULL) ? _tcsdup(value) : NULL; m_status = status; }
-   TableCell(TableCell *src) { m_value = (src->m_value != NULL) ? _tcsdup(src->m_value) : NULL; m_status = src->m_status; }
+   TableCell(const TCHAR *value) { m_value = _tcsdup_ex(value); m_status = -1; }
+   TableCell(const TCHAR *value, int status) { m_value = _tcsdup_ex(value); m_status = status; }
+   TableCell(TableCell *src) { m_value = _tcsdup_ex(src->m_value); m_status = src->m_status; }
    ~TableCell() { safe_free(m_value); }
 
-   void set(const TCHAR *value, int status) { safe_free(m_value); m_value = (value != NULL) ? _tcsdup(value) : NULL; m_status = status; }
+   void set(const TCHAR *value, int status) { safe_free(m_value); m_value = _tcsdup_ex(value); m_status = status; }
    void setPreallocated(TCHAR *value, int status) { safe_free(m_value); m_value = value; m_status = status; }
 
    const TCHAR *getValue() { return m_value; }
-   void setValue(const TCHAR *value) { safe_free(m_value); m_value = (value != NULL) ? _tcsdup(value) : NULL; }
+   void setValue(const TCHAR *value) { safe_free(m_value); m_value = _tcsdup_ex(value); }
    void setPreallocatedValue(TCHAR *value) { safe_free(m_value); m_value = value; }
 
    int getStatus() { return m_status; }
@@ -688,7 +696,7 @@ public:
 	int getColumnIndex(const TCHAR *name);
    ObjectArray<TableColumnDefinition> *getColumnDefinitions() { return m_columns; }
 
-	void setTitle(const TCHAR *title) { safe_free(m_title); m_title = (title != NULL) ? _tcsdup(title) : NULL; }
+	void setTitle(const TCHAR *title) { safe_free(m_title); m_title = _tcsdup_ex(title); }
    void setSource(int source) { m_source = source; }
    int addColumn(const TCHAR *name, INT32 dataType = 0, const TCHAR *displayName = NULL, bool isInstance = false);
    void setColumnDataType(int col, INT32 dataType) { if ((col >= 0) && (col < m_columns->size())) m_columns->get(col)->setDataType(dataType); }
@@ -954,11 +962,6 @@ inline char *nx_strncpy_mb(char *pszDest, const char *pszSrc, size_t nLen)
 #else
 #define nx_strncpy_mb nx_strncpy
 #endif
-
-inline TCHAR *_tcsdup_ex(const TCHAR *s)
-{
-   return (s != NULL) ? _tcsdup(s) : NULL;
-}
 
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout);
 int LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex);

@@ -516,6 +516,7 @@ void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, T
 	   {
 		   DCObject *object = m_dcObjects->get(j);
          if ((object->getType() == DCO_TYPE_ITEM) && object->hasValue() && 
+             (object->getStatus() == ITEM_STATUS_ACTIVE) &&
              ((tc->m_flags & COLUMN_DEFINITION_REGEXP_MATCH) ? 
                RegexpMatch(object->getName(), tc->m_dciName, FALSE) :
                !_tcsicmp(object->getName(), tc->m_dciName)

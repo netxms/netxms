@@ -4074,7 +4074,7 @@ void ClientSession::getLastValuesByDciId(CSCPMessage *pRequest)
    UINT32 incomingIndex = VID_DCI_VALUES_BASE;
    UINT32 outgoingIndex = VID_DCI_VALUES_BASE;
 
-   for(int i = 0 ; i < size; i++, incomingIndex+=10)
+   for(int i = 0; i < size; i++, incomingIndex += 10)
    {
       TCHAR *value;
       UINT32 type, status;
@@ -4105,7 +4105,7 @@ void ClientSession::getLastValuesByDciId(CSCPMessage *pRequest)
                   int columnIndex =  t->getColumnIndex(column);
                   int rowIndex = t->findRowByInstance(instance);
                   type = t->getColumnDataType(columnIndex);
-                  value = _tcsdup(t->getAsString(rowIndex, columnIndex));
+                  value = _tcsdup_ex(t->getAsString(rowIndex, columnIndex));
                   t->decRefCount();
 
                   safe_free(column);
@@ -4116,7 +4116,7 @@ void ClientSession::getLastValuesByDciId(CSCPMessage *pRequest)
                   if (dcoObj->getType() == DCO_TYPE_ITEM)
                   {
                      type = (WORD)((DCItem *)dcoObj)->getDataType();
-                     value = _tcsdup(((DCItem *)dcoObj)->getLastValue());
+                     value = _tcsdup_ex(((DCItem *)dcoObj)->getLastValue());
                   }
                   else
                      continue;
@@ -4125,18 +4125,18 @@ void ClientSession::getLastValuesByDciId(CSCPMessage *pRequest)
 
                status = dcoObj->getStatus();
 
-               msg.SetVariable(outgoingIndex, dciID);
-               msg.SetVariable(outgoingIndex+1, value);
-               msg.SetVariable(outgoingIndex+2, type);
-               msg.SetVariable(outgoingIndex+3, status);
+               msg.SetVariable(outgoingIndex++, dciID);
+               msg.SetVariable(outgoingIndex++, CHECK_NULL_EX(value));
+               msg.SetVariable(outgoingIndex++, type);
+               msg.SetVariable(outgoingIndex++, status);
                safe_free(value);
-               outgoingIndex +=10;
+               outgoingIndex += 6;
             }
          }
       }
    }
    // Set result
-   msg.SetVariable(VID_NUM_ITEMS, (outgoingIndex - VID_DCI_VALUES_BASE)/10);
+   msg.SetVariable(VID_NUM_ITEMS, (outgoingIndex - VID_DCI_VALUES_BASE) / 10);
    msg.SetVariable(VID_RCC, RCC_SUCCESS);
    // Send response
    sendMessage(&msg);
