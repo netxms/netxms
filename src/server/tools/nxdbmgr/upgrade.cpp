@@ -624,6 +624,9 @@ static BOOL H_UpgradeFromV321(int currVersion, int newVersion)
             _T("DROP TABLE temp_user_groups\n")
             _T("<END>")));
 			break;
+		case DB_SYNTAX_ORACLE:
+         // no changes needed
+         break;
 		default:
          CHK_EXEC(SQLBatch(
 			   _T("ALTER TABLE users MODIFY system_access $SQL:INT64\n")
