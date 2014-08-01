@@ -155,6 +155,8 @@ extern "C" {
 
 #endif
 
+#ifdef __cplusplus
+
 /**
  * Extended tcsdup: returns NULL if NULL pointer passed
  */
@@ -162,6 +164,8 @@ inline TCHAR *_tcsdup_ex(const TCHAR *s)
 {
    return (s != NULL) ? _tcsdup(s) : NULL;
 }
+
+#endif
 
 /**
  * Class for serial communications
