@@ -108,10 +108,10 @@ static TCHAR *getLinuxRealPath(TCHAR *path)
 
    //just remove all dots before path
    if(!_tcsncmp(current,_T("../"),3))
-      _tcscat(current, current+3);
+      memmove(current,current+3,(_tcslen(current+3) + 1) * sizeof(TCHAR));
 
    if(!_tcsncmp(current,_T("./"),2))
-      _tcscat(current, current+2);
+      memmove(current,current+2,(_tcslen(current+2) + 1) * sizeof(TCHAR));
 
    while(current[0] != 0)
    {
@@ -122,7 +122,7 @@ static TCHAR *getLinuxRealPath(TCHAR *path)
             switch(current[1])
             {
                case '/':
-                  _tcscat(current, current+1);
+                  memmove(current,current+1,(_tcslen(current+1) + 1) * sizeof(TCHAR));
                   break;
                case '.':
                   if(current[2] != 0)
@@ -131,7 +131,7 @@ static TCHAR *getLinuxRealPath(TCHAR *path)
                      {
                         if(current == result)
                         {
-                           _tcscat(current, current+3);
+                           memmove(current,current+3,(_tcslen(current+3) + 1) * sizeof(TCHAR));
                         }
                         else
                         {
@@ -144,13 +144,13 @@ static TCHAR *getLinuxRealPath(TCHAR *path)
                                  break;
                               }
                            } while(result != tmp);
-                           _tcscat(tmp, current+3);
+                           memmove(tmp,current+3,(_tcslen(current+3) + 1) * sizeof(TCHAR));
                         }
                      }
                   }
                   else
                   {
-                     _tcscat(current, current+2);
+                     memmove(current,current+2,(_tcslen(current+2) + 1) * sizeof(TCHAR));
                   }
                default:
                   current++;
@@ -216,7 +216,7 @@ static BOOL CheckFullPath(TCHAR *folder, bool withHomeDir)
 /**
  * Puts in response list of containing files
  */
-static void GetFolderContent(TCHAR* folder, CSCPMessage *msg)
+static void GetFolderContent(TCHAR* folder, CSCPMessage *msg, bool rootFolder)
 {
    NX_STAT_STRUCT st;
 
@@ -224,7 +224,7 @@ static void GetFolderContent(TCHAR* folder, CSCPMessage *msg)
    UINT32 count = 0;
    UINT32 varId = VID_INSTANCE_LIST_BASE;
 
-   if (!_tcscmp(folder, FS_PATH_SEPARATOR))
+   if (!_tcscmp(folder, FS_PATH_SEPARATOR) && rootFolder)
    {
       for(int i = 0; i < g_rootFileManagerFolders->getSize(); i++)
       {
@@ -520,9 +520,10 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          ConvertPathToHost(directory);
 
-         if (CheckFullPath(directory, true) && ((AbstractCommSession *)session)->isMasterServer())
+         bool rootFolder = request->GetVariableShort(VID_ROOT) ? 1 : 0;
+         if (CheckFullPath(directory, rootFolder) && ((AbstractCommSession *)session)->isMasterServer())
          {
-            GetFolderContent(directory, response);
+            GetFolderContent(directory, response, rootFolder);
          }
          else
          {

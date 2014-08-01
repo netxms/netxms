@@ -6360,6 +6360,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_FOLDER_CONTENT);
       msg.setVariable(NXCPCodes.VID_FILE_NAME, fullPath);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      msg.setVariableInt16(NXCPCodes.VID_ROOT, file == null ? 1 : 0);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getVariableAsInteger(NXCPCodes.VID_INSTANCE_COUNT);
