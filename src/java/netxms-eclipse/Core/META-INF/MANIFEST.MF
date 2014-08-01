@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-SymbolicName: org.netxms.ui.eclipse.console;singleton:=true
-Bundle-Version: 1.2.15
+Bundle-Version: 1.2.16
 Bundle-Activator: org.netxms.ui.eclipse.console.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
@@ -14,10 +14,10 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  jar/simple-xml-2.6.4.jar,
- jar/certificate-manager-1.2.15.jar,
- jar/netxms-base-1.2.15.jar,
- jar/netxms-client-1.2.15.jar,
- jar/netxms-client-api-1.2.15.jar
+ jar/certificate-manager-1.2.16.jar,
+ jar/netxms-base-1.2.16.jar,
+ jar/netxms-client-1.2.16.jar,
+ jar/netxms-client-api-1.2.16.jar
 Export-Package: org.netxms.api.client,
  org.netxms.api.client.constants,
  org.netxms.api.client.images,
