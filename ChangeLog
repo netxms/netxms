@@ -8,7 +8,7 @@
    - String concatenation operation interprets NULL value as empty string instead of throwing runtime error
    - Fixed incorrect processing of ilike, match, and imatch operators
    - Added try / catch operator
-- Fixed issues: #424, #619
+- Fixed issues: #424, #619, #620
 
 
 *

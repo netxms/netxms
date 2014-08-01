@@ -58,13 +58,13 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 				ret_uint64(pValue, availableBlocks * blockSize);
 				break;
 			case DISK_USED_PERC:
-				ret_double(pValue, (usedBlocks * 100) / totalBlocks);
+				ret_double(pValue, (usedBlocks * 100.0) / totalBlocks);
 				break;
 			case DISK_AVAIL_PERC:
-				ret_double(pValue, (availableBlocks * 100) / totalBlocks);
+				ret_double(pValue, (availableBlocks * 100.0) / totalBlocks);
 				break;
 			case DISK_FREE_PERC:
-				ret_double(pValue, (freeBlocks * 100) / totalBlocks);
+				ret_double(pValue, (freeBlocks * 100.0) / totalBlocks);
 				break;
 			default:
 				nRet = SYSINFO_RC_ERROR;
@@ -195,11 +195,11 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
 
             table->set(4, totalBlocks * blockSize);
             table->set(5, freeBlocks * blockSize);
-            table->set(6, (totalBlocks > 0) ? (freeBlocks * 100) / totalBlocks : 0);
+            table->set(6, (totalBlocks > 0) ? (freeBlocks * 100.0) / totalBlocks : 0);
             table->set(7, availableBlocks * blockSize);
-            table->set(8, (totalBlocks > 0) ? (availableBlocks * 100) / totalBlocks : 0);
+            table->set(8, (totalBlocks > 0) ? (availableBlocks * 100.0) / totalBlocks : 0);
             table->set(9, usedBlocks * blockSize);
-            table->set(10, (totalBlocks > 0) ? (usedBlocks * 100) / totalBlocks : 0);
+            table->set(10, (totalBlocks > 0) ? (usedBlocks * 100.0) / totalBlocks : 0);
          }
          else
          {
