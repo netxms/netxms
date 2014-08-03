@@ -192,16 +192,16 @@ bool NXSL_VM::load(NXSL_Program *program)
 
    // Set constants
    m_pConstants->clear();
-   for(i = 0; i < (int)program->m_constants->getSize(); i++)
+   for(i = 0; i < (int)program->m_constants->size(); i++)
    {
       m_pConstants->create(program->m_constants->getKeyByIndex(i), new NXSL_Value(program->m_constants->getValueByIndex(i)));
    }
 
    // Load modules
    m_modules = new ObjectArray<NXSL_Module>(4, 4, true);
-   for(i = 0; i < program->m_requiredModules.getSize(); i++)
+   for(i = 0; i < program->m_requiredModules.size(); i++)
    {
-      if (!m_env->loadModule(this, program->m_requiredModules.getValue(i)))
+      if (!m_env->loadModule(this, program->m_requiredModules.get(i)))
       {
          error(NXSL_ERR_MODULE_NOT_FOUND);
          success = false;

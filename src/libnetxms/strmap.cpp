@@ -28,13 +28,11 @@
  */
 StringMap::StringMap(const StringMap &src) : StringMapBase(true)
 {
-	UINT32 i;
-
 	m_size = src.m_size;
 	m_objectOwner = src.m_objectOwner;
 	m_keys = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
 	m_values = (void **)malloc(sizeof(void *) * m_size);
-	for(i = 0; i < m_size; i++)
+	for(int i = 0; i < m_size; i++)
 	{
 		m_keys[i] = _tcsdup(src.m_keys[i]);
 		m_values[i] = _tcsdup((TCHAR *)src.m_values[i]);
@@ -54,18 +52,25 @@ StringMap::~StringMap()
  */
 StringMap& StringMap::operator =(const StringMap &src)
 {
-	UINT32 i;
-
 	clear();
 	m_size = src.m_size;
 	m_keys = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
 	m_values = (void **)malloc(sizeof(void *) * m_size);
-	for(i = 0; i < m_size; i++)
+	for(int i = 0; i < m_size; i++)
 	{
 		m_keys[i] = _tcsdup(src.m_keys[i]);
 		m_values[i] = _tcsdup((TCHAR *)src.m_values[i]);
 	}
 	return *this;
+}
+
+/**
+ * Add all values from another string map
+ */
+void StringMap::addAll(StringMap *src)
+{
+   for(int i = 0; i < src->m_size; i++)
+      set(src->m_keys[i], (TCHAR *)src->m_values[i]);
 }
 
 /**

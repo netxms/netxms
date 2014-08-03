@@ -453,7 +453,6 @@ bool EPRule::matchScript(Event *pEvent)
 bool EPRule::processEvent(Event *pEvent)
 {
    bool bStopProcessing = false;
-   UINT32 i;
 
    // Check disable flag
    if (!(m_dwFlags & RF_DISABLED))
@@ -473,7 +472,7 @@ bool EPRule::processEvent(Event *pEvent)
          {
             TCHAR *alarmMessage = pEvent->expandText(m_szAlarmMessage);
             TCHAR *alarmKey = pEvent->expandText(m_szAlarmKey);
-            for(i = 0; i < m_dwNumActions; i++)
+            for(UINT32 i = 0; i < m_dwNumActions; i++)
                ExecuteAction(m_pdwActionList[i], pEvent, alarmMessage, alarmKey);
             free(alarmMessage);
             free(alarmKey);
@@ -489,7 +488,7 @@ bool EPRule::processEvent(Event *pEvent)
 				if (pSituation != NULL)
 				{
 					TCHAR *pszText = pEvent->expandText(m_szSituationInstance);
-					for(i = 0; i < m_situationAttrList.getSize(); i++)
+					for(int i = 0; i < m_situationAttrList.size(); i++)
 					{
 						pszAttr = pEvent->expandText(m_situationAttrList.getKeyByIndex(i));
 						pszValue = pEvent->expandText(m_situationAttrList.getValueByIndex(i));
@@ -635,8 +634,8 @@ void EPRule::saveToDB(DB_HANDLE hdb)
    DBQuery(hdb, pszQuery);
 
    // Actions
-	UINT32 i;
-   for(i = 0; i < m_dwNumActions; i++)
+	int i;
+   for(i = 0; i < (int)m_dwNumActions; i++)
    {
       _sntprintf(pszQuery, len, _T("INSERT INTO policy_action_list (rule_id,action_id) VALUES (%d,%d)"),
                 m_dwId, m_pdwActionList[i]);
@@ -644,7 +643,7 @@ void EPRule::saveToDB(DB_HANDLE hdb)
    }
 
    // Events
-   for(i = 0; i < m_dwNumEvents; i++)
+   for(i = 0; i < (int)m_dwNumEvents; i++)
    {
       _sntprintf(pszQuery, len, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"),
                 m_dwId, m_pdwEventList[i]);
@@ -652,7 +651,7 @@ void EPRule::saveToDB(DB_HANDLE hdb)
    }
 
    // Sources
-   for(i = 0; i < m_dwNumSources; i++)
+   for(i = 0; i < (int)m_dwNumSources; i++)
    {
       _sntprintf(pszQuery, len, _T("INSERT INTO policy_source_list (rule_id,object_id) VALUES (%d,%d)"),
                 m_dwId, m_pdwSourceList[i]);
@@ -660,7 +659,7 @@ void EPRule::saveToDB(DB_HANDLE hdb)
    }
 
 	// Situation attributes
-	for(i = 0; i < m_situationAttrList.getSize(); i++)
+	for(i = 0; i < m_situationAttrList.size(); i++)
 	{
       _sntprintf(pszQuery, len, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (%d,%d,%s,%s)"),
                 m_dwId, m_dwSituationId,
@@ -677,8 +676,6 @@ void EPRule::saveToDB(DB_HANDLE hdb)
  */
 void EPRule::createMessage(CSCPMessage *pMsg)
 {
-	UINT32 i, id;
-
    pMsg->SetVariable(VID_FLAGS, m_dwFlags);
    pMsg->SetVariable(VID_RULE_ID, m_dwId);
    pMsg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
@@ -697,8 +694,9 @@ void EPRule::createMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_pszScript));
 	pMsg->SetVariable(VID_SITUATION_ID, m_dwSituationId);
 	pMsg->SetVariable(VID_SITUATION_INSTANCE, m_szSituationInstance);
-	pMsg->SetVariable(VID_SITUATION_NUM_ATTRS, m_situationAttrList.getSize());
-	for(i = 0, id = VID_SITUATION_ATTR_LIST_BASE; i < m_situationAttrList.getSize(); i++)
+	pMsg->SetVariable(VID_SITUATION_NUM_ATTRS, m_situationAttrList.size());
+	UINT32 id = VID_SITUATION_ATTR_LIST_BASE;
+   for(int i = 0; i < m_situationAttrList.size(); i++)
 	{
 		pMsg->SetVariable(id++, m_situationAttrList.getKeyByIndex(i));
 		pMsg->SetVariable(id++, m_situationAttrList.getValueByIndex(i));

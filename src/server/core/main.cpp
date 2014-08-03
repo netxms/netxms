@@ -1456,7 +1456,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 						{
 							ConsolePrintf(pCtx, _T("\x1b[1mVLAN\x1b[0m | \x1b[1mName\x1b[0m             | \x1b[1mPorts\x1b[0m\n")
 								                 _T("-----+------------------+-----------------------------------------------------------------\n"));
-							for(int i = 0; i < vlans->getSize(); i++)
+							for(int i = 0; i < vlans->size(); i++)
 							{
 								VlanInfo *vlan = vlans->get(i);
 								ConsolePrintf(pCtx, _T("%4d | %-16s |"), vlan->getVlanId(), vlan->getName());

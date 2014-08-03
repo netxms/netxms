@@ -115,7 +115,7 @@ void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
  */
 void NXSL_VariableSystem::addAll(StringObjectMap<NXSL_Value> *src)
 {
-	for(UINT32 i = 0; i < src->getSize(); i++)
+	for(int i = 0; i < src->size(); i++)
 	{
       const TCHAR *name = src->getKeyByIndex(i);
       if (find(name) == NULL)

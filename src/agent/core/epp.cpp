@@ -81,7 +81,7 @@ LONG ParamProvider::getValue(const TCHAR *name, TCHAR *buffer)
 
 	lock();
 
-	for(UINT32 i = 0; i < m_parameters->getSize(); i++)
+	for(int i = 0; i < m_parameters->size(); i++)
 	{
 		if (!_tcsicmp(m_parameters->getKeyByIndex(i), name))
 		{
@@ -132,7 +132,7 @@ void ParamProvider::poll()
 			}
 		}
 		pclose(hPipe);
-		DebugPrintf(INVALID_INDEX, 8, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_command, (int)parameters->getSize());
+		DebugPrintf(INVALID_INDEX, 8, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_command, (int)parameters->size());
 	}
 	else
 	{
@@ -155,7 +155,7 @@ void ParamProvider::listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *cou
 	UINT32 id = *baseId;
 
 	lock();
-	for(UINT32 i = 0; i < m_parameters->getSize(); i++)
+	for(int i = 0; i < m_parameters->size(); i++)
 	{
 		msg->SetVariable(id++, m_parameters->getKeyByIndex(i));
 		msg->SetVariable(id++, _T(""));
@@ -173,7 +173,7 @@ void ParamProvider::listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *cou
 void ParamProvider::listParameters(StringList *list)
 {
 	lock();
-	for(UINT32 i = 0; i < m_parameters->getSize(); i++)
+	for(int i = 0; i < m_parameters->size(); i++)
 	{
 		list->add(m_parameters->getKeyByIndex(i));
 	}

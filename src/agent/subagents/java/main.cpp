@@ -99,12 +99,12 @@ LONG actionHandler (const TCHAR *pszAction, StringList *pArgList, const TCHAR *i
    LONG result = SYSINFO_RC_SUCCESS;
    // route the call to SubAgent
    AgentWriteLog(NXLOG_DEBUG, _T("actionHandler(action=%s, id=%s)"), pszAction, id);
-   int len = pArgList->getSize();
+   int len = pArgList->size();
    TCHAR const** args = new TCHAR const* [len];
-   for (int i=0; i<len; i++)
+   for (int i=0; i < len; i++)
    {
                                  // TODO should I use a copy?
-      args[i] = pArgList->getValue(i);
+      args[i] = pArgList->get(i);
    }
    try
    {

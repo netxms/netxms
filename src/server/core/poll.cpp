@@ -152,7 +152,7 @@ void CheckForMgmtNode()
    pIfList = GetLocalInterfaceList();
    if (pIfList != NULL)
    {
-      for(i = 0; i < pIfList->getSize(); i++)
+      for(i = 0; i < pIfList->size(); i++)
       {
          NX_INTERFACE_INFO *iface = pIfList->get(i);
          if ((iface->dwType == IFTYPE_SOFTWARE_LOOPBACK) || ((iface->dwIpAddr & 0xFF000000) == 0x7F000000) || (iface->dwIpAddr == 0))
@@ -169,10 +169,10 @@ void CheckForMgmtNode()
             break;
          }
       }
-      if (i == pIfList->getSize())   // No such node
+      if (i == pIfList->size())   // No such node
       {
          // Find interface with IP address
-         for(i = 0; i < pIfList->getSize(); i++)
+         for(i = 0; i < pIfList->size(); i++)
          {
             NX_INTERFACE_INFO *iface = pIfList->get(i);
             if ((iface->dwType != IFTYPE_SOFTWARE_LOOPBACK) && ((iface->dwIpAddr & 0xFF000000) != 0x7F000000) && (iface->dwIpAddr != 0))

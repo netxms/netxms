@@ -57,9 +57,7 @@ StringMapBase::~StringMapBase()
  */
 void StringMapBase::clear()
 {
-	UINT32 i;
-
-	for(i = 0; i < m_size; i++)
+	for(int i = 0; i < m_size; i++)
 	{
 		safe_free(m_keys[i]);
 		if (m_objectOwner)
@@ -78,7 +76,7 @@ UINT32 StringMapBase::find(const TCHAR *key)
 	if (key == NULL)
 		return INVALID_INDEX;
 
-	for(UINT32 i = 0; i < m_size; i++)
+	for(int i = 0; i < m_size; i++)
 	{
       if (m_ignoreCase ? !_tcsicmp(key, m_keys[i]) : !_tcscmp(key, m_keys[i]))
 			return i;

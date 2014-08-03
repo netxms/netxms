@@ -56,7 +56,6 @@ BOOL CRuleSituationDlg::OnInitDialog()
 {
 	RECT rect;
 	TCHAR buffer[MAX_DB_STRING];
-	DWORD i;
 	int item;
 
 	CDialog::OnInitDialog();
@@ -72,7 +71,7 @@ BOOL CRuleSituationDlg::OnInitDialog()
 	SetDlgItemText(IDC_EDIT_INSTANCE, m_strInstance);
 
 	// Attributes
-	for(i = 0; i < m_attrList.getSize(); i++)
+	for(int i = 0; i < m_attrList.size(); i++)
 	{
 		item = m_wndListCtrl.InsertItem(i, m_attrList.getKeyByIndex(i));
 		m_wndListCtrl.SetItemText(item, 1, m_attrList.getValueByIndex(i));

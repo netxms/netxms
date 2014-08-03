@@ -325,7 +325,7 @@ ClientSession::~ClientSession()
 		free(m_console);
 	}
    m_musicTypeList.clear();
-   if(m_agentConn.getSize() > 0)
+   if (m_agentConn.size() > 0)
    {
       m_agentConn.forEach(&DeleteCallback, NULL);
    }
@@ -4035,7 +4035,10 @@ void ClientSession::getLastValues(CSCPMessage *pRequest)
          if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE) ||
              (object->Type() == OBJECT_TEMPLATE) || (object->Type() == OBJECT_CLUSTER))
          {
-            msg.SetVariable(VID_RCC, ((Template *)object)->getLastValues(&msg, pRequest->GetVariableShort(VID_OBJECT_TOOLTIP_ONLY) ? true : false));
+            msg.SetVariable(VID_RCC, 
+               ((Template *)object)->getLastValues(&msg, 
+                  pRequest->getFieldAsBoolean(VID_OBJECT_TOOLTIP_ONLY),
+                  pRequest->getFieldAsBoolean(VID_INCLUDE_NOVALUE_OBJECTS)));
          }
          else
          {
@@ -7812,8 +7815,8 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
 	UINT32 dciCount = 0;
 	g_idxNodeById.forEach(DciCountCallback, &dciCount);
    msg.SetVariable(VID_NUM_ITEMS, dciCount);
-	msg.SetVariable(VID_NUM_OBJECTS, (UINT32)g_idxObjectById.getSize());
-	msg.SetVariable(VID_NUM_NODES, (UINT32)g_idxNodeById.getSize());
+	msg.SetVariable(VID_NUM_OBJECTS, (UINT32)g_idxObjectById.size());
+	msg.SetVariable(VID_NUM_NODES, (UINT32)g_idxNodeById.size());
 
    // Client sessions
    msg.SetVariable(VID_NUM_SESSIONS, (UINT32)GetSessionCount());
@@ -10658,13 +10661,13 @@ void ClientSession::getServerFile(CSCPMessage *pRequest)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(pRequest->GetId());
    pRequest->GetVariableStr(VID_FILE_NAME, name, MAX_PATH);
-   for(int i = 0; i < m_musicTypeList.getSize(); i++)
+   for(int i = 0; i < m_musicTypeList.size(); i++)
    {
       TCHAR *extension = _tcsrchr(name, _T('.'));
       if (extension != NULL)
       {
          extension++;
-         if(!_tcscmp(extension, m_musicTypeList.getValue(i)))
+         if(!_tcscmp(extension, m_musicTypeList.get(i)))
          {
             musicFile = true;
             break;
@@ -12073,9 +12076,9 @@ void ClientSession::listServerFileStore(CSCPMessage *request)
 	for(int i = 0; i < length; i++)
    {
       extensionList.add(request->GetVariableStr(varId++));
-      for(int j = 0; j < m_musicTypeList.getSize(); j++)
+      for(int j = 0; j < m_musicTypeList.size(); j++)
       {
-         if(_tcscmp(extensionList.getValue(i), m_musicTypeList.getValue(j)))
+         if(_tcscmp(extensionList.get(i), m_musicTypeList.get(j)))
          {
             musicFiles = false;
          }
@@ -12110,9 +12113,9 @@ void ClientSession::listServerFileStore(CSCPMessage *request)
                   if (extension != NULL)
                   {
                      extension++;
-                     for(int j = 0; j < extensionList.getSize(); j++)
+                     for(int j = 0; j < extensionList.size(); j++)
                      {
-                        if (!_tcscmp(extension, extensionList.getValue(j)))
+                        if (!_tcscmp(extension, extensionList.get(j)))
                         {
                            correctType = true;
                            break;

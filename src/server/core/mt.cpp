@@ -144,9 +144,9 @@ void MappingTable::fillMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_FLAGS, m_flags);
 	msg->SetVariable(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
 	
-	msg->SetVariable(VID_NUM_ELEMENTS, m_data->getSize());
+	msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_data->size());
 	UINT32 varId = VID_ELEMENT_LIST_BASE;
-	for(UINT32 i = 0; i < m_data->getSize(); i++)
+	for(int i = 0; i < m_data->size(); i++)
 	{
 		msg->SetVariable(varId++, m_data->getKeyByIndex(i));
 		MappingTableElement *e = m_data->getValueByIndex(i);
@@ -203,7 +203,7 @@ bool MappingTable::saveToDatabase()
 	if (hStmt == NULL)
 		goto failure2;
 
-	for(UINT32 i = 0; i < m_data->getSize(); i++)
+	for(int i = 0; i < m_data->size(); i++)
 	{
 		MappingTableElement *e = m_data->getValueByIndex(i);
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);

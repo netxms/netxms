@@ -132,7 +132,7 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 
    // Translate interface names 
 	// TODO: does it really needed?
-   for(int i = 0; i < ifList->getSize(); i++)
+   for(int i = 0; i < ifList->size(); i++)
    {
 		NX_INTERFACE_INFO *iface = ifList->get(i);
 
@@ -164,7 +164,7 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 	
 	// Calculate slot/port pair from ifIndex
 	UINT32 slotSize = attributes->getULong(_T(".baystack.slotSize"), 64);
-	for(int i = 0; i < ifList->getSize(); i++)
+	for(int i = 0; i < ifList->size(); i++)
 	{
 		UINT32 slot = ifList->get(i)->dwIndex / slotSize + 1;
 		if ((slot > 0) && (slot <= 8))
@@ -191,10 +191,10 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 			int i;
 
 			// Add management virtual interface if management IP is missing in interface list
-			for(i = 0; i < ifList->getSize(); i++)
+			for(i = 0; i < ifList->size(); i++)
 				if (ifList->get(i)->dwIpAddr == mgmtIpAddr)
 					break;
-			if (i == ifList->getSize())
+			if (i == ifList->size())
 			{
 				NX_INTERFACE_INFO iface;
 
@@ -209,7 +209,7 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		}
 
 		// Update wrongly reported MAC addresses
-		for(int i = 0; i < ifList->getSize(); i++)
+		for(int i = 0; i < ifList->size(); i++)
 		{
 			NX_INTERFACE_INFO *curr = ifList->get(i);
 			if ((curr->dwSlotNumber != 0) &&

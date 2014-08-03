@@ -1013,8 +1013,8 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDAT
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_CUSTOM_ATTRS)
    {
-      msg.SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, pUpdate->pCustomAttrs->getSize());
-      for(i = 0, dwId1 = VID_CUSTOM_ATTRIBUTES_BASE; i < pUpdate->pCustomAttrs->getSize(); i++)
+      msg.SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, pUpdate->pCustomAttrs->size());
+      for(i = 0, dwId1 = VID_CUSTOM_ATTRIBUTES_BASE; i < pUpdate->pCustomAttrs->size(); i++)
       {
          msg.SetVariable(dwId1++, pUpdate->pCustomAttrs->getKeyByIndex(i));
          msg.SetVariable(dwId1++, pUpdate->pCustomAttrs->getValueByIndex(i));
@@ -1573,9 +1573,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *
 				fwrite(pList[i].pObject->pdwTrustedNodes, pList[i].pObject->dwNumTrustedNodes, sizeof(UINT32), hFile);
 
 			// Custom attributes
-			dwSize = pList[i].pObject->pCustomAttrs->getSize();
+			dwSize = pList[i].pObject->pCustomAttrs->size();
          fwrite(&dwSize, 1, sizeof(UINT32), hFile);
-			for(j = 0; j < pList[i].pObject->pCustomAttrs->getSize(); j++)
+			for(j = 0; j < pList[i].pObject->pCustomAttrs->size(); j++)
 			{
 				WriteStringToCacheFile(hFile, pList[i].pObject->pCustomAttrs->getKeyByIndex(j), true);
 				WriteStringToCacheFile(hFile, pList[i].pObject->pCustomAttrs->getValueByIndex(j), true);

@@ -192,7 +192,7 @@ public:
 	void *getData(int index) { return ((index >= 0) && (index < 4)) ? m_data[index] : NULL; }
 	void setData(void *data) { setData(0, data); }
 	void *getData() { return getData(0); }
-	int getSize() { return m_count; }
+	int size() { return m_count; }
 };
 
 
@@ -254,7 +254,7 @@ public:
 	~VrrpInfo();
 
 	int getVersion() { return m_version; }
-	int getSize() { return m_routers->size(); }
+	int size() { return m_routers->size(); }
 	VrrpRouter *getRouter(int index) { return m_routers->get(index); }
 };
 

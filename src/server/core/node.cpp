@@ -604,9 +604,9 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
 	LockData();
 	if (m_vrrpInfo != NULL)
 	{
-		DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): m_vrrpInfo->getSize()=%d"), m_szName, (int)m_dwId, m_vrrpInfo->getSize());
+		DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): m_vrrpInfo->size()=%d"), m_szName, (int)m_dwId, m_vrrpInfo->size());
 
-		for(i = 0; i < m_vrrpInfo->getSize(); i++)
+		for(i = 0; i < m_vrrpInfo->size(); i++)
 		{
 			VrrpRouter *router = m_vrrpInfo->getRouter(i);
 			DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): vrouter %d state=%d"), m_szName, (int)m_dwId, i, router->getState());
@@ -615,7 +615,7 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
 
 			// Get netmask for this VR
 			UINT32 netmask = 0;
-			for(j = 0; j < ifList->getSize(); j++)
+			for(j = 0; j < ifList->size(); j++)
 				if (ifList->get(j)->dwIndex == router->getIfIndex())
 				{
 					netmask = ifList->get(j)->dwIpNetMask;
@@ -629,10 +629,10 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
 				DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): checking VIP %s@%d"), m_szName, (int)m_dwId, IpToStr(vip, buffer), i);
 				if (vip != 0)
 				{
-					for(k = 0; k < ifList->getSize(); k++)
+					for(k = 0; k < ifList->size(); k++)
 						if (ifList->get(k)->dwIpAddr == vip)
 							break;
-					if (k == ifList->getSize())
+					if (k == ifList->size())
 					{
 						NX_INTERFACE_INFO iface;
 						memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
@@ -1633,7 +1633,7 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 	if (rcc == ERR_SUCCESS)
 	{
 		// Check for unbound but installed policies
-		for(int i = 0; i < ap->getSize(); i++)
+		for(int i = 0; i < ap->size(); i++)
 		{
 			uuid_t guid;
 			ap->getGuid(i, guid);
@@ -1658,13 +1658,13 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 				int j;
 
 				m_pParentList[i]->getGuid(guid1);
-				for(j = 0; j < ap->getSize(); j++)
+				for(j = 0; j < ap->size(); j++)
 				{
 					ap->getGuid(j, guid2);
 					if (!uuid_compare(guid1, guid2))
 						break;
 				}
-				if (j == ap->getSize())
+				if (j == ap->size())
 					unbindList[unbindListSize++] = m_pParentList[i];
 			}
 		}
@@ -2538,11 +2538,11 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
    pIfList = getInterfaceList();
    if (pIfList != NULL)
    {
-		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): got %d interfaces"), m_szName, m_dwId, pIfList->getSize());
+		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): got %d interfaces"), m_szName, m_dwId, pIfList->size());
 		// Remove cluster virtual interfaces from list
 		if (pCluster != NULL)
 		{
-			for(i = 0; i < pIfList->getSize(); i++)
+			for(i = 0; i < pIfList->size(); i++)
 			{
 				if (pCluster->isVirtualAddr(pIfList->get(i)->dwIpAddr))
 				{
@@ -2562,14 +2562,14 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
             Interface *pInterface = (Interface *)m_pChildList[i];
 				if (!pInterface->isManuallyCreated())
 				{
-					for(j = 0; j < pIfList->getSize(); j++)
+					for(j = 0; j < pIfList->size(); j++)
 					{
 						if ((pIfList->get(j)->dwIndex == pInterface->getIfIndex()) &&
 							 (pIfList->get(j)->dwIpAddr == pInterface->IpAddr()))
 							break;
 					}
 
-					if (j == pIfList->getSize())
+					if (j == pIfList->size())
 					{
 						// No such interface in current configuration, add it to delete list
 						ppDeleteList[iDelCount++] = pInterface;
@@ -2595,7 +2595,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
       safe_free(ppDeleteList);
 
       // Add new interfaces and check configuration of existing
-      for(j = 0; j < pIfList->getSize(); j++)
+      for(j = 0; j < pIfList->size(); j++)
       {
 			NX_INTERFACE_INFO *ifInfo = pIfList->get(j);
          BOOL bNewInterface = TRUE;
@@ -2893,10 +2893,10 @@ void Node::doInstanceDiscovery()
 		DCItem *dci = rootItems.get(i);
 		DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): Updating instances for instance discovery DCI %s [%d]"),
 		          m_szName, m_dwId, dci->getName(), dci->getId());
-		StringList *instances = getInstanceList(dci);
+		StringMap *instances = getInstanceList(dci);
 		if (instances != NULL)
 		{
-			DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): read %d values"), m_szName, m_dwId, instances->getSize());
+			DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): read %d values"), m_szName, m_dwId, instances->size());
 			dci->filterInstanceList(instances);
 			updateInstances(dci, instances);
 			delete instances;
@@ -2913,7 +2913,7 @@ void Node::doInstanceDiscovery()
 /**
  * Get instances for instance discovery DCI
  */
-StringList *Node::getInstanceList(DCItem *dci)
+StringMap *Node::getInstanceList(DCItem *dci)
 {
 	if (dci->getInstanceDiscoveryData() == NULL)
 		return NULL;
@@ -2955,13 +2955,20 @@ StringList *Node::getInstanceList(DCItem *dci)
 			instances = NULL;
 			break;
 	}
-	return instances;
+   if (instances == NULL)
+      return NULL;
+
+   StringMap *instanceMap = new StringMap;
+   for(int i = 0; i < instances->size(); i++)
+      instanceMap->set(instances->get(i), instances->get(i));
+   delete instances;
+	return instanceMap;
 }
 
 /**
  * Update instance DCIs created from instance discovery DCI
  */
-void Node::updateInstances(DCItem *root, StringList *instances)
+void Node::updateInstances(DCItem *root, StringMap *instances)
 {
    lockDciAccess(true);
 
@@ -2976,16 +2983,16 @@ void Node::updateInstances(DCItem *root, StringList *instances)
 			continue;
 
 		int j;
-		for(j = 0; j < instances->getSize(); j++)
-			if (!_tcscmp(((DCItem *)object)->getInstance(), instances->getValue(j)))
+		for(j = 0; j < instances->size(); j++)
+         if (!_tcscmp(((DCItem *)object)->getInstanceDiscoveryData(), instances->getKeyByIndex(j)))
 				break;
 
-		if (j < instances->getSize())
+		if (j < instances->size())
 		{
 			// found, remove value from instances
 			DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
-			          m_szName, m_dwId, root->getName(), root->getId(), instances->getValue(j));
-			instances->remove(j);
+			          m_szName, m_dwId, root->getName(), root->getId(), instances->getKeyByIndex(j));
+			instances->remove(instances->getKeyByIndex(j));
 		}
 		else
 		{
@@ -3000,18 +3007,18 @@ void Node::updateInstances(DCItem *root, StringList *instances)
 		deleteDCObject(deleteList.get(i), false);
 
 	// Create new instances
-	for(int i = 0; i < instances->getSize(); i++)
+	for(int i = 0; i < instances->size(); i++)
 	{
 		DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): creating new DCI for instance \"%s\""),
-		          m_szName, m_dwId, root->getName(), root->getId(), instances->getValue(i));
+		          m_szName, m_dwId, root->getName(), root->getId(), instances->getKeyByIndex(i));
 
 		DCItem *dci = new DCItem(root);
 		dci->setTemplateId(m_dwId, root->getId());
-		dci->setInstance(instances->getValue(i));
+		dci->setInstance(instances->getValueByIndex(i));
 		dci->setInstanceDiscoveryMethod(IDM_NONE);
-		dci->setInstanceDiscoveryData(NULL);
+		dci->setInstanceDiscoveryData(instances->getKeyByIndex(i));
 		dci->setInstanceFilter(NULL);
-		dci->expandInstance();
+      dci->expandInstance();
 		dci->changeBinding(CreateUniqueId(IDG_ITEM), this, FALSE);
 		addDCObject(dci, true);
 	}
@@ -3839,7 +3846,7 @@ void Node::CreateMessage(CSCPMessage *pMsg)
 	if (m_vrrpInfo != NULL)
 	{
 		pMsg->SetVariable(VID_VRRP_VERSION, (WORD)m_vrrpInfo->getVersion());
-		pMsg->SetVariable(VID_VRRP_VR_COUNT, (WORD)m_vrrpInfo->getSize());
+		pMsg->SetVariable(VID_VRRP_VR_COUNT, (WORD)m_vrrpInfo->size());
 	}
 	if (m_driver != NULL)
 	{
@@ -4774,7 +4781,7 @@ BOOL Node::checkSNMPIntegerValue(SNMP_Transport *pTransport, const TCHAR *pszOID
 void Node::checkInterfaceNames(InterfaceList *pIfList)
 {
    // Cut interface names to MAX_OBJECT_NAME and check for unnamed interfaces
-   for(int i = 0; i < pIfList->getSize(); i++)
+   for(int i = 0; i < pIfList->size(); i++)
    {
       pIfList->get(i)->szName[MAX_OBJECT_NAME - 1] = 0;
       if (pIfList->get(i)->szName[0] == 0)
@@ -5193,8 +5200,8 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 	LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(this);
 	if (nbs != NULL)
 	{
-		sendPollerMsg(dwRqId, POLLER_INFO _T("Link layer topology retrieved (%d connections found)\r\n"), nbs->getSize());
-		DbgPrintf(4, _T("Link layer topology retrieved for node %s [%d] (%d connections found)"), m_szName, (int)m_dwId, nbs->getSize());
+		sendPollerMsg(dwRqId, POLLER_INFO _T("Link layer topology retrieved (%d connections found)\r\n"), nbs->size());
+		DbgPrintf(4, _T("Link layer topology retrieved for node %s [%d] (%d connections found)"), m_szName, (int)m_dwId, nbs->size());
 
 		MutexLock(m_mutexTopoAccess);
 		if (m_linkLayerNeighbors != NULL)
@@ -5204,7 +5211,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 
 		// Walk through interfaces and update peers
 	   sendPollerMsg(dwRqId, _T("Updating peer information on interfaces\r\n"));
-		for(int i = 0; i < nbs->getSize(); i++)
+		for(int i = 0; i < nbs->size(); i++)
 		{
 			LL_NEIGHBOR_INFO *ni = nbs->getConnection(i);
 			NetObj *object = FindObjectById(ni->objectId);
@@ -5266,7 +5273,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
          {
             bool nodeFound = false;
             bool ifaceFound = false;
-		      for(int i = 0; i < nbs->getSize(); i++)
+		      for(int i = 0; i < nbs->size(); i++)
 		      {
 			      LL_NEIGHBOR_INFO *ni = nbs->getConnection(i);
                if (ni->objectId == iface->getPeerNodeId())
@@ -5457,7 +5464,7 @@ void Node::addExistingConnections(LinkLayerNeighbors *nbs)
  */
 void Node::resolveVlanPorts(VlanList *vlanList)
 {
-	for(int i = 0; i < vlanList->getSize(); i++)
+	for(int i = 0; i < vlanList->size(); i++)
 	{
 		VlanInfo *vlan = vlanList->get(i);
 		vlan->prepareForResolve();
@@ -5533,7 +5540,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 
 	   // Check if we have subnet bindings for all interfaces
 	   DbgPrintf(5, _T("Checking subnet bindings for node %s [%d]"), m_szName, m_dwId);
-	   for(int i = 0; i < pIfList->getSize(); i++)
+	   for(int i = 0; i < pIfList->size(); i++)
 	   {
 		   NX_INTERFACE_INFO *iface = pIfList->get(i);
 		   if (iface->dwIpAddr != 0)
@@ -5688,7 +5695,7 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId)
    if (pIfList != NULL)
    {
       // Check names of existing interfaces
-      for(j = 0; j < pIfList->getSize(); j++)
+      for(j = 0; j < pIfList->size(); j++)
       {
          LockChildList(FALSE);
          for(i = 0; i < m_dwChildCount; i++)

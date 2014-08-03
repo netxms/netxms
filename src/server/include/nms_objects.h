@@ -174,7 +174,7 @@ public:
 	NetObj *get(QWORD key);
 	NetObj *find(bool (*comparator)(NetObj *, void *), void *data);
 
-	int getSize();
+	int size();
 	ObjectArray<NetObj> *getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *) = NULL, void *userData = NULL);
 
 	void forEach(void (*callback)(NetObj *, void *), void *data);
@@ -591,7 +591,7 @@ public:
 	bool enumDCObjects(bool (* pfCallback)(DCObject *, UINT32, void *), void *pArg);
 	void associateItems();
 
-   UINT32 getLastValues(CSCPMessage *msg, bool objectTooltipOnly);
+   UINT32 getLastValues(CSCPMessage *msg, bool objectTooltipOnly, bool includeNoValueObjects);
 };
 
 /**
@@ -1049,8 +1049,8 @@ protected:
 
 	void applyUserTemplates();
 	void doInstanceDiscovery();
-	StringList *getInstanceList(DCItem *dci);
-	void updateInstances(DCItem *root, StringList *instances);
+	StringMap *getInstanceList(DCItem *dci);
+	void updateInstances(DCItem *root, StringMap *instances);
 
 	void updateContainerMembership();
 	BOOL updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask);

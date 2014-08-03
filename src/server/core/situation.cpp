@@ -98,11 +98,11 @@ const TCHAR *SituationInstance::GetAttribute(const TCHAR *attribute)
  */
 UINT32 SituationInstance::CreateMessage(CSCPMessage *msg, UINT32 baseId)
 {
-	UINT32 i, id = baseId;
+	UINT32 id = baseId;
 	
 	msg->SetVariable(id++, m_name);
-	msg->SetVariable(id++, m_attributes.getSize());
-	for(i = 0; i < m_attributes.getSize(); i++)
+	msg->SetVariable(id++, (UINT32)m_attributes.size());
+	for(int i = 0; i < m_attributes.size(); i++)
 	{
 		msg->SetVariable(id++, m_attributes.getKeyByIndex(i));
 		msg->SetVariable(id++, m_attributes.getValueByIndex(i));
@@ -123,12 +123,10 @@ Situation::Situation(const TCHAR *name)
 	m_accessMutex = MutexCreate();
 }
 
-
-//
-// Situation constructor for loading from database
-// Expected field order: id,name,comments
-//
-
+/**
+ * Situation constructor for loading from database
+ * Expected field order: id,name,comments
+ */
 Situation::Situation(DB_RESULT handle, int row)
 {
 	m_id = DBGetFieldULong(handle, row, 0);

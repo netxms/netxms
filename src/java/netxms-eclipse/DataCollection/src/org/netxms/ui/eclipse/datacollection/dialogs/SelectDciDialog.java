@@ -64,6 +64,7 @@ public class SelectDciDialog extends Dialog
 	private boolean enableEmptySelection = false;
 	private boolean allowTemplateItems = false;
 	private boolean allowSingleSelection = false;
+	private boolean allowNoValueObjects = false;
 	
 	/**
 	 * @param parentShell
@@ -146,7 +147,7 @@ public class SelectDciDialog extends Dialog
 		}
 
       dciList = new DciList(null, (fixedNode == 0) ? splitter : dialogArea, SWT.BORDER, null,
-            "SelectDciDialog.dciList", dcObjectType, allowSingleSelection ? SWT.NONE : SWT.MULTI); //$NON-NLS-1$
+            "SelectDciDialog.dciList", dcObjectType, allowSingleSelection ? SWT.NONE : SWT.MULTI, allowNoValueObjects); //$NON-NLS-1$
 		dciList.setDcObjectType(dcObjectType);
 		dciList.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
@@ -311,5 +312,13 @@ public class SelectDciDialog extends Dialog
    public void setSingleSelection(boolean allowSingleSelection)
    {
       this.allowSingleSelection = allowSingleSelection;
+   }
+
+   /**
+    * @param allowNoValueObjects the allowNoValueObjects to set
+    */
+   public void setAllowNoValueObjects(boolean allowNoValueObjects)
+   {
+      this.allowNoValueObjects = allowNoValueObjects;
    }
 }

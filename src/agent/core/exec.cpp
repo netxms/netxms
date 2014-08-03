@@ -160,15 +160,15 @@ UINT32 ExecuteCommand(TCHAR *pszCommand, StringList *args, pid_t *pid)
 				{
 					int argNum = *sptr - _T('1');
 
-					if (argNum < args->getSize())
+					if (argNum < args->size())
 					{
 						int iArgLength;
 
 						// Extend resulting line
-						iArgLength = (int)_tcslen(args->getValue(argNum));
+						iArgLength = (int)_tcslen(args->get(argNum));
 						dwSize += iArgLength * sizeof(TCHAR);
 						pszCmdLine = (TCHAR *)realloc(pszCmdLine, dwSize);
-						_tcscpy(&pszCmdLine[i], args->getValue(argNum));
+						_tcscpy(&pszCmdLine[i], args->get(argNum));
 						i += iArgLength;
 					}
 				}
@@ -542,7 +542,7 @@ LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
    LONG status = RunExternal(cmd, arg, &values);
    if (status == SYSINFO_RC_SUCCESS)
    {
-      ret_string(value, values.getSize() > 0 ? values.getValue(0) : _T(""));
+      ret_string(value, values.size() > 0 ? values.get(0) : _T(""));
    }
    return status;
 }
@@ -587,15 +587,15 @@ UINT32 ExecuteShellCommand(TCHAR *pszCommand, StringList *args)
             {
                int argNum = *sptr - _T('1');
 
-               if (argNum < args->getSize())
+               if (argNum < args->size())
                {
                   int iArgLength;
 
                   // Extend resulting line
-						iArgLength = (int)_tcslen(args->getValue(argNum));
+						iArgLength = (int)_tcslen(args->get(argNum));
                   dwSize += iArgLength * sizeof(TCHAR);
                   pszCmdLine = (TCHAR *)realloc(pszCmdLine, dwSize);
-                  _tcscpy(&pszCmdLine[i], args->getValue(argNum));
+                  _tcscpy(&pszCmdLine[i], args->get(argNum));
                   i += iArgLength;
                }
             }

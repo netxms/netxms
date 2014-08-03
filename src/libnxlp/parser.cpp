@@ -709,12 +709,12 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TC
 	else if (success)
 	{ 
 		parsers = new ObjectArray<LogParser>;
-		if (state.files.getSize() > 0)
+		if (state.files.size() > 0)
 		{
-			for(int i = 0; i < state.files.getSize(); i++)
+			for(int i = 0; i < state.files.size(); i++)
 			{
 				LogParser *p = (i > 0) ? new LogParser(state.parser) : state.parser;
-				p->setFileName(state.files.getValue(i));
+				p->setFileName(state.files.get(i));
 				p->setFileEncoding(*state.encodings.get(i));
 				parsers->add(p);
 			}

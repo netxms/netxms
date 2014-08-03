@@ -113,7 +113,7 @@ UINT32 GetLocalIpAddr()
    if (pIfList != NULL)
    {
       // Find first interface with IP address
-      for(i = 0; i < pIfList->getSize(); i++)
+      for(i = 0; i < pIfList->size(); i++)
 			if ((pIfList->get(i)->dwIpAddr != 0) && ((pIfList->get(i)->dwIpAddr & 0xFF000000) != 0x7F000000))
          {
             dwAddr = pIfList->get(i)->dwIpAddr;

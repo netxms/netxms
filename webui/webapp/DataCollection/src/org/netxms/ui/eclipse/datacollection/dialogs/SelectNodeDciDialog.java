@@ -89,7 +89,7 @@ public class SelectNodeDciDialog extends Dialog
 		
 		dialogArea.setLayout(new FillLayout());
 		
-		dciList = new DciList(null, dialogArea, SWT.BORDER, null, "SelectNodeDciDialog.dciList", dcObjectType, SWT.SINGLE);  //$NON-NLS-1$
+		dciList = new DciList(null, dialogArea, SWT.BORDER, null, "SelectNodeDciDialog.dciList", dcObjectType, SWT.SINGLE, false);  //$NON-NLS-1$
 		dciList.setDcObjectType(dcObjectType);
 		dciList.addDoubleClickListener(new IDoubleClickListener() {
 			@Override

@@ -388,6 +388,16 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Upgrade from V331 to V332
+ */
+static BOOL H_UpgradeFromV331(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE items SET instd_data=instance WHERE node_id=template_id AND instd_method=0")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='332' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V330 to V331
  */
 static BOOL H_UpgradeFromV330(int currVersion, int newVersion)
@@ -8060,6 +8070,7 @@ static struct
    { 328, 329, H_UpgradeFromV328 },
    { 329, 330, H_UpgradeFromV329 },
    { 330, 331, H_UpgradeFromV330 },
+   { 331, 332, H_UpgradeFromV331 },
    { 0, 0, NULL }
 };
 

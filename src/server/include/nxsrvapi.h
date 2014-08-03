@@ -234,7 +234,7 @@ public:
 	void add(NX_INTERFACE_INFO *iface);
 	void remove(int index);
 
-	int getSize() { return m_size; }
+	int size() { return m_size; }
 	NX_INTERFACE_INFO *get(int index) { return ((index >= 0) && (index < m_size)) ? &m_interfaces[index] : NULL; }
 	NX_INTERFACE_INFO *findByIfIndex(UINT32 ifIndex);
 
@@ -299,7 +299,7 @@ public:
 	void add(VlanInfo *vlan);
 	void addMemberPort(int vlanId, UINT32 portId);
 
-	int getSize() { return m_size; }
+	int size() { return m_size; }
 	VlanInfo *get(int index) { return ((index >= 0) && (index < m_size)) ? m_vlans[index] : NULL; }
 	VlanInfo *findById(int id);
 	VlanInfo *findByName(const TCHAR *name);
@@ -346,7 +346,7 @@ public:
 	AgentPolicyInfo(CSCPMessage *msg);
 	~AgentPolicyInfo();
 
-	int getSize() { return m_size; }
+	int size() { return m_size; }
 	bool getGuid(int index, uuid_t guid);
 	int getType(int index) { return ((index >= 0) && (index < m_size)) ? m_typeList[index] : -1; }
 	const TCHAR *getServer(int index) { return ((index >= 0) && (index < m_size)) ? m_serverList[index] : NULL; }

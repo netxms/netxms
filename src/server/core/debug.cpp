@@ -122,7 +122,7 @@ void ShowServerStats(CONSOLE_CTX pCtx)
    ConsolePrintf(pCtx, _T("Total number of objects:     %d\n")
                        _T("Number of monitored nodes:   %d\n")
                        _T("Number of collectable DCIs:  %d\n\n"),
-	              g_idxObjectById.getSize(), g_idxNodeById.getSize(), dciCount);
+	              g_idxObjectById.size(), g_idxNodeById.size(), dciCount);
 }
 
 /**

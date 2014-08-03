@@ -284,7 +284,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEve
 			msg.SetVariable(VID_ALARM_TIMEOUT_EVENT, pEventPolicy->pRuleList[i].dwAlarmTimeoutEvent);
 			msg.SetVariable(VID_SITUATION_ID, pEventPolicy->pRuleList[i].dwSituationId);
 			msg.SetVariable(VID_SITUATION_INSTANCE, pEventPolicy->pRuleList[i].szSituationInstance);
-			count = (pEventPolicy->pRuleList[i].pSituationAttrList != NULL) ? pEventPolicy->pRuleList[i].pSituationAttrList->getSize() : 0;
+			count = (pEventPolicy->pRuleList[i].pSituationAttrList != NULL) ? pEventPolicy->pRuleList[i].pSituationAttrList->size() : 0;
 			msg.SetVariable(VID_SITUATION_NUM_ATTRS, count);
 			for(j = 0, id = VID_SITUATION_ATTR_LIST_BASE; j < count; j++)
 			{

@@ -360,7 +360,7 @@ public:
 	const TCHAR *getInstance() { return m_instance; }
 	int getSampleCount() { return m_sampleCount; }
 
-	void filterInstanceList(StringList *instances);
+	void filterInstanceList(StringMap *instances);
 	void expandInstance();
 
    virtual bool processNewValue(time_t nTimeStamp, void *value);
@@ -399,7 +399,7 @@ public:
 	void addThreshold(Threshold *pThreshold);
 	void deleteAllThresholds();
 	void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
-	void setInstanceDiscoveryData(const TCHAR *data) { safe_free(m_instanceDiscoveryData); m_instanceDiscoveryData = (data != NULL) ? _tcsdup(data) : NULL; }
+	void setInstanceDiscoveryData(const TCHAR *data) { safe_free(m_instanceDiscoveryData); m_instanceDiscoveryData = _tcsdup_ex(data); }
    void setInstanceFilter(const TCHAR *pszScript);
 
    static bool testTransformation(DataCollectionTarget *object, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);

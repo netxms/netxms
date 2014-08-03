@@ -93,7 +93,7 @@ InterfaceList *PowerConnectDriver::getInterfaces(SNMP_Transport *snmp, StringMap
 	UINT32 slotSize = attributes->getULong(_T(".powerConnect.slotSize"), 52);
 
 	// Find physical ports
-	for(int i = 0; i < ifList->getSize(); i++)
+	for(int i = 0; i < ifList->size(); i++)
 	{
 		NX_INTERFACE_INFO *iface = ifList->get(i);
 		if (iface->dwType == IFTYPE_ETHERNET_CSMACD)

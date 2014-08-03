@@ -86,7 +86,7 @@ InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
 
    // Check if there are indexes below 49
    bool highBase = true;
-	for(int i = 0; i < ifList->getSize(); i++)
+	for(int i = 0; i < ifList->size(); i++)
    {
       if (ifList->get(i)->dwIndex < 49)
       {
@@ -96,7 +96,7 @@ InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
    }
 
 	// Find physical ports
-	for(int i = 0; i < ifList->getSize(); i++)
+	for(int i = 0; i < ifList->size(); i++)
 	{
 		NX_INTERFACE_INFO *iface = ifList->get(i);
 		if (iface->dwIndex < 1000)

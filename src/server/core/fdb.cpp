@@ -345,7 +345,7 @@ ForwardingDatabase *GetSwitchForwardingDatabase(Node *node)
 		VlanList *vlans = node->getVlans();
 		if (vlans != NULL)
 		{
-			for(int i = 0; i < vlans->getSize(); i++)
+			for(int i = 0; i < vlans->size(); i++)
 			{
 				TCHAR context[16];
 				_sntprintf(context, 16, _T("%s%d"), (node->getSNMPVersion() < SNMP_VERSION_3) ? _T("") : _T("vlan-"), vlans->get(i)->getVlanId());

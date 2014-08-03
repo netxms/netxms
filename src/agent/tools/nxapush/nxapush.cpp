@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (s_data->getSize() > 0)
+	if (s_data->size() > 0)
 	{
 		if (Startup())
 		{
@@ -341,8 +341,8 @@ static BOOL Send()
 	CSCPMessage msg;
 	msg.SetCode(CMD_PUSH_DCI_DATA);
    msg.SetVariable(VID_OBJECT_ID, optObjectId);
-   msg.SetVariable(VID_NUM_ITEMS, s_data->getSize());
-	for(DWORD i = 0, varId = VID_PUSH_DCI_DATA_BASE; i < s_data->getSize(); i++)
+   msg.SetVariable(VID_NUM_ITEMS, s_data->size());
+	for(DWORD i = 0, varId = VID_PUSH_DCI_DATA_BASE; i < s_data->size(); i++)
 	{
 		msg.SetVariable(varId++, s_data->getKeyByIndex(i));
 		msg.SetVariable(varId++, s_data->getValueByIndex(i));

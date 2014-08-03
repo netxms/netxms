@@ -129,7 +129,7 @@ bool NetObj::deleteFromDB(DB_HANDLE hdb)
    // Delete module data
    if (success && (m_moduleData != NULL))
    {
-      for(UINT32 i = 0; (i < m_moduleData->getSize()) && success; i++)
+      for(UINT32 i = 0; (i < m_moduleData->size()) && success; i++)
          success = m_moduleData->getValueByIndex(i)->deleteFromDatabase(hdb, m_dwId);
    }
 
@@ -330,7 +330,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 			hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"));
 			if (hStmt != NULL)
 			{
-				for(UINT32 i = 0; i < m_customAttributes.getSize(); i++)
+				for(UINT32 i = 0; i < m_customAttributes.size(); i++)
 				{
 					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
 					DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_customAttributes.getKeyByIndex(i), DB_BIND_STATIC);
@@ -351,7 +351,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
    // Save module data
    if (success && (m_moduleData != NULL))
    {
-      for(UINT32 i = 0; (i < m_moduleData->getSize()) && success; i++)
+      for(UINT32 i = 0; (i < m_moduleData->size()) && success; i++)
          success = m_moduleData->getValueByIndex(i)->saveToDatabase(hdb, m_dwId);
    }
 
@@ -871,8 +871,8 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
 	if (m_dwNumTrustedNodes > 0)
 		pMsg->setFieldInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
 
-	pMsg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_customAttributes.getSize());
-	for(i = 0, dwId = VID_CUSTOM_ATTRIBUTES_BASE; i < m_customAttributes.getSize(); i++)
+	pMsg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_customAttributes.size());
+	for(i = 0, dwId = VID_CUSTOM_ATTRIBUTES_BASE; i < m_customAttributes.size(); i++)
 	{
 		pMsg->SetVariable(dwId++, m_customAttributes.getKeyByIndex(i));
 		pMsg->SetVariable(dwId++, m_customAttributes.getValueByIndex(i));
@@ -883,8 +883,8 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
 
    if (m_moduleData != NULL)
    {
-      pMsg->SetVariable(VID_MODULE_DATA_COUNT, (UINT16)m_moduleData->getSize());
-      for(i = 0, dwId = VID_MODULE_DATA_BASE; i < m_moduleData->getSize(); i++, dwId += 0x100000)
+      pMsg->SetVariable(VID_MODULE_DATA_COUNT, (UINT16)m_moduleData->size());
+      for(i = 0, dwId = VID_MODULE_DATA_BASE; i < m_moduleData->size(); i++, dwId += 0x100000)
       {
          pMsg->SetVariable(dwId, m_moduleData->getKeyByIndex(i));
          ModuleData *d = m_moduleData->getValueByIndex(i);

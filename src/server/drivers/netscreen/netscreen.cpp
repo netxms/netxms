@@ -88,7 +88,7 @@ static UINT32 HandlerIfList(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Tra
 {
 	InterfaceList *ifList = (InterfaceList *)arg;
 
-   UINT32 nameLen = varbind->getName()->getLength();
+   size_t nameLen = varbind->getName()->getLength();
 	UINT32 oidName[MAX_OID_LEN];
 	memcpy(oidName, varbind->getName()->getValue(), nameLen * sizeof(UINT32));
 
@@ -138,11 +138,11 @@ InterfaceList *NetscreenDriver::getInterfaces(SNMP_Transport *snmp, StringMap *a
 	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.3224.9.1.1.1"), HandlerIfList, ifList, FALSE) == SNMP_ERR_SUCCESS)
 	{
 		// Fix interface indexes
-		for(int i = 0; i < ifList->getSize(); i++)
+		for(int i = 0; i < ifList->size(); i++)
 		{
 			NX_INTERFACE_INFO *iface = ifList->get(i);
 			int j;
-			for(j = 0; j < stdIfList->getSize(); j++)
+			for(j = 0; j < stdIfList->size(); j++)
 			{
 				if (!_tcscmp(iface->szName, stdIfList->get(j)->szName))
 				{
@@ -150,7 +150,7 @@ InterfaceList *NetscreenDriver::getInterfaces(SNMP_Transport *snmp, StringMap *a
 					break;
 				}
 			}
-			if (j == stdIfList->getSize())
+			if (j == stdIfList->size())
 			{
 				// Interface nt found in standard interface list (usually tunnel interface)
 				iface->dwIndex += 32768;

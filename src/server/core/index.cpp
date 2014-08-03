@@ -163,12 +163,12 @@ NetObj *ObjectIndex::get(QWORD key)
 /**
  * Get index size
  */
-int ObjectIndex::getSize()
+int ObjectIndex::size()
 {
 	RWLockReadLock(m_lock, INFINITE);
-	int size = m_size;
+	int s = m_size;
 	RWLockUnlock(m_lock);
-	return size;
+	return s;
 }
 
 /**

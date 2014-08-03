@@ -410,7 +410,7 @@ TCHAR *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, UINT32
  */
 void LDAPConnection::compareUserLists(StringObjectMap<Entry> *userEntryList)
 {
-   for(UINT32 i = 0; i < userEntryList->getSize(); i++)
+   for(int i = 0; i < userEntryList->size(); i++)
    {
       UpdateLDAPUsers(userEntryList->getKeyByIndex(i), userEntryList->getValueByIndex(i));
    }
@@ -422,7 +422,7 @@ void LDAPConnection::compareUserLists(StringObjectMap<Entry> *userEntryList)
  */
 void LDAPConnection::compareGroupList(StringObjectMap<Entry> *groupEntryList)
 {
-   for(UINT32 i = 0; i < groupEntryList->getSize(); i++)
+   for(int i = 0; i < groupEntryList->size(); i++)
    {
       UpdateLDAPGroups(groupEntryList->getKeyByIndex(i), groupEntryList->getValueByIndex(i));
    }

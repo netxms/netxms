@@ -174,7 +174,7 @@ void StringList::replace(int index, const TCHAR *value)
  * if given value not found in the list. If list contains duplicate values,
  * index of first occurence will be returned.
  */
-int StringList::getIndex(const TCHAR *value)
+int StringList::indexOf(const TCHAR *value)
 {
 	for(int i = 0; i < m_count; i++)
 		if ((m_values[i] != NULL) && !_tcscmp(m_values[i], value))
@@ -187,7 +187,7 @@ int StringList::getIndex(const TCHAR *value)
  * if given value not found in the list. If list contains duplicate values,
  * index of first occurence will be returned.
  */
-int StringList::getIndexIgnoreCase(const TCHAR *value)
+int StringList::indexOfIgnoreCase(const TCHAR *value)
 {
 	for(int i = 0; i < m_count; i++)
 		if ((m_values[i] != NULL) && !_tcsicmp(m_values[i], value))
@@ -224,7 +224,7 @@ void StringList::merge(const StringList *src, bool matchCase)
 {
    for(int i = 0; i < src->m_count; i++)
    {
-      if ((matchCase ? getIndex(src->m_values[i]) : getIndexIgnoreCase(src->m_values[i])) == -1)
+      if ((matchCase ? indexOf(src->m_values[i]) : indexOfIgnoreCase(src->m_values[i])) == -1)
          add(src->m_values[i]);
    }
 }

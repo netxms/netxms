@@ -527,7 +527,7 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 							{
 								scriptName[i] = 0;
 								StrStrip(scriptName);
-								int index = event->m_parameterNames.getIndexIgnoreCase(scriptName);
+								int index = event->m_parameterNames.indexOfIgnoreCase(scriptName);
 								if (index != -1)
 								{
 									const TCHAR *temp = (TCHAR *)event->m_parameters.get(index);
@@ -590,7 +590,7 @@ void Event::addParameter(const TCHAR *name, const TCHAR *value)
  */
 void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
 {
-	int index = m_parameterNames.getIndexIgnoreCase(name);
+	int index = m_parameterNames.indexOfIgnoreCase(name);
 	if (index != -1)
 	{
 		m_parameters.replace(index, _tcsdup(value));

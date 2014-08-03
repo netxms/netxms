@@ -988,6 +988,7 @@ typedef struct
 #define VID_ALARM_LIST_DISP_LIMIT   ((UINT32)478)
 #define VID_LANGUAGE                ((UINT32)479)
 #define VID_ROOT                    ((UINT32)480)
+#define VID_INCLUDE_NOVALUE_OBJECTS ((UINT32)481)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

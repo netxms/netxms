@@ -45,7 +45,7 @@ static UINT32 PortMapCallback(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
    {
 		UINT32 ifIndex = pRespPDU->getVariable(0)->getValueAsUInt();
 		InterfaceList *ifList = (InterfaceList *)arg;
-		for(int i = 0; i < ifList->getSize(); i++)
+		for(int i = 0; i < ifList->size(); i++)
 			if (ifList->get(i)->dwIndex == ifIndex)
 			{
 				ifList->get(i)->dwBridgePortNumber = var->getValueAsUInt();

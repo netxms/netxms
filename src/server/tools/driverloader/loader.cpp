@@ -124,7 +124,7 @@ static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transpo
    
    driver->analyzeDevice(transport, oid, &s_customAttributes, &s_driverData);
    _tprintf(_T("Custom attributes after device analyze:\n"));
-   for(UINT32 i = 0; i < s_customAttributes.getSize(); i++)
+   for(int i = 0; i < s_customAttributes.size(); i++)
    {
       _tprintf(_T("   %s = %s\n"), s_customAttributes.getKeyByIndex(i), s_customAttributes.getValueByIndex(i));
    }

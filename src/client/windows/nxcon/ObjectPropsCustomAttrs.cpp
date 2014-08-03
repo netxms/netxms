@@ -58,7 +58,6 @@ END_MESSAGE_MAP()
 
 BOOL CObjectPropsCustomAttrs::OnInitDialog() 
 {
-	DWORD i;
 	int item;
 	RECT rect;
 
@@ -73,7 +72,7 @@ BOOL CObjectPropsCustomAttrs::OnInitDialog()
 	m_wndListCtrl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
 	// Fill list control with data
-	for(i = 0; i < m_pObject->pCustomAttrs->getSize(); i++)
+	for(int i = 0; i < m_pObject->pCustomAttrs->size(); i++)
 	{
 		item = m_wndListCtrl.InsertItem(i, m_pObject->pCustomAttrs->getKeyByIndex(i));
 		if (item != -1)

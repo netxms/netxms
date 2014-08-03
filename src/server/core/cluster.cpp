@@ -545,7 +545,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 			if (pIfList != NULL)
 			{
 				LockData();
-				for(j = 0; j < (UINT32)pIfList->getSize(); j++)
+				for(j = 0; j < (UINT32)pIfList->size(); j++)
 				{
 					for(k = 0; k < m_dwNumResources; k++)
 					{

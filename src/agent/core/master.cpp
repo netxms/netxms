@@ -67,9 +67,9 @@ static void H_GetList(CSCPMessage *pRequest, CSCPMessage *pMsg)
    pMsg->SetVariable(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
-		pMsg->SetVariable(VID_NUM_STRINGS, (UINT32)value.getSize());
-		for(int i = 0; i < value.getSize(); i++)
-			pMsg->SetVariable(VID_ENUM_VALUE_BASE + i, value.getValue(i));
+		pMsg->SetVariable(VID_NUM_STRINGS, (UINT32)value.size());
+		for(int i = 0; i < value.size(); i++)
+			pMsg->SetVariable(VID_ENUM_VALUE_BASE + i, value.get(i));
    }
 }
 

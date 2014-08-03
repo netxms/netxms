@@ -284,7 +284,7 @@ public:
 class LIBNETXMS_EXPORTABLE StringMapBase
 {
 protected:
-	UINT32 m_size;
+	int m_size;
 	TCHAR **m_keys;
 	void **m_values;
 	bool m_objectOwner;
@@ -306,8 +306,8 @@ public:
 	void remove(const TCHAR *key);
 	void clear();
 
-	UINT32 getSize() { return m_size; }
-	const TCHAR *getKeyByIndex(UINT32 idx) { return (idx < m_size) ? CHECK_NULL_EX(m_keys[idx]) : NULL; }
+	int size() { return m_size; }
+	const TCHAR *getKeyByIndex(int idx) { return ((idx >= 0) && (idx < m_size)) ? CHECK_NULL_EX(m_keys[idx]) : NULL; }
 };
 
 /**
@@ -326,11 +326,13 @@ public:
 	void setPreallocated(TCHAR *key, TCHAR *value) { setObject(key, value, true); }
 	void set(const TCHAR *key, UINT32 value);
 
+   void addAll(StringMap *src);
+
 	const TCHAR *get(const TCHAR *key) { return (const TCHAR *)getObject(key); }
 	UINT32 getULong(const TCHAR *key, UINT32 defaultValue);
 	bool getBoolean(const TCHAR *key, bool defaultValue);
 
-	const TCHAR *getValueByIndex(UINT32 idx) { return (idx < m_size) ? CHECK_NULL_EX((TCHAR *)m_values[idx]) : NULL; }
+	const TCHAR *getValueByIndex(int idx) { return ((idx >= 0) && (idx < m_size)) ? CHECK_NULL_EX((TCHAR *)m_values[idx]) : NULL; }
 };
 
 /**
@@ -346,7 +348,7 @@ public:
 
 	void set(const TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, false); }
 	T *get(const TCHAR *key) { return (T*)getObject(key); }
-	T *getValueByIndex(UINT32 idx) { return (idx < m_size) ? (T *)m_values[idx] : NULL; }
+	T *getValueByIndex(int idx) { return ((idx >= 0) && (idx < m_size)) ? (T *)m_values[idx] : NULL; }
 };
 
 /**
@@ -374,10 +376,10 @@ public:
 	void add(double value);
 	void replace(int index, const TCHAR *value);
 	void clear();
-	int getSize() { return m_count; }
-	const TCHAR *getValue(int index) { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
-	int getIndex(const TCHAR *value);
-	int getIndexIgnoreCase(const TCHAR *value);
+	int size() { return m_count; }
+	const TCHAR *get(int index) { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
+	int indexOf(const TCHAR *value);
+	int indexOfIgnoreCase(const TCHAR *value);
 	void remove(int index);
    void addAll(const StringList *src);
    void merge(const StringList *src, bool matchCase);

@@ -278,9 +278,9 @@ static BOOL MatchProcess(DWORD pid, HANDLE hProcess, HMODULE hModule, BOOL bExtM
 			StringList *pWndList;
 
 			pWndList = GetProcessWindows(pid);
-			for(i = 0, bWindowMatch = FALSE; i < pWndList->getSize(); i++)
+			for(i = 0, bWindowMatch = FALSE; i < pWndList->size(); i++)
 			{
-				if (RegexpMatch(pWndList->getValue(i), pszWindowName, FALSE))
+				if (RegexpMatch(pWndList->get(i), pszWindowName, FALSE))
 				{
 					bWindowMatch = TRUE;
 					break;

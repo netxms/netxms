@@ -111,7 +111,7 @@ InterfaceList *PassportDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 	bool is1600Series = attributes->getBoolean(_T(".rapidCity.is1600"), false);
 	
 	// Calculate slot/port pair from ifIndex
-	for(int i = 0; i < ifList->getSize(); i++)
+	for(int i = 0; i < ifList->size(); i++)
 	{
 		UINT32 slot = ifList->get(i)->dwIndex / 64;
 

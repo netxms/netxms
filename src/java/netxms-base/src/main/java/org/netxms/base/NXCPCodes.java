@@ -814,6 +814,7 @@ public class NXCPCodes
    public static final long VID_ALARM_LIST_DISP_LIMIT = 478;
    public static final long VID_LANGUAGE = 479;
    public static final long VID_ROOT = 480;
+   public static final long VID_INCLUDE_NOVALUE_OBJECTS = 481;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

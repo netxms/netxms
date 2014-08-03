@@ -62,6 +62,7 @@ public class DciList extends Composite
 	private NXCSession session;
 	private SortableTableViewer viewer;
 	private int dcObjectType;	// DC object type filter; -1 allows all object types
+	private boolean allowNoValueObjects = false;
 	
 	/**
 	 * Create "last values" widget
@@ -72,13 +73,14 @@ public class DciList extends Composite
 	 * @param _node node to display data for
 	 * @param configPrefix configuration prefix for saving/restoring viewer settings
 	 */
-	public DciList(ViewPart viewPart, Composite parent, int style, AbstractNode _node, final String configPrefix, int dcObjectType, int selectionType)
+	public DciList(ViewPart viewPart, Composite parent, int style, AbstractNode _node, final String configPrefix, int dcObjectType, int selectionType, boolean allowNoValueObjects)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		this.viewPart = viewPart;		
 		this.node = _node;
 		this.dcObjectType = dcObjectType;
+		this.allowNoValueObjects = allowNoValueObjects;
 		
 		final IDialogSettings ds = Activator.getDefault().getDialogSettings();
 		
@@ -121,19 +123,19 @@ public class DciList extends Composite
 			return;
 		}
 
-		ConsoleJob job = new ConsoleJob(Messages.get().DciList_JobTitle + node.getObjectName(), viewPart, Activator.PLUGIN_ID, null) {
+		ConsoleJob job = new ConsoleJob(String.format(Messages.get().DciList_JobTitle, node.getObjectName()), viewPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected String getErrorMessage()
 			{
-				return Messages.get().DciList_JobError + node.getObjectName();
+				return String.format(Messages.get().DciList_JobError, node.getObjectName());
 			}
 
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final List<DciValue> data = 
-						(dcObjectType == -1) ? Arrays.asList(session.getLastValues(node.getObjectId())) 
-								: new ArrayList<DciValue>(Arrays.asList(session.getLastValues(node.getObjectId())));
+						(dcObjectType == -1) ? Arrays.asList(session.getLastValues(node.getObjectId(), false, allowNoValueObjects)) 
+								: new ArrayList<DciValue>(Arrays.asList(session.getLastValues(node.getObjectId(), false, allowNoValueObjects)));
 				if (dcObjectType != -1)
 				{
 					Iterator<DciValue> it = data.iterator();

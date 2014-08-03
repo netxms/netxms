@@ -90,7 +90,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 				{
 					try
 					{
-						DciValue[] values = session.getLastValues(e.getKey(), true);
+						DciValue[] values = session.getLastValues(e.getKey(), true, false);
 						cachedDciValues.put(e.getKey(), values);
 					}
 					catch(Exception e2)

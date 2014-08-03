@@ -72,14 +72,14 @@ bool WinPerfObject::readDataFromAgent(AgentConnection *conn)
 UINT32 WinPerfObject::fillMessage(CSCPMessage *msg, UINT32 baseId)
 {
 	msg->SetVariable(baseId, m_name);
-	msg->SetVariable(baseId + 1, (UINT32)m_counters->getSize());
-	msg->SetVariable(baseId + 2, (UINT32)m_instances->getSize());
+	msg->SetVariable(baseId + 1, (UINT32)m_counters->size());
+	msg->SetVariable(baseId + 2, (UINT32)m_instances->size());
 
 	UINT32 varId = baseId + 3;
-	for(int i = 0; i < m_counters->getSize(); i++)
-		msg->SetVariable(varId++, m_counters->getValue(i));
-	for(int i = 0; i < m_instances->getSize(); i++)
-		msg->SetVariable(varId++, m_instances->getValue(i));
+	for(int i = 0; i < m_counters->size(); i++)
+		msg->SetVariable(varId++, m_counters->get(i));
+	for(int i = 0; i < m_instances->size(); i++)
+		msg->SetVariable(varId++, m_instances->get(i));
 	return varId;
 }
 

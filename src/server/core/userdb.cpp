@@ -666,15 +666,15 @@ void SyncGroupMembers(Group* group, Entry *obj)
     * Go throught existing group member list checking each ldap user by dn
     * with new gotten group member list and removing ldap users not existing in last list.
     */
-   for(i = 0; i <count; i++)
+   for(i = 0; i < count; i++)
    {
       UserDatabaseObject * user = GetUser(oldMembers[i]);
       if(user != NULL && user->isLDAPUser())
       {
          bool found = false;
-         for(j = 0; j < newMembers->getSize(); j++)
+         for(j = 0; j < newMembers->size(); j++)
          {
-            if(!_tcscmp(newMembers->getValue(j), CHECK_NULL_EX(user->getDn())))
+            if(!_tcscmp(newMembers->get(j), CHECK_NULL_EX(user->getDn())))
             {
                found = true;
                break;
@@ -694,9 +694,9 @@ void SyncGroupMembers(Group* group, Entry *obj)
     * Go throught new gotten group member list checking each ldap user by dn
     * with existing group member list and adding users not existing in last list.
     */
-   for(i = 0; i< newMembers->getSize(); i++)
+   for(i = 0; i < newMembers->size(); i++)
    {
-      UserDatabaseObject * userNew = GetUser(newMembers->getValue(i));
+      UserDatabaseObject * userNew = GetUser(newMembers->get(i));
       if(userNew != NULL && userNew->isLDAPUser())
       {
          bool found = false;
@@ -712,7 +712,7 @@ void SyncGroupMembers(Group* group, Entry *obj)
          }
          if(!found)
          {
-            DbgPrintf(4, _T("SyncGroupMembers: %s user added to %s group"), newMembers->getValue(i), group->getDn());
+            DbgPrintf(4, _T("SyncGroupMembers: %s user added to %s group"), newMembers->get(i), group->getDn());
             group->addUser(userNew->getId());
             count = group->getMembers(&oldMembers);
          }

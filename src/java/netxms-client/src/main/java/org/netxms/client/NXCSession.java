@@ -2913,7 +2913,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_CREATE_USER);
       msg.setVariable(NXCPCodes.VID_USER_NAME, name);
-      msg.setVariableInt16(NXCPCodes.VID_IS_GROUP, isGroup ? 1 : 0);
+      msg.setVariable(NXCPCodes.VID_IS_GROUP, isGroup);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -3067,17 +3067,19 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    /**
     * Get last DCI values for given node
     *
-    * @param nodeId            ID of the node to get DCI values for
-    * @param objectTooltipOnly if set to true, only DCIs with DCF_SHOW_ON_OBJECT_TOOLTIP flag set are returned
+    * @param nodeId                ID of the node to get DCI values for
+    * @param objectTooltipOnly     if set to true, only DCIs with DCF_SHOW_ON_OBJECT_TOOLTIP flag set are returned
+    * @param includeNoValueObjects if set to true, objects with no value (like instance discovery DCIs) will be returned as well
     * @return List of DCI values
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciValue[] getLastValues(final long nodeId, boolean objectTooltipOnly) throws IOException, NXCException
+   public DciValue[] getLastValues(final long nodeId, boolean objectTooltipOnly, boolean includeNoValueObjects) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LAST_VALUES);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
-      msg.setVariableInt16(NXCPCodes.VID_OBJECT_TOOLTIP_ONLY, objectTooltipOnly ? 1 : 0);
+      msg.setVariable(NXCPCodes.VID_OBJECT_TOOLTIP_ONLY, objectTooltipOnly);
+      msg.setVariable(NXCPCodes.VID_INCLUDE_NOVALUE_OBJECTS, includeNoValueObjects);
       sendMessage(msg);
 
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -3103,7 +3105,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     */
    public DciValue[] getLastValues(final long nodeId) throws IOException, NXCException
    {
-      return getLastValues(nodeId, false);
+      return getLastValues(nodeId, false, false);
    }
    
    /**

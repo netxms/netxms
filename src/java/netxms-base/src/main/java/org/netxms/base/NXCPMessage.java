@@ -304,6 +304,11 @@ public class NXCPMessage
 		setVariable(new NXCPVariable(varId, NXCPVariable.TYPE_INT16, (long)value));
 	}
 	
+   public void setVariable(final long varId, final boolean value)
+   {
+      setVariable(new NXCPVariable(varId, NXCPVariable.TYPE_INT16, value ? 1L : 0L));
+   }
+   
 	public byte[] getVariableAsBinary(final long varId)
 	{
 		final NXCPVariable var = findVariable(varId);

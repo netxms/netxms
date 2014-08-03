@@ -82,7 +82,7 @@ InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 	if (ifList == NULL)
 		return NULL;
 
-   for(int i = 0; i < ifList->getSize(); i++)
+   for(int i = 0; i < ifList->size(); i++)
    {
       NX_INTERFACE_INFO *iface = ifList->get(i);
       if (iface->dwType == IFTYPE_ETHERNET_CSMACD)

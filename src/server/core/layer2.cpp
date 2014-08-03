@@ -36,7 +36,7 @@ void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth, bool inclu
 	if (nbs == NULL)
 		return;
 
-	for(int i = 0; i < nbs->getSize(); i++)
+	for(int i = 0; i < nbs->size(); i++)
 	{
 		LL_NEIGHBOR_INFO *info = nbs->getConnection(i);
 		if (info != NULL)

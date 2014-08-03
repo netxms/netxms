@@ -1649,34 +1649,39 @@ bool DCItem::hasValue()
 void DCItem::expandInstance()
 {
 	String temp = m_szName;
-	temp.replace(_T("{instance}"), m_instance);
+   temp.replace(_T("{instance}"), m_instanceDiscoveryData);
+	temp.replace(_T("{instance-name}"), m_instance);
 	nx_strncpy(m_szName, (const TCHAR *)temp, MAX_ITEM_NAME);
 
 	temp = m_szDescription;
-	temp.replace(_T("{instance}"), m_instance);
+   temp.replace(_T("{instance}"), m_instanceDiscoveryData);
+	temp.replace(_T("{instance-name}"), m_instance);
 	nx_strncpy(m_szDescription, (const TCHAR *)temp, MAX_DB_STRING);
 }
 
 /**
  * Filter instance list
  */
-void DCItem::filterInstanceList(StringList *instances)
+void DCItem::filterInstanceList(StringMap *instances)
 {
    if (m_instanceFilter == NULL)
 		return;
 
-	for(int i = 0; i < instances->getSize(); i++)
+   StringMap filteredInstances;
+	for(int i = 0; i < instances->size(); i++)
 	{
-      NXSL_Value *pValue = new NXSL_Value(instances->getValue(i));
+      NXSL_Value *pValue = new NXSL_Value(instances->getKeyByIndex(i));
       m_instanceFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
       m_instanceFilter->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
 
       if (m_instanceFilter->run(1, &pValue))
       {
+         bool accepted;
+         const TCHAR *instance = instances->getKeyByIndex(i);
+         const TCHAR *name = instances->getValueByIndex(i);
          pValue = m_instanceFilter->getResult();
          if (pValue != NULL)
          {
-            bool accepted;
             if (pValue->isArray())
             {
                NXSL_Array *array = pValue->getValueAsArray();
@@ -1687,11 +1692,23 @@ void DCItem::filterInstanceList(StringList *instances)
                   {
                      // transformed value
                      const TCHAR *newValue = array->get(1)->getValueAsCString();
-                     if (newValue != NULL)
+                     if ((newValue != NULL) && (*newValue != 0))
                      {
                         DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance %d \"%s\" replaced by \"%s\""),
-                                  m_szName, m_dwId, i, instances->getValue(i), newValue);
-                        instances->replace(i, newValue);
+                                  m_szName, m_dwId, i, instance, newValue);
+                        instance = newValue;
+                     }
+
+                     if (array->size() > 2)
+                     {
+                        // instance name
+                        const TCHAR *newName = array->get(2)->getValueAsCString();
+                        if ((newName != NULL) && (*newName != 0))
+                        {
+                           DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance %d \"%s\" name set to \"%s\""),
+                                     m_szName, m_dwId, i, instance, newName);
+                           name = newName;
+                        }
                      }
                   }
                }
@@ -1704,14 +1721,20 @@ void DCItem::filterInstanceList(StringList *instances)
             {
                accepted = pValue->getValueAsInt32() ? true : false;
             }
-				if (!accepted)
-				{
-					DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance \"%s\" removed by filtering script"),
-					          m_szName, m_dwId, instances->getValue(i));
-					instances->remove(i);
-					i--;
-				}
          }
+         else
+         {
+            accepted = true;
+         }
+			if (accepted)
+         {
+            filteredInstances.set(instance, name);
+         }
+         else
+			{
+				DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance \"%s\" removed by filtering script"),
+				          m_szName, m_dwId, instances->getKeyByIndex(i));
+			}
       }
       else
       {
@@ -1721,6 +1744,9 @@ void DCItem::filterInstanceList(StringList *instances)
                     (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
          PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer,
                    m_instanceFilter->getErrorText(), m_dwId);
+         filteredInstances.set(instances->getKeyByIndex(i), instances->getValueByIndex(i));
       }
    }
+   instances->clear();
+   instances->addAll(&filteredInstances);
 }

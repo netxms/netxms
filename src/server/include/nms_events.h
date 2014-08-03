@@ -97,9 +97,9 @@ public:
    UINT32 getParameterAsULong(int index) { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoul(v, NULL, 0) : 0; }
    UINT64 getParameterAsUInt64(int index) { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoull(v, NULL, 0) : 0; }
 
-	const TCHAR *getNamedParameter(const TCHAR *name) { return getParameter(m_parameterNames.getIndexIgnoreCase(name)); }
-   UINT32 getNamedParameterAsULong(const TCHAR *name) { return getParameterAsULong(m_parameterNames.getIndexIgnoreCase(name)); }
-   UINT64 getNamedParameterAsUInt64(const TCHAR *name) { return getParameterAsUInt64(m_parameterNames.getIndexIgnoreCase(name)); }
+	const TCHAR *getNamedParameter(const TCHAR *name) { return getParameter(m_parameterNames.indexOfIgnoreCase(name)); }
+   UINT32 getNamedParameterAsULong(const TCHAR *name) { return getParameterAsULong(m_parameterNames.indexOfIgnoreCase(name)); }
+   UINT64 getNamedParameterAsUInt64(const TCHAR *name) { return getParameterAsUInt64(m_parameterNames.indexOfIgnoreCase(name)); }
 
 	void addParameter(const TCHAR *name, const TCHAR *value);
 	void setNamedParameter(const TCHAR *name, const TCHAR *value);

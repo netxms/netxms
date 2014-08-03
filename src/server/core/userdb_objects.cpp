@@ -93,16 +93,15 @@ bool UserDatabaseObject::deleteFromDatabase(DB_HANDLE hdb)
  */
 void UserDatabaseObject::fillMessage(CSCPMessage *msg)
 {
-	UINT32 i, varId;
-
    msg->SetVariable(VID_USER_ID, m_id);
    msg->SetVariable(VID_USER_NAME, m_name);
    msg->SetVariable(VID_USER_FLAGS, (WORD)m_flags);
    msg->SetVariable(VID_USER_SYS_RIGHTS, m_systemRights);
    msg->SetVariable(VID_USER_DESCRIPTION, m_description);
    msg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
-	msg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_attributes.getSize());
-	for(i = 0, varId = VID_CUSTOM_ATTRIBUTES_BASE; i < m_attributes.getSize(); i++)
+	msg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_attributes.size());
+	UINT32 varId = VID_CUSTOM_ATTRIBUTES_BASE;
+	for(int i = 0; i < m_attributes.size(); i++)
 	{
 		msg->SetVariable(varId++, m_attributes.getKeyByIndex(i));
 		msg->SetVariable(varId++, m_attributes.getValueByIndex(i));
@@ -201,7 +200,6 @@ bool UserDatabaseObject::loadCustomAttributes(DB_HANDLE hdb)
 bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
 {
 	TCHAR query[256];
-	UINT32 i;
 	bool success = false;
 
 	_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
@@ -211,14 +209,15 @@ bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-		   for(i = 0; i < m_attributes.getSize(); i++)
+         int i;
+		   for(i = 0; i < m_attributes.size(); i++)
 		   {
             DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_attributes.getKeyByIndex(i), DB_BIND_STATIC);
             DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_attributes.getValueByIndex(i), DB_BIND_STATIC);
 			   if (!DBExecute(hStmt))
 				   break;
 		   }
-		   success = (i == m_attributes.getSize());
+		   success = (i == m_attributes.size());
          DBFreeStatement(hStmt);
       }
 	}

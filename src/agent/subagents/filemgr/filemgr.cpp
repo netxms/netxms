@@ -200,9 +200,9 @@ static BOOL CheckFullPath(TCHAR *folder, bool withHomeDir)
    {
       return FALSE;
    }
-   for(int i = 0; i < g_rootFileManagerFolders->getSize(); i++)
+   for(int i = 0; i < g_rootFileManagerFolders->size(); i++)
    {
-      if (!_tcsncmp(g_rootFileManagerFolders->getValue(i), folder, _tcslen(g_rootFileManagerFolders->getValue(i))))
+      if (!_tcsncmp(g_rootFileManagerFolders->get(i), folder, _tcslen(g_rootFileManagerFolders->get(i))))
          return TRUE;
    }
 
@@ -216,7 +216,7 @@ static BOOL CheckFullPath(TCHAR *folder, bool withHomeDir)
 /**
  * Puts in response list of containing files
  */
-static void GetFolderContent(TCHAR* folder, CSCPMessage *msg, bool rootFolder)
+static void GetFolderContent(TCHAR *folder, CSCPMessage *msg, bool rootFolder)
 {
    NX_STAT_STRUCT st;
 
@@ -226,14 +226,14 @@ static void GetFolderContent(TCHAR* folder, CSCPMessage *msg, bool rootFolder)
 
    if (!_tcscmp(folder, FS_PATH_SEPARATOR) && rootFolder)
    {
-      for(int i = 0; i < g_rootFileManagerFolders->getSize(); i++)
+      for(int i = 0; i < g_rootFileManagerFolders->size(); i++)
       {
-         if (_taccess(g_rootFileManagerFolders->getValue(i), 4) != 0)
+         if (_taccess(g_rootFileManagerFolders->get(i), 4) != 0)
             continue;
 
-         if (CALL_STAT(g_rootFileManagerFolders->getValue(i), &st) == 0)
+         if (CALL_STAT(g_rootFileManagerFolders->get(i), &st) == 0)
          {
-            msg->SetVariable(varId++, g_rootFileManagerFolders->getValue(i));
+            msg->SetVariable(varId++, g_rootFileManagerFolders->get(i));
             msg->SetVariable(varId++, (QWORD)st.st_size);
             msg->SetVariable(varId++, (QWORD)st.st_mtime);
             UINT32 type = 0;
@@ -242,7 +242,7 @@ static void GetFolderContent(TCHAR* folder, CSCPMessage *msg, bool rootFolder)
             {
                type |= SYMLINC;
                NX_STAT_STRUCT symlincSt;
-               if (CALL_STAT_FOLLOW_SYMLINK(g_rootFileManagerFolders->getValue(i), &symlincSt) == 0)
+               if (CALL_STAT_FOLLOW_SYMLINK(g_rootFileManagerFolders->get(i), &symlincSt) == 0)
                {
                   type |= S_ISDIR(symlincSt.st_mode) ? DIRECTORY : 0;
 
@@ -253,7 +253,7 @@ static void GetFolderContent(TCHAR* folder, CSCPMessage *msg, bool rootFolder)
             type |= S_ISDIR(st.st_mode) ? DIRECTORY : 0;
             msg->SetVariable(varId++, type);
             TCHAR fullName[MAX_PATH];
-            _tcscpy(fullName, g_rootFileManagerFolders->getValue(i));
+            _tcscpy(fullName, g_rootFileManagerFolders->get(i));
             msg->SetVariable(varId++, fullName);
 
             varId += 5;
@@ -261,7 +261,7 @@ static void GetFolderContent(TCHAR* folder, CSCPMessage *msg, bool rootFolder)
          }
          else
          {
-            AgentWriteDebugLog(3, _T("FILEMGR: GetFolderContent: Not possible to get folder %s"), g_rootFileManagerFolders->getValue(i));
+            AgentWriteDebugLog(3, _T("FILEMGR: GetFolderContent: Not possible to get folder %s"), g_rootFileManagerFolders->get(i));
          }
       }
       msg->SetVariable(VID_INSTANCE_COUNT, count);
