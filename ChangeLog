@@ -4,6 +4,7 @@
 
 - Fixed database upgrade issues
 - Fixed packaging issues
+- Fixed bug causing outdated peer information on interface objects
 - NXSL:
    - String concatenation operation interprets NULL value as empty string instead of throwing runtime error
    - Fixed incorrect processing of ilike, match, and imatch operators

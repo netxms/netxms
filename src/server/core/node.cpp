@@ -5247,7 +5247,6 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 			}
 		}
 
-      // Clear self-linked interfaces caused by bug in previous release
       LockChildList(FALSE);
       for(DWORD i = 0; i < m_dwChildCount; i++)
       {
@@ -5255,10 +5254,45 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
             continue;
 
          Interface *iface = (Interface *)m_pChildList[i];
+
+         // Clear self-linked interfaces caused by bug in previous release
          if ((iface->getPeerNodeId() == m_dwId) && (iface->getPeerInterfaceId() == iface->Id()))
          {
             iface->clearPeer();
             DbgPrintf(6, _T("Node::topologyPoll(%s [%d]): Self-linked interface %s [%d] fixed"), m_szName, m_dwId, iface->Name(), iface->Id());
+         }
+         // Remove outdated peer information
+         else if (iface->getPeerNodeId() != 0)
+         {
+            bool nodeFound = false;
+            bool ifaceFound = false;
+		      for(int i = 0; i < nbs->getSize(); i++)
+		      {
+			      LL_NEIGHBOR_INFO *ni = nbs->getConnection(i);
+               if (ni->objectId == iface->getPeerNodeId())
+               {
+                  nodeFound = true;
+                  if (ni->ifLocal == iface->getIfIndex())
+                  {
+                     ifaceFound = true;
+                     break;
+                  }
+               }
+            }
+
+            // Only remove information from interfaces where peer node
+            // found but interface not which means that connectivity information was changed.
+            // If node is not found at all it may just mean that it is down at the moment.
+            if (nodeFound && !ifaceFound)
+            {
+					Interface *ifPeer = (Interface *)FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE);
+					if (ifPeer != NULL)
+					{
+						ifPeer->clearPeer();
+					}
+               iface->clearPeer();
+               DbgPrintf(6, _T("Node::topologyPoll(%s [%d]): Removed outdated peer information from interface %s [%d]"), m_szName, m_dwId, iface->Name(), iface->Id());
+            }
          }
       }
       UnlockChildList();
