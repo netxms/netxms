@@ -704,11 +704,11 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
 
             AgentWriteDebugLog(5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s"),
                         fileName, request->GetVariableShort(VID_FILE_FOLLOW) ? _T("true") : _T("false"));
-            bool result = AgentSendFileToServer(session, request->GetId(), fileName, (int)request->GetVariableLong(VID_FILE_OFFSET));
+            BOOL result = AgentSendFileToServer(session, request->GetId(), fileName, (int)request->GetVariableLong(VID_FILE_OFFSET));
             if(request->GetVariableShort(VID_FILE_FOLLOW) && result)
             {
-               TCHAR* fileID = _tcsdup(fileNameCode);
-               TCHAR* realName = _tcsdup(fileName);
+               TCHAR *fileID = _tcsdup(fileNameCode);
+               TCHAR *realName = _tcsdup(fileName);
                g_monitorFileList.addMonitoringFile(fileID);
                FollowData *flData = new FollowData();
                flData->serverAddress = ((AbstractCommSession *)session)->getServerAddress();
@@ -716,7 +716,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
                flData->fileId = fileID;
                flData->offset = 0;
                flData->session = ((AbstractCommSession *)session);
-               ThreadCreateEx(SendFileUpdatesOverNXCP, 0, (void*)flData);
+               ThreadCreateEx(SendFileUpdatesOverNXCP, 0, (void *)flData);
             }
             response->SetVariable(VID_RCC, ERR_SUCCESS);
          }

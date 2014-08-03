@@ -1,24 +1,22 @@
 /*
-** NetXMS multiplatform core agent
-** Copyright (C) 2003-2014 Raden Solutions
-**
-** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
-** (at your option) any later version.
-**
-** This program is distributed in the hope that it will be useful,
-** but WITHOUT ANY WARRANTY; without even the implied warranty of
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-** GNU General Public License for more details.
-**
-** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
-** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-**
-** File: logmonitoring.cpp
-**
-**/
+ ** File management subagent
+ ** Copyright (C) 2014 Raden Solutions
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU General Public License as published by
+ ** the Free Software Foundation; either version 2 of the License, or
+ ** (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ **
+ **/
 
 #include "filemgr.h"
 
@@ -122,22 +120,31 @@ void MonitoredFileList::Unlock()
    MutexUnlock(m_mutex);
 };
 
-struct DataStruct
+/**
+ * Data for message sending callback
+ */
+struct SendMessageData
 {
    UINT32 ip;
    CSCPMessage *pMsg;
 };
 
-bool SendMessage(AbstractCommSession * session, void *data)
+/**
+ * Callback to send message to agent communication session's peer
+ */
+static bool SendMessage(AbstractCommSession *session, void *data)
 {
-   if (session != NULL && ((DataStruct*)data)->ip == session->getServerAddress())
+   if (session != NULL && ((SendMessageData *)data)->ip == session->getServerAddress())
    {
-      session->sendMessage(((DataStruct*)data)->pMsg);
-      return FALSE;
+      session->sendMessage(((SendMessageData *)data)->pMsg);
+      return false;
    }
-   return TRUE;
+   return true;
 };
 
+/**
+ * Thread sending file updates over NXCP
+ */
 THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
 {
    FollowData *flData = (reinterpret_cast<FollowData*>(args));
@@ -193,17 +200,16 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
 #endif
             flData->offset = newOffset;
 
-            DataStruct data;
+            SendMessageData data;
             data.ip = flData->serverAddress;
             data.pMsg = pMsg;
 
-            bool sent = EnumerateSessions(&SendMessage, &data);
+            bool sent = EnumerateSessions(SendMessage, &data);
 
-            if(!sent)
+            if (!sent)
             {
                g_monitorFileList.removeMonitoringFile(flData->pszFile);
             }
-
 
             safe_free(readBytes);
             delete pMsg;
@@ -216,9 +222,9 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
          follow = false;
       }
    }
-   delete_and_null(flData->pszFile);
-   delete_and_null(flData->fileId);
-   delete_and_null(flData);
+   safe_free(flData->pszFile);
+   safe_free(flData->fileId);
+   delete flData;
    close(hFile);
    return THREAD_OK;
 };
