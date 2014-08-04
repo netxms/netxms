@@ -1253,7 +1253,7 @@ extern "C" DWORD EXPORT DrvRollback(ORACLE_CONN *pConn)
 extern "C" int EXPORT DrvIsTableExist(ORACLE_CONN *pConn, const WCHAR *name)
 {
    WCHAR query[256];
-   snwprintf(query, 256, L"SELECT count(*) FROM user_tables WHERE table_name=upper('%s')", name);
+   swprintf(query, 256, L"SELECT count(*) FROM user_tables WHERE table_name=upper('%s')", name);
    DWORD error;
    WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    int rc = DBIsTableExist_Failure;

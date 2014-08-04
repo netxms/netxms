@@ -1,6 +1,6 @@
 /* 
 ** MySQL Database Driver
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1026,6 +1026,27 @@ extern "C" DWORD EXPORT DrvCommit(MYSQL_CONN *pConn)
 extern "C" DWORD EXPORT DrvRollback(MYSQL_CONN *pConn)
 {
 	return DrvQueryInternal(pConn, "ROLLBACK", NULL);
+}
+
+/**
+ * Check if table exist
+ */
+extern "C" int EXPORT DrvIsTableExist(MYSQL_CONN *pConn, const WCHAR *name)
+{
+   WCHAR query[256], lname[256];
+   wcsncpy(lname, name, 256);
+   wcslwr(lname);
+   swprintf(query, 256, L"SHOW TABLES LIKE '%s'", lname);
+   DWORD error;
+   WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   int rc = DBIsTableExist_Failure;
+   MYSQL_RESULT *hResult = (MYSQL_RESULT *)DrvSelect(pConn, query, &error, errorText);
+   if (hResult != NULL)
+   {
+      rc = (DrvGetNumRows(hResult) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      DrvFreeResult(hResult);
+   }
+   return rc;
 }
 
 #ifdef _WIN32
