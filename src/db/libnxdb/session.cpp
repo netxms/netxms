@@ -1504,6 +1504,20 @@ String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, int 
 #endif
 
 /**
+ * Check if given table exist
+ */
+int LIBNXDB_EXPORTABLE DBIsTableExist(DB_HANDLE conn, const TCHAR *table)
+{
+#ifdef UNICODE
+   return conn->m_driver->m_fpDrvIsTableExist(conn->m_connection, table);
+#else
+   WCHAR wname[256];
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, table, -1, wname, 256);
+   return conn->m_driver->m_fpDrvIsTableExist(conn->m_connection, wname);
+#endif
+}
+
+/**
  * Characters to be escaped before writing to SQL
  */
 static TCHAR m_szSpecialChars[] = _T("\x01\x02\x03\x04\x05\x06\x07\x08")

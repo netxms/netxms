@@ -25,11 +25,9 @@
 
 #include <nms_common.h>
 
-
-//
-// API version
-//
-
+/**
+ * API version
+ */
 #define DBDRV_API_VERSION           14
 
 
@@ -104,5 +102,15 @@ typedef void * DBDRV_ASYNC_RESULT;
 #define DB_SQLTYPE_BIGINT  2
 #define DB_SQLTYPE_DOUBLE  3
 #define DB_SQLTYPE_TEXT    4
+
+/**
+ * DBIsTableExist return codes
+ */
+enum
+{
+   DBIsTableExist_Failure = -1,
+   DBIsTableExist_NotFound = 0,
+   DBIsTableExist_Found = 1
+};
 
 #endif   /* _dbdrv_h_ */

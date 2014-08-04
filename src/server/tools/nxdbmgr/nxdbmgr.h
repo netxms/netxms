@@ -94,6 +94,7 @@ extern BOOL g_bIgnoreErrors;
 extern BOOL g_bTrace;
 extern bool g_isGuiMode;
 extern bool g_checkData;
+extern bool g_checkDataTablesOnly;
 extern bool g_dataOnlyMigration;
 extern bool g_skipDataMigration;
 extern int g_dbSyntax;

@@ -35,6 +35,7 @@ BOOL g_bIgnoreErrors = FALSE;
 BOOL g_bTrace = FALSE;
 bool g_isGuiMode = false;
 bool g_checkData = false;
+bool g_checkDataTablesOnly = false;
 bool g_dataOnlyMigration = false;
 bool g_skipDataMigration = false;
 int g_dbSyntax;
@@ -555,6 +556,7 @@ int main(int argc, char *argv[])
                      _T("Valid commands are:\n")
 						   _T("   batch <file>       : Run SQL batch file\n")
                      _T("   check              : Check database for errors\n")
+                     _T("   check-data-tables  : Check database for missing data tables\n")
                      _T("   export <file>      : Export database to file\n")
                      _T("   get <name>         : Get value of server configuration variable\n")
                      _T("   import <file>      : Import database from file\n")
@@ -651,6 +653,7 @@ int main(int argc, char *argv[])
    }
    if (strcmp(argv[optind], "batch") && 
        strcmp(argv[optind], "check") && 
+       strcmp(argv[optind], "check-data-tables") && 
        strcmp(argv[optind], "export") && 
        strcmp(argv[optind], "get") && 
        strcmp(argv[optind], "import") && 
@@ -762,17 +765,34 @@ stop_search:
 
       // Do requested operation
       if (!strcmp(argv[optind], "batch"))
+      {
          ExecSQLBatch(argv[optind + 1]);
+      }
       else if (!strcmp(argv[optind], "check"))
+      {
          CheckDatabase();
+      }
+      else if (!strcmp(argv[optind], "check-data-tables"))
+      {
+         g_checkDataTablesOnly = true;
+         CheckDatabase();
+      }
       else if (!strcmp(argv[optind], "upgrade"))
+      {
          UpgradeDatabase();
+      }
       else if (!strcmp(argv[optind], "unlock"))
+      {
          UnlockDatabase();
+      }
       else if (!strcmp(argv[optind], "export"))
+      {
          ExportDatabase(argv[optind + 1]);
+      }
       else if (!strcmp(argv[optind], "import"))
+      {
          ImportDatabase(argv[optind + 1]);
+      }
       else if (!strcmp(argv[optind], "migrate"))
 		{
 #ifdef UNICODE

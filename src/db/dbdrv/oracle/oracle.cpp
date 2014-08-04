@@ -1247,6 +1247,27 @@ extern "C" DWORD EXPORT DrvRollback(ORACLE_CONN *pConn)
 	return dwResult;
 }
 
+/**
+ * Check if table exist
+ */
+extern "C" int EXPORT DrvIsTableExist(ORACLE_CONN *pConn, const WCHAR *name)
+{
+   WCHAR query[256];
+   snwprintf(query, 256, L"SELECT count(*) FROM user_tables WHERE table_name=upper('%s')", name);
+   DWORD error;
+   WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   int rc = DBIsTableExist_Failure;
+   ORACLE_RESULT *hResult = (ORACLE_RESULT *)DrvSelect(pConn, query, &error, errorText);
+   if (hResult != NULL)
+   {
+      WCHAR buffer[64] = L"";
+      DrvGetField(hResult, 0, 0, buffer, 64);
+      rc = (wcstol(buffer, NULL, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      DrvFreeResult(hResult);
+   }
+   return rc;
+}
+
 #ifdef _WIN32
 
 /**

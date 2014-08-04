@@ -76,6 +76,7 @@ struct db_driver_t
 	const char* (* m_fpDrvGetColumnNameAsync)(DBDRV_ASYNC_RESULT, int);
 	WCHAR* (* m_fpDrvPrepareStringW)(const WCHAR *);
 	char* (* m_fpDrvPrepareStringA)(const char *);
+	int (* m_fpDrvIsTableExist)(DBDRV_CONNECTION, const WCHAR *);
 };
 
 /**
