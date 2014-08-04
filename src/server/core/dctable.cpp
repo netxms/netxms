@@ -453,11 +453,19 @@ bool DCTable::transform(Table *value)
    bool success = true;
    if (!m_transformationScript->run(1, &nxslValue))
    {
-      TCHAR szBuffer[1024];
+      if (m_transformationScript->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
+      {
+         DbgPrintf(6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"), 
+            m_szDescription, m_dwId, (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), (m_pNode != NULL) ? m_pNode->Id() : 0);
+      }
+      else
+      {
+         TCHAR szBuffer[1024];
 
-		_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::TransformationScript"),
-                 (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
-      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, m_transformationScript->getErrorText(), m_dwId);
+		   _sntprintf(szBuffer, 1024, _T("DCI::%s::%d::TransformationScript"),
+                    (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, m_transformationScript->getErrorText(), m_dwId);
+      }
       success = false;
    }
    return success;

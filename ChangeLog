@@ -7,6 +7,7 @@
 - Fixed bug causing outdated peer information on interface objects
 - Instance display name for DCIs created via instance discovery
 - DCIs created via instance discovery can be combined by instance into one chart on performance tab
+- Transformation script terminated by "abort" call will not generate SYS_SCRIPT_ERROR event
 - NXSL:
    - String concatenation operation interprets NULL value as empty string instead of throwing runtime error
    - Fixed incorrect processing of ilike, match, and imatch operators
