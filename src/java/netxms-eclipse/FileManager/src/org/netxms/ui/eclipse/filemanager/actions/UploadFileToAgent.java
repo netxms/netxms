@@ -82,8 +82,20 @@ public class UploadFileToAgent implements IObjectActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
+				   String remoteFileName = dlg.getRemoteFileName();
+				   if(!remoteFileName.isEmpty())
+				   {
+				      if(remoteFileName.endsWith("/") || remoteFileName.endsWith("\\"))
+				      {
+				         remoteFileName += dlg.getServerFile().getName();
+				      }
+				   }
+				   else 
+				   {
+				      remoteFileName = null;
+				   }
 					for(int i = 0; i < nodeIdList.length; i++)
-						session.uploadFileToAgent(nodeIdList[i], dlg.getServerFile().getName(), dlg.getRemoteFileName(), dlg.isCreateJobOnHold());
+						session.uploadFileToAgent(nodeIdList[i], dlg.getServerFile().getName(), remoteFileName, dlg.isCreateJobOnHold());
 				}
 			}.start();
 		}

@@ -5,6 +5,7 @@
 - Fixed database upgrade issues
 - Fixed packaging issues
 - Fixed bug causing outdated peer information on interface objects
+- Fixed bug with upload to agent default path from server file store
 - Instance display name for DCIs created via instance discovery
 - DCIs created via instance discovery can be combined by instance into one chart on performance tab
 - Transformation script terminated by "abort" call will not generate SYS_SCRIPT_ERROR event

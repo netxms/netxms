@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -61,7 +61,7 @@ void InitLocalNetInfo()
    hModule = LoadLibrary(_T("NETMAN.DLL"));
    if (hModule != NULL)
    {
-      imp_HrLanConnectionNameFromGuidOrPath = 
+      imp_HrLanConnectionNameFromGuidOrPath =
          (UINT32 (__stdcall *)(LPWSTR, LPWSTR, LPWSTR, LPDWORD))GetProcAddress(hModule, "HrLanConnectionNameFromGuidOrPath");
    }
 #elif HAVE_SYS_UTSNAME_H
@@ -121,7 +121,7 @@ void StrToMac(const TCHAR *pszStr, BYTE *pBuffer)
    UINT32 byte1, byte2, byte3, byte4, byte5, byte6;
 
    memset(pBuffer, 0, 6);
-   if (_stscanf(pszStr, _T("%x:%x:%x:%x:%x:%x"), &byte1, &byte2, &byte3, 
+   if (_stscanf(pszStr, _T("%x:%x:%x:%x:%x:%x"), &byte1, &byte2, &byte3,
                 &byte4, &byte5, &byte6) == 6)
    {
       pBuffer[0] = (BYTE)byte1;
@@ -184,9 +184,9 @@ static ARP_CACHE *SysGetLocalArpCache()
       {
          // Create empty structure
          pArpCache = (ARP_CACHE *)malloc(sizeof(ARP_CACHE));
-         pArpCache->dwNumEntries = list.getSize();
-         pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * list.getSize());
-         memset(pArpCache->pEntries, 0, sizeof(ARP_ENTRY) * list.getSize());
+         pArpCache->dwNumEntries = list.size();
+         pArpCache->pEntries = (ARP_ENTRY *)malloc(sizeof(ARP_ENTRY) * list.size());
+         memset(pArpCache->pEntries, 0, sizeof(ARP_ENTRY) * list.size());
 
          szByte[2] = 0;
 
@@ -195,9 +195,9 @@ static ARP_CACHE *SysGetLocalArpCache()
          // where XXXXXXXXXXXX is a MAC address (12 hexadecimal digits)
          // a.b.c.d is an IP address in decimal dotted notation
          // n is an interface index
-         for(i = 0; i < list.getSize(); i++)
+         for(i = 0; i < list.size(); i++)
          {
-            TCHAR *pTemp = _tcsdup(list.getValue(i));
+            TCHAR *pTemp = _tcsdup(list.get(i));
             TCHAR *pBuf = pTemp;
             if (_tcslen(pBuf) < 20)     // Invalid line
             {
@@ -275,7 +275,7 @@ static InterfaceList *SysGetLocalIfList()
 #ifdef UNICODE
 					nx_strncpy(szAdapterName, wName, MAX_OBJECT_NAME);
 #else
-               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
+               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                                    wName, dwSize, szAdapterName, MAX_OBJECT_NAME, NULL, NULL);
                szAdapterName[MAX_OBJECT_NAME - 1] = 0;
 #endif
@@ -329,11 +329,11 @@ static InterfaceList *SysGetLocalIfList()
 		StringList list;
       if (imp_NxSubAgentGetIfList(&list))
       {
-         pIfList = new InterfaceList(list.getSize());
-         for(i = 0; i < list.getSize(); i++)
+         pIfList = new InterfaceList(list.size());
+         for(i = 0; i < list.size(); i++)
          {
 				memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
-            TCHAR *pTemp = _tcsdup(list.getValue(i));
+            TCHAR *pTemp = _tcsdup(list.get(i));
             TCHAR *pBuf = pTemp;
 
             // Index
