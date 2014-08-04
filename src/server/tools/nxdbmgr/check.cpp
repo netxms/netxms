@@ -799,7 +799,12 @@ static BOOL IsDataTableExist(const TCHAR *format, DWORD id)
 {
    TCHAR table[256];
    _sntprintf(table, 256, format, id);
-   return DBIsTableExist(g_hCoreDB, table);
+   int rc = DBIsTableExist(g_hCoreDB, table);
+   if (rc == DBIsTableExist_Failure)
+   {
+      _tprintf(_T("WARNING: call to DBIsTableExist(\"%s\") failed\n"), table);
+   }
+   return rc != DBIsTableExist_NotFound;
 }
 
 /**

@@ -1823,10 +1823,11 @@ AC_CHECK_SIZEOF(wchar_t,,[
 #include <wchar.h>
 #endif
 ])
-AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper wcserror wcserror_r])
-AC_CHECK_FUNCS([wfopen wfopen64 fputws putws wopen wstat waccess wgetenv wrename wunlink])
-AC_CHECK_FUNCS([wremove wchdir wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod])
-AC_CHECK_FUNCS([vwscanf vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
+AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper towlower])
+AC_CHECK_FUNCS([wcslwr wcserror wcserror_r wfopen wfopen64 fputws putws])
+AC_CHECK_FUNCS([wopen wstat waccess wgetenv wrename wunlink wremove wchdir])
+AC_CHECK_FUNCS([wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod vwscanf])
+AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
 
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,

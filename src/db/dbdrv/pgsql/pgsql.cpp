@@ -1052,7 +1052,7 @@ extern "C" DWORD EXPORT DrvRollback(PG_CONN *pConn)
 extern "C" int EXPORT DrvIsTableExist(PG_CONN *pConn, const WCHAR *name)
 {
    WCHAR query[256];
-   swprintf(query, 256, L"SELECT count(*) FROM information_schema.tables WHERE table_catalog=current_catalog AND table_schema=current_schema AND lower(table_name)=lower('%s')", name);
+   swprintf(query, 256, L"SELECT count(*) FROM information_schema.tables WHERE table_catalog=current_catalog AND table_schema=current_schema AND lower(table_name)=lower('%ls')", name);
    DWORD error;
    WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    int rc = DBIsTableExist_Failure;

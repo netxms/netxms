@@ -1305,6 +1305,10 @@ extern "C"
 	UINT64 LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
 #endif
 
+#if !HAVE_WCSLWR
+	WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str);
+#endif
+
 #if !HAVE_WCSCASECMP && !defined(_WIN32)
 	int LIBNETXMS_EXPORTABLE wcscasecmp(const wchar_t *s1, const wchar_t *s2);
 #endif

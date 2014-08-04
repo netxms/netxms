@@ -677,7 +677,7 @@ extern "C" DWORD EXPORT DrvRollback(SQLITE_CONN *pConn)
 extern "C" int EXPORT DrvIsTableExist(SQLITE_CONN *pConn, const WCHAR *name)
 {
    WCHAR query[256];
-   snwprintf(query, 256, L"SELECT count(*) FROM sqlite_master WHERE type='table' AND upper(name)=upper('%s')", name);
+   swprintf(query, 256, L"SELECT count(*) FROM sqlite_master WHERE type='table' AND upper(name)=upper('%ls')", name);
    DWORD error;
    WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    int rc = DBIsTableExist_Failure;

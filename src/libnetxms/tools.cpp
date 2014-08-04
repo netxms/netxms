@@ -2157,3 +2157,24 @@ TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f)
 	return fgets(buffer, len, f);
 #endif
 }
+
+#if !HAVE_WCSLWR
+
+/**
+ * Convert UNICODE string to lowercase
+ */
+WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str)
+{
+   for(WCHAR *p = str; *p != 0; p++)
+   {
+#if HAVE_TOWLOWER
+      *p = towlower(*p);
+#else
+      if ((*p >= 'a') && (*p <= 'z'))
+         *p = *p - ('a' - 'A');
+#endif
+   }
+   return str;
+}
+
+#endif
