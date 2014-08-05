@@ -6395,7 +6395,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPLOAD_FILE_TO_AGENT);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setVariable(NXCPCodes.VID_FILE_NAME, serverFileName);
-      if (remoteFileName != null) msg.setVariable(NXCPCodes.VID_DESTINATION_FILE_NAME, remoteFileName);
+      if (remoteFileName != null)
+         msg.setVariable(NXCPCodes.VID_DESTINATION_FILE_NAME, remoteFileName);
       msg.setVariableInt16(NXCPCodes.VID_CREATE_JOB_ON_HOLD, jobOnHold ? 1 : 0);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());

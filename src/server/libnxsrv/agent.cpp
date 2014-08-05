@@ -1109,7 +1109,6 @@ UINT32 AgentConnection::execAction(const TCHAR *pszAction, int argc, TCHAR **arg
       return ERR_CONNECTION_BROKEN;
 }
 
-
 /**
  * Upload file to agent
  */
@@ -1117,27 +1116,25 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
 {
    UINT32 dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion);
-   int i;
 
    if (!m_bIsConnected)
       return ERR_NOT_CONNECTED;
 
    dwRqId = m_dwRequestId++;
+   msg.SetId(dwRqId);
 
-   if(destinationFile == NULL)
+   // Use core agent if destination file name is not set and file manager subagent otherwise
+   if ((destinationFile == NULL) || (*destinationFile == 0))
    {
       msg.SetCode(CMD_TRANSFER_FILE);
+      int i;
+      for(i = (int)_tcslen(localFile) - 1;
+          (i >= 0) && (localFile[i] != '\\') && (localFile[i] != '/'); i--);
+      msg.SetVariable(VID_FILE_NAME, &localFile[i + 1]);
    }
    else
    {
       msg.SetCode(CMD_FILEMGR_UPLOAD);
-   }
-   msg.SetId(dwRqId);
-   for(i = (int)_tcslen(localFile) - 1;
-       (i >= 0) && (localFile[i] != '\\') && (localFile[i] != '/'); i--);
-   msg.SetVariable(VID_FILE_NAME, &localFile[i + 1]);
-   if (destinationFile != NULL)
-   {
 		msg.SetVariable(VID_FILE_NAME, destinationFile);
    }
 
@@ -1164,11 +1161,9 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    return dwResult;
 }
 
-
-//
-// Send upgrade command
-//
-
+/**
+ * Send upgrade command
+ */
 UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
 {
    UINT32 dwRqId, dwResult;

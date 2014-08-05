@@ -527,6 +527,7 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
    safe_free(data->fileName);
    safe_free(data->fileNameCode);
    delete data;
+   return THREAD_OK;
 }
 
 /**
@@ -556,7 +557,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          else
          {
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Acess denid."));
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Access denied"));
             response->SetVariable(VID_RCC, RCC_ACCESS_DENIED);
          }
          return TRUE;
@@ -587,7 +588,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          else
          {
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Acess denid."));
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Access denied"));
             response->SetVariable(VID_RCC, RCC_ACCESS_DENIED);
          }
          return TRUE;
@@ -679,7 +680,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          else
          {
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Acess denid."));
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Access denied"));
             response->SetVariable(VID_RCC, RCC_ACCESS_DENIED);
          }
          return TRUE;
@@ -693,17 +694,13 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
 
       	if (((AbstractCommSession *)session)->isMasterServer() && CheckFullPath(fileName, false))
          {
-      #ifdef _WIN32
-            struct _stat fs;
-      #else
-            struct stat fs;
-      #endif
+            NX_STAT_STRUCT fs;
 
             //prepare file name
-            if (_tstat(fileName, &fs) == 0)
+            if (NX_STAT(fileName, &fs) == 0)
             {
-               response->SetVariable(VID_FILE_SIZE, (QWORD)fs.st_size);
-               response->SetVariable(VID_MODIFY_TIME, (QWORD)fs.st_mtime);
+               response->SetVariable(VID_FILE_SIZE, (UINT64)fs.st_size);
+               response->SetVariable(VID_MODIFY_TIME, (UINT64)fs.st_mtime);
                response->SetVariable(VID_RCC, ERR_SUCCESS);
             }
             else
@@ -713,7 +710,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          else
          {
-            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Acess denid."));
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Access denied"));
             response->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
          }
          return TRUE;
@@ -738,7 +735,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
             data->offset = request->GetVariableLong(VID_FILE_OFFSET);
             data->session = ((AbstractCommSession *)session);
 
-            ThreadCreateEx(SendFile, 0, (void *)data);
+            ThreadCreateEx(SendFile, 0, data);
 
             response->SetVariable(VID_RCC, ERR_SUCCESS);
          }

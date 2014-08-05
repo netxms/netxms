@@ -711,7 +711,6 @@ void CommSession::action(CSCPMessage *pRequest, CSCPMessage *pMsg)
 /**
  * Prepare for receiving file
  */
-
 void CommSession::recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
 	TCHAR szFileName[MAX_PATH], szFullPath[MAX_PATH];
@@ -732,7 +731,10 @@ void CommSession::recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 	}
 }
 
-UINT32 CommSession::openFile(TCHAR* szFullPath, UINT32 requestId)
+/**
+ * Open file for writing
+ */
+UINT32 CommSession::openFile(TCHAR *szFullPath, UINT32 requestId)
 {
    if (m_hCurrFile != -1)
    {
@@ -750,11 +752,10 @@ UINT32 CommSession::openFile(TCHAR* szFullPath, UINT32 requestId)
       else
       {
          m_dwFileRqId = requestId;
-         return  ERR_SUCCESS;
+         return ERR_SUCCESS;
       }
    }
 }
-
 
 //
 // Send file to server

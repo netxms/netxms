@@ -121,6 +121,22 @@ static void DeleteCallback(NetObj* obj, void *data)
 }
 
 /**
+ * Callback for sending image library update notifications
+ */
+static void ImageLibraryUpdateCallback(ClientSession *pSession, void *pArg)
+{
+	pSession->onLibraryImageChange((uuid_t *)pArg, false);
+}
+
+/**
+ * Callback for sending image library delete notifications
+ */
+static void ImageLibraryDeleteCallback(ClientSession *pSession, void *pArg)
+{
+	pSession->onLibraryImageChange((uuid_t *)pArg, true);
+}
+
+/**
  * Additional message processing thread starters
  */
 #define CALL_IN_NEW_THREAD(func, msg) \
@@ -1504,7 +1520,6 @@ void ClientSession::respondToKeepalive(UINT32 dwRqId)
 /**
  * Process received file
  */
-static void SendLibraryImageUpdate(ClientSession *pSession, void *pArg);
 void ClientSession::onFileUpload(BOOL bSuccess)
 {
   // Do processing specific to command initiated file upload
@@ -1520,7 +1535,7 @@ void ClientSession::onFileUpload(BOOL bSuccess)
       }
       break;
     case CMD_MODIFY_IMAGE:
-      EnumerateClientSessions(SendLibraryImageUpdate, (void *)&m_uploadImageGuid);
+      EnumerateClientSessions(ImageLibraryUpdateCallback, (void *)&m_uploadImageGuid);
       break;
     default:
       break;
@@ -11614,21 +11629,6 @@ void ClientSession::onLibraryImageChange(uuid_t *guid, bool removed)
   }
 }
 
-
-//
-// Send updates to all connected clients
-//
-
-static void SendLibraryImageUpdate(ClientSession *pSession, void *pArg)
-{
-	pSession->onLibraryImageChange((uuid_t *)pArg, false);
-}
-
-static void SendLibraryImageDelete(ClientSession *pSession, void *pArg)
-{
-	pSession->onLibraryImageChange((uuid_t *)pArg, true);
-}
-
 /**
  * Update library image from client
  */
@@ -11780,7 +11780,7 @@ void ClientSession::updateLibraryImage(CSCPMessage *request)
 
 	if (rcc == RCC_SUCCESS)
 	{
-		//EnumerateClientSessions(SendLibraryImageUpdate, (void *)&guid);
+		//EnumerateClientSessions(ImageLibraryUpdateCallback, (void *)&guid);
 	}
 }
 
@@ -11852,7 +11852,7 @@ void ClientSession::deleteLibraryImage(CSCPMessage *request)
 
 	if (rcc == RCC_SUCCESS)
 	{
-		EnumerateClientSessions(SendLibraryImageDelete, (void *)&guid);
+		EnumerateClientSessions(ImageLibraryDeleteCallback, (void *)&guid);
 	}
 }
 
@@ -11980,11 +11980,9 @@ void ClientSession::executeServerCommand(CSCPMessage *request)
 	sendMessage(&msg);
 }
 
-
 /**
  * Upload file from server to agent
  */
-
 void ClientSession::uploadFileToAgent(CSCPMessage *request)
 {
 	CSCPMessage msg;
@@ -13179,6 +13177,9 @@ void ClientSession::fileManagerControl(CSCPMessage *request)
       delete response;
 }
 
+/**
+ * Upload file provided by user directly to agent
+ */
 void ClientSession::uploadUserFileToAgent(CSCPMessage *request)
 {
    CSCPMessage msg, *response = NULL, *responseMessage;

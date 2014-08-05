@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,14 +22,12 @@
 
 #include "nxcore.h"
 
-
 /**
  * Static members
  */
 int FileUploadJob::m_activeJobs = 0;
 int FileUploadJob::m_maxActiveJobs = 10;
 MUTEX FileUploadJob::m_sharedDataMutex = INVALID_MUTEX_HANDLE;
-
 
 /**
  * Static initializer
@@ -40,11 +38,9 @@ void FileUploadJob::init()
 	m_maxActiveJobs = ConfigReadInt(_T("MaxActiveUploadJobs"), 10);
 }
 
-
 /**
  * Constructor
  */
-
 FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, UINT32 userId, bool createOnHold)
               : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node->Id(), userId, createOnHold)
 {
@@ -62,7 +58,6 @@ FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *re
 	m_info = _tcsdup(buffer);
 }
 
-
 /**
  *  Destructor
  */
@@ -73,7 +68,6 @@ FileUploadJob::~FileUploadJob()
 	safe_free(m_remoteFile);
 	safe_free(m_info);
 }
-
 
 /**
  * Run job
@@ -121,7 +115,6 @@ bool FileUploadJob::run()
 	return success;
 }
 
-
 /**
  * Upload progress callback
  */
@@ -132,7 +125,6 @@ void FileUploadJob::uploadCallback(INT64 size, void *arg)
 	else
 		((FileUploadJob *)arg)->markProgress(100);
 }
-
 
 /**
  *  Get additional info for logging
