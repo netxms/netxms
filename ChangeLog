@@ -14,6 +14,7 @@
    - String concatenation operation interprets NULL value as empty string instead of throwing runtime error
    - Fixed incorrect processing of ilike, match, and imatch operators
    - Added try / catch operator
+- New MIBs added: NETUP-MIB
 - Fixed issues: #424, #618, #619, #620
 
 
