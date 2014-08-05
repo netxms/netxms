@@ -697,7 +697,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
             NX_STAT_STRUCT fs;
 
             //prepare file name
-            if (NX_STAT(fileName, &fs) == 0)
+            if (CALL_STAT(fileName, &fs) == 0)
             {
                response->SetVariable(VID_FILE_SIZE, (UINT64)fs.st_size);
                response->SetVariable(VID_MODIFY_TIME, (UINT64)fs.st_mtime);
