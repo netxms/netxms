@@ -1053,7 +1053,7 @@ extern "C" DWORD EXPORT DrvRollback(DB2DRV_CONN *pConn)
 /**
  * Check if table exist
  */
-extern "C" int EXPORT DrvIsTableExist(DB2DRV_CONN *pConn, const WCHAR *name)
+extern "C" int EXPORT DrvIsTableExist(DB2DRV_CONN *pConn, const NETXMS_WCHAR *name)
 {
    WCHAR query[256];
    swprintf(query, 256, L"SELECT count(*) FROM sysibm.systables WHERE type='T' AND upper(name)=upper('%ls')", name);

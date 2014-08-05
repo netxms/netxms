@@ -1047,7 +1047,7 @@ extern "C" DWORD EXPORT DrvRollback(ODBCDRV_CONN *pConn)
 /**
  * Check if table exist
  */
-extern "C" int EXPORT DrvIsTableExist(ODBCDRV_CONN *pConn, const WCHAR *name)
+extern "C" int EXPORT DrvIsTableExist(ODBCDRV_CONN *pConn, const NETXMS_WCHAR *name)
 {
    int rc = DBIsTableExist_Failure;
 
