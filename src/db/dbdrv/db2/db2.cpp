@@ -963,21 +963,17 @@ extern "C" int EXPORT DrvGetColumnCountAsync(DB2DRV_ASYNC_QUERY_RESULT *pResult)
 	return (pResult != NULL) ? pResult->iNumCols : 0;
 }
 
-
-//
-// Get column name in async query result
-//
-
+/**
+ * Get column name in async query result
+ */
 extern "C" const char EXPORT *DrvGetColumnNameAsync(DB2DRV_ASYNC_QUERY_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->iNumCols)) ? pResult->columnNames[column] : NULL;
 }
 
-
-//
-// Destroy result of async query
-//
-
+/**
+ * Destroy result of async query
+ */
 extern "C" void EXPORT DrvFreeAsyncResult(DB2DRV_ASYNC_QUERY_RESULT *pResult)
 {
 	if (pResult != NULL)
@@ -988,11 +984,9 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB2DRV_ASYNC_QUERY_RESULT *pResult)
 	}
 }
 
-
-//
-// Begin transaction
-//
-
+/**
+ * Begin transaction
+ */
 extern "C" DWORD EXPORT DrvBegin(DB2DRV_CONN *pConn)
 {
 	SQLRETURN nRet;
@@ -1017,11 +1011,9 @@ extern "C" DWORD EXPORT DrvBegin(DB2DRV_CONN *pConn)
 	return dwResult;
 }
 
-
-//
-// Commit transaction
-//
-
+/**
+ * Commit transaction
+ */
 extern "C" DWORD EXPORT DrvCommit(DB2DRV_CONN *pConn)
 {
 	SQLRETURN nRet;
@@ -1038,11 +1030,9 @@ extern "C" DWORD EXPORT DrvCommit(DB2DRV_CONN *pConn)
 	return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
-
-//
-// Rollback transaction
-//
-
+/**
+ * Rollback transaction
+ */
 extern "C" DWORD EXPORT DrvRollback(DB2DRV_CONN *pConn)
 {
 	SQLRETURN nRet;
@@ -1060,12 +1050,32 @@ extern "C" DWORD EXPORT DrvRollback(DB2DRV_CONN *pConn)
 }
 
 
-//
-// DLL Entry point
-//
+/**
+ * Check if table exist
+ */
+extern "C" int EXPORT DrvIsTableExist(DB2DRV_CONN *pConn, const WCHAR *name)
+{
+   WCHAR query[256];
+   swprintf(query, 256, L"SELECT count(*) FROM sysibm.systables WHERE type='T' AND upper(name)=upper('%ls')", name);
+   DWORD error;
+   WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   int rc = DBIsTableExist_Failure;
+   DB2DRV_QUERY_RESULT *hResult = (DB2DRV_QUERY_RESULT *)DrvSelect(pConn, query, &error, errorText);
+   if (hResult != NULL)
+   {
+      WCHAR buffer[64] = L"";
+      DrvGetField(hResult, 0, 0, buffer, 64);
+      rc = (wcstol(buffer, NULL, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      DrvFreeResult(hResult);
+   }
+   return rc;
+}
 
 #ifdef _WIN32
 
+/**
+ * DLL Entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)

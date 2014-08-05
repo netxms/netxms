@@ -1,6 +1,6 @@
 /* 
 ** MS SQL Database Driver
-** Copyright (C) 2004-2012 Victor Kirhenshtein
+** Copyright (C) 2004-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -897,11 +897,9 @@ extern "C" DWORD EXPORT DrvCommit(MSSQL_CONN *pConn)
    return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
-
-//
-// Rollback transaction
-//
-
+/**
+ * Rollback transaction
+ */
 extern "C" DWORD EXPORT DrvRollback(MSSQL_CONN *pConn)
 {
    SQLRETURN nRet;
@@ -916,11 +914,30 @@ extern "C" DWORD EXPORT DrvRollback(MSSQL_CONN *pConn)
    return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
+/**
+ * Check if table exist
+ */
+extern "C" int EXPORT DrvIsTableExist(MSSQL_CONN *pConn, const WCHAR *name)
+{
+   WCHAR query[256];
+   swprintf(query, 256, L"SELECT count(*) FROM sysobjects WHERE xtype='U' AND upper(name)=upper('%ls')", name);
+   DWORD error;
+   WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   int rc = DBIsTableExist_Failure;
+   MSSQL_QUERY_RESULT *hResult = (MSSQL_QUERY_RESULT *)DrvSelect(pConn, query, &error, errorText);
+   if (hResult != NULL)
+   {
+      WCHAR buffer[64] = L"";
+      DrvGetField(hResult, 0, 0, buffer, 64);
+      rc = (wcstol(buffer, NULL, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      DrvFreeResult(hResult);
+   }
+   return rc;
+}
 
-//
-// DLL Entry point
-//
-
+/**
+ * DLL Entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
