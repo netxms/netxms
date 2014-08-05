@@ -501,6 +501,35 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
 }
 
 /**
+ * Send file
+ */
+ THREAD_RESULT THREAD_CALL SendFile(void *dataStruct)
+{
+   MessageData *data = (MessageData*)dataStruct;
+   //prepare file name
+
+   AgentWriteDebugLog(5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s"),
+               data->fileName, data->follow ? _T("true") : _T("false"));
+   BOOL result = AgentSendFileToServer(data->session, data->id, data->fileName, (int)data->offset);
+   if(data->follow && result)
+   {
+      TCHAR *fileID = _tcsdup(data->fileNameCode);
+      TCHAR *realName = _tcsdup(data->fileName);
+      g_monitorFileList.addMonitoringFile(fileID);
+      FollowData *flData = new FollowData();
+      flData->serverAddress = data->session->getServerAddress();
+      flData->pszFile = realName;
+      flData->fileId = fileID;
+      flData->offset = 0;
+      flData->session = data->session;
+      ThreadCreateEx(SendFileUpdatesOverNXCP, 0, (void *)flData);
+   }
+   safe_free(data->fileName);
+   safe_free(data->fileNameCode);
+   delete data;
+}
+
+/**
  * Process commands like get files in folder, delete file/folder, copy file/folder, move file/folder
  */
 static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *response, void *session)
@@ -698,26 +727,19 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
 
          if (((AbstractCommSession *)session)->isMasterServer() && CheckFullPath(fileName, false))
          {
-            TCHAR fileNameCode[MAX_PATH];
+            TCHAR *fileNameCode = (TCHAR*)malloc(MAX_PATH * sizeof(TCHAR));
             request->GetVariableStr(VID_NAME, fileNameCode, MAX_PATH);
-            //prepare file name
 
-            AgentWriteDebugLog(5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s"),
-                        fileName, request->GetVariableShort(VID_FILE_FOLLOW) ? _T("true") : _T("false"));
-            BOOL result = AgentSendFileToServer(session, request->GetId(), fileName, (int)request->GetVariableLong(VID_FILE_OFFSET));
-            if(request->GetVariableShort(VID_FILE_FOLLOW) && result)
-            {
-               TCHAR *fileID = _tcsdup(fileNameCode);
-               TCHAR *realName = _tcsdup(fileName);
-               g_monitorFileList.addMonitoringFile(fileID);
-               FollowData *flData = new FollowData();
-               flData->serverAddress = ((AbstractCommSession *)session)->getServerAddress();
-               flData->pszFile = realName;
-               flData->fileId = fileID;
-               flData->offset = 0;
-               flData->session = ((AbstractCommSession *)session);
-               ThreadCreateEx(SendFileUpdatesOverNXCP, 0, (void *)flData);
-            }
+            MessageData *data = new MessageData();
+            data->fileName = _tcsdup(fileName);
+            data->fileNameCode = fileNameCode;
+            data->follow = request->GetVariableShort(VID_FILE_FOLLOW) ? true : false;
+            data->id = request->GetId();
+            data->offset = request->GetVariableLong(VID_FILE_OFFSET);
+            data->session = ((AbstractCommSession *)session);
+
+            ThreadCreateEx(SendFile, 0, (void *)data);
+
             response->SetVariable(VID_RCC, ERR_SUCCESS);
          }
          else

@@ -46,6 +46,16 @@ struct FollowData
 	AbstractCommSession *session;
 };
 
+struct MessageData
+{
+   TCHAR *fileName;
+   TCHAR *fileNameCode;
+   bool follow;
+   UINT32 id;
+   long offset;
+	AbstractCommSession *session;
+};
+
 class MonitoredFileList
 {
 private:

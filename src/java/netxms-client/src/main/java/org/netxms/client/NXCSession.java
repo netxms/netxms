@@ -6471,8 +6471,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       final NXCPMessage response = waitForRCC(msg.getMessageId()); // first confirmation - server job started
       final String id = response.getVariableAsString(NXCPCodes.VID_NAME);
 
-      waitForRCC(msg.getMessageId()); // second confirmation - file downloaded to server
-      return new AgentFile(id, waitForFile(msg.getMessageId(), 3600000));
+      AgentFile file =  new AgentFile(id, waitForFile(msg.getMessageId(), 36000000));
+      
+      waitForRCC(msg.getMessageId()); // second confirmation - file transfered from agent to console
+      return file;
    }
    
    /**
