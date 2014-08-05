@@ -1,6 +1,6 @@
 /* 
 ** ODBC Database Driver
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1042,6 +1042,47 @@ extern "C" DWORD EXPORT DrvRollback(ODBCDRV_CONN *pConn)
    SQLSetConnectAttr(pConn->sqlConn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER)SQL_AUTOCOMMIT_ON, 0);
 	MutexUnlock(pConn->mutexQuery);
    return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
+}
+
+/**
+ * Check if table exist
+ */
+extern "C" int EXPORT DrvIsTableExist(ODBCDRV_CONN *pConn, const WCHAR *name)
+{
+   int rc = DBIsTableExist_Failure;
+
+   MutexLock(pConn->mutexQuery);
+
+   SQLRETURN iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
+	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
+   {
+      if (m_useUnicode)
+      {
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+	      iResult = SQLTablesW(pConn->sqlStatement, NULL, 0, NULL, 0, (SQLWCHAR *)name, SQL_NTS, NULL, 0);
+#else
+			SQLWCHAR *temp = UCS2StringFromUCS4String(name);
+	      iResult = SQLTablesW(pConn->sqlStatement, NULL, 0, NULL, 0, (SQLWCHAR *)temp, SQL_NTS, NULL, 0);
+		   free(temp);
+#endif
+		}
+		else
+		{
+			char *temp = MBStringFromWideString(name);
+	      iResult = SQLTablesA(pConn->sqlStatement, NULL, 0, NULL, 0, (SQLCHAR *)temp, SQL_NTS, NULL, 0);
+		   free(temp);
+		}
+	   if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
+      {
+			ODBCDRV_QUERY_RESULT *pResult = ProcessSelectResults(pConn->sqlStatement);
+         rc = (DrvGetNumRows(pResult) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+         DrvFreeResult(pResult);
+      }
+      SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
+   }
+
+   MutexUnlock(pConn->mutexQuery);
+   return rc;
 }
 
 #ifdef _WIN32

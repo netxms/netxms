@@ -1,6 +1,6 @@
 /* 
 ** Informix Database Driver
-** Copyright (C) 2010-2012 Raden Solutinos
+** Copyright (C) 2010-2014 Raden Solutinos
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -770,11 +770,9 @@ extern "C" BOOL EXPORT DrvFetch(INFORMIX_ASYNC_QUERY_RESULT *pResult)
 	return bResult;
 }
 
-
-//
-// Get field length from async query result
-//
-
+/**
+ * Get field length from async query result
+ */
 extern "C" LONG EXPORT DrvGetFieldLengthAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult, int iColumn)
 {
 	LONG nLen = -1;
@@ -795,13 +793,10 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(INFORMIX_ASYNC_QUERY_RESULT *pResu
 	return nLen;
 }
 
-
-//
-// Get field from current row in async query result
-//
-
-extern "C" WCHAR EXPORT *DrvGetFieldAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult,
-		int iColumn, WCHAR *pBuffer, int iBufSize)
+/**
+ * Get field from current row in async query result
+ */
+extern "C" WCHAR EXPORT *DrvGetFieldAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult, int iColumn, WCHAR *pBuffer, int iBufSize)
 {
 	SQLLEN iDataSize;
 	long iResult;
@@ -836,31 +831,25 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult,
 	return pBuffer;
 }
 
-
-//
-// Get column count in async query result
-//
-
+/**
+ * Get column count in async query result
+ */
 extern "C" int EXPORT DrvGetColumnCountAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->iNumCols : 0;
 }
 
-
-//
-// Get column name in async query result
-//
-
+/**
+ * Get column name in async query result
+ */
 extern "C" const char EXPORT *DrvGetColumnNameAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->iNumCols)) ? pResult->columnNames[column] : NULL;
 }
 
-
-//
-// Destroy result of async query
-//
-
+/**
+ * Destroy result of async query
+ */
 extern "C" void EXPORT DrvFreeAsyncResult(INFORMIX_ASYNC_QUERY_RESULT *pResult)
 {
 	if (pResult != NULL)
@@ -871,11 +860,9 @@ extern "C" void EXPORT DrvFreeAsyncResult(INFORMIX_ASYNC_QUERY_RESULT *pResult)
 	}
 }
 
-
-//
-// Begin transaction
-//
-
+/**
+ * Begin transaction
+ */
 extern "C" DWORD EXPORT DrvBegin(INFORMIX_CONN *pConn)
 {
 	SQLRETURN nRet;
@@ -900,11 +887,9 @@ extern "C" DWORD EXPORT DrvBegin(INFORMIX_CONN *pConn)
 	return dwResult;
 }
 
-
-//
-// Commit transaction
-//
-
+/**
+ * Commit transaction
+ */
 extern "C" DWORD EXPORT DrvCommit(INFORMIX_CONN *pConn)
 {
 	SQLRETURN nRet;
@@ -921,11 +906,9 @@ extern "C" DWORD EXPORT DrvCommit(INFORMIX_CONN *pConn)
 	return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
-
-//
-// Rollback transaction
-//
-
+/**
+ * Rollback transaction
+ */
 extern "C" DWORD EXPORT DrvRollback(INFORMIX_CONN *pConn)
 {
 	SQLRETURN nRet;
@@ -942,13 +925,32 @@ extern "C" DWORD EXPORT DrvRollback(INFORMIX_CONN *pConn)
 	return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
-
-//
-// DLL Entry point
-//
+/**
+ * Check if table exist
+ */
+extern "C" int EXPORT DrvIsTableExist(INFORMIX_CONN *pConn, const WCHAR *name)
+{
+   WCHAR query[256];
+   swprintf(query, 256, L"SELECT count(*) FROM informix.systables WHERE tabtype='T' AND upper(tabname)=upper('%ls')", name);
+   DWORD error;
+   WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   int rc = DBIsTableExist_Failure;
+   INFORMIX_QUERY_RESULT *hResult = (INFORMIX_QUERY_RESULT *)DrvSelect(pConn, query, &error, errorText);
+   if (hResult != NULL)
+   {
+      WCHAR buffer[64] = L"";
+      DrvGetField(hResult, 0, 0, buffer, 64);
+      rc = (wcstol(buffer, NULL, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      DrvFreeResult(hResult);
+   }
+   return rc;
+}
 
 #ifdef _WIN32
 
+/**
+ * DLL Entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
