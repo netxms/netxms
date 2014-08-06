@@ -1,7 +1,6 @@
 @echo off
 call set_build_number.cmd
-set version=1.2.15
-rem set version=1.2.14
+set version=1.2.16
 
 cd win32.win32.x86
 zip -r nxmc-%version%-win32-x86.zip nxmc
