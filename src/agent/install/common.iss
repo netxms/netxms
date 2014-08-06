@@ -25,7 +25,7 @@ Var
   editServerName: TNewEdit;
   cbDownloadConfig: TNewCheckBox;
   SubagentSelectionPage: TInputOptionWizardPage;
-  serverName, sbECS, sbLogWatch, sbPing, sbPortCheck, sbWinPerf, sbWMI, sbUPS, sbDownloadConfig: String;
+  serverName, sbECS, sbFileMgr, sbLogWatch, sbPing, sbPortCheck, sbWinPerf, sbWMI, sbUPS, sbDownloadConfig: String;
 
 #include "..\..\install\windows\firewall.iss"
 
@@ -75,6 +75,7 @@ Begin
   // Empty values for installation data
   serverName := '';
   sbECS := 'FALSE';
+  sbFileMgr := 'FALSE';
   sbLogWatch := 'FALSE';
   sbPing := 'FALSE';
   sbPortCheck := 'FALSE';
@@ -106,6 +107,8 @@ Begin
       param := Uppercase(param);
       If param = 'ECS' Then
         sbECS := 'TRUE';
+      If param = 'FILEMGR' Then
+        sbFileMgr := 'TRUE';
       If param = 'LOGWATCH' Then
         sbLogWatch := 'TRUE';
       If param = 'PING' Then
@@ -125,6 +128,8 @@ Begin
       param := Uppercase(param);
       If param = 'ECS' Then
         sbECS := 'FALSE';
+      If param = 'FILEMGR' Then
+        sbFileMgr := 'FALSE';
       If param = 'LOGWATCH' Then
         sbLogWatch := 'FALSE';
       If param = 'PING' Then
@@ -173,6 +178,7 @@ Begin
     'Subagent Selection', 'Select desired subagents.',
     'Please select additional subagents you wish to load.', False, False);
   SubagentSelectionPage.Add('Extended Checksum Subagent - ecs.nsm');
+  SubagentSelectionPage.Add('File Manager Subagent - filemgr.nsm');
   SubagentSelectionPage.Add('ICMP Pinger Subagent - ping.nsm');
   SubagentSelectionPage.Add('Log Monitoring Subagent - logwatch.nsm');
   SubagentSelectionPage.Add('Port Checker Subagent - portcheck.nsm');
@@ -180,12 +186,13 @@ Begin
   SubagentSelectionPage.Add('WMI Subagent - wmi.nsm');
   SubagentSelectionPage.Add('UPS Monitoring Subagent - ups.nsm');
   SubagentSelectionPage.Values[0] := StrToBool(GetPreviousData('Subagent_ECS', sbECS));
-  SubagentSelectionPage.Values[1] := StrToBool(GetPreviousData('Subagent_PING', sbPing));
-  SubagentSelectionPage.Values[2] := StrToBool(GetPreviousData('Subagent_LOGWATCH', sbLogWatch));
-  SubagentSelectionPage.Values[3] := StrToBool(GetPreviousData('Subagent_PORTCHECK', sbPortCheck));
-  SubagentSelectionPage.Values[4] := StrToBool(GetPreviousData('Subagent_WINPERF', sbWinPerf));
-  SubagentSelectionPage.Values[5] := StrToBool(GetPreviousData('Subagent_WMI', sbWMI));
-  SubagentSelectionPage.Values[6] := StrToBool(GetPreviousData('Subagent_UPS', sbUPS));
+  SubagentSelectionPage.Values[1] := StrToBool(GetPreviousData('Subagent_FILEMGR', sbFileMgr));
+  SubagentSelectionPage.Values[2] := StrToBool(GetPreviousData('Subagent_PING', sbPing));
+  SubagentSelectionPage.Values[3] := StrToBool(GetPreviousData('Subagent_LOGWATCH', sbLogWatch));
+  SubagentSelectionPage.Values[4] := StrToBool(GetPreviousData('Subagent_PORTCHECK', sbPortCheck));
+  SubagentSelectionPage.Values[5] := StrToBool(GetPreviousData('Subagent_WINPERF', sbWinPerf));
+  SubagentSelectionPage.Values[6] := StrToBool(GetPreviousData('Subagent_WMI', sbWMI));
+  SubagentSelectionPage.Values[7] := StrToBool(GetPreviousData('Subagent_UPS', sbUPS));
 End;
 
 Procedure RegisterPreviousData(PreviousDataKey: Integer);
@@ -193,12 +200,13 @@ Begin
   SetPreviousData(PreviousDataKey, 'MasterServer', editServerName.Text);
   SetPreviousData(PreviousDataKey, 'DownloadConfig', BoolToStr(cbDownloadConfig.Checked));
   SetPreviousData(PreviousDataKey, 'Subagent_ECS', BoolToStr(SubagentSelectionPage.Values[0]));
-  SetPreviousData(PreviousDataKey, 'Subagent_PING', BoolToStr(SubagentSelectionPage.Values[1]));
-  SetPreviousData(PreviousDataKey, 'Subagent_LOGWATCH', BoolToStr(SubagentSelectionPage.Values[2]));
-  SetPreviousData(PreviousDataKey, 'Subagent_PORTCHECK', BoolToStr(SubagentSelectionPage.Values[3]));
-  SetPreviousData(PreviousDataKey, 'Subagent_WINPERF', BoolToStr(SubagentSelectionPage.Values[4]));
-  SetPreviousData(PreviousDataKey, 'Subagent_WMI', BoolToStr(SubagentSelectionPage.Values[5]));
-  SetPreviousData(PreviousDataKey, 'Subagent_UPS', BoolToStr(SubagentSelectionPage.Values[6]));
+  SetPreviousData(PreviousDataKey, 'Subagent_FILEMGR', BoolToStr(SubagentSelectionPage.Values[1]));
+  SetPreviousData(PreviousDataKey, 'Subagent_PING', BoolToStr(SubagentSelectionPage.Values[2]));
+  SetPreviousData(PreviousDataKey, 'Subagent_LOGWATCH', BoolToStr(SubagentSelectionPage.Values[3]));
+  SetPreviousData(PreviousDataKey, 'Subagent_PORTCHECK', BoolToStr(SubagentSelectionPage.Values[4]));
+  SetPreviousData(PreviousDataKey, 'Subagent_WINPERF', BoolToStr(SubagentSelectionPage.Values[5]));
+  SetPreviousData(PreviousDataKey, 'Subagent_WMI', BoolToStr(SubagentSelectionPage.Values[6]));
+  SetPreviousData(PreviousDataKey, 'Subagent_UPS', BoolToStr(SubagentSelectionPage.Values[7]));
 End;
 
 Function GetMasterServer(Param: String): String;
@@ -212,16 +220,18 @@ Begin
   If SubagentSelectionPage.Values[0] Then
     Result := Result + 'ecs.nsm ';
   If SubagentSelectionPage.Values[1] Then
-    Result := Result + 'ping.nsm ';
+    Result := Result + 'filemgr.nsm ';
   If SubagentSelectionPage.Values[2] Then
-    Result := Result + 'logwatch.nsm ';
+    Result := Result + 'ping.nsm ';
   If SubagentSelectionPage.Values[3] Then
-    Result := Result + 'portcheck.nsm ';
+    Result := Result + 'logwatch.nsm ';
   If SubagentSelectionPage.Values[4] Then
-    Result := Result + 'winperf.nsm ';
+    Result := Result + 'portcheck.nsm ';
   If SubagentSelectionPage.Values[5] Then
-    Result := Result + 'wmi.nsm ';
+    Result := Result + 'winperf.nsm ';
   If SubagentSelectionPage.Values[6] Then
+    Result := Result + 'wmi.nsm ';
+  If SubagentSelectionPage.Values[7] Then
     Result := Result + 'ups.nsm ';
 End;
 
