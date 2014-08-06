@@ -490,12 +490,12 @@ if test $? = 0; then
 	DISABLE_ICONV="yes"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
 	if test "x$PROPOSED_STATIC_SUBAGENTS" = "xdefault"; then
-		STATIC_SUBAGENT_LIST="ecs logwatch ping portcheck ups"
+		STATIC_SUBAGENT_LIST="ecs filemgr logwatch ping portcheck ups"
 	else
 		STATIC_SUBAGENT_LIST="$PROPOSED_STATIC_SUBAGENTS"
 	fi
 
-	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
+	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/filemgr/filemgr.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
 
 	check_substr "$STATIC_SUBAGENT_LIST" "odbcquery"
 	if test $? = 0; then
