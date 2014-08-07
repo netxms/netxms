@@ -359,9 +359,13 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
    table += cpu * CPU_USAGE_SLOTS;
 
    double usage = 0;
-   double *p = table + m_currentSlot - 1;
 
 	MutexLock(m_cpuUsageMutex);
+
+   // m_currentSlot points to next slot to be filled
+   // it is never zero because collector thread always increment it
+   // before releasing mutex
+   double *p = table + m_currentSlot - 1;
 	for (int i = 0; i < count; i++)
 	{
 		usage += *p;
