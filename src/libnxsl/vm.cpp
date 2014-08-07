@@ -139,8 +139,6 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env)
    m_env = (env != NULL) ? env : new NXSL_Environment;
    m_pRetValue = NULL;
 	m_userData = NULL;
-
-	srand((unsigned int)time(NULL));
 }
 
 /**
