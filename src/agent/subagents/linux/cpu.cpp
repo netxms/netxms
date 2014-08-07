@@ -306,12 +306,15 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
 	table += cpu * CPU_USAGE_SLOTS;
 
 	float usage = 0;
-	float *p = table + m_currentSlot - 1;
 
 	MutexLock(m_cpuUsageMutex);
-	for (int i = 0; i < count; i++) {
+
+	float *p = table + m_currentSlot - 1;
+	for (int i = 0; i < count; i++) 
+   {
 		usage += *p;
-		if (p == table) {
+		if (p == table) 
+      {
 			p += CPU_USAGE_SLOTS;
 		}
 		p--;
