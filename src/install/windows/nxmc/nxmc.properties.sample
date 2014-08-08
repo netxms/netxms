@@ -1,0 +1,23 @@
+#
+# This properties file contains configuration for NetXMS WebUI application
+# Rename nxmc.properties.sample to nxmc.properties after installation.
+#
+
+# Name: server
+# Description: Host name or IP address of NetXMS server.
+server=127.0.0.1
+
+# Name: sessionTimeout
+# Description: Client session inactivity timeout in seconds.
+sessionTimeout=120
+
+# Name: enableAdvancedSettings
+# Description: Enable (true) or disable (false) access to "Settings" button on login page.
+enableAdvancedSettings=false
+
+# Name: loginFormImage
+# Description: Custom image to be displayed in login form instead of NetXMS logo.
+#              Image file must be located within application server's class path
+#              and file name must be given relative to class path root with
+#              leading slash.
+#loginFormImage = /custom_logo.jpg
