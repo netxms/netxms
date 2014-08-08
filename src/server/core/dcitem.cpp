@@ -350,7 +350,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_iRetentionTime);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_status);
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (INT32)m_deltaCalculation);
-	DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_transformationScriptSource, DB_BIND_STATIC);
+	DBBind(hStmt, 10, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
 	DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_szDescription, DB_BIND_STATIC);
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_instance, DB_BIND_STATIC);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
@@ -366,9 +366,9 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, (INT32)m_snmpRawValueType);
 	DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, (INT32)m_instanceDiscoveryMethod);
 	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_instanceDiscoveryData, DB_BIND_STATIC);
-	DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_instanceFilterSource, DB_BIND_STATIC);
+	DBBind(hStmt, 26, DB_SQLTYPE_TEXT, m_instanceFilterSource, DB_BIND_STATIC);
 	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (INT32)m_sampleCount);
-	DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_comments, DB_BIND_STATIC);
+   DBBind(hStmt, 28, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
 	DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_dwId);
 
    BOOL bResult = DBExecute(hStmt);
