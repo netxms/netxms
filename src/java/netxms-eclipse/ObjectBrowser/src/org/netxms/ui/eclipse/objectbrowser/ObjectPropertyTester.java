@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,41 +16,28 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.client.objects;
+package org.netxms.ui.eclipse.objectbrowser;
 
-import org.netxms.base.NXCPMessage;
-import org.netxms.client.NXCSession;
+import org.eclipse.core.expressions.PropertyTester;
+import org.netxms.client.objects.AbstractObject;
 
 /**
- * @author Victor
- *
+ * Property tester for NetXMS objects
  */
-public class EntireNetwork extends GenericObject
+public class ObjectPropertyTester extends PropertyTester
 {
-	/**
-	 * @param msg Message to create object from
-	 * @param session Associated client session
-	 */
-	public EntireNetwork(final NXCPMessage msg, final NXCSession session)
-	{
-		super(msg, session);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.client.NXCObject#getObjectClassName()
-	 */
-	@Override
-	public String getObjectClassName()
-	{
-		return "Network";
-	}
-
    /* (non-Javadoc)
-    * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
+    * @see org.eclipse.core.expressions.IPropertyTester#test(java.lang.Object, java.lang.String, java.lang.Object[], java.lang.Object)
     */
    @Override
-   public boolean isAlarmsVisible()
+   public boolean test(Object receiver, String property, Object[] args, Object expectedValue)
    {
-      return true;
+      if (!(receiver instanceof AbstractObject))
+         return false;
+      
+      if (property.equals("isAlarmsVisible"))
+         return ((AbstractObject)receiver).isAlarmsVisible();
+      
+      return false;
    }
 }

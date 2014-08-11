@@ -44,6 +44,10 @@
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.alarmviewer.commands.open_alarm_browser">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.alarmviewer.commands.alarms"
+            name="%action.Alarms.label">
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -68,6 +72,12 @@
             commandId="org.netxms.ui.eclipse.alarmviewer.commands.open_alarm_browser"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="F8">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.alarmviewer.commands.alarms"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M3+Shift+A">
       </key>
    </extension>
 
@@ -109,99 +119,47 @@
       </page>
    </extension>
    <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            id="org.netxms.ui.eclipse.alarmviewer.actions.popup.object.Node"
-            objectClass="org.netxms.client.objects.Node">
-         <action
-               class="org.netxms.ui.eclipse.alarmviewer.actions.ShowObjectAlarms"
-               enablesFor="1"
-               icon="icons/alarm_browser.png"
-               id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_Node"
-               label="%action.Alarms.label"
-               menubarPath="additions">
-         </action>
-      </objectContribution>
-      <objectContribution
-            id="org.netxms.ui.eclipse.alarmviewer.actions.popup.object.Subnet"
-            objectClass="org.netxms.client.objects.Subnet">
-         <action
-               class="org.netxms.ui.eclipse.alarmviewer.actions.ShowObjectAlarms"
-               enablesFor="1"
-               icon="icons/alarm_browser.png"
-               id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_Subnet"
-               label="%action.Alarms.label"
-               menubarPath="additions">
-         </action>
-      </objectContribution>
-      <objectContribution
-            id="org.netxms.ui.eclipse.alarmviewer.actions.popup.object.EntireNetwork"
-            objectClass="org.netxms.client.objects.EntireNetwork">
-         <action
-               class="org.netxms.ui.eclipse.alarmviewer.actions.ShowObjectAlarms"
-               enablesFor="1"
-               icon="icons/alarm_browser.png"
-               id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_EntireNetwork"
-               label="%action.Alarms.label"
-               menubarPath="additions">
-         </action>
-      </objectContribution>
-      <objectContribution
-            id="org.netxms.ui.eclipse.alarmviewer.actions.popup.object.ServiceRoot"
-            objectClass="org.netxms.client.objects.ServiceRoot">
-         <action
-               class="org.netxms.ui.eclipse.alarmviewer.actions.ShowObjectAlarms"
-               enablesFor="1"
-               icon="icons/alarm_browser.png"
-               id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_ServiceRoot"
-               label="%action.Alarms.label"
-               menubarPath="additions">
-         </action>
-      </objectContribution>
-      <objectContribution
-            id="org.netxms.ui.eclipse.alarmviewer.actions.popup.object.Cluster"
-            objectClass="org.netxms.client.objects.Cluster">
-         <action
-               class="org.netxms.ui.eclipse.alarmviewer.actions.ShowObjectAlarms"
-               enablesFor="1"
-               icon="icons/alarm_browser.png"
-               id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_Cluster"
-               label="%action.Alarms.label"
-               menubarPath="additions">
-         </action>
-      </objectContribution>
-      <objectContribution
-            id="org.netxms.ui.eclipse.alarmviewer.actions.popup.object.Zone"
-            objectClass="org.netxms.client.objects.Zone">
-         <action
-               class="org.netxms.ui.eclipse.alarmviewer.actions.ShowObjectAlarms"
-               enablesFor="1"
-               icon="icons/alarm_browser.png"
-               id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_Zone"
-               label="%action.Alarms.label"
-               menubarPath="additions">
-         </action>
-      </objectContribution>
-      <objectContribution
-            id="org.netxms.ui.eclipse.alarmviewer.actions.popup.object.Container"
-            objectClass="org.netxms.client.objects.Container">
-         <action
-               class="org.netxms.ui.eclipse.alarmviewer.actions.ShowObjectAlarms"
-               enablesFor="1"
-               icon="icons/alarm_browser.png"
-               id="org.netxms.ui.eclipse.alarmviewer.popupActions.ShowObjectAlarms_Container"
-               label="%action.Alarms.label"
-               menubarPath="additions">
-         </action>
-      </objectContribution>
-   </extension>
-   <extension
          point="org.netxms.ui.eclipse.objectview.objectDetailsProvider">
       <provider
             class="org.netxms.ui.eclipse.alarmviewer.AlarmDetailsProvider"
             name="%provider.AlarmDetails.name"
             priority="255">
       </provider>
+   </extension>
+  
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="org.netxms.ui.eclipse.alarmviewer.actions.ShowObjectAlarms"
+            commandId="org.netxms.ui.eclipse.alarmviewer.commands.alarms">
+      </handler>
+   </extension> 
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+         <command
+               commandId="org.netxms.ui.eclipse.alarmviewer.commands.alarms"
+               icon="icons/alarm_browser.png"
+               label="%action.Alarms.label"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <iterate>
+                  <and>
+                     <instanceof
+                           value="org.netxms.client.objects.AbstractObject">
+                     </instanceof>
+                     <test
+                           forcePluginActivation="true"
+                           property="org.netxms.ui.eclipse.objectbrowser.isAlarmsVisible">
+                     </test>
+                  </and>
+               </iterate>
+            </visibleWhen>
+         </command>
+      </menuContribution>
    </extension>
 
 </plugin>

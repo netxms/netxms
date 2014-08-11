@@ -65,4 +65,13 @@ public class Node extends AbstractNode
 	{
 		return true;
 	}
+
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
+    */
+   @Override
+   public boolean isAlarmsVisible()
+   {
+      return true;
+   }
 }

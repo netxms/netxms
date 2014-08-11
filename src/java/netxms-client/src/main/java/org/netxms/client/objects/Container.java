@@ -54,6 +54,15 @@ public class Container extends GenericObject
 		return true;
 	}
 
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
+    */
+   @Override
+   public boolean isAlarmsVisible()
+   {
+      return true;
+   }
+
 	/**
 	 * @return the category
 	 */

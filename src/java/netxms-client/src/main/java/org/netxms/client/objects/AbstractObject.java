@@ -660,6 +660,17 @@ public abstract class AbstractObject
 	{
 		return false;
 	}
+	
+   /**
+    * If this method returns true object can have visible alarms.
+    * Default implementation always returns false.
+    * 
+    * @return true if object can contain visible alarms
+    */
+	public boolean isAlarmsVisible()
+	{
+	   return false;
+	}
 
 	/**
 	 * @return the objectClass

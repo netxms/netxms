@@ -29,4 +29,13 @@ public class ServiceRoot extends GenericObject
 	{
 		return "ServiceRoot";
 	}
+
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
+    */
+   @Override
+   public boolean isAlarmsVisible()
+   {
+      return true;
+   }
 }
