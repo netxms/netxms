@@ -175,6 +175,7 @@ public class AlarmList extends CompositeWithMessageBar
          }
       });
 
+
       createActions();
       createPopupMenu();
 
@@ -663,6 +664,20 @@ public class AlarmList extends CompositeWithMessageBar
    }
 
    /**
+	 * Change root objects for alarm list. List is refreshed after change.
+	 * 
+	 * @param List of objectId
+	 */
+	public void setRootObjects(List<Long> selectedObjects) 
+	{
+		alarmFilter.setRootObjects(selectedObjects);
+		synchronized(alarmList)
+		{
+			alarmViewer.refresh();
+		}
+	}
+
+	/**
     * Refresh alarm list
     */
    public void refresh()

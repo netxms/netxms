@@ -78,6 +78,7 @@ public class CompositeWithMessageBar extends Composite
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       messageBarLabel.setLayoutData(gd);
+      messageBar.setVisible(false);
       
       closeButton = new Label(messageBar, SWT.NONE);
       closeButton.setBackground(messageBar.getBackground());

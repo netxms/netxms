@@ -724,6 +724,20 @@ public class AlarmList extends CompositeWithMessageBar
 	}
 
    /**
+    * Change root objects for alarm list. List is refreshed after change.
+    * 
+    * @param List of objectId
+    */
+   public void setRootObjects(List<Long> selectedObjects) 
+   {
+      alarmFilter.setRootObjects(selectedObjects);
+      synchronized(alarmList)
+      {
+         filterAndLimit();
+      }
+   }
+
+   /**
     * Filter all alarms (e.g. by chosen object), sort them by last change and reduce the size to maximum as it is set in
     * configuration parameter <code>AlarmListDisplayLimit</code>.
     */

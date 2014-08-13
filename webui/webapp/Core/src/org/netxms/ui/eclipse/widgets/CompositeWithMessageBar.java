@@ -70,6 +70,7 @@ public class CompositeWithMessageBar extends Composite
       layout.verticalSpacing = 0;
       layout.numColumns = 2;
       messageBar.setLayout(layout);
+      messageBar.setVisible(false);
       
       messageBarLabel = new CLabel(messageBar, SWT.NONE);
       messageBarLabel.setBackground(messageBar.getBackground());

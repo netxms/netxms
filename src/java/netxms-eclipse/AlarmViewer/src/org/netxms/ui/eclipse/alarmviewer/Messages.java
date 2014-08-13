@@ -101,7 +101,9 @@ public class Messages extends NLS
    public static String Alarms_ShowReminder;
    public static String EditCommentDialog_Comment;
    public static String EditCommentDialog_EditComment;
-   public static String ObjectAlarmBrowser_TitlePrefix;
+   public static String ObjectAlarmBrowser_SelectedObjects;
+   public static String ObjectAlarmBrowser_Title;
+   public static String ObjectAlarmBrowser_TitleMultipleObjects;
    public static String OpenAlarmBrowser_Error;
    public static String OpenAlarmBrowser_ErrorOpeningView;
    public static String ShowObjectAlarms_Error;

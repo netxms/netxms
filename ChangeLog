@@ -2,7 +2,9 @@
 * 1.2.17
 *
 
-- Fixed issues: #624
+- Management console:
+	- Can show alarms for multiple selected objects
+- Fixed issues: #613, #624
 
 
 *

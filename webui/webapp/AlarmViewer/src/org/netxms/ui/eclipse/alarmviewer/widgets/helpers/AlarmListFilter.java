@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.widgets.helpers;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
@@ -28,61 +30,79 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class AlarmListFilter
 {
-	private long rootObject = 0;
-	private int stateFilter = -1;
-	private int severityFilter = 0xFF;
-	private NXCSession session;
-	
-	/**
+   private List<Long> rootObjects = new ArrayList<>();
+   private int stateFilter = -1;
+   private int severityFilter = 0xFF;
+   private NXCSession session;
+
+   /**
 	 * 
 	 */
-	public AlarmListFilter()
-	{
-		rootObject = 0;
+   public AlarmListFilter()
+   {
       session = (NXCSession)ConsoleSharedData.getSession();
-	}
+   }
 
-	/**
-	 * @return true if alarm should be displayed
-	 */
+   /**
+    * @return true if alarm should be displayed
+    */
    public boolean select(Alarm alarm)
    {
-		if ((stateFilter != -1) && (alarm.getState() != stateFilter))
-			return false;
-		
-		if (((1 << alarm.getCurrentSeverity()) & severityFilter) == 0)
-			return false;
-				
-		if ((rootObject == 0) || (rootObject == alarm.getSourceObjectId()))
-			return true;	// No filtering by object ID or root object is a source
-		
-		AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
-		if (object != null)
-			return object.isChildOf(rootObject);
-		return false;
-	}
+      if ((stateFilter != -1) && (alarm.getState() != stateFilter))
+         return false;
 
-	/**
-	 * @param rootObject the rootObject to set
-	 */
-	public final void setRootObject(long rootObject)
-	{
-		this.rootObject = rootObject;
-	}
+      if (((1 << alarm.getCurrentSeverity()) & severityFilter) == 0)
+         return false;
 
-	/**
-	 * @param stateFilter the stateFilter to set
-	 */
-	public void setStateFilter(int stateFilter)
-	{
-		this.stateFilter = stateFilter;
-	}
+      if ((rootObjects.size() == 0) || (rootObjects.contains(((Alarm)alarm).getSourceObjectId())))
+         return true; // No filtering by object ID or root object is a source
 
-	/**
-	 * @param severityFilter the severityFilter to set
-	 */
-	public void setSeverityFilter(int severityFilter)
-	{
-		this.severityFilter = severityFilter;
-	}
+      AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
+      if (object != null)
+      {
+         // convert List of Longs to array of longs
+         long[] rootObjectsArray = new long[rootObjects.size()];
+         int i = 0;
+         for(long objectId : rootObjects)
+         {
+            rootObjectsArray[i++] = objectId;
+         }
+         return object.isChildOf(rootObjectsArray);
+      }
+      return false;
+   }
+
+   /**
+    * @param rootObject the rootObject to set
+    */
+   public final void setRootObject(long rootObject)
+   {
+      this.rootObjects.clear();
+      this.rootObjects.add(rootObject);
+   }
+
+   /**
+    * @param selectedObjects
+    */
+   public void setRootObjects(List<Long> selectedObjects)
+   {
+      this.rootObjects.clear();
+      this.rootObjects.addAll(selectedObjects);
+   }
+
+   /**
+    * @param stateFilter the stateFilter to set
+    */
+   public void setStateFilter(int stateFilter)
+   {
+      this.stateFilter = stateFilter;
+   }
+
+   /**
+    * @param severityFilter the severityFilter to set
+    */
+   public void setSeverityFilter(int severityFilter)
+   {
+      this.severityFilter = severityFilter;
+   }
 }

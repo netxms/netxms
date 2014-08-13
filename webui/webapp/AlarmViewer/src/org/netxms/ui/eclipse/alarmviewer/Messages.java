@@ -9,6 +9,7 @@ public class Messages extends NLS
 {
    private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.alarmviewer.messages"; //$NON-NLS-1$
 
+
    public String AcknowledgeAlarm_ErrorMessage;
    public String AcknowledgeAlarm_JobName;
    public String AcknowledgeAlarm_TaskName;
@@ -104,7 +105,9 @@ public class Messages extends NLS
    public String Alarms_ShowReminder;
    public String EditCommentDialog_Comment;
    public String EditCommentDialog_EditComment;
-   public String ObjectAlarmBrowser_TitlePrefix;
+   public String ObjectAlarmBrowser_SelectedObjects;
+   public String ObjectAlarmBrowser_Title;
+   public String ObjectAlarmBrowser_TitleMultipleObjects;
    public String OpenAlarmBrowser_Error;
    public String OpenAlarmBrowser_ErrorOpeningView;
    public String ShowObjectAlarms_Error;

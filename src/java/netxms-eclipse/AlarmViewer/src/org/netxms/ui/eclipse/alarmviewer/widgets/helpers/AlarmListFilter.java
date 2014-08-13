@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.widgets.helpers;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
@@ -28,7 +30,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class AlarmListFilter
 {
-   private long rootObject = 0;
+   private List<Long> rootObjects = new ArrayList<>();
    private int stateFilter = -1;
    private int severityFilter = 0xFF;
    private NXCSession session;
@@ -38,7 +40,6 @@ public class AlarmListFilter
 	 */
    public AlarmListFilter()
    {
-      rootObject = 0;
       session = (NXCSession)ConsoleSharedData.getSession();
    }
 
@@ -53,12 +54,21 @@ public class AlarmListFilter
       if (((1 << alarm.getCurrentSeverity()) & severityFilter) == 0)
          return false;
 
-      if ((rootObject == 0) || (rootObject == alarm.getSourceObjectId()))
+      if ((rootObjects.size() == 0) || (rootObjects.contains(((Alarm)alarm).getSourceObjectId())))
          return true; // No filtering by object ID or root object is a source
 
       AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
       if (object != null)
-         return object.isChildOf(rootObject);
+      {
+         // convert List of Longs to array of longs
+         long[] rootObjectsArray = new long[rootObjects.size()];
+         int i = 0;
+         for(long objectId : rootObjects)
+         {
+            rootObjectsArray[i++] = objectId;
+         }
+         return object.isChildOf(rootObjectsArray);
+      }
       return false;
    }
 
@@ -67,7 +77,17 @@ public class AlarmListFilter
     */
    public final void setRootObject(long rootObject)
    {
-      this.rootObject = rootObject;
+      this.rootObjects.clear();
+      this.rootObjects.add(rootObject);
+   }
+
+   /**
+    * @param selectedObjects
+    */
+   public void setRootObjects(List<Long> selectedObjects)
+   {
+      this.rootObjects.clear();
+      this.rootObjects.addAll(selectedObjects);
    }
 
    /**
