@@ -25,12 +25,15 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
@@ -64,6 +67,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.dialogs.EditCommentDialog;
+import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeComparator;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeContentProvider;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmCommentsEditor;
@@ -74,6 +78,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ImageCache;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
@@ -388,11 +393,22 @@ public class AlarmDetails extends ViewPart
       section.setClient(content);
       
 		final String[] names = { Messages.get().AlarmDetails_Column_Severity, Messages.get().AlarmDetails_Column_Source, Messages.get().AlarmDetails_Column_Name, Messages.get().AlarmDetails_Column_Message, Messages.get().AlarmDetails_Column_Timestamp };
-		final int[] widths = { 130, 160, 160, 400, 120 };
-		eventViewer = new SortableTreeViewer(content, names, widths, 0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION);
+		final int[] widths = { 130, 160, 160, 400, 150 };
+		eventViewer = new SortableTreeViewer(content, names, widths, EV_COLUMN_TIMESTAMP, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION);
 		eventViewer.setContentProvider(new EventTreeContentProvider());
 		eventViewer.setLabelProvider(new EventTreeLabelProvider());
+		eventViewer.setComparator(new EventTreeComparator());
 		eventViewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		
+		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+		WidgetHelper.restoreTreeViewerSettings(eventViewer, settings, "AlarmDetails.Events");
+		eventViewer.getControl().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveTreeViewerSettings(eventViewer, settings, "AlarmDetails.Events");
+         }
+      });
 	}
 
 	/**

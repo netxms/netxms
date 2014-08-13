@@ -4,7 +4,8 @@
 
 - Management console:
 	- Can show alarms for multiple selected objects
-- Fixed issues: #613, #624
+	- Fixed non-working ordering in event list in alarm details view
+- Fixed issues: #593, #613, #624
 
 
 *
