@@ -387,6 +387,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, T
 #ifdef UNICODE
    if (pszBuffer != NULL)
    {
+      *pszBuffer = 0;
       return hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pszBuffer, nBufLen);
    }
    else
@@ -420,6 +421,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn
    {
       if (pszBuffer != NULL)
       {
+         *pszBuffer = 0;
          return hResult->m_driver->m_fpDrvGetFieldUTF8(hResult->m_data, iRow, iColumn, pszBuffer, nBufLen);
       }
       else
@@ -467,6 +469,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, c
 
    if (pszBuffer != NULL)
    {
+      *pszBuffer = 0;
       pwszBuffer = (WCHAR *)malloc(nBufLen * sizeof(WCHAR));
       pwszData = hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pwszBuffer, nBufLen);
       if (pwszData != NULL)

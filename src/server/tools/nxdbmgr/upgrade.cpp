@@ -489,14 +489,16 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         TCHAR* config = DBGetField(hResult, i, 3, NULL, 0);
+         TCHAR *config = DBGetField(hResult, i, 3, NULL, 0);
+         if (config == NULL)
+            config = _tcsdup(_T(""));
          UINT32 color = DBGetFieldULong(hResult, i, 4);
          UINT32 statusObject = DBGetFieldULong(hResult, i, 5);
          UINT32 routing = DBGetFieldULong(hResult, i, 6);
          TCHAR bendPoints[1024];
          DBGetField(hResult, i, 7, bendPoints, 1024);
 
-         TCHAR *newConfig = (TCHAR *)malloc((_tcslen(config) + 4096) *sizeof(TCHAR));
+         TCHAR *newConfig = (TCHAR *)malloc((_tcslen(config) + 4096) * sizeof(TCHAR));
          _tcscpy(newConfig, _T("<config>"));
          TCHAR* c1 = _tcsstr(config, _T("<dciList"));
          TCHAR* c2 = _tcsstr(config, _T("</dciList>"));
@@ -511,7 +513,7 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
          _sntprintf(tmp, 2048, _T("<color>%d</color>"), color),
          _tcscat(newConfig, tmp);
 
-         if(statusObject != 0)
+         if (statusObject != 0)
          {
             _sntprintf(tmp, 2048, _T("<objectStatusList length=\"1\"><long>%d</long></objectStatusList>"), statusObject);
             _tcscat(newConfig, tmp);
@@ -520,12 +522,12 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
          _sntprintf(tmp, 2048, _T("<routing>%d</routing>"), routing);
          _tcscat(newConfig, tmp);
 
-         if(routing == 3 && bendPoints != NULL)
+         if (routing == 3 && bendPoints[0] != 0)
          {
             count = 1;
             for(int j = 0; j < _tcslen(bendPoints); j++)
             {
-               if(bendPoints[j] == _T(','))
+               if (bendPoints[j] == _T(','))
                   count++;
             }
             _sntprintf(tmp, 2048, _T("<bendPoints length=\"%d\">%s</bendPoints>"), count, bendPoints);
