@@ -30,7 +30,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class AlarmListFilter
 {
-   private List<Long> rootObjects = new ArrayList<>();
+   private List<Long> rootObjects = new ArrayList<Long>();
    private int stateFilter = -1;
    private int severityFilter = 0xFF;
    private NXCSession session;
