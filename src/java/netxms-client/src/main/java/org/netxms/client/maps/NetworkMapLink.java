@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.client.maps;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.netxms.base.Logger;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.maps.configs.LinkConfig;
 import org.netxms.client.maps.configs.SingleDciConfig;
@@ -127,23 +128,22 @@ public class NetworkMapLink
 	 */
 	public NetworkMapLink(NXCPMessage msg, long baseId)
 	{
-	   String xml = "";
 		name = msg.getVariableAsString(baseId + 1);
 		type = msg.getVariableAsInteger(baseId);
 		element1 = msg.getVariableAsInt64(baseId + 4);
 		element2 = msg.getVariableAsInt64(baseId + 5);
 		connectorName1 = msg.getVariableAsString(baseId + 2);
 		connectorName2 = msg.getVariableAsString(baseId + 3);
-		xml = msg.getVariableAsString(baseId + 6);
 		flags = msg.getVariableAsInteger(baseId + 7);
 		
+      String xml = msg.getVariableAsString(baseId + 6);
 		try
       {
-		   config = LinkConfig.createFromXml(xml);
+		   config = ((xml != null) && !xml.isEmpty()) ? LinkConfig.createFromXml(xml) : new LinkConfig();
       }
       catch(Exception e)
       {
-         System.out.println("Impossible to create data from giver sources: " + xml);
+         Logger.warning("NetworkMapLink", "Cannot create data from XML (" + xml + ")", e);
          config = new LinkConfig();
       }		
 	}
@@ -163,8 +163,7 @@ public class NetworkMapLink
       }
       catch(Exception e)
       {
-         // TODO Auto-generated catch block
-         System.out.println("Impossible to create data from giver sources");         
+         Logger.warning("NetworkMapLink", "Cannot create XML from config (" + config.toString() + ")", e);
       }
 	   
 		msg.setVariableInt16(baseId, type);

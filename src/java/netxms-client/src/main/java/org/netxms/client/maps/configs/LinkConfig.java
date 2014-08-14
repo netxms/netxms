@@ -20,6 +20,7 @@ package org.netxms.client.maps.configs;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Arrays;
 import org.netxms.client.maps.NetworkMapLink;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
@@ -176,5 +177,15 @@ public class LinkConfig
    public void setBendPoints(long[] bendPoints)
    {
       this.bendPoints = bendPoints;
+   }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "LinkConfig [dciList=" + Arrays.toString(dciList) + ", objectStatusList=" + Arrays.toString(objectStatusList)
+            + ", color=" + color + ", routing=" + routing + ", bendPoints=" + Arrays.toString(bendPoints) + "]";
    }
 }
