@@ -493,6 +493,7 @@ typedef struct
 #define CMD_FILEMGR_MOVE_FILE          0x0129
 #define CMD_FILEMGR_UPLOAD             0x012A
 #define CMD_GET_SWITCH_FDB             0x012B
+#define CMD_COMMAND_OUTPUT             0x012C
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -989,6 +990,7 @@ typedef struct
 #define VID_LANGUAGE                ((UINT32)479)
 #define VID_ROOT                    ((UINT32)480)
 #define VID_INCLUDE_NOVALUE_OBJECTS ((UINT32)481)
+#define VID_RECEIVE_OUTPUT          ((UINT32)482)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

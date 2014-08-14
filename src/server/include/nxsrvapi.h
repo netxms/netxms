@@ -163,6 +163,16 @@
 #define SG_PSTRING_RESULT 0x0010
 
 /**
+ * Agent action output callback events
+ */
+enum ActionCallbackEvent
+{
+   ACE_CONNECTED = 0,
+   ACE_DATA = 1,
+   ACE_DISCONNECTED = 2
+};
+
+/**
  * Win32 service and syslog constants
  */
 #ifdef _WIN32
@@ -496,7 +506,7 @@ public:
    UINT32 getList(const TCHAR *pszParam);
    UINT32 getTable(const TCHAR *pszParam, Table **table);
    UINT32 nop();
-   UINT32 execAction(const TCHAR *pszAction, int argc, TCHAR **argv);
+   UINT32 execAction(const TCHAR *pszAction, int argc, TCHAR **argv, bool withOutput = false, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = NULL, void *cbData = NULL);
    UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL);
    UINT32 startUpgrade(const TCHAR *pszPkgName);
    UINT32 checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType, WORD wPort = 0,

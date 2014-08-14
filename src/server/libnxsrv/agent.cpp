@@ -1081,12 +1081,11 @@ UINT32 AgentConnection::authenticate(BOOL bProxyData)
       return ERR_CONNECTION_BROKEN;
 }
 
-
-//
-// Execute action on agent
-//
-
-UINT32 AgentConnection::execAction(const TCHAR *pszAction, int argc, TCHAR **argv)
+/**
+ * Execute action on agent
+ */
+UINT32 AgentConnection::execAction(const TCHAR *pszAction, int argc, TCHAR **argv,
+                                   bool withOutput, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *), void *cbData)
 {
    CSCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId;
@@ -1099,14 +1098,56 @@ UINT32 AgentConnection::execAction(const TCHAR *pszAction, int argc, TCHAR **arg
    msg.SetCode(CMD_ACTION);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_ACTION_NAME, pszAction);
+   msg.SetVariable(VID_RECEIVE_OUTPUT, (UINT16)(withOutput ? 1 : 0));
    msg.SetVariable(VID_NUM_ARGS, (UINT32)argc);
    for(i = 0; i < argc; i++)
       msg.SetVariable(VID_ACTION_ARG_BASE + i, argv[i]);
 
    if (sendMessage(&msg))
-      return waitForRCC(dwRqId, m_dwCommandTimeout);
+   {
+      if (withOutput)
+      {
+         UINT32 rcc = waitForRCC(dwRqId, m_dwCommandTimeout);
+         if (rcc == ERR_SUCCESS)
+         {
+            outputCallback(ACE_CONNECTED, NULL, cbData);    // Indicate successful start
+            bool eos = false;
+            while(!eos)
+            {
+               CSCPMessage *response = waitForMessage(CMD_COMMAND_OUTPUT, dwRqId, m_dwCommandTimeout);
+               if (response != NULL)
+               {
+                  eos = response->isEndOfSequence();
+                  if (response->isFieldExist(VID_MESSAGE))
+                  {
+                     TCHAR line[4096];
+                     response->GetVariableStr(VID_MESSAGE, line, 4096);
+                     outputCallback(ACE_DATA, line, cbData);
+                  }
+                  delete response;
+               }
+               else
+               {
+                  return ERR_REQUEST_TIMEOUT;
+               }
+            }
+            outputCallback(ACE_DISCONNECTED, NULL, cbData);
+            return ERR_SUCCESS;
+         }
+         else
+         {
+            return rcc;
+         }
+      }
+      else
+      {
+         return waitForRCC(dwRqId, m_dwCommandTimeout);
+      }
+   }
    else
+   {
       return ERR_CONNECTION_BROKEN;
+   }
 }
 
 /**

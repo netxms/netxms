@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -686,21 +686,29 @@ void CommSession::getTable(CSCPMessage *pRequest, CSCPMessage *pMsg)
  */
 void CommSession::action(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
-   TCHAR szAction[MAX_PARAM_NAME];         //
-   StringList args;
-   UINT32 i, dwRetCode;
-
    if ((g_dwFlags & AF_ENABLE_ACTIONS) && m_bControlServer)
    {
       // Get action name and arguments
-      pRequest->GetVariableStr(VID_ACTION_NAME, szAction, MAX_PARAM_NAME);
-      UINT32 numArgs = pRequest->GetVariableLong(VID_NUM_ARGS);
-      for(i = 0; i < numArgs; i++)
-			args.addPreallocated(pRequest->GetVariableStr(VID_ACTION_ARG_BASE + i));
+      TCHAR action[MAX_PARAM_NAME];
+      pRequest->GetVariableStr(VID_ACTION_NAME, action, MAX_PARAM_NAME);
+      
+      int numArgs = pRequest->getFieldAsInt32(VID_NUM_ARGS);
+      StringList *args = new StringList;
+      for(int i = 0; i < numArgs; i++)
+			args->addPreallocated(pRequest->GetVariableStr(VID_ACTION_ARG_BASE + i));
 
       // Execute action
-      dwRetCode = ExecAction(szAction, &args);
-      pMsg->SetVariable(VID_RCC, dwRetCode);
+      if (pRequest->getFieldAsBoolean(VID_RECEIVE_OUTPUT))
+      {
+         UINT32 rcc = ExecActionWithOutput(this, pRequest->GetId(), action, args);
+         pMsg->SetVariable(VID_RCC, rcc);
+      }
+      else
+      {
+         UINT32 rcc = ExecAction(action, args);
+         pMsg->SetVariable(VID_RCC, rcc);
+         delete args;
+      }
    }
    else
    {

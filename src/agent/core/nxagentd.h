@@ -415,7 +415,8 @@ BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
                LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
                const TCHAR *pszSubAgent, const TCHAR *pszDescription);
 BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec);
-UINT32 ExecAction(const TCHAR *pszAction, StringList *pArgs);
+UINT32 ExecAction(const TCHAR *action, StringList *args);
+UINT32 ExecActionWithOutput(CommSession *session, UINT32 requestId, const TCHAR *action, StringList *args);
 UINT32 ExecuteCommand(TCHAR *pszCommand, StringList *pArgs, pid_t *pid);
 UINT32 ExecuteShellCommand(TCHAR *pszCommand, StringList *pArgs);
 

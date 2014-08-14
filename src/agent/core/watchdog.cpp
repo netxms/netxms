@@ -119,6 +119,7 @@ void StopWatchdog()
 {
 #ifdef _WIN32
 	TerminateProcess(m_hWatchdogProcess, 0);
+   WaitForSingleObject(m_hWatchdogProcess, 10000);
 #else
 	kill(m_pidWatchdogProcess, SIGTERM);
 #endif
