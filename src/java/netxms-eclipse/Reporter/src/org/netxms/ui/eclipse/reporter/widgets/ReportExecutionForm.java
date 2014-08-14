@@ -35,8 +35,15 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -47,12 +54,13 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
+import org.eclipse.ui.forms.widgets.Form;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
-import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.netxms.api.client.SessionListener;
@@ -95,7 +103,7 @@ public class ReportExecutionForm extends Composite
 	
 	private IWorkbenchPart workbenchPart = null;
 	private FormToolkit toolkit;
-	private ScrolledForm form;
+	private Form form;
 	private ImageCache imageCache;
 	private SortableTableViewer resultList;
 	private SortableTableViewer scheduleList;
@@ -103,6 +111,11 @@ public class ReportExecutionForm extends Composite
 	private ReportDefinition report;
 	private List<ReportParameter> parameters;
 	private List<FieldEditor> fields = new ArrayList<FieldEditor>();
+	
+	private Action actionDeleteSchedule;
+   private Action actionDeleteResult;
+   private Action actionRenderXLS;
+   private Action actionRenderPDF;
 	
 	/**
 	 * @param parent
@@ -113,28 +126,31 @@ public class ReportExecutionForm extends Composite
 		super(parent, style);
 		this.report = report;
 		this.workbenchPart = workbenchPart;
+		
+		createActions();
 
 		imageCache = new ImageCache(this);
 		setLayout(new FillLayout());
 
 		/* FORM */
 		toolkit = new FormToolkit(getDisplay());
-		form = toolkit.createScrolledForm(this);
+		form = toolkit.createForm(this);
 		form.setText(report.getName());
 
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
+		layout.numColumns = 3;
+		layout.makeColumnsEqualWidth = true;
 		form.getBody().setLayout(layout);
 
 		// Parameters section
-		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
+		Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR | Section.COMPACT | Section.EXPANDED | Section.TWISTIE);
 		section.setText("Parameters");
 		section.setDescription("Provide parameters necessary to run this report in fields below");
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
+		gd.horizontalSpan = 3;
 		section.setLayoutData(gd);
 
 		final Composite paramArea = toolkit.createComposite(section);
@@ -142,7 +158,7 @@ public class ReportExecutionForm extends Composite
 		createParamEntryFields(paramArea);
 
 		// Schedules section
-		section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
+		section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR | Section.COMPACT | Section.EXPANDED | Section.TWISTIE);
 		section.setText("Schedules");
 		section.setDescription("Scheduling of report generation");
       gd = new GridData();
@@ -150,6 +166,7 @@ public class ReportExecutionForm extends Composite
       gd.verticalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.grabExcessVerticalSpace = true;
+      gd.horizontalSpan = 2;
 		section.setLayoutData(gd);
 		
 		final Composite scheduleArea = toolkit.createComposite(section);
@@ -157,7 +174,7 @@ public class ReportExecutionForm extends Composite
 		createSchedulesSection(scheduleArea);
 		
 		// Results section
-		section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
+		section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR | Section.COMPACT | Section.EXPANDED | Section.TWISTIE);
 		section.setText("Results");
 		section.setDescription("The following execution results are available for rendering");
       gd = new GridData();
@@ -191,6 +208,48 @@ public class ReportExecutionForm extends Composite
 	}
 	
 	/**
+	 * Create actions
+	 */
+	private void createActions()
+	{
+	   actionDeleteSchedule = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            deleteSchedules();
+         }
+      };
+      actionDeleteSchedule.setEnabled(false);
+
+      actionDeleteResult = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
+         @Override
+         public void run()
+         {
+            deleteResults();
+         }
+      };
+      actionDeleteResult.setEnabled(false);
+
+      actionRenderPDF = new Action("Render to &PDF", Activator.getImageDescriptor("icons/pdf.png")) {
+         @Override
+         public void run()
+         {
+            renderSelectedResult(ReportRenderFormat.PDF);
+         }
+      };
+      actionRenderPDF.setEnabled(false);
+
+      actionRenderXLS = new Action("Render to &XLS", Activator.getImageDescriptor("icons/xls.png")) {
+         @Override
+         public void run()
+         {
+            renderSelectedResult(ReportRenderFormat.XLS);
+         }
+      };
+      actionRenderXLS.setEnabled(false);
+	}
+	
+	/**
 	 * Create "Schedules" section's content
 	 * 
 	 * @param parent
@@ -202,15 +261,13 @@ public class ReportExecutionForm extends Composite
 	 */
 	private void createSchedulesSection(Composite parent)
 	{
-		GridLayout layout = new GridLayout(2, false);
+		GridLayout layout = new GridLayout();
 		parent.setLayout(layout);
 
 		final String[] names = { "Type", "Schedule", "Owner", "Comments" };
 		final int[] widths = { 100, 140, 100, 300 };
 		scheduleList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		GridData gd = new GridData();
-		gd.horizontalSpan = 1;
-		gd.verticalSpan = 2;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -227,19 +284,8 @@ public class ReportExecutionForm extends Composite
             WidgetHelper.saveTableViewerSettings(scheduleList, Activator.getDefault().getDialogSettings(), "ReportExecutionForm.ScheduleList");
          }
       });
-
+		
 		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.WRAP);
-		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
-		link.setText("Delete");
-		link.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-				deleteSchedules();
-			}
-		});
-		link.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, true, 1, 2));
-		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
 		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/schedule.png"))); //$NON-NLS-1$
 		link.setText("Add Schedule");
 		link.addHyperlinkListener(new HyperlinkAdapter() {
@@ -249,8 +295,47 @@ public class ReportExecutionForm extends Composite
 				addSchedule();
 			}
 		});
+
+	   createSchedulesContextMenu();
+	   
+	   scheduleList.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = (IStructuredSelection)scheduleList.getSelection();
+            actionDeleteSchedule.setEnabled(selection.size() > 0);
+         }
+      });
 	}
 	
+   /**
+    * Create schedules context menu
+    */
+   private void createSchedulesContextMenu()
+   {
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillSchedulesContextMenu(mgr);
+         }
+      });
+
+      // Create menu.
+      Menu menu = menuMgr.createContextMenu(scheduleList.getControl());
+      scheduleList.getControl().setMenu(menu);
+   }
+	
+   /**
+    * Fill schedules context menu
+    * @param mgr Menu manager
+    */
+   private void fillSchedulesContextMenu(IMenuManager manager)
+   {
+      manager.add(actionDeleteSchedule);
+   }
+   
 	/**
 	 * Create "Results" section's content
 	 * 
@@ -259,15 +344,13 @@ public class ReportExecutionForm extends Composite
 	 */
 	private void createResultsSection(Composite parent)
 	{
-		GridLayout layout = new GridLayout(2, false);
+		GridLayout layout = new GridLayout();
 		parent.setLayout(layout);
 
 		final String[] names = { "Execution Time", "Started by", "Status" };
 		final int[] widths = { 180, 140, 100 };
 		resultList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 		GridData gd = new GridData();
-		gd.horizontalSpan = 1;
-		gd.verticalSpan = 4;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -286,48 +369,6 @@ public class ReportExecutionForm extends Composite
       });
 		
 		ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.WRAP);
-		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/pdf.png"))); //$NON-NLS-1$
-		link.setText("Render to PDF");
-		link.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-				final ReportResult firstElement = (ReportResult)((IStructuredSelection)resultList.getSelection()).getFirstElement();
-				if (firstElement != null)
-				{
-					renderReport(firstElement.getJobId(), firstElement.getExecutionTime(), ReportRenderFormat.PDF);
-				}
-			}
-		});
-
-		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
-		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/xls.png"))); //$NON-NLS-1$
-		link.setText("Render to Excel");
-		link.addHyperlinkListener(new HyperlinkAdapter()
-		{
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-				final ReportResult firstElement = (ReportResult) ((IStructuredSelection) resultList.getSelection()).getFirstElement();
-				if (firstElement != null)
-				{
-					renderReport(firstElement.getJobId(), firstElement.getExecutionTime(), ReportRenderFormat.XLS);
-				}
-			}
-		});
-
-		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
-		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
-		link.setText("Delete");
-		link.addHyperlinkListener(new HyperlinkAdapter() {
-			@Override
-			public void linkActivated(HyperlinkEvent e)
-			{
-				deleteResults();
-			}
-		});
-		link.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, true, 1, 2));
-		link = toolkit.createImageHyperlink(parent, SWT.WRAP);
 		link.setImage(SharedIcons.IMG_EXECUTE);
 		link.setText("Execute Report");
 		link.addHyperlinkListener(new HyperlinkAdapter()
@@ -338,7 +379,51 @@ public class ReportExecutionForm extends Composite
 				executeReport();
 			}
 		});
+		
+		createResultsContextMenu();
+		
+		resultList.addSelectionChangedListener(new ISelectionChangedListener() {
+         @Override
+         public void selectionChanged(SelectionChangedEvent event)
+         {
+            IStructuredSelection selection = (IStructuredSelection)resultList.getSelection();
+            actionDeleteResult.setEnabled(selection.size() > 0);
+            actionRenderPDF.setEnabled(selection.size() == 1);
+            actionRenderXLS.setEnabled(selection.size() == 1);
+         }
+      });
 	}
+	
+   /**
+    * Create results context menu
+    */
+   private void createResultsContextMenu()
+   {
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillResultsContextMenu(mgr);
+         }
+      });
+
+      // Create menu.
+      Menu menu = menuMgr.createContextMenu(resultList.getControl());
+      resultList.getControl().setMenu(menu);
+   }
+   
+   /**
+    * Fill results context menu
+    * @param mgr Menu manager
+    */
+   private void fillResultsContextMenu(IMenuManager manager)
+   {
+      manager.add(actionRenderPDF);
+      manager.add(actionRenderXLS);
+      manager.add(new Separator());
+      manager.add(actionDeleteResult);
+   }
 
 	/**
 	 * Create entry fields for parameters
@@ -453,11 +538,26 @@ public class ReportExecutionForm extends Composite
 	}
 
 	/**
+	 * Render currently selected report result
+	 * 
+	 * @param format rendering format
+	 */
+	private void renderSelectedResult(ReportRenderFormat format)
+	{
+	   IStructuredSelection selection = (IStructuredSelection)resultList.getSelection();
+	   if (selection.size() != 1)
+	      return;
+	   
+      ReportResult r = (ReportResult) selection.getFirstElement();
+      renderReport(r.getJobId(), r.getExecutionTime(), format);
+	}
+	
+	/**
 	 * @param jobId
 	 * @param executionTime
 	 * @param format
 	 */
-	protected void renderReport(final UUID jobId, Date executionTime, final ReportRenderFormat format)
+	private void renderReport(final UUID jobId, Date executionTime, final ReportRenderFormat format)
 	{
 		final StringBuilder nameTemplate = new StringBuilder();
 		nameTemplate.append(report.getName());
