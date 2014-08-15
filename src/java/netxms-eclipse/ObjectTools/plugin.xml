@@ -83,6 +83,14 @@
             name="%view.name.LocalCommand"
             restorable="false">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objecttools.views.AgentActionResults"
+            icon="icons/console.png"
+            id="org.netxms.ui.eclipse.objecttools.views.AgentActionResults"
+            name="Agent Action"
+            restorable="false">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -192,8 +200,8 @@
    <extension
          point="org.eclipse.ui.contexts">
       <context
-            id="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
-            name="LocalCommandResults"
+            id="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
+            name="AbstractCommandResults"
             parentId="org.eclipse.ui.contexts.window">
       </context>
       <context
