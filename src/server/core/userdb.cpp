@@ -222,7 +222,7 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
 {
    int i, j;
    UINT32 dwResult = RCC_ACCESS_DENIED;
-   BOOL bPasswordValid;
+   BOOL bPasswordValid = FALSE;
 
    MutexLock(m_mutexUserDatabaseAccess);
    for(i = 0; i < m_userCount; i++)
@@ -244,6 +244,8 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
             }
             LDAPConnection conn;
             dwResult = conn.ldapUserLogin(user->getDn(), password);
+            if(dwResult == RCC_SUCCESS)
+               bPasswordValid = TRUE;
             goto result;
          }
 
@@ -318,6 +320,7 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
             bPasswordValid = TRUE;
          }
 
+result:
          if (bPasswordValid)
          {
             if (!user->isDisabled())
@@ -396,7 +399,6 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
          break;
       }
    }
-result:
    MutexUnlock(m_mutexUserDatabaseAccess);
    return dwResult;
 }
