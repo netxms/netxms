@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -251,7 +251,10 @@ void MobileDevice::updateStatus(CSCPMessage *msg)
 		m_batteryLevel = -1;
 
 	if (msg->isFieldExist(VID_GEOLOCATION_TYPE))
+	{
 		m_geoLocation = GeoLocation(*msg);
+		addLocationToHistory();
+   }
 
 	if (msg->isFieldExist(VID_IP_ADDRESS))
 		m_dwIpAddr = msg->GetVariableLong(VID_IP_ADDRESS);

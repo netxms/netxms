@@ -187,6 +187,7 @@ DEFINE_THREAD_STARTER(fileManagerControl)
 DEFINE_THREAD_STARTER(uploadUserFileToAgent)
 DEFINE_THREAD_STARTER(getSwitchForwardingDatabase)
 DEFINE_THREAD_STARTER(getRoutingTable)
+DEFINE_THREAD_STARTER(getLocationHistory)
 
 /**
  * Client communication read thread starter
@@ -1462,6 +1463,9 @@ void ClientSession::processingThread()
             break;
          case CMD_GET_ROUTING_TABLE:
             CALL_IN_NEW_THREAD(getRoutingTable, pMsg);
+            break;
+         case CMD_GET_LOC_HISTORY:
+            CALL_IN_NEW_THREAD(getLocationHistory, pMsg);
             break;
          default:
             if ((m_wCurrentCmd >> 8) == 0x11)
@@ -4050,8 +4054,8 @@ void ClientSession::getLastValues(CSCPMessage *pRequest)
          if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_MOBILEDEVICE) ||
              (object->Type() == OBJECT_TEMPLATE) || (object->Type() == OBJECT_CLUSTER))
          {
-            msg.SetVariable(VID_RCC, 
-               ((Template *)object)->getLastValues(&msg, 
+            msg.SetVariable(VID_RCC,
+               ((Template *)object)->getLastValues(&msg,
                   pRequest->getFieldAsBoolean(VID_OBJECT_TOOLTIP_ONLY),
                   pRequest->getFieldAsBoolean(VID_INCLUDE_NOVALUE_OBJECTS)));
          }
@@ -13358,6 +13362,76 @@ void ClientSession::getRoutingTable(CSCPMessage *request)
          {
             msg.SetVariable(VID_RCC, RCC_NO_ROUTING_TABLE);
          }
+      }
+      else
+      {
+         msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, node->Id(), _T("Access denied on reading routing table"));
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Get location history for object
+ */
+void ClientSession::getLocationHistory(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   // Get node id and check object class and access rights
+   Node *node = (Node *)FindObjectById(request->GetVariableLong(VID_OBJECT_ID), OBJECT_MOBILEDEVICE);
+   if (node != NULL)
+   {
+      if (node->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         TCHAR query[256];
+         _sntprintf(query, 255, _T("SELECT latitude,longitude,accuracy,start_timestamp,end_timestamp FROM gps_history_%d")
+                                             _T(" WHERE start_timestamp<? AND end_timestamp>?"), request->GetVariableLong(VID_OBJECT_ID));
+
+         DB_STATEMENT hStmt = DBPrepare(hdb, query);
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, request->GetVariableLong(VID_TIME_TO));
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, request->GetVariableLong(VID_TIME_FROM));
+            DB_RESULT hResult = DBSelectPrepared(hStmt);
+            if (hResult != NULL)
+            {
+               int base = VID_LOC_LIST_BASE;
+               TCHAR buffer[32];
+               msg.SetVariable(VID_NUM_RECORDS, (UINT32)DBGetNumRows(hResult));
+               for(int i = 0; i < DBGetNumRows(hResult); i++, base+=10)
+               {
+                  msg.SetVariable(base, DBGetField(hResult, i, 0, buffer, 32));
+                  msg.SetVariable(base+1, DBGetField(hResult, i, 1, buffer, 32));
+                  msg.SetVariable(base+2, DBGetFieldULong(hResult, i, 2));
+                  msg.SetVariable(base+3, DBGetFieldULong(hResult, i, 3));
+                  msg.SetVariable(base+4, DBGetFieldULong(hResult, i, 4));
+               }
+               DBFreeResult(hResult);
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            msg.SetVariable(VID_RCC, RCC_DB_FAILURE);
+         }
+         DBConnectionPoolReleaseConnection(hdb);
       }
       else
       {

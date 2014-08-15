@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -77,6 +77,7 @@ public:
 	bool isValid() { return m_isValid; }
 	int getAccuracy() { return m_accuracy; }
 	time_t getTimestamp() { return m_timestamp; }
+   bool sameLocation(const TCHAR* loc, const TCHAR* lat, int oldAccurasy);
 
 	void fillMessage(CSCPMessage &msg);
 };

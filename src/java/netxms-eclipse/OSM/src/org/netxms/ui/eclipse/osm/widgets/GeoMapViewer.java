@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.osm.widgets;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +31,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.events.MouseWheelListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
@@ -44,9 +46,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.base.GeoLocation;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -59,15 +63,22 @@ import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.tools.Area;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.osm.tools.MapLoader;
+import org.netxms.ui.eclipse.osm.tools.QuadTree;
 import org.netxms.ui.eclipse.osm.tools.Tile;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * This widget shows map retrieved via OpenStreetMap Static Map API
  */
 public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCacheListener, MouseWheelListener, MouseListener, MouseMoveListener
 {
+   private static final int START = 1;
+   private static final int END = 2;
+   private static final String pointInformation[] = {"Start","End"};
+   
+   
 	private static final Color MAP_BACKGROUND = new Color(Display.getCurrent(), 255, 255, 255);
 	private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getCurrent(), 150, 240, 88);
 	private static final Color INFO_BLOCK_BORDER = new Color(Display.getCurrent(), 0, 0, 0);
@@ -98,20 +109,35 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private Point currentPoint;
 	private Point dragStartPoint = null;
 	private Point selectionStartPoint = null;
-	private Point selectionEndPoint = null; 
+	private Point selectionEndPoint = null;
 	private Set<GeoMapListener> mapListeners = new HashSet<GeoMapListener>(0);
 	private String title = null;
 	private int offsetX;
 	private int offsetY;
 	private TileSet currentTileSet = null;
-
+	//Historical variables
+	private boolean historycalData;
+   private List<GeoLocation> history = new ArrayList<GeoLocation>();
+   private QuadTree<GeoLocation> locationTree = new QuadTree<GeoLocation>();
+   private AbstractObject historyObject = null;
+   private Date till = new Date();
+   private int timeFrame = 60*60*1000;
+   private boolean strictTime = false;
+   private int highlightobjectID = -1;
+   private ToolTip toolTip;
+	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public GeoMapViewer(Composite parent, int style)
+	public GeoMapViewer(Composite parent, int style, final boolean historycalData, AbstractObject historyObject)
 	{
 		super(parent, style | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
+		this.historycalData = historycalData;
+		if(historycalData)
+		{
+		   this.historyObject = historyObject;		   
+		}
 
 		labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 		mapLoader = new MapLoader(getDisplay());
@@ -163,6 +189,72 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		addMouseWheelListener(this);
 
 		GeoLocationCache.getInstance().addListener(this);
+		addMouseTrackListener(new MouseTrackAdapter() {
+         @Override
+         public void mouseHover(MouseEvent e)
+         {
+            highlightobjectID = -1;
+            toolTip.setVisible(false);
+            if (!historycalData) //$NON-NLS-1$
+               return;           
+            
+            Point p = new Point(e.x, e.y);
+            p.x -= 5;
+            p.y -= 5;
+            GeoLocation loc1 = getLocationAtPoint(p);
+            p.x += 10;
+            p.y += 10;
+            GeoLocation loc2 = getLocationAtPoint(p);
+            Area area = new Area(loc1.getLatitude(), loc1.getLongitude(), loc2.getLatitude(), loc2.getLongitude());
+            List<GeoLocation> suitablePoints = locationTree.query(area);
+            if(suitablePoints.size() == 0)
+               return;
+            
+            int i = 0;
+            if(suitablePoints.size() > 1)
+            {
+               double minDistance = 100;
+               for(int j = 0; j < suitablePoints.size(); j++)
+               {
+                  double newDistance =  Math.pow( Math.pow(suitablePoints.get(j).getLatitude() - loc1.getLatitude(), 2) + Math.pow(suitablePoints.get(j).getLongitude() - loc1.getLongitude(), 2), 0.5);  
+                  if(minDistance > newDistance)
+                  {
+                     minDistance = newDistance;
+                     i = j;
+                  }
+               }
+            }
+            
+            highlightobjectID = history.indexOf(suitablePoints.get(i)); 
+            redraw();
+         }
+
+         /* (non-Javadoc)
+          * @see org.eclipse.swt.events.MouseTrackAdapter#mouseExit(org.eclipse.swt.events.MouseEvent)
+          */
+         @Override
+         public void mouseExit(MouseEvent e)
+         {
+            highlightobjectID = -1;
+            toolTip.setVisible(false);
+            redraw();
+         }
+      });
+		
+		addMouseMoveListener(new MouseMoveListener() {
+         @Override
+         public void mouseMove(MouseEvent e)
+         {
+            if (highlightobjectID != -1)
+            {
+               highlightobjectID = -1;
+               toolTip.setVisible(false);
+               redraw();
+            }
+         }
+      });
+		
+      toolTip = new ToolTip(getShell(), SWT.BALLOON);	
 	}
 	
 	/**
@@ -267,9 +359,16 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 						}
 						
 						Point mapSize = new Point(currentImage.getImageData().width, currentImage.getImageData().height);
-						coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), GeoLocationCache.CENTER, accessor.getZoom());
-						objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
-						GeoMapViewer.this.redraw();
+                  coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), GeoLocationCache.CENTER, accessor.getZoom());
+						if(!historycalData)
+						{
+   						objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
+   						GeoMapViewer.this.redraw();
+						}
+						else
+						{
+						   GeoMapViewer.this.updateHistory();
+						}
 					}
 				});
 			}
@@ -390,13 +489,61 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			gc.setTextAntialias(SWT.ON);
 
 			final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
-			for(AbstractObject object : objects)
-			{
-				final Point virtualXY = GeoLocationCache.coordinateToDisplay(object.getGeolocation(), accessor.getZoom());
-				final int dx = virtualXY.x - centerXY.x;
-				final int dy = virtualXY.y - centerXY.y;
-				drawObject(gc, imgW / 2 + dx, imgH / 2 + dy, object);
-			}
+         if(!historycalData)
+         {
+   			for(AbstractObject object : objects)
+   			{
+   				final Point virtualXY = GeoLocationCache.coordinateToDisplay(object.getGeolocation(), accessor.getZoom());
+   				final int dx = virtualXY.x - centerXY.x;
+   				final int dy = virtualXY.y - centerXY.y;
+   				drawObject(gc, imgW / 2 + dx, imgH / 2 + dy, object);
+   			}
+         }
+         else
+         {  
+            int nextX = 0;
+            int nextY = 0;
+            for(int i = 0; i < history.size(); i++)
+            {
+               final Point virtualXY = GeoLocationCache.coordinateToDisplay(history.get(i), accessor.getZoom());
+               final int dx = virtualXY.x - centerXY.x;
+               final int dy = virtualXY.y - centerXY.y;
+               
+               if (i != history.size() - 1)
+               { 
+                  final Point virtualXY2 = GeoLocationCache.coordinateToDisplay(history.get(i+1), accessor.getZoom());
+                  nextX = imgW / 2 + (virtualXY2.x - centerXY.x);
+                  nextY = imgH / 2 + (virtualXY2.y - centerXY.y);
+               }
+               
+               int color = SWT.COLOR_RED;
+               if(i ==  highlightobjectID)
+               {
+                  color = SWT.COLOR_GREEN;
+                  toolTip.setText("Start time: " + history.get(i).getTimestamp() + "\nEnd Time: " + history.get(i).getEndTimestamp() + "\nLocation: " + history.get(i));
+                  toolTip.setVisible(true);
+               }
+                  
+               if(i==0)
+               {
+                  if(i == history.size() - 1)
+                  {
+                     nextX = imgW / 2 + dx;
+                     nextY = imgH / 2 + dy;
+                  }
+                  drawObject(gc, imgW / 2 + dx, imgH / 2 + dy, GeoMapViewer.START, nextX, nextY, color);                  
+                  continue;
+               } 
+               
+               if (i == history.size() - 1)
+               {    
+                  drawObject(gc, imgW / 2 + dx, imgH / 2 + dy, GeoMapViewer.END, nextX, nextY, color);
+                  continue;
+               }
+               
+               drawObject(gc, imgW / 2 + dx, imgH / 2 + dy, 0, nextX, nextY, color);
+            }
+         }
 	
 			final GeoLocation gl = new GeoLocation(accessor.getLatitude(), accessor.getLongitude());
 			final String text = gl.toString();
@@ -404,7 +551,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	
 			Rectangle rect = getClientArea();
 			rect.x = 10;
-			// rect.x = rect.width - textSize.x - 20;
+			rect.x = rect.width - textSize.x - 20;
 			rect.y += 10;
 			rect.width = textSize.x + 10;
 			rect.height = textSize.y + 8;
@@ -460,7 +607,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 * @param y
 	 * @param object
 	 */
-	private void drawObject(GC gc, int x, int y, AbstractObject object)
+	private void drawObject(GC gc, int x, int y, AbstractObject object) 
 	{
 		final String text = object.getObjectName();
 		final Point textSize = gc.textExtent(text);
@@ -504,6 +651,65 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		gc.drawText(text, rect.x + LABEL_X_MARGIN + image.getImageData().width + LABEL_SPACING, rect.y + LABEL_Y_MARGIN);
 	}
 
+	  /**
+    * Draw object on map
+    * 
+    * @param gc
+    * @param x
+    * @param y
+    * @param object
+    */
+   private void drawObject(GC gc, int x, int y, int flag, int prevX, int prevY, int color) 
+   {    
+      if(flag == GeoMapViewer.START || flag == GeoMapViewer.END)
+      {
+         if(flag == GeoMapViewer.START)
+         {
+            gc.drawLine(x, y, prevX, prevY);
+         }
+         gc.setBackground(Display.getCurrent().getSystemColor(color)); 
+         gc.fillOval(x - 5, y -5, 10, 10);
+         
+         final String text = pointInformation[flag -1];
+         final Point textSize = gc.textExtent(text);
+         
+         Rectangle rect = new Rectangle(x - LABEL_ARROW_OFFSET, y - LABEL_ARROW_HEIGHT - textSize.y, textSize.x
+               + LABEL_X_MARGIN * 2 + LABEL_SPACING, textSize.y + LABEL_Y_MARGIN * 2);
+         
+         gc.setBackground(LABEL_BACKGROUND);
+
+         gc.setForeground(BORDER_COLOR);
+         gc.setLineWidth(4);
+         gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+         gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+         
+         gc.setLineWidth(2);
+         gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+         gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+         final int[] arrow = new int[] { rect.x + LABEL_ARROW_OFFSET - 4, rect.y + rect.height, x, y, rect.x + LABEL_ARROW_OFFSET + 4,
+               rect.y + rect.height };
+
+         gc.setLineWidth(4);
+         gc.setForeground(BORDER_COLOR);
+         gc.drawPolyline(arrow);
+
+         gc.fillPolygon(arrow);
+         gc.setForeground(LABEL_BACKGROUND);
+         gc.setLineWidth(2);
+         gc.drawLine(arrow[0], arrow[1], arrow[4], arrow[5]);
+         gc.drawPolyline(arrow);
+
+         gc.setForeground(LABEL_TEXT);
+         gc.drawText(text, rect.x + LABEL_X_MARGIN + LABEL_SPACING, rect.y + LABEL_Y_MARGIN);
+      }
+      else 
+      {
+         gc.drawLine(x, y, prevX, prevY);
+         gc.setBackground(Display.getCurrent().getSystemColor(color)); 
+         gc.fillOval(x - 5, y -5, 10, 10);
+      }      
+   }	
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -538,8 +744,15 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 				|| ((prevLocation != null) && (prevLocation.getType() != GeoLocation.UNSET) && coverage.contains(
 						prevLocation.getLatitude(), prevLocation.getLongitude())))
 		{
-			objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
-			redraw();
+		   if(!historycalData)
+		   {
+   			objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
+   			redraw();
+		   }
+		   else
+		   {
+		      updateHistory();
+		   }
 		}
 	}
 	
@@ -745,5 +958,52 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	public void setTitle(String title)
 	{
 		this.title = title;
+	}
+	
+	/**
+	 * Updates points for historical view
+	 */
+	private void updateHistory()
+	{
+	   ConsoleJob job = new ConsoleJob(Messages.get().GeoMapViewer_DownloadJob_Title, viewPart, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+            if(!strictTime)
+            {
+               till = new Date();
+            }
+            history = session.getLocationHistory(historyObject.getObjectId(), new Date(till.getTime() - timeFrame), till);
+            for(int i = 0; i < history.size(); i++)
+               locationTree.insert(history.get(i).getLatitude(), history.get(i).getLongitude(), history.get(i));
+            
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  GeoMapViewer.this.redraw();
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().GeoMapViewer_DownloadError;
+         }
+      };
+      job.setUser(false);
+      job.start();
+	}
+	
+	/**
+	 * Sets new view period in minutes
+	 */
+	public void changeTimePeriod(int timePeriod)
+	{
+	   strictTime = false;
+	   timeFrame = timePeriod * 60 * 1000;
+	   updateHistory();
 	}
 }

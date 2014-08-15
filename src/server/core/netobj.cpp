@@ -1004,6 +1004,7 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	if (pRequest->isFieldExist(VID_GEOLOCATION_TYPE))
 	{
 		m_geoLocation = GeoLocation(*pRequest);
+		addLocationToHistory();
 	}
 
 	if (pRequest->isFieldExist(VID_SUBMAP_ID))
@@ -1610,8 +1611,8 @@ bool NetObj::isEventSource()
 /**
  * Get module data
  */
-ModuleData *NetObj::getModuleData(const TCHAR *module) 
-{ 
+ModuleData *NetObj::getModuleData(const TCHAR *module)
+{
    LockData();
    ModuleData *data = (m_moduleData != NULL) ? m_moduleData->get(module) : NULL;
    UnlockData();
@@ -1628,4 +1629,126 @@ void NetObj::setModuleData(const TCHAR *module, ModuleData *data)
       m_moduleData = new StringObjectMap<ModuleData>(true);
    m_moduleData->set(module, data);
    UnlockData();
+}
+
+/**
+ * Add new location entry
+ */
+void NetObj::addLocationToHistory()
+{
+   TCHAR lat[32], lon[32];
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   UINT32 startTimestamp;
+   bool isSamePlace;
+   DB_RESULT hResult;
+   if(!locationTableExists())
+   {
+      DbgPrintf(4, _T("NetObj::addLocationToHistory: Geolocation history table will be created for %d node"), m_dwId);
+      if(!cterateLocationGystoryTable(hdb))
+      {
+         DbgPrintf(4, _T("NetObj::addLocationToHistory: Error while creation geolocation history table for %d node"), m_dwId);
+         return;
+      }
+   }
+	const TCHAR *query;
+	switch(g_dbSyntax)
+	{
+		case DB_SYNTAX_ORACLE:
+			query = _T("SELECT * FROM (latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC) WHERE ROWNUM<=1");
+			break;
+		case DB_SYNTAX_MSSQL:
+			query = _T("SELECT TOP 1 latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC");
+			break;
+		case DB_SYNTAX_DB2:
+			query = _T("SELECT latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC FETCH FIRST 200 ROWS ONLY");
+			break;
+		default:
+			query = _T("SELECT latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC LIMIT 1");
+			break;
+	}
+   TCHAR preparedQuery[256];
+	_sntprintf(preparedQuery, 256, query, m_dwId);
+	DB_STATEMENT hStmt = DBPrepare(hdb, preparedQuery);
+
+   if (hStmt == NULL)
+		goto onFail;
+
+   hResult = DBSelectPrepared(hStmt);
+   if(hResult == NULL)
+		goto onFail;
+   if(DBGetNumRows(hResult) > 0)
+   {
+      startTimestamp = DBGetFieldULong(hResult, 0, 3);
+      isSamePlace = m_geoLocation.sameLocation(DBGetField(hResult, 0, 0, lat, 32), DBGetField(hResult, 0, 1, lon, 32), DBGetFieldULong(hResult, 0, 2));
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      isSamePlace = false;
+   }
+
+   if(isSamePlace)
+   {
+      TCHAR query[256];
+      _sntprintf(query, 255, _T("UPDATE gps_history_%d SET end_timestamp = ? WHERE start_timestamp =? "), m_dwId);
+      hStmt = DBPrepare(hdb, query);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, startTimestamp);
+   }
+   else
+   {
+      TCHAR query[256];
+      _sntprintf(query, 255, _T("INSERT INTO gps_history_%d (latitude,longitude,")
+                       _T("accuracy,start_timestamp,end_timestamp) VALUES (?,?,?,?,?)"), m_dwId);
+      hStmt = DBPrepare(hdb, query);
+
+      _sntprintf(lat, 32, _T("%f"), m_geoLocation.getLatitude());
+      _sntprintf(lon, 32, _T("%f"), m_geoLocation.getLongitude());
+
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getAccuracy());
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
+	}
+
+	if (hStmt == NULL)
+		goto onFail;
+
+   DBExecute(hStmt);
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+   return;
+
+onFail:
+   DBFreeStatement(hStmt);
+   DbgPrintf(4, _T("NetObj::addLocationToHistory: Failed to add location to history"));
+   DBConnectionPoolReleaseConnection(hdb);
+   return;
+}
+
+/**
+ * Check if given data table exist
+ */
+bool NetObj::locationTableExists()
+{
+   TCHAR table[256];
+   _sntprintf(table, 256, _T("gps_history_%d"), m_dwId);
+   int rc = DBIsTableExist(g_hCoreDB, table);
+   if (rc == DBIsTableExist_Failure)
+   {
+      _tprintf(_T("WARNING: call to DBIsTableExist(\"%s\") failed\n"), table);
+   }
+   return rc != DBIsTableExist_NotFound;
+}
+
+bool NetObj::cterateLocationGystoryTable(DB_HANDLE hdb)
+{
+   TCHAR szQuery[256], szQueryTemplate[256];
+   MetaDataReadStr(_T("LocationHistory"), szQueryTemplate, 255, _T(""));
+   _sntprintf(szQuery, 256, szQueryTemplate, m_dwId);
+   if (!DBQuery(hdb, szQuery))
+		return false;
+
+   return true;
 }

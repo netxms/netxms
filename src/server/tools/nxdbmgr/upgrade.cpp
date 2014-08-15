@@ -388,6 +388,20 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Upgrade from V332 to V333
+ */
+static BOOL H_UpgradeFromV332(int currVersion, int newVersion)
+{
+    static TCHAR batch[] =
+      _T("INSERT INTO metadata (var_name,var_value)")
+      _T("   VALUES ('LocationHistory','CREATE TABLE gps_history_%d (latitude varchar(20), longitude varchar(20), accuracy integer not null, start_timestamp integer not null, end_timestamp integer not null, PRIMARY KEY(start_timestamp))')\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='333' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V331 to V332
  */
 static BOOL H_UpgradeFromV331(int currVersion, int newVersion)
@@ -8073,6 +8087,7 @@ static struct
    { 329, 330, H_UpgradeFromV329 },
    { 330, 331, H_UpgradeFromV330 },
    { 331, 332, H_UpgradeFromV331 },
+   { 332, 333, H_UpgradeFromV332 },
    { 0, 0, NULL }
 };
 

@@ -473,6 +473,7 @@ private:
    DECLARE_THREAD_STARTER(uploadUserFileToAgent)
    DECLARE_THREAD_STARTER(getSwitchForwardingDatabase)
    DECLARE_THREAD_STARTER(getRoutingTable)
+   DECLARE_THREAD_STARTER(getLocationHistory)
 
    void readThread();
    void writeThread();
@@ -682,6 +683,7 @@ private:
    void uploadUserFileToAgent(CSCPMessage *request);
    void getSwitchForwardingDatabase(CSCPMessage *request);
    void getRoutingTable(CSCPMessage *request);
+   void getLocationHistory(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

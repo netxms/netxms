@@ -7727,4 +7727,28 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       sendMessage(msg);
    }
    
+   
+   public List<GeoLocation> getLocationHistory(long objId, Date from, Date to) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LOC_HISTORY);
+
+      int timeFrom = (from != null) ? (int) (from.getTime() / 1000) : 0;
+      int timeTo = (to != null) ? (int) (to.getTime() / 1000) : 0;
+      
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objId);
+      msg.setVariableInt32(NXCPCodes.VID_TIME_FROM, (int)timeFrom);
+      msg.setVariableInt32(NXCPCodes.VID_TIME_TO, (int)timeTo);
+      sendMessage(msg);
+      
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      int size = response.getVariableAsInteger(NXCPCodes.VID_NUM_RECORDS);
+      List <GeoLocation> elements = new ArrayList<GeoLocation>();
+      long i, base;
+      for(i = 0, base = NXCPCodes.VID_LOC_LIST_BASE; i < size; i++, base += 10)
+      {
+         elements.add(new GeoLocation(base, response));
+      }
+      Collections.sort(elements);
+      return elements;
+   }
 }

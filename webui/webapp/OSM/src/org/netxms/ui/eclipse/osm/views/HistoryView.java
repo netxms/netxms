@@ -24,6 +24,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -33,6 +34,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
@@ -43,9 +45,15 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Base class for all geographical views
  */
-public abstract class AbstractGeolocationView extends ViewPart
+public class HistoryView extends ViewPart
 {
+   public static final String ID = "org.netxms.ui.eclipse.osm.views.HistoryView"; //$NON-NLS-1$
 	public static final String JOB_FAMILY = "MapViewJob"; //$NON-NLS-1$
+	private static final int[] presetRanges = { 10, 30, 60, 120, 240, 720, 1440, 2880, 7200, 10080, 44640, 525600 };
+   private static final String[] presetNames = 
+      { "10 minutes", "30 minutes", "1 hour", "2 hours", "4 hours", "12 hours", "Today",
+        "Last 2 days", "Last 5 days", "This week", "This month","This Year" };
+
 	
 	protected GeoMapViewer map;
 	
@@ -53,20 +61,28 @@ public abstract class AbstractGeolocationView extends ViewPart
 	private int zoomLevel = 15;
 	private Action actionZoomIn;
 	private Action actionZoomOut;
+   private Action[] presetActions;
+	private AbstractObject object;
 	
 	/**
 	 * Get initial center point for displayed map
 	 * 
 	 * @return
 	 */
-	protected abstract GeoLocation getInitialCenterPoint();
+	protected GeoLocation getInitialCenterPoint() 
+	{
+	   return object.getGeolocation();
+	}
 	
 	/**
 	 * Get initial zoom level
 	 * 
 	 * @return
 	 */
-	protected abstract int getInitialZoomLevel();
+	protected int getInitialZoomLevel()
+	{
+      return 15;
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -84,6 +100,19 @@ public abstract class AbstractGeolocationView extends ViewPart
 		catch(Exception e)
 		{
 		}
+		
+		try
+      {
+         long id = Long.parseLong(site.getSecondaryId());
+         object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(id);
+         setPartName(Messages.get().LocationMap_PartNamePrefix + object.getObjectName());
+      }
+      catch(Exception e)
+      {
+         throw new PartInitException(Messages.get().LocationMap_InitError1, e);
+      }
+      if (object == null)
+         throw new PartInitException(Messages.get().LocationMap_InitError2);
 	}
 	
 	/* (non-Javadoc)
@@ -93,7 +122,7 @@ public abstract class AbstractGeolocationView extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		// Map control
-		map = new GeoMapViewer(parent, SWT.BORDER, false, null);
+		map = new GeoMapViewer(parent, SWT.BORDER, true, object);
 		map.setViewPart(this);
 		
 		createActions();
@@ -110,7 +139,7 @@ public abstract class AbstractGeolocationView extends ViewPart
 			@Override
 			public void onZoom(int zoomLevel)
 			{
-				AbstractGeolocationView.this.zoomLevel = zoomLevel;
+				HistoryView.this.zoomLevel = zoomLevel;
 				mapAccessor.setZoom(zoomLevel);
 				actionZoomIn.setEnabled(zoomLevel < 18);
 				actionZoomOut.setEnabled(zoomLevel > 0);
@@ -147,6 +176,19 @@ public abstract class AbstractGeolocationView extends ViewPart
 			}
 		};
 		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
+		
+		presetActions = new Action[presetRanges.length];
+      for(int i = 0; i < presetRanges.length; i++)
+      {
+         final Integer presetIndex = i;
+         presetActions[i] = new Action(presetNames[i]) {
+            @Override
+            public void run()
+            {
+               map.changeTimePeriod(presetRanges[presetIndex]);
+            }
+         };
+      }
 	}
 
 	/**
@@ -166,6 +208,12 @@ public abstract class AbstractGeolocationView extends ViewPart
 	 */
 	protected void fillLocalPullDown(IMenuManager manager)
 	{
+	   MenuManager presets = new MenuManager("&Presets");
+      for(int i = 0; i < presetActions.length; i++)
+         presets.add(presetActions[i]);
+      
+      manager.add(presets);
+      manager.add(new Separator());	   
 		manager.add(actionZoomIn);
 		manager.add(actionZoomOut);
 	}
@@ -209,6 +257,12 @@ public abstract class AbstractGeolocationView extends ViewPart
 	 */
 	protected void fillContextMenu(final IMenuManager manager)
 	{
+	   MenuManager presets = new MenuManager("&Presets");
+      for(int i = 0; i < presetActions.length; i++)
+         presets.add(presetActions[i]);
+      
+      manager.add(presets);
+      manager.add(new Separator());
 		manager.add(actionZoomIn);
 		manager.add(actionZoomOut);
 	}

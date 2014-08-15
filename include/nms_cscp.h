@@ -494,6 +494,7 @@ typedef struct
 #define CMD_FILEMGR_UPLOAD             0x012A
 #define CMD_GET_SWITCH_FDB             0x012B
 #define CMD_COMMAND_OUTPUT             0x012C
+#define CMD_GET_LOC_HISTORY            0x012D
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1163,6 +1164,8 @@ typedef struct
 #define VID_DCI_VALUES_BASE         ((UINT32)0x10000000)
 
 #define VID_FILE_LIST_BASE          ((UINT32)0x10000000)
+
+#define VID_LOC_LIST_BASE           ((UINT32)0x10000000)
 
 //
 // Inline functions

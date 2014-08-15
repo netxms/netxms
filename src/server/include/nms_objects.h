@@ -384,6 +384,9 @@ protected:
 
    virtual void prepareForDeletion();
    virtual void onObjectDelete(UINT32 dwObjectId);
+   void addLocationToHistory();
+   bool locationTableExists();
+   bool cterateLocationGystoryTable(DB_HANDLE hdb);
 
 public:
    NetObj();

@@ -334,10 +334,12 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_FILEMGR_RENAME_FILE"),
       _T("CMD_FILEMGR_MOVE_FILE"),
       _T("CMD_FILEMGR_UPLOAD"),
-      _T("CMD_GET_SWITCH_FDB")
+      _T("CMD_GET_SWITCH_FDB"),
+      _T("CMD_COMMAND_OUTPUT"),
+      _T("CMD_GET_LOC_HISTORY")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_SWITCH_FDB))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_GET_LOC_HISTORY))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);

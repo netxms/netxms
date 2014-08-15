@@ -23,13 +23,11 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.netxms.base.NXCPCodes;
-import org.netxms.base.NXCPMessage;
-
 /**
  * Geolocation encoding
  */
-public class GeoLocation
+@SuppressWarnings("rawtypes")
+public class GeoLocation implements Comparable
 {
 	private static final double ROUND_OFF = 0.00000001;
 
@@ -43,6 +41,7 @@ public class GeoLocation
 	private double longitude;
 	private int accuracy;	// Location accuracy in meters
 	private Date timestamp;
+	private Date endTimestamp;
 	
 	/**
 	 * Create geolocation object from NXCP message
@@ -56,6 +55,20 @@ public class GeoLocation
 		accuracy = msg.getVariableAsInteger(NXCPCodes.VID_ACCURACY);
 		timestamp = msg.getVariableAsDate(NXCPCodes.VID_GEOLOCATION_TIMESTAMP);
 	}
+	
+	/**
+    * Create geolocation object from NXCP message
+    * @param msg NXCP message
+    */
+   public GeoLocation(long base, final NXCPMessage msg)
+   {
+      type = 0;
+      latitude = msg.getVariableAsReal(base);
+      longitude = msg.getVariableAsReal(base+1);
+      accuracy = msg.getVariableAsInteger(base+2);
+      timestamp = msg.getVariableAsDate(base+3);
+      endTimestamp = msg.getVariableAsDate(base+4);
+   }
 	
 	/**
 	 * Create geolocation object of type UNSET or GPS
@@ -342,4 +355,35 @@ public class GeoLocation
 		double _lon = parse(lon, false);
 		return new GeoLocation(_lat, _lon);
 	}
+
+   @Override
+   public int compareTo(Object arg0)
+   {
+      GeoLocation loc = (GeoLocation)arg0;
+      return timestamp.compareTo(loc.getTimestamp());
+   }
+
+   /**
+    * @return the end_timestamp
+    */
+   public Date getEndTimestamp()
+   {
+      return endTimestamp;
+   }
+
+   /**
+    * @param end_timestamp the end_timestamp to set
+    */
+   public void setEndTimestamp(Date endTimestamp)
+   {
+      this.endTimestamp = endTimestamp;
+   }
+   
+   public boolean equals(Object obj)
+   {
+      if(! (obj instanceof GeoLocation))
+         return false;
+      GeoLocation loc = (GeoLocation)obj;      
+      return loc.getTimestamp().equals(getTimestamp());      
+   }
 }

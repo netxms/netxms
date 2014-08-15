@@ -5,6 +5,8 @@
 - Management console:
 	- Can show alarms for multiple selected objects
 	- Fixed non-working ordering in event list in alarm details view
+    - Fixed bug with LDAP user system rights
+    - Added device geolocation tracking and display on map 
 - Fixed issues: #593, #613, #624
 
 

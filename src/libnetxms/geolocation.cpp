@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -348,4 +348,23 @@ bool GeoLocation::parseLongitude(const TCHAR *lon)
 	if (!isValid)
 		m_lon = 0.0;
 	return isValid;
+}
+
+bool GeoLocation::sameLocation(const TCHAR* lon, const TCHAR* lat, int oldAccurasy)
+{
+   bool result =  false;
+   bool isValid;
+
+   int _lon = parse(lon, false, &isValid);
+	if (!isValid)
+		_lon = 0.0;
+
+   int _lat = parse(lat, true, &isValid);
+	if (!isValid)
+		_lat = 0.0;
+
+   if(sqrt(pow(_lon - m_lon, 2) + pow(_lat - m_lat, 2)) <= m_accuracy)
+      result = true;
+
+   return result;
 }
