@@ -77,7 +77,7 @@ public:
 	bool isValid() { return m_isValid; }
 	int getAccuracy() { return m_accuracy; }
 	time_t getTimestamp() { return m_timestamp; }
-   bool sameLocation(const TCHAR* loc, const TCHAR* lat, int oldAccurasy);
+   bool sameLocation(double lat, double lon, int oldAccurasy);
 
 	void fillMessage(CSCPMessage &msg);
 };

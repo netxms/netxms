@@ -129,7 +129,7 @@ bool NetObj::deleteFromDB(DB_HANDLE hdb)
    // Delete module data
    if (success && (m_moduleData != NULL))
    {
-      for(UINT32 i = 0; (i < m_moduleData->size()) && success; i++)
+      for(int i = 0; (i < m_moduleData->size()) && success; i++)
          success = m_moduleData->getValueByIndex(i)->deleteFromDatabase(hdb, m_dwId);
    }
 
@@ -1679,7 +1679,7 @@ void NetObj::addLocationToHistory()
    if(DBGetNumRows(hResult) > 0)
    {
       startTimestamp = DBGetFieldULong(hResult, 0, 3);
-      isSamePlace = m_geoLocation.sameLocation(DBGetField(hResult, 0, 0, lat, 32), DBGetField(hResult, 0, 1, lon, 32), DBGetFieldULong(hResult, 0, 2));
+      isSamePlace = m_geoLocation.sameLocation(DBGetFieldDouble(hResult, 0, 0), DBGetFieldDouble(hResult, 0, 1), DBGetFieldULong(hResult, 0, 2));
       DBFreeStatement(hStmt);
    }
    else

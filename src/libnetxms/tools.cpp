@@ -2158,7 +2158,7 @@ TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f)
 #endif
 }
 
-#if !HAVE_WCSLWR
+#if !HAVE_WCSLWR && !defined(_WIN32)
 
 /**
  * Convert UNICODE string to lowercase
