@@ -2,8 +2,8 @@ package org.netxms.client;
 
 public class TestConstants
 {
-   //Constants for file download
-   public static int NodeID = 1118;
-   public static String FileName = "/var/adm/messages";
-   public static int FileOfset = 0;
+   public static final int NODE_ID = 100;
+   public static final String FILE_NAME = "/var/adm/messages";
+   public static final int FILE_OFFSET = 0;
+   public static final String ACTION = "netstat";
 }

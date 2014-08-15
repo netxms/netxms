@@ -41,7 +41,7 @@ public class ServerFilesTest extends SessionTest
    {
       final NXCSession session = connect();
 
-      AgentFile file = session.downloadFileFromAgent(TestConstants.NodeID, TestConstants.FileName, TestConstants.FileOfset, true);
+      AgentFile file = session.downloadFileFromAgent(TestConstants.NODE_ID, TestConstants.FILE_NAME, TestConstants.FILE_OFFSET, true);
       // check that server returned file with correct size (offset should be less than size of file)
       // assertEquals(file.length(), TestConstants.FileOfset);
       String content = null;
@@ -64,10 +64,10 @@ public class ServerFilesTest extends SessionTest
       int i = 3;
       while(i > 0)
       {
-         System.out.println("Tail content: \n" + session.waitForFileTail(TestConstants.FileName, 30000));
+         System.out.println("Tail content: \n" + session.waitForFileTail(TestConstants.FILE_NAME, 30000));
          i--;
       }
-      session.cancelFileMonitoring(TestConstants.NodeID, TestConstants.FileName);
+      session.cancelFileMonitoring(TestConstants.NODE_ID, TestConstants.FILE_NAME);
       System.out.println("Monitoring have been canceled.\n");
       session.disconnect();
    }

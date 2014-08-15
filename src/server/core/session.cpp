@@ -7247,13 +7247,59 @@ void ClientSession::updateAgentConfig(CSCPMessage *pRequest)
 }
 
 /**
+ * Action execution data
+ */
+class ActionExecutionData
+{
+public:
+   ClientSession *m_session;
+   CSCPMessage *m_msg;
+
+   ActionExecutionData(ClientSession *session, UINT32 requestId)
+   {
+      m_session = session;
+      m_msg = new CSCPMessage;
+      m_msg->SetId(requestId);
+   }
+
+   ~ActionExecutionData()
+   {
+      delete m_msg;
+   }
+};
+
+/**
+ * Action execution callback
+ */
+static void ActionExecuteCallback(ActionCallbackEvent e, const TCHAR *text, void *arg)
+{
+   ActionExecutionData *data = (ActionExecutionData *)arg;
+   switch(e)
+   {
+      case ACE_CONNECTED:
+         data->m_msg->SetCode(CMD_REQUEST_COMPLETED);
+         data->m_msg->SetVariable(VID_RCC, RCC_SUCCESS);
+         break;
+      case ACE_DISCONNECTED:
+         data->m_msg->deleteAllVariables();
+         data->m_msg->SetCode(CMD_COMMAND_OUTPUT);
+         data->m_msg->setEndOfSequence();
+         break;
+      case ACE_DATA:
+         data->m_msg->deleteAllVariables();
+         data->m_msg->SetCode(CMD_COMMAND_OUTPUT);
+         data->m_msg->SetVariable(VID_MESSAGE, text);
+         break;
+   }
+   data->m_session->sendMessage(data->m_msg);
+}
+
+/**
  * Execute action on agent
  */
 void ClientSession::executeAction(CSCPMessage *pRequest)
 {
    CSCPMessage msg;
-   UINT32 dwResult;
-   TCHAR szAction[MAX_PARAM_NAME];
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
@@ -7272,10 +7318,22 @@ void ClientSession::executeAction(CSCPMessage *pRequest)
             pConn = ((Node *)object)->createAgentConnection();
             if (pConn != NULL)
             {
-               pRequest->GetVariableStr(VID_ACTION_NAME, szAction, MAX_PARAM_NAME);
-               dwResult = pConn->execAction(szAction, 0, NULL);
+               TCHAR action[MAX_PARAM_NAME];
+               pRequest->GetVariableStr(VID_ACTION_NAME, action, MAX_PARAM_NAME);
 
-               switch(dwResult)
+               UINT32 rcc;
+               bool withOutput = pRequest->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
+               if (withOutput)
+               {
+                  ActionExecutionData data(this, pRequest->GetId());
+                  rcc = pConn->execAction(action, 0, NULL, true, ActionExecuteCallback, &data);
+               }
+               else
+               {
+                  rcc = pConn->execAction(action, 0, NULL);
+               }
+
+               switch(rcc)
                {
                   case ERR_SUCCESS:
                      msg.SetVariable(VID_RCC, RCC_SUCCESS);

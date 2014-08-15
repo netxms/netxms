@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Writer;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -4412,15 +4413,49 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeAction(final long nodeId, final String action) throws IOException, NXCException
+   public void executeAction(long nodeId, String action) throws IOException, NXCException
+   {
+      executeAction(nodeId, action, false, null, null);
+   }
+
+   /**
+    * Execute action on remote agent
+    *
+    * @param nodeId Node object ID
+    * @param action Action name
+    * @param receiveOutput true if action's output has to be read
+    * @param listener listener for action's output or null
+    * @param writer writer for action's output or null
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void executeAction(long nodeId, String action, boolean receiveOutput, ActionExecutionListener listener, Writer writer) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_ACTION);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setVariable(NXCPCodes.VID_ACTION_NAME, action);
+      msg.setVariable(NXCPCodes.VID_RECEIVE_OUTPUT, receiveOutput);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+      if (receiveOutput)
+      {
+         while(true)
+         {
+            NXCPMessage response = waitForMessage(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId());
+            String text = response.getVariableAsString(NXCPCodes.VID_MESSAGE);
+            if (text != null)
+            {
+               if (listener != null)
+                  listener.messageReceived(text);
+               if (writer != null)
+                  writer.write(text);
+            }
+            if (response.isEndOfSequence())
+               break;
+         }
+      }
    }
-
+   
    /**
     * Wakeup node by sending wake-on-LAN magic packet. Either node ID or
     * interface ID may be given. If node ID is given, system will send wakeup
