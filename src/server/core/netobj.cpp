@@ -1636,7 +1636,6 @@ void NetObj::setModuleData(const TCHAR *module, ModuleData *data)
  */
 void NetObj::addLocationToHistory()
 {
-   TCHAR lat[32], lon[32];
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    UINT32 startTimestamp;
    bool isSamePlace;
@@ -1702,6 +1701,7 @@ void NetObj::addLocationToHistory()
                        _T("accuracy,start_timestamp,end_timestamp) VALUES (?,?,?,?,?)"), m_dwId);
       hStmt = DBPrepare(hdb, query);
 
+      TCHAR lat[32], lon[32];
       _sntprintf(lat, 32, _T("%f"), m_geoLocation.getLatitude());
       _sntprintf(lon, 32, _T("%f"), m_geoLocation.getLongitude());
 

@@ -133,6 +133,8 @@ GeoLocation::GeoLocation(CSCPMessage &msg)
          m_timestamp = timegm(&timeBuff);
       }
    }
+   if(m_timestamp == NULL)
+      m_timestamp = time(0);
 
 	posToString(true, m_lat);
 	posToString(false, m_lon);
