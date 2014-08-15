@@ -36,6 +36,7 @@ import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -7727,15 +7728,24 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       sendMessage(msg);
    }
    
-   
-   public List<GeoLocation> getLocationHistory(long objId, Date from, Date to) throws NXCException, IOException
+   /**
+    * Get location history for given object.
+    * 
+    * @param objectId
+    * @param from
+    * @param to
+    * @return
+    * @throws NXCException
+    * @throws IOException
+    */
+   public List<GeoLocation> getLocationHistory(long objectId, Date from, Date to) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LOC_HISTORY);
 
       int timeFrom = (from != null) ? (int) (from.getTime() / 1000) : 0;
       int timeTo = (to != null) ? (int) (to.getTime() / 1000) : 0;
       
-      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objId);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       msg.setVariableInt32(NXCPCodes.VID_TIME_FROM, (int)timeFrom);
       msg.setVariableInt32(NXCPCodes.VID_TIME_TO, (int)timeTo);
       sendMessage(msg);
@@ -7748,7 +7758,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       {
          elements.add(new GeoLocation(base, response));
       }
-      Collections.sort(elements);
+      Collections.sort(elements, new Comparator<GeoLocation>() {
+         @Override
+         public int compare(GeoLocation l1, GeoLocation l2)
+         {
+            return l1.getTimestamp().compareTo(l2.getTimestamp());
+         }
+      });
       return elements;
    }
 }

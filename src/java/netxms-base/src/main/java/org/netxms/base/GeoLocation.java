@@ -26,8 +26,7 @@ import java.util.regex.Pattern;
 /**
  * Geolocation encoding
  */
-@SuppressWarnings("rawtypes")
-public class GeoLocation implements Comparable
+public class GeoLocation
 {
 	private static final double ROUND_OFF = 0.00000001;
 
@@ -356,13 +355,6 @@ public class GeoLocation implements Comparable
 		return new GeoLocation(_lat, _lon);
 	}
 
-   @Override
-   public int compareTo(Object arg0)
-   {
-      GeoLocation loc = (GeoLocation)arg0;
-      return timestamp.compareTo(loc.getTimestamp());
-   }
-
    /**
     * @return the end_timestamp
     */
@@ -378,12 +370,62 @@ public class GeoLocation implements Comparable
    {
       this.endTimestamp = endTimestamp;
    }
-   
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#hashCode()
+    */
+   @Override
+   public int hashCode()
+   {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + accuracy;
+      result = prime * result + ((endTimestamp == null) ? 0 : endTimestamp.hashCode());
+      long temp;
+      temp = Double.doubleToLongBits(latitude);
+      result = prime * result + (int)(temp ^ (temp >>> 32));
+      temp = Double.doubleToLongBits(longitude);
+      result = prime * result + (int)(temp ^ (temp >>> 32));
+      result = prime * result + ((timestamp == null) ? 0 : timestamp.hashCode());
+      result = prime * result + type;
+      return result;
+   }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#equals(java.lang.Object)
+    */
+   @Override
    public boolean equals(Object obj)
    {
-      if(! (obj instanceof GeoLocation))
+      if (this == obj)
+         return true;
+      if (obj == null)
          return false;
-      GeoLocation loc = (GeoLocation)obj;      
-      return loc.getTimestamp().equals(getTimestamp());      
+      if (getClass() != obj.getClass())
+         return false;
+      GeoLocation other = (GeoLocation)obj;
+      if (accuracy != other.accuracy)
+         return false;
+      if (endTimestamp == null)
+      {
+         if (other.endTimestamp != null)
+            return false;
+      }
+      else if (!endTimestamp.equals(other.endTimestamp))
+         return false;
+      if (Double.doubleToLongBits(latitude) != Double.doubleToLongBits(other.latitude))
+         return false;
+      if (Double.doubleToLongBits(longitude) != Double.doubleToLongBits(other.longitude))
+         return false;
+      if (timestamp == null)
+      {
+         if (other.timestamp != null)
+            return false;
+      }
+      else if (!timestamp.equals(other.timestamp))
+         return false;
+      if (type != other.type)
+         return false;
+      return true;
    }
 }
