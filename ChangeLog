@@ -1,7 +1,13 @@
 *
 * 1.2.17
 *
-
+- Android console:
+	- Fix bug in notifying connection point not found
+	- Fix bug in computing interface expanded list size (removed hardcoded values)
+	- Added manage, unmanage, set expected state (up, down, ignore) and find switch port to interface list
+	- Fix aesthetic problems in expandable list (graphs and interfaces list)
+	- Integration of new support library
+	- Target to new API version (20)
 - Management console:
 	- Can show alarms for multiple selected objects
 	- Fixed non-working ordering in event list in alarm details view
