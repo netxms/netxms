@@ -133,6 +133,7 @@ public class LastValuesAdapter extends BaseAdapter
 	 * @see android.widget.Adapter#getView(int, android.view.View,
 	 * android.view.ViewGroup)
 	 */
+	@SuppressLint("RtlHardcoded")
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent)
 	{

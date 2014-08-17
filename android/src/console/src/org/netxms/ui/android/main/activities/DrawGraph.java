@@ -61,7 +61,7 @@ public class DrawGraph extends AbstractClientActivity
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
 		dialog = new ProgressDialog(this);
 		setContentView(R.layout.graphics);
-		boolean showLegend = getIntent().getBooleanExtra("showLegend", true);
+		//boolean showLegend = getIntent().getBooleanExtra("showLegend", true);
 		numGraphs = getIntent().getIntExtra("numGraphs", 0);
 		if (numGraphs > 0)
 		{

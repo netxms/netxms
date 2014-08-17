@@ -228,12 +228,19 @@
 	<string name="table_value_placeholder">&lt;&lt; TABLE &gt;&gt;</string>
 	<string name="table_last_values">Table last values</string>
 
+	<string name="if_manage">Manage</string>
+	<string name="if_unmanage">Unmanage</string>
+	<string name="if_expected_state">Change expected state</string>
+	<string name="if_expected_state_up">UP</string>
+	<string name="if_expected_state_down">DOWN</string>
+	<string name="if_expected_state_ignore">IGNORE</string>
+						
 	<string name="connection_point_title">MAC address search</string>
 	<string name="connection_point_hint_type_macaddress">Type or scan MAC address&#8230;</string>
 	<string name="connection_point_invalid">MAC Address &quot;%1$s&quot; is invalid</string>
 	<string name="connection_point_notfound">Connection point not found</string>
 	<string name="connection_point_macaddress_notfound">Connection point for MAC address %1$s not found</string>
-	<string name="connection_point_nodeid_notfound">Connection point for node %1$s not found</string>
+	<string name="connection_point_info_notfound">Connection point information cannot be found</string>
 	<string name="connection_point_info">Node%1$s with MAC address %2$s is connected to network switch %3$s on port %4$s</string>
 	<string name="connection_point_delete_one">Delete item</string>
 	<string name="connection_point_delete_all">Delete all items</string>

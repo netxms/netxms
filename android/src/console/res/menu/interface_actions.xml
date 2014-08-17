@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:id="@+id/manage" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/if_manage"></item>
+	<item android:id="@+id/unmanage" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/if_unmanage"></item>
+	<item android:id="@+id/if_expected_state" android:title="@string/if_expected_state">
+		<menu>
+			<item android:id="@+id/if_expected_state_up" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/if_expected_state_up"></item>
+			<item android:id="@+id/if_expected_state_down" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/if_expected_state_down"></item>
+			<item android:id="@+id/if_expected_state_ignore" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/if_expected_state_ignore"></item>
+		</menu>
+	</item>
+    <item android:id="@+id/find_switch_port" android:enabled="true" android:visible="true" android:title="@string/connection_point_find_switch_port"></item>
+</menu>

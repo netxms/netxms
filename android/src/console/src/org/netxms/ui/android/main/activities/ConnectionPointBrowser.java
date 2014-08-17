@@ -277,6 +277,7 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 			}
 			catch (JSONException e)
 			{
+				Log.e(TAG, "JSONException in retrievePreferences...", e);
 				e.printStackTrace();
 			}
 		return values;
@@ -342,11 +343,6 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 							bridge = (Node)session.findObjectById(cp.getNodeId());
 							iface = (Interface)session.findObjectById(cp.getInterfaceId());
 						}
-						else
-						{
-							session.syncMissingObjects(new long[] { nodeId }, false, NXCSession.OBJECT_SYNC_WAIT);
-							host = (Node)session.findObjectById(nodeId);
-						}
 					}
 					catch (MacAddressFormatException e)
 					{
@@ -362,10 +358,10 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 						Log.e(TAG, "IOException while executing syncMissingObjects", e);
 					}
 
-					if ((bridge != null) && (iface != null))
+					if ((host != null) && (bridge != null) && (iface != null))
 						string = r.getString(R.string.connection_point_info, host != null ? " " + host.getObjectName() : "", cp.getLocalMacAddress().toString(), bridge.getObjectName(), iface.getObjectName());
-					else if (host != null)
-						string = r.getString(R.string.connection_point_nodeid_notfound, host.getObjectName());
+					else
+						string = r.getString(R.string.connection_point_info_notfound);
 				}
 			}
 			return string;
