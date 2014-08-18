@@ -1006,4 +1006,14 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	   timeFrame = timePeriod * 60 * 1000;
 	   updateHistory();
 	}
+	
+	/**
+    * Set time period start
+    */
+   public void changeTimePeriod(Date startTime)
+   {
+      strictTime = true;
+      till = startTime;
+      updateHistory();
+   }
 }
