@@ -725,7 +725,15 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			@Override
 			public void run()
 			{
-				onCacheChange(object, prevLocation);
+			   if(!historycalData)
+			   {
+			      onCacheChange(object, prevLocation);
+			   }
+			   else
+			   {
+			      if(object.getObjectId() == historyObject.getObjectId())
+			         onCacheChange(object, prevLocation);
+			   }
 			}
 		});
 	}
