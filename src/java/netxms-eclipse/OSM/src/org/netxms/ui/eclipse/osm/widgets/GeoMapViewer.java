@@ -80,9 +80,8 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
    
    
 	private static final Color MAP_BACKGROUND = new Color(Display.getCurrent(), 255, 255, 255);
-	private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getCurrent(), 150, 240, 88);
-	private static final Color INFO_BLOCK_BORDER = new Color(Display.getCurrent(), 0, 0, 0);
-	private static final Color INFO_BLOCK_TEXT = new Color(Display.getCurrent(), 0, 0, 0);
+   private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getCurrent(), 0, 0, 0);
+   private static final Color INFO_BLOCK_TEXT = new Color(Display.getCurrent(), 255, 255, 255);
 	private static final Color LABEL_BACKGROUND = new Color(Display.getCurrent(), 240, 254, 192);
 	private static final Color LABEL_TEXT = new Color(Display.getCurrent(), 0, 0, 0);
 	private static final Color BORDER_COLOR = new Color(Display.getCurrent(), 128, 128, 128);
@@ -465,30 +464,31 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	public void paintControl(PaintEvent e)
 	{
 		final GC gc = new GC(bufferImage);
+      gc.setAntialias(SWT.ON);
+      gc.setTextAntialias(SWT.ON);
 		
-		gc.fillRectangle(bufferImage.getBounds());
-
-		int imgW, imgH;
-		if (currentImage != null)
-		{
-			gc.drawImage(currentImage, -offsetX, -offsetY);
-			imgW = currentImage.getImageData().width;
-			imgH = currentImage.getImageData().height;
-		}
-		else
-		{
-			imgW = -1;
-			imgH = -1;
-		}
+		GeoLocation currentLocation;
 
 		// Draw objects and decorations if user is not dragging map
 		// and map is not currently loading
 		if (dragStartPoint == null)
 		{
-			gc.setAntialias(SWT.ON);
-			gc.setTextAntialias(SWT.ON);
+         currentLocation = accessor.getCenterPoint();
+         
+	      int imgW, imgH;
+	      if (currentImage != null)
+	      {
+	         gc.drawImage(currentImage, -offsetX, -offsetY);
+	         imgW = currentImage.getImageData().width;
+	         imgH = currentImage.getImageData().height;
+	      }
+	      else
+	      {
+	         imgW = -1;
+	         imgH = -1;
+	      }
 
-			final Point centerXY = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
+			final Point centerXY = GeoLocationCache.coordinateToDisplay(currentLocation, accessor.getZoom());
          if(!historycalData)
          {
    			for(AbstractObject object : objects)
@@ -511,7 +511,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
                
                if (i != history.size() - 1)
                { 
-                  final Point virtualXY2 = GeoLocationCache.coordinateToDisplay(history.get(i+1), accessor.getZoom());
+                  final Point virtualXY2 = GeoLocationCache.coordinateToDisplay(history.get(i + 1), accessor.getZoom());
                   nextX = imgW / 2 + (virtualXY2.x - centerXY.x);
                   nextY = imgH / 2 + (virtualXY2.y - centerXY.y);
                }
@@ -524,9 +524,9 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
                   toolTip.setVisible(true);
                }
                   
-               if(i==0)
+               if (i == 0)
                {
-                  if(i == history.size() - 1)
+                  if (i == history.size() - 1)
                   {
                      nextX = imgW / 2 + dx;
                      nextY = imgH / 2 + dy;
@@ -544,29 +544,33 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
                drawObject(gc, imgW / 2 + dx, imgH / 2 + dy, 0, nextX, nextY, color);
             }
          }
-	
-			final GeoLocation gl = new GeoLocation(accessor.getLatitude(), accessor.getLongitude());
-			final String text = gl.toString();
-			final Point textSize = gc.textExtent(text);
-	
-			Rectangle rect = getClientArea();
-			rect.x = 10;
-			rect.x = rect.width - textSize.x - 20;
-			rect.y += 10;
-			rect.width = textSize.x + 10;
-			rect.height = textSize.y + 8;
-	
-			gc.setAntialias(SWT.ON);
-			gc.setBackground(INFO_BLOCK_BACKGROUND);
-			gc.setAlpha(192);
-			gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-			gc.setAlpha(255);
-			gc.setForeground(INFO_BLOCK_BORDER);
-			gc.setLineWidth(1);
-			gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-	
-			gc.setForeground(INFO_BLOCK_TEXT);
-			gc.drawText(text, rect.x + 5, rect.y + 4, true);
+		}
+		else
+		{
+		   Point cp = GeoLocationCache.coordinateToDisplay(accessor.getCenterPoint(), accessor.getZoom());
+		   cp.x += offsetX;
+		   cp.y += offsetY;
+		   currentLocation = GeoLocationCache.displayToCoordinates(cp, accessor.getZoom());
+		   
+	      Point size = getSize();
+		   TileSet tileSet = mapLoader.getAllTiles(size, currentLocation, MapLoader.CENTER, accessor.getZoom(), true);
+	      int x = tileSet.xOffset;
+	      int y = tileSet.yOffset;
+	      final Tile[][] tiles = tileSet.tiles;
+	      for(int i = 0; i < tiles.length; i++)
+	      {
+	         for(int j = 0; j < tiles[i].length; j++)
+	         {
+	            gc.drawImage(tiles[i][j].getImage(), x, y);
+	            x += 256;
+	            if (x >= size.x)
+	            {
+	               x = tileSet.xOffset;
+	               y += 256;
+	            }
+	         }
+	      }
+	      tileSet.dispose();
 		}
 		
 		// Draw selection rectangle
@@ -585,11 +589,31 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			gc.drawRectangle(x, y, w, h);
 		}
 		
+		// Draw current location info
+      final String text = currentLocation.toString();
+      final Point textSize = gc.textExtent(text);
+
+      Rectangle rect = getClientArea();
+      rect.x = 10;
+      rect.x = rect.width - textSize.x - 20;
+      rect.y += 10;
+      rect.width = textSize.x + 10;
+      rect.height = textSize.y + 8;
+
+      gc.setAntialias(SWT.ON);
+      gc.setBackground(INFO_BLOCK_BACKGROUND);
+      gc.setAlpha(128);
+      gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+      gc.setAlpha(255);
+
+      gc.setForeground(INFO_BLOCK_TEXT);
+      gc.drawText(text, rect.x + 5, rect.y + 4, true);
+		
 		// Draw title
 		if ((title != null) && !title.isEmpty())
 		{
 			gc.setFont(TITLE_FONT);
-			Rectangle rect = getClientArea();
+			rect = getClientArea();
 			int x = (rect.width - gc.textExtent(title).x) / 2;
 			gc.setForeground(SharedColors.getColor(SharedColors.GEOMAP_TITLE, getDisplay()));
 			gc.drawText(title, x, 10, true);
@@ -661,9 +685,9 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
     */
    private void drawObject(GC gc, int x, int y, int flag, int prevX, int prevY, int color) 
    {    
-      if(flag == GeoMapViewer.START || flag == GeoMapViewer.END)
+      if (flag == GeoMapViewer.START || flag == GeoMapViewer.END)
       {
-         if(flag == GeoMapViewer.START)
+         if (flag == GeoMapViewer.START)
          {
             gc.drawLine(x, y, prevX, prevY);
          }
@@ -720,8 +744,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	@Override
 	public void geoLocationCacheChanged(final AbstractObject object, final GeoLocation prevLocation)
 	{
-		getDisplay().asyncExec(new Runnable()
-		{
+		getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run()
 			{
