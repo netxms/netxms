@@ -936,6 +936,35 @@ BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, con
  *
  * @param eventCode Event code
  * @param sourceId Event source object ID
+ * @param parameters event parameters list
+ */
+BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters)
+{
+   int count = parameters->size();
+   if (count > 1023)
+      count = 1023;
+
+   char format[1024];
+   memset(format, 's', count);
+   format[count] = 0;
+
+   const TCHAR *names[1024];
+   const TCHAR *args[1024];
+   for(int i = 0; i < count; i++)
+   {
+      names[i] = parameters->getKeyByIndex(i);
+      args[i] = parameters->getValueByIndex(i);
+   }
+
+//   BOOL bResult = RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, names, args);
+   return bResult;
+}
+
+/**
+ * Post event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
  * @param userTag event's user tag
  * @param format Parameter format string, each parameter represented by one character.
  *    The following format characters can be used:

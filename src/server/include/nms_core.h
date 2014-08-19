@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -97,6 +97,7 @@ typedef __console_ctx * CONSOLE_CTX;
 /**
  * Server includes
  */
+#include "server_timers.h"
 #include "nms_dcoll.h"
 #include "nms_users.h"
 #include "nxcore_winperf.h"
@@ -282,7 +283,6 @@ typedef struct
    UINT32 dwCode;        // Data-specific update code
    void *pData;         // Pointer to data block
 } UPDATE_INFO;
-
 
 /**
  * Extended agent connection

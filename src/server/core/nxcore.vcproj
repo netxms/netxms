@@ -813,6 +813,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\timer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\tools.cpp"
 				>
 			</File>
@@ -1036,6 +1040,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\include\rwlock.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\server_timers.h"
 				>
 			</File>
 			<File

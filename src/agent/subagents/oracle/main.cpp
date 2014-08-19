@@ -425,9 +425,9 @@ bool getParametersFromDB( int dbIndex )
 	return ret;
 }
 
-//
-// Subagent information
-//
+/**
+ * Supported parameters
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("Oracle.Sessions.Count(*)"), getParameters, _T("X"), DCI_DT_INT, _T("Oracle/Sessions: Number of sessions opened") },
@@ -484,24 +484,20 @@ static NETXMS_SUBAGENT_INFO m_info =
 	0,	NULL
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(ORACLE)
 {
 	*ppInfo = &m_info;
 	return TRUE;
 }
 
-
-//
-// DLL entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
