@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export MAVEN_OPTS='-Xmx512m -XX:MaxPermSize=128m'
+
 set -e
 
 mvn -N versions:update-child-modules
