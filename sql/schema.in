@@ -81,8 +81,8 @@ CREATE TABLE user_groups
 	name varchar(63) not null,
 	system_access SQL_INT64 not null,
 	flags integer not null,
-	description varchar(255) not null,
-   ldap_dn SQL_TEXT null,
+	description varchar(255),
+	ldap_dn SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
