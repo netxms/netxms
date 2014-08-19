@@ -53,8 +53,10 @@ private:
    TIMER_ID m_id;
    TCHAR *m_name;
    time_t m_startTime;
-   TimerAction m_action;
    UINT32 m_node;
+   TimerAction m_action;
+   UINT32 m_dataInt;
+   TCHAR *m_dataStr;
    StringMap m_parameters;
 
    void execute();
@@ -64,7 +66,7 @@ private:
 #endif
 
 public:
-   Timer(const TCHAR *name, time_t startTime, TimerAction action, UINT32 node, StringMap *parameters);
+   Timer(const TCHAR *name, time_t startTime, UINT32 node, TimerAction action, UINT32 dataInt, const TCHAR *dataStr, StringMap *parameters);
    virtual ~Timer();
 
    time_t getStartTime() { return m_startTime; }

@@ -32,12 +32,14 @@ HANDLE Timer::m_queue = CreateTimerQueue();
 /**
  * Timer constructor
  */
-Timer::Timer(const TCHAR *name, time_t startTime, TimerAction action, UINT32 node, StringMap *parameters)
+Timer::Timer(const TCHAR *name, time_t startTime, UINT32 node, TimerAction action, UINT32 dataInt, const TCHAR *dataStr, StringMap *parameters)
 {
    m_name = _tcsdup_ex(name);
    m_startTime = startTime;
-   m_action = action;
    m_node = node;
+   m_action = action;
+   m_dataInt = dataInt;
+   m_dataStr = _tcsdup_ex(dataStr);
    m_parameters.addAll(parameters);
 }
 
@@ -47,6 +49,7 @@ Timer::Timer(const TCHAR *name, time_t startTime, TimerAction action, UINT32 nod
 Timer::~Timer()
 {
    free(m_name);
+   free(m_dataStr);
 #ifdef _WIN32
    DeleteTimerQueueTimer(m_queue, m_id, NULL);
 #endif
@@ -60,7 +63,7 @@ void Timer::execute()
    switch(m_action)
    {
       case TIMER_ACTION_SEND_EVENT:
-         PostEventWithNames();
+         PostEventWithNames(m_dataInt, m_node, &m_parameters);
          break;
       default:
          DbgPrintf(4, _T("Unknown timer action %d"), m_action);

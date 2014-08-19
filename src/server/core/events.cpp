@@ -957,7 +957,8 @@ BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, Str
    }
 
 //   BOOL bResult = RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, names, args);
-   return bResult;
+//   return bResult;
+   return FALSE;
 }
 
 /**

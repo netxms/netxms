@@ -90,6 +90,7 @@ target
 /packages/solaris/pkginfo
 /private
 /release
+/sdk/install/Output
 /sql/dbinit_db2.sql
 /sql/dbinit_mssql.sql
 /sql/dbinit_mysql.sql
