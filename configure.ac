@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.16], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.2.17], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -1298,10 +1298,12 @@ if test "x$BUILD_SERVER" = "xyes" ; then
    if test "x$DISABLE_READLINE" = "xno"; then
       AC_CHECK_LIB(readline, readline, [SERVER_LIBS="$SERVER_LIBS -lreadline"], [AC_CHECK_LIB(edit, readline, [SERVER_LIBS="$SERVER_LIBS -ledit"])])
    fi
+   AC_CHECK_LIB(rt, timer_create, [SERVER_LIBS="$SERVER_LIBS -lrt"])
    SAVED_LDFLAGS="$LDFLAGS"
    LDFLAGS="$LDFLAGS $SERVER_LIBS"
 
-   AC_CHECK_FUNCS([readline])
+   AC_CHECK_FUNCS([readline timer_create])
+   AC_CHECK_TYPES([timer_t])
 
    # Check if passing rl_insert to rl_bind_key needs cast
    if test "$ac_cv_func_readline" = "yes"; then

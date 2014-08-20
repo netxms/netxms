@@ -31,4 +31,5 @@ serverinclude_HEADERS = \
 	nxcore_winperf.h \
 	nxmodule.h \
 	nxsrvapi.h \
-	nddrv.h
+	nddrv.h \
+	server_timers.h
