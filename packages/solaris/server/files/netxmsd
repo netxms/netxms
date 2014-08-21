@@ -11,7 +11,7 @@ if [ -z $SMF_FMRI ]; then
 fi
 
 getproparg() {
-    val=`svcprop -p $1 $SMF_FMRI`
+    val=`svcprop -p $1 $SMF_FMRI 2>/dev/null`
     [ -n "$val" ] && echo $val
 }
 

@@ -9,7 +9,7 @@
 # to use the same script.
 
 getproparg() {
-        val=`svcprop -p $1 $SMF_FMRI`
+        val=`svcprop -p $1 $SMF_FMRI 2>/dev/null`
         [ -n "$val" ] && echo $val
 }
 
