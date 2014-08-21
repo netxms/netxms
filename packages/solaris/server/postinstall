@@ -2,3 +2,5 @@
 
 svccfg import /var/svc/manifest/application/management/nxagentd.xml
 svccfg import /var/svc/manifest/application/management/netxmsd.xml
+svcadm enable nxagentd || true
+svcadm enable netxmsd || true

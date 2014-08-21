@@ -2,12 +2,16 @@
 
 svcs netxmsd >/dev/null 2>&1
 if [ $? = 0 ]; then
-	svcadm disable netxmsd
-	svccfg delete netxmsd
+	svcadm disable -s -t netxmsd
+	if [ x"$UPDATE" != "xyes" ]; then
+		svccfg delete netxmsd
+	fi
 fi
 
 svcs nxagentd >/dev/null 2>&1
 if [ $? = 0 ]; then
-	svcadm disable nxagentd
-	svccfg delete nxagentd
+	svcadm disable -s -t nxagentd
+	if [ x"$UPDATE" != "xyes" ]; then
+		svccfg delete nxagentd
+	fi
 fi
