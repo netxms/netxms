@@ -26,7 +26,7 @@ if [ -f $NXBIN/nxenv ]; then
 fi
 
 if [ x"$CONFIGFILE" != "x" ]; then
-    ARGS="$ARGS -c \"$CONFIGFILE\""
+    ARGS="$ARGS -c $CONFIGFILE"
 fi
 
 if [ x"$DEBUGLEVEL" != "x" ]; then
@@ -39,7 +39,7 @@ case "$1" in
         ;;
 
     'stop')
-        pkill netxmsd
+        pkill -f $NXBIN/netxmsd
         ;;
 
     *)

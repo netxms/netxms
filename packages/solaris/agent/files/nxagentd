@@ -29,11 +29,11 @@ if [ -z $SMF_FMRI ]; then
 fi
 
 if [ x"$CONFIGFILE" != "x" ]; then
-	ARGS=$ARGS -c \"$CONFIGFILE\"
+	ARGS="$ARGS -c $CONFIGFILE"
 fi
 
 if [ x"$DEBUGLEVEL" != "x" ]; then
-	ARGS=$ARGS -D $DEBUGLEVEL
+	ARGS="$ARGS -D $DEBUGLEVEL"
 fi
 
 case "$1" in
@@ -42,7 +42,7 @@ case "$1" in
         ;;
 
 'stop')
-	pkill nxagentd
+	pkill -f $NXBIN/nxagentd
         ;;
 
 *)
