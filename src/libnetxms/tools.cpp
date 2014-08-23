@@ -517,13 +517,12 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
             len = (int)min(_tcslen(result), bufSize - outpos - 1);
             memcpy(&buffer[outpos], result, len * sizeof(TCHAR));
          }
-         else {
+         else 
+         {
             len = 0;
          }
 
-
          outpos += len;
-
          i = j;
       }
       else

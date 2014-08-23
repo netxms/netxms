@@ -1607,7 +1607,8 @@ int main(int argc, char *argv[])
                const TCHAR *dir = g_config->getValue(_T("/agent/ConfigIncludeDir"));
                if (dir != NULL)
                {
-                  validConfig = g_config->loadConfigDirectory(g_szConfigIncludeDir, _T("agent"), false);
+                  validConfig = g_config->loadConfigDirectory(dir, _T("agent"), false);
+                  ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), dir);
                }
             }
 

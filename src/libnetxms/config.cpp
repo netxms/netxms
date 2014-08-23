@@ -27,6 +27,97 @@
 #include <nxstat.h>
 
 /**
+ * Expand value
+ */
+static TCHAR *ExpandValue(const TCHAR *src)
+{
+   size_t allocated = _tcslen(src) + 1;
+   TCHAR *buffer = (TCHAR *)malloc(allocated * sizeof(TCHAR));
+
+   const TCHAR *in = src;
+   TCHAR *out = buffer;
+   bool squotes = false;
+   bool dquotes = false;
+   if (*in == _T('"'))
+   {
+      dquotes = true;
+      in++;
+   }
+   else if (*in == _T('\''))
+   {
+      squotes = true;
+      in++;
+   }
+
+   for(; *in != 0; in++)
+   {
+      if (squotes && (*in == _T('\'')))
+      {
+         // Single quoting characters are ignored in quoted string
+         if (*(in + 1) == _T('\''))
+         {
+            in++;
+            *out++ = _T('\'');
+         }
+      }
+      else if (dquotes && (*in == _T('"')))
+      {
+         // Single quoting characters are ignored in quoted string
+         if (*(in + 1) == _T('"'))
+         {
+            in++;
+            *out++ = _T('"');
+         }
+      }
+      else if (!squotes && (*in == _T('$')))
+      {
+         if (*(in + 1) == _T('{'))  // environment string expansion
+         {
+            const TCHAR *end = _tcschr(in, _T('}'));
+            if (end != NULL)
+            {
+               in += 2;
+
+               TCHAR name[256];
+               size_t nameLen = end - in;
+               if (nameLen >= 256)
+                  nameLen = 255;
+               memcpy(name, in, nameLen * sizeof(TCHAR));
+               name[nameLen] = 0;
+               const TCHAR *env = _tgetenv(name);
+               if ((env != NULL) && (*env != 0))
+               {
+                  size_t len = _tcslen(env);
+                  allocated += len;
+                  size_t pos = out - buffer;
+                  buffer = (TCHAR *)realloc(buffer, allocated * sizeof(TCHAR));
+                  out = &buffer[pos];
+                  memcpy(out, env, len * sizeof(TCHAR));
+                  out += len;
+               }
+               in = end;
+            }
+            else
+            {
+               // unexpected end of line, ignore anything after ${
+               break;
+            }
+         }
+         else
+         {
+            *out++ = *in;
+         }
+      }
+      else
+      {
+         *out++ = *in;
+      }
+   }
+   *out = 0;
+   return buffer;
+}
+
+/**
  * Constructor for config entry
  */
 ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *file, int line, int id)
@@ -272,6 +363,16 @@ void ConfigEntry::addValue(const TCHAR *value)
 {
    m_values = (TCHAR **) realloc(m_values, sizeof(TCHAR *) * (m_valueCount + 1));
    m_values[m_valueCount] = _tcsdup(value);
+   m_valueCount++;
+}
+
+/**
+ * Add value (pre-allocated string)
+ */
+void ConfigEntry::addValuePreallocated(TCHAR *value)
+{
+   m_values = (TCHAR **) realloc(m_values, sizeof(TCHAR *) * (m_valueCount + 1));
+   m_values[m_valueCount] = value;
    m_valueCount++;
 }
 
@@ -915,7 +1016,7 @@ bool Config::setValue(const TCHAR *path, uuid_t value)
  * Find comment start in INI style config line
  * Comment starts with # character, characters within double quotes ignored
  */
-static TCHAR* FindComment(TCHAR *str)
+static TCHAR *FindComment(TCHAR *str)
 {
    TCHAR *curr;
    bool quotes;
@@ -1018,7 +1119,7 @@ bool Config::loadIniConfig(const TCHAR *file, const TCHAR *defaultIniSection, bo
          {
             entry = new ConfigEntry(buffer, currentSection, file, sourceLine, 0);
          }
-         entry->addValue(ptr);
+         entry->addValuePreallocated(ExpandValue(ptr));
       }
    }
    fclose(cfg);
@@ -1141,7 +1242,7 @@ static void EndElement(void *userData, const char *name)
       ps->level--;
       if (ps->trimValue[ps->level])
          ps->charData[ps->level].trim();
-      ps->stack[ps->level]->addValue(ps->charData[ps->level]);
+      ps->stack[ps->level]->addValuePreallocated(ExpandValue(ps->charData[ps->level]));
    }
 }
 
