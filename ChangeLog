@@ -13,7 +13,7 @@
 	- Fixed non-working ordering in event list in alarm details view
     - Fixed bug with LDAP user system rights
     - Added device geolocation tracking and display on map 
-- Fixed issues: #593, #613, #624
+- Fixed issues: #542, #593, #613, #624
 
 
 *
