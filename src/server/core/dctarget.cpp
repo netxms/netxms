@@ -409,25 +409,25 @@ void DataCollectionTarget::queueItemsForPolling(Queue *pPollerQueue)
 /**
  * Get value for server's internal parameter
  */
-UINT32 DataCollectionTarget::getInternalItem(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
+UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 {
    UINT32 dwError = DCE_SUCCESS;
 
-   if (!_tcsicmp(szParam, _T("Status")))
+   if (!_tcsicmp(param, _T("Status")))
    {
-      _sntprintf(szBuffer, dwBufSize, _T("%d"), m_iStatus);
+      _sntprintf(buffer, bufSize, _T("%d"), m_iStatus);
    }
-   else if (!_tcsicmp(szParam, _T("Dummy")))
+   else if (!_tcsicmp(param, _T("Dummy")))
    {
-      _tcscpy(szBuffer, _T("0"));
+      _tcscpy(buffer, _T("0"));
    }
-   else if (MatchString(_T("ChildStatus(*)"), szParam, FALSE))
+   else if (MatchString(_T("ChildStatus(*)"), param, FALSE))
    {
       TCHAR *pEnd, szArg[256];
       UINT32 i, dwId;
       NetObj *pObject = NULL;
 
-      AgentGetParameterArg(szParam, 1, szArg, 256);
+      AgentGetParameterArg(param, 1, szArg, 256);
       dwId = _tcstoul(szArg, &pEnd, 0);
       if (*pEnd != 0)
       {
@@ -450,20 +450,20 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *szParam, UINT32 dwBufS
 
       if (pObject != NULL)
       {
-         _sntprintf(szBuffer, dwBufSize, _T("%d"), pObject->Status());
+         _sntprintf(buffer, bufSize, _T("%d"), pObject->Status());
       }
       else
       {
          dwError = DCE_NOT_SUPPORTED;
       }
    }
-   else if (MatchString(_T("ConditionStatus(*)"), szParam, FALSE))
+   else if (MatchString(_T("ConditionStatus(*)"), param, FALSE))
    {
       TCHAR *pEnd, szArg[256];
       UINT32 dwId;
       NetObj *pObject = NULL;
 
-      AgentGetParameterArg(szParam, 1, szArg, 256);
+      AgentGetParameterArg(param, 1, szArg, 256);
       dwId = _tcstoul(szArg, &pEnd, 0);
       if (*pEnd == 0)
 		{
@@ -482,7 +482,7 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *szParam, UINT32 dwBufS
       {
 			if (pObject->isTrustedNode(m_dwId))
 			{
-				_sntprintf(szBuffer, dwBufSize, _T("%d"), pObject->Status());
+				_sntprintf(buffer, bufSize, _T("%d"), pObject->Status());
 			}
 			else
 			{
@@ -500,6 +500,72 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *szParam, UINT32 dwBufS
    }
 
    return dwError;
+}
+
+/**
+ * Get parameter value from NXSL script
+ */
+UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
+{
+   TCHAR name[256];
+   nx_strncpy(name, param, 256);
+   Trim(name);
+
+   ObjectArray<NXSL_Value> args(16, 16, false);
+
+   // Can be in form parameter(arg1, arg2, ... argN)
+   TCHAR *p = _tcschr(name, _T('('));
+   if (p != NULL)
+   {
+      if (name[_tcslen(name) - 1] != _T(')'))
+         return DCE_NOT_SUPPORTED;
+      name[_tcslen(name) - 1] = 0;
+
+      *p = 0;
+      p++;
+      
+      TCHAR *s;
+      do
+      {
+         s = _tcschr(p, _T(','));
+         if (s != NULL)
+            *s = 0;
+         Trim(p);
+         args.add(new NXSL_Value(p));
+         p = s + 1;
+      } while(s != NULL);
+   }
+
+   UINT32 rc = DCE_NOT_SUPPORTED;
+   NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv);
+   if (vm != NULL)
+   {
+      vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, this)));
+      if (Type() == OBJECT_NODE)
+      {
+         vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
+      }
+      vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((Type() == OBJECT_CLUSTER) ? 1 : 0));
+      if (vm->run(&args))
+      {
+         NXSL_Value *value = vm->getResult();
+         nx_strncpy(buffer, value->getValueAsCString(), bufSize);
+         rc = DCE_SUCCESS;
+      }
+      else
+      {
+			DbgPrintf(4, _T("DataCollectionTarget(%s)->getScriptItem(%s): Script execution error: %s"), m_szName, param, vm->getErrorText());
+			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_dwId);
+         rc = DCE_COMM_ERROR;
+      }
+      delete vm;
+   }
+   else
+   {
+      args.setOwner(true);
+   }
+   DbgPrintf(7, _T("DataCollectionTarget(%s)->getScriptItem(%s): rc=%d"), m_szName, param, rc);
+   return rc;
 }
 
 /**

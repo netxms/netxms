@@ -113,6 +113,9 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
                *error = DCE_NOT_SUPPORTED;
             }
             break;
+         case DS_SCRIPT:
+            *error = dcTarget->getScriptItem(pItem->getName(), MAX_LINE_SIZE, pBuffer);
+            break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;
 			   break;

@@ -788,7 +788,8 @@ public:
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   virtual UINT32 getInternalItem(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
+   virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+   virtual UINT32 getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 
    UINT32 getTableLastValues(UINT32 dciId, CSCPMessage *msg);
 	UINT32 getThresholdSummary(CSCPMessage *msg, UINT32 baseId);
@@ -842,7 +843,7 @@ public:
 
 	const TCHAR *getDeviceId() { return CHECK_NULL_EX(m_deviceId); }
 
-	virtual UINT32 getInternalItem(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
+	virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 };
 
 /**
@@ -1182,8 +1183,9 @@ public:
 
    bool connectToSMCLP();
 
-	virtual UINT32 getInternalItem(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
-   UINT32 getItemFromSNMP(WORD port, const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer, int interpretRawValue);
+	virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+
+   UINT32 getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
 	UINT32 getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table);
    UINT32 getListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
    UINT32 getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringList **list);

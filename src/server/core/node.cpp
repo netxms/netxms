@@ -3103,7 +3103,7 @@ BOOL Node::connectToAgent(UINT32 *error, UINT32 *socketError)
 /**
  * Get DCI value via SNMP
  */
-UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer, int interpretRawValue)
+UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue)
 {
    UINT32 dwResult;
 
@@ -3122,40 +3122,40 @@ UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *szParam, UINT32 dwBufSize, 
 		{
 			if (interpretRawValue == SNMP_RAWTYPE_NONE)
 			{
-				dwResult = SnmpGet(m_snmpVersion, pTransport, szParam, NULL, 0, szBuffer, dwBufSize * sizeof(TCHAR), SG_PSTRING_RESULT);
+				dwResult = SnmpGet(m_snmpVersion, pTransport, param, NULL, 0, buffer, bufSize * sizeof(TCHAR), SG_PSTRING_RESULT);
 			}
 			else
 			{
 				BYTE rawValue[1024];
 				memset(rawValue, 0, 1024);
-				dwResult = SnmpGet(m_snmpVersion, pTransport, szParam, NULL, 0, rawValue, 1024, SG_RAW_RESULT);
+				dwResult = SnmpGet(m_snmpVersion, pTransport, param, NULL, 0, rawValue, 1024, SG_RAW_RESULT);
 				if (dwResult == SNMP_ERR_SUCCESS)
 				{
 					switch(interpretRawValue)
 					{
 						case SNMP_RAWTYPE_INT32:
-							_sntprintf(szBuffer, dwBufSize, _T("%d"), ntohl(*((LONG *)rawValue)));
+							_sntprintf(buffer, bufSize, _T("%d"), ntohl(*((LONG *)rawValue)));
 							break;
 						case SNMP_RAWTYPE_UINT32:
-							_sntprintf(szBuffer, dwBufSize, _T("%u"), ntohl(*((UINT32 *)rawValue)));
+							_sntprintf(buffer, bufSize, _T("%u"), ntohl(*((UINT32 *)rawValue)));
 							break;
 						case SNMP_RAWTYPE_INT64:
-							_sntprintf(szBuffer, dwBufSize, INT64_FMT, (INT64)ntohq(*((INT64 *)rawValue)));
+							_sntprintf(buffer, bufSize, INT64_FMT, (INT64)ntohq(*((INT64 *)rawValue)));
 							break;
 						case SNMP_RAWTYPE_UINT64:
-							_sntprintf(szBuffer, dwBufSize, UINT64_FMT, ntohq(*((QWORD *)rawValue)));
+							_sntprintf(buffer, bufSize, UINT64_FMT, ntohq(*((QWORD *)rawValue)));
 							break;
 						case SNMP_RAWTYPE_DOUBLE:
-							_sntprintf(szBuffer, dwBufSize, _T("%f"), ntohd(*((double *)rawValue)));
+							_sntprintf(buffer, bufSize, _T("%f"), ntohd(*((double *)rawValue)));
 							break;
 						case SNMP_RAWTYPE_IP_ADDR:
-							IpToStr(ntohl(*((UINT32 *)rawValue)), szBuffer);
+							IpToStr(ntohl(*((UINT32 *)rawValue)), buffer);
 							break;
 						case SNMP_RAWTYPE_MAC_ADDR:
-							MACToStr(rawValue, szBuffer);
+							MACToStr(rawValue, buffer);
 							break;
 						default:
-							szBuffer[0] = 0;
+							buffer[0] = 0;
 							break;
 					}
 				}
@@ -3167,7 +3167,7 @@ UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *szParam, UINT32 dwBufSize, 
 			dwResult = SNMP_ERR_COMM;
 		}
    }
-   DbgPrintf(7, _T("Node(%s)->GetItemFromSNMP(%s): dwResult=%d"), m_szName, szParam, dwResult);
+   DbgPrintf(7, _T("Node(%s)->GetItemFromSNMP(%s): dwResult=%d"), m_szName, param, dwResult);
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS :
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
@@ -3611,7 +3611,7 @@ end_loop:
 /**
  * Get value for server's internal parameter
  */
-UINT32 Node::getInternalItem(const TCHAR *param, UINT32 bufSize, TCHAR *buffer)
+UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 {
 	UINT32 rc = DataCollectionTarget::getInternalItem(param, bufSize, buffer);
 	if (rc == DCE_SUCCESS)

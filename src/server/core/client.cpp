@@ -214,7 +214,7 @@ THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
    // Create socket
    if ((sock = socket(AF_INET6, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
-      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("ClientListener"));
+      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("ClientListenerIPv6"));
       return THREAD_OK;
    }
 
@@ -230,7 +230,7 @@ THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
    // Bind socket
    if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in6)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, _T("ClientListener"), WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, _T("ClientListenerIPv6"), WSAGetLastError());
       closesocket(sock);
       /* TODO: we should initiate shutdown procedure here */
       return THREAD_OK;

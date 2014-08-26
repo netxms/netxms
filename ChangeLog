@@ -1,6 +1,13 @@
 *
 * 1.2.17
 *
+
+- New DCI source: NXSL script executed on server
+- Management console:
+    - Can show alarms for multiple selected objects
+    - Fixed non-working ordering in event list in alarm details view
+    - Fixed bug with LDAP user system rights
+    - Added device geolocation tracking and display on map 
 - Android console:
 	- Fix bug in notifying connection point not found
 	- Fix bug in computing interface expanded list size (removed hardcoded values)
@@ -8,12 +15,7 @@
 	- Fix aesthetic problems in expandable list (graphs and interfaces list)
 	- Integration of new support library
 	- Target to new API version (20)
-- Management console:
-	- Can show alarms for multiple selected objects
-	- Fixed non-working ordering in event list in alarm details view
-    - Fixed bug with LDAP user system rights
-    - Added device geolocation tracking and display on map 
-- Fixed issues: #542, #593, #613, #624
+- Fixed issues: #542, #593, #613, #624, #632
 
 
 *
