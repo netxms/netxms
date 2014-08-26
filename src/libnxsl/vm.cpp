@@ -218,7 +218,18 @@ bool NXSL_VM::run(UINT32 argc, NXSL_Value **argv,
                   NXSL_VariableSystem *pUserLocals, NXSL_VariableSystem **ppGlobals,
                   NXSL_VariableSystem *pConstants, const TCHAR *entryPoint)
 {
-   UINT32 i;
+   ObjectArray<NXSL_Value> args(argc, 8, false);
+   return run(&args, pUserLocals, ppGlobals, pConstants, entryPoint);
+}
+
+/**
+ * Run program
+ * Returns true on success and false on error
+ */
+bool NXSL_VM::run(ObjectArray<NXSL_Value> *argv,
+                  NXSL_VariableSystem *pUserLocals, NXSL_VariableSystem **ppGlobals,
+                  NXSL_VariableSystem *pConstants, const TCHAR *entryPoint)
+{
    NXSL_VariableSystem *pSavedGlobals, *pSavedConstants = NULL;
    NXSL_Value *pValue;
    TCHAR szBuffer[32];
@@ -235,10 +246,10 @@ bool NXSL_VM::run(UINT32 argc, NXSL_Value **argv,
 
    // Create local variable system for main() and bind arguments
    m_pLocals = (pUserLocals == NULL) ? new NXSL_VariableSystem : pUserLocals;
-   for(i = 0; i < argc; i++)
+   for(int i = 0; i < argv->size(); i++)
    {
       _sntprintf(szBuffer, 32, _T("$%d"), i + 1);
-      m_pLocals->create(szBuffer, argv[i]);
+      m_pLocals->create(szBuffer, argv->get(i));
    }
 
    // Preserve original global variables and constants

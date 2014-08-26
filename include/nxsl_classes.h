@@ -594,6 +594,9 @@ public:
 	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_pGlobals->find(pszName); }
 
    bool load(NXSL_Program *program);
+   bool run(ObjectArray<NXSL_Value> *argv, NXSL_VariableSystem *pUserLocals = NULL,
+            NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL,
+            const TCHAR *entryPoint = NULL);
    bool run(UINT32 argc = 0, NXSL_Value **argv = NULL, NXSL_VariableSystem *pUserLocals = NULL,
             NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL,
             const TCHAR *entryPoint = NULL);
