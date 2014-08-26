@@ -120,7 +120,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
    private QuadTree<GeoLocation> locationTree = new QuadTree<GeoLocation>();
    private AbstractObject historyObject = null;
    private Date till = new Date();
-   private int timeFrame = 60*60*1000;
+   private long timeFrame = 60*60*1000;
    private boolean strictTime = false;
    private int highlightobjectID = -1;
    private ToolTip toolTip;
@@ -1031,7 +1031,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	/**
 	 * Sets new view period in minutes
 	 */
-	public void changeTimePeriod(int timePeriod)
+	public void changeTimePeriod(long timePeriod)
 	{
 	   strictTime = false;
 	   timeFrame = timePeriod * 60 * 1000;

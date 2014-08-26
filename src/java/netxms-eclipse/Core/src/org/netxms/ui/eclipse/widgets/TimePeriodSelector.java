@@ -160,7 +160,7 @@ public class TimePeriodSelector extends Composite
       }
       else 
       {
-         result = timeTo.getValue().getTime() - timeFrom.getValue().getTime();
+         result = (timeTo.getValue().getTime() - timeFrom.getValue().getTime()) / (60000);
       }
       return result; //TODO: implement
    }
