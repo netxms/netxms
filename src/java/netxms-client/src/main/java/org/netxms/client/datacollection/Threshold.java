@@ -54,7 +54,7 @@ public class Threshold
 	private int repeatInterval;
 	private String value;
 	private boolean active;
-	private int currentSeverity;
+	private Severity currentSeverity;
 	private Date lastEventTimestamp;
 	
 	/**
@@ -76,7 +76,7 @@ public class Threshold
 		repeatInterval = msg.getVariableAsInteger(varId++);
 		value = msg.getVariableAsString(varId++);
 		active = msg.getVariableAsBoolean(varId++);
-		currentSeverity = msg.getVariableAsInteger(varId++);
+		currentSeverity = Severity.getByValue(msg.getVariableAsInteger(varId++));
 		lastEventTimestamp = msg.getVariableAsDate(varId);
 	}
 	
@@ -277,7 +277,7 @@ public class Threshold
 	/**
 	 * @return the currentSeverity
 	 */
-	public int getCurrentSeverity()
+	public Severity getCurrentSeverity()
 	{
 		return currentSeverity;
 	}

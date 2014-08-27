@@ -88,7 +88,10 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.base.NXCPMsgWaitQueue;
 import org.netxms.base.NXCommon;
+import org.netxms.client.agent.config.ConfigContent;
+import org.netxms.client.agent.config.ConfigListElement;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
@@ -171,8 +174,6 @@ import org.netxms.client.topology.NetworkPath;
 import org.netxms.client.topology.Route;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.client.topology.WirelessStation;
-import org.netxms.client.agent.config.ConfigContent;
-import org.netxms.client.agent.config.ConfigListElement;
 
 /**
  * Communication session with NetXMS server.
@@ -4055,13 +4056,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       {
          msg.setVariableInt16(NXCPCodes.VID_STATUS_CALCULATION_ALG, data.getStatusCalculationMethod());
          msg.setVariableInt16(NXCPCodes.VID_STATUS_PROPAGATION_ALG, data.getStatusPropagationMethod());
-         msg.setVariableInt16(NXCPCodes.VID_FIXED_STATUS, data.getFixedPropagatedStatus());
+         msg.setVariableInt16(NXCPCodes.VID_FIXED_STATUS, data.getFixedPropagatedStatus().getValue());
          msg.setVariableInt16(NXCPCodes.VID_STATUS_SHIFT, data.getStatusShift());
-         int[] transformation = data.getStatusTransformation();
-         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_1, transformation[0]);
-         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_2, transformation[1]);
-         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_3, transformation[2]);
-         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_4, transformation[3]);
+         ObjectStatus[] transformation = data.getStatusTransformation();
+         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_1, transformation[0].getValue());
+         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_2, transformation[1].getValue());
+         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_3, transformation[2].getValue());
+         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_4, transformation[3].getValue());
          msg.setVariableInt16(NXCPCodes.VID_STATUS_SINGLE_THRESHOLD, data.getStatusSingleThreshold());
          int[] thresholds = data.getStatusThresholds();
          msg.setVariableInt16(NXCPCodes.VID_STATUS_THRESHOLD_1, thresholds[0]);
@@ -4987,7 +4988,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_EVENT_INFO);
       msg.setVariableInt32(NXCPCodes.VID_EVENT_CODE, (int) evt.getCode());
-      msg.setVariableInt32(NXCPCodes.VID_SEVERITY, evt.getSeverity());
+      msg.setVariableInt32(NXCPCodes.VID_SEVERITY, evt.getSeverity().getValue());
       msg.setVariableInt32(NXCPCodes.VID_FLAGS, evt.getFlags());
       msg.setVariable(NXCPCodes.VID_NAME, evt.getName());
       msg.setVariable(NXCPCodes.VID_MESSAGE, evt.getMessage());

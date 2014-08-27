@@ -23,25 +23,26 @@ import java.util.Map;
 import org.netxms.base.Logger;
 
 /**
- * Event/alarm severity
+ * Status codes
  */
-public enum Severity
+public enum ObjectStatus
 {
    NORMAL(0),
    WARNING(1),
    MINOR(2),
    MAJOR(3),
    CRITICAL(4),
-   UNKNOWN(5),    // means "from current event" in alarm creation
-   TERMINATE(6),
-   RESOLVE(7);
+   UNKNOWN(5),
+   UNMANAGED(6),
+   DISABLED(7),
+   TESTING(8);
 
    private int value;
-   private static Map<Integer, Severity> lookupTable = new HashMap<Integer, Severity>();
+   private static Map<Integer, ObjectStatus> lookupTable = new HashMap<Integer, ObjectStatus>();
 
    static
    {
-      for(Severity element : Severity.values())
+      for(ObjectStatus element : ObjectStatus.values())
       {
          lookupTable.put(element.value, element);
       }
@@ -50,7 +51,7 @@ public enum Severity
    /**
     * @param value
     */
-   private Severity(int value)
+   private ObjectStatus(int value)
    {
       this.value = value;
    }
@@ -67,13 +68,13 @@ public enum Severity
     * @param value
     * @return
     */
-   public static Severity getByValue(int value)
+   public static ObjectStatus getByValue(int value)
    {
-      final Severity element = lookupTable.get(value);
+      final ObjectStatus element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(Severity.class.getName(), "Unknown element " + value);
-         return NORMAL; // fallback
+         Logger.warning(ObjectStatus.class.getName(), "Unknown element " + value);
+         return UNKNOWN; // fallback
       }
       return element;
    }

@@ -35,7 +35,7 @@ import org.netxms.base.NXCommon;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.ModuleDataProvider;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 
 /**
  * Abstract base class for all NetXMS objects (both built-in and provided by extensions)
@@ -113,7 +113,7 @@ public abstract class AbstractObject
 	protected UUID guid;
 	protected String objectName;
 	protected int objectClass;
-	protected int status = Severity.UNKNOWN;
+	protected ObjectStatus status = ObjectStatus.UNKNOWN;
 	protected boolean isDeleted = false;
 	protected InetAddress primaryIP;
 	protected String comments;
@@ -125,9 +125,9 @@ public abstract class AbstractObject
 	protected HashSet<AccessListElement> accessList = new HashSet<AccessListElement>(0);
 	protected int statusCalculationMethod;
 	protected int statusPropagationMethod;
-	protected int fixedPropagatedStatus;
+	protected ObjectStatus fixedPropagatedStatus;
 	protected int statusShift;
-	protected int[] statusTransformation;
+	protected ObjectStatus[] statusTransformation;
 	protected int statusSingleThreshold;
 	protected int[] statusThresholds;
 	protected HashSet<Long> parents = new HashSet<Long>(0);
@@ -164,13 +164,13 @@ public abstract class AbstractObject
 
 		statusCalculationMethod = CALCULATE_DEFAULT;
 		statusPropagationMethod = PROPAGATE_DEFAULT;
-		fixedPropagatedStatus = Severity.NORMAL;
+		fixedPropagatedStatus = ObjectStatus.NORMAL;
 		statusShift = 0;
-		statusTransformation = new int[4];
-		statusTransformation[0] = Severity.WARNING;
-		statusTransformation[1] = Severity.MINOR;
-		statusTransformation[2] = Severity.MAJOR;
-		statusTransformation[3] = Severity.CRITICAL;
+		statusTransformation = new ObjectStatus[4];
+		statusTransformation[0] = ObjectStatus.WARNING;
+		statusTransformation[1] = ObjectStatus.MINOR;
+		statusTransformation[2] = ObjectStatus.MAJOR;
+		statusTransformation[3] = ObjectStatus.CRITICAL;
 		statusSingleThreshold = 75;
 		statusThresholds = new int[4];
 		statusThresholds[0] = 75;
@@ -197,7 +197,7 @@ public abstract class AbstractObject
 		objectClass = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_CLASS);
 		primaryIP = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
 		isDeleted = msg.getVariableAsBoolean(NXCPCodes.VID_IS_DELETED);
-		status = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_STATUS);
+		status = ObjectStatus.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_STATUS));
 		comments = msg.getVariableAsString(NXCPCodes.VID_COMMENTS);
 		geolocation = new GeoLocation(msg);
 		image = msg.getVariableAsUUID(NXCPCodes.VID_IMAGE);
@@ -207,13 +207,13 @@ public abstract class AbstractObject
 		
 		statusCalculationMethod = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_CALCULATION_ALG);
 		statusPropagationMethod = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_PROPAGATION_ALG);
-		fixedPropagatedStatus = msg.getVariableAsInteger(NXCPCodes.VID_FIXED_STATUS);
+		fixedPropagatedStatus = ObjectStatus.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_FIXED_STATUS));
 		statusShift = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_SHIFT);
-		statusTransformation = new int[4];
-		statusTransformation[0] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_1);
-		statusTransformation[1] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_2);
-		statusTransformation[2] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_3);
-		statusTransformation[3] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_4);
+		statusTransformation = new ObjectStatus[4];
+		statusTransformation[0] = ObjectStatus.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_1));
+		statusTransformation[1] = ObjectStatus.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_2));
+		statusTransformation[2] = ObjectStatus.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_3));
+		statusTransformation[3] = ObjectStatus.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_4));
 		statusSingleThreshold = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_SINGLE_THRESHOLD);
 		statusThresholds = new int[4];
 		statusThresholds[0] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_THRESHOLD_1);
@@ -363,7 +363,7 @@ public abstract class AbstractObject
 	/**
 	 * @return the status
 	 */
-	public int getStatus()
+	public ObjectStatus getStatus()
 	{
 		return status;
 	}
@@ -753,7 +753,7 @@ public abstract class AbstractObject
 	/**
 	 * @return the fixedPropagatedStatus
 	 */
-	public int getFixedPropagatedStatus()
+	public ObjectStatus getFixedPropagatedStatus()
 	{
 		return fixedPropagatedStatus;
 	}
@@ -769,7 +769,7 @@ public abstract class AbstractObject
 	/**
 	 * @return the statusTransformation
 	 */
-	public int[] getStatusTransformation()
+	public ObjectStatus[] getStatusTransformation()
 	{
 		return statusTransformation;
 	}
