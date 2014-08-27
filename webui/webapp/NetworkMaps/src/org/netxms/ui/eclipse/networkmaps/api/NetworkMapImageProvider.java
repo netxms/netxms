@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.networkmaps.api;
 
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 
 /**
@@ -40,5 +41,5 @@ public interface NetworkMapImageProvider
 	 * @param status status code
 	 * @return icon for given status or null to continue search
 	 */
-	public Image getStatusIcon(int status);
+	public Image getStatusIcon(ObjectStatus status);
 }

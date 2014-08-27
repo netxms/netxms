@@ -24,7 +24,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -187,24 +187,24 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 				switch(iface.getOperState())
 				{
 					case Interface.OPER_STATE_UP:
-						return StatusDisplayInfo.getStatusColor(Severity.NORMAL);
+						return StatusDisplayInfo.getStatusColor(ObjectStatus.NORMAL);
 					case Interface.OPER_STATE_DOWN:
-						return StatusDisplayInfo.getStatusColor((iface.getAdminState() == Interface.ADMIN_STATE_DOWN) ? Severity.DISABLED : Severity.CRITICAL);
+						return StatusDisplayInfo.getStatusColor((iface.getAdminState() == Interface.ADMIN_STATE_DOWN) ? ObjectStatus.DISABLED : ObjectStatus.CRITICAL);
 					case Interface.OPER_STATE_TESTING:
-						return StatusDisplayInfo.getStatusColor(Severity.TESTING);
+						return StatusDisplayInfo.getStatusColor(ObjectStatus.TESTING);
 				}
-				return StatusDisplayInfo.getStatusColor(Severity.UNKNOWN);
+				return StatusDisplayInfo.getStatusColor(ObjectStatus.UNKNOWN);
 			case InterfacesTab.COLUMN_ADMIN_STATE:
 				switch(iface.getAdminState())
 				{
 					case Interface.ADMIN_STATE_UP:
-						return StatusDisplayInfo.getStatusColor(Severity.NORMAL);
+						return StatusDisplayInfo.getStatusColor(ObjectStatus.NORMAL);
 					case Interface.ADMIN_STATE_DOWN:
-						return StatusDisplayInfo.getStatusColor(Severity.DISABLED);
+						return StatusDisplayInfo.getStatusColor(ObjectStatus.DISABLED);
 					case Interface.ADMIN_STATE_TESTING:
-						return StatusDisplayInfo.getStatusColor(Severity.TESTING);
+						return StatusDisplayInfo.getStatusColor(ObjectStatus.TESTING);
 				}
-				return StatusDisplayInfo.getStatusColor(Severity.UNKNOWN);
+				return StatusDisplayInfo.getStatusColor(ObjectStatus.UNKNOWN);
 			default:
 				return null;
 		}

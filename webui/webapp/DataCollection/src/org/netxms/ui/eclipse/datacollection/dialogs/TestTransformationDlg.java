@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.TransformationTestResult;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -123,7 +124,7 @@ public class TestTransformationDlg extends Dialog
 		status = new CLabel(dialogArea, SWT.BORDER);
 		status.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		status.setText(Messages.get().TestTransformationDlg_Idle);
-		status.setImage(StatusDisplayInfo.getStatusImage(Severity.UNKNOWN));
+		status.setImage(StatusDisplayInfo.getStatusImage(ObjectStatus.UNKNOWN));
 		
 		result = new LabeledText(dialogArea, SWT.NONE);
 		result.setLabel(Messages.get().TestTransformationDlg_Result);

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ public class NodeListComparator extends ViewerComparator
 				result = node1.getObjectName().compareToIgnoreCase(node2.getObjectName());
 				break;
 			case NodesTab.COLUMN_STATUS:
-				result = node1.getStatus() - node2.getStatus();
+				result = node1.getStatus().compareTo(node2.getStatus());
 				break;
 			case NodesTab.COLUMN_IP_ADDRESS:
 				result = ComparatorHelper.compareInetAddresses(node1.getPrimaryIP(), node2.getPrimaryIP());

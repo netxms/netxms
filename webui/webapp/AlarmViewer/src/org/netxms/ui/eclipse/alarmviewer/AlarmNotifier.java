@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -202,9 +202,18 @@ public class AlarmNotifier
       if (alarm.getState() != Alarm.STATE_OUTSTANDING)
          return;
 
-      String fileName = getMelodyAndDownloadIfRequired(severityArray[alarm.getCurrentSeverity()]);
+      String fileName;
+      try
+      {
+         fileName = getMelodyAndDownloadIfRequired(severityArray[alarm.getCurrentSeverity().getValue()]);
+      }
+      catch(ArrayIndexOutOfBoundsException e)
+      {
+         Activator.logError("Invalid alarm severity", e);
+         fileName = null;
+      }
 
-      if (!fileName.equals("") && fileName != null)
+      if ((fileName != null) && !fileName.isEmpty())
       {
          JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
          File localFile = new File(workspaceUrl.getPath(), fileName);

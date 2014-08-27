@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
@@ -223,9 +224,9 @@ public class LastValuesLabelProvider extends LabelProvider implements ITableLabe
 	public Color getForeground(Object element, int columnIndex)
 	{
 		if (((DciValue)element).getStatus() == DataCollectionObject.DISABLED)
-			return StatusDisplayInfo.getStatusColor(Severity.UNMANAGED);
+			return StatusDisplayInfo.getStatusColor(ObjectStatus.UNMANAGED);
 		if (showErrors && ((DciValue)element).getErrorCount() > 0)
-			return StatusDisplayInfo.getStatusColor(Severity.CRITICAL);
+			return StatusDisplayInfo.getStatusColor(ObjectStatus.CRITICAL);
 		return null;
 	}
 

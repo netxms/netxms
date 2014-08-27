@@ -240,16 +240,16 @@ public class RuleSituation extends PropertyPage
 	/**
 	 * Delete attribute(s) from list
 	 */
-	@SuppressWarnings("unchecked")
 	private void deleteAttribute()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		Iterator<Entry<String, String>> it = selection.iterator();
+		Iterator<?> it = selection.iterator();
 		if (it.hasNext())
 		{
 			while(it.hasNext())
 			{
-				Entry<String, String> e = it.next();
+			   @SuppressWarnings("unchecked")
+				Entry<String, String> e = (Entry<String, String>) it.next();
 				attributes.remove(e.getKey());
 			}
 	      viewer.setInput(attributes.entrySet().toArray());
