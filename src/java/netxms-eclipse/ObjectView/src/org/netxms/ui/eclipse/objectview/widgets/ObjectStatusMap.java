@@ -247,7 +247,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			while(it.hasNext())
 			{
 				AbstractObject o = it.next();
-				if (((1 << o.getStatus()) & severityFilter) == 0)
+				if (((1 << o.getStatus().getValue()) & severityFilter) == 0)
 				{
 					it.remove();
 				}
@@ -316,7 +316,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			if (!(o instanceof AbstractNode))
 				continue;
 			
-			if (((1 << o.getStatus()) & severityFilter) == 0)
+			if (((1 << o.getStatus().getValue()) & severityFilter) == 0)
 				continue;
 
 			if (section == null)

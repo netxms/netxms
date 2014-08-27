@@ -26,7 +26,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.base.Glob;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.ServiceCheck;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -102,7 +102,7 @@ public class ObjectFilter extends ViewerFilter
 				return false;
 		}
 		
-		if (hideUnmanaged && (((AbstractObject)element).getStatus() == Severity.UNMANAGED))
+		if (hideUnmanaged && (((AbstractObject)element).getStatus() == ObjectStatus.UNMANAGED))
 			return false;
 		
 		if (hideTemplateChecks && (element instanceof ServiceCheck) && ((ServiceCheck)element).isTemplate())

@@ -19,10 +19,9 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import java.util.Arrays;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IViewPart;
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.AbstractObject;
@@ -68,7 +67,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 		chart.setTransposed(config.isTransposed());
 		chart.setTranslucent(config.isTranslucent());
 
-		for(int i = 0; i <= Severity.UNKNOWN; i++)
+		for(int i = 0; i <= ObjectStatus.UNKNOWN.getValue(); i++)
 		{
 			chart.addParameter(new GraphItem(0, 0, 0, 0, StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i)), 0.0);
 			chart.setPaletteEntry(i, new ChartColor(StatusDisplayInfo.getStatusColor(i).getRGB()));
@@ -113,8 +112,8 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 	{
 		for(AbstractObject o : root.getAllChilds(-1))
 		{
-			if ((o.getStatus() <= Severity.UNKNOWN) && filterObject(o))
-				objectCount[o.getStatus()]++;
+         if ((o.getStatus().compareTo(ObjectStatus.UNKNOWN) <= 0) && filterObject(o))
+				objectCount[o.getStatus().getValue()]++;
 		}
 	}
 

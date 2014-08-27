@@ -78,7 +78,7 @@ public class InterfaceListComparator extends ViewerComparator
 				result = iface1.getSlot() - iface2.getSlot();
 				break;
 			case InterfacesTab.COLUMN_STATUS:
-				result = iface1.getStatus() - iface2.getStatus();
+				result = iface1.getStatus().compareTo(iface2.getStatus());
 				break;
 			case InterfacesTab.COLUMN_TYPE:
 				result = iface1.getIfType() - iface2.getIfType();

@@ -22,6 +22,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.BaseLabelProvider;
 import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.ILightweightLabelDecorator;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 
 /**
@@ -54,7 +55,7 @@ public class ObjectDecorator extends BaseLabelProvider implements ILightweightLa
 	@Override
 	public void decorate(Object element, IDecoration decoration)
 	{
-		int status = ((AbstractObject)element).getStatus();
-		decoration.addOverlay(statusImages[status], IDecoration.BOTTOM_RIGHT);
+		ObjectStatus status = ((AbstractObject)element).getStatus();
+		decoration.addOverlay(statusImages[status.getValue()], IDecoration.BOTTOM_RIGHT);
 	}
 }

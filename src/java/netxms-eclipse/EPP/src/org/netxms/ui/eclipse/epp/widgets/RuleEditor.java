@@ -614,7 +614,7 @@ public class RuleEditor extends Composite
 	 * @param parent parent composite
 	 * @param severity severity code
 	 */
-	private void addSeverityLabel(Composite parent, int severity, MouseListener mouseListener)
+	private void addSeverityLabel(Composite parent, Severity severity, MouseListener mouseListener)
 	{
 		CLabel clabel = createCLabel(parent, 2, false);
 		clabel.setText(StatusDisplayInfo.getStatusText(severity));
@@ -642,7 +642,7 @@ public class RuleEditor extends Composite
 		if ((rule.getFlags() & EventProcessingPolicyRule.GENERATE_ALARM) != 0)
 		{
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleAlarm#10"); //$NON-NLS-1$
-			if (rule.getAlarmSeverity() < Severity.UNMANAGED)
+			if (rule.getAlarmSeverity().compareTo(Severity.TERMINATE) < 0)
 			{
 				addActionGroupLabel(clientArea, Messages.get().RuleEditor_GenerateAlarm, editor.getImageAlarm(), listener);
 				
@@ -656,14 +656,14 @@ public class RuleEditor extends Composite
 					createLabel(clientArea, 1, false, String.format(Messages.get().RuleEditor_WithKey, rule.getAlarmKey()), null);
 				}
 			}
-			else if (rule.getAlarmSeverity() == Severity.UNMANAGED)
+			else if (rule.getAlarmSeverity() == Severity.TERMINATE)
 			{
 				addActionGroupLabel(clientArea, Messages.get().RuleEditor_TerminateAlarms, editor.getImageTerminate(), listener);
 				createLabel(clientArea, 1, false, String.format(Messages.get().RuleEditor_WithKey, rule.getAlarmKey()), listener);
 				if ((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0)
 					createLabel(clientArea, 1, false, Messages.get().RuleEditor_UserRegexpForTerminate, listener);
 			}
-			else if (rule.getAlarmSeverity() == Severity.DISABLED)
+			else if (rule.getAlarmSeverity() == Severity.RESOLVE)
 			{
 				addActionGroupLabel(clientArea, Messages.get().RuleEditor_ResolveAlarms, editor.getImageTerminate(), listener);
 				createLabel(clientArea, 1, false, String.format(Messages.get().RuleEditor_WithKey, rule.getAlarmKey()), listener);

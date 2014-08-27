@@ -65,7 +65,7 @@ public class SeverityConditionEditor extends ConditionEditor
 	{
 		severity = new ImageCombo(this, SWT.READ_ONLY | SWT.BORDER);
 		toolkit.adapt(severity);
-		for(int i = Severity.NORMAL; i <= Severity.CRITICAL; i++)
+		for(int i = Severity.NORMAL.getValue(); i <= Severity.CRITICAL.getValue(); i++)
 			severity.add(StatusDisplayInfo.getStatusImage(i), StatusDisplayInfo.getStatusText(i));
 		severity.select(0);
 		GridData gd = new GridData();

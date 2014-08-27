@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -158,7 +159,7 @@ public class StatusCalculation extends PropertyPage
 		comboFixedStatus.setLayoutData(gd);
 		for(int i = 0; i < 5; i++)
 			comboFixedStatus.add(StatusDisplayInfo.getStatusText(i));
-		comboFixedStatus.select(object.getFixedPropagatedStatus());
+		comboFixedStatus.select(object.getFixedPropagatedStatus().getValue());
 		
 		radioPropRelative = new Button(group, SWT.RADIO);
 		radioPropRelative.setText(Messages.get().StatusCalculation_Relative);
@@ -206,7 +207,7 @@ public class StatusCalculation extends PropertyPage
 			comboTranslatedStatus[i].setLayoutData(gd);
 			for(int j = 0; j < 5; j++)
 				comboTranslatedStatus[i].add(StatusDisplayInfo.getStatusText(j));
-			comboTranslatedStatus[i].select(object.getStatusTransformation()[i]);
+			comboTranslatedStatus[i].select(object.getStatusTransformation()[i].getValue());
 		}
 	}
 
@@ -440,11 +441,11 @@ public class StatusCalculation extends PropertyPage
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setStatusCalculationMethod(calculationMethod);
 		md.setStatusPropagationMethod(propagationMethod);
-		md.setFixedPropagatedStatus(comboFixedStatus.getSelectionIndex());
+		md.setFixedPropagatedStatus(ObjectStatus.getByValue(comboFixedStatus.getSelectionIndex()));
 		md.setStatusShift(Integer.parseInt(textRelativeStatus.getText()));
-		int[] transformations = new int[4];
+		ObjectStatus[] transformations = new ObjectStatus[4];
 		for(int i = 0; i < 4; i++)
-			transformations[i] = comboTranslatedStatus[i].getSelectionIndex();
+			transformations[i] = ObjectStatus.getByValue(comboTranslatedStatus[i].getSelectionIndex());
 		md.setStatusTransformation(transformations);
 		md.setStatusSingleThreshold(Integer.parseInt(textSingleThreshold.getText()));
 		int[] thresholds = new int[4];

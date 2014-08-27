@@ -218,10 +218,10 @@ public class RuleAlarm extends PropertyPage
 		severityGroup.setLayoutData(gd);
 		new Label(severityGroup, SWT.NONE).setText(Messages.get().RuleAlarm_Severity);
 		alarmSeverity = new ImageCombo(severityGroup, SWT.DROP_DOWN | SWT.READ_ONLY | SWT.BORDER);
-		for(int i = 0; i < Severity.UNKNOWN; i++)
+		for(int i = 0; i < Severity.UNKNOWN.getValue(); i++)
 			alarmSeverity.add(StatusDisplayInfo.getStatusImage(i), StatusDisplayInfo.getStatusText(i));
 		alarmSeverity.add(StatusDisplayInfo.getStatusImage(Severity.UNKNOWN), Messages.get().RuleAlarm_FromEvent);
-		alarmSeverity.select(rule.getAlarmSeverity());
+		alarmSeverity.select(rule.getAlarmSeverity().getValue());
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
@@ -283,10 +283,10 @@ public class RuleAlarm extends PropertyPage
 		if ((rule.getFlags() & EventProcessingPolicyRule.GENERATE_ALARM) == 0)
 			return ALARM_NO_ACTION;
 		
-		if (rule.getAlarmSeverity() < Severity.UNMANAGED)
+		if (rule.getAlarmSeverity().compareTo(Severity.TERMINATE) < 0)
 			return ALARM_CREATE;
 		
-		if (rule.getAlarmSeverity() == Severity.DISABLED)
+		if (rule.getAlarmSeverity() == Severity.RESOLVE)
 			return ALARM_RESOLVE;
 		
 		return ALARM_TERMINATE;
@@ -341,14 +341,14 @@ public class RuleAlarm extends PropertyPage
 				}
 				rule.setAlarmMessage(alarmMessage.getText());
 				rule.setAlarmKey(alarmKeyCreate.getText());
-				rule.setAlarmSeverity(alarmSeverity.getSelectionIndex());
+				rule.setAlarmSeverity(Severity.getByValue(alarmSeverity.getSelectionIndex()));
 				rule.setAlarmTimeoutEvent(timeoutEvent.getEventCode());
 				rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.GENERATE_ALARM);
 				break;
 			case ALARM_RESOLVE:
 			case ALARM_TERMINATE:
 				rule.setAlarmKey(alarmKeyTerminate.getText());
-				rule.setAlarmSeverity((alarmAction == ALARM_TERMINATE) ? Severity.UNMANAGED : Severity.DISABLED);
+				rule.setAlarmSeverity((alarmAction == ALARM_TERMINATE) ? Severity.TERMINATE : Severity.RESOLVE);
 				rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.GENERATE_ALARM);
 				if (checkTerminateWithRegexp.getSelection())
 					rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.TERMINATE_BY_REGEXP);

@@ -90,7 +90,7 @@ public class EditEventTemplateDialog extends Dialog
       severity.add(StatusDisplayInfo.getStatusText(Severity.MINOR));
       severity.add(StatusDisplayInfo.getStatusText(Severity.MAJOR));
       severity.add(StatusDisplayInfo.getStatusText(Severity.CRITICAL));
-      severity.select(object.getSeverity());
+      severity.select(object.getSeverity().getValue());
       
       name = new LabeledText(dialogArea, SWT.NONE);
       name.setLabel(Messages.get().EditEventTemplateDialog_EventName);
@@ -141,7 +141,7 @@ public class EditEventTemplateDialog extends Dialog
 	protected void okPressed()
 	{
 		object.setName(name.getText());
-		object.setSeverity(severity.getSelectionIndex());
+		object.setSeverity(Severity.getByValue(severity.getSelectionIndex()));
 		object.setMessage(message.getText());
 		object.setDescription(description.getText());
 		object.setFlags(optionLog.getSelection() ? EventTemplate.FLAG_WRITE_TO_LOG : 0);
