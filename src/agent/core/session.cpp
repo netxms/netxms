@@ -807,17 +807,15 @@ UINT32 CommSession::upgrade(CSCPMessage *pRequest)
    }
 }
 
-
-//
-// Get agent's configuration file
-//
-
+/**
+ * Get agent's configuration file
+ */
 void CommSession::getConfig(CSCPMessage *pMsg)
 {
    if (m_bMasterServer)
    {
       pMsg->SetVariable(VID_RCC,
-         pMsg->SetVariableFromFile(VID_CONFIG_FILE, g_szConfigFile) ? ERR_SUCCESS : ERR_IO_FAILURE);
+         pMsg->setFieldFromFile(VID_CONFIG_FILE, g_szConfigFile) ? ERR_SUCCESS : ERR_IO_FAILURE);
    }
    else
    {

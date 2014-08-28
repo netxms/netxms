@@ -344,6 +344,18 @@
 #define DCTDESC_SYSTEM_PROCESSES                  _T("Processes")
 
 /**
+ * API for CommSession
+ */
+class AbstractCommSession
+{
+public:
+   virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
+   virtual BOOL isMasterServer() = 0;
+   virtual UINT32 getServerAddress() = 0;
+   virtual void sendMessage(CSCPMessage *pMsg) = 0;
+};
+
+/**
  * Subagent's parameter information
  */
 typedef struct
@@ -398,13 +410,13 @@ typedef struct
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_ACTION;
 
-/**
- * Subagent initialization structure
- */
 #define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20110301)
 
 class CSCPMessage;
 
+/**
+ * Subagent initialization structure
+ */
 typedef struct
 {
    UINT32 magic;    // Magic number to check if subagent uses correct version of this structure
@@ -412,7 +424,7 @@ typedef struct
    TCHAR version[32];
 	BOOL (* init)(Config *);   // Called to initialize subagent. Can be NULL.
    void (* shutdown)();       // Called at subagent unload. Can be NULL.
-   BOOL (* commandHandler)(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session);
+   BOOL (* commandHandler)(UINT32 command, CSCPMessage *request, CSCPMessage *response, AbstractCommSession *session);
    UINT32 numParameters;
    NETXMS_SUBAGENT_PARAM *parameters;
    UINT32 numLists;
@@ -497,18 +509,6 @@ inline void ret_uint64(TCHAR *rbuf, QWORD value)
    _sntprintf(rbuf, MAX_RESULT_LENGTH, UINT64_FMT, value);
 #endif   /* _WIN32 */
 }
-
-/**
- * Api for CommSession
- */
-class AbstractCommSession
-{
-public:
-   virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
-   virtual BOOL isMasterServer() = 0;
-   virtual UINT32 getServerAddress() = 0;
-   virtual void sendMessage(CSCPMessage *pMsg) = 0;
-};
 
 //
 // API for subagents

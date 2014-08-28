@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="windows-1251"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="winnt"
-	ProjectGUID="{E95263B5-A248-4163-95F3-E33CA679AEB3}"
-	RootNamespace="winnt"
+	Name="libpng"
+	ProjectGUID="{C1A5E28A-CF47-4D96-9656-3312F16E3724}"
+	RootNamespace="libpng"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -43,14 +43,14 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\include;..\..\..\libpng"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;WINNT_EXPORTS"
+				AdditionalIncludeDirectories="..\..\include;..\zlib"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBPNG_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="false"
+				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -64,11 +64,85 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="netapi32.lib psapi.lib wtsapi32.lib ws2_32.lib iphlpapi.lib msi.lib"
-				OutputFile="$(OutDir)\$(ProjectName).nsm"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\..\include;..\zlib"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBPNG_EXPORTS"
+				RuntimeLibrary="2"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				LinkIncremental="1"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -122,8 +196,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\include;..\..\..\libpng"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;WINNT_EXPORTS"
+				AdditionalIncludeDirectories="..\..\include;..\zlib"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBPNG_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -143,90 +217,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="netapi32.lib psapi.lib wtsapi32.lib ws2_32.lib iphlpapi.lib ntdll.lib msi.lib"
-				OutputFile="$(OutDir)\$(ProjectName).nsm"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
-			CharacterSet="1"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\include;..\..\..\libpng"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;WINNT_EXPORTS"
-				RuntimeLibrary="2"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="netapi32.lib psapi.lib wtsapi32.lib ws2_32.lib iphlpapi.lib msi.lib"
-				OutputFile="$(OutDir)\$(ProjectName).nsm"
-				LinkIncremental="1"
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -279,8 +273,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\include;..\..\..\libpng"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;WINNT_EXPORTS"
+				AdditionalIncludeDirectories="..\..\include;..\zlib"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBPNG_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -298,8 +292,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="netapi32.lib psapi.lib wtsapi32.lib ws2_32.lib iphlpapi.lib ntdll.lib msi.lib"
-				OutputFile="$(OutDir)\$(ProjectName).nsm"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -342,27 +334,63 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\main.cpp"
+				RelativePath=".\png.c"
 				>
 			</File>
 			<File
-				RelativePath=".\msi.cpp"
+				RelativePath=".\pngerror.c"
 				>
 			</File>
 			<File
-				RelativePath=".\net.cpp"
+				RelativePath=".\pngget.c"
 				>
 			</File>
 			<File
-				RelativePath=".\png.cpp"
+				RelativePath=".\pngmem.c"
 				>
 			</File>
 			<File
-				RelativePath=".\procinfo.cpp"
+				RelativePath=".\pngpread.c"
 				>
 			</File>
 			<File
-				RelativePath=".\system.cpp"
+				RelativePath=".\pngread.c"
+				>
+			</File>
+			<File
+				RelativePath=".\pngrio.c"
+				>
+			</File>
+			<File
+				RelativePath=".\pngrtran.c"
+				>
+			</File>
+			<File
+				RelativePath=".\pngrutil.c"
+				>
+			</File>
+			<File
+				RelativePath=".\pngset.c"
+				>
+			</File>
+			<File
+				RelativePath=".\pngtrans.c"
+				>
+			</File>
+			<File
+				RelativePath=".\pngwio.c"
+				>
+			</File>
+			<File
+				RelativePath=".\pngwrite.c"
+				>
+			</File>
+			<File
+				RelativePath=".\pngwtran.c"
+				>
+			</File>
+			<File
+				RelativePath=".\pngwutil.c"
 				>
 			</File>
 		</Filter>
@@ -372,31 +400,31 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\..\..\include\nms_agent.h"
+				RelativePath=".\png.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\nms_common.h"
+				RelativePath=".\pngconf.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\nms_cscp.h"
+				RelativePath=".\pngdebug.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\nms_threads.h"
+				RelativePath=".\pnginfo.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\nms_util.h"
+				RelativePath=".\pnglibconf.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\nxlog.h"
+				RelativePath=".\pngpriv.h"
 				>
 			</File>
 			<File
-				RelativePath=".\winnt_subagent.h"
+				RelativePath=".\pngstruct.h"
 				>
 			</File>
 		</Filter>

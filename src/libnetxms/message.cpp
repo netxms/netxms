@@ -968,12 +968,12 @@ UINT32 CSCPMessage::getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *d
 /**
  * set binary field from file
  */
-BOOL CSCPMessage::SetVariableFromFile(UINT32 dwVarId, const TCHAR *pszFileName)
+bool CSCPMessage::setFieldFromFile(UINT32 dwVarId, const TCHAR *pszFileName)
 {
    FILE *pFile;
    BYTE *pBuffer;
    UINT32 dwSize;
-   BOOL bResult = FALSE;
+   bool bResult = false;
 
    dwSize = (UINT32)FileSize(pszFileName);
    pFile = _tfopen(pszFileName, _T("rb"));
@@ -983,7 +983,7 @@ BOOL CSCPMessage::SetVariableFromFile(UINT32 dwVarId, const TCHAR *pszFileName)
       if (pBuffer != NULL)
       {
          if (fread(pBuffer + sizeof(UINT32), 1, dwSize, pFile) == dwSize)
-            bResult = TRUE;
+            bResult = true;
       }
       fclose(pFile);
    }

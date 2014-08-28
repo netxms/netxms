@@ -1406,11 +1406,9 @@ UINT32 AgentConnection::setupEncryption(RSA *pServerKey)
 #endif
 }
 
-
-//
-// Get configuration file from agent
-//
-
+/**
+ * Get configuration file from agent
+ */
 UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
 {
    UINT32 i, dwRqId, dwResult;
@@ -1473,11 +1471,9 @@ UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
    return dwResult;
 }
 
-
-//
-// Get configuration file from agent
-//
-
+/**
+ * Update configuration file on agent
+ */
 UINT32 AgentConnection::updateConfigFile(const TCHAR *pszConfig)
 {
    UINT32 dwRqId, dwResult;
@@ -1517,11 +1513,9 @@ UINT32 AgentConnection::updateConfigFile(const TCHAR *pszConfig)
    return dwResult;
 }
 
-
-//
-// Get routing table from agent
-//
-
+/**
+ * Get routing table from agent
+ */
 ROUTING_TABLE *AgentConnection::getRoutingTable()
 {
    ROUTING_TABLE *pRT = NULL;
@@ -1592,11 +1586,9 @@ ROUTING_TABLE *AgentConnection::getRoutingTable()
    return pRT;
 }
 
-
-//
-// Set proxy information
-//
-
+/**
+ * Set proxy information
+ */
 void AgentConnection::setProxy(UINT32 dwAddr, WORD wPort, int iAuthMethod, const TCHAR *pszSecret)
 {
    m_dwProxyAddr = dwAddr;
@@ -1618,11 +1610,9 @@ void AgentConnection::setProxy(UINT32 dwAddr, WORD wPort, int iAuthMethod, const
    m_bUseProxy = TRUE;
 }
 
-
-//
-// Setup proxy connection
-//
-
+/**
+ * Setup proxy connection
+ */
 UINT32 AgentConnection::setupProxyConnection()
 {
    CSCPMessage msg(m_nProtocolVersion);
@@ -1654,6 +1644,50 @@ UINT32 AgentConnection::enableTraps()
       return waitForRCC(dwRqId, m_dwCommandTimeout);
    else
       return ERR_CONNECTION_BROKEN;
+}
+
+/**
+ * Take screenshot from remote system
+ */
+UINT32 AgentConnection::takeScreenshot(BYTE **data, size_t *size)
+{
+   CSCPMessage msg(m_nProtocolVersion);
+   UINT32 dwRqId;
+
+   dwRqId = m_dwRequestId++;
+   msg.SetCode(CMD_TAKE_SCREENSHOT);
+   msg.SetId(dwRqId);
+   if (sendMessage(&msg))
+   {
+      CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      if (response != NULL)
+      {
+         UINT32 rcc = response->GetVariableLong(VID_RCC);
+         if (rcc == ERR_SUCCESS)
+         {
+            BYTE *p = response->getBinaryFieldPtr(VID_FILE_DATA, size);
+            if (p != NULL)
+            {
+               *data = (BYTE *)malloc(*size);
+               memcpy(*data, p, *size);
+            }
+            else
+            {
+               *data = NULL;
+            }
+         }
+         delete response;
+         return rcc;
+      }
+      else
+      {
+         return ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      return ERR_CONNECTION_BROKEN;
+   }
 }
 
 /**

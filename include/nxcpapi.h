@@ -103,7 +103,7 @@ public:
 #endif
    void setFieldInt32Array(UINT32 dwVarId, UINT32 dwNumElements, const UINT32 *pdwData);
    void setFieldInt32Array(UINT32 dwVarId, IntegerArray<UINT32> *data);
-   BOOL SetVariableFromFile(UINT32 dwVarId, const TCHAR *pszFileName);
+   bool setFieldFromFile(UINT32 dwVarId, const TCHAR *pszFileName);
 
    INT16 getFieldAsInt16(UINT32 fieldId);
    INT32 getFieldAsInt32(UINT32 fieldId);

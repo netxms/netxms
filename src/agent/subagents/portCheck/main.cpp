@@ -30,7 +30,7 @@ char g_szFailedDir[1024] = "";
 /**
  * Command handler
  */
-BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session)
+BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, AbstractCommSession *session)
 {
 	BOOL bHandled = TRUE;
 	WORD wType, wPort;
