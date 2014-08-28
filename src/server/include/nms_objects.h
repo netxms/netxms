@@ -624,6 +624,8 @@ protected:
 	int m_pollCount;
 	int m_requiredPollCount;
    UINT32 m_zoneId;
+   UINT32 m_pingTime;
+   time_t m_pingLastTimeStamp;
 
 	void paeStatusPoll(ClientSession *pSession, UINT32 dwRqId, SNMP_Transport *pTransport, Node *node);
 
@@ -661,6 +663,7 @@ public:
 	int getDot1xBackendAuthState() { return (int)m_dot1xBackendAuthState; }
 	const TCHAR *getDescription() { return m_description; }
    const BYTE *getMacAddr() { return m_bMacAddr; }
+   UINT32 getPingTime();
 	bool isSyntheticMask() { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
 	bool isPhysicalPort() { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
 	bool isLoopback() { return (m_flags & IF_LOOPBACK) ? true : false; }
@@ -695,6 +698,7 @@ public:
 
    UINT32 wakeUp();
 	void setExpectedState(int state);
+	void updatePingData();
 };
 
 /**

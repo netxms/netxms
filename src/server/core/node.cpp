@@ -1477,7 +1477,7 @@ restart_agent_check:
 }
 
 /**
- * Check single elementof network path
+ * Check single element of network path
  */
 bool Node::checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 dwRqId)
 {

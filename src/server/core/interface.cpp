@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -47,6 +47,7 @@ Interface::Interface() : NetObj()
 	m_pollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneId = 0;
+	m_pingTime = g_icmpPingTimeout;
 }
 
 /**
@@ -79,6 +80,7 @@ Interface::Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSynth
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneId = zoneId;
    m_isHidden = true;
+	m_pingTime = g_icmpPingTimeout;
 }
 
 /**
@@ -113,6 +115,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneId = zoneId;
    m_isHidden = true;
+	m_pingTime = g_icmpPingTimeout;
 }
 
 /**
@@ -120,6 +123,18 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32
  */
 Interface::~Interface()
 {
+}
+
+/**
+ * Returns last ping time
+ */
+UINT32 Interface::getPingTime()
+{
+   if((time(NULL) - m_pingLastTimeStamp) > g_icmpPingTimeout)
+   {
+      updatePingData();
+   }
+   return m_pingTime;
 }
 
 /**
@@ -134,7 +149,7 @@ BOOL Interface::CreateFromDB(UINT32 dwId)
    if (!loadCommonProperties())
       return FALSE;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, 
+	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
 		_T("SELECT ip_addr,ip_netmask,if_type,if_index,node_id,")
 		_T("mac_addr,flags,required_polls,bridge_port,phy_slot,")
 		_T("phy_port,peer_node_id,peer_if_id,description,")
@@ -362,7 +377,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 			sendPollerMsg(rqId, POLLER_WARNING _T("      Unable to retrieve interface status from SNMP agent\r\n"));
 		}
    }
-   
+
    if (bNeedPoll)
    {
 		// Pings cannot be used for cluster sync interfaces
@@ -437,8 +452,9 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 			else	// not using ICMP proxy
 			{
 				sendPollerMsg(rqId, _T("      Starting ICMP ping\r\n"));
-				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,%d,NULL,%d)"), m_dwId, m_szName, htonl(m_dwIpAddr), g_icmpPingTimeout, g_icmpPingSize);
-				UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, NULL, g_icmpPingSize);
+				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,%d,%d,%d)"), m_dwId, m_szName, htonl(m_dwIpAddr), g_icmpPingTimeout, m_pingTime, g_icmpPingSize);
+				UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+            m_pingLastTimeStamp = time(NULL);
 				if (dwPingStatus == ICMP_SUCCESS)
 				{
 					adminState = IF_ADMIN_STATE_UP;
@@ -446,6 +462,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 				}
 				else
 				{
+               m_pingTime = g_icmpPingTimeout;
 					adminState = IF_ADMIN_STATE_UNKNOWN;
 					operState = IF_OPER_STATE_DOWN;
 				}
@@ -504,7 +521,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 		newStatus = STATUS_UNKNOWN;
 		DbgPrintf(6, _T("StatusPoll(%s): Status for interface %s reset to UNKNOWN"), pNode->Name(), m_szName);
 	}
-   
+
 	if (newStatus == m_pendingStatus)
 	{
 		m_pollCount++;
@@ -555,7 +572,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
       if (!m_isSystem)
       {
 		   sendPollerMsg(rqId, _T("      Interface status changed to %s\r\n"), g_szStatusText[m_iStatus]);
-		   PostEventEx(eventQueue, 
+		   PostEventEx(eventQueue,
 		               (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_iStatus] : statusToEvent[m_iStatus],
 						   pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask, m_dwIfIndex);
       }
@@ -575,9 +592,22 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 		Modify();
 	}
 	UnlockData();
-	
+
 	sendPollerMsg(rqId, _T("      Interface status after poll is %s\r\n"), g_szStatusText[m_iStatus]);
 	sendPollerMsg(rqId, _T("   Finished status poll on interface %s\r\n"), m_szName);
+}
+
+/**
+ * Updates last ping time and ping time
+ */
+void Interface::updatePingData()
+{
+   UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+   if (dwPingStatus != ICMP_SUCCESS)
+   {
+      m_pingTime = g_icmpPingTimeout;
+   }
+   m_pingLastTimeStamp = time(NULL);
 }
 
 /**
@@ -585,7 +615,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
  */
 void Interface::paeStatusPoll(ClientSession *pSession, UINT32 rqId, SNMP_Transport *pTransport, Node *node)
 {
-	static const TCHAR *paeStateText[] = 
+	static const TCHAR *paeStateText[] =
 	{
 		_T("UNKNOWN"),
 		_T("INITIALIZE"),
@@ -599,7 +629,7 @@ void Interface::paeStatusPoll(ClientSession *pSession, UINT32 rqId, SNMP_Transpo
 		_T("FORCE UNAUTH"),
 		_T("RESTART")
 	};
-	static const TCHAR *backendStateText[] = 
+	static const TCHAR *backendStateText[] =
 	{
 		_T("UNKNOWN"),
 		_T("REQUEST"),
@@ -790,7 +820,7 @@ UINT32 Interface::getParentNodeId()
 /**
  * Change interface's IP address
  */
-void Interface::setIpAddr(UINT32 dwNewAddr) 
+void Interface::setIpAddr(UINT32 dwNewAddr)
 {
    UpdateInterfaceIndex(m_dwIpAddr, dwNewAddr, this);
    LockData();
@@ -802,7 +832,7 @@ void Interface::setIpAddr(UINT32 dwNewAddr)
 /**
  * Change interface's IP subnet mask
  */
-void Interface::setIpNetMask(UINT32 dwNetMask) 
+void Interface::setIpNetMask(UINT32 dwNetMask)
 {
    LockData();
    m_dwIpNetMask = dwNetMask;
@@ -865,9 +895,9 @@ void Interface::setPeer(Node *node, Interface *iface, int protocol)
    Modify();
    if (!m_isSystem)
    {
-      static const TCHAR *names[] = { _T("localIfId"), _T("localIfIndex"), _T("localIfName"), 
+      static const TCHAR *names[] = { _T("localIfId"), _T("localIfIndex"), _T("localIfName"),
          _T("localIfIP"), _T("localIfMAC"), _T("remoteNodeId"), _T("remoteNodeName"),
-         _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"), 
+         _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"),
          _T("remoteIfMAC"), _T("protocol") };
       PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsahdsddsah", names,
          m_dwId, m_dwIfIndex, m_szName, m_dwIpAddr, m_bMacAddr, node->Id(), node->Name(),

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -192,7 +192,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
 		if (curr->getStatus() != ITEM_STATUS_DISABLED || (g_flags & AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE))
 		{
 			curr->updateFromTemplate(dcObject);
-			DbgPrintf(9, _T("DCO \"%s\" NOT disabled or ApplyDCIFromTemplateToDisabledDCI set, updated (%d)"), 
+			DbgPrintf(9, _T("DCO \"%s\" NOT disabled or ApplyDCIFromTemplateToDisabledDCI set, updated (%d)"),
 				dcObject->getName(), curr->getStatus());
          if ((curr->getType() == DCO_TYPE_ITEM) && (((DCItem *)curr)->getInstanceDiscoveryMethod() != IDM_NONE))
          {
@@ -201,7 +201,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
 		}
 		else
 		{
-			DbgPrintf(9, _T("DCO \"%s\" is disabled and ApplyDCIFromTemplateToDisabledDCI not set, no update (%d)"), 
+			DbgPrintf(9, _T("DCO \"%s\" is disabled and ApplyDCIFromTemplateToDisabledDCI not set, no update (%d)"),
 				dcObject->getName(), curr->getStatus());
 		}
    }
@@ -251,7 +251,7 @@ void DataCollectionTarget::cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32
 }
 
 /**
- * Unbind data collection target from template, i.e either remove DCI 
+ * Unbind data collection target from template, i.e either remove DCI
  * association with template or remove these DCIs at all
  */
 void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI)
@@ -303,8 +303,8 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-      if ((object->getPerfTabSettings() != NULL) && 
-          object->hasValue() && 
+      if ((object->getPerfTabSettings() != NULL) &&
+          object->hasValue() &&
           (object->getStatus() == ITEM_STATUS_ACTIVE) &&
           object->matchClusterResource())
 		{
@@ -494,6 +494,67 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
          dwError = DCE_NOT_SUPPORTED;
       }
    }
+   else if(MatchString(_T("PingTime(*)"), szParam, FALSE))
+   {
+      TCHAR *pEnd, szArg[256];
+      UINT32 i, dwId;
+      NetObj *pObject = NULL;
+
+      AgentGetParameterArg(szParam, 1, szArg, 256);
+      dwId = _tcstoul(szArg, &pEnd, 0);
+      if (*pEnd != 0)
+      {
+         // Argument is object's name
+         dwId = 0;
+      }
+
+      // Find child object with requested ID or name
+      LockChildList(FALSE);
+      for(i = 0; i < m_dwChildCount; i++)
+      {
+         if (((dwId == 0) && (!_tcsicmp(m_pChildList[i]->Name(), szArg))) ||
+             (dwId == m_pChildList[i]->Id()))
+         {
+            pObject = m_pChildList[i];
+            break;
+         }
+      }
+      UnlockChildList();
+
+      if (pObject != NULL)
+      {
+         _sntprintf(szBuffer, dwBufSize, _T("%d"), ((Interface *)pObject)->getPingTime());
+      }
+      else
+      {
+         dwError = DCE_NOT_SUPPORTED;
+      }
+   }
+   else if(MatchString(_T("PingTime"), szParam, FALSE))
+   {
+      NetObj *pObject = NULL;
+
+      // Find child object with requested ID or name
+      LockChildList(FALSE);
+      for(int i = 0; i < m_dwChildCount; i++)
+      {
+         if (m_pChildList[i]->IpAddr() == m_dwIpAddr)
+         {
+            pObject = m_pChildList[i];
+            break;
+         }
+      }
+      UnlockChildList();
+
+      if (pObject != NULL)
+      {
+         _sntprintf(szBuffer, dwBufSize, _T("%d"), ((Interface *)pObject)->getPingTime());
+      }
+      else
+      {
+         dwError = DCE_NOT_SUPPORTED;
+      }
+   }
    else
    {
       dwError = DCE_NOT_SUPPORTED;
@@ -581,9 +642,9 @@ void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, T
       for(int j = 0; j < m_dcObjects->size(); j++)
 	   {
 		   DCObject *object = m_dcObjects->get(j);
-         if ((object->getType() == DCO_TYPE_ITEM) && object->hasValue() && 
+         if ((object->getType() == DCO_TYPE_ITEM) && object->hasValue() &&
              (object->getStatus() == ITEM_STATUS_ACTIVE) &&
-             ((tc->m_flags & COLUMN_DEFINITION_REGEXP_MATCH) ? 
+             ((tc->m_flags & COLUMN_DEFINITION_REGEXP_MATCH) ?
                RegexpMatch(object->getName(), tc->m_dciName, FALSE) :
                !_tcsicmp(object->getName(), tc->m_dciName)
              ))

@@ -49,6 +49,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		list.add(new AgentParameter("ConditionStatus(*)", Messages.get().SelectInternalParamDlg_DCI_ConditionStatus, DataCollectionItem.DT_INT)); //$NON-NLS-1$
 		list.add(new AgentParameter("Dummy", Messages.get().SelectInternalParamDlg_DCI_Dummy, DataCollectionItem.DT_INT)); //$NON-NLS-1$
 		list.add(new AgentParameter("Status", Messages.get().SelectInternalParamDlg_DCI_Status, DataCollectionItem.DT_INT)); //$NON-NLS-1$
+		list.add(new AgentParameter("PingTime", "Ping time of primary IP", DataCollectionItem.DT_UINT)); //$NON-NLS-1$
+		list.add(new AgentParameter("PingTime(*)", "Ping time of {instance}", DataCollectionItem.DT_UINT)); //$NON-NLS-1$
 		
 		if ((object instanceof Template) || (object instanceof AbstractNode))
 		{
