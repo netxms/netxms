@@ -131,7 +131,7 @@ Interface::~Interface()
  */
 UINT32 Interface::getPingTime()
 {
-   if((time(NULL) - m_pingLastTimeStamp) > g_icmpPingTimeout)
+   if((time(NULL) - m_pingLastTimeStamp) > g_dwStatusPollingInterval)
    {
       updatePingData();
    }
