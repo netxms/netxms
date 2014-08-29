@@ -494,13 +494,13 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
          dwError = DCE_NOT_SUPPORTED;
       }
    }
-   else if(MatchString(_T("PingTime(*)"), szParam, FALSE))
+   else if(MatchString(_T("PingTime(*)"), param, FALSE))
    {
       TCHAR *pEnd, szArg[256];
       UINT32 i, dwId;
       NetObj *pObject = NULL;
 
-      AgentGetParameterArg(szParam, 1, szArg, 256);
+      AgentGetParameterArg(param, 1, szArg, 256);
       dwId = _tcstoul(szArg, &pEnd, 0);
       if (*pEnd != 0)
       {
@@ -523,14 +523,14 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
 
       if (pObject != NULL)
       {
-         _sntprintf(szBuffer, dwBufSize, _T("%d"), ((Interface *)pObject)->getPingTime());
+         _sntprintf(buffer, bufSize, _T("%d"), ((Interface *)pObject)->getPingTime());
       }
       else
       {
          dwError = DCE_NOT_SUPPORTED;
       }
    }
-   else if(MatchString(_T("PingTime"), szParam, FALSE))
+   else if(MatchString(_T("PingTime"), param, FALSE))
    {
       NetObj *pObject = NULL;
 
@@ -548,7 +548,7 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
 
       if (pObject != NULL)
       {
-         _sntprintf(szBuffer, dwBufSize, _T("%d"), ((Interface *)pObject)->getPingTime());
+         _sntprintf(buffer, bufSize, _T("%d"), ((Interface *)pObject)->getPingTime());
       }
       else
       {
@@ -584,7 +584,7 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
 
       *p = 0;
       p++;
-      
+
       TCHAR *s;
       do
       {
