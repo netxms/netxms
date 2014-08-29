@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <ieee8021x.h>
+#define PING_TIME_ON_TIMEOUT 10000
 
 /**
  * Default constructor for Interface object
@@ -47,7 +48,7 @@ Interface::Interface() : NetObj()
 	m_pollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneId = 0;
-	m_pingTime = g_icmpPingTimeout;
+	m_pingTime = PING_TIME_ON_TIMEOUT;
 }
 
 /**
@@ -80,7 +81,7 @@ Interface::Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSynth
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneId = zoneId;
    m_isHidden = true;
-	m_pingTime = g_icmpPingTimeout;
+	m_pingTime = PING_TIME_ON_TIMEOUT;
 }
 
 /**
@@ -115,7 +116,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneId = zoneId;
    m_isHidden = true;
-	m_pingTime = g_icmpPingTimeout;
+	m_pingTime = PING_TIME_ON_TIMEOUT;
 }
 
 /**
@@ -462,7 +463,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 				}
 				else
 				{
-               m_pingTime = g_icmpPingTimeout;
+               m_pingTime = PING_TIME_ON_TIMEOUT;
 					adminState = IF_ADMIN_STATE_UNKNOWN;
 					operState = IF_OPER_STATE_DOWN;
 				}
@@ -605,7 +606,7 @@ void Interface::updatePingData()
    UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
    if (dwPingStatus != ICMP_SUCCESS)
    {
-      m_pingTime = g_icmpPingTimeout;
+      m_pingTime = PING_TIME_ON_TIMEOUT;
    }
    m_pingLastTimeStamp = time(NULL);
 }
