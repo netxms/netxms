@@ -298,6 +298,36 @@ LONG H_ActiveUserSessions(const TCHAR *pszCmd, const TCHAR *pArg, StringList *va
 }
 
 /**
+ * Callback for window stations enumeration
+ */
+static BOOL CALLBACK WindowStationsEnumCallback(LPTSTR lpszWindowStation, LPARAM lParam)
+{
+   ((StringList *)lParam)->add(lpszWindowStation);
+   return TRUE;
+}
+
+/**
+ * Handler for System.WindowStations list
+ */
+LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+{
+   return EnumWindowStations(WindowStationsEnumCallback, (LONG_PTR)value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+}
+
+/**
+ * Handler for Agent.WindowStation parameter
+ */
+LONG H_AgentWindowStation(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+{
+   HWINSTA ws = GetProcessWindowStation();
+   if (ws == NULL)
+      return SYSINFO_RC_ERROR;
+
+   DWORD size;
+   return GetUserObjectInformation(ws, UOI_NAME, value, MAX_RESULT_LENGTH * sizeof(TCHAR), &size) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+}
+
+/**
  * Handler for System.AppAddressSpace
  */
 LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)

@@ -26,6 +26,7 @@
  * Externlals
  */
 LONG H_ActiveUserSessions(const TCHAR *cmd, const TCHAR *arg, StringList *value);
+LONG H_AgentWindowStation(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
 LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
@@ -44,6 +45,7 @@ LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value);
 LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 
 /**
  * Optional imports
@@ -183,6 +185,7 @@ static BOOL CommandHandler(UINT32 command, CSCPMessage *request, CSCPMessage *re
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
+   { _T("Agent.WindowStation"), H_AgentWindowStation, NULL, DCI_DT_STRING, _T("Window station associated with agent process") },
    { _T("Net.Interface.AdminStatus(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
    { _T("Net.Interface.BytesIn(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_BYTES_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
    { _T("Net.Interface.BytesIn64(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_BYTES_IN_64, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESIN },
@@ -235,7 +238,8 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
    { _T("Net.IP.RoutingTable"), H_IPRoutingTable, NULL },
 	{ _T("System.ActiveUserSessions"), H_ActiveUserSessions, NULL },
 	{ _T("System.ProcessList"), H_ProcessList, NULL },
-	{ _T("System.Services"), H_ServiceList, NULL }
+	{ _T("System.Services"), H_ServiceList, NULL },
+	{ _T("System.WindowStations"), H_WindowStations, NULL }
 };
 
 /**
