@@ -388,6 +388,21 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Upgrade from V334 to V335
+ */
+static BOOL H_UpgradeFromV334(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(
+		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES ")
+		_T("(75, 'SYS_IF_MASK_CHANGED',0,1,'Interface \"%2\" changed mask from %6 to %4 (IP Addr: %3/%4, IfIndex: %5)',")
+		_T("'Generated when when network mask on interface is corrected.\r\n")
+		_T("Parameters:\r\n    1) Interface object ID\r\n    2) Interface name\r\n    3) Interface IP address\r\n ")
+		_T("    4) Interface netmask\r\n    5) Interface index\r\n    6) Interface old mask')")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='335' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V333 to V334
  */
 static BOOL H_UpgradeFromV333(int currVersion, int newVersion)
@@ -8099,6 +8114,7 @@ static struct
    { 331, 332, H_UpgradeFromV331 },
    { 332, 333, H_UpgradeFromV332 },
    { 333, 334, H_UpgradeFromV333 },
+   { 334, 335, H_UpgradeFromV334 },
    { 0, 0, NULL }
 };
 

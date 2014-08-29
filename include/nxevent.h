@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
@@ -129,6 +129,7 @@
 #define EVENT_AP_ADOPTED                  72
 #define EVENT_AP_UNADOPTED                73
 #define EVENT_AP_DOWN                     74
+#define EVENT_IF_MASK_CHANGED             75
 
 #define EVENT_SNMP_UNMATCHED_TRAP         500
 #define EVENT_SNMP_COLD_START             501

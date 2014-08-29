@@ -835,10 +835,14 @@ void Interface::setIpAddr(UINT32 dwNewAddr)
  */
 void Interface::setIpNetMask(UINT32 dwNetMask)
 {
+   UINT32 oldNetMask = m_dwIpNetMask;
    LockData();
    m_dwIpNetMask = dwNetMask;
    Modify();
    UnlockData();
+   PostEvent(EVENT_IF_MASK_CHANGED, m_dwId, "dsaada", m_dwId,
+                m_szName, m_dwIpAddr,
+                m_dwIpNetMask, m_dwIfIndex, oldNetMask);
 }
 
 /**
