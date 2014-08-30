@@ -392,12 +392,16 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
  */
 static BOOL H_UpgradeFromV334(int currVersion, int newVersion)
 {
-   CHK_EXEC(SQLQuery(
-		_T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES ")
-		_T("(75, 'SYS_IF_MASK_CHANGED',0,1,'Interface \"%2\" changed mask from %6 to %4 (IP Addr: %3/%4, IfIndex: %5)',")
-		_T("'Generated when when network mask on interface is corrected.\r\n")
-		_T("Parameters:\r\n    1) Interface object ID\r\n    2) Interface name\r\n    3) Interface IP address\r\n ")
-		_T("    4) Interface netmask\r\n    5) Interface index\r\n    6) Interface old mask')")));
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_MASK_CHANGED, _T("SYS_IF_MASK_CHANGED"), SEVERITY_NORMAL, EF_LOG,
+         _T("Interface \"%2\" changed mask from %6 to %4 (IP Addr: %3/%4, IfIndex: %5)"),
+         _T("Generated when when network mask on interface is changed.\r\n")
+         _T("Parameters:\r\n")
+         _T("    1) Interface object ID\r\n")
+         _T("    2) Interface name\r\n")
+         _T("    3) IP address\r\n")
+         _T("    4) New network mask\r\n")
+         _T("    5) Interface index\r\n")
+         _T("    6) Old network mask")));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='335' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
