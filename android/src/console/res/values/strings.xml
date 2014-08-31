@@ -153,6 +153,7 @@
 	<string name="overview_system_description">System Description</string>
 	<string name="overview_netxms_agent_version">NetXMS Agent Version</string>
 	<string name="overview_platform_name">Platform Name</string>
+	<string name="overview_boot_time">Boot Time</string>
 	<string name="overview_snmp_sysname">SNMP sysName</string>
 	<string name="overview_snmp_oid">SNMP OID</string>
 	<string name="overview_bridge_base_address">Bridge Base Address</string>
