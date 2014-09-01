@@ -86,8 +86,7 @@ THREAD_RESULT THREAD_CALL CommSession::proxyReadThreadStarter(void *pArg)
 /**
  * Client session class constructor
  */
-CommSession::CommSession(SOCKET hSocket, UINT32 dwHostAddr,
-                         BOOL bMasterServer, BOOL bControlServer)
+CommSession::CommSession(SOCKET hSocket, UINT32 dwHostAddr, BOOL bMasterServer, BOOL bControlServer)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
@@ -525,6 +524,29 @@ void CommSession::processingThread()
                   msg.SetVariable(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
+            case CMD_TAKE_SCREENSHOT:
+					if (m_bControlServer)
+					{
+                  TCHAR sessionName[256];
+                  pMsg->GetVariableStr(VID_NAME, sessionName, 256);
+                  DebugPrintf(m_dwIndex, 6, _T("Take snapshot from session \"%s\""), sessionName);
+                  SessionAgentConnector *conn = AcquireSessionAgentConnector(sessionName);
+                  if (conn != NULL)
+                  {
+                     DebugPrintf(m_dwIndex, 6, _T("Session agent connector acquired"));
+                     conn->takeScreenshot(&msg);
+                     conn->decRefCount();
+                  }
+                  else
+                  {
+                     msg.SetVariable(VID_RCC, ERR_NO_SESSION_AGENT);
+                  }
+					}
+					else
+					{
+                  msg.SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+					}
+					break;
             default:
                // Attempt to process unknown command by subagents
                if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg, this))
@@ -765,25 +787,23 @@ UINT32 CommSession::openFile(TCHAR *szFullPath, UINT32 requestId)
    }
 }
 
-//
-// Send file to server
-//
 
 static void SendFileProgressCallback(INT64 bytesTransferred, void *cbArg)
 {
 	((CommSession *)cbArg)->updateTimeStamp();
 }
 
+/**
+ * Send file to server
+ */
 bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset)
 {
 	return SendFileOverNXCP(m_hSocket, requestId, file, m_pCtx, offset, SendFileProgressCallback, this, m_socketWriteMutex) ? true : false;
 }
 
-
-//
-// Upgrade agent from package in the file store
-//
-
+/**
+ * Upgrade agent from package in the file store
+ */
 UINT32 CommSession::upgrade(CSCPMessage *pRequest)
 {
    if (m_bMasterServer)

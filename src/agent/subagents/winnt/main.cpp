@@ -128,60 +128,6 @@ static LONG H_ActionShutdown(const TCHAR *pszAction, StringList *pArgList, const
 }
 
 /**
- * Command handler
- */
-static BOOL CommandHandler(UINT32 command, CSCPMessage *request, CSCPMessage *response, AbstractCommSession *session)
-{
-   if (command != CMD_TAKE_SCREENSHOT)
-      return FALSE;
-
-   UINT32 rcc = ERR_INTERNAL_ERROR;
-
-   HDC dc = GetDC(NULL);
-   if (dc != NULL)
-   {
-      HDC memdc = CreateCompatibleDC(dc);
-      if (memdc != NULL)
-      {
-         RECT desktopRect;
-         GetWindowRect(GetDesktopWindow(), &desktopRect);
-         int cx = desktopRect.right - desktopRect.left;
-         int cy = desktopRect.bottom - desktopRect.top;
-
-         HBITMAP bitmap = CreateCompatibleBitmap(dc, cx, cy);
-         if (bitmap != NULL)
-         {
-            SelectObject(memdc, bitmap);
-            BitBlt(memdc, 0, 0, cx, cy, dc, 0, 0, SRCCOPY);
-         }
-
-         DeleteDC(memdc);
-
-         TCHAR tempPath[MAX_PATH];
-         GetTempPath(MAX_PATH, tempPath);
-
-         TCHAR tempFile[MAX_PATH];
-         GetTempFileName(tempPath, _T("nx"), 0, tempFile);
-         if (SaveBitmapToPng(bitmap, tempFile))
-         {
-            rcc = ERR_SUCCESS;
-            response->setFieldFromFile(VID_FILE_DATA, tempFile);
-         }
-         else
-         {
-            AgentWriteDebugLog(4, _T("Cannot save bitmap as PNG"));
-         }
-         DeleteObject(bitmap);
-         DeleteFile(tempFile);
-      }
-      ReleaseDC(NULL, dc);
-   }
-   
-   response->SetVariable(VID_RCC, rcc);
-   return TRUE;
-}
-
-/**
  * Supported parameters
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
@@ -270,7 +216,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("WinNT"), NETXMS_VERSION_STRING,
-	NULL, NULL, CommandHandler,
+	NULL, NULL, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),

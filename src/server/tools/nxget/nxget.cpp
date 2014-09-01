@@ -215,11 +215,17 @@ static int GetConfig(AgentConnection *pConn)
 /**
  * Get screenshot
  */
-static int GetScreenshot(AgentConnection *pConn, const char *fileName)
+static int GetScreenshot(AgentConnection *pConn, const char *sessionName, const char *fileName)
 {
    BYTE *data;
    size_t size;
-   UINT32 dwError = pConn->takeScreenshot(&data, &size);
+#ifdef UNICODE
+   WCHAR *wname = WideStringFromMBString(sessionName);
+   UINT32 dwError = pConn->takeScreenshot(wname, &data, &size);
+   free(wname);
+#else
+   UINT32 dwError = pConn->takeScreenshot(sessionName, &data, &size);
+#endif
    if (dwError == ERR_SUCCESS)
    {
       FILE *f = fopen(fileName, "wb");
@@ -671,7 +677,7 @@ int main(int argc, char *argv[])
                         iExitCode = GetConfig(&conn);
                         break;
                      case CMD_GET_SCREENSHOT:
-                        iExitCode = GetScreenshot(&conn, argv[optind + 1]);
+                        iExitCode = GetScreenshot(&conn, "Console", argv[optind + 1]);
                         break;
                      default:
                         break;

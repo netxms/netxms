@@ -367,6 +367,42 @@ public:
 };
 
 /**
+ * Session agent connector
+ */
+class SessionAgentConnector : public RefCountObject
+{
+private:
+   UINT32 m_id;
+   SOCKET m_socket;
+   MUTEX m_mutex;
+   CSCP_BUFFER m_msgBuffer; 
+   MsgWaitQueue m_msgQueue;
+   UINT32 m_sessionId;
+   TCHAR *m_sessionName;
+   VolatileCounter m_requestId;
+
+   void readThread();
+   bool sendMessage(CSCPMessage *msg);
+   UINT32 nextRequestId() { return InterlockedIncrement(&m_requestId); }
+
+   static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
+
+public:
+   SessionAgentConnector(UINT32 id, SOCKET s);
+   ~SessionAgentConnector();
+
+   void run();
+   void disconnect();
+
+   UINT32 getId() { return m_id; }
+   UINT32 getSessionId() { return m_sessionId; }
+   const TCHAR *getSessionName() { return CHECK_NULL(m_sessionName); }
+
+   bool testConnection();
+   void takeScreenshot(CSCPMessage *msg);
+};
+
+/**
  * Functions
  */
 BOOL Initialize();
@@ -465,6 +501,9 @@ void StartStorageDiscoveryConnector();
 void StartControlConnector();
 bool SendControlMessage(CSCPMessage *msg);
 
+void StartSessionAgentConnector();
+SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName);
+
 #ifdef _WIN32
 
 void InitService();
@@ -495,7 +534,7 @@ extern TCHAR g_szRegistrar[];
 extern TCHAR g_szListenAddress[];
 extern TCHAR g_szConfigIncludeDir[];
 extern TCHAR g_masterAgent[];
-extern WORD g_wListenPort;
+extern UINT16 g_wListenPort;
 extern SERVER_INFO g_pServerList[];
 extern UINT32 g_dwServerCount;
 extern time_t g_tmAgentStartTime;
@@ -506,6 +545,7 @@ extern UINT32 g_dwMaxSessions;
 extern UINT32 g_dwExecTimeout;
 extern UINT32 g_dwSNMPTimeout;
 extern UINT32 g_debugLevel;
+extern UINT16 g_sessionAgentPort;
 
 extern Config *g_config;
 

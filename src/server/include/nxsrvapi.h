@@ -517,7 +517,7 @@ public:
    UINT32 enableTraps();
 	UINT32 getPolicyInventory(AgentPolicyInfo **info);
 	UINT32 uninstallPolicy(uuid_t guid);
-   UINT32 takeScreenshot(BYTE **data, size_t *size);
+   UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
 
 	UINT32 generateRequestId() { return m_dwRequestId++; }
 	CSCPMessage *customRequest(CSCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false, void (*downloadProgressCallback)(size_t, void *) = NULL,

@@ -121,7 +121,7 @@ TCHAR g_szRegistrar[MAX_DB_STRING] = _T("not_set");
 TCHAR g_szListenAddress[MAX_PATH] = _T("*");
 TCHAR g_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 TCHAR g_masterAgent[MAX_PATH] = _T("not_set");
-WORD g_wListenPort = AGENT_LISTEN_PORT;
+UINT16 g_wListenPort = AGENT_LISTEN_PORT;
 SERVER_INFO g_pServerList[MAX_SERVERS];
 UINT32 g_dwServerCount = 0;
 UINT32 g_dwExecTimeout = 2000;     // External process execution timeout in milliseconds
@@ -130,6 +130,11 @@ time_t g_tmAgentStartTime;
 UINT32 g_dwStartupDelay = 0;
 UINT32 g_dwMaxSessions = 32;
 UINT32 g_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
+#ifdef _WIN32
+UINT16 g_sessionAgentPort = 28180;
+#else
+UINT16 g_sessionAgentPort = 0;
+#endif
 Config *g_config;
 #ifdef _WIN32
 UINT32 g_dwIdleTimeout = 60;   // Session idle timeout
@@ -223,6 +228,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("Servers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList, NULL },
    { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout, NULL },
    { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szEncryptedSharedSecret, NULL },
+   { _T("SessionAgentPort"), CT_WORD, 0, 0, 0, 0, &g_sessionAgentPort, NULL },
    { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
 	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwSNMPTimeout, NULL },
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay, NULL },
@@ -941,6 +947,7 @@ BOOL Initialize()
 		m_thSessionWatchdog = ThreadCreateEx(SessionWatchdog, 0, NULL);
 		StartPushConnector();
 		StartStorageDiscoveryConnector();
+      StartSessionAgentConnector();
       if (g_dwFlags & AF_ENABLE_CONTROL_CONNECTOR)
 	   {
          StartControlConnector();

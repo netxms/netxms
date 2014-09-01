@@ -92,6 +92,7 @@
 #define ERR_FILE_STAT_FAILED        ((UINT32)916)
 #define ERR_MEM_ALLOC_FAILED        ((UINT32)917)
 #define ERR_FILE_DELETE_FAILED      ((UINT32)918)
+#define ERR_NO_SESSION_AGENT        ((UINT32)919)
 
 /**
  * Parameter handler return codes

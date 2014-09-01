@@ -1649,7 +1649,7 @@ UINT32 AgentConnection::enableTraps()
 /**
  * Take screenshot from remote system
  */
-UINT32 AgentConnection::takeScreenshot(BYTE **data, size_t *size)
+UINT32 AgentConnection::takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size)
 {
    CSCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId;
@@ -1657,6 +1657,7 @@ UINT32 AgentConnection::takeScreenshot(BYTE **data, size_t *size)
    dwRqId = m_dwRequestId++;
    msg.SetCode(CMD_TAKE_SCREENSHOT);
    msg.SetId(dwRqId);
+   msg.SetVariable(VID_NAME, sessionName);
    if (sendMessage(&msg))
    {
       CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);

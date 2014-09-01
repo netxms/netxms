@@ -99,9 +99,4 @@ struct WINDOW_LIST
  */
 extern DWORD (__stdcall *imp_GetIfEntry2)(PMIB_IF_ROW2);
 
-/**
- * Save given bitmap as PNG file
- */
-bool SaveBitmapToPng(HBITMAP hBitmap, const TCHAR *fileName);
-
 #endif   /* _winnt_subagent_h_ */
