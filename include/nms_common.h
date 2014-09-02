@@ -184,6 +184,8 @@ typedef int bool;
 #endif
 #define HAVE_DECL_VA_COPY       1
 
+#define HAVE_LIBCURL            1
+
 #include <winsock2.h>
 #include <windows.h>
 #include <ws2tcpip.h>

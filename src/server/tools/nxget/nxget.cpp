@@ -297,7 +297,7 @@ int main(int argc, char *argv[])
                      _T("                    3 = Force encrypted connection;\n")
                      _T("                  Default value is 1.\n")
 #endif
-                     _T("   -E <file>    : Take screenshot\n")
+                     _T("   -E <file>    : Take screenshot. First parameter is file name, second (optional) is session name.\n")
                      _T("   -h           : Display help and exit.\n")
                      _T("   -i <seconds> : Get specified parameter(s) continously with given interval.\n")
                      _T("   -I           : Get list of supported parameters.\n")
@@ -677,7 +677,7 @@ int main(int argc, char *argv[])
                         iExitCode = GetConfig(&conn);
                         break;
                      case CMD_GET_SCREENSHOT:
-                        iExitCode = GetScreenshot(&conn, "Console", argv[optind + 1]);
+                        iExitCode = GetScreenshot(&conn, (argc > optind + 2) ? argv[optind + 2] : "Console", argv[optind + 1]);
                         break;
                      default:
                         break;

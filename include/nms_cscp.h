@@ -993,6 +993,7 @@ typedef struct
 #define VID_ROOT                    ((UINT32)480)
 #define VID_INCLUDE_NOVALUE_OBJECTS ((UINT32)481)
 #define VID_RECEIVE_OUTPUT          ((UINT32)482)
+#define VID_SESSION_STATE           ((UINT32)483)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

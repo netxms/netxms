@@ -40,6 +40,7 @@ LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value);
 LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 
 #ifdef _WIN32
@@ -263,6 +264,7 @@ static NETXMS_SUBAGENT_LIST m_stdLists[] =
  */
 static NETXMS_SUBAGENT_TABLE m_stdTables[] =
 {
+   { _T("Agent.SessionAgents"), H_SessionAgents, NULL, _T("SESSION_ID"), DCTDESC_AGENT_SUBAGENTS },
    { _T("Agent.SubAgents"), H_SubAgentTable, NULL, _T("NAME"), DCTDESC_AGENT_SUBAGENTS },
 #ifdef _WIN32
    { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES }

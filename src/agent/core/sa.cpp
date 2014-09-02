@@ -65,7 +65,7 @@ THREAD_RESULT THREAD_CALL SessionAgentConnector::readThreadStarter(void *arg)
    // When SessionAgentConnector::ReadThread exits, all other
    // threads are already stopped, so we can safely destroy
    // session object
-   UnregisterSessionAgent(((SessionAgentConnector *)arg)->getSessionId());
+   UnregisterSessionAgent(((SessionAgentConnector *)arg)->getId());
    ((SessionAgentConnector *)arg)->decRefCount();
    return THREAD_OK;
 }
@@ -79,6 +79,8 @@ SessionAgentConnector::SessionAgentConnector(UINT32 id, SOCKET s)
    m_socket = s;
    m_sessionId = 0;
    m_sessionName = NULL;
+   m_sessionState = USER_SESSION_OTHER;
+   m_userName = NULL;
    m_mutex = MutexCreate();
    m_requestId = 0;
 }
@@ -91,6 +93,7 @@ SessionAgentConnector::~SessionAgentConnector()
    MutexDestroy(m_mutex);
    closesocket(m_socket);
    safe_free(m_sessionName);
+   safe_free(m_userName);
 }
 
 /**
@@ -171,10 +174,16 @@ void SessionAgentConnector::readThread()
          if (msg->GetCode() == CMD_LOGIN)
          {
             m_sessionId = msg->GetVariableLong(VID_SESSION_ID);
+            m_sessionState = msg->getFieldAsInt16(VID_SESSION_STATE);
+
             safe_free(m_sessionName);
             m_sessionName = msg->GetVariableStr(VID_NAME);
+
+            safe_free(m_userName);
+            m_userName = msg->GetVariableStr(VID_USER_NAME);
+
             delete msg;
-            DebugPrintf(INVALID_INDEX, 5, _T("Session agent connector %d: login as %s [%d]"), m_id, CHECK_NULL(m_sessionName), m_sessionId);
+            DebugPrintf(INVALID_INDEX, 5, _T("Session agent connector %d: login as %s@%s [%d]"), m_id, getUserName(), getSessionName(), m_sessionId);
          }
          else
          {
@@ -417,4 +426,29 @@ SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName)
    RWLockUnlock(s_lock);
 
    return c;
+}
+
+/**
+ * Get table of registered session agents
+ */
+LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value)
+{
+   value->addColumn(_T("SESSION_ID"), DCI_DT_UINT, _T("Session ID"), true);
+   value->addColumn(_T("SESSION_NAME"), DCI_DT_STRING, _T("Session"));
+   value->addColumn(_T("USER_NAME"), DCI_DT_STRING, _T("User"));
+   value->addColumn(_T("STATE"), DCI_DT_INT, _T("State"));
+
+   RWLockReadLock(s_lock, INFINITE);
+   for(int i = 0; i < s_agents.size(); i++)
+   {
+      SessionAgentConnector *c = s_agents.get(i);
+      value->addRow();
+      value->set(0, c->getSessionId());
+      value->set(1, c->getSessionName());
+      value->set(2, c->getUserName());
+      value->set(3, c->getSessionState());
+   }
+   RWLockUnlock(s_lock);
+
+   return SYSINFO_RC_SUCCESS;
 }

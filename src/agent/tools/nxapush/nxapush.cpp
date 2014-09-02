@@ -342,7 +342,7 @@ static BOOL Send()
 	msg.SetCode(CMD_PUSH_DCI_DATA);
    msg.SetVariable(VID_OBJECT_ID, optObjectId);
    msg.SetVariable(VID_NUM_ITEMS, s_data->size());
-	for(DWORD i = 0, varId = VID_PUSH_DCI_DATA_BASE; i < s_data->size(); i++)
+	for(int i = 0, varId = VID_PUSH_DCI_DATA_BASE; i < s_data->size(); i++)
 	{
 		msg.SetVariable(varId++, s_data->getKeyByIndex(i));
 		msg.SetVariable(varId++, s_data->getValueByIndex(i));

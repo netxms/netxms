@@ -379,6 +379,8 @@ private:
    MsgWaitQueue m_msgQueue;
    UINT32 m_sessionId;
    TCHAR *m_sessionName;
+   INT16 m_sessionState;
+   TCHAR *m_userName;
    VolatileCounter m_requestId;
 
    void readThread();
@@ -396,7 +398,9 @@ public:
 
    UINT32 getId() { return m_id; }
    UINT32 getSessionId() { return m_sessionId; }
+   INT16 getSessionState() { return m_sessionState; }
    const TCHAR *getSessionName() { return CHECK_NULL(m_sessionName); }
+   const TCHAR *getUserName() { return CHECK_NULL(m_userName); }
 
    bool testConnection();
    void takeScreenshot(CSCPMessage *msg);

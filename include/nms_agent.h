@@ -108,6 +108,15 @@
 #define WINPERF_REMOTE_COUNTER_CONFIG     ((UINT32)0x00000002)
 
 /**
+ * User session states (used by session agents)
+ */
+#define USER_SESSION_ACTIVE         0
+#define USER_SESSION_CONNECTED      1
+#define USER_SESSION_DISCONNECTED   2
+#define USER_SESSION_IDLE           3
+#define USER_SESSION_OTHER          4
+
+/**
  * Descriptions for common parameters
  */
 #define DCIDESC_FS_AVAIL                          _T("Available space on file system {instance}")
@@ -339,6 +348,7 @@
 #define DCIDESC_DEPRECATED                        _T("<deprecated>")
 
 
+#define DCTDESC_AGENT_SESSION_AGENTS              _T("Registered session agents")
 #define DCTDESC_AGENT_SUBAGENTS                   _T("Loaded subagents")
 #define DCTDESC_FILESYSTEM_VOLUMES                _T("File system volumes")
 #define DCTDESC_SYSTEM_INSTALLED_PRODUCTS         _T("Installed products")

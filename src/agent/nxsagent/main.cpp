@@ -33,6 +33,11 @@ static UINT16 s_port = 28180;
 static SOCKET s_socket = INVALID_SOCKET;
 
 /**
+ * Socket lock
+ */
+static MUTEX s_socketLock = MutexCreate();
+
+/**
  * Protocol buffer
  */
 static CSCP_BUFFER s_msgBuffer;
@@ -78,7 +83,7 @@ static bool SendMsg(CSCPMessage *msg)
       return false;
 
    CSCP_MESSAGE *rawMsg = msg->createMessage();
-   bool success = (SendEx(s_socket, rawMsg, ntohl(rawMsg->dwSize), 0, NULL) == ntohl(rawMsg->dwSize));
+   bool success = (SendEx(s_socket, rawMsg, ntohl(rawMsg->dwSize), 0, s_socketLock) == ntohl(rawMsg->dwSize));
    free(rawMsg);
    return success;
 }
@@ -95,12 +100,52 @@ static void Login()
    ProcessIdToSessionId(GetCurrentProcessId(), &sid);
    msg.SetVariable(VID_SESSION_ID, (UINT32)sid);
 
-   TCHAR *sessionName;
    DWORD size;
+   WTS_CONNECTSTATE_CLASS *state;
+   INT16 sessionState = USER_SESSION_OTHER;
+   if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sid, WTSConnectState, (LPTSTR *)&state, &size))
+   {
+      switch(*state)
+      {
+         case WTSActive:
+            sessionState = USER_SESSION_ACTIVE;
+            break;
+         case WTSConnected:
+            sessionState = USER_SESSION_CONNECTED;
+            break;
+         case WTSDisconnected:
+            sessionState = USER_SESSION_DISCONNECTED;
+            break;
+         case WTSIdle:
+            sessionState = USER_SESSION_IDLE;
+            break;
+      }
+      WTSFreeMemory(state);
+   }
+
+   msg.SetVariable(VID_SESSION_STATE, sessionState);
+
+   TCHAR *sessionName;
    if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sid, WTSWinStationName, &sessionName, &size))
    {
-      msg.SetVariable(VID_NAME, sessionName);
+      if (*sessionName != 0)
+      {
+         msg.SetVariable(VID_NAME, sessionName);
+      }
+      else
+      {
+         TCHAR buffer[256];
+         _sntprintf(buffer, 256, _T("%s-%d"), (sessionState == USER_SESSION_DISCONNECTED) ? _T("Disconnected") : ((sessionState == USER_SESSION_IDLE) ? _T("Idle") : _T("Session")), sid);
+         msg.SetVariable(VID_NAME, buffer);
+      }
       WTSFreeMemory(sessionName);
+   }
+
+   TCHAR userName[256];
+   size = 256;
+   if (GetUserName(userName, &size))
+   {
+      msg.SetVariable(VID_USER_NAME, userName);
    }
 
    SendMsg(&msg);
@@ -182,6 +227,69 @@ static void ProcessMessages()
    free(rawMsg);
 }
 
+#ifdef _WIN32
+
+/**
+ * Window proc for event handling window
+ */
+static LRESULT CALLBACK EventHandlerWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch(uMsg)
+	{
+      case WM_WTSSESSION_CHANGE:
+         _tprintf(_T(">> session change: %d\n"), wParam);
+         if ((wParam == WTS_CONSOLE_CONNECT) || (wParam == WTS_CONSOLE_DISCONNECT) ||
+             (wParam == WTS_REMOTE_CONNECT) || (wParam == WTS_REMOTE_DISCONNECT))
+         {
+            Login();
+         }
+         break;
+		default:
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
+	}
+	return 0;
+}
+
+/**
+ * Event handling thread
+ */
+static THREAD_RESULT THREAD_CALL EventHandler(void *arg)
+{
+   HINSTANCE hInstance = (HINSTANCE)GetModuleHandle(NULL);
+
+	WNDCLASS wc;
+	memset(&wc, 0, sizeof(WNDCLASS));
+	wc.lpfnWndProc = EventHandlerWndProc;
+	wc.hInstance = hInstance;
+	wc.cbWndExtra = 0;
+	wc.lpszClassName = _T("NetXMS_SessionAgent_Wnd");
+	if (RegisterClass(&wc) == 0)
+   {
+      _tprintf(_T("Call to RegisterClass() failed\n"));
+      return THREAD_OK;
+   }
+
+	HWND hWnd = CreateWindow(_T("NetXMS_SessionAgent_Wnd"), _T("NetXMS Session Agent"), 0, 0, 0, 0, 0, HWND_MESSAGE, NULL, hInstance, NULL);
+	if (hWnd == NULL)
+	{
+      _tprintf(_T("Cannot create window: %s"), GetSystemErrorText(GetLastError(), NULL, 0));
+		return THREAD_OK;
+	}
+
+   WTSRegisterSessionNotification(hWnd, NOTIFY_FOR_THIS_SESSION);
+
+	MSG msg;
+	while(GetMessage(&msg, NULL, 0, 0) > 0)
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+   return THREAD_OK;
+}
+
+#endif
+
 /**
  * Entry point
  */
@@ -195,6 +303,8 @@ int main(int argc, char *argv[])
       _tprintf(_T("WSAStartup() failed"));
       return 1;
    }
+
+   ThreadCreate(EventHandler, 0, NULL);
 #endif
 
    while(true)
