@@ -29,22 +29,22 @@ void TakeScreenshot(CSCPMessage *response)
 {
    UINT32 rcc = ERR_INTERNAL_ERROR;
 
-   HDC dc = GetDC(NULL);
+   HDC dc = CreateDC(_T("DISPLAY"), NULL, NULL, NULL);
    if (dc != NULL)
    {
       HDC memdc = CreateCompatibleDC(dc);
       if (memdc != NULL)
       {
-         RECT desktopRect;
-         GetWindowRect(GetDesktopWindow(), &desktopRect);
-         int cx = desktopRect.right - desktopRect.left;
-         int cy = desktopRect.bottom - desktopRect.top;
+         int x = GetSystemMetrics(SM_XVIRTUALSCREEN);
+         int y = GetSystemMetrics(SM_YVIRTUALSCREEN);
+         int cx = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+         int cy = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
          HBITMAP bitmap = CreateCompatibleBitmap(dc, cx, cy);
          if (bitmap != NULL)
          {
             SelectObject(memdc, bitmap);
-            BitBlt(memdc, 0, 0, cx, cy, dc, 0, 0, SRCCOPY);
+            BitBlt(memdc, 0, 0, cx, cy, dc, x, y, SRCCOPY);
          }
 
          DeleteDC(memdc);
@@ -66,7 +66,7 @@ void TakeScreenshot(CSCPMessage *response)
          DeleteObject(bitmap);
          DeleteFile(tempFile);
       }
-      ReleaseDC(NULL, dc);
+      DeleteDC(dc);
    }
    
    response->SetVariable(VID_RCC, rcc);
