@@ -99,6 +99,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean showStatusBackground = false;
 	private boolean showStatusFrame = false;
 	private boolean enableLongObjectName = false;
+	private boolean hideLinkLabel = false;
 	private ILabelProvider workbenchLabelProvider;
 	private ObjectFigureType objectFigureType = ObjectFigureType.ICON;
 	private ColorCache colors;
@@ -423,7 +424,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		   connection.setLineStyle(SWT.LINE_DOT);
 		}
 		
-		if (link.hasConnectorName1())
+		if (link.hasConnectorName1() && !hideLinkLabel)
 		{
 			ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
 			sourceEndpointLocator.setVDistance(0);
@@ -431,7 +432,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			label.setFont(fontLabel);
 			connection.getConnectionFigure().add(label, sourceEndpointLocator);
 		}
-		if (link.hasConnectorName2())
+		if (link.hasConnectorName2() && !hideLinkLabel)
 		{
 			ConnectionEndpointLocator targetEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), true);
 			targetEndpointLocator.setVDistance(0);
@@ -443,7 +444,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		boolean hasDciData = link.hasDciData();
       boolean hasName = link.hasName();
       
-      if (hasName || hasDciData)
+      if ((hasName || hasDciData) && !hideLinkLabel)
       {
          ConnectionLocator nameLocator = new ConnectionLocator(connection.getConnectionFigure());
          nameLocator.setRelativePosition(PositionConstants.CENTER);
@@ -628,5 +629,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    public boolean isLongObjectNameEnabled()
    {
       return enableLongObjectName;
+   }
+
+   public void setLabelHideStatus(boolean checked)
+   {
+     hideLinkLabel = checked;
    }
 }

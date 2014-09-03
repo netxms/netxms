@@ -100,6 +100,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean showStatusBackground = false;
 	private boolean showStatusFrame = false;
 	private boolean enableLongObjectName = false;
+	private boolean hideLinkLabel = false;
 	private ILabelProvider workbenchLabelProvider;
 	private ObjectFigureType objectFigureType = ObjectFigureType.ICON;
 	private ColorCache colors;
@@ -629,5 +630,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    public boolean isLongObjectNameEnabled()
    {
       return enableLongObjectName;
+   }
+
+   public void setLabelHideStatus(boolean checked)
+   {
+     hideLinkLabel = checked;
    }
 }

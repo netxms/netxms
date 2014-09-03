@@ -164,6 +164,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionAlignToGrid;
 	protected Action actionSnapToGrid;
 	protected Action actionShowObjectDetails;
+   protected Action actionHideLinkLabels;
 
 	private String viewId;
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
@@ -761,6 +762,16 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				showObjectDetails();
 			}
 		};
+		
+		actionHideLinkLabels = new Action("Hide link labels", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {         
+            labelProvider.setLabelHideStatus(actionHideLinkLabels.isChecked());
+            viewer.refresh(true);
+         }
+      };
+      actionHideLinkLabels.setImageDescriptor(Activator.getImageDescriptor("icons/hide_link.png")); //$NON-NLS-1$
 	}
 
 	/**
@@ -837,6 +848,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionAlignToGrid);
 		manager.add(actionSnapToGrid);
 		manager.add(actionShowGrid);
+      manager.add(new Separator()); 
+      manager.add(actionHideLinkLabels);    
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -854,6 +867,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionAlignToGrid);
 		manager.add(actionSnapToGrid);
 		manager.add(actionShowGrid);
+      manager.add(new Separator()); 
+      manager.add(actionHideLinkLabels);  
 		manager.add(new Separator());
 		if (allowManualLayout)
 		{
@@ -978,6 +993,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionAlignToGrid);
 		manager.add(actionSnapToGrid);
 		manager.add(actionShowGrid);
+      manager.add(new Separator()); 
+      manager.add(actionHideLinkLabels);  
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
