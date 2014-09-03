@@ -44,7 +44,7 @@ void TakeScreenshot(CSCPMessage *response)
          if (bitmap != NULL)
          {
             SelectObject(memdc, bitmap);
-            BitBlt(memdc, 0, 0, cx, cy, dc, x, y, SRCCOPY);
+            BitBlt(memdc, 0, 0, cx, cy, dc, x, y, SRCCOPY | CAPTUREBLT);
          }
 
          DeleteDC(memdc);

@@ -35,7 +35,7 @@
    - Fixed incorrect processing of ilike, match, and imatch operators
    - Added try / catch operator
 - New MIBs added: NETUP-MIB
-- Fixed issues: #424, #618, #619, #620
+- Fixed issues: #424, #463, #543, #618, #619, #620
 
 
 *
