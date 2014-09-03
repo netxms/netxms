@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -101,6 +101,33 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 
 	netxmsObject->setCustomAttribute(argv[1]->getValueAsCString(), argv[2]->getValueAsCString());
 
+	return 0;
+}
+
+/**
+ * Delete node's custom attribute
+ * First argument is a node object, second is an attribute name
+ */
+static int F_DeleteCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	NXSL_Object *object;
+	const TCHAR *value;
+
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
+	    _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	NetObj *netxmsObject = (NetObj *)object->getData();
+	netxmsObject->deleteCustomAttribute(argv[1]->getValueAsCString());
+   *ppResult = new NXSL_Value;
 	return 0;
 }
 
@@ -446,7 +473,7 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	// Validate first argument
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
-	
+
 	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
@@ -641,7 +668,7 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 		return NXSL_ERR_BAD_CLASS;
 
 	NXSL_Object *obj2 = argv[1]->getValueAsObject();
-	if (_tcscmp(obj2->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+	if (_tcscmp(obj2->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		_tcscmp(obj2->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
@@ -685,7 +712,7 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		return NXSL_ERR_BAD_CLASS;
 
 	NXSL_Object *obj2 = argv[1]->getValueAsObject();
-	if (_tcscmp(obj2->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+	if (_tcscmp(obj2->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		_tcscmp(obj2->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
@@ -720,7 +747,7 @@ static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		return NXSL_ERR_NOT_STRING;
 
 	NXSL_Object *object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
@@ -746,7 +773,7 @@ static int F_ManageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		return NXSL_ERR_NOT_OBJECT;
 
 	NXSL_Object *object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
@@ -772,7 +799,7 @@ static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 		return NXSL_ERR_NOT_OBJECT;
 
 	NXSL_Object *object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
@@ -1001,7 +1028,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 			UINT32 dataType = SNMPResolveDataType(argv[3]->getValueAsString(&len));
 			if (dataType == ASN_NULL)
 			{
-				DbgPrintf(6, _T("SNMPSet: failed to resolve data type '%s', assume string"), 
+				DbgPrintf(6, _T("SNMPSet: failed to resolve data type '%s', assume string"),
 					argv[3]->getValueAsString(&len));
 				dataType = ASN_OCTET_STRING;
 			}
@@ -1249,6 +1276,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ _T("AgentReadParameter"), F_AgentReadParameter, 2 },
 	{ _T("AgentReadTable"), F_AgentReadTable, 2 },
 	{ _T("CreateSNMPTransport"), F_CreateSNMPTransport, 1 },
+	{ _T("DeleteCustomAttribute"), F_DeleteCustomAttribute, 2 },
    { _T("GetConfigurationVariable"), F_GetConfigurationVariable, -1 },
    { _T("GetCustomAttribute"), F_GetCustomAttribute, 2 },
    { _T("GetEventParameter"), F_GetEventParameter, 2 },
