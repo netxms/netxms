@@ -212,12 +212,16 @@ void LDAPConnection::getAllSyncParameters()
    ConfigReadStr(_T("LdapConnectionString"), m_connList, MAX_DB_STRING, _T(""));
    ConfigReadStr(_T("LdapSyncUser"), m_userDN, MAX_DB_STRING, _T(""));
    ConfigReadStr(_T("LdapSearchBase"), m_searchBase, MAX_DB_STRING, _T(""));
-   ConfigReadStr(_T("LdapSearchFilter"), m_searchFilter, MAX_DB_STRING, _T(""));
+   ConfigReadStr(_T("LdapSearchFilter"), m_searchFilter, MAX_DB_STRING, _T("(objectClass=*)"));
+   if(!wcscmp("", m_searchFilter))
+      wcscpy(m_searchFilter, _T("(objectClass=*)"));
 #else
    ConfigReadStrUTF8(_T("LdapConnectionString"), m_connList, MAX_DB_STRING, "");
    ConfigReadStrUTF8(_T("LdapSyncUser"), m_userDN, MAX_DB_STRING, "");
    ConfigReadStrUTF8(_T("LdapSearchBase"), m_searchBase, MAX_DB_STRING, "");
-   ConfigReadStrUTF8(_T("LdapSearchFilter"), m_searchFilter, MAX_DB_STRING, "");
+   ConfigReadStrUTF8(_T("LdapSearchFilter"), m_searchFilter, MAX_DB_STRING, "(objectClass=*)");
+   if(!strcmp("", m_searchFilter))
+      strcmp(m_searchFilter, "(objectClass=*)");
 #endif
    ConfigReadStrUTF8(_T("LdapSyncUserPassword"), m_userPassword, MAX_DB_STRING, "");
    ConfigReadStrUTF8(_T("LdapMappingName"), m_ldapLoginNameAttr, MAX_DB_STRING, "");

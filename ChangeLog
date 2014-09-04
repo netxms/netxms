@@ -7,6 +7,7 @@
     - Can show alarms for multiple selected objects
     - Fixed non-working ordering in event list in alarm details view
     - Fixed bug with LDAP user system rights
+    - Added default search string for LDAP to select all objects: "(objectClass=*)"
     - Added device geolocation tracking and display on map 
 - Android console:
 	- Fix bug in notifying connection point not found
