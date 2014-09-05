@@ -467,6 +467,8 @@ public class DataCollectionEditor extends ViewPart
 			public void run()
 			{
 				setItemStatus(DataCollectionObject.ACTIVE);
+            actionActivate.setEnabled(false);
+            actionDisable.setEnabled(true);
 			}
 		};
 		actionActivate.setEnabled(false);
@@ -476,6 +478,8 @@ public class DataCollectionEditor extends ViewPart
 			public void run()
 			{
 				setItemStatus(DataCollectionObject.DISABLED);
+            actionActivate.setEnabled(true);
+            actionDisable.setEnabled(false);
 			}
 		};
 		actionDisable.setEnabled(false);
