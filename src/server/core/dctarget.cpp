@@ -347,7 +347,7 @@ UINT32 DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, UINT32 baseId
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-		if (object->hasValue() && (object->getType() == DCO_TYPE_ITEM))
+		if (object->hasValue() && (object->getType() == DCO_TYPE_ITEM) && object->getStatus() == ITEM_STATUS_ACTIVE)
 		{
 			if (((DCItem *)object)->hasActiveThreshold())
 			{
