@@ -1640,12 +1640,12 @@ void NetObj::addLocationToHistory()
    UINT32 startTimestamp;
    bool isSamePlace;
    DB_RESULT hResult;
-   if(!locationTableExists())
+   if (!isLocationTableExists())
    {
-      DbgPrintf(4, _T("NetObj::addLocationToHistory: Geolocation history table will be created for %d node"), m_dwId);
-      if(!cterateLocationGystoryTable(hdb))
+      DbgPrintf(4, _T("NetObj::addLocationToHistory: Geolocation history table will be created for object %s [%d]"), m_szName, m_dwId);
+      if (!createLocationHistoryTable(hdb))
       {
-         DbgPrintf(4, _T("NetObj::addLocationToHistory: Error while creation geolocation history table for %d node"), m_dwId);
+         DbgPrintf(4, _T("NetObj::addLocationToHistory: Error creating geolocation history table for object %s [%d]"), m_szName, m_dwId);
          return;
       }
    }
@@ -1673,12 +1673,12 @@ void NetObj::addLocationToHistory()
 		goto onFail;
 
    hResult = DBSelectPrepared(hStmt);
-   if(hResult == NULL)
+   if (hResult == NULL)
 		goto onFail;
-   if(DBGetNumRows(hResult) > 0)
+   if (DBGetNumRows(hResult) > 0)
    {
       startTimestamp = DBGetFieldULong(hResult, 0, 3);
-      isSamePlace = m_geoLocation.sameLocation(DBGetFieldDouble(hResult, 0, 0), DBGetFieldDouble(hResult, 0, 1), DBGetFieldULong(hResult, 0, 2));
+      isSamePlace = m_geoLocation.sameLocation(DBGetFieldDouble(hResult, 0, 0), DBGetFieldDouble(hResult, 0, 1), DBGetFieldLong(hResult, 0, 2));
       DBFreeStatement(hStmt);
    }
    else
@@ -1686,7 +1686,7 @@ void NetObj::addLocationToHistory()
       isSamePlace = false;
    }
 
-   if(isSamePlace)
+   if (isSamePlace)
    {
       TCHAR query[256];
       _sntprintf(query, 255, _T("UPDATE gps_history_%d SET end_timestamp = ? WHERE start_timestamp =? "), m_dwId);
@@ -1722,7 +1722,7 @@ void NetObj::addLocationToHistory()
 
 onFail:
    DBFreeStatement(hStmt);
-   DbgPrintf(4, _T("NetObj::addLocationToHistory: Failed to add location to history"));
+   DbgPrintf(4, _T("NetObj::addLocationToHistory(%s [%d]): Failed to add location to history"), m_szName, m_dwId);
    DBConnectionPoolReleaseConnection(hdb);
    return;
 }
@@ -1730,7 +1730,7 @@ onFail:
 /**
  * Check if given data table exist
  */
-bool NetObj::locationTableExists()
+bool NetObj::isLocationTableExists()
 {
    TCHAR table[256];
    _sntprintf(table, 256, _T("gps_history_%d"), m_dwId);
@@ -1742,7 +1742,10 @@ bool NetObj::locationTableExists()
    return rc != DBIsTableExist_NotFound;
 }
 
-bool NetObj::cterateLocationGystoryTable(DB_HANDLE hdb)
+/**
+ * Create table for storing geolocation history for this object
+ */
+bool NetObj::createLocationHistoryTable(DB_HANDLE hdb)
 {
    TCHAR szQuery[256], szQueryTemplate[256];
    MetaDataReadStr(_T("LocationHistory"), szQueryTemplate, 255, _T(""));
