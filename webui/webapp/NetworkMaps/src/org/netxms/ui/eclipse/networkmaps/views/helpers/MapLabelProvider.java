@@ -101,6 +101,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean showStatusFrame = false;
 	private boolean enableLongObjectName = false;
 	private boolean hideLinkLabel = false;
+	private boolean showOnlyStatusIcons = false;
 	private ILabelProvider workbenchLabelProvider;
 	private ObjectFigureType objectFigureType = ObjectFigureType.ICON;
 	private ColorCache colors;
@@ -254,6 +255,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	{
 		if (element instanceof NetworkMapObject)
 		{
+		   if(showOnlyStatusIcons)
+		      objectFigureType = objectFigureType.ICON;
 			switch(objectFigureType)
 			{
             case LARGE_LABEL:
@@ -635,5 +638,21 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    public void setLabelHideStatus(boolean checked)
    {
      hideLinkLabel = checked;
+   }
+
+   /**
+    * @return the showOnlyStatusIcons
+    */
+   public boolean isShowOnlyStatusIcons()
+   {
+      return showOnlyStatusIcons;
+   }
+
+   /**
+    * @param showOnlyStatusIcons the showOnlyStatusIcons to set
+    */
+   public void setShowOnlyStatusIcons(boolean showOnlyStatusIcons)
+   {
+      this.showOnlyStatusIcons = showOnlyStatusIcons;
    }
 }

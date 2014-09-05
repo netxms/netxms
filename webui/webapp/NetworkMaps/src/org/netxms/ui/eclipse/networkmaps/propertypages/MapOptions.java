@@ -35,7 +35,8 @@ public class MapOptions extends PropertyPage
 	private NetworkMap object;
 	private Button checkShowStatusIcon;
 	private Button checkShowStatusFrame;
-	private Button checkShowStatusBkgnd;
+   private Button checkShowStatusBkgnd;
+   private Button checkShowOnlyStatusIcon;
 	private Combo routingAlgorithm;
 	private Button radioColorDefault;
 	private Button radioColorCustom;
@@ -84,6 +85,10 @@ public class MapOptions extends PropertyPage
       checkShowStatusBkgnd = new Button(statusDisplayGroup, SWT.CHECK);
       checkShowStatusBkgnd.setText(Messages.get().MapOptions_ShowStatusBkgnd);
       checkShowStatusBkgnd.setSelection((object.getFlags() & NetworkMap.MF_SHOW_STATUS_BKGND) != 0);
+      
+      checkShowOnlyStatusIcon = new Button(statusDisplayGroup, SWT.CHECK);
+      checkShowOnlyStatusIcon.setText("Show only status icon");
+      checkShowOnlyStatusIcon.setSelection((object.getFlags() & NetworkMap.MF_SHOW_ONLY_STATUS_ICON) != 0);
       
 		/**** default link appearance ****/
 		Group linkGroup = new Group(dialogArea, SWT.NONE);
@@ -215,6 +220,8 @@ public class MapOptions extends PropertyPage
 			flags |= NetworkMap.MF_SHOW_STATUS_BKGND;
 		if (checkCalculateStatus.getSelection())
 			flags |= NetworkMap.MF_CALCULATE_STATUS;
+		if (checkShowOnlyStatusIcon.getSelection())
+		   flags |= NetworkMap.MF_SHOW_ONLY_STATUS_ICON;
 		md.setObjectFlags(flags);
 		
 		md.setConnectionRouting(routingAlgorithm.getSelectionIndex() + 1);

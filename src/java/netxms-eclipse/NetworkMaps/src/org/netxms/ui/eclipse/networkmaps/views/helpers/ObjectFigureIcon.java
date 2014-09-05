@@ -51,11 +51,13 @@ public class ObjectFigureIcon extends ObjectFigure
 		super(element, labelProvider);
 		
 		setLayoutManager(new BorderLayout());
-		
-		label = new Label(object.getObjectName());
-		label.setFont(labelProvider.getLabelFont());
-		label.setLabelAlignment(PositionConstants.CENTER);
-		add(label, BorderLayout.BOTTOM);
+      if(!labelProvider.isShowOnlyStatusIcons())
+      {
+      	label = new Label(object.getObjectName());
+      	label.setFont(labelProvider.getLabelFont());
+      	label.setLabelAlignment(PositionConstants.CENTER);
+      	add(label, BorderLayout.BOTTOM);
+      }
 		
 		setOpaque(false);
 
@@ -67,7 +69,16 @@ public class ObjectFigureIcon extends ObjectFigure
 	 */
 	private void updateSize(MapLabelProvider labelProvider)
 	{
-		final Image image = labelProvider.getImage(element);
+      Image image = null;
+      if(labelProvider.isShowOnlyStatusIcons())
+      {
+         image = labelProvider.getStatusImage(object); 
+      }
+      else
+      {
+         image = labelProvider.getImage(element);
+      }
+      
 		if (image != null)
 		{
 			imageWidth = image.getImageData().width;
@@ -79,13 +90,20 @@ public class ObjectFigureIcon extends ObjectFigure
 			imageHeight = 32;
 		}
 		
-		Dimension ls = label.getPreferredSize(-1, -1);
-		if(!labelProvider.isLongObjectNameEnabled())
+		if(!labelProvider.isShowOnlyStatusIcons())
 		{
-   		if (ls.width > imageWidth * 2)
-   			ls.width = imageWidth * 2; 
+   		Dimension ls = label.getPreferredSize(-1, -1);
+   		if(!labelProvider.isLongObjectNameEnabled())
+   		{
+      		if (ls.width > imageWidth * 2)
+      			ls.width = imageWidth * 2; 
+   		}
+   		setSize(Math.max(Math.max(ls.width, imageWidth), imageWidth + BACKGROUND_MARGIN_X * 2 + FRAME_LINE_WIDTH), imageHeight + IMAGE_MARGIN_Y * 2 + ls.height);
+	   }
+		else
+		{
+		   setSize(Math.max( imageWidth, imageWidth + BACKGROUND_MARGIN_X * 2 + FRAME_LINE_WIDTH), imageHeight + IMAGE_MARGIN_Y * 2);
 		}
-		setSize(Math.max(Math.max(ls.width, imageWidth), imageWidth + BACKGROUND_MARGIN_X * 2 + FRAME_LINE_WIDTH), imageHeight + IMAGE_MARGIN_Y * 2 + ls.height);
 	}
 
 	/* (non-Javadoc)
@@ -100,7 +118,7 @@ public class ObjectFigureIcon extends ObjectFigure
 		final int imageOffset = (rect.width - imageWidth) / 2;
 		
 		// Status background
-		if (labelProvider.isShowStatusBackground())
+		if (labelProvider.isShowStatusBackground() && !labelProvider.isShowOnlyStatusIcons())
 		{
 			rect.x += imageOffset - BACKGROUND_MARGIN_X;
 			rect.y += IMAGE_MARGIN_Y - BACKGROUND_MARGIN_Y;
@@ -116,7 +134,7 @@ public class ObjectFigureIcon extends ObjectFigure
 		}
 			
 		// Status frame
-		if (labelProvider.isShowStatusFrame())
+		if (labelProvider.isShowStatusFrame() && !labelProvider.isShowOnlyStatusIcons())
 		{
 			rect.x += imageOffset - BACKGROUND_MARGIN_X;
 			rect.y += IMAGE_MARGIN_Y - BACKGROUND_MARGIN_Y + 1;
@@ -146,14 +164,22 @@ public class ObjectFigureIcon extends ObjectFigure
 		}
 			
 		// Object image
-		Image image = labelProvider.getImage(element);
+		Image image = null;
+		if(labelProvider.isShowOnlyStatusIcons())
+		{
+         image = labelProvider.getStatusImage(object);  //TODO: draw a bit bigger picture
+		}
+		else
+		{
+		   image = labelProvider.getImage(element);
+		}
 		if (image != null)
 		{
 			gc.drawImage(image, rect.x + imageOffset, rect.y + IMAGE_MARGIN_Y);
 		}
 		
 		// Status image
-		if (labelProvider.isShowStatusIcons())
+		if (labelProvider.isShowStatusIcons() && !labelProvider.isShowOnlyStatusIcons())
 		{
 			image = labelProvider.getStatusImage(object);
 			if (image != null)

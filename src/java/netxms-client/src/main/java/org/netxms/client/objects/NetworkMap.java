@@ -42,11 +42,12 @@ public class NetworkMap extends GenericObject
 	public static final int TYPE_LAYER2_TOPOLOGY = 1;
 	public static final int TYPE_IP_TOPOLOGY = 2;
 	
-	public static final int MF_SHOW_STATUS_ICON  = 0x000001;
-	public static final int MF_SHOW_STATUS_FRAME = 0x000002;
-	public static final int MF_SHOW_STATUS_BKGND = 0x000004;
-	public static final int MF_SHOW_END_NODES    = 0x000008;
-	public static final int MF_CALCULATE_STATUS  = 0x000010;
+	public static final int MF_SHOW_STATUS_ICON       = 0x000001;
+	public static final int MF_SHOW_STATUS_FRAME      = 0x000002;
+	public static final int MF_SHOW_STATUS_BKGND      = 0x000004;
+	public static final int MF_SHOW_END_NODES         = 0x000008;
+	public static final int MF_CALCULATE_STATUS       = 0x000010;
+   public static final int MF_SHOW_ONLY_STATUS_ICON  = 0x000020;
 	
 	private int mapType;
 	private MapLayoutAlgorithm layout;

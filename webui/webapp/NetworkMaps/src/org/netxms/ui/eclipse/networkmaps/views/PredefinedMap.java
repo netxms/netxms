@@ -180,6 +180,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
 		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
 		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
+      labelProvider.setShowOnlyStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_ONLY_STATUS_ICON) > 0);
 		
 		actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
 		actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
@@ -596,7 +597,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		Object[] objects = selection.toArray();
 		long id1 = ((NetworkMapObject)objects[0]).getId();
 		long id2 = ((NetworkMapObject)objects[1]).getId();
-   	mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, id1, id2));
+		mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, id1, id2));
 		saveMap();
 	}
 
@@ -843,7 +844,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 			else
 			{
-				viewer.setBackgroundImage(ImageProvider.getInstance(display).getImage(mapObject.getBackground()));
+				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
 			}
 		}
 
@@ -852,6 +853,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
 		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
 		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
+      labelProvider.setShowOnlyStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_ONLY_STATUS_ICON) > 0);
 		
 		refreshMap();
 	}
