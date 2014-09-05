@@ -135,7 +135,7 @@
 /**
  * Compatibility defines for C sources
  */
-#ifndef __cplusplus
+#if !defined(__cplusplus) && !defined(CORTEX)
 typedef int bool;
 #endif
 

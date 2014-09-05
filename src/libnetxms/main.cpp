@@ -75,7 +75,7 @@ void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr)
 /**
  * strupr() implementation for non-windows platforms
  */
-void LIBNETXMS_EXPORTABLE strupr(char *in)
+void LIBNETXMS_EXPORTABLE __strupr(char *in)
 {
 	char *p = in;
 
@@ -96,7 +96,7 @@ void LIBNETXMS_EXPORTABLE strupr(char *in)
 /**
  * wcsupr() implementation for non-windows platforms
  */
-void LIBNETXMS_EXPORTABLE wcsupr(WCHAR *in)
+void LIBNETXMS_EXPORTABLE __wcsupr(WCHAR *in)
 {
 	WCHAR *p = in;
 
