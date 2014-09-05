@@ -770,6 +770,17 @@ typedef struct
 } DELAYED_IDATA_INSERT;
 
 /**
+ * Delayed request for raw_dci_values UPDATE
+ */
+typedef struct
+{
+	time_t timestamp;
+	UINT32 dciId;
+	TCHAR rawValue[MAX_RESULT_LENGTH];
+	TCHAR transformedValue[MAX_RESULT_LENGTH];
+} DELAYED_RAW_DATA_UPDATE;
+
+/**
  * Graph ACL entry
  */
 struct GRAPH_ACL_ENTRY
@@ -837,6 +848,7 @@ void NXCORE_EXPORTABLE ObjectTransactionEnd();
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);
 void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *value);
+void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue);
 void StartDBWriter();
 void StopDBWriter();
 
@@ -1031,8 +1043,9 @@ extern TCHAR g_szDbSchema[];
 extern TCHAR NXCORE_EXPORTABLE g_szJavaPath[];
 extern DB_DRIVER g_dbDriver;
 extern DB_HANDLE NXCORE_EXPORTABLE g_hCoreDB;
-extern Queue *g_pLazyRequestQueue;
-extern Queue *g_pIDataInsertQueue;
+extern Queue *g_dbWriterQueue;
+extern Queue *g_dciDataWriterQueue;
+extern Queue *g_dciRawDataWriterQueue;
 
 extern int NXCORE_EXPORTABLE g_dbSyntax;
 extern FileMonitoringList g_monitoringList;

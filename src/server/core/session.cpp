@@ -7915,7 +7915,7 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
 	msg.SetVariable(VID_QSIZE_CONDITION_POLLER, g_conditionPollerQueue.Size());
 	msg.SetVariable(VID_QSIZE_CONF_POLLER, g_configPollQueue.Size());
 	msg.SetVariable(VID_QSIZE_DCI_POLLER, g_pItemQueue->Size());
-	msg.SetVariable(VID_QSIZE_DBWRITER, g_pLazyRequestQueue->Size());
+	msg.SetVariable(VID_QSIZE_DBWRITER, g_dbWriterQueue->Size());
 	msg.SetVariable(VID_QSIZE_EVENT, g_pEventQueue->Size());
 	msg.SetVariable(VID_QSIZE_DISCOVERY, g_discoveryPollQueue.Size());
 	msg.SetVariable(VID_QSIZE_NODE_POLLER, g_nodePollerQueue.Size());

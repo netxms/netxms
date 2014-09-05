@@ -3712,6 +3712,10 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
       {
          _sntprintf(buffer, bufSize, _T("%f"), g_dAvgIDataWriterQueueSize);
       }
+      else if (!_tcsicmp(param, _T("Server.AverageDBWriterQueueSize.RawData")))
+      {
+         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgRawDataWriterQueueSize);
+      }
       else if (!_tcsicmp(param, _T("Server.AverageStatusPollerQueueSize")))
       {
          _sntprintf(buffer, bufSize, _T("%f"), g_dAvgStatusPollerQueueSize);

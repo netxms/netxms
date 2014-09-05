@@ -494,7 +494,7 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
          dwError = DCE_NOT_SUPPORTED;
       }
    }
-   else if(MatchString(_T("PingTime(*)"), param, FALSE))
+   else if (MatchString(_T("PingTime(*)"), param, FALSE))
    {
       TCHAR *pEnd, szArg[256];
       UINT32 i, dwId;
@@ -530,13 +530,13 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
          dwError = DCE_NOT_SUPPORTED;
       }
    }
-   else if(MatchString(_T("PingTime"), param, FALSE))
+   else if (!_tcsicmp(_T("PingTime"), param))
    {
       NetObj *pObject = NULL;
 
       // Find child object with requested ID or name
       LockChildList(FALSE);
-      for(int i = 0; i < m_dwChildCount; i++)
+      for(int i = 0; i < (int)m_dwChildCount; i++)
       {
          if (m_pChildList[i]->IpAddr() == m_dwIpAddr)
          {

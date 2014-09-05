@@ -111,7 +111,6 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 static int F_DeleteCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	NXSL_Object *object;
-	const TCHAR *value;
 
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;

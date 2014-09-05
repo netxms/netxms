@@ -691,31 +691,8 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
    m_prevRawValue = rawValue;
    m_tPrevValueTimeStamp = tmTimeStamp;
 
-	// Prepare SQL statement bindings
-	TCHAR dciId[32], pollTime[32];
-	_sntprintf(dciId, 32, _T("%d"), (int)m_dwId);
-	_sntprintf(pollTime, 32, _T("%ld"), (long)tmTimeStamp);
-
    // Save raw value into database
-	const TCHAR *values[4];
-	if (_tcslen((const TCHAR *)originalValue) >= MAX_DB_STRING)
-	{
-		// need to be truncated
-		TCHAR *temp = _tcsdup((const TCHAR *)originalValue);
-		temp[MAX_DB_STRING - 1] = 0;
-		values[0] = temp;
-	}
-	else
-	{
-		values[0] = (const TCHAR *)originalValue;
-	}
-	values[1] = pValue->getString();
-	values[2] = pollTime;
-	values[3] = dciId;
-	QueueSQLRequest(_T("UPDATE raw_dci_values SET raw_value=?,transformed_value=?,last_poll_time=? WHERE item_id=?"),
-	                4, updateRawValueTypes, values);
-	if ((void *)values[0] != originalValue)
-		free((void *)values[0]);
+   QueueRawDciDataUpdate(tmTimeStamp, m_dwId, (const TCHAR *)originalValue, pValue->getString());
 
 	// Save transformed value to database
    if ((m_flags & DCF_NO_STORAGE) == 0)

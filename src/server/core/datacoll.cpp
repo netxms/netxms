@@ -41,6 +41,7 @@ extern Queue g_syslogWriteQueue;
 double g_dAvgPollerQueueSize = 0;
 double g_dAvgDBWriterQueueSize = 0;
 double g_dAvgIDataWriterQueueSize = 0;
+double g_dAvgRawDataWriterQueueSize = 0;
 double g_dAvgDBAndIDataWriterQueueSize = 0;
 double g_dAvgStatusPollerQueueSize = 0;
 double g_dAvgConfigPollerQueueSize = 0;
@@ -357,14 +358,15 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
 {
    UINT32 i, currPos = 0;
    UINT32 pollerQS[12], dbWriterQS[12];
-   UINT32 iDataWriterQS[12], dbAndIDataWriterQS[12];
+   UINT32 iDataWriterQS[12], rawDataWriterQS[12], dbAndIDataWriterQS[12];
    UINT32 statusPollerQS[12], configPollerQS[12];
    UINT32 syslogProcessingQS[12], syslogWriterQS[12];
-   double sum1, sum2, sum3, sum4, sum5, sum6, sum7, sum8;
+   double sum1, sum2, sum3, sum4, sum5, sum6, sum7, sum8, sum9;
 
    memset(pollerQS, 0, sizeof(UINT32) * 12);
    memset(dbWriterQS, 0, sizeof(UINT32) * 12);
    memset(iDataWriterQS, 0, sizeof(UINT32) * 12);
+   memset(rawDataWriterQS, 0, sizeof(UINT32) * 12);
    memset(dbAndIDataWriterQS, 0, sizeof(UINT32) * 12);
    memset(statusPollerQS, 0, sizeof(UINT32) * 12);
    memset(configPollerQS, 0, sizeof(UINT32) * 12);
@@ -373,6 +375,7 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
    g_dAvgPollerQueueSize = 0;
    g_dAvgDBWriterQueueSize = 0;
    g_dAvgIDataWriterQueueSize = 0;
+   g_dAvgRawDataWriterQueueSize = 0;
    g_dAvgDBAndIDataWriterQueueSize = 0;
    g_dAvgStatusPollerQueueSize = 0;
    g_dAvgConfigPollerQueueSize = 0;
@@ -385,9 +388,10 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
 
       // Get current values
       pollerQS[currPos] = g_pItemQueue->Size();
-      dbWriterQS[currPos] = g_pLazyRequestQueue->Size();
-      iDataWriterQS[currPos] = g_pIDataInsertQueue->Size();
-      dbAndIDataWriterQS[currPos] = g_pLazyRequestQueue->Size() + g_pIDataInsertQueue->Size();
+      dbWriterQS[currPos] = g_dbWriterQueue->Size();
+      iDataWriterQS[currPos] = g_dciDataWriterQueue->Size();
+      rawDataWriterQS[currPos] = g_dciRawDataWriterQueue->Size();
+      dbAndIDataWriterQS[currPos] = g_dbWriterQueue->Size() + g_dciDataWriterQueue->Size() + g_dciRawDataWriterQueue->Size();
       statusPollerQS[currPos] = g_statusPollQueue.Size();
       configPollerQS[currPos] = g_configPollQueue.Size();
       syslogProcessingQS[currPos] = g_syslogProcessingQueue.Size();
@@ -397,25 +401,27 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
          currPos = 0;
 
       // Calculate new averages
-      for(i = 0, sum1 = 0, sum2 = 0, sum3 = 0, sum4 = 0, sum5 = 0, sum6 = 0, sum7 = 0, sum8 = 0; i < 12; i++)
+      for(i = 0, sum1 = 0, sum2 = 0, sum3 = 0, sum4 = 0, sum5 = 0, sum6 = 0, sum7 = 0, sum8 = 0, sum9 = 0; i < 12; i++)
       {
          sum1 += pollerQS[i];
          sum2 += dbWriterQS[i];
          sum3 += iDataWriterQS[i];
-         sum4 += dbAndIDataWriterQS[i];
-         sum5 += statusPollerQS[i];
-         sum6 += configPollerQS[i];
-         sum7 += syslogProcessingQS[i];
-         sum8 += syslogWriterQS[i];
+         sum4 += rawDataWriterQS[i];
+         sum5 += dbAndIDataWriterQS[i];
+         sum6 += statusPollerQS[i];
+         sum7 += configPollerQS[i];
+         sum8 += syslogProcessingQS[i];
+         sum9 += syslogWriterQS[i];
       }
       g_dAvgPollerQueueSize = sum1 / 12;
       g_dAvgDBWriterQueueSize = sum2 / 12;
       g_dAvgIDataWriterQueueSize = sum3 / 12;
-      g_dAvgDBAndIDataWriterQueueSize = sum4 / 12;
-      g_dAvgStatusPollerQueueSize = sum5 / 12;
-      g_dAvgConfigPollerQueueSize = sum6 / 12;
-      g_dAvgSyslogProcessingQueueSize = sum7 / 12;
-      g_dAvgSyslogWriterQueueSize = sum8 / 12;
+      g_dAvgRawDataWriterQueueSize = sum4 / 12;
+      g_dAvgDBAndIDataWriterQueueSize = sum5 / 12;
+      g_dAvgStatusPollerQueueSize = sum6 / 12;
+      g_dAvgConfigPollerQueueSize = sum7 / 12;
+      g_dAvgSyslogProcessingQueueSize = sum8 / 12;
+      g_dAvgSyslogWriterQueueSize = sum9 / 12;
    }
    return THREAD_OK;
 }
