@@ -819,12 +819,13 @@ CSCP_MESSAGE *CSCPMessage::createMessage()
 
    // Message should be aligned to 8 bytes boundary
    // This is always the case starting from version 2 because
-   // all variables padded to be _kratnimi_ 8 bytes
+   // all variables are padded to 8 bytes boundary
    if (m_version < 2)
       dwSize += (8 - (dwSize % 8)) & 7;
 
    // Create message
    CSCP_MESSAGE *pMsg = (CSCP_MESSAGE *)malloc(dwSize);
+   memset(pMsg, 0, dwSize);
    pMsg->wCode = htons(m_code);
    pMsg->wFlags = htons(m_flags);
    pMsg->dwSize = htonl(dwSize);
