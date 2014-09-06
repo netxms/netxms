@@ -1106,7 +1106,7 @@ void AlarmManager::watchdogThread()
 				 ((m_pAlarmList[i].nState & ALARM_STATE_STICKY) != 0) &&
 				 (((time_t)m_pAlarmList[i].ackTimeout <= now)))
 			{
-				DbgPrintf(5, _T("Alarm aknowledgment timeout: alarm_id=%u, timeout=%u, now=%u"),
+				DbgPrintf(5, _T("Alarm acknowledgment timeout: alarm_id=%u, timeout=%u, now=%u"),
 				          m_pAlarmList[i].dwAlarmId, m_pAlarmList[i].ackTimeout, (UINT32)now);
 
 				PostEvent(m_pAlarmList[i].dwTimeoutEvent, m_pAlarmList[i].dwSourceObject, "dssd",
