@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.osm.widgets;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -52,6 +53,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -194,7 +196,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
          {
             highlightobjectID = -1;
             toolTip.setVisible(false);
-            if (!historycalData) //$NON-NLS-1$
+            if (!historycalData || (coverage == null))
                return;           
             
             Point p = new Point(e.x, e.y);
@@ -517,10 +519,12 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
                }
                
                int color = SWT.COLOR_RED;
-               if(i ==  highlightobjectID)
+               if (i == highlightobjectID)
                {
                   color = SWT.COLOR_GREEN;
-                  toolTip.setText("Start time: " + history.get(i).getTimestamp() + "\nEnd Time: " + history.get(i).getEndTimestamp() + "\nLocation: " + history.get(i));
+                  DateFormat df = RegionalSettings.getDateTimeFormat();
+                  toolTip.setText(String.format("%s\r\n%s - %s", 
+                        history.get(i), df.format(history.get(i).getTimestamp()), df.format(history.get(i).getEndTimestamp())));
                   toolTip.setVisible(true);
                }
                   

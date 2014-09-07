@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.osm.widgets;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -59,6 +60,7 @@ import org.eclipse.ui.presentations.PresentationUtil;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -126,7 +128,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
    private QuadTree<GeoLocation> locationTree = new QuadTree<GeoLocation>();
    private AbstractObject historyObject = null;
    private Date till = new Date();
-   private int timeFrame = 60*60*1000;
+   private long timeFrame = 60*60*1000;
    private boolean strictTime = false;
    private int highlightobjectID = -1;
    private ToolTip toolTip;
@@ -330,7 +332,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 						Rectangle clientArea = getClientArea();
 						Point mapSize = new Point(clientArea.width, clientArea.height);
 						coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), GeoLocationCache.CENTER, accessor.getZoom());
-						if(!historycalData)
+						if (!historycalData || (coverage == null))
 						{
    						objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
    						GeoMapViewer.this.redraw();
@@ -472,10 +474,12 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
                }
                
                int color = SWT.COLOR_RED;
-               if(i ==  highlightobjectID)
+               if (i == highlightobjectID)
                {
                   color = SWT.COLOR_GREEN;
-                  toolTip.setText("Start time: " + history.get(i).getTimestamp() + "\nEnd Time: " + history.get(i).getEndTimestamp() + "\nLocation: " + history.get(i));
+                  DateFormat df = RegionalSettings.getDateTimeFormat();
+                  toolTip.setText(String.format("%s\r\n%s - %s",
+                        history.get(i), df.format(history.get(i).getTimestamp()), df.format(history.get(i).getEndTimestamp())));
                   toolTip.setVisible(true);
                }
                   
@@ -1032,7 +1036,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	/**
 	 * Sets new view period in minutes
 	 */
-	public void changeTimePeriod(int timePeriod)
+	public void changeTimePeriod(long timePeriod)
 	{
 	   strictTime = false;
 	   timeFrame = timePeriod * 60 * 1000;
