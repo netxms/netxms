@@ -625,19 +625,19 @@ public class AlarmList extends CompositeWithMessageBar
          }
       }
 
-      // sort by last change newest first
-      Collections.sort(filteredAlarmList, new Comparator<Alarm>() {
-         @Override
-         public int compare(Alarm alarm1, Alarm alarm2)
-         {
-            return -(alarm1.getLastChangeTime().compareTo(alarm2.getLastChangeTime()));
-         }
-      });
-
-      // limit if the feature is not disabled
-      if (session.getAlarmListDisplayLimit() > 0)
+      // limit number of alarms to display
+      if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() > session.getAlarmListDisplayLimit()))
       {
-         filteredAlarmList = filteredAlarmList.subList(0, Math.min(session.getAlarmListDisplayLimit(), filteredAlarmList.size()));
+         // sort by last change - newest first
+         Collections.sort(filteredAlarmList, new Comparator<Alarm>() {
+            @Override
+            public int compare(Alarm alarm1, Alarm alarm2)
+            {
+               return -(alarm1.getLastChangeTime().compareTo(alarm2.getLastChangeTime()));
+            }
+         });
+         
+         filteredAlarmList = filteredAlarmList.subList(0, session.getAlarmListDisplayLimit());
       }
 
       alarmViewer.getControl().getDisplay().asyncExec(new Runnable() {
