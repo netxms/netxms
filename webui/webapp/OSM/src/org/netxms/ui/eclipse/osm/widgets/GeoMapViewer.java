@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
@@ -87,7 +88,6 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
    private static final int END = 2;
    private static final String pointInformation[] = {"Start","End"};
    
-   
 	private static final Color MAP_BACKGROUND = new Color(Display.getCurrent(), 255, 255, 255);
    private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getCurrent(), 0, 0, 0);
    private static final Color INFO_BLOCK_TEXT = new Color(Display.getCurrent(), 255, 255, 255);
@@ -107,7 +107,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private static final int DRAG_JITTER = 8;
 
 	private ILabelProvider labelProvider;
-	private Area coverage = null;
+	private Area coverage = new Area(0, 0, 0, 0);
 	private List<AbstractObject> objects = new ArrayList<AbstractObject>();
 	private MapAccessor accessor;
 	private MapLoader mapLoader;
@@ -122,8 +122,10 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private int offsetY;
 	private TileSet currentTileSet = null;
 	private RAPDragTracker tracker;
-	//Historical variables
-	private boolean historycalData;
+	private Image imageZoomIn;
+	private Image imageZoomOut;
+	private Rectangle zoomControlRect = null;
+	private boolean historicalData;
    private List<GeoLocation> history = new ArrayList<GeoLocation>();
    private QuadTree<GeoLocation> locationTree = new QuadTree<GeoLocation>();
    private AbstractObject historyObject = null;
@@ -137,14 +139,17 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 * @param parent
 	 * @param style
 	 */
-	public GeoMapViewer(Composite parent, int style, final boolean historycalData, AbstractObject historyObject)
+	public GeoMapViewer(Composite parent, int style, final boolean historicalData, AbstractObject historyObject)
 	{
 		super(parent, style | SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED);
-		this.historycalData = historycalData;
-		if(historycalData)
+		this.historicalData = historicalData;
+		if (historicalData)
 		{
 		   this.historyObject = historyObject;		   
 		}
+
+		imageZoomIn = Activator.getImageDescriptor("icons/map_zoom_in.png").createImage();
+      imageZoomOut = Activator.getImageDescriptor("icons/map_zoom_out.png").createImage();
 
 		labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 		mapLoader = new MapLoader(getDisplay());
@@ -184,6 +189,8 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 					currentTileSet.dispose();
 					currentTileSet = null;
 				}
+				imageZoomIn.dispose();
+				imageZoomOut.dispose();
 			}
 		});
 
@@ -332,7 +339,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 						Rectangle clientArea = getClientArea();
 						Point mapSize = new Point(clientArea.width, clientArea.height);
 						coverage = GeoLocationCache.calculateCoverage(mapSize, accessor.getCenterPoint(), GeoLocationCache.CENTER, accessor.getZoom());
-						if (!historycalData || (coverage == null))
+						if (!historicalData)
 						{
    						objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
    						GeoMapViewer.this.redraw();
@@ -446,7 +453,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			Rectangle rect = getClientArea();
 			
 			final Point centerXY = GeoLocationCache.coordinateToDisplay(currentLocation, accessor.getZoom());
-         if(!historycalData)
+         if(!historicalData)
          {
    			for(AbstractObject object : objects)
    			{
@@ -529,17 +536,15 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		}
 		
 		// Draw current location info
-      final String text = currentLocation.toString();
-      final Point textSize = gc.textExtent(text);
+      String text = currentLocation.toString();
+      Point textSize = gc.textExtent(text);
 
       Rectangle rect = getClientArea();
-      rect.x = 10;
       rect.x = rect.width - textSize.x - 20;
       rect.y += 10;
       rect.width = textSize.x + 10;
       rect.height = textSize.y + 8;
 
-      gc.setAntialias(SWT.ON);
       gc.setBackground(INFO_BLOCK_BACKGROUND);
       gc.setAlpha(128);
       gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
@@ -557,6 +562,28 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			gc.setForeground(SharedColors.getColor(SharedColors.GEOMAP_TITLE, getDisplay()));
 			gc.drawText(title, x, 10, true);
 		}
+		
+		// Draw zoom control
+		gc.setFont(JFaceResources.getHeaderFont());
+		text = Integer.toString(accessor.getZoom());
+		textSize = gc.textExtent(text);
+		
+      rect = getClientArea();
+      rect.x = 10;
+      rect.y = 10;
+      rect.width = 80;
+      rect.height = 47 + textSize.y;
+
+      gc.setBackground(INFO_BLOCK_BACKGROUND);
+      gc.setAlpha(128);
+      gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
+      gc.setAlpha(255);
+      
+      gc.drawText(text, rect.x + rect.width / 2 - textSize.x / 2, rect.y + 5, true);
+      gc.drawImage(imageZoomIn, rect.x + 5, rect.y + rect.height - 37);
+      gc.drawImage(imageZoomOut, rect.x + 42, rect.y + rect.height - 37);
+      
+      zoomControlRect = rect;
 	}
 
 	/**
@@ -684,7 +711,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			@Override
 			public void run()
 			{
-			   if(!historycalData)
+			   if(!historicalData)
 			   {
 			      onCacheChange(object, prevLocation);
 			   }
@@ -706,12 +733,12 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private void onCacheChange(final AbstractObject object, final GeoLocation prevLocation)
 	{
 		GeoLocation currLocation = object.getGeolocation();
-		if (((currLocation.getType() != GeoLocation.UNSET) && coverage.contains(currLocation.getLatitude(),
-				currLocation.getLongitude()))
-				|| ((prevLocation != null) && (prevLocation.getType() != GeoLocation.UNSET) && coverage.contains(
-						prevLocation.getLatitude(), prevLocation.getLongitude())))
+		if (((currLocation.getType() != GeoLocation.UNSET) &&
+		      coverage.contains(currLocation.getLatitude(), currLocation.getLongitude()))
+				|| ((prevLocation != null) && (prevLocation.getType() != GeoLocation.UNSET) && 
+				      coverage.contains(prevLocation.getLatitude(), prevLocation.getLongitude())))
 		{
-		   if(!historycalData)
+		   if (!historicalData)
 		   {
    			objects = GeoLocationCache.getInstance().getObjectsInArea(coverage);
    			redraw();
@@ -739,7 +766,33 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	{
 		if (e.button == 1) // left button, ignore if map is currently loading
 		{
-			if ((e.stateMask & SWT.SHIFT) != 0)
+		   if (zoomControlRect.contains(e.x, e.y))
+		   {
+		      Rectangle r = new Rectangle(zoomControlRect.x + 5, zoomControlRect.y + zoomControlRect.height - 37, 32, 32);
+		      int zoom = accessor.getZoom();
+		      if (r.contains(e.x, e.y))
+		      {
+		         if (zoom < 18)
+		            zoom++;
+		      }
+		      else
+		      {
+		         r.x += 37;
+               if (r.contains(e.x, e.y))
+               {
+                  if (zoom > 1)
+                     zoom--;
+               }
+		      }
+		      
+		      if (zoom != accessor.getZoom())
+		      {
+		         accessor.setZoom(zoom);
+		         reloadMap();
+		         notifyOnZoomChange();
+		      }
+		   }
+		   else if ((e.stateMask & SWT.SHIFT) != 0)
 			{
 				if (accessor.getZoom() < 18)
 					selectionStartPoint = new Point(e.x, e.y);
