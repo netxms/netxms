@@ -23,6 +23,7 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -34,6 +35,11 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.ImageTransfer;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.dnd.TransferData;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -116,6 +122,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private Action actionProperties;
    private Action actionSave;
    private Action[] presetActions;
+   private Action actionCopyImage;
 
    /*
     * (non-Javadoc)
@@ -687,6 +694,17 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             }
          };
       }
+      
+      actionCopyImage = new Action("Copy map image to clipboard", SharedIcons.COPY) {
+          @Override
+          public void run()
+          {
+             Image image = chart.takeSnapshot();
+             ImageTransfer imageTransfer = ImageTransfer.getInstance();
+             final Clipboard clipboard = new Clipboard(getSite().getShell().getDisplay());
+             clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+          }
+       };
    }
 
    /**
@@ -795,6 +813,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       manager.add(actionZoomOut);
       manager.add(new Separator());
       manager.add(actionSave);
+      manager.add(actionCopyImage); 
       manager.add(new Separator());
       manager.add(actionRefresh);
    }

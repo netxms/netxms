@@ -49,6 +49,7 @@ import org.eclipse.birt.chart.model.type.impl.BarSeriesImpl;
 import org.eclipse.birt.chart.model.type.impl.PieSeriesImpl;
 import org.eclipse.birt.core.framework.PlatformConfig;
 import org.eclipse.draw2d.Graphics;
+import org.eclipse.draw2d.SWTGraphics;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.graphics.GC;
@@ -841,5 +842,22 @@ public class BirtChartFigure extends GenericChartFigure implements DataCompariso
          yAxis.getScale().setMin(NumberDataElementImpl.create(from));
          yAxis.getScale().setMax(NumberDataElementImpl.create(to));
       }
+   }
+   
+   /**
+    * Take snapshot of network map
+    * 
+    * @return
+    */
+   public Image takeSnapshot()
+   {
+      Rectangle rect = getClientArea();
+      Image image = new Image(Display.getCurrent(), rect.width, rect.height);
+      GC gc = new GC(image);
+      Graphics g = new SWTGraphics(gc);
+	  paint(g);
+	  g.dispose();
+      gc.dispose();
+      return image;
    }
 }
