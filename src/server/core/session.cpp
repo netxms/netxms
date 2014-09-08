@@ -5011,7 +5011,7 @@ void ClientSession::onAlarmUpdate(UINT32 dwCode, NXC_ALARM *pAlarm)
 void ClientSession::sendAllAlarms(UINT32 dwRqId)
 {
    MutexLock(m_mutexSendAlarms);
-   g_alarmMgr.sendAlarmsToClient(dwRqId, this);
+   SendAlarmsToClient(dwRqId, this);
    MutexUnlock(m_mutexSendAlarms);
 }
 
@@ -5028,13 +5028,13 @@ void ClientSession::getAlarm(CSCPMessage *request)
 
    // Get alarm id and it's source object
    UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   NetObj *object = GetAlarmSourceObject(alarmId);
    if (object != NULL)
    {
       // User should have "view alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-         msg.SetVariable(VID_RCC, g_alarmMgr.getAlarm(alarmId, &msg));
+         msg.SetVariable(VID_RCC, GetAlarm(alarmId, &msg));
       }
       else
       {
@@ -5066,14 +5066,14 @@ void ClientSession::getAlarmEvents(CSCPMessage *request)
 
    // Get alarm id and it's source object
    UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   NetObj *object = GetAlarmSourceObject(alarmId);
    if (object != NULL)
    {
       // User should have "view alarm" right to the object and
 		// system-wide "view event log" access
       if ((m_dwSystemAccess & SYSTEM_ACCESS_VIEW_EVENT_LOG) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-         msg.SetVariable(VID_RCC, g_alarmMgr.getAlarmEvents(alarmId, &msg));
+         msg.SetVariable(VID_RCC, GetAlarmEvents(alarmId, &msg));
       }
       else
       {
@@ -5111,13 +5111,13 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
    if (pRequest->isFieldExist(VID_HELPDESK_REF))
    {
       pRequest->GetVariableStr(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
-      object = g_alarmMgr.getAlarmSourceObject(hdref);
+      object = GetAlarmSourceObject(hdref);
       byHelpdeskRef = true;
    }
    else
    {
       alarmId = pRequest->GetVariableLong(VID_ALARM_ID);
-      object = g_alarmMgr.getAlarmSourceObject(alarmId);
+      object = GetAlarmSourceObject(alarmId);
       byHelpdeskRef = false;
    }
    if (object != NULL)
@@ -5127,8 +5127,8 @@ void ClientSession::acknowledgeAlarm(CSCPMessage *pRequest)
       {
 			msg.SetVariable(VID_RCC,
             byHelpdeskRef ?
-            g_alarmMgr.ackByHDRef(hdref, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)) :
-            g_alarmMgr.ackById(alarmId, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)));
+            AckAlarmByHDRef(hdref, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)) :
+            AckAlarmById(alarmId, this, pRequest->GetVariableShort(VID_STICKY_FLAG) != 0, pRequest->GetVariableLong(VID_TIMESTAMP)));
       }
       else
       {
@@ -5166,13 +5166,13 @@ void ClientSession::resolveAlarm(CSCPMessage *pRequest, bool terminate)
    if (pRequest->isFieldExist(VID_HELPDESK_REF))
    {
       pRequest->GetVariableStr(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
-      object = g_alarmMgr.getAlarmSourceObject(hdref);
+      object = GetAlarmSourceObject(hdref);
       byHelpdeskRef = true;
    }
    else
    {
       alarmId = pRequest->GetVariableLong(VID_ALARM_ID);
-      object = g_alarmMgr.getAlarmSourceObject(alarmId);
+      object = GetAlarmSourceObject(alarmId);
       byHelpdeskRef = false;
    }
    if (object != NULL)
@@ -5182,8 +5182,8 @@ void ClientSession::resolveAlarm(CSCPMessage *pRequest, bool terminate)
       {
          msg.SetVariable(VID_RCC,
             byHelpdeskRef ?
-            g_alarmMgr.resolveByHDRef(hdref, this, terminate) :
-            g_alarmMgr.resolveById(alarmId, this, terminate));
+            ResolveAlarmByHDRef(hdref, this, terminate) :
+            ResolveAlarmById(alarmId, this, terminate));
       }
       else
       {
@@ -5216,7 +5216,7 @@ void ClientSession::deleteAlarm(CSCPMessage *pRequest)
 
    // Get alarm id and it's source object
    UINT32 alarmId = pRequest->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   NetObj *object = GetAlarmSourceObject(alarmId);
    if (object != NULL)
    {
       // User should have "terminate alarm" right to the object
@@ -5224,7 +5224,7 @@ void ClientSession::deleteAlarm(CSCPMessage *pRequest)
       if ((object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_TERM_ALARMS)) &&
           (m_dwSystemAccess & SYSTEM_ACCESS_DELETE_ALARMS))
       {
-         g_alarmMgr.deleteAlarm(alarmId, false);
+         DeleteAlarm(alarmId, false);
          msg.SetVariable(VID_RCC, RCC_SUCCESS);
       }
       else
@@ -5257,13 +5257,13 @@ void ClientSession::openHelpdeskIssue(CSCPMessage *request)
 
    // Get alarm id and it's source object
    UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   NetObj *object = GetAlarmSourceObject(alarmId);
    if (object != NULL)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE_ISSUE))
       {
          TCHAR hdref[MAX_HELPDESK_REF_LEN];
-         msg.SetVariable(VID_RCC, g_alarmMgr.openHelpdeskIssue(alarmId, this, hdref));
+         msg.SetVariable(VID_RCC, OpenHelpdeskIssue(alarmId, this, hdref));
          msg.SetVariable(VID_HELPDESK_REF, hdref);
       }
       else
@@ -5297,13 +5297,13 @@ void ClientSession::getHelpdeskUrl(CSCPMessage *request)
 
    // Get alarm id and it's source object
    UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   NetObj *object = GetAlarmSourceObject(alarmId);
    if (object != NULL)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
          TCHAR url[MAX_PATH];
-         msg.SetVariable(VID_RCC, g_alarmMgr.getHelpdeskIssueUrl(alarmId, url, MAX_PATH));
+         msg.SetVariable(VID_RCC, GetHelpdeskIssueUrlFromAlarm(alarmId, url, MAX_PATH));
          msg.SetVariable(VID_URL, url);
       }
       else
@@ -5343,13 +5343,13 @@ void ClientSession::unlinkHelpdeskIssue(CSCPMessage *request)
    if (request->isFieldExist(VID_HELPDESK_REF))
    {
       request->GetVariableStr(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
-      object = g_alarmMgr.getAlarmSourceObject(hdref);
+      object = GetAlarmSourceObject(hdref);
       byHelpdeskRef = true;
    }
    else
    {
       alarmId = request->GetVariableLong(VID_ALARM_ID);
-      object = g_alarmMgr.getAlarmSourceObject(alarmId);
+      object = GetAlarmSourceObject(alarmId);
       byHelpdeskRef = false;
    }
    if (object != NULL)
@@ -5359,8 +5359,8 @@ void ClientSession::unlinkHelpdeskIssue(CSCPMessage *request)
       {
          msg.SetVariable(VID_RCC,
             byHelpdeskRef ?
-            g_alarmMgr.unlinkIssueByHDRef(hdref, this) :
-            g_alarmMgr.unlinkIssueById(alarmId, this));
+            UnlinkHelpdeskIssueByHDRef(hdref, this) :
+            UnlinkHelpdeskIssueById(alarmId, this));
       }
       else
       {
@@ -5393,13 +5393,13 @@ void ClientSession::getAlarmComments(CSCPMessage *request)
 
    // Get alarm id and it's source object
    UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   NetObj *object = GetAlarmSourceObject(alarmId);
    if (object != NULL)
    {
       // User should have "view alarms" right to the object
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-			msg.SetVariable(VID_RCC, g_alarmMgr.getAlarmComments(alarmId, &msg));
+			msg.SetVariable(VID_RCC, GetAlarmComments(alarmId, &msg));
       }
       else
       {
@@ -5436,13 +5436,13 @@ void ClientSession::updateAlarmComment(CSCPMessage *request)
    if (request->isFieldExist(VID_HELPDESK_REF))
    {
       request->GetVariableStr(VID_HELPDESK_REF, hdref, MAX_HELPDESK_REF_LEN);
-      object = g_alarmMgr.getAlarmSourceObject(hdref);
+      object = GetAlarmSourceObject(hdref);
       byHelpdeskRef = true;
    }
    else
    {
       alarmId = request->GetVariableLong(VID_ALARM_ID);
-      object = g_alarmMgr.getAlarmSourceObject(alarmId);
+      object = GetAlarmSourceObject(alarmId);
       byHelpdeskRef = false;
    }
    if (object != NULL)
@@ -5454,8 +5454,8 @@ void ClientSession::updateAlarmComment(CSCPMessage *request)
 			TCHAR *text = request->GetVariableStr(VID_COMMENTS);
 			msg.SetVariable(VID_RCC,
             byHelpdeskRef ?
-            g_alarmMgr.addAlarmComment(hdref, CHECK_NULL(text), m_dwUserId) :
-            g_alarmMgr.updateAlarmComment(alarmId, commentId, CHECK_NULL(text), m_dwUserId));
+            AddAlarmComment(hdref, CHECK_NULL(text), m_dwUserId) :
+            UpdateAlarmComment(alarmId, commentId, CHECK_NULL(text), m_dwUserId));
 			safe_free(text);
       }
       else
@@ -5487,14 +5487,14 @@ void ClientSession::deleteAlarmComment(CSCPMessage *request)
 
    // Get alarm id and it's source object
    UINT32 alarmId = request->GetVariableLong(VID_ALARM_ID);
-   NetObj *object = g_alarmMgr.getAlarmSourceObject(alarmId);
+   NetObj *object = GetAlarmSourceObject(alarmId);
    if (object != NULL)
    {
       // User should have "acknowledge alarm" right to the object
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_UPDATE_ALARMS))
       {
 			UINT32 commentId = request->GetVariableLong(VID_COMMENT_ID);
-			msg.SetVariable(VID_RCC, g_alarmMgr.deleteAlarmCommentByID(alarmId, commentId));
+			msg.SetVariable(VID_RCC, DeleteAlarmCommentByID(alarmId, commentId));
       }
       else
       {
@@ -7899,7 +7899,7 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
    msg.SetVariable(VID_NUM_SESSIONS, (UINT32)GetSessionCount());
 
    // Alarms
-   g_alarmMgr.getAlarmStats(&msg);
+   GetAlarmStats(&msg);
 
    // Process info
 #ifdef _WIN32

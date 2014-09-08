@@ -759,6 +759,14 @@ retry_db_lock:
 	// Initialize audit
 	InitAuditLog();
 
+	// Initialize event handling subsystem
+	if (!InitEventSubsystem())
+		return FALSE;
+
+	// Initialize alarms
+	if (!InitAlarmManager())
+		return FALSE;
+
 	// Initialize objects infrastructure and load objects from database
 	LoadNetworkDeviceDrivers();
 	ObjectsInit();
@@ -777,14 +785,6 @@ retry_db_lock:
 		nxlog_write(MSG_ACTION_INIT_ERROR, EVENTLOG_ERROR_TYPE, NULL);
 		return FALSE;
 	}
-
-	// Initialize event handling subsystem
-	if (!InitEventSubsystem())
-		return FALSE;
-
-	// Initialize alarms
-	if (!g_alarmMgr.init())
-		return FALSE;
 
    // Initialize helpdesk link
    SetHDLinkEntryPoints(ResolveAlarmByHDRef, TerminateAlarmByHDRef);
@@ -957,6 +957,7 @@ void NXCORE_EXPORTABLE Shutdown()
 
 	CleanupActions();
 	ShutdownEventSubsystem();
+   ShutdownAlarmManager();
 	DbgPrintf(1, _T("Event processing stopped"));
 
 	delete g_pScriptLibrary;

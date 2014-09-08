@@ -521,14 +521,14 @@ void EPRule::generateAlarm(Event *pEvent)
 	{
 		TCHAR *pszAckKey = pEvent->expandText(m_szAlarmKey);
 		if (pszAckKey[0] != 0)
-			g_alarmMgr.resolveByKey(pszAckKey, (m_dwFlags & RF_TERMINATE_BY_REGEXP) ? true : false, m_iAlarmSeverity == SEVERITY_TERMINATE, pEvent);
+			ResolveAlarmByKey(pszAckKey, (m_dwFlags & RF_TERMINATE_BY_REGEXP) ? true : false, m_iAlarmSeverity == SEVERITY_TERMINATE, pEvent);
 		free(pszAckKey);
 	}
 	else	// Generate new alarm
 	{
-		g_alarmMgr.newAlarm(m_szAlarmMessage, m_szAlarmKey, ALARM_STATE_OUTSTANDING,
-								  (m_iAlarmSeverity == SEVERITY_FROM_EVENT) ? pEvent->getSeverity() : m_iAlarmSeverity,
-								  m_dwAlarmTimeout, m_dwAlarmTimeoutEvent, pEvent, 0);
+		CreateNewAlarm(m_szAlarmMessage, m_szAlarmKey, ALARM_STATE_OUTSTANDING,
+                     (m_iAlarmSeverity == SEVERITY_FROM_EVENT) ? pEvent->getSeverity() : m_iAlarmSeverity,
+                     m_dwAlarmTimeout, m_dwAlarmTimeoutEvent, pEvent, 0);
 	}
 }
 

@@ -123,7 +123,7 @@ bool NetObj::deleteFromDB(DB_HANDLE hdb)
    // Delete alarms
    if (success && ConfigReadInt(_T("DeleteAlarmsOfDeletedObject"), 1))
    {
-      success = g_alarmMgr.deleteObjectAlarms(m_dwId, hdb);
+      success = DeleteObjectAlarms(m_dwId, hdb);
    }
 
    // Delete module data
@@ -632,7 +632,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
 
    if (m_iStatus != STATUS_UNMANAGED)
    {
-      iMostCriticalAlarm = g_alarmMgr.getMostCriticalStatusForObject(m_dwId);
+      iMostCriticalAlarm = GetMostCriticalStatusForObject(m_dwId);
 
       LockData();
       if (m_iStatusCalcAlg == SA_CALCULATE_DEFAULT)
