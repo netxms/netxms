@@ -869,6 +869,7 @@ static void CheckDataTables()
    CheckDataTablesForClass(_T("nodes"), _T("node"));
    CheckDataTablesForClass(_T("clusters"), _T("cluster"));
    CheckDataTablesForClass(_T("mobile_devices"), _T("mobile device"));
+   CheckDataTablesForClass(_T("access_points"), _T("access point"));
 
 	EndStage();
 }

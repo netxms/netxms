@@ -5277,9 +5277,9 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
          {
             bool nodeFound = false;
             bool ifaceFound = false;
-		      for(int i = 0; i < nbs->size(); i++)
+		      for(int j = 0; j < nbs->size(); j++)
 		      {
-			      LL_NEIGHBOR_INFO *ni = nbs->getConnection(i);
+			      LL_NEIGHBOR_INFO *ni = nbs->getConnection(j);
                if (ni->objectId == iface->getPeerNodeId())
                {
                   nodeFound = true;
