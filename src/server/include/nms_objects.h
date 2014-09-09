@@ -614,7 +614,7 @@ protected:
 	UINT32 m_portNumber;				// Vendor/device specific port number
 	UINT32 m_peerNodeId;				// ID of peer node object, or 0 if unknown
 	UINT32 m_peerInterfaceId;		// ID of peer interface object, or 0 if unknown
-   int m_peerDiscoveryProtocol;  // Protocol used to discover peer node
+   LinkLayerProtocol m_peerDiscoveryProtocol;  // Protocol used to discover peer node
 	WORD m_adminState;				// interface administrative state
 	WORD m_operState;					// interface operational state
 	WORD m_dot1xPaeAuthState;		// 802.1x port auth state
@@ -655,7 +655,7 @@ public:
 	UINT32 getPortNumber() { return m_portNumber; }
 	UINT32 getPeerNodeId() { return m_peerNodeId; }
 	UINT32 getPeerInterfaceId() { return m_peerInterfaceId; }
-   int getPeerDiscoveryProtocol() { return m_peerDiscoveryProtocol; }
+   LinkLayerProtocol getPeerDiscoveryProtocol() { return m_peerDiscoveryProtocol; }
 	UINT32 getFlags() { return m_flags; }
 	int getAdminState() { return (int)m_adminState; }
 	int getOperState() { return (int)m_operState; }
@@ -685,7 +685,7 @@ public:
    void setPortNumber(UINT32 port) { m_portNumber = port; Modify(); }
 	void setPhysicalPortFlag(bool isPhysical) { if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; Modify(); }
 	void setManualCreationFlag(bool isManual) { if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; Modify(); }
-	void setPeer(Node *node, Interface *iface, int protocol);
+	void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol);
    void clearPeer() { m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; Modify(); }
    void setDescription(const TCHAR *descr) { LockData(); nx_strncpy(m_description, descr, MAX_DB_STRING); Modify(); UnlockData(); }
 

@@ -1436,6 +1436,56 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		{
 			ShowServerStats(pCtx);
 		}
+		else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
+		{
+			pArg = ExtractWord(pArg, szBuffer);
+			UINT32 nodeId = _tcstoul(szBuffer, NULL, 0);
+			if (nodeId != 0)
+			{
+				Node *node = (Node *)FindObjectById(nodeId, OBJECT_NODE);
+				if (node != NULL)
+				{
+            	LinkLayerNeighbors *nbs = BuildLinkLayerNeighborList(node);
+               if (nbs != NULL)
+               {
+                  ConsolePrintf(pCtx, _T("Proto   | PtP | ifLocal | ifRemote | Peer\n")
+                                      _T("--------+-----+---------+----------+------------------------------------\n"));
+                  for(int i = 0; i < nbs->size(); i++)
+                  {
+            			LL_NEIGHBOR_INFO *ni = nbs->getConnection(i);
+                     TCHAR peer[256];
+                     if (ni->objectId != 0)
+                     {
+                        NetObj *object = FindObjectById(ni->objectId);
+                        if (object != NULL)
+                           _sntprintf(peer, 256, _T("%s [%d]"), object->Name(), ni->objectId);
+                        else
+                           _sntprintf(peer, 256, _T("[%d]"), ni->objectId);
+                     }
+                     else
+                     {
+                        peer[0] = 0;
+                     }
+                     ConsolePrintf(pCtx, _T("%-7s | %c   | %7d | %7d | %s\n"), 
+                        GetLinkLayerProtocolName(ni->protocol), ni->isPtToPt ? _T('Y') : _T('N'), ni->ifLocal, ni->ifRemote, peer);
+                  }
+                  nbs->decRefCount();
+               }
+               else
+               {
+   					ConsolePrintf(pCtx, _T("ERROR: call to BuildLinkLayerNeighborList failed\n\n"));
+               }
+				}
+				else
+				{
+					ConsolePrintf(pCtx, _T("ERROR: Node with ID %d does not exist\n\n"), nodeId);
+				}
+			}
+			else
+			{
+				ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+			}
+		}
 		else if (IsCommand(_T("USERS"), szBuffer, 1))
 		{
 			DumpUsers(pCtx);
@@ -1687,6 +1737,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   show routing-table <node> - Show cached routing table for node\n")
 				_T("   show sessions             - Show active client sessions\n")
 				_T("   show stats                - Show server statistics\n")
+				_T("   show topology <node>      - Collect and show link layer topology for node\n")
 				_T("   show users                - Show users\n")
 				_T("   show vlans <node>         - Show cached VLAN information for node\n")
 				_T("   show watchdog             - Display watchdog information\n")

@@ -187,7 +187,7 @@ BOOL Interface::CreateFromDB(UINT32 dwId)
 		m_dot1xBackendAuthState = (WORD)DBGetFieldLong(hResult, 0, 15);
 		m_adminState = (WORD)DBGetFieldLong(hResult, 0, 16);
 		m_operState = (WORD)DBGetFieldLong(hResult, 0, 17);
-		m_peerDiscoveryProtocol = DBGetFieldLong(hResult, 0, 18);
+		m_peerDiscoveryProtocol = (LinkLayerProtocol)DBGetFieldLong(hResult, 0, 18);
 
       // Link interface to node
       if (!m_isDeleted)
@@ -719,7 +719,7 @@ void Interface::CreateMessage(CSCPMessage *pMsg)
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
 	pMsg->SetVariable(VID_PEER_NODE_ID, m_peerNodeId);
 	pMsg->SetVariable(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
-	pMsg->SetVariable(VID_PEER_PROTOCOL, m_peerDiscoveryProtocol);
+	pMsg->SetVariable(VID_PEER_PROTOCOL, (INT16)m_peerDiscoveryProtocol);
 	pMsg->SetVariable(VID_DESCRIPTION, m_description);
 	pMsg->SetVariable(VID_ADMIN_STATE, m_adminState);
 	pMsg->SetVariable(VID_OPER_STATE, m_operState);
@@ -889,7 +889,7 @@ void Interface::onObjectDelete(UINT32 dwObjectId)
 /**
  * Set peer information
  */
-void Interface::setPeer(Node *node, Interface *iface, int protocol)
+void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol)
 {
    if ((m_peerNodeId == node->Id()) && (m_peerInterfaceId == iface->Id()) && (m_peerDiscoveryProtocol == protocol))
       return;
