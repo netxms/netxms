@@ -180,7 +180,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
 		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
 		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
-      labelProvider.setShowOnlyStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_ONLY_STATUS_ICON) > 0);
 		
 		actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
 		actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
@@ -853,7 +852,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
 		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
 		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
-      labelProvider.setShowOnlyStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_ONLY_STATUS_ICON) > 0);
 		
 		refreshMap();
 	}

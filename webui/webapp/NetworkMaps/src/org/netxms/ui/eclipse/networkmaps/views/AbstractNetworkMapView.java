@@ -160,6 +160,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionFiguresIcons;
 	protected Action actionFiguresSmallLabels;
 	protected Action actionFiguresLargeLabels;
+	protected Action actionFiguresStatusIconOnly;
 	protected Action actionShowGrid;
 	protected Action actionAlignToGrid;
 	protected Action actionSnapToGrid;
@@ -725,6 +726,21 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 		actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.LARGE_LABEL);
+		
+		actionFiguresStatusIconOnly = new Action("Show only status icon", Action.AS_RADIO_BUTTON) {
+         @Override
+         public void run()
+         {
+            labelProvider.setObjectFigureType(ObjectFigureType.STATUS);
+            updateObjectPositions();
+            saveLayout();
+            viewer.refresh(true);
+            actionShowStatusBackground.setEnabled(false);
+            actionShowStatusFrame.setEnabled(false);
+            actionShowStatusIcon.setEnabled(false);
+         }
+      };
+      actionFiguresStatusIconOnly.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.STATUS);
 
 		actionShowGrid = new Action(Messages.get().AbstractNetworkMapView_ShowGrid, Action.AS_CHECK_BOX) {
 			@Override
@@ -835,6 +851,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		figureType.add(actionFiguresIcons);
 		figureType.add(actionFiguresSmallLabels);
 		figureType.add(actionFiguresLargeLabels);
+		figureType.add(actionFiguresStatusIconOnly);
 
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
@@ -980,6 +997,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		figureType.add(actionFiguresIcons);
 		figureType.add(actionFiguresSmallLabels);
 		figureType.add(actionFiguresLargeLabels);
+      figureType.add(actionFiguresStatusIconOnly);
 
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);

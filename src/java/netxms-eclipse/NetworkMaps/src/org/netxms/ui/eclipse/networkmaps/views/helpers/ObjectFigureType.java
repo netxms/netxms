@@ -10,5 +10,6 @@ public enum ObjectFigureType
 {
 	ICON,
 	SMALL_LABEL,
-	LARGE_LABEL
+	LARGE_LABEL,
+	STATUS
 }
