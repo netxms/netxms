@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.widgets;
 
 import java.util.Date;
@@ -13,6 +31,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
+import org.netxms.client.TimePeriod;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -27,7 +46,7 @@ public class TimePeriodSelector extends Composite
    private DateTimeSelector timeFrom;
    private DateTimeSelector timeTo;
    
-   public TimePeriodSelector(Composite parent, int style, int timeFrameType, int timeRangeValue, int timeUnitValue, Date timeFromValue, Date timeToValue)
+   public TimePeriodSelector(Composite parent, int style, TimePeriod period)
    {
       super(parent, style);
       
@@ -62,12 +81,12 @@ public class TimePeriodSelector extends Composite
 
       radioBackFromNow = new Button(timeGroup, SWT.RADIO);
       radioBackFromNow.setText("Back from now");
-      radioBackFromNow.setSelection(timeFrameType == GraphSettings.TIME_FRAME_BACK_FROM_NOW);
+      radioBackFromNow.setSelection(period.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW);
       radioBackFromNow.addSelectionListener(listener);
       
       radioFixedInterval = new Button(timeGroup, SWT.RADIO);
       radioFixedInterval.setText("Fixed time frame");
-      radioFixedInterval.setSelection(timeFrameType == GraphSettings.TIME_FRAME_FIXED);
+      radioFixedInterval.setSelection(period.getTimeFrameType() == GraphSettings.TIME_FRAME_FIXED);
       radioFixedInterval.addSelectionListener(listener);
       
       Composite timeBackGroup = new Composite(timeGroup, SWT.NONE);
@@ -84,14 +103,14 @@ public class TimePeriodSelector extends Composite
       timeBackGroup.setLayoutData(gd);
       
       timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, "Time interval", 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
-      timeRange.setSelection(timeRangeValue);
+      timeRange.setSelection(period.getTimeRangeValue());
       timeRange.setEnabled(radioBackFromNow.getSelection());
       
       timeUnits = WidgetHelper.createLabeledCombo(timeBackGroup, SWT.READ_ONLY, "Time units", WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeUnits.add("Minutes");
       timeUnits.add("Hours");
       timeUnits.add("Days");
-      timeUnits.select(timeUnitValue);
+      timeUnits.select(period.getTimeUnitValue());
       timeUnits.setEnabled(radioBackFromNow.getSelection());
 
       Composite timeFixedGroup = new Composite(timeGroup, SWT.NONE);
@@ -115,12 +134,23 @@ public class TimePeriodSelector extends Composite
       };
       
       timeFrom = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, "Time from", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      timeFrom.setValue(timeFromValue);
+      timeFrom.setValue(period.getTimeFromValue());
       timeFrom.setEnabled(radioFixedInterval.getSelection());
 
       timeTo = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, "Time to", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      timeTo.setValue(timeToValue);
+      timeTo.setValue(period.getTimeToValue());
       timeTo.setEnabled(radioFixedInterval.getSelection());
+   }
+   
+   public TimePeriod getTimePeriod()
+   {
+      TimePeriod tp = new TimePeriod();
+      tp.setTimeFrameType(radioBackFromNow.getSelection() ? GraphSettings.TIME_FRAME_BACK_FROM_NOW : GraphSettings.TIME_FRAME_FIXED);
+      tp.setTimeRangeValue(timeRange.getSelection());
+      tp.setTimeUnitValue(timeUnits.getSelectionIndex());
+      tp.setTimeFromValue(timeFrom.getValue());
+      tp.setTimeToValue(timeTo.getValue());
+      return tp;
    }
    
    public int getTimeFrameType()
@@ -136,33 +166,6 @@ public class TimePeriodSelector extends Composite
    public int getTimeUnitValue()
    {
       return timeUnits.getSelectionIndex();
-   }
-   
-   public long getTimeInMinutes()
-   {
-      long result;
-      if(radioBackFromNow.getSelection())
-      {
-         switch(timeUnits.getSelectionIndex())
-         {
-            case 0:
-               result = timeRange.getSelection();
-               break;
-            case 1:
-               result = timeRange.getSelection() * 60;
-               break;
-            case 2:
-               result = timeRange.getSelection() * 24 * 60;
-               break;
-            default:
-               result = 0;
-         }
-      }
-      else 
-      {
-         result = timeTo.getValue().getTime() - timeFrom.getValue().getTime();
-      }
-      return result; //TODO: implement
    }
    
    public Date getTimeFrom()

@@ -180,7 +180,7 @@ public class General extends PropertyPage
 			}
 		});
       
-      timeSelector = new TimePeriodSelector(dialogArea, SWT.NONE, config.getTimeFrameType(), config.getTimeRange(), config.getTimeUnits(), config.getTimeFrom(), config.getTimeTo());
+      timeSelector = new TimePeriodSelector(dialogArea, SWT.NONE, config.timePeriod());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -188,7 +188,6 @@ public class General extends PropertyPage
 
       yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
       gd = new GridData();
-      gd.horizontalSpan = layout.numColumns;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       yAxisRange.setLayoutData(gd);

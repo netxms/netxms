@@ -18,25 +18,24 @@
  */
 package org.netxms.ui.eclipse.osm.dialogs;
 
-import java.util.Date;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.client.TimePeriod;
 import org.netxms.ui.eclipse.widgets.TimePeriodSelector;
 
 public class TimeSelectionDialog extends Dialog
 {
    private TimePeriodSelector timeSelector;
-   private int timeFrameType;
-   private long timeInMinutes;
-   private Date endTime;
+   private TimePeriod timePeriod;
    
-   public TimeSelectionDialog(Shell parentShell)
+   public TimeSelectionDialog(Shell parentShell, TimePeriod tp)
    {
-      super(parentShell);        
+      super(parentShell);  
+      timePeriod = tp;
    }
    
    /* (non-Javadoc)
@@ -56,8 +55,7 @@ public class TimeSelectionDialog extends Dialog
    protected Control createDialogArea(Composite parent)
    {
       Composite dialogArea = (Composite)super.createDialogArea(parent);
-
-      timeSelector = new TimePeriodSelector(dialogArea, SWT.NONE, 1, 1, 1, new Date((new Date()).getTime() - 3600000), new Date());
+      timeSelector = new TimePeriodSelector(dialogArea, SWT.NONE, timePeriod);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -66,31 +64,18 @@ public class TimeSelectionDialog extends Dialog
       return dialogArea;
    }
    
-   public int getTimeFrameType()
-   {
-      return timeFrameType;
-   }
-   
-   public long getTimeInMinutes()
-   {
-      return timeInMinutes;
-   }
-   
-   public Date getTimeFrom()
-   {      
-      return endTime;
-   }
-   
    /* (non-Javadoc)
     * @see org.eclipse.jface.dialogs.Dialog#okPressed()
     */
    @Override
    protected void okPressed()
    {
-      timeFrameType = timeSelector.getTimeFrameType();
-      timeInMinutes = timeSelector.getTimeInMinutes();
-      endTime = timeSelector.getTimeTo();      
-
+      timePeriod = timeSelector.getTimePeriod();  
       super.okPressed();
+   }
+
+   public TimePeriod getTimePeriod()
+   {
+      return timePeriod;
    }
 }

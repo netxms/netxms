@@ -20,7 +20,6 @@ package org.netxms.ui.eclipse.osm.widgets;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -60,6 +59,8 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.presentations.PresentationUtil;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
+import org.netxms.client.TimePeriod;
+import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
@@ -129,12 +130,10 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
    private List<GeoLocation> history = new ArrayList<GeoLocation>();
    private QuadTree<GeoLocation> locationTree = new QuadTree<GeoLocation>();
    private AbstractObject historyObject = null;
-   private Date till = new Date();
-   private long timeFrame = 60*60*1000;
-   private boolean strictTime = false;
+   private TimePeriod timePeriod = new TimePeriod();
    private int highlightobjectID = -1;
    private ToolTip toolTip;
-
+	
 	/**
 	 * @param parent
 	 * @param style
@@ -147,7 +146,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		{
 		   this.historyObject = historyObject;		   
 		}
-
+		
 		imageZoomIn = Activator.getImageDescriptor("icons/map_zoom_in.png").createImage();
       imageZoomOut = Activator.getImageDescriptor("icons/map_zoom_out.png").createImage();
 
@@ -1059,11 +1058,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            if(!strictTime)
-            {
-               till = new Date();
-            }
-            history = session.getLocationHistory(historyObject.getObjectId(), new Date(till.getTime() - timeFrame), till);
+            history = session.getLocationHistory(historyObject.getObjectId(), timePeriod.getPeriodStart(), timePeriod.getPeriodEnd());
             for(int i = 0; i < history.size(); i++)
                locationTree.insert(history.get(i).getLatitude(), history.get(i).getLongitude(), history.get(i));
             
@@ -1087,22 +1082,27 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	}
 	
 	/**
-	 * Sets new view period in minutes
+	 * Sets new time period
 	 */
-	public void changeTimePeriod(long timePeriod)
-	{
-	   strictTime = false;
-	   timeFrame = timePeriod * 60 * 1000;
-	   updateHistory();
-	}
-	
-	/**
-    * Set time period start
-    */
-   public void changeTimePeriod(Date startTime)
+   public void setTimePeriod(TimePeriod timePeriod)
    {
-      strictTime = true;
-      till = startTime;
+      this.timePeriod = timePeriod;
+      updateHistory();      
+   }
+
+   /**
+    * Gets time period
+    */
+   public TimePeriod getTimePeriod()
+   {
+      return timePeriod;
+   }
+
+   public void changeTimePeriod(int value, int unit)
+   {
+      timePeriod.setTimeFrameType(GraphSettings.TIME_FRAME_BACK_FROM_NOW);
+      timePeriod.setTimeRangeValue(value);
+      timePeriod.setTimeUnitValue(unit);
       updateHistory();
    }
 }

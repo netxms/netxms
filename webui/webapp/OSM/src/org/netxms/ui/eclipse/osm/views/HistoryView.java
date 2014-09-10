@@ -52,7 +52,11 @@ public class HistoryView extends ViewPart
 {
    public static final String ID = "org.netxms.ui.eclipse.osm.views.HistoryView"; //$NON-NLS-1$
 	public static final String JOB_FAMILY = "MapViewJob"; //$NON-NLS-1$
-	private static final long[] presetRanges = { 10, 30, 60, 120, 240, 720, 1440, 2880, 7200, 10080, 44640, 525600 };
+   private static final int[] presetUnits = { GraphSettings.TIME_UNIT_MINUTE, GraphSettings.TIME_UNIT_MINUTE,
+      GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR,
+      GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY,
+      GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY };
+   private static final int[] presetRanges = { 10, 30, 1, 2, 4, 12, 1, 2, 5, 7, 31, 365 };
    private static final String[] presetNames = 
       { "10 minutes", "30 minutes", "1 hour", "2 hours", "4 hours", "12 hours", "Today",
         "Last 2 days", "Last 5 days", "This week", "This month","This Year" };
@@ -189,7 +193,7 @@ public class HistoryView extends ViewPart
             @Override
             public void run()
             {
-               map.changeTimePeriod(presetRanges[presetIndex]);
+               map.changeTimePeriod(presetRanges[presetIndex], presetUnits[presetIndex]);
             }
          };
       }
@@ -199,15 +203,11 @@ public class HistoryView extends ViewPart
          @Override
          public void run()
          {
-            TimeSelectionDialog dialog = new TimeSelectionDialog(parent.getShell());
+            TimeSelectionDialog dialog = new TimeSelectionDialog(parent.getShell(), map.getTimePeriod());
             int result = dialog.open();
             if (result == Window.CANCEL)
                return;
-            map.changeTimePeriod(dialog.getTimeInMinutes());
-            if(dialog.getTimeFrameType() == GraphSettings.TIME_FRAME_FIXED)
-            {
-               map.changeTimePeriod(dialog.getTimeFrom());
-            }
+            map.setTimePeriod(dialog.getTimePeriod());
          }
       };
 	}
