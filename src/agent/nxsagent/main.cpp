@@ -22,6 +22,10 @@
 
 #include "nxsagent.h"
 
+#if HAVE_GETOPT_H
+#include <getopt.h>
+#endif
+
 /**
  * Connection port
  */
@@ -288,6 +292,29 @@ static THREAD_RESULT THREAD_CALL EventHandler(void *arg)
    return THREAD_OK;
 }
 
+/**
+ * Get our own console window handle (an alternative to Microsoft's GetConsoleWindow)
+ */
+static HWND GetConsoleHWND()
+{
+	HWND hWnd;
+	DWORD wpid, cpid;
+
+   cpid = GetCurrentProcessId();
+   while(1)
+   {
+	   hWnd = FindWindowEx(NULL, NULL, _T("ConsoleWindowClass"), NULL);
+      if (hWnd == NULL)
+         break;
+
+      GetWindowThreadProcessId(hWnd, &wpid);
+	   if (cpid == wpid)
+         break;
+   }
+
+	return hWnd;
+}
+
 #endif
 
 /**
@@ -295,6 +322,27 @@ static THREAD_RESULT THREAD_CALL EventHandler(void *arg)
  */
 int main(int argc, char *argv[])
 {
+   bool hideConsole = false;
+
+   int ch;
+   while((ch = getopt(argc, argv, "c:Hv")) != -1)
+   {
+		switch(ch)
+		{
+         case 'c':   // config
+            break;
+         case 'H':   // hide console
+            hideConsole = true;
+            break;
+		   case 'v':   // version
+            _tprintf(_T("NetXMS Session Agent Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T("\n"));
+			   exit(0);
+			   break;
+		   case '?':
+			   return 3;
+		}
+   }
+
 #ifdef _WIN32
    WSADATA wsaData;
 	int wrc = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -305,6 +353,13 @@ int main(int argc, char *argv[])
    }
 
    ThreadCreate(EventHandler, 0, NULL);
+
+   if (hideConsole)
+   {
+      HWND hWnd = GetConsoleHWND();
+      if (hWnd != NULL)
+         ShowWindow(hWnd, SW_HIDE);
+   }
 #endif
 
    while(true)
