@@ -23,17 +23,15 @@
 #include "nxcore.h"
 
 
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 void UnregisterJob(UINT32 jobId);
 
 
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, UINT32 userId, bool createOnHold)
 {
 	m_id = CreateUniqueId(IDG_JOB);
@@ -55,11 +53,9 @@ ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, U
 	createHistoryRecord();
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 ServerJob::~ServerJob()
 {
 	UnregisterJob(m_id);
@@ -73,10 +69,9 @@ ServerJob::~ServerJob()
 }
 
 
-//
-// Send notification to clients
-//
-
+/**
+ * Send notification to clients
+ */
 void ServerJob::sendNotification(ClientSession *session, void *arg)
 {
 	ServerJob *job = (ServerJob *)arg;
@@ -85,10 +80,9 @@ void ServerJob::sendNotification(ClientSession *session, void *arg)
 }
 
 
-//
-// Notify clients
-//
-
+/**
+ * Notify clients
+ */
 void ServerJob::notifyClients(bool isStatusChange)
 {
 	if (m_resolvedObject == NULL)
@@ -107,10 +101,9 @@ void ServerJob::notifyClients(bool isStatusChange)
 }
 
 
-//
-// Change status
-//
-
+/**
+ * Change status
+ */
 void ServerJob::changeStatus(ServerJobStatus newStatus)
 {
 	m_status = newStatus;
@@ -119,10 +112,9 @@ void ServerJob::changeStatus(ServerJobStatus newStatus)
 }
 
 
-//
-// Set owning queue
-//
-
+/**
+ * Set owning queue
+ */
 void ServerJob::setOwningQueue(ServerJobQueue *queue)
 {
 	m_owningQueue = queue;
@@ -133,7 +125,6 @@ void ServerJob::setOwningQueue(ServerJobQueue *queue)
 /**
  * Update progress
  */
-
 void ServerJob::markProgress(int pctCompleted)
 {
 	if ((pctCompleted > m_progress) && (pctCompleted <= 100))
@@ -144,10 +135,9 @@ void ServerJob::markProgress(int pctCompleted)
 }
 
 
-//
-// Worker thread starter
-//
-
+/**
+ *  Worker thread starter
+ */
 THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
 {
 	ServerJob *job = (ServerJob *)arg;
@@ -176,10 +166,9 @@ THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
 }
 
 
-//
-// Start job
-//
-
+/**
+ * Start job
+ */
 void ServerJob::start()
 {
 	m_status = JOB_ACTIVE;
@@ -187,10 +176,9 @@ void ServerJob::start()
 }
 
 
-//
-// Cancel job
-//
-
+/**
+ * Cancel job
+ */
 bool ServerJob::cancel()
 {
 	switch(m_status)
@@ -210,10 +198,9 @@ bool ServerJob::cancel()
 }
 
 
-//
-// Hold job
-//
-
+/**
+ * Hold job
+ */
 bool ServerJob::hold()
 {
 	if (m_status == JOB_PENDING)
@@ -225,10 +212,9 @@ bool ServerJob::hold()
 }
 
 
-//
-// Unhold job
-//
-
+/**
+ * Unhold job
+ */
 bool ServerJob::unhold()
 {
 	if (m_status == JOB_ON_HOLD)
@@ -240,30 +226,27 @@ bool ServerJob::unhold()
 }
 
 
-//
-// Default run (empty)
-//
-
+/**
+ * Default run (empty)
+ */
 bool ServerJob::run()
 {
 	return true;
 }
 
 
-//
-// Default cancel handler
-//
-
+/**
+ * Default cancel handler
+ */
 bool ServerJob::onCancel()
 {
 	return false;
 }
 
 
-//
-// Set failure message
-//
-
+/**
+ * Set failure message
+ */
 void ServerJob::setFailureMessage(const TCHAR *msg)
 {
 	safe_free(m_failureMessage);
@@ -271,10 +254,9 @@ void ServerJob::setFailureMessage(const TCHAR *msg)
 }
 
 
-//
-// Set description
-//
-
+/**
+ * Set description
+ */
 void ServerJob::setDescription(const TCHAR *description)
 {
 	safe_free(m_description);
@@ -282,10 +264,9 @@ void ServerJob::setDescription(const TCHAR *description)
 }
 
 
-//
-// Fill NXCP message with job's data
-//
-
+/**
+ * Fill NXCP message with job's data
+ */
 void ServerJob::fillMessage(CSCPMessage *msg)
 {
 	msg->SetVariable(VID_JOB_ID, m_id);

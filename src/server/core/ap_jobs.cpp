@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -54,6 +54,7 @@ bool PolicyDeploymentJob::run()
 {
 	bool success = false;
 
+restart:
 	AgentConnectionEx *conn = m_node->createAgentConnection();
 	if (conn != NULL)
 	{
@@ -71,6 +72,15 @@ bool PolicyDeploymentJob::run()
 	else
 	{
 		setFailureMessage(_T("Agent connection not available"));
+	}
+	if(!success)
+	{
+      setDescription(_T("Policy deploy failed. Wainting 10 minutes to restart job."));
+      sleep(600);
+      TCHAR buffer[1024];
+      _sntprintf(buffer, 1024, _T("Deploy policy %s"), m_policy->Name());
+      setDescription(buffer);
+      goto restart;
 	}
 	return success;
 }
