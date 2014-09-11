@@ -52,36 +52,38 @@ PolicyDeploymentJob::~PolicyDeploymentJob()
  */
 bool PolicyDeploymentJob::run()
 {
-	bool success = false;
+   bool success = false;
 
-restart:
-	AgentConnectionEx *conn = m_node->createAgentConnection();
-	if (conn != NULL)
-	{
-		UINT32 rcc = conn->deployPolicy(m_policy);
-		if (rcc == ERR_SUCCESS)
-		{
-			m_policy->linkNode(m_node);
-			success = true;
-		}
-		else
-		{
-			setFailureMessage(AgentErrorCodeToText(rcc));
-		}
-	}
-	else
-	{
-		setFailureMessage(_T("Agent connection not available"));
-	}
-	if(!success)
-	{
+   TCHAR jobName[1024];
+   _sntprintf(jobName, 1024, _T("Deploy policy %s"), m_policy->Name());
+
+   do
+   {
+      setDescription(jobName);
+      AgentConnectionEx *conn = m_node->createAgentConnection();
+      if (conn != NULL)
+      {
+         UINT32 rcc = conn->deployPolicy(m_policy);
+         if (rcc == ERR_SUCCESS)
+         {
+            m_policy->linkNode(m_node);
+            success = true;
+            break;
+         }
+         else
+         {
+            setFailureMessage(AgentErrorCodeToText(rcc));
+         }
+      }
+      else
+      {
+         setFailureMessage(_T("Agent connection not available"));
+      }
+      
       setDescription(_T("Policy deploy failed. Wainting 10 minutes to restart job."));
-      sleep(600);
-      TCHAR buffer[1024];
-      _sntprintf(buffer, 1024, _T("Deploy policy %s"), m_policy->Name());
-      setDescription(buffer);
-      goto restart;
-	}
+      success = SleepAndCheckForShutdown(600);
+   } while (!success);
+
 	return success;
 }
 
