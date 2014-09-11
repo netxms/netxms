@@ -1,7 +1,22 @@
 /*
-** NetXMS subagent for Oracle monitoring
-** Copyright (C) 2009-2012 Raden Solutions
-**/
+ ** NetXMS - Network Management System
+ ** Subagent for Oracle monitoring
+ ** Copyright (C) 2009-2014 Raden Solutions
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU Lesser General Public License as published
+ ** by the Free Software Foundation; either version 3 of the License, or
+ ** (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU Lesser General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ **/
 
 #ifndef _oracle_subagent_h_
 #define _oracle_subagent_h_
@@ -24,53 +39,73 @@
 #define MAX_USERNAME	(30+1)
 #define MAX_PASSWORD	(30+1)
 
-#define MAX_DATABASES	(5)
-
-
-//
-// DB-related structs
-//
-
-// struct for the databases configured within the subagent
-typedef struct _DatabaseInfo
+/**
+ * Database connection information
+ */
+struct DatabaseInfo
 {
-	TCHAR id[MAX_STR];				// this is how client addresses the database
+	TCHAR id[MAX_STR];				// instance ID
 	TCHAR name[MAX_STR];
 	TCHAR server[MAX_STR];
 	TCHAR username[MAX_USERNAME];
 	TCHAR password[MAX_PASSWORD];
-	THREAD queryThreadHandle;
-	DB_HANDLE handle;
-	bool connected;
-	int version;					// in xxx format
-	MUTEX accessMutex;
-} DatabaseInfo;
+};
 
-typedef struct {
-	TCHAR name[MAX_STR];
-	StringMap *attrs;
-} DBParameter;
-
-typedef struct {
-	int version;						// minimum database version in xxx format for this query
-	const TCHAR *prefix;						// parameter prefix, e.g. "Oracle.Tablespaces."
-	const TCHAR *query;						// the query
-	int	 queryColumns;						// number of columns returned by query
-	DBParameter *values[MAX_DATABASES];	// list of values
-	int valueCount[MAX_DATABASES];
-} DBParameterGroup;
-
-// struct for stat data obtained from the database
-typedef struct
+/**
+ * Database instance
+ */
+class DatabaseInstance
 {
-	DWORD openCursors;
-	DWORD sessions;
-} DatabaseData;
+private:
+   DatabaseInfo m_info;
+	THREAD m_pollerThread;
+	DB_HANDLE m_session;
+	bool m_connected;
+	int m_version;
+   StringMap *m_data;
+	MUTEX m_mutex;
+   CONDITION m_stopCondition;
 
-//
-// Functions
-//
+   static THREAD_RESULT THREAD_CALL pollerThreadStarter(void *arg);
+   
+   void pollerThread();
+   bool poll();
+   int getOracleVersion();
 
-bool getParametersFromDB(int dbIndex);
+public:
+   DatabaseInstance(DatabaseInfo *info);
+   ~DatabaseInstance();
+
+   void run();
+   void stop();
+
+   const TCHAR *getId() { return m_info.id; }
+   bool isConnected() { return m_connected; }
+   int getVersion() { return m_version; }
+
+   bool getData(const TCHAR *tag, TCHAR *value);
+};
+
+/**
+ * Query for polling
+ */
+struct DatabaseQuery
+{
+   const TCHAR *name;
+   int minVersion;
+   int instanceColumns;
+   const TCHAR *query;
+};
+
+/**
+ * Make version number
+ */
+#define MAKE_ORACLE_VERSION(major, minor) (((major) << 8) | (minor))
+
+/**
+ * Global variables
+ */
+extern DB_DRIVER g_driverHandle;
+extern DatabaseQuery g_queries[];
 
 #endif   /* _oracle_subagent_h_ */

@@ -46,11 +46,9 @@
 #define MAX_DB_PASSWORD       64
 #define MAX_DB_NAME           256
 
-
-//
-// DB events
-//
-
+/**
+ * DB events
+ */
 #define DBEVENT_CONNECTION_LOST        0
 #define DBEVENT_CONNECTION_RESTORED    1
 #define DBEVENT_QUERY_FAILED           2

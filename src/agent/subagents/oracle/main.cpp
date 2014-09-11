@@ -1,19 +1,61 @@
 /*
-** NetXMS subagent for Oracle monitoring
-** Copyright (C) 2009-2012 Raden Solutions
-**/
+ ** NetXMS - Network Management System
+ ** Subagent for Oracle monitoring
+ ** Copyright (C) 2009-2014 Raden Solutions
+ **
+ ** This program is free software; you can redistribute it and/or modify
+ ** it under the terms of the GNU Lesser General Public License as published
+ ** by the Free Software Foundation; either version 3 of the License, or
+ ** (at your option) any later version.
+ **
+ ** This program is distributed in the hope that it will be useful,
+ ** but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ ** GNU General Public License for more details.
+ **
+ ** You should have received a copy of the GNU Lesser General Public License
+ ** along with this program; if not, write to the Free Software
+ ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ **/
 
 #include "oracle_subagent.h"
 
-CONDITION g_shutdownCondition;
-MUTEX g_paramAccessMutex;
-int g_dbCount;
+/**
+ * Driver handle
+ */
 DB_DRIVER g_driverHandle = NULL;
-DatabaseInfo g_dbInfo[MAX_DATABASES];
-DatabaseData g_dbData[MAX_DATABASES];
 
-THREAD_RESULT THREAD_CALL queryThread(void *arg);
+/**
+ * Polling queries
+ */
+DatabaseQuery g_queries[] = 
+{
+   { _T("DUAL"), MAKE_ORACLE_VERSION(7, 0), 0, _T("SELECT decode(count(*),1,0,1) ExcessRows FROM dual") },
+   { _T("OBJECTS"), MAKE_ORACLE_VERSION(7, 0), 0, _T("SELECT count(*) InvalidCount FROM dba_objects WHERE status!='VALID'") },
+   { _T("SESSIONS"), MAKE_ORACLE_VERSION(7, 0), 0, _T("SELECT count(*) Count from v$session") },
+   { NULL, 0, NULL }
+};
 
+/**
+ * Database instances
+ */
+static ObjectArray<DatabaseInstance> *s_instances = NULL;
+
+/**
+ * Find instance by ID
+ */
+static DatabaseInstance *FindInstance(const TCHAR *id)
+{
+   for(int i = 0; i < s_instances->size(); i++)
+   {
+      DatabaseInstance *db = s_instances->get(i);
+      if (!_tcsicmp(db->getId(), id))
+         return db;
+   }
+   return NULL;
+}
+
+/*
 DBParameterGroup g_paramGroup[] = {
 	{
 		700, _T("Oracle.Sessions."),
@@ -79,81 +121,57 @@ DBParameterGroup g_paramGroup[] = {
 	},
 	0
 };
+*/
 
-//
-// Handler functions
-//
-
-LONG getParameters(const TCHAR *parameter, const TCHAR *argument, TCHAR *value)
+/**
+ * Handler for parameters without instance
+ */
+static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 {
-	LONG ret = SYSINFO_RC_UNSUPPORTED;
-	TCHAR dbId[MAX_STR];
-	TCHAR entity[MAX_STR];
+   TCHAR id[MAX_STR];
+   if (!AgentGetParameterArg(param, 1, id, MAX_STR))
+      return SYSINFO_RC_UNSUPPORTED;
 
-	// Get id of the database requested
-	if (!AgentGetParameterArg(parameter, 1, dbId, MAX_STR))
-		return ret;
-	if (!AgentGetParameterArg(parameter, 2, entity, MAX_STR) || entity[0] == _T('\0'))
-		nx_strncpy(entity, DB_NULLARG_MAGIC, MAX_STR);
+   DatabaseInstance *db = FindInstance(id);
+   if (db == NULL)
+      return SYSINFO_RC_UNSUPPORTED;
 
-	AgentWriteDebugLog(7, _T("%s: got request for params: dbid='%s', param='%s'"), MYNAMESTR, dbId, parameter);
+   return db->getData(arg, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+}
 
-	// Loop through databases and find an entry in g_dbInfo[] for this id
-	for (int i = 0; i <= g_dbCount; i++)
-	{
-		if (!_tcsnicmp(g_dbInfo[i].id, dbId, MAX_STR))	// found DB
-		{
-			if (argument[0] == _T('R'))
-			{
-				ret_string(value, g_dbInfo[i].connected ? _T("YES") : _T("NO"));
-				ret = SYSINFO_RC_SUCCESS;
-			}
-			// Loop through parameter groups and check whose prefix matches the parameter requested
-			for (int k = 0; argument[0] == _T('X') && g_paramGroup[k].prefix; k++)
-			{
-				if (!_tcsnicmp(g_paramGroup[k].prefix, parameter, _tcslen(g_paramGroup[k].prefix))) // found prefix
-				{
-					MutexLock(g_dbInfo[i].accessMutex);
-					// Loop through the values
-					AgentWriteDebugLog(9, _T("%s: valuecount %d"), MYNAMESTR, g_paramGroup[k].valueCount[i]);
-					for(int j = 0; j < g_paramGroup[k].valueCount[i]; j++)
-					{
-						StringMap *map = (g_paramGroup[k].values[i])[j].attrs;
-						TCHAR *name = (g_paramGroup[k].values[i])[j].name;
-   					AgentWriteDebugLog(9, _T("%s: map=%p name=%s"), MYNAMESTR, map, name);
-						if (!_tcsnicmp(name, entity, MAX_STR))	// found value which matches the parameters argument
-						{
-							TCHAR key[MAX_STR];
-							nx_strncpy(key, parameter + _tcslen(g_paramGroup[k].prefix), MAX_STR);
-							TCHAR *place = _tcschr(key, _T('('));
-							if (place != NULL)
-							{
-								*place = 0;
-								const TCHAR *dbval = map->get(key);
-                        if (dbval != NULL)
-                        {
-								   ret_string(value, dbval);
-								   ret = SYSINFO_RC_SUCCESS;
-                        }
-                        else
-                        {
-                        	AgentWriteDebugLog(7, _T("%s: no data for dbid='%s', param='%s'"), MYNAMESTR, dbId, parameter);
-                           ret = SYSINFO_RC_ERROR;
-                        }
-							}
-							break;
-						}
-					}
-					MutexUnlock(g_dbInfo[i].accessMutex);
+/**
+ * Handler for Oracle.DBInfo.Version parameter
+ */
+static LONG H_DatabaseVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+{
+   TCHAR id[MAX_STR];
+   if (!AgentGetParameterArg(param, 1, id, MAX_STR))
+      return SYSINFO_RC_UNSUPPORTED;
 
-					break;
-				}
-			}
-			break;
-		}
-	}
+   DatabaseInstance *db = FindInstance(id);
+   if (db == NULL)
+      return SYSINFO_RC_UNSUPPORTED;
 
-	return ret;
+   int version = db->getVersion();
+   _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%d"), version >> 8, version & 0xFF);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Oracle.DBInfo.IsReachable parameter
+ */
+static LONG H_DatabaseConnectionStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+{
+   TCHAR id[MAX_STR];
+   if (!AgentGetParameterArg(param, 1, id, MAX_STR))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   DatabaseInstance *db = FindInstance(id);
+   if (db == NULL)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   ret_string(value, db->isConnected() ? _T("YES") : _T("NO"));
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -177,26 +195,21 @@ static NX_CFG_TEMPLATE s_configTemplate[] =
  */
 static BOOL SubAgentInit(Config *config)
 {
-	BOOL result = TRUE;
-	int i;
+   int i;
 
 	// Init db driver
 	g_driverHandle = DBLoadDriver(_T("oracle.ddr"), NULL, TRUE, NULL, NULL);
 	if (g_driverHandle == NULL)
 	{
-		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load db driver"), MYNAMESTR);
-		result = FALSE;
+		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to load database driver"), MYNAMESTR);
+		return FALSE;
 	}
 
-	if (result)
-	{
-		g_shutdownCondition = ConditionCreate(TRUE);
-	}
+   s_instances = new ObjectArray<DatabaseInstance>(8, 8, true);
 
 	// Load configuration from "oracle" section to allow simple configuration
 	// of one database without XML includes
 	memset(&s_info, 0, sizeof(s_info));
-	g_dbCount = -1;
 	if (config->parseTemplate(_T("ORACLE"), s_configTemplate))
 	{
 		if (s_info.name[0] != 0)
@@ -207,222 +220,60 @@ static BOOL SubAgentInit(Config *config)
          {
             DecryptPassword(s_info.username, s_dbPassEncrypted, s_info.password);
          }
-			memcpy(&g_dbInfo[++g_dbCount], &s_info, sizeof(DatabaseInfo));
-			g_dbInfo[g_dbCount].accessMutex = MutexCreate();
+         s_instances->add(new DatabaseInstance(&s_info));
 		}
 	}
 
 	// Load full-featured XML configuration
-	if (g_dbCount == -1) // Didn't load anything from the .conf file
+	for(i = 1; i <= 64; i++)
 	{
-		for (i = 1; result && i <= MAX_DATABASES; i++)
+		TCHAR section[MAX_STR];
+		memset((void*)&s_info, 0, sizeof(s_info));
+		_sntprintf(section, MAX_STR, _T("oracle/databases/database#%d"), i);
+		s_dbPassEncrypted[0] = 0;
+
+		if (!config->parseTemplate(section, s_configTemplate))
 		{
-			TCHAR section[MAX_STR];
-			memset((void*)&s_info, 0, sizeof(s_info));
-			_sntprintf(section, MAX_STR, _T("oracle/databases/database#%d"), i);
-			s_dbPassEncrypted[0] = 0;
-
-			if ((result = config->parseTemplate(section, s_configTemplate)) != TRUE)
-			{
-				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error parsing configuration template"), MYNAMESTR);
-				return FALSE;
-			}
-			if (s_info.name[0] != 0)
-				memcpy(&g_dbInfo[++g_dbCount], &s_info, sizeof(s_info));
-			else
-				continue;
-			if (s_info.username[0] == 0)
-			{
-				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting username for "), MYNAMESTR);
-				result = FALSE;
-			}
-         if (*s_dbPassEncrypted != _T('\0'))
-         {
-            result = DecryptPassword(s_info.username, s_dbPassEncrypted, s_info.password);
-         }
-         if (s_info.password[0] == '\0')
-         {
-            AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting password for "), MYNAMESTR);
-            result = FALSE;
-         }
-
-			if (result && (g_dbInfo[g_dbCount].accessMutex = MutexCreate()) == NULL)
-			{
-				AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to create mutex (%d)"), MYNAMESTR, i);
-				result = FALSE;
-			}
+			AgentWriteLog(NXLOG_WARNING, _T("ORACLE: error parsing configuration template %d"), i);
+         continue;
 		}
+
+		if (s_info.name[0] == 0)
+			continue;
+
+      if (*s_dbPassEncrypted != 0)
+      {
+         DecryptPassword(s_info.username, s_dbPassEncrypted, s_info.password);
+      }
+
+      s_instances->add(new DatabaseInstance(&s_info));
 	}
 
 	// Exit if no usable configuration found
-	if (result && g_dbCount < 0)
+   if (s_instances->size() == 0)
 	{
-		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: no databases to monitor"), MYNAMESTR);
-		result = FALSE;
+      AgentWriteLog(NXLOG_WARNING, _T("ORACLE: no databases to monitor, exiting"));
+      delete s_instances;
+      return FALSE;
 	}
 
-	// Run query thread for each database configured
-	for (i = 0; result && i <= g_dbCount; i++)
-	{
-		g_dbInfo[i].queryThreadHandle = ThreadCreateEx(queryThread, 0, CAST_TO_POINTER(i, void *));
-	}
+	// Run query thread for each configured database
+   for(i = 0; i < s_instances->size(); i++)
+      s_instances->get(i)->run();
 
-	return result;
+	return TRUE;
 }
 
-
-//
-// Shutdown handler
-//
-
+/**
+ * Shutdown handler
+ */
 static void SubAgentShutdown()
 {
-	AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: shutting down"), MYNAMESTR);
-	ConditionSet(g_shutdownCondition);
-	for (int i = 0; i <= g_dbCount; i++)
-	{
-		ThreadJoin(g_dbInfo[i].queryThreadHandle);
-		MutexDestroy(g_dbInfo[i].accessMutex);
-	}
-	ConditionDestroy(g_shutdownCondition);
-}
-
-//
-// Figure out Oracle DBMS version
-//
-
-static int getOracleVersion(DB_HANDLE handle) 
-{
-	TCHAR versionString[32];
-
-	DB_RESULT result = DBSelect(handle,_T("select version from v$instance"));
-	if (result == NULL)	
-	{
-		AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("%s: query from v$instance failed"), MYNAMESTR);
-		return 700;		// assume Oracle 7.0 by default
-	}
-
-	DBGetField(result, 0, 0, versionString, 32);
-	int major = 0, minor = 0;
-	_stscanf(versionString, _T("%d.%d"), &major, &minor);
-	DBFreeResult(result);
-
-	return major * 100 + minor * 10;
-}
-
-//
-// Thread for SQL queries
-//
-
-THREAD_RESULT THREAD_CALL queryThread(void* arg)
-{
-	int dbIndex = CAST_FROM_POINTER(arg, int);
-	DatabaseInfo& db = g_dbInfo[dbIndex];
-	const DWORD pollInterval = 60 * 1000L;	// 1 minute
-	int waitTimeout;
-	QWORD startTimeMs;
-	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-
-	while (true)
-	{
-		db.handle = DBConnect(g_driverHandle, db.name, NULL /* db.server */, db.username, db.password, NULL, errorText);
-		DBEnableReconnect(db.handle, false);
-		if (db.handle != NULL)
-		{
-			AgentWriteLog(EVENTLOG_INFORMATION_TYPE, _T("%s: connected to DB '%s'"), MYNAMESTR, db.name);
-			db.connected = true;
-			db.version = getOracleVersion(db.handle);
-		}
-      else
-      {
-         AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: can't connect to DB: %s"), MYNAMESTR, errorText);
-      }
-
-		while (db.connected)
-		{
-			startTimeMs = GetCurrentTimeMs();
-
-			// Do queries
-			if (!(db.connected = getParametersFromDB(dbIndex)))
-			{
-				break;
-			}
-
-			waitTimeout = pollInterval - DWORD(GetCurrentTimeMs() - startTimeMs);
-			if (ConditionWait(g_shutdownCondition, waitTimeout < 0 ? 1 : waitTimeout))
-				goto finish;
-		}
-
-		// Try to reconnect every 30 secs
-		if (ConditionWait(g_shutdownCondition, DWORD(30 * 1000)))
-			break;
-	}
-
-finish:
-	if (db.connected && db.handle != NULL)
-	{
-		DBDisconnect(db.handle);
-	}
-
-	return THREAD_OK;
-}
-
-
-bool getParametersFromDB( int dbIndex )
-{
-	bool ret = true;
-	DatabaseInfo& info = g_dbInfo[dbIndex];
-
-	if (!info.connected)
-	{
-		return false;
-	}
-
-	MutexLock(info.accessMutex);
-
-	for (int i = 0; g_paramGroup[i].prefix; i++)
-	{
-		AgentWriteDebugLog(7, _T("%s: got entry for '%s'"), MYNAMESTR, g_paramGroup[i].prefix);
-
-		if (g_paramGroup[i].version > info.version)	// this parameter group is not supported for this DB
-			continue; 
-
-		// Release previously allocated array of values for this group
-		for (int j = 0; g_paramGroup[i].values[dbIndex] && j < g_paramGroup[i].valueCount[dbIndex]; j++)
-			delete (g_paramGroup[i].values[dbIndex])[j].attrs;
-		safe_free_and_null(g_paramGroup[i].values[dbIndex]);
-      g_paramGroup[i].valueCount[dbIndex] = 0;
-
-		DB_RESULT queryResult = DBSelect(info.handle, g_paramGroup[i].query);
-		if (queryResult == NULL)
-		{
-			ret = false;
-			break;
-		}
-
-		int rows = DBGetNumRows(queryResult);
-		g_paramGroup[i].values[dbIndex] = (DBParameter*)malloc(sizeof(DBParameter) * rows);
-		g_paramGroup[i].valueCount[dbIndex]		= rows;
-		for (int j = 0; j < rows; j++)
-		{
-			TCHAR colname[MAX_STR];
-			DBGetField(queryResult, j, 0, (g_paramGroup[i].values[dbIndex])[j].name, MAX_STR);
-			(g_paramGroup[i].values[dbIndex])[j].attrs = new StringMap;
-			for (int k = 1; DBGetColumnName(queryResult, k, colname, MAX_STR); k++) 
-			{
-				TCHAR colval[MAX_STR];
-				DBGetField(queryResult, j, k, colval, MAX_STR);
-				// AgentWriteDebugLog(9, _T("%s: getParamsFromDB: colname '%s' ::: colval '%s'"), MYNAMESTR, colname, colval);
-				(g_paramGroup[i].values[dbIndex])[j].attrs->set(colname, colval);
-			}
-		}
-
-		DBFreeResult(queryResult);
-	}
-
-	MutexUnlock(info.accessMutex);
-
-	return ret;
+	AgentWriteDebugLog(1, _T("ORACLE: stopping pollers"));
+   for(int i = 0; i < s_instances->size(); i++)
+      s_instances->get(i)->stop();
+   delete s_instances;
+	AgentWriteDebugLog(1, _T("ORACLE: stopped"));
 }
 
 /**
@@ -430,38 +281,39 @@ bool getParametersFromDB( int dbIndex )
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ _T("Oracle.Sessions.Count(*)"), getParameters, _T("X"), DCI_DT_INT, _T("Oracle/Sessions: Number of sessions opened") },
-	{ _T("Oracle.Cursors.Count(*)"), getParameters, _T("X"), DCI_DT_INT, _T("Oracle/Cursors: Current number of opened cursors systemwide") },
-	{ _T("Oracle.DBInfo.IsReachable(*)"), getParameters, _T("R"), DCI_DT_STRING, _T("Oracle/Info: Database is reachable") },
-	{ _T("Oracle.DBInfo.Name(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Info: Database name") },
-	{ _T("Oracle.DBInfo.CreateDate(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Info: Database creation date") },
-	{ _T("Oracle.DBInfo.LogMode(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Info: Database log mode") },
-	{ _T("Oracle.DBInfo.OpenMode(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Info: Database open mode") },
-	{ _T("Oracle.TableSpaces.Status(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Tablespaces: Status") },
-	{ _T("Oracle.TableSpaces.Type(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Tablespaces: Type") },
-	{ _T("Oracle.TableSpaces.UsedPct(*)"), getParameters, _T("X"), DCI_DT_INT, _T("Oracle/Tablespaces: Percentage used") },
-	{ _T("Oracle.Instance.Version(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Instance: DBMS Version") },
-	{ _T("Oracle.Instance.Status(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Instance: Status") },
-	{ _T("Oracle.Instance.ArchiverStatus(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Instance: Archiver status") },
-	{ _T("Oracle.Instance.ShutdownPending(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Instance: Is shutdown pending") },
-	{ _T("Oracle.CriticalStats.TSOffCount(*)"), getParameters, _T("X"), DCI_DT_INT, _T("Oracle/CriticalStats: Number of offline tablespaces") },
-	{ _T("Oracle.CriticalStats.DFOffCount(*)"), getParameters, _T("X"), DCI_DT_INT, _T("Oracle/CriticalStats: Number of offline datafiles") },
-	{ _T("Oracle.CriticalStats.FullSegmentsCount(*)"), getParameters, _T("X"), DCI_DT_INT64, _T("Oracle/CriticalStats: Number of segments that cannot extend") },
-	{ _T("Oracle.CriticalStats.RBSegsNotOnlineCount(*)"), getParameters, _T("X"), DCI_DT_INT64, _T("Oracle/CriticalStats: Number of rollback segments not online") },
-	{ _T("Oracle.CriticalStats.AutoArchivingOff(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/CriticalStats: Archive logs enabled but auto archiving off ") },
-	{ _T("Oracle.CriticalStats.DatafilesNeedMediaRecovery(*)"), getParameters, _T("X"), DCI_DT_INT64, _T("Oracle/CriticalStats: Number of datafiles that need media recovery") },
-	{ _T("Oracle.CriticalStats.FailedJobs(*)"), getParameters, _T("X"), DCI_DT_INT64, _T("Oracle/CriticalStats: Number of failed jobs") },
-	{ _T("Oracle.Dual.ExcessRows(*)"), getParameters, _T("X"), DCI_DT_INT64, _T("Oracle/Dual: Excessive rows") },
-	{ _T("Oracle.Performance.PhysReads(*)"),  getParameters, _T("X"), DCI_DT_INT64, _T("Oracle/Performance: Number of physical reads") },
-	{ _T("Oracle.Performance.LogicReads(*)"), getParameters, _T("X"), DCI_DT_INT64, _T("Oracle/Performance: Number of logical reads") },
-	{ _T("Oracle.Performance.CacheHitRatio(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Performance: Data buffer cache hit ratio") },
-	{ _T("Oracle.Performance.LibCacheHitRatio(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Performance: Library cache hit ratio") },
-	{ _T("Oracle.Performance.DictCacheHitRatio(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Performance: Dictionary cache hit ratio") },
-	{ _T("Oracle.Performance.RollbackWaitRatio(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Performance: Ratio of waits for requests to rollback segments") },
-	{ _T("Oracle.Performance.MemorySortRatio(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Performance: PGA memory sort ratio") },
-	{ _T("Oracle.Performance.DispatcherWorkload(*)"), getParameters, _T("X"), DCI_DT_STRING, _T("Oracle/Performance: Dispatcher workload (percentage)") },
-	{ _T("Oracle.Performance.FreeSharedPool(*)"), getParameters, _T("X"), DCI_DT_INT64, _T("Oracle/Performance: Free space in shared pool (bytes)") },
-	{ _T("Oracle.Objects.InvalidCount(*)"), getParameters, _T("X"), DCI_DT_INT64, _T("Oracle/Objects: Number of invalid objects in DB") }
+	{ _T("Oracle.Sessions.Count(*)"), H_GlobalParameter, _T("SESSIONS/COUNT"), DCI_DT_INT, _T("Oracle/Sessions: Number of sessions opened") },
+	{ _T("Oracle.Cursors.Count(*)"), H_GlobalParameter, _T("X"), DCI_DT_INT, _T("Oracle/Cursors: Current number of opened cursors systemwide") },
+	{ _T("Oracle.DBInfo.IsReachable(*)"), H_DatabaseConnectionStatus, NULL, DCI_DT_STRING, _T("Oracle/Info: Database is reachable") },
+	{ _T("Oracle.DBInfo.Name(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Info: Database name") },
+	{ _T("Oracle.DBInfo.CreateDate(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Info: Database creation date") },
+	{ _T("Oracle.DBInfo.LogMode(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Info: Database log mode") },
+	{ _T("Oracle.DBInfo.OpenMode(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Info: Database open mode") },
+	{ _T("Oracle.DBInfo.Version(*)"), H_DatabaseVersion, NULL, DCI_DT_STRING, _T("Oracle/Info: Database version") },
+	{ _T("Oracle.TableSpaces.Status(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Tablespaces: Status") },
+	{ _T("Oracle.TableSpaces.Type(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Tablespaces: Type") },
+	{ _T("Oracle.TableSpaces.UsedPct(*)"), H_GlobalParameter, _T("X"), DCI_DT_INT, _T("Oracle/Tablespaces: Percentage used") },
+	{ _T("Oracle.Instance.Version(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Instance: DBMS Version") },
+	{ _T("Oracle.Instance.Status(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Instance: Status") },
+	{ _T("Oracle.Instance.ArchiverStatus(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Instance: Archiver status") },
+	{ _T("Oracle.Instance.ShutdownPending(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Instance: Is shutdown pending") },
+	{ _T("Oracle.CriticalStats.TSOffCount(*)"), H_GlobalParameter, _T("X"), DCI_DT_INT, _T("Oracle/CriticalStats: Number of offline tablespaces") },
+	{ _T("Oracle.CriticalStats.DFOffCount(*)"), H_GlobalParameter, _T("X"), DCI_DT_INT, _T("Oracle/CriticalStats: Number of offline datafiles") },
+	{ _T("Oracle.CriticalStats.FullSegmentsCount(*)"), H_GlobalParameter, _T("X"), DCI_DT_INT64, _T("Oracle/CriticalStats: Number of segments that cannot extend") },
+	{ _T("Oracle.CriticalStats.RBSegsNotOnlineCount(*)"), H_GlobalParameter, _T("X"), DCI_DT_INT64, _T("Oracle/CriticalStats: Number of rollback segments not online") },
+	{ _T("Oracle.CriticalStats.AutoArchivingOff(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/CriticalStats: Archive logs enabled but auto archiving off ") },
+	{ _T("Oracle.CriticalStats.DatafilesNeedMediaRecovery(*)"), H_GlobalParameter, _T("X"), DCI_DT_INT64, _T("Oracle/CriticalStats: Number of datafiles that need media recovery") },
+	{ _T("Oracle.CriticalStats.FailedJobs(*)"), H_GlobalParameter, _T("X"), DCI_DT_INT64, _T("Oracle/CriticalStats: Number of failed jobs") },
+	{ _T("Oracle.Dual.ExcessRows(*)"), H_GlobalParameter, _T("DUAL/EXCESSROWS"), DCI_DT_INT64, _T("Oracle/Dual: Excessive rows") },
+	{ _T("Oracle.Performance.PhysReads(*)"),  H_GlobalParameter, _T("X"), DCI_DT_INT64, _T("Oracle/Performance: Number of physical reads") },
+	{ _T("Oracle.Performance.LogicReads(*)"), H_GlobalParameter, _T("X"), DCI_DT_INT64, _T("Oracle/Performance: Number of logical reads") },
+	{ _T("Oracle.Performance.CacheHitRatio(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Performance: Data buffer cache hit ratio") },
+	{ _T("Oracle.Performance.LibCacheHitRatio(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Performance: Library cache hit ratio") },
+	{ _T("Oracle.Performance.DictCacheHitRatio(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Performance: Dictionary cache hit ratio") },
+	{ _T("Oracle.Performance.RollbackWaitRatio(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Performance: Ratio of waits for requests to rollback segments") },
+	{ _T("Oracle.Performance.MemorySortRatio(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Performance: PGA memory sort ratio") },
+	{ _T("Oracle.Performance.DispatcherWorkload(*)"), H_GlobalParameter, _T("X"), DCI_DT_STRING, _T("Oracle/Performance: Dispatcher workload (percentage)") },
+	{ _T("Oracle.Performance.FreeSharedPool(*)"), H_GlobalParameter, _T("X"), DCI_DT_INT64, _T("Oracle/Performance: Free space in shared pool (bytes)") },
+	{ _T("Oracle.Objects.InvalidCount(*)"), H_GlobalParameter, _T("OBJECTS/INVALIDCOUNT"), DCI_DT_INT64, _T("Oracle/Objects: Number of invalid objects in DB") }
 };
 
 /*

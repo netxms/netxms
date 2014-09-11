@@ -679,7 +679,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
    name[0] = _T('/');
    nx_strncpy(&name[1], section, MAX_PATH - 2);
    _tcscat(name, _T("/"));
-   pos = (int) _tcslen(name);
+   pos = (int)_tcslen(name);
 
    for(i = 0; cfgTemplate[i].type != CT_END_OF_LIST; i++)
    {
