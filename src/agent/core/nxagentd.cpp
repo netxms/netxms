@@ -566,14 +566,18 @@ static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file,
  */
 static bool EnumerateSessionsBySubagent(bool (* pHandler)(AbstractCommSession *, void* ), void *data)
 {
+   bool ret = false;
    MutexLock(g_hSessionListAccess);
    for(UINT32 i = 0; i < g_dwMaxSessions; i++)
    {
       if(!pHandler(g_pSessionList[i], data))
-         return true;
+      {
+         ret = true;
+         break;
+      }
    }
    MutexUnlock(g_hSessionListAccess);
-   return false;
+   return ret;
 }
 
 /**
