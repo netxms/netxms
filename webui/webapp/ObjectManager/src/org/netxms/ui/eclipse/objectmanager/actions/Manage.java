@@ -18,40 +18,46 @@
  */
 package org.netxms.ui.eclipse.objectmanager.actions;
 
-import org.eclipse.swt.widgets.Display;
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.handlers.HandlerUtil;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.objectmanager.Messages;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Set selected object(s) to managed state
  */
-public class Manage extends MultipleObjectAction
+public class Manage extends AbstractHandler
 {
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#runObjectAction(org.netxms.client.NXCSession, org.netxms.client.objects.AbstractObject)
-	 */
-	@Override
-	protected void runObjectAction(final NXCSession session, final AbstractObject object) throws Exception
-	{
-		session.setObjectManaged(object.getObjectId(), true);
-	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#formatJobDescription(org.netxms.client.objects.AbstractObject)
-	 */
-	@Override
-	protected String formatJobDescription(AbstractObject object)
-	{
-		return String.format(Messages.get().Manage_JobDescription, object.getObjectName(), object.getObjectId());
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#formatErrorMessage(org.netxms.client.objects.AbstractObject, org.eclipse.swt.widgets.Display)
-	 */
-	@Override
-	protected String formatErrorMessage(AbstractObject object, Display display)
-	{
-		return String.format(Messages.get().Manage_JobError, object.getObjectName(), object.getObjectId());
-	}
+   @Override
+   public Object execute(ExecutionEvent event) throws ExecutionException
+   {
+      IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(event);
+      ISelection selection = window.getActivePage().getSelection();
+      if ((selection == null) || !(selection instanceof IStructuredSelection) || selection.isEmpty())
+         return null;
+      
+      for(Object o : ((IStructuredSelection)selection).toList())
+      {
+         if (!(o instanceof AbstractObject))
+            continue;
+         try
+         {
+            ((NXCSession)ConsoleSharedData.getSession()).setObjectManaged(((AbstractObject)o).getObjectId(), true);
+         }
+         catch(Exception e)
+         {
+            MessageDialogHelper.openError(window.getShell(), "Error on change object state", "Error on change object state to manage: " + e.getMessage());
+         }
+      }
+      
+      return null;
+   }
 }
