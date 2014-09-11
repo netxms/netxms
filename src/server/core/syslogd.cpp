@@ -558,6 +558,8 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    fd_set rdfs;
    struct timeval tv;
 
+   s_nodeMatchingPolicy = (NodeMatchingPolicy)ConfigReadInt(_T("SyslogNodeMatchingPolicy"), SOURCE_IP_THEN_HOSTNAME);
+
    // Determine first available message id
    hResult = DBSelect(g_hCoreDB, _T("SELECT max(msg_id) FROM syslog"));
    if (hResult != NULL)

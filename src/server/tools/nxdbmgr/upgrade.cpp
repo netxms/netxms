@@ -388,6 +388,16 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Upgrade from V336 to V337
+ */
+static BOOL H_UpgradeFromV336(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("SyslogNodeMatchingPolicy"), _T("0"), 1, 1));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='337' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V335 to V336
  */
 static BOOL H_UpgradeFromV335(int currVersion, int newVersion)
@@ -494,10 +504,7 @@ static BOOL H_UpgradeFromV328(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV327(int currVersion, int newVersion)
 {
-   if (!CreateConfigParam(_T("ResolveDNSToIPOnStatusPoll"), _T("0"), 1, 1))
-   if (!g_bIgnoreErrors)
-      return FALSE;
-
+   CHK_EXEC(CreateConfigParam(_T("ResolveDNSToIPOnStatusPoll"), _T("0"), 1, 1));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='328' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -8131,6 +8138,7 @@ static struct
    { 333, 334, H_UpgradeFromV333 },
    { 334, 335, H_UpgradeFromV334 },
    { 335, 336, H_UpgradeFromV335 },
+   { 336, 337, H_UpgradeFromV336 },
    { 0, 0, NULL }
 };
 
