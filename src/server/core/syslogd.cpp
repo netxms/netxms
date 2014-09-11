@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,11 +46,21 @@ Queue g_syslogProcessingQueue(1000, 100);
 Queue g_syslogWriteQueue(1000, 100);
 
 /**
+ * Node matching policy
+ */
+enum NodeMatchingPolicy
+{
+   SOURCE_IP_THEN_HOSTNAME = 0,
+   HOSTNAME_THEN_SOURCE_IP = 1
+};
+
+/**
  * Static data
  */
 static UINT64 s_msgId = 1;
 static LogParser *s_parser = NULL;
 static MUTEX s_parserLock = INVALID_MUTEX_HANDLE;
+static NodeMatchingPolicy s_nodeMatchingPolicy = SOURCE_IP_THEN_HOSTNAME;
 
 /**
  * Parse timestamp field
@@ -223,59 +233,69 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_SYSLOG_RECORD *pRec)
 }
 
 /**
+ * Find node by host name
+ */
+static Node *FindNodeByHostname(const char *hostName)
+{
+   if (hostName[0] == 0)
+      return NULL;
+
+   Node *node = NULL;
+   UINT32 ipAddr = ntohl(ResolveHostNameA(hostName));
+	if ((ipAddr != INADDR_NONE) && (ipAddr != INADDR_ANY))
+   {
+      node = FindNodeByIP(0, ipAddr);
+   }
+
+   if (node == NULL)
+	{
+#ifdef UNICODE
+		WCHAR wname[MAX_OBJECT_NAME];
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hostName, -1, wname, MAX_OBJECT_NAME);
+		wname[MAX_OBJECT_NAME - 1] = 0;
+		node = (Node *)FindObjectByName(wname, OBJECT_NODE);
+#else
+		node = (Node *)FindObjectByName(hostName, OBJECT_NODE);
+#endif
+   }
+   return node;
+}
+
+/**
  * Bind syslog message to NetXMS node object
  * dwSourceIP is an IP address from which we receive message
  */
 static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
 {
-   Node *pNode = NULL;
-   UINT32 dwIpAddr;
+   Node *node = NULL;
 
-   // Determine IP address of a source
-   if (pRec->szHostName[0] == 0)
+   if (s_nodeMatchingPolicy == SOURCE_IP_THEN_HOSTNAME)
    {
-      // Hostname was not defined in the message
-      dwIpAddr = dwSourceIP;
+      node = FindNodeByIP(0, dwSourceIP);
+      if (node == NULL)
+      {
+         node = FindNodeByHostname(pRec->szHostName);
+      }
    }
    else
    {
-      dwIpAddr = ntohl(ResolveHostNameA(pRec->szHostName));
-		if ((dwIpAddr == INADDR_NONE) || (dwIpAddr == INADDR_ANY))
-		{
-#ifdef UNICODE
-			WCHAR wname[MAX_OBJECT_NAME];
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pRec->szHostName, -1, wname, MAX_OBJECT_NAME);
-			wname[MAX_OBJECT_NAME - 1] = 0;
-			pNode = (Node *)FindObjectByName(wname, OBJECT_NODE);
-#else
-			pNode = (Node *)FindObjectByName(pRec->szHostName, OBJECT_NODE);
-#endif
-			if (pNode == NULL)
-				dwIpAddr = dwSourceIP;
-		}
+      node = FindNodeByHostname(pRec->szHostName);
+      if (node == NULL)
+      {
+         node = FindNodeByIP(0, dwSourceIP);
+      }
    }
 
-   // Match source IP to NetXMS object
-   if ((dwIpAddr != INADDR_NONE) && (pNode == NULL))
-      pNode = FindNodeByIP(0, dwIpAddr);
-
-   // Try source IP if provided hostname/IP cannot be found
-   if ((pNode == NULL) && (dwIpAddr != dwSourceIP))
+	if (node != NULL)
    {
-		dwIpAddr = dwSourceIP;
-      pNode = FindNodeByIP(0, dwIpAddr);
-   }
-
-	if (pNode != NULL)
-   {
-      pRec->dwSourceObject = pNode->Id();
+      pRec->dwSourceObject = node->Id();
       if (pRec->szHostName[0] == 0)
 		{
 #ifdef UNICODE
-			WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pNode->Name(), -1, pRec->szHostName, MAX_SYSLOG_HOSTNAME_LEN, NULL, NULL);
+			WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, node->Name(), -1, pRec->szHostName, MAX_SYSLOG_HOSTNAME_LEN, NULL, NULL);
 			pRec->szHostName[MAX_SYSLOG_HOSTNAME_LEN - 1] = 0;
 #else
-         nx_strncpy(pRec->szHostName, pNode->Name(), MAX_SYSLOG_HOSTNAME_LEN);
+         nx_strncpy(pRec->szHostName, node->Name(), MAX_SYSLOG_HOSTNAME_LEN);
 #endif
 		}
    }
@@ -285,7 +305,7 @@ static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
          IpToStrA(dwSourceIP, pRec->szHostName);
    }
 
-   return pNode;
+   return node;
 }
 
 /**
