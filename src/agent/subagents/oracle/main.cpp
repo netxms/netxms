@@ -61,7 +61,7 @@ DatabaseQuery g_queries[] =
    { _T("TABLESPACE"), MAKE_ORACLE_VERSION(10, 0), 1, 
       _T("SELECT d.tablespace_name, d.status Status, d.contents Type, to_char(round(used_percent,2)) UsedPct FROM dba_tablespaces d, dba_tablespace_usage_metrics m WHERE d.tablespace_name=m.tablespace_name")
    },
-   { NULL, 0, NULL }
+   { NULL, 0, 0, NULL }
 };
 
 /**
