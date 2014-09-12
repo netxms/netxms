@@ -54,6 +54,7 @@ DatabaseQuery g_queries[] =
             _T("(SELECT count(*) FROM dba_jobs WHERE nvl(failures,0) <> 0) FailedJobs,")
       		_T("(SELECT sum(a.value) FROM v$sesstat a, v$statname b, v$session s WHERE a.statistic#=b.statistic# AND s.sid=a.sid AND b.name='opened cursors current') OpenCursors,")
             _T("(SELECT count(*) FROM dba_objects WHERE status!='VALID') InvalidObjects,")
+            _T("(SELECT count(*) FROM v$lock) Locks,")
             _T("(SELECT count(*) FROM v$session) SessionCount ")
          _T("FROM dual")
    },
@@ -302,6 +303,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Oracle.Performance.DictCacheHitRatio(*)"), H_GlobalParameter, _T("GLOBALSTATS/DICTCACHEHITRATIO"), DCI_DT_STRING, _T("Oracle/Performance: Dictionary cache hit ratio") },
 	{ _T("Oracle.Performance.DispatcherWorkload(*)"), H_GlobalParameter, _T("GLOBALSTATS/DISPATCHERWORKLOAD"), DCI_DT_STRING, _T("Oracle/Performance: Dispatcher workload (percentage)") },
 	{ _T("Oracle.Performance.FreeSharedPool(*)"), H_GlobalParameter, _T("GLOBALSTATS/FREESHAREDPOOL"), DCI_DT_INT64, _T("Oracle/Performance: Free space in shared pool (bytes)") },
+	{ _T("Oracle.Performance.Locks(*)"), H_GlobalParameter, _T("GLOBALSTATS/LOCKS"), DCI_DT_INT64, _T("Oracle/Performance: Number of locks") },
 	{ _T("Oracle.Performance.LogicalReads(*)"), H_GlobalParameter, _T("GLOBALSTATS/LOGICREADS"), DCI_DT_INT64, _T("Oracle/Performance: Number of logical reads") },
 	{ _T("Oracle.Performance.LibCacheHitRatio(*)"), H_GlobalParameter, _T("GLOBALSTATS/LIBCACHEHITRATIO"), DCI_DT_STRING, _T("Oracle/Performance: Library cache hit ratio") },
 	{ _T("Oracle.Performance.MemorySortRatio(*)"), H_GlobalParameter, _T("GLOBALSTATS/MEMORYSORTRATIO"), DCI_DT_STRING, _T("Oracle/Performance: PGA memory sort ratio") },
