@@ -52,6 +52,19 @@ struct DatabaseInfo
 };
 
 /**
+ * Table query descriptor
+ */
+struct TableDescriptor
+{
+   const TCHAR *query;
+   struct
+   {
+      int dataType;
+      const TCHAR *displayName;
+   } columns[32];
+};
+
+/**
  * Database instance
  */
 class DatabaseInstance
@@ -63,7 +76,8 @@ private:
 	bool m_connected;
 	int m_version;
    StringMap *m_data;
-	MUTEX m_mutex;
+	MUTEX m_dataLock;
+	MUTEX m_sessionLock;
    CONDITION m_stopCondition;
 
    static THREAD_RESULT THREAD_CALL pollerThreadStarter(void *arg);
@@ -85,6 +99,7 @@ public:
 
    bool getData(const TCHAR *tag, TCHAR *value);
    bool getTagList(const TCHAR *pattern, StringList *value);
+   bool queryTable(TableDescriptor *td, Table *value);
 };
 
 /**

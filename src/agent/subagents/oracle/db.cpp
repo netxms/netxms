@@ -32,7 +32,8 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
 	m_connected = false;
 	m_version = 0;
    m_data = NULL;
-	m_mutex = MutexCreate();
+	m_dataLock = MutexCreate();
+	m_sessionLock = MutexCreate();
    m_stopCondition = ConditionCreate(TRUE);
 }
 
@@ -42,7 +43,8 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
 DatabaseInstance::~DatabaseInstance()
 {
    stop();
-   MutexDestroy(m_mutex);
+   MutexDestroy(m_dataLock);
+   MutexDestroy(m_sessionLock);
    ConditionDestroy(m_stopCondition);
    delete m_data;
 }
@@ -107,10 +109,13 @@ void DatabaseInstance::pollerThread()
    AgentWriteDebugLog(3, _T("ORACLE: poller thread for database %s started"), m_info.id);
    do
    {
+      MutexLock(m_sessionLock);
+
       TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-		m_session = DBConnect(g_driverHandle, m_info.name, NULL, m_info.username, m_info.password, NULL, errorText);
+      m_session = DBConnect(g_driverHandle, m_info.name, NULL, m_info.username, m_info.password, NULL, errorText);
       if (m_session == NULL)
       {
+         MutexUnlock(m_sessionLock);
          AgentWriteDebugLog(6, _T("ORACLE: cannot connect to database %s: %s"), m_info.id, errorText);
          continue;
       }
@@ -120,6 +125,8 @@ void DatabaseInstance::pollerThread()
       m_version = getOracleVersion();
       AgentWriteLog(NXLOG_INFO, _T("ORACLE: connection with database %s restored (version %d.%d)"), 
          m_info.id, m_version >> 8, m_version &0xFF);
+
+      MutexUnlock(m_sessionLock);
 
       UINT32 sleepTime;
       do
@@ -135,9 +142,11 @@ void DatabaseInstance::pollerThread()
       }
       while(!ConditionWait(m_stopCondition, sleepTime));
 
+      MutexLock(m_sessionLock);
       m_connected = false;
       DBDisconnect(m_session);
       m_session = NULL;
+      MutexUnlock(m_sessionLock);
    }
    while(!ConditionWait(m_stopCondition, 60000));   // reconnect every 60 seconds
    AgentWriteDebugLog(3, _T("ORACLE: poller thread for database %s stopped"), m_info.id);
@@ -213,10 +222,10 @@ bool DatabaseInstance::poll()
    }
 
    // update cached data
-   MutexLock(m_mutex);
+   MutexLock(m_dataLock);
    delete m_data;
    m_data = data;
-   MutexUnlock(m_mutex);
+   MutexUnlock(m_dataLock);
 
    return failures < count;
 }
@@ -227,7 +236,7 @@ bool DatabaseInstance::poll()
 bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
 {
    bool success = false;
-   MutexLock(m_mutex);
+   MutexLock(m_dataLock);
    if (m_data != NULL)
    {
       const TCHAR *v = m_data->get(tag);
@@ -237,7 +246,7 @@ bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
          success = true;
       }
    }
-   MutexUnlock(m_mutex);
+   MutexUnlock(m_dataLock);
    return success;
 }
 
@@ -248,7 +257,7 @@ bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
 {
    bool success = false;
 
-   MutexLock(m_mutex);
+   MutexLock(m_dataLock);
    if (m_data != NULL)
    {
       regex_t preg;
@@ -275,6 +284,50 @@ bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
          success = true;
 	   }
    }
-   MutexUnlock(m_mutex);
+   MutexUnlock(m_dataLock);
+   return success;
+}
+
+/**
+ * Query table
+ */
+bool DatabaseInstance::queryTable(TableDescriptor *td, Table *value)
+{
+   MutexLock(m_sessionLock);
+   
+   if (!m_connected || (m_session == NULL))
+   {
+      MutexUnlock(m_sessionLock);
+      return false;
+   }
+
+   bool success = false;
+
+   DB_RESULT hResult = DBSelect(m_session, td->query);
+   if (hResult != NULL)
+   {
+      int numColumns = DBGetColumnCount(hResult);
+      for(int col = 0; col < numColumns; col++)
+      {
+         TCHAR name[64];
+         DBGetColumnName(hResult, col, name, 64);
+         value->addColumn(name, td->columns[col].dataType, td->columns[col].displayName, col == 0);
+      }
+
+      int numRows = DBGetNumRows(hResult);
+      for(int row = 0; row < numRows; row++)
+      {
+         value->addRow();
+         for(int col = 0; col < numColumns; col++)
+         {
+            value->setPreallocated(col, DBGetField(hResult, row, col, NULL, 0));
+         }
+      }
+
+      DBFreeResult(hResult);
+      success = true;
+   }
+
+   MutexUnlock(m_sessionLock);
    return success;
 }

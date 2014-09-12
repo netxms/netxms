@@ -35,8 +35,9 @@ DatabaseQuery g_queries[] =
    { _T("INSTANCE"), MAKE_ORACLE_VERSION(7, 0), 0, _T("SELECT version,status,archiver,shutdown_pending FROM v$instance") },
    { _T("GLOBALSTATS"), MAKE_ORACLE_VERSION(7, 0), 0,
          _T("SELECT ")
-            _T("(SELECT s.value PhysReads FROM v$sysstat s, v$statname n WHERE n.name='physical reads' AND n.statistic#=s.statistic#) PhysReads, ")
-            _T("(SELECT s.value LogicReads FROM v$sysstat s, v$statname n WHERE n.name='session logical reads' AND n.statistic#=s.statistic#) LogicReads, ")
+            _T("(SELECT s.value FROM v$sysstat s, v$statname n WHERE n.name='physical reads' AND n.statistic#=s.statistic#) PhysReads, ")
+            _T("(SELECT s.value FROM v$sysstat s, v$statname n WHERE n.name='physical writes' AND n.statistic#=s.statistic#) PhysWrites, ")
+            _T("(SELECT s.value FROM v$sysstat s, v$statname n WHERE n.name='session logical reads' AND n.statistic#=s.statistic#) LogicReads, ")
             _T("(SELECT round((sum(decode(name,'consistent gets',value,0))+sum(decode(name,'db block gets',value,0))-sum(decode(name,'physical reads',value, 0)))/(sum(decode(name,'consistent gets',value,0))+sum(decode(name,'db block gets',value,0)))*100,2) FROM v$sysstat) CacheHitRatio, ")
             _T("(SELECT round(sum(waits)*100/sum(gets),2) FROM v$rollstat) RollbackWaitRatio, ")
             _T("(SELECT round((1-(sum(getmisses)/sum(gets)))*100,2) FROM v$rowcache) DictCacheHitRatio, ")
@@ -59,9 +60,62 @@ DatabaseQuery g_queries[] =
          _T("FROM dual")
    },
    { _T("TABLESPACE"), MAKE_ORACLE_VERSION(10, 0), 1, 
-      _T("SELECT d.tablespace_name, d.status Status, d.contents Type, to_char(round(used_percent,2)) UsedPct FROM dba_tablespaces d, dba_tablespace_usage_metrics m WHERE d.tablespace_name=m.tablespace_name")
+      _T("SELECT d.tablespace_name, d.status Status, d.contents Type, d.block_size BlockSize, d.logging Logging,")
+         _T("m.tablespace_size * d.block_size TotalSpace,")
+         _T("m.used_space * d.block_size UsedSpace,")
+         _T("trim(to_char(round(m.used_percent,2), '990.99')) UsedSpacePct,")
+         _T("(m.tablespace_size - m.used_space) * d.block_size FreeSpace,")
+         _T("trim(to_char(round((100 - m.used_percent),2), '990.99')) FreeSpacePct ")
+         _T("FROM dba_tablespaces d, dba_tablespace_usage_metrics m WHERE d.tablespace_name=m.tablespace_name")
    },
    { NULL, 0, 0, NULL }
+};
+
+/**
+ * Table query definition: Sessions
+ */
+static TableDescriptor s_tqSessions =
+{
+   _T("SELECT sid,username,schemaname AS schema,osuser AS os_user,machine,status,process,program,type,state,service_name AS service FROM v$session"),
+   {
+      { DCI_DT_INT, _T("SID") },
+      { DCI_DT_STRING, _T("User") },
+      { DCI_DT_STRING, _T("Schema") },
+      { DCI_DT_STRING, _T("OS User") },
+      { DCI_DT_STRING, _T("Machine") },
+      { DCI_DT_STRING, _T("Status") },
+      { DCI_DT_STRING, _T("Process") },
+      { DCI_DT_STRING, _T("Program") },
+      { DCI_DT_STRING, _T("Type") },
+      { DCI_DT_STRING, _T("State") },
+      { DCI_DT_STRING, _T("Service") }
+   }
+};
+
+/**
+ * Table query definition: TableSpaces
+ */
+static TableDescriptor s_tqTableSpaces =
+{
+   _T("SELECT d.tablespace_name AS name, d.status AS status, d.contents AS type, d.block_size AS block_size, d.logging AS logging,")
+      _T("m.tablespace_size * d.block_size AS total,")
+      _T("m.used_space * d.block_size AS used,")
+      _T("trim(to_char(round(m.used_percent,2), '990.99')) AS used_pct,")
+      _T("(m.tablespace_size - m.used_space) * d.block_size AS free,")
+      _T("trim(to_char(round((100 - m.used_percent),2), '990.99')) AS free_pct ")
+      _T("FROM dba_tablespaces d, dba_tablespace_usage_metrics m WHERE d.tablespace_name=m.tablespace_name"),
+   {
+      { DCI_DT_STRING, _T("Name") },
+      { DCI_DT_STRING, _T("Status") },
+      { DCI_DT_STRING, _T("Type") },
+      { DCI_DT_INT, _T("Block size") },
+      { DCI_DT_STRING, _T("Logging") },
+      { DCI_DT_INT64, _T("Total") },
+      { DCI_DT_INT64, _T("Used") },
+      { DCI_DT_INT, _T("Used %") },
+      { DCI_DT_INT64, _T("Free") },
+      { DCI_DT_INT, _T("Free %") }
+   }
 };
 
 /**
@@ -173,17 +227,33 @@ static LONG H_TagList(const TCHAR *param, const TCHAR *arg, StringList *value)
 }
 
 /**
+ * Handler for generic table queries
+ */
+static LONG H_TableQuery(const TCHAR *param, const TCHAR *arg, Table *value)
+{
+   TCHAR id[MAX_STR];
+   if (!AgentGetParameterArg(param, 1, id, MAX_STR))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   DatabaseInstance *db = FindInstance(id);
+   if (db == NULL)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   return db->queryTable((TableDescriptor *)arg, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+}
+
+/**
  * Config template
  */
-static DatabaseInfo s_info;
+static DatabaseInfo s_dbInfo;
 static TCHAR s_dbPassEncrypted[MAX_DB_STRING] = _T("");
 static NX_CFG_TEMPLATE s_configTemplate[] = 
 {
-	{ _T("Id"),					   CT_STRING, 0, 0, MAX_STR,       0, s_info.id },
-	{ _T("Name"),				   CT_STRING, 0, 0, MAX_STR,       0, s_info.name },
-	{ _T("TnsName"),			   CT_STRING, 0, 0, MAX_STR,       0, s_info.name },
-	{ _T("UserName"),			   CT_STRING, 0, 0, MAX_USERNAME,  0, s_info.username },
-	{ _T("Password"),			   CT_STRING, 0, 0, MAX_PASSWORD,  0, s_info.password },
+	{ _T("Id"),					   CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.id },
+	{ _T("Name"),				   CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.name },
+	{ _T("TnsName"),			   CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.name },
+	{ _T("UserName"),			   CT_STRING, 0, 0, MAX_USERNAME,  0, s_dbInfo.username },
+	{ _T("Password"),			   CT_STRING, 0, 0, MAX_PASSWORD,  0, s_dbInfo.password },
    { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_dbPassEncrypted },
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
@@ -207,18 +277,18 @@ static BOOL SubAgentInit(Config *config)
 
 	// Load configuration from "oracle" section to allow simple configuration
 	// of one database without XML includes
-	memset(&s_info, 0, sizeof(s_info));
+	memset(&s_dbInfo, 0, sizeof(s_dbInfo));
 	if (config->parseTemplate(_T("ORACLE"), s_configTemplate))
 	{
-		if (s_info.name[0] != 0)
+		if (s_dbInfo.name[0] != 0)
 		{
-			if (s_info.id[0] == 0)
-				_tcscpy(s_info.id, s_info.name);
+			if (s_dbInfo.id[0] == 0)
+				_tcscpy(s_dbInfo.id, s_dbInfo.name);
          if (*s_dbPassEncrypted != 0)
          {
-            DecryptPassword(s_info.username, s_dbPassEncrypted, s_info.password);
+            DecryptPassword(s_dbInfo.username, s_dbPassEncrypted, s_dbInfo.password);
          }
-         s_instances->add(new DatabaseInstance(&s_info));
+         s_instances->add(new DatabaseInstance(&s_dbInfo));
 		}
 	}
 
@@ -226,7 +296,7 @@ static BOOL SubAgentInit(Config *config)
 	for(i = 1; i <= 64; i++)
 	{
 		TCHAR section[MAX_STR];
-		memset((void*)&s_info, 0, sizeof(s_info));
+		memset((void*)&s_dbInfo, 0, sizeof(s_dbInfo));
 		_sntprintf(section, MAX_STR, _T("oracle/databases/database#%d"), i);
 		s_dbPassEncrypted[0] = 0;
 
@@ -236,15 +306,15 @@ static BOOL SubAgentInit(Config *config)
          continue;
 		}
 
-		if (s_info.name[0] == 0)
+		if (s_dbInfo.name[0] == 0)
 			continue;
 
       if (*s_dbPassEncrypted != 0)
       {
-         DecryptPassword(s_info.username, s_dbPassEncrypted, s_info.password);
+         DecryptPassword(s_dbInfo.username, s_dbPassEncrypted, s_dbInfo.password);
       }
 
-      s_instances->add(new DatabaseInstance(&s_info));
+      s_instances->add(new DatabaseInstance(&s_dbInfo));
 	}
 
 	// Exit if no usable configuration found
@@ -277,7 +347,7 @@ static void SubAgentShutdown()
 /**
  * Supported parameters
  */
-static NETXMS_SUBAGENT_PARAM m_parameters[] =
+static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
 	{ _T("Oracle.CriticalStats.AutoArchivingOff(*)"), H_GlobalParameter, _T("GLOBALSTATS/AAOFF"), DCI_DT_STRING, _T("Oracle/CriticalStats: Archive logs enabled but auto archiving off ") },
 	{ _T("Oracle.CriticalStats.DatafilesNeedMediaRecovery(*)"), H_GlobalParameter, _T("GLOBALSTATS/DFNEEDREC"), DCI_DT_INT64, _T("Oracle/CriticalStats: Number of datafiles that need media recovery") },
@@ -308,11 +378,18 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Oracle.Performance.LibCacheHitRatio(*)"), H_GlobalParameter, _T("GLOBALSTATS/LIBCACHEHITRATIO"), DCI_DT_STRING, _T("Oracle/Performance: Library cache hit ratio") },
 	{ _T("Oracle.Performance.MemorySortRatio(*)"), H_GlobalParameter, _T("GLOBALSTATS/MEMORYSORTRATIO"), DCI_DT_STRING, _T("Oracle/Performance: PGA memory sort ratio") },
 	{ _T("Oracle.Performance.PhysicalReads(*)"),  H_GlobalParameter, _T("GLOBALSTATS/PHYSREADS"), DCI_DT_INT64, _T("Oracle/Performance: Number of physical reads") },
+	{ _T("Oracle.Performance.PhysicalWrites(*)"),  H_GlobalParameter, _T("GLOBALSTATS/PHYSWRITES"), DCI_DT_INT64, _T("Oracle/Performance: Number of physical writes") },
 	{ _T("Oracle.Performance.RollbackWaitRatio(*)"), H_GlobalParameter, _T("GLOBALSTATS/ROLLBACKWAITRATIO"), DCI_DT_STRING, _T("Oracle/Performance: Ratio of waits for requests to rollback segments") },
 	{ _T("Oracle.Sessions.Count(*)"), H_GlobalParameter, _T("GLOBALSTATS/SESSIONCOUNT"), DCI_DT_INT, _T("Oracle/Sessions: Number of sessions opened") },
-	{ _T("Oracle.TableSpaces.Status(*)"), H_InstanceParameter, _T("TABLESPACE/STATUS"), DCI_DT_STRING, _T("Oracle/Tablespaces: Status") },
-	{ _T("Oracle.TableSpaces.Type(*)"), H_InstanceParameter, _T("TABLESPACE/TYPE"), DCI_DT_STRING, _T("Oracle/Tablespaces: Type") },
-	{ _T("Oracle.TableSpaces.UsedPct(*)"), H_InstanceParameter, _T("TABLESPACE/USEDPCT"), DCI_DT_INT, _T("Oracle/Tablespaces: Percentage used") }
+   { _T("Oracle.TableSpaces.BlockSize(*)"), H_InstanceParameter, _T("TABLESPACE/BLOCKSIZE"), DCI_DT_INT, _T("Oracle/Tablespace: {instance} block size") },
+	{ _T("Oracle.TableSpaces.FreeBytes(*)"), H_InstanceParameter, _T("TABLESPACE/FREESPACE"), DCI_DT_INT64, _T("Oracle/Tablespaces: {instance} bytes free") },
+	{ _T("Oracle.TableSpaces.FreePct(*)"), H_InstanceParameter, _T("TABLESPACE/FREESPACEPCT"), DCI_DT_INT, _T("Oracle/Tablespaces: {instance} percentage free") },
+	{ _T("Oracle.TableSpaces.Logging(*)"), H_InstanceParameter, _T("TABLESPACE/LOGGING"), DCI_DT_STRING, _T("Oracle/Tablespaces: {instance} logging mode") },
+	{ _T("Oracle.TableSpaces.Status(*)"), H_InstanceParameter, _T("TABLESPACE/STATUS"), DCI_DT_STRING, _T("Oracle/Tablespaces: {instance} status") },
+	{ _T("Oracle.TableSpaces.TotalBytes(*)"), H_InstanceParameter, _T("TABLESPACE/TOTALSPACE"), DCI_DT_INT64, _T("Oracle/Tablespaces: {instance} bytes total") },
+	{ _T("Oracle.TableSpaces.Type(*)"), H_InstanceParameter, _T("TABLESPACE/TYPE"), DCI_DT_STRING, _T("Oracle/Tablespaces: {instance} type") },
+	{ _T("Oracle.TableSpaces.UsedBytes(*)"), H_InstanceParameter, _T("TABLESPACE/USEDSPACE"), DCI_DT_INT64, _T("Oracle/Tablespaces: {instance} bytes used") },
+	{ _T("Oracle.TableSpaces.UsedPct(*)"), H_InstanceParameter, _T("TABLESPACE/USEDSPACEPCT"), DCI_DT_INT, _T("Oracle/Tablespaces: {instance} percentage used") }
 };
 
 /**
@@ -325,16 +402,25 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
 };
 
 /**
+ * Supported tables
+ */
+static NETXMS_SUBAGENT_TABLE s_tables[] =
+{
+   { _T("Oracle.Sessions(*)"), H_TableQuery, (const TCHAR *)&s_tqSessions, _T("SID"), _T("Oracle: open sessions") },
+   { _T("Oracle.TableSpaces(*)"), H_TableQuery, (const TCHAR *)&s_tqTableSpaces, _T("NAME"), _T("Oracle: table spaces") }
+};
+
+/**
  * Subagent information
  */
-static NETXMS_SUBAGENT_INFO m_info =
+static NETXMS_SUBAGENT_INFO s_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("ORACLE"), NETXMS_VERSION_STRING,
 	SubAgentInit, SubAgentShutdown, NULL,
-	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), m_parameters,
+	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM), s_parameters,
 	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST), s_lists,
-	0,	NULL,    // tables
+	sizeof(s_tables) / sizeof(NETXMS_SUBAGENT_TABLE), s_tables,
 	0,	NULL,    // actions
 	0,	NULL     // push parameters
 };
@@ -344,7 +430,7 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(ORACLE)
 {
-	*ppInfo = &m_info;
+	*ppInfo = &s_info;
 	return TRUE;
 }
 
