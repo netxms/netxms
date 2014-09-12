@@ -234,7 +234,8 @@ void ConfigEntry::unlinkEntry(ConfigEntry *entry)
 }
 
 /**
- * Get all subentries with names matched to mask
+ * Get all subentries with names matched to mask.
+ * Returned list ordered by ID
  */
 ObjectArray<ConfigEntry> *ConfigEntry::getSubEntries(const TCHAR *mask)
 {
@@ -895,11 +896,10 @@ ConfigEntry *Config::getEntry(const TCHAR *path)
    return NULL;
 }
 
-/*
+/**
  * Create entry if does not exist, or return existing
  * Will return NULL on error
  */
-
 ConfigEntry *Config::createEntry(const TCHAR *path)
 {
    const TCHAR *curr, *end;
@@ -956,11 +956,10 @@ void Config::deleteEntry(const TCHAR *path)
    delete entry;
 }
 
-/*
+/**
  * Set value
  * Returns false on error (usually caused by incorrect path)
  */
-
 bool Config::setValue(const TCHAR *path, const TCHAR *value)
 {
    ConfigEntry *entry = createEntry(path);
@@ -970,6 +969,10 @@ bool Config::setValue(const TCHAR *path, const TCHAR *value)
    return true;
 }
 
+/**
+ * Set value
+ * Returns false on error (usually caused by incorrect path)
+ */
 bool Config::setValue(const TCHAR *path, INT32 value)
 {
    TCHAR buffer[32];
@@ -977,6 +980,10 @@ bool Config::setValue(const TCHAR *path, INT32 value)
    return setValue(path, buffer);
 }
 
+/**
+ * Set value
+ * Returns false on error (usually caused by incorrect path)
+ */
 bool Config::setValue(const TCHAR *path, UINT32 value)
 {
    TCHAR buffer[32];
@@ -984,6 +991,10 @@ bool Config::setValue(const TCHAR *path, UINT32 value)
    return setValue(path, buffer);
 }
 
+/**
+ * Set value
+ * Returns false on error (usually caused by incorrect path)
+ */
 bool Config::setValue(const TCHAR *path, INT64 value)
 {
    TCHAR buffer[32];
@@ -991,6 +1002,10 @@ bool Config::setValue(const TCHAR *path, INT64 value)
    return setValue(path, buffer);
 }
 
+/**
+ * Set value
+ * Returns false on error (usually caused by incorrect path)
+ */
 bool Config::setValue(const TCHAR *path, UINT64 value)
 {
    TCHAR buffer[32];
@@ -998,6 +1013,10 @@ bool Config::setValue(const TCHAR *path, UINT64 value)
    return setValue(path, buffer);
 }
 
+/**
+ * Set value
+ * Returns false on error (usually caused by incorrect path)
+ */
 bool Config::setValue(const TCHAR *path, double value)
 {
    TCHAR buffer[32];
@@ -1005,6 +1024,10 @@ bool Config::setValue(const TCHAR *path, double value)
    return setValue(path, buffer);
 }
 
+/**
+ * Set value
+ * Returns false on error (usually caused by incorrect path)
+ */
 bool Config::setValue(const TCHAR *path, uuid_t value)
 {
    TCHAR buffer[64];

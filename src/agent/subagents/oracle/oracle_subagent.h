@@ -84,6 +84,7 @@ public:
    int getVersion() { return m_version; }
 
    bool getData(const TCHAR *tag, TCHAR *value);
+   bool getTagList(const TCHAR *pattern, StringList *value);
 };
 
 /**

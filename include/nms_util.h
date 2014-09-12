@@ -1081,8 +1081,8 @@ void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str);
 #define RemoveTrailingCRLF RemoveTrailingCRLFA
 #endif
 
-BOOL LIBNETXMS_EXPORTABLE RegexpMatchA(const char *pszStr, const char *pszExpr, BOOL bMatchCase);
-BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *pszStr, const WCHAR *pszExpr, BOOL bMatchCase);
+BOOL LIBNETXMS_EXPORTABLE RegexpMatchA(const char *str, const char *expr, bool matchCase);
+BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool matchCase);
 #ifdef UNICODE
 #define RegexpMatch RegexpMatchW
 #else

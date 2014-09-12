@@ -19,6 +19,7 @@
  **/
 
 #include "oracle_subagent.h"
+#include <netxms-regex.h>
 
 /**
  * Create new database instance object
@@ -86,7 +87,7 @@ int DatabaseInstance::getOracleVersion()
 	_stscanf(versionString, _T("%d.%d"), &major, &minor);
 	DBFreeResult(hResult);
 
-	return (major << 8) | minor;
+	return MAKE_ORACLE_VERSION(major, minor);
 }
 
 /**
@@ -104,7 +105,7 @@ THREAD_RESULT THREAD_CALL DatabaseInstance::pollerThreadStarter(void *arg)
 void DatabaseInstance::pollerThread()
 {
    AgentWriteDebugLog(3, _T("ORACLE: poller thread for database %s started"), m_info.id);
-   while(!ConditionWait(m_stopCondition, 30000))   // reconnect every 30 seconds
+   do
    {
       TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 		m_session = DBConnect(g_driverHandle, m_info.name, NULL, m_info.username, m_info.password, NULL, errorText);
@@ -138,6 +139,7 @@ void DatabaseInstance::pollerThread()
       DBDisconnect(m_session);
       m_session = NULL;
    }
+   while(!ConditionWait(m_stopCondition, 60000));   // reconnect every 60 seconds
    AgentWriteDebugLog(3, _T("ORACLE: poller thread for database %s stopped"), m_info.id);
 }
 
@@ -164,25 +166,45 @@ bool DatabaseInstance::poll()
          continue;
       }
 
+      TCHAR tag[256];
+      _tcscpy(tag, g_queries[i].name);
+      int tagBaseLen = (int)_tcslen(tag);
+      tag[tagBaseLen++] = _T('/');
+
       int numColumns = DBGetColumnCount(hResult);
       if (g_queries[i].instanceColumns > 0)
       {
-         int col;
-
-         // Process instance columns
-         for(col = 0; col < g_queries[i].instanceColumns; col++)
+         int rowCount = DBGetNumRows(hResult);
+         for(int row = 0; row < rowCount; row++)
          {
+            int col;
+
+            // Process instance columns
+            TCHAR instance[128];
+            instance[0] = 0;
+            for(col = 0; (col < g_queries[i].instanceColumns) && (col < numColumns); col++)
+            {
+               int len = (int)_tcslen(instance);
+               if (len > 0)
+                  instance[len++] = _T('|');
+               DBGetField(hResult, row, col, &instance[len], 128 - len);
+            }
+
+            for(; col < numColumns; col++)
+            {
+               DBGetColumnName(hResult, col, &tag[tagBaseLen], 256 - tagBaseLen);
+               size_t tagLen = _tcslen(tag);
+               tag[tagLen++] = _T('@');
+               nx_strncpy(&tag[tagLen], instance, 256 - tagLen);
+               data->setPreallocated(_tcsdup(tag), DBGetField(hResult, row, col, NULL, 0));
+            }
          }
       }
       else
       {
-         TCHAR tag[256];
-         _tcscpy(tag, g_queries[i].name);
-         int tagLen = (int)_tcslen(tag);
-         tag[tagLen++] = _T('/');
          for(int col = 0; col < numColumns; col++)
          {
-            DBGetColumnName(hResult, col, &tag[tagLen], 256 - tagLen);
+            DBGetColumnName(hResult, col, &tag[tagBaseLen], 256 - tagBaseLen);
             data->setPreallocated(_tcsdup(tag), DBGetField(hResult, 0, col, NULL, 0));
          }
       }
@@ -214,6 +236,44 @@ bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
          ret_string(value, v);
          success = true;
       }
+   }
+   MutexUnlock(m_mutex);
+   return success;
+}
+
+/**
+ * Get list of tags matching given pattern from collected data
+ */
+bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
+{
+   bool success = false;
+
+   MutexLock(m_mutex);
+   if (m_data != NULL)
+   {
+      regex_t preg;
+	   if (_tregcomp(&preg, pattern, REG_EXTENDED | REG_ICASE) == 0)
+	   {
+         for(int i = 0; i < m_data->size(); i++)
+         {
+            const TCHAR *tag = m_data->getKeyByIndex(i);
+            regmatch_t pmatch[16];
+   		   if (_tregexec(&preg, tag, 16, pmatch, 0) == 0) // MATCH
+            {
+               if (pmatch[1].rm_so != -1)
+               {
+                  size_t slen = pmatch[1].rm_eo - pmatch[1].rm_so;
+                  TCHAR *s = (TCHAR *)malloc((slen + 1) * sizeof(TCHAR));
+                  memcpy(s, &tag[pmatch[1].rm_so], slen * sizeof(TCHAR));
+                  s[slen] = 0;
+                  value->addPreallocated(s);
+               }
+            }
+         }
+
+         regfree(&preg);
+         success = true;
+	   }
    }
    MutexUnlock(m_mutex);
    return success;
