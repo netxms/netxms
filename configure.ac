@@ -804,6 +804,7 @@ esac
 #  * Turn on 64bit mode on HP-UX/Itanium
 #  * Turn on 64bit mode on AIX
 #  * Turn on 64bit mode on Solaris
+#  * Disable inconsistent C/C++ linkage warnings for Solaris Studio
 #--------------------------------------------------------------------
 
 if test "x$ac_compiler_gnu" = "xyes" ; then
@@ -1016,6 +1017,7 @@ fi
 if test "x$CXX" = "xCC" ; then
 	SQLFLAGS="-Qn"
 	CPPFLAGS="$CPPFLAGS -mt"
+	CXXFLAGS="$CXXFLAGS -erroff=badargtype2w,wbadinit"
 
 	if test "x$FORCE_32BIT_BUILD" = "xyes"; then
 		AC_MSG_CHECKING(whether C compiler accepts -m32)
@@ -1428,6 +1430,7 @@ if test "x$HAVE_LIBCURL" = "xyes"; then
   SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
   SMSDRV_DIRS="$SMSDRV_DIRS websms"
   HDLINK_DIRS="$HDLINK_DIRS jira"
+  AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
 
 if test "x$LDAP_SUPPORT" = "xyes"; then
