@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.objecttools.views;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -64,7 +66,7 @@ public class BrowserView extends ViewPart
 			@Override
 			public void changed(LocationEvent event)
 			{
-				setPartName(String.format(Messages.get().BrowserView_PartName_Changed, event.location));
+				setPartName(String.format(Messages.get().BrowserView_PartName_Changed, getTitle(browser.getText(), event.location)));
 				actionStop.setEnabled(false);
 			}
 		});
@@ -165,5 +167,24 @@ public class BrowserView extends ViewPart
 	public void openUrl(final String url)
 	{
 		browser.setUrl(url);
+	}
+	
+	/**
+	 * @param html
+	 * @param fallback
+	 * @return
+	 */
+	private static String getTitle(String html, String fallback)
+	{
+	   Pattern p = Pattern.compile("\\<html\\>.*\\<head\\>.*\\<title\\>(.*)\\</title\\>.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+	   Matcher m = p.matcher(html);
+	   if (m.matches())
+	   {
+	      int index = m.start(1);
+	      if (index == -1)
+	         return fallback;
+	      return html.substring(index, m.end(1));
+	   }
+	   return fallback;
 	}
 }
