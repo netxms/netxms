@@ -417,7 +417,7 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
    {
       _sntprintf(buffer, bufSize, _T("%d"), m_iStatus);
    }
-   else if (!_tcsicmp(param, _T("Dummy")))
+   else if (!_tcsicmp(param, _T("Dummy")) || MatchString(_T("Dummy(*)"), param, FALSE))
    {
       _tcscpy(buffer, _T("0"));
    }
