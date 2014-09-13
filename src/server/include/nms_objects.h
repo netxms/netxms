@@ -2001,17 +2001,18 @@ public:
    void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
 };
 
-
-//
-// Business service object
-//
-
+/**
+ * Business service object
+ */
 class NXCORE_EXPORTABLE BusinessService : public ServiceContainer
 {
 protected:
 	bool m_busy;
+   bool m_pollingDisabled;
 	time_t m_lastPollTime;
 	int m_lastPollStatus;
+
+   virtual void prepareForDeletion();
 
 public:
 	BusinessService();
