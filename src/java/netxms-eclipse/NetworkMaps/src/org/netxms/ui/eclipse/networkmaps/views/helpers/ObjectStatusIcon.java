@@ -20,14 +20,10 @@ package org.netxms.ui.eclipse.networkmaps.views.helpers;
 
 import org.eclipse.draw2d.BorderLayout;
 import org.eclipse.draw2d.Graphics;
-import org.eclipse.draw2d.Label;
-import org.eclipse.draw2d.PositionConstants;
-import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.maps.elements.NetworkMapObject;
-import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
  * Figure representing NetXMS object as icon with object name below
@@ -39,7 +35,6 @@ public class ObjectStatusIcon extends ObjectFigure
    private static final int BACKGROUND_MARGIN_Y = 4;
    private static final int FRAME_LINE_WIDTH = 3;
    
-   private Label label;
    private int imageWidth;
    private int imageHeight;
    

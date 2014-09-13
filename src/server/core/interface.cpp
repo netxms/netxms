@@ -659,7 +659,7 @@ void Interface::paeStatusPoll(ClientSession *pSession, UINT32 rqId, SNMP_Transpo
 
 	if (m_dot1xPaeAuthState != (WORD)paeState)
 	{
-	   sendPollerMsg(rqId, _T("      Port PAE state changed to %s...\r\n"), PAE_STATE_TEXT(paeState));
+	   sendPollerMsg(rqId, _T("      Port PAE state changed to %s\r\n"), PAE_STATE_TEXT(paeState));
 		modified = true;
       if (!m_isSystem)
       {
@@ -675,7 +675,7 @@ void Interface::paeStatusPoll(ClientSession *pSession, UINT32 rqId, SNMP_Transpo
 
 	if (m_dot1xBackendAuthState != (WORD)backendState)
 	{
-	   sendPollerMsg(rqId, _T("      Port backend state changed to %s...\r\n"), BACKEND_STATE_TEXT(backendState));
+	   sendPollerMsg(rqId, _T("      Port backend state changed to %s\r\n"), BACKEND_STATE_TEXT(backendState));
 		modified = true;
       if (!m_isSystem)
       {

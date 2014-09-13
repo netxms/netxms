@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.objectmanager.actions;
 
-import java.util.List;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -46,11 +45,10 @@ public class DeleteObject extends AbstractHandler
       if ((selection == null) || !(selection instanceof IStructuredSelection) || selection.isEmpty())
          return null;
       
-      List sList = ((IStructuredSelection)selection).toList();
       String question;
-      if (sList.size() == 1)
+      if (((IStructuredSelection)selection).size() == 1)
       {
-         question = String.format(Messages.get().DeleteObject_ConfirmQuestionSingular, ((AbstractObject)sList.get(0)).getObjectName());
+         question = String.format(Messages.get().DeleteObject_ConfirmQuestionSingular, ((AbstractObject)((IStructuredSelection)selection).getFirstElement()).getObjectName());
       }
       else
       {
@@ -60,7 +58,7 @@ public class DeleteObject extends AbstractHandler
       
       if(confirmed)
       {
-         for(Object o : sList)
+         for(Object o : ((IStructuredSelection)selection).toList())
          {
             if (!(o instanceof AbstractObject))
                continue;

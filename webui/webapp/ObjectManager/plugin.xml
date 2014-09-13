@@ -391,7 +391,7 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.ChangeZone"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.ChangeZone_Node"
-               label="%action.label.CreateZone"
+               label="%action.label.ChangeZone"
                menubarPath="objectmgmt">
          </action>
          <menu
@@ -519,7 +519,7 @@
          point="org.eclipse.ui.menus">
       <menuContribution
             allPopups="false"
-            locationURI="popup:org.eclipse.ui.popup.any?after=objectmgmt">
+            locationURI="popup:org.eclipse.ui.popup.any?before=objectmgmt">
          <command
                commandId="org.netxms.ui.eclipse.objectmanager.popupActions.Manage"
                label="%action.label.Manage"
@@ -614,9 +614,36 @@
             <visibleWhen
                   checkEnabled="false">
                <iterate>
+                  <and>
                   <instanceof
                         value="org.netxms.client.objects.AbstractObject">
                   </instanceof>
+                     <not>
+                        <or>
+                           <instanceof
+                                 value="org.netxms.client.objects.EntireNetwork">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.ServiceRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.TemplateRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.NetworkMapRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.DashboardRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.BusinessServiceRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.PolicyRoot">
+                           </instanceof>
+                        </or>
+                     </not>
+                  </and>
                </iterate>
             </visibleWhen>
          </command>

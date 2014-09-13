@@ -25,7 +25,6 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.ThresholdViolationSummary;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
