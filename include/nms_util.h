@@ -755,21 +755,21 @@ protected:
    int m_maskBits;
 
 public:
-   virtual bool isAnyLocal() = NULL;
-   virtual bool isLoopback() = NULL;
-   virtual bool isMulticast() = NULL;
-   virtual bool isBroadcast() = NULL;
+   virtual bool isAnyLocal() = 0;
+   virtual bool isLoopback() = 0;
+   virtual bool isMulticast() = 0;
+   virtual bool isBroadcast() = 0;
 
-   virtual int getFamily() = NULL;
+   virtual int getFamily() = 0;
 
-   virtual bool contain(InetAddress *a) = NULL;
-   virtual bool equals(InetAddress *a) = NULL;
-   virtual int compareTo(InetAddress *a) = NULL;
+   virtual bool contain(InetAddress *a) = 0;
+   virtual bool equals(InetAddress *a) = 0;
+   virtual int compareTo(InetAddress *a) = 0;
 
-   virtual InetAddress *clone() = NULL;
+   virtual InetAddress *clone() = 0;
 
-   virtual String toString() = NULL;
-   virtual TCHAR *toString(TCHAR *buffer) = NULL;
+   virtual String toString() = 0;
+   virtual TCHAR *toString(TCHAR *buffer) = 0;
 
    void setMaskBits(int m) { m_maskBits = m; }
    int getMaskBits() { return m_maskBits; }

@@ -339,6 +339,6 @@ InetAddress *InetAddress::createFromSockaddr(struct sockaddr *s)
    if (s->sa_family == AF_INET)
       return new Inet4Address(ntohl(((struct sockaddr_in *)s)->sin_addr.s_addr));
    if (s->sa_family == AF_INET6)
-      return new Inet6Address(((struct sockaddr_in6 *)s)->sin6_addr.u.Byte);
+      return new Inet6Address(((struct sockaddr_in6 *)s)->sin6_addr.s6_addr);
    return NULL;
 }
