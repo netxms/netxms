@@ -122,7 +122,7 @@ TCHAR g_szListenAddress[MAX_PATH] = _T("*");
 TCHAR g_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 TCHAR g_masterAgent[MAX_PATH] = _T("not_set");
 UINT16 g_wListenPort = AGENT_LISTEN_PORT;
-SERVER_INFO g_pServerList[MAX_SERVERS];
+ObjectArray<ServerInfo> g_serverList(8, 8, true);
 UINT32 g_dwServerCount = 0;
 UINT32 g_dwExecTimeout = 2000;     // External process execution timeout in milliseconds
 UINT32 g_dwSNMPTimeout = 3000;
@@ -276,6 +276,81 @@ static TCHAR m_szHelpText[] =
 #endif
    _T("   -v         : Display version and exit\n")
    _T("\n");
+
+/**
+ * Server info: constructor
+ */
+ServerInfo::ServerInfo(const TCHAR *name, bool control, bool master)
+{
+#ifdef UNICODE
+   m_name = MBStringFromWideString(name);
+#else
+   m_name = strdup(name);
+#endif
+
+   char *p = strchr(m_name, '/');
+   if (p != NULL)
+   {
+      *p = 0;
+      p++;
+      m_address = InetAddress::resolveHostName(m_name);
+      if (m_address != NULL)
+      {
+         int bits = strtol(p, NULL, 10);
+         if ((bits >= 0) && (bits <= 32))
+            m_address->setMaskBits(bits);
+      }
+      m_redoResolve = false;
+   }
+   else
+   {
+      m_address = InetAddress::resolveHostName(m_name);
+      m_redoResolve = true;
+   }
+
+   m_control = control;
+   m_master = master;
+   m_lastResolveTime = time(NULL);
+   m_mutex = MutexCreate();
+}
+
+/**
+ * Server info: destructor
+ */
+ServerInfo::~ServerInfo()
+{
+   delete m_address;
+   safe_free(m_name);
+   MutexDestroy(m_mutex);
+}
+
+/**
+ * Server info: resolve hostname if needed
+ */
+void ServerInfo::resolve()
+{
+   time_t now = time(NULL);
+   time_t age = now - m_lastResolveTime;
+   if ((age >= 3600) || ((age > 300) && (m_address == NULL)))
+   {
+      delete m_address;
+      m_address = InetAddress::resolveHostName(m_name);
+      m_lastResolveTime = now;
+   }
+}
+
+/**
+ * Server info: match address
+ */
+bool ServerInfo::match(InetAddress *addr)
+{
+   MutexLock(m_mutex);
+   if (m_redoResolve)
+      resolve();
+   bool result = (m_address != NULL) ? m_address->contain(addr) : false;
+   MutexUnlock(m_mutex);
+   return result;
+}
 
 /**
  * Save registry
@@ -583,7 +658,7 @@ static bool EnumerateSessionsBySubagent(bool (* pHandler)(AbstractCommSession *,
 /**
  * Parser server list
  */
-static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
+static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
 {
 	TCHAR *pItem, *pEnd;
 
@@ -594,56 +669,7 @@ static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
 			*pEnd = 0;
 		StrStrip(pItem);
 
-		UINT32 ipAddr, netMask;
-
-		TCHAR *mask = _tcschr(pItem, _T('/'));
-		if (mask != NULL)
-		{
-			*mask = 0;
-			mask++;
-			ipAddr = _t_inet_addr(pItem);
-
-			TCHAR *eptr;
-			int bits = _tcstol(mask, &eptr, 10);
-			if ((*eptr == 0) && (bits >= 0) && (bits <= 32))
-			{
-            netMask = (bits > 0) ? htonl(0xFFFFFFFF << (32 - bits)) : 0;
-			}
-			else
-			{
-				ipAddr = INADDR_NONE;
-				if (!(g_dwFlags & AF_DAEMON))
-					_tprintf(_T("Invalid network mask %s\n"), mask);
-			}
-		}
-		else
-		{
-			ipAddr = ResolveHostName(pItem);
-			if (ipAddr == INADDR_ANY)
-				ipAddr = INADDR_NONE;
-			netMask = 0xFFFFFFFF;
-		}
-		if (ipAddr == INADDR_NONE)
-		{
-			if (!(g_dwFlags & AF_DAEMON))
-				_tprintf(_T("Invalid server address '%s'\n"), pItem);
-		}
-		else
-		{
-			UINT32 i;
-
-			for(i = 0; i < g_dwServerCount; i++)
-				if ((g_pServerList[i].dwIpAddr == ipAddr) && (g_pServerList[i].dwNetMask == netMask))
-					break;
-			if (i == g_dwServerCount)
-			{
-				g_dwServerCount++;
-				g_pServerList[i].dwIpAddr = ipAddr;
-				g_pServerList[i].dwNetMask = netMask;
-			}
-			g_pServerList[i].bMasterServer = isMaster;
-			g_pServerList[i].bControlServer = isControl;
-		}
+      g_serverList.add(new ServerInfo(pItem, isControl, isMaster));
 	}
 	free(serverList);
 }

@@ -439,6 +439,7 @@ static TCHAR *FormatMessageUX(UINT32 dwMsgId, TCHAR **ppStrings)
  *             e - System error code (will appear in log as textual description)
  *             a - IP address in network byte order
  *             A - IPv6 address in network byte order
+ *             I - pointer to InetAddress object
  */
 void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...)
 {
@@ -495,6 +496,10 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
             case 'A':
                strings[numStrings] = (TCHAR *)malloc(48 * sizeof(TCHAR));
                Ip6ToStr(va_arg(args, BYTE *), strings[numStrings]);
+               break;
+            case 'I':
+               strings[numStrings] = (TCHAR *)malloc(48 * sizeof(TCHAR));
+               va_arg(args, InetAddress *)->toString(strings[numStrings]);
                break;
             case 'e':
                error = va_arg(args, UINT32);

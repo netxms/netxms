@@ -37,13 +37,39 @@ struct MONITORED_FILE
    int monitoringCount;
 };
 
-struct FollowData
+/**
+ * Data for file change follow thread
+ */
+class FollowData
 {
-   TCHAR *pszFile;
-   TCHAR *fileId;
-   long offset;
-	UINT32 serverAddress;
-	AbstractCommSession *session;
+private:
+   TCHAR *m_file;
+   TCHAR *m_fileId;
+   long m_offset;
+   InetAddress *m_serverAddress;
+
+public:
+   FollowData(const TCHAR *file, const TCHAR *fileId, long offset, InetAddress *address)
+   {
+      m_file = _tcsdup(file);
+      m_fileId = _tcsdup(fileId);
+      m_offset = offset;
+      m_serverAddress = address->clone();
+   }
+
+   ~FollowData()
+   {
+      free(m_file);
+      free(m_fileId);
+      delete m_serverAddress;
+   }
+
+   const TCHAR *getFile() { return m_file; }
+   const TCHAR *getFileId() { return m_fileId; }
+   long getOffset() { return m_offset; }
+   InetAddress *getServerAddress() { return m_serverAddress; }
+
+   void setOffset(long offset) { m_offset = offset; }
 };
 
 struct MessageData

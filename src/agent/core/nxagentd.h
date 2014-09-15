@@ -282,12 +282,27 @@ public:
 /**
  * Server information
  */
-struct SERVER_INFO
+class ServerInfo
 {
-   UINT32 dwIpAddr;
-	UINT32 dwNetMask;
-   BOOL bMasterServer;
-   BOOL bControlServer;
+private:
+   char *m_name;
+   InetAddress *m_address;
+   bool m_control;
+   bool m_master;
+   time_t m_lastResolveTime;
+   bool m_redoResolve;
+   MUTEX m_mutex;
+
+   void resolve();
+
+public:
+   ServerInfo(const TCHAR *name, bool control, bool master);
+   ~ServerInfo();
+
+   bool match(InetAddress *addr);
+
+   bool isMaster() { return m_master; }
+   bool isControl() { return m_control; }
 };
 
 /**
@@ -303,13 +318,13 @@ private:
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
    THREAD m_hProxyReadThread;
-   UINT32 m_dwHostAddr;        // IP address of connected host (network byte order)
+   InetAddress *m_serverAddr;        // IP address of connected host
    UINT32 m_dwIndex;
-   BOOL m_bIsAuthenticated;
-   BOOL m_bMasterServer;
-   BOOL m_bControlServer;
-   BOOL m_bProxyConnection;
-   BOOL m_bAcceptTraps;
+   bool m_authenticated;
+   bool m_masterServer;
+   bool m_controlServer;
+   bool m_proxyConnection;
+   bool m_acceptTraps;
    int m_hCurrFile;
    UINT32 m_dwFileRqId;
 	NXCPEncryptionContext *m_pCtx;
@@ -342,17 +357,17 @@ private:
    static THREAD_RESULT THREAD_CALL proxyReadThreadStarter(void *);
 
 public:
-   CommSession(SOCKET hSocket, UINT32 dwHostAddr, BOOL bMasterServer, BOOL bControlServer);
+   CommSession(SOCKET hSocket, InetAddress *serverAddr, bool masterServer, bool controlServer);
    ~CommSession();
 
    void run();
    void disconnect();
 
-   void sendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
-   void sendRawMessage(CSCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->dwSize))); }
-	bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
+   virtual void sendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
+   virtual void sendRawMessage(CSCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->dwSize))); }
+	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
 
-	UINT32 getServerAddress() { return m_dwHostAddr; }
+	virtual InetAddress *getServerAddress() { return m_serverAddr; }
 
    UINT32 getIndex() { return m_dwIndex; }
    void setIndex(UINT32 dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
@@ -360,10 +375,12 @@ public:
    time_t getTimeStamp() { return m_ts; }
 	void updateTimeStamp() { m_ts = time(NULL); }
 
-   BOOL canAcceptTraps() { return m_bAcceptTraps; }
-
-   BOOL isMasterServer() { return m_bMasterServer; }
-   UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId);
+   bool canAcceptTraps() { return m_acceptTraps; }
+   
+   virtual bool isMasterServer() { return m_masterServer; }
+   virtual bool isControlServer() { return m_controlServer; }
+   
+   virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId);
 };
 
 /**
@@ -539,7 +556,7 @@ extern TCHAR g_szListenAddress[];
 extern TCHAR g_szConfigIncludeDir[];
 extern TCHAR g_masterAgent[];
 extern UINT16 g_wListenPort;
-extern SERVER_INFO g_pServerList[];
+extern ObjectArray<ServerInfo> g_serverList;
 extern UINT32 g_dwServerCount;
 extern time_t g_tmAgentStartTime;
 extern TCHAR g_szPlatformSuffix[];

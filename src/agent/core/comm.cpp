@@ -53,18 +53,19 @@ void InitSessionList()
 /**
  * Validates server's address
  */
-static BOOL IsValidServerAddr(UINT32 dwAddr, BOOL *pbMasterServer, BOOL *pbControlServer)
+static bool IsValidServerAddress(InetAddress *addr, bool *pbMasterServer, bool *pbControlServer)
 {
-   for(UINT32 i = 0; i < g_dwServerCount; i++)
+   for(int i = 0; i < g_serverList.size(); i++)
 	{
-      if ((dwAddr & g_pServerList[i].dwNetMask) == g_pServerList[i].dwIpAddr)
+      ServerInfo *s = g_serverList.get(i);
+      if (s->match(addr))
       {
-         *pbMasterServer = g_pServerList[i].bMasterServer;
-         *pbControlServer = g_pServerList[i].bControlServer;
-         return TRUE;
+         *pbMasterServer = s->isMaster();
+         *pbControlServer = s->isControl();
+         return true;
       }
 	}
-   return FALSE;
+   return false;
 }
 
 /**
@@ -110,7 +111,6 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    socklen_t iSize;
    CommSession *pSession;
    TCHAR szBuffer[256];
-   BOOL bMasterServer, bControlServer;
    struct timeval tv;
    fd_set rdfs;
 
@@ -188,16 +188,17 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 #endif
 
          iNumErrors = 0;     // Reset consecutive errors counter
-         DebugPrintf(INVALID_INDEX, 5, _T("Incoming connection from %s"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer));
+         InetAddress *addr = InetAddress::createFromSockaddr((struct sockaddr *)&servAddr);
+         DebugPrintf(INVALID_INDEX, 5, _T("Incoming connection from %s"), addr->toString(szBuffer));
 
-         if (IsValidServerAddr(servAddr.sin_addr.s_addr, &bMasterServer, &bControlServer))
+         bool masterServer, controlServer;
+         if (IsValidServerAddress(addr, &masterServer, &controlServer))
          {
             g_dwAcceptedConnections++;
             DebugPrintf(INVALID_INDEX, 5, _T("Connection from %s accepted"), szBuffer);
 
             // Create new session structure and threads
-            pSession = new CommSession(hClientSocket, ntohl(servAddr.sin_addr.s_addr), 
-                                       bMasterServer, bControlServer);
+            pSession = new CommSession(hClientSocket, addr, masterServer, controlServer);
 			
             if (!RegisterSession(pSession))
             {
@@ -210,6 +211,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
          }
          else     // Unauthorized connection
          {
+            delete addr;
             g_dwRejectedConnections++;
             shutdown(hClientSocket, SHUT_RDWR);
             closesocket(hClientSocket);

@@ -747,6 +747,95 @@ public:
 };
 
 /**
+ * IP address
+ */
+class LIBNETXMS_EXPORTABLE InetAddress
+{
+protected:
+   int m_maskBits;
+
+public:
+   virtual bool isAnyLocal() = NULL;
+   virtual bool isLoopback() = NULL;
+   virtual bool isMulticast() = NULL;
+   virtual bool isBroadcast() = NULL;
+
+   virtual int getFamily() = NULL;
+
+   virtual bool contain(InetAddress *a) = NULL;
+   virtual bool equals(InetAddress *a) = NULL;
+   virtual int compareTo(InetAddress *a) = NULL;
+
+   virtual InetAddress *clone() = NULL;
+
+   virtual String toString() = NULL;
+   virtual TCHAR *toString(TCHAR *buffer) = NULL;
+
+   void setMaskBits(int m) { m_maskBits = m; }
+   int getMaskBits() { return m_maskBits; }
+
+   static InetAddress *resolveHostName(const WCHAR *hostname);
+   static InetAddress *resolveHostName(const char *hostname);
+   static InetAddress *createFromSockaddr(struct sockaddr *s);
+};
+
+/**
+ * IPv4 address
+ */
+class LIBNETXMS_EXPORTABLE Inet4Address : public InetAddress
+{
+private:
+   UINT32 m_addr;
+
+public:
+   Inet4Address(UINT32 addr);
+
+   virtual bool isAnyLocal();
+   virtual bool isLoopback();
+   virtual bool isMulticast();
+   virtual bool isBroadcast();
+
+   virtual int getFamily();
+
+   virtual bool contain(InetAddress *a);
+   virtual bool equals(InetAddress *a);
+   virtual int compareTo(InetAddress *a);
+
+   virtual InetAddress *clone();
+
+   virtual String toString();
+   virtual TCHAR *toString(TCHAR *buffer);
+};
+
+/**
+ * IPv6 address
+ */
+class LIBNETXMS_EXPORTABLE Inet6Address : public InetAddress
+{
+private:
+   BYTE m_addr[16];
+
+public:
+   Inet6Address(BYTE *addr);
+
+   virtual bool isAnyLocal();
+   virtual bool isLoopback();
+   virtual bool isMulticast();
+   virtual bool isBroadcast();
+
+   virtual int getFamily();
+
+   virtual bool contain(InetAddress *a);
+   virtual bool equals(InetAddress *a);
+   virtual int compareTo(InetAddress *a);
+
+   virtual InetAddress *clone();
+
+   virtual String toString();
+   virtual TCHAR *toString(TCHAR *buffer);
+};
+
+/**
  * Network connection
  */
 class LIBNETXMS_EXPORTABLE SocketConnection

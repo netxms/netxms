@@ -398,6 +398,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\inetaddr.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\log.cpp"
 				>
 			</File>

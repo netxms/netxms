@@ -360,10 +360,14 @@
 class AbstractCommSession
 {
 public:
-   virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
-   virtual BOOL isMasterServer() = 0;
-   virtual UINT32 getServerAddress() = 0;
+   virtual bool isMasterServer() = 0;
+   virtual bool isControlServer() = 0;
+   virtual InetAddress *getServerAddress() = 0;
+
    virtual void sendMessage(CSCPMessage *pMsg) = 0;
+   virtual void sendRawMessage(CSCP_MESSAGE *pMsg) = 0;
+	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) = 0;
+   virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
 };
 
 /**
