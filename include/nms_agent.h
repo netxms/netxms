@@ -362,7 +362,7 @@ class AbstractCommSession
 public:
    virtual bool isMasterServer() = 0;
    virtual bool isControlServer() = 0;
-   virtual InetAddress *getServerAddress() = 0;
+   virtual const InetAddress& getServerAddress() = 0;
 
    virtual void sendMessage(CSCPMessage *pMsg) = 0;
    virtual void sendRawMessage(CSCP_MESSAGE *pMsg) = 0;

@@ -116,7 +116,7 @@ TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer)
 /**
  * Convert IPv6 address from binary form to string
  */
-TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(BYTE *addr, TCHAR *buffer)
+TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer)
 {
    static TCHAR internalBuffer[64];
    TCHAR *bufPtr = (buffer == NULL) ? internalBuffer : buffer;

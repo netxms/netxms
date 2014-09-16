@@ -86,7 +86,7 @@ THREAD_RESULT THREAD_CALL CommSession::proxyReadThreadStarter(void *pArg)
 /**
  * Client session class constructor
  */
-CommSession::CommSession(SOCKET hSocket, InetAddress *serverAddr, bool masterServer, bool controlServer)
+CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool masterServer, bool controlServer)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
@@ -124,7 +124,6 @@ CommSession::~CommSession()
       close(m_hCurrFile);
 	if ((m_pCtx != NULL) && (m_pCtx != PROXY_ENCRYPTION_CTX))
 		m_pCtx->decRefCount();
-   delete m_serverAddr;
 	MutexDestroy(m_socketWriteMutex);
 }
 
@@ -328,7 +327,7 @@ void CommSession::readThread()
    if (m_proxyConnection)
       ThreadJoin(m_hProxyReadThread);
 
-   DebugPrintf(m_dwIndex, 5, _T("Session with %s closed"), (const TCHAR *)m_serverAddr->toString());
+   DebugPrintf(m_dwIndex, 5, _T("Session with %s closed"), (const TCHAR *)m_serverAddr.toString());
 }
 
 /**

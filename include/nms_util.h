@@ -751,88 +751,41 @@ public:
  */
 class LIBNETXMS_EXPORTABLE InetAddress
 {
-protected:
-   int m_maskBits;
+private:
+   short m_maskBits;
+   short m_family;
+   union
+   {
+      UINT32 v4;
+      BYTE v6[16];
+   } m_addr;
 
 public:
-   virtual bool isAnyLocal() = 0;
-   virtual bool isLoopback() = 0;
-   virtual bool isMulticast() = 0;
-   virtual bool isBroadcast() = 0;
+   InetAddress();
+   InetAddress(UINT32 addr);
+   InetAddress(BYTE *addr);
 
-   virtual int getFamily() = 0;
+   bool isAnyLocal() const;
+   bool isLoopback() const;
+   bool isMulticast() const;
+   bool isBroadcast() const;
+   bool isValid() const { return m_family != AF_UNSPEC; }
 
-   virtual bool contain(InetAddress *a) = 0;
-   virtual bool equals(InetAddress *a) = 0;
-   virtual int compareTo(InetAddress *a) = 0;
+   int getFamily() const { return m_family; }
 
-   virtual InetAddress *clone() = 0;
-
-   virtual String toString() = 0;
-   virtual TCHAR *toString(TCHAR *buffer) = 0;
+   bool contain(const InetAddress &a) const;
+   bool equals(const InetAddress &a) const;
+   int compareTo(const InetAddress &a) const;
 
    void setMaskBits(int m) { m_maskBits = m; }
-   int getMaskBits() { return m_maskBits; }
+   int getMaskBits() const { return m_maskBits; }
 
-   static InetAddress *resolveHostName(const WCHAR *hostname);
-   static InetAddress *resolveHostName(const char *hostname);
-   static InetAddress *createFromSockaddr(struct sockaddr *s);
-};
+   String toString() const;
+   TCHAR *toString(TCHAR *buffer) const;
 
-/**
- * IPv4 address
- */
-class LIBNETXMS_EXPORTABLE Inet4Address : public InetAddress
-{
-private:
-   UINT32 m_addr;
-
-public:
-   Inet4Address(UINT32 addr);
-
-   virtual bool isAnyLocal();
-   virtual bool isLoopback();
-   virtual bool isMulticast();
-   virtual bool isBroadcast();
-
-   virtual int getFamily();
-
-   virtual bool contain(InetAddress *a);
-   virtual bool equals(InetAddress *a);
-   virtual int compareTo(InetAddress *a);
-
-   virtual InetAddress *clone();
-
-   virtual String toString();
-   virtual TCHAR *toString(TCHAR *buffer);
-};
-
-/**
- * IPv6 address
- */
-class LIBNETXMS_EXPORTABLE Inet6Address : public InetAddress
-{
-private:
-   BYTE m_addr[16];
-
-public:
-   Inet6Address(BYTE *addr);
-
-   virtual bool isAnyLocal();
-   virtual bool isLoopback();
-   virtual bool isMulticast();
-   virtual bool isBroadcast();
-
-   virtual int getFamily();
-
-   virtual bool contain(InetAddress *a);
-   virtual bool equals(InetAddress *a);
-   virtual int compareTo(InetAddress *a);
-
-   virtual InetAddress *clone();
-
-   virtual String toString();
-   virtual TCHAR *toString(TCHAR *buffer);
+   static InetAddress resolveHostName(const WCHAR *hostname);
+   static InetAddress resolveHostName(const char *hostname);
+   static InetAddress createFromSockaddr(struct sockaddr *s);
 };
 
 /**
@@ -1106,7 +1059,7 @@ char LIBNETXMS_EXPORTABLE *IpToStrA(UINT32 dwAddr, char *szBuffer);
 #else
 #define IpToStrA IpToStr
 #endif
-TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(BYTE *addr, TCHAR *buffer);
+TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer);
 TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
 
 UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *name);

@@ -125,7 +125,7 @@ void MonitoredFileList::Unlock()
  */
 struct SendMessageData
 {
-   InetAddress *ip;
+   InetAddress ip;
    CSCPMessage *pMsg;
 };
 
@@ -134,7 +134,7 @@ struct SendMessageData
  */
 static bool SendMessage(AbstractCommSession *session, void *data)
 {
-   if (session != NULL && ((SendMessageData *)data)->ip->equals(session->getServerAddress()))
+   if (session != NULL && ((SendMessageData *)data)->ip.equals(session->getServerAddress()))
    {
       session->sendMessage(((SendMessageData *)data)->pMsg);
       return false;

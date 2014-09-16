@@ -26,240 +26,146 @@
 /**
  * Create IPv4 address object
  */
-Inet4Address::Inet4Address(UINT32 addr)
+InetAddress::InetAddress(UINT32 addr)
 {
-   m_addr = addr;
+   m_family = AF_INET;
+   m_addr.v4 = addr;
    m_maskBits = 32;
-}
-
-/**
- * Clone IPv4 address object
- */
-InetAddress *Inet4Address::clone()
-{
-   Inet4Address *a = new Inet4Address(m_addr);
-   a->m_maskBits = m_maskBits;
-   return a;
-}
-
-/**
- * Returns true if address is a wildcard address
- */
-bool Inet4Address::isAnyLocal()
-{
-   return m_addr == 0;
-}
-
-/**
- * Returns true if address is a loopback address
- */
-bool Inet4Address::isLoopback()
-{
-   return (m_addr & 0xFF000000) == 0x7F000000;
-}
-
-/**
- * Returns true if address is a multicast address
- */
-bool Inet4Address::isMulticast()
-{
-   return (m_addr >= 0xE0000000) && (m_addr != 0xFFFFFFFF);
-}
-
-/**
- * Returns true if address is a broadcast address
- */
-bool Inet4Address::isBroadcast()
-{
-   return m_addr == 0xFFFFFFFF;
-}
-
-/**
- * Get address family
- */
-int Inet4Address::getFamily()
-{
-   return AF_INET;
-}
-
-/**
- * Convert to string
- */
-String Inet4Address::toString()
-{
-   TCHAR buffer[32];
-   String s = IpToStr(m_addr, buffer);
-   return s;
-}
-
-/**
- * Convert to string
- */
-TCHAR *Inet4Address::toString(TCHAR *buffer)
-{
-   return IpToStr(m_addr, buffer);
-}
-
-/**
- * Check if this InetAddress contain given InetAddress using current network mask
- */
-bool Inet4Address::contain(InetAddress *a)
-{
-   if (a->getFamily() != getFamily())
-      return false;
-
-   UINT32 mask = (m_maskBits > 0) ? (0xFFFFFFFF << (32 - m_maskBits)) : 0;
-   return (((Inet4Address *)a)->m_addr & mask) == m_addr;
-}
-
-/**
- * Check if two inet addresses are equals
- */
-bool Inet4Address::equals(InetAddress *a)
-{
-   if (a->getFamily() != getFamily())
-      return false;
-   return (((Inet4Address *)a)->m_addr == m_addr) && (a->getMaskBits() == m_maskBits);
-}
-
-/**
- * Compare two inet addresses
- */
-int Inet4Address::compareTo(InetAddress *a)
-{
-   int r = a->getFamily() - getFamily();
-   if (r != 0)
-      return r;
-
-   return (m_addr == ((Inet4Address *)a)->m_addr) ? (m_maskBits - a->getMaskBits()) : ((m_addr < ((Inet4Address *)a)->m_addr) ? -1 : 1);
 }
 
 /**
  * Create IPv6 address object
  */
-Inet6Address::Inet6Address(BYTE *addr)
+InetAddress::InetAddress(BYTE *addr)
 {
-   memcpy(m_addr, addr, 16);
+   m_family = AF_INET6;
+   memcpy(m_addr.v6, addr, 16);
    m_maskBits = 128;
 }
 
 /**
- * Clone IPv6 address object
+ * Create invalid address object
  */
-InetAddress *Inet6Address::clone()
+InetAddress::InetAddress()
 {
-   Inet6Address *a = new Inet6Address(m_addr);
-   a->m_maskBits = m_maskBits;
-   return a;
+   m_family = AF_UNSPEC;
+   m_maskBits = 0;
 }
 
 /**
  * Returns true if address is a wildcard address
  */
-bool Inet6Address::isAnyLocal()
+bool InetAddress::isAnyLocal() const
 {
-   return !memcmp(m_addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 16);
+   return (m_family == AF_INET) ? (m_addr.v4 == 0) : !memcmp(m_addr.v6, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 16);
 }
 
 /**
  * Returns true if address is a loopback address
  */
-bool Inet6Address::isLoopback()
+bool InetAddress::isLoopback() const
 {
-   return !memcmp(m_addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01", 16);
+   return (m_family == AF_INET) ? ((m_addr.v4 & 0xFF000000) == 0x7F000000) : !memcmp(m_addr.v6, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01", 16);
 }
 
 /**
  * Returns true if address is a multicast address
  */
-bool Inet6Address::isMulticast()
+bool InetAddress::isMulticast() const
 {
-   return m_addr[0] == 0xFF;
+   return (m_family == AF_INET) ? ((m_addr.v4 >= 0xE0000000) && (m_addr.v4 != 0xFFFFFFFF)) : (m_addr.v6[0] == 0xFF);
 }
 
 /**
  * Returns true if address is a broadcast address
  */
-bool Inet6Address::isBroadcast()
+bool InetAddress::isBroadcast() const
 {
-   return false;
-}
-
-/**
- * Get address family
- */
-int Inet6Address::getFamily()
-{
-   return AF_INET6;
+   return (m_family == AF_INET) ? (m_addr.v4 == 0xFFFFFFFF) : false;
 }
 
 /**
  * Convert to string
  */
-String Inet6Address::toString()
+String InetAddress::toString() const
 {
-   TCHAR buffer[32];
-   String s = Ip6ToStr(m_addr, buffer);
+   TCHAR buffer[64];
+   String s = (m_family == AF_INET) ? IpToStr(m_addr.v4, buffer) : Ip6ToStr(m_addr.v6, buffer);
    return s;
 }
 
 /**
  * Convert to string
  */
-TCHAR *Inet6Address::toString(TCHAR *buffer)
+TCHAR *InetAddress::toString(TCHAR *buffer) const
 {
-   return Ip6ToStr(m_addr, buffer);
+   return (m_family == AF_INET) ? IpToStr(m_addr.v4, buffer) : Ip6ToStr(m_addr.v6, buffer);
 }
 
 /**
  * Check if this InetAddress contain given InetAddress using current network mask
  */
-bool Inet6Address::contain(InetAddress *a)
+bool InetAddress::contain(const InetAddress &a) const
 {
-   if (a->getFamily() != getFamily())
+   if (a.m_family != m_family)
       return false;
 
-   BYTE addr[16];
-   memcpy(addr, ((Inet6Address *)a)->m_addr, 16);
-   if (m_maskBits < 128)
+   if (m_family == AF_INET)
    {
-      int b = m_maskBits / 8;
-      int shift = m_maskBits % 8;
-      BYTE mask = (shift > 0) ? (BYTE)((1 << (8 - shift)) & 0xFF) : 0;
-      addr[b] &= mask;
-      for(int i = b + 1; i < 16; i++)
-         addr[i] = 0;
+      UINT32 mask = (m_maskBits > 0) ? (0xFFFFFFFF << (32 - m_maskBits)) : 0;
+      return (a.m_addr.v4 & mask) == m_addr.v4;
    }
-   return !memcmp(addr, m_addr, 16);
+   else
+   {
+      BYTE addr[16];
+      memcpy(addr, a.m_addr.v6, 16);
+      if (m_maskBits < 128)
+      {
+         int b = m_maskBits / 8;
+         int shift = m_maskBits % 8;
+         BYTE mask = (shift > 0) ? (BYTE)((1 << (8 - shift)) & 0xFF) : 0;
+         addr[b] &= mask;
+         for(int i = b + 1; i < 16; i++)
+            addr[i] = 0;
+      }
+      return !memcmp(addr, m_addr.v6, 16);
+   }
 }
 
 /**
  * Check if two inet addresses are equals
  */
-bool Inet6Address::equals(InetAddress *a)
+bool InetAddress::equals(const InetAddress &a) const
 {
-   if (a->getFamily() != getFamily())
+   if (a.m_family != m_family)
       return false;
-   return !memcmp(((Inet6Address *)a)->m_addr, m_addr, 16) && (a->getMaskBits() == m_maskBits);
+   return ((m_family == AF_INET) ? (a.m_addr.v4 == m_addr.v4) : !memcmp(a.m_addr.v6, m_addr.v6, 16)) && (a.m_maskBits == m_maskBits);
 }
 
 /**
  * Compare two inet addresses
  */
-int Inet6Address::compareTo(InetAddress *a)
+int InetAddress::compareTo(const InetAddress &a) const
 {
-   int r = a->getFamily() - getFamily();
+   int r = a.m_family - m_family;
    if (r != 0)
       return r;
 
-   r = memcmp(((Inet6Address *)a)->m_addr, m_addr, 16);
-   return (r == 0) ? (m_maskBits - a->getMaskBits()) : r;
+   if (m_family == AF_INET)
+   {
+      return (m_addr.v4 == a.m_addr.v4) ? (m_maskBits - a.m_maskBits) : ((m_addr.v4 < a.m_addr.v4) ? -1 : 1);
+   }
+   else
+   {
+      r = memcmp(a.m_addr.v6, m_addr.v6, 16);
+      return (r == 0) ? (m_maskBits - a.m_maskBits) : r;
+   }
 }
 
 /**
  * Resolve hostname
  */
-InetAddress *InetAddress::resolveHostName(const WCHAR *hostname)
+InetAddress InetAddress::resolveHostName(const WCHAR *hostname)
 {
    char mbName[256];
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, hostname, -1, mbName, 256, NULL, NULL);
@@ -269,7 +175,7 @@ InetAddress *InetAddress::resolveHostName(const WCHAR *hostname)
 /**
  * Resolve hostname
  */
-InetAddress *InetAddress::resolveHostName(const char *hostname)
+InetAddress InetAddress::resolveHostName(const char *hostname)
 {
    // Check for IPv4 address
 #ifdef _WIN32
@@ -281,13 +187,13 @@ InetAddress *InetAddress::resolveHostName(const char *hostname)
    INT addrLen = sizeof(addr4);
    if (WSAStringToAddressA(hostnameCopy, AF_INET, NULL, (struct sockaddr *)&addr4, &addrLen) == 0)
    {
-      return new Inet4Address(ntohl(addr4.sin_addr.s_addr));
+      return InetAddress(ntohl(addr4.sin_addr.s_addr));
    }
 #else
    struct in_addr addr4;
    if (inet_aton(hostname, &addr4))
    {
-      return new Inet4Address(ntohl(addr4.s_addr));
+      return InetAddress(ntohl(addr4.s_addr));
    }
 #endif
 
@@ -298,13 +204,13 @@ InetAddress *InetAddress::resolveHostName(const char *hostname)
    addrLen = sizeof(addr6);
    if (WSAStringToAddressA(hostnameCopy, AF_INET6, NULL, (struct sockaddr *)&addr6, &addrLen) == 0)
    {
-      return new Inet6Address(addr6.sin6_addr.u.Byte);
+      return InetAddress(addr6.sin6_addr.u.Byte);
    }
 #else
    struct in6_addr addr6;
    if (inet_pton(AF_INET6, hostname, &addr6))
    {
-      return new Inet6Address(addr6.s6_addr);
+      return InetAddress(addr6.s6_addr);
    }
 #endif
 
@@ -321,24 +227,24 @@ InetAddress *InetAddress::resolveHostName(const char *hostname)
    {
       if (hs->h_addrtype == AF_INET)
       {
-         return new Inet4Address(ntohl(*((UINT32 *)hs->h_addr)));
+         return InetAddress(ntohl(*((UINT32 *)hs->h_addr)));
       }
       else if (hs->h_addrtype == AF_INET6)
       {
-         return new Inet6Address((BYTE *)hs->h_addr);
+         return InetAddress((BYTE *)hs->h_addr);
       }
    }
-   return NULL;
+   return InetAddress();
 }
 
 /**
  * Create IndetAddress from struct sockaddr
  */
-InetAddress *InetAddress::createFromSockaddr(struct sockaddr *s)
+InetAddress InetAddress::createFromSockaddr(struct sockaddr *s)
 {
    if (s->sa_family == AF_INET)
-      return new Inet4Address(ntohl(((struct sockaddr_in *)s)->sin_addr.s_addr));
+      return InetAddress(ntohl(((struct sockaddr_in *)s)->sin_addr.s_addr));
    if (s->sa_family == AF_INET6)
-      return new Inet6Address(((struct sockaddr_in6 *)s)->sin6_addr.s6_addr);
-   return NULL;
+      return InetAddress(((struct sockaddr_in6 *)s)->sin6_addr.s6_addr);
+   return InetAddress();
 }

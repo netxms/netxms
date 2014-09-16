@@ -294,11 +294,11 @@ ServerInfo::ServerInfo(const TCHAR *name, bool control, bool master)
       *p = 0;
       p++;
       m_address = InetAddress::resolveHostName(m_name);
-      if (m_address != NULL)
+      if (m_address.isValid())
       {
          int bits = strtol(p, NULL, 10);
          if ((bits >= 0) && (bits <= 32))
-            m_address->setMaskBits(bits);
+            m_address.setMaskBits(bits);
       }
       m_redoResolve = false;
    }
@@ -319,7 +319,6 @@ ServerInfo::ServerInfo(const TCHAR *name, bool control, bool master)
  */
 ServerInfo::~ServerInfo()
 {
-   delete m_address;
    safe_free(m_name);
    MutexDestroy(m_mutex);
 }
@@ -331,9 +330,8 @@ void ServerInfo::resolve()
 {
    time_t now = time(NULL);
    time_t age = now - m_lastResolveTime;
-   if ((age >= 3600) || ((age > 300) && (m_address == NULL)))
+   if ((age >= 3600) || ((age > 300) && !m_address.isValid()))
    {
-      delete m_address;
       m_address = InetAddress::resolveHostName(m_name);
       m_lastResolveTime = now;
    }
@@ -342,12 +340,12 @@ void ServerInfo::resolve()
 /**
  * Server info: match address
  */
-bool ServerInfo::match(InetAddress *addr)
+bool ServerInfo::match(const InetAddress &addr)
 {
    MutexLock(m_mutex);
    if (m_redoResolve)
       resolve();
-   bool result = (m_address != NULL) ? m_address->contain(addr) : false;
+   bool result = m_address.isValid() ? m_address.contain(addr) : false;
    MutexUnlock(m_mutex);
    return result;
 }

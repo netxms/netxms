@@ -286,7 +286,7 @@ class ServerInfo
 {
 private:
    char *m_name;
-   InetAddress *m_address;
+   InetAddress m_address;
    bool m_control;
    bool m_master;
    time_t m_lastResolveTime;
@@ -299,7 +299,7 @@ public:
    ServerInfo(const TCHAR *name, bool control, bool master);
    ~ServerInfo();
 
-   bool match(InetAddress *addr);
+   bool match(const InetAddress &addr);
 
    bool isMaster() { return m_master; }
    bool isControl() { return m_control; }
@@ -318,7 +318,7 @@ private:
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
    THREAD m_hProxyReadThread;
-   InetAddress *m_serverAddr;        // IP address of connected host
+   InetAddress m_serverAddr;        // IP address of connected host
    UINT32 m_dwIndex;
    bool m_authenticated;
    bool m_masterServer;
@@ -357,7 +357,7 @@ private:
    static THREAD_RESULT THREAD_CALL proxyReadThreadStarter(void *);
 
 public:
-   CommSession(SOCKET hSocket, InetAddress *serverAddr, bool masterServer, bool controlServer);
+   CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool masterServer, bool controlServer);
    ~CommSession();
 
    void run();
@@ -367,7 +367,7 @@ public:
    virtual void sendRawMessage(CSCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->dwSize))); }
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
 
-	virtual InetAddress *getServerAddress() { return m_serverAddr; }
+	virtual const InetAddress& getServerAddress() { return m_serverAddr; }
 
    UINT32 getIndex() { return m_dwIndex; }
    void setIndex(UINT32 dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }

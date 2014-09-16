@@ -53,7 +53,7 @@ void InitSessionList()
 /**
  * Validates server's address
  */
-static bool IsValidServerAddress(InetAddress *addr, bool *pbMasterServer, bool *pbControlServer)
+static bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer)
 {
    for(int i = 0; i < g_serverList.size(); i++)
 	{
@@ -188,8 +188,8 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 #endif
 
          iNumErrors = 0;     // Reset consecutive errors counter
-         InetAddress *addr = InetAddress::createFromSockaddr((struct sockaddr *)&servAddr);
-         DebugPrintf(INVALID_INDEX, 5, _T("Incoming connection from %s"), addr->toString(szBuffer));
+         InetAddress addr = InetAddress::createFromSockaddr((struct sockaddr *)&servAddr);
+         DebugPrintf(INVALID_INDEX, 5, _T("Incoming connection from %s"), addr.toString(szBuffer));
 
          bool masterServer, controlServer;
          if (IsValidServerAddress(addr, &masterServer, &controlServer))
@@ -211,7 +211,6 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
          }
          else     // Unauthorized connection
          {
-            delete addr;
             g_dwRejectedConnections++;
             shutdown(hClientSocket, SHUT_RDWR);
             closesocket(hClientSocket);
