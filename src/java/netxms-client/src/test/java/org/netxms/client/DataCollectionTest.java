@@ -37,13 +37,12 @@ import org.netxms.client.objects.Node;
  */
 public class DataCollectionTest extends SessionTest
 {
-	private static final long nodeId = 100;
 	
 	public void testGetLastValues() throws Exception
 	{
 		final NXCSession session = connect();
 		
-		DciValue[] list = session.getLastValues(nodeId);
+		DciValue[] list = session.getLastValues(TestConstants.NODE_ID);
 		assertEquals(true, list.length > 0);
 		
 		boolean statusFound = false;
@@ -62,7 +61,7 @@ public class DataCollectionTest extends SessionTest
 	{
 		final NXCSession session = connect();
 		
-		DciValue[] list = session.getLastValues(nodeId, true, false);
+		DciValue[] list = session.getLastValues(TestConstants.LOCAL_NODE_ID, true, false);
 		assertEquals(true, list.length > 0);
 		
 		boolean statusFound = false;
@@ -81,14 +80,14 @@ public class DataCollectionTest extends SessionTest
 	{
 		final NXCSession session = connect();
 		
-		DataCollectionConfiguration dc = session.openDataCollectionConfiguration(nodeId);
+		DataCollectionConfiguration dc = session.openDataCollectionConfiguration(TestConstants.NODE_ID);
 		final long dciId = dc.createItem();
 		DataCollectionItem dci = (DataCollectionItem)dc.findItem(dciId, DataCollectionItem.class);
 		dci.setName("TEST");
 		dci.getThresholds().add(new Threshold());
 		dc.modifyObject(dciId);
 		
-		Threshold[] thresholds = session.getThresholds(nodeId, dciId);
+		Threshold[] thresholds = session.getThresholds(TestConstants.NODE_ID, dciId);
 		assertNotNull(thresholds);
 		assertEquals(1, thresholds.length);
 
@@ -128,7 +127,7 @@ public class DataCollectionTest extends SessionTest
 	{
 		final NXCSession session = connect();
 		
-		PerfTabDci[] list = session.getPerfTabItems(nodeId);
+		PerfTabDci[] list = session.getPerfTabItems(TestConstants.NODE_ID);
 		assertNotNull(list);
 		assertTrue(list.length > 0);
 		

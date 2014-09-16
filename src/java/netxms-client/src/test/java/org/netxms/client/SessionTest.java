@@ -45,4 +45,13 @@ public class SessionTest extends TestCase
 	{
 		return connect(false);
 	}
+	
+	public void testConnection() throws Exception
+	{
+	   NXCSession session = connect();
+	   assertNotNull(session);
+	   
+	   session = connect(true);
+      assertNotNull(session);
+	}
 }

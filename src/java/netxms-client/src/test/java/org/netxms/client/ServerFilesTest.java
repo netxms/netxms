@@ -41,9 +41,9 @@ public class ServerFilesTest extends SessionTest
    {
       final NXCSession session = connect();
 
-      AgentFile file = session.downloadFileFromAgent(TestConstants.NODE_ID, TestConstants.FILE_NAME, TestConstants.FILE_OFFSET, true);
+      AgentFile file = session.downloadFileFromAgent(TestConstants.LOCAL_NODE_ID, TestConstants.FILE_NAME, TestConstants.FILE_OFFSET, true);
       // check that server returned file with correct size (offset should be less than size of file)
-      // assertEquals(file.length(), TestConstants.FileOfset);
+      //assertEquals(file.length(), TestConstants.FileOfset);
       String content = null;
       try
       {
@@ -59,15 +59,15 @@ public class ServerFilesTest extends SessionTest
       }
       System.out.println("Downloaded content is: \n" + content);
       System.out.println("*** Downloaded file: " + file.getFile().getAbsolutePath());
-
+      
       // get tails of provided file
       int i = 3;
       while(i > 0)
       {
-         System.out.println("Tail content: \n" + session.waitForFileTail(TestConstants.FILE_NAME, 30000));
+         System.out.println("Tail content: \n" + session.waitForFileTail(file.getId(), 30000));
          i--;
       }
-      session.cancelFileMonitoring(TestConstants.NODE_ID, TestConstants.FILE_NAME);
+      session.cancelFileMonitoring(TestConstants.LOCAL_NODE_ID, file.getId());
       System.out.println("Monitoring have been canceled.\n");
       session.disconnect();
    }
