@@ -239,7 +239,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
       if ((nRet > 0) && (!(g_dwFlags & AF_SHUTDOWN)))
       {
          char clientAddr[128];
-         int size = 128;
+         socklen_t size = 128;
 #ifdef WITH_IPV6
          SOCKET hClientSocket = accept(FD_ISSET(hSocket, &rdfs) ? hSocket : hSocket6, (struct sockaddr *)clientAddr, &size);
 #else
