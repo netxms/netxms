@@ -165,17 +165,17 @@ int InetAddress::compareTo(const InetAddress &a) const
 /**
  * Resolve hostname
  */
-InetAddress InetAddress::resolveHostName(const WCHAR *hostname)
+InetAddress InetAddress::resolveHostName(const WCHAR *hostname, int af)
 {
    char mbName[256];
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, hostname, -1, mbName, 256, NULL, NULL);
-   return resolveHostName(mbName);
+   return resolveHostName(mbName, af);
 }
 
 /**
  * Resolve hostname
  */
-InetAddress InetAddress::resolveHostName(const char *hostname)
+InetAddress InetAddress::resolveHostName(const char *hostname, int af)
 {
    // Check for IPv4 address
 #ifdef _WIN32
@@ -219,7 +219,7 @@ InetAddress InetAddress::resolveHostName(const char *hostname)
    struct hostent h, *hs = NULL;
    char buffer[1024];
    int err;
-   gethostbyname2_r(hostname, AF_INET, &h, buffer, 1024, &hs, &err);
+   gethostbyname2_r(hostname, af, &h, buffer, 1024, &hs, &err);
 #else
    struct hostent *hs = gethostbyname(hostname);
 #endif

@@ -772,6 +772,8 @@ public:
    bool isValid() const { return m_family != AF_UNSPEC; }
 
    int getFamily() const { return m_family; }
+   UINT32 getAddressV4() const { return (m_family == AF_INET) ? m_addr.v4 : 0; }
+   const BYTE *getAddressV6() const { return (m_family == AF_INET6) ? m_addr.v6 : (const BYTE *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"; }
 
    bool contain(const InetAddress &a) const;
    bool equals(const InetAddress &a) const;
@@ -783,8 +785,8 @@ public:
    String toString() const;
    TCHAR *toString(TCHAR *buffer) const;
 
-   static InetAddress resolveHostName(const WCHAR *hostname);
-   static InetAddress resolveHostName(const char *hostname);
+   static InetAddress resolveHostName(const WCHAR *hostname, int af = AF_INET);
+   static InetAddress resolveHostName(const char *hostname, int af = AF_INET);
    static InetAddress createFromSockaddr(struct sockaddr *s);
 };
 

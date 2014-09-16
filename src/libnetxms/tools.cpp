@@ -94,11 +94,9 @@ char LIBNETXMS_EXPORTABLE *IpToStrA(UINT32 dwAddr, char *szBuffer)
 
 #endif
 
-
-//
-// Universal IPv4/IPv6 to string converter
-//
-
+/**
+ * Universal IPv4/IPv6 to string converter
+ */
 TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer)
 {
 	switch(addr->sa_family)

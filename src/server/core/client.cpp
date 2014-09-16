@@ -194,11 +194,11 @@ THREAD_RESULT THREAD_CALL ClientListener(void *arg)
    return THREAD_OK;
 }
 
+#ifdef WITH_IPV6
+
 /**
  * Listener thread - IPv6
  */
-#ifdef WITH_IPV6
-
 THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
 {
    SOCKET sock, sockClient;
