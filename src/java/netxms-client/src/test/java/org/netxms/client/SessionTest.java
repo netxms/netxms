@@ -46,12 +46,23 @@ public class SessionTest extends TestCase
 		return connect(false);
 	}
 	
-	public void testConnection() throws Exception
-	{
-	   NXCSession session = connect();
-	   assertNotNull(session);
-	   
-	   session = connect(true);
-      assertNotNull(session);
-	}
+   public void testConnect() throws Exception
+   {
+      final NXCSession session = connect();
+
+      assertEquals(0, session.getUserId());
+      
+      Thread.sleep(2000);
+      session.disconnect();
+   }
+
+   public void testEncryptedConnect() throws Exception
+   {
+      final NXCSession session = connect(true);
+
+      assertEquals(0, session.getUserId());
+      
+      Thread.sleep(2000);
+      session.disconnect();
+   }
 }
