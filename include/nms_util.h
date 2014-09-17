@@ -467,6 +467,7 @@ public:
 	void unlink(void *element) { internalRemove(indexOf(element), false); }
 	void clear();
    void sort(int (*cb)(const void *, const void *));
+   void *find(const void *key, int (*cb)(const void *, const void *));
 
 	int size() { return m_size; }
 
