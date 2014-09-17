@@ -20,6 +20,7 @@ public class TestConstants
    public static int FILE_OFFSET = 0;
    public static String ACTION = "netstat";
    public static int EVENT_CODE = 100000;
+   public static int CONNECTION_PULL = 100;
    //Reinitialize variables from properties file
    public static TestConstants testConstants = new TestConstants();
    
@@ -39,7 +40,8 @@ public class TestConstants
          FILE_NAME = properties.getProperty("file.name", "/var/log/netxms/netxmsd");
          FILE_OFFSET = Integer.parseInt(properties.getProperty("file.offset", "1000"));
          ACTION = properties.getProperty("action", "echo");
-         EVENT_CODE = Integer.parseInt(properties.getProperty("event.code", "29")); 
+         EVENT_CODE = Integer.parseInt(properties.getProperty("event.code", "29"));
+         CONNECTION_PULL = Integer.parseInt(properties.getProperty("connection.pull", "100"));
       }
       catch (Exception e)
       {

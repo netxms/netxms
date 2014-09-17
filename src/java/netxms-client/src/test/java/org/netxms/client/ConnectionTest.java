@@ -47,7 +47,7 @@ public class ConnectionTest extends SessionTest
 	
 	public void testMultipleConnections() throws Exception
 	{
-	   Thread[] t = new Thread[100];
+	   Thread[] t = new Thread[TestConstants.CONNECTION_PULL];
 	   for(int i = 0; i < t.length; i++)
 	   {
 	      t[i] = new Thread(new Runnable() {
