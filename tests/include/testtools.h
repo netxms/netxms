@@ -4,7 +4,7 @@
 /**
  * Assert failure
  */
-#define Assert(c) do { if (!(c)) { _tprintf(_T("FAIL\nAssert failed at %s:%d\n"), __FILE__, __LINE__); exit(1); } } while(0)
+#define Assert(c) do { if (!(c)) { _tprintf(_T("FAIL\nAssert failed at %hs:%d\n"), __FILE__, __LINE__); exit(1); } } while(0)
 
 /**
  * Assert that two values are equal

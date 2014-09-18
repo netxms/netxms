@@ -1,6 +1,6 @@
 SOURCES = agent.cpp array.cpp base64.cpp config.cpp crypto.cpp dirw_unix.c \
 	  gen_uuid.c geolocation.cpp getopt.c dload.cpp hash.cpp ice.c \
-	  icmp.cpp inetaddr.cpp log.cpp main.cpp md5.cpp message.cpp \
+	  icmp.cpp iconv.cpp inetaddr.cpp log.cpp main.cpp md5.cpp message.cpp \
 	  msgwq.cpp net.cpp nxcp.cpp parisc_atomic.cpp qsort.c queue.cpp \
 	  rwlock.cpp scandir.c serial.cpp sha1.cpp solaris9_atomic.c \
 	  string.cpp stringlist.cpp strmap.cpp strmapbase.cpp strptime.c \

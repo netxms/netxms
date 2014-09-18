@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2014 NetXMS Team
+ ** Copyright (C) 2003-2014 RAden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -23,9 +23,8 @@
 #include "libnetxms.h"
 
 /**
- * Static data
+ * Default codepage
  */
-
 static char m_cpDefault[MAX_CODEPAGE_LEN] = ICONV_DEFAULT_CODEPAGE;
 
 #ifndef _WIN32
@@ -37,8 +36,16 @@ static char m_cpDefault[MAX_CODEPAGE_LEN] = ICONV_DEFAULT_CODEPAGE;
 /**
  * UNICODE character set
  */
-
 #ifndef __DISABLE_ICONV
+
+// iconv cache functions
+#if WITH_ICONV_CACHE
+iconv_t IconvOpen(const char *to, const char *from);
+void IconvClose(iconv_t cd);
+#else
+#define IconvOpen iconv_open
+#define IconvClose iconv_close
+#endif
 
 // configure first test for libiconv, then for iconv
 // if libiconv was found, HAVE_ICONV will not be set correctly
@@ -211,7 +218,7 @@ inline int WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *p
    strcat(cp, "//IGNORE");
 #endif /* HAVE_ICONV_IGNORE */
 
-   cd = iconv_open(iCodePage == CP_UTF8 ? "UTF-8" : cp, UNICODE_CODEPAGE_NAME);
+   cd = IconvOpen(iCodePage == CP_UTF8 ? "UTF-8" : cp, UNICODE_CODEPAGE_NAME);
    if (cd == (iconv_t)(-1))
    {
       return WideCharToMultiByteSimpleCopy(iCodePage, dwFlags, pWideCharStr, cchWideChar, pByteStr, cchByteChar, pDefaultChar, pbUsedDefChar);
@@ -222,7 +229,7 @@ inline int WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *p
    outbuf = pByteStr;
    outbytes = cchByteChar;
    nRet = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
-   iconv_close(cd);
+   IconvClose(cd);
    if (nRet == -1)
    {
       if (errno == EILSEQ)
@@ -306,7 +313,7 @@ inline int MultiByteToWideCharIconv(int iCodePage, DWORD dwFlags, const char *pB
    char *outbuf;
    size_t inbytes, outbytes;
 
-   cd = iconv_open(UNICODE_CODEPAGE_NAME, iCodePage == CP_UTF8 ? "UTF-8" : m_cpDefault);
+   cd = IconvOpen(UNICODE_CODEPAGE_NAME, iCodePage == CP_UTF8 ? "UTF-8" : m_cpDefault);
    if (cd == (iconv_t)(-1))
    {
       return MultiByteToWideCharSimpleCopy(iCodePage, dwFlags, pByteStr, cchByteChar, pWideCharStr, cchWideChar);
@@ -317,7 +324,7 @@ inline int MultiByteToWideCharIconv(int iCodePage, DWORD dwFlags, const char *pB
    outbuf = (char *)pWideCharStr;
    outbytes = cchWideChar * sizeof(WCHAR);
    nRet = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
-   iconv_close(cd);
+   IconvClose(cd);
 
    if (nRet == -1)
    {
@@ -503,7 +510,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR 
    char *outbuf;
    size_t count, inbytes, outbytes;
 
-   cd = iconv_open(UCS4_CODEPAGE_NAME, UCS2_CODEPAGE_NAME);
+   cd = IconvOpen(UCS4_CODEPAGE_NAME, UCS2_CODEPAGE_NAME);
    if (cd == (iconv_t) (-1))
    {
       return __internal_ucs2_to_ucs4(src, srcLen, dst, dstLen);
@@ -514,7 +521,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR 
    outbuf = (char *) dst;
    outbytes = (size_t) dstLen * sizeof(WCHAR);
    count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
-   iconv_close(cd);
+   IconvClose(cd);
 
    if (count == (size_t) - 1)
    {
@@ -549,7 +556,7 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR 
    char *outbuf;
    size_t count, inbytes, outbytes;
 
-   cd = iconv_open(UCS2_CODEPAGE_NAME, UCS4_CODEPAGE_NAME);
+   cd = IconvOpen(UCS2_CODEPAGE_NAME, UCS4_CODEPAGE_NAME);
    if (cd == (iconv_t) (-1))
    {
       return __internal_ucs4_to_ucs2(src, srcLen, dst, dstLen);
@@ -560,7 +567,7 @@ size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR 
    outbuf = (char *) dst;
    outbytes = (size_t) dstLen * sizeof(UCS2CHAR);
    count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
-   iconv_close(cd);
+   IconvClose(cd);
 
    if (count == (size_t) - 1)
    {
@@ -666,7 +673,7 @@ inline size_t ucs2_to_utf8_iconv(const UCS2CHAR *src, int srcLen, char *dst, int
    char *outbuf;
    size_t count, inbytes, outbytes;
 
-   cd = iconv_open("UTF-8", UCS2_CODEPAGE_NAME);
+   cd = IconvOpen("UTF-8", UCS2_CODEPAGE_NAME);
    if (cd == (iconv_t) (-1))
    {
       return ucs2_to_utf8_simple_copy(src, srcLen, dst, dstLen);
@@ -677,7 +684,7 @@ inline size_t ucs2_to_utf8_iconv(const UCS2CHAR *src, int srcLen, char *dst, int
    outbuf = (char *) dst;
    outbytes = (size_t) dstLen;
    count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
-   iconv_close(cd);
+   IconvClose(cd);
 
    if (count == (size_t) - 1)
    {
@@ -746,7 +753,7 @@ inline size_t ucs2_to_mb_iconv(const UCS2CHAR *src, int srcLen, char *dst, int d
    char *outbuf;
    size_t count, inbytes, outbytes;
 
-   cd = iconv_open(m_cpDefault, UCS2_CODEPAGE_NAME);
+   cd = IconvOpen(m_cpDefault, UCS2_CODEPAGE_NAME);
    if (cd == (iconv_t) (-1))
    {
       return ucs2_to_mb_simple_copy(src, srcLen, dst, dstLen);
@@ -757,7 +764,7 @@ inline size_t ucs2_to_mb_iconv(const UCS2CHAR *src, int srcLen, char *dst, int d
    outbuf = (char *) dst;
    outbytes = (size_t) dstLen;
    count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
-   iconv_close(cd);
+   IconvClose(cd);
 
    if (count == (size_t) - 1)
    {
@@ -818,7 +825,7 @@ inline size_t mb_to_ucs2_iconv(const char *src, int srcLen, UCS2CHAR *dst, int d
    char *outbuf;
    size_t count, inbytes, outbytes;
 
-   cd = iconv_open(UCS2_CODEPAGE_NAME, m_cpDefault);
+   cd = IconvOpen(UCS2_CODEPAGE_NAME, m_cpDefault);
    if (cd == (iconv_t) (-1))
    {
       return mb_to_ucs2_simple_copy(src, srcLen, dst, dstLen);
@@ -829,7 +836,7 @@ inline size_t mb_to_ucs2_iconv(const char *src, int srcLen, UCS2CHAR *dst, int d
    outbuf = (char *) dst;
    outbytes = (size_t) dstLen * sizeof(UCS2CHAR);
    count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
-   iconv_close(cd);
+   IconvClose(cd);
 
    if (count == (size_t) - 1)
    {
