@@ -445,7 +445,7 @@ AC_ARG_WITH(dist,
 	SMSDRV_DIRS="websms"
    HDLINK_DIRS="jira"
 	NXCONFIG="nxconfig"
-	TOP_LEVEL_MODULES="include sql images"
+	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds"
 	CLIENT_COMPONENTS="nxalarm nxevent nxlexer nxpush nxsms scilexer windows"
@@ -456,6 +456,12 @@ AC_ARG_WITH(rpi-agent,
 [AS_HELP_STRING(--with-rpi-agent,build Raspberry Pi agent)],
 [
 	COMPONENTS="$COMPONENTS raspberrypi"
+])
+
+AC_ARG_WITH(tests,
+[AS_HELP_STRING(--with-tests,build tests)],
+[
+	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES tests"
 ])
 
 
@@ -2617,6 +2623,9 @@ AC_CONFIG_FILES([
 	src/tools/nxencpasswd/Makefile
 	src/zlib/Makefile
 	sql/Makefile
+	tests/Makefile
+	tests/include/Makefile
+	tests/test-libnetxms/Makefile
 	tools/Makefile
 ])
 
