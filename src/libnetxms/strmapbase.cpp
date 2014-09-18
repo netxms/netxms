@@ -187,3 +187,20 @@ const void *StringMapBase::findElement(bool (*comparator)(const TCHAR *, const v
    }
    return result;
 }
+
+/**
+ * Convert to key/value array
+ */
+StructArray<KeyValuePair> *StringMapBase::toArray()
+{
+   StructArray<KeyValuePair> *a = new StructArray<KeyValuePair>(m_size);
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      KeyValuePair p;
+      p.key = entry->key;
+      p.value = entry->value;
+      a->add(&p);
+   }
+   return a;
+}

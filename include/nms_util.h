@@ -279,9 +279,134 @@ public:
 };
 
 /**
- * Entry of string map
+ * Dynamic array class
+ */
+class LIBNETXMS_EXPORTABLE Array
+{
+private:
+	int m_size;
+	int m_allocated;
+	int m_grow;
+   size_t m_elementSize;
+	void **m_data;
+	bool m_objectOwner;
+
+	void internalRemove(int index, bool allowDestruction);
+	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
+
+protected:
+   bool m_storePointers;
+	void (*m_objectDestructor)(void *);
+
+   Array(void *data, int initial, int grow, size_t elementSize);
+   void *__getBuffer() { return m_data; }
+
+public:
+	Array(int initial = 0, int grow = 16, bool owner = false);
+	virtual ~Array();
+
+	int add(void *element);
+   void *get(int index) { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
+   int indexOf(void *element);
+	void set(int index, void *element);
+	void replace(int index, void *element);
+	void remove(int index) { internalRemove(index, true); }
+   void remove(void *element) { internalRemove(indexOf(element), true); }
+	void unlink(int index) { internalRemove(index, false); }
+	void unlink(void *element) { internalRemove(indexOf(element), false); }
+	void clear();
+   void sort(int (*cb)(const void *, const void *));
+   void *find(const void *key, int (*cb)(const void *, const void *));
+
+	int size() { return m_size; }
+
+	void setOwner(bool owner) { m_objectOwner = owner; }
+	bool isOwner() { return m_objectOwner; }
+};
+
+/**
+ * Template class for dynamic array which holds objects
+ */
+template <class T> class ObjectArray : public Array
+{
+private:
+	static void destructor(void *object) { delete (T*)object; }
+
+public:
+	ObjectArray(int initial = 0, int grow = 16, bool owner = false) : Array(initial, grow, owner) { m_objectDestructor = destructor; }
+	virtual ~ObjectArray() { }
+
+	int add(T *object) { return Array::add((void *)object); }
+	T *get(int index) { return (T*)Array::get(index); }
+   int indexOf(T *object) { return Array::indexOf((void *)object); }
+	void set(int index, T *object) { Array::set(index, (void *)object); }
+	void replace(int index, T *object) { Array::replace(index, (void *)object); }
+	void remove(int index) { Array::remove(index); }
+   void remove(T *object) { Array::remove((void *)object); }
+	void unlink(int index) { Array::unlink(index); }
+   void unlink(T *object) { Array::unlink((void *)object); }
+};
+
+/**
+ * Template class for dynamic array which holds scalar values
+ */
+template <class T> class IntegerArray : public Array
+{
+private:
+	static void destructor(void *element) { }
+
+public:
+	IntegerArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
+	virtual ~IntegerArray() { }
+
+   int add(T value) { return Array::add(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   T get(int index) { return m_storePointers ? CAST_FROM_POINTER(Array::get(index), T) : *((T*)Array::get(index)); }
+   int indexOf(T value) { return Array::indexOf(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   void set(int index, T value) { Array::set(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   void replace(int index, T value) { Array::replace(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+
+   T *getBuffer() { return (T*)__getBuffer(); }
+};
+
+/**
+ * Auxilliary class to hold dynamically allocated array of structures
+ */
+template <class T> class StructArray : public Array
+{
+private:
+	static void destructor(void *element) { }
+
+public:
+	StructArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; }
+	StructArray(T *data, int size) : Array(data, size, 16, sizeof(T)) { m_objectDestructor = destructor; }
+	virtual ~StructArray() { }
+
+	int add(T *element) { return Array::add((void *)element); }
+	T *get(int index) { return (T*)Array::get(index); }
+   int indexOf(T *element) { return Array::indexOf((void *)element); }
+	void set(int index, T *element) { Array::set(index, (void *)element); }
+	void replace(int index, T *element) { Array::replace(index, (void *)element); }
+	void remove(int index) { Array::remove(index); }
+   void remove(T *element) { Array::remove((void *)element); }
+	void unlink(int index) { Array::unlink(index); }
+   void unlink(T *element) { Array::unlink((void *)element); }
+
+   T *getBuffer() { return (T*)__getBuffer(); }
+};
+
+/**
+ * Entry of string map (internal)
  */
 struct StringMapEntry;
+
+/**
+ * Key/value pair
+ */
+struct KeyValuePair
+{
+   const TCHAR *key;
+   const void *value;
+};
 
 /**
  * String maps base class
@@ -315,6 +440,8 @@ public:
 
    bool forEach(bool (*cb)(const TCHAR *, const void *, void *), void *userData);
    const void *findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData);
+
+   StructArray<KeyValuePair> *toArray();
 };
 
 /**
@@ -438,122 +565,6 @@ public:
    void addAllFromMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
 
    String getAll(const TCHAR *separator);
-};
-
-/**
- * Dynamic array class
- */
-class LIBNETXMS_EXPORTABLE Array
-{
-private:
-	int m_size;
-	int m_allocated;
-	int m_grow;
-   size_t m_elementSize;
-	void **m_data;
-	bool m_objectOwner;
-
-	void internalRemove(int index, bool allowDestruction);
-	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
-
-protected:
-   bool m_storePointers;
-	void (*m_objectDestructor)(void *);
-
-   Array(void *data, int initial, int grow, size_t elementSize);
-   void *__getBuffer() { return m_data; }
-
-public:
-	Array(int initial = 0, int grow = 16, bool owner = false);
-	virtual ~Array();
-
-	int add(void *element);
-   void *get(int index) { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
-   int indexOf(void *element);
-	void set(int index, void *element);
-	void replace(int index, void *element);
-	void remove(int index) { internalRemove(index, true); }
-   void remove(void *element) { internalRemove(indexOf(element), true); }
-	void unlink(int index) { internalRemove(index, false); }
-	void unlink(void *element) { internalRemove(indexOf(element), false); }
-	void clear();
-   void sort(int (*cb)(const void *, const void *));
-   void *find(const void *key, int (*cb)(const void *, const void *));
-
-	int size() { return m_size; }
-
-	void setOwner(bool owner) { m_objectOwner = owner; }
-	bool isOwner() { return m_objectOwner; }
-};
-
-/**
- * Template class for dynamic array which holds objects
- */
-template <class T> class ObjectArray : public Array
-{
-private:
-	static void destructor(void *object) { delete (T*)object; }
-
-public:
-	ObjectArray(int initial = 0, int grow = 16, bool owner = false) : Array(initial, grow, owner) { m_objectDestructor = destructor; }
-	virtual ~ObjectArray() { }
-
-	int add(T *object) { return Array::add((void *)object); }
-	T *get(int index) { return (T*)Array::get(index); }
-   int indexOf(T *object) { return Array::indexOf((void *)object); }
-	void set(int index, T *object) { Array::set(index, (void *)object); }
-	void replace(int index, T *object) { Array::replace(index, (void *)object); }
-	void remove(int index) { Array::remove(index); }
-   void remove(T *object) { Array::remove((void *)object); }
-	void unlink(int index) { Array::unlink(index); }
-   void unlink(T *object) { Array::unlink((void *)object); }
-};
-
-/**
- * Template class for dynamic array which holds scalar values
- */
-template <class T> class IntegerArray : public Array
-{
-private:
-	static void destructor(void *element) { }
-
-public:
-	IntegerArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
-	virtual ~IntegerArray() { }
-
-   int add(T value) { return Array::add(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
-   T get(int index) { return m_storePointers ? CAST_FROM_POINTER(Array::get(index), T) : *((T*)Array::get(index)); }
-   int indexOf(T value) { return Array::indexOf(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
-   void set(int index, T value) { Array::set(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
-   void replace(int index, T value) { Array::replace(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
-
-   T *getBuffer() { return (T*)__getBuffer(); }
-};
-
-/**
- * Auxilliary class to hold dynamically allocated array of structures
- */
-template <class T> class StructArray : public Array
-{
-private:
-	static void destructor(void *element) { }
-
-public:
-	StructArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; }
-	StructArray(T *data, int size) : Array(data, size, 16, sizeof(T)) { m_objectDestructor = destructor; }
-	virtual ~StructArray() { }
-
-	int add(T *element) { return Array::add((void *)element); }
-	T *get(int index) { return (T*)Array::get(index); }
-   int indexOf(T *element) { return Array::indexOf((void *)element); }
-	void set(int index, T *element) { Array::set(index, (void *)element); }
-	void replace(int index, T *element) { Array::replace(index, (void *)element); }
-	void remove(int index) { Array::remove(index); }
-   void remove(T *element) { Array::remove((void *)element); }
-	void unlink(int index) { Array::unlink(index); }
-   void unlink(T *element) { Array::unlink((void *)element); }
-
-   T *getBuffer() { return (T*)__getBuffer(); }
 };
 
 /**
