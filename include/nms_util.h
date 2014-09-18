@@ -314,6 +314,7 @@ public:
    bool contains(const TCHAR *key) { return find(key) != NULL; }
 
    bool forEach(bool (*cb)(const TCHAR *, const void *, void *), void *userData);
+   const void *findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData);
 };
 
 /**

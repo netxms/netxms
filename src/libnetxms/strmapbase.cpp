@@ -169,3 +169,21 @@ bool StringMapBase::forEach(bool (*cb)(const TCHAR *, const void *, void *), voi
    }
    return result;
 }
+
+/**
+ * Find entry
+ */
+const void *StringMapBase::findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData)
+{
+   const void *result = NULL;
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (comparator(entry->key, entry->value, userData))
+      {
+         result = entry->value;
+         break;
+      }
+   }
+   return result;
+}
