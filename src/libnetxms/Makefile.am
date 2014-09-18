@@ -30,7 +30,7 @@ endif
 
 EXTRA_DIST = \
 	libnetxms.vcproj \
-	libnetxms.h ice.h md5.h sha1.h uuidP.h \
+	libnetxms.h ice.h md5.h sha1.h strmap-internal.h uuidP.h \
 	dir.c dirw.c \
 	seh.cpp StackWalker.cpp StackWalker.h \
 	ldcw.s

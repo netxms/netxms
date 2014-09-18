@@ -81,14 +81,11 @@ LONG ParamProvider::getValue(const TCHAR *name, TCHAR *buffer)
 
 	lock();
 
-	for(int i = 0; i < m_parameters->size(); i++)
-	{
-		if (!_tcsicmp(m_parameters->getKeyByIndex(i), name))
-		{
-			nx_strncpy(buffer, m_parameters->getValueByIndex(i), MAX_RESULT_LENGTH);
-			rc = SYSINFO_RC_SUCCESS;
-			break;
-		}
+   const TCHAR *value = m_parameters->get(name);
+   if (value != NULL)
+   {
+		nx_strncpy(buffer, value, MAX_RESULT_LENGTH);
+		rc = SYSINFO_RC_SUCCESS;
 	}
 
 	unlock();
@@ -148,23 +145,52 @@ void ParamProvider::poll()
 }
 
 /**
+ * Parameter list callback data
+ */
+struct ParameterListCallbackData
+{
+   CSCPMessage *msg;
+   UINT32 id;
+   UINT32 count;
+};
+
+/**
+ * Parameter list callback
+ */
+static bool ParameterListCallback(const TCHAR *key, const void *value, void *data)
+{
+	((ParameterListCallbackData *)data)->msg->SetVariable(((ParameterListCallbackData *)data)->id++, key);
+	((ParameterListCallbackData *)data)->msg->SetVariable(((ParameterListCallbackData *)data)->id++, _T(""));
+	((ParameterListCallbackData *)data)->msg->SetVariable(((ParameterListCallbackData *)data)->id++, (WORD)DCI_DT_STRING);
+	((ParameterListCallbackData *)data)->count++;
+   return true;
+}
+
+/**
  * List available parameters
  */
 void ParamProvider::listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
-	UINT32 id = *baseId;
+   ParameterListCallbackData data;
+   data.msg = msg;
+   data.id = *baseId;
+   data.count = 0;
 
 	lock();
-	for(int i = 0; i < m_parameters->size(); i++)
-	{
-		msg->SetVariable(id++, m_parameters->getKeyByIndex(i));
-		msg->SetVariable(id++, _T(""));
-		msg->SetVariable(id++, (WORD)DCI_DT_STRING);
-		(*count)++;
-	}
+   m_parameters->forEach(ParameterListCallback, &data);
 	unlock();
 
-	*baseId = id;
+	*baseId = data.id;
+   *count += data.count;
+}
+
+/**
+ * Parameter list callback
+ */
+static bool ParameterListCallback2(const TCHAR *key, const void *value, void *data)
+{
+   ((StringList *)data)->add(key);
+   return true;
 }
 
 /**
@@ -173,10 +199,7 @@ void ParamProvider::listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *cou
 void ParamProvider::listParameters(StringList *list)
 {
 	lock();
-	for(int i = 0; i < m_parameters->size(); i++)
-	{
-		list->add(m_parameters->getKeyByIndex(i));
-	}
+   m_parameters->forEach(ParameterListCallback2, list);
 	unlock();
 }
 

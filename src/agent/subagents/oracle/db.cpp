@@ -251,6 +251,35 @@ bool DatabaseInstance::getData(const TCHAR *tag, TCHAR *value)
 }
 
 /**
+ * Tag list callback data
+ */
+struct TagListCallbackData
+{
+   regex_t preg;
+   StringList *list;
+};
+
+/**
+ * Tag list callback
+ */
+static bool TagListCallback(const TCHAR *key, const void *value, void *data)
+{
+   regmatch_t pmatch[16];
+   if (_tregexec(&(((TagListCallbackData *)data)->preg), key, 16, pmatch, 0) == 0) // MATCH
+   {
+      if (pmatch[1].rm_so != -1)
+      {
+         size_t slen = pmatch[1].rm_eo - pmatch[1].rm_so;
+         TCHAR *s = (TCHAR *)malloc((slen + 1) * sizeof(TCHAR));
+         memcpy(s, &key[pmatch[1].rm_so], slen * sizeof(TCHAR));
+         s[slen] = 0;
+         ((TagListCallbackData *)data)->list->addPreallocated(s);
+      }
+   }
+   return true;
+}
+
+/**
  * Get list of tags matching given pattern from collected data
  */
 bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
@@ -260,27 +289,11 @@ bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
    MutexLock(m_dataLock);
    if (m_data != NULL)
    {
-      regex_t preg;
-	   if (_tregcomp(&preg, pattern, REG_EXTENDED | REG_ICASE) == 0)
+      TagListCallbackData data;
+	   if (_tregcomp(&data.preg, pattern, REG_EXTENDED | REG_ICASE) == 0)
 	   {
-         for(int i = 0; i < m_data->size(); i++)
-         {
-            const TCHAR *tag = m_data->getKeyByIndex(i);
-            regmatch_t pmatch[16];
-   		   if (_tregexec(&preg, tag, 16, pmatch, 0) == 0) // MATCH
-            {
-               if (pmatch[1].rm_so != -1)
-               {
-                  size_t slen = pmatch[1].rm_eo - pmatch[1].rm_so;
-                  TCHAR *s = (TCHAR *)malloc((slen + 1) * sizeof(TCHAR));
-                  memcpy(s, &tag[pmatch[1].rm_so], slen * sizeof(TCHAR));
-                  s[slen] = 0;
-                  value->addPreallocated(s);
-               }
-            }
-         }
-
-         regfree(&preg);
+         m_data->forEach(TagListCallback, &data);
+         regfree(&data.preg);
          success = true;
 	   }
    }

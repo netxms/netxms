@@ -410,15 +410,30 @@ TCHAR *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, UINT32
 }
 
 /**
+ * Update user callback
+ */
+static bool UpdateUserCallback(const TCHAR *key, const void *value, void *data)
+{
+   UpdateLDAPUser(key, (Entry *)value);
+   return true;
+}
+
+/**
  * Updates user list according to newly recievd user list
  */
 void LDAPConnection::compareUserLists(StringObjectMap<Entry> *userEntryList)
 {
-   for(int i = 0; i < userEntryList->size(); i++)
-   {
-      UpdateLDAPUsers(userEntryList->getKeyByIndex(i), userEntryList->getValueByIndex(i));
-   }
+   userEntryList->forEach(UpdateUserCallback, NULL);
    RemoveDeletedLDAPEntry(userEntryList, m_action, true);
+}
+
+/**
+ * Update group callback
+ */
+static bool UpdateGroupCallback(const TCHAR *key, const void *value, void *data)
+{
+   UpdateLDAPGroup(key, (Entry *)value);
+   return true;
 }
 
 /**
@@ -426,10 +441,7 @@ void LDAPConnection::compareUserLists(StringObjectMap<Entry> *userEntryList)
  */
 void LDAPConnection::compareGroupList(StringObjectMap<Entry> *groupEntryList)
 {
-   for(int i = 0; i < groupEntryList->size(); i++)
-   {
-      UpdateLDAPGroups(groupEntryList->getKeyByIndex(i), groupEntryList->getValueByIndex(i));
-   }
+   groupEntryList->forEach(UpdateGroupCallback, NULL);
    RemoveDeletedLDAPEntry(groupEntryList, m_action, false);
 }
 

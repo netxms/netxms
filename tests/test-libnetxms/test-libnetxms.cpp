@@ -99,7 +99,9 @@ static void TestStringMap()
       m->set(key, _T("Lorem ipsum dolor sit amet"));
    }
    AssertEquals(m->size(), 10000);
-   AssertTrue(!_tcscmp(m->get(_T("key-42")), _T("Lorem ipsum dolor sit amet")));
+   const TCHAR *v = m->get(_T("key-42"));
+   AssertNotNull(v);
+   AssertTrue(!_tcscmp(v, _T("Lorem ipsum dolor sit amet")));
    EndTest(GetCurrentTimeMs() - start);
 
    StartTest(_T("String map - replace"));
@@ -111,12 +113,14 @@ static void TestStringMap()
       m->set(key, _T("consectetur adipiscing elit"));
    }
    AssertEquals(m->size(), 10000);
-   AssertTrue(!_tcscmp(m->get(_T("key-42")), _T("consectetur adipiscing elit")));
+   v = m->get(_T("key-42"));
+   AssertNotNull(v);
+   AssertTrue(!_tcscmp(v, _T("consectetur adipiscing elit")));
    EndTest(GetCurrentTimeMs() - start);
 
    StartTest(_T("String map - get"));
    start = GetCurrentTimeMs();
-   const TCHAR *v = m->get(_T("key-888"));
+   v = m->get(_T("key-888"));
    AssertNotNull(v);
    AssertTrue(!_tcscmp(v, _T("consectetur adipiscing elit")));
    EndTest(GetCurrentTimeMs() - start);

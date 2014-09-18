@@ -135,6 +135,28 @@ MappingTable::~MappingTable()
 }
 
 /**
+ * Data for FillMessageCallback
+ */
+struct FillMessageCallbackData
+{
+   CSCPMessage *msg;
+   UINT32 id;
+};
+
+/**
+ * Callback for setting mapping table elements in NXCP message
+ */
+static bool FillMessageCallback(const TCHAR *key, const void *value, void *data)
+{
+   UINT32 id = ((FillMessageCallbackData *)data)->id;
+	((FillMessageCallbackData *)data)->msg->SetVariable(id, key);
+	((FillMessageCallbackData *)data)->msg->SetVariable(id + 1, ((MappingTableElement *)value)->getValue());
+	((FillMessageCallbackData *)data)->msg->SetVariable(id + 2, ((MappingTableElement *)value)->getDescription());
+	((FillMessageCallbackData *)data)->id += 10;
+   return true;
+}
+
+/**
  * Fill NXCP message with mapping table's data
  */
 void MappingTable::fillMessage(CSCPMessage *msg)
@@ -145,15 +167,22 @@ void MappingTable::fillMessage(CSCPMessage *msg)
 	msg->SetVariable(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
 	
 	msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_data->size());
-	UINT32 varId = VID_ELEMENT_LIST_BASE;
-	for(int i = 0; i < m_data->size(); i++)
-	{
-		msg->SetVariable(varId++, m_data->getKeyByIndex(i));
-		MappingTableElement *e = m_data->getValueByIndex(i);
-		msg->SetVariable(varId++, e->getValue());
-		msg->SetVariable(varId++, e->getDescription());
-		varId += 7;
-	}
+   FillMessageCallbackData data;
+   data.msg = msg;
+	data.id = VID_ELEMENT_LIST_BASE;
+   m_data->forEach(FillMessageCallback, &data);
+}
+
+/**
+ * Callback for saving elements into database
+ */
+static bool SaveElementCallback(const TCHAR *key, const void *value, void *data)
+{
+   DB_STATEMENT hStmt = (DB_STATEMENT)data;
+	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, ((MappingTableElement *)value)->getValue(), DB_BIND_STATIC);
+	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, ((MappingTableElement *)value)->getDescription(), DB_BIND_STATIC);
+   return DBExecute(hStmt) ? true : false;
 }
 
 /**
@@ -203,16 +232,9 @@ bool MappingTable::saveToDatabase()
 	if (hStmt == NULL)
 		goto failure2;
 
-	for(int i = 0; i < m_data->size(); i++)
-	{
-		MappingTableElement *e = m_data->getValueByIndex(i);
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_data->getKeyByIndex(i), DB_BIND_STATIC);
-		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, e->getValue(), DB_BIND_STATIC);
-		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, e->getDescription(), DB_BIND_STATIC);
-		if (!DBExecute(hStmt))
-			goto failure;
-	}
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   if (!m_data->forEach(SaveElementCallback, hStmt))
+      goto failure;
 	DBFreeStatement(hStmt);
 
 	DBCommit(hdb);

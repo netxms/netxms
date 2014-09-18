@@ -279,19 +279,23 @@ public:
 };
 
 /**
+ * Entry of string map
+ */
+struct StringMapEntry;
+
+/**
  * String maps base class
  */
 class LIBNETXMS_EXPORTABLE StringMapBase
 {
 protected:
 	int m_size;
-	TCHAR **m_keys;
-	void **m_values;
+   StringMapEntry *m_data;
 	bool m_objectOwner;
    bool m_ignoreCase;
 	void (*m_objectDestructor)(void *);
 
-	UINT32 find(const TCHAR *key);
+	StringMapEntry *find(const TCHAR *key);
 	void setObject(TCHAR *key, void *value, bool keyPreAlloc);
 	void *getObject(const TCHAR *key);
 	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
@@ -307,8 +311,15 @@ public:
 	void clear();
 
 	int size() { return m_size; }
-	const TCHAR *getKeyByIndex(int idx) { return ((idx >= 0) && (idx < m_size)) ? CHECK_NULL_EX(m_keys[idx]) : NULL; }
+   bool contains(const TCHAR *key) { return find(key) != NULL; }
+
+   bool forEach(bool (*cb)(const TCHAR *, const void *, void *), void *userData);
 };
+
+/**
+ * NXCP message class
+ */
+class CSCPMessage;
 
 /**
  * String map class
@@ -332,7 +343,7 @@ public:
 	UINT32 getULong(const TCHAR *key, UINT32 defaultValue);
 	bool getBoolean(const TCHAR *key, bool defaultValue);
 
-	const TCHAR *getValueByIndex(int idx) { return ((idx >= 0) && (idx < m_size)) ? CHECK_NULL_EX((TCHAR *)m_values[idx]) : NULL; }
+   void fillMessage(CSCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId);
 };
 
 /**
@@ -348,7 +359,6 @@ public:
 
 	void set(const TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, false); }
 	T *get(const TCHAR *key) { return (T*)getObject(key); }
-	T *getValueByIndex(int idx) { return ((idx >= 0) && (idx < m_size)) ? (T *)m_values[idx] : NULL; }
 };
 
 /**

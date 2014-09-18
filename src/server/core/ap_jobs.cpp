@@ -82,7 +82,7 @@ bool PolicyDeploymentJob::run()
       
       setDescription(_T("Policy deploy failed. Wainting 10 minutes to restart job."));
       success = SleepAndCheckForShutdown(600);
-   } while (!success);
+   } while(!success);
 
 	return success;
 }

@@ -832,7 +832,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
 void NXCORE_EXPORTABLE ShutdownDB();
 void InitiateShutdown();
 
-BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
+bool NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
 
 void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
 #if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))

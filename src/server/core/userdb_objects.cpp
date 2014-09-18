@@ -99,13 +99,7 @@ void UserDatabaseObject::fillMessage(CSCPMessage *msg)
    msg->SetVariable(VID_USER_SYS_RIGHTS, m_systemRights);
    msg->SetVariable(VID_USER_DESCRIPTION, m_description);
    msg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
-	msg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_attributes.size());
-	UINT32 varId = VID_CUSTOM_ATTRIBUTES_BASE;
-	for(int i = 0; i < m_attributes.size(); i++)
-	{
-		msg->SetVariable(varId++, m_attributes.getKeyByIndex(i));
-		msg->SetVariable(varId++, m_attributes.getValueByIndex(i));
-	}
+   m_attributes.fillMessage(msg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
 }
 
 /**
@@ -195,6 +189,17 @@ bool UserDatabaseObject::loadCustomAttributes(DB_HANDLE hdb)
 }
 
 /**
+ * Callback for saving custom attribute in database
+ */
+static bool SaveAttributeCallback(const TCHAR *key, const void *value, void *data)
+{
+   DB_STATEMENT hStmt = (DB_STATEMENT)data;
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (const TCHAR *)value, DB_BIND_STATIC);
+   return DBExecute(hStmt) ? true : false;
+}
+
+/**
  * Save custom attributes to database
  */
 bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
@@ -209,15 +214,7 @@ bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         int i;
-		   for(i = 0; i < m_attributes.size(); i++)
-		   {
-            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_attributes.getKeyByIndex(i), DB_BIND_STATIC);
-            DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_attributes.getValueByIndex(i), DB_BIND_STATIC);
-			   if (!DBExecute(hStmt))
-				   break;
-		   }
-		   success = (i == m_attributes.size());
+         success = m_attributes.forEach(SaveAttributeCallback, hStmt);
          DBFreeStatement(hStmt);
       }
 	}

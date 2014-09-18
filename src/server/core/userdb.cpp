@@ -503,7 +503,7 @@ bool NXCORE_EXPORTABLE ResolveUserId(UINT32 id, TCHAR *buffer, int bufSize)
 /**
  * Update/Add LDAP user
  */
-void NXCORE_EXPORTABLE UpdateLDAPUsers(const TCHAR* dn, Entry *obj)
+void NXCORE_EXPORTABLE UpdateLDAPUser(const TCHAR *dn, Entry *obj)
 {
    MutexLock(m_mutexUserDatabaseAccess);
    bool userModified = false;
@@ -519,7 +519,7 @@ void NXCORE_EXPORTABLE UpdateLDAPUsers(const TCHAR* dn, Entry *obj)
             {
                user->setSyncException();
                TCHAR mistakeDescription[MAX_USER_DESCR];
-               _sntprintf(mistakeDescription, MAX_USER_DESCR, _T("UpdateLDAPUsers(): Ldap sync error. User with name \"%s\" already exists."), obj->m_loginName);
+               _sntprintf(mistakeDescription, MAX_USER_DESCR, _T("UpdateLDAPUser(): Ldap sync error. User with name \"%s\" already exists."), obj->m_loginName);
                user->setDescription(mistakeDescription);
                DbgPrintf(4, mistakeDescription);
             }
@@ -528,7 +528,7 @@ void NXCORE_EXPORTABLE UpdateLDAPUsers(const TCHAR* dn, Entry *obj)
                user->setName(obj->m_loginName);
                user->setFullName(obj->m_fullName);
                user->setDescription(obj->m_description);
-               DbgPrintf(4, _T("UpdateLDAPUsers(): User updated: dn: %s, login name: %s, full name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
+               DbgPrintf(4, _T("UpdateLDAPUser(): User updated: dn: %s, login name: %s, full name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
             }
             if(user->isModified())
             {
@@ -553,11 +553,11 @@ void NXCORE_EXPORTABLE UpdateLDAPUsers(const TCHAR* dn, Entry *obj)
          m_users[m_userCount] = user;
          m_userCount++;
          SendUserDBUpdate(USER_DB_CREATE, user->getId(), user);
-         DbgPrintf(4, _T("UpdateLDAPUsers(): User added: dn: %s, login name: %s, full name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
+         DbgPrintf(4, _T("UpdateLDAPUser(): User added: dn: %s, login name: %s, full name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
       }
       else
       {
-         DbgPrintf(4, _T("UpdateLDAPUsers(): User with name %s already exists, but is not LDAP user. LDAP user won`t be creadted."), obj->m_loginName);
+         DbgPrintf(4, _T("UpdateLDAPUser(): User with name %s already exists, but is not LDAP user. LDAP user won`t be creadted."), obj->m_loginName);
       }
    }
    MutexUnlock(m_mutexUserDatabaseAccess);
@@ -594,7 +594,7 @@ void RemoveDeletedLDAPEntry(StringObjectMap<Entry>* entryList, UINT32 m_action, 
 /**
  * Update/Add LDAP group
  */
-void NXCORE_EXPORTABLE UpdateLDAPGroups(const TCHAR* dn, Entry *obj) //no full name, add users inside group, and delete removed from the group
+void NXCORE_EXPORTABLE UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users inside group, and delete removed from the group
 {
    MutexLock(m_mutexUserDatabaseAccess);
    bool userModified = false;
@@ -610,7 +610,7 @@ void NXCORE_EXPORTABLE UpdateLDAPGroups(const TCHAR* dn, Entry *obj) //no full n
             {
                group->setSyncException();
                TCHAR mistakeDescription[MAX_USER_DESCR];
-               _sntprintf(mistakeDescription, MAX_USER_DESCR, _T("UpdateLDAPGroups(): LDAP sync error. Group with \"%s\" name already exists."), obj->m_loginName);
+               _sntprintf(mistakeDescription, MAX_USER_DESCR, _T("UpdateLDAPGroup(): LDAP sync error. Group with \"%s\" name already exists."), obj->m_loginName);
                group->setDescription(mistakeDescription);
                DbgPrintf(4, mistakeDescription);
             }
@@ -618,7 +618,7 @@ void NXCORE_EXPORTABLE UpdateLDAPGroups(const TCHAR* dn, Entry *obj) //no full n
             {
                group->setName(obj->m_loginName);
                group->setDescription(obj->m_description);
-               DbgPrintf(4, _T("UpdateLDAPGroups(): Group updated: dn: %s, login name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
+               DbgPrintf(4, _T("UpdateLDAPGroup(): Group updated: dn: %s, login name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
             }
             if(group->isModified())
             {
@@ -643,11 +643,11 @@ void NXCORE_EXPORTABLE UpdateLDAPGroups(const TCHAR* dn, Entry *obj) //no full n
          m_users[m_userCount] = group;
          m_userCount++;
          SyncGroupMembers(group , obj);
-         DbgPrintf(4, _T("UpdateLDAPGroups(): Group added: dn: %s, login name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
+         DbgPrintf(4, _T("UpdateLDAPGroup(): Group added: dn: %s, login name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
       }
       else
       {
-         DbgPrintf(4, _T("UpdateLDAPGroups(): Group with %s name already exists, but is not LDAP user. LDAP user won't be creadted."), obj->m_loginName);
+         DbgPrintf(4, _T("UpdateLDAPGroup(): Group with %s name already exists, but is not LDAP user. LDAP user won't be creadted."), obj->m_loginName);
       }
    }
    MutexUnlock(m_mutexUserDatabaseAccess);

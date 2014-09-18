@@ -581,6 +581,16 @@ void ConfigEntry::print(FILE *file, int level)
 }
 
 /**
+ * Add attribute
+ */
+static bool AddAttribute(const TCHAR *key, const void *value, void *userData)
+{
+   if (_tcscmp(key, _T("id")))
+      ((String *)userData)->addFormattedString(_T(" %s=\"%s\""), key, (const TCHAR *)value);
+   return true;
+}
+
+/**
  * Create XML element(s) from config entry
  */
 void ConfigEntry::createXml(String &xml, int level)
@@ -594,11 +604,7 @@ void ConfigEntry::createXml(String &xml, int level)
       xml.addFormattedString(_T("%*s<%s"), level * 4, _T(""), name);
    else
       xml.addFormattedString(_T("%*s<%s id=\"%d\""), level * 4, _T(""), name, m_id);
-   for(int j = 0; j < m_attributes.size(); j++)
-   {
-      if (_tcscmp(m_attributes.getKeyByIndex(j), _T("id")))
-         xml.addFormattedString(_T(" %s=\"%s\""), m_attributes.getKeyByIndex(j), m_attributes.getValueByIndex(j));
-   }
+   m_attributes.forEach(AddAttribute, &xml);
    xml += _T(">");
 
    if (m_first != NULL)

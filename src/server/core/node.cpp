@@ -2966,6 +2966,46 @@ StringMap *Node::getInstanceList(DCItem *dci)
 }
 
 /**
+ * Callback for finding instance
+ */
+static bool FindInstanceCallback(const TCHAR *key, const void *value, void *data)
+{
+   return _tcscmp((const TCHAR *)data, key) != 0;  // return false if instance found - it will stop enumeration
+}
+
+/**
+ * Data for CreateInstanceDCI
+ */
+struct CreateInstanceDCIData
+{
+   DCItem *root;
+   Template *object;
+};
+
+/**
+ * Callback for creating instance DCIs
+ */
+static bool CreateInstanceDCI(const TCHAR *key, const void *value, void *data)
+{
+   Template *object = ((CreateInstanceDCIData *)data)->object;
+   DCItem *root = ((CreateInstanceDCIData *)data)->root;
+
+	DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): creating new DCI for instance \"%s\""),
+	          object->Name(), object->Id(), root->getName(), root->getId(), key);
+
+	DCItem *dci = new DCItem(root);
+   dci->setTemplateId(object->Id(), root->getId());
+	dci->setInstance((const TCHAR *)value);
+	dci->setInstanceDiscoveryMethod(IDM_NONE);
+	dci->setInstanceDiscoveryData(key);
+	dci->setInstanceFilter(NULL);
+   dci->expandInstance();
+	dci->changeBinding(CreateUniqueId(IDG_ITEM), object, FALSE);
+	object->addDCObject(dci, true);
+   return true;
+}
+
+/**
  * Update instance DCIs created from instance discovery DCI
  */
 void Node::updateInstances(DCItem *root, StringMap *instances)
@@ -2982,23 +3022,19 @@ void Node::updateInstances(DCItem *root, StringMap *instances)
 			 (object->getTemplateItemId() != root->getId()))
 			continue;
 
-		int j;
-		for(j = 0; j < instances->size(); j++)
-         if (!_tcscmp(((DCItem *)object)->getInstanceDiscoveryData(), instances->getKeyByIndex(j)))
-				break;
-
-		if (j < instances->size())
+      const TCHAR *dciInstance = ((DCItem *)object)->getInstanceDiscoveryData();
+      if (!instances->forEach(FindInstanceCallback, (void *)dciInstance))
 		{
 			// found, remove value from instances
 			DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
-			          m_szName, m_dwId, root->getName(), root->getId(), instances->getKeyByIndex(j));
-			instances->remove(instances->getKeyByIndex(j));
+			          m_szName, m_dwId, root->getName(), root->getId(), dciInstance);
+			instances->remove(dciInstance);
 		}
 		else
 		{
 			// not found, delete DCI
 			DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCI will be deleted"),
-			          m_szName, m_dwId, root->getName(), root->getId(), ((DCItem *)object)->getInstance());
+			          m_szName, m_dwId, root->getName(), root->getId(), dciInstance);
 			deleteList.add(object->getId());
 		}
    }
@@ -3007,21 +3043,10 @@ void Node::updateInstances(DCItem *root, StringMap *instances)
 		deleteDCObject(deleteList.get(i), false);
 
 	// Create new instances
-	for(int i = 0; i < instances->size(); i++)
-	{
-		DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): creating new DCI for instance \"%s\""),
-		          m_szName, m_dwId, root->getName(), root->getId(), instances->getKeyByIndex(i));
-
-		DCItem *dci = new DCItem(root);
-		dci->setTemplateId(m_dwId, root->getId());
-		dci->setInstance(instances->getValueByIndex(i));
-		dci->setInstanceDiscoveryMethod(IDM_NONE);
-		dci->setInstanceDiscoveryData(instances->getKeyByIndex(i));
-		dci->setInstanceFilter(NULL);
-      dci->expandInstance();
-		dci->changeBinding(CreateUniqueId(IDG_ITEM), this, FALSE);
-		addDCObject(dci, true);
-	}
+   CreateInstanceDCIData data;
+   data.root = root;
+   data.object = this;
+   instances->forEach(CreateInstanceDCI, &data);
 
    unlockDciAccess();
 }

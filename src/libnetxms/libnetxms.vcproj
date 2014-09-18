@@ -620,6 +620,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\strmap-internal.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\include\unicode.h"
 				>
 			</File>

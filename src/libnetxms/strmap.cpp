@@ -22,21 +22,23 @@
 **/
 
 #include "libnetxms.h"
+#include "strmap-internal.h"
 
 /**
  * Copy constructor
  */
 StringMap::StringMap(const StringMap &src) : StringMapBase(true)
 {
-	m_size = src.m_size;
+	m_size = 0;
 	m_objectOwner = src.m_objectOwner;
-	m_keys = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
-	m_values = (void **)malloc(sizeof(void *) * m_size);
-	for(int i = 0; i < m_size; i++)
-	{
-		m_keys[i] = _tcsdup(src.m_keys[i]);
-		m_values[i] = _tcsdup((TCHAR *)src.m_values[i]);
-	}
+   m_ignoreCase = src.m_ignoreCase;
+   m_objectDestructor = src.m_objectDestructor;
+
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, src.m_data, entry, tmp)
+   {
+      setObject(_tcsdup(entry->key), _tcsdup((TCHAR *)entry->value), true);
+   }
 }
 
 /**
@@ -53,14 +55,15 @@ StringMap::~StringMap()
 StringMap& StringMap::operator =(const StringMap &src)
 {
 	clear();
-	m_size = src.m_size;
-	m_keys = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
-	m_values = (void **)malloc(sizeof(void *) * m_size);
-	for(int i = 0; i < m_size; i++)
-	{
-		m_keys[i] = _tcsdup(src.m_keys[i]);
-		m_values[i] = _tcsdup((TCHAR *)src.m_values[i]);
-	}
+	m_objectOwner = src.m_objectOwner;
+   m_ignoreCase = src.m_ignoreCase;
+   m_objectDestructor = src.m_objectDestructor;
+
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, src.m_data, entry, tmp)
+   {
+      setObject(_tcsdup(entry->key), _tcsdup((TCHAR *)entry->value), true);
+   }
 	return *this;
 }
 
@@ -69,8 +72,11 @@ StringMap& StringMap::operator =(const StringMap &src)
  */
 void StringMap::addAll(StringMap *src)
 {
-   for(int i = 0; i < src->m_size; i++)
-      set(src->m_keys[i], (TCHAR *)src->m_values[i]);
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, src->m_data, entry, tmp)
+   {
+      setObject(_tcsdup(entry->key), _tcsdup((TCHAR *)entry->value), true);
+   }
 }
 
 /**
@@ -108,4 +114,19 @@ bool StringMap::getBoolean(const TCHAR *key, bool defaultValue)
 	if (!_tcsicmp(value, _T("true")))
 		return true;
 	return (_tcstoul(value, NULL, 0) != 0) ? true : false;
+}
+
+/**
+ * Fill NXCP message with map data
+ */
+void StringMap::fillMessage(CSCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId)
+{
+   msg->SetVariable(sizeFieldId, (UINT32)m_size);
+   UINT32 id = baseFieldId;
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      msg->SetVariable(id++, entry->key);
+      msg->SetVariable(id++, (TCHAR *)entry->value);
+   }
 }

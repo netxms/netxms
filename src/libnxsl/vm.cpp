@@ -130,9 +130,9 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env)
    m_errorCode = 0;
    m_errorLine = 0;
    m_errorText = NULL;
-   m_pConstants = new NXSL_VariableSystem(true);
-   m_pGlobals = new NXSL_VariableSystem(false);
-   m_pLocals = NULL;
+   m_constants = new NXSL_VariableSystem(true);
+   m_globals = new NXSL_VariableSystem(false);
+   m_locals = NULL;
    m_functions = NULL;
    m_modules = new ObjectArray<NXSL_Module>(4, 4, true);
    m_dwSubLevel = 0;    // Level of current subroutine
@@ -152,9 +152,9 @@ NXSL_VM::~NXSL_VM()
    delete m_codeStack;
    delete m_catchStack;
 
-   delete m_pConstants;
-   delete m_pGlobals;
-   delete m_pLocals;
+   delete m_constants;
+   delete m_globals;
+   delete m_locals;
 
    delete m_env;
    delete m_pRetValue;
@@ -163,6 +163,15 @@ NXSL_VM::~NXSL_VM()
    delete m_modules;
 
    safe_free(m_errorText);
+}
+
+/**
+ * Constant creation callback
+ */
+bool NXSL_VM::createConstantsCallback(const TCHAR *key, const void *value, void *data)
+{
+   ((NXSL_VM *)data)->m_constants->create(key, new NXSL_Value((NXSL_Value *)value));
+   return true;
 }
 
 /**
@@ -189,11 +198,8 @@ bool NXSL_VM::load(NXSL_Program *program)
       m_functions->add(new NXSL_Function(program->m_functions->get(i)));
 
    // Set constants
-   m_pConstants->clear();
-   for(i = 0; i < (int)program->m_constants->size(); i++)
-   {
-      m_pConstants->create(program->m_constants->getKeyByIndex(i), new NXSL_Value(program->m_constants->getValueByIndex(i)));
-   }
+   m_constants->clear();
+   program->m_constants->forEach(createConstantsCallback, this);
 
    // Load modules
    m_modules = new ObjectArray<NXSL_Module>(4, 4, true);
@@ -247,19 +253,19 @@ bool NXSL_VM::run(ObjectArray<NXSL_Value> *args,
    m_catchStack = new NXSL_Stack;
 
    // Create local variable system for main() and bind arguments
-   m_pLocals = (pUserLocals == NULL) ? new NXSL_VariableSystem : pUserLocals;
+   m_locals = (pUserLocals == NULL) ? new NXSL_VariableSystem : pUserLocals;
    for(int i = 0; i < args->size(); i++)
    {
       _sntprintf(szBuffer, 32, _T("$%d"), i + 1);
-      m_pLocals->create(szBuffer, args->get(i));
+      m_locals->create(szBuffer, args->get(i));
    }
 
    // Preserve original global variables and constants
-   pSavedGlobals = new NXSL_VariableSystem(m_pGlobals);
+   pSavedGlobals = new NXSL_VariableSystem(m_globals);
 	if (pConstants != NULL)
 	{
-		pSavedConstants = new NXSL_VariableSystem(m_pConstants);
-		m_pConstants->merge(pConstants);
+		pSavedConstants = new NXSL_VariableSystem(m_constants);
+		m_constants->merge(pConstants);
 	}
 
    // Locate entry point and run
@@ -307,16 +313,16 @@ resume:
 
    // Restore global variables
    if (ppGlobals == NULL)
-	   delete m_pGlobals;
+	   delete m_globals;
 	else
-		*ppGlobals = m_pGlobals;
-   m_pGlobals = pSavedGlobals;
+		*ppGlobals = m_globals;
+   m_globals = pSavedGlobals;
 
 	// Restore constants
 	if (pSavedConstants != NULL)
 	{
-		delete m_pConstants;
-		m_pConstants = pSavedConstants;
+		delete m_constants;
+		m_constants = pSavedConstants;
 	}
 
    // Cleanup
@@ -334,7 +340,7 @@ resume:
    while((p = (NXSL_CatchPoint *)m_catchStack->pop()) != NULL)
       delete p;
    
-   delete_and_null(m_pLocals);
+   delete_and_null(m_locals);
    delete_and_null(m_dataStack);
    delete_and_null(m_codeStack);
    delete_and_null(m_catchStack);
@@ -354,8 +360,8 @@ bool NXSL_VM::unwind()
    while(m_dwSubLevel > p->subLevel)
    {
       m_dwSubLevel--;
-      delete m_pLocals;
-      m_pLocals = (NXSL_VariableSystem *)m_codeStack->pop();
+      delete m_locals;
+      m_locals = (NXSL_VariableSystem *)m_codeStack->pop();
       m_codeStack->pop();
    }
 
@@ -374,9 +380,9 @@ void NXSL_VM::setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue)
 {
    NXSL_Variable *pVar;
 
-	pVar = m_pGlobals->find(pszName);
+	pVar = m_globals->find(pszName);
    if (pVar == NULL)
-		m_pGlobals->create(pszName, pValue);
+		m_globals->create(pszName, pValue);
 	else
 		pVar->setValue(pValue);
 }
@@ -388,13 +394,13 @@ NXSL_Variable *NXSL_VM::findVariable(const TCHAR *pszName)
 {
    NXSL_Variable *pVar;
 
-   pVar = m_pConstants->find(pszName);
+   pVar = m_constants->find(pszName);
    if (pVar == NULL)
    {
-      pVar = m_pGlobals->find(pszName);
+      pVar = m_globals->find(pszName);
       if (pVar == NULL)
       {
-         pVar = m_pLocals->find(pszName);
+         pVar = m_locals->find(pszName);
       }
    }
    return pVar;
@@ -408,7 +414,7 @@ NXSL_Variable *NXSL_VM::findOrCreateVariable(const TCHAR *pszName)
    NXSL_Variable *pVar = findVariable(pszName);
    if (pVar == NULL)
    {
-      pVar = m_pLocals->create(pszName);
+      pVar = m_locals->create(pszName);
    }
    return pVar;
 }
@@ -420,13 +426,13 @@ NXSL_Variable *NXSL_VM::createVariable(const TCHAR *pszName)
 {
    NXSL_Variable *pVar = NULL;
 
-   if (m_pConstants->find(pszName) == NULL)
+   if (m_constants->find(pszName) == NULL)
    {
-      if (m_pGlobals->find(pszName) == NULL)
+      if (m_globals->find(pszName) == NULL)
       {
-         if (m_pLocals->find(pszName) == NULL)
+         if (m_locals->find(pszName) == NULL)
          {
-            pVar = m_pLocals->create(pszName);
+            pVar = m_locals->create(pszName);
          }
       }
    }
@@ -512,7 +518,7 @@ void NXSL_VM::execute()
 			break;
 		case OPCODE_GLOBAL_ARRAY:
 			// Check if variable already exist
-			pVar = m_pGlobals->find(cp->m_operand.m_pszString);
+			pVar = m_globals->find(cp->m_operand.m_pszString);
 			if (pVar == NULL)
 			{
 				// raise error if variable with given name already exist and is not global
@@ -522,7 +528,7 @@ void NXSL_VM::execute()
 				}
 				else
 				{
-					m_pGlobals->create(cp->m_operand.m_pszString, new NXSL_Value(new NXSL_Array));
+					m_globals->create(cp->m_operand.m_pszString, new NXSL_Value(new NXSL_Array));
 				}
 			}
 			else
@@ -535,7 +541,7 @@ void NXSL_VM::execute()
 			break;
 		case OPCODE_GLOBAL:
 			// Check if variable already exist
-			pVar = m_pGlobals->find(cp->m_operand.m_pszString);
+			pVar = m_globals->find(cp->m_operand.m_pszString);
 			if (pVar == NULL)
 			{
 				// raise error if variable with given name already exist and is not global
@@ -550,7 +556,7 @@ void NXSL_VM::execute()
 						pValue = (NXSL_Value *)m_dataStack->pop();
 						if (pValue != NULL)
 						{
-							m_pGlobals->create(cp->m_operand.m_pszString, pValue);
+							m_globals->create(cp->m_operand.m_pszString, pValue);
 						}
 						else
 						{
@@ -559,7 +565,7 @@ void NXSL_VM::execute()
 					}
 					else
 					{
-						m_pGlobals->create(cp->m_operand.m_pszString, new NXSL_Value);
+						m_globals->create(cp->m_operand.m_pszString, new NXSL_Value);
 					}
 				}
 			}
@@ -915,8 +921,8 @@ void NXSL_VM::execute()
          if (m_dwSubLevel > 0)
          {
             m_dwSubLevel--;
-            delete m_pLocals;
-            m_pLocals = (NXSL_VariableSystem *)m_codeStack->pop();
+            delete m_locals;
+            m_locals = (NXSL_VariableSystem *)m_codeStack->pop();
             dwNext = CAST_FROM_POINTER(m_codeStack->pop(), UINT32);
          }
          else
@@ -927,11 +933,11 @@ void NXSL_VM::execute()
          break;
       case OPCODE_BIND:
          _sntprintf(szBuffer, 256, _T("$%d"), m_nBindPos++);
-         pVar = m_pLocals->find(szBuffer);
+         pVar = m_locals->find(szBuffer);
          pValue = (pVar != NULL) ? new NXSL_Value(pVar->getValue()) : new NXSL_Value;
-         pVar = m_pLocals->find(cp->m_operand.m_pszString);
+         pVar = m_locals->find(cp->m_operand.m_pszString);
          if (pVar == NULL)
-            m_pLocals->create(cp->m_operand.m_pszString, pValue);
+            m_locals->create(cp->m_operand.m_pszString, pValue);
          else
             pVar->setValue(pValue);
          break;
@@ -1210,7 +1216,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
 		   pVal2 = (NXSL_Value *)m_dataStack->peek();
          break;
       case OPCODE_CASE_CONST:
-         var = m_pConstants->find(m_instructionSet->get(m_cp)->m_operand.m_pszString);
+         var = m_constants->find(m_instructionSet->get(m_cp)->m_operand.m_pszString);
          if (var != NULL)
          {
             pVal1 = var->getValue();
@@ -1554,7 +1560,7 @@ void NXSL_VM::loadModule(NXSL_Program *module, const TCHAR *name)
    }
 
    // Add constants from module
-   m_pConstants->addAll(module->m_constants);
+   m_constants->addAll(module->m_constants);
 
    // Register module as loaded
    NXSL_Module *m = new NXSL_Module;
@@ -1579,8 +1585,8 @@ void NXSL_VM::callFunction(int nArgCount)
    {
       m_dwSubLevel++;
       m_codeStack->push(CAST_TO_POINTER(m_cp + 1, void *));
-      m_codeStack->push(m_pLocals);
-      m_pLocals = new NXSL_VariableSystem;
+      m_codeStack->push(m_locals);
+      m_locals = new NXSL_VariableSystem;
       m_nBindPos = 1;
 
       // Bind arguments
@@ -1590,13 +1596,13 @@ void NXSL_VM::callFunction(int nArgCount)
          if (pValue != NULL)
          {
             _sntprintf(szBuffer, 256, _T("$%d"), i);
-            m_pLocals->create(szBuffer, pValue);
+            m_locals->create(szBuffer, pValue);
 				if (pValue->getName() != NULL)
 				{
 					// Named parameter
 					_sntprintf(szBuffer, 255, _T("$%s"), pValue->getName());
 					szBuffer[255] = 0;
-	            m_pLocals->create(szBuffer, new NXSL_Value(pValue));
+	            m_locals->create(szBuffer, new NXSL_Value(pValue));
 				}
          }
          else
@@ -1650,9 +1656,9 @@ NXSL_Value *NXSL_VM::matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL b
          for(i = 1; (i < 256) && (fields[i].rm_so != -1); i++)
          {
             _sntprintf(szName, 16, _T("$%d"), i);
-            pVar = m_pLocals->find(szName);
+            pVar = m_locals->find(szName);
             if (pVar == NULL)
-               m_pLocals->create(szName, new NXSL_Value(pValue->getValueAsCString() + fields[i].rm_so, fields[i].rm_eo - fields[i].rm_so));
+               m_locals->create(szName, new NXSL_Value(pValue->getValueAsCString() + fields[i].rm_so, fields[i].rm_eo - fields[i].rm_so));
             else
                pVar->setValue(new NXSL_Value(pValue->getValueAsCString() + fields[i].rm_so, fields[i].rm_eo - fields[i].rm_so));
          }

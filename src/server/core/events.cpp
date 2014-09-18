@@ -940,6 +940,7 @@ BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, con
  */
 BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters)
 {
+   /*
    int count = parameters->size();
    if (count > 1023)
       count = 1023;
@@ -956,8 +957,8 @@ BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, Str
       args[i] = parameters->getValueByIndex(i);
    }
 
-//   BOOL bResult = RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, names, args);
-//   return bResult;
+   return RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, names, args);
+   */
    return FALSE;
 }
 

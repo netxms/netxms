@@ -173,7 +173,7 @@ static pthread_t m_signalHandlerThread;
  * @param seconds seconds to sleep
  * @return true if server is shutting down
  */
-BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int seconds)
+bool NXCORE_EXPORTABLE SleepAndCheckForShutdown(int seconds)
 {
 	return ConditionWait(m_condShutdown, seconds * 1000);
 }

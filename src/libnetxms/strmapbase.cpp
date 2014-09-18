@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -17,11 +17,12 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: strmap.cpp
+** File: strmapbase.cpp
 **
 **/
 
 #include "libnetxms.h"
+#include "strmap-internal.h"
 
 /**
  * Standard object destructor
@@ -37,8 +38,7 @@ static void ObjectDestructor(void *object)
 StringMapBase::StringMapBase(bool objectOwner)
 {
 	m_size = 0;
-	m_keys = NULL;
-	m_values = NULL;
+	m_data = NULL;
 	m_objectOwner = objectOwner;
    m_ignoreCase = true;
 	m_objectDestructor = ObjectDestructor;
@@ -57,31 +57,39 @@ StringMapBase::~StringMapBase()
  */
 void StringMapBase::clear()
 {
-	for(int i = 0; i < m_size; i++)
-	{
-		safe_free(m_keys[i]);
-		if (m_objectOwner)
-			destroyObject(m_values[i]);
-	}
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      HASH_DEL(m_data, entry);
+      free(entry->key);
+      destroyObject(entry->value);
+      free(entry);
+   }
 	m_size = 0;
-	safe_free_and_null(m_keys);
-	safe_free_and_null(m_values);
 }
 
 /**
  * Find entry index by key
  */
-UINT32 StringMapBase::find(const TCHAR *key)
+StringMapEntry *StringMapBase::find(const TCHAR *key)
 {
 	if (key == NULL)
-		return INVALID_INDEX;
+		return NULL;
 
-	for(int i = 0; i < m_size; i++)
-	{
-      if (m_ignoreCase ? !_tcsicmp(key, m_keys[i]) : !_tcscmp(key, m_keys[i]))
-			return i;
-	}
-	return INVALID_INDEX;
+   StringMapEntry *entry;
+   int keyLen = (int)(_tcslen(key) * sizeof(TCHAR));
+   if (m_ignoreCase)
+   {
+      TCHAR *ukey = (TCHAR *)alloca(keyLen + sizeof(TCHAR));
+      memcpy(ukey, key, keyLen + sizeof(TCHAR));
+      _tcsupr(ukey);
+      HASH_FIND(hh, m_data, ukey, keyLen, entry);
+   }
+   else
+   {
+      HASH_FIND(hh, m_data, key, keyLen, entry);
+   }
+   return entry;
 }
 
 /**
@@ -92,21 +100,24 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
    if (key == NULL)
       return;
 
-	UINT32 index = find(key);
-	if (index != INVALID_INDEX)
+	StringMapEntry *entry = find(key);
+	if (entry != NULL)
 	{
 		if (keyPreAllocated)
 			free(key);
 		if (m_objectOwner)
-			destroyObject(m_values[index]);
-		m_values[index] = value;
+         destroyObject(entry->value);
+      entry->value = value;
 	}
 	else
 	{
-		m_keys = (TCHAR **)realloc(m_keys, (m_size + 1) * sizeof(TCHAR *));
-		m_values = (void **)realloc(m_values, (m_size + 1) * sizeof(void *));
-		m_keys[m_size] = keyPreAllocated ? key : _tcsdup(key);
-		m_values[m_size] = value;
+      entry = (StringMapEntry *)malloc(sizeof(StringMapEntry));
+      entry->key = keyPreAllocated ? key : _tcsdup(key);
+      if (m_ignoreCase)
+         _tcsupr(entry->key);
+      int keyLen = (int)(_tcslen(key) * sizeof(TCHAR));
+      entry->value = value;
+      HASH_ADD_KEYPTR(hh, m_data, entry->key, keyLen, entry);
 		m_size++;
 	}
 }
@@ -116,10 +127,8 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
  */
 void *StringMapBase::getObject(const TCHAR *key)
 {
-	UINT32 index;
-
-	index = find(key);
-	return (index != INVALID_INDEX) ? m_values[index] : NULL;
+	StringMapEntry *entry = find(key);
+   return (entry != NULL) ? entry->value : NULL;
 }
 
 /**
@@ -127,16 +136,32 @@ void *StringMapBase::getObject(const TCHAR *key)
  */
 void StringMapBase::remove(const TCHAR *key)
 {
-	UINT32 index;
-
-	index = find(key);
-	if (index != INVALID_INDEX)
-	{
-		safe_free(m_keys[index]);
+   StringMapEntry *entry = find(key);
+   if (entry != NULL)
+   {
+      free(entry->key);
 		if (m_objectOwner)
-			destroyObject(m_values[index]);
-		m_size--;
-		memmove(&m_keys[index], &m_keys[index + 1], sizeof(TCHAR *) * (m_size - index));
-		memmove(&m_values[index], &m_values[index + 1], sizeof(void *) * (m_size - index));
-	}
+         destroyObject(entry->value);
+      free(entry);
+      m_size--;
+   }
+}
+
+/**
+ * Enumerate entries
+ * Returns true if whole map was enumerated and false if enumeration was aborted by callback.
+ */
+bool StringMapBase::forEach(bool (*cb)(const TCHAR *, const void *, void *), void *userData)
+{
+   bool result = true;
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (!cb(entry->key, entry->value, userData))
+      {
+         result = false;
+         break;
+      }
+   }
+   return result;
 }

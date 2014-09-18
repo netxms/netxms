@@ -341,14 +341,7 @@ static BOOL Send()
 	CSCPMessage msg;
 	msg.SetCode(CMD_PUSH_DCI_DATA);
    msg.SetVariable(VID_OBJECT_ID, optObjectId);
-   msg.SetVariable(VID_NUM_ITEMS, s_data->size());
-	for(int i = 0, varId = VID_PUSH_DCI_DATA_BASE; i < s_data->size(); i++)
-	{
-		msg.SetVariable(varId++, s_data->getKeyByIndex(i));
-		msg.SetVariable(varId++, s_data->getValueByIndex(i));
-		if (optVerbose > 2)
-			_tprintf(_T("Record #%d: \"%s\" = \"%s\"\n"), (int)i + 1, s_data->getKeyByIndex(i), s_data->getValueByIndex(i));
-	}
+   s_data->fillMessage(&msg, VID_NUM_ITEMS, VID_PUSH_DCI_DATA_BASE);
 
 	// Send response to pipe
 	CSCP_MESSAGE *rawMsg = msg.createMessage();

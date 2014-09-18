@@ -1013,12 +1013,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDAT
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_CUSTOM_ATTRS)
    {
-      msg.SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, pUpdate->pCustomAttrs->size());
-      for(i = 0, dwId1 = VID_CUSTOM_ATTRIBUTES_BASE; i < pUpdate->pCustomAttrs->size(); i++)
-      {
-         msg.SetVariable(dwId1++, pUpdate->pCustomAttrs->getKeyByIndex(i));
-         msg.SetVariable(dwId1++, pUpdate->pCustomAttrs->getValueByIndex(i));
-      }
+      pUpdate->pCustomAttrs->fillMessage(&msg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_AUTOBIND)
    {
