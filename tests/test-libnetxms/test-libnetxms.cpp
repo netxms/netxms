@@ -126,6 +126,53 @@ static void TestStringMap()
    m->clear();
    AssertEquals(m->size(), 0);
    EndTest(GetCurrentTimeMs() - start);
+
+   delete m;
+}
+
+/**
+ * Test string set
+ */
+static void TestStringSet()
+{
+   StringSet *s = new StringSet();
+
+   StartTest(_T("String set - insert"));
+   INT64 start = GetCurrentTimeMs();
+   for(int i = 0; i < 10000; i++)
+   {
+      TCHAR key[64];
+      _sntprintf(key, 64, _T("key-%d lorem ipsum"), i);
+      s->add(key);
+   }
+   AssertEquals(s->size(), 10000);
+   AssertTrue(s->contains(_T("key-42 lorem ipsum")));
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("String set - replace"));
+   start = GetCurrentTimeMs();
+   for(int i = 0; i < 10000; i++)
+   {
+      TCHAR key[64];
+      _sntprintf(key, 64, _T("key-%d lorem ipsum"), i);
+      s->add(key);
+   }
+   AssertEquals(s->size(), 10000);
+   AssertTrue(s->contains(_T("key-42 lorem ipsum")));
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("String set - contains"));
+   start = GetCurrentTimeMs();
+   AssertTrue(s->contains(_T("key-888 lorem ipsum")));
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("String set - clear"));
+   start = GetCurrentTimeMs();
+   s->clear();
+   AssertEquals(s->size(), 0);
+   EndTest(GetCurrentTimeMs() - start);
+
+   delete s;
 }
 
 /**
@@ -135,5 +182,6 @@ int main(int argc, char *argv)
 {
    TestStringConversion();
    TestStringMap();
+   TestStringSet();
    return 0;
 }

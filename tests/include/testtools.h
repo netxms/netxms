@@ -49,6 +49,7 @@ inline void StartTest(const TCHAR *name)
       filler[0] = 0;
    }
    _tprintf(_T("%s %s "), name, filler);
+   fflush(stdout);
 }
 
 /**
