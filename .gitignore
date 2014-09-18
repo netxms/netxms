@@ -196,6 +196,7 @@ target
 /src/tools/nxencpasswd/nxencpasswd
 /stamp-h1
 /status
+/tests/test-libnetxms/test-libnetxms
 /webui/eclipse
 /x64
 

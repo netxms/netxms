@@ -24,6 +24,10 @@
 #include "libnetxms.h"
 #include "strmap-internal.h"
 
+#if HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
+
 /**
  * Standard object destructor
  */
