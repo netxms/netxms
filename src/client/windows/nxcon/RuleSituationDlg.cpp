@@ -71,11 +71,14 @@ BOOL CRuleSituationDlg::OnInitDialog()
 	SetDlgItemText(IDC_EDIT_INSTANCE, m_strInstance);
 
 	// Attributes
-	for(int i = 0; i < m_attrList.size(); i++)
+   StructArray<KeyValuePair> *a = m_attrList.toArray();
+	for(int i = 0; i < a->size(); i++)
 	{
-		item = m_wndListCtrl.InsertItem(i, m_attrList.getKeyByIndex(i));
-		m_wndListCtrl.SetItemText(item, 1, m_attrList.getValueByIndex(i));
+      KeyValuePair *p = a->get(i);
+		item = m_wndListCtrl.InsertItem(i, p->key);
+		m_wndListCtrl.SetItemText(item, 1, (const TCHAR *)p->value);
 	}
+   delete a;
 
 	SendDlgItemMessage(IDC_CHECK_ENABLE, BM_SETCHECK, (m_dwSituation != 0) ? BST_CHECKED : BST_UNCHECKED, 0);
 	EnableControls(m_dwSituation != 0);

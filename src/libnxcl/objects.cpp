@@ -1530,11 +1530,21 @@ static void WriteStringToCacheFile(FILE *file, const TCHAR *str, bool writeNull)
 	}
 }
 
+/**
+ * Callback for writing object;s custom attributes to file
+ */
+static bool CacheWriteCallback(const TCHAR *key, const void *value, void *data)
+{
+	WriteStringToCacheFile((FILE *)data, key, true);
+	WriteStringToCacheFile((FILE *)data, (const TCHAR *)value, true);
+   return true;
+}
+
 UINT32 LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *pszFile)
 {
    FILE *hFile;
    OBJECT_CACHE_HEADER hdr;
-   UINT32 i, j, dwResult, dwNumObjects, dwSize;
+   UINT32 i, dwResult, dwNumObjects, dwSize;
    INDEX *pList;
 
    hFile = _tfopen(pszFile, _T("wb"));
@@ -1570,11 +1580,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCSaveObjectCache(NXC_SESSION hSession, const TCHAR *
 			// Custom attributes
 			dwSize = pList[i].pObject->pCustomAttrs->size();
          fwrite(&dwSize, 1, sizeof(UINT32), hFile);
-			for(j = 0; j < pList[i].pObject->pCustomAttrs->size(); j++)
-			{
-				WriteStringToCacheFile(hFile, pList[i].pObject->pCustomAttrs->getKeyByIndex(j), true);
-				WriteStringToCacheFile(hFile, pList[i].pObject->pCustomAttrs->getValueByIndex(j), true);
-			}
+         pList[i].pObject->pCustomAttrs->forEach(CacheWriteCallback, hFile);
 
          switch(pList[i].pObject->iClass)
          {
