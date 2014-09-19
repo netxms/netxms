@@ -4,13 +4,10 @@
 package org.netxms.ui.android.main.adapters;
 
 import java.util.ArrayList;
-
-import org.netxms.client.constants.Severity;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.main.views.ActivityListElement;
-
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
@@ -194,17 +191,17 @@ public class ActivityListAdapter extends BaseAdapter
 						{
 							switch (obj.getStatus())
 							{
-								case Severity.WARNING:
-								case Severity.MINOR:
-								case Severity.MAJOR:
-								case Severity.CRITICAL:
-									infoLayer = parent.getResources().getDrawable(statusImageId[obj.getStatus()]);
+								case WARNING:
+								case MINOR:
+								case MAJOR:
+								case CRITICAL:
+									infoLayer = parent.getResources().getDrawable(statusImageId[obj.getStatus().getValue()]);
 									break;
-								case Severity.NORMAL:
-								case Severity.UNKNOWN:
-								case Severity.UNMANAGED:
-								case Severity.DISABLED:
-								case Severity.TESTING:
+								case NORMAL:
+								case UNKNOWN:
+								case UNMANAGED:
+								case DISABLED:
+								case TESTING:
 								default:
 									break;
 							}

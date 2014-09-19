@@ -4,11 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.android.R;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -177,25 +175,25 @@ public class InterfacesAdapter extends BaseExpandableListAdapter
 		return true;
 	}
 
-	private int getInterfaceStatusIcon(int status)
+	private int getInterfaceStatusIcon(ObjectStatus status)
 	{
 		switch (status)
 		{
-			case Severity.NORMAL:
+			case NORMAL:
 				return R.drawable.status_normal;
-			case Severity.WARNING:
+			case WARNING:
 				return R.drawable.status_warning;
-			case Severity.MINOR:
+			case MINOR:
 				return R.drawable.status_minor;
-			case Severity.MAJOR:
+			case MAJOR:
 				return R.drawable.status_major;
-			case Severity.CRITICAL:
+			case CRITICAL:
 				return R.drawable.status_critical;
-			case Severity.UNKNOWN:
+			case UNKNOWN:
 				return R.drawable.status_unknown;
-			case Severity.UNMANAGED:
+			case UNMANAGED:
 				return R.drawable.status_unmanaged;
-			case Severity.DISABLED:
+			case DISABLED:
 				return R.drawable.status_disabled;
 		}
 		return R.drawable.status_unknown;

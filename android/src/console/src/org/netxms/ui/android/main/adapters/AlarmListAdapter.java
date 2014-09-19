@@ -162,7 +162,7 @@ public class AlarmListAdapter extends BaseAdapter
 		int rc = 0;
 		if (alarm1 != null && alarm2 != null)
 		{
-			rc = alarm1.getCurrentSeverity() - alarm2.getCurrentSeverity();
+			rc = alarm1.getCurrentSeverity().compareTo(alarm2.getCurrentSeverity());
 			if (rc == 0)
 			{
 				rc = (int)(alarm1.getSourceObjectId() - alarm2.getSourceObjectId());
@@ -355,7 +355,7 @@ public class AlarmListAdapter extends BaseAdapter
 	{
 		final int[] severityImageId = { R.drawable.status_normal, R.drawable.status_warning,
 				R.drawable.status_minor, R.drawable.status_major, R.drawable.status_critical };
-		return severityImageId[alarm.getCurrentSeverity()];
+		return severityImageId[alarm.getCurrentSeverity().getValue()];
 
 	}
 	private int getAlarmIconState(Alarm alarm)

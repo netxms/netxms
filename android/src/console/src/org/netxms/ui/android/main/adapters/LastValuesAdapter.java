@@ -298,7 +298,7 @@ public class LastValuesAdapter extends BaseAdapter
 	 */
 	private int getThresholdIcon(Threshold t)
 	{
-		int s = t != null ? t.getCurrentSeverity() : 0;
+		int s = t != null ? t.getCurrentSeverity().getValue() : 0;
 		return severityImageId[s < severityImageId.length ? s : 0];
 	}
 
