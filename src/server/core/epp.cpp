@@ -438,7 +438,7 @@ bool EPRule::matchScript(Event *pEvent)
    }
    else
    {
-      nxlog_write(MSG_EPRULE_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE, "ds", m_dwId, m_pScript->getErrorText());
+      nxlog_write(MSG_EPRULE_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE, "ds", m_dwId + 1, m_pScript->getErrorText());
    }
    free(ppValueList);
    delete pGlobals;
