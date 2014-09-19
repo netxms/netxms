@@ -774,6 +774,7 @@ void DCObject::updateFromMessage(CSCPMessage *pMsg)
 	m_pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
 	m_snmpPort = pMsg->GetVariableShort(VID_SNMP_PORT);
    TCHAR *pszStr = pMsg->GetVariableStr(VID_TRANSFORMATION_SCRIPT);
+   safe_free_and_null(m_comments);
    m_comments = pMsg->GetVariableStr(VID_COMMENTS);
    setTransformationScript(pszStr);
    safe_free(pszStr);
