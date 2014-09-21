@@ -450,12 +450,10 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 
 					// Read process output
                DWORD size = GetFileSize(hOutput, NULL);
-    printf("SIZE=%d\n",size);
                char *buffer = (char *)malloc(size + 1);
 					ReadFile(hOutput, buffer, size, &size, NULL);
 					buffer[size] = 0;
 
-    printf("b: %s\n%d\n",buffer,size);
                char *line = strtok(buffer, "\n");
                while(line != NULL)
                {

@@ -18,7 +18,7 @@
 	- Fix aesthetic problems in expandable list (graphs and interfaces list)
 	- Integration of new support library
 	- Target to new API version (20)
-- Fixed issues: #51, #91, #359, #409, #532, #542, #571, #563, #593, #613, #617, #624, #626, #632, #635, #638, #639, #642
+- Fixed issues: #51, #91, #359, #409, #532, #542, #571, #563, #590, #593, #613, #617, #624, #626, #632, #635, #638, #639, #642
 
 
 *
