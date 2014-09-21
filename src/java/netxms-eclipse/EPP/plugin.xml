@@ -35,6 +35,10 @@
             id="org.netxms.ui.eclipse.epp.commands.open_situations_manager"
             name="%command.name.OpenSituations">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.epp.commands.show_rule_filter"
+            name="Show filter">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -71,6 +75,12 @@
             commandId="org.netxms.ui.eclipse.epp.commands.open_policy_editor"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="F4">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.epp.commands.show_rule_filter"
+            contextId="org.netxms.ui.eclipse.epp.context.PolicyEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
       </key>
    </extension>
    <extension
@@ -188,5 +198,13 @@
       <loginlistener
             class="org.netxms.ui.eclipse.epp.LoginListener">
       </loginlistener>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.epp.context.PolicyEditor"
+            name="Event Processing Policy Editor"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
 </plugin>

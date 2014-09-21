@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -757,8 +757,11 @@ public class RuleEditor extends Composite
 	public void setRuleNumber(int ruleNumber)
 	{
 		this.ruleNumber = ruleNumber;
-		ruleNumberLabel.setText(Integer.toString(ruleNumber));
-		leftPanel.layout();
+		if (!isDisposed())
+		{
+         ruleNumberLabel.setText(Integer.toString(ruleNumber));
+         leftPanel.layout();
+      }
 	}
 
 	/**

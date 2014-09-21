@@ -10,7 +10,8 @@
     - Fixed non-working ordering in event list in alarm details view
     - Fixed bug with LDAP user system rights
     - Added default search string for LDAP to select all objects: "(objectClass=*)"
-    - Added device geolocation tracking and display on map 
+    - Added device geolocation tracking and display on map
+    - Filter in event processing policy editor
 - Android console:
 	- Fix bug in notifying connection point not found
 	- Fix bug in computing interface expanded list size (removed hardcoded values)
