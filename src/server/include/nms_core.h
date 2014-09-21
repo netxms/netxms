@@ -357,9 +357,6 @@ public:
    MobileDeviceSession(SOCKET hSocket, struct sockaddr *addr);
    ~MobileDeviceSession();
 
-   void incRefCount() { m_dwRefCount++; }
-   void decRefCount() { if (m_dwRefCount > 0) m_dwRefCount--; }
-
    void run();
 
    void postMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }

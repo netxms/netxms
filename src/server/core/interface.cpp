@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <ieee8021x.h>
+
 #define PING_TIME_ON_TIMEOUT 10000
 
 /**
@@ -909,4 +910,17 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
          iface->Id(), iface->getIfIndex(), iface->Name(), iface->IpAddr(), iface->getMacAddr(),
          protocol);
    }
+}
+
+/**
+ * Set MAC address for interface
+ */
+void Interface::setMacAddr(const BYTE *pbNewMac) 
+{
+   LockData();
+   MacDbRemove(m_bMacAddr);
+   memcpy(m_bMacAddr, pbNewMac, MAC_ADDR_LENGTH);
+   MacDbAddInterface(this);
+   Modify(); 
+   UnlockData();
 }

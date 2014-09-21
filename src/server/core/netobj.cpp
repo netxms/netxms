@@ -575,7 +575,7 @@ void NetObj::deleteObject(NetObj *initiator)
    LockParentList(TRUE);
    for(UINT32 i = 0; i < m_dwParentCount; i++)
    {
-      // If parent is deletion initiator the this is object already
+      // If parent is deletion initiator then this object already
       // removed from parent's list
       if (m_pParentList[i] != initiator)
       {

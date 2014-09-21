@@ -677,7 +677,7 @@ public:
    QWORD getLastDownEventId() { return m_lastDownEventId; }
    void setLastDownEventId(QWORD id) { m_lastDownEventId = id; }
 
-   void setMacAddr(const BYTE *pbNewMac) { memcpy(m_bMacAddr, pbNewMac, MAC_ADDR_LENGTH); Modify(); }
+   void setMacAddr(const BYTE *pbNewMac);
    void setIpAddr(UINT32 dwNewAddr);
    void setIpNetMask(UINT32 dwNewMask);
    void setBridgePortNumber(UINT32 bpn) { m_bridgePortNumber = bpn; Modify(); }
