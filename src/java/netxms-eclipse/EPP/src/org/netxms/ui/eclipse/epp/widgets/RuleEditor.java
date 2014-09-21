@@ -18,7 +18,11 @@
  */
 package org.netxms.ui.eclipse.epp.widgets;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -280,9 +284,30 @@ public class RuleEditor extends Composite
 	 */
 	private void createHeader()
 	{
+	   final MouseListener headerMouseListener = new MouseListener() {
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+            if (e.button == 1)
+               setCollapsed(!isCollapsed(), true);
+         }
+
+         @Override
+         public void mouseDown(MouseEvent e)
+         {
+            ruleMouseListener.mouseDown(e);
+         }
+
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+            ruleMouseListener.mouseUp(e);
+         }
+      };
+	   
 		header = new Composite(this, SWT.NONE);
 		header.setBackground(SharedColors.getColor(rule.isDisabled() ? SharedColors.RULE_EDITOR_DISABLED_TITLE_BACKGROUND : SharedColors.RULE_EDITOR_NORMAL_TITLE_BACKGROUND, getDisplay()));
-		header.addMouseListener(ruleMouseListener);
+		header.addMouseListener(headerMouseListener);
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
@@ -305,26 +330,7 @@ public class RuleEditor extends Composite
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		headerLabel.setLayoutData(gd);
-		headerLabel.addMouseListener(new MouseListener() {
-			@Override
-			public void mouseDoubleClick(MouseEvent e)
-			{
-				if (e.button == 1)
-					setCollapsed(!isCollapsed(), true);
-			}
-
-			@Override
-			public void mouseDown(MouseEvent e)
-			{
-				ruleMouseListener.mouseDown(e);
-			}
-
-			@Override
-			public void mouseUp(MouseEvent e)
-			{
-				ruleMouseListener.mouseUp(e);
-			}
-		});
+		headerLabel.addMouseListener(headerMouseListener);
 		
 		editButton = new Label(header, SWT.NONE);
 		editButton.setBackground(SharedColors.getColor(rule.isDisabled() ? SharedColors.RULE_EDITOR_DISABLED_TITLE_BACKGROUND : SharedColors.RULE_EDITOR_NORMAL_TITLE_BACKGROUND, getDisplay()));
@@ -482,23 +488,33 @@ public class RuleEditor extends Composite
 		{
 			final MouseListener listener = createMouseListener("org.netxms.ui.eclipse.epp.propertypages.RuleEvents#10"); //$NON-NLS-1$
 			addConditionGroupLabel(clientArea, Messages.get().RuleEditor_EventIs, needAnd, rule.isEventsInverted(), listener);
-			
-			for(Long code : rule.getEvents())
+
+			List<EventTemplate> sortedEvents = new ArrayList<EventTemplate>(rule.getEvents().size());
+         for(Long code : rule.getEvents())
+         {
+            EventTemplate event = session.findEventTemplateByCode(code);
+            if (event == null)
+            {
+               event = new EventTemplate(code);
+               event.setSeverity(Severity.UNKNOWN);
+               event.setName("<" + code.toString() + ">");
+            }
+            sortedEvents.add(event);
+         }
+         Collections.sort(sortedEvents, new Comparator<EventTemplate>() {
+            @Override
+            public int compare(EventTemplate t1, EventTemplate t2)
+            {
+               return t1.getName().compareToIgnoreCase(t2.getName());
+            }
+         });
+         
+			for(EventTemplate e : sortedEvents)
 			{
 				CLabel clabel = createCLabel(clientArea, 2, false);
 				clabel.addMouseListener(listener);
-				
-				EventTemplate event = session.findEventTemplateByCode(code);
-				if (event != null)
-				{
-					clabel.setText(event.getName());
-					clabel.setImage(StatusDisplayInfo.getStatusImage(event.getSeverity()));
-				}
-				else
-				{
-					clabel.setText("<" + code.toString() + ">"); //$NON-NLS-1$ //$NON-NLS-2$
-					clabel.setImage(StatusDisplayInfo.getStatusImage(Severity.UNKNOWN));
-				}
+				clabel.setText(e.getName());
+				clabel.setImage(StatusDisplayInfo.getStatusImage(e.getSeverity()));
 			}
 			needAnd = true;
 		}
