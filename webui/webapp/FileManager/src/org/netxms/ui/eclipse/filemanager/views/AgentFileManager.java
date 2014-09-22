@@ -696,7 +696,7 @@ public class AgentFileManager extends ViewPart
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             final AgentFile file = session.downloadFileFromAgent(objectId, sf.getFullName(), 0, false);
-            DownloadServiceHandler.addDownload(file.getFile().getName(), sf.getName(), file.getFile(), "application/octetstream");
+            DownloadServiceHandler.addDownload(file.getFile().getName(), sf.getName(), file.getFile(), "application/octet-stream");
             runInUIThread(new Runnable() {
                @Override
                public void run()
