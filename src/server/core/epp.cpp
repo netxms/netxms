@@ -202,8 +202,7 @@ EPRule::EPRule(CSCPMessage *pMsg)
       }
       else
       {
-         nxlog_write(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
-                  "ds", m_dwId, szError);
+         nxlog_write(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "ds", m_dwId, szError);
       }
    }
    else
