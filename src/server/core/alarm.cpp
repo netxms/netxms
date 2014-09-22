@@ -1299,11 +1299,24 @@ UINT32 GetAlarmComments(UINT32 alarmId, CSCPMessage *msg)
 				msg->SetVariable(varId++, DBGetFieldULong(hResult, i, 0));
 				msg->SetVariable(varId++, alarmId);
 				msg->SetVariable(varId++, DBGetFieldULong(hResult, i, 1));
-				msg->SetVariable(varId++, DBGetFieldULong(hResult, i, 2));
-				TCHAR *text = DBGetField(hResult, i, 3, NULL, 0);
+            UINT32 userId = DBGetFieldULong(hResult, i, 2);
+				msg->SetVariable(varId++, userId);
+				
+            TCHAR *text = DBGetField(hResult, i, 3, NULL, 0);
 				msg->SetVariable(varId++, CHECK_NULL_EX(text));
 				safe_free(text);
-				varId += 5;
+
+            TCHAR userName[MAX_USER_NAME];
+            if (ResolveUserId(userId, userName, MAX_USER_NAME))
+            {
+   				msg->SetVariable(varId++, userName);
+            }
+            else
+            {
+               varId++;
+            }
+				
+            varId += 4;
 			}
 			DBFreeResult(hResult);
 			rcc = RCC_SUCCESS;

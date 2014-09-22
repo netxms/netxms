@@ -90,10 +90,12 @@ int main(int argc, char *argv[])
          case 'h':   // Display help and exit
             printf("Usage: nxalarm [<options>] <server> <command> [<alarm_id>]\n"
 				       "Possible commands are:\n"
-						 "   ack <id>       : Acknowledge alarm\n"
-						 "   list           : List active alarms\n"
-						 "   open <id>      : OPen helpdesk issue from alarm\n"
-						 "   terminate <id> : Terminate alarm\n"
+						 "   ack <id>                : Acknowledge alarm\n"
+                   "   add-comment <id> <text> : Add comment to alarm\n"
+						 "   get-comments <id>       : Get comments of alarm\n"
+						 "   list                    : List active alarms\n"
+						 "   open <id>               : Open helpdesk issue from alarm\n"
+						 "   terminate <id>          : Terminate alarm\n"
                    "Valid options are:\n"
                    "   -D             : Turn on debug mode.\n"
                    "   -e             : Encrypt session.\n"
@@ -192,7 +194,8 @@ int main(int argc, char *argv[])
 	}
 
 	// All commands except "list" requirs alarm id
-   if (stricmp(argv[optind + 1], "list") && (argc - optind < 3))
+   if ((stricmp(argv[optind + 1], "list") && (argc - optind < 3)) ||
+       (!stricmp(argv[optind + 1], "add-comment") && (argc - optind < 4)))
    {
       _tprintf(_T("Required arguments missing. Use nxalarm -h for help.\n"));
 		return 1;
@@ -250,12 +253,47 @@ int main(int argc, char *argv[])
 			NXCDisconnect(session);
 			return 1;
 		}
+
 		if (!stricmp(argv[optind + 1], "ack"))
 		{
 		   rcc = NXCAcknowledgeAlarmEx(session, alarmId, isSticky, (UINT32)ackTimeout * 60);
 			if (rcc != RCC_SUCCESS)
 				_tprintf(_T("Cannot acknowledge alarm: %s\n"), NXCGetErrorText(rcc));
 		}
+		else if (!stricmp(argv[optind + 1], "add-comment"))
+		{
+#ifdef UNICODE
+         WCHAR *wtext = WideStringFromMBString(argv[optind + 3]);
+			rcc = NXCAddAlarmComment(session, alarmId, wtext);
+         free(wtext);
+#else
+			rcc = NXCAddAlarmComment(session, alarmId, argv[optind + 3]);
+#endif
+			if (rcc != RCC_SUCCESS)
+				_tprintf(_T("Cannot add alarm comment: %s\n"), NXCGetErrorText(rcc));
+		}
+		else if (!stricmp(argv[optind + 1], "get-comments"))
+		{
+         ObjectArray<AlarmComment> *comments;
+         rcc = NXCGetAlarmComments(session, alarmId, &comments);
+         if (rcc == RCC_SUCCESS)
+         {
+            for(int i = 0; i < comments->size(); i++)
+            {
+               AlarmComment *c = comments->get(i);
+               time_t t = c->getTimestamp();
+               struct tm *ltm = localtime(&t);
+               TCHAR timeText[64];
+               _tcsftime(timeText, 64, _T("%d-%b-%Y %H:%M:%S"), ltm);
+               _tprintf(_T("[%d] %s by %s\n%s\n\n"), c->getId(), timeText, c->getUserName(), c->getText());
+            }
+            delete comments;
+         }
+         else
+         {
+				_tprintf(_T("Cannot get alarm comments: %s\n"), NXCGetErrorText(rcc));
+         }
+      }
 		else if (!stricmp(argv[optind + 1], "open"))
 		{
          TCHAR hdref[MAX_HELPDESK_REF_LEN];

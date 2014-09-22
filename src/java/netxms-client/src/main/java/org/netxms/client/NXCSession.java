@@ -2669,7 +2669,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException
     * @throws NXCException
     */
-   public void createAlarmComment(long alarmId, String text) throws IOException, NXCException {
+   public void createAlarmComment(long alarmId, String text) throws IOException, NXCException 
+   {
    	updateAlarmComment(alarmId, 0, text);
    }
 
@@ -2681,7 +2682,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException
     * @throws NXCException
     */
-   public void createAlarmComment(final String helpdeskReference, String text) throws IOException, NXCException {
+   public void createAlarmComment(final String helpdeskReference, String text) throws IOException, NXCException 
+   {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_ALARM_COMMENT);
       msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, 0);
       msg.setVariable(NXCPCodes.VID_HELPDESK_REF, helpdeskReference);

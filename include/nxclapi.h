@@ -1960,11 +1960,9 @@ typedef struct
 	TCHAR privPassword[MAX_DB_STRING];
 } NXC_SNMP_USM_CRED;
 
-
-//
-// Connection point information
-//
-
+/**
+ * Connection point information
+ */
 typedef struct
 {
 	UINT32 localNodeId;
@@ -1976,43 +1974,62 @@ typedef struct
 } NXC_CONNECTION_POINT;
 
 
-// All situation stuff will be available only in C++
 #ifdef __cplusplus
 
-//
-// Situation instance
-//
-
-typedef struct
+/**
+ * Situation instance
+ */
+struct NXC_SITUATION_INSTANCE
 {
 	TCHAR *m_name;
 	StringMap *m_attrList;
-} NXC_SITUATION_INSTANCE;
+};
 
-
-//
-// Situation
-//
-
-typedef struct
+/**
+ * Situation
+ */
+struct NXC_SITUATION
 {
 	UINT32 m_id;
 	TCHAR *m_name;
 	TCHAR *m_comments;
 	int m_instanceCount;
 	NXC_SITUATION_INSTANCE *m_instanceList;
-} NXC_SITUATION;
+};
 
-
-//
-// Situation list
-//
-
-typedef struct
+/**
+ * Situation list
+ */
+struct NXC_SITUATION_LIST
 {
 	int m_count;
 	NXC_SITUATION *m_situations;
-} NXC_SITUATION_LIST;
+};
+
+/**
+ * Alarm comments
+ */
+class LIBNXCL_EXPORTABLE AlarmComment
+{
+private:
+   UINT32 m_id;
+   UINT32 m_alarmId;
+   UINT32 m_userId;
+   TCHAR *m_userName;
+   time_t m_timestamp;
+   TCHAR *m_text;
+
+public:
+   AlarmComment(CSCPMessage *msg, UINT32 baseId);
+   ~AlarmComment();
+
+   UINT32 getId() { return m_id; }
+   UINT32 getAlarmId() { return m_alarmId; }
+   UINT32 getUserId() { return m_userId; }
+   const TCHAR *getUserName() { return m_userName; }
+   time_t getTimestamp() { return m_timestamp; }
+   const TCHAR *getText() { return m_text; }
+};
 
 #endif	/* __cplusplus */
 
@@ -2232,6 +2249,11 @@ UINT32 LIBNXCL_EXPORTABLE NXCTerminateAlarm(NXC_SESSION hSession, UINT32 dwAlarm
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteAlarm(NXC_SESSION hSession, UINT32 dwAlarmId);
 UINT32 LIBNXCL_EXPORTABLE NXCOpenHelpdeskIssue(NXC_SESSION hSession, UINT32 dwAlarmId, TCHAR *pszHelpdeskRef);
 TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *alarm, TCHAR *format);
+UINT32 LIBNXCL_EXPORTABLE NXCAddAlarmComment(NXC_SESSION hSession, UINT32 alarmId, const TCHAR *text);
+UINT32 LIBNXCL_EXPORTABLE NXCUpdateAlarmComment(NXC_SESSION hSession, UINT32 alarmId, UINT32 commentId, const TCHAR *text);
+#ifdef __cplusplus
+UINT32 LIBNXCL_EXPORTABLE NXCGetAlarmComments(NXC_SESSION hSession, UINT32 alarmId, ObjectArray<AlarmComment> **comments);
+#endif
 
 /** Actions **/
 UINT32 LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, UINT32 *pdwNumActions, NXC_ACTION **ppActionList);

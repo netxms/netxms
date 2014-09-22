@@ -5,6 +5,7 @@
 - New DCI source: NXSL script executed on server
 - Configurable node matching policy for built-in syslog server (controlled by SyslogNodeMatchingPolicy configuration parameter)
 - Oracle monitoring subagent improved (bugs fixed, new metrics)
+- nxalarm tool supports commands add-comment and get-comments
 - Management console:
     - Can show alarms for multiple selected objects
     - Fixed non-working ordering in event list in alarm details view
