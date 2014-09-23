@@ -290,6 +290,7 @@ bool DatabaseInstance::getTagList(const TCHAR *pattern, StringList *value)
    if (m_data != NULL)
    {
       TagListCallbackData data;
+      data.list = value;
 	   if (_tregcomp(&data.preg, pattern, REG_EXTENDED | REG_ICASE) == 0)
 	   {
          m_data->forEach(TagListCallback, &data);
