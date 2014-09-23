@@ -30,13 +30,16 @@ DB_DRIVER g_driverHandle = NULL;
  */
 DatabaseQuery g_queries[] = 
 {
-   { _T("DATAFILE"), MAKE_ORACLE_VERSION(9, 0), 1,
+   { _T("DATAFILE"), MAKE_ORACLE_VERSION(10, 2), 1,
       _T("SELECT regexp_substr(regexp_substr(f.name, '[/\\][^/\\]+$'), '[^/\\]+') AS name,")
-         _T("f.name AS full_name, s.phyrds AS phy_reads, s.phywrts AS phy_writes, s.readtim * 100 AS read_time,")
+         _T("f.name AS full_name, (SELECT name FROM v$tablespace ts WHERE ts.ts#=d.ts#) AS tablespace,")
+         _T("d.status AS status, d.bytes AS bytes, d.blocks AS blocks, d.block_size AS block_size,")
+         _T("s.phyrds AS phy_reads, s.phywrts AS phy_writes, s.readtim * 100 AS read_time,")
          _T("s.writetim * 100 AS write_time, s.avgiotim * 100 AS avg_io_time, s.miniotim * 100 AS min_io_time,")
          _T("s.maxiortm * 100 AS max_io_rtime, s.maxiowtm * 100 AS max_io_wtime ")
          _T("FROM sys.v_$dbfile f ")
-         _T("INNER JOIN sys.v_$filestat s ON s.file#=f.file#")
+         _T("INNER JOIN sys.v_$filestat s ON s.file#=f.file# ")
+         _T("INNER JOIN v$datafile d ON d.file#=f.file#")
    },
    { _T("DBINFO"), MAKE_ORACLE_VERSION(7, 0), 0, _T("SELECT name, to_char(created) CreateDate, log_mode, open_mode FROM v$database") },
    { _T("DUAL"), MAKE_ORACLE_VERSION(7, 0), 0, _T("SELECT decode(count(*),1,0,1) ExcessRows FROM dual") },
@@ -68,13 +71,16 @@ DatabaseQuery g_queries[] =
          _T("FROM dual")
    },
    { _T("TABLESPACE"), MAKE_ORACLE_VERSION(10, 0), 1,
-      _T("SELECT d.tablespace_name, d.status Status, d.contents Type, d.block_size BlockSize, d.logging Logging,")
-         _T("m.tablespace_size * d.block_size TotalSpace,")
-         _T("m.used_space * d.block_size UsedSpace,")
-         _T("trim(to_char(round(m.used_percent,2), '990.99')) UsedSpacePct,")
-         _T("(m.tablespace_size - m.used_space) * d.block_size FreeSpace,")
-         _T("trim(to_char(round((100 - m.used_percent),2), '990.99')) FreeSpacePct ")
-         _T("FROM dba_tablespaces d, dba_tablespace_usage_metrics m WHERE d.tablespace_name=m.tablespace_name")
+      _T("SELECT d.tablespace_name, d.status AS Status, d.contents AS Type, d.block_size AS BlockSize, d.logging AS Logging,")
+         _T("m.tablespace_size * d.block_size AS TotalSpace,")
+         _T("m.used_space * d.block_size AS UsedSpace,")
+         _T("trim(to_char(round(m.used_percent,2), '990.99')) AS UsedSpacePct,")
+         _T("(m.tablespace_size - m.used_space) * d.block_size AS FreeSpace,")
+         _T("trim(to_char(round((100 - m.used_percent),2), '990.99')) AS FreeSpacePct,")
+         _T("(SELECT count(*) FROM v$datafile df WHERE df.ts#=v.ts#) AS DataFiles ")
+         _T("FROM dba_tablespaces d ")
+         _T("INNER JOIN dba_tablespace_usage_metrics m ON m.tablespace_name=d.tablespace_name ")
+         _T("INNER JOIN v$tablespace v ON v.name=d.tablespace_name")
    },
    { NULL, 0, 0, NULL }
 };
@@ -110,8 +116,11 @@ static TableDescriptor s_tqTableSpaces =
       _T("m.used_space * d.block_size AS used,")
       _T("trim(to_char(round(m.used_percent,2), '990.99')) AS used_pct,")
       _T("(m.tablespace_size - m.used_space) * d.block_size AS free,")
-      _T("trim(to_char(round((100 - m.used_percent),2), '990.99')) AS free_pct ")
-      _T("FROM dba_tablespaces d, dba_tablespace_usage_metrics m WHERE d.tablespace_name=m.tablespace_name"),
+      _T("trim(to_char(round((100 - m.used_percent),2), '990.99')) AS free_pct,")
+      _T("(SELECT count(*) FROM v$datafile df WHERE df.ts#=v.ts#) AS data_files ")
+      _T("FROM dba_tablespaces d ")
+      _T("INNER JOIN dba_tablespace_usage_metrics m ON m.tablespace_name=d.tablespace_name ")
+      _T("INNER JOIN v$tablespace v ON v.name=d.tablespace_name"),
    {
       { DCI_DT_STRING, _T("Name") },
       { DCI_DT_STRING, _T("Status") },
@@ -122,7 +131,8 @@ static TableDescriptor s_tqTableSpaces =
       { DCI_DT_INT64, _T("Used") },
       { DCI_DT_INT, _T("Used %") },
       { DCI_DT_INT64, _T("Free") },
-      { DCI_DT_INT, _T("Free %") }
+      { DCI_DT_INT, _T("Free %") },
+      { DCI_DT_INT, _T("Data Files") }
    }
 };
 
@@ -132,15 +142,23 @@ static TableDescriptor s_tqTableSpaces =
 static TableDescriptor s_tqDataFiles =
 {
    _T("SELECT regexp_substr(regexp_substr(f.name, '[/\\][^/\\]+$'), '[^/\\]+') AS name, f.file# AS id,")
-      _T("f.name AS full_name, s.phyrds AS phy_reads, s.phywrts AS phy_writes, s.readtim * 100 AS read_time,")
+      _T("f.name AS full_name, (SELECT name FROM v$tablespace ts WHERE ts.ts#=d.ts#) AS tablespace,")
+      _T("d.status AS status, d.bytes AS bytes,d.blocks AS blocks, d.block_size AS block_size,")
+      _T("s.phyrds AS phy_reads, s.phywrts AS phy_writes, s.readtim * 100 AS read_time,")
       _T("s.writetim * 100 AS write_time, s.avgiotim * 100 AS avg_io_time, s.miniotim * 100 AS min_io_time,")
       _T("s.maxiortm * 100 AS max_io_rtime, s.maxiowtm * 100 AS max_io_wtime ")
       _T("FROM sys.v_$dbfile f ")
-      _T("INNER JOIN sys.v_$filestat s ON s.file#=f.file#"),
+      _T("INNER JOIN sys.v_$filestat s ON s.file#=f.file# ")
+      _T("INNER JOIN v$datafile d ON d.file#=f.file#"),
    {
       { DCI_DT_STRING, _T("Name") },
       { DCI_DT_INT, _T("ID") },
       { DCI_DT_STRING, _T("Full name") },
+      { DCI_DT_STRING, _T("Tablespace") },
+      { DCI_DT_STRING, _T("Status") },
+      { DCI_DT_INT64, _T("Bytes") },
+      { DCI_DT_INT64, _T("Blocks") },
+      { DCI_DT_INT, _T("Block Size") },
       { DCI_DT_INT64, _T("Physical Reads") },
       { DCI_DT_INT64, _T("Physical Writes") },
       { DCI_DT_INT64, _T("Read Time") },
@@ -392,6 +410,9 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 	{ _T("Oracle.CriticalStats.TSOffCount(*)"), H_GlobalParameter, _T("GLOBALSTATS/TSOFFCOUNT"), DCI_DT_INT, _T("Oracle/CriticalStats: Number of offline tablespaces") },
 	{ _T("Oracle.Cursors.Count(*)"), H_GlobalParameter, _T("GLOBALSTATS/OPENCURSORS"), DCI_DT_INT, _T("Oracle/Cursors: Current number of opened cursors systemwide") },
    { _T("Oracle.DataFile.AvgIoTime(*)"), H_InstanceParameter, _T("DATAFILE/AVG_IO_TIME"), DCI_DT_INT, _T("Oracle/Datafile: {instance} average I/O time") },
+   { _T("Oracle.DataFile.Blocks(*)"), H_InstanceParameter, _T("DATAFILE/BLOCKS"), DCI_DT_INT64, _T("Oracle/Datafile: {instance} size in blocks") },
+   { _T("Oracle.DataFile.BlockSize(*)"), H_InstanceParameter, _T("DATAFILE/BLOCK_SIZE"), DCI_DT_INT, _T("Oracle/Datafile: {instance} block size") },
+   { _T("Oracle.DataFile.Bytes(*)"), H_InstanceParameter, _T("DATAFILE/BYTES"), DCI_DT_INT64, _T("Oracle/Datafile: {instance} size in bytes") },
    { _T("Oracle.DataFile.FullName(*)"), H_InstanceParameter, _T("DATAFILE/FULL_NAME"), DCI_DT_STRING, _T("Oracle/Datafile: {instance} full name") },
    { _T("Oracle.DataFile.MaxIoReadTime(*)"), H_InstanceParameter, _T("DATAFILE/MAX_IO_RTIME"), DCI_DT_INT, _T("Oracle/Datafile: {instance} maximum read time") },
    { _T("Oracle.DataFile.MaxIoWriteTime(*)"), H_InstanceParameter, _T("DATAFILE/MAX_IO_WTIME"), DCI_DT_INT, _T("Oracle/Datafile: {instance} maximum write time") },
@@ -399,6 +420,8 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("Oracle.DataFile.PhysicalReads(*)"), H_InstanceParameter, _T("DATAFILE/PHY_READS"), DCI_DT_INT64, _T("Oracle/Datafile: {instance} physical reads") },
    { _T("Oracle.DataFile.PhysicalWrites(*)"), H_InstanceParameter, _T("DATAFILE/PHY_WRITES"), DCI_DT_INT64, _T("Oracle/Datafile: {instance} physical writes") },
    { _T("Oracle.DataFile.ReadTime(*)"), H_InstanceParameter, _T("DATAFILE/READ_TIME"), DCI_DT_INT64, _T("Oracle/Datafile: {instance} read time") },
+   { _T("Oracle.DataFile.Status(*)"), H_InstanceParameter, _T("DATAFILE/STATUS"), DCI_DT_STRING, _T("Oracle/Datafile: {instance} status") },
+   { _T("Oracle.DataFile.Tablespace(*)"), H_InstanceParameter, _T("DATAFILE/TABLESPACE"), DCI_DT_STRING, _T("Oracle/Datafile: {instance} tablespace") },
    { _T("Oracle.DataFile.WriteTime(*)"), H_InstanceParameter, _T("DATAFILE/WRITE_TIME"), DCI_DT_INT64, _T("Oracle/Datafile: {instance} write time") },
 	{ _T("Oracle.DBInfo.CreateDate(*)"), H_GlobalParameter, _T("DBINFO/CREATEDATE"), DCI_DT_STRING, _T("Oracle/Info: Database creation date") },
 	{ _T("Oracle.DBInfo.IsReachable(*)"), H_DatabaseConnectionStatus, NULL, DCI_DT_STRING, _T("Oracle/Info: Database is reachable") },
@@ -425,14 +448,15 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 	{ _T("Oracle.Performance.RollbackWaitRatio(*)"), H_GlobalParameter, _T("GLOBALSTATS/ROLLBACKWAITRATIO"), DCI_DT_STRING, _T("Oracle/Performance: Ratio of waits for requests to rollback segments") },
 	{ _T("Oracle.Sessions.Count(*)"), H_GlobalParameter, _T("GLOBALSTATS/SESSIONCOUNT"), DCI_DT_INT, _T("Oracle/Sessions: Number of sessions opened") },
    { _T("Oracle.TableSpace.BlockSize(*)"), H_InstanceParameter, _T("TABLESPACE/BLOCKSIZE"), DCI_DT_INT, _T("Oracle/Tablespace: {instance} block size") },
-	{ _T("Oracle.TableSpace.FreeBytes(*)"), H_InstanceParameter, _T("TABLESPACE/FREESPACE"), DCI_DT_INT64, _T("Oracle/Tablespaces: {instance} bytes free") },
-	{ _T("Oracle.TableSpace.FreePct(*)"), H_InstanceParameter, _T("TABLESPACE/FREESPACEPCT"), DCI_DT_INT, _T("Oracle/Tablespaces: {instance} percentage free") },
-	{ _T("Oracle.TableSpace.Logging(*)"), H_InstanceParameter, _T("TABLESPACE/LOGGING"), DCI_DT_STRING, _T("Oracle/Tablespaces: {instance} logging mode") },
-	{ _T("Oracle.TableSpace.Status(*)"), H_InstanceParameter, _T("TABLESPACE/STATUS"), DCI_DT_STRING, _T("Oracle/Tablespaces: {instance} status") },
-	{ _T("Oracle.TableSpace.TotalBytes(*)"), H_InstanceParameter, _T("TABLESPACE/TOTALSPACE"), DCI_DT_INT64, _T("Oracle/Tablespaces: {instance} bytes total") },
-	{ _T("Oracle.TableSpace.Type(*)"), H_InstanceParameter, _T("TABLESPACE/TYPE"), DCI_DT_STRING, _T("Oracle/Tablespaces: {instance} type") },
-	{ _T("Oracle.TableSpace.UsedBytes(*)"), H_InstanceParameter, _T("TABLESPACE/USEDSPACE"), DCI_DT_INT64, _T("Oracle/Tablespaces: {instance} bytes used") },
-	{ _T("Oracle.TableSpace.UsedPct(*)"), H_InstanceParameter, _T("TABLESPACE/USEDSPACEPCT"), DCI_DT_INT, _T("Oracle/Tablespaces: {instance} percentage used") }
+   { _T("Oracle.TableSpace.DataFiles(*)"), H_InstanceParameter, _T("TABLESPACE/DATAFILES"), DCI_DT_INT, _T("Oracle/Tablespace: {instance} number of datafiles") },
+	{ _T("Oracle.TableSpace.FreeBytes(*)"), H_InstanceParameter, _T("TABLESPACE/FREESPACE"), DCI_DT_INT64, _T("Oracle/Tablespace: {instance} bytes free") },
+	{ _T("Oracle.TableSpace.FreePct(*)"), H_InstanceParameter, _T("TABLESPACE/FREESPACEPCT"), DCI_DT_INT, _T("Oracle/Tablespace: {instance} percentage free") },
+	{ _T("Oracle.TableSpace.Logging(*)"), H_InstanceParameter, _T("TABLESPACE/LOGGING"), DCI_DT_STRING, _T("Oracle/Tablespace: {instance} logging mode") },
+	{ _T("Oracle.TableSpace.Status(*)"), H_InstanceParameter, _T("TABLESPACE/STATUS"), DCI_DT_STRING, _T("Oracle/Tablespace: {instance} status") },
+	{ _T("Oracle.TableSpace.TotalBytes(*)"), H_InstanceParameter, _T("TABLESPACE/TOTALSPACE"), DCI_DT_INT64, _T("Oracle/Tablespace: {instance} bytes total") },
+	{ _T("Oracle.TableSpace.Type(*)"), H_InstanceParameter, _T("TABLESPACE/TYPE"), DCI_DT_STRING, _T("Oracle/Tablespace: {instance} type") },
+	{ _T("Oracle.TableSpace.UsedBytes(*)"), H_InstanceParameter, _T("TABLESPACE/USEDSPACE"), DCI_DT_INT64, _T("Oracle/Tablespace: {instance} bytes used") },
+	{ _T("Oracle.TableSpace.UsedPct(*)"), H_InstanceParameter, _T("TABLESPACE/USEDSPACEPCT"), DCI_DT_INT, _T("Oracle/Tablespace: {instance} percentage used") }
 };
 
 /**
@@ -440,7 +464,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("Oracle.DataFiles(*)"), H_TagList, _T("^DATAFILE/FULL_NAME@(.*)$") },
+   { _T("Oracle.DataFiles(*)"), H_TagList, _T("^DATAFILE/STATUS@(.*)$") },
    { _T("Oracle.DataTags(*)"), H_TagList, _T("^(.*)$") },
    { _T("Oracle.TableSpaces(*)"), H_TagList, _T("^TABLESPACE/STATUS@(.*)$") }
 };
