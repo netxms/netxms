@@ -877,7 +877,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
       }
       else if (m_transformationScript->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
       {
-         DbgPrintf(6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"), 
+         DbgPrintf(6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"),
             m_szDescription, m_dwId, (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), (m_pNode != NULL) ? m_pNode->Id() : 0);
          success = false;
       }
@@ -1548,6 +1548,7 @@ bool DCItem::testTransformation(DataCollectionTarget *object, const TCHAR *scrip
 			nx_strncpy(buffer, vm->getErrorText(), bufSize);
       }
    }
+   delete vm;
 	return success;
 }
 
