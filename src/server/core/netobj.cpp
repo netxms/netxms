@@ -1726,7 +1726,7 @@ void NetObj::addLocationToHistory()
       startTimestamp = DBGetFieldULong(hResult, 0, 3);
       isSamePlace = m_geoLocation.sameLocation(DBGetFieldDouble(hResult, 0, 0), DBGetFieldDouble(hResult, 0, 1), DBGetFieldLong(hResult, 0, 2));
       DBFreeStatement(hStmt);
-      safe_free(hResult);
+      DBFreeResult(hResult);
    }
    else
    {
