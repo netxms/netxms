@@ -593,7 +593,7 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
             }
             else
             {
-               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "Is", m_serverAddr, "PLAIN");
+               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "Is", &m_serverAddr, "PLAIN");
                pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
             }
             break;
@@ -616,7 +616,7 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
             }
             else
             {
-               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "Is", m_serverAddr, _T("MD5"));
+               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "Is", &m_serverAddr, _T("MD5"));
                pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
             }
             break;
@@ -639,7 +639,7 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
             }
             else
             {
-               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "Is", m_serverAddr, _T("SHA1"));
+               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "Is", &m_serverAddr, _T("SHA1"));
                pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
             }
             break;
