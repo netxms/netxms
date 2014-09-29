@@ -18,7 +18,6 @@
  */
 package org.netxms.client;
 
-import junit.framework.Test;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 
