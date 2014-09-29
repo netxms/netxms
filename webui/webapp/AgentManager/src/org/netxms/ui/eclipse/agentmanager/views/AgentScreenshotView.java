@@ -1,8 +1,6 @@
 package org.netxms.ui.eclipse.agentmanager.views;
 
 import java.io.ByteArrayInputStream;
-import java.util.Date;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;

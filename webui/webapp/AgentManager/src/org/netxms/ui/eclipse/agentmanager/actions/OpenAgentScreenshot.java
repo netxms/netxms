@@ -50,11 +50,11 @@ public class OpenAgentScreenshot implements IObjectActionDelegate
       {
    	   try
          {
-            AgentScreenshotView view = (AgentScreenshotView)window.getActivePage().showView(AgentScreenshotView.ID, Long.toString(node.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
+            window.getActivePage().showView(AgentScreenshotView.ID, Long.toString(node.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
          }
          catch(PartInitException e)
          {
-            MessageDialogHelper.openError(window.getShell(), "Error while opening screenshot", "Error while opening screenshot: " + e.getLocalizedMessage());
+            MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening screenshot: %s", e.getLocalizedMessage()));
          }
       }
 	}

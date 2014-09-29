@@ -177,6 +177,35 @@ public class Interface extends GenericObject
 	{
 		return subnetMask;
 	}
+	
+	/**
+	 * Get number of bits in subnet mask
+	 * 
+	 * @return
+	 */
+	public int getSubnetMaskBits()
+	{
+      byte[] addr = subnetMask.getAddress();
+      int bits = 0;
+      for(int i = 0; i < addr.length; i++)
+      {
+         if (addr[i] == (byte)0xFF)
+         {
+            bits += 8;
+         }
+         else
+         {
+            for(int j = 0x80; j > 0; j >>= 1)
+            {
+               if ((addr[i] & j) == 0)
+                  break;
+               bits++;
+            }
+            break;
+         }
+      }
+      return bits;
+	}
 
 	/**
 	 * @return Interface index
