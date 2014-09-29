@@ -697,6 +697,8 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
 	// Save transformed value to database
    if ((m_flags & DCF_NO_STORAGE) == 0)
 	   QueueIDataInsert(tmTimeStamp, m_pNode->Id(), m_dwId, pValue->getString());
+   if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
+      PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
 
    // Check thresholds and add value to cache
    checkThresholds(*pValue);

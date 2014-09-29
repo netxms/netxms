@@ -430,6 +430,10 @@ bool DCTable::processNewValue(time_t nTimeStamp, void *value)
 	   DBConnectionPoolReleaseConnection(hdb);
    }
    checkThresholds((Table *)value);
+
+   if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
+      PerfDataStorageRequest(this, nTimeStamp, (Table *)value);
+
    return true;
 }
 

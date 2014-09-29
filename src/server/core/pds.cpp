@@ -98,6 +98,24 @@ bool PerfDataStorageDriver::saveDCTableValue(DCTable *dcObject, time_t timestamp
 }
 
 /**
+ * Storage request
+ */
+void PerfDataStorageRequest(DCItem *dci, time_t timestamp, const TCHAR *value)
+{
+   for(int i = 0; i < s_numDrivers; i++)
+      s_drivers[i]->saveDCItemValue(dci, timestamp, value);
+}
+
+/**
+ * Storage request
+ */
+void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value)
+{
+   for(int i = 0; i < s_numDrivers; i++)
+      s_drivers[i]->saveDCTableValue(dci, timestamp, value);
+}
+
+/**
  * Load perf data storage driver
  *
  * @param file Driver's file name
@@ -205,5 +223,7 @@ void LoadPerfDataStorageDrivers()
 		if (s_numDrivers == MAX_PDS_DRIVERS)
 			break;	// Too many drivers already loaded
    }
+   if (s_numDrivers > 0)
+      g_flags |= AF_PERFDATA_STORAGE_DRIVER_LOADED;
 	DbgPrintf(1, _T("%d performance data storage drivers loaded"), s_numDrivers);
 }

@@ -61,8 +61,6 @@
 #include <openssl/ssl.h>
 #endif
 
-#define SHOW_FLAG_VALUE(x) _T("  %-32s = %d\n"), _T(#x), (g_flags & x) ? 1 : 0
-
 //
 // Common includes
 //
@@ -848,6 +846,9 @@ void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR
 void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue);
 void StartDBWriter();
 void StopDBWriter();
+
+void PerfDataStorageRequest(DCItem *dci, time_t timestamp, const TCHAR *value);
+void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value);
 
 bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id);
 
