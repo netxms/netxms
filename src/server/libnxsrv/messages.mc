@@ -962,4 +962,28 @@ Language=English
 Helpdesk link module "%1" cannot be loaded because of API version mismatch (module: %3; server: %2)
 .
 
+MessageId=
+SymbolicName=MSG_PDSDRV_LOADED
+Language=English
+Performance data storage driver "%1" loaded successfully
+.
+
+MessageId=
+SymbolicName=MSG_NO_PDSDRV_ENTRY_POINT
+Language=English
+Unable to find entry point in performance data storage driver "%1"
+.
+
+MessageId=
+SymbolicName=MSG_PDSDRV_INIT_FAILED
+Language=English
+Initialization of performance data storage driver "%1" failed
+.
+
+MessageId=
+SymbolicName=MSG_PDSDRV_API_VERSION_MISMATCH
+Language=English
+Performance data storage driver "%1" cannot be loaded because of API version mismatch (driver: %3; server: %2)
+.
+
 ;#endif

@@ -25,7 +25,7 @@
 /**
  * List of loaded modules
  */
-TCHAR *g_pszModLoadList = NULL;
+TCHAR *g_moduleLoadList = NULL;
 UINT32 g_dwNumModules = 0;
 NXMODULE *g_pModuleList = NULL;
 
@@ -120,7 +120,7 @@ bool LoadNetXMSModules()
    TCHAR *curr, *next, *ptr;
    bool success = true;
 
-	for(curr = g_pszModLoadList; curr != NULL; curr = next)
+	for(curr = g_moduleLoadList; curr != NULL; curr = next)
    {
 		next = _tcschr(curr, _T('\n'));
 		if (next != NULL)

@@ -22,7 +22,7 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
 			netinfo.cpp netmap.cpp netobj.cpp netsrv.cpp \
 			node.cpp nodelink.cpp np.cpp nxsl_classes.cpp \
 			nxslext.cpp objects.cpp objtools.cpp package.cpp \
-			poll.cpp rack.cpp radius.cpp \
+			pds.cpp poll.cpp rack.cpp radius.cpp \
 			reporting.cpp rootobj.cpp script.cpp session.cpp \
 			situation.cpp slmcheck.cpp smclp.cpp sms.cpp snmp.cpp \
 			snmptrap.cpp stp.cpp subnet.cpp svccontainer.cpp \

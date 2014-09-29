@@ -733,6 +733,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\pds.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\poll.cpp"
 				>
 			</File>
@@ -1032,6 +1036,10 @@
 			</File>
 			<File
 				RelativePath="..\include\nxsrvapi.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\pdsdrv.h"
 				>
 			</File>
 			<File

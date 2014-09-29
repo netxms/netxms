@@ -77,6 +77,7 @@ void InitMobileDeviceListeners();
 void InitCertificates();
 void InitUsers();
 void CleanupUsers();
+void LoadPerfDataStorageDrivers();
 
 #if XMPP_SUPPORTED
 void StopXMPPConnector();
@@ -791,6 +792,7 @@ retry_db_lock:
    LoadHelpDeskLink();
 
 	// Initialize data collection subsystem
+   LoadPerfDataStorageDrivers();
 	if (!InitDataCollector())
 		return FALSE;
 

@@ -62,6 +62,7 @@
 #define DEFAULT_DUMP_DIR      _T("C:\\")
 
 #define LDIR_NDD              _T("\\ndd")
+#define LDIR_PDSDRV           _T("\\pdsdrv")
 
 #define DDIR_MIBS             _T("\\mibs")
 #define DDIR_PACKAGES         _T("\\packages")
@@ -98,6 +99,7 @@
 #define DEFAULT_DUMP_DIR      _T("/")
 
 #define LDIR_NDD              _T("/ndd")
+#define LDIR_PDSDRV           _T("/pdsdrv")
 
 #define DDIR_MIBS             _T("/mibs")
 #define DDIR_PACKAGES         _T("/packages")

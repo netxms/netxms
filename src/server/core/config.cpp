@@ -27,7 +27,8 @@
  * Externals
  */
 extern char g_szCodePage[];
-extern TCHAR *g_pszModLoadList;
+extern TCHAR *g_moduleLoadList;
+extern TCHAR *g_pdsLoadList;
 
 /**
  * database connection parameters
@@ -70,7 +71,8 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &g_dwLogHistorySize, NULL },
    { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &g_dwLogRotationMode, NULL },
    { _T("MaxLogSize"), CT_LONG, 0, 0, 0, 0, &g_dwMaxLogSize, NULL },
-   { _T("Module"), CT_STRING_LIST, '\n', 0, 0, 0, &g_pszModLoadList, NULL },
+   { _T("Module"), CT_STRING_LIST, '\n', 0, 0, 0, &g_moduleLoadList, NULL },
+   { _T("PerfDataStorageDriver"), CT_STRING_LIST, '\n', 0, 0, 0, &g_pdsLoadList, NULL },
    { _T("ProcessAffinityMask"), CT_LONG, 0, 0, 0, 0, &g_processAffinityMask, NULL },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
 };
