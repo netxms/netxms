@@ -1467,6 +1467,9 @@ void ClientSession::processingThread()
          case CMD_GET_LOC_HISTORY:
             CALL_IN_NEW_THREAD(getLocationHistory, pMsg);
             break;
+         case CMD_TAKE_SCREENSHOT:
+            getScreenshot(pMsg);
+            break;
          default:
             if ((m_wCurrentCmd >> 8) == 0x11)
             {
@@ -13264,7 +13267,6 @@ void ClientSession::uploadUserFileToAgent(CSCPMessage *request)
             Node *node = (Node *)object;
             node->incRefCount();
             AgentConnection *conn = node->createAgentConnection();
-            node->decRefCount();
             if(conn != NULL)
             {
                conn->sendMessage(request);
@@ -13302,6 +13304,7 @@ void ClientSession::uploadUserFileToAgent(CSCPMessage *request)
             {
                msg.SetVariable(VID_RCC, RCC_CONNECTION_BROKEN);
             }
+            node->decRefCount();
 			}
 			else
 			{
@@ -13502,6 +13505,73 @@ void ClientSession::getLocationHistory(CSCPMessage *request)
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Get location history for object
+ */
+void ClientSession::getScreenshot(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   TCHAR* sessionName;
+   request->GetVariableStr(VID_NAME, sessionName);
+   if(sessionName == NULL)
+      sessionName = _tcsdup(_T("Console"));
+   UINT32 objectId = request->GetVariableLong(VID_NODE_ID);
+	NetObj *object = FindObjectById(objectId);
+
+	if (object != NULL)
+	{
+		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		{
+			if (object->Type() == OBJECT_NODE)
+			{
+            Node *node = (Node *)object;
+            node->incRefCount();
+            AgentConnection *conn = node->createAgentConnection();
+            if(conn != NULL)
+            {
+               BYTE *data;
+               size_t size;
+               UINT32 dwError = conn->takeScreenshot(sessionName, &data, &size);
+               if (dwError == ERR_SUCCESS)
+               {
+                  msg.SetVariable(VID_FILE_DATA, data, size);
+               }
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
+               }
+
+               delete conn;
+            }
+            else
+            {
+               msg.SetVariable(VID_RCC, RCC_CONNECTION_BROKEN);
+            }
+            node->decRefCount();
+			}
+			else
+			{
+				msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+		}
+		else
+		{
+			msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+		}
+	}
+	else
+	{
+		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
+   safe_free(sessionName);
    // Send response
    sendMessage(&msg);
 }

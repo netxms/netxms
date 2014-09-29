@@ -679,6 +679,7 @@ private:
    void getSwitchForwardingDatabase(CSCPMessage *request);
    void getRoutingTable(CSCPMessage *request);
    void getLocationHistory(CSCPMessage *request);
+   void getScreenshot(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

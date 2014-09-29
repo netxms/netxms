@@ -36,6 +36,15 @@
             name="Agent Config Manager"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.agentmanager.views.AgentScreenshotView"
+            icon="icons/image_obj.gif"
+            id="org.netxms.ui.eclipse.agentmanager.views.AgentScreenshotView"
+            name="Agent screenshot"
+            restorable="false">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.popupMenus">
@@ -49,6 +58,15 @@
                icon="icons/agent_config.gif"
                id="org.netxms.ui.eclipse.agentmanager.popupActions.OpenAgentConfig_Node"
                label="%menu.EditConfig"
+               menubarPath="objectmgmt"
+               style="push">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.agentmanager.actions.OpenAgentScreenshot"
+               enablesFor="+"
+               icon="icons/image_obj.gif"
+               id="org.netxms.ui.eclipse.agentmanager.popupActions.OpenAgentScreenshot_Node"
+               label="Get agent screenshot"
                menubarPath="objectmgmt"
                style="push">
          </action>

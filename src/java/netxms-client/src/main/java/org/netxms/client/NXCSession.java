@@ -7820,11 +7820,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException  if socket I/O error occurs
     * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
     */
-   public byte[] takeScreenshot(long nodeId, int sessionId, String sessionName) throws NetXMSClientException, IOException
+   public byte[] takeScreenshot(long nodeId, String sessionName) throws NetXMSClientException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_TAKE_SCREENSHOT);
       msg.setVariableInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
-      msg.setVariableInt32(NXCPCodes.VID_SESSION_ID, sessionId);
       if (sessionName != null)
          msg.setVariable(NXCPCodes.VID_NAME, sessionName);
       sendMessage(msg);
