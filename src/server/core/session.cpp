@@ -13519,8 +13519,7 @@ void ClientSession::getScreenshot(CSCPMessage *request)
    msg.SetCode(CMD_REQUEST_COMPLETED);
    msg.SetId(request->GetId());
 
-   TCHAR* sessionName;
-   request->GetVariableStr(VID_NAME, sessionName);
+   TCHAR* sessionName = request->GetVariableStr(VID_NAME);
    if(sessionName == NULL)
       sessionName = _tcsdup(_T("Console"));
    UINT32 objectId = request->GetVariableLong(VID_NODE_ID);
@@ -13548,7 +13547,7 @@ void ClientSession::getScreenshot(CSCPMessage *request)
                {
                   msg.SetVariable(VID_RCC, RCC_INTERNAL_ERROR);
                }
-
+               safe_free(data);
                delete conn;
             }
             else
