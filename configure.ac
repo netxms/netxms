@@ -59,6 +59,7 @@ SERVER_TOOLS=""
 SERVER_INCLUDE=""
 SMSDRV_DIRS=""
 HDLINK_DIRS=""
+PDSDRV_DIRS=""
 TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
@@ -449,6 +450,7 @@ AC_ARG_WITH(dist,
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2"
 	SMSDRV_DIRS="websms"
    HDLINK_DIRS="jira"
+   PDSDRV_DIRS="rrdtool"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
@@ -2439,6 +2441,7 @@ AC_SUBST(SERVER_LIBS)
 AC_SUBST(SERVER_TOOLS)
 AC_SUBST(SMSDRV_DIRS)
 AC_SUBST(HDLINK_DIRS)
+AC_SUBST(PDSDRV_DIRS)
 AC_SUBST(TOP_LEVEL_MODULES)
 AC_SUBST(CONTRIB_MODULES)
 AC_SUBST(CLIENT_COMPONENTS)
@@ -2647,6 +2650,8 @@ AC_CONFIG_FILES([
 	src/server/include/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
+	src/server/pdsdrv/Makefile
+	src/server/pdsdrv/rrdtool/Makefile
 	src/server/smsdrv/Makefile
 	src/server/smsdrv/dummy/Makefile
 	src/server/smsdrv/generic/Makefile
