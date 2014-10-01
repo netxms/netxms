@@ -70,6 +70,9 @@ DatabaseQuery g_queries[] =
             _T("(SELECT count(*) FROM v$session) SessionCount ")
          _T("FROM dual")
    },
+   { _T("SESSIONS_BY_PROGRAM"), MAKE_ORACLE_VERSION(7, 0), 1, _T("SELECT program,count(*) AS count FROM v$session GROUP BY program") },
+   { _T("SESSIONS_BY_SCHEMA"), MAKE_ORACLE_VERSION(7, 0), 1, _T("SELECT schemaname,count(*) AS count FROM v$session GROUP BY schemaname") },
+   { _T("SESSIONS_BY_USER"), MAKE_ORACLE_VERSION(7, 0), 1, _T("SELECT username,count(*) AS count FROM v$session WHERE username IS NOT NULL GROUP BY username") },
    { _T("TABLESPACE"), MAKE_ORACLE_VERSION(10, 0), 1,
       _T("SELECT d.tablespace_name, d.status AS Status, d.contents AS Type, d.block_size AS BlockSize, d.logging AS Logging,")
          _T("m.tablespace_size * d.block_size AS TotalSpace,")
@@ -223,8 +226,25 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
       return SYSINFO_RC_UNSUPPORTED;
 
    TCHAR tag[MAX_STR];
-   _sntprintf(tag, MAX_STR, _T("%s@%s"), arg, instance);
-   return db->getData(tag, value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+   bool missingAsZero;
+   if (arg[0] == _T('?'))  // count missing instance as 0
+   {
+      _sntprintf(tag, MAX_STR, _T("%s@%s"), &arg[1], instance);
+      missingAsZero = true;
+   }
+   else
+   {
+      _sntprintf(tag, MAX_STR, _T("%s@%s"), arg, instance);
+      missingAsZero = false;
+   }
+   if (db->getData(tag, value))
+      return SYSINFO_RC_SUCCESS;
+   if (missingAsZero)
+   {
+      ret_int(value, 0);
+      return SYSINFO_RC_SUCCESS;
+   }
+   return SYSINFO_RC_ERROR;
 }
 
 /**
@@ -447,6 +467,9 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 	{ _T("Oracle.Performance.PhysicalWrites(*)"),  H_GlobalParameter, _T("GLOBALSTATS/PHYSWRITES"), DCI_DT_INT64, _T("Oracle/Performance: Number of physical writes") },
 	{ _T("Oracle.Performance.RollbackWaitRatio(*)"), H_GlobalParameter, _T("GLOBALSTATS/ROLLBACKWAITRATIO"), DCI_DT_STRING, _T("Oracle/Performance: Ratio of waits for requests to rollback segments") },
 	{ _T("Oracle.Sessions.Count(*)"), H_GlobalParameter, _T("GLOBALSTATS/SESSIONCOUNT"), DCI_DT_INT, _T("Oracle/Sessions: Number of sessions opened") },
+   { _T("Oracle.Sessions.CountByProgram(*)"), H_InstanceParameter, _T("?SESSIONS_BY_PROGRAM/COUNT"), DCI_DT_INT, _T("Oracle/Sessions: Number of sessions created by program {instance}") },
+   { _T("Oracle.Sessions.CountBySchema(*)"), H_InstanceParameter, _T("?SESSIONS_BY_SCHEMA/COUNT"), DCI_DT_INT, _T("Oracle/Sessions: Number of sessions with schema {instance}") },
+   { _T("Oracle.Sessions.CountByUser(*)"), H_InstanceParameter, _T("?SESSIONS_BY_USER/COUNT"), DCI_DT_INT, _T("Oracle/Sessions: Number of sessions with user name {instance}") },
    { _T("Oracle.TableSpace.BlockSize(*)"), H_InstanceParameter, _T("TABLESPACE/BLOCKSIZE"), DCI_DT_INT, _T("Oracle/Tablespace: {instance} block size") },
    { _T("Oracle.TableSpace.DataFiles(*)"), H_InstanceParameter, _T("TABLESPACE/DATAFILES"), DCI_DT_INT, _T("Oracle/Tablespace: {instance} number of datafiles") },
 	{ _T("Oracle.TableSpace.FreeBytes(*)"), H_InstanceParameter, _T("TABLESPACE/FREESPACE"), DCI_DT_INT64, _T("Oracle/Tablespace: {instance} bytes free") },
