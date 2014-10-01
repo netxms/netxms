@@ -12,7 +12,8 @@ Require-Bundle: org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.17",
  org.netxms.ui.eclipse.datacollection;bundle-version="1.2.17",
  org.netxms.ui.eclipse.eventmanager;bundle-version="1.2.17",
  org.eclipse.rap.ui;bundle-version="2.3.0",
- org.netxms.webui.core;bundle-version="1.2.17"
+ org.netxms.webui.core;bundle-version="1.2.17",
+ org.eclipse.rap.ui.forms
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objectmanager.actions,

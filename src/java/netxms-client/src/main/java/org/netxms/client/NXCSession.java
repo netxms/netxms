@@ -4105,7 +4105,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
       if ((flags & NXCObjectModificationData.MODIFY_VPN_NETWORKS) != 0)
       {
-         long varId = NXCPCodes.VID_VPN_NETWORK_BASE;
+         long varId = NXCPCodes.VID_VPN_NETWORK_BASE;         
 
          msg.setVariableInt32(NXCPCodes.VID_NUM_LOCAL_NETS, data.getLocalNetworks().size());
          for(IpAddressListElement e : data.getLocalNetworks())

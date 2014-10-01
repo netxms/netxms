@@ -255,6 +255,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.VPNSubnets"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.VPNSubnets"
+              name="Subnets">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.VPNConnector">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension
@@ -615,9 +625,9 @@
                   checkEnabled="false">
                <iterate>
                   <and>
-                  <instanceof
-                        value="org.netxms.client.objects.AbstractObject">
-                  </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.AbstractObject">
+                     </instanceof>
                      <not>
                         <or>
                            <instanceof
