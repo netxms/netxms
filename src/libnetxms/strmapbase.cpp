@@ -41,7 +41,6 @@ static void ObjectDestructor(void *object)
  */
 StringMapBase::StringMapBase(bool objectOwner)
 {
-	m_size = 0;
 	m_data = NULL;
 	m_objectOwner = objectOwner;
    m_ignoreCase = true;
@@ -69,7 +68,6 @@ void StringMapBase::clear()
       destroyObject(entry->value);
       free(entry);
    }
-	m_size = 0;
 }
 
 /**
@@ -122,7 +120,6 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
       int keyLen = (int)(_tcslen(key) * sizeof(TCHAR));
       entry->value = value;
       HASH_ADD_KEYPTR(hh, m_data, entry->key, keyLen, entry);
-		m_size++;
 	}
 }
 
@@ -143,11 +140,11 @@ void StringMapBase::remove(const TCHAR *key)
    StringMapEntry *entry = find(key);
    if (entry != NULL)
    {
+      HASH_DEL(m_data, entry);
       free(entry->key);
 		if (m_objectOwner)
          destroyObject(entry->value);
       free(entry);
-      m_size--;
    }
 }
 
@@ -193,7 +190,7 @@ const void *StringMapBase::findElement(bool (*comparator)(const TCHAR *, const v
  */
 StructArray<KeyValuePair> *StringMapBase::toArray()
 {
-   StructArray<KeyValuePair> *a = new StructArray<KeyValuePair>(m_size);
+   StructArray<KeyValuePair> *a = new StructArray<KeyValuePair>(size());
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
@@ -203,4 +200,12 @@ StructArray<KeyValuePair> *StringMapBase::toArray()
       a->add(&p);
    }
    return a;
+}
+
+/**
+ * Get size
+ */
+int StringMapBase::size()
+{
+   return HASH_COUNT(m_data);
 }

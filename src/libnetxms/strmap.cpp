@@ -29,7 +29,6 @@
  */
 StringMap::StringMap(const StringMap &src) : StringMapBase(true)
 {
-	m_size = 0;
 	m_objectOwner = src.m_objectOwner;
    m_ignoreCase = src.m_ignoreCase;
    m_objectDestructor = src.m_objectDestructor;
@@ -121,7 +120,7 @@ bool StringMap::getBoolean(const TCHAR *key, bool defaultValue)
  */
 void StringMap::fillMessage(CSCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId)
 {
-   msg->SetVariable(sizeFieldId, (UINT32)m_size);
+   msg->SetVariable(sizeFieldId, (UINT32)size());
    UINT32 id = baseFieldId;
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)

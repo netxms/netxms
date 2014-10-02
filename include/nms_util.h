@@ -414,7 +414,6 @@ struct KeyValuePair
 class LIBNETXMS_EXPORTABLE StringMapBase
 {
 protected:
-	int m_size;
    StringMapEntry *m_data;
 	bool m_objectOwner;
    bool m_ignoreCase;
@@ -435,7 +434,7 @@ public:
 	void remove(const TCHAR *key);
 	void clear();
 
-	int size() { return m_size; }
+	int size();
    bool contains(const TCHAR *key) { return find(key) != NULL; }
 
    bool forEach(bool (*cb)(const TCHAR *, const void *, void *), void *userData);
