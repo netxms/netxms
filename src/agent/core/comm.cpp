@@ -106,13 +106,13 @@ void UnregisterSession(UINT32 dwIndex)
 THREAD_RESULT THREAD_CALL ListenerThread(void *)
 {
    // Create socket(s)
-   SOCKET hSocket = socket(AF_INET, SOCK_STREAM, 0);
+   SOCKET hSocket = (g_dwFlags & AF_DISABLE_IPV4) ? INVALID_SOCKET : socket(AF_INET, SOCK_STREAM, 0);
 #ifdef WITH_IPV6
-   SOCKET hSocket6 = socket(AF_INET6, SOCK_STREAM, 0);
+   SOCKET hSocket6 = (g_dwFlags & AF_DISABLE_IPV6) ? INVALID_SOCKET : socket(AF_INET6, SOCK_STREAM, 0);
 #endif
-   if ((hSocket == INVALID_SOCKET)
+   if (((hSocket == INVALID_SOCKET) && !(g_dwFlags & AF_DISABLE_IPV4))
 #ifdef WITH_IPV6
-       && (hSocket6 == INVALID_SOCKET)
+       && ((hSocket6 == INVALID_SOCKET) && !(g_dwFlags & AF_DISABLE_IPV6))
 #endif
       )
    {
@@ -120,18 +120,24 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
       exit(1);
    }
 
-	SetSocketExclusiveAddrUse(hSocket);
-	SetSocketReuseFlag(hSocket);
+   if (!(g_dwFlags & AF_DISABLE_IPV4))
+   {
+	   SetSocketExclusiveAddrUse(hSocket);
+	   SetSocketReuseFlag(hSocket);
 #ifndef _WIN32
-   fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
+      fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
 #endif
+   }
 
 #ifdef WITH_IPV6
-	SetSocketExclusiveAddrUse(hSocket6);
-	SetSocketReuseFlag(hSocket6);
+   if (!(g_dwFlags & AF_DISABLE_IPV6))
+   {
+	   SetSocketExclusiveAddrUse(hSocket6);
+	   SetSocketReuseFlag(hSocket6);
 #ifndef _WIN32
-   fcntl(hSocket6, F_SETFD, fcntl(hSocket6, F_GETFD) | FD_CLOEXEC);
+      fcntl(hSocket6, F_SETFD, fcntl(hSocket6, F_GETFD) | FD_CLOEXEC);
 #endif
+   }
 #endif
 
    // Fill in local address structure
@@ -184,18 +190,32 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    // Bind socket
    TCHAR buffer[64];
    int bindFailures = 0;
-	DebugPrintf(INVALID_INDEX, 1, _T("Trying to bind on %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
-   if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
+   if (!(g_dwFlags & AF_DISABLE_IPV4))
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+	   DebugPrintf(INVALID_INDEX, 1, _T("Trying to bind on %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
+      if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
+      {
+         nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+         bindFailures++;
+      }
+   }
+   else
+   {
       bindFailures++;
    }
 
 #ifdef WITH_IPV6
-   DebugPrintf(INVALID_INDEX, 1, _T("Trying to bind on [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
-   if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
+   if (!(g_dwFlags & AF_DISABLE_IPV6))
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+      DebugPrintf(INVALID_INDEX, 1, _T("Trying to bind on [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
+      if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
+      {
+         nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+         bindFailures++;
+      }
+   }
+   else
+   {
       bindFailures++;
    }
 #else
@@ -209,11 +229,17 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    }
 
    // Set up queue
-   listen(hSocket, SOMAXCONN);
-	nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_wListenPort);
+   if (!(g_dwFlags & AF_DISABLE_IPV4))
+   {
+      listen(hSocket, SOMAXCONN);
+	   nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_wListenPort);
+   }
 #ifdef WITH_IPV6
-   listen(hSocket6, SOMAXCONN);
-	nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr6.sin6_addr.s6_addr, g_wListenPort);
+   if (!(g_dwFlags & AF_DISABLE_IPV6))
+   {
+      listen(hSocket6, SOMAXCONN);
+	   nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr6.sin6_addr.s6_addr, g_wListenPort);
+   }
 #endif
 
    // Wait for connection requests
@@ -226,13 +252,20 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 
       fd_set rdfs;
       FD_ZERO(&rdfs);
-      FD_SET(hSocket, &rdfs);
+      if (hSocket != INVALID_SOCKET)
+         FD_SET(hSocket, &rdfs);
 #ifdef WITH_IPV6
-      FD_SET(hSocket6, &rdfs);
+      if (hSocket6 != INVALID_SOCKET)
+         FD_SET(hSocket6, &rdfs);
 #endif
 
 #if defined(WITH_IPV6) && !defined(_WIN32)
-      int nRet = select(SELECT_NFDS(max(hSocket, hSocket6) + 1), &rdfs, NULL, NULL, &tv);
+      SOCKET nfds = 0;
+      if (hSocket != INVALID_SOCKET)
+         nfds = hSocket;
+      if ((hSocket6 != INVALID_SOCKET) && (hSocket6 > nfds))
+         nfds = hSocket6;
+      int nRet = select(SELECT_NFDS(nfds + 1), &rdfs, NULL, NULL, &tv);
 #else
       int nRet = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
 #endif
