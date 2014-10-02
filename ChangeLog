@@ -13,6 +13,7 @@
     - Added default search string for LDAP to select all objects: "(objectClass=*)"
     - Added device geolocation tracking and display on map
     - Filter in event processing policy editor
+    - Fixed bug with deletion of subnet with corrected IP
 - Android console:
 	- Fix bug in notifying connection point not found
 	- Fix bug in computing interface expanded list size (removed hardcoded values)
@@ -21,7 +22,7 @@
 	- Integration of new support library
 	- Target to new API version (20)
 - Fixed issues: #51, #91, #359, #409, #532, #542, #571, #563, #590, #593,
-                #613, #617, #624, #626, #632, #635, #638, #639, #642, #649
+                #613, #617, #624, #626, #629, #632, #635, #638, #639, #642, #649
 
 
 *

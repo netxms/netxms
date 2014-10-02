@@ -5561,6 +5561,7 @@ Subnet *Node::createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask)
 void Node::checkSubnetBinding(InterfaceList *pIfList)
 {
 	Cluster *pCluster = NULL;
+   bool hasIfaceForPrimaryIp = false;
 
    if (pIfList != NULL)
    {
@@ -5579,6 +5580,10 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 				   nxlog_write(MSG_INTERNAL_ERROR, EVENTLOG_WARNING_TYPE, "s", _T("Cannot find interface object in Node::CheckSubnetBinding()"));
 				   break;	// Something goes really wrong
 			   }
+
+			   if (pInterface->IpAddr() == m_dwIpAddr)
+               hasIfaceForPrimaryIp = true;
+
 			   if (pInterface->isExcludedFromTopology())
 				   continue;
 
@@ -5632,7 +5637,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
    // Some devices may report interface list, but without IP
    // To prevent such nodes from hanging at top of the tree, attempt
    // to find subnet node primary IP
-   if ((m_dwIpAddr != 0) && !(m_dwFlags & NF_REMOTE_AGENT))
+   if ((m_dwIpAddr != 0) && !(m_dwFlags & NF_REMOTE_AGENT) && !hasIfaceForPrimaryIp)
    {
 	   Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
       if (pSubnet != NULL)
