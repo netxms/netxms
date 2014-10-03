@@ -429,7 +429,7 @@ public:
 	virtual ~StringMapBase();
 
    void setOwner(bool owner) { m_objectOwner = owner; }
-   void setIgnoreCase(bool ignore) { m_ignoreCase = ignore; }
+   void setIgnoreCase(bool ignore);
 
 	void remove(const TCHAR *key);
 	void clear();
