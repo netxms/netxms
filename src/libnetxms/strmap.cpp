@@ -36,7 +36,7 @@ StringMap::StringMap(const StringMap &src) : StringMapBase(true)
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, src.m_data, entry, tmp)
    {
-      setObject(_tcsdup(entry->key), _tcsdup((TCHAR *)entry->value), true);
+      setObject(_tcsdup(m_ignoreCase ? entry->originalKey : entry->key), _tcsdup((TCHAR *)entry->value), true);
    }
 }
 
@@ -61,7 +61,7 @@ StringMap& StringMap::operator =(const StringMap &src)
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, src.m_data, entry, tmp)
    {
-      setObject(_tcsdup(entry->key), _tcsdup((TCHAR *)entry->value), true);
+      setObject(_tcsdup(m_ignoreCase ? entry->originalKey : entry->key), _tcsdup((TCHAR *)entry->value), true);
    }
 	return *this;
 }
@@ -74,7 +74,7 @@ void StringMap::addAll(StringMap *src)
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, src->m_data, entry, tmp)
    {
-      setObject(_tcsdup(entry->key), _tcsdup((TCHAR *)entry->value), true);
+      setObject(_tcsdup(src->m_ignoreCase ? entry->originalKey : entry->key), _tcsdup((TCHAR *)entry->value), true);
    }
 }
 
@@ -125,7 +125,7 @@ void StringMap::fillMessage(CSCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFie
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      msg->SetVariable(id++, entry->key);
+      msg->SetVariable(id++, m_ignoreCase ? entry->originalKey : entry->key);
       msg->SetVariable(id++, (TCHAR *)entry->value);
    }
 }

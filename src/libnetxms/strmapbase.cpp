@@ -65,6 +65,7 @@ void StringMapBase::clear()
    {
       HASH_DEL(m_data, entry);
       free(entry->key);
+      safe_free(entry->originalKey);
       destroyObject(entry->value);
       free(entry);
    }
@@ -106,7 +107,22 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
 	if (entry != NULL)
 	{
 		if (keyPreAllocated)
-			free(key);
+      {
+         if (m_ignoreCase)
+         {
+            free(entry->originalKey);
+            entry->originalKey = key;
+         }
+         else
+         {
+			   free(key);
+         }
+      }
+      else if (m_ignoreCase)
+      {
+         free(entry->originalKey);
+         entry->originalKey = _tcsdup(key);
+      }
 		if (m_objectOwner)
          destroyObject(entry->value);
       entry->value = value;
@@ -116,7 +132,14 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
       entry = (StringMapEntry *)malloc(sizeof(StringMapEntry));
       entry->key = keyPreAllocated ? key : _tcsdup(key);
       if (m_ignoreCase)
+      {
+         entry->originalKey = _tcsdup(entry->key);
          _tcsupr(entry->key);
+      }
+      else
+      {
+         entry->originalKey = NULL;
+      }
       int keyLen = (int)(_tcslen(key) * sizeof(TCHAR));
       entry->value = value;
       HASH_ADD_KEYPTR(hh, m_data, entry->key, keyLen, entry);
@@ -142,6 +165,7 @@ void StringMapBase::remove(const TCHAR *key)
    {
       HASH_DEL(m_data, entry);
       free(entry->key);
+      safe_free(entry->originalKey);
 		if (m_objectOwner)
          destroyObject(entry->value);
       free(entry);
@@ -158,7 +182,7 @@ bool StringMapBase::forEach(bool (*cb)(const TCHAR *, const void *, void *), voi
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if (!cb(entry->key, entry->value, userData))
+      if (!cb(m_ignoreCase ? entry->originalKey : entry->key, entry->value, userData))
       {
          result = false;
          break;
@@ -176,7 +200,7 @@ const void *StringMapBase::findElement(bool (*comparator)(const TCHAR *, const v
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if (comparator(entry->key, entry->value, userData))
+      if (comparator(m_ignoreCase ? entry->originalKey : entry->key, entry->value, userData))
       {
          result = entry->value;
          break;
@@ -195,7 +219,7 @@ StructArray<KeyValuePair> *StringMapBase::toArray()
    HASH_ITER(hh, m_data, entry, tmp)
    {
       KeyValuePair p;
-      p.key = entry->key;
+      p.key = m_ignoreCase ? entry->originalKey : entry->key;
       p.value = entry->value;
       a->add(&p);
    }
@@ -208,4 +232,46 @@ StructArray<KeyValuePair> *StringMapBase::toArray()
 int StringMapBase::size()
 {
    return HASH_COUNT(m_data);
+}
+
+/**
+ * Change case sensitivity mode
+ */
+void StringMapBase::setIgnoreCase(bool ignore)
+{ 
+   if (m_ignoreCase == ignore)
+      return;  // No change required
+
+   m_ignoreCase = ignore;
+   if (m_data == NULL)
+      return;  // Empty set
+
+   StringMapEntry *data = NULL;
+   StringMapEntry *entry, *tmp;
+   if (m_ignoreCase)
+   {
+      // switching to case ignore mode
+      HASH_ITER(hh, m_data, entry, tmp)
+      {
+         HASH_DEL(m_data, entry);
+         entry->originalKey = _tcsdup(entry->key);
+         _tcsupr(entry->key);
+         int keyLen = (int)(_tcslen(entry->key) * sizeof(TCHAR));
+         HASH_ADD_KEYPTR(hh, data, entry->key, keyLen, entry);
+      }
+   }
+   else
+   {
+      // switching to case sensitive mode
+      HASH_ITER(hh, m_data, entry, tmp)
+      {
+         HASH_DEL(m_data, entry);
+         free(entry->key);
+         entry->key = entry->originalKey;
+         entry->originalKey = NULL;
+         int keyLen = (int)(_tcslen(entry->key) * sizeof(TCHAR));
+         HASH_ADD_KEYPTR(hh, data, entry->key, keyLen, entry);
+      }
+   }
+   m_data = data;
 }

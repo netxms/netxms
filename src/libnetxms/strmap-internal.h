@@ -33,6 +33,7 @@ struct StringMapEntry
    UT_hash_handle hh;
    TCHAR *key;
    void *value;
+   TCHAR *originalKey;
 };
 
 #endif
