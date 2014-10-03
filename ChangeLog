@@ -6,6 +6,7 @@
 - Configurable node matching policy for built-in syslog server (controlled by SyslogNodeMatchingPolicy configuration parameter)
 - Oracle monitoring subagent improved (bugs fixed, new metrics)
 - nxalarm tool supports commands add-comment and get-comments
+- Source port number added to events generated from SNMP trap (available via "sourcePort" named parameter)
 - Management console:
     - Can show alarms for multiple selected objects
     - Fixed non-working ordering in event list in alarm details view

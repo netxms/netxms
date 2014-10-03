@@ -160,13 +160,17 @@ void InitTraps()
 /**
  * Generate event for matched trap
  */
-static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu)
+static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, int sourcePort)
 {
-   TCHAR *pszArgList[32], szBuffer[256];
+   TCHAR *argList[32], szBuffer[256];
+   const TCHAR *names[33];
    char szFormat[] = "sssssssssssssssssssssssssssssssss";
    UINT32 i;
-   SNMP_Variable *pVar;
    int iResult;
+
+   memset(argList, 0, sizeof(argList));
+   memset(names, 0, sizeof(names));
+   names[0] = _T("oid");
 
 	// Extract varbinds from trap and add them as event's parameters
    for(i = 0; i < m_pTrapCfg[dwIndex].dwNumMaps; i++)
@@ -174,56 +178,59 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu)
       if (m_pTrapCfg[dwIndex].pMaps[i].dwOidLen & 0x80000000)
       {
 			// Extract by varbind position
-         pVar = pdu->getVariable((m_pTrapCfg[dwIndex].pMaps[i].dwOidLen & 0x7FFFFFFF) - 1);
-         if (pVar != NULL)
+         SNMP_Variable *varbind = pdu->getVariable((m_pTrapCfg[dwIndex].pMaps[i].dwOidLen & 0x7FFFFFFF) - 1);
+         if (varbind != NULL)
          {
 				bool convertToHex = true;
-				pszArgList[i] = _tcsdup((s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ? pVar->getValueAsPrintableString(szBuffer, 256, &convertToHex) : pVar->getValueAsString(szBuffer, 256));
-         }
-         else
-         {
-            pszArgList[i] = _tcsdup(_T(""));
+				argList[i] = _tcsdup(
+               (s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ? 
+                  varbind->getValueAsPrintableString(szBuffer, 256, &convertToHex) : 
+                  varbind->getValueAsString(szBuffer, 256));
+            names[i + 1] = varbind->getName()->getValueAsText();
          }
       }
       else
       {
 			// Extract by varbind OID
-         size_t j;
-         for(j = 0; j < pdu->getNumVariables(); j++)
+         for(int j = 0; j < pdu->getNumVariables(); j++)
          {
-            iResult = pdu->getVariable((int)j)->getName()->compare(
+            SNMP_Variable *varbind = pdu->getVariable(j);
+            iResult = varbind->getName()->compare(
                   m_pTrapCfg[dwIndex].pMaps[i].pdwObjectId,
                   m_pTrapCfg[dwIndex].pMaps[i].dwOidLen);
             if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
             {
 					bool convertToHex = true;
-					pszArgList[i] = _tcsdup(
+					argList[i] = _tcsdup(
                   (s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ? 
-                     pdu->getVariable((int)j)->getValueAsPrintableString(szBuffer, 256, &convertToHex) : 
-                     pdu->getVariable((int)j)->getValueAsString(szBuffer, 256));
+                     varbind->getValueAsPrintableString(szBuffer, 256, &convertToHex) : 
+                     varbind->getValueAsString(szBuffer, 256));
+               names[i] = varbind->getName()->getValueAsText();
                break;
             }
          }
-         if (j == pdu->getNumVariables())
-            pszArgList[i] = _tcsdup(_T(""));
       }
    }
 
-   szFormat[m_pTrapCfg[dwIndex].dwNumMaps + 1] = 0;
-   PostEventWithTag(m_pTrapCfg[dwIndex].dwEventCode, dwObjectId,
-	                 m_pTrapCfg[dwIndex].szUserTag,
-	                 szFormat, pdu->getTrapId()->getValueAsText(),
-                    pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
-                    pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
-                    pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
-                    pszArgList[12], pszArgList[13], pszArgList[14], pszArgList[15],
-                    pszArgList[16], pszArgList[17], pszArgList[18], pszArgList[19],
-                    pszArgList[20], pszArgList[21], pszArgList[22], pszArgList[23],
-                    pszArgList[24], pszArgList[25], pszArgList[26], pszArgList[27],
-                    pszArgList[28], pszArgList[29], pszArgList[30], pszArgList[31]);
+   argList[m_pTrapCfg[dwIndex].dwNumMaps] = (TCHAR *)malloc(16 * sizeof(TCHAR));
+   _sntprintf(argList[m_pTrapCfg[dwIndex].dwNumMaps], 16, _T("%d"), sourcePort);
+   names[m_pTrapCfg[dwIndex].dwNumMaps + 1] = _T("sourcePort");
+   szFormat[m_pTrapCfg[dwIndex].dwNumMaps + 2] = 0;
+   PostEventWithTagAndNames(
+      m_pTrapCfg[dwIndex].dwEventCode, dwObjectId,
+	   m_pTrapCfg[dwIndex].szUserTag, szFormat, names,
+      pdu->getTrapId()->getValueAsText(),
+      argList[0], argList[1], argList[2], argList[3],
+      argList[4], argList[5], argList[6], argList[7],
+      argList[8], argList[9], argList[10], argList[11],
+      argList[12], argList[13], argList[14], argList[15],
+      argList[16], argList[17], argList[18], argList[19],
+      argList[20], argList[21], argList[22], argList[23],
+      argList[24], argList[25], argList[26], argList[27],
+      argList[28], argList[29], argList[30], argList[31]);
 
-   for(i = 0; i < m_pTrapCfg[dwIndex].dwNumMaps; i++)
-      free(pszArgList[i]);
+   for(i = 0; i <= m_pTrapCfg[dwIndex].dwNumMaps; i++)
+      free(argList[i]);
 }
 
 /**
@@ -362,7 +369,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
 
          if (dwMatchLen > 0)
          {
-            GenerateTrapEvent(pNode->Id(), dwMatchIdx, pdu);
+            GenerateTrapEvent(pNode->Id(), dwMatchIdx, pdu, (int)ntohs(pOrigin->sin_port));
          }
          else     // Process unmatched traps
          {
@@ -384,7 +391,9 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
                }
 
                // Generate default event for unmatched traps
-               PostEvent(EVENT_SNMP_UNMATCHED_TRAP, pNode->Id(), "ss", pdu->getTrapId()->getValueAsText(), pszTrapArgs);
+               const TCHAR *names[3] = { _T("oid"), NULL, _T("sourcePort") };
+               PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, pNode->Id(), "ssd", names, 
+                  pdu->getTrapId()->getValueAsText(), pszTrapArgs, (int)ntohs(pOrigin->sin_port));
                free(pszTrapArgs);
             }
          }
