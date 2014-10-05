@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# remove legacy stuff
 if test -x /etc/init.d/netxmsd; then
 	/etc/init.d/netxmsd stop
 	rm -f /etc/init.d/netxmsd
@@ -7,4 +8,21 @@ fi
 if test -x /etc/init.d/nxagentd; then
 	/etc/init.d/nxagentd stop
 	rm -f /etc/init.d/nxagentd
+fi
+
+# stop services
+svcs netxmsd >/dev/null 2>&1
+if [ $? = 0 ]; then
+	svcadm disable -s -t netxmsd
+	if [ x"$UPDATE" != "xyes" ]; then
+		svccfg delete netxmsd
+	fi
+fi
+
+svcs nxagentd >/dev/null 2>&1
+if [ $? = 0 ]; then
+	svcadm disable -s -t nxagentd
+	if [ x"$UPDATE" != "xyes" ]; then
+		svccfg delete nxagentd
+	fi
 fi

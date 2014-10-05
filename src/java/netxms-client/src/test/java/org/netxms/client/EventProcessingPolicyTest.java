@@ -41,7 +41,7 @@ public class EventProcessingPolicyTest extends SessionTest
 	{
       final NXCSession session = connect();
 
-      session.sendEvent(100000, new String[] { "test message\nline #2\nline #3" });
+      session.sendEvent(TestConstants.EVENT_CODE, new String[] { "test message\nline #2\nline #3" });
       
       session.disconnect();
 	}

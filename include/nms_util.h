@@ -279,19 +279,147 @@ public:
 };
 
 /**
+ * Dynamic array class
+ */
+class LIBNETXMS_EXPORTABLE Array
+{
+private:
+	int m_size;
+	int m_allocated;
+	int m_grow;
+   size_t m_elementSize;
+	void **m_data;
+	bool m_objectOwner;
+
+	void internalRemove(int index, bool allowDestruction);
+	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
+
+protected:
+   bool m_storePointers;
+	void (*m_objectDestructor)(void *);
+
+   Array(void *data, int initial, int grow, size_t elementSize);
+   void *__getBuffer() { return m_data; }
+
+public:
+	Array(int initial = 0, int grow = 16, bool owner = false);
+	virtual ~Array();
+
+	int add(void *element);
+   void *get(int index) { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
+   int indexOf(void *element);
+	void set(int index, void *element);
+	void replace(int index, void *element);
+	void remove(int index) { internalRemove(index, true); }
+   void remove(void *element) { internalRemove(indexOf(element), true); }
+	void unlink(int index) { internalRemove(index, false); }
+	void unlink(void *element) { internalRemove(indexOf(element), false); }
+	void clear();
+   void sort(int (*cb)(const void *, const void *));
+   void *find(const void *key, int (*cb)(const void *, const void *));
+
+	int size() { return m_size; }
+
+	void setOwner(bool owner) { m_objectOwner = owner; }
+	bool isOwner() { return m_objectOwner; }
+};
+
+/**
+ * Template class for dynamic array which holds objects
+ */
+template <class T> class ObjectArray : public Array
+{
+private:
+	static void destructor(void *object) { delete (T*)object; }
+
+public:
+	ObjectArray(int initial = 0, int grow = 16, bool owner = false) : Array(initial, grow, owner) { m_objectDestructor = destructor; }
+	virtual ~ObjectArray() { }
+
+	int add(T *object) { return Array::add((void *)object); }
+	T *get(int index) { return (T*)Array::get(index); }
+   int indexOf(T *object) { return Array::indexOf((void *)object); }
+	void set(int index, T *object) { Array::set(index, (void *)object); }
+	void replace(int index, T *object) { Array::replace(index, (void *)object); }
+	void remove(int index) { Array::remove(index); }
+   void remove(T *object) { Array::remove((void *)object); }
+	void unlink(int index) { Array::unlink(index); }
+   void unlink(T *object) { Array::unlink((void *)object); }
+};
+
+/**
+ * Template class for dynamic array which holds scalar values
+ */
+template <class T> class IntegerArray : public Array
+{
+private:
+	static void destructor(void *element) { }
+
+public:
+	IntegerArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
+	virtual ~IntegerArray() { }
+
+   int add(T value) { return Array::add(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   T get(int index) { return m_storePointers ? CAST_FROM_POINTER(Array::get(index), T) : *((T*)Array::get(index)); }
+   int indexOf(T value) { return Array::indexOf(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   void set(int index, T value) { Array::set(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   void replace(int index, T value) { Array::replace(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+
+   T *getBuffer() { return (T*)__getBuffer(); }
+};
+
+/**
+ * Auxilliary class to hold dynamically allocated array of structures
+ */
+template <class T> class StructArray : public Array
+{
+private:
+	static void destructor(void *element) { }
+
+public:
+	StructArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; }
+	StructArray(T *data, int size) : Array(data, size, 16, sizeof(T)) { m_objectDestructor = destructor; }
+	virtual ~StructArray() { }
+
+	int add(T *element) { return Array::add((void *)element); }
+	T *get(int index) { return (T*)Array::get(index); }
+   int indexOf(T *element) { return Array::indexOf((void *)element); }
+	void set(int index, T *element) { Array::set(index, (void *)element); }
+	void replace(int index, T *element) { Array::replace(index, (void *)element); }
+	void remove(int index) { Array::remove(index); }
+   void remove(T *element) { Array::remove((void *)element); }
+	void unlink(int index) { Array::unlink(index); }
+   void unlink(T *element) { Array::unlink((void *)element); }
+
+   T *getBuffer() { return (T*)__getBuffer(); }
+};
+
+/**
+ * Entry of string map (internal)
+ */
+struct StringMapEntry;
+
+/**
+ * Key/value pair
+ */
+struct KeyValuePair
+{
+   const TCHAR *key;
+   const void *value;
+};
+
+/**
  * String maps base class
  */
 class LIBNETXMS_EXPORTABLE StringMapBase
 {
 protected:
-	int m_size;
-	TCHAR **m_keys;
-	void **m_values;
+   StringMapEntry *m_data;
 	bool m_objectOwner;
    bool m_ignoreCase;
 	void (*m_objectDestructor)(void *);
 
-	UINT32 find(const TCHAR *key);
+	StringMapEntry *find(const TCHAR *key);
 	void setObject(TCHAR *key, void *value, bool keyPreAlloc);
 	void *getObject(const TCHAR *key);
 	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
@@ -301,14 +429,24 @@ public:
 	virtual ~StringMapBase();
 
    void setOwner(bool owner) { m_objectOwner = owner; }
-   void setIgnoreCase(bool ignore) { m_ignoreCase = ignore; }
+   void setIgnoreCase(bool ignore);
 
 	void remove(const TCHAR *key);
 	void clear();
 
-	int size() { return m_size; }
-	const TCHAR *getKeyByIndex(int idx) { return ((idx >= 0) && (idx < m_size)) ? CHECK_NULL_EX(m_keys[idx]) : NULL; }
+	int size();
+   bool contains(const TCHAR *key) { return find(key) != NULL; }
+
+   bool forEach(bool (*cb)(const TCHAR *, const void *, void *), void *userData);
+   const void *findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData);
+
+   StructArray<KeyValuePair> *toArray();
 };
+
+/**
+ * NXCP message class
+ */
+class CSCPMessage;
 
 /**
  * String map class
@@ -332,7 +470,7 @@ public:
 	UINT32 getULong(const TCHAR *key, UINT32 defaultValue);
 	bool getBoolean(const TCHAR *key, bool defaultValue);
 
-	const TCHAR *getValueByIndex(int idx) { return ((idx >= 0) && (idx < m_size)) ? CHECK_NULL_EX((TCHAR *)m_values[idx]) : NULL; }
+   void fillMessage(CSCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId);
 };
 
 /**
@@ -348,7 +486,6 @@ public:
 
 	void set(const TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, false); }
 	T *get(const TCHAR *key) { return (T*)getObject(key); }
-	T *getValueByIndex(int idx) { return ((idx >= 0) && (idx < m_size)) ? (T *)m_values[idx] : NULL; }
 };
 
 /**
@@ -427,121 +564,6 @@ public:
    void addAllFromMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
 
    String getAll(const TCHAR *separator);
-};
-
-/**
- * Dynamic array class
- */
-class LIBNETXMS_EXPORTABLE Array
-{
-private:
-	int m_size;
-	int m_allocated;
-	int m_grow;
-   size_t m_elementSize;
-	void **m_data;
-	bool m_objectOwner;
-
-	void internalRemove(int index, bool allowDestruction);
-	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
-
-protected:
-   bool m_storePointers;
-	void (*m_objectDestructor)(void *);
-
-   Array(void *data, int initial, int grow, size_t elementSize);
-   void *__getBuffer() { return m_data; }
-
-public:
-	Array(int initial = 0, int grow = 16, bool owner = false);
-	virtual ~Array();
-
-	int add(void *element);
-   void *get(int index) { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
-   int indexOf(void *element);
-	void set(int index, void *element);
-	void replace(int index, void *element);
-	void remove(int index) { internalRemove(index, true); }
-   void remove(void *element) { internalRemove(indexOf(element), true); }
-	void unlink(int index) { internalRemove(index, false); }
-	void unlink(void *element) { internalRemove(indexOf(element), false); }
-	void clear();
-   void sort(int (*cb)(const void *, const void *));
-
-	int size() { return m_size; }
-
-	void setOwner(bool owner) { m_objectOwner = owner; }
-	bool isOwner() { return m_objectOwner; }
-};
-
-/**
- * Template class for dynamic array which holds objects
- */
-template <class T> class ObjectArray : public Array
-{
-private:
-	static void destructor(void *object) { delete (T*)object; }
-
-public:
-	ObjectArray(int initial = 0, int grow = 16, bool owner = false) : Array(initial, grow, owner) { m_objectDestructor = destructor; }
-	virtual ~ObjectArray() { }
-
-	int add(T *object) { return Array::add((void *)object); }
-	T *get(int index) { return (T*)Array::get(index); }
-   int indexOf(T *object) { return Array::indexOf((void *)object); }
-	void set(int index, T *object) { Array::set(index, (void *)object); }
-	void replace(int index, T *object) { Array::replace(index, (void *)object); }
-	void remove(int index) { Array::remove(index); }
-   void remove(T *object) { Array::remove((void *)object); }
-	void unlink(int index) { Array::unlink(index); }
-   void unlink(T *object) { Array::unlink((void *)object); }
-};
-
-/**
- * Template class for dynamic array which holds scalar values
- */
-template <class T> class IntegerArray : public Array
-{
-private:
-	static void destructor(void *element) { }
-
-public:
-	IntegerArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
-	virtual ~IntegerArray() { }
-
-   int add(T value) { return Array::add(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
-   T get(int index) { return m_storePointers ? CAST_FROM_POINTER(Array::get(index), T) : *((T*)Array::get(index)); }
-   int indexOf(T value) { return Array::indexOf(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
-   void set(int index, T value) { Array::set(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
-   void replace(int index, T value) { Array::replace(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
-
-   T *getBuffer() { return (T*)__getBuffer(); }
-};
-
-/**
- * Auxilliary class to hold dynamically allocated array of structures
- */
-template <class T> class StructArray : public Array
-{
-private:
-	static void destructor(void *element) { }
-
-public:
-	StructArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; }
-	StructArray(T *data, int size) : Array(data, size, 16, sizeof(T)) { m_objectDestructor = destructor; }
-	virtual ~StructArray() { }
-
-	int add(T *element) { return Array::add((void *)element); }
-	T *get(int index) { return (T*)Array::get(index); }
-   int indexOf(T *element) { return Array::indexOf((void *)element); }
-	void set(int index, T *element) { Array::set(index, (void *)element); }
-	void replace(int index, T *element) { Array::replace(index, (void *)element); }
-	void remove(int index) { Array::remove(index); }
-   void remove(T *element) { Array::remove((void *)element); }
-	void unlink(int index) { Array::unlink(index); }
-   void unlink(T *element) { Array::unlink((void *)element); }
-
-   T *getBuffer() { return (T*)__getBuffer(); }
 };
 
 /**
@@ -744,6 +766,50 @@ public:
 
    UINT32 getObjectId(int row) { TableRow *r = m_data->get(row); return (r != NULL) ? r->getObjectId() : 0; }
    void setObjectId(int row, UINT32 id) { TableRow *r = m_data->get(row); if (r != NULL) r->setObjectId(id); }
+};
+
+/**
+ * IP address
+ */
+class LIBNETXMS_EXPORTABLE InetAddress
+{
+private:
+   short m_maskBits;
+   short m_family;
+   union
+   {
+      UINT32 v4;
+      BYTE v6[16];
+   } m_addr;
+
+public:
+   InetAddress();
+   InetAddress(UINT32 addr);
+   InetAddress(BYTE *addr);
+
+   bool isAnyLocal() const;
+   bool isLoopback() const;
+   bool isMulticast() const;
+   bool isBroadcast() const;
+   bool isValid() const { return m_family != AF_UNSPEC; }
+
+   int getFamily() const { return m_family; }
+   UINT32 getAddressV4() const { return (m_family == AF_INET) ? m_addr.v4 : 0; }
+   const BYTE *getAddressV6() const { return (m_family == AF_INET6) ? m_addr.v6 : (const BYTE *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"; }
+
+   bool contain(const InetAddress &a) const;
+   bool equals(const InetAddress &a) const;
+   int compareTo(const InetAddress &a) const;
+
+   void setMaskBits(int m) { m_maskBits = m; }
+   int getMaskBits() const { return m_maskBits; }
+
+   String toString() const;
+   TCHAR *toString(TCHAR *buffer) const;
+
+   static InetAddress resolveHostName(const WCHAR *hostname, int af = AF_INET);
+   static InetAddress resolveHostName(const char *hostname, int af = AF_INET);
+   static InetAddress createFromSockaddr(struct sockaddr *s);
 };
 
 /**
@@ -978,163 +1044,165 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flag
 extern "C"
 {
 #endif
+
 #if defined(_WIN32) || !(HAVE_DECL___BSWAP_32)
-   UINT32 LIBNETXMS_EXPORTABLE __bswap_32(UINT32 dwVal);
+UINT32 LIBNETXMS_EXPORTABLE __bswap_32(UINT32 dwVal);
 #endif
 #if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
-   UINT64 LIBNETXMS_EXPORTABLE __bswap_64(UINT64 qwVal);
+UINT64 LIBNETXMS_EXPORTABLE __bswap_64(UINT64 qwVal);
 #endif
-   double LIBNETXMS_EXPORTABLE __bswap_double(double dVal);
-   void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr);
+double LIBNETXMS_EXPORTABLE __bswap_double(double dVal);
+void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr);
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 #if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
-   void LIBNETXMS_EXPORTABLE wcsupr(WCHAR *in);
+void LIBNETXMS_EXPORTABLE __wcsupr(WCHAR *in);
+#define wcsupr __wcsupr
 #endif
-   void LIBNETXMS_EXPORTABLE strupr(char *in);
+void LIBNETXMS_EXPORTABLE __strupr(char *in);
+#define strupr __strupr
 #endif
 
-	void LIBNETXMS_EXPORTABLE QSortEx(void *base, size_t nmemb, size_t size, void *arg,
+void LIBNETXMS_EXPORTABLE QSortEx(void *base, size_t nmemb, size_t size, void *arg,
 												 int (*compare)(const void *, const void *, void *));
 
-   INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs();
+INT64 LIBNETXMS_EXPORTABLE GetCurrentTimeMs();
 
-	UINT64 LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName);
-	UINT64 LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);
+UINT64 LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName);
+UINT64 LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName);
 #ifdef UNICODE
 #define FileSize FileSizeW
 #else
 #define FileSize FileSizeA
 #endif
 
-   int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 dwMask);
-   TCHAR LIBNETXMS_EXPORTABLE *IpToStr(UINT32 dwAddr, TCHAR *szBuffer);
+int LIBNETXMS_EXPORTABLE BitsInMask(UINT32 dwMask);
+TCHAR LIBNETXMS_EXPORTABLE *IpToStr(UINT32 dwAddr, TCHAR *szBuffer);
 #ifdef UNICODE
-   char LIBNETXMS_EXPORTABLE *IpToStrA(UINT32 dwAddr, char *szBuffer);
+char LIBNETXMS_EXPORTABLE *IpToStrA(UINT32 dwAddr, char *szBuffer);
 #else
 #define IpToStrA IpToStr
 #endif
-	TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(BYTE *addr, TCHAR *buffer);
-	TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
+TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer);
+TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
 
-   UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *name);
-   UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameW(const WCHAR *name);
+UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *name);
+UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameW(const WCHAR *name);
 #ifdef UNICODE
 #define ResolveHostName ResolveHostNameW
 #else
 #define ResolveHostName ResolveHostNameA
 #endif
 
-   void LIBNETXMS_EXPORTABLE *nx_memdup(const void *data, size_t size);
-   void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size);
+void LIBNETXMS_EXPORTABLE *nx_memdup(const void *data, size_t size);
+void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size);
 
-   WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *data, size_t size, WCHAR *pStr);
-   char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *data, size_t size, char *pStr);
+WCHAR LIBNETXMS_EXPORTABLE *BinToStrW(const BYTE *data, size_t size, WCHAR *pStr);
+char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *data, size_t size, char *pStr);
 #ifdef UNICODE
 #define BinToStr BinToStrW
 #else
 #define BinToStr BinToStrA
 #endif
 
-   size_t LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *data, size_t size);
-   size_t LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *data, size_t size);
+size_t LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *data, size_t size);
+size_t LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *data, size_t size);
 #ifdef UNICODE
 #define StrToBin StrToBinW
 #else
 #define StrToBin StrToBinA
 #endif
 
-   TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *data, TCHAR *pStr);
+TCHAR LIBNETXMS_EXPORTABLE *MACToStr(const BYTE *data, TCHAR *pStr);
 
-   void LIBNETXMS_EXPORTABLE StrStripA(char *pszStr);
-   void LIBNETXMS_EXPORTABLE StrStripW(WCHAR *pszStr);
+void LIBNETXMS_EXPORTABLE StrStripA(char *pszStr);
+void LIBNETXMS_EXPORTABLE StrStripW(WCHAR *pszStr);
 #ifdef UNICODE
 #define StrStrip StrStripW
 #else
 #define StrStrip StrStripA
 #endif
 
-   const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer);
-	const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer);
+const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer);
+const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer);
 #ifdef UNICODE
 #define ExtractWord ExtractWordW
 #else
 #define ExtractWord ExtractWordA
 #endif
 
-   int LIBNETXMS_EXPORTABLE NumCharsA(const char *pszStr, char ch);
-   int LIBNETXMS_EXPORTABLE NumCharsW(const WCHAR *pszStr, WCHAR ch);
+int LIBNETXMS_EXPORTABLE NumCharsA(const char *pszStr, char ch);
+int LIBNETXMS_EXPORTABLE NumCharsW(const WCHAR *pszStr, WCHAR ch);
 #ifdef UNICODE
 #define NumChars NumCharsW
 #else
 #define NumChars NumCharsA
 #endif
 
-	void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFA(char *str);
-	void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str);
+void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFA(char *str);
+void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str);
 #ifdef UNICODE
 #define RemoveTrailingCRLF RemoveTrailingCRLFW
 #else
 #define RemoveTrailingCRLF RemoveTrailingCRLFA
 #endif
 
-	BOOL LIBNETXMS_EXPORTABLE RegexpMatchA(const char *pszStr, const char *pszExpr, BOOL bMatchCase);
-	BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *pszStr, const WCHAR *pszExpr, BOOL bMatchCase);
+BOOL LIBNETXMS_EXPORTABLE RegexpMatchA(const char *str, const char *expr, bool matchCase);
+BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool matchCase);
 #ifdef UNICODE
 #define RegexpMatch RegexpMatchW
 #else
 #define RegexpMatch RegexpMatchA
 #endif
 
-	const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommand);
-	void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);
-   bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bool matchCase);
-	TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
+const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommand);
+void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);
+bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bool matchCase);
+TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
 
 #ifdef __cplusplus
-   BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtendedChars = FALSE);
+BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtendedChars = FALSE);
 #endif
-   BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName);
-   /* deprecated */ void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr, const TCHAR *pszReplace);
-   const TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(const TCHAR *pszFileName);
-   void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize);
-	BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize);
+BOOL LIBNETXMS_EXPORTABLE IsValidScriptName(const TCHAR *pszName);
+/* deprecated */ void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr, const TCHAR *pszReplace);
+const TCHAR LIBNETXMS_EXPORTABLE *GetCleanFileName(const TCHAR *pszFileName);
+void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize);
+BYTE LIBNETXMS_EXPORTABLE *LoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize);
 #ifdef UNICODE
-	BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, UINT32 *pdwFileSize);
+BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, UINT32 *pdwFileSize);
 #else
 #define LoadFileA LoadFile
 #endif
 
-   UINT32 LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, UINT32 size, UINT32 dwCRC);
-   void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nbytes, unsigned char *hash);
-	void LIBNETXMS_EXPORTABLE MD5HashForPattern(const unsigned char *data, size_t patternSize, size_t fullSize, BYTE *hash);
-   void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, unsigned char *hash);
-   void LIBNETXMS_EXPORTABLE SHA1HashForPattern(unsigned char *data, size_t patternSize, size_t fullSize, unsigned char *hash);
-   BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *pszFileName, BYTE *pHash);
-   BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *pHash);
-   BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *pszFileName, UINT32 *pResult);
+UINT32 LIBNETXMS_EXPORTABLE CalculateCRC32(const unsigned char *data, UINT32 size, UINT32 dwCRC);
+void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nbytes, unsigned char *hash);
+void LIBNETXMS_EXPORTABLE MD5HashForPattern(const unsigned char *data, size_t patternSize, size_t fullSize, BYTE *hash);
+void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, unsigned char *hash);
+void LIBNETXMS_EXPORTABLE SHA1HashForPattern(unsigned char *data, size_t patternSize, size_t fullSize, unsigned char *hash);
+BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *pszFileName, BYTE *pHash);
+BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *pHash);
+BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *pszFileName, UINT32 *pResult);
 
-	void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key);
-	void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key);
+void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key);
+void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key);
 
-	BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd);
+BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd);
 
-   UINT32 LIBNETXMS_EXPORTABLE IcmpPing(UINT32 dwAddr, int iNumRetries, UINT32 dwTimeout,
-                                       UINT32 *pdwRTT, UINT32 dwPacketSize);
+UINT32 LIBNETXMS_EXPORTABLE IcmpPing(UINT32 dwAddr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize);
 
-   int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText);
+int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText);
 
-   HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText);
-   void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
-   void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *pszSymbol, TCHAR *pszErrorText);
+HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText);
+void LIBNETXMS_EXPORTABLE DLClose(HMODULE hModule);
+void LIBNETXMS_EXPORTABLE *DLGetSymbolAddr(HMODULE hModule, const char *pszSymbol, TCHAR *pszErrorText);
 
-	bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const WCHAR *option, WCHAR *buffer, int bufSize);
-	bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolW(const WCHAR *optString, const WCHAR *option, bool defVal);
-	long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntW(const WCHAR *optString, const WCHAR *option, long defVal);
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueW(const WCHAR *optString, const WCHAR *option, WCHAR *buffer, int bufSize);
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolW(const WCHAR *optString, const WCHAR *option, bool defVal);
+long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntW(const WCHAR *optString, const WCHAR *option, long defVal);
 
-	bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueA(const char *optString, const char *option, char *buffer, int bufSize);
-	bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolA(const char *optString, const char *option, bool defVal);
-	long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntA(const char *optString, const char *option, long defVal);
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueA(const char *optString, const char *option, char *buffer, int bufSize);
+bool LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsBoolA(const char *optString, const char *option, bool defVal);
+long LIBNETXMS_EXPORTABLE ExtractNamedOptionValueAsIntA(const char *optString, const char *option, long defVal);
 
 #ifdef UNICODE
 #define ExtractNamedOptionValue ExtractNamedOptionValueW
@@ -1147,181 +1215,181 @@ extern "C"
 #endif
 
 #ifdef __cplusplus
-	const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText = _T("Unknown"));
+const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText = _T("Unknown"));
 #else
-	const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText);
+const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText);
 #endif
 
 #ifdef _WIN32
-   TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 dwError, TCHAR *pszBuffer, size_t iBufSize);
-	BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strSize);
-	INT64 LIBNETXMS_EXPORTABLE GetProcessRSS();
+TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 dwError, TCHAR *pszBuffer, size_t iBufSize);
+BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strSize);
+INT64 LIBNETXMS_EXPORTABLE GetProcessRSS();
 #endif
 
 #if !(HAVE_DAEMON)
-   int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose);
+int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose);
 #endif
 
-   UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr);
+UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr);
 
 #ifndef _WIN32
-	BOOL LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp);
-   int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, UINT32 dwFlags, const WCHAR *pWideCharStr,
-                                                int cchWideChar, char *pByteStr, int cchByteChar,
-                                                char *pDefaultChar, BOOL *pbUsedDefChar);
-   int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, UINT32 dwFlags, const char *pByteStr,
-                                                int cchByteChar, WCHAR *pWideCharStr,
-                                                int cchWideChar);
+BOOL LIBNETXMS_EXPORTABLE SetDefaultCodepage(const char *cp);
+int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, UINT32 dwFlags, const WCHAR *pWideCharStr,
+                                             int cchWideChar, char *pByteStr, int cchByteChar,
+                                             char *pDefaultChar, BOOL *pbUsedDefChar);
+int LIBNETXMS_EXPORTABLE MultiByteToWideChar(int iCodePage, UINT32 dwFlags, const char *pByteStr,
+                                             int cchByteChar, WCHAR *pWideCharStr,
+                                             int cchWideChar);
 
 #if !defined(UNICODE_UCS2) || !HAVE_WCSLEN
-	int LIBNETXMS_EXPORTABLE ucs2_strlen(const UCS2CHAR *pStr);
+int LIBNETXMS_EXPORTABLE ucs2_strlen(const UCS2CHAR *pStr);
 #endif
 #if !defined(UNICODE_UCS2) || !HAVE_WCSNCPY
-	UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strncpy(UCS2CHAR *pDst, const UCS2CHAR *pSrc, int nDstLen);
+UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strncpy(UCS2CHAR *pDst, const UCS2CHAR *pSrc, int nDstLen);
 #endif
 #if !defined(UNICODE_UCS2) || !HAVE_WCSDUP
-	UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2__tcsdup(const UCS2CHAR *pStr);
+UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2__tcsdup(const UCS2CHAR *pStr);
 #endif
 
-	size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
-	size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen);
-	UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromMBString(const char *pszString);
-	char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *pszString);
+size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
+size_t LIBNETXMS_EXPORTABLE mb_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen);
+UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromMBString(const char *pszString);
+char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *pszString);
 
-	int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...);
-	int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const WCHAR *format, ...);
-	int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, const WCHAR *format, ...);
-	int LIBNETXMS_EXPORTABLE nx_vwprintf(const WCHAR *format, va_list args);
-	int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, const WCHAR *format, va_list args);
-	int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, const WCHAR *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_wprintf(const WCHAR *format, ...);
+int LIBNETXMS_EXPORTABLE nx_fwprintf(FILE *fp, const WCHAR *format, ...);
+int LIBNETXMS_EXPORTABLE nx_swprintf(WCHAR *buffer, size_t size, const WCHAR *format, ...);
+int LIBNETXMS_EXPORTABLE nx_vwprintf(const WCHAR *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_vfwprintf(FILE *fp, const WCHAR *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_vswprintf(WCHAR *buffer, size_t size, const WCHAR *format, va_list args);
 
-	int LIBNETXMS_EXPORTABLE nx_wscanf(const WCHAR *format, ...);
-	int LIBNETXMS_EXPORTABLE nx_fwscanf(FILE *fp, const WCHAR *format, ...);
-	int LIBNETXMS_EXPORTABLE nx_swscanf(const WCHAR *str, const WCHAR *format, ...);
-	int LIBNETXMS_EXPORTABLE nx_vwscanf(const WCHAR *format, va_list args);
-	int LIBNETXMS_EXPORTABLE nx_vfwscanf(FILE *fp, const WCHAR *format, va_list args);
-	int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_wscanf(const WCHAR *format, ...);
+int LIBNETXMS_EXPORTABLE nx_fwscanf(FILE *fp, const WCHAR *format, ...);
+int LIBNETXMS_EXPORTABLE nx_swscanf(const WCHAR *str, const WCHAR *format, ...);
+int LIBNETXMS_EXPORTABLE nx_vwscanf(const WCHAR *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_vfwscanf(FILE *fp, const WCHAR *format, va_list args);
+int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_list args);
 
 #endif	/* _WIN32 */
 
-   WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString);
-	WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString);
-   char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString);
-   char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString);
+WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString);
+WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString);
+char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString);
+char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString);
 
 #ifdef _WITH_ENCRYPTION
-	WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer);
+WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer);
 #endif
 
 #ifdef UNICODE_UCS4
-	size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *dst, int dstLen);
-	size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *dst, int dstLen);
-	size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
-	UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const WCHAR *pwszString);
-	WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString);
+size_t LIBNETXMS_EXPORTABLE ucs2_to_ucs4(const UCS2CHAR *src, int srcLen, WCHAR *dst, int dstLen);
+size_t LIBNETXMS_EXPORTABLE ucs4_to_ucs2(const WCHAR *src, int srcLen, UCS2CHAR *dst, int dstLen);
+size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
+UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const WCHAR *pwszString);
+WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString);
 #endif
 
 #if !defined(_WIN32) && !HAVE_WSTAT
-	int wstat(const WCHAR *_path, struct stat *_sbuf);
+int wstat(const WCHAR *_path, struct stat *_sbuf);
 #endif
 
 #if defined(UNICODE) && !defined(_WIN32)
 
 #if !HAVE_WPOPEN
-	FILE LIBNETXMS_EXPORTABLE *wpopen(const WCHAR *_command, const WCHAR *_type);
+FILE LIBNETXMS_EXPORTABLE *wpopen(const WCHAR *_command, const WCHAR *_type);
 #endif
 #if !HAVE_WFOPEN
-	FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type);
+FILE LIBNETXMS_EXPORTABLE *wfopen(const WCHAR *_name, const WCHAR *_type);
 #endif
 #if HAVE_FOPEN64 && !HAVE_WFOPEN64
-	FILE LIBNETXMS_EXPORTABLE *wfopen64(const WCHAR *_name, const WCHAR *_type);
+FILE LIBNETXMS_EXPORTABLE *wfopen64(const WCHAR *_name, const WCHAR *_type);
 #endif
 #if !HAVE_WOPEN
-	int LIBNETXMS_EXPORTABLE wopen(const WCHAR *, int, ...);
+int LIBNETXMS_EXPORTABLE wopen(const WCHAR *, int, ...);
 #endif
 #if !HAVE_WCHMOD
-	int LIBNETXMS_EXPORTABLE wchmod(const WCHAR *_name, int mode);
+int LIBNETXMS_EXPORTABLE wchmod(const WCHAR *_name, int mode);
 #endif
 #if !HAVE_WCHDIR
-	int wchdir(const WCHAR *_path);
+int wchdir(const WCHAR *_path);
 #endif
 #if !HAVE_WMKDIR
-	int wmkdir(const WCHAR *_path, int mode);
+int wmkdir(const WCHAR *_path, int mode);
 #endif
 #if !HAVE_WRMDIR
-	int wrmdir(const WCHAR *_path);
+int wrmdir(const WCHAR *_path);
 #endif
 #if !HAVE_WRENAME
-	int wrename(const WCHAR *_oldpath, const WCHAR *_newpath);
+int wrename(const WCHAR *_oldpath, const WCHAR *_newpath);
 #endif
 #if !HAVE_WUNLINK
-	int wunlink(const WCHAR *_path);
+int wunlink(const WCHAR *_path);
 #endif
 #if !HAVE_WREMOVE
-	int wremove(const WCHAR *_path);
+int wremove(const WCHAR *_path);
 #endif
 #if !HAVE_WSYSTEM
-	int wsystem(const WCHAR *_cmd);
+int wsystem(const WCHAR *_cmd);
 #endif
 #if !HAVE_WMKSTEMP
-	int wmkstemp(WCHAR *_template);
+int wmkstemp(WCHAR *_template);
 #endif
 #if !HAVE_WACCESS
-	int waccess(const WCHAR *_path, int mode);
+int waccess(const WCHAR *_path, int mode);
 #endif
 #if !HAVE_WGETENV
-	WCHAR *wgetenv(const WCHAR *_string);
+WCHAR *wgetenv(const WCHAR *_string);
 #endif
 #if !HAVE_WCTIME
-	WCHAR *wctime(const time_t *timep);
+WCHAR *wctime(const time_t *timep);
 #endif
 #if !HAVE_PUTWS
-	int putws(const WCHAR *s);
+int putws(const WCHAR *s);
 #endif
 #if !HAVE_WCSERROR && HAVE_STRERROR
-	WCHAR *wcserror(int errnum);
+WCHAR *wcserror(int errnum);
 #endif
 #if !HAVE_WCSERROR_R && HAVE_STRERROR_R
 #if HAVE_POSIX_STRERROR_R
-	int wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen);
+int wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen);
 #else
-	WCHAR *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen);
+WCHAR *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen);
 #endif
 #endif
 
 #endif	/* UNICODE && !_WIN32*/
 
 #if !HAVE_STRTOLL
-	INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base);
+INT64 LIBNETXMS_EXPORTABLE strtoll(const char *nptr, char **endptr, int base);
 #endif
 #if !HAVE_STRTOULL
-	UINT64 LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base);
+UINT64 LIBNETXMS_EXPORTABLE strtoull(const char *nptr, char **endptr, int base);
 #endif
 
 #if !HAVE_WCSTOLL
-	INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base);
+INT64 LIBNETXMS_EXPORTABLE wcstoll(const WCHAR *nptr, WCHAR **endptr, int base);
 #endif
 #if !HAVE_WCSTOULL
-	UINT64 LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
+UINT64 LIBNETXMS_EXPORTABLE wcstoull(const WCHAR *nptr, WCHAR **endptr, int base);
 #endif
 
 #if !HAVE_WCSLWR && !defined(_WIN32)
-	WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str);
+WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str);
 #endif
 
 #if !HAVE_WCSCASECMP && !defined(_WIN32)
-	int LIBNETXMS_EXPORTABLE wcscasecmp(const wchar_t *s1, const wchar_t *s2);
+int LIBNETXMS_EXPORTABLE wcscasecmp(const wchar_t *s1, const wchar_t *s2);
 #endif
 
 #if !HAVE_WCSNCASECMP && !defined(_WIN32)
-	int LIBNETXMS_EXPORTABLE wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
+int LIBNETXMS_EXPORTABLE wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
 #endif
 
 #ifdef _WIN32
 #ifdef UNICODE
-    DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *filename);
-    struct dirent_w LIBNETXMS_EXPORTABLE *wreaddir(DIRW *dirp);
-    int LIBNETXMS_EXPORTABLE wclosedir(DIRW *dirp);
+DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *filename);
+struct dirent_w LIBNETXMS_EXPORTABLE *wreaddir(DIRW *dirp);
+int LIBNETXMS_EXPORTABLE wclosedir(DIRW *dirp);
 
 #define _topendir wopendir
 #define _treaddir wreaddir
@@ -1332,23 +1400,23 @@ extern "C"
 #define _tclosedir closedir
 #endif
 
-    DIR LIBNETXMS_EXPORTABLE *opendir(const char *filename);
-    struct dirent LIBNETXMS_EXPORTABLE *readdir(DIR *dirp);
-    int LIBNETXMS_EXPORTABLE closedir(DIR *dirp);
+DIR LIBNETXMS_EXPORTABLE *opendir(const char *filename);
+struct dirent LIBNETXMS_EXPORTABLE *readdir(DIR *dirp);
+int LIBNETXMS_EXPORTABLE closedir(DIR *dirp);
 
 #else	/* not _WIN32 */
 
-    DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *filename);
-    struct dirent_w LIBNETXMS_EXPORTABLE *wreaddir(DIRW *dirp);
-    int LIBNETXMS_EXPORTABLE wclosedir(DIRW *dirp);
+DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *filename);
+struct dirent_w LIBNETXMS_EXPORTABLE *wreaddir(DIRW *dirp);
+int LIBNETXMS_EXPORTABLE wclosedir(DIRW *dirp);
 
 #endif
 
 #if defined(_WIN32) || !(HAVE_SCANDIR)
-   int LIBNETXMS_EXPORTABLE scandir(const char *dir, struct dirent ***namelist,
-               int (*select)(const struct dirent *),
-               int (*compar)(const struct dirent **, const struct dirent **));
-   int LIBNETXMS_EXPORTABLE alphasort(const struct dirent **a, const struct dirent **b);
+int LIBNETXMS_EXPORTABLE scandir(const char *dir, struct dirent ***namelist,
+              int (*select)(const struct dirent *),
+              int (*compar)(const struct dirent **, const struct dirent **));
+int LIBNETXMS_EXPORTABLE alphasort(const struct dirent **a, const struct dirent **b);
 #endif
 
 TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f);

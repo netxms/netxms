@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
@@ -100,6 +100,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean showStatusBackground = false;
 	private boolean showStatusFrame = false;
 	private boolean enableLongObjectName = false;
+	private boolean hideLinkLabel = false;
 	private ILabelProvider workbenchLabelProvider;
 	private ObjectFigureType objectFigureType = ObjectFigureType.ICON;
 	private ColorCache colors;
@@ -261,6 +262,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 					return new ObjectFigureSmallLabel((NetworkMapObject)element, this);
 				case ICON:
 					return new ObjectFigureIcon((NetworkMapObject)element, this);
+				case STATUS:
+               return new ObjectStatusIcon((NetworkMapObject)element, this);				   
 				default:
 					return null;
 			}
@@ -297,7 +300,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		{
 			try
 			{
-				image = statusImages[object.getStatus()];
+				image = statusImages[object.getStatus().getValue()];
 			}
 			catch(IndexOutOfBoundsException e)
 			{
@@ -424,7 +427,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		   connection.setLineStyle(Graphics.LINE_DOT);
 		}
 		
-		if (link.hasConnectorName1())
+		if (link.hasConnectorName1() && !hideLinkLabel)
 		{
 			ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
 			sourceEndpointLocator.setVDistance(0);
@@ -432,7 +435,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			label.setFont(fontLabel);
 			connection.getConnectionFigure().add(label, sourceEndpointLocator);
 		}
-		if (link.hasConnectorName2())
+		if (link.hasConnectorName2() && !hideLinkLabel)
 		{
 			ConnectionEndpointLocator targetEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), true);
 			targetEndpointLocator.setVDistance(0);
@@ -444,7 +447,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		boolean hasDciData = link.hasDciData();
       boolean hasName = link.hasName();
       
-      if (hasName || hasDciData)
+      if ((hasName || hasDciData) && !hideLinkLabel)
       {
          ConnectionLocator nameLocator = new ConnectionLocator(connection.getConnectionFigure());
          nameLocator.setRelativePosition(PositionConstants.CENTER);
@@ -468,23 +471,22 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 
 		if (link.getStatusObject() != null && link.getStatusObject().size() != 0)
 		{
-		   int severity = -1;
+		   ObjectStatus status = ObjectStatus.UNKNOWN;
 		   for(Long id : link.getStatusObject())
 		   {
    			AbstractObject object = session.findObjectById(id);
    			if (object != null)
             {
-   			   int stat = object.getStatus();
-   			   severity = stat < Severity.UNKNOWN && severity < stat ? stat : severity;
-   			   if(severity == Severity.CRITICAL)
+   			   ObjectStatus s = object.getStatus();
+   			   if ((s.compareTo(ObjectStatus.UNKNOWN) < 0) && ((status.compareTo(s) < 0) || (status == ObjectStatus.UNKNOWN)))
    			   {
-   			      break;
+   			      status = s;
+   			      if (status == ObjectStatus.CRITICAL)
+   			         break;
    			   }
             } 
          }
-		   if(severity == -1)
-		      severity = Severity.UNKNOWN;
-		   connection.setLineColor(StatusDisplayInfo.getStatusColor(severity));   			
+		   connection.setLineColor(StatusDisplayInfo.getStatusColor(status));   			
 		}
 		else if (link.getColor() >= 0)
 		{
@@ -630,5 +632,10 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
    public boolean isLongObjectNameEnabled()
    {
       return enableLongObjectName;
+   }
+
+   public void setLabelHideStatus(boolean checked)
+   {
+     hideLinkLabel = checked;
    }
 }

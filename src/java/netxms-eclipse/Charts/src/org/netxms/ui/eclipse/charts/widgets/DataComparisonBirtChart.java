@@ -48,6 +48,9 @@ import org.eclipse.birt.chart.model.type.BarSeries;
 import org.eclipse.birt.chart.model.type.PieSeries;
 import org.eclipse.birt.chart.model.type.impl.BarSeriesImpl;
 import org.eclipse.birt.chart.model.type.impl.PieSeriesImpl;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
@@ -529,5 +532,20 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	{
 		// TODO Auto-generated method stub
 		
+	}
+	
+	/**
+     * Take snapshot of network map
+     * 
+     * @return
+     */
+	public Image takeSnapshot()
+	{
+		Rectangle rect = getClientArea();
+		Image image = new Image(getDisplay(), rect.width, rect.height);
+		GC gc = new GC(image);
+		this.print(gc);
+		gc.dispose();
+		return image;
 	}
 }

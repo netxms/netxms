@@ -86,8 +86,7 @@ THREAD_RESULT THREAD_CALL CommSession::proxyReadThreadStarter(void *pArg)
 /**
  * Client session class constructor
  */
-CommSession::CommSession(SOCKET hSocket, UINT32 dwHostAddr,
-                         BOOL bMasterServer, BOOL bControlServer)
+CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool masterServer, bool controlServer)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
@@ -97,12 +96,12 @@ CommSession::CommSession(SOCKET hSocket, UINT32 dwHostAddr,
    m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
    m_hWriteThread = INVALID_THREAD_HANDLE;
    m_hProcessingThread = INVALID_THREAD_HANDLE;
-   m_dwHostAddr = dwHostAddr;
-   m_bIsAuthenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? FALSE : TRUE;
-   m_bMasterServer = bMasterServer;
-   m_bControlServer = bControlServer;
-   m_bProxyConnection = FALSE;
-   m_bAcceptTraps = FALSE;
+   m_serverAddr = serverAddr;
+   m_authenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? false : true;
+   m_masterServer = masterServer;
+   m_controlServer = controlServer;
+   m_proxyConnection = false;
+   m_acceptTraps = false;
    m_hCurrFile = -1;
    m_pCtx = NULL;
    m_ts = time(NULL);
@@ -213,7 +212,7 @@ void CommSession::readThread()
          DebugPrintf(m_dwIndex, 8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
       }
 
-      if (m_bProxyConnection)
+      if (m_proxyConnection)
       {
          // Forward received message to remote peer
          SendEx(m_hProxySocket, (char *)pRawMsg, iErr, 0, NULL);
@@ -325,10 +324,10 @@ void CommSession::readThread()
    // Wait for other threads to finish
    ThreadJoin(m_hWriteThread);
    ThreadJoin(m_hProcessingThread);
-   if (m_bProxyConnection)
+   if (m_proxyConnection)
       ThreadJoin(m_hProxyReadThread);
 
-   DebugPrintf(m_dwIndex, 5, _T("Session with %s closed"), IpToStr(m_dwHostAddr, szBuffer));
+   DebugPrintf(m_dwIndex, 5, _T("Session with %s closed"), (const TCHAR *)m_serverAddr.toString());
 }
 
 /**
@@ -409,7 +408,7 @@ void CommSession::processingThread()
       msg.SetId(pMsg->GetId());
 
       // Check if authentication required
-      if ((!m_bIsAuthenticated) && (dwCommand != CMD_AUTHENTICATE))
+      if ((!m_authenticated) && (dwCommand != CMD_AUTHENTICATE))
       {
 			DebugPrintf(m_dwIndex, 6, _T("Authentication required"));
          msg.SetVariable(VID_RCC, ERR_AUTH_REQUIRED);
@@ -475,9 +474,9 @@ void CommSession::processingThread()
                msg.SetVariable(VID_RCC, dwRet);
                break;
             case CMD_ENABLE_AGENT_TRAPS:
-               if (m_bMasterServer)
+               if (m_masterServer)
                {
-                  m_bAcceptTraps = TRUE;
+                  m_acceptTraps = true;
                   msg.SetVariable(VID_RCC, ERR_SUCCESS);
                }
                else
@@ -486,7 +485,7 @@ void CommSession::processingThread()
                }
                break;
 				case CMD_SNMP_REQUEST:
-					if (m_bMasterServer && (g_dwFlags & AF_ENABLE_SNMP_PROXY))
+					if (m_masterServer && (g_dwFlags & AF_ENABLE_SNMP_PROXY))
 					{
 						ProxySNMPRequest(pMsg, &msg);
 					}
@@ -496,7 +495,7 @@ void CommSession::processingThread()
 					}
 					break;
 				case CMD_DEPLOY_AGENT_POLICY:
-					if (m_bMasterServer)
+					if (m_masterServer)
 					{
 						msg.SetVariable(VID_RCC, DeployPolicy(this, pMsg));
 					}
@@ -506,7 +505,7 @@ void CommSession::processingThread()
 					}
 					break;
 				case CMD_UNINSTALL_AGENT_POLICY:
-					if (m_bMasterServer)
+					if (m_masterServer)
 					{
 						msg.SetVariable(VID_RCC, UninstallPolicy(this, pMsg));
 					}
@@ -516,9 +515,32 @@ void CommSession::processingThread()
 					}
 					break;
 				case CMD_GET_POLICY_INVENTORY:
-					if (m_bMasterServer)
+					if (m_masterServer)
 					{
 						msg.SetVariable(VID_RCC, GetPolicyInventory(this, &msg));
+					}
+					else
+					{
+                  msg.SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+					}
+					break;
+            case CMD_TAKE_SCREENSHOT:
+					if (m_controlServer)
+					{
+                  TCHAR sessionName[256];
+                  pMsg->GetVariableStr(VID_NAME, sessionName, 256);
+                  DebugPrintf(m_dwIndex, 6, _T("Take snapshot from session \"%s\""), sessionName);
+                  SessionAgentConnector *conn = AcquireSessionAgentConnector(sessionName);
+                  if (conn != NULL)
+                  {
+                     DebugPrintf(m_dwIndex, 6, _T("Session agent connector acquired"));
+                     conn->takeScreenshot(&msg);
+                     conn->decRefCount();
+                  }
+                  else
+                  {
+                     msg.SetVariable(VID_RCC, ERR_NO_SESSION_AGENT);
+                  }
 					}
 					else
 					{
@@ -548,7 +570,7 @@ stop_processing:
  */
 void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
-   if (m_bIsAuthenticated)
+   if (m_authenticated)
    {
       // Already authenticated
       pMsg->SetVariable(VID_RCC, (g_dwFlags & AF_REQUIRE_AUTH) ? ERR_ALREADY_AUTHENTICATED : ERR_AUTH_NOT_REQUIRED);
@@ -566,12 +588,12 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
             pRequest->GetVariableStr(VID_SHARED_SECRET, szSecret, MAX_SECRET_LENGTH);
             if (!_tcscmp(szSecret, g_szSharedSecret))
             {
-               m_bIsAuthenticated = TRUE;
+               m_authenticated = true;
                pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
             }
             else
             {
-               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, "PLAIN");
+               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "Is", &m_serverAddr, "PLAIN");
                pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
             }
             break;
@@ -589,12 +611,12 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
 #endif
             if (!memcmp(szSecret, hash, MD5_DIGEST_SIZE))
             {
-               m_bIsAuthenticated = TRUE;
+               m_authenticated = true;
                pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
             }
             else
             {
-               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, _T("MD5"));
+               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "Is", &m_serverAddr, _T("MD5"));
                pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
             }
             break;
@@ -612,12 +634,12 @@ void CommSession::authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg)
 #endif
             if (!memcmp(szSecret, hash, SHA1_DIGEST_SIZE))
             {
-               m_bIsAuthenticated = TRUE;
+               m_authenticated = true;
                pMsg->SetVariable(VID_RCC, ERR_SUCCESS);
             }
             else
             {
-               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "as", m_dwHostAddr, _T("SHA1"));
+               nxlog_write(MSG_AUTH_FAILED, EVENTLOG_WARNING_TYPE, "Is", &m_serverAddr, _T("SHA1"));
                pMsg->SetVariable(VID_RCC, ERR_AUTH_FAILED);
             }
             break;
@@ -686,7 +708,7 @@ void CommSession::getTable(CSCPMessage *pRequest, CSCPMessage *pMsg)
  */
 void CommSession::action(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
-   if ((g_dwFlags & AF_ENABLE_ACTIONS) && m_bControlServer)
+   if ((g_dwFlags & AF_ENABLE_ACTIONS) && m_controlServer)
    {
       // Get action name and arguments
       TCHAR action[MAX_PARAM_NAME];
@@ -723,7 +745,7 @@ void CommSession::recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
 	TCHAR szFileName[MAX_PATH], szFullPath[MAX_PATH];
 
-	if (m_bMasterServer)
+	if (m_masterServer)
 	{
 		szFileName[0] = 0;
 		pRequest->GetVariableStr(VID_FILE_NAME, szFileName, MAX_PATH);
@@ -765,28 +787,26 @@ UINT32 CommSession::openFile(TCHAR *szFullPath, UINT32 requestId)
    }
 }
 
-//
-// Send file to server
-//
 
 static void SendFileProgressCallback(INT64 bytesTransferred, void *cbArg)
 {
 	((CommSession *)cbArg)->updateTimeStamp();
 }
 
+/**
+ * Send file to server
+ */
 bool CommSession::sendFile(UINT32 requestId, const TCHAR *file, long offset)
 {
 	return SendFileOverNXCP(m_hSocket, requestId, file, m_pCtx, offset, SendFileProgressCallback, this, m_socketWriteMutex) ? true : false;
 }
 
-
-//
-// Upgrade agent from package in the file store
-//
-
+/**
+ * Upgrade agent from package in the file store
+ */
 UINT32 CommSession::upgrade(CSCPMessage *pRequest)
 {
-   if (m_bMasterServer)
+   if (m_masterServer)
    {
       TCHAR szPkgName[MAX_PATH], szFullPath[MAX_PATH];
 
@@ -807,17 +827,15 @@ UINT32 CommSession::upgrade(CSCPMessage *pRequest)
    }
 }
 
-
-//
-// Get agent's configuration file
-//
-
+/**
+ * Get agent's configuration file
+ */
 void CommSession::getConfig(CSCPMessage *pMsg)
 {
-   if (m_bMasterServer)
+   if (m_masterServer)
    {
       pMsg->SetVariable(VID_RCC,
-         pMsg->SetVariableFromFile(VID_CONFIG_FILE, g_szConfigFile) ? ERR_SUCCESS : ERR_IO_FAILURE);
+         pMsg->setFieldFromFile(VID_CONFIG_FILE, g_szConfigFile) ? ERR_SUCCESS : ERR_IO_FAILURE);
    }
    else
    {
@@ -830,7 +848,7 @@ void CommSession::getConfig(CSCPMessage *pMsg)
  */
 void CommSession::updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg)
 {
-   if (m_bMasterServer)
+   if (m_masterServer)
    {
       BYTE *pConfig;
       int hFile;
@@ -888,7 +906,7 @@ UINT32 CommSession::setupProxyConnection(CSCPMessage *pRequest)
    NXCPEncryptionContext *pSavedCtx;
    TCHAR szBuffer[32];
 
-   if (m_bMasterServer && (g_dwFlags & AF_ENABLE_PROXY))
+   if (m_masterServer && (g_dwFlags & AF_ENABLE_PROXY))
    {
       dwAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
       wPort = pRequest->GetVariableShort(VID_AGENT_PORT);
@@ -915,7 +933,7 @@ UINT32 CommSession::setupProxyConnection(CSCPMessage *pRequest)
             // Finish proxy connection setup
             pSavedCtx = m_pCtx;
             m_pCtx = PROXY_ENCRYPTION_CTX;
-            m_bProxyConnection = TRUE;
+            m_proxyConnection = true;
             dwResult = ERR_SUCCESS;
             m_hProxyReadThread = ThreadCreateEx(proxyReadThreadStarter, 0, this);
 

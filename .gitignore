@@ -90,6 +90,7 @@ target
 /packages/solaris/pkginfo
 /private
 /release
+/sdk/install/Output
 /sql/dbinit_db2.sql
 /sql/dbinit_mssql.sql
 /sql/dbinit_mysql.sql
@@ -195,6 +196,7 @@ target
 /src/tools/nxencpasswd/nxencpasswd
 /stamp-h1
 /status
+/tests/test-libnetxms/test-libnetxms
 /webui/eclipse
 /x64
 

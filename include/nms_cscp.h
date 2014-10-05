@@ -495,6 +495,7 @@ typedef struct
 #define CMD_GET_SWITCH_FDB             0x012B
 #define CMD_COMMAND_OUTPUT             0x012C
 #define CMD_GET_LOC_HISTORY            0x012D
+#define CMD_TAKE_SCREENSHOT            0x012E
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -992,6 +993,8 @@ typedef struct
 #define VID_ROOT                    ((UINT32)480)
 #define VID_INCLUDE_NOVALUE_OBJECTS ((UINT32)481)
 #define VID_RECEIVE_OUTPUT          ((UINT32)482)
+#define VID_SESSION_STATE           ((UINT32)483)
+#define VID_PAGE_SIZE               ((UINT32)484)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

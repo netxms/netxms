@@ -94,11 +94,9 @@ char LIBNETXMS_EXPORTABLE *IpToStrA(UINT32 dwAddr, char *szBuffer)
 
 #endif
 
-
-//
-// Universal IPv4/IPv6 to string converter
-//
-
+/**
+ * Universal IPv4/IPv6 to string converter
+ */
 TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer)
 {
 	switch(addr->sa_family)
@@ -116,7 +114,7 @@ TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer)
 /**
  * Convert IPv6 address from binary form to string
  */
-TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(BYTE *addr, TCHAR *buffer)
+TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer)
 {
    static TCHAR internalBuffer[64];
    TCHAR *bufPtr = (buffer == NULL) ? internalBuffer : buffer;
@@ -517,13 +515,12 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
             len = (int)min(_tcslen(result), bufSize - outpos - 1);
             memcpy(&buffer[outpos], result, len * sizeof(TCHAR));
          }
-         else {
+         else 
+         {
             len = 0;
          }
 
-
          outpos += len;
-
          i = j;
       }
       else
@@ -1349,46 +1346,45 @@ int LIBNETXMS_EXPORTABLE NumCharsA(const char *pszStr, char ch)
    return nCount;
 }
 
-
-//
-// Match string against regexp
-//
-
-BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *pszStr, const WCHAR *pszExpr, BOOL bMatchCase)
+/**
+ * Match string against regexp (UNICODE version)
+ */
+BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool matchCase)
 {
    regex_t preg;
-   BOOL bResult = FALSE;
+   bool result = false;
 
-	if (tre_regwcomp(&preg, pszExpr, bMatchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
+	if (tre_regwcomp(&preg, expr, matchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
 	{
-		if (tre_regwexec(&preg, pszStr, 0, NULL, 0) == 0) // MATCH
-			bResult = TRUE;
+		if (tre_regwexec(&preg, str, 0, NULL, 0) == 0) // MATCH
+			result = true;
 		regfree(&preg);
 	}
 
-   return bResult;
+   return result;
 }
 
-BOOL LIBNETXMS_EXPORTABLE RegexpMatchA(const char *pszStr, const char *pszExpr, BOOL bMatchCase)
+/**
+ * Match string against regexp (multibyte version)
+ */
+BOOL LIBNETXMS_EXPORTABLE RegexpMatchA(const char *str, const char *expr, bool matchCase)
 {
    regex_t preg;
-   BOOL bResult = FALSE;
+   bool result = false;
 
-	if (tre_regcomp(&preg, pszExpr, bMatchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
+	if (tre_regcomp(&preg, expr, matchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
 	{
-		if (tre_regexec(&preg, pszStr, 0, NULL, 0) == 0) // MATCH
-			bResult = TRUE;
+		if (tre_regexec(&preg, str, 0, NULL, 0) == 0) // MATCH
+			result = true;
 		regfree(&preg);
 	}
 
-   return bResult;
+   return result;
 }
 
-
-//
-// Translate given code to text
-//
-
+/**
+ * Translate given code to text
+ */
 const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText)
 {
    int i;

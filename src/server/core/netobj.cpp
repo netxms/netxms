@@ -103,6 +103,23 @@ BOOL NetObj::SaveToDB(DB_HANDLE hdb)
 }
 
 /**
+ * Parameters for DeleteModuleDataCallback and SaveModuleDataCallback
+ */
+struct ModuleDataDatabaseCallbackParams
+{
+   UINT32 id;
+   DB_HANDLE hdb;
+};
+
+/**
+ * Callback for deleting module data from database
+ */
+static bool DeleteModuleDataCallback(const TCHAR *key, const void *value, void *data)
+{
+   return ((ModuleData *)value)->deleteFromDatabase(((ModuleDataDatabaseCallbackParams *)data)->hdb, ((ModuleDataDatabaseCallbackParams *)data)->id);
+}
+
+/**
  * Delete object from database
  */
 bool NetObj::deleteFromDB(DB_HANDLE hdb)
@@ -123,14 +140,16 @@ bool NetObj::deleteFromDB(DB_HANDLE hdb)
    // Delete alarms
    if (success && ConfigReadInt(_T("DeleteAlarmsOfDeletedObject"), 1))
    {
-      success = g_alarmMgr.deleteObjectAlarms(m_dwId, hdb);
+      success = DeleteObjectAlarms(m_dwId, hdb);
    }
 
    // Delete module data
    if (success && (m_moduleData != NULL))
    {
-      for(int i = 0; (i < m_moduleData->size()) && success; i++)
-         success = m_moduleData->getValueByIndex(i)->deleteFromDatabase(hdb, m_dwId);
+      ModuleDataDatabaseCallbackParams data;
+      data.id = m_dwId;
+      data.hdb = hdb;
+      success = m_moduleData->forEach(DeleteModuleDataCallback, &data);
    }
 
    return success;
@@ -252,6 +271,25 @@ bool NetObj::loadCommonProperties()
 }
 
 /**
+ * Callback for saving custom attribute in database
+ */
+static bool SaveAttributeCallback(const TCHAR *key, const void *value, void *data)
+{
+   DB_STATEMENT hStmt = (DB_STATEMENT)data;
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (const TCHAR *)value, DB_BIND_STATIC);
+   return DBExecute(hStmt) ? true : false;
+}
+
+/**
+ * Callback for saving module data in database
+ */
+static bool SaveModuleDataCallback(const TCHAR *key, const void *value, void *data)
+{
+   return ((ModuleData *)value)->saveToDatabase(((ModuleDataDatabaseCallbackParams *)data)->hdb, ((ModuleDataDatabaseCallbackParams *)data)->id);
+}
+
+/**
  * Save common object properties to database
  */
 bool NetObj::saveCommonProperties(DB_HANDLE hdb)
@@ -330,15 +368,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 			hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"));
 			if (hStmt != NULL)
 			{
-				for(int i = 0; i < m_customAttributes.size(); i++)
-				{
-					DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
-					DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_customAttributes.getKeyByIndex(i), DB_BIND_STATIC);
-					DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_customAttributes.getValueByIndex(i), DB_BIND_STATIC);
-               success = DBExecute(hStmt) ? true : false;
-					if (!success)
-						break;
-				}
+				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+            success = m_customAttributes.forEach(SaveAttributeCallback, hStmt);
 				DBFreeStatement(hStmt);
 			}
 			else
@@ -351,8 +382,10 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
    // Save module data
    if (success && (m_moduleData != NULL))
    {
-      for(int i = 0; (i < m_moduleData->size()) && success; i++)
-         success = m_moduleData->getValueByIndex(i)->saveToDatabase(hdb, m_dwId);
+      ModuleDataDatabaseCallbackParams data;
+      data.id = m_dwId;
+      data.hdb = hdb;
+      success = m_moduleData->forEach(SaveModuleDataCallback, &data);
    }
 
 	if (success)
@@ -542,7 +575,7 @@ void NetObj::deleteObject(NetObj *initiator)
    LockParentList(TRUE);
    for(UINT32 i = 0; i < m_dwParentCount; i++)
    {
-      // If parent is deletion initiator the this is object already
+      // If parent is deletion initiator then this object already
       // removed from parent's list
       if (m_pParentList[i] != initiator)
       {
@@ -632,7 +665,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
 
    if (m_iStatus != STATUS_UNMANAGED)
    {
-      iMostCriticalAlarm = g_alarmMgr.getMostCriticalStatusForObject(m_dwId);
+      iMostCriticalAlarm = GetMostCriticalStatusForObject(m_dwId);
 
       LockData();
       if (m_iStatusCalcAlg == SA_CALCULATE_DEFAULT)
@@ -823,6 +856,26 @@ bool NetObj::saveACLToDB(DB_HANDLE hdb)
 }
 
 /**
+ * Data for SendModuleDataCallback
+ */
+struct SendModuleDataCallbackData
+{
+   CSCPMessage *msg;
+   UINT32 id;
+};
+
+/**
+ * Callback for sending module data in NXCP message
+ */
+static bool SendModuleDataCallback(const TCHAR *key, const void *value, void *data)
+{
+   ((SendModuleDataCallbackData *)data)->msg->SetVariable(((SendModuleDataCallbackData *)data)->id, key);
+   ((ModuleData *)value)->fillMessage(((SendModuleDataCallbackData *)data)->msg, ((SendModuleDataCallbackData *)data)->id + 1);
+   ((SendModuleDataCallbackData *)data)->id += 0x100000;
+   return true;
+}
+
+/**
  * Create NXCP message with object's data
  */
 void NetObj::CreateMessage(CSCPMessage *pMsg)
@@ -871,12 +924,7 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
 	if (m_dwNumTrustedNodes > 0)
 		pMsg->setFieldInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
 
-	pMsg->SetVariable(VID_NUM_CUSTOM_ATTRIBUTES, m_customAttributes.size());
-	for(i = 0, dwId = VID_CUSTOM_ATTRIBUTES_BASE; i < (UINT32)m_customAttributes.size(); i++)
-	{
-		pMsg->SetVariable(dwId++, m_customAttributes.getKeyByIndex(i));
-		pMsg->SetVariable(dwId++, m_customAttributes.getValueByIndex(i));
-	}
+   m_customAttributes.fillMessage(pMsg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
 
    m_pAccessList->fillMessage(pMsg);
 	m_geoLocation.fillMessage(*pMsg);
@@ -884,12 +932,10 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
    if (m_moduleData != NULL)
    {
       pMsg->SetVariable(VID_MODULE_DATA_COUNT, (UINT16)m_moduleData->size());
-      for(i = 0, dwId = VID_MODULE_DATA_BASE; i < (UINT32)m_moduleData->size(); i++, dwId += 0x100000)
-      {
-         pMsg->SetVariable(dwId, m_moduleData->getKeyByIndex(i));
-         ModuleData *d = m_moduleData->getValueByIndex(i);
-         d->fillMessage(pMsg, dwId + 1);
-      }
+      SendModuleDataCallbackData data;
+      data.msg = pMsg;
+      data.id = VID_MODULE_DATA_BASE;
+      m_moduleData->forEach(SendModuleDataCallback, &data);
    }
    else
    {
@@ -1640,12 +1686,12 @@ void NetObj::addLocationToHistory()
    UINT32 startTimestamp;
    bool isSamePlace;
    DB_RESULT hResult;
-   if(!locationTableExists())
+   if (!isLocationTableExists())
    {
-      DbgPrintf(4, _T("NetObj::addLocationToHistory: Geolocation history table will be created for %d node"), m_dwId);
-      if(!cterateLocationGystoryTable(hdb))
+      DbgPrintf(4, _T("NetObj::addLocationToHistory: Geolocation history table will be created for object %s [%d]"), m_szName, m_dwId);
+      if (!createLocationHistoryTable(hdb))
       {
-         DbgPrintf(4, _T("NetObj::addLocationToHistory: Error while creation geolocation history table for %d node"), m_dwId);
+         DbgPrintf(4, _T("NetObj::addLocationToHistory: Error creating geolocation history table for object %s [%d]"), m_szName, m_dwId);
          return;
       }
    }
@@ -1673,20 +1719,21 @@ void NetObj::addLocationToHistory()
 		goto onFail;
 
    hResult = DBSelectPrepared(hStmt);
-   if(hResult == NULL)
+   if (hResult == NULL)
 		goto onFail;
-   if(DBGetNumRows(hResult) > 0)
+   if (DBGetNumRows(hResult) > 0)
    {
       startTimestamp = DBGetFieldULong(hResult, 0, 3);
-      isSamePlace = m_geoLocation.sameLocation(DBGetFieldDouble(hResult, 0, 0), DBGetFieldDouble(hResult, 0, 1), DBGetFieldULong(hResult, 0, 2));
+      isSamePlace = m_geoLocation.sameLocation(DBGetFieldDouble(hResult, 0, 0), DBGetFieldDouble(hResult, 0, 1), DBGetFieldLong(hResult, 0, 2));
       DBFreeStatement(hStmt);
+      DBFreeResult(hResult);
    }
    else
    {
       isSamePlace = false;
    }
 
-   if(isSamePlace)
+   if (isSamePlace)
    {
       TCHAR query[256];
       _sntprintf(query, 255, _T("UPDATE gps_history_%d SET end_timestamp = ? WHERE start_timestamp =? "), m_dwId);
@@ -1722,7 +1769,7 @@ void NetObj::addLocationToHistory()
 
 onFail:
    DBFreeStatement(hStmt);
-   DbgPrintf(4, _T("NetObj::addLocationToHistory: Failed to add location to history"));
+   DbgPrintf(4, _T("NetObj::addLocationToHistory(%s [%d]): Failed to add location to history"), m_szName, m_dwId);
    DBConnectionPoolReleaseConnection(hdb);
    return;
 }
@@ -1730,7 +1777,7 @@ onFail:
 /**
  * Check if given data table exist
  */
-bool NetObj::locationTableExists()
+bool NetObj::isLocationTableExists()
 {
    TCHAR table[256];
    _sntprintf(table, 256, _T("gps_history_%d"), m_dwId);
@@ -1742,7 +1789,10 @@ bool NetObj::locationTableExists()
    return rc != DBIsTableExist_NotFound;
 }
 
-bool NetObj::cterateLocationGystoryTable(DB_HANDLE hdb)
+/**
+ * Create table for storing geolocation history for this object
+ */
+bool NetObj::createLocationHistoryTable(DB_HANDLE hdb)
 {
    TCHAR szQuery[256], szQueryTemplate[256];
    MetaDataReadStr(_T("LocationHistory"), szQueryTemplate, 255, _T(""));

@@ -63,6 +63,7 @@ public class AgentConfigSourceViewerConfiguration extends SourceViewerConfigurat
 		"EnableSubagentAutoload", //$NON-NLS-1$
 		"EnableWatchdog", //$NON-NLS-1$
 		"ExecTimeout", //$NON-NLS-1$
+      "ExternalList", //$NON-NLS-1$
 		"ExternalParameter", //$NON-NLS-1$
 		"ExternalParameterShellExec", //$NON-NLS-1$
 		"ExternalSubAgent", //$NON-NLS-1$

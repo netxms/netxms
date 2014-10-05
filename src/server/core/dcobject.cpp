@@ -422,10 +422,8 @@ void DCObject::setStatus(int status, bool generateEvent)
 	if (generateEvent && (m_pNode != NULL) && (m_status != (BYTE)status) && IsEventSource(m_pNode->Type()))
 	{
 		static UINT32 eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
-		static const TCHAR *originName[7] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push"), _T("WinPerf"), _T("iLO") };
-
-		PostEvent(eventCode[status], m_pNode->Id(), "dssds", m_dwId, m_szName, m_szDescription,
-		          m_source, originName[m_source]);
+		static const TCHAR *originName[8] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push"), _T("WinPerf"), _T("iLO"), _T("Script") };
+		PostEvent(eventCode[status], m_pNode->Id(), "dssds", m_dwId, m_szName, m_szDescription, m_source, originName[m_source]);
 	}
 	m_status = (BYTE)status;
 }
@@ -776,6 +774,7 @@ void DCObject::updateFromMessage(CSCPMessage *pMsg)
 	m_pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
 	m_snmpPort = pMsg->GetVariableShort(VID_SNMP_PORT);
    TCHAR *pszStr = pMsg->GetVariableStr(VID_TRANSFORMATION_SCRIPT);
+   safe_free_and_null(m_comments);
    m_comments = pMsg->GetVariableStr(VID_COMMENTS);
    setTransformationScript(pszStr);
    safe_free(pszStr);

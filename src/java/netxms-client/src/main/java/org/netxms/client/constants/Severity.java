@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,63 @@
  */
 package org.netxms.client.constants;
 
+import java.util.HashMap;
+import java.util.Map;
+import org.netxms.base.Logger;
+
 /**
- * This class holds severity constants.
+ * Event/alarm severity
  */
-public final class Severity
+public enum Severity
 {
-	public static final int NORMAL = 0;
-	public static final int WARNING = 1;
-	public static final int MINOR = 2;
-	public static final int MAJOR = 3;
-	public static final int CRITICAL = 4;
-	public static final int UNKNOWN = 5;
-	public static final int UNMANAGED = 6;
-	public static final int DISABLED = 7;
-	public static final int TESTING = 8;
+   NORMAL(0),
+   WARNING(1),
+   MINOR(2),
+   MAJOR(3),
+   CRITICAL(4),
+   UNKNOWN(5),    // means "from current event" in alarm creation
+   TERMINATE(6),
+   RESOLVE(7);
+
+   private int value;
+   private static Map<Integer, Severity> lookupTable = new HashMap<Integer, Severity>();
+
+   static
+   {
+      for(Severity element : Severity.values())
+      {
+         lookupTable.put(element.value, element);
+      }
+   }
+
+   /**
+    * @param value
+    */
+   private Severity(int value)
+   {
+      this.value = value;
+   }
+
+   /**
+    * @return
+    */
+   public int getValue()
+   {
+      return value;
+   }
+
+   /**
+    * @param value
+    * @return
+    */
+   public static Severity getByValue(int value)
+   {
+      final Severity element = lookupTable.get(value);
+      if (element == null)
+      {
+         Logger.warning(Severity.class.getName(), "Unknown element " + value);
+         return NORMAL; // fallback
+      }
+      return element;
+   }
 }

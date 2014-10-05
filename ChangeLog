@@ -1,6 +1,20 @@
 *
 * 1.2.17
 *
+
+- New DCI source: NXSL script executed on server
+- Configurable node matching policy for built-in syslog server (controlled by SyslogNodeMatchingPolicy configuration parameter)
+- Oracle monitoring subagent improved (bugs fixed, new metrics)
+- nxalarm tool supports commands add-comment and get-comments
+- Source port number added to events generated from SNMP trap (available via "sourcePort" named parameter)
+- Management console:
+    - Can show alarms for multiple selected objects
+    - Fixed non-working ordering in event list in alarm details view
+    - Fixed bug with LDAP user system rights
+    - Added default search string for LDAP to select all objects: "(objectClass=*)"
+    - Added device geolocation tracking and display on map
+    - Filter in event processing policy editor
+    - Fixed bug with deletion of subnet with corrected IP
 - Android console:
 	- Fix bug in notifying connection point not found
 	- Fix bug in computing interface expanded list size (removed hardcoded values)
@@ -8,12 +22,8 @@
 	- Fix aesthetic problems in expandable list (graphs and interfaces list)
 	- Integration of new support library
 	- Target to new API version (20)
-- Management console:
-	- Can show alarms for multiple selected objects
-	- Fixed non-working ordering in event list in alarm details view
-    - Fixed bug with LDAP user system rights
-    - Added device geolocation tracking and display on map 
-- Fixed issues: #593, #613, #624
+- Fixed issues: #51, #91, #359, #409, #532, #542, #571, #563, #590, #593,
+                #613, #617, #624, #626, #629, #632, #635, #638, #639, #642, #649
 
 
 *
@@ -33,7 +43,7 @@
    - Fixed incorrect processing of ilike, match, and imatch operators
    - Added try / catch operator
 - New MIBs added: NETUP-MIB
-- Fixed issues: #424, #618, #619, #620
+- Fixed issues: #424, #463, #543, #618, #619, #620
 
 
 *

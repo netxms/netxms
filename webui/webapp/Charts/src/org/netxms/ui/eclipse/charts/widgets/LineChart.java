@@ -83,7 +83,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private boolean zoomEnabled;
 	private boolean gridVisible;
 	private boolean stacked;
-	private boolean selectionActive = false;
+	//private boolean selectionActive = false;
 	private boolean adjustYAxis = true;
 	private int zoomLevel = 0;
 	private int legendPosition = GraphSettings.POSITION_BOTTOM;
@@ -244,14 +244,14 @@ public class LineChart extends Chart implements HistoricalDataChart
 	 */
 	private void startSelection(MouseEvent e)
 	{
+      /*
 		if (zoomLevel >= MAX_ZOOM_LEVEL)
 			return;
 		
 		selectionActive = true;
-		//selection.setStartPoint(e.x, e.y);
-		//selection.setEndPoint(e.x, e.y);
+		selection.setStartPoint(e.x, e.y);
+		selection.setEndPoint(e.x, e.y);
 		
-      /*
 		final Composite plotArea = getPlotArea();
 		moveListener = new MouseMoveListener() {
 			@Override
@@ -261,8 +261,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 				plotArea.redraw();
 			}
 		};
-		*/
-		//plotArea.addMouseMoveListener(moveListener);
+		plotArea.addMouseMoveListener(moveListener);
+      */
 	}
 	
 	/**
@@ -270,14 +270,14 @@ public class LineChart extends Chart implements HistoricalDataChart
 	 */
 	private void endSelection()
 	{
+      /*
 		if (!selectionActive)
 			return;
 		
 		selectionActive = false;
 		final Composite plotArea = getPlotArea();
-		//plotArea.removeMouseMoveListener(moveListener);
+		plotArea.removeMouseMoveListener(moveListener);
 
-		/*
 		if (selection.isUsableSize())
 		{
 			for(IAxis axis : getAxisSet().getAxes())
@@ -301,8 +301,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 		}
       
 		selection.dispose();
-		*/
 		redraw();
+      */
 	}
 	
    /**

@@ -271,8 +271,17 @@ public class AlarmNotifier
       if (alarm.getState() != Alarm.STATE_OUTSTANDING)
          return;
 
-      String fileName = getMelodyAndDownloadIfRequired(severityArray[alarm.getCurrentSeverity()]); //$NON-NLS-1$
-
+      String fileName;
+      try
+      {
+         fileName = getMelodyAndDownloadIfRequired(severityArray[alarm.getCurrentSeverity().getValue()]);
+      }
+      catch(ArrayIndexOutOfBoundsException e)
+      {
+         Activator.logError("Invalid alarm severity", e);
+         fileName = null;
+      }
+      
       if ((fileName != null) && !fileName.isEmpty())
       {
          try

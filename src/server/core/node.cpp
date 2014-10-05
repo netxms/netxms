@@ -1477,7 +1477,7 @@ restart_agent_check:
 }
 
 /**
- * Check single elementof network path
+ * Check single element of network path
  */
 bool Node::checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 dwRqId)
 {
@@ -2584,8 +2584,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
       {
          for(j = 0; j < iDelCount; j++)
          {
-            sendPollerMsg(dwRqId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"),
-                          ppDeleteList[j]->Name());
+            sendPollerMsg(dwRqId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), ppDeleteList[j]->Name());
             PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", ppDeleteList[j]->getIfIndex(),
                       ppDeleteList[j]->Name(), ppDeleteList[j]->IpAddr(), ppDeleteList[j]->getIpNetMask());
             deleteInterface(ppDeleteList[j]);
@@ -2966,6 +2965,46 @@ StringMap *Node::getInstanceList(DCItem *dci)
 }
 
 /**
+ * Callback for finding instance
+ */
+static bool FindInstanceCallback(const TCHAR *key, const void *value, void *data)
+{
+   return _tcscmp((const TCHAR *)data, key) != 0;  // return false if instance found - it will stop enumeration
+}
+
+/**
+ * Data for CreateInstanceDCI
+ */
+struct CreateInstanceDCIData
+{
+   DCItem *root;
+   Template *object;
+};
+
+/**
+ * Callback for creating instance DCIs
+ */
+static bool CreateInstanceDCI(const TCHAR *key, const void *value, void *data)
+{
+   Template *object = ((CreateInstanceDCIData *)data)->object;
+   DCItem *root = ((CreateInstanceDCIData *)data)->root;
+
+	DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): creating new DCI for instance \"%s\""),
+	          object->Name(), object->Id(), root->getName(), root->getId(), key);
+
+	DCItem *dci = new DCItem(root);
+   dci->setTemplateId(object->Id(), root->getId());
+	dci->setInstance((const TCHAR *)value);
+	dci->setInstanceDiscoveryMethod(IDM_NONE);
+	dci->setInstanceDiscoveryData(key);
+	dci->setInstanceFilter(NULL);
+   dci->expandInstance();
+	dci->changeBinding(CreateUniqueId(IDG_ITEM), object, FALSE);
+	object->addDCObject(dci, true);
+   return true;
+}
+
+/**
  * Update instance DCIs created from instance discovery DCI
  */
 void Node::updateInstances(DCItem *root, StringMap *instances)
@@ -2982,23 +3021,19 @@ void Node::updateInstances(DCItem *root, StringMap *instances)
 			 (object->getTemplateItemId() != root->getId()))
 			continue;
 
-		int j;
-		for(j = 0; j < instances->size(); j++)
-         if (!_tcscmp(((DCItem *)object)->getInstanceDiscoveryData(), instances->getKeyByIndex(j)))
-				break;
-
-		if (j < instances->size())
+      const TCHAR *dciInstance = ((DCItem *)object)->getInstanceDiscoveryData();
+      if (!instances->forEach(FindInstanceCallback, (void *)dciInstance))
 		{
 			// found, remove value from instances
 			DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
-			          m_szName, m_dwId, root->getName(), root->getId(), instances->getKeyByIndex(j));
-			instances->remove(instances->getKeyByIndex(j));
+			          m_szName, m_dwId, root->getName(), root->getId(), dciInstance);
+			instances->remove(dciInstance);
 		}
 		else
 		{
 			// not found, delete DCI
 			DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCI will be deleted"),
-			          m_szName, m_dwId, root->getName(), root->getId(), ((DCItem *)object)->getInstance());
+			          m_szName, m_dwId, root->getName(), root->getId(), dciInstance);
 			deleteList.add(object->getId());
 		}
    }
@@ -3007,21 +3042,10 @@ void Node::updateInstances(DCItem *root, StringMap *instances)
 		deleteDCObject(deleteList.get(i), false);
 
 	// Create new instances
-	for(int i = 0; i < instances->size(); i++)
-	{
-		DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): creating new DCI for instance \"%s\""),
-		          m_szName, m_dwId, root->getName(), root->getId(), instances->getKeyByIndex(i));
-
-		DCItem *dci = new DCItem(root);
-		dci->setTemplateId(m_dwId, root->getId());
-		dci->setInstance(instances->getValueByIndex(i));
-		dci->setInstanceDiscoveryMethod(IDM_NONE);
-		dci->setInstanceDiscoveryData(instances->getKeyByIndex(i));
-		dci->setInstanceFilter(NULL);
-      dci->expandInstance();
-		dci->changeBinding(CreateUniqueId(IDG_ITEM), this, FALSE);
-		addDCObject(dci, true);
-	}
+   CreateInstanceDCIData data;
+   data.root = root;
+   data.object = this;
+   instances->forEach(CreateInstanceDCI, &data);
 
    unlockDciAccess();
 }
@@ -3103,7 +3127,7 @@ BOOL Node::connectToAgent(UINT32 *error, UINT32 *socketError)
 /**
  * Get DCI value via SNMP
  */
-UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer, int interpretRawValue)
+UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue)
 {
    UINT32 dwResult;
 
@@ -3122,40 +3146,40 @@ UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *szParam, UINT32 dwBufSize, 
 		{
 			if (interpretRawValue == SNMP_RAWTYPE_NONE)
 			{
-				dwResult = SnmpGet(m_snmpVersion, pTransport, szParam, NULL, 0, szBuffer, dwBufSize * sizeof(TCHAR), SG_PSTRING_RESULT);
+				dwResult = SnmpGet(m_snmpVersion, pTransport, param, NULL, 0, buffer, bufSize * sizeof(TCHAR), SG_PSTRING_RESULT);
 			}
 			else
 			{
 				BYTE rawValue[1024];
 				memset(rawValue, 0, 1024);
-				dwResult = SnmpGet(m_snmpVersion, pTransport, szParam, NULL, 0, rawValue, 1024, SG_RAW_RESULT);
+				dwResult = SnmpGet(m_snmpVersion, pTransport, param, NULL, 0, rawValue, 1024, SG_RAW_RESULT);
 				if (dwResult == SNMP_ERR_SUCCESS)
 				{
 					switch(interpretRawValue)
 					{
 						case SNMP_RAWTYPE_INT32:
-							_sntprintf(szBuffer, dwBufSize, _T("%d"), ntohl(*((LONG *)rawValue)));
+							_sntprintf(buffer, bufSize, _T("%d"), ntohl(*((LONG *)rawValue)));
 							break;
 						case SNMP_RAWTYPE_UINT32:
-							_sntprintf(szBuffer, dwBufSize, _T("%u"), ntohl(*((UINT32 *)rawValue)));
+							_sntprintf(buffer, bufSize, _T("%u"), ntohl(*((UINT32 *)rawValue)));
 							break;
 						case SNMP_RAWTYPE_INT64:
-							_sntprintf(szBuffer, dwBufSize, INT64_FMT, (INT64)ntohq(*((INT64 *)rawValue)));
+							_sntprintf(buffer, bufSize, INT64_FMT, (INT64)ntohq(*((INT64 *)rawValue)));
 							break;
 						case SNMP_RAWTYPE_UINT64:
-							_sntprintf(szBuffer, dwBufSize, UINT64_FMT, ntohq(*((QWORD *)rawValue)));
+							_sntprintf(buffer, bufSize, UINT64_FMT, ntohq(*((QWORD *)rawValue)));
 							break;
 						case SNMP_RAWTYPE_DOUBLE:
-							_sntprintf(szBuffer, dwBufSize, _T("%f"), ntohd(*((double *)rawValue)));
+							_sntprintf(buffer, bufSize, _T("%f"), ntohd(*((double *)rawValue)));
 							break;
 						case SNMP_RAWTYPE_IP_ADDR:
-							IpToStr(ntohl(*((UINT32 *)rawValue)), szBuffer);
+							IpToStr(ntohl(*((UINT32 *)rawValue)), buffer);
 							break;
 						case SNMP_RAWTYPE_MAC_ADDR:
-							MACToStr(rawValue, szBuffer);
+							MACToStr(rawValue, buffer);
 							break;
 						default:
-							szBuffer[0] = 0;
+							buffer[0] = 0;
 							break;
 					}
 				}
@@ -3167,7 +3191,7 @@ UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *szParam, UINT32 dwBufSize, 
 			dwResult = SNMP_ERR_COMM;
 		}
    }
-   DbgPrintf(7, _T("Node(%s)->GetItemFromSNMP(%s): dwResult=%d"), m_szName, szParam, dwResult);
+   DbgPrintf(7, _T("Node(%s)->GetItemFromSNMP(%s): dwResult=%d"), m_szName, param, dwResult);
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS :
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
@@ -3611,7 +3635,7 @@ end_loop:
 /**
  * Get value for server's internal parameter
  */
-UINT32 Node::getInternalItem(const TCHAR *param, UINT32 bufSize, TCHAR *buffer)
+UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 {
 	UINT32 rc = DataCollectionTarget::getInternalItem(param, bufSize, buffer);
 	if (rc == DCE_SUCCESS)
@@ -3711,6 +3735,10 @@ UINT32 Node::getInternalItem(const TCHAR *param, UINT32 bufSize, TCHAR *buffer)
       else if (!_tcsicmp(param, _T("Server.AverageDBWriterQueueSize.IData")))
       {
          _sntprintf(buffer, bufSize, _T("%f"), g_dAvgIDataWriterQueueSize);
+      }
+      else if (!_tcsicmp(param, _T("Server.AverageDBWriterQueueSize.RawData")))
+      {
+         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgRawDataWriterQueueSize);
       }
       else if (!_tcsicmp(param, _T("Server.AverageStatusPollerQueueSize")))
       {
@@ -5273,9 +5301,9 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
          {
             bool nodeFound = false;
             bool ifaceFound = false;
-		      for(int i = 0; i < nbs->size(); i++)
+		      for(int j = 0; j < nbs->size(); j++)
 		      {
-			      LL_NEIGHBOR_INFO *ni = nbs->getConnection(i);
+			      LL_NEIGHBOR_INFO *ni = nbs->getConnection(j);
                if (ni->objectId == iface->getPeerNodeId())
                {
                   nodeFound = true;
@@ -5533,6 +5561,7 @@ Subnet *Node::createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask)
 void Node::checkSubnetBinding(InterfaceList *pIfList)
 {
 	Cluster *pCluster = NULL;
+   bool hasIfaceForPrimaryIp = false;
 
    if (pIfList != NULL)
    {
@@ -5551,6 +5580,10 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 				   nxlog_write(MSG_INTERNAL_ERROR, EVENTLOG_WARNING_TYPE, "s", _T("Cannot find interface object in Node::CheckSubnetBinding()"));
 				   break;	// Something goes really wrong
 			   }
+
+			   if (pInterface->IpAddr() == m_dwIpAddr)
+               hasIfaceForPrimaryIp = true;
+
 			   if (pInterface->isExcludedFromTopology())
 				   continue;
 
@@ -5604,7 +5637,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
    // Some devices may report interface list, but without IP
    // To prevent such nodes from hanging at top of the tree, attempt
    // to find subnet node primary IP
-   if ((m_dwIpAddr != 0) && !(m_dwFlags & NF_REMOTE_AGENT))
+   if ((m_dwIpAddr != 0) && !(m_dwFlags & NF_REMOTE_AGENT) && !hasIfaceForPrimaryIp)
    {
 	   Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
       if (pSubnet != NULL)

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TreeItem;
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -234,15 +234,15 @@ public class ObjectStatusIndicator extends Canvas implements PaintListener
 	 */
 	private void drawObject(GC gc, AbstractObject object, int y, int width, int height)
 	{
-		final int status = object.getStatus();
+		final ObjectStatus status = object.getStatus();
 		
-		if ((status == Severity.NORMAL) && hideNormal)
+		if ((status == ObjectStatus.NORMAL) && hideNormal)
 			return;
-		if ((status == Severity.UNMANAGED) && hideUnmanaged)
+		if ((status == ObjectStatus.UNMANAGED) && hideUnmanaged)
 			return;
-		if ((status == Severity.UNKNOWN) && hideUnknown)
+		if ((status == ObjectStatus.UNKNOWN) && hideUnknown)
 			return;
-		if ((status == Severity.DISABLED) && hideDisabled)
+		if ((status == ObjectStatus.DISABLED) && hideDisabled)
 			return;
 		
 		if (showIcons)

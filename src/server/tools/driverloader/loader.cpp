@@ -91,6 +91,15 @@ void PrintMobileUnits(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 }
 
 /**
+ * Print attribute
+ */
+static bool PrintAttributeCallback(const TCHAR *key, const void *value, void *data)
+{
+   _tprintf(_T("   %s = %s\n"), key, (const TCHAR *)value);
+   return true;
+}
+
+/**
  * Connect to device
  */
 static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transport)
@@ -124,10 +133,7 @@ static bool ConnectToDevice(NetworkDeviceDriver *driver, SNMP_Transport *transpo
    
    driver->analyzeDevice(transport, oid, &s_customAttributes, &s_driverData);
    _tprintf(_T("Custom attributes after device analyze:\n"));
-   for(int i = 0; i < s_customAttributes.size(); i++)
-   {
-      _tprintf(_T("   %s = %s\n"), s_customAttributes.getKeyByIndex(i), s_customAttributes.getValueByIndex(i));
-   }
+   s_customAttributes.forEach(PrintAttributeCallback, NULL);
    return true;
 }
 

@@ -164,11 +164,13 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionFiguresIcons;
 	protected Action actionFiguresSmallLabels;
 	protected Action actionFiguresLargeLabels;
+	protected Action actionFiguresStatusIconOnly;
 	protected Action actionShowGrid;
 	protected Action actionAlignToGrid;
 	protected Action actionSnapToGrid;
 	protected Action actionShowObjectDetails;
 	protected Action actionCopyImage;
+   protected Action actionHideLinkLabels;
 
 	private String viewId;
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
@@ -729,6 +731,21 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 		actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.LARGE_LABEL);
+		
+		actionFiguresStatusIconOnly = new Action("Show only status icon", Action.AS_RADIO_BUTTON) {
+         @Override
+         public void run()
+         {
+            labelProvider.setObjectFigureType(ObjectFigureType.STATUS);
+            updateObjectPositions();
+            saveLayout();
+            viewer.refresh(true);
+            actionShowStatusBackground.setEnabled(false);
+            actionShowStatusFrame.setEnabled(false);
+            actionShowStatusIcon.setEnabled(false);
+         }
+      };
+      actionFiguresStatusIconOnly.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.STATUS);
 
 		actionShowGrid = new Action(Messages.get().AbstractNetworkMapView_ShowGrid, Action.AS_CHECK_BOX) {
 			@Override
@@ -777,6 +794,16 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
             clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
          }
 		};
+		
+		actionHideLinkLabels = new Action("Hide link labels", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {         
+            labelProvider.setLabelHideStatus(actionHideLinkLabels.isChecked());
+            viewer.refresh(true);
+         }
+      };
+      actionHideLinkLabels.setImageDescriptor(Activator.getImageDescriptor("icons/hide_link.png")); //$NON-NLS-1$
 	}
 
 	/**
@@ -840,6 +867,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		figureType.add(actionFiguresIcons);
 		figureType.add(actionFiguresSmallLabels);
 		figureType.add(actionFiguresLargeLabels);
+		figureType.add(actionFiguresStatusIconOnly);
 
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
@@ -853,7 +881,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionAlignToGrid);
 		manager.add(actionSnapToGrid);
 		manager.add(actionShowGrid);
-      manager.add(new Separator());
+      manager.add(new Separator()); 
+      manager.add(actionHideLinkLabels);    
+      manager.add(new Separator());      
       manager.add(actionCopyImage);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -872,6 +902,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionAlignToGrid);
 		manager.add(actionSnapToGrid);
 		manager.add(actionShowGrid);
+      manager.add(new Separator()); 
+      manager.add(actionHideLinkLabels);  
 		manager.add(new Separator());
 		if (allowManualLayout)
 		{
@@ -985,6 +1017,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		figureType.add(actionFiguresIcons);
 		figureType.add(actionFiguresSmallLabels);
 		figureType.add(actionFiguresLargeLabels);
+      figureType.add(actionFiguresStatusIconOnly);
 
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
@@ -998,6 +1031,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionAlignToGrid);
 		manager.add(actionSnapToGrid);
 		manager.add(actionShowGrid);
+      manager.add(new Separator()); 
+      manager.add(actionHideLinkLabels);  
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());

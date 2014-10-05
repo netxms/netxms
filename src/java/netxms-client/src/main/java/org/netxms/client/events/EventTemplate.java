@@ -31,7 +31,7 @@ public class EventTemplate
 	
 	private long code;
 	private String name;
-	private int severity;
+	private Severity severity;
 	private int flags;
 	private String message;
 	private String description;
@@ -59,7 +59,7 @@ public class EventTemplate
 	public EventTemplate(final NXCPMessage msg)
 	{
 		code = msg.getVariableAsInt64(NXCPCodes.VID_EVENT_CODE);
-		severity = msg.getVariableAsInteger(NXCPCodes.VID_SEVERITY);
+		severity = Severity.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_SEVERITY));
 		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
 		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
 		message = msg.getVariableAsString(NXCPCodes.VID_MESSAGE);
@@ -110,7 +110,7 @@ public class EventTemplate
 	/**
 	 * @return the severity
 	 */
-	public int getSeverity()
+	public Severity getSeverity()
 	{
 		return severity;
 	}
@@ -118,7 +118,7 @@ public class EventTemplate
 	/**
 	 * @param severity the severity to set
 	 */
-	public void setSeverity(int severity)
+	public void setSeverity(Severity severity)
 	{
 		this.severity = severity;
 	}

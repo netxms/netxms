@@ -29,7 +29,7 @@ import org.eclipse.draw2d.text.TextFlow;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.netxms.client.MacAddress;
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphSettings;
@@ -185,7 +185,7 @@ public class ObjectTooltip extends Figure
 		chart.setTranslucent(false);
 		chart.setBorder(new LineBorder());
 
-		for(int i = 0; i <= Severity.UNKNOWN; i++)
+		for(int i = 0; i <= ObjectStatus.UNKNOWN.getValue(); i++)
 		{
 			chart.addParameter(new GraphItem(0, 0, 0, 0, StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i)),
 					objectCount[i]);
@@ -202,8 +202,8 @@ public class ObjectTooltip extends Figure
 	{
 		for(AbstractObject o : root.getAllChilds(AbstractObject.OBJECT_NODE))
 		{
-			if (o.getStatus() <= Severity.UNKNOWN)
-				objectCount[o.getStatus()]++;
+			if (o.getStatus().compareTo(ObjectStatus.UNKNOWN) <= 0)
+				objectCount[o.getStatus().getValue()]++;
 		}
 	}
 }

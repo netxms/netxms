@@ -388,6 +388,56 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Upgrade from V336 to V337
+ */
+static BOOL H_UpgradeFromV336(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("SyslogNodeMatchingPolicy"), _T("0"), 1, 1));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='337' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V335 to V336
+ */
+static BOOL H_UpgradeFromV335(int currVersion, int newVersion)
+{
+   CHK_EXEC(ResizeColumn(_T("network_map_links"), _T("connector_name1"), 255));
+   CHK_EXEC(ResizeColumn(_T("network_map_links"), _T("connector_name2"), 255));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='336' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V334 to V335
+ */
+static BOOL H_UpgradeFromV334(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_MASK_CHANGED, _T("SYS_IF_MASK_CHANGED"), SEVERITY_NORMAL, EF_LOG,
+         _T("Interface \"%2\" changed mask from %6 to %4 (IP Addr: %3/%4, IfIndex: %5)"),
+         _T("Generated when when network mask on interface is changed.\r\n")
+         _T("Parameters:\r\n")
+         _T("    1) Interface object ID\r\n")
+         _T("    2) Interface name\r\n")
+         _T("    3) IP address\r\n")
+         _T("    4) New network mask\r\n")
+         _T("    5) Interface index\r\n")
+         _T("    6) Old network mask")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='335' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V333 to V334
+ */
+static BOOL H_UpgradeFromV333(int currVersion, int newVersion)
+{
+   CHK_EXEC(SetColumnNullable(_T("user_groups"), _T("description")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='334' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V332 to V333
  */
 static BOOL H_UpgradeFromV332(int currVersion, int newVersion)
@@ -454,10 +504,7 @@ static BOOL H_UpgradeFromV328(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV327(int currVersion, int newVersion)
 {
-   if (!CreateConfigParam(_T("ResolveDNSToIPOnStatusPoll"), _T("0"), 1, 1))
-   if (!g_bIgnoreErrors)
-      return FALSE;
-
+   CHK_EXEC(CreateConfigParam(_T("ResolveDNSToIPOnStatusPoll"), _T("0"), 1, 1));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='328' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -8088,6 +8135,10 @@ static struct
    { 330, 331, H_UpgradeFromV330 },
    { 331, 332, H_UpgradeFromV331 },
    { 332, 333, H_UpgradeFromV332 },
+   { 333, 334, H_UpgradeFromV333 },
+   { 334, 335, H_UpgradeFromV334 },
+   { 335, 336, H_UpgradeFromV335 },
+   { 336, 337, H_UpgradeFromV336 },
    { 0, 0, NULL }
 };
 

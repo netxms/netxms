@@ -544,6 +544,9 @@ struct NXSL_CatchPoint
  */
 class LIBNXSL_EXPORTABLE NXSL_VM
 {
+private:
+   static bool createConstantsCallback(const TCHAR *key, const void *value, void *data);
+
 protected:
    NXSL_Environment *m_env;
 	void *m_userData;
@@ -557,9 +560,9 @@ protected:
    NXSL_Stack *m_catchStack;
    int m_nBindPos;
 
-   NXSL_VariableSystem *m_pConstants;
-   NXSL_VariableSystem *m_pGlobals;
-   NXSL_VariableSystem *m_pLocals;
+   NXSL_VariableSystem *m_constants;
+   NXSL_VariableSystem *m_globals;
+   NXSL_VariableSystem *m_locals;
 
    ObjectArray<NXSL_Function> *m_functions;
    ObjectArray<NXSL_Module> *m_modules;
@@ -591,12 +594,16 @@ public:
    void loadModule(NXSL_Program *module, const TCHAR *name);
 
 	void setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
-	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_pGlobals->find(pszName); }
+	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_globals->find(pszName); }
 
    bool load(NXSL_Program *program);
-   bool run(UINT32 argc = 0, NXSL_Value **argv = NULL, NXSL_VariableSystem *pUserLocals = NULL,
+   bool run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem *pUserLocals = NULL,
             NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL,
             const TCHAR *entryPoint = NULL);
+   bool run(int argc, NXSL_Value **argv, NXSL_VariableSystem *pUserLocals = NULL,
+            NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL,
+            const TCHAR *entryPoint = NULL);
+   bool run() { ObjectArray<NXSL_Value> args(1, 1, false); return run(&args); }
 
    UINT32 getCodeSize() { return m_instructionSet->size(); }
 

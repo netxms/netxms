@@ -111,18 +111,21 @@ void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
 }
 
 /**
- * Add all values
+ * Callback for adding variables
+ */
+static bool AddVariableCallback(const TCHAR *key, const void *value, void *data)
+{
+   if (((NXSL_VariableSystem *)data)->find(key) == NULL)
+      ((NXSL_VariableSystem *)data)->create(key, new NXSL_Value((NXSL_Value *)value));
+   return true;
+}
+
+/**
+ * Add all values from given map
  */
 void NXSL_VariableSystem::addAll(StringObjectMap<NXSL_Value> *src)
 {
-	for(int i = 0; i < src->size(); i++)
-	{
-      const TCHAR *name = src->getKeyByIndex(i);
-      if (find(name) == NULL)
-		{
-         create(name, new NXSL_Value(src->getValueByIndex(i)));
-		}
-	}
+   src->forEach(AddVariableCallback, this);
 }
 
 /**

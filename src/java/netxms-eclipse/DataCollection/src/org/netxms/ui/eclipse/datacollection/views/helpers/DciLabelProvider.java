@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,6 +62,7 @@ public class DciLabelProvider implements ITableLabelProvider
 		originTexts.put(DataCollectionItem.PUSH, Messages.get().DciLabelProvider_SourcePush);
 		originTexts.put(DataCollectionItem.WINPERF, Messages.get().DciLabelProvider_SourceWinPerf);
 		originTexts.put(DataCollectionItem.ILO, Messages.get().DciLabelProvider_SourceILO);
+      originTexts.put(DataCollectionItem.SCRIPT, Messages.get().DciLabelProvider_SourceScript);
 		
 		statusTexts.put(DataCollectionItem.ACTIVE, Messages.get().DciLabelProvider_Active);
 		statusTexts.put(DataCollectionItem.DISABLED, Messages.get().DciLabelProvider_Disabled);

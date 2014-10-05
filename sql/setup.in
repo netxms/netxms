@@ -147,6 +147,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyncInterval','60',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyncNodeNamesWithDNS','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyslogListenPort','514',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyslogNodeMatchingPolicy','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyslogRetentionTime','90',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ThresholdRepeatInterval','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('TileServerURL','http://tile.openstreetmap.org/',1,0);

@@ -25,7 +25,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.ServerFile;
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.filemanager.views.ViewServerFile;
@@ -109,7 +109,7 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
    public Color getForeground(Object element)
    {
       if (((ServerFile)element).isPlaceholder())
-         return StatusDisplayInfo.getStatusColor(Severity.DISABLED);
+         return StatusDisplayInfo.getStatusColor(ObjectStatus.DISABLED);
       return null;
    }
 

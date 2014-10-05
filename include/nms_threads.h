@@ -233,10 +233,10 @@ inline void ConditionPulse(CONDITION hCond)
    PulseEvent(hCond);
 }
 
-inline BOOL ConditionWait(CONDITION hCond, UINT32 dwTimeOut)
+inline bool ConditionWait(CONDITION hCond, UINT32 dwTimeOut)
 {
 	if (hCond == INVALID_CONDITION_HANDLE)
-		return FALSE;
+		return false;
    return WaitForSingleObject(hCond, dwTimeOut) == WAIT_OBJECT_0;
 }
 
@@ -451,9 +451,9 @@ inline void ConditionPulse(CONDITION cond)
 	}
 }
 
-inline BOOL ConditionWait(CONDITION cond, UINT32 dwTimeOut)
+inline bool ConditionWait(CONDITION cond, UINT32 dwTimeOut)
 {
-	BOOL ret = FALSE;
+	bool ret = false;
 
 	if (cond != NULL)
 	{
@@ -462,7 +462,7 @@ inline BOOL ConditionWait(CONDITION cond, UINT32 dwTimeOut)
 		pth_mutex_acquire(&cond->mutex, FALSE, NULL);
       if (cond->isSet)
       {
-         ret = TRUE;
+         ret = true;
          if (!cond->broadcast)
             cond->isSet = FALSE;
       }
@@ -485,7 +485,7 @@ inline BOOL ConditionWait(CONDITION cond, UINT32 dwTimeOut)
 		   {
             if (!cond->broadcast)
                cond->isSet = FALSE;
-			   ret = TRUE;
+			   ret = true;
 		   }
       }
 
@@ -810,9 +810,9 @@ inline void ConditionPulse(CONDITION cond)
 	}
 }
 
-inline BOOL ConditionWait(CONDITION cond, UINT32 dwTimeOut)
+inline bool ConditionWait(CONDITION cond, UINT32 dwTimeOut)
 {
-	BOOL ret = FALSE;
+	bool ret = FALSE;
 
 	if (cond != NULL)
 	{
@@ -821,7 +821,7 @@ inline BOOL ConditionWait(CONDITION cond, UINT32 dwTimeOut)
 		pthread_mutex_lock(&cond->mutex);
       if (cond->isSet)
       {
-         ret = TRUE;
+         ret = true;
          if (!cond->broadcast)
             cond->isSet = FALSE;
       }
@@ -868,7 +868,7 @@ inline BOOL ConditionWait(CONDITION cond, UINT32 dwTimeOut)
 		   {
             if (!cond->broadcast)
                cond->isSet = FALSE;
-			   ret = TRUE;
+			   ret = true;
 		   }
       }
 

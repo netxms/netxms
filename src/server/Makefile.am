@@ -8,4 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = @SERVER_INCLUDE@ libnxsrv core netxmsd tools drivers hdlink smsdrv
+SUBDIRS = @SERVER_INCLUDE@ libnxsrv core netxmsd tools drivers hdlink pdsdrv smsdrv

@@ -72,12 +72,15 @@ BOOL CObjectPropsCustomAttrs::OnInitDialog()
 	m_wndListCtrl.SetExtendedStyle(LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
 
 	// Fill list control with data
-	for(int i = 0; i < m_pObject->pCustomAttrs->size(); i++)
+   StructArray<KeyValuePair> *a = m_pObject->pCustomAttrs->toArray();
+	for(int i = 0; i < a->size(); i++)
 	{
-		item = m_wndListCtrl.InsertItem(i, m_pObject->pCustomAttrs->getKeyByIndex(i));
+      KeyValuePair *p = a->get(i);
+		item = m_wndListCtrl.InsertItem(i, p->key);
 		if (item != -1)
-			m_wndListCtrl.SetItemText(item, 1, m_pObject->pCustomAttrs->getValueByIndex(i));
+			m_wndListCtrl.SetItemText(item, 1, (const TCHAR *)p->value);
 	}
+   delete a;
 	
 	EnableDlgItem(this, IDC_BUTTON_EDIT, m_wndListCtrl.GetSelectedCount() == 1);
 	EnableDlgItem(this, IDC_BUTTON_DELETE, m_wndListCtrl.GetSelectedCount() > 0);

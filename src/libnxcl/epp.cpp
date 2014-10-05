@@ -223,25 +223,21 @@ UINT32 LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppE
    return dwRetCode;
 }
 
-
-//
-// Close event policy (without saving)
-//
-
+/**
+ * Close event policy (without saving)
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCCloseEventPolicy(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->SimpleCommand(CMD_CLOSE_EPP);
 }
 
-
-//
-// Save (and install) new event policy
-//
-
+/**
+ * Save (and install) new event policy
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEventPolicy)
 {
    CSCPMessage msg;
-   UINT32 i, j, id, count, dwRqId, dwRetCode;
+   UINT32 i, dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
@@ -284,13 +280,14 @@ UINT32 LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEve
 			msg.SetVariable(VID_ALARM_TIMEOUT_EVENT, pEventPolicy->pRuleList[i].dwAlarmTimeoutEvent);
 			msg.SetVariable(VID_SITUATION_ID, pEventPolicy->pRuleList[i].dwSituationId);
 			msg.SetVariable(VID_SITUATION_INSTANCE, pEventPolicy->pRuleList[i].szSituationInstance);
-			count = (pEventPolicy->pRuleList[i].pSituationAttrList != NULL) ? pEventPolicy->pRuleList[i].pSituationAttrList->size() : 0;
-			msg.SetVariable(VID_SITUATION_NUM_ATTRS, count);
-			for(j = 0, id = VID_SITUATION_ATTR_LIST_BASE; j < count; j++)
-			{
-				msg.SetVariable(id++, pEventPolicy->pRuleList[i].pSituationAttrList->getKeyByIndex(j));
-				msg.SetVariable(id++, pEventPolicy->pRuleList[i].pSituationAttrList->getValueByIndex(j));
-			}
+         if (pEventPolicy->pRuleList[i].pSituationAttrList != NULL)
+         {
+            pEventPolicy->pRuleList[i].pSituationAttrList->fillMessage(&msg, VID_SITUATION_NUM_ATTRS, VID_SITUATION_ATTR_LIST_BASE);
+         }
+         else
+         {
+   			msg.SetVariable(VID_SITUATION_NUM_ATTRS, (UINT32)0);
+         }
 
          ((NXCL_Session *)hSession)->SendMsg(&msg);
       }

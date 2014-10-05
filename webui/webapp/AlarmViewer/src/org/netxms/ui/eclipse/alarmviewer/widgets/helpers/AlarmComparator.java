@@ -49,7 +49,7 @@ public class AlarmComparator extends ViewerComparator
 		switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
 		{
 			case AlarmList.COLUMN_SEVERITY:
-				rc = Integer.signum(((Alarm)e1).getCurrentSeverity() - ((Alarm)e2).getCurrentSeverity());
+				rc = ((Alarm)e1).getCurrentSeverity().compareTo(((Alarm)e2).getCurrentSeverity());
 				break;
 			case AlarmList.COLUMN_STATE:
 				rc = Integer.signum(((Alarm)e1).getState() - ((Alarm)e2).getState());

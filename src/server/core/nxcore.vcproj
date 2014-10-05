@@ -733,6 +733,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\pds.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\poll.cpp"
 				>
 			</File>
@@ -810,6 +814,10 @@
 			</File>
 			<File
 				RelativePath=".\template.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\timer.cpp"
 				>
 			</File>
 			<File
@@ -1031,11 +1039,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\pdsdrv.h"
+				>
+			</File>
+			<File
 				RelativePath=".\radius.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\include\rwlock.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\server_timers.h"
 				>
 			</File>
 			<File

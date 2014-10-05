@@ -230,10 +230,9 @@ public:
 };
 
 
-//
-// Agent policy uninstall job
-//
-
+/**
+ * Agent policy uninstall job
+ */
 class PolicyUninstallJob : public ServerJob
 {
 protected:

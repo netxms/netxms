@@ -572,7 +572,7 @@ public class Session
 			msg.setVariable(NXCPCodes.VID_LONGITUDE, location.getLongitude());
 			msg.setVariableInt16(NXCPCodes.VID_GEOLOCATION_TYPE, location.getType());
 			msg.setVariableInt16(NXCPCodes.VID_ACCURACY, location.getAccuracy());
-			msg.setVariableInt64(NXCPCodes.VID_GEOLOCATION_TIMESTAMP, location.getTimestamp().getTime() / 1000);
+			msg.setVariableInt64(NXCPCodes.VID_GEOLOCATION_TIMESTAMP, location.getTimestamp() != null ? location.getTimestamp().getTime() / 1000 : 0);
 		}
 		else
 		{

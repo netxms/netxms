@@ -153,6 +153,7 @@ public class EventSelectionDialog extends Dialog
 			}
 		});
 		
+		filterText.setFocus();
 		return dialogArea;
 	}
 	

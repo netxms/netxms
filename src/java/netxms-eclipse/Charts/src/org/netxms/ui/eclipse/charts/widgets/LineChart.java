@@ -59,6 +59,7 @@ import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.swtchart.Chart;
 import org.swtchart.IAxis;
+import org.swtchart.IAxis.Direction;
 import org.swtchart.IAxisSet;
 import org.swtchart.IAxisTick;
 import org.swtchart.ICustomPaintListener;
@@ -71,7 +72,6 @@ import org.swtchart.ISeriesSet;
 import org.swtchart.ITitle;
 import org.swtchart.LineStyle;
 import org.swtchart.Range;
-import org.swtchart.IAxis.Direction;
 
 /**
  * Line chart widget
@@ -1015,5 +1015,20 @@ public class LineChart extends Chart implements HistoricalDataChart
    {
       getAxisSet().getYAxis(0).setRange(new Range(from, to));
       adjustYAxis = false;
+   }
+   
+   /**
+    * Take snapshot of network map
+    * 
+    * @return
+    */
+   public Image takeSnapshot()
+   {
+      Rectangle rect = getClientArea();
+      Image image = new Image(getDisplay(), rect.width, rect.height);
+      GC gc = new GC(image);
+      this.print(gc);
+      gc.dispose();
+      return image;
    }
 }

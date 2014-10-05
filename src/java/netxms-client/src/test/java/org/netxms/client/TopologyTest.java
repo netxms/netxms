@@ -31,14 +31,12 @@ import org.netxms.client.topology.Route;
  */
 public class TopologyTest extends SessionTest
 {
-   private static final long SUBNET_ID = 796;
-   private static final long NODE_ID = 100;
    
    public void testAddressMap() throws Exception
    {
       final NXCSession session = connect();
 
-      long[] map = session.getSubnetAddressMap(SUBNET_ID);
+      long[] map = session.getSubnetAddressMap(TestConstants.SUBNET_ID);
       for(int i = 0; i < map.length; i++)
          System.out.println(i + ": " + map[i]);
       
@@ -49,7 +47,7 @@ public class TopologyTest extends SessionTest
    {
       final NXCSession session = connect();
 
-      NetworkMapPage page = session.queryLayer2Topology(NODE_ID);
+      NetworkMapPage page = session.queryLayer2Topology(TestConstants.NODE_ID);
       for(NetworkMapElement e : page.getElements())
          System.out.println(e.toString());
       for(NetworkMapLink l : page.getLinks())
@@ -62,7 +60,7 @@ public class TopologyTest extends SessionTest
    {
       final NXCSession session = connect();
 
-      List<Route> rt = session.getRoutingTable(NODE_ID);
+      List<Route> rt = session.getRoutingTable(TestConstants.NODE_ID);
       for(Route r : rt)
          System.out.println(r.toString());
       
@@ -73,7 +71,7 @@ public class TopologyTest extends SessionTest
    {
       final NXCSession session = connect();
 
-      List<FdbEntry> fdb = session.getSwitchForwardingDatabase(NODE_ID);
+      List<FdbEntry> fdb = session.getSwitchForwardingDatabase(TestConstants.NODE_ID);
       for(FdbEntry e : fdb)
          System.out.println(e.toString());
       

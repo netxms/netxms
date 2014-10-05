@@ -43,6 +43,7 @@
 #define CMD_GET_PARAMS     3
 #define CMD_GET_CONFIG     4
 #define CMD_TABLE          5
+#define CMD_GET_SCREENSHOT 6
 
 
 //
@@ -78,11 +79,9 @@ static int Get(AgentConnection *pConn, const TCHAR *pszParam, BOOL bShowName)
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
 
-
-//
-// Get list of values for enum parameters
-//
-
+/**
+ * Get list of values for enum parameters
+ */
 static int List(AgentConnection *pConn, const TCHAR *pszParam)
 {
    UINT32 i, dwNumLines, dwError;
@@ -101,11 +100,9 @@ static int List(AgentConnection *pConn, const TCHAR *pszParam)
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
 
-
-//
-// Get list of values for enum parameters
-//
-
+/**
+ * Get table value
+ */
 static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
 {
 	Table *table;
@@ -135,11 +132,9 @@ static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
    return (rcc == ERR_SUCCESS) ? 0 : 1;
 }
 
-
-//
-// Check network service state
-//
-
+/**
+ * Check network service state
+ */
 static int CheckService(AgentConnection *pConn, int iServiceType, UINT32 dwServiceAddr,
                         WORD wProto, WORD wPort, const TCHAR *pszRequest, const TCHAR *pszResponse)
 {
@@ -187,11 +182,9 @@ static int ListParameters(AgentConnection *pConn)
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
 
-
-//
-// Get configuration file
-//
-
+/**
+ * Get configuration file
+ */
 static int GetConfig(AgentConnection *pConn)
 {
    UINT32 dwError, dwSize;
@@ -219,11 +212,41 @@ static int GetConfig(AgentConnection *pConn)
    return (dwError == ERR_SUCCESS) ? 0 : 1;
 }
 
+/**
+ * Get screenshot
+ */
+static int GetScreenshot(AgentConnection *pConn, const char *sessionName, const char *fileName)
+{
+   BYTE *data;
+   size_t size;
+#ifdef UNICODE
+   WCHAR *wname = WideStringFromMBString(sessionName);
+   UINT32 dwError = pConn->takeScreenshot(wname, &data, &size);
+   free(wname);
+#else
+   UINT32 dwError = pConn->takeScreenshot(sessionName, &data, &size);
+#endif
+   if (dwError == ERR_SUCCESS)
+   {
+      FILE *f = fopen(fileName, "wb");
+      if (f != NULL)
+      {
+         if (data != NULL)
+            fwrite(data, 1, size, f);
+         fclose(f);
+      }
+      safe_free(data);
+   }
+   else
+   {
+      _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
+   }
+   return (dwError == ERR_SUCCESS) ? 0 : 1;
+}
 
-//
-// Startup
-//
-
+/**
+ * Startup
+ */
 int main(int argc, char *argv[])
 {
    char *eptr;
@@ -254,7 +277,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:A:bCe:hi:IK:lno:O:p:P:qr:R:s:S:t:Tvw:W:X:Z:")) != -1)
+	while((ch = getopt(argc, argv, "a:A:bCe:Ehi:IK:lno:O:p:P:qr:R:s:S:t:Tvw:W:X:Z:")) != -1)
    {
       switch(ch)
       {
@@ -274,6 +297,7 @@ int main(int argc, char *argv[])
                      _T("                    3 = Force encrypted connection;\n")
                      _T("                  Default value is 1.\n")
 #endif
+                     _T("   -E <file>    : Take screenshot. First parameter is file name, second (optional) is session name.\n")
                      _T("   -h           : Display help and exit.\n")
                      _T("   -i <seconds> : Get specified parameter(s) continously with given interval.\n")
                      _T("   -I           : Get list of supported parameters.\n")
@@ -337,6 +361,9 @@ int main(int argc, char *argv[])
             {
                iInterval = i;
             }
+            break;
+         case 'E':
+            iCommand = CMD_GET_SCREENSHOT;
             break;
          case 'I':
             iCommand = CMD_GET_PARAMS;
@@ -648,6 +675,9 @@ int main(int argc, char *argv[])
                         break;
                      case CMD_GET_CONFIG:
                         iExitCode = GetConfig(&conn);
+                        break;
+                     case CMD_GET_SCREENSHOT:
+                        iExitCode = GetScreenshot(&conn, (argc > optind + 2) ? argv[optind + 2] : "Console", argv[optind + 1]);
                         break;
                      default:
                         break;

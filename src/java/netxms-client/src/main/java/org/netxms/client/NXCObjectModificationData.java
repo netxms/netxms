@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.netxms.base.GeoLocation;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.maps.MapLayoutAlgorithm;
@@ -158,9 +159,9 @@ public class NXCObjectModificationData
 	private List<ClusterSyncNetwork> networkList;
 	private int statusCalculationMethod;
 	private int statusPropagationMethod;
-	private int fixedPropagatedStatus;
+	private ObjectStatus fixedPropagatedStatus;
 	private int statusShift;
-	private int[] statusTransformation;
+	private ObjectStatus[] statusTransformation;
 	private int statusSingleThreshold;
 	private int[] statusThresholds;
 	private int expectedState;
@@ -1175,7 +1176,7 @@ public class NXCObjectModificationData
 	/**
 	 * @return the fixedPropagatedStatus
 	 */
-	public int getFixedPropagatedStatus()
+	public ObjectStatus getFixedPropagatedStatus()
 	{
 		return fixedPropagatedStatus;
 	}
@@ -1183,7 +1184,7 @@ public class NXCObjectModificationData
 	/**
 	 * @param fixedPropagatedStatus the fixedPropagatedStatus to set
 	 */
-	public void setFixedPropagatedStatus(int fixedPropagatedStatus)
+	public void setFixedPropagatedStatus(ObjectStatus fixedPropagatedStatus)
 	{
 		this.fixedPropagatedStatus = fixedPropagatedStatus;
 		flags |= MODIFY_STATUS_CALCULATION;
@@ -1209,7 +1210,7 @@ public class NXCObjectModificationData
 	/**
 	 * @return the statusTransformation
 	 */
-	public int[] getStatusTransformation()
+	public ObjectStatus[] getStatusTransformation()
 	{
 		return statusTransformation;
 	}
@@ -1217,7 +1218,7 @@ public class NXCObjectModificationData
 	/**
 	 * @param statusTransformation the statusTransformation to set
 	 */
-	public void setStatusTransformation(int[] statusTransformation)
+	public void setStatusTransformation(ObjectStatus[] statusTransformation)
 	{
 		this.statusTransformation = statusTransformation;
 		flags |= MODIFY_STATUS_CALCULATION;

@@ -413,6 +413,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sa.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\sd.cpp"
 				>
 			</File>

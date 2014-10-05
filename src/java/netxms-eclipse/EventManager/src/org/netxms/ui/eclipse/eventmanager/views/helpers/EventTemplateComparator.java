@@ -33,7 +33,7 @@ public class EventTemplateComparator extends ViewerComparator
 				result = ((EventTemplate)e1).getName().compareToIgnoreCase(((EventTemplate)e2).getName());
 				break;
 			case EventConfigurator.COLUMN_SEVERITY:
-				result = ((EventTemplate)e1).getSeverity() - ((EventTemplate)e2).getSeverity();
+				result = ((EventTemplate)e1).getSeverity().compareTo(((EventTemplate)e2).getSeverity());
 				break;
 			case EventConfigurator.COLUMN_FLAGS:
 				result = ((EventTemplate)e1).getFlags() - ((EventTemplate)e2).getFlags();

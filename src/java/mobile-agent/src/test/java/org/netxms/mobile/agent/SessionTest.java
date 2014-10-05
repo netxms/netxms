@@ -29,15 +29,11 @@ import junit.framework.TestCase;
  */
 public class SessionTest extends TestCase
 {
-	private static final String serverAddress = "127.0.0.1";
-	private static final int serverPort = Session.DEFAULT_CONN_PORT;
-	private static final String deviceId = "0000000000";
-	private static final String loginName = "admin";
-	private static final String password = "";
+	
 
 	protected Session connect(boolean useEncryption) throws Exception
 	{
-		Session session = new Session(serverAddress, serverPort, deviceId, loginName, password, useEncryption);
+		Session session = new Session(TestConstants.serverAddress, TestConstants.serverPort, TestConstants.DEVICE_ID, TestConstants.loginName, TestConstants.password, useEncryption);
 		session.connect();
 		return session;
 	}
@@ -45,5 +41,10 @@ public class SessionTest extends TestCase
 	protected Session connect() throws Exception
 	{
 		return connect(false);
+	}
+	
+	public void testFake()
+	{
+	   assertTrue(true);
 	}
 }

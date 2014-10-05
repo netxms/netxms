@@ -32,7 +32,6 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
@@ -117,7 +116,7 @@ public class ObjectAlarmBrowser extends ViewPart
             sb.append(", ");
          sb.append(session.getObjectName(id));
       }
-      content.showMessage(Severity.NORMAL, String.format(Messages.get().ObjectAlarmBrowser_SelectedObjects, sb.toString()));
+      content.showMessage(CompositeWithMessageBar.INFORMATION, String.format(Messages.get().ObjectAlarmBrowser_SelectedObjects, sb.toString()));
    }
 
    /**

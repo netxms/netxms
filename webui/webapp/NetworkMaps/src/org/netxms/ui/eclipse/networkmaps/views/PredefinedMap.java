@@ -596,7 +596,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		Object[] objects = selection.toArray();
 		long id1 = ((NetworkMapObject)objects[0]).getId();
 		long id2 = ((NetworkMapObject)objects[1]).getId();
-   	mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, id1, id2));
+		mapPage.addLink(new NetworkMapLink(NetworkMapLink.NORMAL, id1, id2));
 		saveMap();
 	}
 
@@ -843,7 +843,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			}
 			else
 			{
-				viewer.setBackgroundImage(ImageProvider.getInstance(display).getImage(mapObject.getBackground()));
+				viewer.setBackgroundImage(ImageProvider.getInstance().getImage(mapObject.getBackground()));
 			}
 		}
 

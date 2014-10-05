@@ -65,16 +65,18 @@ public class DownloadServiceHandler implements ServiceHandler
 		response.setHeader("Content-Disposition", "attachment; filename=\"" + info.name + "\"");
 		if (info.localFile != null)
 		{
+	      response.setContentLength((int)info.localFile.length());
 			InputStream in = new FileInputStream(info.localFile);
 			try
 			{
 				OutputStream out = response.getOutputStream();
 
-				byte[] buffer = new byte[4096];
+				byte[] buffer = new byte[8192];
 				int len = in.read(buffer);
 				while(len != -1)
 				{
 					out.write(buffer, 0, len);
+               response.flushBuffer();
 					len = in.read(buffer);
 				}
 			}

@@ -178,7 +178,7 @@ THREAD_RESULT THREAD_CALL MobileDeviceListenerIPv6(void *arg)
    // Create socket
    if ((sock = socket(AF_INET6, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
-      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("MobileDeviceListener"));
+      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("MobileDeviceListenerIPv6"));
       return THREAD_OK;
    }
 
@@ -194,7 +194,7 @@ THREAD_RESULT THREAD_CALL MobileDeviceListenerIPv6(void *arg)
    // Bind socket
    if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in6)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, _T("MobileDeviceListener"), WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, _T("MobileDeviceListenerIPv6"), WSAGetLastError());
       closesocket(sock);
       /* TODO: we should initiate shutdown procedure here */
       return THREAD_OK;

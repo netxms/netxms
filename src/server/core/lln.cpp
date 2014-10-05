@@ -108,3 +108,27 @@ LinkLayerNeighbors *BuildLinkLayerNeighborList(Node *node)
    node->addExistingConnections(nbs);
 	return nbs;
 }
+
+/**
+ * Return protocol name
+ */
+const TCHAR *GetLinkLayerProtocolName(LinkLayerProtocol p)
+{
+   switch(p)
+   {
+      case LL_PROTO_FDB:
+         return _T("FDB");
+      case LL_PROTO_CDP:
+         return _T("CDP");
+      case LL_PROTO_LLDP:
+         return _T("LLDP");
+      case LL_PROTO_NDP:
+         return _T("NDP");
+      case LL_PROTO_EDP:
+         return _T("EDP");
+      case LL_PROTO_STP:
+         return _T("STP");
+      default:
+         return _T("UNKNOWN");
+   }
+}

@@ -158,13 +158,6 @@ public class DataCollectionEditor extends ViewPart
 				onFilterModify();
 			}
 		});
-		filterText.setCloseAction(new Action() {
-			@Override
-			public void run()
-			{
-				enableFilter(false);
-			}
-		});
 		
 		final String[] names = { Messages.get().DataCollectionEditor_ColID, Messages.get().DataCollectionEditor_ColOrigin, Messages.get().DataCollectionEditor_ColDescription, Messages.get().DataCollectionEditor_ColParameter, Messages.get().DataCollectionEditor_ColDataType, Messages.get().DataCollectionEditor_ColPollingInterval, Messages.get().DataCollectionEditor_ColRetentionTime, Messages.get().DataCollectionEditor_ColStatus, Messages.get().DataCollectionEditor_ColTemplate };
 		final int[] widths = { 60, 100, 250, 200, 90, 90, 90, 100, 150 };
@@ -467,6 +460,8 @@ public class DataCollectionEditor extends ViewPart
 			public void run()
 			{
 				setItemStatus(DataCollectionObject.ACTIVE);
+            actionActivate.setEnabled(false);
+            actionDisable.setEnabled(true);
 			}
 		};
 		actionActivate.setEnabled(false);
@@ -476,6 +471,8 @@ public class DataCollectionEditor extends ViewPart
 			public void run()
 			{
 				setItemStatus(DataCollectionObject.DISABLED);
+            actionActivate.setEnabled(true);
+            actionDisable.setEnabled(false);
 			}
 		};
 		actionDisable.setEnabled(false);

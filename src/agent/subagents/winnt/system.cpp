@@ -298,6 +298,92 @@ LONG H_ActiveUserSessions(const TCHAR *pszCmd, const TCHAR *pArg, StringList *va
 }
 
 /**
+ * Callback for window stations enumeration
+ */
+static BOOL CALLBACK WindowStationsEnumCallback(LPTSTR lpszWindowStation, LPARAM lParam)
+{
+   ((StringList *)lParam)->add(lpszWindowStation);
+   return TRUE;
+}
+
+/**
+ * Handler for System.WindowStations list
+ */
+LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+{
+   return EnumWindowStations(WindowStationsEnumCallback, (LONG_PTR)value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+}
+
+/**
+ * Callback for desktop enumeration
+ */
+static BOOL CALLBACK DesktopsEnumCallback(LPTSTR lpszDesktop, LPARAM lParam)
+{
+   ((StringList *)lParam)->add(lpszDesktop);
+   return TRUE;
+}
+
+/**
+ * Handler for System.Desktops list
+ */
+LONG H_Desktops(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+{
+   TCHAR wsName[256];
+   AgentGetParameterArg(cmd, 1, wsName, 256);
+   HWINSTA ws = OpenWindowStation(wsName, FALSE, WINSTA_ENUMDESKTOPS);
+   if (ws == NULL)
+      return SYSINFO_RC_ERROR;
+
+   LONG rc = EnumDesktops(ws, DesktopsEnumCallback, (LONG_PTR)value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+   CloseWindowStation(ws);
+   return rc;
+}
+
+/**
+ * Handler for Agent.Desktop parameter
+ */
+LONG H_AgentDesktop(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+{
+   HWINSTA ws = GetProcessWindowStation();
+   if (ws == NULL)
+      return SYSINFO_RC_ERROR;
+
+   HDESK desk = GetThreadDesktop(GetCurrentThreadId());
+   if (desk == NULL)
+      return SYSINFO_RC_ERROR;
+
+   TCHAR wsName[64], deskName[64];
+   DWORD size;
+   if (GetUserObjectInformation(ws, UOI_NAME, wsName, 64 * sizeof(TCHAR), &size) &&
+       GetUserObjectInformation(desk, UOI_NAME, deskName, 64 * sizeof(TCHAR), &size))
+   {
+      DWORD sid;
+      if (ProcessIdToSessionId(GetCurrentProcessId(), &sid))
+      {
+         TCHAR *sessionName;
+         if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sid, WTSWinStationName, &sessionName, &size))
+         {
+            _sntprintf(value, MAX_RESULT_LENGTH, _T("/%s/%s/%s"), sessionName, wsName, deskName);
+            WTSFreeMemory(sessionName);
+         }
+         else
+         {
+            _sntprintf(value, MAX_RESULT_LENGTH, _T("/%u/%s/%s"), sid, wsName, deskName);
+         }
+      }
+      else
+      {
+         _sntprintf(value, MAX_RESULT_LENGTH, _T("/?/%s/%s"), wsName, deskName);
+      }
+      return SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      return SYSINFO_RC_ERROR;
+   }
+}
+
+/**
  * Handler for System.AppAddressSpace
  */
 LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)

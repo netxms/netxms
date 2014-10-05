@@ -135,7 +135,7 @@
 /**
  * Compatibility defines for C sources
  */
-#ifndef __cplusplus
+#if !defined(__cplusplus) && !defined(CORTEX)
 typedef int bool;
 #endif
 
@@ -183,6 +183,8 @@ typedef int bool;
 #define va_copy(x,y)            (x = y)
 #endif
 #define HAVE_DECL_VA_COPY       1
+
+#define HAVE_LIBCURL            1
 
 #include <winsock2.h>
 #include <windows.h>

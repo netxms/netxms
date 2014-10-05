@@ -46,7 +46,7 @@ static void RegisterPolicy(CommSession *session, UINT32 type, uuid_t guid)
 	registry->setValue(path, type);
 
 	_tcscpy(&path[tail], _T("server"));
-	registry->setValue(path, IpToStr(session->getServerAddress(), buffer));
+   registry->setValue(path, session->getServerAddress().toString(buffer));
 
 	CloseRegistry(true);
 }

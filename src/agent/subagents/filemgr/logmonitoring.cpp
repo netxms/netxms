@@ -125,7 +125,7 @@ void MonitoredFileList::Unlock()
  */
 struct SendMessageData
 {
-   UINT32 ip;
+   InetAddress ip;
    CSCPMessage *pMsg;
 };
 
@@ -134,7 +134,7 @@ struct SendMessageData
  */
 static bool SendMessage(AbstractCommSession *session, void *data)
 {
-   if (session != NULL && ((SendMessageData *)data)->ip == session->getServerAddress())
+   if (session != NULL && ((SendMessageData *)data)->ip.equals(session->getServerAddress()))
    {
       session->sendMessage(((SendMessageData *)data)->pMsg);
       return false;
@@ -155,39 +155,39 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
    UINT32 readSize;
 
    bool follow = true;
-   hFile = _topen(flData->pszFile, O_RDONLY | O_BINARY);
+   hFile = _topen(flData->getFile(), O_RDONLY | O_BINARY);
    NX_STAT_STRUCT st;
    NX_FSTAT(hFile, &st);
-   flData->offset = (long)st.st_size;
+   flData->setOffset((long)st.st_size);
    ThreadSleep(threadSleepTime);
    int headerSize = CSCP_HEADER_SIZE + MAX_PATH*2;
 
    if (hFile == -1)
    {
-      AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: File does not exists or couldn't be opened. File: %s."), flData->pszFile);
-      g_monitorFileList.removeMonitoringFile(flData->pszFile);
+      AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: File does not exists or couldn't be opened. File: %s."), flData->getFile());
+      g_monitorFileList.removeMonitoringFile(flData->getFile());
       return THREAD_OK;
    }
    while (follow)
    {
       NX_FSTAT(hFile, &st);
       long newOffset = (long)st.st_size;
-      if(flData->offset < newOffset)
+      if (flData->getOffset() < newOffset)
       {
-         readSize = newOffset - flData->offset;
+         readSize = newOffset - flData->getOffset();
          for(int i = readSize; i > 0; i = i - readSize)
          {
             if(readSize+1+headerSize > MAX_MSG_SIZE)
             {
                readSize = MAX_MSG_SIZE - headerSize;
-               newOffset = flData->offset + readSize;
+               newOffset = flData->getOffset() + readSize;
             }
             pMsg = new CSCPMessage();
             pMsg->SetCode(CMD_FILE_MONITORING);
             pMsg->SetId(0);
-            pMsg->SetVariable(VID_FILE_NAME, flData->fileId, MAX_PATH);
+            pMsg->SetVariable(VID_FILE_NAME, flData->getFileId(), MAX_PATH);
 
-            lseek(hFile, flData->offset, SEEK_SET);
+            lseek(hFile, flData->getOffset(), SEEK_SET);
             readBytes = (BYTE*)malloc(readSize);
             readSize = read(hFile, readBytes, readSize);
             AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: %d bytes will be sent."), readSize);
@@ -198,17 +198,17 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
 #else
             pMsg->SetVariable(VID_FILE_DATA, (char *)readBytes, readSize);
 #endif
-            flData->offset = newOffset;
+            flData->setOffset(newOffset);
 
             SendMessageData data;
-            data.ip = flData->serverAddress;
+            data.ip = flData->getServerAddress();
             data.pMsg = pMsg;
 
             bool sent = EnumerateSessions(SendMessage, &data);
 
             if (!sent)
             {
-               g_monitorFileList.removeMonitoringFile(flData->pszFile);
+               g_monitorFileList.removeMonitoringFile(flData->getFileId());
             }
 
             safe_free(readBytes);
@@ -217,13 +217,11 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
       }
 
       ThreadSleep(threadSleepTime);
-      if(!g_monitorFileList.checkFileMonitored(flData->fileId))
+      if (!g_monitorFileList.checkFileMonitored(flData->getFileId()))
       {
          follow = false;
       }
    }
-   safe_free(flData->pszFile);
-   safe_free(flData->fileId);
    delete flData;
    close(hFile);
    return THREAD_OK;

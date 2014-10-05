@@ -6,14 +6,12 @@ package org.netxms.ui.android.main.adapters;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.netxms.base.GeoLocation;
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.android.R;
-
 import android.content.Context;
 import android.content.res.Resources;
 import android.view.Gravity;
@@ -253,27 +251,27 @@ public class OverviewAdapter extends BaseAdapter
 	 * @param status NetXMS type of status
 	 * @return Human readable status 
 	 */
-	private String getNodeStatus(int status)
+	private String getNodeStatus(ObjectStatus status)
 	{
 		switch (status)
 		{
-			case Severity.NORMAL:
+			case NORMAL:
 				return r.getString(R.string.status_normal);
-			case Severity.WARNING:
+			case WARNING:
 				return r.getString(R.string.status_warning);
-			case Severity.MINOR:
+			case MINOR:
 				return r.getString(R.string.status_minor);
-			case Severity.MAJOR:
+			case MAJOR:
 				return r.getString(R.string.status_major);
-			case Severity.CRITICAL:
+			case CRITICAL:
 				return r.getString(R.string.status_critical);
-			case Severity.UNKNOWN:
+			case UNKNOWN:
 				return r.getString(R.string.status_unknown);
-			case Severity.UNMANAGED:
+			case UNMANAGED:
 				return r.getString(R.string.status_unmanaged);
-			case Severity.DISABLED:
+			case DISABLED:
 				return r.getString(R.string.status_disabled);
-			case Severity.TESTING:
+			case TESTING:
 				return r.getString(R.string.status_testing);
 		}
 		return r.getString(R.string.status_unknown);

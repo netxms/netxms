@@ -51,7 +51,7 @@ public class AlarmListFilter
       if ((stateFilter != -1) && (alarm.getState() != stateFilter))
          return false;
 
-      if (((1 << alarm.getCurrentSeverity()) & severityFilter) == 0)
+      if (((1 << alarm.getCurrentSeverity().getValue()) & severityFilter) == 0)
          return false;
 
       if ((rootObjects.size() == 0) || (rootObjects.contains(((Alarm)alarm).getSourceObjectId())))

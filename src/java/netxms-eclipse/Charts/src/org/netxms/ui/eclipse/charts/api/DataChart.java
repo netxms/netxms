@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.charts.api;
 
+import org.eclipse.swt.graphics.Image;
+
 /**
  * Generic data chart interface
  *
@@ -236,4 +238,11 @@ public interface DataChart
 	 * Clear errors
 	 */
 	public abstract void clearErrors();
+	
+	/**
+	 * Take snapshot of network map
+	 * 
+	 * @return
+	 */
+	public Image takeSnapshot();
 }

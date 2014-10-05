@@ -24,30 +24,10 @@ import java.util.Random;
  * Basic connection tests
  */
 public class ConnectionTest extends SessionTest
-{
-	public void testConnect() throws Exception
-	{
-		final NXCSession session = connect();
-
-		assertEquals(0, session.getUserId());
-		
-		Thread.sleep(2000);
-		session.disconnect();
-	}
-
-	public void testEncryptedConnect() throws Exception
-	{
-		final NXCSession session = connect(true);
-
-		assertEquals(0, session.getUserId());
-		
-		Thread.sleep(2000);
-		session.disconnect();
-	}
-	
+{	
 	public void testMultipleConnections() throws Exception
 	{
-	   Thread[] t = new Thread[100];
+	   Thread[] t = new Thread[TestConstants.CONNECTION_PULL];
 	   for(int i = 0; i < t.length; i++)
 	   {
 	      t[i] = new Thread(new Runnable() {

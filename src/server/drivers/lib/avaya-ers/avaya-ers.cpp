@@ -43,14 +43,14 @@ static UINT32 HandlerVlanList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transp
    UINT32 oidName[MAX_OID_LEN], dwResult;
    VlanList *vlanList = (VlanList *)pArg;
 
-   UINT32 dwNameLen = pVar->getName()->getLength();
+   size_t nameLen = pVar->getName()->getLength();
 	VlanInfo *vlan = new VlanInfo(pVar->getValueAsInt(), VLAN_PRM_IFINDEX);
 
    // Get VLAN name
-   memcpy(oidName, pVar->getName()->getValue(), dwNameLen * sizeof(UINT32));
-   oidName[dwNameLen - 2] = 2;
+   memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
+   oidName[nameLen - 2] = 2;
    TCHAR buffer[256];
-	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, buffer, sizeof(buffer), SG_STRING_RESULT);
+	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, buffer, sizeof(buffer), SG_STRING_RESULT);
    if (dwResult != SNMP_ERR_SUCCESS)
 	{
 		delete vlan;
@@ -68,10 +68,10 @@ static UINT32 HandlerVlanList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transp
 	//   bit of octet #1 corresponds to ifIndex 0, while the least significant 
 	//   bit of octet #32 corresponds to ifIndex 255." 
 	// Note: on newer devices port list can be longer
-   oidName[dwNameLen - 2] = 12;
+   oidName[nameLen - 2] = 12;
 	BYTE portMask[256];
 	memset(portMask, 0, sizeof(portMask));
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, dwNameLen, portMask, sizeof(portMask), SG_RAW_RESULT);
+   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, portMask, sizeof(portMask), SG_RAW_RESULT);
    if (dwResult != SNMP_ERR_SUCCESS)
 	{
 		delete vlan;

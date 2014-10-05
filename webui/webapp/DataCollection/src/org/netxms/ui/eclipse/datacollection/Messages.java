@@ -153,6 +153,7 @@ public class Messages extends NLS
 	public String DciLabelProvider_SourceCPSNMP;
 	public String DciLabelProvider_SourceInternal;
 	public String DciLabelProvider_SourcePush;
+   public String DciLabelProvider_SourceScript;
 	public String DciLabelProvider_SourceSNMP;
 	public String DciLabelProvider_SourceILO;
 	public String DciLabelProvider_SourceWinPerf;
@@ -247,6 +248,7 @@ public class Messages extends NLS
 	public String General_ProxyNode;
 	public String General_RetentionTime;
 	public String General_SampleCountForAvg;
+   public String General_Script;
 	public String General_Select;
 	public String General_SMCLP;
 	public String General_SNMP_DT_float;

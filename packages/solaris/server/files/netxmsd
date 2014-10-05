@@ -11,7 +11,7 @@ if [ -z $SMF_FMRI ]; then
 fi
 
 getproparg() {
-    val=`svcprop -p $1 $SMF_FMRI`
+    val=`svcprop -p $1 $SMF_FMRI 2>/dev/null`
     [ -n "$val" ] && echo $val
 }
 
@@ -26,7 +26,7 @@ if [ -f $NXBIN/nxenv ]; then
 fi
 
 if [ x"$CONFIGFILE" != "x" ]; then
-    ARGS="$ARGS -c \"$CONFIGFILE\""
+    ARGS="$ARGS -c $CONFIGFILE"
 fi
 
 if [ x"$DEBUGLEVEL" != "x" ]; then
@@ -39,7 +39,7 @@ case "$1" in
         ;;
 
     'stop')
-        pkill netxmsd
+        pkill -f $NXBIN/netxmsd
         ;;
 
     *)

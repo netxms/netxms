@@ -221,3 +221,11 @@ void Array::sort(int (*cb)(const void *, const void *))
 {
    qsort(m_data, m_size, m_elementSize, cb);
 }
+
+/**
+ * Find element (assuming array is already sorted)
+ */
+void *Array::find(const void *key, int (*cb)(const void *, const void *))
+{
+   return bsearch(key, m_data, m_size, m_elementSize, cb);
+}

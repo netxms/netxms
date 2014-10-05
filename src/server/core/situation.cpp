@@ -98,16 +98,9 @@ const TCHAR *SituationInstance::GetAttribute(const TCHAR *attribute)
  */
 UINT32 SituationInstance::CreateMessage(CSCPMessage *msg, UINT32 baseId)
 {
-	UINT32 id = baseId;
-	
-	msg->SetVariable(id++, m_name);
-	msg->SetVariable(id++, (UINT32)m_attributes.size());
-	for(int i = 0; i < m_attributes.size(); i++)
-	{
-		msg->SetVariable(id++, m_attributes.getKeyByIndex(i));
-		msg->SetVariable(id++, m_attributes.getValueByIndex(i));
-	}
-	return id;
+	msg->SetVariable(baseId, m_name);
+   m_attributes.fillMessage(msg, baseId + 1, baseId + 2);
+   return baseId + m_attributes.size() * 2 + 2;
 }
 
 /**

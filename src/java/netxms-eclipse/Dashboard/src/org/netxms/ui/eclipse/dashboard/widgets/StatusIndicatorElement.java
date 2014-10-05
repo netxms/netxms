@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -47,7 +47,7 @@ public class StatusIndicatorElement extends ElementWidget
 	private Canvas canvas;
 	private Runnable refreshTimer;
 	private Font font;
-	private int status = Severity.UNKNOWN;
+	private ObjectStatus status = ObjectStatus.UNKNOWN;
 	private int xSize;
 	private int ySize;
 
@@ -127,7 +127,7 @@ public class StatusIndicatorElement extends ElementWidget
 		}
 		else
 		{
-			status = Severity.UNKNOWN;
+			status = ObjectStatus.UNKNOWN;
 		}
 		canvas.redraw();
 	}
@@ -165,7 +165,7 @@ public class StatusIndicatorElement extends ElementWidget
 		if (config.isFullColorRange())
 		   e.gc.setBackground(StatusDisplayInfo.getStatusColor(status));
 		else
-         e.gc.setBackground((status == Severity.NORMAL) ? StatusDisplayInfo.getStatusColor(Severity.NORMAL) : StatusDisplayInfo.getStatusColor(Severity.CRITICAL));
+         e.gc.setBackground((status == ObjectStatus.NORMAL) ? StatusDisplayInfo.getStatusColor(ObjectStatus.NORMAL) : StatusDisplayInfo.getStatusColor(ObjectStatus.CRITICAL));
       e.gc.fillOval(MARGIN_X, MARGIN_Y, CIRCLE_SIZE, CIRCLE_SIZE);
 
       e.gc.setBackground(canvas.getBackground());

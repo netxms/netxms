@@ -265,6 +265,7 @@ public:
    bool isShowOnObjectTooltip() { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
    bool isAggregateOnCluster() { return (m_flags & DCF_AGGREGATE_ON_CLUSTER) ? true : false; }
    int getAggregationFunction() { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
+   Template *getNode() { return m_pNode; }
 
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
@@ -605,6 +606,7 @@ void CalculateItemValueMax(ItemValue &result, int nDataType, int nNumValues, Ite
 extern double g_dAvgPollerQueueSize;
 extern double g_dAvgDBWriterQueueSize;
 extern double g_dAvgIDataWriterQueueSize;
+extern double g_dAvgRawDataWriterQueueSize;
 extern double g_dAvgDBAndIDataWriterQueueSize;
 extern double g_dAvgStatusPollerQueueSize;
 extern double g_dAvgConfigPollerQueueSize;

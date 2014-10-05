@@ -81,8 +81,8 @@ CREATE TABLE user_groups
 	name varchar(63) not null,
 	system_access SQL_INT64 not null,
 	flags integer not null,
-	description varchar(255) not null,
-   ldap_dn SQL_TEXT null,
+	description varchar(255),
+	ldap_dn SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1294,8 +1294,8 @@ CREATE TABLE network_map_links
 	element2 integer not null,
 	link_type integer not null,
 	link_name varchar(255) null,
-	connector_name1 varchar(63) null,
-	connector_name2 varchar(63) null,
+	connector_name1 varchar(255) null,
+	connector_name2 varchar(255) null,
 	element_data SQL_TEXT null,
 	flags integer not null
 ) TABLE_TYPE;

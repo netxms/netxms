@@ -321,6 +321,7 @@ public class NXCPCodes
    public static final int CMD_GET_SWITCH_FDB = 0x012B;
    public static final int CMD_COMMAND_OUTPUT = 0x012C;
    public static final int CMD_GET_LOC_HISTORY = 0x012D;
+   public static final int CMD_TAKE_SCREENSHOT = 0x012E;
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -818,6 +819,8 @@ public class NXCPCodes
    public static final long VID_ROOT = 480;
    public static final long VID_INCLUDE_NOVALUE_OBJECTS = 481;
    public static final long VID_RECEIVE_OUTPUT = 482;
+   public static final long VID_SESSION_STATE = 483;
+   public static final long VID_PAGE_SIZE = 484;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

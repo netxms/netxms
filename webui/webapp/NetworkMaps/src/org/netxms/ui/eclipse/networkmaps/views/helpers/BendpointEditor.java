@@ -50,6 +50,7 @@ public class BendpointEditor
 	private MouseListener mouseListener;
 	private List<AbsoluteBendpoint> bendpoints = new ArrayList<AbsoluteBendpoint>(16);
 	private Map<AbsoluteBendpoint, BendpointHandle> handles = new HashMap<AbsoluteBendpoint, BendpointHandle>(16);
+   private Rectangle rect = new Rectangle();
 	
 	/**
 	 * @param linkObject
@@ -204,7 +205,6 @@ public class BendpointEditor
 	private boolean isLineContainsPoint(int x1, int y1, int x2, int y2, int px, int py)
 	{
 		int tolerance = 7;
-		Rectangle rect = Rectangle.getSINGLETON();
 		rect.setSize(0, 0);
 		rect.setLocation(x1, y1);
 		rect.union(x2, y2);

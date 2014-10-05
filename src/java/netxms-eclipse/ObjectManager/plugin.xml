@@ -255,36 +255,20 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.VPNSubnets"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.VPNSubnets"
+              name="Subnets">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.VPNConnector">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension
          point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.GenericObject"
-            objectClass="org.netxms.client.objects.GenericObject">
-         <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.DeleteObject"
-               enablesFor="+"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.DeleteObject"
-               label="%action.label.Delete"
-               icon="icons/delete.png"
-               menubarPath="objectmgmt">
-         </action>
-         <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.Unmanage"
-               enablesFor="+"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.Unmanage"
-               label="%action.label.Unmanage"
-               menubarPath="objectmgmt">
-         </action>
-         <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.Manage"
-               enablesFor="+"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.Manage"
-               label="%action.label.Manage"
-               menubarPath="objectmgmt">
-         </action>
-      </objectContribution>
 
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.Container"
@@ -417,7 +401,7 @@
                class="org.netxms.ui.eclipse.objectmanager.actions.ChangeZone"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.ChangeZone_Node"
-               label="%action.label.CreateZone"
+               label="%action.label.ChangeZone"
                menubarPath="objectmgmt">
          </action>
          <menu
@@ -540,6 +524,170 @@
             name="%view.name.NodePoll"
             restorable="true">
       </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any?before=objectmgmt">
+         <command
+               commandId="org.netxms.ui.eclipse.objectmanager.popupActions.Manage"
+               label="%action.label.Manage"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <iterate>
+                  <and>
+                     <instanceof
+                           value="org.netxms.client.objects.AbstractObject">
+                     </instanceof>
+                     <not>
+                        <or>
+                           <instanceof
+                                 value="org.netxms.client.objects.Template">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.TemplateGroup">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.TemplateRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.Dashboard">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.DashboardRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.PolicyRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.PolicyGroup">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.AgentPolicy">
+                           </instanceof>
+                        </or>
+                     </not>
+                  </and>
+               </iterate>
+            </visibleWhen>
+         </command>
+         <command
+               commandId="org.netxms.ui.eclipse.objectmanager.popupActions.Unmanage"
+               label="%action.label.Unmanage"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <iterate>
+                  <and>
+                     <instanceof
+                           value="org.netxms.client.objects.AbstractObject">
+                     </instanceof>
+                     <not>
+                        <or>
+                           <instanceof
+                                 value="org.netxms.client.objects.Template">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.TemplateGroup">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.TemplateRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.Dashboard">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.DashboardRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.PolicyRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.PolicyGroup">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.AgentPolicy">
+                           </instanceof>
+                        </or>
+                     </not>
+                  </and>
+               </iterate>
+            </visibleWhen>
+         </command>
+         <command
+               commandId="org.netxms.ui.eclipse.objectmanager.popupActions.DeleteObject"
+               icon="icons/delete.png"
+               label="%action.label.Delete"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <iterate>
+                  <and>
+                     <instanceof
+                           value="org.netxms.client.objects.AbstractObject">
+                     </instanceof>
+                     <not>
+                        <or>
+                           <instanceof
+                                 value="org.netxms.client.objects.EntireNetwork">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.ServiceRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.TemplateRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.NetworkMapRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.DashboardRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.BusinessServiceRoot">
+                           </instanceof>
+                           <instanceof
+                                 value="org.netxms.client.objects.PolicyRoot">
+                           </instanceof>
+                        </or>
+                     </not>
+                  </and>
+               </iterate>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            id="org.netxms.ui.eclipse.objectmanager.popupActions.Manage"
+            name="%action.label.Manage">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.objectmanager.popupActions.Unmanage"
+            name="%action.label.Unmanage">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.objectmanager.popupActions.DeleteObject"
+            name="%action.label.Delete">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="org.netxms.ui.eclipse.objectmanager.actions.Manage"
+            commandId="org.netxms.ui.eclipse.objectmanager.popupActions.Manage">
+      </handler>
+      <handler
+            class="org.netxms.ui.eclipse.objectmanager.actions.Unmanage"
+            commandId="org.netxms.ui.eclipse.objectmanager.popupActions.Unmanage">
+      </handler>
+      <handler
+            class="org.netxms.ui.eclipse.objectmanager.actions.DeleteObject"
+            commandId="org.netxms.ui.eclipse.objectmanager.popupActions.DeleteObject">
+      </handler>
    </extension>
 
 </plugin>

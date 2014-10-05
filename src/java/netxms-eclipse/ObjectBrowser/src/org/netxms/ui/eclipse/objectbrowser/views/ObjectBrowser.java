@@ -70,6 +70,7 @@ import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.client.objects.NetworkMapGroup;
 import org.netxms.client.objects.NetworkMapRoot;
@@ -768,6 +769,7 @@ public class ObjectBrowser extends ViewPart
 					           (currentObject instanceof Subnet) ||
 				              (currentObject instanceof Condition) ||
 				              (currentObject instanceof Rack) ||
+                          (currentObject instanceof MobileDevice) ||
 					           (currentObject instanceof Container)) &&
 					          ((parentObject instanceof Container) ||
 					           (parentObject instanceof ServiceRoot)) ? APPROVE : REJECT;

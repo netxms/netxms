@@ -31,11 +31,11 @@ struct FileRequest
    UINT32 serverRequestId;
    ClientSession *session;
 
-   FileRequest(UINT32 originalRequestId, UINT32 serverRequestId, ClientSession *session)
+   FileRequest(UINT32 _originalRequestId, UINT32 _serverRequestId, ClientSession *_session)
    {
-      this->originalRequestId = originalRequestId;
-      this->serverRequestId = serverRequestId;
-      this->session = session;
+      originalRequestId = _originalRequestId;
+      serverRequestId = _serverRequestId;
+      session = _session;
    }
 };
 

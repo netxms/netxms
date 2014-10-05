@@ -224,7 +224,7 @@ public class PerformanceTab extends ObjectTab
 				final GridData gd = new GridData();
 				gd.horizontalAlignment = SWT.FILL;
 				gd.grabExcessHorizontalSpace = true;
-				gd.heightHint = 250;
+				gd.heightHint = 320;
 				chart.setLayoutData(gd);
 			}
 			else

@@ -214,7 +214,7 @@
          point="org.eclipse.ui.bindings">
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.copy"
-            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+C">
       </key>
@@ -226,7 +226,7 @@
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.select_all"
-            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+A">
       </key>
@@ -238,13 +238,13 @@
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.terminate_process"
-            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="CTRL+BREAK">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.scroll_lock"
-            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="PAUSE">
       </key>
@@ -256,7 +256,7 @@
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.clear_output"
-            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="CTRL+L">
       </key>

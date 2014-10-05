@@ -88,7 +88,10 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCPMessageReceiver;
 import org.netxms.base.NXCPMsgWaitQueue;
 import org.netxms.base.NXCommon;
+import org.netxms.client.agent.config.ConfigContent;
+import org.netxms.client.agent.config.ConfigListElement;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
@@ -171,8 +174,6 @@ import org.netxms.client.topology.NetworkPath;
 import org.netxms.client.topology.Route;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.client.topology.WirelessStation;
-import org.netxms.client.agent.config.ConfigContent;
-import org.netxms.client.agent.config.ConfigListElement;
 
 /**
  * Communication session with NetXMS server.
@@ -2668,7 +2669,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException
     * @throws NXCException
     */
-   public void createAlarmComment(long alarmId, String text) throws IOException, NXCException {
+   public void createAlarmComment(long alarmId, String text) throws IOException, NXCException 
+   {
    	updateAlarmComment(alarmId, 0, text);
    }
 
@@ -2680,7 +2682,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException
     * @throws NXCException
     */
-   public void createAlarmComment(final String helpdeskReference, String text) throws IOException, NXCException {
+   public void createAlarmComment(final String helpdeskReference, String text) throws IOException, NXCException 
+   {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_ALARM_COMMENT);
       msg.setVariableInt32(NXCPCodes.VID_ALARM_ID, 0);
       msg.setVariable(NXCPCodes.VID_HELPDESK_REF, helpdeskReference);
@@ -4055,13 +4058,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       {
          msg.setVariableInt16(NXCPCodes.VID_STATUS_CALCULATION_ALG, data.getStatusCalculationMethod());
          msg.setVariableInt16(NXCPCodes.VID_STATUS_PROPAGATION_ALG, data.getStatusPropagationMethod());
-         msg.setVariableInt16(NXCPCodes.VID_FIXED_STATUS, data.getFixedPropagatedStatus());
+         msg.setVariableInt16(NXCPCodes.VID_FIXED_STATUS, data.getFixedPropagatedStatus().getValue());
          msg.setVariableInt16(NXCPCodes.VID_STATUS_SHIFT, data.getStatusShift());
-         int[] transformation = data.getStatusTransformation();
-         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_1, transformation[0]);
-         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_2, transformation[1]);
-         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_3, transformation[2]);
-         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_4, transformation[3]);
+         ObjectStatus[] transformation = data.getStatusTransformation();
+         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_1, transformation[0].getValue());
+         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_2, transformation[1].getValue());
+         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_3, transformation[2].getValue());
+         msg.setVariableInt16(NXCPCodes.VID_STATUS_TRANSLATION_4, transformation[3].getValue());
          msg.setVariableInt16(NXCPCodes.VID_STATUS_SINGLE_THRESHOLD, data.getStatusSingleThreshold());
          int[] thresholds = data.getStatusThresholds();
          msg.setVariableInt16(NXCPCodes.VID_STATUS_THRESHOLD_1, thresholds[0]);
@@ -4102,7 +4105,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
       if ((flags & NXCObjectModificationData.MODIFY_VPN_NETWORKS) != 0)
       {
-         long varId = NXCPCodes.VID_VPN_NETWORK_BASE;
+         long varId = NXCPCodes.VID_VPN_NETWORK_BASE;         
 
          msg.setVariableInt32(NXCPCodes.VID_NUM_LOCAL_NETS, data.getLocalNetworks().size());
          for(IpAddressListElement e : data.getLocalNetworks())
@@ -4987,7 +4990,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_EVENT_INFO);
       msg.setVariableInt32(NXCPCodes.VID_EVENT_CODE, (int) evt.getCode());
-      msg.setVariableInt32(NXCPCodes.VID_SEVERITY, evt.getSeverity());
+      msg.setVariableInt32(NXCPCodes.VID_SEVERITY, evt.getSeverity().getValue());
       msg.setVariableInt32(NXCPCodes.VID_FLAGS, evt.getFlags());
       msg.setVariable(NXCPCodes.VID_NAME, evt.getName());
       msg.setVariable(NXCPCodes.VID_MESSAGE, evt.getMessage());
@@ -7379,7 +7382,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @param baseObjectId base container object ID
     * @return table with last values data for all nodes under given base container
     * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
     */
    public Table queryDciSummaryTable(int tableId, long baseObjectId) throws IOException, NetXMSClientException
    {
@@ -7514,8 +7517,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
    /**
     * @param reportId - current report uuid
-    * @throws NetXMSClientException
-    * @throws IOException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
     */
    @Override
 	public void scheduleReport(ReportingJob job, Map<String, String> parameters) throws NetXMSClientException, IOException
@@ -7664,10 +7667,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * 
     * @param subnetId
     * @return
-    * @throws NXCException
-    * @throws IOException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
     */
-   public long[] getSubnetAddressMap(long subnetId) throws NXCException, IOException
+   public long[] getSubnetAddressMap(long subnetId) throws NetXMSClientException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_SUBNET_ADDRESS_MAP);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)subnetId);
@@ -7680,10 +7683,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * Gets the list of configuration files.(Config id, name and sequence number)
     * 
     * @return the list of configuration files in correct sequence
-    * @throws NXCException
-    * @throws IOException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
     */
-   public List <ConfigListElement> getConfigList() throws NXCException, IOException
+   public List <ConfigListElement> getConfigList() throws NetXMSClientException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_CFG_LIST);
       sendMessage(msg);
@@ -7704,10 +7707,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     *  
     * @param id config id
     * @return content of requested by id configurations file
-    * @throws NXCException
-    * @throws IOException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
     */
-   public ConfigContent getConfigContent(long id) throws NXCException, IOException
+   public ConfigContent getConfigContent(long id) throws NetXMSClientException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_AGENT_CONFIG);
       msg.setVariableInt32(NXCPCodes.VID_CONFIG_ID, (int)id);
@@ -7722,29 +7725,30 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * Saves or creates new agent's config 
     * 
     * @param conf contents of config
-    * @throws NXCException
-    * @throws IOException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
     */
-   public void saveAgentConfig(ConfigContent conf) throws NXCException, IOException
+   public void saveAgentConfig(ConfigContent conf) throws NetXMSClientException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SAVE_AGENT_CONFIG);
       conf.fillMessage(msg);
       sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
    
    /**
-    * Seletes config by given id. Does not chenge sequence nuber of elements
-    * going after it.
+    * Delete config with given id. Does not change sequence number of following elements.
     * 
-    * @param id
-    * @throws NXCException
-    * @throws IOException
+    * @param id agent configuration ID
+    * @throws IOException  if socket I/O error occurs
+    * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
     */
-   public void deleteAgentConfig(long id) throws NXCException, IOException
+   public void deleteAgentConfig(long id) throws NetXMSClientException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_AGENT_CONFIG);
       msg.setVariableInt32(NXCPCodes.VID_CONFIG_ID, (int)id);
       sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
    
    /**
@@ -7752,15 +7756,16 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * 
     * @param id1
     * @param id2
-    * @throws NXCException
-    * @throws IOException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
     */
-   public void swapAgentConfigs(long id1, long id2) throws NXCException, IOException
+   public void swapAgentConfigs(long id1, long id2) throws NetXMSClientException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SWAP_AGENT_CONFIGS);
       msg.setVariableInt32(NXCPCodes.VID_CONFIG_ID, (int)id1);
       msg.setVariableInt32(NXCPCodes.VID_CONFIG_ID_2, (int)id2);
       sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
    
    /**
@@ -7770,10 +7775,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @param from
     * @param to
     * @return
-    * @throws NXCException
-    * @throws IOException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
     */
-   public List<GeoLocation> getLocationHistory(long objectId, Date from, Date to) throws NXCException, IOException
+   public List<GeoLocation> getLocationHistory(long objectId, Date from, Date to) throws NetXMSClientException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LOC_HISTORY);
 
@@ -7801,5 +7806,29 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          }
       });
       return elements;
+   }
+   
+   /**
+    * Take screenshot from given node. Session to take screenshot from
+    * can be identified either by ID or name. If ID is used name must
+    * be set to null.
+    * 
+    * @param nodeId node object ID
+    * @param sessionId session ID for session to take screenshot from
+    * @param sessionName session name for session to take screenshot from
+    * @return Screenshot as PNG image
+    * @throws IOException  if socket I/O error occurs
+    * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
+    */
+   public byte[] takeScreenshot(long nodeId, String sessionName) throws NetXMSClientException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_TAKE_SCREENSHOT);
+      msg.setVariableInt32(NXCPCodes.VID_NODE_ID, (int)nodeId);
+      if (sessionName != null)
+         msg.setVariable(NXCPCodes.VID_NAME, sessionName);
+      sendMessage(msg);
+      
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getVariableAsBinary(NXCPCodes.VID_FILE_DATA);
    }
 }

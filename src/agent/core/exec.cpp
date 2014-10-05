@@ -420,7 +420,6 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 		PROCESS_INFORMATION pi;
 		SECURITY_ATTRIBUTES sa;
 		HANDLE hOutput;
-		DWORD dwBytes;
 
 		// Create temporary file to hold process output
 		GetTempPath(MAX_PATH - 1, szBuffer);
@@ -450,21 +449,29 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 					SetFilePointer(hOutput, 0, NULL, FILE_BEGIN);
 
 					// Read process output
-					char *eptr;
-					char buffer[256];
-					ReadFile(hOutput, buffer, MAX_RESULT_LENGTH - 1, &dwBytes, NULL);
-					buffer[dwBytes] = 0;
-					eptr = strchr(buffer, '\r');
-					if (eptr != NULL)
-						*eptr = 0;
-					eptr = strchr(buffer, '\n');
-					if (eptr != NULL)
-						*eptr = 0;
+               DWORD size = GetFileSize(hOutput, NULL);
+               char *buffer = (char *)malloc(size + 1);
+					ReadFile(hOutput, buffer, size, &size, NULL);
+					buffer[size] = 0;
+
+               char *line = strtok(buffer, "\n");
+               while(line != NULL)
+               {
+					   char *eptr = strchr(line, '\r');
+					   if (eptr != NULL)
+						   *eptr = 0;
+                  StrStripA(line);
+
+                  if (line[0] != 0)
+                  {
 #ifdef UNICODE
-               value->addPreallocated(WideStringFromMBString(buffer));
+                     value->addPreallocated(WideStringFromMBString(line));
 #else
-               value->add(buffer);
+                     value->add(line);
 #endif
+                  }
+                  line = strtok(NULL, "\n");
+               }
 					iStatus = SYSINFO_RC_SUCCESS;
 				}
 				else

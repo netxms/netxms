@@ -30,6 +30,7 @@ public class AlarmComment
 	private long id;
 	private long alarmId;
 	private long userId;
+	private String userName;
 	private Date lastChangeTime;
 	private String text;
 	
@@ -46,6 +47,7 @@ public class AlarmComment
 		lastChangeTime = msg.getVariableAsDate(baseId + 2);
 		userId = msg.getVariableAsInt64(baseId + 3);
 		text = msg.getVariableAsString(baseId + 4);
+      userName = msg.getVariableAsString(baseId + 5);
 	}
 
 	/**
@@ -87,4 +89,12 @@ public class AlarmComment
 	{
 		return text;
 	}
+
+   /**
+    * @return the userName
+    */
+   public String getUserName()
+   {
+      return userName;
+   }
 }

@@ -71,12 +71,12 @@ public class ThresholdViolationSummary
 	 * 
 	 * @return
 	 */
-	public int getCurrentSeverity()
+	public Severity getCurrentSeverity()
 	{
-		int severity = Severity.NORMAL;
+		Severity severity = Severity.NORMAL;
 		for(DciValue v : dciList)
 		{
-			if (v.getActiveThreshold().getCurrentSeverity() > severity)
+			if (v.getActiveThreshold().getCurrentSeverity().compareTo(severity) > 0)
 				severity = v.getActiveThreshold().getCurrentSeverity();
 		}
 		return severity;

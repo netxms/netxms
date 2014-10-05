@@ -691,35 +691,14 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
    m_prevRawValue = rawValue;
    m_tPrevValueTimeStamp = tmTimeStamp;
 
-	// Prepare SQL statement bindings
-	TCHAR dciId[32], pollTime[32];
-	_sntprintf(dciId, 32, _T("%d"), (int)m_dwId);
-	_sntprintf(pollTime, 32, _T("%ld"), (long)tmTimeStamp);
-
    // Save raw value into database
-	const TCHAR *values[4];
-	if (_tcslen((const TCHAR *)originalValue) >= MAX_DB_STRING)
-	{
-		// need to be truncated
-		TCHAR *temp = _tcsdup((const TCHAR *)originalValue);
-		temp[MAX_DB_STRING - 1] = 0;
-		values[0] = temp;
-	}
-	else
-	{
-		values[0] = (const TCHAR *)originalValue;
-	}
-	values[1] = pValue->getString();
-	values[2] = pollTime;
-	values[3] = dciId;
-	QueueSQLRequest(_T("UPDATE raw_dci_values SET raw_value=?,transformed_value=?,last_poll_time=? WHERE item_id=?"),
-	                4, updateRawValueTypes, values);
-	if ((void *)values[0] != originalValue)
-		free((void *)values[0]);
+   QueueRawDciDataUpdate(tmTimeStamp, m_dwId, (const TCHAR *)originalValue, pValue->getString());
 
 	// Save transformed value to database
    if ((m_flags & DCF_NO_STORAGE) == 0)
 	   QueueIDataInsert(tmTimeStamp, m_pNode->Id(), m_dwId, pValue->getString());
+   if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
+      PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
 
    // Check thresholds and add value to cache
    checkThresholds(*pValue);
@@ -900,7 +879,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
       }
       else if (m_transformationScript->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
       {
-         DbgPrintf(6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"), 
+         DbgPrintf(6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"),
             m_szDescription, m_dwId, (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), (m_pNode != NULL) ? m_pNode->Id() : 0);
          success = false;
       }
@@ -1571,6 +1550,7 @@ bool DCItem::testTransformation(DataCollectionTarget *object, const TCHAR *scrip
 			nx_strncpy(buffer, vm->getErrorText(), bufSize);
       }
    }
+   delete vm;
 	return success;
 }
 
@@ -1666,6 +1646,102 @@ void DCItem::expandInstance()
 }
 
 /**
+ * Filter callback data
+ */
+struct FilterCallbackData
+{
+   StringMap *filteredInstances;
+   DCItem *dci;
+   NXSL_VM *instanceFilter;
+};
+
+/**
+ * Callback for filtering instances
+ */
+static bool FilterCallback(const TCHAR *key, const void *value, void *data)
+{
+   NXSL_VM *instanceFilter = ((FilterCallbackData *)data)->instanceFilter;
+   DCItem *dci = ((FilterCallbackData *)data)->dci;
+
+   NXSL_Value *pValue = new NXSL_Value(key);
+   instanceFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, dci->getNode())));
+   instanceFilter->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci)));
+
+   if (instanceFilter->run(1, &pValue))
+   {
+      bool accepted;
+      const TCHAR *instance = key;
+      const TCHAR *name = (const TCHAR *)value;
+      pValue = instanceFilter->getResult();
+      if (pValue != NULL)
+      {
+         if (pValue->isArray())
+         {
+            NXSL_Array *array = pValue->getValueAsArray();
+            if (array->size() > 0)
+            {
+               accepted = array->get(0)->getValueAsInt32() ? true : false;
+               if (accepted && (array->size() > 1))
+               {
+                  // transformed value
+                  const TCHAR *newValue = array->get(1)->getValueAsCString();
+                  if ((newValue != NULL) && (*newValue != 0))
+                  {
+                     DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance \"%s\" replaced by \"%s\""),
+                               dci->getName(), dci->getId(), instance, newValue);
+                     instance = newValue;
+                  }
+
+                  if (array->size() > 2)
+                  {
+                     // instance name
+                     const TCHAR *newName = array->get(2)->getValueAsCString();
+                     if ((newName != NULL) && (*newName != 0))
+                     {
+                        DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance \"%s\" name set to \"%s\""),
+                                  dci->getName(), dci->getId(), instance, newName);
+                        name = newName;
+                     }
+                  }
+               }
+            }
+            else
+            {
+               accepted = true;
+            }
+         }
+         else
+         {
+            accepted = pValue->getValueAsInt32() ? true : false;
+         }
+      }
+      else
+      {
+         accepted = true;
+      }
+		if (accepted)
+      {
+         ((FilterCallbackData *)data)->filteredInstances->set(instance, name);
+      }
+      else
+		{
+			DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance \"%s\" removed by filtering script"),
+                   dci->getName(), dci->getId(), key);
+		}
+   }
+   else
+   {
+      TCHAR szBuffer[1024];
+
+		_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"),
+                 (dci->getNode() != NULL) ? dci->getNode()->Name() : _T("(null)"), dci->getId());
+      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, instanceFilter->getErrorText(), dci->getId());
+      ((FilterCallbackData *)data)->filteredInstances->set(key, (const TCHAR *)value);
+   }
+   return true;
+}
+
+/**
  * Filter instance list
  */
 void DCItem::filterInstanceList(StringMap *instances)
@@ -1674,85 +1750,11 @@ void DCItem::filterInstanceList(StringMap *instances)
 		return;
 
    StringMap filteredInstances;
-	for(int i = 0; i < instances->size(); i++)
-	{
-      NXSL_Value *pValue = new NXSL_Value(instances->getKeyByIndex(i));
-      m_instanceFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
-      m_instanceFilter->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
-
-      if (m_instanceFilter->run(1, &pValue))
-      {
-         bool accepted;
-         const TCHAR *instance = instances->getKeyByIndex(i);
-         const TCHAR *name = instances->getValueByIndex(i);
-         pValue = m_instanceFilter->getResult();
-         if (pValue != NULL)
-         {
-            if (pValue->isArray())
-            {
-               NXSL_Array *array = pValue->getValueAsArray();
-               if (array->size() > 0)
-               {
-                  accepted = array->get(0)->getValueAsInt32() ? true : false;
-                  if (accepted && (array->size() > 1))
-                  {
-                     // transformed value
-                     const TCHAR *newValue = array->get(1)->getValueAsCString();
-                     if ((newValue != NULL) && (*newValue != 0))
-                     {
-                        DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance %d \"%s\" replaced by \"%s\""),
-                                  m_szName, m_dwId, i, instance, newValue);
-                        instance = newValue;
-                     }
-
-                     if (array->size() > 2)
-                     {
-                        // instance name
-                        const TCHAR *newName = array->get(2)->getValueAsCString();
-                        if ((newName != NULL) && (*newName != 0))
-                        {
-                           DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance %d \"%s\" name set to \"%s\""),
-                                     m_szName, m_dwId, i, instance, newName);
-                           name = newName;
-                        }
-                     }
-                  }
-               }
-               else
-               {
-                  accepted = true;
-               }
-            }
-            else
-            {
-               accepted = pValue->getValueAsInt32() ? true : false;
-            }
-         }
-         else
-         {
-            accepted = true;
-         }
-			if (accepted)
-         {
-            filteredInstances.set(instance, name);
-         }
-         else
-			{
-				DbgPrintf(5, _T("DCItem::filterInstanceList(%s [%d]): instance \"%s\" removed by filtering script"),
-				          m_szName, m_dwId, instances->getKeyByIndex(i));
-			}
-      }
-      else
-      {
-         TCHAR szBuffer[1024];
-
-			_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"),
-                    (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer,
-                   m_instanceFilter->getErrorText(), m_dwId);
-         filteredInstances.set(instances->getKeyByIndex(i), instances->getValueByIndex(i));
-      }
-   }
+   FilterCallbackData data;
+   data.filteredInstances = &filteredInstances;
+   data.instanceFilter = m_instanceFilter;
+   data.dci = this;
+   instances->forEach(FilterCallback, &data);
    instances->clear();
    instances->addAll(&filteredInstances);
 }

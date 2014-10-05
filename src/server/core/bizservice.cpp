@@ -30,38 +30,34 @@
 BusinessService::BusinessService() : ServiceContainer()
 {
 	m_busy = false;
+   m_pollingDisabled = false;
 	m_lastPollTime = time_t(0);
 	m_lastPollStatus = STATUS_UNKNOWN;
 	_tcscpy(m_szName, _T("Default"));
 }
 
-
-//
-// Constructor for new service object
-//
-
+/**
+ * Constructor for new service object
+ */
 BusinessService::BusinessService(const TCHAR *name) : ServiceContainer(name)
 {
 	m_busy = false;
+   m_pollingDisabled = false;
 	m_lastPollTime = time_t(0);
 	m_lastPollStatus = STATUS_UNKNOWN;
 	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
 }
 
-
-//
-// Service class destructor
-//
-
+/**
+ * Destructor
+ */
 BusinessService::~BusinessService()
 {
 }
 
-
-//
-// Create object from database data
-//
-
+/**
+ * Create object from database data
+ */
 BOOL BusinessService::CreateFromDB(UINT32 id)
 {
 	if (!ServiceContainer::CreateFromDB(id))
@@ -96,11 +92,9 @@ BOOL BusinessService::CreateFromDB(UINT32 id)
 	return TRUE;
 }
 
-
-//
-// Save service to database
-//
-
+/**
+ * Save service to database
+ */
 BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 {
 	BOOL bNewObject = TRUE;
@@ -184,7 +178,10 @@ UINT32 BusinessService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLo
  */
 bool BusinessService::isReadyForPolling()
 {
-	return (time(NULL) - m_lastPollTime > g_slmPollingInterval) && !m_busy;
+   LockData();
+	bool ready = (time(NULL) - m_lastPollTime > g_slmPollingInterval) && !m_busy && !m_pollingDisabled;
+   UnlockData();
+   return ready;
 }
 
 /**
@@ -192,7 +189,9 @@ bool BusinessService::isReadyForPolling()
  */
 void BusinessService::lockForPolling()
 {
+   LockData();
 	m_busy = true;
+   UnlockData();
 }
 
 /**
@@ -248,4 +247,30 @@ void BusinessService::getApplicableTemplates(ServiceContainer *target, ObjectArr
 		}
 	}
 	UnlockParentList();
+}
+
+/**
+ * Prepare business service object for deletion
+ */
+void BusinessService::prepareForDeletion()
+{
+   // Prevent service from being queued for polling
+   LockData();
+   m_pollingDisabled = true;
+   UnlockData();
+
+   // wait for outstanding poll to complete
+   while(true)
+   {
+      LockData();
+      if (!m_busy)
+      {
+         UnlockData();
+         break;
+      }
+      UnlockData();
+      ThreadSleep(100);
+   }
+	DbgPrintf(4, _T("BusinessService::PrepareForDeletion(%s [%d]): no outstanding polls left"), m_szName, (int)m_dwId);
+   ServiceContainer::prepareForDeletion();
 }

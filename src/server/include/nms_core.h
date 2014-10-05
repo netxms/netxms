@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,8 +61,6 @@
 #include <openssl/ssl.h>
 #endif
 
-#define SHOW_FLAG_VALUE(x) _T("  %-32s = %d\n"), _T(#x), (g_flags & x) ? 1 : 0
-
 //
 // Common includes
 //
@@ -97,6 +95,7 @@ typedef __console_ctx * CONSOLE_CTX;
 /**
  * Server includes
  */
+#include "server_timers.h"
 #include "nms_dcoll.h"
 #include "nms_users.h"
 #include "nxcore_winperf.h"
@@ -283,7 +282,6 @@ typedef struct
    void *pData;         // Pointer to data block
 } UPDATE_INFO;
 
-
 /**
  * Extended agent connection
  */
@@ -356,9 +354,6 @@ private:
 public:
    MobileDeviceSession(SOCKET hSocket, struct sockaddr *addr);
    ~MobileDeviceSession();
-
-   void incRefCount() { m_dwRefCount++; }
-   void decRefCount() { if (m_dwRefCount > 0) m_dwRefCount--; }
 
    void run();
 
@@ -684,6 +679,7 @@ private:
    void getSwitchForwardingDatabase(CSCPMessage *request);
    void getRoutingTable(CSCPMessage *request);
    void getLocationHistory(CSCPMessage *request);
+   void getScreenshot(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);
@@ -770,6 +766,17 @@ typedef struct
 } DELAYED_IDATA_INSERT;
 
 /**
+ * Delayed request for raw_dci_values UPDATE
+ */
+typedef struct
+{
+	time_t timestamp;
+	UINT32 dciId;
+	TCHAR rawValue[MAX_RESULT_LENGTH];
+	TCHAR transformedValue[MAX_RESULT_LENGTH];
+} DELAYED_RAW_DATA_UPDATE;
+
+/**
  * Graph ACL entry
  */
 struct GRAPH_ACL_ENTRY
@@ -821,7 +828,7 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *);
 void NXCORE_EXPORTABLE ShutdownDB();
 void InitiateShutdown();
 
-BOOL NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
+bool NXCORE_EXPORTABLE SleepAndCheckForShutdown(int iSeconds);
 
 void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
 #if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
@@ -837,8 +844,12 @@ void NXCORE_EXPORTABLE ObjectTransactionEnd();
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query);
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *sqlTypes, const TCHAR **values);
 void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *value);
+void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue);
 void StartDBWriter();
 void StopDBWriter();
+
+void PerfDataStorageRequest(DCItem *dci, time_t timestamp, const TCHAR *value);
+void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value);
 
 bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id);
 
@@ -1031,8 +1042,9 @@ extern TCHAR g_szDbSchema[];
 extern TCHAR NXCORE_EXPORTABLE g_szJavaPath[];
 extern DB_DRIVER g_dbDriver;
 extern DB_HANDLE NXCORE_EXPORTABLE g_hCoreDB;
-extern Queue *g_pLazyRequestQueue;
-extern Queue *g_pIDataInsertQueue;
+extern Queue *g_dbWriterQueue;
+extern Queue *g_dciDataWriterQueue;
+extern Queue *g_dciRawDataWriterQueue;
 
 extern int NXCORE_EXPORTABLE g_dbSyntax;
 extern FileMonitoringList g_monitoringList;

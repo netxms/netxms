@@ -69,6 +69,7 @@ public:
 	bool getValueAsUUID(int index, uuid_t uuid);
 
 	void addValue(const TCHAR *value);
+	void addValuePreallocated(TCHAR *value);
 	void setValue(const TCHAR*value);
 
 	const TCHAR *getSubEntryValue(const TCHAR *name, int index = 0, const TCHAR *defaultValue = NULL);

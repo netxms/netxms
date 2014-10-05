@@ -202,8 +202,7 @@ EPRule::EPRule(CSCPMessage *pMsg)
       }
       else
       {
-         nxlog_write(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE,
-                  "ds", m_dwId, szError);
+         nxlog_write(MSG_EPRULE_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "ds", m_dwId, szError);
       }
    }
    else
@@ -438,12 +437,35 @@ bool EPRule::matchScript(Event *pEvent)
    }
    else
    {
-      nxlog_write(MSG_EPRULE_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE, "ds", m_dwId, m_pScript->getErrorText());
+      nxlog_write(MSG_EPRULE_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE, "ds", m_dwId + 1, m_pScript->getErrorText());
    }
    free(ppValueList);
    delete pGlobals;
 
    return bRet;
+}
+
+/**
+ * Situation update callback data
+ */
+struct SituationUpdateCallbackData
+{
+   Situation *s;
+   TCHAR *text;
+   Event *evt;
+};
+
+/**
+ * Situation update callback
+ */
+static bool SituationUpdateCallback(const TCHAR *key, const void *value, void *data)
+{
+	TCHAR *attrName = ((SituationUpdateCallbackData *)data)->evt->expandText(key);
+	TCHAR *attrValue = ((SituationUpdateCallbackData *)data)->evt->expandText((const TCHAR *)value);
+	((SituationUpdateCallbackData *)data)->s->UpdateSituation(((SituationUpdateCallbackData *)data)->text, attrName, attrValue);
+	free(attrName);
+	free(attrValue);
+   return true;
 }
 
 /**
@@ -481,22 +503,15 @@ bool EPRule::processEvent(Event *pEvent)
 			// Update situation of needed
 			if (m_dwSituationId != 0)
 			{
-				Situation *pSituation;
-				TCHAR *pszAttr, *pszValue;
-
-				pSituation = FindSituationById(m_dwSituationId);
+				Situation *pSituation = FindSituationById(m_dwSituationId);
 				if (pSituation != NULL)
 				{
-					TCHAR *pszText = pEvent->expandText(m_szSituationInstance);
-					for(int i = 0; i < m_situationAttrList.size(); i++)
-					{
-						pszAttr = pEvent->expandText(m_situationAttrList.getKeyByIndex(i));
-						pszValue = pEvent->expandText(m_situationAttrList.getValueByIndex(i));
-						pSituation->UpdateSituation(pszText, pszAttr, pszValue);
-						free(pszAttr);
-						free(pszValue);
-					}
-					free(pszText);
+               SituationUpdateCallbackData data;
+					data.text = pEvent->expandText(m_szSituationInstance);
+               data.s = pSituation;
+               data.evt = pEvent;
+               m_situationAttrList.forEach(SituationUpdateCallback, &data);
+					free(data.text);
 				}
 				else
 				{
@@ -521,14 +536,14 @@ void EPRule::generateAlarm(Event *pEvent)
 	{
 		TCHAR *pszAckKey = pEvent->expandText(m_szAlarmKey);
 		if (pszAckKey[0] != 0)
-			g_alarmMgr.resolveByKey(pszAckKey, (m_dwFlags & RF_TERMINATE_BY_REGEXP) ? true : false, m_iAlarmSeverity == SEVERITY_TERMINATE, pEvent);
+			ResolveAlarmByKey(pszAckKey, (m_dwFlags & RF_TERMINATE_BY_REGEXP) ? true : false, m_iAlarmSeverity == SEVERITY_TERMINATE, pEvent);
 		free(pszAckKey);
 	}
 	else	// Generate new alarm
 	{
-		g_alarmMgr.newAlarm(m_szAlarmMessage, m_szAlarmKey, ALARM_STATE_OUTSTANDING,
-								  (m_iAlarmSeverity == SEVERITY_FROM_EVENT) ? pEvent->getSeverity() : m_iAlarmSeverity,
-								  m_dwAlarmTimeout, m_dwAlarmTimeoutEvent, pEvent, 0);
+		CreateNewAlarm(m_szAlarmMessage, m_szAlarmKey, ALARM_STATE_OUTSTANDING,
+                     (m_iAlarmSeverity == SEVERITY_FROM_EVENT) ? pEvent->getSeverity() : m_iAlarmSeverity,
+                     m_dwAlarmTimeout, m_dwAlarmTimeoutEvent, pEvent, 0);
 	}
 }
 
@@ -613,6 +628,18 @@ bool EPRule::loadFromDB()
 }
 
 /**
+ * Callback for saving situation attributes
+ */
+static bool SaveSituationAttribute(const TCHAR *key, const void *value, void *data)
+{
+   DB_STATEMENT hStmt = (DB_STATEMENT)data;
+   DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, (const TCHAR *)value, DB_BIND_STATIC);
+   DBExecute(hStmt);
+   return true;
+}
+
+/**
  * Save rule to database
  */
 void EPRule::saveToDB(DB_HANDLE hdb)
@@ -659,14 +686,17 @@ void EPRule::saveToDB(DB_HANDLE hdb)
    }
 
 	// Situation attributes
-	for(i = 0; i < m_situationAttrList.size(); i++)
-	{
-      _sntprintf(pszQuery, len, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (%d,%d,%s,%s)"),
-                m_dwId, m_dwSituationId,
-					 (const TCHAR *)DBPrepareString(hdb, m_situationAttrList.getKeyByIndex(i)),
-					 (const TCHAR *)DBPrepareString(hdb, m_situationAttrList.getValueByIndex(i)));
-      DBQuery(hdb, pszQuery);
-	}
+   if (m_situationAttrList.size() > 0)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (?,?,?,?)"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwSituationId);
+         m_situationAttrList.forEach(SaveSituationAttribute, hStmt);
+         DBFreeStatement(hStmt);
+      }
+   }
 
    free(pszQuery);
 }
@@ -694,13 +724,7 @@ void EPRule::createMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_pszScript));
 	pMsg->SetVariable(VID_SITUATION_ID, m_dwSituationId);
 	pMsg->SetVariable(VID_SITUATION_INSTANCE, m_szSituationInstance);
-	pMsg->SetVariable(VID_SITUATION_NUM_ATTRS, m_situationAttrList.size());
-	UINT32 id = VID_SITUATION_ATTR_LIST_BASE;
-   for(int i = 0; i < m_situationAttrList.size(); i++)
-	{
-		pMsg->SetVariable(id++, m_situationAttrList.getKeyByIndex(i));
-		pMsg->SetVariable(id++, m_situationAttrList.getValueByIndex(i));
-	}
+   m_situationAttrList.fillMessage(pMsg, VID_SITUATION_NUM_ATTRS, VID_SITUATION_ATTR_LIST_BASE);
 }
 
 /**

@@ -161,11 +161,11 @@ enum LinkLayerProtocol
  */
 struct LL_NEIGHBOR_INFO
 {
-	UINT32 ifLocal;			// Local interface index
-	UINT32 ifRemote;		// Remote interface index
-	UINT32 objectId;		// ID of connected object
-	bool isPtToPt;			// true if this is point-to-point link
-	int protocol;			// Protocol used to obtain information
+	UINT32 ifLocal;             // Local interface index
+	UINT32 ifRemote;            // Remote interface index
+	UINT32 objectId;		       // ID of connected object
+	bool isPtToPt;			       // true if this is point-to-point link
+	LinkLayerProtocol protocol; // Protocol used to obtain information
 };
 
 /**
@@ -280,5 +280,7 @@ void BuildLldpId(int type, const BYTE *data, int length, TCHAR *id, int idLen);
 void BridgeMapPorts(int snmpVersion, SNMP_Transport *transport, InterfaceList *ifList);
 
 VrrpInfo *GetVRRPInfo(Node *node);
+
+const TCHAR *GetLinkLayerProtocolName(LinkLayerProtocol p); 
 
 #endif   /* _nms_topo_h_ */

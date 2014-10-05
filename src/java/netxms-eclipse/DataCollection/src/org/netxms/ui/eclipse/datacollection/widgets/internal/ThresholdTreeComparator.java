@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ public class ThresholdTreeComparator extends ViewerComparator
 					result = name1.compareToIgnoreCase(name2);
 					break;
 				case ThresholdSummaryWidget.COLUMN_STATUS:
-					result = ((ThresholdViolationSummary)e1).getCurrentSeverity() - ((ThresholdViolationSummary)e2).getCurrentSeverity();
+					result = ((ThresholdViolationSummary)e1).getCurrentSeverity().compareTo(((ThresholdViolationSummary)e2).getCurrentSeverity());
 					break;
 				default:
 					break;
@@ -65,7 +65,7 @@ public class ThresholdTreeComparator extends ViewerComparator
 			switch((Integer)((SortableTreeViewer)viewer).getTree().getSortColumn().getData("ID")) //$NON-NLS-1$
 			{
 				case ThresholdSummaryWidget.COLUMN_STATUS:
-					result = ((DciValue)e1).getActiveThreshold().getCurrentSeverity() - ((DciValue)e2).getActiveThreshold().getCurrentSeverity();
+					result = ((DciValue)e1).getActiveThreshold().getCurrentSeverity().compareTo(((DciValue)e2).getActiveThreshold().getCurrentSeverity());
 					break;
 				case ThresholdSummaryWidget.COLUMN_PARAMETER:
 					result = ((DciValue)e1).getDescription().compareToIgnoreCase(((DciValue)e2).getDescription());

@@ -1,3 +1,4 @@
 #!/bin/sh
 
 svccfg import /var/svc/manifest/application/management/nxagentd.xml
+svcadm enable nxagentd || true

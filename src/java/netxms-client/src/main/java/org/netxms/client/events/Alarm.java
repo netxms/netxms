@@ -22,6 +22,7 @@ import java.util.Date;
 
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.Severity;
 
 
 /**
@@ -44,8 +45,8 @@ public class Alarm
 	
 	// Alarm attributes
 	private long id;
-	private int currentSeverity;
-	private int originalSeverity;
+	private Severity currentSeverity;
+	private Severity originalSeverity;
 	private int repeatCount;
 	private int state;
 	private boolean sticky;
@@ -72,8 +73,8 @@ public class Alarm
 	public Alarm(NXCPMessage msg)
 	{
 		id = msg.getVariableAsInt64(NXCPCodes.VID_ALARM_ID);
-		currentSeverity = msg.getVariableAsInteger(NXCPCodes.VID_CURRENT_SEVERITY);
-		originalSeverity = msg.getVariableAsInteger(NXCPCodes.VID_ORIGINAL_SEVERITY);
+		currentSeverity = Severity.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_CURRENT_SEVERITY));
+		originalSeverity = Severity.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_ORIGINAL_SEVERITY));
 		repeatCount = msg.getVariableAsInteger(NXCPCodes.VID_REPEAT_COUNT);
 		state = msg.getVariableAsInteger(NXCPCodes.VID_STATE);
 		sticky = msg.getVariableAsBoolean(NXCPCodes.VID_IS_STICKY);
@@ -106,7 +107,7 @@ public class Alarm
 	/**
 	 * @return the currentSeverity
 	 */
-	public int getCurrentSeverity()
+	public Severity getCurrentSeverity()
 	{
 		return currentSeverity;
 	}
@@ -114,7 +115,7 @@ public class Alarm
 	/**
 	 * @return the originalSeverity
 	 */
-	public int getOriginalSeverity()
+	public Severity getOriginalSeverity()
 	{
 		return originalSeverity;
 	}

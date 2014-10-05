@@ -273,7 +273,10 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 		pObject->generateGuid();
 
       // Create tables for storing data collection values
-      if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE) || (pObject->Type() == OBJECT_CLUSTER))
+      if ((pObject->Type() == OBJECT_NODE) || 
+          (pObject->Type() == OBJECT_MOBILEDEVICE) || 
+          (pObject->Type() == OBJECT_CLUSTER) || 
+          (pObject->Type() == OBJECT_ACCESSPOINT))
       {
          TCHAR szQuery[256], szQueryTemplate[256];
          UINT32 i;

@@ -18,61 +18,61 @@
  */
 package org.netxms.ui.eclipse.objectmanager.actions;
 
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.handlers.HandlerUtil;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectmanager.Messages;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Delete selected object(s)
  */
-public class DeleteObject extends MultipleObjectAction
+public class DeleteObject extends AbstractHandler
 {
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#confirm()
-	 */
-	protected boolean confirm()
-	{
-		IStructuredSelection selection = getSelection();
-		String question;
-		if (selection.size() == 1)
-		{
-			question = String.format(Messages.get().DeleteObject_ConfirmQuestionSingular, ((AbstractObject)selection.getFirstElement()).getObjectName());
-		}
-		else
-		{
-			question = Messages.get().DeleteObject_ConfirmQuestionPlural;
-		}
-		boolean confirmed = MessageDialogHelper.openConfirm(getWindow().getShell(), Messages.get().DeleteObject_ConfirmDelete, question);
-		return confirmed;
-	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#runObjectAction(org.netxms.client.NXCSession, org.netxms.client.NXCObject)
-	 */
-	@Override
-	protected void runObjectAction(NXCSession session, AbstractObject object) throws Exception
-	{
-	   session.deleteObject(object.getObjectId());
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#formatJobDescription(org.netxms.client.objects.AbstractObject)
-	 */
-	@Override
-	protected String formatJobDescription(AbstractObject object)
-	{
-		return String.format(Messages.get().DeleteObject_JobDescription, object.getObjectName(), object.getObjectId());
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#formatErrorMessage(org.netxms.client.objects.AbstractObject, org.eclipse.swt.widgets.Display)
-	 */
-	@Override
-	protected String formatErrorMessage(AbstractObject object, Display display)
-	{
-		return String.format(Messages.get().DeleteObject_JobError, object.getObjectName(), object.getObjectId());
-	}
+   @Override
+   public Object execute(ExecutionEvent event) throws ExecutionException
+   {
+      IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(event);
+      ISelection selection = window.getActivePage().getSelection();
+      if ((selection == null) || !(selection instanceof IStructuredSelection) || selection.isEmpty())
+         return null;
+      
+      String question;
+      if (((IStructuredSelection)selection).size() == 1)
+      {
+         question = String.format(Messages.get().DeleteObject_ConfirmQuestionSingular, ((AbstractObject)((IStructuredSelection)selection).getFirstElement()).getObjectName());
+      }
+      else
+      {
+         question = Messages.get().DeleteObject_ConfirmQuestionPlural;
+      }
+      boolean confirmed = MessageDialogHelper.openConfirm(window.getShell(), Messages.get().DeleteObject_ConfirmDelete, question);
+      
+      if(confirmed)
+      {
+         for(Object o : ((IStructuredSelection)selection).toList())
+         {
+            if (!(o instanceof AbstractObject))
+               continue;
+            try
+            {
+               ((NXCSession)ConsoleSharedData.getSession()).deleteObject(((AbstractObject)o).getObjectId());
+            }
+            catch(Exception e)
+            {
+               MessageDialogHelper.openError(window.getShell(), "Error on deleting object", "Error on deleting object: " + e.getMessage());
+            }
+         }
+      }     
+      
+      return null;
+   }
 }

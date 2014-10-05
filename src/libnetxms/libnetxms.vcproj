@@ -398,6 +398,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\inetaddr.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\log.cpp"
 				>
 			</File>
@@ -613,6 +617,10 @@
 			</File>
 			<File
 				RelativePath=".\StackWalker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\strmap-internal.h"
 				>
 			</File>
 			<File

@@ -62,6 +62,7 @@
 #define DEFAULT_DUMP_DIR      _T("C:\\")
 
 #define LDIR_NDD              _T("\\ndd")
+#define LDIR_PDSDRV           _T("\\pdsdrv")
 
 #define DDIR_MIBS             _T("\\mibs")
 #define DDIR_PACKAGES         _T("\\packages")
@@ -98,6 +99,7 @@
 #define DEFAULT_DUMP_DIR      _T("/")
 
 #define LDIR_NDD              _T("/ndd")
+#define LDIR_PDSDRV           _T("/pdsdrv")
 
 #define DDIR_MIBS             _T("/mibs")
 #define DDIR_PACKAGES         _T("/packages")
@@ -142,6 +144,7 @@
 #define AF_SNMP_TRAP_DISCOVERY                 _ULL(0x0000000020000000)
 #define AF_TRAPS_FROM_UNMANAGED_NODES          _ULL(0x0000000040000000)
 #define AF_RESOLVE_IP_FOR_EACH_STATUS_POLL     _ULL(0x0000000080000000)
+#define AF_PERFDATA_STORAGE_DRIVER_LOADED      _ULL(0x0000000080000000)
 #define AF_SERVER_INITIALIZED                  _ULL(0x4000000000000000)
 #define AF_SHUTDOWN                            _ULL(0x8000000000000000)
 
@@ -517,6 +520,7 @@ public:
    UINT32 enableTraps();
 	UINT32 getPolicyInventory(AgentPolicyInfo **info);
 	UINT32 uninstallPolicy(uuid_t guid);
+   UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
 
 	UINT32 generateRequestId() { return m_dwRequestId++; }
 	CSCPMessage *customRequest(CSCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false, void (*downloadProgressCallback)(size_t, void *) = NULL,

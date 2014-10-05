@@ -25,6 +25,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.networkmaps.api.NetworkMapImageProvider;
 
@@ -115,7 +116,7 @@ public class MapImageProvidersManager
 	 * 
 	 * @return icon for given status code or null.
 	 */
-	public Image getStatusIcon(int status)
+	public Image getStatusIcon(ObjectStatus status)
 	{
 		for(NetworkMapImageProvider p : providers.values())
 		{

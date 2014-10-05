@@ -1,10 +1,11 @@
 #!/bin/sh
 
+export MAVEN_OPTS='-Xmx512m -XX:MaxPermSize=128m'
+
 set -e
 
 mvn -N versions:update-child-modules
 mvn clean
-mvn -Dmaven.test.skip=true package
 mvn -Dmaven.test.skip=true install
 
 version=`grep '<version>' pom.xml | cut -f 2 -d \> | cut -f 1 -d \<|head -n1`

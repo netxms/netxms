@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,42 +22,44 @@
 
 #include "nxcore.h"
 
-
-//
-// Constants
-//
-
+/**
+ * MAximum supported number of database writers
+ */
 #define MAX_DB_WRITERS     16
 
+/**
+ * Generic DB writer queue
+ */
+Queue *g_dbWriterQueue = NULL;
 
-//
-// Global variables
-//
+/**
+ * DCI data (idata_* tables) writer queue
+ */
+Queue *g_dciDataWriterQueue = NULL;
 
-Queue *g_pLazyRequestQueue = NULL;
-Queue *g_pIDataInsertQueue = NULL;
+/**
+ * Raw DCI data writer queue
+ */
+Queue *g_dciRawDataWriterQueue = NULL;
 
-
-//
-// Static data
-//
-
-static int m_iNumWriters = 1;
+/**
+ * Static data
+ */
+static int m_numWriters = 1;
 static THREAD m_hWriteThreadList[MAX_DB_WRITERS];
 static THREAD m_hIDataWriterThread;
+static THREAD m_hRawDataWriterThread;
 
-
-//
-// Put SQL request into queue for later execution
-//
-
+/**
+ * Put SQL request into queue for later execution
+ */
 void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query)
 {
 	DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)malloc(sizeof(DELAYED_SQL_REQUEST) + (_tcslen(query) + 1) * sizeof(TCHAR));
 	rq->query = (TCHAR *)&rq->bindings[0];
 	_tcscpy(rq->query, query);
 	rq->bindCount = 0;
-   g_pLazyRequestQueue->Put(rq);
+   g_dbWriterQueue->Put(rq);
 	DbgPrintf(8, _T("SQL request queued: %s"), query);
 }
 
@@ -95,15 +97,13 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 			pos += align - pos % align;
 	}
 
-   g_pLazyRequestQueue->Put(rq);
+   g_dbWriterQueue->Put(rq);
 	DbgPrintf(8, _T("SQL request queued: %s"), query);
 }
 
-
-//
-// Queue INSERT request for idata_xxx table
-//
-
+/**
+ * Queue INSERT request for idata_xxx table
+ */
 void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR *value)
 {
 	DELAYED_IDATA_INSERT *rq = (DELAYED_IDATA_INSERT *)malloc(sizeof(DELAYED_IDATA_INSERT));
@@ -111,7 +111,20 @@ void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR
 	rq->nodeId = nodeId;
 	rq->dciId = dciId;
 	nx_strncpy(rq->value, value, MAX_RESULT_LENGTH);
-	g_pIDataInsertQueue->Put(rq);
+	g_dciDataWriterQueue->Put(rq);
+}
+
+/**
+ * Queue UPDATE request for raw_dci_values table
+ */
+void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue, const TCHAR *transformedValue)
+{
+	DELAYED_RAW_DATA_UPDATE *rq = (DELAYED_RAW_DATA_UPDATE *)malloc(sizeof(DELAYED_RAW_DATA_UPDATE));
+	rq->timestamp = timestamp;
+	rq->dciId = dciId;
+	nx_strncpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
+	nx_strncpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
+	g_dciRawDataWriterQueue->Put(rq);
 }
 
 /**
@@ -138,7 +151,7 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 
    while(1)
    {
-      DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)g_pLazyRequestQueue->GetOrBlock();
+      DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)g_dbWriterQueue->GetOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
@@ -193,7 +206,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 
    while(1)
    {
-		DELAYED_IDATA_INSERT *rq = (DELAYED_IDATA_INSERT *)g_pIDataInsertQueue->GetOrBlock();
+		DELAYED_IDATA_INSERT *rq = (DELAYED_IDATA_INSERT *)g_dciDataWriterQueue->GetOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
@@ -225,7 +238,83 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 				if (!success || (count > 1000))
 					break;
 
-				rq = (DELAYED_IDATA_INSERT *)g_pIDataInsertQueue->Get();
+				rq = (DELAYED_IDATA_INSERT *)g_dciDataWriterQueue->Get();
+				if (rq == NULL)
+					break;
+				if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
+					goto stop;
+			}
+			DBCommit(hdb);
+		}
+		else
+		{
+			free(rq);
+		}
+	}
+
+stop:
+   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
+   {
+      DBDisconnect(hdb);
+   }
+   return THREAD_OK;
+}
+
+/**
+ * Database "lazy" write thread for raw_dci_values UPDATEs
+ */
+static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
+{
+   DB_HANDLE hdb;
+
+   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
+   {
+		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+      hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
+      if (hdb == NULL)
+      {
+         nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
+         return THREAD_OK;
+      }
+   }
+   else
+   {
+      hdb = g_hCoreDB;
+   }
+
+   while(1)
+   {
+		DELAYED_RAW_DATA_UPDATE *rq = (DELAYED_RAW_DATA_UPDATE *)g_dciRawDataWriterQueue->GetOrBlock();
+      if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
+         break;
+
+		if (DBBegin(hdb))
+		{
+			int count = 0;
+			while(1)
+			{
+				BOOL success;
+				DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE raw_dci_values SET raw_value=?,transformed_value=?,last_poll_time=? WHERE item_id=?"));
+				if (hStmt != NULL)
+				{
+					DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, rq->rawValue, DB_BIND_STATIC);
+					DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, rq->transformedValue, DB_BIND_STATIC);
+					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT64)rq->timestamp);
+					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, rq->dciId);
+					success = DBExecute(hStmt);
+					DBFreeStatement(hStmt);
+				}
+				else
+				{
+					success = FALSE;
+				}
+				free(rq);
+
+				count++;
+				if (!success || (count > 1000))
+					break;
+
+				rq = (DELAYED_RAW_DATA_UPDATE *)g_dciRawDataWriterQueue->Get();
 				if (rq == NULL)
 					break;
 				if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
@@ -256,17 +345,18 @@ void StartDBWriter()
 
    if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
    {
-      m_iNumWriters = ConfigReadInt(_T("NumberOfDatabaseWriters"), 1);
-      if (m_iNumWriters < 1)
-         m_iNumWriters = 1;
-      if (m_iNumWriters > MAX_DB_WRITERS)
-         m_iNumWriters = MAX_DB_WRITERS;
+      m_numWriters = ConfigReadInt(_T("NumberOfDatabaseWriters"), 1);
+      if (m_numWriters < 1)
+         m_numWriters = 1;
+      if (m_numWriters > MAX_DB_WRITERS)
+         m_numWriters = MAX_DB_WRITERS;
    }
 
-   for(i = 0; i < m_iNumWriters; i++)
+   for(i = 0; i < m_numWriters; i++)
       m_hWriteThreadList[i] = ThreadCreateEx(DBWriteThread, 0, NULL);
 
 	m_hIDataWriterThread = ThreadCreateEx(IDataWriteThread, 0, NULL);
+	m_hRawDataWriterThread = ThreadCreateEx(RawDataWriteThread, 0, NULL);
 }
 
 /**
@@ -276,11 +366,13 @@ void StopDBWriter()
 {
    int i;
 
-   for(i = 0; i < m_iNumWriters; i++)
-      g_pLazyRequestQueue->Put(INVALID_POINTER_VALUE);
-   for(i = 0; i < m_iNumWriters; i++)
+   for(i = 0; i < m_numWriters; i++)
+      g_dbWriterQueue->Put(INVALID_POINTER_VALUE);
+   for(i = 0; i < m_numWriters; i++)
       ThreadJoin(m_hWriteThreadList[i]);
 
-	g_pIDataInsertQueue->Put(INVALID_POINTER_VALUE);
+	g_dciDataWriterQueue->Put(INVALID_POINTER_VALUE);
+	g_dciRawDataWriterQueue->Put(INVALID_POINTER_VALUE);
 	ThreadJoin(m_hIDataWriterThread);
+	ThreadJoin(m_hRawDataWriterThread);
 }

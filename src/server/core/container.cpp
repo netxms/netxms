@@ -336,7 +336,7 @@ bool Container::isSuitableForNode(Node *node)
 	if ((m_flags & CF_AUTO_BIND) && (m_bindFilter != NULL))
 	{
 		m_bindFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
-		if (m_bindFilter->run(0, NULL))
+		if (m_bindFilter->run())
 		{
       	NXSL_Value *value = m_bindFilter->getResult();
 			result = ((value != NULL) && (value->getValueAsInt32() != 0));

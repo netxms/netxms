@@ -18,11 +18,6 @@
  */
 package org.netxms.ui.eclipse.filemanager.views;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -39,6 +34,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.jface.window.Window;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSourceAdapter;
@@ -53,7 +50,6 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
@@ -66,6 +62,7 @@ import org.netxms.client.AgentFile;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerFile;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.DownloadServiceHandler;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.filemanager.Activator;
 import org.netxms.ui.eclipse.filemanager.Messages;
@@ -681,54 +678,54 @@ public class AgentFileManager extends ViewPart
       */
    }
 
+   /**
+    * Download file from agent
+    */
    private void downloadFile()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.isEmpty())
+      if (selection.size() != 1)
          return;
 
-      final Object[] objects = selection.toArray();
-
-      if (((ServerFile)objects[0]).isDirectory())
+      final ServerFile sf = (ServerFile)selection.getFirstElement();
+      if (sf.isDirectory())
          return;
-
-      final ServerFile sf = ((ServerFile)objects[0]);
-      String selected;
-      do
-      {
-         FileDialog fd = new FileDialog(getSite().getShell(), SWT.SAVE);
-         fd.setText("Select how to save file");
-         selected = fd.open();
-
-         if (selected == null)
-            return;
-      } while(selected.isEmpty());
-
-      final String name = selected;
-
+      
       ConsoleJob job = new ConsoleJob("Download file from agent", null, Activator.PLUGIN_ID, null) {
-         @Override
-         protected String getErrorMessage()
-         {
-            return String.format("Error while downloading %s file from %d node.", sf.getFullName(), objectId);
-         }
-
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             final AgentFile file = session.downloadFileFromAgent(objectId, sf.getFullName(), 0, false);
-            File outputFile = new File(name);
-            outputFile.createNewFile();
-            InputStream in = new FileInputStream(file.getFile());
-            OutputStream out = new FileOutputStream(outputFile);
-            byte[] buf = new byte[1024];
-            int len;
-            while((len = in.read(buf)) > 0)
-            {
-               out.write(buf, 0, len);
-            }
-            in.close();
-            out.close();
+            DownloadServiceHandler.addDownload(file.getFile().getName(), sf.getName(), file.getFile(), "application/octet-stream");
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+                  if( executor != null ) 
+                  {
+                     StringBuilder js = new StringBuilder();
+                     js.append("var hiddenIFrameID = 'hiddenDownloader',");
+                     js.append("   iframe = document.getElementById(hiddenIFrameID);");
+                     js.append("if (iframe === null) {");
+                     js.append("   iframe = document.createElement('iframe');");
+                     js.append("   iframe.id = hiddenIFrameID;");
+                     js.append("   iframe.style.display = 'none';");
+                     js.append("   document.body.appendChild(iframe);");
+                     js.append("}");
+                     js.append("iframe.src = '");
+                     js.append(DownloadServiceHandler.createDownloadUrl(file.getFile().getName()));
+                     js.append("';");
+                     executor.execute(js.toString());
+                  }                 
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format("Error while downloading file %s from node %s [%d]", sf.getFullName(), session.getObjectName(objectId), objectId);
          }
       };
       job.start();

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
@@ -23,26 +23,23 @@
 #include "nxcore.h"
 
 
-//
-// Job operation codes
-//
-
+/**
+ * Job operation codes
+ */
 #define CANCEL_JOB		0
 #define HOLD_JOB			1
 #define UNHOLD_JOB		2
 
 
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static ObjectIndex s_jobNodes;
 
 
-//
-// Add job
-//
-
+/**
+ * Add job
+ */
 bool NXCORE_EXPORTABLE AddJob(ServerJob *job)
 {
 	bool success = false;
@@ -59,20 +56,18 @@ bool NXCORE_EXPORTABLE AddJob(ServerJob *job)
 }
 
 
-//
-// Unregister job from job manager
-//
-
+/**
+ * Unregister job from job manager
+ */
 void UnregisterJob(UINT32 jobId)
 {
 	s_jobNodes.remove(jobId);
 }
 
 
-//
-// Get job list
-//
-
+/**
+ * Get job list
+ */
 struct __job_callback_data
 {
 	CSCPMessage *msg;
@@ -99,10 +94,9 @@ void GetJobList(CSCPMessage *msg)
 }
 
 
-//
-// Implementatoin for job status changing operations: cancel, hold, unhold
-//
-
+/**
+ * Implementatoin for job status changing operations: cancel, hold, unhold
+ */
 static UINT32 ChangeJobStatus(UINT32 userId, CSCPMessage *msg, int operation)
 {
 	UINT32 rcc = RCC_INVALID_JOB_ID;
@@ -146,40 +140,36 @@ static UINT32 ChangeJobStatus(UINT32 userId, CSCPMessage *msg, int operation)
 }
 
 
-//
-// Cancel job
-//
-
+/**
+ * Cancel job
+ */
 UINT32 NXCORE_EXPORTABLE CancelJob(UINT32 userId, CSCPMessage *msg)
 {
 	return ChangeJobStatus(userId, msg, CANCEL_JOB);
 }
 
 
-//
-// Hold job
-//
-
+/**
+ * Hold job
+ */
 UINT32 NXCORE_EXPORTABLE HoldJob(UINT32 userId, CSCPMessage *msg)
 {
 	return ChangeJobStatus(userId, msg, HOLD_JOB);
 }
 
 
-//
-// Unhold job
-//
-
+/**
+ * Unhold job
+ */
 UINT32 NXCORE_EXPORTABLE UnholdJob(UINT32 userId, CSCPMessage *msg)
 {
 	return ChangeJobStatus(userId, msg, UNHOLD_JOB);
 }
 
 
-//
-// Job manager worker thread
-//
-
+/**
+ * Job manager worker thread
+ */
 static void CleanupJobQueue(NetObj *object, void *data)
 {
 	ServerJobQueue *queue = ((Node *)object)->getJobQueue();

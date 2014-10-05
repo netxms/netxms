@@ -57,7 +57,7 @@ public class EventProcessingPolicyRule
 	private int flags;
 	private String alarmKey;
 	private String alarmMessage;
-	private int alarmSeverity;
+	private Severity alarmSeverity;
 	private int alarmTimeout;
 	private long alarmTimeoutEvent;
 	private List<Long> actions;
@@ -124,7 +124,7 @@ public class EventProcessingPolicyRule
 		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
 		alarmKey = msg.getVariableAsString(NXCPCodes.VID_ALARM_KEY);
 		alarmMessage = msg.getVariableAsString(NXCPCodes.VID_ALARM_MESSAGE);
-		alarmSeverity = msg.getVariableAsInteger(NXCPCodes.VID_ALARM_SEVERITY);
+		alarmSeverity = Severity.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_ALARM_SEVERITY));
 		alarmTimeout = msg.getVariableAsInteger(NXCPCodes.VID_ALARM_TIMEOUT);
 		alarmTimeoutEvent = msg.getVariableAsInt64(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
 		actions = Arrays.asList(msg.getVariableAsUInt32ArrayEx(NXCPCodes.VID_RULE_ACTIONS));
@@ -166,7 +166,7 @@ public class EventProcessingPolicyRule
 		
 		msg.setVariable(NXCPCodes.VID_ALARM_KEY, alarmKey);
 		msg.setVariable(NXCPCodes.VID_ALARM_MESSAGE, alarmMessage);
-		msg.setVariableInt16(NXCPCodes.VID_ALARM_SEVERITY, alarmSeverity);
+		msg.setVariableInt16(NXCPCodes.VID_ALARM_SEVERITY, alarmSeverity.getValue());
 		msg.setVariableInt32(NXCPCodes.VID_ALARM_TIMEOUT, alarmTimeout);
 		msg.setVariableInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT, (int)alarmTimeoutEvent);
 
@@ -268,7 +268,7 @@ public class EventProcessingPolicyRule
 	/**
 	 * @return the alarmSeverity
 	 */
-	public int getAlarmSeverity()
+	public Severity getAlarmSeverity()
 	{
 		return alarmSeverity;
 	}
@@ -276,7 +276,7 @@ public class EventProcessingPolicyRule
 	/**
 	 * @param alarmSeverity the alarmSeverity to set
 	 */
-	public void setAlarmSeverity(int alarmSeverity)
+	public void setAlarmSeverity(Severity alarmSeverity)
 	{
 		this.alarmSeverity = alarmSeverity;
 	}

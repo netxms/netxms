@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -247,7 +247,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			while(it.hasNext())
 			{
 				AbstractObject o = it.next();
-				if (((1 << o.getStatus()) & severityFilter) == 0)
+				if (((1 << o.getStatus().getValue()) & severityFilter) == 0)
 				{
 					it.remove();
 				}
@@ -316,7 +316,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			if (!(o instanceof AbstractNode))
 				continue;
 			
-			if (((1 << o.getStatus()) & severityFilter) == 0)
+			if (((1 << o.getStatus().getValue()) & severityFilter) == 0)
 				continue;
 
 			if (section == null)

@@ -819,12 +819,13 @@ CSCP_MESSAGE *CSCPMessage::createMessage()
 
    // Message should be aligned to 8 bytes boundary
    // This is always the case starting from version 2 because
-   // all variables padded to be _kratnimi_ 8 bytes
+   // all variables are padded to 8 bytes boundary
    if (m_version < 2)
       dwSize += (8 - (dwSize % 8)) & 7;
 
    // Create message
    CSCP_MESSAGE *pMsg = (CSCP_MESSAGE *)malloc(dwSize);
+   memset(pMsg, 0, dwSize);
    pMsg->wCode = htons(m_code);
    pMsg->wFlags = htons(m_flags);
    pMsg->dwSize = htonl(dwSize);
@@ -968,12 +969,12 @@ UINT32 CSCPMessage::getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *d
 /**
  * set binary field from file
  */
-BOOL CSCPMessage::SetVariableFromFile(UINT32 dwVarId, const TCHAR *pszFileName)
+bool CSCPMessage::setFieldFromFile(UINT32 dwVarId, const TCHAR *pszFileName)
 {
    FILE *pFile;
    BYTE *pBuffer;
    UINT32 dwSize;
-   BOOL bResult = FALSE;
+   bool bResult = false;
 
    dwSize = (UINT32)FileSize(pszFileName);
    pFile = _tfopen(pszFileName, _T("rb"));
@@ -983,7 +984,7 @@ BOOL CSCPMessage::SetVariableFromFile(UINT32 dwVarId, const TCHAR *pszFileName)
       if (pBuffer != NULL)
       {
          if (fread(pBuffer + sizeof(UINT32), 1, dwSize, pFile) == dwSize)
-            bResult = TRUE;
+            bResult = true;
       }
       fclose(pFile);
    }

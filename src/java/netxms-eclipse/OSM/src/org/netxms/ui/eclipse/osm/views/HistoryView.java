@@ -25,6 +25,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -34,9 +35,11 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.osm.Messages;
+import org.netxms.ui.eclipse.osm.dialogs.TimeSelectionDialog;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
 import org.netxms.ui.eclipse.osm.widgets.GeoMapViewer;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
@@ -49,7 +52,11 @@ public class HistoryView extends ViewPart
 {
    public static final String ID = "org.netxms.ui.eclipse.osm.views.HistoryView"; //$NON-NLS-1$
 	public static final String JOB_FAMILY = "MapViewJob"; //$NON-NLS-1$
-	private static final int[] presetRanges = { 10, 30, 60, 120, 240, 720, 1440, 2880, 7200, 10080, 44640, 525600 };
+   private static final int[] presetUnits = { GraphSettings.TIME_UNIT_MINUTE, GraphSettings.TIME_UNIT_MINUTE,
+      GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR, GraphSettings.TIME_UNIT_HOUR,
+      GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY,
+      GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY };
+   private static final int[] presetRanges = { 10, 30, 1, 2, 4, 12, 1, 2, 5, 7, 31, 365 };
    private static final String[] presetNames = 
       { "10 minutes", "30 minutes", "1 hour", "2 hours", "4 hours", "12 hours", "Today",
         "Last 2 days", "Last 5 days", "This week", "This month","This Year" };
@@ -62,6 +69,7 @@ public class HistoryView extends ViewPart
 	private Action actionZoomIn;
 	private Action actionZoomOut;
    private Action[] presetActions;
+   private Action setConfigurableTime;
 	private AbstractObject object;
 	
 	/**
@@ -125,7 +133,7 @@ public class HistoryView extends ViewPart
 		map = new GeoMapViewer(parent, SWT.BORDER, true, object);
 		map.setViewPart(this);
 		
-		createActions();
+		createActions(parent);
 		contributeToActionBars();
 		createPopupMenu();
 		
@@ -157,7 +165,7 @@ public class HistoryView extends ViewPart
 	/**
 	 * Create actions
 	 */
-	protected void createActions()
+	protected void createActions(final Composite parent)
 	{
 		actionZoomIn = new Action(Messages.get().AbstractGeolocationView_ZoomIn) {
 			@Override
@@ -185,10 +193,23 @@ public class HistoryView extends ViewPart
             @Override
             public void run()
             {
-               map.changeTimePeriod(presetRanges[presetIndex]);
+               map.changeTimePeriod(presetRanges[presetIndex], presetUnits[presetIndex]);
             }
          };
       }
+      
+      setConfigurableTime = new Action("Set time frame") 
+      {
+         @Override
+         public void run()
+         {
+            TimeSelectionDialog dialog = new TimeSelectionDialog(parent.getShell(), map.getTimePeriod());
+            int result = dialog.open();
+            if (result == Window.CANCEL)
+               return;
+            map.setTimePeriod(dialog.getTimePeriod());
+         }
+      };
 	}
 
 	/**
@@ -213,6 +234,8 @@ public class HistoryView extends ViewPart
          presets.add(presetActions[i]);
       
       manager.add(presets);
+      manager.add(new Separator()); 
+      manager.add(setConfigurableTime);
       manager.add(new Separator());	   
 		manager.add(actionZoomIn);
 		manager.add(actionZoomOut);
@@ -262,6 +285,8 @@ public class HistoryView extends ViewPart
          presets.add(presetActions[i]);
       
       manager.add(presets);
+      manager.add(new Separator()); 
+      manager.add(setConfigurableTime);
       manager.add(new Separator());
 		manager.add(actionZoomIn);
 		manager.add(actionZoomOut);

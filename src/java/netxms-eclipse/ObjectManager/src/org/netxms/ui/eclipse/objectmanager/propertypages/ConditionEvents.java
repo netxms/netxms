@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -118,7 +118,7 @@ public class ConditionEvents extends PropertyPage
 		layout.numColumns = 2;
 		statusGroup.setLayout(layout);
 		
-		activeStatus = new StatusSelector(statusGroup, SWT.NONE, Severity.CRITICAL);
+		activeStatus = new StatusSelector(statusGroup, SWT.NONE, Severity.CRITICAL.getValue());
 		activeStatus.setLabel(Messages.get().ConditionEvents_ActiveStatus);
 		activeStatus.setSelection(object.getActiveStatus());
 		gd = new GridData();
@@ -126,7 +126,7 @@ public class ConditionEvents extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		activeStatus.setLayoutData(gd);
 		
-		inactiveStatus = new StatusSelector(statusGroup, SWT.NONE, Severity.CRITICAL);
+		inactiveStatus = new StatusSelector(statusGroup, SWT.NONE, Severity.CRITICAL.getValue());
 		inactiveStatus.setLabel(Messages.get().ConditionEvents_InactiveStatus);
 		inactiveStatus.setSelection(object.getInactiveStatus());
 		gd = new GridData();

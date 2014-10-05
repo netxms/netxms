@@ -683,18 +683,19 @@ public class AgentFileManager extends ViewPart
       job.start();
    }
 
+   /**
+    * Download file from agent
+    */
    private void downloadFile()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.isEmpty())
+      if (selection.size() != 1)
          return;
 
-      final Object[] objects = selection.toArray();
-
-      if (((ServerFile)objects[0]).isDirectory())
+      final ServerFile sf = (ServerFile)selection.getFirstElement();
+      if (sf.isDirectory())
          return;
 
-      final ServerFile sf = ((ServerFile)objects[0]);
       String selected;
       do
       {
@@ -715,12 +716,6 @@ public class AgentFileManager extends ViewPart
 
       ConsoleJob job = new ConsoleJob("Download file from agent", null, Activator.PLUGIN_ID, null) {
          @Override
-         protected String getErrorMessage()
-         {
-            return String.format("Error while downloading %s file from %d node.", sf.getFullName(), objectId);
-         }
-
-         @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             final AgentFile file = session.downloadFileFromAgent(objectId, sf.getFullName(), 0, false);
@@ -736,6 +731,12 @@ public class AgentFileManager extends ViewPart
             }
             in.close();
             out.close();
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return String.format("Error while downloading file %s from node %s [%d]", sf.getFullName(), session.getObjectName(objectId), objectId);
          }
       };
       job.start();

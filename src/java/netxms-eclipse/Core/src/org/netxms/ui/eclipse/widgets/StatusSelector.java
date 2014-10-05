@@ -24,7 +24,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -62,7 +62,7 @@ public class StatusSelector extends Composite
 		label.setLayoutData(gd);
 		
 		combo = new ImageCombo(this, SWT.DROP_DOWN | SWT.READ_ONLY | SWT.BORDER);
-		for(int i = 0; i <= Math.min(maxSeverity, Severity.TESTING); i++)
+		for(int i = 0; i <= Math.min(maxSeverity, ObjectStatus.TESTING.getValue()); i++)
 			combo.add(StatusDisplayInfo.getStatusImage(i), StatusDisplayInfo.getStatusText(i));
 		combo.select(0);
 		gd = new GridData();

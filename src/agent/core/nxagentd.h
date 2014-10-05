@@ -131,6 +131,8 @@
 #define AF_CATCH_EXCEPTIONS         0x00010000
 #define AF_WRITE_FULL_DUMP          0x00020000
 #define AF_ENABLE_CONTROL_CONNECTOR 0x00040000
+#define AF_DISABLE_IPV4             0x00080000
+#define AF_DISABLE_IPV6             0x00100000
 
 
 #ifdef _WIN32
@@ -282,12 +284,27 @@ public:
 /**
  * Server information
  */
-struct SERVER_INFO
+class ServerInfo
 {
-   UINT32 dwIpAddr;
-	UINT32 dwNetMask;
-   BOOL bMasterServer;
-   BOOL bControlServer;
+private:
+   char *m_name;
+   InetAddress m_address;
+   bool m_control;
+   bool m_master;
+   time_t m_lastResolveTime;
+   bool m_redoResolve;
+   MUTEX m_mutex;
+
+   void resolve();
+
+public:
+   ServerInfo(const TCHAR *name, bool control, bool master);
+   ~ServerInfo();
+
+   bool match(const InetAddress &addr);
+
+   bool isMaster() { return m_master; }
+   bool isControl() { return m_control; }
 };
 
 /**
@@ -303,13 +320,13 @@ private:
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
    THREAD m_hProxyReadThread;
-   UINT32 m_dwHostAddr;        // IP address of connected host (network byte order)
+   InetAddress m_serverAddr;        // IP address of connected host
    UINT32 m_dwIndex;
-   BOOL m_bIsAuthenticated;
-   BOOL m_bMasterServer;
-   BOOL m_bControlServer;
-   BOOL m_bProxyConnection;
-   BOOL m_bAcceptTraps;
+   bool m_authenticated;
+   bool m_masterServer;
+   bool m_controlServer;
+   bool m_proxyConnection;
+   bool m_acceptTraps;
    int m_hCurrFile;
    UINT32 m_dwFileRqId;
 	NXCPEncryptionContext *m_pCtx;
@@ -342,17 +359,17 @@ private:
    static THREAD_RESULT THREAD_CALL proxyReadThreadStarter(void *);
 
 public:
-   CommSession(SOCKET hSocket, UINT32 dwHostAddr, BOOL bMasterServer, BOOL bControlServer);
+   CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool masterServer, bool controlServer);
    ~CommSession();
 
    void run();
    void disconnect();
 
-   void sendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
-   void sendRawMessage(CSCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->dwSize))); }
-	bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
+   virtual void sendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
+   virtual void sendRawMessage(CSCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->dwSize))); }
+	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
 
-	UINT32 getServerAddress() { return m_dwHostAddr; }
+	virtual const InetAddress& getServerAddress() { return m_serverAddr; }
 
    UINT32 getIndex() { return m_dwIndex; }
    void setIndex(UINT32 dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }
@@ -360,10 +377,52 @@ public:
    time_t getTimeStamp() { return m_ts; }
 	void updateTimeStamp() { m_ts = time(NULL); }
 
-   BOOL canAcceptTraps() { return m_bAcceptTraps; }
+   bool canAcceptTraps() { return m_acceptTraps; }
+   
+   virtual bool isMasterServer() { return m_masterServer; }
+   virtual bool isControlServer() { return m_controlServer; }
+   
+   virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId);
+};
 
-   BOOL isMasterServer() { return m_bMasterServer; }
-   UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId);
+/**
+ * Session agent connector
+ */
+class SessionAgentConnector : public RefCountObject
+{
+private:
+   UINT32 m_id;
+   SOCKET m_socket;
+   MUTEX m_mutex;
+   CSCP_BUFFER m_msgBuffer; 
+   MsgWaitQueue m_msgQueue;
+   UINT32 m_sessionId;
+   TCHAR *m_sessionName;
+   INT16 m_sessionState;
+   TCHAR *m_userName;
+   VolatileCounter m_requestId;
+
+   void readThread();
+   bool sendMessage(CSCPMessage *msg);
+   UINT32 nextRequestId() { return InterlockedIncrement(&m_requestId); }
+
+   static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
+
+public:
+   SessionAgentConnector(UINT32 id, SOCKET s);
+   ~SessionAgentConnector();
+
+   void run();
+   void disconnect();
+
+   UINT32 getId() { return m_id; }
+   UINT32 getSessionId() { return m_sessionId; }
+   INT16 getSessionState() { return m_sessionState; }
+   const TCHAR *getSessionName() { return CHECK_NULL(m_sessionName); }
+   const TCHAR *getUserName() { return CHECK_NULL(m_userName); }
+
+   bool testConnection();
+   void takeScreenshot(CSCPMessage *msg);
 };
 
 /**
@@ -410,7 +469,7 @@ void UnloadAllSubAgents();
 BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
                   BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, Config *),
                   const TCHAR *pszEntryPoint);
-BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session);
+BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, AbstractCommSession *session);
 BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
                LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
                const TCHAR *pszSubAgent, const TCHAR *pszDescription);
@@ -465,6 +524,9 @@ void StartStorageDiscoveryConnector();
 void StartControlConnector();
 bool SendControlMessage(CSCPMessage *msg);
 
+void StartSessionAgentConnector();
+SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName);
+
 #ifdef _WIN32
 
 void InitService();
@@ -495,8 +557,8 @@ extern TCHAR g_szRegistrar[];
 extern TCHAR g_szListenAddress[];
 extern TCHAR g_szConfigIncludeDir[];
 extern TCHAR g_masterAgent[];
-extern WORD g_wListenPort;
-extern SERVER_INFO g_pServerList[];
+extern UINT16 g_wListenPort;
+extern ObjectArray<ServerInfo> g_serverList;
 extern UINT32 g_dwServerCount;
 extern time_t g_tmAgentStartTime;
 extern TCHAR g_szPlatformSuffix[];
@@ -506,6 +568,7 @@ extern UINT32 g_dwMaxSessions;
 extern UINT32 g_dwExecTimeout;
 extern UINT32 g_dwSNMPTimeout;
 extern UINT32 g_debugLevel;
+extern UINT16 g_sessionAgentPort;
 
 extern Config *g_config;
 

@@ -70,7 +70,7 @@ public class ObjectTest extends SessionTest
 		AbstractObject object = session.findObjectById(2);
 		assertFalse(object.isChildOf(1));
 		
-		object = session.findObjectById(100);
+		object = session.findObjectById(TestConstants.NODE_ID);
 		assertTrue(object.isChildOf(1));
 		
 		session.disconnect();
@@ -184,7 +184,7 @@ public class ObjectTest extends SessionTest
       Set<AbstractObject> subnets = object.getAllChilds(AbstractObject.OBJECT_SUBNET);
       for(AbstractObject s : subnets)
       {
-         System.out.println(s.getObjectName() + ": " + ((Subnet)s).getSubnetMask().getHostAddress() + " " + ((Subnet)s).getMaskBits());
+         System.out.println(s.getObjectName() + ": " + ((Subnet)s).getSubnetMask().getHostAddress() + "/" + ((Subnet)s).getMaskBits());
       }
       
       session.disconnect();

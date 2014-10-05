@@ -616,12 +616,9 @@ void Template::sendItemsToClient(ClientSession *pSession, UINT32 dwRqId)
    // Walk through items list
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
-		if ((_tcsnicmp(m_dcObjects->get(i)->getDescription(), _T("@system."), 8)) || (Type() == OBJECT_TEMPLATE))
-		{
-			m_dcObjects->get(i)->createMessage(&msg);
-			pSession->sendMessage(&msg);
-			msg.deleteAllVariables();
-		}
+		m_dcObjects->get(i)->createMessage(&msg);
+		pSession->sendMessage(&msg);
+		msg.deleteAllVariables();
    }
 
    unlockDciAccess();
@@ -1076,7 +1073,6 @@ UINT32 Template::getLastValues(CSCPMessage *msg, bool objectTooltipOnly, bool in
 	{
 		DCObject *object = m_dcObjects->get(i);
 		if ((object->hasValue() || includeNoValueObjects) &&
-          _tcsnicmp(object->getDescription(), _T("@system."), 8) &&
           (!objectTooltipOnly || object->isShowOnObjectTooltip()))
 		{
 			if (object->getType() == DCO_TYPE_ITEM)

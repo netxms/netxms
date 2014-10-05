@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.16], [bugs@netxms.org])
+AC_INIT([NetXMS], [1.2.17], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -59,6 +59,7 @@ SERVER_TOOLS=""
 SERVER_INCLUDE=""
 SMSDRV_DIRS=""
 HDLINK_DIRS=""
+PDSDRV_DIRS=""
 TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
@@ -380,6 +381,11 @@ AC_ARG_ENABLE(iconv,
 	DISABLE_ICONV="yes"
 ])
 
+AC_ARG_ENABLE(iconv-cache,
+[AS_HELP_STRING([--enable-iconv-cache=@<:@yes/no/auto@:>@],
+[cache iconv descriptors [default=auto]])],,
+[enable_iconv_cache=auto])
+
 AC_ARG_ENABLE(readline,
 [AS_HELP_STRING(--disable-readline,do not use libreadline)],
 [
@@ -444,8 +450,9 @@ AC_ARG_WITH(dist,
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2"
 	SMSDRV_DIRS="websms"
    HDLINK_DIRS="jira"
+   PDSDRV_DIRS="rrdtool"
 	NXCONFIG="nxconfig"
-	TOP_LEVEL_MODULES="include sql images"
+	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds"
 	CLIENT_COMPONENTS="nxalarm nxevent nxlexer nxpush nxsms scilexer windows"
@@ -456,6 +463,12 @@ AC_ARG_WITH(rpi-agent,
 [AS_HELP_STRING(--with-rpi-agent,build Raspberry Pi agent)],
 [
 	COMPONENTS="$COMPONENTS raspberrypi"
+])
+
+AC_ARG_WITH(tests,
+[AS_HELP_STRING(--with-tests,build tests)],
+[
+	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES tests"
 ])
 
 
@@ -804,6 +817,7 @@ esac
 #  * Turn on 64bit mode on HP-UX/Itanium
 #  * Turn on 64bit mode on AIX
 #  * Turn on 64bit mode on Solaris
+#  * Disable inconsistent C/C++ linkage warnings for Solaris Studio
 #--------------------------------------------------------------------
 
 if test "x$ac_compiler_gnu" = "xyes" ; then
@@ -1016,6 +1030,7 @@ fi
 if test "x$CXX" = "xCC" ; then
 	SQLFLAGS="-Qn"
 	CPPFLAGS="$CPPFLAGS -mt"
+	CXXFLAGS="$CXXFLAGS -erroff=badargtype2w,wbadinit"
 
 	if test "x$FORCE_32BIT_BUILD" = "xyes"; then
 		AC_MSG_CHECKING(whether C compiler accepts -m32)
@@ -1298,10 +1313,12 @@ if test "x$BUILD_SERVER" = "xyes" ; then
    if test "x$DISABLE_READLINE" = "xno"; then
       AC_CHECK_LIB(readline, readline, [SERVER_LIBS="$SERVER_LIBS -lreadline"], [AC_CHECK_LIB(edit, readline, [SERVER_LIBS="$SERVER_LIBS -ledit"])])
    fi
+   AC_CHECK_LIB(rt, timer_create, [SERVER_LIBS="$SERVER_LIBS -lrt"])
    SAVED_LDFLAGS="$LDFLAGS"
    LDFLAGS="$LDFLAGS $SERVER_LIBS"
 
-   AC_CHECK_FUNCS([readline])
+   AC_CHECK_FUNCS([readline timer_create])
+   AC_CHECK_TYPES([timer_t])
 
    # Check if passing rl_insert to rl_bind_key needs cast
    if test "$ac_cv_func_readline" = "yes"; then
@@ -1426,6 +1443,7 @@ if test "x$HAVE_LIBCURL" = "xyes"; then
   SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
   SMSDRV_DIRS="$SMSDRV_DIRS websms"
   HDLINK_DIRS="$HDLINK_DIRS jira"
+  AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
 
 if test "x$LDAP_SUPPORT" = "xyes"; then
@@ -2110,6 +2128,49 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(no) ]
 )
 
+AC_MSG_CHECKING(whether iconv supports state reset)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#include <stdio.h>
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     iconv_t cd = iconv_open("UTF-8","$valid_ucs2_code");
+     if (cd == (iconv_t)(-1)) return 1;
+     return iconv(cd, NULL, NULL, NULL, NULL) != 0;
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_STATE_RESET, 1, Define to 1 if iconv supports state reset)
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
+AC_MSG_CHECKING(whether iconv descriptor cache is needed)
+case $enable_iconv_cache in
+    auto)
+        case $PLATFORM in
+            SunOS|HP-UX|AIX)
+                enable_iconv_cache=yes
+                ;;
+            *)
+                enable_iconv_cache=no
+                ;;
+        esac
+        ;;
+    yes|no)
+        ;;
+    *)
+        AC_MSG_ERROR([Value given to --enable-iconv-cache must be one of yes, no or auto])
+        ;;
+esac
+if test "x$enable_iconv_cache" = "xyes"; then
+    AC_DEFINE(WITH_ICONV_CACHE, 1, Define to 1 to enable iconv descriptor cache)
+fi
+AC_MSG_RESULT($enable_iconv_cache)
+
 # taken from ZSH's configure
 # Check if iconv uses const in prototype declaration
 if test "x$ac_found_iconv" = "xyes"; then
@@ -2131,6 +2192,9 @@ if test "x$ac_found_iconv" = "xyes"; then
   AC_DEFINE_UNQUOTED([ICONV_CONST], $ac_cv_iconv_const,
     [Define as const if the declaration of iconv() needs const.])
 fi
+
+AC_MSG_CHECKING(if iconv descriptor cache is needed)
+
 
 if test "x$ac_cv_type_wchar_t" = "xyes"; then
 	if test $ac_cv_sizeof_wchar_t -eq 2; then
@@ -2377,6 +2441,7 @@ AC_SUBST(SERVER_LIBS)
 AC_SUBST(SERVER_TOOLS)
 AC_SUBST(SMSDRV_DIRS)
 AC_SUBST(HDLINK_DIRS)
+AC_SUBST(PDSDRV_DIRS)
 AC_SUBST(TOP_LEVEL_MODULES)
 AC_SUBST(CONTRIB_MODULES)
 AC_SUBST(CLIENT_COMPONENTS)
@@ -2585,6 +2650,8 @@ AC_CONFIG_FILES([
 	src/server/include/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
+	src/server/pdsdrv/Makefile
+	src/server/pdsdrv/rrdtool/Makefile
 	src/server/smsdrv/Makefile
 	src/server/smsdrv/dummy/Makefile
 	src/server/smsdrv/generic/Makefile
@@ -2612,6 +2679,9 @@ AC_CONFIG_FILES([
 	src/tools/nxencpasswd/Makefile
 	src/zlib/Makefile
 	sql/Makefile
+	tests/Makefile
+	tests/include/Makefile
+	tests/test-libnetxms/Makefile
 	tools/Makefile
 ])
 

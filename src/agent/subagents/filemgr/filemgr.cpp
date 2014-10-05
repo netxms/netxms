@@ -505,24 +505,16 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
  */
  THREAD_RESULT THREAD_CALL SendFile(void *dataStruct)
 {
-   MessageData *data = (MessageData*)dataStruct;
-   //prepare file name
+   MessageData *data = (MessageData *)dataStruct;
 
    AgentWriteDebugLog(5, _T("CommSession::getLocalFile(): request for file \"%s\", follow = %s"),
                data->fileName, data->follow ? _T("true") : _T("false"));
    BOOL result = AgentSendFileToServer(data->session, data->id, data->fileName, (int)data->offset);
    if(data->follow && result)
    {
-      TCHAR *fileID = _tcsdup(data->fileNameCode);
-      TCHAR *realName = _tcsdup(data->fileName);
-      g_monitorFileList.addMonitoringFile(fileID);
-      FollowData *flData = new FollowData();
-      flData->serverAddress = data->session->getServerAddress();
-      flData->pszFile = realName;
-      flData->fileId = fileID;
-      flData->offset = 0;
-      flData->session = data->session;
-      ThreadCreateEx(SendFileUpdatesOverNXCP, 0, (void *)flData);
+      g_monitorFileList.addMonitoringFile(data->fileNameCode);
+      FollowData *flData = new FollowData(data->fileName, data->fileNameCode, 0, data->session->getServerAddress());
+      ThreadCreateEx(SendFileUpdatesOverNXCP, 0, flData);
    }
    safe_free(data->fileName);
    safe_free(data->fileNameCode);
@@ -533,7 +525,7 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
 /**
  * Process commands like get files in folder, delete file/folder, copy file/folder, move file/folder
  */
-static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *response, void *session)
+static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *response, AbstractCommSession *session)
 {
    switch(command)
    {
@@ -551,7 +543,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          ConvertPathToHost(directory);
 
          bool rootFolder = request->GetVariableShort(VID_ROOT) ? 1 : 0;
-         if (CheckFullPath(directory, rootFolder) && ((AbstractCommSession *)session)->isMasterServer())
+         if (CheckFullPath(directory, rootFolder) && session->isMasterServer())
          {
             GetFolderContent(directory, response, rootFolder);
          }
@@ -575,7 +567,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          ConvertPathToHost(file);
 
-         if(CheckFullPath(file, false) && ((AbstractCommSession *)session)->isMasterServer())
+         if (CheckFullPath(file, false) && session->isMasterServer())
          {
             if (Delete(file))
             {
@@ -600,7 +592,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          TCHAR newName[MAX_PATH];
          request->GetVariableStr(VID_NEW_FILE_NAME, newName, MAX_PATH);
          response->SetId(request->GetId());
-         if(oldName == NULL && newName == NULL)
+         if (oldName == NULL && newName == NULL)
          {
             response->SetVariable(VID_RCC, RCC_IO_ERROR);
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): File names should be set."));
@@ -609,7 +601,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          ConvertPathToHost(oldName);
          ConvertPathToHost(newName);
 
-         if (CheckFullPath(oldName, false) && CheckFullPath(newName, false) && ((AbstractCommSession *)session)->isMasterServer())
+         if (CheckFullPath(oldName, false) && CheckFullPath(newName, false) && session->isMasterServer())
          {
             if (Rename(oldName, newName))
             {
@@ -643,7 +635,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          ConvertPathToHost(oldName);
          ConvertPathToHost(newName);
 
-         if (CheckFullPath(oldName, false) && CheckFullPath(newName, false) && ((AbstractCommSession *)session)->isMasterServer())
+         if (CheckFullPath(oldName, false) && CheckFullPath(newName, false) && session->isMasterServer())
          {
             if(MoveFile(oldName, newName))
             {
@@ -674,9 +666,9 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          }
          ConvertPathToHost(name);
 
-         if (CheckFullPath(name, false) && ((AbstractCommSession *)session)->isMasterServer())
+         if (CheckFullPath(name, false) && session->isMasterServer())
          {
-            response->SetVariable(VID_RCC, ((AbstractCommSession *)session)->openFile(name, request->GetId()));
+            response->SetVariable(VID_RCC, session->openFile(name, request->GetId()));
          }
          else
          {
@@ -692,7 +684,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          ExpandFileName(fileName, fileName, MAX_PATH, false);
          response->SetId(request->GetId());
 
-      	if (((AbstractCommSession *)session)->isMasterServer() && CheckFullPath(fileName, false))
+      	if (session->isMasterServer() && CheckFullPath(fileName, false))
          {
             NX_STAT_STRUCT fs;
 
@@ -722,7 +714,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          request->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);
          ExpandFileName(fileName, fileName, MAX_PATH, false);
 
-         if (((AbstractCommSession *)session)->isMasterServer() && CheckFullPath(fileName, false))
+         if (session->isMasterServer() && CheckFullPath(fileName, false))
          {
             TCHAR *fileNameCode = (TCHAR*)malloc(MAX_PATH * sizeof(TCHAR));
             request->GetVariableStr(VID_NAME, fileNameCode, MAX_PATH);
@@ -733,7 +725,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
             data->follow = request->GetVariableShort(VID_FILE_FOLLOW) ? true : false;
             data->id = request->GetId();
             data->offset = request->GetVariableLong(VID_FILE_OFFSET);
-            data->session = ((AbstractCommSession *)session);
+            data->session = session;
 
             ThreadCreateEx(SendFile, 0, data);
 
@@ -748,7 +740,7 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
       case CMD_CANCEL_FILE_MONITORING:
       {
          response->SetId(request->GetId());
-         if (((AbstractCommSession *)session)->isMasterServer())
+         if (session->isMasterServer())
          {
             TCHAR fileName[MAX_PATH];
             request->GetVariableStr(VID_FILE_NAME, fileName, MAX_PATH);

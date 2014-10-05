@@ -29,6 +29,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <nxcpapi.h>
 #include <nxlog.h>
 #include <psapi.h>
 #include <wtsapi32.h>

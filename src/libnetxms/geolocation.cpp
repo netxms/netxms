@@ -353,14 +353,25 @@ bool GeoLocation::parseLongitude(const TCHAR *lon)
 }
 
 /**
+ * Convert degrees to radians
+ */
+#define DegreesToRadians(a) ((a) * 3.14159265 / 180.0)
+
+/**
  * Check if this locations is (almost) same as given location
  */
-bool GeoLocation::sameLocation(double lat, double lon, int oldAccurasy)
+bool GeoLocation::sameLocation(double lat, double lon, int oldAccuracy)
 {
-   bool result = false;
+   const double R = 6371000; // Earth radius in meters
 
-   if(sqrt(pow(lon - m_lon, 2) + pow(lat - m_lat, 2)) <= m_accuracy)
-      result = true;
+   double f1 = DegreesToRadians(lat);
+   double f2 = DegreesToRadians(m_lat);
+   double df = DegreesToRadians(m_lat - lat);
+   double dl = DegreesToRadians(m_lon - lon);
 
-   return result;
+   double a = pow(sin(df / 2), 2) + cos(f1) * cos(f2) * pow(sin(dl / 2), 2);
+   double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+   double distance = R * c;
+   return distance <= min(oldAccuracy, m_accuracy);
 }

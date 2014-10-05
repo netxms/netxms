@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -116,12 +116,12 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
 		           _T("INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid,synthetic_mask) VALUES (%d,'%s','%s',%d,%d)"),
                  m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
 					  IpToStr(m_dwIpNetMask, szNetMask), m_zoneId, m_bSyntheticMask ? 1 : 0);
    else
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
 		           _T("UPDATE subnets SET ip_addr='%s',ip_netmask='%s',zone_guid=%d,synthetic_mask=%d WHERE id=%d"),
                  IpToStr(m_dwIpAddr, szIpAddr),
 					  IpToStr(m_dwIpNetMask, szNetMask), m_zoneId, m_bSyntheticMask ? 1 : 0, m_dwId);
@@ -180,7 +180,7 @@ void Subnet::setCorrectMask(UINT32 dwAddr, UINT32 dwMask)
 	TCHAR szName[MAX_OBJECT_NAME], szBuffer[32];
 
 	LockData();
-	
+
 	// Check if name is default
 	_sntprintf(szName, MAX_OBJECT_NAME, _T("%s/%d"), IpToStr(m_dwIpAddr, szBuffer), BitsInMask(m_dwIpNetMask));
 	if (!_tcsicmp(szName, m_szName))
@@ -188,11 +188,22 @@ void Subnet::setCorrectMask(UINT32 dwAddr, UINT32 dwMask)
 		// Change name
 		_sntprintf(m_szName, MAX_OBJECT_NAME, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwMask));
 	}
-	
+
+	bool shouldReaddNode = m_dwIpAddr != dwAddr;
+
+   if(shouldReaddNode)
+   {
+      g_idxSubnetByAddr.remove(m_dwIpAddr);
+   }
+
 	m_dwIpAddr = dwAddr;
 	m_dwIpNetMask = dwMask;
 	m_bSyntheticMask = false;
 
+	if(shouldReaddNode)
+   {
+      g_idxSubnetByAddr.put(m_dwIpAddr, this);
+   }
 	Modify();
 	UnlockData();
 }

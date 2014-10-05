@@ -121,8 +121,8 @@ TCHAR g_szRegistrar[MAX_DB_STRING] = _T("not_set");
 TCHAR g_szListenAddress[MAX_PATH] = _T("*");
 TCHAR g_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 TCHAR g_masterAgent[MAX_PATH] = _T("not_set");
-WORD g_wListenPort = AGENT_LISTEN_PORT;
-SERVER_INFO g_pServerList[MAX_SERVERS];
+UINT16 g_wListenPort = AGENT_LISTEN_PORT;
+ObjectArray<ServerInfo> g_serverList(8, 8, true);
 UINT32 g_dwServerCount = 0;
 UINT32 g_dwExecTimeout = 2000;     // External process execution timeout in milliseconds
 UINT32 g_dwSNMPTimeout = 3000;
@@ -130,6 +130,11 @@ time_t g_tmAgentStartTime;
 UINT32 g_dwStartupDelay = 0;
 UINT32 g_dwMaxSessions = 32;
 UINT32 g_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
+#ifdef _WIN32
+UINT16 g_sessionAgentPort = 28180;
+#else
+UINT16 g_sessionAgentPort = 0;
+#endif
 Config *g_config;
 #ifdef _WIN32
 UINT32 g_dwIdleTimeout = 60;   // Session idle timeout
@@ -191,6 +196,8 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 	{ _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDirectory, NULL },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, MAX_PATH, 0, m_szDailyLogFileSuffix, NULL },
 	{ _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel, &g_debugLevel },
+   { _T("DisableIPv4"), CT_BOOLEAN, 0, 0, AF_DISABLE_IPV4, 0, &g_dwFlags, NULL },
+   { _T("DisableIPv6"), CT_BOOLEAN, 0, 0, AF_DISABLE_IPV6, 0, &g_dwFlags, NULL },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, m_szDumpDir, NULL },
    { _T("EnableActions"), CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags, NULL },
    { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers, NULL },
@@ -223,6 +230,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("Servers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList, NULL },
    { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout, NULL },
    { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szEncryptedSharedSecret, NULL },
+   { _T("SessionAgentPort"), CT_WORD, 0, 0, 0, 0, &g_sessionAgentPort, NULL },
    { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
 	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwSNMPTimeout, NULL },
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay, NULL },
@@ -270,6 +278,79 @@ static TCHAR m_szHelpText[] =
 #endif
    _T("   -v         : Display version and exit\n")
    _T("\n");
+
+/**
+ * Server info: constructor
+ */
+ServerInfo::ServerInfo(const TCHAR *name, bool control, bool master)
+{
+#ifdef UNICODE
+   m_name = MBStringFromWideString(name);
+#else
+   m_name = strdup(name);
+#endif
+
+   char *p = strchr(m_name, '/');
+   if (p != NULL)
+   {
+      *p = 0;
+      p++;
+      m_address = InetAddress::resolveHostName(m_name);
+      if (m_address.isValid())
+      {
+         int bits = strtol(p, NULL, 10);
+         if ((bits >= 0) && (bits <= 32))
+            m_address.setMaskBits(bits);
+      }
+      m_redoResolve = false;
+   }
+   else
+   {
+      m_address = InetAddress::resolveHostName(m_name);
+      m_redoResolve = true;
+   }
+
+   m_control = control;
+   m_master = master;
+   m_lastResolveTime = time(NULL);
+   m_mutex = MutexCreate();
+}
+
+/**
+ * Server info: destructor
+ */
+ServerInfo::~ServerInfo()
+{
+   safe_free(m_name);
+   MutexDestroy(m_mutex);
+}
+
+/**
+ * Server info: resolve hostname if needed
+ */
+void ServerInfo::resolve()
+{
+   time_t now = time(NULL);
+   time_t age = now - m_lastResolveTime;
+   if ((age >= 3600) || ((age > 300) && !m_address.isValid()))
+   {
+      m_address = InetAddress::resolveHostName(m_name);
+      m_lastResolveTime = now;
+   }
+}
+
+/**
+ * Server info: match address
+ */
+bool ServerInfo::match(const InetAddress &addr)
+{
+   MutexLock(m_mutex);
+   if (m_redoResolve)
+      resolve();
+   bool result = m_address.isValid() ? m_address.contain(addr) : false;
+   MutexUnlock(m_mutex);
+   return result;
+}
 
 /**
  * Save registry
@@ -560,20 +641,24 @@ static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file,
  */
 static bool EnumerateSessionsBySubagent(bool (* pHandler)(AbstractCommSession *, void* ), void *data)
 {
+   bool ret = false;
    MutexLock(g_hSessionListAccess);
    for(UINT32 i = 0; i < g_dwMaxSessions; i++)
    {
       if(!pHandler(g_pSessionList[i], data))
-         return true;
+      {
+         ret = true;
+         break;
+      }
    }
    MutexUnlock(g_hSessionListAccess);
-   return false;
+   return ret;
 }
 
 /**
  * Parser server list
  */
-static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
+static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
 {
 	TCHAR *pItem, *pEnd;
 
@@ -584,56 +669,7 @@ static void ParseServerList(TCHAR *serverList, BOOL isControl, BOOL isMaster)
 			*pEnd = 0;
 		StrStrip(pItem);
 
-		UINT32 ipAddr, netMask;
-
-		TCHAR *mask = _tcschr(pItem, _T('/'));
-		if (mask != NULL)
-		{
-			*mask = 0;
-			mask++;
-			ipAddr = _t_inet_addr(pItem);
-
-			TCHAR *eptr;
-			int bits = _tcstol(mask, &eptr, 10);
-			if ((*eptr == 0) && (bits >= 0) && (bits <= 32))
-			{
-            netMask = (bits > 0) ? htonl(0xFFFFFFFF << (32 - bits)) : 0;
-			}
-			else
-			{
-				ipAddr = INADDR_NONE;
-				if (!(g_dwFlags & AF_DAEMON))
-					_tprintf(_T("Invalid network mask %s\n"), mask);
-			}
-		}
-		else
-		{
-			ipAddr = ResolveHostName(pItem);
-			if (ipAddr == INADDR_ANY)
-				ipAddr = INADDR_NONE;
-			netMask = 0xFFFFFFFF;
-		}
-		if (ipAddr == INADDR_NONE)
-		{
-			if (!(g_dwFlags & AF_DAEMON))
-				_tprintf(_T("Invalid server address '%s'\n"), pItem);
-		}
-		else
-		{
-			UINT32 i;
-
-			for(i = 0; i < g_dwServerCount; i++)
-				if ((g_pServerList[i].dwIpAddr == ipAddr) && (g_pServerList[i].dwNetMask == netMask))
-					break;
-			if (i == g_dwServerCount)
-			{
-				g_dwServerCount++;
-				g_pServerList[i].dwIpAddr = ipAddr;
-				g_pServerList[i].dwNetMask = netMask;
-			}
-			g_pServerList[i].bMasterServer = isMaster;
-			g_pServerList[i].bControlServer = isControl;
-		}
+      g_serverList.add(new ServerInfo(pItem, isControl, isMaster));
 	}
 	free(serverList);
 }
@@ -941,6 +977,7 @@ BOOL Initialize()
 		m_thSessionWatchdog = ThreadCreateEx(SessionWatchdog, 0, NULL);
 		StartPushConnector();
 		StartStorageDiscoveryConnector();
+      StartSessionAgentConnector();
       if (g_dwFlags & AF_ENABLE_CONTROL_CONNECTOR)
 	   {
          StartControlConnector();
@@ -1607,7 +1644,8 @@ int main(int argc, char *argv[])
                const TCHAR *dir = g_config->getValue(_T("/agent/ConfigIncludeDir"));
                if (dir != NULL)
                {
-                  validConfig = g_config->loadConfigDirectory(g_szConfigIncludeDir, _T("agent"), false);
+                  validConfig = g_config->loadConfigDirectory(dir, _T("agent"), false);
+                  ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), dir);
                }
             }
 

@@ -325,9 +325,9 @@ const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name)
 UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name);
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value);
 bool NXCORE_EXPORTABLE ResolveUserId(UINT32 id, TCHAR *buffer, int bufSize);
-void NXCORE_EXPORTABLE UpdateLDAPUsers(const TCHAR* dn, Entry *obj);
+void NXCORE_EXPORTABLE UpdateLDAPUser(const TCHAR* dn, Entry *obj);
 void RemoveDeletedLDAPEntry(StringObjectMap<Entry>* userEntryList, UINT32 m_action, bool isUser);
-void NXCORE_EXPORTABLE UpdateLDAPGroups(const TCHAR* dn, Entry *obj);
+void NXCORE_EXPORTABLE UpdateLDAPGroup(const TCHAR* dn, Entry *obj);
 void SyncGroupMembers(Group* group, Entry *obj);
 UserDatabaseObject* GetUser(UINT32 userID);
 UserDatabaseObject* GetUser(const TCHAR* dn);

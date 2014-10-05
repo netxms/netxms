@@ -113,21 +113,30 @@ Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, c
          switch(szFormat[i])
          {
             case 's':
-					m_parameters.add(_tcsdup(va_arg(args, TCHAR *)));
+               {
+                  const TCHAR *s = va_arg(args, const TCHAR *);
+					   m_parameters.add(_tcsdup_ex(s));
+               }
                break;
             case 'm':	// multibyte string
+               {
+                  const char *s = va_arg(args, const char *);
 #ifdef UNICODE
-					m_parameters.add(WideStringFromMBString(va_arg(args, char *)));
+                  m_parameters.add((s != NULL) ? WideStringFromMBString(s) : _tcsdup(_T("")));
 #else
-					m_parameters.add(strdup(va_arg(args, char *)));
+					   m_parameters.add(strdup(CHECK_NULL_EX(s)));
 #endif
+               }
                break;
             case 'u':	// UNICODE string
+               {
+                  const WCHAR *s = va_arg(args, const WCHAR *);
 #ifdef UNICODE
-					m_parameters.add(wcsdup(va_arg(args, WCHAR *)));
+		   			m_parameters.add(wcsdup(CHECK_NULL_EX(s)));
 #else
-					m_parameters.add(MBStringFromWideString(va_arg(args, WCHAR *)));
+                  m_parameters.add((s != NULL) ? MBStringFromWideString(s) : strdup(""));
 #endif
+               }
                break;
             case 'd':
                buffer = (TCHAR *)malloc(16 * sizeof(TCHAR));
@@ -929,6 +938,66 @@ BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, con
    bResult = RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, names, args);
    va_end(args);
    return bResult;
+}
+
+/**
+ * Post event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param format Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IP address
+ *        h - MAC (hardware) address
+ *        i - Object ID
+ * @param names names for parameters (NULL if parameters are unnamed)
+ */
+BOOL NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, ...)
+{
+   va_list args;
+   BOOL bResult;
+
+   va_start(args, names);
+   bResult = RealPostEvent(g_pEventQueue, eventCode, sourceId, userTag, format, names, args);
+   va_end(args);
+   return bResult;
+}
+
+/**
+ * Post event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param parameters event parameters list
+ */
+BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters)
+{
+   /*
+   int count = parameters->size();
+   if (count > 1023)
+      count = 1023;
+
+   char format[1024];
+   memset(format, 's', count);
+   format[count] = 0;
+
+   const TCHAR *names[1024];
+   const TCHAR *args[1024];
+   for(int i = 0; i < count; i++)
+   {
+      names[i] = parameters->getKeyByIndex(i);
+      args[i] = parameters->getValueByIndex(i);
+   }
+
+   return RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, names, args);
+   */
+   return FALSE;
 }
 
 /**

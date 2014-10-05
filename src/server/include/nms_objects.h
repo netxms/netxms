@@ -385,8 +385,8 @@ protected:
    virtual void prepareForDeletion();
    virtual void onObjectDelete(UINT32 dwObjectId);
    void addLocationToHistory();
-   bool locationTableExists();
-   bool cterateLocationGystoryTable(DB_HANDLE hdb);
+   bool isLocationTableExists();
+   bool createLocationHistoryTable(DB_HANDLE hdb);
 
 public:
    NetObj();
@@ -614,7 +614,7 @@ protected:
 	UINT32 m_portNumber;				// Vendor/device specific port number
 	UINT32 m_peerNodeId;				// ID of peer node object, or 0 if unknown
 	UINT32 m_peerInterfaceId;		// ID of peer interface object, or 0 if unknown
-   int m_peerDiscoveryProtocol;  // Protocol used to discover peer node
+   LinkLayerProtocol m_peerDiscoveryProtocol;  // Protocol used to discover peer node
 	WORD m_adminState;				// interface administrative state
 	WORD m_operState;					// interface operational state
 	WORD m_dot1xPaeAuthState;		// 802.1x port auth state
@@ -624,6 +624,8 @@ protected:
 	int m_pollCount;
 	int m_requiredPollCount;
    UINT32 m_zoneId;
+   UINT32 m_pingTime;
+   time_t m_pingLastTimeStamp;
 
 	void paeStatusPoll(ClientSession *pSession, UINT32 dwRqId, SNMP_Transport *pTransport, Node *node);
 
@@ -653,7 +655,7 @@ public:
 	UINT32 getPortNumber() { return m_portNumber; }
 	UINT32 getPeerNodeId() { return m_peerNodeId; }
 	UINT32 getPeerInterfaceId() { return m_peerInterfaceId; }
-   int getPeerDiscoveryProtocol() { return m_peerDiscoveryProtocol; }
+   LinkLayerProtocol getPeerDiscoveryProtocol() { return m_peerDiscoveryProtocol; }
 	UINT32 getFlags() { return m_flags; }
 	int getAdminState() { return (int)m_adminState; }
 	int getOperState() { return (int)m_operState; }
@@ -661,6 +663,7 @@ public:
 	int getDot1xBackendAuthState() { return (int)m_dot1xBackendAuthState; }
 	const TCHAR *getDescription() { return m_description; }
    const BYTE *getMacAddr() { return m_bMacAddr; }
+   UINT32 getPingTime();
 	bool isSyntheticMask() { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
 	bool isPhysicalPort() { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
 	bool isLoopback() { return (m_flags & IF_LOOPBACK) ? true : false; }
@@ -674,7 +677,7 @@ public:
    QWORD getLastDownEventId() { return m_lastDownEventId; }
    void setLastDownEventId(QWORD id) { m_lastDownEventId = id; }
 
-   void setMacAddr(const BYTE *pbNewMac) { memcpy(m_bMacAddr, pbNewMac, MAC_ADDR_LENGTH); Modify(); }
+   void setMacAddr(const BYTE *pbNewMac);
    void setIpAddr(UINT32 dwNewAddr);
    void setIpNetMask(UINT32 dwNewMask);
    void setBridgePortNumber(UINT32 bpn) { m_bridgePortNumber = bpn; Modify(); }
@@ -682,7 +685,7 @@ public:
    void setPortNumber(UINT32 port) { m_portNumber = port; Modify(); }
 	void setPhysicalPortFlag(bool isPhysical) { if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; Modify(); }
 	void setManualCreationFlag(bool isManual) { if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; Modify(); }
-	void setPeer(Node *node, Interface *iface, int protocol);
+	void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol);
    void clearPeer() { m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; Modify(); }
    void setDescription(const TCHAR *descr) { LockData(); nx_strncpy(m_description, descr, MAX_DB_STRING); Modify(); UnlockData(); }
 
@@ -695,6 +698,7 @@ public:
 
    UINT32 wakeUp();
 	void setExpectedState(int state);
+	void updatePingData();
 };
 
 /**
@@ -788,7 +792,8 @@ public:
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   virtual UINT32 getInternalItem(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
+   virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+   virtual UINT32 getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 
    UINT32 getTableLastValues(UINT32 dciId, CSCPMessage *msg);
 	UINT32 getThresholdSummary(CSCPMessage *msg, UINT32 baseId);
@@ -842,7 +847,7 @@ public:
 
 	const TCHAR *getDeviceId() { return CHECK_NULL_EX(m_deviceId); }
 
-	virtual UINT32 getInternalItem(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
+	virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 };
 
 /**
@@ -1182,8 +1187,9 @@ public:
 
    bool connectToSMCLP();
 
-	virtual UINT32 getInternalItem(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
-   UINT32 getItemFromSNMP(WORD port, const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer, int interpretRawValue);
+	virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+
+   UINT32 getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
 	UINT32 getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table);
    UINT32 getListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
    UINT32 getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
@@ -1995,17 +2001,18 @@ public:
    void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
 };
 
-
-//
-// Business service object
-//
-
+/**
+ * Business service object
+ */
 class NXCORE_EXPORTABLE BusinessService : public ServiceContainer
 {
 protected:
 	bool m_busy;
+   bool m_pollingDisabled;
 	time_t m_lastPollTime;
 	int m_lastPollStatus;
+
+   virtual void prepareForDeletion();
 
 public:
 	BusinessService();

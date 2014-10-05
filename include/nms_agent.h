@@ -92,6 +92,7 @@
 #define ERR_FILE_STAT_FAILED        ((UINT32)916)
 #define ERR_MEM_ALLOC_FAILED        ((UINT32)917)
 #define ERR_FILE_DELETE_FAILED      ((UINT32)918)
+#define ERR_NO_SESSION_AGENT        ((UINT32)919)
 
 /**
  * Parameter handler return codes
@@ -105,6 +106,15 @@
  */
 #define WINPERF_AUTOMATIC_SAMPLE_COUNT    ((UINT32)0x00000001)
 #define WINPERF_REMOTE_COUNTER_CONFIG     ((UINT32)0x00000002)
+
+/**
+ * User session states (used by session agents)
+ */
+#define USER_SESSION_ACTIVE         0
+#define USER_SESSION_CONNECTED      1
+#define USER_SESSION_DISCONNECTED   2
+#define USER_SESSION_IDLE           3
+#define USER_SESSION_OTHER          4
 
 /**
  * Descriptions for common parameters
@@ -338,10 +348,27 @@
 #define DCIDESC_DEPRECATED                        _T("<deprecated>")
 
 
+#define DCTDESC_AGENT_SESSION_AGENTS              _T("Registered session agents")
 #define DCTDESC_AGENT_SUBAGENTS                   _T("Loaded subagents")
 #define DCTDESC_FILESYSTEM_VOLUMES                _T("File system volumes")
 #define DCTDESC_SYSTEM_INSTALLED_PRODUCTS         _T("Installed products")
 #define DCTDESC_SYSTEM_PROCESSES                  _T("Processes")
+
+/**
+ * API for CommSession
+ */
+class AbstractCommSession
+{
+public:
+   virtual bool isMasterServer() = 0;
+   virtual bool isControlServer() = 0;
+   virtual const InetAddress& getServerAddress() = 0;
+
+   virtual void sendMessage(CSCPMessage *pMsg) = 0;
+   virtual void sendRawMessage(CSCP_MESSAGE *pMsg) = 0;
+	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) = 0;
+   virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
+};
 
 /**
  * Subagent's parameter information
@@ -398,13 +425,13 @@ typedef struct
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_ACTION;
 
-/**
- * Subagent initialization structure
- */
 #define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20110301)
 
 class CSCPMessage;
 
+/**
+ * Subagent initialization structure
+ */
 typedef struct
 {
    UINT32 magic;    // Magic number to check if subagent uses correct version of this structure
@@ -412,7 +439,7 @@ typedef struct
    TCHAR version[32];
 	BOOL (* init)(Config *);   // Called to initialize subagent. Can be NULL.
    void (* shutdown)();       // Called at subagent unload. Can be NULL.
-   BOOL (* commandHandler)(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session);
+   BOOL (* commandHandler)(UINT32 command, CSCPMessage *request, CSCPMessage *response, AbstractCommSession *session);
    UINT32 numParameters;
    NETXMS_SUBAGENT_PARAM *parameters;
    UINT32 numLists;
@@ -497,18 +524,6 @@ inline void ret_uint64(TCHAR *rbuf, QWORD value)
    _sntprintf(rbuf, MAX_RESULT_LENGTH, UINT64_FMT, value);
 #endif   /* _WIN32 */
 }
-
-/**
- * Api for CommSession
- */
-class AbstractCommSession
-{
-public:
-   virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
-   virtual BOOL isMasterServer() = 0;
-   virtual UINT32 getServerAddress() = 0;
-   virtual void sendMessage(CSCPMessage *pMsg) = 0;
-};
 
 //
 // API for subagents
