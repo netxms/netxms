@@ -16,6 +16,7 @@
     - Added device geolocation tracking and display on map
     - Filter in event processing policy editor
     - Fixed bug with deletion of subnet with corrected IP
+    - Added command line option to open specific dashboard after login
 - Android console:
 	- Fix bug in notifying connection point not found
 	- Fix bug in computing interface expanded list size (removed hardcoded values)

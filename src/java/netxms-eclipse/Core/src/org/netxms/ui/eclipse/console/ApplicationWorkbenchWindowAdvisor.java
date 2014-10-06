@@ -33,6 +33,9 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
@@ -47,6 +50,8 @@ import org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.console.dialogs.LoginDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
 import org.netxms.ui.eclipse.console.dialogs.PasswordRequestDialog;
@@ -54,6 +59,7 @@ import org.netxms.ui.eclipse.console.dialogs.SecurityWarningDialog;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.jobs.LoginJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Workbench window advisor
@@ -142,9 +148,57 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 					a.setChecked(true);
 				}
 			}
+         else if (s.startsWith("-dashboard="))
+         {
+            showDashboard(s.substring(11));
+         }
       }
 	}
 
+   /**
+    * Show dashboard
+    * 
+    * @param dashboardId
+    */
+   private void showDashboard(String dashboardId)
+   {
+      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      
+      long objectId;
+      try
+      {
+         objectId = Long.parseLong(dashboardId);
+      }
+      catch(NumberFormatException e)
+      {
+         AbstractObject object = session.findObjectByName(dashboardId);
+         if ((object == null) || !(object instanceof Dashboard))
+         {
+            MessageDialogHelper.openError(null, "Error", String.format("Cannot open dashboard %s (invalid dashboard ID)", dashboardId));
+            return;
+         }
+         objectId = object.getObjectId();
+      }
+      
+      Dashboard dashboard = (Dashboard)session.findObjectById(objectId, Dashboard.class);
+      if (dashboard == null)
+      {
+         MessageDialogHelper.openError(null, "Error", String.format("Cannot open dashboard %s (invalid dashboard ID)", dashboardId));
+         return;
+      }
+      
+      IWorkbenchPage page = getWindowConfigurer().getWindow().getActivePage();
+      try
+      {
+         IViewPart view = page.showView("org.netxms.ui.eclipse.dashboard.views.DashboardView", Long.toString(objectId), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
+         page.setPartState(page.getReference(view), IWorkbenchPage.STATE_MAXIMIZED);
+      }
+      catch(PartInitException e)
+      {
+         MessageDialogHelper.openError(null, "Error", String.format("Cannot open dashboard %s (%s)", dashboardId, e.getLocalizedMessage()));
+      }
+   }
+	
 	/**
     * Show login dialog and perform login
     */
