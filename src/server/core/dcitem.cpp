@@ -653,7 +653,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
  *
  * @return true on success
  */
-bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
+bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue, bool *updateStatus)
 {
 	static int updateRawValueTypes[] = { DB_SQLTYPE_VARCHAR, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER };
 	static int updateValueTypes[] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
@@ -687,6 +687,15 @@ bool DCItem::processNewValue(time_t tmTimeStamp, void *originalValue)
    }
 
    m_dwErrorCount = 0;
+
+   if(isStatusDCO() && (m_dwCacheSize == 0 || ((UINT32)*pValue != (UINT32)*m_ppValueCache[0])))
+   {
+      *updateStatus = true;
+   }
+   else
+   {
+      *updateStatus = false;
+   }
 
    m_prevRawValue = rawValue;
    m_tPrevValueTimeStamp = tmTimeStamp;

@@ -367,9 +367,14 @@ UINT32 DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, UINT32 baseId
  */
 bool DataCollectionTarget::processNewDCValue(DCObject *dco, time_t currTime, void *value)
 {
+   bool updateState;
 	lockDciAccess(false);
-	bool result = dco->processNewValue(currTime, value);
+	bool result = dco->processNewValue(currTime, value, &updateState);
 	unlockDciAccess();
+	if(updateState)
+	{
+      calculateCompoundStatus(FALSE);
+   }
    return result;
 }
 
@@ -671,4 +676,34 @@ void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, T
 bool DataCollectionTarget::isEventSource()
 {
    return true;
+}
+
+/**
+ * Returns most critical status of DCI used for
+ * status calculation
+ */
+int DataCollectionTarget::getMostCriticalDCIStatus()
+{
+   int status = -1;
+   lockDciAccess(false);
+   // Check if that item exists
+   for(int i = 0; i < m_dcObjects->size(); i++)
+	{
+		DCObject *curr = m_dcObjects->get(i);
+      if (curr->isStatusDCO() && (curr->getType() == DCO_TYPE_ITEM) &&
+          curr->hasValue() && (curr->getStatus() == ITEM_STATUS_ACTIVE))
+      {
+         if(Type() == OBJECT_CLUSTER && !curr->isAggregateOnCluster())
+            continue; //Calculated only on thows that are agregated on cluster
+
+         ItemValue *value = ((DCItem *)curr)->getInternalLastValue();
+         if(value != NULL && (INT32)*value >= -1 && (INT32)*value < 5)
+            status = max(status, (INT32)*value);
+         delete value;
+      }
+	}
+   unlockDciAccess();
+   status = (status == -1) ? STATUS_UNKNOWN : status;
+
+   return status;
 }

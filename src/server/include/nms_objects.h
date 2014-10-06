@@ -810,6 +810,7 @@ public:
    virtual void unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI);
 
    virtual bool isEventSource();
+   int getMostCriticalDCIStatus();
 };
 
 /**

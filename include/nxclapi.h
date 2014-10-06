@@ -734,6 +734,7 @@ enum
 #define DCF_AGGREGATE_ON_CLUSTER    ((UINT16)0x0080)
 #define DCF_TRANSFORM_AGGREGATED    ((UINT16)0x0100)
 #define DCF_NO_STORAGE              ((UINT16)0x0200)
+#define DCF_CALCULATE_NODE_STATUSS  ((UINT16)0x0400)
 
 /**
  * Get cluster aggregation function from DCI flags

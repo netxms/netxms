@@ -301,8 +301,9 @@ bool DCTable::deleteAllData()
  *
  * @return true on success
  */
-bool DCTable::processNewValue(time_t nTimeStamp, void *value)
+bool DCTable::processNewValue(time_t nTimeStamp, void *value, bool *updateStatus)
 {
+   *updateStatus = false;
    lock();
 
    // Normally m_pNode shouldn't be NULL for polled items, but who knows...
@@ -459,7 +460,7 @@ bool DCTable::transform(Table *value)
    {
       if (m_transformationScript->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
       {
-         DbgPrintf(6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"), 
+         DbgPrintf(6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"),
             m_szDescription, m_dwId, (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), (m_pNode != NULL) ? m_pNode->Id() : 0);
       }
       else

@@ -916,8 +916,9 @@ void DCObject::updateFromTemplate(DCObject *src)
  *
  * @return true on success
  */
-bool DCObject::processNewValue(time_t nTimeStamp, void *value)
+bool DCObject::processNewValue(time_t nTimeStamp, void *value, bool *updateStatus)
 {
+   *updateStatus = false;
    return false;
 }
 

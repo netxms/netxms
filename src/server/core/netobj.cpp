@@ -659,13 +659,18 @@ const TCHAR *NetObj::dbgGetParentList(TCHAR *szBuffer)
 void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    UINT32 i;
-   int iMostCriticalAlarm, iMostCriticalStatus, iCount, iStatusAlg;
+   int iMostCriticalAlarm, iMostCriticalStatus, mostCriticalDCI, iCount, iStatusAlg;
    int nSingleThreshold, *pnThresholds, iOldStatus = m_iStatus;
    int nRating[5], iChildStatus, nThresholds[4];
 
    if (m_iStatus != STATUS_UNMANAGED)
    {
       iMostCriticalAlarm = GetMostCriticalStatusForObject(m_dwId);
+      if(Type() == OBJECT_NODE || Type() == OBJECT_MOBILEDEVICE || Type() == OBJECT_CLUSTER || Type() == OBJECT_ACCESSPOINT)
+      {
+         DataCollectionTarget *target = (DataCollectionTarget *)this;
+         mostCriticalDCI = target->getMostCriticalDCIStatus();
+      }
 
       LockData();
       if (m_iStatusCalcAlg == SA_CALCULATE_DEFAULT)
@@ -747,6 +752,19 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
          else
          {
             m_iStatus = max(m_iStatus, iMostCriticalAlarm);
+         }
+      }
+
+      //If DCI status is calculated for object apply DCI object's statud
+      if(mostCriticalDCI != STATUS_UNKNOWN)
+      {
+         if (m_iStatus == STATUS_UNKNOWN)
+         {
+            m_iStatus = mostCriticalDCI;
+         }
+         else
+         {
+            m_iStatus = max(m_iStatus, mostCriticalDCI);
          }
       }
 

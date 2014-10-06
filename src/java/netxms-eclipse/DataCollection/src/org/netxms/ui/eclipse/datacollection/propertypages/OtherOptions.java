@@ -33,11 +33,12 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  * @author Victor
  *
  */
-public class NetworkMaps extends PropertyPage
+public class OtherOptions extends PropertyPage
 {
 	private DataCollectionObjectEditor editor;
 	private DataCollectionItem dci;
 	private Button checkShowOnTooltip;
+   private Button checkCalculateStatus;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -59,6 +60,10 @@ public class NetworkMaps extends PropertyPage
       checkShowOnTooltip = new Button(dialogArea, SWT.CHECK);
       checkShowOnTooltip.setText(Messages.get().NetworkMaps_ShowInTooltips);
       checkShowOnTooltip.setSelection(dci.isShowOnObjectTooltip());
+
+      checkCalculateStatus = new Button(dialogArea, SWT.CHECK);
+      checkCalculateStatus.setText("Use this DCI for node status calculation");
+      checkCalculateStatus.setSelection(dci.isUsedForNodeStatusCalculation());
       
 		return dialogArea;
 	}
@@ -71,6 +76,7 @@ public class NetworkMaps extends PropertyPage
 	protected void applyChanges(final boolean isApply)
 	{
 		dci.setShowOnObjectTooltip(checkShowOnTooltip.getSelection());
+      dci.setUsedForNodeStatusCalculation(checkCalculateStatus.getSelection());
 		editor.modify();
 	}
 
@@ -101,5 +107,6 @@ public class NetworkMaps extends PropertyPage
 	{
 		super.performDefaults();
 		checkShowOnTooltip.setSelection(false);
+		checkCalculateStatus.setSelection(false);
 	}
 }
