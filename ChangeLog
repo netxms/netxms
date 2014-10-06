@@ -7,6 +7,7 @@
 - Oracle monitoring subagent improved (bugs fixed, new metrics)
 - nxalarm tool supports commands add-comment and get-comments
 - Source port number added to events generated from SNMP trap (available via "sourcePort" named parameter)
+- Jira link: added possibility to set project's component for issues being created
 - Management console:
     - Can show alarms for multiple selected objects
     - Fixed non-working ordering in event list in alarm details view
