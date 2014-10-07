@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008-2012 Victor Kirhenshtein
+** Copyright (C) 2008-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,40 +22,25 @@
 
 #include "logwatch.h"
 
-
-//
-// Externals
-//
-
 #ifdef _WIN32
 THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *);
 THREAD_RESULT THREAD_CALL ParserThreadEventLogV6(void *);
 bool InitEventLogParsersV6();
 #endif
 
-
-//
-// Global variables
-//
-
+/**
+ * Shutdown condition
+ */
 CONDITION g_hCondShutdown = INVALID_CONDITION_HANDLE;
 
+/**
+ * Configured parsers
+ */
+static ObjectArray<LogParser> s_parsers(16, 16, true);
 
-//
-// Static data
-//
-
-#ifdef _NETWARE
-static CONDITION m_hCondTerminate = INVALID_CONDITION_HANDLE;
-#endif
-static DWORD m_numParsers = 0;
-static LogParser **m_parserList = NULL;
-
-
-//
-// File parsing thread
-//
-
+/**
+ * File parsing thread
+ */
 THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
 {
 	((LogParser *)arg)->monitorFile(g_hCondShutdown, AgentWriteLog);
@@ -73,12 +58,15 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 		return SYSINFO_RC_UNSUPPORTED;
 
 	LogParser *parser = NULL;
-	for(DWORD i = 0; i < m_numParsers; i++)
-		if (!_tcsicmp(m_parserList[i]->getName(), name))
+	for(int i = 0; i < s_parsers.size(); i++)
+   {
+      LogParser *p = m_parsers.get(i);
+		if (!_tcsicmp(p->getName(), name))
 		{
-			parser = m_parserList[i];
+			parser = p;
 			break;
 		}
+   }
 
 	if (parser == NULL)
 	{
@@ -108,8 +96,8 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
  */
 static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
-	for(DWORD i = 0; i < m_numParsers; i++)
-		value->add(m_parserList[i]->getName());
+	for(int i = 0; i < s_parsers.size(); i++)
+		value->add(s_parsers.get(i)->getName());
 	return SYSINFO_RC_SUCCESS;
 }
 
@@ -123,12 +111,10 @@ static void SubagentShutdown()
 	if (g_hCondShutdown != INVALID_CONDITION_HANDLE)
 		ConditionSet(g_hCondShutdown);
 
-	for(i = 0; i < m_numParsers; i++)
+	for(int i = 0; i < s_parsers.size(); i++)
 	{
-		ThreadJoin(m_parserList[i]->getThread());
-		delete m_parserList[i];
+		ThreadJoin(s_parsers.get(i)->getThread());
 	}
-	safe_free(m_parserList);
 
 #ifdef _WIN32
 	CleanupEventLogParsers();
@@ -261,19 +247,19 @@ static BOOL SubagentInit(Config *config)
 	for(int i = 0; i < (int)m_numParsers; i++)
 	{
 #ifdef _WIN32
-		if (m_parserList[i]->getFileName()[0] == _T('*'))	// event log
+		if (s_parsers.get(i)->getFileName()[0] == _T('*'))	// event log
 		{
-			m_parserList[i]->setThread(ThreadCreateEx(eventLogParserThread, 0, m_parserList[i]));
+			s_parsers.get(i)->setThread(ThreadCreateEx(eventLogParserThread, 0, s_parsers.get(i)));
 			// Seems that simultaneous calls to OpenEventLog() from two or more threads may
 			// cause entire process to hang
 			ThreadSleepMs(200);
 		}
 		else	// regular file
 		{
-			m_parserList[i]->setThread(ThreadCreateEx(ParserThreadFile, 0, m_parserList[i]));
+			s_parsers.get(i)->setThread(ThreadCreateEx(ParserThreadFile, 0, s_parsers.get(i)));
 		}
 #else
-		m_parserList[i]->setThread(ThreadCreateEx(ParserThreadFile, 0, m_parserList[i]));
+		s_parsers.get(i)->setThread(ThreadCreateEx(ParserThreadFile, 0, s_parsers.get(i)));
 #endif
 	}
 

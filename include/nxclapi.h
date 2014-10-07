@@ -537,7 +537,8 @@ enum
 #define RCC_NO_LDAP_CONNECTION       ((UINT32)112)
 #define RCC_NO_ROUTING_TABLE         ((UINT32)113)
 #define RCC_NO_FDB                   ((UINT32)114)
-#define RCC_NO_LOC_HISTORY           ((UINT32)115)
+#define RCC_NO_LOCATION_HISTORY      ((UINT32)115)
+#define RCC_OBJECT_IN_USE            ((UINT32)116)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
