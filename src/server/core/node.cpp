@@ -1004,7 +1004,7 @@ Interface *Node::createNewInterface(UINT32 dwIpAddr, UINT32 dwNetMask, const TCH
       pSubnet->AddNode(this);
 
       // Check if subnet mask is correct on interface
-      if ((pSubnet->getIpNetMask() != pInterface->getIpNetMask()) && !pSubnet->isSyntheticMask())
+      if ((pSubnet->getIpNetMask() != pInterface->getIpNetMask()) && !pSubnet->isSyntheticMask() && (dwNetMask != 0xFFFFFFFF))
 		{
          PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),
                    pInterface->getIfIndex(), pInterface->Name(),
@@ -5624,7 +5624,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 			   }
 
 			   // Check if subnet mask is correct on interface
-			   if ((pSubnet != NULL) && (pSubnet->getIpNetMask() != pInterface->getIpNetMask()))
+			   if ((pSubnet != NULL) && (pSubnet->getIpNetMask() != pInterface->getIpNetMask()) && (iface->dwIpNetMask != 0xFFFFFFFF))
 			   {
 				   PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),
 							    pInterface->getIfIndex(), pInterface->Name(),
