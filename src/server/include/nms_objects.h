@@ -542,6 +542,9 @@ protected:
    void lockDciAccess(bool writeLock) { if (writeLock) { RWLockWriteLock(m_dciAccessLock, INFINITE); } else { RWLockReadLock(m_dciAccessLock, INFINITE); } }
 	void unlockDciAccess() { RWLockUnlock(m_dciAccessLock); }
 
+   void deleteChildDCIs(UINT32 dcObjectId);
+   void destroyItem(DCObject *object, int index);
+
 public:
    Template();
    Template(const TCHAR *pszName);
