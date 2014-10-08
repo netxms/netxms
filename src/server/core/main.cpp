@@ -953,11 +953,11 @@ void NXCORE_EXPORTABLE Shutdown()
 	// Remove database lock
 	UnlockDB();
 
+	DBConnectionPoolShutdown();
+
 	// Disconnect from database and unload driver
 	if (g_hCoreDB != NULL)
 		DBDisconnect(g_hCoreDB);
-
-	DBConnectionPoolShutdown();
 
 	DBUnloadDriver(g_dbDriver);
 	DbgPrintf(1, _T("Database driver unloaded"));
