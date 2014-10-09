@@ -6,12 +6,14 @@ package org.netxms.ui.android.main.adapters;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.netxms.base.GeoLocation;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.android.R;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.view.Gravity;

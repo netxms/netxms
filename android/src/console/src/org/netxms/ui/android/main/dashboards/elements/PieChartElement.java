@@ -4,15 +4,18 @@
 package org.netxms.ui.android.main.dashboards.elements;
 
 import java.util.concurrent.ScheduledExecutorService;
+
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.model.CategorySeries;
 import org.achartengine.renderer.DefaultRenderer;
 import org.achartengine.renderer.SimpleSeriesRenderer;
 import org.netxms.client.datacollection.DciData;
+import org.netxms.ui.android.helpers.Colors;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
 import org.netxms.ui.android.main.dashboards.configs.PieChartConfig;
 import org.netxms.ui.android.service.ClientConnectorService;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -22,11 +25,11 @@ import android.util.Log;
 public class PieChartElement extends AbstractDashboardElement
 {
 	private static final String TAG = "nxclient/PieChartElement";
-	
+
 	private PieChartConfig config;
-	private CategorySeries dataset;
-	private GraphicalView chartView;
-	
+	private final CategorySeries dataset;
+	private final GraphicalView chartView;
+
 	/**
 	 * @param context
 	 * @param xmlConfig
@@ -38,12 +41,12 @@ public class PieChartElement extends AbstractDashboardElement
 		{
 			config = PieChartConfig.createFromXml(xmlConfig);
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			Log.e(TAG, "Error parsing element config", e);
 			config = new PieChartConfig();
 		}
-		
+
 		dataset = buildDataset();
 		chartView = ChartFactory.getPieChartView(context, dataset, buildRenderer());
 		addView(chartView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
@@ -66,14 +69,14 @@ public class PieChartElement extends AbstractDashboardElement
 	{
 		CategorySeries series = new CategorySeries(config.getTitle());
 		ChartDciConfig[] items = config.getDciList();
-		for(int i = 0; i < items.length; i++)
+		for (int i = 0; i < items.length; i++)
 		{
 			series.add(items[i].getName(), 0);
 		}
-		
+
 		return series;
 	}
-	
+
 	/**
 	 * @return
 	 */
@@ -88,29 +91,29 @@ public class PieChartElement extends AbstractDashboardElement
 		renderer.setZoomEnabled(false);
 		renderer.setAntialiasing(true);
 		renderer.setChartTitle(config.getTitle());
-		
+
 		renderer.setApplyBackgroundColor(true);
-		renderer.setBackgroundColor(BACKGROUND_COLOR);
-		renderer.setAxesColor(LABEL_COLOR);
-		renderer.setLabelsColor(LABEL_COLOR);
-		
+		renderer.setBackgroundColor(Colors.BACKGROUND_COLOR);
+		renderer.setAxesColor(Colors.LABEL_COLOR);
+		renderer.setLabelsColor(Colors.LABEL_COLOR);
+
 		ChartDciConfig[] items = config.getDciList();
-		for(int i = 0; i < items.length; i++)
+		for (int i = 0; i < items.length && i < Colors.DEFAULT_ITEM_COLORS.length; i++)
 		{
 			SimpleSeriesRenderer r = new SimpleSeriesRenderer();
 			int color = items[i].getColorAsInt();
 			if (color == -1)
-				color = DEFAULT_ITEM_COLORS[i];
+				color = Colors.DEFAULT_ITEM_COLORS[i];
 			else
 				color = swapRGB(color);
 			r.setColor(color | 0xFF000000);
 			renderer.addSeriesRenderer(r);
 			r.setDisplayChartValues(true);
 		}
-		
+
 		return renderer;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.android.main.dashboards.elements.AbstractDashboardElement#refresh()
 	 */
@@ -120,7 +123,7 @@ public class PieChartElement extends AbstractDashboardElement
 		final ChartDciConfig[] items = config.getDciList();
 		if (items.length == 0)
 			return;
-		
+
 		try
 		{
 			final DciData[] dciData = new DciData[items.length];
@@ -129,12 +132,13 @@ public class PieChartElement extends AbstractDashboardElement
 				dciData[i] = new DciData(0, 0);
 				dciData[i] = service.getSession().getCollectedData(items[i].nodeId, items[i].dciId, null, null, 1);
 			}
-			
-			post(new Runnable() {
+
+			post(new Runnable()
+			{
 				@Override
 				public void run()
 				{
-					for(int i = 0; i < dciData.length; i++)
+					for (int i = 0; i < dciData.length; i++)
 					{
 						dataset.set(i, items[i].getName(), dciData[i].getLastValue().getValueAsDouble());
 					}
@@ -142,7 +146,7 @@ public class PieChartElement extends AbstractDashboardElement
 				}
 			});
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			Log.e(TAG, "Exception while reading data from server", e);
 		}

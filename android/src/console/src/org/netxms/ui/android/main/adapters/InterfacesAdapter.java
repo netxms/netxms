@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.android.R;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -195,6 +197,8 @@ public class InterfacesAdapter extends BaseExpandableListAdapter
 				return R.drawable.status_unmanaged;
 			case DISABLED:
 				return R.drawable.status_disabled;
+			case TESTING:
+				return R.drawable.status_unknown;	// TODO: 2014Oct10 Implement corresponding settings section
 		}
 		return R.drawable.status_unknown;
 	}

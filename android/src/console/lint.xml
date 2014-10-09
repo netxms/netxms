@@ -6,6 +6,9 @@
     <issue id="DrawAllocation">
         <ignore path="src/com/jjoe64/graphview/GraphView.java" />
     </issue>
+    <issue id="RtlHardcoded">
+        <ignore path="src/org/netxms/ui/android/main/adapters/OverviewAdapter.java" />
+    </issue>
     <issue id="SimpleDateFormat">
         <ignore path="src/org/netxms/ui/android/helpers/CustomLabel.java" />
     </issue>
