@@ -8,6 +8,7 @@
 - nxalarm tool supports commands add-comment and get-comments
 - Source port number added to events generated from SNMP trap (available via "sourcePort" named parameter)
 - Jira link: added possibility to set project's component for issues being created
+- ICMP proxy can be set for nodes
 - Management console:
     - Can show alarms for multiple selected objects
     - Fixed non-working ordering in event list in alarm details view

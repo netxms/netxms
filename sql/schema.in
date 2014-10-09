@@ -256,6 +256,7 @@ CREATE TABLE nodes
 	zone_guid integer not null,
 	proxy_node integer not null,
 	snmp_proxy integer not null,
+	icmp_proxy integer not null,
 	required_polls integer not null,
 	uname varchar(255) null,
 	use_ifxtable integer not null,

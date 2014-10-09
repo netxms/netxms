@@ -694,7 +694,7 @@ public:
 
 	void updateZoneId();
 
-   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, bool clusterSync, SNMP_Transport *snmpTransport);
+   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, bool clusterSync, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy);
 
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
@@ -1006,9 +1006,10 @@ protected:
    SMCLP_Connection *m_smclpConnection;
 	QWORD m_lastAgentTrapId;	     // ID of last received agent trap
    QWORD m_lastAgentPushRequestId; // ID of last received agent push request
-   UINT32 m_dwPollerNode;      // Node used for network service polling
-   UINT32 m_dwProxyNode;       // Node used as proxy for agent connection
-	UINT32 m_dwSNMPProxy;			// Node used as proxy for SNMP requests
+   UINT32 m_pollerNode;      // Node used for network service polling
+   UINT32 m_agentProxy;      // Node used as proxy for agent connection
+	UINT32 m_snmpProxy;       // Node used as proxy for SNMP requests
+   UINT32 m_icmpProxy;       // Node used as proxy for ICMP ping
    QWORD m_qwLastEvents[MAX_LAST_EVENTS];
    ROUTING_TABLE *m_pRoutingTable;
 	ForwardingDatabase *m_fdb;
@@ -1076,7 +1077,7 @@ protected:
 
 public:
    Node();
-   Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 dwProxyNode, UINT32 dwSNMPProxy, UINT32 dwZone);
+   Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 dwZone);
    virtual ~Node();
 
    virtual int Type() { return OBJECT_NODE; }

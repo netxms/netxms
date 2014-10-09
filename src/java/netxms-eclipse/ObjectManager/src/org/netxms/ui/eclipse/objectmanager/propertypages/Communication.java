@@ -69,6 +69,7 @@ public class Communication extends PropertyPage
 	private LabeledText snmpAuthName;
 	private LabeledText snmpAuthPassword;
 	private LabeledText snmpPrivPassword;
+	private ObjectSelector icmpProxy;
 	private boolean primaryNameChanged = false;
 	
 	/* (non-Javadoc)
@@ -142,7 +143,7 @@ public class Communication extends PropertyPage
 		
 		agentProxy = new ObjectSelector(agentGroup, SWT.NONE, true);
 		agentProxy.setLabel(Messages.get().Communication_Proxy);
-		agentProxy.setObjectId(node.getProxyNodeId());
+		agentProxy.setObjectId(node.getAgentProxyId());
 		fd = new FormData();
 		fd.left = new FormAttachment(agentPort, 0, SWT.RIGHT);
 		fd.right = new FormAttachment(100, 0);
@@ -293,6 +294,22 @@ public class Communication extends PropertyPage
 		fd.right = new FormAttachment(snmpAuthName, 0, SWT.LEFT);
 		fd.top = new FormAttachment(0, 0);
 		snmpPort.setLayoutData(fd);
+
+      // SNMP
+      Group icmpGroup = new Group(dialogArea, SWT.NONE);
+      icmpGroup.setText("ICMP");
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      icmpGroup.setLayoutData(gd);
+      
+      GridLayout icmpGroupLayout = new GridLayout();
+      icmpGroup.setLayout(icmpGroupLayout);
+      
+      icmpProxy = new ObjectSelector(icmpGroup, SWT.NONE, true);
+      icmpProxy.setLabel(Messages.get().Communication_Proxy);
+      icmpProxy.setObjectId(node.getIcmpProxyId());
+      icmpProxy.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		
 		return dialogArea;
 	}
@@ -397,6 +414,8 @@ public class Communication extends PropertyPage
 		md.setSnmpAuthName(snmpAuthName.getText());
 		md.setSnmpAuthPassword(snmpAuthPassword.getText());
 		md.setSnmpPrivPassword(snmpPrivPassword.getText());
+		
+		md.setIcmpProxy(icmpProxy.getObjectId());
 		
 		/* TODO: sync in some way with "Polling" page */
 		int flags = node.getFlags();
