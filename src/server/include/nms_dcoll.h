@@ -242,7 +242,7 @@ public:
    virtual void deleteFromDB();
    virtual bool loadThresholdsFromDB();
 
-   virtual bool processNewValue(time_t nTimeStamp, void *value);
+   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus);
    virtual void processNewError();
 
 	virtual bool hasValue();
@@ -264,6 +264,7 @@ public:
 	WORD getSnmpPort() { return m_snmpPort; }
    bool isShowOnObjectTooltip() { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
    bool isAggregateOnCluster() { return (m_flags & DCF_AGGREGATE_ON_CLUSTER) ? true : false; }
+	bool isStatusDCO() {return (m_flags & DCF_CALCULATE_NODE_STATUSS) ? true : false; }
    int getAggregationFunction() { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
    Template *getNode() { return m_pNode; }
 
@@ -364,7 +365,7 @@ public:
 	void filterInstanceList(StringMap *instances);
 	void expandInstance();
 
-   virtual bool processNewValue(time_t nTimeStamp, void *value);
+   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus);
    virtual void processNewError();
 
 	virtual bool hasValue();
@@ -560,7 +561,7 @@ public:
    virtual BOOL saveToDB(DB_HANDLE hdb);
    virtual void deleteFromDB();
 
-   virtual bool processNewValue(time_t nTimeStamp, void *value);
+   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus);
    virtual void processNewError();
 
    virtual void createMessage(CSCPMessage *pMsg);

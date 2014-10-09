@@ -7,6 +7,8 @@
 - Oracle monitoring subagent improved (bugs fixed, new metrics)
 - nxalarm tool supports commands add-comment and get-comments
 - Source port number added to events generated from SNMP trap (available via "sourcePort" named parameter)
+- Jira link: added possibility to set project's component for issues being created
+- ICMP proxy can be set for nodes
 - Management console:
     - Can show alarms for multiple selected objects
     - Fixed non-working ordering in event list in alarm details view
@@ -15,6 +17,7 @@
     - Added device geolocation tracking and display on map
     - Filter in event processing policy editor
     - Fixed bug with deletion of subnet with corrected IP
+    - Added command line option to open specific dashboard after login
 - Android console:
 	- Fix bug in notifying connection point not found
 	- Fix bug in computing interface expanded list size (removed hardcoded values)
@@ -22,7 +25,7 @@
 	- Fix aesthetic problems in expandable list (graphs and interfaces list)
 	- Integration of new support library
 	- Target to new API version (20)
-- Fixed issues: #51, #91, #359, #409, #532, #542, #571, #563, #590, #593,
+- Fixed issues: #51, #91, #324, #359, #409, #532, #542, #571, #563, #590, #593,
                 #613, #617, #624, #626, #629, #632, #635, #638, #639, #642, #649
 
 

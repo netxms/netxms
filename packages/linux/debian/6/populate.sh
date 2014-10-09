@@ -59,6 +59,7 @@ cp -P /usr/lib/libnxddr_sqlite.so* netxms-agent/usr/lib/
 cp -P /usr/lib/libnxmap.so* netxms-agent/usr/lib/
 cp -P /usr/lib/libnxcl.so* netxms-agent/usr/lib/
 cp ../../../../contrib/startup/debian/nxagentd netxms-agent/etc/init.d/
+cp ../../../../contrib/nxagentd.conf-dist netxms-agent/etc
 chmod 755 netxms-agent/etc/init.d/nxagentd
 
 # netxms-server
@@ -112,6 +113,7 @@ cp -P /usr/lib/libstrophe.so* netxms-server/usr/lib/
 cp /usr/share/netxms/mibs/*.txt netxms-server/usr/share/netxms/mibs/
 cp /usr/share/netxms/sql/* netxms-server/usr/share/netxms/sql/
 cp ../../../../contrib/startup/debian/netxmsd netxms-server/etc/init.d/
+cp ../../../../contrib/netxmsd.conf-dist netxms-server/etc
 cp ../../../../images/* netxms-server/usr/share/netxms/images/
 rm -f netxms-server/usr/share/netxms/images/Makefile*
 chmod 755 netxms-server/etc/init.d/netxmsd

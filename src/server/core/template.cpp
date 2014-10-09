@@ -446,20 +446,14 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
 		DCObject *object = m_dcObjects->get(i);
       if (object->getId() == dcObjectId)
       {
+         //Check if it is instance DCI
+         if( (object->getType() == DCO_TYPE_ITEM) && (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE) )
+         {
+            deleteChildDCIs(dcObjectId);
+         }
          // Destroy item
 			DbgPrintf(7, _T("Template::DeleteDCObject: deleting DCObject %d from object %d"), (int)dcObjectId, (int)m_dwId);
-         if (object->prepareForDeletion())
-			{
-				// Physically delete DCI only if it is not busy
-				// Busy DCIs will be deleted by data collector
-				object->deleteFromDB();
-				m_dcObjects->remove(i);
-			}
-			else
-			{
-				m_dcObjects->unlink(i);
-				DbgPrintf(7, _T("Template::DeleteItem: destruction of DCO %d delayed"), (int)dcObjectId);
-			}
+			destroyItem(object, i);
          success = true;
 			DbgPrintf(7, _T("Template::DeleteDCObject: DCO deleted from object %d"), (int)m_dwId);
          break;
@@ -469,6 +463,45 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
 	if (needLock)
 	   unlockDciAccess();
    return success;
+}
+
+/**
+ * Delets child DCI objects of instance discovery DCI.
+ * It is assumed that list is already locked
+ */
+void Template::deleteChildDCIs(UINT32 dcObjectId)
+{
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *subObject = m_dcObjects->get(i);
+      if (subObject->getTemplateItemId() == dcObjectId)
+      {
+         destroyItem(subObject, i);
+         i--;
+			DbgPrintf(7, _T("Template::DeleteDCObject: deleting DCObject %d created by DCObject %d instance discovery from object %d"), (int)subObject->getId(), (int)dcObjectId, (int)m_dwId);
+      }
+   }
+}
+
+/**
+ * Delets DCI object deletes or shedules
+ * deletion from DB and removes it from index
+ * It is assumed that list is already locked
+ */
+void Template::destroyItem(DCObject *object, int index)
+{
+   if (object->prepareForDeletion())
+   {
+      // Physically delete DCI only if it is not busy
+      // Busy DCIs will be deleted by data collector
+      object->deleteFromDB();
+      m_dcObjects->remove(index);
+   }
+   else
+   {
+      m_dcObjects->unlink(index);
+      DbgPrintf(7, _T("Template::DeleteItem: destruction of DCO %d delayed"), (int)object->getId());
+   }
 }
 
 /**

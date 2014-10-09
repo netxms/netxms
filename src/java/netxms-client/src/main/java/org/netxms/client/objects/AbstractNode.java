@@ -91,8 +91,9 @@ public abstract class AbstractNode extends GenericObject
 	protected int nodeType;
 	protected int requredPollCount;
 	protected long pollerNodeId;
-	protected long proxyNodeId;
+	protected long agentProxyId;
 	protected long snmpProxyId;
+   protected long icmpProxyId;
 	protected int agentPort;
 	protected int agentAuthMethod;
 	protected String agentSharedSecret;
@@ -144,8 +145,9 @@ public abstract class AbstractNode extends GenericObject
 		nodeType = msg.getVariableAsInteger(NXCPCodes.VID_NODE_TYPE);
 		requredPollCount = msg.getVariableAsInteger(NXCPCodes.VID_REQUIRED_POLLS);
 		pollerNodeId = msg.getVariableAsInt64(NXCPCodes.VID_POLLER_NODE_ID);
-		proxyNodeId = msg.getVariableAsInt64(NXCPCodes.VID_AGENT_PROXY);
+		agentProxyId = msg.getVariableAsInt64(NXCPCodes.VID_AGENT_PROXY);
 		snmpProxyId = msg.getVariableAsInt64(NXCPCodes.VID_SNMP_PROXY);
+      icmpProxyId = msg.getVariableAsInt64(NXCPCodes.VID_ICMP_PROXY);
 		agentPort = msg.getVariableAsInteger(NXCPCodes.VID_AGENT_PORT);
 		agentAuthMethod = msg.getVariableAsInteger(NXCPCodes.VID_AUTH_METHOD);
 		agentSharedSecret = msg.getVariableAsString(NXCPCodes.VID_SHARED_SECRET);
@@ -217,9 +219,9 @@ public abstract class AbstractNode extends GenericObject
 	/**
 	 * @return the proxyNodeId
 	 */
-	public long getProxyNodeId()
+	public long getAgentProxyId()
 	{
-		return proxyNodeId;
+		return agentProxyId;
 	}
 
 	/**
@@ -229,6 +231,14 @@ public abstract class AbstractNode extends GenericObject
 	{
 		return snmpProxyId;
 	}
+
+   /**
+    * @return the icmpProxyId
+    */
+   public long getIcmpProxyId()
+   {
+      return icmpProxyId;
+   }
 
 	/**
 	 * @return the agentPort

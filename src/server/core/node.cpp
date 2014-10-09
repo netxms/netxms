@@ -76,9 +76,10 @@ Node::Node() : DataCollectionTarget()
 	m_lldpLocalPortInfo = NULL;
    m_paramList = NULL;
 	m_tableList = NULL;
-   m_dwPollerNode = 0;
-   m_dwProxyNode = 0;
-	m_dwSNMPProxy = 0;
+   m_pollerNode = 0;
+   m_agentProxy = 0;
+	m_snmpProxy = 0;
+   m_icmpProxy = 0;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_pRoutingTable = NULL;
    m_failTimeSNMP = 0;
@@ -109,7 +110,7 @@ Node::Node() : DataCollectionTarget()
 /**
  * Constructor for new node object
  */
-Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 dwProxyNode, UINT32 dwSNMPProxy, UINT32 dwZone) : DataCollectionTarget()
+Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 dwZone) : DataCollectionTarget()
 {
 	IpToStr(dwAddr, m_primaryName);
    m_iStatus = STATUS_UNKNOWN;
@@ -153,9 +154,10 @@ Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 dwProxyNode, UINT32 dwSNMPProxy
 	m_lldpLocalPortInfo = NULL;
    m_paramList = NULL;
 	m_tableList = NULL;
-   m_dwPollerNode = 0;
-   m_dwProxyNode = dwProxyNode;
-	m_dwSNMPProxy = dwSNMPProxy;
+   m_pollerNode = 0;
+   m_agentProxy = agentProxy;
+	m_snmpProxy = snmpProxy;
+   m_icmpProxy = 0;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_isHidden = true;
    m_pRoutingTable = NULL;
@@ -246,7 +248,7 @@ BOOL Node::CreateFromDB(UINT32 dwId)
       _T("proxy_node,snmp_proxy,required_polls,uname,")
 		_T("use_ifxtable,snmp_port,community,usm_auth_password,")
 		_T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
-      _T("runtime_flags,down_since,boot_time,driver_name FROM nodes WHERE id=?"));
+      _T("runtime_flags,down_since,boot_time,driver_name,icmp_proxy FROM nodes WHERE id=?"));
 	if (hStmt == NULL)
 		return FALSE;
 
@@ -277,10 +279,10 @@ BOOL Node::CreateFromDB(UINT32 dwId)
    DBGetField(hResult, 0, 8, m_szObjectId, MAX_OID_LEN * 4);
    DBGetField(hResult, 0, 9, m_szAgentVersion, MAX_AGENT_VERSION_LEN);
    DBGetField(hResult, 0, 10, m_szPlatformName, MAX_PLATFORM_NAME_LEN);
-   m_dwPollerNode = DBGetFieldULong(hResult, 0, 11);
+   m_pollerNode = DBGetFieldULong(hResult, 0, 11);
    m_zoneId = DBGetFieldULong(hResult, 0, 12);
-   m_dwProxyNode = DBGetFieldULong(hResult, 0, 13);
-   m_dwSNMPProxy = DBGetFieldULong(hResult, 0, 14);
+   m_agentProxy = DBGetFieldULong(hResult, 0, 13);
+   m_snmpProxy = DBGetFieldULong(hResult, 0, 14);
    m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 15);
    m_sysDescription = DBGetField(hResult, 0, 16, NULL, 0);
    m_nUseIfXTable = (BYTE)DBGetFieldLong(hResult, 0, 17);
@@ -315,6 +317,8 @@ BOOL Node::CreateFromDB(UINT32 dwId)
 	StrStrip(driverName);
 	if (driverName[0] != 0)
 		m_driver = FindDriverByName(driverName);
+
+   m_icmpProxy = DBGetFieldULong(hResult, 0, 29);
 
    DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
@@ -402,7 +406,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 		hStmt = DBPrepare(hdb,
 			_T("UPDATE nodes SET primary_ip=?,primary_name=?,snmp_port=?,node_flags=?,snmp_version=?,community=?,")
          _T("status_poll_type=?,agent_port=?,auth_method=?,secret=?,snmp_oid=?,uname=?,agent_version=?,")
-			_T("platform_name=?,poller_node_id=?,zone_guid=?,proxy_node=?,snmp_proxy=?,required_polls=?,")
+			_T("platform_name=?,poller_node_id=?,zone_guid=?,proxy_node=?,snmp_proxy=?,icmp_proxy=?,required_polls=?,")
 			_T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
 			_T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_id=?,boot_time=? WHERE id=?"));
 	}
@@ -411,9 +415,9 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 		hStmt = DBPrepare(hdb,
 		  _T("INSERT INTO nodes (primary_ip,primary_name,snmp_port,node_flags,snmp_version,community,status_poll_type,")
 		  _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
-		  _T("proxy_node,snmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
+		  _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
 		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_id,boot_time,id) ")
-		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -441,30 +445,31 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_sysDescription, DB_BIND_STATIC);
 	DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_szAgentVersion, DB_BIND_STATIC);
 	DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_szPlatformName, DB_BIND_STATIC);
-	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dwPollerNode);
+	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_pollerNode);
 	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_zoneId);
-	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_dwProxyNode);
-	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_dwSNMPProxy);
-	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (LONG)m_iRequiredPollCount);
-	DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, (LONG)m_nUseIfXTable);
+	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_agentProxy);
+	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_snmpProxy);
+	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_icmpProxy);
+	DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, (LONG)m_iRequiredPollCount);
+	DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, (LONG)m_nUseIfXTable);
 #ifdef UNICODE
-	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthPassword()), DB_BIND_DYNAMIC);
-	DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getPrivPassword()), DB_BIND_DYNAMIC);
+	DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getAuthPassword()), DB_BIND_DYNAMIC);
+	DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, WideStringFromMBString(m_snmpSecurity->getPrivPassword()), DB_BIND_DYNAMIC);
 #else
-	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthPassword(), DB_BIND_STATIC);
-	DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getPrivPassword(), DB_BIND_STATIC);
+	DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getAuthPassword(), DB_BIND_STATIC);
+	DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getPrivPassword(), DB_BIND_STATIC);
 #endif
-	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, (LONG)snmpMethods);
-	DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_sysName, DB_BIND_STATIC);
-	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), DB_BIND_STATIC);
-	DBBind(hStmt, 26, DB_SQLTYPE_INTEGER, m_dwDynamicFlags);
-	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (LONG)m_downSince);
-	DBBind(hStmt, 28, DB_SQLTYPE_VARCHAR, (m_driver != NULL) ? m_driver->getName() : _T(""), DB_BIND_STATIC);
-	DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, _T("00000000-0000-0000-0000-000000000000"), DB_BIND_STATIC);	// rack image
-	DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, (LONG)0);	// rack position
-	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)0);	// rack ID
-	DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);	// rack ID
-	DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 24, DB_SQLTYPE_INTEGER, (LONG)snmpMethods);
+	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_sysName, DB_BIND_STATIC);
+	DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, BinToStr(m_baseBridgeAddress, MAC_ADDR_LENGTH, baseAddress), DB_BIND_STATIC);
+	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, m_dwDynamicFlags);
+	DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, (LONG)m_downSince);
+	DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, (m_driver != NULL) ? m_driver->getName() : _T(""), DB_BIND_STATIC);
+	DBBind(hStmt, 30, DB_SQLTYPE_VARCHAR, _T("00000000-0000-0000-0000-000000000000"), DB_BIND_STATIC);	// rack image
+	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)0);	// rack position
+	DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, (LONG)0);	// rack ID
+	DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);	// rack ID
+	DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_dwId);
 
 	BOOL bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -1004,7 +1009,7 @@ Interface *Node::createNewInterface(UINT32 dwIpAddr, UINT32 dwNetMask, const TCH
       pSubnet->AddNode(this);
 
       // Check if subnet mask is correct on interface
-      if ((pSubnet->getIpNetMask() != pInterface->getIpNetMask()) && !pSubnet->isSyntheticMask())
+      if ((pSubnet->getIpNetMask() != pInterface->getIpNetMask()) && !pSubnet->isSyntheticMask() && (dwNetMask != 0xFFFFFFFF))
 		{
          PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),
                    pInterface->getIfIndex(), pInterface->Name(),
@@ -1213,9 +1218,9 @@ restart_agent_check:
 
    // Find service poller node object
    LockData();
-   if (m_dwPollerNode != 0)
+   if (m_pollerNode != 0)
    {
-		UINT32 id = m_dwPollerNode;
+		UINT32 id = m_pollerNode;
 		UnlockData();
       pPollerNode = FindObjectById(id);
       if (pPollerNode != NULL)
@@ -1265,7 +1270,7 @@ restart_agent_check:
 			   DbgPrintf(7, _T("StatusPoll(%s): polling interface %d [%s]"), m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
             ((Interface *)ppPollList[i])->statusPoll(pSession, dwRqId, pQueue,
 					(pCluster != NULL) ? pCluster->isSyncAddr(((Interface *)ppPollList[i])->IpAddr()) : FALSE,
-					pTransport);
+					pTransport, m_icmpProxy);
             break;
          case OBJECT_NETWORKSERVICE:
 			   DbgPrintf(7, _T("StatusPoll(%s): polling network service %d [%s]"), m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
@@ -3859,10 +3864,11 @@ void Node::CreateMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_SNMP_VERSION, (WORD)m_snmpVersion);
    pMsg->SetVariable(VID_AGENT_VERSION, m_szAgentVersion);
    pMsg->SetVariable(VID_PLATFORM_NAME, m_szPlatformName);
-   pMsg->SetVariable(VID_POLLER_NODE_ID, m_dwPollerNode);
+   pMsg->SetVariable(VID_POLLER_NODE_ID, m_pollerNode);
    pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
-   pMsg->SetVariable(VID_AGENT_PROXY, m_dwProxyNode);
-   pMsg->SetVariable(VID_SNMP_PROXY, m_dwSNMPProxy);
+   pMsg->SetVariable(VID_AGENT_PROXY, m_agentProxy);
+   pMsg->SetVariable(VID_SNMP_PROXY, m_snmpProxy);
+   pMsg->SetVariable(VID_ICMP_PROXY, m_icmpProxy);
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
 	pMsg->SetVariable(VID_SYS_NAME, CHECK_NULL_EX(m_sysName));
 	pMsg->SetVariable(VID_SYS_DESCRIPTION, CHECK_NULL_EX(m_sysDescription));
@@ -4000,7 +4006,7 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 				return RCC_INVALID_OBJECT_ID;
 			}
 		}
-		m_dwPollerNode = dwNodeId;
+		m_pollerNode = dwNodeId;
    }
 
    // Change listen port of native agent
@@ -4047,11 +4053,15 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
    // Change proxy node
    if (pRequest->isFieldExist(VID_AGENT_PROXY))
-      m_dwProxyNode = pRequest->GetVariableLong(VID_AGENT_PROXY);
+      m_agentProxy = pRequest->GetVariableLong(VID_AGENT_PROXY);
 
    // Change SNMP proxy node
    if (pRequest->isFieldExist(VID_SNMP_PROXY))
-      m_dwSNMPProxy = pRequest->GetVariableLong(VID_SNMP_PROXY);
+      m_snmpProxy = pRequest->GetVariableLong(VID_SNMP_PROXY);
+
+   // Change ICMP proxy node
+   if (pRequest->isFieldExist(VID_ICMP_PROXY))
+      m_icmpProxy = pRequest->GetVariableLong(VID_ICMP_PROXY);
 
    // Number of required polls
    if (pRequest->isFieldExist(VID_REQUIRED_POLLS))
@@ -4266,10 +4276,10 @@ UINT32 Node::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServic
 void Node::onObjectDelete(UINT32 dwObjectId)
 {
 	LockData();
-   if (dwObjectId == m_dwPollerNode)
+   if (dwObjectId == m_pollerNode)
    {
       // If deleted object is our poller node, change it to default
-      m_dwPollerNode = 0;
+      m_pollerNode = 0;
       Modify();
       DbgPrintf(3, _T("Node \"%s\": poller node %d deleted"), m_szName, dwObjectId);
    }
@@ -4695,7 +4705,7 @@ UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
  */
 void Node::setAgentProxy(AgentConnection *pConn)
 {
-	UINT32 proxyNode = m_dwProxyNode;
+	UINT32 proxyNode = m_agentProxy;
 
 	if (IsZoningEnabled() && (proxyNode == 0) && (m_zoneId != 0))
 	{
@@ -4842,7 +4852,7 @@ Cluster *Node::getMyCluster()
 SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 {
 	SNMP_Transport *pTransport = NULL;
-	UINT32 snmpProxy = m_dwSNMPProxy;
+	UINT32 snmpProxy = m_snmpProxy;
 
 	if (IsZoningEnabled() && (snmpProxy == 0) && (m_zoneId != 0))
 	{
@@ -5624,7 +5634,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 			   }
 
 			   // Check if subnet mask is correct on interface
-			   if ((pSubnet != NULL) && (pSubnet->getIpNetMask() != pInterface->getIpNetMask()))
+			   if ((pSubnet != NULL) && (pSubnet->getIpNetMask() != pInterface->getIpNetMask()) && (iface->dwIpNetMask != 0xFFFFFFFF))
 			   {
 				   PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),
 							    pInterface->getIfIndex(), pInterface->Name(),

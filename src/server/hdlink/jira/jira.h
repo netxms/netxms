@@ -32,6 +32,7 @@
 #define JIRA_MAX_PASSWORD_LEN       64
 #define JIRA_MAX_PROJECT_CODE_LEN   32
 #define JIRA_MAX_ISSUE_TYPE_LEN     32
+#define JIRA_MAX_COMPONENT_NAME_LEN 128
 
 /**
  * Request data for cURL call
@@ -41,6 +42,31 @@ struct RequestData
    size_t size;
    size_t allocated;
    char *data;
+};
+
+/**
+ * Jira project's component
+ */
+class ProjectComponent
+{
+public:
+   INT64 m_id;
+   TCHAR *m_name;
+
+   ProjectComponent(INT64 id, const char *name)
+   {
+      m_id = id;
+#ifdef UNICODE
+      m_name = WideStringFromUTF8String(CHECK_NULL_EX_A(name));
+#else
+      m_name = strdup(CHECK_NULL_EX(name));
+#endif
+   }
+
+   ~ProjectComponent()
+   {
+      free(m_name);
+   }
 };
 
 /**
@@ -54,14 +80,17 @@ private:
    char m_login[JIRA_MAX_LOGIN_LEN];
    char m_password[JIRA_MAX_PASSWORD_LEN];
    char m_projectCode[JIRA_MAX_PROJECT_CODE_LEN];
+   TCHAR m_projectComponent[JIRA_MAX_COMPONENT_NAME_LEN];
    char m_issueType[JIRA_MAX_ISSUE_TYPE_LEN];
    CURL *m_curl;
    char m_errorBuffer[CURL_ERROR_SIZE];
+   ObjectArray<ProjectComponent> *m_components;
 
    void lock() { MutexLock(m_mutex); }
    void unlock() { MutexUnlock(m_mutex); }
    UINT32 connect();
    void disconnect();
+   ObjectArray<ProjectComponent> *getProjectComponents(const char *project);
 
 public:
    JiraLink();

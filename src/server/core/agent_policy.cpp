@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2009 Victor Kirhenshtein
 **
@@ -122,10 +122,9 @@ BOOL AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
 }
 
 
-//
-// Save to database
-//
-
+/**
+ * Save to database
+ */
 BOOL AgentPolicy::SaveToDB(DB_HANDLE hdb)
 {
 	LockData();

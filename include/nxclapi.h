@@ -537,7 +537,8 @@ enum
 #define RCC_NO_LDAP_CONNECTION       ((UINT32)112)
 #define RCC_NO_ROUTING_TABLE         ((UINT32)113)
 #define RCC_NO_FDB                   ((UINT32)114)
-#define RCC_NO_LOC_HISTORY           ((UINT32)115)
+#define RCC_NO_LOCATION_HISTORY      ((UINT32)115)
+#define RCC_OBJECT_IN_USE            ((UINT32)116)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -734,6 +735,7 @@ enum
 #define DCF_AGGREGATE_ON_CLUSTER    ((UINT16)0x0080)
 #define DCF_TRANSFORM_AGGREGATED    ((UINT16)0x0100)
 #define DCF_NO_STORAGE              ((UINT16)0x0200)
+#define DCF_CALCULATE_NODE_STATUSS  ((UINT16)0x0400)
 
 /**
  * Get cluster aggregation function from DCI flags

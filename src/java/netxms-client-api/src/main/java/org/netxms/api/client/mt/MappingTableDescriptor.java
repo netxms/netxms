@@ -18,17 +18,20 @@
  */
 package org.netxms.api.client.mt;
 
+import java.util.UUID;
 import org.netxms.base.NXCPMessage;
+import org.netxms.base.NXCommon;
 
 /**
  * Information about mapping table without actual mapping data
  */
 public class MappingTableDescriptor
 {
-	private int id;
-	private String name;
-	private String description;
-	private int flags;
+	protected int id;
+	protected UUID guid;
+	protected String name;
+	protected String description;
+	protected int flags;
 
 	/**
 	 * Create from NXCP message.
@@ -42,6 +45,7 @@ public class MappingTableDescriptor
 		name = msg.getVariableAsString(baseId + 1);
 		description = msg.getVariableAsString(baseId + 2);
 		flags = msg.getVariableAsInteger(baseId + 3);
+		guid = msg.getVariableAsUUID(baseId + 4);
 	}
 	
 	/**
@@ -56,6 +60,7 @@ public class MappingTableDescriptor
 		this.name = name;
 		this.description = description;
 		this.flags = flags;
+		this.guid = NXCommon.EMPTY_GUID;
 	}
 
 	/**
@@ -138,4 +143,12 @@ public class MappingTableDescriptor
 			return false;
 		return true;
 	}
+
+   /**
+    * @return the guid
+    */
+   public UUID getGuid()
+   {
+      return guid;
+   }
 }

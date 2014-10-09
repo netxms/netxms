@@ -327,7 +327,7 @@ bool Interface::deleteFromDB(DB_HANDLE hdb)
 /**
  * Perform status poll on interface
  */
-void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, bool clusterSync, SNMP_Transport *snmpTransport)
+void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, bool clusterSync, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy)
 {
    m_pollRequestor = session;
    Node *pNode = getParentNode();
@@ -392,9 +392,9 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
       else
       {
          // Use ICMP ping as a last option
-			UINT32 icmpProxy = 0;
+			UINT32 icmpProxy = nodeIcmpProxy;
 
-			if (IsZoningEnabled() && (m_zoneId != 0))
+			if (IsZoningEnabled() && (m_zoneId != 0) && (icmpProxy == 0))
 			{
 				Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
 				if (zone != NULL)

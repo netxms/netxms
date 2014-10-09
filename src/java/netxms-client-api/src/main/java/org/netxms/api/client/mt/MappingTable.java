@@ -22,8 +22,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.base.NXCommon;
 
 /**
  * Mapping table
@@ -35,12 +37,13 @@ public class MappingTable
 	 */
 	public static final int NUMERIC_KEYS = 0x00000001;
 	
-	private int id;
-	private String name;
-	private String description;
-	private int flags;
-	private List<MappingTableEntry> data;
-	private Map<String, String> hashMap = null;
+	protected int id;
+	protected UUID guid;
+	protected String name;
+	protected String description;
+	protected int flags;
+	protected List<MappingTableEntry> data;
+	protected Map<String, String> hashMap = null;
 	
 	/**
 	 * Create new empty mapping table with ID 0.
@@ -54,6 +57,7 @@ public class MappingTable
 		this.name = name;
 		this.description = description;
 		this.flags = 0;
+		this.guid = NXCommon.EMPTY_GUID;
 		this.data = new ArrayList<MappingTableEntry>(0);
 	}
 	
@@ -68,6 +72,7 @@ public class MappingTable
 		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
 		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
 		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
+      guid = msg.getVariableAsUUID(NXCPCodes.VID_GUID);
 		
 		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
 		data = new ArrayList<MappingTableEntry>(count);
@@ -90,6 +95,8 @@ public class MappingTable
 		msg.setVariable(NXCPCodes.VID_NAME, name);
 		msg.setVariable(NXCPCodes.VID_DESCRIPTION, description);
 		msg.setVariableInt32(NXCPCodes.VID_FLAGS, flags);
+		if (guid != null)
+		   msg.setVariable(NXCPCodes.VID_GUID, guid);
 		
 		msg.setVariableInt32(NXCPCodes.VID_NUM_ELEMENTS, data.size());
 		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
@@ -186,4 +193,12 @@ public class MappingTable
 	{
 		return data;
 	}
+
+   /**
+    * @return the guid
+    */
+   public UUID getGuid()
+   {
+      return guid;
+   }
 }

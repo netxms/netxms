@@ -388,6 +388,20 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Upgrade from V337 to V338
+ */
+static BOOL H_UpgradeFromV337(int currVersion, int newVersion)
+{
+    static TCHAR batch[] =
+      _T("ALTER TABLE nodes ADD icmp_proxy integer\n")
+      _T("UPDATE nodes SET icmp_proxy=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='338' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V336 to V337
  */
 static BOOL H_UpgradeFromV336(int currVersion, int newVersion)
@@ -8139,6 +8153,7 @@ static struct
    { 334, 335, H_UpgradeFromV334 },
    { 335, 336, H_UpgradeFromV335 },
    { 336, 337, H_UpgradeFromV336 },
+   { 337, 338, H_UpgradeFromV337 },
    { 0, 0, NULL }
 };
 

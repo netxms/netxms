@@ -305,9 +305,9 @@
            </enabledWhen>
         </page>
         <page
-              class="org.netxms.ui.eclipse.datacollection.propertypages.NetworkMaps"
+              class="org.netxms.ui.eclipse.datacollection.propertypages.OtherOptions"
               id="org.netxms.ui.eclipse.datacollection.propertypages.NetworkMaps#110"
-              name="%page.name.NetworkMaps">
+              name="Other options">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DataCollectionItem">

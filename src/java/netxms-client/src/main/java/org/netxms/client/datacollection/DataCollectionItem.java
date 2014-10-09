@@ -33,6 +33,7 @@ public class DataCollectionItem extends DataCollectionObject
 	public static final int DCF_RAW_VALUE_OCTET_STRING = 0x0004;
 	public static final int DCF_SHOW_ON_OBJECT_TOOLTIP = 0x0008;
 	public static final int DCF_AGGREGATE_FUNCTION_MASK = 0x0070;
+   public static final int DCF_CALCULATE_NODE_STATUSS = 0x0400;
 	
 	// Aggregation functions
 	public static final int DCF_FUNCTION_SUM = 0;
@@ -420,4 +421,21 @@ public class DataCollectionItem extends DataCollectionObject
 	{
 		this.sampleCount = sampleCount;
 	}
+	
+	  /**
+    * @return State of DCF_CALCULATE_NODE_STATUSS flag
+    */
+   public boolean isUsedForNodeStatusCalculation()
+   {
+      return (flags & DCF_CALCULATE_NODE_STATUSS) != 0;
+   }
+   
+   public void setUsedForNodeStatusCalculation(boolean enable)
+   {
+      if(enable)
+         flags |= DCF_CALCULATE_NODE_STATUSS;
+      else
+         flags &= ~DCF_CALCULATE_NODE_STATUSS;
+   }
+
 }

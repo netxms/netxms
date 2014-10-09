@@ -39,6 +39,26 @@ static TCHAR s_moduleName[] = _T("JIRA");
 static TCHAR s_moduleVersion[] = NETXMS_VERSION_STRING;
 
 /**
+ * Get integer value from json element
+ */
+static INT64 JsonIntegerValue(json_t *v)
+{
+   switch(json_typeof(v))
+   {
+      case JSON_INTEGER:
+         return (INT64)json_integer_value(v);
+      case JSON_REAL:
+         return (INT64)json_real_value(v);
+      case JSON_TRUE:
+         return 1;
+      case JSON_STRING:
+         return strtoll(json_string_value(v), NULL, 0);
+      default:
+         return 0;
+   }
+}
+
+/**
  * Constructor
  */
 JiraLink::JiraLink() : HelpDeskLink()
@@ -48,6 +68,7 @@ JiraLink::JiraLink() : HelpDeskLink()
    strcpy(m_login, "netxms");
    m_password[0] = 0;
    m_curl = NULL;
+   m_components = NULL;
 }
 
 /**
@@ -57,6 +78,7 @@ JiraLink::~JiraLink()
 {
    disconnect();
    MutexDestroy(m_mutex);
+   delete m_components;
 }
 
 /**
@@ -90,6 +112,7 @@ bool JiraLink::init()
    ConfigReadStrUTF8(_T("JiraLogin"), m_login, JIRA_MAX_LOGIN_LEN, "netxms");
    ConfigReadStrUTF8(_T("JiraPassword"), m_password, JIRA_MAX_PASSWORD_LEN, "");
    ConfigReadStrUTF8(_T("JiraProjectCode"), m_projectCode, JIRA_MAX_PROJECT_CODE_LEN, "NETXMS");
+   ConfigReadStr(_T("JiraProjectComponent"), m_projectComponent, JIRA_MAX_COMPONENT_NAME_LEN, _T(""));
    ConfigReadStrUTF8(_T("JiraIssueType"), m_issueType, JIRA_MAX_ISSUE_TYPE_LEN, "Task");
    DbgPrintf(5, _T("Jira: server URL set to %hs"), m_serverUrl);
    return true;
@@ -193,6 +216,13 @@ UINT32 JiraLink::connect()
 
    free(request);
    free(data);
+
+   if (rcc == RCC_SUCCESS)
+   {
+      delete m_components;
+      m_components = getProjectComponents(m_projectCode);
+   }
+
    return rcc;
 }
 
@@ -206,6 +236,8 @@ void JiraLink::disconnect()
 
    curl_easy_cleanup(m_curl);
    m_curl = NULL;
+
+   delete_and_null(m_components);
 }
 
 /**
@@ -302,6 +334,24 @@ UINT32 JiraLink::openIssue(const TCHAR *description, TCHAR *hdref)
    json_t *issuetype = json_object();
    json_object_set_new(issuetype, "name", json_string(m_issueType));
    json_object_set_new(fields, "issuetype", issuetype);
+   if ((m_projectComponent[0] != 0) && (m_components != NULL))
+   {
+      for(int i = 0; i < m_components->size(); i++)
+      {
+         ProjectComponent *c = m_components->get(i);
+         if (!_tcsicmp(c->m_name, m_projectComponent))
+         {
+            json_t *components = json_array();
+            json_t *component = json_object();
+            char buffer[32];
+            snprintf(buffer, 32, INT64_FMTA, c->m_id);
+            json_object_set_new(component, "id", json_string(buffer));
+            json_array_append_new(components, component);
+            json_object_set_new(fields, "components", components);
+            break;
+         }
+      }
+   }
    json_object_set_new(root, "fields", fields);
    char *request = json_dumps(root, 0);
    curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, request);
@@ -453,6 +503,79 @@ bool JiraLink::getIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size)
    _sntprintf(url, size, _T("%s/browse/%s"), m_serverUrl, hdref);
 #endif
    return true;
+}
+
+/**
+ * Get list of project's components
+ */
+ObjectArray<ProjectComponent> *JiraLink::getProjectComponents(const char *project)
+{
+   ObjectArray<ProjectComponent> *components = NULL;
+
+   RequestData *data = (RequestData *)malloc(sizeof(RequestData));
+   memset(data, 0, sizeof(RequestData));
+   curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, data);
+
+   curl_easy_setopt(m_curl, CURLOPT_POST, (long)0);
+
+   char url[MAX_PATH];
+   snprintf(url, MAX_PATH, "%s/rest/api/2/project/%s/components", m_serverUrl, project);
+   curl_easy_setopt(m_curl, CURLOPT_URL, url);
+
+   if (curl_easy_perform(m_curl) == CURLE_OK)
+   {
+      data->data[data->size] = 0;
+      DbgPrintf(7, _T("Jira: POST request completed, data: %hs"), data->data);
+      long response = 500;
+      curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &response);
+      if (response == 200)
+      {
+         json_error_t err;
+         json_t *root = json_loads(data->data, 0, &err);
+         if (root != NULL)
+         {
+            if (json_is_array(root))
+            {
+               DbgPrintf(4, _T("Jira: got components list for project %hs"), project);
+               int size = (int)json_array_size(root);
+               components = new ObjectArray<ProjectComponent>(size, 8, true);
+               for(int i = 0; i < size; i++)
+               {
+                  json_t *e = json_array_get(root, i);
+                  if (e == NULL)
+                     break;
+
+                  json_t *id = json_object_get(e, "id");
+                  json_t *name = json_object_get(e, "name");
+                  if ((id != NULL) && (name != NULL))
+                  {
+                     components->add(new ProjectComponent(JsonIntegerValue(id), json_string_value(name)));
+                  }
+               }
+            }
+            else
+            {
+               DbgPrintf(4, _T("Jira: cannot get components for project %hs (JSON root element is not an array)"), project);
+            }
+            json_decref(root);
+         }
+         else
+         {
+            DbgPrintf(4, _T("Jira: cannot get components for project %hs (JSON parse error: %hs)"), project, err.text);
+         }
+      }
+      else
+      {
+         DbgPrintf(4, _T("Jira: cannot get components for project %hs (HTTP response code %03d)"), project, response);
+      }
+   }
+   else
+   {
+      DbgPrintf(4, _T("Jira: call to curl_easy_perform() failed: %hs"), m_errorBuffer);
+   }
+   free(data);
+
+   return components;
 }
 
 /**

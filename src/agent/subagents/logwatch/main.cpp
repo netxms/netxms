@@ -1,6 +1,6 @@
 /*
 ** NetXMS LogWatch subagent
-** Copyright (C) 2008-2012 Victor Kirhenshtein
+** Copyright (C) 2008-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,40 +22,25 @@
 
 #include "logwatch.h"
 
-
-//
-// Externals
-//
-
 #ifdef _WIN32
 THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *);
 THREAD_RESULT THREAD_CALL ParserThreadEventLogV6(void *);
 bool InitEventLogParsersV6();
 #endif
 
-
-//
-// Global variables
-//
-
+/**
+ * Shutdown condition
+ */
 CONDITION g_hCondShutdown = INVALID_CONDITION_HANDLE;
 
+/**
+ * Configured parsers
+ */
+static ObjectArray<LogParser> s_parsers(16, 16, true);
 
-//
-// Static data
-//
-
-#ifdef _NETWARE
-static CONDITION m_hCondTerminate = INVALID_CONDITION_HANDLE;
-#endif
-static DWORD m_numParsers = 0;
-static LogParser **m_parserList = NULL;
-
-
-//
-// File parsing thread
-//
-
+/**
+ * File parsing thread
+ */
 THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
 {
 	((LogParser *)arg)->monitorFile(g_hCondShutdown, AgentWriteLog);
@@ -73,12 +58,15 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 		return SYSINFO_RC_UNSUPPORTED;
 
 	LogParser *parser = NULL;
-	for(DWORD i = 0; i < m_numParsers; i++)
-		if (!_tcsicmp(m_parserList[i]->getName(), name))
+	for(int i = 0; i < s_parsers.size(); i++)
+   {
+      LogParser *p = s_parsers.get(i);
+		if (!_tcsicmp(p->getName(), name))
 		{
-			parser = m_parserList[i];
+			parser = p;
 			break;
 		}
+   }
 
 	if (parser == NULL)
 	{
@@ -108,8 +96,8 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
  */
 static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 {
-	for(DWORD i = 0; i < m_numParsers; i++)
-		value->add(m_parserList[i]->getName());
+	for(int i = 0; i < s_parsers.size(); i++)
+		value->add(s_parsers.get(i)->getName());
 	return SYSINFO_RC_SUCCESS;
 }
 
@@ -118,17 +106,13 @@ static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
  */
 static void SubagentShutdown()
 {
-	DWORD i;
-
 	if (g_hCondShutdown != INVALID_CONDITION_HANDLE)
 		ConditionSet(g_hCondShutdown);
 
-	for(i = 0; i < m_numParsers; i++)
+	for(int i = 0; i < s_parsers.size(); i++)
 	{
-		ThreadJoin(m_parserList[i]->getThread());
-		delete m_parserList[i];
+		ThreadJoin(s_parsers.get(i)->getThread());
 	}
-	safe_free(m_parserList);
 
 #ifdef _WIN32
 	CleanupEventLogParsers();
@@ -200,9 +184,7 @@ static void AddParserFromConfig(const TCHAR *file)
 				{
 					parser->setCallback(LogParserMatch);
 					parser->setTraceCallback(LogParserTrace);
-					m_numParsers++;
-					m_parserList = (LogParser **)realloc(m_parserList, sizeof(LogParser *) * m_numParsers);
-					m_parserList[m_numParsers - 1] = parser;
+               s_parsers.add(parser);
 					AgentWriteDebugLog(1, _T("LogWatch: registered parser for file %s, trace level set to %d"),
 						parser->getFileName(), parser->getTraceLevel());
 #ifdef _WIN32
@@ -258,76 +240,78 @@ static BOOL SubagentInit(Config *config)
 #endif
 	// Create shutdown condition and start parsing threads
 	g_hCondShutdown = ConditionCreate(TRUE);
-	for(int i = 0; i < (int)m_numParsers; i++)
+   for(int i = 0; i < s_parsers.size(); i++)
 	{
+      LogParser *p = s_parsers.get(i);
 #ifdef _WIN32
-		if (m_parserList[i]->getFileName()[0] == _T('*'))	// event log
+		if (p->getFileName()[0] == _T('*'))	// event log
 		{
-			m_parserList[i]->setThread(ThreadCreateEx(eventLogParserThread, 0, m_parserList[i]));
+			s_parsers.get(i)->setThread(ThreadCreateEx(eventLogParserThread, 0, p));
 			// Seems that simultaneous calls to OpenEventLog() from two or more threads may
 			// cause entire process to hang
 			ThreadSleepMs(200);
 		}
 		else	// regular file
 		{
-			m_parserList[i]->setThread(ThreadCreateEx(ParserThreadFile, 0, m_parserList[i]));
+			p->setThread(ThreadCreateEx(ParserThreadFile, 0, p));
 		}
 #else
-		m_parserList[i]->setThread(ThreadCreateEx(ParserThreadFile, 0, m_parserList[i]));
+		p->setThread(ThreadCreateEx(ParserThreadFile, 0, p));
 #endif
 	}
 
 	return TRUE;
 }
 
-
-//
-// Subagent information
-//
-
-static NETXMS_SUBAGENT_PARAM m_parameters[] =
+/**
+ * Supported parameters
+ */
+static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
 	{ _T("LogWatch.Parser.Status(*)"), H_ParserStats, _T("S"), DCI_DT_INT, _T("Parser {instance} status") },
 	{ _T("LogWatch.Parser.MatchedRecords(*)"), H_ParserStats, _T("M"), DCI_DT_INT, _T("Number of records matched by parser {instance}") },
 	{ _T("LogWatch.Parser.ProcessedRecords(*)"), H_ParserStats, _T("P"), DCI_DT_INT, _T("Number of records processed by parser {instance}") }
 };
-static NETXMS_SUBAGENT_LIST m_lists[] =
+
+/**
+ * Supported lists
+ */
+static NETXMS_SUBAGENT_LIST s_lists[] =
 {
 	{ _T("LogWatch.ParserList"), H_ParserList, NULL }
 };
 
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("LOGWATCH"), NETXMS_VERSION_STRING,
 	SubagentInit, SubagentShutdown, NULL,
-	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
-	m_parameters,
-	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
-	m_lists,
+	sizeof(s_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
+	s_parameters,
+	sizeof(s_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+	s_lists,
 	0, NULL,		// tables
 	0, NULL,		// actions
 	0, NULL		// push parameters
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(LOGWATCH)
 {
 	*ppInfo = &m_info;
 	return TRUE;
 }
 
-
-//
-// DLL entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)

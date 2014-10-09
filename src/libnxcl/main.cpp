@@ -390,9 +390,11 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(UINT32 dwError)
       _T("Helpdesk link internal error"),
       _T("LDAP connection error"),
       _T("Routing table unavailable"),
-      _T("Switch forwarding database unavailable")
+      _T("Switch forwarding database unavailable"),
+      _T("Location history not available"),
+      _T("Object is in use and cannot be deleted")
    };
-	return (dwError <= RCC_NO_FDB) ? pszErrorText[dwError] : _T("No text message for this error");
+	return (dwError <= RCC_OBJECT_IN_USE) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 #if defined(_WIN32) && !defined(UNDER_CE)
