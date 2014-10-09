@@ -19,6 +19,8 @@
     - Fixed bug with deletion of subnet with corrected IP
     - Added command line option to open specific dashboard after login
 - Android console:
+	- Fixed issue #661
+	- Added node boot time to overview tab
 	- Fix bug in notifying connection point not found
 	- Fix bug in computing interface expanded list size (removed hardcoded values)
 	- Added manage, unmanage, set expected state (up, down, ignore) and find switch port to interface list
