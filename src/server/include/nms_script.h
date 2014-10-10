@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
@@ -126,6 +126,24 @@ public:
 
 	virtual void print(NXSL_Value *value);
 	virtual void trace(int level, const TCHAR *text);
+
+	void setConsole(CONSOLE_CTX console) { m_console = console; }
+};
+
+/**
+ * Java consoles's default script environment
+ */
+class NXSL_ConsoleEnv : public NXSL_Environment
+{
+protected:
+	CONSOLE_CTX m_console;
+	ClientSession *session;
+	CSCPMessage *msg;
+
+public:
+	NXSL_ConsoleEnv(ClientSession *session, CSCPMessage *msg);
+
+	virtual void print(NXSL_Value *value);
 
 	void setConsole(CONSOLE_CTX console) { m_console = console; }
 };

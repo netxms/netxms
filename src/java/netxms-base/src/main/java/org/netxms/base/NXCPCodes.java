@@ -322,6 +322,8 @@ public class NXCPCodes
    public static final int CMD_COMMAND_OUTPUT = 0x012C;
    public static final int CMD_GET_LOC_HISTORY = 0x012D;
    public static final int CMD_TAKE_SCREENSHOT = 0x012E;
+   public static final int CMD_EXECUTE_SCRIPT = 0x012F;
+   public static final int CMD_EXECUTE_SCRIPT_UPDATE = 0x0130;
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

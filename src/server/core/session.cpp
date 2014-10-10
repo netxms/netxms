@@ -188,6 +188,7 @@ DEFINE_THREAD_STARTER(uploadUserFileToAgent)
 DEFINE_THREAD_STARTER(getSwitchForwardingDatabase)
 DEFINE_THREAD_STARTER(getRoutingTable)
 DEFINE_THREAD_STARTER(getLocationHistory)
+DEFINE_THREAD_STARTER(executeScript)
 
 /**
  * Client communication read thread starter
@@ -1313,6 +1314,9 @@ void ClientSession::processingThread()
 				break;
 			case CMD_TEST_DCI_TRANSFORMATION:
 				testDCITransformation(pMsg);
+				break;
+			case CMD_EXECUTE_SCRIPT:
+            CALL_IN_NEW_THREAD(executeScript, pMsg);
 				break;
 			case CMD_GET_JOB_LIST:
 				sendJobList(pMsg->GetId());
@@ -10966,6 +10970,98 @@ void ClientSession::testDCITransformation(CSCPMessage *pRequest)
 }
 
 /**
+ * Test DCI transformation script
+ */
+void ClientSession::executeScript(CSCPMessage *pRequest)
+{
+   CSCPMessage msg, updateMessage, endMessage;
+   NetObj *object;
+   bool sucess = false;
+   NXSL_VM *vm = NULL;
+   TCHAR result[256];
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(pRequest->GetId());
+   //Prepare update message
+   updateMessage.SetCode(CMD_EXECUTE_SCRIPT_UPDATE);
+   updateMessage.SetId(pRequest->GetId());
+
+   // Get node id and check object class and access rights
+   object = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_CLUSTER))
+      {
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+         {
+				TCHAR *script = pRequest->GetVariableStr(VID_SCRIPT);
+				if (script != NULL)
+				{
+               vm = NXSLCompileAndCreateVM(script, result, 256, new NXSL_ConsoleEnv(this, &updateMessage));
+               if (vm != NULL)
+               {
+                  vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
+                  if (object->Type() == OBJECT_NODE)
+                  {
+                     vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
+                  }
+                  sucess = true;
+                  msg.SetVariable(VID_RCC, RCC_SUCCESS);
+                  msg.SetVariable(VID_EXECUTION_RESULT, result);
+                  sendMessage(&msg);
+               }
+               msg.SetVariable(VID_EXECUTION_RESULT, result);
+               msg.SetVariable(VID_RCC, RCC_COMM_FAILURE); //TODO: return correct errot(Compilation error)
+					safe_free(script);
+				}
+				else
+				{
+	            msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
+				}
+         }
+         else  // User doesn't have READ rights on object
+         {
+            msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else     // Object is not a node
+      {
+         msg.SetVariable(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   //start execution
+   if(sucess)
+   {
+      updateMessage.setEndOfSequence();
+      if (vm->run())
+      {
+			updateMessage.SetVariable(VID_RCC, RCC_SUCCESS);
+         sendMessage(&updateMessage);
+      }
+      else
+      {
+         nx_strncpy(result, vm->getErrorText(), 256);
+         updateMessage.SetVariable(VID_EXECUTION_RESULT, result);
+			updateMessage.SetVariable(VID_RCC, RCC_EXEC_FAILED);
+         sendMessage(&updateMessage);
+         //send update about error
+      }
+      delete vm;
+   }
+   else
+   {
+      // Send response
+      sendMessage(&msg);
+   }
+}
+
+/**
  * Send list of server jobs
  */
 void ClientSession::sendJobList(UINT32 dwRqId)
@@ -13536,7 +13632,7 @@ void ClientSession::getScreenshot(CSCPMessage *request)
             AgentConnection *conn = node->createAgentConnection();
             if(conn != NULL)
             {
-               BYTE *data;
+               BYTE *data = NULL;
                size_t size;
                UINT32 dwError = conn->takeScreenshot(sessionName, &data, &size);
                if (dwError == ERR_SUCCESS)

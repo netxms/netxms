@@ -1517,7 +1517,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          }
       }
       return tail;
-   }
+   }   
 
    /**
     * Execute simple commands (without arguments and only returning RCC)
@@ -4780,6 +4780,37 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       r.success = response.getVariableAsBoolean(NXCPCodes.VID_EXECUTION_STATUS);
       r.result = response.getVariableAsString(NXCPCodes.VID_EXECUTION_RESULT);
       return r;
+   }
+   
+   /**
+    * Execute script.
+    *
+    * @param nodeId     ID of the node object to test script on
+    * @param script     script source code
+    * @return test execution results
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void executeScript(long nodeId, String script, ActionExecutionListener listener)
+      throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SCRIPT);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setVariable(NXCPCodes.VID_SCRIPT, script);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+      while(true)
+      {
+         NXCPMessage response = waitForMessage(NXCPCodes.CMD_EXECUTE_SCRIPT_UPDATE, msg.getMessageId());
+         String text = response.getVariableAsString(NXCPCodes.VID_EXECUTION_RESULT);
+         if (text != null)
+         {
+            if (listener != null)
+               listener.messageReceived(text);
+         }
+         if (response.isEndOfSequence())
+            break;
+      }
    }
 
    /**

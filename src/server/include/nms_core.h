@@ -469,6 +469,7 @@ private:
    DECLARE_THREAD_STARTER(getSwitchForwardingDatabase)
    DECLARE_THREAD_STARTER(getRoutingTable)
    DECLARE_THREAD_STARTER(getLocationHistory)
+   DECLARE_THREAD_STARTER(executeScript)
 
    void readThread();
    void writeThread();
@@ -680,6 +681,7 @@ private:
    void getRoutingTable(CSCPMessage *request);
    void getLocationHistory(CSCPMessage *request);
    void getScreenshot(CSCPMessage *request);
+	void executeScript(CSCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

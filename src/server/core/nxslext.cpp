@@ -1312,6 +1312,8 @@ static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
 	{ _T("UnbindObject"), F_UnbindObject, 2 }
 };
 
+/*** NXSL_ServerEnv class implementation ***/
+
 /**
  * Constructor for server default script environment
  */
@@ -1350,5 +1352,36 @@ void NXSL_ServerEnv::print(NXSL_Value *value)
 	{
 		const TCHAR *text = value->getValueAsCString();
 		ConsolePrintf(m_console, _T("%s"), CHECK_NULL(text));
+	}
+}
+
+/*** NXSL_ConsoleEnv class implementation ***/
+
+/**
+ * Constructor for server default script environment
+ */
+NXSL_ConsoleEnv::NXSL_ConsoleEnv(ClientSession *session, CSCPMessage *msg) : NXSL_Environment()
+{
+   this->session = session;
+   this->msg = msg;
+	m_console = NULL;
+	setLibrary(g_pScriptLibrary);
+	registerFunctionSet(sizeof(m_nxslServerFunctions) / sizeof(NXSL_ExtFunction), m_nxslServerFunctions);
+	RegisterDCIFunctions(this);
+	registerFunctionSet(g_nxslNumSituationFunctions, g_nxslSituationFunctions);
+	if (g_flags & AF_ENABLE_NXSL_CONTAINER_FUNCS)
+		registerFunctionSet(sizeof(m_nxslServerFunctionsForContainers) / sizeof(NXSL_ExtFunction), m_nxslServerFunctionsForContainers);
+}
+
+/**
+ * Print script output to console
+ */
+void NXSL_ConsoleEnv::print(NXSL_Value *value)
+{
+	if (session != NULL && msg != NULL)
+	{
+		const TCHAR *text = value->getValueAsCString(); //check that memory is not lost(If it is fix also print in console)
+		msg->SetVariable(VID_EXECUTION_RESULT, text);
+		session->sendMessage(msg);
 	}
 }
