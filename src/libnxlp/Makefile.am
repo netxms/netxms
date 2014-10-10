@@ -17,5 +17,6 @@ libnxlp_la_LIBADD += @top_srcdir@/src/libtre/libnxtre.la
 endif
 
 EXTRA_DIST = \
+	eventlog.cpp wevt.cpp \
 	libnxlp.vcproj \
 	libnxlp.h

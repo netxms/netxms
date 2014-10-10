@@ -16,22 +16,16 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: main.cpp
+** File: logwatch.cpp
 **
 **/
 
 #include "logwatch.h"
 
-#ifdef _WIN32
-THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *);
-THREAD_RESULT THREAD_CALL ParserThreadEventLogV6(void *);
-bool InitEventLogParsersV6();
-#endif
-
 /**
  * Shutdown condition
  */
-CONDITION g_hCondShutdown = INVALID_CONDITION_HANDLE;
+static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
 
 /**
  * Configured parsers
@@ -43,9 +37,22 @@ static ObjectArray<LogParser> s_parsers(16, 16, true);
  */
 THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
 {
-	((LogParser *)arg)->monitorFile(g_hCondShutdown, AgentWriteLog);
+	((LogParser *)arg)->monitorFile(s_shutdownCondition);
 	return THREAD_OK;
 }
+
+#ifdef _WIN32
+
+/**
+ * Event log parsing thread
+ */
+THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
+{
+	((LogParser *)arg)->monitorEventLog(s_shutdownCondition);
+	return THREAD_OK;
+}
+
+#endif
 
 /**
  * Get parser statistics
@@ -106,17 +113,15 @@ static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
  */
 static void SubagentShutdown()
 {
-	if (g_hCondShutdown != INVALID_CONDITION_HANDLE)
-		ConditionSet(g_hCondShutdown);
+	if (s_shutdownCondition != INVALID_CONDITION_HANDLE)
+		ConditionSet(s_shutdownCondition);
 
 	for(int i = 0; i < s_parsers.size(); i++)
 	{
 		ThreadJoin(s_parsers.get(i)->getThread());
 	}
 
-#ifdef _WIN32
-	CleanupEventLogParsers();
-#endif
+   CleanupLogParserLibrary();
 
 #ifdef _NETWARE
 	// Notify main thread that NLM can exit
@@ -211,13 +216,13 @@ static void AddParserFromConfig(const TCHAR *file)
 	}
 }
 
-
-//
-// Subagent initialization
-//
-
+/**
+ * Subagent initialization
+ */
 static BOOL SubagentInit(Config *config)
 {
+   InitLogParserLibrary();
+
 	ConfigEntry *parsers = config->getEntry(_T("/LogWatch/Parser"));
 	if (parsers != NULL)
 	{
@@ -225,28 +230,15 @@ static BOOL SubagentInit(Config *config)
 			AddParserFromConfig(parsers->getValue(i));
 	}
 
-	// Additional initialization
-#ifdef _WIN32
-	THREAD_RESULT (THREAD_CALL *eventLogParserThread)(void *);
-	if (InitEventLogParsersV6())
-	{
-		eventLogParserThread = ParserThreadEventLogV6;
-	}
-	else
-	{
-		eventLogParserThread = ParserThreadEventLog;
-		InitEventLogParsers();
-	}
-#endif
 	// Create shutdown condition and start parsing threads
-	g_hCondShutdown = ConditionCreate(TRUE);
+	s_shutdownCondition = ConditionCreate(TRUE);
    for(int i = 0; i < s_parsers.size(); i++)
 	{
       LogParser *p = s_parsers.get(i);
 #ifdef _WIN32
 		if (p->getFileName()[0] == _T('*'))	// event log
 		{
-			s_parsers.get(i)->setThread(ThreadCreateEx(eventLogParserThread, 0, p));
+			p->setThread(ThreadCreateEx(ParserThreadEventLog, 0, p));
 			// Seems that simultaneous calls to OpenEventLog() from two or more threads may
 			// cause entire process to hang
 			ThreadSleepMs(200);
@@ -304,6 +296,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 DECLARE_SUBAGENT_ENTRY_POINT(LOGWATCH)
 {
 	*ppInfo = &m_info;
+   SetLogParserTraceCallback(AgentWriteDebugLog2);
 	return TRUE;
 }
 

@@ -186,6 +186,13 @@ private:
 	void trace(int level, const TCHAR *format, ...);
 	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, UINT32 objectId);
 
+#ifdef _WIN32
+   void parseEvent(EVENTLOGRECORD *rec);
+
+	bool monitorEventLogV6(CONDITION stopCondition);
+	bool monitorEventLogV4(CONDITION stopCondition);
+#endif
+
 public:
 	LogParser();
 	LogParser(LogParser *src);
@@ -233,7 +240,25 @@ public:
 	void setTraceLevel(int level) { m_traceLevel = level; }
 	void setTraceCallback(void (*cb)(const TCHAR *, va_list)) { m_traceCallback = cb; }
 
-	bool monitorFile(CONDITION stopCondition, void (*logger)(int, const TCHAR *, ...), bool readFromCurrPos = true);
+	bool monitorFile(CONDITION stopCondition, bool readFromCurrPos = true);
+#ifdef _WIN32
+	bool monitorEventLog(CONDITION stopCondition);
+#endif
 };
+
+/**
+ * Init log parser library
+ */
+void LIBNXLP_EXPORTABLE InitLogParserLibrary();
+
+/**
+ * Cleanup event log parsig library
+ */
+void LIBNXLP_EXPORTABLE CleanupLogParserLibrary();
+
+/**
+ * Set trace callback for log parser library
+ */
+void LIBNXLP_EXPORTABLE SetLogParserTraceCallback(void (* traceCallback)(int, const TCHAR *, va_list));
 
 #endif

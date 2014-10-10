@@ -1,6 +1,7 @@
 /*
-** NetXMS LogWatch subagent
-** Copyright (C) 2008-2013 Victor Kirhenshtein
+** NetXMS - Network Management System
+** Log Parsing Library
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +22,7 @@
 **/
 
 #define _WIN32_WINNT 0x0600
-#include "logwatch.h"
+#include "libnxlp.h"
 #include <winevt.h>
 #include <winmeta.h>
 
@@ -49,16 +50,16 @@ static void LogMetadataProperty(EVT_HANDLE pubMetadata, EVT_PUBLISHER_METADATA_P
       switch(p->Type)
       {
          case EvtVarTypeNull:
-      	   AgentWriteDebugLog(5, _T("LogWatch: publisher %s: NULL"), name);
+      	   LogParserTrace(5, _T("LogWatch: publisher %s: NULL"), name);
             break;
          case EvtVarTypeString:
-      	   AgentWriteDebugLog(5, _T("LogWatch: publisher %s: %ls"), name, p->StringVal);
+      	   LogParserTrace(5, _T("LogWatch: publisher %s: %ls"), name, p->StringVal);
             break;
          case EvtVarTypeAnsiString:
-      	   AgentWriteDebugLog(5, _T("LogWatch: publisher %s: %hs"), name, p->AnsiStringVal);
+      	   LogParserTrace(5, _T("LogWatch: publisher %s: %hs"), name, p->AnsiStringVal);
             break;
          default:
-      	   AgentWriteDebugLog(5, _T("LogWatch: publisher %s: (variant type %d)"), name, (int)p->Type);
+      	   LogParserTrace(5, _T("LogWatch: publisher %s: (variant type %d)"), name, (int)p->Type);
             break;
       }
    }
@@ -81,7 +82,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	EVT_HANDLE renderContext = _EvtCreateRenderContext(4, eventProperties, EvtRenderContextValues);
 	if (renderContext == NULL)
 	{
-		AgentWriteDebugLog(5, _T("LogWatch: Call to EvtCreateRenderContext failed: %s"),
+		LogParserTrace(5, _T("LogWatch: Call to EvtCreateRenderContext failed: %s"),
 							    GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 		return 0;
 	}
@@ -89,7 +90,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	// Get event values
 	if (!_EvtRender(renderContext, event, EvtRenderEventValues, 4096, buffer, &reqSize, &propCount))
 	{
-		AgentWriteDebugLog(5, _T("LogWatch: Call to EvtRender failed: %s"),
+		LogParserTrace(5, _T("LogWatch: Call to EvtRender failed: %s"),
 		                   GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 		goto cleanup;
 	}
@@ -103,11 +104,11 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 #else
 		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, values[0].StringVal, -1, publisherName, MAX_PATH, NULL, NULL);
 #endif
-		AgentWriteDebugLog(6, _T("LogWatch: publisher name is %s"), publisherName);
+		LogParserTrace(6, _T("LogWatch: publisher name is %s"), publisherName);
 	}
 	else
 	{
-		AgentWriteDebugLog(6, _T("LogWatch: unable to get publisher name from event"));
+		LogParserTrace(6, _T("LogWatch: unable to get publisher name from event"));
 	}
 
 	// Event id
@@ -148,7 +149,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	pubMetadata = _EvtOpenPublisherMetadata(NULL, values[0].StringVal, NULL, MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT), 0);
 	if (pubMetadata == NULL)
 	{
-		AgentWriteDebugLog(5, _T("LogWatch: Call to EvtOpenPublisherMetadata failed: %s"),
+		LogParserTrace(5, _T("LogWatch: Call to EvtOpenPublisherMetadata failed: %s"),
 							    GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 		goto cleanup;
 	}
@@ -159,7 +160,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	{
 		if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
 		{
-			AgentWriteDebugLog(5, _T("LogWatch: Call to EvtFormatMessage failed: %s"),
+			LogParserTrace(5, _T("LogWatch: Call to EvtFormatMessage failed: %s"),
 								    GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 			LogMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, _T("message file"));
 			LogMetadataProperty(pubMetadata, EvtPublisherMetadataParameterFilePath, _T("parameter file"));
@@ -170,7 +171,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 		success = _EvtFormatMessage(NULL, event, 0, 0, NULL, EvtFormatMessageEvent, reqSize, msg, &reqSize);
 		if (!success)
 		{
-			AgentWriteDebugLog(5, _T("LogWatch: Call to EvtFormatMessage failed: %s"),
+			LogParserTrace(5, _T("LogWatch: Call to EvtFormatMessage failed: %s"),
 								    GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 			LogMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, _T("message file"));
 			LogMetadataProperty(pubMetadata, EvtPublisherMetadataParameterFilePath, _T("parameter file"));
@@ -199,40 +200,37 @@ cleanup:
 /**
  * Event log parser thread
  */
-THREAD_RESULT THREAD_CALL ParserThreadEventLogV6(void *arg)
+bool LogParser::monitorEventLogV6(CONDITION stopCondition)
 {
-	LogParser *parser = (LogParser *)arg;
 	EVT_HANDLE handle;
+   bool success;
 
 #ifdef UNICODE
-	handle = _EvtSubscribe(NULL, NULL, &(parser->getFileName()[1]), NULL, NULL, arg,
-	                       SubscribeCallback, EvtSubscribeToFutureEvents);
+	handle = _EvtSubscribe(NULL, NULL, &m_fileName[1], NULL, NULL, this, SubscribeCallback, EvtSubscribeToFutureEvents);
 #else
 	WCHAR channel[MAX_PATH];
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &(parser->getFileName()[1]), -1, channel, MAX_PATH);
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &m_fileName[1], -1, channel, MAX_PATH);
 	channel[MAX_PATH - 1] = 0;
-	handle = _EvtSubscribe(NULL, NULL, channel, NULL, NULL, arg,
-	                       SubscribeCallback, EvtSubscribeToFutureEvents);
+	handle = _EvtSubscribe(NULL, NULL, channel, NULL, NULL, this, SubscribeCallback, EvtSubscribeToFutureEvents);
 #endif
 	if (handle != NULL)
 	{
-		AgentWriteDebugLog(1, _T("LogWatch: Start watching event log \"%s\" (using EvtSubscribe)"),
-		                   &(parser->getFileName()[1]));
-		parser->setStatus(LPS_RUNNING);
-		WaitForSingleObject(g_hCondShutdown, INFINITE);
-		AgentWriteDebugLog(1, _T("LogWatch: Stop watching event log \"%s\" (using EvtSubscribe)"),
-		                   &(parser->getFileName()[1]));
+		LogParserTrace(1, _T("LogWatch: Start watching event log \"%s\" (using EvtSubscribe)"), &m_fileName[1]);
+		setStatus(LPS_RUNNING);
+		WaitForSingleObject(stopCondition, INFINITE);
+		LogParserTrace(1, _T("LogWatch: Stop watching event log \"%s\" (using EvtSubscribe)"), &m_fileName[1]);
 		_EvtClose(handle);
+      success = true;
 	}
 	else
 	{
 		TCHAR buffer[1024];
-		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to open event log \"%s\" with EvtSubscribe(): %s"),
-		                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), buffer, 1024));
-		parser->setStatus(_T("EVENT LOG SUBSCRIBE FAILED"));
+		LogParserTrace(0, _T("LogWatch: Unable to open event log \"%s\" with EvtSubscribe(): %s"),
+		               &m_fileName[1], GetSystemErrorText(GetLastError(), buffer, 1024));
+		setStatus(_T("EVENT LOG SUBSCRIBE FAILED"));
+      success = false;
 	}
-
-	return THREAD_OK;
+   return success;
 }
 
 /**
@@ -244,7 +242,7 @@ bool InitEventLogParsersV6()
 	if (module == NULL)
 	{
 		TCHAR buffer[1024];
-		AgentWriteDebugLog(1, _T("LogWatch: cannot load wevtapi.dll: %s"), GetSystemErrorText(GetLastError(), buffer, 1024));
+		LogParserTrace(1, _T("LogWatch: cannot load wevtapi.dll: %s"), GetSystemErrorText(GetLastError(), buffer, 1024));
 		return false;
 	}
 

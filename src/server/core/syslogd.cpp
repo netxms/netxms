@@ -601,6 +601,9 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    }
 	nxlog_write(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), nPort);
 
+   SetLogParserTraceCallback(DbgPrintf2);
+   InitLogParserLibrary();
+
 	// Create message parser
 	s_parserLock = MutexCreate();
 	CreateParserFromConfig();
@@ -650,6 +653,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    ThreadJoin(hWriterThread);
 
 	delete s_parser;
+   CleanupLogParserLibrary();
 
    DbgPrintf(1, _T("Syslog Daemon stopped"));
    return THREAD_OK;

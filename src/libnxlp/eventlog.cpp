@@ -1,6 +1,7 @@
 /*
-** NetXMS LogWatch subagent
-** Copyright (C) 2008-2013 Victor Kirhenshtein
+** NetXMS - Network Management System
+** Log Parsing Library
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,7 +21,7 @@
 **
 **/
 
-#include "logwatch.h"
+#include "libnxlp.h"
 
 /**
  * Event source class definition
@@ -100,12 +101,12 @@ BOOL EventSource::load()
 					m_numModules++;
 					m_modules = (HMODULE *)realloc(m_modules, sizeof(HMODULE) * m_numModules);
 					m_modules[m_numModules - 1] = hModule;
-               AgentWriteDebugLog(4, _T("LogWatch: Message file \"%s\" loaded"), curr);
+               LogParserTrace(4, _T("LogWatch: Message file \"%s\" loaded"), curr);
 					isLoaded = TRUE;
             }
             else
             {
-               AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("LogWatch: Unable to load message file \"%s\": %s"), 
+               LogParserTrace(0, _T("LogWatch: Unable to load message file \"%s\": %s"), 
 					                curr, GetSystemErrorText(GetLastError(), buffer, MAX_PATH));
             }
          }
@@ -146,7 +147,7 @@ BOOL EventSource::formatMessage(EVENTLOGRECORD *rec, TCHAR *msg, size_t msgSize)
    }
    if (!success)
    {
-      AgentWriteDebugLog(4, _T("LogWatch: event log %s source %s FormatMessage(%d) error: %s"),
+      LogParserTrace(4, _T("LogWatch: event log %s source %s FormatMessage(%d) error: %s"),
 		                m_logName, m_name, rec->EventID, 
 							 GetSystemErrorText(GetLastError(), msg, msgSize));
       nx_strncpy(msg, _T("**** LogWatch: cannot format message ****"), msgSize);
@@ -231,41 +232,41 @@ static THREAD_RESULT THREAD_CALL NotificationThread(void *arg)
 /**
  * Parse event log record
  */
-static void ParseEvent(LogParser *parser, EVENTLOGRECORD *rec)
+void LogParser::parseEvent(EVENTLOGRECORD *rec)
 {
 	TCHAR msg[8192], *eventSourceName;
 	EventSource *es;
 
 	eventSourceName = (TCHAR *)((BYTE *)rec + sizeof(EVENTLOGRECORD));
-	es = LoadEventSource(&(parser->getFileName()[1]), eventSourceName);
+	es = LoadEventSource(&m_fileName[1], eventSourceName);
 	if (es != NULL)
 	{
 		es->formatMessage(rec, msg, 8192);
-		parser->matchEvent(eventSourceName, rec->EventID & 0x0000FFFF, rec->EventType, msg);
+		matchEvent(eventSourceName, rec->EventID & 0x0000FFFF, rec->EventType, msg);
 	}
 	else
 	{
-		AgentWriteDebugLog(4, _T("LogWatch: unable to load event source \"%s\" for log \"%s\""), eventSourceName, &(parser->getFileName()[1]));
+		LogParserTrace(4, _T("LogWatch: unable to load event source \"%s\" for log \"%s\""), eventSourceName, &m_fileName[1]);
 	}
 }
 
 /**
  * Event log parser thread
  */
-THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
+bool LogParser::monitorEventLogV4(CONDITION stopCondition)
 {
-	LogParser *parser = (LogParser *)arg;
    HANDLE hLog, handles[2];
    BYTE *buffer, *rec;
    DWORD bytes, bytesNeeded, bufferSize = 32768, error = 0;
    BOOL success, reopen = FALSE;
 	THREAD nt;	// Notification thread's handle
 	NOTIFICATION_THREAD_DATA nd;
+   bool result;
 
    buffer = (BYTE *)malloc(bufferSize);
 
 reopen_log:
-   hLog = OpenEventLog(NULL, &(parser->getFileName()[1]));
+   hLog = OpenEventLog(NULL, &m_fileName[1]);
    if (hLog != NULL)
    {
       nd.hLogEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -284,8 +285,8 @@ reopen_log:
 					bufferSize = bytesNeeded;
 					buffer = (BYTE *)realloc(buffer, bufferSize);
 					success = TRUE;
-					AgentWriteDebugLog(9, _T("LogWatch: Increasing buffer for event log \"%s\" to %u bytes on initial read"),
-										    &(parser->getFileName()[1]), bufferSize);
+					LogParserTrace(9, _T("LogWatch: Increasing buffer for event log \"%s\" to %u bytes on initial read"),
+										    m_fileName[1], bufferSize);
 				}
 			} while(success);
 		}
@@ -295,13 +296,10 @@ reopen_log:
          nt = ThreadCreateEx(NotificationThread, 0, &nd);
          NotifyChangeEventLog(hLog, nd.hLogEvent);
 			handles[0] = nd.hWakeupEvent;
-			handles[1] = g_hCondShutdown;
-			AgentWriteDebugLog(1, _T("LogWatch: Start watching event log \"%s\""),
-			                &(parser->getFileName()[1]));
-#ifdef _WIN32
-			AgentWriteDebugLog(7, _T("LogWatch: Process RSS is ") INT64_FMT _T(" bytes"), GetProcessRSS());
-#endif
-			parser->setStatus(LPS_RUNNING);
+			handles[1] = stopCondition;
+			LogParserTrace(1, _T("LogWatch: Start watching event log \"%s\""), &m_fileName[1]);
+			LogParserTrace(7, _T("LogWatch: Process RSS is ") INT64_FMT _T(" bytes"), GetProcessRSS());
+			setStatus(LPS_RUNNING);
 
          while(1)
          {
@@ -318,41 +316,38 @@ retry_read:
 					{
 						bufferSize = bytesNeeded;
 						buffer = (BYTE *)realloc(buffer, bufferSize);
-						AgentWriteDebugLog(9, _T("LogWatch: Increasing buffer for event log \"%s\" to %u bytes"),
-												 &(parser->getFileName()[1]), bufferSize);
+						LogParserTrace(9, _T("LogWatch: Increasing buffer for event log \"%s\" to %u bytes"), &m_fileName[1], bufferSize);
 						goto retry_read;
 					}
                if (success)
                {
                   for(rec = buffer; rec < buffer + bytes; rec += ((EVENTLOGRECORD *)rec)->Length)
-                     ParseEvent(parser, (EVENTLOGRECORD *)rec);
+                     parseEvent((EVENTLOGRECORD *)rec);
                }
             } while(success);
 
 				if (error == ERROR_EVENTLOG_FILE_CHANGED)
 				{
-					AgentWriteDebugLog(4, _T("LogWatch: Got ERROR_EVENTLOG_FILE_CHANGED, reopen event log \"%s\""),
-										 &(parser->getFileName()[1]));
+					LogParserTrace(4, _T("LogWatch: Got ERROR_EVENTLOG_FILE_CHANGED, reopen event log \"%s\""), &m_fileName[1]);
 					break;
 				}
 
             if (error != ERROR_HANDLE_EOF)
 				{
-					AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to read event log \"%s\": %s"),
-										 &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, bufferSize / sizeof(TCHAR)));
-					parser->setStatus(_T("EVENT LOG READ ERROR"));
+					LogParserTrace(0, _T("LogWatch: Unable to read event log \"%s\": %s"),
+										&m_fileName[1], GetSystemErrorText(GetLastError(), (TCHAR *)buffer, bufferSize / sizeof(TCHAR)));
+					setStatus(_T("EVENT LOG READ ERROR"));
 				}
          }
 
 			SetEvent(nd.hStopEvent);
 			ThreadJoin(nt);
-			AgentWriteDebugLog(1, _T("LogWatch: Stop watching event log \"%s\""),
-			                &(parser->getFileName()[1]));
+			LogParserTrace(1, _T("LogWatch: Stop watching event log \"%s\""), &m_fileName[1]);
       }
       else
       {
-			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to read event log (initial read) \"%s\": %s"),
-			                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, bufferSize / sizeof(TCHAR)));
+			LogParserTrace(0, _T("LogWatch: Unable to read event log (initial read) \"%s\": %s"),
+			               &m_fileName[1], GetSystemErrorText(GetLastError(), (TCHAR *)buffer, bufferSize / sizeof(TCHAR)));
       }
 
 		CloseEventLog(hLog);
@@ -366,16 +361,18 @@ retry_read:
 			reopen = TRUE;
 			goto reopen_log;
 		}
+      result = true;
    }
    else
    {
-		AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("LogWatch: Unable to open event log \"%s\": %s"),
-		                &(parser->getFileName()[1]), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, bufferSize / sizeof(TCHAR)));
-		parser->setStatus(_T("EVENT LOG OPEN ERROR"));
+		LogParserTrace(0, _T("LogWatch: Unable to open event log \"%s\": %s"),
+		               &m_fileName[1], GetSystemErrorText(GetLastError(), (TCHAR *)buffer, bufferSize / sizeof(TCHAR)));
+		setStatus(_T("EVENT LOG OPEN ERROR"));
+      result = false;
    }
 
 	free(buffer);
-	return THREAD_OK;
+	return result;
 }
 
 /**

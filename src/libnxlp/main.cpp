@@ -23,7 +23,91 @@
 
 #include "libnxlp.h"
 
+/**
+ * Reference count
+ */
+static VolatileCounter s_referenceCount = 0;
+
+/**
+ * Trace callback
+ */
+void (* s_traceCallback)(int, const TCHAR *, va_list) = NULL;
+
+/**
+ * Event log reading mode
+ */
 #ifdef _WIN32
+bool s_eventLogV6 = false;
+#endif
+
+/**
+ * Set trace callback for log parser library
+ */
+void LIBNXLP_EXPORTABLE SetLogParserTraceCallback(void (* traceCallback)(int, const TCHAR *, va_list))
+{
+   s_traceCallback = traceCallback;
+}
+
+/**
+ * Trace messages for log parser
+ */
+void LogParserTrace(int level, const TCHAR *format, ...)
+{
+   if (s_traceCallback == NULL)
+      return;
+
+   va_list args;
+   va_start(args, format);
+   s_traceCallback(level, format, args);
+   va_end(args);
+}
+
+/**
+ * Init log parser library
+ */
+void LIBNXLP_EXPORTABLE InitLogParserLibrary()
+{
+   if (InterlockedIncrement(&s_referenceCount) > 1)
+      return;  // already initialized
+
+#ifdef _WIN32
+	if (InitEventLogParsersV6())
+	{
+		s_eventLogV6 = true;
+	}
+	else
+	{
+		s_eventLogV6 = false;
+		InitEventLogParsers();
+	}
+#endif
+}
+
+/**
+ * Cleanup event log parsig library
+ */
+void LIBNXLP_EXPORTABLE CleanupLogParserLibrary()
+{
+   if (InterlockedDecrement(&s_referenceCount) > 0)
+      return;  // still referenced
+
+#ifdef _WIN32
+   if (!s_eventLogV6)
+   {
+      CleanupEventLogParsers();
+   }
+#endif
+}
+
+#ifdef _WIN32
+
+/**
+ * Event log parsing wrapper. Calls appropriate implementation.
+ */
+bool LogParser::monitorEventLog(CONDITION stopCondition)
+{
+   return s_eventLogV6 ? monitorEventLogV6(stopCondition) : monitorEventLogV4(stopCondition);
+}
 
 /**
  * DLL entry point

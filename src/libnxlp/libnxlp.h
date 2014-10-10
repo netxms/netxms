@@ -28,5 +28,14 @@
 #include <nms_util.h>
 #include <nxlpapi.h>
 
+void LogParserTrace(int level, const TCHAR *format, ...);
+
+#ifdef _WIN32
+THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *);
+THREAD_RESULT THREAD_CALL ParserThreadEventLogV6(void *);
+bool InitEventLogParsersV6();
+void InitEventLogParsers();
+void CleanupEventLogParsers();
 #endif
 
+#endif

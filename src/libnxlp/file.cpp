@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -208,7 +208,7 @@ static void ParseNewRecords(LogParser *parser, int fh)
 /**
  * File parser thread
  */
-bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const TCHAR *, ...), bool readFromCurrPos)
+bool LogParser::monitorFile(CONDITION stopCondition, bool readFromCurrPos)
 {
 	TCHAR fname[MAX_PATH], temp[MAX_PATH];
 	NX_STAT_STRUCT st, stn;
@@ -218,14 +218,11 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 
 	if (m_fileName == NULL)
 	{
-		if (logger != NULL)
-			logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: parser thread will not start, file name not set"));
+		LogParserTrace(0, _T("LogParser: parser thread will not start, file name not set"));
 		return false;
 	}
 
-	if (logger != NULL)
-		logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: parser thread for file \"%s\" started"), m_fileName);
-
+	LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" started"), m_fileName);
 	while(1)
 	{
 		ExpandFileName(getFileName(), fname, MAX_PATH, true);
@@ -239,14 +236,12 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 			if (fh != -1)
 			{
 				setStatus(LPS_RUNNING);
-				if (logger != NULL)
-					logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file \"%s\" (pattern \"%s\") successfully opened"), fname, m_fileName);
+				LogParserTrace(3, _T("LogParser: file \"%s\" (pattern \"%s\") successfully opened"), fname, m_fileName);
 
 				size = (size_t)st.st_size;
 				if (readFromStart)
 				{
-					if (logger != NULL)
-						logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: parsing existing records in file \"%s\""), fname);
+					LogParserTrace(5, _T("LogParser: parsing existing records in file \"%s\""), fname);
 					ParseNewRecords(this, fh);
 					readFromStart = false;
 				}
@@ -264,9 +259,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 					ExpandFileName(getFileName(), temp, MAX_PATH, true);
 					if (_tcscmp(temp, fname))
 					{
-						if (logger != NULL)
-							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file name change for \"%s\" (\"%s\" -> \"%s\")"),
-						          m_fileName, fname, temp);
+						LogParserTrace(5, _T("LogParser: file name change for \"%s\" (\"%s\" -> \"%s\")"), m_fileName, fname, temp);
 						readFromStart = true;
 						break;
 					}
@@ -274,16 +267,14 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 #ifdef _NETWARE
 					if (fgetstat(fh, &st, ST_SIZE_BIT | ST_NAME_BIT) < 0)
 					{
-						if (logger != NULL)
-							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: fgetstat(%d) failed, errno=%d"), fh, errno);
+						LogParserTrace(1, _T("LogParser: fgetstat(%d) failed, errno=%d"), fh, errno);
 						readFromStart = true;
 						break;
 					}
 #else
 					if (NX_FSTAT(fh, &st) < 0)
 					{
-						if (logger != NULL)
-							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: fstat(%d) failed, errno=%d"), fh, errno);
+						LogParserTrace(1, _T("LogParser: fstat(%d) failed, errno=%d"), fh, errno);
 						readFromStart = true;
 						break;
 					}
@@ -291,8 +282,7 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 
 					if (CALL_STAT(fname, &stn) < 0)
 					{
-						if (logger != NULL)
-							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: stat(%s) failed, errno=%d"), fname, errno);
+						LogParserTrace(1, _T("LogParser: stat(%s) failed, errno=%d"), fname, errno);
 						readFromStart = true;
 						break;
 					}
@@ -300,16 +290,14 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 #ifdef _WIN32
 					if (st.st_size > stn.st_size)
 					{
-						if (logger != NULL)
-							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file size for fstat(%d) is greater then for stat(%s), assume file rename"), fh, fname);
+						LogParserTrace(3, _T("LogParser: file size for fstat(%d) is greater then for stat(%s), assume file rename"), fh, fname);
 						readFromStart = true;
 						break;
 					}
 #else
 					if ((st.st_ino != stn.st_ino) || (st.st_dev != stn.st_dev))
 					{
-						if (logger != NULL)
-							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file device or inode differs for stat(%d) and fstat(%s), assume file rename"), fh, fname);
+						LogParserTrace(3, _T("LogParser: file device or inode differs for stat(%d) and fstat(%s), assume file rename"), fh, fname);
 						readFromStart = true;
 						break;
 					}
@@ -321,12 +309,10 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 						{
 							// File was cleared, start from the beginning
 							lseek(fh, 0, SEEK_SET);
-							if (logger != NULL)
-								logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: file \"%s\" st_size != size"), fname);
+							LogParserTrace(3, _T("LogParser: file \"%s\" st_size != size"), fname);
 						}
 						size = (size_t)st.st_size;
-						if (logger != NULL)
-							logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: new data avialable in file \"%s\""), fname);
+						LogParserTrace(6, _T("LogParser: new data avialable in file \"%s\""), fname);
 						ParseNewRecords(this, fh);
 					}
 				}
@@ -346,7 +332,6 @@ bool LogParser::monitorFile(CONDITION stopCondition, void (*logger)(int, const T
 	}
 
 stop_parser:
-	if (logger != NULL)
-		logger(EVENTLOG_DEBUG_TYPE, _T("LogParser: parser thread for file \"%s\" stopped"), m_fileName);
+	LogParserTrace(0, _T("LogParser: parser thread for file \"%s\" stopped"), m_fileName);
 	return true;
 }

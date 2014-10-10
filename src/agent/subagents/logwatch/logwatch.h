@@ -28,22 +28,4 @@
 #include <nms_agent.h>
 #include <nxlpapi.h>
 
-
-//
-// Functions
-//
-
-#ifdef _WIN32
-void InitEventLogParsers();
-void CleanupEventLogParsers();
-#endif
-
-
-//
-// Global variables
-//
-
-extern CONDITION g_hCondShutdown;
-
-
 #endif
