@@ -276,6 +276,7 @@ reopen_log:
       // Initial read (skip on reopen)
 		if (!reopen)
 		{
+			LogParserTrace(7, _T("LogWatch: Initial read of event log \"%s\""), &m_fileName[1]);
 			do
 			{
 				while((success = ReadEventLog(hLog, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0,
@@ -285,8 +286,7 @@ reopen_log:
 					bufferSize = bytesNeeded;
 					buffer = (BYTE *)realloc(buffer, bufferSize);
 					success = TRUE;
-					LogParserTrace(9, _T("LogWatch: Increasing buffer for event log \"%s\" to %u bytes on initial read"),
-										    m_fileName[1], bufferSize);
+					LogParserTrace(9, _T("LogWatch: Increasing buffer for event log \"%s\" to %u bytes on initial read"), &m_fileName[1], bufferSize);
 				}
 			} while(success);
 		}

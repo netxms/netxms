@@ -20,6 +20,7 @@
 **
 **/
 
+#define _WIN32_WINNT 0x0502
 #include "nxcore.h"
 
 #define MAX_DEVICE_DRIVERS		1024
