@@ -600,7 +600,7 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
          if (routing == 3 && bendPoints[0] != 0)
          {
             count = 1;
-            for(int j = 0; j < _tcslen(bendPoints); j++)
+            for(size_t j = 0; j < _tcslen(bendPoints); j++)
             {
                if (bendPoints[j] == _T(','))
                   count++;

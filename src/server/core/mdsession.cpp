@@ -786,7 +786,7 @@ void MobileDeviceSession::pushData(CSCPMessage *request)
          {
             time_t t = 0;
             int ft = request->getFieldType(VID_TIMESTAMP);
-            if (ft == CSCP_DT_INTEGER)
+            if (ft == CSCP_DT_INT32)
             {
                t = (time_t)request->GetVariableLong(VID_TIMESTAMP);
             }

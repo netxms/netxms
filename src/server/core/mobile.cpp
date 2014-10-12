@@ -243,7 +243,7 @@ void MobileDevice::updateStatus(CSCPMessage *msg)
 	m_lastReportTime = time(NULL);
 
    int type = msg->getFieldType(VID_BATTERY_LEVEL);
-   if (type == CSCP_DT_INTEGER)
+   if (type == CSCP_DT_INT32)
 		m_batteryLevel = (int)msg->GetVariableLong(VID_BATTERY_LEVEL);
    else if (type == CSCP_DT_INT16)
 		m_batteryLevel = (int)msg->GetVariableShort(VID_BATTERY_LEVEL);
