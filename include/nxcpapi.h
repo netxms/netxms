@@ -59,7 +59,7 @@ private:
    int m_version;    // Protocol version
 
    void *set(UINT32 fieldId, BYTE type, const void *value, UINT32 size = 0);
-   void *get(UINT32 fieldId, BYTE type);
+   void *get(UINT32 fieldId, BYTE requiredType, BYTE *fieldType = NULL);
    CSCP_DF *find(UINT32 fieldId);
 
 public:
@@ -86,41 +86,43 @@ public:
    bool isFieldExist(UINT32 fieldId) { return find(fieldId) != NULL; }
    int getFieldType(UINT32 fieldId);
 
-   void SetVariable(UINT32 dwVarId, INT16 wValue) { set(dwVarId, CSCP_DT_INT16, &wValue); }
-   void SetVariable(UINT32 dwVarId, UINT16 wValue) { set(dwVarId, CSCP_DT_INT16, &wValue); }
-   void SetVariable(UINT32 dwVarId, INT32 dwValue) { set(dwVarId, CSCP_DT_INTEGER, &dwValue); }
-   void SetVariable(UINT32 dwVarId, UINT32 dwValue) { set(dwVarId, CSCP_DT_INTEGER, &dwValue); }
-   void SetVariable(UINT32 dwVarId, INT64 qwValue) { set(dwVarId, CSCP_DT_INT64, &qwValue); }
-   void SetVariable(UINT32 dwVarId, UINT64 qwValue) { set(dwVarId, CSCP_DT_INT64, &qwValue); }
-   void SetVariable(UINT32 dwVarId, double dValue) { set(dwVarId, CSCP_DT_FLOAT, &dValue); }
-   void SetVariable(UINT32 dwVarId, const TCHAR *value) { if (value != NULL) set(dwVarId, CSCP_DT_STRING, value); }
-   void SetVariable(UINT32 dwVarId, const TCHAR *value, UINT32 maxLen) { if (value != NULL) set(dwVarId, CSCP_DT_STRING, value, maxLen); }
-   void SetVariable(UINT32 dwVarId, BYTE *pValue, UINT32 dwSize) { set(dwVarId, CSCP_DT_BINARY, pValue, dwSize); }
+   void SetVariable(UINT32 fieldId, INT16 wValue) { set(fieldId, CSCP_DT_INT16, &wValue); }
+   void SetVariable(UINT32 fieldId, UINT16 wValue) { set(fieldId, CSCP_DT_INT16, &wValue); }
+   void SetVariable(UINT32 fieldId, INT32 dwValue) { set(fieldId, CSCP_DT_INT32, &dwValue); }
+   void SetVariable(UINT32 fieldId, UINT32 dwValue) { set(fieldId, CSCP_DT_INT32, &dwValue); }
+   void SetVariable(UINT32 fieldId, INT64 qwValue) { set(fieldId, CSCP_DT_INT64, &qwValue); }
+   void SetVariable(UINT32 fieldId, UINT64 qwValue) { set(fieldId, CSCP_DT_INT64, &qwValue); }
+   void SetVariable(UINT32 fieldId, double dValue) { set(fieldId, CSCP_DT_FLOAT, &dValue); }
+   void SetVariable(UINT32 fieldId, const TCHAR *value) { if (value != NULL) set(fieldId, CSCP_DT_STRING, value); }
+   void SetVariable(UINT32 fieldId, const TCHAR *value, UINT32 maxLen) { if (value != NULL) set(fieldId, CSCP_DT_STRING, value, maxLen); }
+   void SetVariable(UINT32 fieldId, BYTE *pValue, UINT32 dwSize) { set(fieldId, CSCP_DT_BINARY, pValue, dwSize); }
 #ifdef UNICODE
-   void SetVariableFromMBString(UINT32 dwVarId, const char *pszValue);
+   void SetVariableFromMBString(UINT32 fieldId, const char *pszValue);
 #else
-   void SetVariableFromMBString(UINT32 dwVarId, const char *pszValue) { set(dwVarId, CSCP_DT_STRING, pszValue); }
+   void SetVariableFromMBString(UINT32 fieldId, const char *pszValue) { set(fieldId, CSCP_DT_STRING, pszValue); }
 #endif
-   void setFieldInt32Array(UINT32 dwVarId, UINT32 dwNumElements, const UINT32 *pdwData);
-   void setFieldInt32Array(UINT32 dwVarId, IntegerArray<UINT32> *data);
-   bool setFieldFromFile(UINT32 dwVarId, const TCHAR *pszFileName);
+   void setField(UINT32 fieldId, time_t value) { UINT64 t = (UINT64)value; set(fieldId, CSCP_DT_INT64, &t); }
+   void setFieldInt32Array(UINT32 fieldId, UINT32 dwNumElements, const UINT32 *pdwData);
+   void setFieldInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data);
+   bool setFieldFromFile(UINT32 fieldId, const TCHAR *pszFileName);
 
    INT16 getFieldAsInt16(UINT32 fieldId);
    INT32 getFieldAsInt32(UINT32 fieldId);
    INT64 getFieldAsInt64(UINT32 fieldId);
    double getFieldAsDouble(UINT32 fieldId);
    bool getFieldAsBoolean(UINT32 fieldId);
+   time_t getFieldAsTime(UINT32 fieldId);
    UINT32 getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer);
    UINT32 getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data);
    BYTE *getBinaryFieldPtr(UINT32 fieldId, size_t *size);
 
-   UINT32 GetVariableLong(UINT32 dwVarId);
-   UINT64 GetVariableInt64(UINT32 dwVarId);
-   UINT16 GetVariableShort(UINT32 dwVarId);
-   TCHAR *GetVariableStr(UINT32 dwVarId, TCHAR *szBuffer = NULL, UINT32 dwBufSize = 0);
-	char *GetVariableStrA(UINT32 dwVarId, char *pszBuffer = NULL, UINT32 dwBufSize = 0);
-	char *GetVariableStrUTF8(UINT32 dwVarId, char *pszBuffer = NULL, UINT32 dwBufSize = 0);
-   UINT32 GetVariableBinary(UINT32 dwVarId, BYTE *pBuffer, UINT32 dwBufSize);
+   UINT32 GetVariableLong(UINT32 fieldId);
+   UINT64 GetVariableInt64(UINT32 fieldId);
+   UINT16 GetVariableShort(UINT32 fieldId);
+   TCHAR *GetVariableStr(UINT32 fieldId, TCHAR *szBuffer = NULL, UINT32 dwBufSize = 0);
+	char *GetVariableStrA(UINT32 fieldId, char *pszBuffer = NULL, UINT32 dwBufSize = 0);
+	char *GetVariableStrUTF8(UINT32 fieldId, char *pszBuffer = NULL, UINT32 dwBufSize = 0);
+   UINT32 GetVariableBinary(UINT32 fieldId, BYTE *pBuffer, UINT32 dwBufSize);
 
    void deleteAllVariables();
 

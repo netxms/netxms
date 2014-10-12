@@ -99,12 +99,12 @@ GeoLocation::GeoLocation(CSCPMessage &msg)
 {
 	m_type = (int)msg.GetVariableShort(VID_GEOLOCATION_TYPE);
 
-   if (msg.getFieldType(VID_LATITUDE) == CSCP_DT_INTEGER)
+   if (msg.getFieldType(VID_LATITUDE) == CSCP_DT_INT32)
 	   m_lat = (double)msg.getFieldAsInt32(VID_LATITUDE) / 1000000;
    else
 	   m_lat = msg.getFieldAsDouble(VID_LATITUDE);
 
-   if (msg.getFieldType(VID_LONGITUDE) == CSCP_DT_INTEGER)
+   if (msg.getFieldType(VID_LONGITUDE) == CSCP_DT_INT32)
 	   m_lon = (double)msg.getFieldAsInt32(VID_LONGITUDE) / 1000000;
    else
    	m_lon = msg.getFieldAsDouble(VID_LONGITUDE);
@@ -117,7 +117,7 @@ GeoLocation::GeoLocation(CSCPMessage &msg)
    {
       m_timestamp = (time_t)msg.GetVariableInt64(VID_GEOLOCATION_TIMESTAMP);
    }
-   else if (ft == CSCP_DT_INTEGER)
+   else if (ft == CSCP_DT_INT32)
    {
       m_timestamp = (time_t)msg.GetVariableLong(VID_GEOLOCATION_TIMESTAMP);
    }

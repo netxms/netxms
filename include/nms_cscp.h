@@ -68,18 +68,18 @@
 #define CSCP_SUPPORT_AES_128      0x10
 #define CSCP_SUPPORT_BLOWFISH_128 0x20
 
-/**
- * Data field structure
- */
 #ifdef __HP_aCC
 #pragma pack 1
 #else
 #pragma pack(1)
 #endif
 
+/**
+ * NXCP data field structure
+ */
 typedef struct
 {
-   UINT32 dwVarId;      // Variable identifier
+   UINT32 fieldId;      // Field identifier
    BYTE  bType;         // Data type
    BYTE  bPadding;      // Padding
    WORD wInt16;
@@ -178,7 +178,7 @@ typedef struct
 /**
  * Data types
  */
-#define CSCP_DT_INTEGER    0
+#define CSCP_DT_INT32      0
 #define CSCP_DT_STRING     1
 #define CSCP_DT_INT64      2
 #define CSCP_DT_INT16      3
