@@ -122,11 +122,6 @@ static void SubagentShutdown()
 	}
 
    CleanupLogParserLibrary();
-
-#ifdef _NETWARE
-	// Notify main thread that NLM can exit
-	ConditionSet(m_hCondTerminate);
-#endif
 }
 
 /**
@@ -295,8 +290,8 @@ static NETXMS_SUBAGENT_INFO m_info =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(LOGWATCH)
 {
-	*ppInfo = &m_info;
    SetLogParserTraceCallback(AgentWriteDebugLog2);
+	*ppInfo = &m_info;
 	return TRUE;
 }
 
@@ -310,26 +305,6 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 	if (dwReason == DLL_PROCESS_ATTACH)
 		DisableThreadLibraryCalls(hInstance);
 	return TRUE;
-}
-
-#endif
-
-
-//
-// NetWare entry point
-// We use main() instead of _init() and _fini() to implement
-// automatic unload of the subagent after unload handler is called
-//
-
-#ifdef _NETWARE
-
-int main(int argc, char *argv[])
-{
-   m_hCondTerminate = ConditionCreate(TRUE);
-   ConditionWait(m_hCondTerminate, INFINITE);
-   ConditionDestroy(m_hCondTerminate);
-   sleep(1);
-   return 0;
 }
 
 #endif
