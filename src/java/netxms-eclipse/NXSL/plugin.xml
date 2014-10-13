@@ -22,10 +22,10 @@
       <view
             allowMultiple="true"
             category="org.netxms.ui.eclipse.viewcategory.config"
-            class="org.netxms.ui.eclipse.nxsl.views.ScriptExecuter"
-            icon="icons/active.gif"
-            id="org.netxms.ui.eclipse.nxsl.views.ScriptExecuter"
-            name="Script Executer"
+            class="org.netxms.ui.eclipse.nxsl.views.ScriptExecutor"
+            icon="icons/script_exec.gif"
+            id="org.netxms.ui.eclipse.nxsl.views.ScriptExecutor"
+            name="Script Executor"
             restorable="false">
       </view>
    </extension>
@@ -36,6 +36,10 @@
             description="%command.description.ScriptLibrary"
             id="org.netxms.ui.eclipse.nxsl.commands.open_script_library"
             name="%command.name.ScriptLibrary">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.nxsl.popupActions.ExecuteServerScript"
+            name="Execute server script">
       </command>
    </extension>
    <extension
@@ -58,35 +62,46 @@
       </actionSet>
    </extension>
    <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            adaptable="false"
-            id="org.netxms.ui.eclipse.agentmanager.actions.popup.object.Node"
-            objectClass="org.netxms.client.objects.Node">
-         <action
-               class="org.netxms.ui.eclipse.nxsl.actions.OpenAgentScriptExecuter"
-               enablesFor="+"
-               icon="icons/active.gif"
-               id="org.netxms.ui.eclipse.nxsl.popupActions.OpenAgentScriptExecuter_Node"
-               label="Script Executer"
-               menubarPath="objectmgmt"
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any?before=additions">
+         <command
+               commandId="org.netxms.ui.eclipse.nxsl.popupActions.ExecuteServerScript"
+               icon="icons/script_exec.gif"
+               label="Execute server script"
                style="push">
-         </action>
-      </objectContribution>
-      <objectContribution
-            adaptable="false"
-            id="org.netxms.ui.eclipse.agentmanager.actions.popup.object.Cluster"
-            objectClass="org.netxms.client.objects.Cluster">
-         <action
-               class="org.netxms.ui.eclipse.nxsl.actions.OpenAgentScriptExecuter"
-               enablesFor="+"
-               icon="icons/active.gif"
-               id="org.netxms.ui.eclipse.nxsl.popupActions.OpenAgentScriptExecuter_Cluster"
-               label="Script Executer"
-               menubarPath="objectmgmt"
-               style="push">
-         </action>
-      </objectContribution>
+            <visibleWhen
+                  checkEnabled="false">
+               <iterate>
+                  <or>
+                     <instanceof
+                           value="org.netxms.client.objects.AbstractNode">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Container">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Cluster">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.MobileDevice">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Subnet">
+                     </instanceof>
+                  </or>
+               </iterate>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="org.netxms.ui.eclipse.nxsl.actions.ExecuteServerScript"
+            commandId="org.netxms.ui.eclipse.nxsl.popupActions.ExecuteServerScript">
+      </handler>
    </extension>
 
 </plugin>

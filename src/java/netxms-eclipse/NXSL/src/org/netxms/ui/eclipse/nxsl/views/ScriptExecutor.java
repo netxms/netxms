@@ -18,7 +18,6 @@
  */
 package org.netxms.ui.eclipse.nxsl.views;
 
-import java.io.IOException;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -52,9 +51,6 @@ import org.netxms.api.client.scripts.Script;
 import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.client.ActionExecutionListener;
 import org.netxms.client.NXCSession;
-import org.netxms.client.agent.config.ConfigContent;
-import org.netxms.client.datacollection.TransformationTestResult;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
@@ -68,14 +64,14 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * Sored on server agent's configuration editor
  */
-public class ScriptExecuter extends ViewPart implements ISaveablePart2, ActionExecutionListener
+public class ScriptExecutor extends ViewPart implements ISaveablePart2, ActionExecutionListener
 {
-   public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptExecuter"; //$NON-NLS-1$
+   public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptExecutor"; //$NON-NLS-1$
 
    private NXCSession session;
    private ScriptLibraryManager scriptLibraryManager;
    private boolean modified = false;
-   private long nodeId;
+   private long objectId;
 
    private ScrolledForm form;
    private Combo scriptCombo;
@@ -102,11 +98,10 @@ public class ScriptExecuter extends ViewPart implements ISaveablePart2, ActionEx
       super.init(site);
 
       session = (NXCSession)ConsoleSharedData.getSession();
-      nodeId = Long.parseLong(site.getSecondaryId());
+      objectId = Long.parseLong(site.getSecondaryId());
       scriptLibraryManager = (ScriptLibraryManager)ConsoleSharedData.getSession();
 
-      AbstractObject object = session.findObjectById(nodeId);
-      setPartName("Script executer for node " + ((object != null) ? object.getObjectName() : Long.toString(nodeId)));
+      setPartName("Execute Script - " +session.getObjectName(objectId));
    }
 
    /*
@@ -142,34 +137,25 @@ public class ScriptExecuter extends ViewPart implements ISaveablePart2, ActionEx
       form.getBody().setLayoutData(gridData);       
 
       /**** Script list dropdown ****/
-      scriptCombo = WidgetHelper.createLabeledCombo(form.getBody(), SWT.READ_ONLY, "Script library list", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      scriptCombo = WidgetHelper.createLabeledCombo(form.getBody(), SWT.READ_ONLY, "Script library list", WidgetHelper.DEFAULT_LAYOUT_DATA, toolkit);
       updateScriptList(null); 
       scriptCombo.addSelectionListener( new SelectionListener() {
-         
          @Override
          public void widgetSelected(SelectionEvent e)
          {
-            System.out.println("selection changed");  
-            if(modified)
+            if (modified)
             {
-               if(saveIfRequired(true))
+               if (saveIfRequired(true))
                   return;
             }           
-            getScriptConetnt();        
+            getScriptContent();        
             previousSelection = scriptCombo.getSelectionIndex();
          }
          
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
-            System.out.println("selection changed");   
-            if(modified)
-            {
-               if(saveIfRequired(true))
-                  return;
-            }           
-            getScriptConetnt();       
-            previousSelection = scriptCombo.getSelectionIndex();  
+            widgetSelected(e);
          }
       });
       
@@ -318,7 +304,7 @@ public class ScriptExecuter extends ViewPart implements ISaveablePart2, ActionEx
             }
             
             updateScriptList(null);
-            getScriptConetnt();
+            getScriptContent();
             executionResult.setText("");
          }
       };
@@ -349,7 +335,7 @@ public class ScriptExecuter extends ViewPart implements ISaveablePart2, ActionEx
             createNewScript(onSelectionChange);
             break;
          case SaveScriptDialog.DISCARD_ID:
-            getScriptConetnt(); 
+            getScriptContent(); 
             clearDirtyFlags();
             break;
          default:
@@ -404,7 +390,7 @@ public class ScriptExecuter extends ViewPart implements ISaveablePart2, ActionEx
    /**
     * Updates content of script editor to selected by user script
     */
-   protected void getScriptConetnt()
+   protected void getScriptContent()
    {
       final int index = scriptCombo.getSelectionIndex();
       if(index == -1)
@@ -444,7 +430,7 @@ public class ScriptExecuter extends ViewPart implements ISaveablePart2, ActionEx
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.executeScript(nodeId, scrpt, ScriptExecuter.this);
+            session.executeScript(objectId, scrpt, ScriptExecutor.this);
          }
          
          @Override
