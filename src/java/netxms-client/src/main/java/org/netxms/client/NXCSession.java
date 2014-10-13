@@ -271,6 +271,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private LinkedBlockingQueue<SessionNotification> notificationQueue = new LinkedBlockingQueue<SessionNotification>(8192);
    private Set<SessionListener> listeners = new HashSet<SessionListener>(0);
    private Set<ServerConsoleListener> consoleListeners = new HashSet<ServerConsoleListener>(0);
+   
+   // Message subscriptions
+   private Map<MessageSubscription, MessageHandler> messageSubscriptions = new HashMap<MessageSubscription, MessageHandler>(0);
 
    // Received files
    private Map<Long, NXCReceivedFile> receivedFiles = new HashMap<Long, NXCReceivedFile>();
@@ -310,239 +313,56 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private boolean eventTemplatesNeedSync = false;
    
    /**
-    * @param connAddress
-    * @param connPort
-    * @param connLoginName
+    * Message subscription class
     */
-   public NXCSession(String connAddress, int connPort, String connLoginName)
+   final protected class MessageSubscription
    {
-      this(connAddress, DEFAULT_CONN_PORT, connLoginName, "", false);
-   }
-
-   /**
-    * @param connAddress
-    * @param connLoginName
-    * @param connPassword
-    */
-   public NXCSession(String connAddress, String connLoginName, String connPassword)
-   {
-      this(connAddress, DEFAULT_CONN_PORT, connLoginName, connPassword, false);
-   }
-
-   /**
-    * @param connAddress
-    * @param connPort
-    * @param connLoginName
-    * @param connPassword
-    */
-   public NXCSession(String connAddress, int connPort, String connLoginName, String connPassword)
-   {
-      this(connAddress, connPort, connLoginName, connPassword, false);
-   }
-
-   /**
-    * @param connAddress
-    * @param connPort
-    * @param connLoginName
-    * @param connPassword
-    * @param connUseEncryption
-    */
-   public NXCSession(String connAddress, int connPort, String connLoginName, String connPassword, boolean connUseEncryption)
-   {
-      this.connAddress = connAddress;
-      this.connPort = connPort;
-      this.connLoginName = connLoginName;
-      this.connPassword = connPassword;
-      this.connUseEncryption = connUseEncryption;
-   }
-
-   /*
-   * (non-Javadoc)
-   *
-   * @see java.lang.Object#finalize()
-   */
-   @Override
-   protected void finalize() throws Throwable
-   {
-      try
+      protected int messageCode;
+      protected long messageId;
+      
+      /**
+       * @param messageCode
+       * @param messageId
+       * @param handler
+       */
+      protected MessageSubscription(int messageCode, long messageId)
       {
-         disconnect();
+         this.messageCode = messageCode;
+         this.messageId = messageId;
       }
-      finally
+      
+      /* (non-Javadoc)
+       * @see java.lang.Object#hashCode()
+       */
+      @Override
+      public int hashCode()
       {
-         super.finalize();
-      }
-   }
-
-   /**
-    * Convert IP address to 32 bit integer
-    *
-    * @param addr
-    * @return
-    */
-   private static long int32FromInetAddress(InetAddress addr)
-   {
-      byte[] bytes = addr.getAddress();
-      return (((long)bytes[0] & 0xFF) << 24)  | (((long)bytes[1] & 0xFF) << 16) | (((long)bytes[2] & 0xFF) << 8) | ((long)bytes[3] & 0xFF);
-   }
-
-   /**
-    * Create custom object from NXCP message. May be overridden by derived classes to create custom
-    * NetXMS objects. This method called before standard object creation, so it can be used for
-    * overriding standard object classes. If this method returns null, standard object
-    * creation mechanism will be used. Default implementation will always return null.
-    *
-    * @param objectClass NetXMS object class ID
-    * @param msg         Source NXCP message
-    * @return NetXMS object or null if object cannot be created
-    */
-   protected AbstractObject createCustomObjectFromMessage(int objectClass, NXCPMessage msg)
-   {
-      return null;
-   }
-
-   /**
-    * Create object from message
-    *
-    * @param msg Source NXCP message
-    * @return NetXMS object
-    */
-   private AbstractObject createObjectFromMessage(NXCPMessage msg)
-   {
-      final int objectClass = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_CLASS);
-
-      AbstractObject object = createCustomObjectFromMessage(objectClass, msg);
-      if (object != null) 
-         return object;
-
-      switch(objectClass)
-      {
-         case AbstractObject.OBJECT_ACCESSPOINT:
-            object = new AccessPoint(msg, this);
-            break;
-         case AbstractObject.OBJECT_AGENTPOLICY:
-            object = new AgentPolicy(msg, this);
-            break;
-         case AbstractObject.OBJECT_AGENTPOLICY_CONFIG:
-            object = new AgentPolicyConfig(msg, this);
-            break;
-         case AbstractObject.OBJECT_BUSINESSSERVICE:
-            object = new BusinessService(msg, this);
-            break;
-         case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
-            object = new BusinessServiceRoot(msg, this);
-            break;
-         case AbstractObject.OBJECT_CLUSTER:
-            object = new Cluster(msg, this);
-            break;
-         case AbstractObject.OBJECT_CONDITION:
-            object = new Condition(msg, this);
-            break;
-         case AbstractObject.OBJECT_CONTAINER:
-            object = new Container(msg, this);
-            break;
-         case AbstractObject.OBJECT_DASHBOARD:
-            object = new Dashboard(msg, this);
-            break;
-         case AbstractObject.OBJECT_DASHBOARDROOT:
-            object = new DashboardRoot(msg, this);
-            break;
-         case AbstractObject.OBJECT_INTERFACE:
-            object = new Interface(msg, this);
-            break;
-         case AbstractObject.OBJECT_MOBILEDEVICE:
-            object = new MobileDevice(msg, this);
-            break;
-         case AbstractObject.OBJECT_NETWORK:
-            object = new EntireNetwork(msg, this);
-            break;
-         case AbstractObject.OBJECT_NETWORKMAP:
-            object = new NetworkMap(msg, this);
-            break;
-         case AbstractObject.OBJECT_NETWORKMAPGROUP:
-            object = new NetworkMapGroup(msg, this);
-            break;
-         case AbstractObject.OBJECT_NETWORKMAPROOT:
-            object = new NetworkMapRoot(msg, this);
-            break;
-         case AbstractObject.OBJECT_NETWORKSERVICE:
-            object = new NetworkService(msg, this);
-            break;
-         case AbstractObject.OBJECT_NODE:
-            object = new Node(msg, this);
-            break;
-         case AbstractObject.OBJECT_NODELINK:
-            object = new NodeLink(msg, this);
-            break;
-         case AbstractObject.OBJECT_POLICYGROUP:
-            object = new PolicyGroup(msg, this);
-            break;
-         case AbstractObject.OBJECT_POLICYROOT:
-            object = new PolicyRoot(msg, this);
-            break;
-         case AbstractObject.OBJECT_RACK:
-            object = new Rack(msg, this);
-            break;
-         case AbstractObject.OBJECT_SERVICEROOT:
-            object = new ServiceRoot(msg, this);
-            break;
-         case AbstractObject.OBJECT_SLMCHECK:
-            object = new ServiceCheck(msg, this);
-            break;
-         case AbstractObject.OBJECT_SUBNET:
-            object = new Subnet(msg, this);
-            break;
-         case AbstractObject.OBJECT_TEMPLATE:
-            object = new Template(msg, this);
-            break;
-         case AbstractObject.OBJECT_TEMPLATEGROUP:
-            object = new TemplateGroup(msg, this);
-            break;
-         case AbstractObject.OBJECT_TEMPLATEROOT:
-            object = new TemplateRoot(msg, this);
-            break;
-         case AbstractObject.OBJECT_VPNCONNECTOR:
-            object = new VPNConnector(msg, this);
-            break;
-         case AbstractObject.OBJECT_ZONE:
-            object = new Zone(msg, this);
-            break;
-         default:
-            object = new GenericObject(msg, this);
-            break;
+         final int prime = 31;
+         int result = 1;
+         result = prime * result + messageCode;
+         result = prime * result + (int)(messageId ^ (messageId >>> 32));
+         return result;
       }
 
-      return object;
-   }
-
-   /**
-    * Setup encryption
-    *
-    * @param msg CMD_REQUEST_SESSION_KEY message
-    * @throws IOException
-    * @throws NXCException
-    */
-   private void setupEncryption(NXCPMessage msg) throws IOException, NXCException
-   {
-      final NXCPMessage response = new NXCPMessage(NXCPCodes.CMD_SESSION_KEY, msg.getMessageId());
-      response.setEncryptionDisabled(true);
-
-      try
+      /* (non-Javadoc)
+       * @see java.lang.Object#equals(java.lang.Object)
+       */
+      @Override
+      public boolean equals(Object obj)
       {
-         encryptionContext = EncryptionContext.createInstance(msg);
-         response.setVariable(NXCPCodes.VID_SESSION_KEY, encryptionContext.getEncryptedSessionKey(msg));
-         response.setVariable(NXCPCodes.VID_SESSION_IV, encryptionContext.getEncryptedIv(msg));
-         response.setVariableInt16(NXCPCodes.VID_CIPHER, encryptionContext.getCipher());
-         response.setVariableInt16(NXCPCodes.VID_KEY_LENGTH, encryptionContext.getKeyLength());
-         response.setVariableInt16(NXCPCodes.VID_IV_LENGTH, encryptionContext.getIvLength());
-         response.setVariableInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
+         if (this == obj)
+            return true;
+         if (obj == null)
+            return false;
+         if (getClass() != obj.getClass())
+            return false;
+         MessageSubscription other = (MessageSubscription)obj;
+         if (messageCode != other.messageCode)
+            return false;
+         if (messageId != other.messageId)
+            return false;
+         return true;
       }
-      catch(Exception e)
-      {
-         response.setVariableInt32(NXCPCodes.VID_RCC, RCC.NO_CIPHERS);
-      }
-
-      sendMessage(response);
    }
 
    /**
@@ -575,7 +395,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          {
             try
             {
-               final NXCPMessage msg = receiver.receiveMessage(in, encryptionContext);
+               NXCPMessage msg = receiver.receiveMessage(in, encryptionContext);
                switch(msg.getMessageCode())
                {
                   case NXCPCodes.CMD_REQUEST_SESSION_KEY:
@@ -697,12 +517,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
                      processImageLibraryUpdate(msg);
                      break;
                   default:
-                     if (msg.getMessageCode() >= 0x1000)
+                     // Check subscriptions
+                     synchronized(messageSubscriptions)
                      {
-                        // Custom message
-                        sendNotification(new NXCNotification(NXCNotification.CUSTOM_MESSAGE, msg));
+                        MessageHandler handler = messageSubscriptions.get(new MessageSubscription(msg.getMessageCode(), msg.getMessageId()));
+                        if ((handler != null) && handler.processMessage(msg))
+                           msg = null;
                      }
-                     msgWaitQueue.putMessage(msg);
+                     if (msg != null)
+                     {
+                        if (msg.getMessageCode() >= 0x1000)
+                        {
+                           // Custom message
+                           sendNotification(new NXCNotification(NXCNotification.CUSTOM_MESSAGE, msg));
+                        }
+                        msgWaitQueue.putMessage(msg);
+                     }
                      break;
                }
             }
@@ -1009,9 +839,9 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 
       /*
        * (non-Javadoc)
-		 * 
-		 * @see java.lang.Thread#run()
-		 */
+       * 
+       * @see java.lang.Thread#run()
+       */
       @Override
       public void run()
       {
@@ -1049,129 +879,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       public void setStopFlag(boolean stopFlag)
       {
          this.stopFlag = stopFlag;
-      }
-   }
-
-   /**
-    * @return the authType
-    */
-   public int getAuthType()
-   {
-      return authType;
-   }
-
-   /**
-    * @param authType the authType to set
-    */
-   public void setAuthType(int authType)
-   {
-      this.authType = authType;
-   }
-
-   /**
-    * Wait for synchronization completion
-    */
-   private void waitForSync(final Semaphore syncObject, final int timeout) throws NXCException
-   {
-      if (timeout == 0)
-      {
-         syncObject.acquireUninterruptibly();
-      }
-      else
-      {
-         long actualTimeout = timeout;
-         boolean success = false;
-
-         while(actualTimeout > 0)
-         {
-            long startTime = System.currentTimeMillis();
-            try
-            {
-               if (syncObjects.tryAcquire(actualTimeout, TimeUnit.MILLISECONDS))
-               {
-                  success = true;
-                  syncObjects.release();
-                  break;
-               }
-            }
-            catch(InterruptedException e)
-            {
-            }
-            actualTimeout -= System.currentTimeMillis() - startTime;
-         }
-         if (!success) throw new NXCException(RCC.TIMEOUT);
-      }
-   }
-
-   /**
-    * Report synchronization completion
-    *
-    * @param syncObject Synchronization object
-    */
-   private void completeSync(final Semaphore syncObject)
-   {
-      syncObject.release();
-   }
-
-   /*
-    * (non-Javadoc)
-	 * 
-	 * @see org.netxms.api.client.Session#addListener(org.netxms.api.client.
-	 * SessionListener)
-	 */
-   @Override
-   public void addListener(SessionListener listener)
-   {
-      boolean changed;
-      synchronized(listeners)
-      {
-         changed = listeners.add(listener);
-      }
-      if (changed)
-         notificationQueue.offer(new NXCNotification(NXCNotification.UPDATE_LISTENER_LIST));
-   }
-
-   /*
-    * (non-Javadoc)
-	 * 
-	 * @see org.netxms.api.client.Session#removeListener(org.netxms.api.client.
-	 * SessionListener)
-	 */
-   @Override
-   public void removeListener(SessionListener listener)
-   {
-      boolean changed;
-      synchronized(listeners)
-      {
-         changed = listeners.remove(listener);
-      }
-      if (changed)
-         notificationQueue.offer(new NXCNotification(NXCNotification.UPDATE_LISTENER_LIST));
-   }
-
-   /**
-    * Add server console listener
-    *
-    * @param listener
-    */
-   public void addConsoleListener(ServerConsoleListener listener)
-   {
-      synchronized(consoleListeners)
-      {
-         consoleListeners.add(listener);
-      }
-   }
-
-   /**
-    * Remove server console listener
-    *
-    * @param listener
-    */
-   public void removeConsoleListener(ServerConsoleListener listener)
-   {
-      synchronized(consoleListeners)
-      {
-         consoleListeners.remove(listener);
       }
    }
    
@@ -1237,6 +944,384 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       }
    }
 
+   /**
+    * @param connAddress
+    * @param connPort
+    * @param connLoginName
+    */
+   public NXCSession(String connAddress, int connPort, String connLoginName)
+   {
+      this(connAddress, DEFAULT_CONN_PORT, connLoginName, "", false);
+   }
+
+   /**
+    * @param connAddress
+    * @param connLoginName
+    * @param connPassword
+    */
+   public NXCSession(String connAddress, String connLoginName, String connPassword)
+   {
+      this(connAddress, DEFAULT_CONN_PORT, connLoginName, connPassword, false);
+   }
+
+   /**
+    * @param connAddress
+    * @param connPort
+    * @param connLoginName
+    * @param connPassword
+    */
+   public NXCSession(String connAddress, int connPort, String connLoginName, String connPassword)
+   {
+      this(connAddress, connPort, connLoginName, connPassword, false);
+   }
+
+   /**
+    * @param connAddress
+    * @param connPort
+    * @param connLoginName
+    * @param connPassword
+    * @param connUseEncryption
+    */
+   public NXCSession(String connAddress, int connPort, String connLoginName, String connPassword, boolean connUseEncryption)
+   {
+      this.connAddress = connAddress;
+      this.connPort = connPort;
+      this.connLoginName = connLoginName;
+      this.connPassword = connPassword;
+      this.connUseEncryption = connUseEncryption;
+   }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#finalize()
+    */
+   @Override
+   protected void finalize() throws Throwable
+   {
+      try
+      {
+         disconnect();
+      }
+      finally
+      {
+         super.finalize();
+      }
+   }
+
+   /**
+    * Convert IP address to 32 bit integer
+    *
+    * @param addr
+    * @return
+    */
+   private static long int32FromInetAddress(InetAddress addr)
+   {
+      byte[] bytes = addr.getAddress();
+      return (((long)bytes[0] & 0xFF) << 24)  | (((long)bytes[1] & 0xFF) << 16) | (((long)bytes[2] & 0xFF) << 8) | ((long)bytes[3] & 0xFF);
+   }
+
+   /**
+    * Create custom object from NXCP message. May be overridden by derived classes to create custom
+    * NetXMS objects. This method called before standard object creation, so it can be used for
+    * overriding standard object classes. If this method returns null, standard object
+    * creation mechanism will be used. Default implementation will always return null.
+    *
+    * @param objectClass NetXMS object class ID
+    * @param msg         Source NXCP message
+    * @return NetXMS object or null if object cannot be created
+    */
+   protected AbstractObject createCustomObjectFromMessage(int objectClass, NXCPMessage msg)
+   {
+      return null;
+   }
+
+   /**
+    * Create object from message
+    *
+    * @param msg Source NXCP message
+    * @return NetXMS object
+    */
+   private AbstractObject createObjectFromMessage(NXCPMessage msg)
+   {
+      final int objectClass = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_CLASS);
+
+      AbstractObject object = createCustomObjectFromMessage(objectClass, msg);
+      if (object != null) 
+         return object;
+
+      switch(objectClass)
+      {
+         case AbstractObject.OBJECT_ACCESSPOINT:
+            object = new AccessPoint(msg, this);
+            break;
+         case AbstractObject.OBJECT_AGENTPOLICY:
+            object = new AgentPolicy(msg, this);
+            break;
+         case AbstractObject.OBJECT_AGENTPOLICY_CONFIG:
+            object = new AgentPolicyConfig(msg, this);
+            break;
+         case AbstractObject.OBJECT_BUSINESSSERVICE:
+            object = new BusinessService(msg, this);
+            break;
+         case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
+            object = new BusinessServiceRoot(msg, this);
+            break;
+         case AbstractObject.OBJECT_CLUSTER:
+            object = new Cluster(msg, this);
+            break;
+         case AbstractObject.OBJECT_CONDITION:
+            object = new Condition(msg, this);
+            break;
+         case AbstractObject.OBJECT_CONTAINER:
+            object = new Container(msg, this);
+            break;
+         case AbstractObject.OBJECT_DASHBOARD:
+            object = new Dashboard(msg, this);
+            break;
+         case AbstractObject.OBJECT_DASHBOARDROOT:
+            object = new DashboardRoot(msg, this);
+            break;
+         case AbstractObject.OBJECT_INTERFACE:
+            object = new Interface(msg, this);
+            break;
+         case AbstractObject.OBJECT_MOBILEDEVICE:
+            object = new MobileDevice(msg, this);
+            break;
+         case AbstractObject.OBJECT_NETWORK:
+            object = new EntireNetwork(msg, this);
+            break;
+         case AbstractObject.OBJECT_NETWORKMAP:
+            object = new NetworkMap(msg, this);
+            break;
+         case AbstractObject.OBJECT_NETWORKMAPGROUP:
+            object = new NetworkMapGroup(msg, this);
+            break;
+         case AbstractObject.OBJECT_NETWORKMAPROOT:
+            object = new NetworkMapRoot(msg, this);
+            break;
+         case AbstractObject.OBJECT_NETWORKSERVICE:
+            object = new NetworkService(msg, this);
+            break;
+         case AbstractObject.OBJECT_NODE:
+            object = new Node(msg, this);
+            break;
+         case AbstractObject.OBJECT_NODELINK:
+            object = new NodeLink(msg, this);
+            break;
+         case AbstractObject.OBJECT_POLICYGROUP:
+            object = new PolicyGroup(msg, this);
+            break;
+         case AbstractObject.OBJECT_POLICYROOT:
+            object = new PolicyRoot(msg, this);
+            break;
+         case AbstractObject.OBJECT_RACK:
+            object = new Rack(msg, this);
+            break;
+         case AbstractObject.OBJECT_SERVICEROOT:
+            object = new ServiceRoot(msg, this);
+            break;
+         case AbstractObject.OBJECT_SLMCHECK:
+            object = new ServiceCheck(msg, this);
+            break;
+         case AbstractObject.OBJECT_SUBNET:
+            object = new Subnet(msg, this);
+            break;
+         case AbstractObject.OBJECT_TEMPLATE:
+            object = new Template(msg, this);
+            break;
+         case AbstractObject.OBJECT_TEMPLATEGROUP:
+            object = new TemplateGroup(msg, this);
+            break;
+         case AbstractObject.OBJECT_TEMPLATEROOT:
+            object = new TemplateRoot(msg, this);
+            break;
+         case AbstractObject.OBJECT_VPNCONNECTOR:
+            object = new VPNConnector(msg, this);
+            break;
+         case AbstractObject.OBJECT_ZONE:
+            object = new Zone(msg, this);
+            break;
+         default:
+            object = new GenericObject(msg, this);
+            break;
+      }
+
+      return object;
+   }
+
+   /**
+    * Setup encryption
+    *
+    * @param msg CMD_REQUEST_SESSION_KEY message
+    * @throws IOException
+    * @throws NXCException
+    */
+   private void setupEncryption(NXCPMessage msg) throws IOException, NXCException
+   {
+      final NXCPMessage response = new NXCPMessage(NXCPCodes.CMD_SESSION_KEY, msg.getMessageId());
+      response.setEncryptionDisabled(true);
+
+      try
+      {
+         encryptionContext = EncryptionContext.createInstance(msg);
+         response.setVariable(NXCPCodes.VID_SESSION_KEY, encryptionContext.getEncryptedSessionKey(msg));
+         response.setVariable(NXCPCodes.VID_SESSION_IV, encryptionContext.getEncryptedIv(msg));
+         response.setVariableInt16(NXCPCodes.VID_CIPHER, encryptionContext.getCipher());
+         response.setVariableInt16(NXCPCodes.VID_KEY_LENGTH, encryptionContext.getKeyLength());
+         response.setVariableInt16(NXCPCodes.VID_IV_LENGTH, encryptionContext.getIvLength());
+         response.setVariableInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
+      }
+      catch(Exception e)
+      {
+         response.setVariableInt32(NXCPCodes.VID_RCC, RCC.NO_CIPHERS);
+      }
+
+      sendMessage(response);
+   }
+   
+   /**
+    * @return the authType
+    */
+   public int getAuthType()
+   {
+      return authType;
+   }
+
+   /**
+    * @param authType the authType to set
+    */
+   public void setAuthType(int authType)
+   {
+      this.authType = authType;
+   }
+
+   /**
+    * Wait for synchronization completion
+    */
+   private void waitForSync(final Semaphore syncObject, final int timeout) throws NXCException
+   {
+      if (timeout == 0)
+      {
+         syncObject.acquireUninterruptibly();
+      }
+      else
+      {
+         long actualTimeout = timeout;
+         boolean success = false;
+
+         while(actualTimeout > 0)
+         {
+            long startTime = System.currentTimeMillis();
+            try
+            {
+               if (syncObjects.tryAcquire(actualTimeout, TimeUnit.MILLISECONDS))
+               {
+                  success = true;
+                  syncObjects.release();
+                  break;
+               }
+            }
+            catch(InterruptedException e)
+            {
+            }
+            actualTimeout -= System.currentTimeMillis() - startTime;
+         }
+         if (!success) throw new NXCException(RCC.TIMEOUT);
+      }
+   }
+
+   /**
+    * Report synchronization completion
+    *
+    * @param syncObject Synchronization object
+    */
+   private void completeSync(final Semaphore syncObject)
+   {
+      syncObject.release();
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.api.client.Session#addListener(org.netxms.api.client.SessionListener)
+    */
+   @Override
+   public void addListener(SessionListener listener)
+   {
+      boolean changed;
+      synchronized(listeners)
+      {
+         changed = listeners.add(listener);
+      }
+      if (changed)
+         notificationQueue.offer(new NXCNotification(NXCNotification.UPDATE_LISTENER_LIST));
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.api.client.Session#removeListener(org.netxms.api.client.SessionListener)
+    */
+   @Override
+   public void removeListener(SessionListener listener)
+   {
+      boolean changed;
+      synchronized(listeners)
+      {
+         changed = listeners.remove(listener);
+      }
+      if (changed)
+         notificationQueue.offer(new NXCNotification(NXCNotification.UPDATE_LISTENER_LIST));
+   }
+
+   /**
+    * Add server console listener
+    *
+    * @param listener
+    */
+   public void addConsoleListener(ServerConsoleListener listener)
+   {
+      synchronized(consoleListeners)
+      {
+         consoleListeners.add(listener);
+      }
+   }
+
+   /**
+    * Remove server console listener
+    *
+    * @param listener
+    */
+   public void removeConsoleListener(ServerConsoleListener listener)
+   {
+      synchronized(consoleListeners)
+      {
+         consoleListeners.remove(listener);
+      }
+   }
+   
+   /**
+    * Subscribe to specific messages
+    * 
+    * @param messageCode
+    * @param messageId
+    * @param handler
+    */
+   public void addMessageSubscription(int messageCode, long messageId, MessageHandler handler)
+   {
+      synchronized(messageSubscriptions)
+      {
+         messageSubscriptions.put(new MessageSubscription(messageCode, messageId), handler);
+      }
+   }
+   
+   /**
+    * @param messageCode
+    * @param messageId
+    */
+   public void removeMessageSubscription(int messageCode, long messageId)
+   {
+      synchronized(messageSubscriptions)
+      {
+         messageSubscriptions.remove(new MessageSubscription(messageCode, messageId));
+      }
+   }
+   
    /**
     * Call notification handlers on all registered listeners
     *
@@ -6252,24 +6337,49 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void pollNode(long nodeId, int pollType, NodePollListener listener) throws IOException, NXCException
+   public void pollNode(long nodeId, int pollType, final NodePollListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLL_NODE);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setVariableInt16(NXCPCodes.VID_POLL_TYPE, pollType);
-      sendMessage(msg);
 
-      int rcc;
-      do
-      {
-         final NXCPMessage response = waitForMessage(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId(), 120000);
-         rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
-         if ((rcc == RCC.OPERATION_IN_PROGRESS) && (listener != null))
+      final Object stopCondition = new Object();
+      addMessageSubscription(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId(), new MessageHandler() {
+         @Override
+         public boolean processMessage(NXCPMessage m)
          {
-            listener.onPollerMessage(response.getVariableAsString(NXCPCodes.VID_POLLER_MESSAGE));
+            int rcc = m.getVariableAsInteger(NXCPCodes.VID_RCC);
+            if (rcc == RCC.OPERATION_IN_PROGRESS)
+            {
+               if (listener != null)
+                  listener.onPollerMessage(m.getVariableAsString(NXCPCodes.VID_POLLER_MESSAGE));
+            }
+            else
+            {
+               synchronized(stopCondition)
+               {
+                  stopCondition.notifyAll();
+               }
+            }
+            return true;
+         }
+      });
+      
+      try
+      {
+         sendMessage(msg);
+         synchronized(stopCondition)
+         {
+            stopCondition.wait(600000);
          }
       }
-      while(rcc == RCC.OPERATION_IN_PROGRESS);
+      catch(InterruptedException e)
+      {
+      }
+      finally
+      {
+         removeMessageSubscription(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId());
+      }
    }
 
    /**

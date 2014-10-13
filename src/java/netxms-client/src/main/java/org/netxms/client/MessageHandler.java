@@ -16,25 +16,20 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/**
- * 
- */
 package org.netxms.client;
 
-import org.netxms.api.client.services.ServiceHandler;
 import org.netxms.base.NXCPMessage;
 
 /**
- * Module data provider
+ * Message handler interface
  */
-public interface ModuleDataProvider extends ServiceHandler
+public interface MessageHandler
 {
    /**
-    * Create module data from NXCP message
+    * Process message. If handler returns true message will not be placed into waiting queue.
     * 
-    * @param msg
-    * @param baseId
-    * @return
+    * @param msg NXCP message to process
+    * @return true if message is processed
     */
-   public Object createModuleData(NXCPMessage msg, long baseId);
+   public boolean processMessage(NXCPMessage msg);
 }
