@@ -478,6 +478,9 @@ public:
 	virtual bool showThresholdSummary();
    virtual bool isEventSource();
 
+   void setStatusCalculation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
+   void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
+
    // Debug methods
    const TCHAR *dbgGetParentList(TCHAR *szBuffer);
    const TCHAR *dbgGetChildList(TCHAR *szBuffer);

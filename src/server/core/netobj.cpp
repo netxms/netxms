@@ -1820,3 +1820,56 @@ bool NetObj::createLocationHistoryTable(DB_HANDLE hdb)
 
    return true;
 }
+
+/**
+ * Set status calculation method
+ */
+void NetObj::setStatusCalculation(int method, int arg1, int arg2, int arg3, int arg4)
+{
+   LockData();
+   m_iStatusCalcAlg = method;
+   switch(method)
+   {
+      case SA_CALCULATE_SINGLE_THRESHOLD:
+         m_iStatusSingleThreshold = arg1;
+         break;
+      case SA_CALCULATE_MULTIPLE_THRESHOLDS:
+         m_iStatusThresholds[0] = arg1;
+         m_iStatusThresholds[1] = arg2;
+         m_iStatusThresholds[2] = arg3;
+         m_iStatusThresholds[3] = arg4;
+         break;
+      default:
+         break;
+   }
+   Modify();
+   UnlockData();
+}
+
+/**
+ * Set status propagation method
+ */
+void NetObj::setStatusPropagation(int method, int arg1, int arg2, int arg3, int arg4)
+{
+   LockData();
+   m_iStatusPropAlg = method;
+   switch(method)
+   {
+      case SA_PROPAGATE_FIXED:
+         m_iFixedStatus = arg1;
+         break;
+      case SA_PROPAGATE_RELATIVE:
+         m_iStatusShift = arg1;
+         break;
+      case SA_PROPAGATE_TRANSLATED:
+         m_iStatusTranslation[0] = arg1;
+         m_iStatusTranslation[1] = arg2;
+         m_iStatusTranslation[2] = arg3;
+         m_iStatusTranslation[3] = arg4;
+         break;
+      default:
+         break;
+   }
+   Modify();
+   UnlockData();
+}

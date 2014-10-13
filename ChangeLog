@@ -9,6 +9,7 @@
 - Source port number added to events generated from SNMP trap (available via "sourcePort" named parameter)
 - Jira link: added possibility to set project's component for issues being created
 - ICMP proxy can be set for nodes
+- New methods in NXSL Node class: setStatusCalculation and setStatusPropagation
 - Management console:
     - Can show alarms for multiple selected objects
     - Fixed non-working ordering in event list in alarm details view

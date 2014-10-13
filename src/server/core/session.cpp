@@ -11035,8 +11035,8 @@ void ClientSession::executeScript(CSCPMessage *pRequest)
       msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
    }
 
-   //start execution
-   if(sucess)
+   // start execution
+   if (sucess)
    {
       updateMessage.setEndOfSequence();
       if (vm->run())

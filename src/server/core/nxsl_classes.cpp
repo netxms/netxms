@@ -213,6 +213,97 @@ NXSL_METHOD_DEFINITION(enableTopologyPolling)
 }
 
 /**
+ * setStatusCalculation(type, ...)
+ */
+NXSL_METHOD_DEFINITION(setStatusCalculation)
+{
+   if (argc < 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   INT32 success = 1;
+   int method = argv[0]->getValueAsInt32();
+   Node *node = (Node *)object->getData();
+   switch(method)
+   {
+      case SA_CALCULATE_DEFAULT:
+      case SA_CALCULATE_MOST_CRITICAL:
+         node->setStatusCalculation(method);
+         break;
+      case SA_CALCULATE_SINGLE_THRESHOLD:
+         if (argc < 2)
+            return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+         if (!argv[1]->isInteger())
+            return NXSL_ERR_NOT_INTEGER;
+         node->setStatusCalculation(method, argv[1]->getValueAsInt32());
+         break;
+      case SA_CALCULATE_MULTIPLE_THRESHOLDS:
+         if (argc < 5)
+            return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+         for(int i = 1; i <= 4; i++)
+         {
+            if (!argv[i]->isInteger())
+               return NXSL_ERR_NOT_INTEGER;
+         }
+         node->setStatusCalculation(method, argv[1]->getValueAsInt32(), argv[2]->getValueAsInt32(), argv[3]->getValueAsInt32(), argv[4]->getValueAsInt32());
+         break;
+      default:
+         success = 0;   // invalid method
+         break;
+   }
+   *result = new NXSL_Value(success);
+   return 0;
+}
+
+/**
+ * setStatusPropagation(type, ...)
+ */
+NXSL_METHOD_DEFINITION(setStatusPropagation)
+{
+   if (argc < 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   INT32 success = 1;
+   int method = argv[0]->getValueAsInt32();
+   Node *node = (Node *)object->getData();
+   switch(method)
+   {
+      case SA_PROPAGATE_DEFAULT:
+      case SA_PROPAGATE_UNCHANGED:
+         node->setStatusPropagation(method);
+         break;
+      case SA_PROPAGATE_FIXED:
+      case SA_PROPAGATE_RELATIVE:
+         if (argc < 2)
+            return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+         if (!argv[1]->isInteger())
+            return NXSL_ERR_NOT_INTEGER;
+         node->setStatusPropagation(method, argv[1]->getValueAsInt32());
+         break;
+      case SA_PROPAGATE_TRANSLATED:
+         if (argc < 5)
+            return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+         for(int i = 1; i <= 4; i++)
+         {
+            if (!argv[i]->isInteger())
+               return NXSL_ERR_NOT_INTEGER;
+         }
+         node->setStatusPropagation(method, argv[1]->getValueAsInt32(), argv[2]->getValueAsInt32(), argv[3]->getValueAsInt32(), argv[4]->getValueAsInt32());
+         break;
+      default:
+         success = 0;   // invalid method
+         break;
+   }
+   *result = new NXSL_Value(success);
+   return 0;
+}
+
+/**
  * NXSL class Node: constructor
  */
 NXSL_NodeClass::NXSL_NodeClass() : NXSL_Class()
@@ -225,6 +316,8 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(enableSnmp, 1);
    NXSL_REGISTER_METHOD(enableStatusPolling, 1);
    NXSL_REGISTER_METHOD(enableTopologyPolling, 1);
+   NXSL_REGISTER_METHOD(setStatusCalculation, -1);
+   NXSL_REGISTER_METHOD(setStatusPropagation, -1);
 }
 
 /**

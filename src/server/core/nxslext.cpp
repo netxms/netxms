@@ -1380,7 +1380,7 @@ void NXSL_ConsoleEnv::print(NXSL_Value *value)
 {
 	if (session != NULL && msg != NULL)
 	{
-		const TCHAR *text = value->getValueAsCString(); //check that memory is not lost(If it is fix also print in console)
+		const TCHAR *text = value->getValueAsCString();
 		msg->SetVariable(VID_EXECUTION_RESULT, text);
 		session->sendMessage(msg);
 	}
