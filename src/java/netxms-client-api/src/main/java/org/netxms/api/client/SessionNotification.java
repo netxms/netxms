@@ -32,6 +32,7 @@ public class SessionNotification
 	public static final int DBCON_STATUS_CHANGED = 1010;
 	public static final int MAPPING_TABLE_UPDATED = 1019;
 	public static final int MAPPING_TABLE_DELETED = 1020;
+   public static final int SESSION_KILLED = 1027;
 	
 	public static final int CUSTOM_MESSAGE = 2000;
 	

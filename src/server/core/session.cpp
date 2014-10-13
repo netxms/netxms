@@ -2626,6 +2626,8 @@ void ClientSession::getConfigCLOB(CSCPMessage *pRequest)
  */
 void ClientSession::kill()
 {
+   notify(NX_NOTIFY_SESSION_KILLED);
+
    // We shutdown socket connection, which will cause
    // read thread to stop, and other threads will follow
    shutdown(m_hSocket, 2);

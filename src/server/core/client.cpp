@@ -323,14 +323,32 @@ void DumpClientSessions(CONSOLE_CTX pCtx)
 }
 
 /**
+ * Kill client session
+ */
+bool NXCORE_EXPORTABLE KillClientSession(int id)
+{
+   bool success = false;
+   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
+   {
+      if ((m_pSessionList[i] != NULL) && (m_pSessionList[i]->getId() == id))
+      {
+         m_pSessionList[i]->kill();
+         success = true;
+         break;
+      }
+   }
+   RWLockUnlock(m_rwlockSessionListAccess);
+   return success;
+}
+
+/**
  * Enumerate active sessions
  */
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg)
 {
-   int i;
-
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
-   for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
       if (m_pSessionList[i] != NULL)
       {

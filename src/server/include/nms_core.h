@@ -889,6 +889,7 @@ void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *,
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
 int GetSessionCount(bool withRoot = true);
 bool IsLoggedIn(UINT32 dwUserId);
+bool NXCORE_EXPORTABLE KillClientSession(int id);
 
 void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);
 UINT32 GetLocalIpAddr();

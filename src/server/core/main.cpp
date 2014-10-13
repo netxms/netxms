@@ -1155,6 +1155,33 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, _T("Cannot exit from local server console\n"));
 		}
 	}
+	else if (IsCommand(_T("KILL"), szBuffer, 4))
+	{
+		pArg = ExtractWord(pArg, szBuffer);
+		if (szBuffer[0] != 0)
+		{
+         int id = _tcstol(szBuffer, &eptr, 10);
+         if (*eptr == 0)
+         {
+            if (KillClientSession(id))
+            {
+      			ConsolePrintf(pCtx, _T("Session killed\n"));
+            }
+            else
+            {
+      			ConsolePrintf(pCtx, _T("Invalid session ID\n"));
+            }
+         }
+         else
+         {
+   			ConsolePrintf(pCtx, _T("Invalid session ID\n"));
+         }
+		}
+		else
+		{
+			ConsolePrintf(pCtx, _T("Session ID missing\n"));
+		}
+   }
 	else if (IsCommand(_T("SET"), szBuffer, 3))
 	{
 		pArg = ExtractWord(pArg, szBuffer);
@@ -1730,6 +1757,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   down                      - Shutdown NetXMS server\n")
 				_T("   exec <script> [<params>]  - Executes NXSL script from script library\n")
 				_T("   exit                      - Exit from remote session\n")
+            _T("   kill <session>            - Kill client session\n")
 				_T("   get <variable>            - Get value of server configuration variable\n")
 				_T("   help                      - Display this help\n")
 				_T("   ldapsync                  - Synchronize ldap users with local user database\n")

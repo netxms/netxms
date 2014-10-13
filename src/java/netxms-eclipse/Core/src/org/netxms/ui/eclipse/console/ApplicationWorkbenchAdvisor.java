@@ -136,7 +136,8 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			public void notificationHandler(final SessionNotification n)
 			{
 				if ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ||
-				    (n.getCode() == SessionNotification.SERVER_SHUTDOWN))
+				    (n.getCode() == SessionNotification.SERVER_SHUTDOWN) || 
+				    (n.getCode() == SessionNotification.SESSION_KILLED))
 				{
 					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 						@Override
@@ -145,8 +146,11 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
                     	String productName = BrandingManager.getInstance().getProductName();
                      MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
 								Messages.get().ApplicationWorkbenchAdvisor_CommunicationError,
-                           ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? String.format(Messages.get().ApplicationWorkbenchAdvisor_ConnectionLostMessage, productName)
-                                 : String.format(Messages.get().ApplicationWorkbenchAdvisor_ServerShutdownMessage, productName))
+                           ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? 
+                                 String.format(Messages.get().ApplicationWorkbenchAdvisor_ConnectionLostMessage, productName)
+                                 : ((n.getCode() == SessionNotification.SESSION_KILLED) ? 
+                                       "Communication session was terminated by system administrator"
+                                       : String.format(Messages.get().ApplicationWorkbenchAdvisor_ServerShutdownMessage, productName)))
                                  + Messages.get().ApplicationWorkbenchAdvisor_OKToCloseMessage);
 							PlatformUI.getWorkbench().getActiveWorkbenchWindow().close();
 						}
