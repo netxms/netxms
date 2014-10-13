@@ -38,7 +38,7 @@ public class ServiceLauncher {
         synchronized (shutdownLatch) {
             shutdownLatch.notify();
         }
-   }
+    }
 
     public static void main(String[] args) throws IOException {
         if ("start".equals(args[0])) {

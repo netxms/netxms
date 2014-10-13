@@ -1,18 +1,16 @@
 package com.radensolutions.reporting.application;
 
+import org.quartz.JobDetail;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.quartz.JobDetail;
-
-public interface ReportScheduler
-{
+public interface ReportScheduler {
 
     /**
      * Schedule report for one time, immediate execution
-     *
      *
      * @param userId
      * @param reportUuid report UUID
@@ -33,21 +31,20 @@ public interface ReportScheduler
      * @return job UUID or null
      */
     UUID addRecurrent(UUID jobId, UUID reportUuid, int jobType, int daysOfWeek, int daysOfMonth, Date startDate, Map<String, Object> parameters, int userId);
-    
+
     /**
      * List of schedules
      *
-     * @param reportUuid  report UUID
+     * @param reportUuid report UUID
      * @return
      */
     List<JobDetail> getSchedules(UUID reportUuid);
-    
-    
+
     /**
      * Delete schedule by job uuid
-     * 
+     *
      * @param reportId - report uuid
-     * @param jobId - schedule uuid id
+     * @param jobId    - schedule uuid id
      * @return
      */
     boolean deleteScheduleJob(UUID reportId, UUID jobId);

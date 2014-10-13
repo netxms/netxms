@@ -1,10 +1,10 @@
 package com.radensolutions.reporting.application;
 
 import org.netxms.base.NXCPMessage;
+
 import java.io.OutputStream;
 
-public interface Session
-{
+public interface Session {
     /**
      * Process incoming NXCP message and generate reply
      *
@@ -16,7 +16,7 @@ public interface Session
 
     /**
      * Send NXCP message to shserver
-     * 
+     *
      * @param code
      * @param data
      */

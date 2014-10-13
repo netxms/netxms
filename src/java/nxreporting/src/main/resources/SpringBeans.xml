@@ -58,7 +58,8 @@
         Reporting Data Source
         TODO: Handle multiple reporting data sources
     -->
-    <bean id="reportingDataSource" class="com.radensolutions.reporting.application.ReportingDataSource" destroy-method="close">
+    <bean id="reportingDataSource" class="com.radensolutions.reporting.application.ReportingDataSource"
+          destroy-method="close">
         <property name="driverClassName" value="${report.datasource.driverClassName}"/>
         <property name="url" value="${report.datasource.url}"/>
         <property name="username" value="${report.datasource.username}"/>

@@ -1,96 +1,78 @@
 package com.radensolutions.reporting.domain;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.UUID;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-
 @Entity
 @Table(name = "report_notification")
-public class Notification implements Serializable
-{
-	private static final long serialVersionUID = -7771049240652612119L;
+public class Notification implements Serializable {
+    private static final long serialVersionUID = -7771049240652612119L;
 
-	@Id
-	@Column(name = "id")
-	@GeneratedValue
-	private Integer id;
+    @Id
+    @Column(name = "id")
+    @GeneratedValue
+    private Integer id;
 
-	@Column(name = "jobid")
-	private UUID jobId;
-	
-	@Column(name = "mail")
-	private String mail;
-	
-	@Column(name = "attach_format_code")
-	private int attachFormatCode;
-	
-	@Column(name = "report_name")
-	private String reportName;
+    @Column(name = "jobid")
+    private UUID jobId;
 
-	public Notification()
-	{
-	}
-	
-	public Notification(UUID jobId, String mail, int attachFormatCode, String reportName)
-	{
-		this.jobId = jobId;
-		this.mail = mail;
-		this.attachFormatCode = attachFormatCode;
-		this.reportName = reportName;
-	}
+    @Column(name = "mail")
+    private String mail;
 
-	public Integer getId()
-	{
-		return id;
-	}
+    @Column(name = "attach_format_code")
+    private int attachFormatCode;
 
-	public void setId(Integer id)
-	{
-		this.id = id;
-	}
+    @Column(name = "report_name")
+    private String reportName;
 
-	public UUID getJobId()
-	{
-		return jobId;
-	}
+    public Notification() {
+    }
 
-	public void setJobId(UUID jobId)
-	{
-		this.jobId = jobId;
-	}
+    public Notification(UUID jobId, String mail, int attachFormatCode, String reportName) {
+        this.jobId = jobId;
+        this.mail = mail;
+        this.attachFormatCode = attachFormatCode;
+        this.reportName = reportName;
+    }
 
-	public String getMail()
-	{
-		return mail;
-	}
+    public Integer getId() {
+        return id;
+    }
 
-	public void setMail(String mail)
-	{
-		this.mail = mail;
-	}
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
-	public int getAttachFormatCode()
-	{
-		return attachFormatCode;
-	}
+    public UUID getJobId() {
+        return jobId;
+    }
 
-	public void setAttachFormatCode(int attachFormatCode)
-	{
-		this.attachFormatCode = attachFormatCode;
-	}
+    public void setJobId(UUID jobId) {
+        this.jobId = jobId;
+    }
 
-	public String getReportName()
-	{
-		return reportName;
-	}
+    public String getMail() {
+        return mail;
+    }
 
-	public void setReportName(String reportName)
-	{
-		this.reportName = reportName;
-	}
+    public void setMail(String mail) {
+        this.mail = mail;
+    }
+
+    public int getAttachFormatCode() {
+        return attachFormatCode;
+    }
+
+    public void setAttachFormatCode(int attachFormatCode) {
+        this.attachFormatCode = attachFormatCode;
+    }
+
+    public String getReportName() {
+        return reportName;
+    }
+
+    public void setReportName(String reportName) {
+        this.reportName = reportName;
+    }
 }
