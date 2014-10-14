@@ -67,6 +67,14 @@
             name="%view.name.FileViewer"
             restorable="false">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objecttools.views.AgentActionResults"
+            icon="icons/console.png"
+            id="org.netxms.ui.eclipse.objecttools.views.AgentActionResults"
+            name="Agent Action"
+            restorable="false">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">

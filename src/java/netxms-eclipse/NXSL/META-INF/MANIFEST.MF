@@ -10,7 +10,8 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
  org.eclipse.jface.text;bundle-version="3.7.2",
  org.eclipse.ui.workbench.texteditor;bundle-version="3.7.0",
  org.netxms.ui.eclipse.console;bundle-version="1.2.17",
- org.eclipse.ui.forms;bundle-version="3.5.101"
+ org.eclipse.ui.forms;bundle-version="3.5.101",
+ org.eclipse.ui.console;bundle-version="3.5.100"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.nxsl.dialogs,

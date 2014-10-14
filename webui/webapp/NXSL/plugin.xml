@@ -19,6 +19,15 @@
             name="%view.name.EditScript"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.nxsl.views.ScriptExecutor"
+            icon="icons/script_exec.gif"
+            id="org.netxms.ui.eclipse.nxsl.views.ScriptExecutor"
+            name="Script Executor"
+            restorable="false">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -27,6 +36,26 @@
             description="%command.description.ScriptLibrary"
             id="org.netxms.ui.eclipse.nxsl.commands.open_script_library"
             name="%command.name.ScriptLibrary">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.nxsl.popupActions.ExecuteServerScript"
+            name="Execute server script">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.nxsl.commands.execute_script"
+            name="Execute">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.nxsl.commands.save"
+            name="Save">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.nxsl.commands.save_as"
+            name="Save as">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.nxsl.commands.clear_output"
+            name="Clear output">
       </command>
    </extension>
    <extension
@@ -47,6 +76,89 @@
                tooltip="%action.tooltip.ScriptLibrary">
          </action>
       </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any?before=additions">
+         <command
+               commandId="org.netxms.ui.eclipse.nxsl.popupActions.ExecuteServerScript"
+               icon="icons/script_exec.gif"
+               label="Execute server script"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <iterate>
+                  <or>
+                     <instanceof
+                           value="org.netxms.client.objects.AbstractNode">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Container">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Cluster">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.MobileDevice">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Subnet">
+                     </instanceof>
+                  </or>
+               </iterate>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="org.netxms.ui.eclipse.nxsl.actions.ExecuteServerScript"
+            commandId="org.netxms.ui.eclipse.nxsl.popupActions.ExecuteServerScript">
+      </handler>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.nxsl.context.ScriptExecutor"
+            name="Script Executor"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.commands.execute_script"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptExecutor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="F2">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.commands.save"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptExecutor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+S">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.commands.save_as"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptExecutor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+M2+S">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.commands.clear_output"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptExecutor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+L">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.popupActions.ExecuteServerScript"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M3+M2+S">
+      </key>
    </extension>
 
 </plugin>

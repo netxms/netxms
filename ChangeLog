@@ -10,6 +10,7 @@
 - Jira link: added possibility to set project's component for issues being created
 - ICMP proxy can be set for nodes
 - New methods in NXSL classes Node, Interface, and NetObj: setStatusCalculation and setStatusPropagation
+- Can execute arbitrary NXSL script in context of node, cluster, subnet, or container object from management console
 - Management console:
     - Can show alarms for multiple selected objects
     - Fixed non-working ordering in event list in alarm details view

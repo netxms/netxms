@@ -19,6 +19,7 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
+import org.netxms.ui.eclipse.objecttools.views.AgentActionResults;
 import org.netxms.ui.eclipse.objecttools.views.FileViewer;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -170,6 +171,9 @@ public final class ObjectToolExecutor
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       final String action = substituteMacros(tool.getData(), node);
+      
+      if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
+      {      
       new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, node.object.getObjectName()), null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
@@ -190,6 +194,21 @@ public final class ObjectToolExecutor
             });
          }
       }.start();
+   }
+      else
+      {
+         final String secondaryId = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()); //$NON-NLS-1$
+         final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+         try
+         {
+            AgentActionResults view = (AgentActionResults)window.getActivePage().showView(AgentActionResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
+            view.executeAction(action);
+         }
+         catch(Exception e)
+         {
+            MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
+         }
+      }
    }
 
    /**

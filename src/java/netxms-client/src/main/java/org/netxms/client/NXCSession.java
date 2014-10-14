@@ -887,7 +887,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
                while(it.hasNext())
                {
                   Entry<MessageSubscription, MessageHandler> e = it.next();
-                  if (currTime - e.getValue().getLastMessageTimestamp() / 1000 > commandTimeout)
+                  if (currTime - e.getValue().getLastMessageTimestamp() > commandTimeout)
                   {
                      e.getValue().setTimeout();
                      e.getValue().setComplete();
@@ -4542,31 +4542,59 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeAction(long nodeId, String action, boolean receiveOutput, TextOutputListener listener, Writer writer) throws IOException, NXCException
+   public void executeAction(long nodeId, String action, boolean receiveOutput, final TextOutputListener listener, final Writer writer) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_ACTION);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setVariable(NXCPCodes.VID_ACTION_NAME, action);
       msg.setVariable(NXCPCodes.VID_RECEIVE_OUTPUT, receiveOutput);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-      if (receiveOutput)
-      {
-         while(true)
+      
+      MessageHandler handler = receiveOutput ? new MessageHandler() {
+         @Override
+         public boolean processMessage(NXCPMessage m)
          {
-            NXCPMessage response = waitForMessage(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId());
-            String text = response.getVariableAsString(NXCPCodes.VID_MESSAGE);
+            String text = m.getVariableAsString(NXCPCodes.VID_MESSAGE);
             if (text != null)
             {
                if (listener != null)
                   listener.messageReceived(text);
                if (writer != null)
-                  writer.write(text);
+               {
+                  try
+                  {
+                     writer.write(text);
+                  }
+                  catch(IOException e)
+                  {
+                  }
+               }
             }
-            if (response.isEndOfSequence())
-               break;
+            if (m.isEndOfSequence())
+               setComplete();
+            return true;
          }
-      }
+      } : null;
+      if (receiveOutput)
+         addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), handler);
+      
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+
+      if (receiveOutput)
+      {
+         synchronized(handler)
+         {
+            try
+            {
+               handler.wait();
+            }
+            catch(InterruptedException e)
+            {
+            }
+         }
+         if (handler.isTimeout())
+            throw new NXCException(RCC.TIMEOUT);
+      }      
    }
    
    /**

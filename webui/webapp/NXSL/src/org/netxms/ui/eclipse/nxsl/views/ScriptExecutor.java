@@ -43,7 +43,6 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart2;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.forms.widgets.Form;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -65,6 +64,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.TextConsole;
+import org.netxms.ui.eclipse.widgets.TextConsole.IOConsoleOutputStream;
 
 /**
  * Sored on server agent's configuration editor
@@ -461,7 +461,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          protected String getErrorMessage()
          {
             return "Error executing script";
-         }
+         } 
 
          /* (non-Javadoc)
           * @see org.netxms.ui.eclipse.jobs.ConsoleJob#jobFinalize()
@@ -703,14 +703,14 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    public void messageReceived(final String text)
    {
       if (consoleOutputStream != null)
-      {
-         try
          {
+         try
+               {
             consoleOutputStream.write(text);
-         }
+               }
          catch(IOException e)
          {
          }
-      }
+         }
    }
 }

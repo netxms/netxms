@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -119,10 +120,24 @@ public class WidgetHelper
 	 * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
 	 * @return Created Combo object
 	 */
-	public static Combo createLabeledCombo(final Composite parent, int flags, final String labelText,
-	                                       Object layoutData)
+	public static Combo createLabeledCombo(final Composite parent, int flags, final String labelText, Object layoutData)
 	{
-		Composite group = new Composite(parent, SWT.NONE);
+		return createLabeledCombo(parent, flags, labelText, layoutData, null);
+	}
+	
+	/**
+    * Create pair of label and combo box, with label above
+	 * 
+	 * @param parent Parent composite
+	 * @param flags Flags for Text creation
+	 * @param labelText Label's text
+	 * @param layoutData Layout data for label/input pair. If null, default GridData will be assigned.
+	 * @param toolkit form toolkit to be used for control creation. May be null.
+	 * @return Created Combo object
+	 */
+	public static Combo createLabeledCombo(final Composite parent, int flags, final String labelText, Object layoutData, FormToolkit toolkit)
+	{
+		Composite group = (toolkit != null) ? toolkit.createComposite(parent) : new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = INNER_SPACING;
 		layout.horizontalSpacing = 0;
@@ -144,14 +159,24 @@ public class WidgetHelper
 			group.setLayoutData(gridData);
 		}
 		
-		Label label = new Label(group, SWT.NONE);
-		label.setText(labelText);
+		if (toolkit != null)
+		{
+			toolkit.createLabel(group, labelText);
+		}
+		else
+		{
+			Label label = new Label(group, SWT.NONE);
+			label.setText(labelText);
+		}
 
 		Combo combo = new Combo(group, flags);
 		GridData gridData = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.grabExcessHorizontalSpace = true;
 		combo.setLayoutData(gridData);		
+		
+		if (toolkit != null)
+			toolkit.adapt(combo);
 		
 		return combo;
 	}
