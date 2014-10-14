@@ -25,8 +25,8 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.ui.console.IOConsoleOutputStream;
-import org.netxms.client.ActionExecutionListener;
 import org.netxms.client.NXCSession;
+import org.netxms.client.TextOutputListener;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
@@ -36,7 +36,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * View for agent action execution results
  */
-public class AgentActionResults extends AbstractCommandResults implements ActionExecutionListener
+public class AgentActionResults extends AbstractCommandResults implements TextOutputListener
 {
    public static final String ID = "org.netxms.ui.eclipse.objecttools.views.AgentActionResults"; //$NON-NLS-1$
 

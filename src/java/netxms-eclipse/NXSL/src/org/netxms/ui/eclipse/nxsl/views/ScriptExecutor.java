@@ -49,8 +49,8 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.scripts.Script;
 import org.netxms.api.client.scripts.ScriptLibraryManager;
-import org.netxms.client.ActionExecutionListener;
 import org.netxms.client.NXCSession;
+import org.netxms.client.TextOutputListener;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
@@ -64,7 +64,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * Sored on server agent's configuration editor
  */
-public class ScriptExecutor extends ViewPart implements ISaveablePart2, ActionExecutionListener
+public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutputListener
 {
    public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptExecutor"; //$NON-NLS-1$
 
@@ -170,7 +170,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, ActionEx
       
       /**** Script editor  ****/
       Section section = toolkit.createSection(splitter, Section.TITLE_BAR);
-      section.setText("Filter");
+      section.setText("Script source");
       section.setLayout(layout);
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
@@ -194,7 +194,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, ActionEx
       gridData.verticalAlignment = SWT.FILL;
       gridData.grabExcessVerticalSpace = true;
       scriptEditor.setLayoutData(gridData);
-      
+      scriptEditor.setText("");
       
       /**** Execution result ****/
       section = toolkit.createSection(splitter, Section.TITLE_BAR);
@@ -206,7 +206,8 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, ActionEx
       gridData.grabExcessVerticalSpace = true;
       section.setLayoutData(gridData);
       
-      executionResult = new StyledText(section, SWT.H_SCROLL | SWT.V_SCROLL);
+      executionResult = new StyledText(section, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
+      section.setClient(executionResult);
       executionResult.setEditable(false);
       executionResult.setFont(JFaceResources.getTextFont());
       /*executionResult.addSelectionListener(new SelectionAdapter() {
@@ -425,12 +426,12 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, ActionEx
     */
    protected void executeScript()
    {
-      final String scrpt = scriptEditor.getText();
+      final String script = scriptEditor.getText();
       new ConsoleJob("Execute script", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.executeScript(objectId, scrpt, ScriptExecutor.this);
+            session.executeScript(objectId, script, ScriptExecutor.this);
          }
          
          @Override

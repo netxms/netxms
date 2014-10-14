@@ -1381,7 +1381,7 @@ void NXSL_ConsoleEnv::print(NXSL_Value *value)
 	if (session != NULL && msg != NULL)
 	{
 		const TCHAR *text = value->getValueAsCString();
-		msg->SetVariable(VID_EXECUTION_RESULT, text);
+		msg->SetVariable(VID_MESSAGE, text);
 		session->sendMessage(msg);
 	}
 }

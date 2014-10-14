@@ -520,9 +520,17 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
                      // Check subscriptions
                      synchronized(messageSubscriptions)
                      {
-                        MessageHandler handler = messageSubscriptions.get(new MessageSubscription(msg.getMessageCode(), msg.getMessageId()));
-                        if ((handler != null) && handler.processMessage(msg))
-                           msg = null;
+                        MessageSubscription s = new MessageSubscription(msg.getMessageCode(), msg.getMessageId());
+                        MessageHandler handler = messageSubscriptions.get(s);
+                        if (handler != null)
+                        { 
+                           if (handler.processMessage(msg))
+                              msg = null;
+                           if (handler.isComplete())
+                              messageSubscriptions.remove(s);
+                           else
+                              handler.setLastMessageTimestamp(System.currentTimeMillis());
+                        }
                      }
                      if (msg != null)
                      {
@@ -855,10 +863,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
             {
             }
 
+            long currTime = System.currentTimeMillis();
+
             // Check for old entries in received files
             synchronized(receivedFiles)
             {
-               long currTime = System.currentTimeMillis();
                Iterator<NXCReceivedFile> it = receivedFiles.values().iterator();
                while(it.hasNext())
                {
@@ -866,6 +875,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
                   if (file.getTimestamp() + RECEIVED_FILE_TTL < currTime)
                   {
                      file.getFile().delete();
+                     it.remove();
+                  }
+               }
+            }
+            
+            // Check timeouts on message subscriptions
+            synchronized(messageSubscriptions)
+            {
+               Iterator<Entry<MessageSubscription, MessageHandler>> it = messageSubscriptions.entrySet().iterator();
+               while(it.hasNext())
+               {
+                  Entry<MessageSubscription, MessageHandler> e = it.next();
+                  if (currTime - e.getValue().getLastMessageTimestamp() / 1000 > commandTimeout)
+                  {
+                     e.getValue().setTimeout();
+                     e.getValue().setComplete();
                      it.remove();
                   }
                }
@@ -4517,7 +4542,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeAction(long nodeId, String action, boolean receiveOutput, ActionExecutionListener listener, Writer writer) throws IOException, NXCException
+   public void executeAction(long nodeId, String action, boolean receiveOutput, TextOutputListener listener, Writer writer) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_ACTION);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
@@ -4876,26 +4901,42 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeScript(long nodeId, String script, ActionExecutionListener listener)
-      throws IOException, NXCException
+   public void executeScript(long nodeId, String script, final TextOutputListener listener) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SCRIPT);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setVariable(NXCPCodes.VID_SCRIPT, script);
+
+      MessageHandler handler = new MessageHandler() {
+         @Override
+         public boolean processMessage(NXCPMessage m)
+         {
+            String text = m.getVariableAsString(NXCPCodes.VID_MESSAGE);
+            if (text != null)
+            {
+               if (listener != null)
+                  listener.messageReceived(text);
+            }
+            if (m.isEndOfSequence())
+               setComplete();
+            return true;
+         }
+      };
+      addMessageSubscription(NXCPCodes.CMD_EXECUTE_SCRIPT_UPDATE, msg.getMessageId(), handler);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-      while(true)
+      synchronized(handler)
       {
-         NXCPMessage response = waitForMessage(NXCPCodes.CMD_EXECUTE_SCRIPT_UPDATE, msg.getMessageId());
-         String text = response.getVariableAsString(NXCPCodes.VID_EXECUTION_RESULT);
-         if (text != null)
+         try
          {
-            if (listener != null)
-               listener.messageReceived(text);
+            handler.wait();
          }
-         if (response.isEndOfSequence())
-            break;
+         catch(InterruptedException e)
+         {
+         }
       }
+      if (handler.isTimeout())
+         throw new NXCException(RCC.TIMEOUT);
    }
 
    /**
@@ -6337,14 +6378,13 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void pollNode(long nodeId, int pollType, final NodePollListener listener) throws IOException, NXCException
+   public void pollNode(long nodeId, int pollType, final TextOutputListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLL_NODE);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setVariableInt16(NXCPCodes.VID_POLL_TYPE, pollType);
 
-      final Object stopCondition = new Object();
-      addMessageSubscription(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId(), new MessageHandler() {
+      MessageHandler handler = new MessageHandler() {
          @Override
          public boolean processMessage(NXCPMessage m)
          {
@@ -6352,34 +6392,30 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
             if (rcc == RCC.OPERATION_IN_PROGRESS)
             {
                if (listener != null)
-                  listener.onPollerMessage(m.getVariableAsString(NXCPCodes.VID_POLLER_MESSAGE));
+                  listener.messageReceived(m.getVariableAsString(NXCPCodes.VID_POLLER_MESSAGE));
             }
             else
             {
-               synchronized(stopCondition)
-               {
-                  stopCondition.notifyAll();
-               }
+               setComplete();
             }
             return true;
          }
-      });
+      };
+      addMessageSubscription(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId(), handler);
       
-      try
+      sendMessage(msg);
+      synchronized(handler)
       {
-         sendMessage(msg);
-         synchronized(stopCondition)
+         try
          {
-            stopCondition.wait(600000);
+            handler.wait();
+         }
+         catch(InterruptedException e)
+         {
          }
       }
-      catch(InterruptedException e)
-      {
-      }
-      finally
-      {
-         removeMessageSubscription(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId());
-      }
+      if (handler.isTimeout())
+         throw new NXCException(RCC.TIMEOUT);
    }
 
    /**

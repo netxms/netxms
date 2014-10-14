@@ -23,13 +23,71 @@ import org.netxms.base.NXCPMessage;
 /**
  * Message handler interface
  */
-public interface MessageHandler
+public abstract class MessageHandler
 {
+   private boolean complete = false;
+   private boolean timeout = false;
+   private long lastMessageTimestamp = System.currentTimeMillis();
+   
+   /**
+    * Set handler to complete state. This will signal all waiters and remove subscription. 
+    */
+   protected void setComplete()
+   {
+      complete = true;
+      synchronized(this)
+      {
+         notifyAll();
+      }
+   }
+   
+   /**
+    * Get completion flag
+    * 
+    * @return
+    */
+   public boolean isComplete()
+   {
+      return complete;
+   }
+   
+   /**
+    * @return the lastMessageTimestamp
+    */
+   protected long getLastMessageTimestamp()
+   {
+      return lastMessageTimestamp;
+   }
+
+   /**
+    * @param lastMessageTimestamp the lastMessageTimestamp to set
+    */
+   protected void setLastMessageTimestamp(long lastMessageTimestamp)
+   {
+      this.lastMessageTimestamp = lastMessageTimestamp;
+   }
+
+   /**
+    * @return the timeout
+    */
+   public boolean isTimeout()
+   {
+      return timeout;
+   }
+
+   /**
+    * @param timeout the timeout to set
+    */
+   protected void setTimeout()
+   {
+      timeout = true;
+   }
+
    /**
     * Process message. If handler returns true message will not be placed into waiting queue.
     * 
     * @param msg NXCP message to process
     * @return true if message is processed
     */
-   public boolean processMessage(NXCPMessage msg);
+   abstract public boolean processMessage(NXCPMessage msg);
 }

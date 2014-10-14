@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,14 @@
 package org.netxms.client;
 
 /**
- * Listener interface for NXCSession.nodePoll
+ * Listener for text output (provided by actions, scripts, etc.)
  */
-public interface NodePollListener
+public interface TextOutputListener
 {
-	/**
-	 * Called by poller thread when new poller message received from server
-	 * 
-	 * @param message poller message
-	 */
-	abstract public void onPollerMessage(String message);
+   /**
+    * Called when new message is received.
+    * 
+    * @param text received message
+    */
+   public void messageReceived(String text);
 }

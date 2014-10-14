@@ -10972,7 +10972,7 @@ void ClientSession::testDCITransformation(CSCPMessage *pRequest)
 }
 
 /**
- * Test DCI transformation script
+ * Execute script in object's context
  */
 void ClientSession::executeScript(CSCPMessage *pRequest)
 {
