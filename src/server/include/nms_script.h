@@ -131,21 +131,19 @@ public:
 };
 
 /**
- * Java consoles's default script environment
+ * Script environment with output redirected to client session
  */
-class NXSL_ConsoleEnv : public NXSL_Environment
+class NXSL_ClientSessionEnv : public NXSL_ServerEnv
 {
 protected:
-	CONSOLE_CTX m_console;
-	ClientSession *session;
-	CSCPMessage *msg;
+	ClientSession *m_session;
+	CSCPMessage *m_response;
 
 public:
-	NXSL_ConsoleEnv(ClientSession *session, CSCPMessage *msg);
+	NXSL_ClientSessionEnv(ClientSession *session, CSCPMessage *response);
 
 	virtual void print(NXSL_Value *value);
-
-	void setConsole(CONSOLE_CTX console) { m_console = console; }
+	virtual void trace(int level, const TCHAR *text);
 };
 
 

@@ -1355,33 +1355,37 @@ void NXSL_ServerEnv::print(NXSL_Value *value)
 	}
 }
 
-/*** NXSL_ConsoleEnv class implementation ***/
-
 /**
- * Constructor for server default script environment
+ * Constructor for environment intended for passing script's output to client
  */
-NXSL_ConsoleEnv::NXSL_ConsoleEnv(ClientSession *session, CSCPMessage *msg) : NXSL_Environment()
+NXSL_ClientSessionEnv::NXSL_ClientSessionEnv(ClientSession *session, CSCPMessage *response) : NXSL_ServerEnv()
 {
-   this->session = session;
-   this->msg = msg;
-	m_console = NULL;
-	setLibrary(g_pScriptLibrary);
-	registerFunctionSet(sizeof(m_nxslServerFunctions) / sizeof(NXSL_ExtFunction), m_nxslServerFunctions);
-	RegisterDCIFunctions(this);
-	registerFunctionSet(g_nxslNumSituationFunctions, g_nxslSituationFunctions);
-	if (g_flags & AF_ENABLE_NXSL_CONTAINER_FUNCS)
-		registerFunctionSet(sizeof(m_nxslServerFunctionsForContainers) / sizeof(NXSL_ExtFunction), m_nxslServerFunctionsForContainers);
+   m_session = session;
+   m_response = response;
 }
 
 /**
- * Print script output to console
+ * Send script output to user
  */
-void NXSL_ConsoleEnv::print(NXSL_Value *value)
+void NXSL_ClientSessionEnv::print(NXSL_Value *value)
 {
-	if (session != NULL && msg != NULL)
+	if (m_session != NULL && m_response != NULL)
 	{
 		const TCHAR *text = value->getValueAsCString();
-		msg->SetVariable(VID_MESSAGE, text);
-		session->sendMessage(msg);
+		m_response->SetVariable(VID_MESSAGE, text);
+		m_session->sendMessage(m_response);
 	}
+}
+
+/**
+ * Trace output
+ */
+void NXSL_ClientSessionEnv::trace(int level, const TCHAR *text)
+{
+	if (m_session != NULL && m_response != NULL)
+	{
+		m_response->SetVariable(VID_MESSAGE, text);
+		m_session->sendMessage(m_response);
+	}
+   NXSL_ServerEnv::trace(level, text);
 }

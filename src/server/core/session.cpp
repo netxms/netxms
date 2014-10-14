@@ -11000,7 +11000,7 @@ void ClientSession::executeScript(CSCPMessage *pRequest)
 				TCHAR *script = pRequest->GetVariableStr(VID_SCRIPT);
 				if (script != NULL)
 				{
-               vm = NXSLCompileAndCreateVM(script, result, 256, new NXSL_ConsoleEnv(this, &updateMessage));
+               vm = NXSLCompileAndCreateVM(script, result, 256, new NXSL_ClientSessionEnv(this, &updateMessage));
                if (vm != NULL)
                {
                   vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));

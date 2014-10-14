@@ -87,9 +87,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
 
    private boolean allowSaveAs = false;
    
-   /*
-    * (non-Javadoc)
-    * 
+   /* (non-Javadoc)
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
     */
    @Override
@@ -104,9 +102,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       setPartName("Execute Script - " +session.getObjectName(objectId));
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /* (non-Javadoc)
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
@@ -170,7 +166,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       
       /**** Script editor  ****/
       Section section = toolkit.createSection(splitter, Section.TITLE_BAR);
-      section.setText("Script source");
+      section.setText("Source");
       section.setLayout(layout);
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
@@ -198,7 +194,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       
       /**** Execution result ****/
       section = toolkit.createSection(splitter, Section.TITLE_BAR);
-      section.setText("Execution result");
+      section.setText("Output");
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
@@ -245,9 +241,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       }
    }
 
-   /*
-    * (non-Javadoc)
-    * 
+   /* (non-Javadoc)
     * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
     */
    @Override
