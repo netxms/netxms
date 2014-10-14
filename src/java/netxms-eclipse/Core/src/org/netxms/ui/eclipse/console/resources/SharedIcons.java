@@ -55,6 +55,7 @@ public class SharedIcons
 	public static ImageDescriptor REFRESH;
 	public static ImageDescriptor RESTART;
 	public static ImageDescriptor SAVE;
+   public static ImageDescriptor SAVE_AS;
 	public static ImageDescriptor TERMINATE;
 	public static ImageDescriptor UNKNOWN_OBJECT;
 	public static ImageDescriptor UP;
@@ -90,6 +91,7 @@ public class SharedIcons
 	public static Image IMG_REFRESH;
 	public static Image IMG_RESTART;
 	public static Image IMG_SAVE;
+   public static Image IMG_SAVE_AS;
 	public static Image IMG_TERMINATE;
 	public static Image IMG_UNKNOWN_OBJECT;
 	public static Image IMG_UP;
@@ -130,6 +132,7 @@ public class SharedIcons
 		REFRESH = Activator.getImageDescriptor("icons/refresh.gif"); //$NON-NLS-1$
 		RESTART = Activator.getImageDescriptor("icons/restart.gif"); //$NON-NLS-1$
 		SAVE = Activator.getImageDescriptor("icons/save.gif"); //$NON-NLS-1$
+      SAVE_AS = Activator.getImageDescriptor("icons/saveas.gif"); //$NON-NLS-1$
 		TERMINATE = Activator.getImageDescriptor("icons/terminate.gif"); //$NON-NLS-1$
 		UNKNOWN_OBJECT = Activator.getImageDescriptor("icons/unknown_obj.gif"); //$NON-NLS-1$
 		UP = Activator.getImageDescriptor("icons/up.png"); //$NON-NLS-1$
@@ -165,6 +168,7 @@ public class SharedIcons
 		IMG_REFRESH = REFRESH.createImage();
 		IMG_RESTART = RESTART.createImage();
 		IMG_SAVE = SAVE.createImage();
+      IMG_SAVE_AS = SAVE_AS.createImage();
 		IMG_TERMINATE = TERMINATE.createImage();
 		IMG_UNKNOWN_OBJECT = UNKNOWN_OBJECT.createImage();
 		IMG_UP = UP.createImage();

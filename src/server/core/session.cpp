@@ -11046,6 +11046,10 @@ void ClientSession::executeScript(CSCPMessage *pRequest)
    {
       if (vm->run())
       {
+         TCHAR buffer[1024];
+         const TCHAR *value = vm->getResult()->getValueAsCString();
+         _sntprintf(buffer, 1024, _T("\n\n*** FINISHED ***\n\nResult: %s\n\n"), CHECK_NULL(value));
+         updateMessage.SetVariable(VID_MESSAGE, buffer);
 			updateMessage.SetVariable(VID_RCC, RCC_SUCCESS);
          updateMessage.setEndOfSequence();
          sendMessage(&updateMessage);
@@ -11053,7 +11057,7 @@ void ClientSession::executeScript(CSCPMessage *pRequest)
       else
       {
          nx_strncpy(result, vm->getErrorText(), 256);
-         updateMessage.SetVariable(VID_EXECUTION_RESULT, result);
+         updateMessage.SetVariable(VID_MESSAGE, result);
 			updateMessage.SetVariable(VID_RCC, RCC_EXEC_FAILED);
          updateMessage.setEndOfSequence();
          sendMessage(&updateMessage);

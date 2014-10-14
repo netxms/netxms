@@ -24,6 +24,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.window.Window;
@@ -43,14 +44,17 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart2;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.forms.widgets.Form;
 import org.eclipse.ui.forms.widgets.FormToolkit;
-import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.scripts.Script;
 import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
+import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
@@ -73,13 +77,14 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    private boolean modified = false;
    private long objectId;
 
-   private ScrolledForm form;
+   private Form form;
    private Combo scriptCombo;
    private ScriptEditor scriptEditor;
    private StyledText output;
    private Action actionSave;
    private Action actionSaveAs;
    private Action actionClear;
+   private Action actionClearOutput;
    private Action actionReload;
    private Action actionExecute;
    private List<Script> library;
@@ -114,24 +119,15 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       FormToolkit toolkit = new FormToolkit(getSite().getShell().getDisplay());
 
       Composite formContainer = new Composite(parent, SWT.NONE);
-      GridLayout layout = new GridLayout();
-      layout.marginHeight = 0;
-      layout.marginWidth = 0;
-      layout.numColumns = 2;
-      layout.horizontalSpacing = 0;
-      formContainer.setLayout(layout);      
+      formContainer.setLayout(new FillLayout());      
       
-      form = toolkit.createScrolledForm(formContainer);
+      form = toolkit.createForm(formContainer);
       form.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
       form.setText("noname");
       
-      layout = new GridLayout();
+      GridLayout layout = new GridLayout();
       layout.verticalSpacing = 8;
       form.getBody().setLayout(layout);
-      GridData gridData = new GridData();
-      gridData.horizontalAlignment = SWT.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      form.getBody().setLayoutData(gridData);       
 
       /**** Script list dropdown ****/
       scriptCombo = WidgetHelper.createLabeledCombo(form.getBody(), SWT.READ_ONLY, "Script from library", WidgetHelper.DEFAULT_LAYOUT_DATA, toolkit);
@@ -158,7 +154,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       
       SashForm splitter = new SashForm(form.getBody(), SWT.VERTICAL);
       splitter.setSashWidth(3); 
-      gridData = new GridData();
+      GridData gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
       gridData.verticalAlignment = SWT.FILL;
@@ -220,10 +216,23 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          }
       });*/ // TODO: Think how to split copy action between 2 editors
       
+      activateContext();
       createActions();
       contributeToActionBars();
       
       actionSave.setEnabled(false);
+   }
+
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.nxsl.context.ScriptExecutor"); //$NON-NLS-1$
+      }
    }
 
    /**
@@ -254,6 +263,8 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
     */
    private void createActions()
    {
+      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+      
       actionSave = new Action("Save", SharedIcons.SAVE) {
          @Override
          public void run()
@@ -261,16 +272,20 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
             intermidiateSave(false);
          }
       };
+      actionSave.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.save"); //$NON-NLS-1$
+      handlerService.activateHandler(actionSave.getActionDefinitionId(), new ActionHandler(actionSave));
       
-      actionSaveAs = new Action("Save as", SharedIcons.SAVE) { //TODO: Download new icon
+      actionSaveAs = new Action("Save as...", SharedIcons.SAVE_AS) {
          @Override
          public void run()
          {
             createNewScript(false); 
          }
       };
+      actionSaveAs.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.save_as"); //$NON-NLS-1$
+      handlerService.activateHandler(actionSaveAs.getActionDefinitionId(), new ActionHandler(actionSaveAs));
       
-      actionClear = new Action("Clear", SharedIcons.CLEAR) {
+      actionClear = new Action("Clear source", SharedIcons.CLEAR) {
          @Override
          public void run()
          {
@@ -286,12 +301,22 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
             form.setText("noname");
          }
       };
-      
-      actionReload = new Action("Reload script", SharedIcons.REFRESH) {
+
+      actionClearOutput = new Action("Clear output", SharedIcons.CLEAR_LOG) {
          @Override
          public void run()
          {
-            if(modified)
+            output.setText("");
+         }
+      };
+      actionClearOutput.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.clear_output"); //$NON-NLS-1$
+      handlerService.activateHandler(actionClearOutput.getActionDefinitionId(), new ActionHandler(actionClearOutput));
+      
+      actionReload = new RefreshAction(this) {
+         @Override
+         public void run()
+         {
+            if (modified)
             {
                if(saveIfRequired(false))
                   return;
@@ -302,6 +327,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
             output.setText("");
          }
       };
+      actionReload.setText("Reload script");
       
       actionExecute = new Action("Execute", SharedIcons.EXECUTE) {
          @Override
@@ -310,6 +336,8 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
             executeScript();
          }
       };
+      actionExecute.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.execute_script"); //$NON-NLS-1$
+      handlerService.activateHandler(actionExecute.getActionDefinitionId(), new ActionHandler(actionExecute));
    }  
    
    /**
@@ -539,9 +567,11 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       manager.add(actionSave);
       manager.add(actionSaveAs);
       manager.add(actionClear);
+      manager.add(new Separator());
       manager.add(actionReload);
       manager.add(new Separator());
       manager.add(actionExecute);
+      manager.add(actionClearOutput);
    }
 
    /**
@@ -554,9 +584,11 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       manager.add(actionSave);
       manager.add(actionSaveAs);
       manager.add(actionClear);
+      manager.add(new Separator());
       manager.add(actionReload);
       manager.add(new Separator());
       manager.add(actionExecute);
+      manager.add(actionClearOutput);
    }
 
    /*
