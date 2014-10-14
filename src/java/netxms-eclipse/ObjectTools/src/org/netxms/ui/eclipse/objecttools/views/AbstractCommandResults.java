@@ -27,13 +27,12 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.console.IOConsole;
-import org.eclipse.ui.console.TextConsoleViewer;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
@@ -44,6 +43,7 @@ import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolsCache;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.TextConsole;
 
 /**
  * Abstract view to display command execution results
@@ -52,8 +52,7 @@ public abstract class AbstractCommandResults extends ViewPart
 {
 	protected long nodeId;
 	protected long toolId;
-	protected TextConsoleViewer viewer;
-	protected IOConsole console;
+	protected TextConsole console;
 	
 	private Action actionClear;
 	private Action actionScrollLock;
@@ -94,14 +93,12 @@ public abstract class AbstractCommandResults extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		console = new IOConsole("Console", Activator.getImageDescriptor("icons/console.png")); //$NON-NLS-1$ //$NON-NLS-2$
-		viewer = new TextConsoleViewer(parent, console);
-		viewer.setEditable(false);
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+		console = new TextConsole(parent, SWT.NONE);
+		console.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
 			{
-				actionCopy.setEnabled(viewer.canDoOperation(TextConsoleViewer.COPY));
+				actionCopy.setEnabled(console.canCopy());
 			}
 		});
 
@@ -135,7 +132,7 @@ public abstract class AbstractCommandResults extends ViewPart
 			@Override
 			public void run()
 			{
-				console.clearConsole();
+				console.clear();
 			}
 		};
 		actionClear.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.clear_output"); //$NON-NLS-1$
@@ -145,6 +142,7 @@ public abstract class AbstractCommandResults extends ViewPart
 			@Override
 			public void run()
 			{
+			   console.setAutoScroll(!actionScrollLock.isChecked());
 			}
 		};
 		actionScrollLock.setImageDescriptor(Activator.getImageDescriptor("icons/scroll_lock.gif")); //$NON-NLS-1$
@@ -156,8 +154,7 @@ public abstract class AbstractCommandResults extends ViewPart
 			@Override
 			public void run()
 			{
-				if (viewer.canDoOperation(TextConsoleViewer.COPY))
-					viewer.doOperation(TextConsoleViewer.COPY);
+			   console.copy();
 			}
 		};
 		actionCopy.setEnabled(false);
@@ -168,8 +165,7 @@ public abstract class AbstractCommandResults extends ViewPart
 			@Override
 			public void run()
 			{
-				if (viewer.canDoOperation(TextConsoleViewer.SELECT_ALL))
-					viewer.doOperation(TextConsoleViewer.SELECT_ALL);
+			   console.selectAll();
 			}
 		};
       actionSelectAll.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.select_all"); //$NON-NLS-1$
@@ -227,8 +223,8 @@ public abstract class AbstractCommandResults extends ViewPart
 		});
 
 		// Create menu
-		Menu menu = menuMgr.createContextMenu(viewer.getControl());
-		viewer.getControl().setMenu(menu);
+		Menu menu = menuMgr.createContextMenu(console);
+		console.setMenu(menu);
 	}
 
 	/**
@@ -251,6 +247,6 @@ public abstract class AbstractCommandResults extends ViewPart
 	@Override
 	public void setFocus()
 	{
-		viewer.getTextWidget().setFocus();
+		console.setFocus();
 	}	
 }
