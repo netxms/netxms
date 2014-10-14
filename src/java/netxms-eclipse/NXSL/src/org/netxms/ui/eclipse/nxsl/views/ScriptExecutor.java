@@ -76,7 +76,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    private ScrolledForm form;
    private Combo scriptCombo;
    private ScriptEditor scriptEditor;
-   private StyledText executionResult;
+   private StyledText output;
    private Action actionSave;
    private Action actionSaveAs;
    private Action actionClear;
@@ -126,6 +126,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       form.setText("noname");
       
       layout = new GridLayout();
+      layout.verticalSpacing = 8;
       form.getBody().setLayout(layout);
       GridData gridData = new GridData();
       gridData.horizontalAlignment = SWT.FILL;
@@ -133,7 +134,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       form.getBody().setLayoutData(gridData);       
 
       /**** Script list dropdown ****/
-      scriptCombo = WidgetHelper.createLabeledCombo(form.getBody(), SWT.READ_ONLY, "Script library list", WidgetHelper.DEFAULT_LAYOUT_DATA, toolkit);
+      scriptCombo = WidgetHelper.createLabeledCombo(form.getBody(), SWT.READ_ONLY, "Script from library", WidgetHelper.DEFAULT_LAYOUT_DATA, toolkit);
       updateScriptList(null); 
       scriptCombo.addSelectionListener( new SelectionListener() {
          @Override
@@ -165,9 +166,14 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       splitter.setLayoutData(gridData);
       
       /**** Script editor  ****/
-      Section section = toolkit.createSection(splitter, Section.TITLE_BAR);
+      Composite container = toolkit.createComposite(splitter);
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.marginBottom = 4;
+      container.setLayout(layout);
+      Section section = toolkit.createSection(container, Section.TITLE_BAR);
       section.setText("Source");
-      section.setLayout(layout);
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
@@ -184,16 +190,16 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
             onTextModify();
          }
       });
-      gridData = new GridData();
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.verticalAlignment = SWT.FILL;
-      gridData.grabExcessVerticalSpace = true;
-      scriptEditor.setLayoutData(gridData);
       scriptEditor.setText("");
       
       /**** Execution result ****/
-      section = toolkit.createSection(splitter, Section.TITLE_BAR);
+      container = toolkit.createComposite(splitter);
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.marginTop = 4;
+      container.setLayout(layout);
+      section = toolkit.createSection(container, Section.TITLE_BAR);
       section.setText("Output");
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
@@ -202,10 +208,10 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       gridData.grabExcessVerticalSpace = true;
       section.setLayoutData(gridData);
       
-      executionResult = new StyledText(section, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
-      section.setClient(executionResult);
-      executionResult.setEditable(false);
-      executionResult.setFont(JFaceResources.getTextFont());
+      output = new StyledText(section, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
+      section.setClient(output);
+      output.setEditable(false);
+      output.setFont(JFaceResources.getTextFont());
       /*executionResult.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -214,13 +220,6 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          }
       });*/ // TODO: Think how to split copy action between 2 editors
       
-      gridData = new GridData();
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      gridData.verticalAlignment = SWT.FILL;
-      gridData.grabExcessVerticalSpace = true;
-      executionResult.setLayoutData(gridData);
-
       createActions();
       contributeToActionBars();
       
@@ -283,7 +282,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
             scriptCombo.deselectAll();
             scriptCombo.clearSelection();
             scriptEditor.setText("");
-            executionResult.setText("");
+            output.setText("");
             form.setText("noname");
          }
       };
@@ -300,7 +299,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
             
             updateScriptList(null);
             getScriptContent();
-            executionResult.setText("");
+            output.setText("");
          }
       };
       
@@ -655,7 +654,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
                @Override
                public void run()
                {
-                  executionResult.setText(executionResult.getText() + text); //Shold be writen with ID(If user runs 2 scripts simultaniously output could be mixed.
+                  output.setText(output.getText() + text); //Shold be writen with ID(If user runs 2 scripts simultaniously output could be mixed.
                }
             });
          }

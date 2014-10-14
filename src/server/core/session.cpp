@@ -10879,7 +10879,7 @@ void ClientSession::cancelFileMonitoring(CSCPMessage *request)
                if(rcc == RCC_SUCCESS)
                {
                   msg.SetVariable(VID_RCC, rcc);
-                  debugPrintf(6, _T("File monitoring cancelled sucessfully"));
+                  debugPrintf(6, _T("File monitoring cancelled successfully"));
                }
                else
                {
@@ -10976,9 +10976,8 @@ void ClientSession::testDCITransformation(CSCPMessage *pRequest)
  */
 void ClientSession::executeScript(CSCPMessage *pRequest)
 {
-   CSCPMessage msg, updateMessage, endMessage;
-   NetObj *object;
-   bool sucess = false;
+   CSCPMessage msg, updateMessage;
+   bool success = false;
    NXSL_VM *vm = NULL;
    TCHAR result[256];
 
@@ -10990,10 +10989,15 @@ void ClientSession::executeScript(CSCPMessage *pRequest)
    updateMessage.SetId(pRequest->GetId());
 
    // Get node id and check object class and access rights
-   object = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   NetObj *object = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
    if (object != NULL)
    {
-      if ((object->Type() == OBJECT_NODE) || (object->Type() == OBJECT_CLUSTER))
+      if ((object->Type() == OBJECT_NODE) ||
+          (object->Type() == OBJECT_CLUSTER) ||
+          (object->Type() == OBJECT_MOBILEDEVICE) ||
+          (object->Type() == OBJECT_CONTAINER) ||
+          (object->Type() == OBJECT_ZONE) ||
+          (object->Type() == OBJECT_SUBNET))
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
@@ -11008,10 +11012,10 @@ void ClientSession::executeScript(CSCPMessage *pRequest)
                   {
                      vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
                   }
-                  sucess = true;
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
                   msg.SetVariable(VID_EXECUTION_RESULT, result);
                   sendMessage(&msg);
+                  success = true;
                }
                msg.SetVariable(VID_EXECUTION_RESULT, result);
                msg.SetVariable(VID_RCC, RCC_COMM_FAILURE); //TODO: return correct errot(Compilation error)
@@ -11038,12 +11042,12 @@ void ClientSession::executeScript(CSCPMessage *pRequest)
    }
 
    // start execution
-   if (sucess)
+   if (success)
    {
-      updateMessage.setEndOfSequence();
       if (vm->run())
       {
 			updateMessage.SetVariable(VID_RCC, RCC_SUCCESS);
+         updateMessage.setEndOfSequence();
          sendMessage(&updateMessage);
       }
       else
@@ -11051,8 +11055,8 @@ void ClientSession::executeScript(CSCPMessage *pRequest)
          nx_strncpy(result, vm->getErrorText(), 256);
          updateMessage.SetVariable(VID_EXECUTION_RESULT, result);
 			updateMessage.SetVariable(VID_RCC, RCC_EXEC_FAILED);
+         updateMessage.setEndOfSequence();
          sendMessage(&updateMessage);
-         //send update about error
       }
       delete vm;
    }
