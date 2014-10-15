@@ -152,7 +152,9 @@ LogParser::~LogParser()
 	safe_free(m_rules);
 	safe_free(m_name);
 	safe_free(m_fileName);
+#ifdef _WIN32
    safe_free(m_marker);
+#endif
 }
 
 /**
