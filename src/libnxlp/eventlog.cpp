@@ -285,7 +285,19 @@ reopen_log:
 			do
 			{
 				while((success = ReadEventLog(hLog, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0,
-														buffer, bufferSize, &bytes, &bytesNeeded)));
+														buffer, bufferSize, &bytes, &bytesNeeded)))
+            {
+               if (m_marker != NULL)
+               {
+                  for(BYTE *rec = buffer; rec < buffer + bytes; rec += ((EVENTLOGRECORD *)rec)->Length)
+                  {
+                     if ((time_t)((EVENTLOGRECORD *)rec)->TimeGenerated > startTime)
+                     {
+                        parseEvent((EVENTLOGRECORD *)rec);
+                     }
+                  }
+               }
+            }
 				if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
 				{
 					bufferSize = bytesNeeded;
@@ -293,16 +305,6 @@ reopen_log:
 					success = TRUE;
 					LogParserTrace(9, _T("LogWatch: Increasing buffer for event log \"%s\" to %u bytes on initial read"), &m_fileName[1], bufferSize);
 				}
-            else if (m_marker != NULL)
-            {
-               for(BYTE *rec = buffer; rec < buffer + bytes; rec += ((EVENTLOGRECORD *)rec)->Length)
-               {
-                  if ((time_t)((EVENTLOGRECORD *)rec)->TimeGenerated > startTime)
-                  {
-                     parseEvent((EVENTLOGRECORD *)rec);
-                  }
-               }
-            }
 			} while(success);
 		}
 

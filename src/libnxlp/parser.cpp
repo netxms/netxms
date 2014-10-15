@@ -91,7 +91,7 @@ LogParser::LogParser()
 	m_thread = INVALID_THREAD_HANDLE;
 	m_recordsProcessed = 0;
 	m_recordsMatched = 0;
-	m_processAllRules = FALSE;
+	m_processAllRules = false;
 	m_traceLevel = 0;
 	m_traceCallback = NULL;
 	_tcscpy(m_status, LPS_INIT);
