@@ -256,14 +256,15 @@ void LogParser::parseEvent(EVENTLOGRECORD *rec)
 bool LogParser::monitorEventLogV4(CONDITION stopCondition)
 {
    HANDLE hLog, handles[2];
-   BYTE *buffer, *rec;
    DWORD bytes, bytesNeeded, bufferSize = 32768, error = 0;
    BOOL success, reopen = FALSE;
 	THREAD nt;	// Notification thread's handle
 	NOTIFICATION_THREAD_DATA nd;
    bool result;
 
-   buffer = (BYTE *)malloc(bufferSize);
+   time_t startTime = readLastProcessedRecordTimestamp();
+
+   BYTE *buffer = (BYTE *)malloc(bufferSize);
 
 reopen_log:
    hLog = OpenEventLog(NULL, &m_fileName[1]);
@@ -277,6 +278,10 @@ reopen_log:
 		if (!reopen)
 		{
 			LogParserTrace(7, _T("LogWatch: Initial read of event log \"%s\""), &m_fileName[1]);
+         if (m_marker != NULL)
+         {
+	         LogParserTrace(1, _T("LogWatch: reading old events between %I64d and %I64d"), (INT64)startTime, (INT64)time(NULL));
+         }
 			do
 			{
 				while((success = ReadEventLog(hLog, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0,
@@ -288,8 +293,20 @@ reopen_log:
 					success = TRUE;
 					LogParserTrace(9, _T("LogWatch: Increasing buffer for event log \"%s\" to %u bytes on initial read"), &m_fileName[1], bufferSize);
 				}
+            else if (m_marker != NULL)
+            {
+               for(BYTE *rec = buffer; rec < buffer + bytes; rec += ((EVENTLOGRECORD *)rec)->Length)
+               {
+                  if ((time_t)((EVENTLOGRECORD *)rec)->TimeGenerated > startTime)
+                  {
+                     parseEvent((EVENTLOGRECORD *)rec);
+                  }
+               }
+            }
 			} while(success);
 		}
+
+      saveLastProcessedRecordTimestamp(time(NULL));
 
       if (reopen || (GetLastError() == ERROR_HANDLE_EOF))
       {
@@ -310,7 +327,7 @@ reopen_log:
             {
 retry_read:
                success = ReadEventLog(hLog, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ, 0,
-                                       buffer, bufferSize, &bytes, &bytesNeeded);
+                                      buffer, bufferSize, &bytes, &bytesNeeded);
 					error = GetLastError();
 					if (!success && (error == ERROR_INSUFFICIENT_BUFFER))
 					{
@@ -321,9 +338,10 @@ retry_read:
 					}
                if (success)
                {
-                  for(rec = buffer; rec < buffer + bytes; rec += ((EVENTLOGRECORD *)rec)->Length)
+                  for(BYTE *rec = buffer; rec < buffer + bytes; rec += ((EVENTLOGRECORD *)rec)->Length)
                      parseEvent((EVENTLOGRECORD *)rec);
                }
+               saveLastProcessedRecordTimestamp(time(NULL));
             } while(success);
 
 				if (error == ERROR_EVENTLOG_FILE_CHANGED)

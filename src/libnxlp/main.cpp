@@ -104,9 +104,58 @@ void LIBNXLP_EXPORTABLE CleanupLogParserLibrary()
 /**
  * Event log parsing wrapper. Calls appropriate implementation.
  */
-bool LogParser::monitorEventLog(CONDITION stopCondition)
+bool LogParser::monitorEventLog(CONDITION stopCondition, const TCHAR *markerPrefix)
 {
+   if (markerPrefix != NULL)
+   {
+      size_t len = _tcslen(markerPrefix) + _tcslen(m_fileName) + 2;
+      m_marker = (TCHAR *)malloc(len * sizeof(TCHAR));
+      _sntprintf(m_marker, len, _T("%s.%s"), markerPrefix, &m_fileName[1]);
+   }
    return s_eventLogV6 ? monitorEventLogV6(stopCondition) : monitorEventLogV4(stopCondition);
+}
+
+/**
+ * Save timestamp of last processed record
+ */
+void LogParser::saveLastProcessedRecordTimestamp(time_t timestamp)
+{
+   if (m_marker == NULL)
+      return;
+
+   HKEY hKey;
+   if (RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\NetXMS\\LogParserLibrary"), 0, NULL, 
+                      REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, NULL) == ERROR_SUCCESS)
+   {
+      DWORD t = (DWORD)timestamp;
+      RegSetValueEx(hKey, m_marker, 0, REG_DWORD, (BYTE *)&t, sizeof(DWORD));
+      RegCloseKey(hKey);
+   }
+}
+
+/**
+ * Read timestamp of last processed record
+ */
+time_t LogParser::readLastProcessedRecordTimestamp()
+{
+   if (m_marker == NULL)
+      return time(NULL);
+
+   time_t result;
+   HKEY hKey;
+   if (RegOpenKeyEx(HKEY_CURRENT_USER, _T("Software\\NetXMS\\LogParserLibrary"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   {
+      DWORD t;
+      DWORD size = sizeof(DWORD);
+      RegQueryValueEx(hKey, m_marker, NULL, NULL, (BYTE *)&t, &size);
+      RegCloseKey(hKey);
+      result = (time_t)t;
+   }
+   else
+   {
+      result = time(NULL);
+   }
+   return result;
 }
 
 /**

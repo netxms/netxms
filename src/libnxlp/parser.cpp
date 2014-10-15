@@ -95,6 +95,9 @@ LogParser::LogParser()
 	m_traceLevel = 0;
 	m_traceCallback = NULL;
 	_tcscpy(m_status, LPS_INIT);
+#ifdef _WIN32
+   m_marker = NULL;
+#endif
 }
 
 /**
@@ -132,6 +135,9 @@ LogParser::LogParser(LogParser *src)
 	m_traceLevel = src->m_traceLevel;
 	m_traceCallback = src->m_traceCallback;
 	_tcscpy(m_status, LPS_INIT);
+#ifdef _WIN32
+   m_marker = _tcsdup_ex(src->m_marker);
+#endif
 }
 
 /**
@@ -146,6 +152,7 @@ LogParser::~LogParser()
 	safe_free(m_rules);
 	safe_free(m_name);
 	safe_free(m_fileName);
+   safe_free(m_marker);
 }
 
 /**

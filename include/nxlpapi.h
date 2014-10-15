@@ -181,6 +181,9 @@ private:
 	int m_traceLevel;
 	void (*m_traceCallback)(const TCHAR *, va_list);
 	TCHAR m_status[MAX_PARSER_STATUS_LEN];
+#ifdef _WIN32
+   TCHAR *m_marker;
+#endif
 	
 	const TCHAR *checkContext(LogParserRule *rule);
 	void trace(int level, const TCHAR *format, ...);
@@ -191,6 +194,8 @@ private:
 
 	bool monitorEventLogV6(CONDITION stopCondition);
 	bool monitorEventLogV4(CONDITION stopCondition);
+
+   time_t readLastProcessedRecordTimestamp();
 #endif
 
 public:
@@ -242,7 +247,8 @@ public:
 
 	bool monitorFile(CONDITION stopCondition, bool readFromCurrPos = true);
 #ifdef _WIN32
-	bool monitorEventLog(CONDITION stopCondition);
+	bool monitorEventLog(CONDITION stopCondition, const TCHAR *markerPrefix);
+   void saveLastProcessedRecordTimestamp(time_t timestamp);
 #endif
 };
 

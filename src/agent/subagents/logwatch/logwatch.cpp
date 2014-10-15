@@ -33,6 +33,11 @@ static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
 static ObjectArray<LogParser> s_parsers(16, 16, true);
 
 /**
+ * Offline (missed during agent's downtime) events processing flag
+ */
+static bool s_processOfflineEvents;
+
+/**
  * File parsing thread
  */
 THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
@@ -48,7 +53,7 @@ THREAD_RESULT THREAD_CALL ParserThreadFile(void *arg)
  */
 THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
 {
-	((LogParser *)arg)->monitorEventLog(s_shutdownCondition);
+   ((LogParser *)arg)->monitorEventLog(s_shutdownCondition, s_processOfflineEvents ? _T("LogWatch") : NULL);
 	return THREAD_OK;
 }
 
@@ -217,6 +222,8 @@ static void AddParserFromConfig(const TCHAR *file)
 static BOOL SubagentInit(Config *config)
 {
    InitLogParserLibrary();
+
+   s_processOfflineEvents = config->getValueAsBoolean(_T("/LogWatch/ProcessOfflineEvents"), false);
 
 	ConfigEntry *parsers = config->getEntry(_T("/LogWatch/Parser"));
 	if (parsers != NULL)

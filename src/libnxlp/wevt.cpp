@@ -33,7 +33,9 @@ static BOOL (WINAPI *_EvtClose)(EVT_HANDLE);
 static EVT_HANDLE (WINAPI *_EvtCreateRenderContext)(DWORD, LPCWSTR *, DWORD);
 static BOOL (WINAPI *_EvtGetPublisherMetadataProperty)(EVT_HANDLE, EVT_PUBLISHER_METADATA_PROPERTY_ID, DWORD, DWORD, PEVT_VARIANT, PDWORD);
 static BOOL (WINAPI *_EvtFormatMessage)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PEVT_VARIANT, DWORD, DWORD, LPWSTR, PDWORD);
+static BOOL (WINAPI *_EvtNext)(EVT_HANDLE, DWORD, EVT_HANDLE *, DWORD, DWORD, PDWORD);
 static EVT_HANDLE (WINAPI *_EvtOpenPublisherMetadata)(EVT_HANDLE, LPCWSTR, LPCWSTR, LCID, DWORD);
+static EVT_HANDLE (WINAPI *_EvtQuery)(EVT_HANDLE, LPCWSTR, LPCWSTR, DWORD);
 static BOOL (WINAPI *_EvtRender)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PVOID, PDWORD, PDWORD);
 static EVT_HANDLE (WINAPI *_EvtSubscribe)(EVT_HANDLE, HANDLE, LPCWSTR, LPCWSTR, EVT_HANDLE, PVOID, EVT_SUBSCRIBE_CALLBACK, DWORD);
 
@@ -188,6 +190,8 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	free(mbmsg);
 #endif
 
+   ((LogParser *)userContext)->saveLastProcessedRecordTimestamp(time(NULL));
+
 cleanup:
 	if (pubMetadata != NULL)
 		_EvtClose(pubMetadata);
@@ -202,16 +206,49 @@ cleanup:
  */
 bool LogParser::monitorEventLogV6(CONDITION stopCondition)
 {
-	EVT_HANDLE handle;
    bool success;
 
+   // Read old records if needed
+   if (m_marker != NULL)
+   {
+      time_t startTime = readLastProcessedRecordTimestamp();
+      time_t now = time(NULL);
+      if (startTime < now)
+      {
+		   LogParserTrace(1, _T("LogWatch: reading old events between %I64d and %I64d"), (INT64)startTime, (INT64)now);
+
+         WCHAR query[256];
+         _snwprintf(query, 256, L"*[System/TimeCreated[timediff(@SystemTime) < %I64d]]", (INT64)(time(NULL) - startTime) * 1000LL);
+         EVT_HANDLE handle = _EvtQuery(NULL, &m_fileName[1], query, EvtQueryChannelPath | EvtQueryForwardDirection);
+         if (handle != NULL)
+         {
+            EVT_HANDLE events[64];
+            DWORD count;
+            while(_EvtNext(handle, 64, events, 5000, 0, &count))
+            {
+               for(DWORD i = 0; i < count; i++)
+               {
+                  SubscribeCallback(EvtSubscribeActionDeliver, this, events[i]);
+                  _EvtClose(events[i]);
+               }
+            }
+   		   _EvtClose(handle);
+         }
+         else
+         {
+            TCHAR buffer[1024];
+   		   LogParserTrace(1, _T("LogWatch: EvtQuery failed (%s)"), GetSystemErrorText(GetLastError(), buffer, 1024));
+         }
+      }
+   }
+
 #ifdef UNICODE
-	handle = _EvtSubscribe(NULL, NULL, &m_fileName[1], NULL, NULL, this, SubscribeCallback, EvtSubscribeToFutureEvents);
+	EVT_HANDLE handle = _EvtSubscribe(NULL, NULL, &m_fileName[1], NULL, NULL, this, SubscribeCallback, EvtSubscribeToFutureEvents);
 #else
 	WCHAR channel[MAX_PATH];
 	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, &m_fileName[1], -1, channel, MAX_PATH);
 	channel[MAX_PATH - 1] = 0;
-	handle = _EvtSubscribe(NULL, NULL, channel, NULL, NULL, this, SubscribeCallback, EvtSubscribeToFutureEvents);
+	EVT_HANDLE handle = _EvtSubscribe(NULL, NULL, channel, NULL, NULL, this, SubscribeCallback, EvtSubscribeToFutureEvents);
 #endif
 	if (handle != NULL)
 	{
@@ -250,11 +287,14 @@ bool InitEventLogParsersV6()
 	_EvtCreateRenderContext = (EVT_HANDLE (WINAPI *)(DWORD, LPCWSTR *, DWORD))GetProcAddress(module, "EvtCreateRenderContext");
 	_EvtGetPublisherMetadataProperty = (BOOL (WINAPI *)(EVT_HANDLE, EVT_PUBLISHER_METADATA_PROPERTY_ID, DWORD, DWORD, PEVT_VARIANT, PDWORD))GetProcAddress(module, "EvtGetPublisherMetadataProperty");
 	_EvtFormatMessage = (BOOL (WINAPI *)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PEVT_VARIANT, DWORD, DWORD, LPWSTR, PDWORD))GetProcAddress(module, "EvtFormatMessage");
-	_EvtOpenPublisherMetadata = (EVT_HANDLE (WINAPI *)(EVT_HANDLE, LPCWSTR, LPCWSTR, LCID, DWORD))GetProcAddress(module, "EvtOpenPublisherMetadata");
+   _EvtNext = (BOOL (WINAPI *)(EVT_HANDLE, DWORD, EVT_HANDLE *, DWORD, DWORD, PDWORD))GetProcAddress(module, "EvtNext");
+   _EvtOpenPublisherMetadata = (EVT_HANDLE (WINAPI *)(EVT_HANDLE, LPCWSTR, LPCWSTR, LCID, DWORD))GetProcAddress(module, "EvtOpenPublisherMetadata");
+	_EvtQuery = (EVT_HANDLE (WINAPI *)(EVT_HANDLE, LPCWSTR, LPCWSTR, DWORD))GetProcAddress(module, "EvtQuery");
 	_EvtRender = (BOOL (WINAPI *)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PVOID, PDWORD, PDWORD))GetProcAddress(module, "EvtRender");
 	_EvtSubscribe = (EVT_HANDLE (WINAPI *)(EVT_HANDLE, HANDLE, LPCWSTR, LPCWSTR, EVT_HANDLE, PVOID, EVT_SUBSCRIBE_CALLBACK, DWORD))GetProcAddress(module, "EvtSubscribe");
 
-	return (_EvtClose != NULL) && (_EvtCreateRenderContext != NULL) && 
-	       (_EvtGetPublisherMetadataProperty != NULL) && (_EvtFormatMessage != NULL) && 
-	       (_EvtOpenPublisherMetadata != NULL) && (_EvtRender != NULL) && (_EvtSubscribe != NULL);
+	return (_EvtClose != NULL) && (_EvtCreateRenderContext != NULL) &&
+          (_EvtGetPublisherMetadataProperty != NULL) && (_EvtFormatMessage != NULL) && 
+	       (_EvtNext != NULL) && (_EvtOpenPublisherMetadata != NULL) &&
+          (_EvtQuery != NULL) && (_EvtRender != NULL) && (_EvtSubscribe != NULL);
 }
