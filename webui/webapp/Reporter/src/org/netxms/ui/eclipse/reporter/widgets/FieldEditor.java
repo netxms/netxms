@@ -22,6 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.api.client.reporting.ReportParameter;
@@ -62,7 +63,12 @@ public abstract class FieldEditor extends Composite
 		gd.horizontalAlignment = SWT.FILL;
 		label.setLayoutData(gd);
 
-		createContent(this);
+		Control content = createContent(this);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.TOP;
+      content.setLayoutData(gd);
 	}
 
 	/**
@@ -70,7 +76,7 @@ public abstract class FieldEditor extends Composite
 	 * 
 	 * @param parent parent composite
 	 */
-	abstract protected void createContent(Composite parent);
+	abstract protected Control createContent(Composite parent);
 
 	/**
 	 * Get current value for parameter being edited.

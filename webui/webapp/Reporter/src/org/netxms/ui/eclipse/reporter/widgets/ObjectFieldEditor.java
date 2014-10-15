@@ -26,6 +26,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -70,14 +71,9 @@ public class ObjectFieldEditor extends FieldEditor
 	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected Control createContent(Composite parent)
 	{
 		Composite content = toolkit.createComposite(parent, SWT.BORDER);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.TOP;
-		content.setLayoutData(gd);
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
@@ -88,7 +84,7 @@ public class ObjectFieldEditor extends FieldEditor
 		
 		text = new CLabel(content, SWT.NONE);
 		toolkit.adapt(text);
-		gd = new GridData();
+		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.TOP;
@@ -107,6 +103,8 @@ public class ObjectFieldEditor extends FieldEditor
 				selectObject();
 			}
 		});
+		
+		return content;
 	}
 	
 	/**

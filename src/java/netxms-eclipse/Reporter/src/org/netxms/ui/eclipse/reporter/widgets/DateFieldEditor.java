@@ -70,7 +70,7 @@ public class DateFieldEditor extends FieldEditor
 	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected Control createContent(Composite parent)
 	{
 		final ImageCache imageCache = new ImageCache(this);
 		
@@ -119,6 +119,8 @@ public class DateFieldEditor extends FieldEditor
       gd.verticalAlignment = SWT.BOTTOM;
       gd.horizontalAlignment = SWT.LEFT;
       link.setLayoutData(gd);
+      
+      return content;
 	}
 
 	/* (non-Javadoc)

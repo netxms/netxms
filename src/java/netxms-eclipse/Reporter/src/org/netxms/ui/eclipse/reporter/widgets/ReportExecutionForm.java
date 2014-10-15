@@ -471,7 +471,7 @@ public class ReportExecutionForm extends Composite
 
 			GridData gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
-			gd.verticalAlignment = SWT.CENTER;
+			gd.verticalAlignment = SWT.TOP;
 			gd.grabExcessHorizontalSpace = true;
 			gd.grabExcessVerticalSpace = false;
 			gd.horizontalSpan = parameter.getSpan();

@@ -18,45 +18,47 @@
  */
 package org.netxms.ui.eclipse.reporter.widgets;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.api.client.reporting.ReportParameter;
 
 /**
- * Editor for string fields
+ * Numeric field editor
  */
-public class StringFieldEditor extends FieldEditor
+public class NumberFieldEditor extends FieldEditor
 {
-	private Text text;
+   private Spinner value;
+   
+   /**
+    * @param parameter
+    * @param toolkit
+    * @param parent
+    */
+   public NumberFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
+   {
+      super(parameter, toolkit, parent);
+   }
 
-	/**
-	 * @param parameter
-	 * @param toolkit
-	 * @param parent
-	 */
-	public StringFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
-	{
-		super(parameter, toolkit, parent);
-	}
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected Control createContent(Composite parent)
+   {
+      value = new Spinner(parent, SWT.BORDER);
+      value.setSelection(0);
+      return value;
+   }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	protected Control createContent(Composite parent)
-	{
-		text = toolkit.createText(this, parameter.getDefaultValue());
-		return text;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
-	 */
-	@Override
-	public String getValue()
-	{
-		return text.getText();
-	}
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#getValue()
+    */
+   @Override
+   public String getValue()
+   {
+      return Integer.toString(value.getSelection());
+   }
 }

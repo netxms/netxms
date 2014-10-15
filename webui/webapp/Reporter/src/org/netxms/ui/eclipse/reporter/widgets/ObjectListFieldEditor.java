@@ -28,6 +28,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -61,26 +62,28 @@ public class ObjectListFieldEditor extends FieldEditor
 	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected Control createContent(Composite parent)
 	{
 		Composite content = toolkit.createComposite(parent, SWT.NONE);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.TOP;
-		content.setLayoutData(gd);
 		
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 1;
+		layout.numColumns = 2;
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		content.setLayout(layout);
 		
-		viewer = new TableViewer(content, SWT.FULL_SELECTION | SWT.MULTI);
+		viewer = new TableViewer(content, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new WorkbenchLabelProvider());
 		viewer.setInput(new Object[0]);
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.grabExcessVerticalSpace = true;
+		gd.verticalSpan = 2;
+		viewer.getControl().setLayoutData(gd);
 		
 		ImageHyperlink link = toolkit.createImageHyperlink(content, SWT.NONE);
 		link.setImage(SharedIcons.IMG_ADD_OBJECT);
@@ -92,6 +95,9 @@ public class ObjectListFieldEditor extends FieldEditor
 				addObjects();
 			}
 		});
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      link.setLayoutData(gd);
 		
 		link = toolkit.createImageHyperlink(content, SWT.NONE);
 		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -103,6 +109,11 @@ public class ObjectListFieldEditor extends FieldEditor
 				deleteObjects();
 			}
 		});
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      link.setLayoutData(gd);
+		
+		return content;
 	}
 	
 	/**

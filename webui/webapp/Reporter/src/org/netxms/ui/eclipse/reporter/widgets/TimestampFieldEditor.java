@@ -23,6 +23,7 @@ import java.util.Date;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.api.client.reporting.ReportParameter;
@@ -56,7 +57,7 @@ public class TimestampFieldEditor extends FieldEditor
 	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected Control createContent(Composite parent)
 	{
 		parseType();
 
@@ -91,6 +92,8 @@ public class TimestampFieldEditor extends FieldEditor
 			toolkit.adapt(timePicker);
 			timePicker.setTime(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE), c.get(Calendar.SECOND));
 		}
+		
+		return area;
 	}
 
 	/**
