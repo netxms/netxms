@@ -686,24 +686,21 @@ int DataCollectionTarget::getMostCriticalDCIStatus()
 {
    int status = -1;
    lockDciAccess(false);
-   // Check if that item exists
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *curr = m_dcObjects->get(i);
       if (curr->isStatusDCO() && (curr->getType() == DCO_TYPE_ITEM) &&
           curr->hasValue() && (curr->getStatus() == ITEM_STATUS_ACTIVE))
       {
-         if(Type() == OBJECT_CLUSTER && !curr->isAggregateOnCluster())
-            continue; //Calculated only on thows that are agregated on cluster
+         if (Type() == OBJECT_CLUSTER && !curr->isAggregateOnCluster())
+            continue; // Calculated only on those that are agregated on cluster
 
          ItemValue *value = ((DCItem *)curr)->getInternalLastValue();
-         if(value != NULL && (INT32)*value >= -1 && (INT32)*value < 5)
+         if (value != NULL && (INT32)*value >= STATUS_NORMAL && (INT32)*value <= STATUS_CRITICAL)
             status = max(status, (INT32)*value);
          delete value;
       }
 	}
    unlockDciAccess();
-   status = (status == -1) ? STATUS_UNKNOWN : status;
-
-   return status;
+   return (status == -1) ? STATUS_UNKNOWN : status;
 }

@@ -666,7 +666,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
    if (m_iStatus != STATUS_UNMANAGED)
    {
       iMostCriticalAlarm = GetMostCriticalStatusForObject(m_dwId);
-      if(Type() == OBJECT_NODE || Type() == OBJECT_MOBILEDEVICE || Type() == OBJECT_CLUSTER || Type() == OBJECT_ACCESSPOINT)
+      if (Type() == OBJECT_NODE || Type() == OBJECT_MOBILEDEVICE || Type() == OBJECT_CLUSTER || Type() == OBJECT_ACCESSPOINT)
       {
          DataCollectionTarget *target = (DataCollectionTarget *)this;
          mostCriticalDCI = target->getMostCriticalDCIStatus();
@@ -755,8 +755,8 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
          }
       }
 
-      //If DCI status is calculated for object apply DCI object's statud
-      if(mostCriticalDCI != STATUS_UNKNOWN)
+      // If DCI status is calculated for object apply DCI object's statud
+      if (mostCriticalDCI != STATUS_UNKNOWN)
       {
          if (m_iStatus == STATUS_UNKNOWN)
          {
