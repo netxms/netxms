@@ -402,7 +402,7 @@ bool EPRule::matchScript(Event *pEvent)
    pLocals = new NXSL_VariableSystem;
    pLocals->create(_T("EVENT_CODE"), new NXSL_Value(pEvent->getCode()));
    pLocals->create(_T("SEVERITY"), new NXSL_Value(pEvent->getSeverity()));
-   pLocals->create(_T("SEVERITY_TEXT"), new NXSL_Value(g_szStatusText[pEvent->getSeverity()]));
+   pLocals->create(_T("SEVERITY_TEXT"), new NXSL_Value(GetStatusAsText(pEvent->getSeverity(), true)));
    pLocals->create(_T("OBJECT_ID"), new NXSL_Value(pEvent->getSourceId()));
    pLocals->create(_T("EVENT_TEXT"), new NXSL_Value((TCHAR *)pEvent->getMessage()));
    pLocals->create(_T("USER_TAG"), new NXSL_Value((TCHAR *)pEvent->getUserTag()));

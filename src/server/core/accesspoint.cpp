@@ -416,7 +416,7 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
    AccessPointState state = m_state;
 
    sendPollerMsg(rqId, _T("   Starting status poll on access point %s\r\n"), m_szName);
-   sendPollerMsg(rqId, _T("      Current access point status is %s\r\n"), g_szStatusText[m_iStatus]);
+   sendPollerMsg(rqId, _T("      Current access point status is %s\r\n"), GetStatusAsText(m_iStatus, true));
 
    /* TODO: read status from controller via driver and use ping as last resort only */
 
@@ -504,6 +504,6 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 
    updateState(state);
 
-   sendPollerMsg(rqId, _T("      Access point status after poll is %s\r\n"), g_szStatusText[m_iStatus]);
+   sendPollerMsg(rqId, _T("      Access point status after poll is %s\r\n"), GetStatusAsText(m_iStatus, true));
 	sendPollerMsg(rqId, _T("   Finished status poll on access point %s\r\n"), m_szName);
 }

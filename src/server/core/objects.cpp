@@ -1758,7 +1758,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
                        _T("   Class: %s  Primary IP: %s  Status: %s  IsModified: %d  IsDeleted: %d\n"),
 					  object->Id(), object->Name(), (object->Type() < OBJECT_CUSTOM) ? g_szClassName[object->Type()] : _T("Custom"),
                  IpToStr(object->IpAddr(), dd->buffer),
-                 g_szStatusTextSmall[object->Status()],
+                 GetStatusAsText(object->Status(), true),
                  object->isModified(), object->isDeleted());
    ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"), 
                  object->dbgGetParentList(dd->buffer), object->dbgGetChildList(&dd->buffer[4096]));

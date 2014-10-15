@@ -206,7 +206,7 @@ void CorrelateEvent(Event *pEvent);
 void CreateNXMPEventRecord(String &str, UINT32 eventCode);
 
 BOOL EventNameFromCode(UINT32 eventCode, TCHAR *pszBuffer);
-UINT32 EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);
+UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);
 EVENT_TEMPLATE *FindEventTemplateByCode(UINT32 eventCode);
 EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName);
 
@@ -218,13 +218,13 @@ BOOL NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const
 BOOL NXCORE_EXPORTABLE PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...);
 void NXCORE_EXPORTABLE ResendEvents(Queue *queue);
 
+const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
+
 /**
  * Global variables
  */
 extern Queue *g_pEventQueue;
 extern EventPolicy *g_pEventPolicy;
-extern const TCHAR *g_szStatusText[];
-extern const TCHAR *g_szStatusTextSmall[];
 extern INT64 g_totalEventsProcessed;
 
 #endif   /* _nms_events_h_ */

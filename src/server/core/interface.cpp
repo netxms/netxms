@@ -338,7 +338,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
    }
 
    sendPollerMsg(rqId, _T("   Starting status poll on interface %s\r\n"), m_szName);
-   sendPollerMsg(rqId, _T("      Current interface status is %s\r\n"), g_szStatusText[m_iStatus]);
+   sendPollerMsg(rqId, _T("      Current interface status is %s\r\n"), GetStatusAsText(m_iStatus, true));
 
 	int adminState = IF_ADMIN_STATE_UNKNOWN;
 	int operState = IF_OPER_STATE_UNKNOWN;
@@ -536,7 +536,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 
 	int requiredPolls = (m_requiredPollCount > 0) ? m_requiredPollCount : g_requiredPolls;
 	sendPollerMsg(rqId, _T("      Interface is %s for %d poll%s (%d poll%s required for status change)\r\n"),
-	              g_szStatusText[newStatus], m_pollCount, (m_pollCount == 1) ? _T("") : _T("s"),
+	              GetStatusAsText(newStatus, true), m_pollCount, (m_pollCount == 1) ? _T("") : _T("s"),
 	              requiredPolls, (requiredPolls == 1) ? _T("") : _T("s"));
 	DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): newStatus=%d oldStatus=%d pollCount=%d requiredPolls=%d"),
 	          m_dwId, m_szName, newStatus, oldStatus, m_pollCount, requiredPolls);
@@ -573,7 +573,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 		m_pendingStatus = -1;	// Invalidate pending status
       if (!m_isSystem)
       {
-		   sendPollerMsg(rqId, _T("      Interface status changed to %s\r\n"), g_szStatusText[m_iStatus]);
+		   sendPollerMsg(rqId, _T("      Interface status changed to %s\r\n"), GetStatusAsText(m_iStatus, true));
 		   PostEventEx(eventQueue,
 		               (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_iStatus] : statusToEvent[m_iStatus],
 						   pNode->Id(), "dsaad", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask, m_dwIfIndex);
@@ -595,7 +595,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 	}
 	UnlockData();
 
-	sendPollerMsg(rqId, _T("      Interface status after poll is %s\r\n"), g_szStatusText[m_iStatus]);
+	sendPollerMsg(rqId, _T("      Interface status after poll is %s\r\n"), GetStatusAsText(m_iStatus, true));
 	sendPollerMsg(rqId, _T("   Finished status poll on interface %s\r\n"), m_szName);
 }
 

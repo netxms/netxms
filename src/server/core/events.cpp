@@ -27,8 +27,6 @@
  */
 Queue *g_pEventQueue = NULL;
 EventPolicy *g_pEventPolicy = NULL;
-const TCHAR *g_szStatusText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"), _T("CRITICAL"), _T("UNKNOWN"), _T("UNMANAGED"), _T("DISABLED"), _T("TESTING") };
-const TCHAR *g_szStatusTextSmall[] = { _T("Normal"), _T("Warning"), _T("Minor"), _T("Major"), _T("Critical"), _T("Unknown"), _T("Unmanaged"), _T("Disabled"), _T("Testing") };
 
 /**
  * Static data
@@ -340,10 +338,11 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                case 'S':   // Severity text
 						if (event != NULL)
 						{
-							dwSize += (UINT32)_tcslen(g_szStatusTextSmall[event->m_dwSeverity]);
+                     const TCHAR *statusText = GetStatusAsText(event->m_dwSeverity, false);
+							dwSize += (UINT32)_tcslen(statusText);
 							pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-							_tcscpy(&pText[dwPos], g_szStatusTextSmall[event->m_dwSeverity]);
-							dwPos += (UINT32)_tcslen(g_szStatusTextSmall[event->m_dwSeverity]);
+							_tcscpy(&pText[dwPos], statusText);
+							dwPos += (UINT32)_tcslen(statusText);
 						}
                   break;
                case 'v':   // NetXMS server version
@@ -1178,8 +1177,26 @@ EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *name)
  * Translate event name to code
  * If event with given name does not exist, returns supplied default value
  */
-UINT32 EventCodeFromName(const TCHAR *name, UINT32 defaultValue)
+UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue)
 {
 	EVENT_TEMPLATE *p = FindEventTemplateByName(name);
 	return (p != NULL) ? p->dwCode : defaultValue;
+}
+
+/**
+ * Get status as text
+ */
+const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps)
+{
+   static const TCHAR *statusText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"), _T("CRITICAL"), _T("UNKNOWN"), _T("UNMANAGED"), _T("DISABLED"), _T("TESTING") };
+   static const TCHAR *statusTextSmall[] = { _T("Normal"), _T("Warning"), _T("Minor"), _T("Major"), _T("Critical"), _T("Unknown"), _T("Unmanaged"), _T("Disabled"), _T("Testing") };
+
+   if (allCaps)
+   {
+      return ((status >= STATUS_NORMAL) && (status <= STATUS_TESTING)) ? statusText[status] : _T("INTERNAL ERROR");
+   }
+   else
+   {
+      return ((status >= STATUS_NORMAL) && (status <= STATUS_TESTING)) ? statusTextSmall[status] : _T("INTERNAL ERROR");
+   }
 }

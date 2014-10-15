@@ -334,7 +334,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
    }
 
    sendPollerMsg(rqId, _T("   Starting status poll on network service %s\r\n"), m_szName);
-   sendPollerMsg(rqId, _T("      Current service status is %s\r\n"), g_szStatusTextSmall[m_iStatus]);
+   sendPollerMsg(rqId, _T("      Current service status is %s\r\n"), GetStatusAsText(m_iStatus, true));
 
    if (m_pollerNode != 0)
    {
@@ -402,7 +402,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
 		{
 			m_iStatus = newStatus;
 			m_pendingStatus = -1;	// Invalidate pending status
-			sendPollerMsg(rqId, _T("      Service status changed to %s\r\n"), g_szStatusTextSmall[m_iStatus]);
+			sendPollerMsg(rqId, _T("      Service status changed to %s\r\n"), GetStatusAsText(m_iStatus, true));
 			PostEventEx(eventQueue, m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP : 
 							(m_iStatus == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
 							m_hostNode->Id(), "sdd", m_szName, m_dwId, m_serviceType);

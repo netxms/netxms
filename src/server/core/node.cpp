@@ -1473,7 +1473,7 @@ restart_agent_check:
    calculateCompoundStatus();
    m_lastStatusPoll = time(NULL);
    sendPollerMsg(dwRqId, _T("Finished status poll for node %s\r\n"), m_szName);
-   sendPollerMsg(dwRqId, _T("Node status after poll is %s\r\n"), g_szStatusText[m_iStatus]);
+   sendPollerMsg(dwRqId, _T("Node status after poll is %s\r\n"), GetStatusAsText(m_iStatus, true));
    m_pollRequestor = NULL;
    if (dwRqId == 0)
       m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
