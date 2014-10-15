@@ -34,6 +34,7 @@ LONG H_Desktops(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value);
 LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 LONG H_IPRoutingTable(const TCHAR *cmd, const TCHAR *arg, StringList *pValue);
+LONG H_NetInterface64bitSupport(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_RemoteShareStatus(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
@@ -133,6 +134,7 @@ static LONG H_ActionShutdown(const TCHAR *pszAction, StringList *pArgList, const
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("Agent.Desktop"), H_AgentDesktop, NULL, DCI_DT_STRING, _T("Desktop associated with agent process") },
+   { _T("Net.Interface.64BitCounters"), H_NetInterface64bitSupport, NULL, DCI_DT_INT, DCIDESC_NET_INTERFACE_64BITCOUNTERS },
    { _T("Net.Interface.AdminStatus(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
    { _T("Net.Interface.BytesIn(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_BYTES_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
    { _T("Net.Interface.BytesIn64(*)"), H_NetInterfaceStats, (TCHAR *)NETINFO_IF_BYTES_IN_64, DCI_DT_UINT64, DCIDESC_NET_INTERFACE_BYTESIN },

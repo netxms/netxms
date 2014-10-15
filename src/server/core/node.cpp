@@ -2029,6 +2029,15 @@ bool Node::confPollAgent(UINT32 dwRqId)
          UnlockData();
 		}
 
+      // Check for 64 bit counter support.
+      // if Net.Interface.64BitCounters not supported by agent then use 
+      // only presence of 64 bit parameters as indicator
+      bool netIf64bitCounters = true;
+		if (pAgentConn->getParameter(_T("Net.Interface.64BitCounters"), MAX_DB_STRING, buffer) == ERR_SUCCESS)
+      {
+         netIf64bitCounters = _tcstol(buffer, NULL, 10) ? true : false;
+      }
+
 		ObjectArray<AgentParameterDefinition> *plist;
       ObjectArray<AgentTableDefinition> *tlist;
       UINT32 rcc = pAgentConn->getSupportedParameters(&plist, &tlist);
@@ -2042,13 +2051,17 @@ bool Node::confPollAgent(UINT32 dwRqId)
 
 			// Check for 64-bit interface counters
 			m_dwFlags &= ~NF_HAS_AGENT_IFXCOUNTERS;
-			for(int i = 0; i < plist->size(); i++)
-			{
-				if (!_tcsicmp(plist->get(i)->getName(), _T("Net.Interface.BytesIn64(*)")))
-				{
-					m_dwFlags |= NF_HAS_AGENT_IFXCOUNTERS;
-				}
-			}
+         if (netIf64bitCounters)
+         {
+			   for(int i = 0; i < plist->size(); i++)
+			   {
+				   if (!_tcsicmp(plist->get(i)->getName(), _T("Net.Interface.BytesIn64(*)")))
+				   {
+					   m_dwFlags |= NF_HAS_AGENT_IFXCOUNTERS;
+                  break;
+				   }
+			   }
+         }
 
 			UnlockData();
 		}

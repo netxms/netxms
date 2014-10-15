@@ -445,3 +445,12 @@ LONG H_IPRoutingTable(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value)
    free(pRoutingTable);
    return SYSINFO_RC_SUCCESS;
 }
+
+/**
+ * Support for 64 bit interface counters
+ */
+LONG H_NetInterface64bitSupport(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+{
+   ret_int(value, (imp_GetIfEntry2 != NULL) ? 1 : 0);
+   return SYSINFO_RC_SUCCESS;
+}

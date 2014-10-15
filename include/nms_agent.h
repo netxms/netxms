@@ -126,6 +126,7 @@
 #define DCIDESC_FS_TOTAL                          _T("Total space on file system {instance}")
 #define DCIDESC_FS_USED                           _T("Used space on file system {instance}")
 #define DCIDESC_FS_USEDPERC                       _T("Percentage of used space on file system {instance}")
+#define DCIDESC_NET_INTERFACE_64BITCOUNTERS       _T("Is 64bit interface counters supported")
 #define DCIDESC_NET_INTERFACE_ADMINSTATUS         _T("Administrative status of interface {instance}")
 #define DCIDESC_NET_INTERFACE_BYTESIN             _T("Number of input bytes on interface {instance}")
 #define DCIDESC_NET_INTERFACE_BYTESOUT            _T("Number of output bytes on interface {instance}")
