@@ -388,6 +388,16 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Upgrade from V338 to V339
+ */
+static BOOL H_UpgradeFromV338(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("EscapeLocalCommands"), _T("0"), 1, 0));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='339' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V337 to V338
  */
 static BOOL H_UpgradeFromV337(int currVersion, int newVersion)
@@ -8154,6 +8164,7 @@ static struct
    { 335, 336, H_UpgradeFromV335 },
    { 336, 337, H_UpgradeFromV336 },
    { 337, 338, H_UpgradeFromV337 },
+   { 338, 339, H_UpgradeFromV338 },
    { 0, 0, NULL }
 };
 

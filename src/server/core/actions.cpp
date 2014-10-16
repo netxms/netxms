@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -249,6 +249,22 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
  */
 static THREAD_RESULT THREAD_CALL RunCommandThread(void *pArg)
 {
+   if (ConfigReadInt(_T("EscapeLocalCommands"), 0))
+   {
+      String s = (TCHAR *)pArg;
+#ifdef _WIN32
+      s.replace(_T("\t"), _T("\\t"));
+      s.replace(_T("\n"), _T("\\n"));
+      s.replace(_T("\r"), _T("\\r"));
+#else
+      s.replace(_T("\t"), _T("\\\\t"));
+      s.replace(_T("\n"), _T("\\\\n"));
+      s.replace(_T("\r"), _T("\\\\r"));
+#endif
+      free(pArg);
+      pArg = _tcsdup(s.getBuffer());
+   }
+   DbgPrintf(3, _T("*actions* Executing command \"%s\""), (TCHAR *)pArg);
 	if (_tsystem((TCHAR *)pArg) == -1)
 	   DbgPrintf(5, _T("RunCommandThread: failed to execute command \"%s\""), (TCHAR *)pArg);
 	free(pArg);
@@ -390,7 +406,6 @@ BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const TCHAR *alarmMsg, cons
             case ACTION_EXEC:
                if (pszExpandedData[0] != 0)
                {
-                  DbgPrintf(3, _T("*actions* Executing command \"%s\""), pszExpandedData);
 					   ThreadCreate(RunCommandThread, 0, _tcsdup(pszExpandedData));
                }
                else
