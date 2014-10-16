@@ -658,146 +658,145 @@ const TCHAR *NetObj::dbgGetParentList(TCHAR *szBuffer)
  */
 void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
 {
+   if (m_iStatus == STATUS_UNMANAGED)
+      return;
+
+   int mostCriticalAlarm = GetMostCriticalStatusForObject(m_dwId);
+   int mostCriticalDCI = 
+      (Type() == OBJECT_NODE || Type() == OBJECT_MOBILEDEVICE || Type() == OBJECT_CLUSTER || Type() == OBJECT_ACCESSPOINT) ?
+         ((DataCollectionTarget *)this)->getMostCriticalDCIStatus() : STATUS_UNKNOWN; 
+
    UINT32 i;
-   int iMostCriticalAlarm, iMostCriticalStatus, mostCriticalDCI, iCount, iStatusAlg;
-   int nSingleThreshold, *pnThresholds, iOldStatus = m_iStatus;
+   int oldStatus = m_iStatus;
+   int mostCriticalStatus, count, iStatusAlg;
+   int nSingleThreshold, *pnThresholds;
    int nRating[5], iChildStatus, nThresholds[4];
 
-   if (m_iStatus != STATUS_UNMANAGED)
+   LockData();
+   if (m_iStatusCalcAlg == SA_CALCULATE_DEFAULT)
    {
-      iMostCriticalAlarm = GetMostCriticalStatusForObject(m_dwId);
-      if (Type() == OBJECT_NODE || Type() == OBJECT_MOBILEDEVICE || Type() == OBJECT_CLUSTER || Type() == OBJECT_ACCESSPOINT)
-      {
-         DataCollectionTarget *target = (DataCollectionTarget *)this;
-         mostCriticalDCI = target->getMostCriticalDCIStatus();
-      }
+      iStatusAlg = GetDefaultStatusCalculation(&nSingleThreshold, &pnThresholds);
+   }
+   else
+   {
+      iStatusAlg = m_iStatusCalcAlg;
+      nSingleThreshold = m_iStatusSingleThreshold;
+      pnThresholds = m_iStatusThresholds;
+   }
+   if (iStatusAlg == SA_CALCULATE_SINGLE_THRESHOLD)
+   {
+      for(i = 0; i < 4; i++)
+         nThresholds[i] = nSingleThreshold;
+      pnThresholds = nThresholds;
+   }
 
-      LockData();
-      if (m_iStatusCalcAlg == SA_CALCULATE_DEFAULT)
+   switch(iStatusAlg)
+   {
+      case SA_CALCULATE_MOST_CRITICAL:
+         LockChildList(FALSE);
+         for(i = 0, count = 0, mostCriticalStatus = -1; i < m_dwChildCount; i++)
+         {
+            iChildStatus = m_pChildList[i]->getPropagatedStatus();
+            if ((iChildStatus < STATUS_UNKNOWN) &&
+                (iChildStatus > mostCriticalStatus))
+            {
+               mostCriticalStatus = iChildStatus;
+               count++;
+            }
+         }
+         m_iStatus = (count > 0) ? mostCriticalStatus : STATUS_UNKNOWN;
+         UnlockChildList();
+         break;
+      case SA_CALCULATE_SINGLE_THRESHOLD:
+      case SA_CALCULATE_MULTIPLE_THRESHOLDS:
+         // Step 1: calculate severity raitings
+         memset(nRating, 0, sizeof(int) * 5);
+         LockChildList(FALSE);
+         for(i = 0, count = 0; i < m_dwChildCount; i++)
+         {
+            iChildStatus = m_pChildList[i]->getPropagatedStatus();
+            if (iChildStatus < STATUS_UNKNOWN)
+            {
+               while(iChildStatus >= 0)
+                  nRating[iChildStatus--]++;
+               count++;
+            }
+         }
+         UnlockChildList();
+
+         // Step 2: check what severity rating is above threshold
+         if (count > 0)
+         {
+            for(i = 4; i > 0; i--)
+               if (nRating[i] * 100 / count >= pnThresholds[i - 1])
+                  break;
+            m_iStatus = i;
+         }
+         else
+         {
+            m_iStatus = STATUS_UNKNOWN;
+         }
+         break;
+      default:
+         m_iStatus = STATUS_UNKNOWN;
+         break;
+   }
+
+   // If alarms exist for object, apply alarm severity to object's status
+   if (mostCriticalAlarm != STATUS_UNKNOWN)
+   {
+      if (m_iStatus == STATUS_UNKNOWN)
       {
-         iStatusAlg = GetDefaultStatusCalculation(&nSingleThreshold, &pnThresholds);
+         m_iStatus = mostCriticalAlarm;
       }
       else
       {
-         iStatusAlg = m_iStatusCalcAlg;
-         nSingleThreshold = m_iStatusSingleThreshold;
-         pnThresholds = m_iStatusThresholds;
+         m_iStatus = max(m_iStatus, mostCriticalAlarm);
       }
-      if (iStatusAlg == SA_CALCULATE_SINGLE_THRESHOLD)
+   }
+
+   // If DCI status is calculated for object apply DCI object's statud
+   if (mostCriticalDCI != STATUS_UNKNOWN)
+   {
+      if (m_iStatus == STATUS_UNKNOWN)
       {
-         for(i = 0; i < 4; i++)
-            nThresholds[i] = nSingleThreshold;
-         pnThresholds = nThresholds;
+         m_iStatus = mostCriticalDCI;
       }
-
-      switch(iStatusAlg)
+      else
       {
-         case SA_CALCULATE_MOST_CRITICAL:
-            LockChildList(FALSE);
-            for(i = 0, iCount = 0, iMostCriticalStatus = -1; i < m_dwChildCount; i++)
-            {
-               iChildStatus = m_pChildList[i]->getPropagatedStatus();
-               if ((iChildStatus < STATUS_UNKNOWN) &&
-                   (iChildStatus > iMostCriticalStatus))
-               {
-                  iMostCriticalStatus = iChildStatus;
-                  iCount++;
-               }
-            }
-            m_iStatus = (iCount > 0) ? iMostCriticalStatus : STATUS_UNKNOWN;
-            UnlockChildList();
-            break;
-         case SA_CALCULATE_SINGLE_THRESHOLD:
-         case SA_CALCULATE_MULTIPLE_THRESHOLDS:
-            // Step 1: calculate severity raitings
-            memset(nRating, 0, sizeof(int) * 5);
-            LockChildList(FALSE);
-            for(i = 0, iCount = 0; i < m_dwChildCount; i++)
-            {
-               iChildStatus = m_pChildList[i]->getPropagatedStatus();
-               if (iChildStatus < STATUS_UNKNOWN)
-               {
-                  while(iChildStatus >= 0)
-                     nRating[iChildStatus--]++;
-                  iCount++;
-               }
-            }
-            UnlockChildList();
-
-            // Step 2: check what severity rating is above threshold
-            if (iCount > 0)
-            {
-               for(i = 4; i > 0; i--)
-                  if (nRating[i] * 100 / iCount >= pnThresholds[i - 1])
-                     break;
-               m_iStatus = i;
-            }
-            else
-            {
-               m_iStatus = STATUS_UNKNOWN;
-            }
-            break;
-         default:
-            m_iStatus = STATUS_UNKNOWN;
-            break;
+         m_iStatus = max(m_iStatus, mostCriticalDCI);
       }
+   }
 
-      // If alarms exist for object, apply alarm severity to object's status
-      if (iMostCriticalAlarm != STATUS_UNKNOWN)
+   // Query loaded modules for object status
+   ENUMERATE_MODULES(pfCalculateObjectStatus)
+   {
+      int moduleStatus = g_pModuleList[__i].pfCalculateObjectStatus(this);
+      if (moduleStatus != STATUS_UNKNOWN)
       {
          if (m_iStatus == STATUS_UNKNOWN)
          {
-            m_iStatus = iMostCriticalAlarm;
+            m_iStatus = moduleStatus;
          }
          else
          {
-            m_iStatus = max(m_iStatus, iMostCriticalAlarm);
+            m_iStatus = max(m_iStatus, moduleStatus);
          }
       }
+   }
 
-      // If DCI status is calculated for object apply DCI object's statud
-      if (mostCriticalDCI != STATUS_UNKNOWN)
-      {
-         if (m_iStatus == STATUS_UNKNOWN)
-         {
-            m_iStatus = mostCriticalDCI;
-         }
-         else
-         {
-            m_iStatus = max(m_iStatus, mostCriticalDCI);
-         }
-      }
+   UnlockData();
 
-      // Query loaded modules for object status
-      ENUMERATE_MODULES(pfCalculateObjectStatus)
-      {
-	      int moduleStatus = g_pModuleList[__i].pfCalculateObjectStatus(this);
-         if (moduleStatus != STATUS_UNKNOWN)
-         {
-            if (m_iStatus == STATUS_UNKNOWN)
-            {
-               m_iStatus = moduleStatus;
-            }
-            else
-            {
-               m_iStatus = max(m_iStatus, moduleStatus);
-            }
-         }
-      }
-
+   // Cause parent object(s) to recalculate it's status
+   if ((oldStatus != m_iStatus) || bForcedRecalc)
+   {
+      LockParentList(FALSE);
+      for(i = 0; i < m_dwParentCount; i++)
+         m_pParentList[i]->calculateCompoundStatus();
+      UnlockParentList();
+      LockData();
+      Modify();
       UnlockData();
-
-      // Cause parent object(s) to recalculate it's status
-      if ((iOldStatus != m_iStatus) || bForcedRecalc)
-      {
-         LockParentList(FALSE);
-         for(i = 0; i < m_dwParentCount; i++)
-            m_pParentList[i]->calculateCompoundStatus();
-         UnlockParentList();
-         LockData();
-         Modify();
-         UnlockData();
-      }
    }
 }
 
@@ -1167,7 +1166,7 @@ void NetObj::dropUserAccess(UINT32 dwUserId)
 void NetObj::setMgmtStatus(BOOL bIsManaged)
 {
    UINT32 i;
-   int iOldStatus;
+   int oldStatus;
 
    LockData();
 
@@ -1178,12 +1177,12 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
       return;  // Status is already correct
    }
 
-   iOldStatus = m_iStatus;
+   oldStatus = m_iStatus;
    m_iStatus = (bIsManaged ? STATUS_UNKNOWN : STATUS_UNMANAGED);
 
    // Generate event if current object is a node
    if (Type() == OBJECT_NODE)
-      PostEvent(bIsManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_dwId, "d", iOldStatus);
+      PostEvent(bIsManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_dwId, "d", oldStatus);
 
    Modify();
    UnlockData();
