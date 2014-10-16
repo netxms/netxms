@@ -797,6 +797,8 @@ public:
 
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
    virtual UINT32 getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
@@ -816,6 +818,7 @@ public:
    virtual void unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI);
 
    virtual bool isEventSource();
+
    int getMostCriticalDCIStatus();
 };
 
@@ -930,8 +933,6 @@ public:
 
    virtual void CreateMessage(CSCPMessage *pMsg);
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    virtual void unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI);
 

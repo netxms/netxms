@@ -251,7 +251,7 @@ void Container::calculateCompoundStatus(BOOL bForcedRecalc)
 {
 	NetObj::calculateCompoundStatus(bForcedRecalc);
 
-	if (m_iStatus == STATUS_UNKNOWN && m_dwChildIdListSize == 0) 
+	if ((m_iStatus == STATUS_UNKNOWN) && (m_dwChildIdListSize == 0))
    {
 		LockData();
 		m_iStatus = STATUS_NORMAL;

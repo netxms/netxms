@@ -433,14 +433,6 @@ UINT32 Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 }
 
 /**
- * Calculate compound status
- */
-void Cluster::calculateCompoundStatus(BOOL bForcedRecalc)
-{
-   NetObj::calculateCompoundStatus(bForcedRecalc);
-}
-
-/**
  * Check if given address is within sync network
  */
 bool Cluster::isSyncAddr(UINT32 dwAddr)

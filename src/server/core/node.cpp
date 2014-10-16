@@ -1074,7 +1074,7 @@ void Node::calculateCompoundStatus(BOOL bForcedRecalc)
       EVENT_NODE_MINOR, EVENT_NODE_MAJOR, EVENT_NODE_CRITICAL,
       EVENT_NODE_UNKNOWN, EVENT_NODE_UNMANAGED };
 
-   NetObj::calculateCompoundStatus(bForcedRecalc);
+   DataCollectionTarget::calculateCompoundStatus(bForcedRecalc);
    if (m_iStatus != iOldStatus)
       PostEvent(dwEventCodes[m_iStatus], m_dwId, "d", iOldStatus);
 }

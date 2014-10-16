@@ -704,3 +704,11 @@ int DataCollectionTarget::getMostCriticalDCIStatus()
    unlockDciAccess();
    return (status == -1) ? STATUS_UNKNOWN : status;
 }
+
+/**
+ * Calculate compound status
+ */
+void DataCollectionTarget::calculateCompoundStatus(BOOL bForcedRecalc)
+{
+   NetObj::calculateCompoundStatus(bForcedRecalc);
+}
