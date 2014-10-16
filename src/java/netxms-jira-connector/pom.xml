@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.radensolutions.jira</groupId>
     <artifactId>netxms-connector</artifactId>
-    <version>1.2.16</version>
+    <version>1.2.17</version>
 
     <organization>
         <name>Raden Solutions</name>
@@ -51,7 +51,7 @@
         <dependency>
             <groupId>org.netxms</groupId>
             <artifactId>netxms-client</artifactId>
-            <version>1.2.16</version>
+            <version>1.2.17</version>
         </dependency>
     </dependencies>
 
