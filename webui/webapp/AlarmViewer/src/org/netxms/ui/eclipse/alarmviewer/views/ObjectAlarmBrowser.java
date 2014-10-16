@@ -51,7 +51,7 @@ public class ObjectAlarmBrowser extends ViewPart
    private AlarmList alarmView;
    private Action actionRefresh;
    private Action actionExportToCsv;
-   private List<Long> objects = new ArrayList<>(1);
+   private List<Long> objects = new ArrayList<Long>(1);
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
