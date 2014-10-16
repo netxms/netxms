@@ -321,3 +321,20 @@ UINT32 MobileDevice::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *
 
    return rc;
 }
+
+/**
+ * Calculate compound status
+ */
+void MobileDevice::calculateCompoundStatus(BOOL bForcedRecalc)
+{
+   NetObj::calculateCompoundStatus(bForcedRecalc);
+
+   // Assume normal status by default for mobile device
+   if (m_iStatus == STATUS_UNKNOWN)
+   {
+      LockData();
+      m_iStatus = STATUS_NORMAL;
+      Modify();
+      UnlockData();
+   }
+}

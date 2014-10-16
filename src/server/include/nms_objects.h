@@ -852,6 +852,8 @@ public:
 	virtual void CreateMessage(CSCPMessage *pMsg);
    virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
 	void updateSystemInfo(CSCPMessage *msg);
 	void updateStatus(CSCPMessage *msg);
 
