@@ -675,6 +675,14 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 			pValue = new NXSL_Value;
 		}
    }
+   else if (!_tcscmp(pszAttr, _T("port")))
+   {
+      pValue = new NXSL_Value(iface->getPortNumber());
+   }
+   else if (!_tcscmp(pszAttr, _T("slot")))
+   {
+      pValue = new NXSL_Value(iface->getSlotNumber());
+   }
    else if (!_tcscmp(pszAttr, _T("status")))
    {
       pValue = new NXSL_Value((LONG)iface->Status());
