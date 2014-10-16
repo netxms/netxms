@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.TableCell;
 import org.netxms.client.TableRow;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -32,6 +33,11 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
  */
 public class TableLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
+   private final Color FOREGROUND_COLOR_DARK = new Color(Display.getCurrent(), 0, 0, 0);
+   private final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);
+   private final Color[] FOREGROUND_COLORS =
+      { null, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_LIGHT };
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
@@ -61,7 +67,13 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
    @Override
    public Color getForeground(Object element, int columnIndex)
    {
+      TableRow row = (TableRow)element;
+      
+      if (columnIndex >= row.size())
       return null;
+      
+      TableCell cell = row.get(columnIndex);
+      return (cell.getStatus() >= 0) && (cell.getStatus() < FOREGROUND_COLORS.length) ? FOREGROUND_COLORS[cell.getStatus()] : null;
    }
 
    /* (non-Javadoc)
@@ -77,5 +89,16 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
       
       TableCell cell = row.get(columnIndex);
       return (cell.getStatus() > 0) ? StatusDisplayInfo.getStatusColor(cell.getStatus()) : null;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      FOREGROUND_COLOR_DARK.dispose();
+      FOREGROUND_COLOR_LIGHT.dispose();
+      super.dispose();
    }
 }

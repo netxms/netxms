@@ -85,7 +85,8 @@ public class Table
             row.get(j).setValue(msg.getVariableAsString(varId++));
 			   if (extendedFormat)
 			   {
-	            row.get(j).setStatus(msg.getVariableAsInteger(varId++));
+			      int status = msg.getVariableAsInteger(varId++);
+	            row.get(j).setStatus((status == 65535) ? -1 : status);
 	            varId += 8;
 			   }
 			}
