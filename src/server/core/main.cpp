@@ -870,8 +870,6 @@ retry_db_lock:
 	// Start uptime calculator for SLM
 	ThreadCreate(UptimeCalculator, 0, NULL);
 
-	DbgPrintf(2, _T("Java VM: %s"), g_szJavaPath);
-	DbgPrintf(2, _T("Java LIBDIR: %s"), g_szJavaLibDir);
 	DbgPrintf(2, _T("LIBDIR: %s"), g_szLibDir);
 
 	// Call startup functions for the modules

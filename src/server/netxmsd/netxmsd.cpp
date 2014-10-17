@@ -391,33 +391,6 @@ int main(int argc, char* argv[])
 	__try {
 #endif
 
-	// Fix path to Java VM
-#ifdef _WIN32
-	if (!_tcscmp(g_szJavaPath, _T("java")))
-	{
-		TCHAR path[MAX_PATH];
-
-		if (GetModuleFileName(NULL, path, MAX_PATH) != 0)
-		{
-			TCHAR *p = _tcsrchr(path, _T('\\'));
-			if (p != NULL)
-			{
-				p--;
-				p = _tcsrchr(p, _T('\\'));
-				if (p != NULL)
-				{
-					p++;
-					_tcscpy(p, _T("jre\\bin\\java.exe"));
-					if (_taccess(path, 4))
-					{
-						_tcscpy(g_szJavaPath, path);
-					}
-				}
-			}
-		}
-	}
-#endif
-
    // Check database before start if requested
    if (g_bCheckDB)
    {
