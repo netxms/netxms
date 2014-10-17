@@ -478,6 +478,7 @@ static UINT32 HandlerVlanEgressPorts(UINT32 version, SNMP_Variable *var, SNMP_Tr
 			ParseVlanPorts(vlanList, vlan, buffer[i], i * 8 + 1);
 		}
 	}
+   vlanList->setData(vlanList);  // to indicate that callback was called
 	return SNMP_ERR_SUCCESS;
 }
 
@@ -493,11 +494,21 @@ VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attribu
 {
 	VlanList *list = new VlanList();
 	
+   // dot1qVlanStaticName
 	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
 		goto failure;
 
+   // dot1qVlanCurrentEgressPorts
 	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.17.7.1.4.2.1.4"), HandlerVlanEgressPorts, list, FALSE) != SNMP_ERR_SUCCESS)
 		goto failure;
+
+   if (list->getData() == NULL)
+   {
+      // Some devices does not return anything under dot1qVlanCurrentEgressPorts.
+      // In that case we use dot1qVlanStaticEgressPorts
+	   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.2"), HandlerVlanEgressPorts, list, FALSE) != SNMP_ERR_SUCCESS)
+		   goto failure;
+   }
 
 	return list;
 

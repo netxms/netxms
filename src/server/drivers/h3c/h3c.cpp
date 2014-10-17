@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** Driver for HP ProCurve switches
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Driver for H3C (now HP A-series) switches
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -17,15 +17,15 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: procurve.cpp
+** File: h3c.cpp
 **/
 
-#include "procurve.h"
+#include "h3c.h"
 
 /**
  * Driver name
  */
-static TCHAR s_driverName[] = _T("PROCURVE");
+static TCHAR s_driverName[] = _T("H3C");
 
 /**
  * Driver version
@@ -35,7 +35,7 @@ static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 /**
  * Get driver name
  */
-const TCHAR *ProCurveDriver::getName()
+const TCHAR *H3CDriver::getName()
 {
 	return s_driverName;
 }
@@ -43,7 +43,7 @@ const TCHAR *ProCurveDriver::getName()
 /**
  * Get driver version
  */
-const TCHAR *ProCurveDriver::getVersion()
+const TCHAR *H3CDriver::getVersion()
 {
 	return s_driverVersion;
 }
@@ -53,9 +53,9 @@ const TCHAR *ProCurveDriver::getVersion()
  *
  * @param oid Device OID
  */
-int ProCurveDriver::isPotentialDevice(const TCHAR *oid)
+int H3CDriver::isPotentialDevice(const TCHAR *oid)
 {
-	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.11.2.3.7.11"), 24) == 0) ? 127 : 0;
+	return (_tcsncmp(oid, _T(".1.3.6.1.4.1.43.1.16.4.3."), 25) == 0) ? 255 : 0;
 }
 
 /**
@@ -64,7 +64,7 @@ int ProCurveDriver::isPotentialDevice(const TCHAR *oid)
  * @param snmp SNMP transport
  * @param oid Device OID
  */
-bool ProCurveDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
+bool H3CDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
 	return true;
 }
@@ -77,16 +77,29 @@ bool ProCurveDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-void ProCurveDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
+void H3CDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData)
 {
-	int model = _tcstol(&oid[25], NULL, 10);
-	
-	// modular switches
-	if ((model == 7) || (model == 9) || (model == 13) || (model == 14) || (model == 23) || (model == 27))
-	{
-		attributes->set(_T(".procurve.isModular"), _T("1"));
-		attributes->set(_T(".procurve.slotSize"), _T("24"));
-	}
+}
+
+/**
+ * Handler for port walk
+ */
+static UINT32 PortWalkHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+{
+   InterfaceList *ifList = (InterfaceList *)arg;
+   UINT32 ifIndex = var->getValueAsUInt();
+   for(int i = 0; i < ifList->size(); i++)
+   {
+      NX_INTERFACE_INFO *iface = ifList->get(i);
+      if (iface->dwIndex == ifIndex)
+      {
+         iface->isPhysicalPort = true;
+         iface->dwSlotNumber = var->getName()->getValue()[18];
+         iface->dwPortNumber = var->getName()->getValue()[20];
+         break;
+      }
+   }
+   return SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -95,49 +108,28 @@ void ProCurveDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
  * @param snmp SNMP transport
  * @param attributes Node's custom attributes
  */
-InterfaceList *ProCurveDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
+InterfaceList *H3CDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
 	// Get interface list from standard MIB
 	InterfaceList *ifList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, useAliases, useIfXTable);
 	if (ifList == NULL)
 		return NULL;
 
-	bool isModular = attributes->getBoolean(_T(".procurve.isModular"), false);
-	UINT32 slotSize = attributes->getULong(_T(".procurve.slotSize"), 24);
-
 	// Find physical ports
-	for(int i = 0; i < ifList->size(); i++)
-	{
-		NX_INTERFACE_INFO *iface = ifList->get(i);
-		if (iface->dwType == IFTYPE_ETHERNET_CSMACD)
-		{
-			iface->isPhysicalPort = true;
-			if (isModular)
-			{
-				iface->dwSlotNumber = (iface->dwIndex / slotSize) + 1;
-				iface->dwPortNumber = iface->dwIndex % slotSize;
-			}
-			else
-			{
-				iface->dwSlotNumber = 1;
-				iface->dwPortNumber = iface->dwIndex;
-			}
-		}
-	}
-
+   SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.43.45.1.2.23.1.18.4.5.1.3"), PortWalkHandler, ifList, FALSE);
 	return ifList;
 }
 
 /**
  * Driver entry point
  */
-DECLARE_NDD_ENTRY_POINT(s_driverName, ProCurveDriver);
+DECLARE_NDD_ENTRY_POINT(s_driverName, H3CDriver);
+
+#ifdef _WIN32
 
 /**
  * DLL entry point
  */
-#ifdef _WIN32
-
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
