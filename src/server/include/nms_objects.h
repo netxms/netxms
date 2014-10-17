@@ -691,7 +691,7 @@ public:
    void setPortNumber(UINT32 port) { m_portNumber = port; Modify(); }
 	void setPhysicalPortFlag(bool isPhysical) { if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; Modify(); }
 	void setManualCreationFlag(bool isManual) { if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; Modify(); }
-	void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol);
+	void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection);
    void clearPeer() { m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; Modify(); }
    void setDescription(const TCHAR *descr) { LockData(); nx_strncpy(m_description, descr, MAX_DB_STRING); Modify(); UnlockData(); }
 
@@ -1127,7 +1127,7 @@ public:
 	WORD getAuthMethod() { return m_wAuthMethod; }
 	const TCHAR *getSharedSecret() { return m_szSharedSecret; }
 
-   BOOL isDown() { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }
+   bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
 
    void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }

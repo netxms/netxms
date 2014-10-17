@@ -890,14 +890,26 @@ void Interface::onObjectDelete(UINT32 dwObjectId)
 /**
  * Set peer information
  */
-void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol)
+void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection)
 {
    if ((m_peerNodeId == node->Id()) && (m_peerInterfaceId == iface->Id()) && (m_peerDiscoveryProtocol == protocol))
+   {
+      if ((m_flags & IF_PEER_REFLECTION) && !reflection)
+      {
+         // set peer information as confirmed
+         m_flags &= ~IF_PEER_REFLECTION;
+         Modify();
+      }
       return;
+   }
 
    m_peerNodeId = node->Id();
    m_peerInterfaceId = iface->Id();
    m_peerDiscoveryProtocol = protocol;
+   if (reflection)
+      m_flags |= IF_PEER_REFLECTION;
+   else
+      m_flags &= ~IF_PEER_REFLECTION;
    Modify();
    if (!m_isSystem)
    {

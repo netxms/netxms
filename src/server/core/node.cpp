@@ -5265,6 +5265,9 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 		for(int i = 0; i < nbs->size(); i++)
 		{
 			LL_NEIGHBOR_INFO *ni = nbs->getConnection(i);
+         if (ni->isCached)
+            continue;   // ignore cached information
+
 			NetObj *object = FindObjectById(ni->objectId);
 			if ((object != NULL) && (object->Type() == OBJECT_NODE))
 			{
@@ -5295,8 +5298,8 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 						}
 					}
 
-               ifLocal->setPeer((Node *)object, ifRemote, ni->protocol);
-               ifRemote->setPeer(this, ifLocal, ni->protocol);
+               ifLocal->setPeer((Node *)object, ifRemote, ni->protocol, false);
+               ifRemote->setPeer(this, ifLocal, ni->protocol, true);
 					sendPollerMsg(dwRqId, _T("   Local interface %s linked to remote interface %s:%s\r\n"),
 					              ifLocal->Name(), object->Name(), ifRemote->Name());
 					DbgPrintf(5, _T("Local interface %s:%s linked to remote interface %s:%s"),
@@ -5322,32 +5325,29 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
          // Remove outdated peer information
          else if (iface->getPeerNodeId() != 0)
          {
-            bool nodeFound = false;
+            Node *peerNode = (Node *)FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
+            if (peerNode->isDown())
+               continue; // Don't change information about down peers
+
             bool ifaceFound = false;
-		      for(int j = 0; j < nbs->size(); j++)
-		      {
-			      LL_NEIGHBOR_INFO *ni = nbs->getConnection(j);
-               if (ni->objectId == iface->getPeerNodeId())
+	         for(int j = 0; j < nbs->size(); j++)
+	         {
+		         LL_NEIGHBOR_INFO *ni = nbs->getConnection(j);
+               if ((ni->objectId == iface->getPeerNodeId()) && (ni->ifLocal == iface->getIfIndex()))
                {
-                  nodeFound = true;
-                  if (ni->ifLocal == iface->getIfIndex())
-                  {
-                     ifaceFound = true;
-                     break;
-                  }
+                  bool reflection = (iface->getFlags() & IF_PEER_REFLECTION) ? true : false;
+                  ifaceFound = !ni->isCached || (((ni->protocol == LL_PROTO_FDB) || (ni->protocol == LL_PROTO_STP)) && reflection);
+                  break;
                }
             }
 
-            // Only remove information from interfaces where peer node
-            // found but interface not which means that connectivity information was changed.
-            // If node is not found at all it may just mean that it is down at the moment.
-            if (nodeFound && !ifaceFound)
+            if (!ifaceFound)
             {
-					Interface *ifPeer = (Interface *)FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE);
-					if (ifPeer != NULL)
-					{
-						ifPeer->clearPeer();
-					}
+				   Interface *ifPeer = (Interface *)FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE);
+				   if (ifPeer != NULL)
+				   {
+					   ifPeer->clearPeer();
+				   }
                iface->clearPeer();
                DbgPrintf(6, _T("Node::topologyPoll(%s [%d]): Removed outdated peer information from interface %s [%d]"), m_szName, m_dwId, iface->Name(), iface->Id());
             }
@@ -5503,6 +5503,7 @@ void Node::addExistingConnections(LinkLayerNeighbors *nbs)
 				info.objectId = ifLocal->getPeerNodeId();
 				info.isPtToPt = true;
             info.protocol = ifLocal->getPeerDiscoveryProtocol();
+            info.isCached = true;
 				nbs->addConnection(&info);
 			}
 		}

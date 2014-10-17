@@ -195,6 +195,7 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 			info.ifRemote = (ifRemote != NULL) ? ifRemote->getIfIndex() : 0;
 			info.isPtToPt = true;
 			info.protocol = LL_PROTO_LLDP;
+         info.isCached = false;
 
 			// Index to lldpRemTable is lldpRemTimeMark, lldpRemLocalPortNum, lldpRemIndex
 			UINT32 localPort = oid->getValue()[oid->getLength() - 2];

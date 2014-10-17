@@ -99,6 +99,7 @@ static UINT32 NDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transp
 				info.ifLocal = ifLocal->getIfIndex();
 				info.isPtToPt = true;
 				info.protocol = LL_PROTO_NDP;
+            info.isCached = false;
 				((LinkLayerNeighbors *)arg)->addConnection(&info);
 			}
 		}

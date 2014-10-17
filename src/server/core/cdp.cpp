@@ -76,6 +76,7 @@ static UINT32 CDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transp
 				info.objectId = remoteNode->Id();
 				info.isPtToPt = true;
 				info.protocol = LL_PROTO_CDP;
+            info.isCached = false;
 
 				((LinkLayerNeighbors *)arg)->addConnection(&info);
 			}

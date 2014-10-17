@@ -269,6 +269,7 @@ typedef void * NXC_SESSION;
 #define IF_EXCLUDE_FROM_TOPOLOGY 0x00000004
 #define IF_LOOPBACK              0x00000008
 #define IF_CREATED_MANUALLY      0x00000010
+#define IF_PEER_REFLECTION       0x00000020  /* topology information obtained by reflection */
 #define IF_EXPECTED_STATE_MASK   0x30000000	/* 2-bit field holding expected interface state */
 #define IF_USER_FLAGS_MASK       (IF_EXCLUDE_FROM_TOPOLOGY)    /* flags that can be changed by user */
 

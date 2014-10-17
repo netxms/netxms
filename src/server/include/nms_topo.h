@@ -166,6 +166,7 @@ struct LL_NEIGHBOR_INFO
 	UINT32 objectId;		       // ID of connected object
 	bool isPtToPt;			       // true if this is point-to-point link
 	LinkLayerProtocol protocol; // Protocol used to obtain information
+   bool isCached;              // true if this is cached information
 };
 
 /**
