@@ -13,6 +13,7 @@
 - New attributes "slot" and "port" in NXSL class Interface
 - Can execute arbitrary NXSL script in context of node, cluster, subnet, or container object from management console
 - Improved network topology changes detection
+- Added driver for H3C switches
 - Management console:
     - Can show alarms for multiple selected objects
     - Fixed non-working ordering in event list in alarm details view

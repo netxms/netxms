@@ -1,0 +1,234 @@
+-- =========================================================================
+-- Copyright (C) 2001,2002 by  HUAWEI TECHNOLOGIES. All rights reserved.
+--
+-- Reference:Huawei-3com enterprise MIB
+-- Version: V1.1
+-- History:
+-- 	V1.0 6th Mar 2004
+--    Initial version
+--  V1.1 2004-12-16 Changed by zhoujianjun
+--    Change SYNTAX of vLANMibRouterMaxPktProcessCount from Counter to Unsigned32.
+-- =========================================================================
+HUAWEI-VLAN-MIB    DEFINITIONS ::= BEGIN
+
+IMPORTS
+	OBJECT-TYPE
+		FROM RFC-1212
+        IpAddress, Counter
+		FROM RFC1155-SMI
+        hwLocal,hwInternetProtocol,vrpProtocol
+                FROM HUAWEI-3COM-OID-MIB;
+
+    huawei-vlan              OBJECT IDENTIFIER ::=  { vrpProtocol 3 }
+
+	-- HUAWEI VLAN config group
+
+    vLANMibRoutertCountTable          OBJECT-TYPE
+	SYNTAX		SEQUENCE OF VLANMibRoutertCountEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"Router packet statistics table."
+	::= { huawei-vlan 1 }
+
+    vLANMibRoutertCountEntry          OBJECT-TYPE
+	SYNTAX		VLANMibRoutertCountEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"Entry of vLANMibRoutertCountTable."
+        INDEX           { vLANMibRouterPort }
+	::= { vLANMibRoutertCountTable 1 }
+
+    VLANMibRoutertCountEntry ::=
+        SEQUENCE {
+                vLANMibRouterPort
+                        INTEGER,
+                vLANMibRouterPortPktDisc
+                        Counter,
+                vLANMibRouterPortPktTran
+                        Counter,
+                vLANMibClearRouterStatistics
+                        INTEGER
+                
+                 }       
+                        
+    vLANMibRouterPort       OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"Interface Index(es) of trunk port(s) present on router."
+	::= { vLANMibRoutertCountEntry 1 }
+
+    vLANMibRouterPortPktDisc       OBJECT-TYPE
+	SYNTAX		Counter 
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"Number of packets discarded."
+	::= { vLANMibRoutertCountEntry 2 }
+
+
+    vLANMibRouterPortPktTran     OBJECT-TYPE
+	SYNTAX		Counter 
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"Number of packets transmitted."
+	::= { vLANMibRoutertCountEntry 3 }
+
+    vLANMibClearRouterStatistics     OBJECT-TYPE
+	SYNTAX		INTEGER{
+				clear(1)
+				} 
+	ACCESS		write-only
+	STATUS		mandatory
+	DESCRIPTION	" "
+	::= { vLANMibRoutertCountEntry 4 }
+
+
+
+    vLANMibRoutertVlanCountTable          OBJECT-TYPE
+	SYNTAX		SEQUENCE OF VLANMibRoutertVlanCountEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"Per vid router statistics table."
+	::= { huawei-vlan 2 }
+
+    vLANMibRoutertVlanCountEntry          OBJECT-TYPE
+	SYNTAX		VLANMibRoutertVlanCountEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"Entry of vLANMibRoutertVlanCountTable."
+        INDEX           { vLANMibRouterVID }
+	::= { vLANMibRoutertVlanCountTable 1 }
+
+    VLANMibRoutertVlanCountEntry ::=
+        SEQUENCE {
+                vLANMibRouterVID
+                        INTEGER,
+                vLANMibRouterVlanPacketTran
+                        Counter,
+                vLANMibRouterVlanPacketSent
+                        Counter,
+                vLANMibClearVidStatistics
+                        INTEGER
+                 }       
+                        
+    vLANMibRouterVID       OBJECT-TYPE
+	SYNTAX		INTEGER(1..4094)
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"Vlan id"
+	::= { vLANMibRoutertVlanCountEntry 1 }
+
+    vLANMibRouterVlanPacketTran       OBJECT-TYPE
+	SYNTAX		Counter 
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"Number of packets transmitted to vlan."
+	::= { vLANMibRoutertVlanCountEntry 2 }
+
+
+    vLANMibRouterVlanPacketSent     OBJECT-TYPE
+	SYNTAX		Counter 
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"Number of packets sent by vlan."
+	::= { vLANMibRoutertVlanCountEntry 3 }
+
+    vLANMibClearVidStatistics     OBJECT-TYPE
+	SYNTAX		INTEGER{
+				clear(1)
+				} 
+	ACCESS		write-only
+	STATUS		mandatory
+	DESCRIPTION	" "
+	::= { vLANMibRoutertVlanCountEntry 4 }
+
+    
+    vLANMibRouterMaxPkTable          OBJECT-TYPE
+	SYNTAX		SEQUENCE OF VLANMibRouterMaxPkEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"Per vid max router packet processing count table."
+	::= { huawei-vlan 9 }
+
+    vLANMibRouterMaxPkEntry          OBJECT-TYPE
+	SYNTAX		VLANMibRouterMaxPkEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"Entry of vLANMibRouterMaxPkTable."
+        INDEX           { vLANMIbVID }
+	::= { vLANMibRouterMaxPkTable 1 }
+
+    VLANMibRouterMaxPkEntry ::=
+        SEQUENCE {
+                vLANMIbVID
+                        INTEGER,
+                vLANMibRouterMaxPktProcessCount
+                        Unsigned32
+                 }       
+                        
+    vLANMIbVID       OBJECT-TYPE
+	SYNTAX		INTEGER(1..4094)
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"Vlan id."
+	::= { vLANMibRouterMaxPkEntry 1 }
+
+    vLANMibRouterMaxPktProcessCount       OBJECT-TYPE
+	SYNTAX		Unsigned32 
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"Max packet processing count. If set to zero then router will process, default number of packets per second."
+	::= { vLANMibRouterMaxPkEntry 2 }
+
+   
+	
+    vLANMibSubIfTable          OBJECT-TYPE
+	SYNTAX		SEQUENCE OF VLANMibSubIfEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"Sub interface table."
+	::= { huawei-vlan 11 }
+
+    vLANMibSubIfEntry          OBJECT-TYPE
+	SYNTAX		VLANMibSubIfEntry
+	ACCESS		not-accessible
+	STATUS		mandatory
+	DESCRIPTION	"Entry of vLANMibSubIfTable."
+        INDEX           { vLANMibSubIfPortIndex }
+	::= { vLANMibSubIfTable 1 }
+
+    VLANMibSubIfEntry ::=
+        SEQUENCE {
+                vLANMibSubIfPortIndex
+                        INTEGER,
+                vLANMibSubIfEncapsulation
+                        INTEGER,
+                vLANMibSubIfVID
+                	INTEGER
+                 }       
+                        
+    vLANMibSubIfPortIndex       OBJECT-TYPE
+	SYNTAX		INTEGER
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"Interface Index(es) of port(s) present on router."
+	::= { vLANMibSubIfEntry 1 }
+
+    vLANMibSubIfEncapsulation       OBJECT-TYPE
+	SYNTAX		INTEGER {
+				iSL(1),
+				dot1q(2)
+				}
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"Encapsulation type."
+	::= { vLANMibSubIfEntry 2 }
+
+    vLANMibSubIfVID       OBJECT-TYPE
+	SYNTAX		INTEGER(1..4094)
+	ACCESS		read-write
+	STATUS		mandatory
+	DESCRIPTION	"Vlan id"
+	::= { vLANMibSubIfEntry 3 }
+	
+END

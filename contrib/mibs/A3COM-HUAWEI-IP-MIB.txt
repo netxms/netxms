@@ -1,0 +1,127 @@
+-- ==================================================================
+-- Copyright (C) 2002 by  HUAWEI TECHNOLOGIES. All rights reserved.
+--
+-- Description: This file describes the huawei mib implementation of ip
+-- Reference: 
+-- Version: V1.1
+-- History: 
+-- V1.0 created by wanglu
+-- V1.1 updated by gaolong
+-- ==================================================================
+A3COM-HUAWEI-IP-MIB    DEFINITIONS ::= BEGIN
+
+IMPORTS
+        OBJECT-TYPE
+                FROM RFC-1212
+        huawei,hwLocal,hwInternetProtocol
+                FROM A3COM-HUAWEI-OID-MIB
+        Counter
+                FROM RFC1155-SMI;
+
+--	HW_IP MIB defination
+
+rIp                   OBJECT IDENTIFIER ::= { hwInternetProtocol 1}
+
+--Extension of Ip group of RFC1213 MIBII
+
+ipTooShorts		OBJECT-TYPE
+	SYNTAX          Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of packets with invalid data length."
+        ::=     {  rIp  1  }
+
+ipTooSmalls		OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION   "The number of packets too small to contain IP packet."
+        ::=     {  rIp 2  }
+
+ipBadVersions		OBJECT-TYPE
+	SYNTAX   	Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION  	"The number of packets with an IP version other than 4."
+        ::=     {  rIp 3  }
+
+ipBadChecksums		OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of packets with bad checksum."
+        ::=     {  rIp 4  }
+
+ipBadLens        OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of packets with invalid IP length."
+        ::=     {  rIp 5  }
+
+ipBadHeadLens		OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of packets with invalid IP header length."
+        ::=     {  rIp 6  }
+
+ipBadOptions		OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of packets discovered with errors in option processing."
+        ::=     {  rIp 7  }
+
+ipFragDroppeds		OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of fragments dropped(duplicates or out of space)."
+        ::=     {  rIp 8  }
+
+ipRawOuts		OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION  	"The total number of raw ip packets generated."
+        ::=     {  rIp 9  }
+
+--Extersion of ipRouting
+
+ipRouteBadRedirects	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION 	"The number of invalid redirect calls."
+        ::=     {  rIp 10 }
+
+ipRouteDynamics	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of routes created by redirects."
+        ::=     {  rIp  11  }
+
+ipRouteNewGateways	OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of routes modified by redirects."
+        ::=     {  rIp  12 }
+
+ipRouteUnreachs	OBJECT-TYPE
+	SYNTAX 	Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of lookups that failed."
+        ::=     {  rIp  13 }
+
+ipRouteWilds		OBJECT-TYPE
+	SYNTAX		Counter
+	ACCESS		read-only
+	STATUS		mandatory
+	DESCRIPTION	"The number of lookups matched by wildcard(never used.)"
+        ::=     {  rIp  14 }
+
+END

@@ -1,0 +1,762 @@
+-- ==========================================================================
+-- Copyright (c) 2004-2010 Hangzhou H3C Tech. Co., Ltd. All rights reserved.
+--
+-- Description: Syslog MIB
+-- Reference: RFC3164
+-- Version: V1.2
+-- History:
+--   V1.0 Initial version 2005-08-20 by wangrui
+--   V1.1 added h3cSyslogLoghostIpaddressPort by jinyi
+--   V1.2 2010-06-09 added h3cSyslogLogGlobalLevel by haoyan
+--                   added h3cSyslogLoghostTAddress by jinyi
+-- ==========================================================================
+A3COM-HUAWEI-SYSLOG-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    h3cCommon
+        FROM A3COM-HUAWEI-OID-MIB
+    DisplayString, TruthValue, RowStatus, TAddress, TEXTUAL-CONVENTION
+        FROM SNMPv2-TC
+    Integer32, Counter32, Unsigned32, OBJECT-TYPE, MODULE-IDENTITY
+        FROM SNMPv2-SMI
+    InetAddressType, InetAddress
+        FROM INET-ADDRESS-MIB;
+
+h3cSyslog MODULE-IDENTITY
+    LAST-UPDATED "201006091050Z"
+    ORGANIZATION
+        "Hangzhou H3C Tech. Co., Ltd."
+    CONTACT-INFO
+        "Platform Team Hangzhou H3C Tech. Co., Ltd.
+         Hai-Dian District Beijing P.R. China
+         http://www.h3c.com
+         Zip:100085"
+    DESCRIPTION
+        "All the configuration of the syslog can be managed
+        by syslog Mib."
+    REVISION "201006091050Z"
+    DESCRIPTION
+        "The initial revision of this MIB module."
+     ::= { h3cCommon 63 }
+
+--
+-- Textual conventions
+--
+
+MessageLevelType ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "Specify severity level of message."
+    SYNTAX INTEGER
+        {
+            emergency(1),
+            alert(2),
+            critical(3),
+            error(4),
+            warning(5),
+            notice(6),
+            informational(7),
+            debug(8),
+            invalid(9)
+        }
+
+TimeStampType ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "Specify operation types on time stamp of message.
+        none: no time stamp information in message.
+        date: the time stamp type of message is date.
+        boot: the time stamp type of message is the time from
+            uptime of system.
+        dateWithoutYear: the time stamp type of message is date
+            without year information."
+    SYNTAX INTEGER
+        {
+            none(1),
+            date(2),
+            boot(3),
+            dateWithoutYear(4)
+        }
+
+FacilityType ::= TEXTUAL-CONVENTION
+    STATUS current
+    DESCRIPTION
+        "Specify loghost facility which generates messages."
+    SYNTAX INTEGER
+        {
+            kernel(0),
+            userLevel(1),
+            mailSystem(2),
+            systemDaemons(3),
+            securityAuthorization(4),
+            internallyMessages(5),
+            linePrinter(6),
+            networkNews(7),
+            uucp(8),
+            clockDaemon(9),
+            securityAuthorization2(10),
+            ftpDaemon(11),
+            ntp(12),
+            logAudit(13),
+            logAlert(14),
+            clockDaemon2(15),
+            local0(16),
+            local1(17),
+            local2(18),
+            local3(19),
+            local4(20),
+            local5(21),
+            local6(22),
+            local7(23)
+        }
+
+--
+-- Node definitions
+--
+
+h3cSyslogObjects OBJECT IDENTIFIER ::= { h3cSyslog 1 }
+
+h3cSyslogObject OBJECT IDENTIFIER ::= { h3cSyslogObjects 1 }
+
+h3cSyslogState OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The state of syslog: true(1):enable.
+                              false(2):disable."
+    ::= { h3cSyslogObject 1 }
+
+h3cSyslogMaxLoghost OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The object shows the maximum number of rows in
+         h3cLoghostTable."
+    ::= { h3cSyslogObject 2 }
+
+h3cSyslogMaxChannel OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The object shows the maximum number of channels in
+         h3cSyslogChannelTable."
+    ::= { h3cSyslogObject 3 }
+
+h3cSyslogMaxLogbufferSize OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The maximum number of messages that can be stored
+         in logbuffer."
+    ::= { h3cSyslogObject 4 }
+
+h3cSyslogMaxTrapbufferSize OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The maximum number of messages that can be stored
+         in trapbuffer."
+    ::= { h3cSyslogObject 5 }
+
+h3cSyslogConsole OBJECT IDENTIFIER ::= { h3cSyslogObjects 2 }
+
+h3cSyslogConsoleChannel OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The channel number of console."
+    DEFVAL { 0 }
+    ::= { h3cSyslogConsole 1 }
+
+h3cSyslogMonitor OBJECT IDENTIFIER ::= { h3cSyslogObjects 3 }
+
+h3cSyslogMonitorChannel OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The channel number of monitor."
+    DEFVAL { 1 }
+    ::= { h3cSyslogMonitor 1 }
+
+h3cSyslogSnmp OBJECT IDENTIFIER ::= { h3cSyslogObjects 4 }
+
+h3cSyslogSnmpChannel OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The channel number of snmp."
+    DEFVAL { 5 }
+    ::= { h3cSyslogSnmp 1 }
+
+h3cSyslogLogbuffer OBJECT IDENTIFIER ::= { h3cSyslogObjects 5 }
+
+h3cSyslogLogbufferChannel OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The channel number of logbuffer."
+    DEFVAL { 4 }
+    ::= { h3cSyslogLogbuffer 1 }
+
+h3cSyslogLogbufferSize OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The capacity of logbuffer which can be customized by users.
+         The valid range is from 0 to h3cSyslogMaxLogbufferSize."
+    DEFVAL { 512 }
+    ::= { h3cSyslogLogbuffer 2 }
+
+h3cSyslogLogbufferTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF H3cSyslogLogbufferEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The table of logbuffer."
+    ::= { h3cSyslogLogbuffer 3 }
+
+h3cSyslogLogbufferEntry OBJECT-TYPE
+    SYNTAX H3cSyslogLogbufferEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The logbuffer entry of syslog."
+    INDEX { h3cLogbufferIndex }
+    ::= { h3cSyslogLogbufferTable 1 }
+
+H3cSyslogLogbufferEntry ::=
+    SEQUENCE {
+        h3cLogbufferIndex                    Integer32,
+        h3cLogbufferCurrentMessages          Unsigned32,
+        h3cLogbufferOverwrittenMessages      Counter32,
+        h3cLogbufferDroppedMessages          Counter32
+        }
+
+h3cLogbufferIndex OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The index of this table."
+    ::= { h3cSyslogLogbufferEntry 1 }
+
+h3cLogbufferCurrentMessages OBJECT-TYPE
+    SYNTAX Unsigned32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of log messages stored in logbuffer."
+    ::= { h3cSyslogLogbufferEntry 2 }
+
+h3cLogbufferOverwrittenMessages OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of log messages overwritten in logbuffer."
+    ::= { h3cSyslogLogbufferEntry 3 }
+
+h3cLogbufferDroppedMessages OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of log messages dropped in logbuffer."
+    ::= { h3cSyslogLogbufferEntry 4 }
+
+h3cSyslogTrapbuffer OBJECT IDENTIFIER ::= { h3cSyslogObjects 6 }
+
+h3cSyslogTrapbufferChannel OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The channel number of trapbuffer."
+    DEFVAL { 3 }
+    ::= { h3cSyslogTrapbuffer 1 }
+
+h3cSyslogTrapbufferSize OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The capacity of the trapbuffer which can be customized by users.
+         The valid range is from 0 to h3cSyslogMaxTrapbufferSize."
+    DEFVAL { 256 }
+    ::= { h3cSyslogTrapbuffer 2 }
+
+h3cSyslogTrapbufferTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF H3cSyslogTrapbufferEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The table of trapbuffer."
+    ::= { h3cSyslogTrapbuffer 3 }
+
+h3cSyslogTrapbufferEntry OBJECT-TYPE
+    SYNTAX H3cSyslogTrapbufferEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The trapbuffer entry of syslog."
+    INDEX { h3cTrapbufferIndex }
+    ::= { h3cSyslogTrapbufferTable 1 }
+
+H3cSyslogTrapbufferEntry ::=
+    SEQUENCE {
+        h3cTrapbufferIndex                      Integer32,
+        h3cTrapbufferCurrentMessages            Unsigned32,
+        h3cTrapbufferOverwrittenMessages        Counter32,
+        h3cTrapbufferDroppedMessages            Counter32
+        }
+
+h3cTrapbufferIndex OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The index of this table."
+    ::= { h3cSyslogTrapbufferEntry 1 }
+
+h3cTrapbufferCurrentMessages OBJECT-TYPE
+    SYNTAX Unsigned32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of trap messages stored in trapbuffer."
+    ::= { h3cSyslogTrapbufferEntry 2 }
+
+h3cTrapbufferOverwrittenMessages OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of trap messages overwritten in trapbuffer."
+    ::= { h3cSyslogTrapbufferEntry 3 }
+
+h3cTrapbufferDroppedMessages OBJECT-TYPE
+    SYNTAX Counter32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The number of trap messages dropped in trapbuffer."
+    ::= { h3cSyslogTrapbufferEntry 4 }
+
+h3cSyslogLoghost OBJECT IDENTIFIER ::= { h3cSyslogObjects 7 }
+
+h3cSyslogLoghostSourceInterface OBJECT-TYPE
+    SYNTAX INTEGER
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The source interface which sends message to loghost.
+         All loghosts use the same source interface."
+    ::= { h3cSyslogLoghost 1 }
+
+h3cSyslogLoghostTimestampType OBJECT-TYPE
+    SYNTAX TimeStampType
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Time stamp type of message sent to loghost."
+    DEFVAL { date }
+    ::= { h3cSyslogLoghost 2 }
+
+h3cSyslogLoghostTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF H3cSyslogLoghostEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The table of loghost."
+    ::= { h3cSyslogLoghost 3 }
+
+h3cSyslogLoghostEntry OBJECT-TYPE
+    SYNTAX H3cSyslogLoghostEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The loghost entry of syslog."
+    INDEX { h3cSyslogLoghostIndex }
+    ::= { h3cSyslogLoghostTable 1 }
+
+H3cSyslogLoghostEntry ::=
+    SEQUENCE {
+        h3cSyslogLoghostIndex                   Integer32,
+        h3cSyslogLoghostChannel                 Integer32,
+        h3cSyslogLoghostIpaddressType           InetAddressType,
+        h3cSyslogLoghostIpaddress               InetAddress,
+        h3cSyslogLoghostFacility                FacilityType,
+        h3cSyslogLoghostLanguage                INTEGER,
+        h3cSyslogLoghostOperateRowStatus        RowStatus,
+        h3cSyslogLoghostIpaddressPort           Integer32,
+        h3cSyslogLoghostTAddress                TAddress
+    }
+
+h3cSyslogLoghostIndex OBJECT-TYPE
+    SYNTAX Integer32(1..64)
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The index of this table."
+    ::= { h3cSyslogLoghostEntry 1 }
+
+h3cSyslogLoghostChannel OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The channel number of loghost."
+    DEFVAL { 2 }
+    ::= { h3cSyslogLoghostEntry 2 }
+
+h3cSyslogLoghostIpaddressType OBJECT-TYPE
+    SYNTAX InetAddressType
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The ip address type of loghost."
+    DEFVAL { ipv4 }
+    ::= { h3cSyslogLoghostEntry 3 }
+
+h3cSyslogLoghostIpaddress OBJECT-TYPE
+    SYNTAX InetAddress
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The ip address of loghost."
+    ::= { h3cSyslogLoghostEntry 4 }
+
+h3cSyslogLoghostFacility OBJECT-TYPE
+    SYNTAX FacilityType
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The operations staff can selectively filter the messages
+         with priority which consists of facility that generates
+         the message and severity of the message.
+         "
+    DEFVAL { local7 }
+    ::= { h3cSyslogLoghostEntry 5 }
+
+h3cSyslogLoghostLanguage OBJECT-TYPE
+    SYNTAX INTEGER {
+        chinese(1),
+        english(2)
+        }
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The language of the message sent to the loghost."
+    DEFVAL { english }
+    ::= { h3cSyslogLoghostEntry 6 }
+
+h3cSyslogLoghostOperateRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The status of this table entry."
+    ::= { h3cSyslogLoghostEntry 7 }
+
+h3cSyslogLoghostIpaddressPort OBJECT-TYPE
+    SYNTAX Integer32(1..65535)
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The loghost server port."
+    DEFVAL { 514 }
+    ::= { h3cSyslogLoghostEntry 8 }
+
+h3cSyslogLoghostTAddress OBJECT-TYPE
+    SYNTAX TAddress
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The loghost server transport address."
+    ::= { h3cSyslogLoghostEntry 9 }
+
+h3cSyslogChannel OBJECT IDENTIFIER ::= { h3cSyslogObjects 8 }
+
+h3cSyslogChannelTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF H3cSyslogChannelEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "A table of syslog channel."
+    ::= { h3cSyslogChannel 1 }
+
+h3cSyslogChannelEntry OBJECT-TYPE
+    SYNTAX H3cSyslogChannelEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The channel entry of syslog."
+    INDEX { h3cSyslogChannelIndex }
+    ::= { h3cSyslogChannelTable 1 }
+
+H3cSyslogChannelEntry ::=
+    SEQUENCE {
+        h3cSyslogChannelIndex       Integer32,
+        h3cSyslogChannelName        DisplayString
+        }
+
+h3cSyslogChannelIndex OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The index of this table."
+    ::= { h3cSyslogChannelEntry 1 }
+
+h3cSyslogChannelName OBJECT-TYPE
+    SYNTAX DisplayString (SIZE (1..30))
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The name of channel.
+         The channel name must be different from each other."
+    ::= { h3cSyslogChannelEntry 2 }
+
+h3cSyslogModule OBJECT IDENTIFIER ::= { h3cSyslogObjects 9 }
+
+h3cSyslogModuleTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF H3cSyslogModuleEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "A table of syslog module."
+    ::= { h3cSyslogModule 1 }
+
+h3cSyslogModuleEntry OBJECT-TYPE
+    SYNTAX H3cSyslogModuleEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The module entry of syslog."
+    INDEX { h3cSyslogModuleIndex }
+    ::= { h3cSyslogModuleTable 1 }
+
+H3cSyslogModuleEntry ::=
+    SEQUENCE {
+        h3cSyslogModuleIndex        Integer32,
+        h3cSyslogModuleName         DisplayString
+        }
+
+h3cSyslogModuleIndex OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The index of this table."
+    ::= { h3cSyslogModuleEntry 1 }
+
+h3cSyslogModuleName OBJECT-TYPE
+    SYNTAX DisplayString (SIZE (1..20))
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+        "The name of module."
+    ::= { h3cSyslogModuleEntry 2 }
+
+h3cSyslogLog OBJECT IDENTIFIER ::= { h3cSyslogObjects 10 }
+
+h3cSyslogLogTimestampType OBJECT-TYPE
+    SYNTAX TimeStampType
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Time stamp type of log message."
+    DEFVAL { date }
+    ::= { h3cSyslogLog 1 }
+
+h3cSyslogLogTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF H3cSyslogLogEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "A table of syslog module."
+    ::= { h3cSyslogLog 2 }
+
+h3cSyslogLogEntry OBJECT-TYPE
+    SYNTAX H3cSyslogLogEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The log entry of syslog."
+    INDEX { h3cSyslogChannelIndex,
+            h3cSyslogModuleIndex
+          }
+    ::= { h3cSyslogLogTable 1 }
+
+H3cSyslogLogEntry ::=
+    SEQUENCE {
+        h3cSyslogLogState           TruthValue,
+        h3cSyslogLogLevel           MessageLevelType,
+        h3cSyslogLogRowStatus       RowStatus
+        }
+
+h3cSyslogLogState OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The switch state of log."
+    ::= { h3cSyslogLogEntry 1 }
+
+h3cSyslogLogLevel OBJECT-TYPE
+    SYNTAX MessageLevelType
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The level of log message."
+    ::= { h3cSyslogLogEntry 2 }
+
+h3cSyslogLogRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The status of this table entry."
+    ::= { h3cSyslogLogEntry 3 }
+
+h3cSyslogLogGlobalLevel OBJECT-TYPE
+    SYNTAX MessageLevelType
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "The global level of log message."
+    ::= { h3cSyslogLog 3 }
+
+h3cSyslogTrap OBJECT IDENTIFIER ::= { h3cSyslogObjects 11 }
+
+h3cSyslogTrapTimestampType OBJECT-TYPE
+    SYNTAX TimeStampType
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Time stamp type of trap message."
+    DEFVAL { date }
+    ::= { h3cSyslogTrap 1 }
+
+h3cSyslogTrapTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF H3cSyslogTrapEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "A table of syslog module."
+    ::= { h3cSyslogTrap 2 }
+
+h3cSyslogTrapEntry OBJECT-TYPE
+    SYNTAX H3cSyslogTrapEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The trap entry of syslog."
+    INDEX { h3cSyslogChannelIndex,
+            h3cSyslogModuleIndex
+          }
+    ::= { h3cSyslogTrapTable 1 }
+
+H3cSyslogTrapEntry ::=
+    SEQUENCE {
+        h3cSyslogTrapState              TruthValue,
+        h3cSyslogTrapLevel              MessageLevelType,
+        h3cSyslogTrapRowStatus          RowStatus
+        }
+
+h3cSyslogTrapState OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The switch state of trap."
+    ::= { h3cSyslogTrapEntry 1 }
+
+h3cSyslogTrapLevel OBJECT-TYPE
+    SYNTAX MessageLevelType
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The level of trap message."
+    ::= { h3cSyslogTrapEntry 2 }
+
+h3cSyslogTrapRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The status of this table entry."
+    ::= { h3cSyslogTrapEntry 3 }
+
+h3cSyslogDebug OBJECT IDENTIFIER ::= { h3cSyslogObjects 12 }
+
+h3cSyslogDebugTimestampType OBJECT-TYPE
+    SYNTAX TimeStampType
+    MAX-ACCESS read-write
+    STATUS current
+    DESCRIPTION
+        "Time stamp type of debug message."
+    DEFVAL { boot }
+    ::= { h3cSyslogDebug 1 }
+
+h3cSyslogDebugTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF H3cSyslogDebugEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "A table of syslog module."
+    ::= { h3cSyslogDebug 2 }
+
+h3cSyslogDebugEntry OBJECT-TYPE
+    SYNTAX H3cSyslogDebugEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION
+        "The debug entry of syslog."
+    INDEX { h3cSyslogChannelIndex,
+            h3cSyslogModuleIndex
+          }
+    ::= { h3cSyslogDebugTable 1 }
+
+H3cSyslogDebugEntry ::=
+    SEQUENCE {
+        h3cSyslogDebugState             TruthValue,
+        h3cSyslogDebugLevel             MessageLevelType,
+        h3cSyslogDebugRowStatus         RowStatus
+        }
+
+h3cSyslogDebugState OBJECT-TYPE
+    SYNTAX TruthValue
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The switch state of debug."
+    ::= { h3cSyslogDebugEntry 1 }
+
+h3cSyslogDebugLevel OBJECT-TYPE
+    SYNTAX MessageLevelType
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The level of debug message."
+    ::= { h3cSyslogDebugEntry 2 }
+
+h3cSyslogDebugRowStatus OBJECT-TYPE
+    SYNTAX RowStatus
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+        "The status of this table entry."
+    ::= { h3cSyslogDebugEntry 3 }
+
+END

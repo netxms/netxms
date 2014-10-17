@@ -2635,6 +2635,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/dell-pwc/Makefile
 	src/server/drivers/dlink/Makefile
 	src/server/drivers/ers8000/Makefile
+	src/server/drivers/h3c/Makefile
 	src/server/drivers/lib/Makefile
 	src/server/drivers/lib/avaya-ers/Makefile
 	src/server/drivers/lib/cisco/Makefile

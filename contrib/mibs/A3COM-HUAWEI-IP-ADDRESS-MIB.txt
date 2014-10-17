@@ -1,0 +1,437 @@
+-- ====================================================================
+-- Copyright (c) 2004-2011 Hangzhou H3C Tech. Co., Ltd. All rights reserved.
+--
+-- Description: IPv4 address MIB
+-- Reference:
+-- Version: V1.5
+-- History:
+--   V1.0 2005-11-22 Created by Wang Hui and Liu Jinguang
+--        Initial version
+--   V1.1 2006-03-16 Modify by Yu Hongqiang
+--        Modify the description of some objects.
+--   V1.2 2007-12-18 Modify by Zhangyinfei
+--        Add enmu 'vrrp' for h3cIpAddrReadSourceType and h3cIpAddrReadCatalog
+--   V1.3 2009-8-11 Modify by lifei
+--        Add ip address change notify trap
+--   V1.4 2010-03-06 Modify by Jianzhuang Ge
+--        Add ipv4 address management table h3cIpv4AddrTable
+--   V1.5 2011-11-28 Modify by zhangshuai
+--        Add h3cIpAddrFirstTrapTime
+-- ====================================================================
+A3COM-HUAWEI-IP-ADDRESS-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        h3cCommon
+            FROM A3COM-HUAWEI-OID-MIB
+        Integer32, IpAddress, OBJECT-TYPE, MODULE-IDENTITY, NOTIFICATION-TYPE,
+        TimeTicks
+            FROM SNMPv2-SMI
+        RowStatus
+            FROM SNMPv2-TC
+        InetAddressType,InetAddress
+            FROM INET-ADDRESS-MIB
+        ifIndex
+            FROM IF-MIB;
+
+    h3cIpAddrMIB MODULE-IDENTITY
+        LAST-UPDATED "200511220000Z"
+        ORGANIZATION
+            "H3C Technologies Co., Ltd."
+        CONTACT-INFO
+            "Platform Team H3C Technologies Co., Ltd.
+            Hai-Dian District Beijing P.R. China
+            http://www.h3c.com
+            Zip:100085
+            "
+        DESCRIPTION
+            "The MIB module for managing IPv4 address."
+        REVISION "200511220000Z"
+        DESCRIPTION
+            "The initial revision of this MIB module."
+        ::= { h3cCommon 67 }
+
+
+--
+-- Node definitions
+--
+    h3cIpAddressObjects OBJECT IDENTIFIER ::= { h3cIpAddrMIB 1 }
+
+    h3cIpAddressConfig OBJECT IDENTIFIER ::= { h3cIpAddressObjects 1 }
+
+    h3cIpAddrSetTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF H3cIpAddrSetEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+            "The table of address information is relevant to this
+            entity's IPv4 addresses for setting. The address information
+            that can be read and set in this table is a subset of the
+            address information that can be read in h3cIpAddrReadTable
+            and ipAddrTable in IP-MIB. This table is used to configure IPv4
+            addresses of an interface identified by h3cIpAddrSetIfIndex.
+            When users create or delete an entry in this table, the agent also
+            increases or reduces a corresponding entry in the
+            h3cIpAddrReadTable and ipAddrTable in IP-MIB.
+            When an interface which has been assigned IPv6 address is deleted,
+            the agent also deletes the entry corresponding to the interface
+            in this table and h3cIpAddrReadTable.
+            All IPv4 addresses in this table will also show in ipAddrTable in
+            IP-MIB.
+            "
+        REFERENCE
+            "RFC 2011"
+        ::= { h3cIpAddressConfig 1 }
+
+    h3cIpAddrSetEntry OBJECT-TYPE
+        SYNTAX H3cIpAddrSetEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+            "Define the IPv4 address information.
+            "
+        INDEX { h3cIpAddrSetIfIndex, h3cIpAddrSetAddrType, h3cIpAddrSetAddr }
+        ::= { h3cIpAddrSetTable 1 }
+
+    H3cIpAddrSetEntry ::=
+        SEQUENCE
+        {
+            h3cIpAddrSetIfIndex
+                Integer32,
+            h3cIpAddrSetAddrType
+                InetAddressType,
+            h3cIpAddrSetAddr
+                InetAddress,
+            h3cIpAddrSetMask
+                IpAddress,
+            h3cIpAddrSetSourceType
+                INTEGER,
+            h3cIpAddrSetCatalog
+                INTEGER,
+            h3cIpAddrSetRowStatus
+                RowStatus
+        }
+
+    h3cIpAddrSetIfIndex OBJECT-TYPE
+        SYNTAX Integer32 (1..2147483647)
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+            "The index value which uniquely identifies the interface to
+            which this entry is applicable. The interface identified by
+            a particular value of this index is the same interface as
+            identified by the same value of RFC 1573's ifIndex.
+            "
+        ::= { h3cIpAddrSetEntry 1 }
+
+    h3cIpAddrSetAddrType OBJECT-TYPE
+        SYNTAX InetAddressType
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+            "The IP address type to which this entry's address information
+            pertains. The value must be ipv4.
+            "
+        ::= { h3cIpAddrSetEntry 2 }
+
+    h3cIpAddrSetAddr OBJECT-TYPE
+        SYNTAX InetAddress
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+            "The IPv4 address to which this entry's address information
+            pertains.
+            "
+        ::= { h3cIpAddrSetEntry 3 }
+
+    h3cIpAddrSetMask OBJECT-TYPE
+        SYNTAX IpAddress
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "The subnet mask associated with the IPv4 address of this
+            entry. The value of the mask is an IPv4 address with all the
+            network bits set to 1 and all the hosts bits set to 0.
+            "
+        ::= { h3cIpAddrSetEntry 4 }
+
+    h3cIpAddrSetSourceType OBJECT-TYPE
+        SYNTAX INTEGER
+        {
+            assignedIp(1)
+        }
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "Indicate the type of source of the IPv4 address."
+        DEFVAL { assignedIp }
+        ::= { h3cIpAddrSetEntry 5 }
+
+    h3cIpAddrSetCatalog OBJECT-TYPE
+        SYNTAX INTEGER
+        {
+            primary(1),
+            sub(2)
+        }
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "Indicate the category of the IPv4 address."
+        DEFVAL { primary }
+        ::= { h3cIpAddrSetEntry 6 }
+
+    h3cIpAddrSetRowStatus OBJECT-TYPE
+        SYNTAX RowStatus
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "This object is used to create a new row or delete an
+            existing row in this table, only support active,
+            createAndGo and destroy.
+            "
+        ::= { h3cIpAddrSetEntry 7 }
+
+    h3cIpAddrReadTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF H3cIpAddrReadEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+            "The table of address information is relevant to this
+            entity's IP addresses for reading. This is the extension
+            of the ipAddrTable in IP-MIB.
+            All IPv4 addresses in this table will also show in ipAddrTable
+            in IP-MIB.
+            "
+        REFERENCE
+            "RFC 2011"
+        ::= { h3cIpAddressConfig 2 }
+
+    h3cIpAddrReadEntry OBJECT-TYPE
+        SYNTAX H3cIpAddrReadEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+            "Define the IPv4 address information.
+            "
+        INDEX { h3cIpAddrReadIfIndex, h3cIpAddrReadAddrType, h3cIpAddrReadAddr }
+        ::= { h3cIpAddrReadTable 1 }
+
+    H3cIpAddrReadEntry ::=
+        SEQUENCE
+        {
+            h3cIpAddrReadIfIndex
+                Integer32,
+            h3cIpAddrReadAddrType
+                InetAddressType,
+            h3cIpAddrReadAddr
+                InetAddress,
+            h3cIpAddrReadMask
+                IpAddress,
+            h3cIpAddrReadSourceType
+                INTEGER,
+            h3cIpAddrReadCatalog
+                INTEGER
+        }
+
+    h3cIpAddrReadIfIndex OBJECT-TYPE
+        SYNTAX Integer32 (1..2147483647)
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+            "The index value which uniquely identifies the interface to
+            which this entry is applicable. The interface identified by
+            a particular value of this index is the same interface as
+            identified by the same value of RFC 1573's ifIndex.
+            "
+        ::= { h3cIpAddrReadEntry 1 }
+
+    h3cIpAddrReadAddrType OBJECT-TYPE
+        SYNTAX InetAddressType
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+            "The IP address type to which this entry's address information
+            pertains. The value must be ipv4.
+            "
+        ::= { h3cIpAddrReadEntry 2 }
+
+    h3cIpAddrReadAddr OBJECT-TYPE
+        SYNTAX InetAddress
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+            "The IPv4 address to which this entry's address information
+            pertains.
+            "
+        ::= { h3cIpAddrReadEntry 3 }
+
+    h3cIpAddrReadMask OBJECT-TYPE
+        SYNTAX IpAddress
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "The subnet mask associated with the IPv4 address of this
+            entry. The value of the mask is an IPv4 address with all the
+            network bits set to 1 and all the hosts bits set to 0.
+            "
+        ::= { h3cIpAddrReadEntry 4 }
+
+    h3cIpAddrReadSourceType OBJECT-TYPE
+        SYNTAX INTEGER
+        {
+            assignedIp(1),
+            cluster(2),
+            dhcp(3),
+            bootp(4),
+            negotiate(5),
+            unnumbered(6),
+            vrrp(7)
+        }
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "Indicate the type of source of the IPv4 address."
+        ::= { h3cIpAddrReadEntry 5 }
+
+    h3cIpAddrReadCatalog OBJECT-TYPE
+        SYNTAX INTEGER
+        {
+            primary(1),
+            sub(2),
+            cluster(3),
+            vrrp(4)
+        }
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "Indicate the category of the IPv4 address."
+        ::= { h3cIpAddrReadEntry 6 }
+
+    h3cIpv4AddrTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF H3cIpv4AddrEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+            "This table is used to configure primary IPv4 address of an
+             interface identified by ifIndex."
+        ::= { h3cIpAddressConfig 3 }
+
+    h3cIpv4AddrEntry OBJECT-TYPE
+        SYNTAX H3cIpv4AddrEntry
+        MAX-ACCESS not-accessible
+        STATUS current
+        DESCRIPTION
+            "Define the IPv4 address information.
+            "
+        INDEX { ifIndex }
+        ::= { h3cIpv4AddrTable 1 }
+
+    H3cIpv4AddrEntry ::=
+        SEQUENCE
+        {
+            h3cIpv4AddrAddr
+                IpAddress,
+            h3cIpv4AddrMask
+                IpAddress,
+            h3cIpv4AddrRowStatus
+                RowStatus
+        }
+
+    h3cIpv4AddrAddr OBJECT-TYPE
+        SYNTAX IpAddress
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "The IPv4 address to which this entry's address information
+            pertains.
+            "
+        ::= { h3cIpv4AddrEntry 1 }
+
+    h3cIpv4AddrMask OBJECT-TYPE
+        SYNTAX IpAddress
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "The subnet mask associated with the IPv4 address of this
+            entry.  The value of the mask is an IPv4 address with all the
+            network bits set to 1 and all the hosts bits set to 0.
+            "
+        ::= { h3cIpv4AddrEntry 2 }
+
+    h3cIpv4AddrRowStatus OBJECT-TYPE
+        SYNTAX RowStatus
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "This object is used to create a new row or delete an
+            existing row in this table, only support active,
+            notInService, createAndGo and destroy.
+            "
+        ::= { h3cIpv4AddrEntry 3 }
+
+--
+-- Define the IP Address Traps.
+--
+
+h3cIpAddrNotify OBJECT IDENTIFIER ::= { h3cIpAddrMIB 2 }
+
+-- Scalar Objects for Notify
+h3cIpAddrNotifyScalarObjects OBJECT IDENTIFIER ::= { h3cIpAddrNotify 1 }
+
+h3cIpAddrNotifyIfIndex OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The IP address IfIndex of specified interface on the device."
+    ::= { h3cIpAddrNotifyScalarObjects 1 }
+
+h3cIpAddrOldIpAddress OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The Old IP address of specified interface on the device."
+    ::= { h3cIpAddrNotifyScalarObjects 2 }
+
+h3cIpAddrNewIpAddress OBJECT-TYPE
+    SYNTAX      InetAddress
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "The New IP address of specified interface on the device."
+    ::= { h3cIpAddrNotifyScalarObjects 3 }
+
+h3cIpAddrFirstTrapTime OBJECT-TYPE
+    SYNTAX      TimeTicks
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION
+        "Represents the first trap time."
+    ::= { h3cIpAddrNotifyScalarObjects 4 }
+
+
+-- Notification Objects
+h3cIpAddrNotifyObjects OBJECT IDENTIFIER ::= { h3cIpAddrNotify 2 }
+
+h3cIpAddrNotifyObjectsPrefix OBJECT IDENTIFIER ::= { h3cIpAddrNotifyObjects 0 }
+
+h3cIpAddressChangeNotify NOTIFICATION-TYPE
+    OBJECTS
+        {
+            h3cIpAddrNotifyIfIndex,
+            h3cIpAddrOldIpAddress,
+            h3cIpAddrNewIpAddress,
+            h3cIpAddrFirstTrapTime
+         }
+    STATUS      current
+    DESCRIPTION
+        "This notification will be generated when the IP address of interface
+        is changed.  The change maybe originate from NMS, DHCP server or
+        administrator.
+
+        This notification announces useful IP address change.  So it
+        is triggered by significative IP address change."
+
+    ::= { h3cIpAddrNotifyObjectsPrefix 1 }
+
+END

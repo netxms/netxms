@@ -1,0 +1,782 @@
+-- =================================================================
+-- Copyright (c) 2004-2010 Hangzhou H3C Tech. Co., Ltd. All rights reserved.
+--
+-- Description: interface extension mib
+-- Reference: IF-MIB
+-- Version: V1.6
+-- History:
+--   V1.0 created by gaolong
+--     Initial version 2004-11-13
+--   V1.1 2007-01-13 Modified by wanglirong
+--     Add h3cIfStatGlobalFlowInterval and h3cIfSpeedStatTable
+--   V1.2 Modified by chenxi
+--     Add h3cRTParentIfTable, h3cRTSubIfTable and
+--     h3cIfLinkModeTable 2007-10-15
+--   V1.3 2009-05-05 Add h3cIfPhysicalNumber, h3cIfTable
+--   V1.4 2009-08-08 Add h3cIfMtu, h3cIfBandwidth, h3cIfDiscardPktRate,
+--     h3cIfExtTrapCfgTable
+--   V1.5 2010-09-04 Add h3cIfInNUcastPkts, h3cIfOutNUcastPkts and h3cIfStatusKeepTime by shuaixj
+--   V1.6 2011-09-16 Add h3cIfHCFlowStatTable by xiedong
+--        2011-11-04 Add h3cIfIsPoe by duyanbing
+-- =================================================================
+A3COM-HUAWEI-IF-EXT-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+        h3cCommon
+    FROM A3COM-HUAWEI-OID-MIB
+        ifIndex, ifDescr
+    FROM IF-MIB
+        Integer32, Counter64, Unsigned32, TimeTicks,
+        OBJECT-TYPE, MODULE-IDENTITY, NOTIFICATION-TYPE
+    FROM SNMPv2-SMI
+        CounterBasedGauge64
+    FROM HCNUM-TC
+        DisplayString, RowStatus, TruthValue
+    FROM SNMPv2-TC;
+
+h3cIfExt MODULE-IDENTITY
+    LAST-UPDATED "200905061936Z"        -- May 6, 2009 at 19:36 GMT
+    ORGANIZATION
+        "Hangzhou H3C Technologies Co., Ltd."
+    CONTACT-INFO
+        "Platform Team H3C Technologies Co., Ltd.
+         Hai-Dian District Beijing P.R. China
+         http://www.h3c.com
+         Zip: 100085"
+    DESCRIPTION
+        "This MIB is an extension of interface MIBs such as IF-MIB.
+
+        This MIB is applicable to routers, switches and other products.
+
+        Some objects in this may be used only for some specific products,
+        so users should refer to the related documents to acquire more
+        detail information.
+        "
+    REVISION "200905061936Z"
+    DESCRIPTION
+        "Update this MIB module."
+    REVISION "200411131936Z"        -- December 13, 2004 at 19:36 GMT
+    DESCRIPTION
+        "The initial revision of this MIB module."
+    ::= { h3cCommon 40 }
+
+
+--
+-- Node definitions
+--
+
+-- Scalar MIB objects, which are considered as global variables
+-- to all interfaces in a device, are defined in this section.
+h3cIfExtScalarGroup OBJECT IDENTIFIER ::= { h3cIfExt 1 }
+
+h3cIfStatGlobalFlowInterval OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Sampling interval for in/out flow of all interfaces.
+        Setting zero indicates closing the statistic function."
+    ::= { h3cIfExtScalarGroup 1 }
+
+-- =================================================================
+-- All other groups are defined below. Of course, scalar objects can
+-- also be defined in a sub section, but they must be one part of
+-- that sub section.
+
+-- Note that a scalar group should be defined firstly and all
+-- scalar objects are placed under that group when doing so.
+h3cIfExtGroup OBJECT IDENTIFIER ::= { h3cIfExt 2 }
+
+
+-- =================================================================
+-- The section below describes statistics of interfaces in a device.
+-- These statistics may not be included in standard MIBs.
+h3cIfStat OBJECT IDENTIFIER ::= { h3cIfExtGroup 1 }
+
+-- Define a scalar group which consists of all scalar objects used for
+-- interface statistics.
+h3cIfStatScalarGroup OBJECT IDENTIFIER ::= { h3cIfStat 1 }
+
+h3cIfStatTable OBJECT IDENTIFIER ::= { h3cIfStat 2 }
+
+h3cIfFlowStatTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF H3cIfStatEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table contains objects to get statistic information
+        of interfaces on a device."
+    ::= { h3cIfStatTable 1 }
+
+h3cIfStatEntry OBJECT-TYPE
+    SYNTAX      H3cIfStatEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Entry items"
+    INDEX
+        {
+            ifIndex
+        }
+    ::= { h3cIfFlowStatTable 1 }
+
+H3cIfStatEntry ::= SEQUENCE
+    {
+        h3cIfStatFlowInterval    Integer32,
+        h3cIfStatFlowInBits      Unsigned32,
+        h3cIfStatFlowOutBits     Unsigned32,
+        h3cIfStatFlowInPkts      Unsigned32,
+        h3cIfStatFlowOutPkts     Unsigned32,
+        h3cIfStatFlowInBytes     Unsigned32,
+        h3cIfStatFlowOutBytes    Unsigned32
+    }
+
+h3cIfStatFlowInterval OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Sampling interval for in/out flow of interface.
+        Setting zero indicates closing this statistic function
+        and objects in this table should return 0."
+    ::= { h3cIfStatEntry 1 }
+
+h3cIfStatFlowInBits OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "In bits in the specific interval."
+    ::= { h3cIfStatEntry 2 }
+
+h3cIfStatFlowOutBits OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Out bits in specific interval."
+    ::= { h3cIfStatEntry 3 }
+
+h3cIfStatFlowInPkts OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "In Packets in the specific interval."
+    ::= { h3cIfStatEntry 4 }
+
+h3cIfStatFlowOutPkts OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Out packets in the specific interval."
+    ::= { h3cIfStatEntry 5 }
+
+h3cIfStatFlowInBytes OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "In bytes in the specific interval."
+    ::= { h3cIfStatEntry 6 }
+
+h3cIfStatFlowOutBytes OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Out bytes in the specific interval."
+    ::= { h3cIfStatEntry 7 }
+
+
+-- =================================================================
+h3cIfSpeedStatTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF H3cIfSpeedStatEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table contains objects to get average speed information
+        in the specific interval of interfaces on a device."
+    ::= { h3cIfStatTable 2 }
+
+h3cIfSpeedStatEntry OBJECT-TYPE
+    SYNTAX      H3cIfSpeedStatEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Entry items"
+    INDEX
+        {
+            ifIndex
+        }
+    ::= { h3cIfSpeedStatTable 1 }
+
+H3cIfSpeedStatEntry ::= SEQUENCE
+    {
+        h3cIfSpeedStatInterval    Integer32,
+        h3cIfSpeedStatInPkts      Unsigned32,
+        h3cIfSpeedStatOutPkts     Unsigned32,
+        h3cIfSpeedStatInBytes     Unsigned32,
+        h3cIfSpeedStatOutBytes    Unsigned32
+    }
+
+h3cIfSpeedStatInterval OBJECT-TYPE
+    SYNTAX      Integer32
+    UNITS       "seconds"
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Sampling interval for in/out flow of interface.
+        Setting zero indicates closing this statistic function
+        and objects in this table should return 0."
+    ::= { h3cIfSpeedStatEntry 1 }
+
+h3cIfSpeedStatInPkts OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Average of input packets per second in the specific interval by
+        h3cIfSpeedStatInterval."
+    ::= { h3cIfSpeedStatEntry 2 }
+
+h3cIfSpeedStatOutPkts OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Average of output packets per second in the specific interval by
+        h3cIfSpeedStatInterval."
+    ::= { h3cIfSpeedStatEntry 3 }
+
+h3cIfSpeedStatInBytes OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Average of input bytes per second in the specific interval by
+        h3cIfSpeedStatInterval."
+    ::= { h3cIfSpeedStatEntry 4 }
+
+h3cIfSpeedStatOutBytes OBJECT-TYPE
+    SYNTAX      Unsigned32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Average of output bytes per second in the specific interval by
+        h3cIfSpeedStatInterval."
+    ::= { h3cIfSpeedStatEntry 5 }
+
+-- =================================================================
+h3cIfHCFlowStatTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF H3cIfHCFlowStatEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table contains objects to get statistic information
+         of interfaces on a device."
+    ::= { h3cIfStatTable 3 }
+
+h3cIfHCFlowStatEntry OBJECT-TYPE
+    SYNTAX      H3cIfHCFlowStatEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Entry items"
+    INDEX
+        {
+            ifIndex
+        }
+    ::= { h3cIfHCFlowStatTable 1 }
+
+H3cIfHCFlowStatEntry ::= SEQUENCE
+    {
+        h3cIfStatFlowHCInBits      CounterBasedGauge64,
+        h3cIfStatFlowHCOutBits     CounterBasedGauge64,
+        h3cIfStatFlowHCInPkts      CounterBasedGauge64,
+        h3cIfStatFlowHCOutPkts     CounterBasedGauge64,
+        h3cIfStatFlowHCInBytes     CounterBasedGauge64,
+        h3cIfStatFlowHCOutBytes    CounterBasedGauge64
+    }
+
+h3cIfStatFlowHCInBits OBJECT-TYPE
+    SYNTAX      CounterBasedGauge64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "In bits in the specific interval.  This object is a 64-bit
+         version of h3cIfStatFlowInBits."
+    ::= { h3cIfHCFlowStatEntry 1 }
+
+h3cIfStatFlowHCOutBits OBJECT-TYPE
+    SYNTAX      CounterBasedGauge64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Out bits in specific interval.  This object is a 64-bit
+         version of h3cIfStatFlowOutBits."
+    ::= { h3cIfHCFlowStatEntry 2 }
+
+h3cIfStatFlowHCInPkts OBJECT-TYPE
+    SYNTAX      CounterBasedGauge64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "In Packets in the specific interval.  This object is a 64-bit
+         version of h3cIfStatFlowInPkts."
+    ::= { h3cIfHCFlowStatEntry 3 }
+
+h3cIfStatFlowHCOutPkts OBJECT-TYPE
+    SYNTAX      CounterBasedGauge64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Out packets in the specific interval.  This object is a 64-bit
+         version of h3cIfStatFlowOutPkts."
+    ::= { h3cIfHCFlowStatEntry 4 }
+
+h3cIfStatFlowHCInBytes OBJECT-TYPE
+    SYNTAX      CounterBasedGauge64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "In bytes in the specific interval.  This object is a 64-bit
+         version of h3cIfStatFlowInBytes."
+    ::= { h3cIfHCFlowStatEntry 5 }
+
+h3cIfStatFlowHCOutBytes OBJECT-TYPE
+    SYNTAX      CounterBasedGauge64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Out bytes in the specific interval.  This object is a 64-bit
+         version of h3cIfStatFlowOutBytes."
+    ::= { h3cIfHCFlowStatEntry 6 }
+
+-- =================================================================
+
+h3cIfControl OBJECT IDENTIFIER ::= { h3cIfExtGroup 2 }
+
+h3cRTParentIfTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF H3cRTParentIfEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table contains all interfaces that can create sub
+        interface."
+    ::= { h3cIfControl  1 }
+
+h3cRTParentIfEntry OBJECT-TYPE
+    SYNTAX      H3cRTParentIfEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This entry describes a interface that can create sub
+        interface."
+    INDEX
+        {
+            h3cRTParentIfIndex
+        }
+    ::= { h3cRTParentIfTable 1}
+
+H3cRTParentIfEntry    ::= SEQUENCE
+    {
+        h3cRTParentIfIndex      Integer32,
+        h3cRTMinSubIfOrdinal    Integer32,
+        h3cRTMaxSubIfOrdinal    Integer32
+    }
+
+h3cRTParentIfIndex OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The index of interface that can creat sub interface.  The value
+        is the same as ifIndex value for this interface."
+    ::= { h3cRTParentIfEntry 1 }
+
+h3cRTMinSubIfOrdinal OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The minimum ordinal of the sub interface can be created."
+    ::= { h3cRTParentIfEntry 2 }
+
+h3cRTMaxSubIfOrdinal OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The max ordinal of the sub interface can be created."
+    ::= { h3cRTParentIfEntry 3 }
+
+-- =================================================================
+
+h3cRTSubIfTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF H3cRTSubIfEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table contains objects to create or delete sub interfaces.
+        To create a sub interface, a valid parent interface must be
+        specified by h3cRTSubIfParentIfIndex and the h3cRTSubIfOrdinal
+        must be in the range between h3cRTMinSubIfOrdinal and
+        h3cRTMaxSubIfOrdinal of the parent interface from
+        h3cRTParentIfTable.
+
+        Sub interfaces are logical virtual interfaces configured on a
+        main interface.  The main interface can be either a physical
+        interface (such as a Layer 3 Ethernet interface) or a logical
+        interface (such as an MFR interface).  The subinterfaces on a
+        main interface share the physical layer parameters of the main
+        interface but can have link layer and network layer parameters
+        of their own.  Disabling or enabling a subinterface does not
+        affect the main interface, but the main interface status change
+        affects the subinterfaces.  The subinterfaces cannot operate
+        normally unless the main interface is connected.
+        A single physical interface containing multiple subinterfaces
+        enables you to network in a more flexible way.
+
+        You can create subinterfaces for the following physical
+        interfaces:
+        Ethernet interface.  An Ethernet subinterface associated with no
+        VLAN supports only IPX, while an Ethernet subinterface associated
+        with a VLAN supports both IP and IPX.
+        WAN interfaces with their data link layer protocols being frame
+        relay, whose subinterfaces support IP and IPX.
+        WAN interfaces with their data link layer protocols being X.25,
+        whose subinterfaces support IP and IPX.
+        ATM interface, whose subinterfaces support only IP."
+    ::= { h3cIfControl  2 }
+
+h3cRTSubIfEntry OBJECT-TYPE
+    SYNTAX      H3cRTSubIfEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "The h3cRTSubIfTable entry items"
+    INDEX
+        {
+            h3cRTSubIfParentIfIndex,
+            h3cRTSubIfOrdinal
+        }
+    ::= { h3cRTSubIfTable 1}
+
+H3cRTSubIfEntry    ::= SEQUENCE
+    {
+        h3cRTSubIfParentIfIndex    Integer32,
+        h3cRTSubIfOrdinal          Integer32,
+        h3cRTSubIfSubIfIndex       Integer32,
+        h3cRTSubIfSubIfDesc        DisplayString,
+        h3cRTSubIfRowStatus        RowStatus
+    }
+
+h3cRTSubIfParentIfIndex OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The parent interface index.  The value should be the same as the
+        h3cRTParentIfIndex."
+    ::= { h3cRTSubIfEntry 1 }
+
+h3cRTSubIfOrdinal OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The ordinal of sub interface.  It should between
+        h3cRTMinSubIfOrdinal and h3cRTMaxSubIfOrdinal of the parent
+        interface."
+    ::= { h3cRTSubIfEntry 2 }
+
+h3cRTSubIfSubIfIndex OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The ifIndex value of the sub interface"
+    ::= { h3cRTSubIfEntry 3 }
+
+h3cRTSubIfSubIfDesc OBJECT-TYPE
+    SYNTAX      DisplayString(SIZE(0..255))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The name of the interface"
+    ::= { h3cRTSubIfEntry 4 }
+
+h3cRTSubIfRowStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "Operation status."
+    ::= { h3cRTSubIfEntry 5 }
+
+-- =================================================================
+h3cIfLinkModeTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF H3cIfLinkModeEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This table contains objects to get or set the link mode of an
+        interface.
+        According to the layer at which the device processes received
+        data packets, Ethernet interfaces can operate in bridge or route
+        mode."
+    ::= { h3cIfControl  3 }
+
+h3cIfLinkModeEntry OBJECT-TYPE
+    SYNTAX      H3cIfLinkModeEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION "The interface link mode table entry"
+    INDEX
+        {
+            h3cIfLinkModeIndex
+        }
+    ::= { h3cIfLinkModeTable 1}
+
+H3cIfLinkModeEntry    ::= SEQUENCE
+    {
+        h3cIfLinkModeIndex            Integer32,
+        h3cIfLinkMode                 INTEGER,
+        h3cIfLinkModeSwitchSupport    TruthValue
+    }
+
+h3cIfLinkModeIndex OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The value is same as ifIndex."
+    ::= { h3cIfLinkModeEntry 1 }
+
+
+h3cIfLinkMode OBJECT-TYPE
+    SYNTAX      INTEGER
+        {
+            bridgeMode(1),
+            routeMode(2)
+        }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The current link mode of the interface
+        If h3cIfLinkModeSwitchSupport is true, writing to the object can
+        change the link mode of the interface."
+    ::= { h3cIfLinkModeEntry 2 }
+
+h3cIfLinkModeSwitchSupport OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Whether the interface supports link mode switching.
+        If this object is true, the interface can operate in either
+        bridge mode or route mode.  Otherwise the interfaces can operate
+        only in bridge or route mode."
+    ::= { h3cIfLinkModeEntry 3 }
+
+h3cIfInterfaces OBJECT IDENTIFIER ::= { h3cIfExtGroup 3 }
+
+h3cIfPhysicalNumber OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Represents the number of physical interfaces in the device."
+    ::= { h3cIfInterfaces 1 }
+
+h3cIfTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF H3cIfEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of interface entries.  The number of entries is given by
+         the value of IfNumber."
+    ::= { h3cIfInterfaces 2 }
+
+h3cIfEntry OBJECT-TYPE
+    SYNTAX      H3cIfEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry containing management information applicable to a
+         particular interface."
+    INDEX
+        {
+            ifIndex
+        }
+    ::= { h3cIfTable 1 }
+
+H3cIfEntry ::= SEQUENCE
+    {
+        h3cIfUpDownTimes      Integer32,
+        h3cIfMtu              Integer32,
+        h3cIfBandwidthRate    Integer32,
+        h3cIfDiscardPktRate   Integer32,
+        h3cIfStatusKeepTime   TimeTicks,
+        h3cIfInNUcastPkts     Counter64,
+        h3cIfOutNUcastPkts    Counter64,
+        h3cIfIsPoe            TruthValue
+    }
+
+h3cIfUpDownTimes OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The interface's up/down times, since the device was initialized."
+    ::= { h3cIfEntry 1 }
+
+h3cIfMtu OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The size of the largest datagram which can be sent/received on the
+        interface, specified in octets.  For interfaces that are used for
+        transmitting network datagram, this is the size of the largest network
+        datagram that can be sent on the interface."
+    ::= { h3cIfEntry 2 }
+
+h3cIfBandwidthRate OBJECT-TYPE
+    SYNTAX      Integer32(0..100)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The rate of the bandwidth for an interface."
+    ::= { h3cIfEntry 3 }
+
+h3cIfDiscardPktRate OBJECT-TYPE
+    SYNTAX      Integer32(0..100)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The rate of the discarded packets for an interface."
+    ::= { h3cIfEntry 4 }
+
+h3cIfStatusKeepTime OBJECT-TYPE
+    SYNTAX      TimeTicks
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The time since the interface
+        entered its current operational state."
+    ::= { h3cIfEntry 5 }
+
+h3cIfInNUcastPkts OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The number of non-unicast (i.e., subnetwork-
+        broadcast or subnetwork-multicast) packets
+        delivered to a higher-layer protocol."
+    ::= { h3cIfEntry 6 }
+
+h3cIfOutNUcastPkts OBJECT-TYPE
+    SYNTAX      Counter64
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The total number of packets that higher-level
+        protocols requested be transmitted to a non-
+        unicast (i.e., a subnetwork-broadcast or
+        subnetwork-multicast) address."
+    ::= { h3cIfEntry 7 }
+
+h3cIfIsPoe OBJECT-TYPE
+    SYNTAX      TruthValue
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Whether the interface supports poe."
+    ::= { h3cIfEntry 8 }
+
+--
+-- Notification definitions
+--
+-- =================================================================
+-- Traps are defined below.
+
+h3cIfExtTrap OBJECT IDENTIFIER ::= { h3cIfExt 3 }
+h3cIfExtTrapPrex OBJECT IDENTIFIER ::= { h3cIfExtTrap 0 }
+-- All trap definitions should be placed under this object.
+
+h3cIfBandwidthUsageHigh NOTIFICATION-TYPE
+    OBJECTS
+        {
+            ifDescr,
+            h3cIfBandwidthRate,
+            h3cIfBandwidthUpperLimit
+        }
+    STATUS current
+    DESCRIPTION
+        "The notification is generated when the rate of the bandwidth for the
+         interface exceeds the upper limit."
+    ::= { h3cIfExtTrapPrex 1 }
+
+h3cIfDiscardPktRateHigh NOTIFICATION-TYPE
+    OBJECTS
+        {
+            ifDescr,
+            h3cIfDiscardPktRate,
+            h3cIfDiscardPktRateUpperLimit
+        }
+    STATUS current
+    DESCRIPTION
+        "The notification is generated when the rate of the discarded packets
+         for the interface exceeds the upper limit."
+    ::= { h3cIfExtTrapPrex 2 }
+
+h3cIfExtTrapObject OBJECT IDENTIFIER ::= { h3cIfExtTrap 1 }
+
+h3cIfExtTrapCfgTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF H3cIfExtTrapCfgEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The trap configuration table."
+    ::= { h3cIfExtTrapObject 1 }
+
+h3cIfExtTrapCfgEntry OBJECT-TYPE
+    SYNTAX      H3cIfExtTrapCfgEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "An entry for this table."
+    INDEX
+        {
+            ifIndex
+        }
+    ::= { h3cIfExtTrapCfgTable 1 }
+
+H3cIfExtTrapCfgEntry ::= SEQUENCE
+    {
+        h3cIfBandwidthUpperLimit      Integer32,
+        h3cIfDiscardPktRateUpperLimit Integer32
+    }
+
+h3cIfBandwidthUpperLimit OBJECT-TYPE
+    SYNTAX      Integer32(1..100)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The rate of the bandwidth upper limit for an interface."
+    ::= { h3cIfExtTrapCfgEntry 1 }
+
+h3cIfDiscardPktRateUpperLimit OBJECT-TYPE
+    SYNTAX      Integer32(1..100)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The rate of the discarded packets upper limit for an interface."
+    ::= { h3cIfExtTrapCfgEntry 2 }
+
+END

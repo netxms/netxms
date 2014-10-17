@@ -1,0 +1,235 @@
+-- =========================================================================
+-- Copyright (c) 2004-2012 Hangzhou H3C Tech. Co., Ltd. All rights reserved.
+--
+-- Description:This file describes various common MIB objects implemented by both
+--             Routers and Switches for use.
+-- Reference:
+-- Version: V2.3
+-- History:
+-- V1.0 26th Nov 2003
+--      Separated from a3Comm8040.mib
+-- V1.1 9th Dec 2003
+--      a3comoemrouter.mib added
+-- V1.2 23rd Jan 2004
+--      merged in common node defns from a3Comoemrouter.mib
+-- V1.3 24th Feb 2004
+--      module imported from A3COM-HUAWEI-OID-MIB which is the root MIB MODULE for huawei-3com.
+--      delete MODULE-IDENTITY import declaration
+-- V1.4 16th Aug 2004
+--      Add a trap node 'hwRebootSendTrap' into hwSystemNotification
+-- V2.0 2004-10-12 updated by gaolong
+--      Import from SNMPv2-SMI and SNMPv2-TC instead from RFC1212 and RFC1155-SMI
+--      Change ACCESS clauses to MAX-ACCESS
+--      Change STATUS clauses from mandatory to current
+-- V2.1 2008-11-11 add node hwSysBootType by lifengguang
+-- V2.2 2009-05-05 add hwSysStatisticPeriod, hwSysSamplePeriod,
+--      hwSysTrapResendPeriod, hwSysTrapCollectionPeriod, hwSysColdStartTrap,
+--      hwSysWarmStartTrap, hwSysSnmpPort, hwSysSnmpTrapPort, hwSysNetID,
+--      hwSysLastSampleTime by jinyi
+-- V2.3 2012-01-07 add node hwSysTrapSendNum and hwSysFirstTrapTime by duyanbing
+-- =========================================================================
+A3COM-HUAWEI-COMMON-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        OBJECT-TYPE, NOTIFICATION-TYPE, TimeTicks
+            FROM SNMPv2-SMI
+        DisplayString, DateAndTime
+            FROM SNMPv2-TC
+        hwSystem
+            FROM A3COM-HUAWEI-OID-MIB;
+
+-- ==============================
+-- Begin define of hwmHostName
+-- ==============================
+
+    hwWriteConfig OBJECT-TYPE
+        SYNTAX INTEGER{
+                       save(1)
+                      }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "Write config to router."
+        ::= { hwSystem 5 }
+
+    hwStartFtpServer OBJECT-TYPE
+        SYNTAX INTEGER{
+                       enable(1),
+                       disable(2)
+                       }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "Decide whether start ftp-server.enable(1) indicates to start ftp-server;
+            disable(2) indicates to stop ftp-server."
+        ::= { hwSystem 6 }
+
+    hwReboot OBJECT-TYPE
+        SYNTAX INTEGER{
+                       reboot(1)
+                       }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "Reboot router."
+        ::= { hwSystem 7 }
+
+    hwSystemNotification OBJECT IDENTIFIER ::= { hwSystem 8 }
+
+    hwWriteSuccessTrap NOTIFICATION-TYPE
+        STATUS current
+        DESCRIPTION
+            "send a trap about write success."
+        ::= { hwSystemNotification 1 }
+
+    hwWriteFailureTrap NOTIFICATION-TYPE
+        STATUS current
+        DESCRIPTION
+            "send a trap about write failure."
+        ::= { hwSystemNotification 2 }
+
+    hwRebootSendTrap NOTIFICATION-TYPE
+        STATUS current
+        DESCRIPTION
+            "When users restart the device with command
+            'reboot', this trap will be sent two seconds
+             before the device reboots."
+        ::= { hwSystemNotification 3 }
+
+    hwSysColdStartTrap NOTIFICATION-TYPE
+        OBJECTS
+            {
+                hwSysFirstTrapTime
+            }
+        STATUS current
+        DESCRIPTION
+            "A system cold start trap."
+        ::= { hwSystemNotification 4 }
+
+    hwSysWarmStartTrap NOTIFICATION-TYPE
+        OBJECTS
+            {
+                hwSysFirstTrapTime
+            }
+        STATUS current
+        DESCRIPTION
+            "A system warm start trap."
+        ::= { hwSystemNotification 5 }
+
+    hwSoftwareVersion OBJECT-TYPE
+        SYNTAX DisplayString
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "Software version."
+        ::= { hwSystem 9 }
+
+    hwSysBootType OBJECT-TYPE
+        SYNTAX INTEGER
+        {
+            coldStart(1),           -- Cold start
+            warmStart(2)            -- Warm start
+        }
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "The boot type of the system whether the last device reboot was by
+            CLI (warm start) or power off (cold start)."
+        ::= { hwSystem 10 }
+
+    hwSystemInfo OBJECT IDENTIFIER ::= { hwSystem 11 }
+
+    hwSysStatisticPeriod OBJECT-TYPE
+        SYNTAX      INTEGER(0..900)
+        UNITS       "seconds"
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "The statistic period. The device collects statistics
+             within the period."
+        DEFVAL { 0 }
+        ::= { hwSystemInfo 1 }
+
+    hwSysSamplePeriod OBJECT-TYPE
+        SYNTAX      INTEGER(0..300)
+        UNITS       "seconds"
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "The sampling period. The device takes samples periodically
+             for statistics collection."
+        DEFVAL { 0 }
+        ::= { hwSystemInfo 2 }
+
+    hwSysTrapResendPeriod OBJECT-TYPE
+        SYNTAX      INTEGER(0..3600)
+        UNITS       "seconds"
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "The trap resending period. If the value is zero, the trap
+             will not be re-sent."
+        DEFVAL { 0 }
+        ::= { hwSystemInfo 3 }
+
+    hwSysTrapCollectionPeriod OBJECT-TYPE
+        SYNTAX      INTEGER(0..60)
+        UNITS       "seconds"
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "The trap collecting period. If the value is zero, the trap
+             will not be re-sent."
+        DEFVAL { 0 }
+        ::= { hwSystemInfo 4 }
+
+    hwSysSnmpPort OBJECT-TYPE
+        SYNTAX      INTEGER
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "UDP port for SNMP protocol entity to receive messages except Trap-PDU."
+        ::= { hwSystemInfo 5 }
+
+    hwSysSnmpTrapPort OBJECT-TYPE
+        SYNTAX      INTEGER
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "UDP port for Trap-PDU to receive messages."
+        ::= { hwSystemInfo 6 }
+
+    hwSysNetID OBJECT-TYPE
+        SYNTAX      OCTET STRING(SIZE(0..127))
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "The system Net ID."
+        ::= { hwSystemInfo 7 }
+
+    hwSysLastSampleTime OBJECT-TYPE
+        SYNTAX      DateAndTime
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The last sample local time of the system."
+        ::= { hwSystemInfo 8 }
+
+    hwSysTrapSendNum OBJECT-TYPE
+        SYNTAX      INTEGER(0..24)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "The trap send times. If the value is zero, the trap
+             will be sent all the time if it occurs."
+        ::= { hwSystemInfo 9 }
+
+    hwSysFirstTrapTime OBJECT-TYPE
+        SYNTAX      TimeTicks
+        MAX-ACCESS  accessible-for-notify
+        STATUS      current
+        DESCRIPTION
+            "Represents the first trap time."
+        ::= { hwSystemInfo 10 }
+
+END
