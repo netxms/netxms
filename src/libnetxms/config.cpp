@@ -695,7 +695,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
       if (entry != NULL)
       {
          const TCHAR *value = CHECK_NULL(entry->getValue(entry->getValueCount() - 1));
-         switch (cfgTemplate[i].type)
+         switch(cfgTemplate[i].type)
          {
             case CT_LONG:
                if ((cfgTemplate[i].overrideIndicator != NULL) &&

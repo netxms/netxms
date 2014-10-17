@@ -58,7 +58,6 @@
 #define DEFAULT_LOG_FILE      _T("C:\\NetXMS.log")
 #define DEFAULT_DATA_DIR      _T("C:\\NetXMS\\var")
 #define DEFAULT_LIBDIR        _T("C:\\NetXMS\\lib")
-#define DEFAULT_JAVA_LIBDIR   _T("C:\\NetXMS\\lib\\java")
 #define DEFAULT_DUMP_DIR      _T("C:\\")
 
 #define LDIR_NDD              _T("\\ndd")
@@ -95,7 +94,6 @@
 #define DEFAULT_LOG_FILE      DATADIR _T("/log/netxmsd.log")
 #define DEFAULT_DATA_DIR      DATADIR
 #define DEFAULT_LIBDIR        PKGLIBDIR
-#define DEFAULT_JAVA_LIBDIR   PKGLIBDIR _T("/java")
 #define DEFAULT_DUMP_DIR      _T("/")
 
 #define LDIR_NDD              _T("/ndd")

@@ -142,8 +142,6 @@ UINT32 g_auditFlags;
 UINT32 g_slmPollingInterval;
 TCHAR g_szDataDir[MAX_PATH] = _T("");
 TCHAR g_szLibDir[MAX_PATH] = DEFAULT_LIBDIR;
-TCHAR g_szJavaLibDir[MAX_PATH] = DEFAULT_JAVA_LIBDIR;
-TCHAR NXCORE_EXPORTABLE g_szJavaPath[MAX_DB_NAME] = _T("java");
 int g_dbSyntax = DB_SYNTAX_UNKNOWN;
 UINT32 NXCORE_EXPORTABLE g_processAffinityMask = DEFAULT_AFFINITY_MASK;
 QWORD g_qwServerId;
