@@ -3,12 +3,16 @@ Name: "{app}\etc"
 Name: "{app}\etc\nxagentd.conf.d"
 Name: "{app}\var"
 
+[Tasks]
+Name: sessionagent; Description: "Install session agent (will run in every user session)"; Flags: unchecked
+
 [Registry]
 Root: HKLM; Subkey: "Software\NetXMS"; Flags: uninsdeletekeyifempty
 Root: HKLM; Subkey: "Software\NetXMS\Agent"; Flags: uninsdeletekey
 Root: HKLM; Subkey: "Software\NetXMS\Agent"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"
 Root: HKLM; Subkey: "Software\NetXMS\Agent"; ValueType: string; ValueName: "ConfigFile"; ValueData: "{app}\etc\nxagentd.conf"
 Root: HKLM; Subkey: "Software\NetXMS\Agent"; ValueType: string; ValueName: "ConfigIncludeDir"; ValueData: "{app}\etc\nxagentd.conf.d"
+Root: HKLM; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "NetXMSSessionAgent"; ValueData: """{app}\bin\nxsagent.exe"" -c ""{app}\etc\nxagentd.conf"" -H"; Flags: uninsdeletevalue; Tasks: sessionagent
 
 [Run]
 Filename: "{app}\bin\nxagentd.exe"; Parameters: "-Z ""{app}\etc\nxagentd.conf"" ""{code:GetMasterServer}"" {{syslog} ""{app}\var"" ""{app}\etc\nxagentd.conf.d"" {code:GetSubagentList}"; WorkingDir: "{app}\bin"; StatusMsg: "Creating agent's config..."; Flags: runhidden
