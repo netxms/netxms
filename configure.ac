@@ -293,13 +293,21 @@ AC_ARG_WITH(mysql,
 [AS_HELP_STRING(--with-mysql,build MySQL database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-		LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}/lib/mysql -L${withval}/mysql/lib"
-		CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}/include/mysql -I${withval}/mysql/include"
+		if find_existing_dir "${withval}/lib" "${withval}/lib/mysql" "${withval}/mysql/lib"; then
+			MYSQL_LD_RUN_PATH="$__dir$"    
+			MYSQL_LDFLAGS="-L$__dir"
+		fi
+		if find_existing_dir "${withval}/include" "${withval}/include/mysql" "${withval}/mysql/include"; then
+			MYSQL_CPPFLAGS="-I$__dir"
+		fi
 	else
-		LD_RUN_PATH="/usr/local/mysql/lib:/usr/local/mysql/lib/mysql:/usr/lib64/mysql:/usr/lib/mysql:/usr/mysql/lib:/usr/mysql/lib/mysql:/usr/local/lib/mysql:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
-		LDFLAGS="$LDFLAGS -L/usr/local/mysql/lib -L/usr/lib64/mysql -L/usr/lib/mysql -L/usr/mysql/lib -L/usr/local/lib/mysql -L/usr/local/mysql/lib/mysql -L/usr/mysql/lib/mysql"
-		CPPFLAGS="$CPPFLAGS -I/usr/local/mysql/include -I/usr/include/mysql -I/usr/mysql/include -I/usr/local/include/mysql -I/usr/local/mysql/include/mysql -I/usr/mysql/include/mysql"
+		if find_existing_dir "/usr/local/mysql/lib" "/usr/local/mysql/lib/mysql" "/usr/lib64/mysql" "/usr/lib/mysql" "/usr/mysql/lib" "/usr/mysql/lib/mysql" "/usr/local/lib/mysql"; then
+			MYSQL_LD_RUN_PATH="$__dir$"    
+			MYSQL_LDFLAGS="-L$__dir"
+		fi
+		if find_existing_dir "/usr/local/mysql/include" "/usr/include/mysql" "/usr/mysql/include" "/usr/local/include/mysql" "/usr/local/mysql/include/mysql" "/usr/mysql/include/mysql"; then
+			MYSQL_CPPFLAGS="-I$__dir"
+		fi
 	fi
 	COMPONENTS="$COMPONENTS mysql"
 	DBDRIVER_SELECTED="yes"
@@ -2240,28 +2248,29 @@ fi
 
 check_substr "$COMPONENTS" "mysql"
 if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LD_RUN_PATH="$LD_RUN_PATH"
+
+	CPPFLAGS="$CPPFLAGS $MYSQL_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $MYSQL_LDFLAGS"
+	if test "x$MYSQL_LD_RUN_PATH" != "x"; then
+		LD_RUN_PATH="${MYSQL_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+	fi
+
+	AC_CHECK_HEADER(mysql.h,,AC_MSG_ERROR([Cannot find mysql.h - check your PostgreSQL client installation]))
+
 	AC_CHECK_LIB(mysqlclient, mysql_init, [MYSQL_LIBS="-lmysqlclient"],
 		[AC_MSG_ERROR(libmysqlclient is requred for MySQL support)])
 
 	OLD_LIBS="$LIBS"
 	LIBS="$LIBS $MYSQL_LIBS"
 
-	AC_MSG_CHECKING(whether mysql clients can run)
-	AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <stdio.h>
-#include <mysql.h>    
-int main(void)
-{
-	MYSQL *a = mysql_init(NULL);
-	return 0;
-}
-		]])],[],[
-			AC_MSG_RESULT(no)
-			AC_MSG_ERROR(Your MySQL client libraries aren't properly installed)
-	],[])
-	AC_MSG_RESULT(yes)
-
 	AC_CHECK_FUNCS(mysql_real_escape_string)
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LD_RUN_PATH="$OLD_LD_RUN_PATH"
 	LIBS="$OLD_LIBS"
 fi
 
@@ -2281,6 +2290,8 @@ if test $? = 0; then
 	if test "x$PGSQL_LD_RUN_PATH" != "x"; then
 		LD_RUN_PATH="${PGSQL_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 	fi
+
+	AC_CHECK_HEADER(libpq-fe.h,,AC_MSG_ERROR([Cannot find libpq-fe.h - check your PostgreSQL client installation]))
 
 	AC_CHECK_LIB(m, floor)
 	AC_CHECK_LIB(pq, PQconnectdb, [PGSQL_LIBS="-lpq"], [
