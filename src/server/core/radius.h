@@ -277,7 +277,7 @@ enum
   PW_OPERATOR_GREATER_EQUAL,	/* >= */
   PW_OPERATOR_SET,		/* := */
   PW_OPERATOR_ADD,		/* += */
-  PW_OPERATOR_SUB,		/* -= */
+  PW_OPERATOR_SUB 		/* -= */
 } PW_OPERATORS;
 
 #endif   /* _RADIUS_H_ */
