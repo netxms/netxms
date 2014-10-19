@@ -15,7 +15,7 @@ import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.widget.TextView;
-import org.netxms.client.NodePollListener;
+import org.netxms.client.TextOutputListener;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.R;
 
@@ -78,9 +78,9 @@ public class NodePollerActivity extends AbstractClientActivity
 			{
 				try
 				{
-					service.getSession().pollNode(nodeId, pollType, new NodePollListener() {
+					service.getSession().pollNode(nodeId, pollType, new TextOutputListener() {
 						@Override
-						public void onPollerMessage(final String text)
+						public void messageReceived(final String text)
 						{
 							runOnUiThread(new Runnable() {
 								@Override
