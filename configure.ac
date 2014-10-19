@@ -26,6 +26,17 @@ check_substr()
 	return 1
 }
 
+find_existing_dir()
+{
+	for d in "$@"; do
+		if test -d "$d"; then
+			__dir="$d"
+			return 0;
+		fi
+	done
+	return 1
+}
+
 
 #--------------------------------------------------------------------
 # Initialize variables
@@ -298,13 +309,21 @@ AC_ARG_WITH(pgsql,
 [AS_HELP_STRING(--with-pgsql,build PostgreSQL database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"    
-		LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}/lib/pgsql -L${withval}/lib/postgresql -L${withval}/pgsql/lib -L${withval}/postgresql/lib"
-		CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}/include/pgsql -I${withval}/include/postgresql -I${withval}/pgsql/include -I${withval}/postgresql/include"
+		if find_existing_dir "${withval}/lib" "${withval}/lib/pgsql" "${withval}/lib/postgresql" "${withval}/pgsql/lib" "${withval}/postgresql/lib"; then
+			PGSQL_LD_RUN_PATH="$__dir$"    
+			PGSQL_LDFLAGS="-L$__dir"
+		fi
+		if find_existing_dir "${withval}/include" "${withval}/include/pgsql" "${withval}/include/postgresql" "${withval}/pgsql/include" "${withval}/postgresql/include"; then
+			PGSQL_CPPFLAGS="-I$__dir"
+		fi
 	else
-		LD_RUN_PATH="/usr/local/pgsql/lib:/usr/local/pgsql/lib/pgsql:/usr/lib64/pgsql:/usr/lib/pgsql:/usr/pgsql/lib:/usr/pgsql/lib/pgsql:/usr/local/lib/pgsql:/usr/local/postgresql/lib:/usr/local/postgresql/lib/postgresql:/usr/lib/postgresql:/usr/postgresql/lib:/usr/postgresql/lib/postgresql:/usr/local/lib/postgresql:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
-		LDFLAGS="$LDFLAGS -L/usr/local/pgsql/lib -L/usr/lib64/pgsql -L/usr/lib/pgsql -L/usr/pgsql/lib -L/usr/local/lib/pgsql -L/usr/local/pgsql/lib/pgsql -L/usr/pgsql/lib/pgsql -L/usr/local/postgresql/lib -L/usr/lib/postgresql -L/usr/postgresql/lib -L/usr/local/lib/postgresql -L/usr/local/postgresql/lib/postgresql -L/usr/postgresql/lib/postgresql"
-		CPPFLAGS="$CPPFLAGS -I/usr/local/pgsql/include -I/usr/include/pgsql -I/usr/pgsql/include -I/usr/local/include/pgsql -I/usr/local/pgsql/include/pgsql -I/usr/pgsql/include/pgsql -I/usr/local/postgresql/include -I/usr/include/postgresql -I/usr/postgresql/include -I/usr/local/include/postgresql -I/usr/local/postgresql/include/postgresql -I/usr/postgresql/include/postgresql"
+		if find_existing_dir "/usr/local/pgsql/lib" "/usr/local/pgsql/lib/pgsql" "/usr/lib64/pgsql" "/usr/lib/pgsql" "/usr/pgsql/lib" "/usr/pgsql/lib/pgsql" "/usr/local/lib/pgsql" "/usr/local/postgresql/lib" "/usr/local/postgresql/lib/postgresql" "/usr/lib/postgresql" "/usr/postgresql/lib" "/usr/postgresql/lib/postgresql" "/usr/local/lib/postgresql"; then
+			PGSQL_LD_RUN_PATH="$__dir$"    
+			PGSQL_LDFLAGS="-L$__dir"
+		fi
+		if find_existing_dir "/usr/local/pgsql/include" "/usr/include/pgsql" "/usr/pgsql/include" "/usr/local/include/pgsql" "/usr/local/pgsql/include/pgsql" "/usr/pgsql/include/pgsql" "/usr/local/postgresql/include" "/usr/include/postgresql" "/usr/postgresql/include" "/usr/local/include/postgresql" "/usr/local/postgresql/include/postgresql" "/usr/postgresql/include/postgresql"; then
+			PGSQL_CPPFLAGS="-I$__dir"
+		fi
 	fi
 	COMPONENTS="$COMPONENTS pgsql"
 	DBDRIVER_SELECTED="yes"
@@ -2253,27 +2272,36 @@ fi
 
 check_substr "$COMPONENTS" "pgsql"
 if test $? = 0; then
-	AC_CHECK_LIB(m, floor)
-	AC_CHECK_LIB(pq, PQconnectdb, [PGSQL_LIBS="-lpq"],
-		[AC_MSG_ERROR(libpq is required for PostgreSQL support)])        
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LD_RUN_PATH="$LD_RUN_PATH"
 
-	AC_MSG_CHECKING(whether postgresql clients can run)
-	OLD_LIBS="$LIBS"
-	LIBS="$LIBS $PGSQL_LIBS"
-	AC_RUN_IFELSE([AC_LANG_SOURCE([[
-			#include <stdio.h>
-			#include <libpq-fe.h>
-			int main(void)
-			{
-				PGconn *a = PQconnectdb("");
-				return 0;
-			}
-		]])],[AC_MSG_RESULT(yes)],[
-			AC_MSG_RESULT(no)
-			AC_MSG_ERROR(Your PostgreSQL client libraries are not properly installed)
-		],[])    
-	LIBS="$OLD_LIBS"
-	AC_CHECK_LIB(pq, PQfformat, [ AC_DEFINE(HAVE_PQFFORMAT, 1, PQfformat not exist in 7.3) ])
+	CPPFLAGS="$CPPFLAGS $PGSQL_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $PGSQL_LDFLAGS"
+	if test "x$PGSQL_LD_RUN_PATH" != "x"; then
+		LD_RUN_PATH="${PGSQL_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+	fi
+
+	AC_CHECK_LIB(m, floor)
+	AC_CHECK_LIB(pq, PQconnectdb, [PGSQL_LIBS="-lpq"], [
+		if test "x$PLATFORM" = "xSunOS"; then
+			PGSQL_LDFLAGS="$PGSQL_LDFLAGS/sparcv9"
+			LDFLAGS="$OLD_LDFLAGS $PGSQL_LDFLAGS"
+			if test "x$PGSQL_LD_RUN_PATH" != "x"; then
+				PGSQL_LD_RUN_PATH="$PGSQL_LD_RUN_PATH/sparcv9"
+				LD_RUN_PATH="${PGSQL_LD_RUN_PATH}${OLD_LD_RUN_PATH:+:}${OLD_LD_RUN_PATH}"
+			fi
+			unset ac_cv_lib_pq_PQconnectdb
+			AC_CHECK_LIB(pq, PQconnectdb, [PGSQL_LIBS="-lpq"], [
+				AC_MSG_ERROR(libpq is required for PostgreSQL support)])        
+		else
+			AC_MSG_ERROR(libpq is required for PostgreSQL support)
+		fi
+	])
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LD_RUN_PATH="$OLD_LD_RUN_PATH"
 fi
 
 
@@ -2288,7 +2316,7 @@ if test $? = 0; then
 	OLD_LD_RUN_PATH="$LD_RUN_PATH"
 
 	CPPFLAGS="$CPPFLAGS $ODBC_CPPFLAGS"
-	LDFLAGS="$CPPFLAGS $ODBC_LDFLAGS"
+	LDFLAGS="$LDFLAGS $ODBC_LDFLAGS"
 	if test "x$ODBC_LD_RUN_PATH" != "x"; then
 		LD_RUN_PATH="${ODBC_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 	fi
@@ -2317,7 +2345,7 @@ if test $? = 0; then
 	OLD_LD_RUN_PATH="$LD_RUN_PATH"
 
 	CPPFLAGS="$CPPFLAGS $ORACLE_CPPFLAGS"
-	LDFLAGS="$CPPFLAGS $ORACLE_LDFLAGS"
+	LDFLAGS="$LDFLAGS $ORACLE_LDFLAGS"
 	if test "x$ORACLE_LD_RUN_PATH" != "x"; then
 		LD_RUN_PATH="${ORACLE_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 	fi
@@ -2375,8 +2403,8 @@ fi
 check_substr "$COMPONENTS" "java"
 if test $? = 0; then
 	AC_CHECK_HEADER(jni.h,,AC_MSG_ERROR([*** Cannot find jni.h - check your JDK installation ***]))
-#	AC_CHECK_LIB(jvm, SQLAllocHandle, [JAVA_LIBS="-ljvm"],
-#		[AC_MSG_ERROR(libjvm is required for Java support)])
+	AC_CHECK_LIB(jvm, SQLAllocHandle, [JAVA_LIBS="-ljvm"],
+		[AC_MSG_ERROR(libjvm is required for Java support)])
 fi
 
 
