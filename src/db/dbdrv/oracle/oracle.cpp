@@ -385,7 +385,6 @@ extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQu
 		stmt->bindings = new Array(8, 8, false);
 		stmt->buffers = new Array(8, 8, true);
 		OCIHandleAlloc(pConn->handleEnv, (void **)&stmt->handleError, OCI_HTYPE_ERROR, 0, NULL);
-      OCIAttrSet(pConn->handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, sizeof(ub4), OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
 		*pdwError = DBERR_SUCCESS;
 	}
 	else
@@ -813,6 +812,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(ORACLE_CONN *pConn, ORACLE_STAT
 	ORACLE_RESULT *pResult = NULL;
 
 	MutexLock(pConn->mutexQueryLock);
+   OCIAttrSet(pConn->handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, sizeof(ub4), OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
 	if (OCIStmtExecute(pConn->handleService, stmt->handleStmt, pConn->handleError,
 	                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
 	{
