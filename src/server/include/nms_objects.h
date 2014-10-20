@@ -1482,7 +1482,7 @@ public:
    Container(const TCHAR *pszName, UINT32 dwCategory);
    virtual ~Container();
 
-   virtual int Type(void) { return OBJECT_CONTAINER; }
+   virtual int getObjectClass() { return OBJECT_CONTAINER; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -1608,7 +1608,7 @@ public:
    Network();
    virtual ~Network();
 
-   virtual int Type(void) { return OBJECT_NETWORK; }
+   virtual int getObjectClass() { return OBJECT_NETWORK; }
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
 
 	virtual bool showThresholdSummary();
