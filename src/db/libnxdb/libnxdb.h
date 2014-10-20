@@ -43,11 +43,13 @@ struct db_driver_t
 	bool m_logSqlErrors;
 	bool m_dumpSql;
 	int m_reconnect;
+   int m_defaultPrefetchLimit;
 	MUTEX m_mutexReconnect;
 	HMODULE m_handle;
 	void *m_userArg;
 	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *, const char *, WCHAR *);
 	void (* m_fpDrvDisconnect)(DBDRV_CONNECTION);
+	bool (* m_fpDrvSetPrefetchLimit)(DBDRV_CONNECTION, int);
 	DBDRV_STATEMENT (* m_fpDrvPrepare)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
 	void (* m_fpDrvFreeStatement)(DBDRV_STATEMENT);
 	void (* m_fpDrvBind)(DBDRV_STATEMENT, int, int, int, void *, int);

@@ -106,11 +106,13 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 														void *userArg);
 void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver);
 const char LIBNXDB_EXPORTABLE *DBGetDriverName(DB_DRIVER driver);
+void LIBNXDB_EXPORTABLE DBSetDefaultPrefetchLimit(DB_DRIVER driver, int limit);
 
 DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
                                        const TCHAR *login, const TCHAR *password, const TCHAR *schema, TCHAR *errorText);
 void LIBNXDB_EXPORTABLE DBDisconnect(DB_HANDLE hConn);
 void LIBNXDB_EXPORTABLE DBEnableReconnect(DB_HANDLE hConn, bool enabled);
+bool LIBNXDB_EXPORTABLE DBSetPrefetchLimit(DB_HANDLE hConn, int limit);
 
 DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepare(DB_HANDLE hConn, const TCHAR *szQuery);
 DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText);

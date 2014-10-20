@@ -92,6 +92,8 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
          hConn->m_server = (server == NULL) ? NULL : _tcsdup(server);
          hConn->m_schema = (schema == NULL) ? NULL : _tcsdup(schema);
 #endif
+         if (driver->m_fpDrvSetPrefetchLimit != NULL)
+            driver->m_fpDrvSetPrefetchLimit(hDrvConn, driver->m_defaultPrefetchLimit);
 		   __DBDbgPrintf(4, _T("New DB connection opened: handle=%p"), hConn);
       }
       else
@@ -163,7 +165,11 @@ static void DBReconnect(DB_HANDLE hConn)
 		hConn->m_connection = hConn->m_driver->m_fpDrvConnect(hConn->m_server, hConn->m_login,
                                                             hConn->m_password, hConn->m_dbName, hConn->m_schema, errorText);
       if (hConn->m_connection != NULL)
+      {
+         if (hConn->m_driver->m_fpDrvSetPrefetchLimit != NULL)
+            hConn->m_driver->m_fpDrvSetPrefetchLimit(hConn->m_connection, hConn->m_driver->m_defaultPrefetchLimit);
          break;
+      }
       if (nCount == 0)
       {
 			MutexLock(hConn->m_driver->m_mutexReconnect);
@@ -182,6 +188,24 @@ static void DBReconnect(DB_HANDLE hConn)
 			hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_RESTORED, NULL, NULL, hConn->m_driver->m_userArg);
       MutexUnlock(hConn->m_driver->m_mutexReconnect);
    }
+}
+
+/**
+ * Set default prefetch limit
+ */
+void LIBNXDB_EXPORTABLE DBSetDefaultPrefetchLimit(DB_DRIVER driver, int limit)
+{
+   driver->m_defaultPrefetchLimit = limit;
+}
+
+/**
+ * Set prefetch limit
+ */
+bool LIBNXDB_EXPORTABLE DBSetPrefetchLimit(DB_HANDLE hConn, int limit)
+{
+   if (hConn->m_driver->m_fpDrvSetPrefetchLimit == NULL)
+      return false;  // Not supported by driver
+   return hConn->m_driver->m_fpDrvSetPrefetchLimit(hConn->m_connection, limit);
 }
 
 /**

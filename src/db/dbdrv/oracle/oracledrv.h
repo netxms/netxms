@@ -64,6 +64,7 @@ typedef struct
 	ORACLE_FETCH_BUFFER *pBuffers;
 	int nCols;
 	char **columnNames;
+   ub4 prefetchLimit;
 } ORACLE_CONN;
 
 typedef struct

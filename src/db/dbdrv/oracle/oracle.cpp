@@ -222,6 +222,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 					pConn->mutexQueryLock = MutexCreate();
 					pConn->nTransLevel = 0;
 					pConn->szLastError[0] = 0;
+               pConn->prefetchLimit = 10;
 
 					if ((schema != NULL) && (schema[0] != 0))
 					{
@@ -279,6 +280,15 @@ extern "C" void EXPORT DrvDisconnect(ORACLE_CONN *pConn)
      	MutexDestroy(pConn->mutexQueryLock);
       free(pConn);
 	}
+}
+
+/**
+ * Set prefetch limit
+ */
+extern "C" void EXPORT DrvSetPrefetchLimit(ORACLE_CONN *pConn, int limit)
+{
+	if (pConn != NULL)
+      pConn->prefetchLimit = limit;
 }
 
 /**
@@ -375,6 +385,7 @@ extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQu
 		stmt->bindings = new Array(8, 8, false);
 		stmt->buffers = new Array(8, 8, true);
 		OCIHandleAlloc(pConn->handleEnv, (void **)&stmt->handleError, OCI_HTYPE_ERROR, 0, NULL);
+      OCIAttrSet(pConn->handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, sizeof(ub4), OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
 		*pdwError = DBERR_SUCCESS;
 	}
 	else
@@ -763,6 +774,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, D
 	if (OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
 	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
 	{
+      OCIAttrSet(handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, sizeof(ub4), OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
 		if (OCIStmtExecute(pConn->handleService, handleStmt, pConn->handleError,
 		                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
 		{
@@ -922,6 +934,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *p
 	if (OCIStmtPrepare2(pConn->handleService, &pConn->handleStmt, pConn->handleError, (text *)ucs2Query,
 	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
 	{
+      OCIAttrSet(pConn->handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, sizeof(ub4), OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
 		if (OCIStmtExecute(pConn->handleService, pConn->handleStmt, pConn->handleError,
 		                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
 		{
