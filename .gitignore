@@ -66,6 +66,7 @@ target
 /contrib/startup/ubuntu/nxagentd
 /doc/doxygen
 /eclipse
+/eclipse.cpp
 /libtool
 /m4
 /packages/linux/debian/6/netxms-agent
