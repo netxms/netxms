@@ -138,9 +138,9 @@ bool NXSL_Program::addFunction(const char *pszName, UINT32 dwAddr, char *pszErro
 #endif
    for(int i = 0; i < m_functions->size(); i++)
 #ifdef UNICODE
-      if (!wcscmp(m_functions->get(i)->m_szName, pwszName))
+      if (!wcscmp(m_functions->get(i)->m_name, pwszName))
 #else
-      if (!strcmp(m_functions->get(i)->m_szName, pszName))
+      if (!strcmp(m_functions->get(i)->m_name, pszName))
 #endif
       {
          sprintf(pszError, "Duplicate function name: \"%s\"", pszName);
@@ -151,10 +151,10 @@ bool NXSL_Program::addFunction(const char *pszName, UINT32 dwAddr, char *pszErro
       }
    NXSL_Function *f = new NXSL_Function;
 #ifdef UNICODE
-   nx_strncpy(f->m_szName, pwszName, MAX_FUNCTION_NAME);
+   nx_strncpy(f->m_name, pwszName, MAX_FUNCTION_NAME);
 	free(pwszName);
 #else
-   nx_strncpy(f->m_szName, pszName, MAX_FUNCTION_NAME);
+   nx_strncpy(f->m_name, pszName, MAX_FUNCTION_NAME);
 #endif
    f->m_dwAddr = (dwAddr == INVALID_ADDRESS) ? m_instructionSet->size() : dwAddr;
    m_functions->add(f);
@@ -187,7 +187,7 @@ void NXSL_Program::resolveFunctions()
          for(int j = 0; j < m_functions->size(); j++)
          {
             NXSL_Function *f = m_functions->get(j);
-            if (!_tcscmp(f->m_szName, instr->m_operand.m_pszString))
+            if (!_tcscmp(f->m_name, instr->m_operand.m_pszString))
             {
                free(instr->m_operand.m_pszString);
                instr->m_operand.m_dwAddr = f->m_dwAddr;

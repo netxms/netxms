@@ -150,7 +150,7 @@ static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 	Interface *ifc = node->findInterface(argv[1]->getValueAsUInt32(), INADDR_ANY);
 	if (ifc != NULL)
 	{
-		*ppResult = new NXSL_Value(ifc->Name());
+		*ppResult = new NXSL_Value(ifc->getName());
 	}
 	else
 	{
@@ -218,7 +218,7 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 	if (argv[1]->isInteger())
 	{
 		NetObj *o = FindObjectById(argv[1]->getValueAsUInt32());
-		if ((o != NULL) && (o->Type() == OBJECT_NODE))
+		if ((o != NULL) && (o->getObjectClass() == OBJECT_NODE))
 			node = (Node *)o;
 	}
 	else
@@ -230,7 +230,7 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 	{
 		if (g_flags & AF_CHECK_TRUSTED_NODES)
 		{
-			if ((currNode != NULL) && (node->isTrustedNode(currNode->Id())))
+			if ((currNode != NULL) && (node->isTrustedNode(currNode->getId())))
 			{
 				*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node));
 			}
@@ -239,8 +239,8 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 				// No access, return null
 				*ppResult = new NXSL_Value;
 				DbgPrintf(4, _T("NXSL::FindNodeObject(%s [%d], '%s'): access denied for node %s [%d]"),
-				          (currNode != NULL) ? currNode->Name() : _T("null"), (currNode != NULL) ? currNode->Id() : 0,
-							 argv[1]->getValueAsCString(), node->Name(), node->Id());
+				          (currNode != NULL) ? currNode->getName() : _T("null"), (currNode != NULL) ? currNode->getId() : 0,
+							 argv[1]->getValueAsCString(), node->getName(), node->getId());
 			}
 		}
 		else
@@ -298,9 +298,9 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 
 				currNode = (Node *)o->getData();
 			}
-			if ((currNode != NULL) && (object->isTrustedNode(currNode->Id())))
+			if ((currNode != NULL) && (object->isTrustedNode(currNode->getId())))
 			{
-				*ppResult = new NXSL_Value(new NXSL_Object((object->Type() == OBJECT_NODE) ? (NXSL_Class *)&g_nxslNodeClass : (NXSL_Class *)&g_nxslNetObjClass, object));
+				*ppResult = new NXSL_Value(new NXSL_Object((object->getObjectClass() == OBJECT_NODE) ? (NXSL_Class *)&g_nxslNodeClass : (NXSL_Class *)&g_nxslNetObjClass, object));
 			}
 			else
 			{
@@ -308,13 +308,13 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 				*ppResult = new NXSL_Value;
 				DbgPrintf(4, _T("NXSL::FindObject('%s', %s [%d]): access denied for node %s [%d]"),
 				          argv[0]->getValueAsCString(),
-				          (currNode != NULL) ? currNode->Name() : _T("null"), (currNode != NULL) ? currNode->Id() : 0,
-							 object->Name(), object->Id());
+				          (currNode != NULL) ? currNode->getName() : _T("null"), (currNode != NULL) ? currNode->getId() : 0,
+							 object->getName(), object->getId());
 			}
 		}
 		else
 		{
-			*ppResult = new NXSL_Value(new NXSL_Object((object->Type() == OBJECT_NODE) ? (NXSL_Class *)&g_nxslNodeClass : (NXSL_Class *)&g_nxslNetObjClass, object));
+			*ppResult = new NXSL_Value(new NXSL_Object((object->getObjectClass() == OBJECT_NODE) ? (NXSL_Class *)&g_nxslNodeClass : (NXSL_Class *)&g_nxslNetObjClass, object));
 		}
 	}
 	else
@@ -512,7 +512,7 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 		for(int i = 3; (i < argc) && (eargc < 32); i++)
 			plist[eargc++] = argv[i]->getValueAsCString();
 		format[eargc] = 0;
-		success = PostEventWithTag(eventCode, node->Id(), userTag, format,
+		success = PostEventWithTag(eventCode, node->getId(), userTag, format,
 		                           plist[0], plist[1], plist[2], plist[3],
 		                           plist[4], plist[5], plist[6], plist[7],
 		                           plist[8], plist[9], plist[10], plist[11],
@@ -552,7 +552,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *parent = (NetObj*)obj->getData();
-	if (parent->Type() != OBJECT_CONTAINER && parent->Type() != OBJECT_SERVICEROOT)
+	if (parent->getObjectClass() != OBJECT_CONTAINER && parent->getObjectClass() != OBJECT_SERVICEROOT)
 		return NXSL_ERR_BAD_CLASS;
 
 	if (!argv[1]->isString() || !argv[2]->isString())
@@ -597,7 +597,7 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *parent = (NetObj*)obj->getData();
-	if (parent->Type() != OBJECT_CONTAINER && parent->Type() != OBJECT_SERVICEROOT)
+	if (parent->getObjectClass() != OBJECT_CONTAINER && parent->getObjectClass() != OBJECT_SERVICEROOT)
 		return NXSL_ERR_BAD_CLASS;
 
 	if (!argv[1]->isString())
@@ -663,7 +663,7 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netobj = (NetObj*)obj->getData();
-	if (netobj->Type() != OBJECT_CONTAINER)
+	if (netobj->getObjectClass() != OBJECT_CONTAINER)
 		return NXSL_ERR_BAD_CLASS;
 
 	NXSL_Object *obj2 = argv[1]->getValueAsObject();
@@ -672,10 +672,10 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *child = (NetObj*)obj2->getData();
-	if (child->Type() != OBJECT_CONTAINER && child->Type() != OBJECT_SUBNET && child->Type() != OBJECT_NODE)
+	if (child->getObjectClass() != OBJECT_CONTAINER && child->getObjectClass() != OBJECT_SUBNET && child->getObjectClass() != OBJECT_NODE)
 		return NXSL_ERR_BAD_CLASS;
 
-	if (child->isChild(netobj->Id())) // prevent loops
+	if (child->isChild(netobj->getId())) // prevent loops
 		return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
 	netobj->AddChild(child);
@@ -707,7 +707,7 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netobj = (NetObj*)obj->getData();
-	if (netobj->Type() != OBJECT_CONTAINER)
+	if (netobj->getObjectClass() != OBJECT_CONTAINER)
 		return NXSL_ERR_BAD_CLASS;
 
 	NXSL_Object *obj2 = argv[1]->getValueAsObject();
@@ -716,7 +716,7 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *child = (NetObj*)obj2->getData();
-	if (child->Type() != OBJECT_CONTAINER && child->Type() != OBJECT_SUBNET && child->Type() != OBJECT_NODE)
+	if (child->getObjectClass() != OBJECT_CONTAINER && child->getObjectClass() != OBJECT_SUBNET && child->getObjectClass() != OBJECT_NODE)
 		return NXSL_ERR_BAD_CLASS;
 
 	netobj->DeleteChild(child);
@@ -921,7 +921,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 	pdu->bindVariable(new SNMP_Variable(varName, nameLen));
 
 	SNMP_PDU *rspPDU;
-   result = trans->doRequest(pdu, &rspPDU, g_dwSNMPTimeout, 3 /* num retries */);
+   result = trans->doRequest(pdu, &rspPDU, g_snmpTimeout, 3 /* num retries */);
    if (result == SNMP_ERR_SUCCESS)
    {
       if ((rspPDU->getNumVariables() > 0) && (rspPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
@@ -1043,7 +1043,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 
 	// Send request and process response
 	UINT32 snmpResult;
-	if ((snmpResult = trans->doRequest(request, &response, g_dwSNMPTimeout, 3)) == SNMP_ERR_SUCCESS)
+	if ((snmpResult = trans->doRequest(request, &response, g_snmpTimeout, 3)) == SNMP_ERR_SUCCESS)
 	{
 		if (response->getErrorCode() != 0)
 		{
@@ -1113,7 +1113,7 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
    {
       rqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, requestId++, trans->getSnmpVersion());
       rqPDU->bindVariable(new SNMP_Variable(name, nameLen));
-      result = trans->doRequest(rqPDU, &rspPDU, g_dwSNMPTimeout, 3);
+      result = trans->doRequest(rqPDU, &rspPDU, g_snmpTimeout, 3);
 
       // Analyze response
       if (result == SNMP_ERR_SUCCESS)

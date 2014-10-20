@@ -47,7 +47,7 @@ void SlmCheck::init()
 
 SlmCheck::SlmCheck() : NetObj()
 {
-	_tcscpy(m_szName, _T("Default"));
+	_tcscpy(m_name, _T("Default"));
 	m_type = SlmCheck::check_script;
 	m_script = NULL;
 	m_pCompiledScript = NULL;
@@ -64,7 +64,7 @@ SlmCheck::SlmCheck() : NetObj()
 SlmCheck::SlmCheck(const TCHAR *name, bool isTemplate) : NetObj()
 {
    m_isHidden = true;
-	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
+	nx_strncpy(m_name, name, MAX_OBJECT_NAME);
 	m_type = SlmCheck::check_script;
 	m_script = NULL;
 	m_pCompiledScript = NULL;
@@ -83,13 +83,13 @@ SlmCheck::SlmCheck(const TCHAR *name, bool isTemplate) : NetObj()
 SlmCheck::SlmCheck(SlmCheck *tmpl) : NetObj()
 {
    m_isHidden = true;
-	nx_strncpy(m_szName, tmpl->m_szName, MAX_OBJECT_NAME);
+	nx_strncpy(m_name, tmpl->m_name, MAX_OBJECT_NAME);
 	m_type = tmpl->m_type;
 	m_script = ((m_type == check_script) && (tmpl->m_script != NULL)) ? _tcsdup(tmpl->m_script) : NULL;
 	m_threshold = NULL;
 	m_reason[0] = 0;
 	m_isTemplate = false;
-	m_templateId = tmpl->Id();
+	m_templateId = tmpl->getId();
 	m_currentTicketId = 0;
 	compileScript();
 }
@@ -113,15 +113,15 @@ SlmCheck::~SlmCheck()
 
 void SlmCheck::updateFromTemplate(SlmCheck *tmpl)
 {
-	LockData();
-	tmpl->LockData();
-	DbgPrintf(4, _T("Updating service check %s [%d] from service check template template %s [%d]"), m_szName, m_dwId, tmpl->Name(), tmpl->Id());
+	lockProperties();
+	tmpl->lockProperties();
+	DbgPrintf(4, _T("Updating service check %s [%d] from service check template template %s [%d]"), m_name, m_id, tmpl->getName(), tmpl->getId());
 
 	delete m_threshold;
 	safe_free(m_script);
 	delete m_pCompiledScript;
 
-	nx_strncpy(m_szName, tmpl->m_szName, MAX_OBJECT_NAME);
+	nx_strncpy(m_name, tmpl->m_name, MAX_OBJECT_NAME);
 	m_type = tmpl->m_type;
 	m_script = ((m_type == check_script) && (tmpl->m_script != NULL)) ? _tcsdup(tmpl->m_script) : NULL;
 	m_threshold = NULL;
@@ -129,10 +129,10 @@ void SlmCheck::updateFromTemplate(SlmCheck *tmpl)
 	m_isTemplate = false;
 	compileScript();
 
-	tmpl->UnlockData();
+	tmpl->unlockProperties();
 
-	Modify();
-	UnlockData();
+	setModified();
+	unlockProperties();
 }
 
 /**
@@ -147,18 +147,18 @@ void SlmCheck::compileScript()
 
 		m_pCompiledScript = NXSLCompileAndCreateVM(m_script, errorMsg, errorMsgLen, new NXSL_ServerEnv);
 		if (m_pCompiledScript == NULL)
-			nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, errorMsg);
+			nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, errorMsg);
 	}
 }
 
 /**
  * Create object from database data
  */
-BOOL SlmCheck::CreateFromDB(UINT32 id)
+BOOL SlmCheck::loadFromDatabase(UINT32 id)
 {
 	UINT32 thresholdId;
 
-	m_dwId = id;
+	m_id = id;
 
 	if (!loadCommonProperties())
 		return FALSE;
@@ -169,7 +169,7 @@ BOOL SlmCheck::CreateFromDB(UINT32 id)
 		DbgPrintf(4, _T("Cannot prepare select from slm_checks"));
 		return FALSE;
 	}
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
 	if (hResult == NULL)
@@ -182,7 +182,7 @@ BOOL SlmCheck::CreateFromDB(UINT32 id)
 	{
 		DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
-		DbgPrintf(4, _T("Cannot load check object %ld - record missing"), (long)m_dwId);
+		DbgPrintf(4, _T("Cannot load check object %ld - record missing"), (long)m_id);
 		return FALSE;
 	}
 
@@ -215,20 +215,20 @@ BOOL SlmCheck::CreateFromDB(UINT32 id)
 // Save service to database
 //
 
-BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
+BOOL SlmCheck::saveToDatabase(DB_HANDLE hdb)
 {
 	BOOL bNewObject = TRUE;
 	BOOL ret = FALSE;
 	DB_RESULT hResult = NULL;
 
-	LockData();
+	lockProperties();
 
 	saveCommonProperties(hdb);
    
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id FROM slm_checks WHERE id=?"));
 	if (hStmt == NULL)
 		goto finish;
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 	hResult = DBSelectPrepared(hStmt);
 	if (hResult != NULL)
 	{
@@ -242,7 +242,7 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 		_T("UPDATE slm_checks SET id=?,type=?,content=?,threshold_id=?,reason=?,is_template=?,template_id=?,current_ticket=? WHERE id=?"));
 	if (hStmt == NULL)	
 		goto finish;
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, UINT32(m_type));
 	DBBind(hStmt, 3, DB_SQLTYPE_TEXT, CHECK_NULL_EX(m_script), DB_BIND_STATIC);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_threshold ? m_threshold->getId() : 0);
@@ -251,7 +251,7 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_templateId);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_currentTicketId);
 	if (!bNewObject)
-		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
 	
 	if (!DBExecute(hStmt))
 	{
@@ -267,16 +267,16 @@ BOOL SlmCheck::SaveToDB(DB_HANDLE hdb)
 finish:
 	// Unlock object and clear modification flag
 	m_isModified = false;
-	UnlockData();
+	unlockProperties();
 	return ret;
 }
 
 /**
  * Delete object from database
  */
-bool SlmCheck::deleteFromDB(DB_HANDLE hdb)
+bool SlmCheck::deleteFromDatabase(DB_HANDLE hdb)
 {
-	bool success = NetObj::deleteFromDB(hdb);
+	bool success = NetObj::deleteFromDatabase(hdb);
 	if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM slm_checks WHERE id=?"));
 	return success;
@@ -285,9 +285,9 @@ bool SlmCheck::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void SlmCheck::CreateMessage(CSCPMessage *pMsg)
+void SlmCheck::fillMessage(CSCPMessage *pMsg)
 {
-	NetObj::CreateMessage(pMsg);
+	NetObj::fillMessage(pMsg);
 	pMsg->SetVariable(VID_SLMCHECK_TYPE, UINT32(m_type));
 	pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_script));
 	pMsg->SetVariable(VID_REASON, m_reason);
@@ -297,15 +297,13 @@ void SlmCheck::CreateMessage(CSCPMessage *pMsg)
 		m_threshold->createMessage(pMsg, VID_THRESHOLD_BASE);
 }
 
-
-//
-// Modify object from message
-//
-
-UINT32 SlmCheck::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+/**
+ * Modify object from message
+ */
+UINT32 SlmCheck::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
 	if (!bAlreadyLocked)
-		LockData();
+		lockProperties();
 
 	if (pRequest->isFieldExist(VID_SLMCHECK_TYPE))
 		m_type = CheckType(pRequest->GetVariableLong(VID_SLMCHECK_TYPE));
@@ -324,7 +322,7 @@ UINT32 SlmCheck::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_threshold->updateFromMessage(pRequest, VID_THRESHOLD_BASE);
 	}
 
-	return NetObj::ModifyFromMessage(pRequest, TRUE);
+	return NetObj::modifyFromMessage(pRequest, TRUE);
 }
 
 
@@ -337,7 +335,7 @@ static void UpdateFromTemplateCallback(NetObj *object, void *data)
 	SlmCheck *check = (SlmCheck *)object;
 	SlmCheck *tmpl = (SlmCheck *)data;
 
-	if (check->getTemplateId() == tmpl->Id())
+	if (check->getTemplateId() == tmpl->getId())
 		check->updateFromTemplate(tmpl);
 }
 
@@ -363,7 +361,7 @@ void SlmCheck::setScript(const TCHAR *script)
 
 			m_pCompiledScript = NXSLCompileAndCreateVM(m_script, error, 256, new NXSL_ServerEnv);
 			if (m_pCompiledScript == NULL)
-				nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, error);
+				nxlog_write(MSG_SLMCHECK_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, error);
 		}
 		else
 		{
@@ -375,7 +373,7 @@ void SlmCheck::setScript(const TCHAR *script)
 		delete_and_null(m_pCompiledScript);
 		safe_free_and_null(m_script);
 	}
-	Modify();
+	setModified();
 }
 
 /**
@@ -406,15 +404,15 @@ void SlmCheck::execute()
 						NXSL_Variable *reason = pGlobals->find(_T("$reason"));
 						setReason((reason != NULL) ? reason->getValue()->getValueAsCString() : _T("Check script returns error"));
 					}
-					DbgPrintf(6, _T("SlmCheck::execute: %s [%ld] return value %d"), m_szName, (long)m_dwId, pValue->getValueAsInt32());
+					DbgPrintf(6, _T("SlmCheck::execute: %s [%ld] return value %d"), m_name, (long)m_id, pValue->getValueAsInt32());
 				}
 				else
 				{
 					TCHAR buffer[1024];
 
-					_sntprintf(buffer, 1024, _T("ServiceCheck::%s::%d"), m_szName, m_dwId);
-					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_pCompiledScript->getErrorText(), m_dwId);
-					nxlog_write(MSG_SLMCHECK_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, m_pCompiledScript->getErrorText());
+					_sntprintf(buffer, 1024, _T("ServiceCheck::%s::%d"), m_name, m_id);
+					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_pCompiledScript->getErrorText(), m_id);
+					nxlog_write(MSG_SLMCHECK_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, m_pCompiledScript->getErrorText());
 					m_iStatus = STATUS_UNKNOWN;
 				}
 				delete pGlobals;
@@ -426,21 +424,21 @@ void SlmCheck::execute()
 			break;
 		case check_threshold:
 		default:
-			DbgPrintf(4, _T("SlmCheck::execute() called for undefined check type, check %s/%ld"), m_szName, (long)m_dwId);
+			DbgPrintf(4, _T("SlmCheck::execute() called for undefined check type, check %s/%ld"), m_name, (long)m_id);
 			m_iStatus = STATUS_UNKNOWN;
 			break;
 	}
 
-	LockData();
+	lockProperties();
 	if (m_iStatus != oldStatus)
 	{
 		if (m_iStatus == STATUS_CRITICAL)
 			insertTicket();
 		else
 			closeTicket();
-		Modify();
+		setModified();
 	}
-	UnlockData();
+	unlockProperties();
 }
 
 /**
@@ -448,7 +446,7 @@ void SlmCheck::execute()
  */
 bool SlmCheck::insertTicket()
 {
-	DbgPrintf(4, _T("SlmCheck::insertTicket() called for %s [%d], reason='%s'"), m_szName, (int)m_dwId, m_reason);
+	DbgPrintf(4, _T("SlmCheck::insertTicket() called for %s [%d], reason='%s'"), m_name, (int)m_id, m_reason);
 
 	if (m_iStatus == STATUS_NORMAL)
 		return false;
@@ -461,7 +459,7 @@ bool SlmCheck::insertTicket()
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_currentTicketId);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
 		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, getOwnerId());
 		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
 		DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_TRANSIENT);
@@ -477,7 +475,7 @@ bool SlmCheck::insertTicket()
  */
 void SlmCheck::closeTicket()
 {
-	DbgPrintf(4, _T("SlmCheck::closeTicket() called for %s [%d], ticketId=%d"), m_szName, (int)m_dwId, (int)m_currentTicketId);
+	DbgPrintf(4, _T("SlmCheck::closeTicket() called for %s [%d], ticketId=%d"), m_name, (int)m_id, (int)m_currentTicketId);
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE slm_tickets SET close_timestamp=? WHERE ticket_id=?"));
 	if (hStmt != NULL)
@@ -501,10 +499,10 @@ UINT32 SlmCheck::getOwnerId()
 	LockParentList(FALSE);
 	for(UINT32 i = 0; i < m_dwParentCount; i++)
 	{
-		if ((m_pParentList[i]->Type() == OBJECT_BUSINESSSERVICE) ||
-		    (m_pParentList[i]->Type() == OBJECT_NODELINK))
+		if ((m_pParentList[i]->getObjectClass() == OBJECT_BUSINESSSERVICE) ||
+		    (m_pParentList[i]->getObjectClass() == OBJECT_NODELINK))
 		{
-			ownerId = m_pParentList[i]->Id();
+			ownerId = m_pParentList[i]->getId();
 			break;
 		}
 	}
@@ -526,7 +524,7 @@ NXSL_Value *SlmCheck::getNodeObjectForNXSL()
 	LockParentList(FALSE);
 	for(UINT32 i = 0; i < m_dwParentCount; i++)
 	{
-		if (m_pParentList[i]->Type() == OBJECT_NODELINK)
+		if (m_pParentList[i]->getObjectClass() == OBJECT_NODELINK)
 		{
 			nodeId = ((NodeLink *)m_pParentList[i])->getNodeId();
 			break;
@@ -537,7 +535,7 @@ NXSL_Value *SlmCheck::getNodeObjectForNXSL()
 	if (nodeId != 0)
 	{
 		NetObj *node = FindObjectById(nodeId);
-		if ((node != NULL) && (node->Type() == OBJECT_NODE))
+		if ((node != NULL) && (node->getObjectClass() == OBJECT_NODE))
 		{
 			value = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node));
 		}
@@ -555,7 +553,7 @@ void SlmCheck::onObjectDelete(UINT32 objectId)
 	// a template used to create this check
 	if (objectId == m_templateId)
 	{
-		DbgPrintf(4, _T("SlmCheck %s [%d] delete itself because of template deletion"), m_szName, (int)m_dwId);
+		DbgPrintf(4, _T("SlmCheck %s [%d] delete itself because of template deletion"), m_name, (int)m_id);
 		deleteObject();
 	}
    NetObj::onObjectDelete(objectId);

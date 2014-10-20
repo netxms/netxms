@@ -186,8 +186,8 @@ class Template;
 class NXCORE_EXPORTABLE DCObject
 {
 protected:
-   UINT32 m_dwId;
-   TCHAR m_szName[MAX_ITEM_NAME];
+   UINT32 m_id;
+   TCHAR m_name[MAX_ITEM_NAME];
    TCHAR m_szDescription[MAX_DB_STRING];
 	TCHAR m_systemTag[MAX_DB_STRING];
    time_t m_tLastPoll;           // Last poll time
@@ -239,7 +239,7 @@ public:
    virtual void updateFromTemplate(DCObject *dcObject);
 
    virtual BOOL saveToDB(DB_HANDLE hdb);
-   virtual void deleteFromDB();
+   virtual void deleteFromDatabase();
    virtual bool loadThresholdsFromDB();
 
    virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus);
@@ -247,10 +247,10 @@ public:
 
 	virtual bool hasValue();
 
-	UINT32 getId() { return m_dwId; }
+	UINT32 getId() { return m_id; }
    int getDataSource() { return m_source; }
    int getStatus() { return m_status; }
-   const TCHAR *getName() { return m_szName; }
+   const TCHAR *getName() { return m_name; }
    const TCHAR *getDescription() { return m_szDescription; }
 	const TCHAR *getSystemTag() { return m_systemTag; }
 	const TCHAR *getPerfTabSettings() { return m_pszPerfTabSettings; }
@@ -288,7 +288,7 @@ public:
    virtual void getEventList(UINT32 **ppdwList, UINT32 *pdwSize);
    virtual void createNXMPRecord(String &str);
 
-	void setName(const TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_ITEM_NAME); }
+	void setName(const TCHAR *pszName) { nx_strncpy(m_name, pszName, MAX_ITEM_NAME); }
 	void setDescription(const TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
 	void setOrigin(int origin) { m_source = origin; }
 	void setRetentionTime(int nTime) { m_iRetentionTime = nTime; }
@@ -346,7 +346,7 @@ public:
    virtual void updateFromTemplate(DCObject *dcObject);
 
    virtual BOOL saveToDB(DB_HANDLE hdb);
-   virtual void deleteFromDB();
+   virtual void deleteFromDatabase();
    virtual bool loadThresholdsFromDB();
 
    void updateCacheSize(UINT32 dwCondId = 0);
@@ -559,7 +559,7 @@ public:
    virtual void updateFromTemplate(DCObject *dcObject);
 
    virtual BOOL saveToDB(DB_HANDLE hdb);
-   virtual void deleteFromDB();
+   virtual void deleteFromDatabase();
 
    virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus);
    virtual void processNewError();

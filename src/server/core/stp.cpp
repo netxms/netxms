@@ -45,7 +45,7 @@ static UINT32 STPPortListHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Tr
    request->bindVariable(new SNMP_Variable(oid, var->getName()->getLength()));
 
 	SNMP_PDU *response = NULL;
-   UINT32 rcc = transport->doRequest(request, &response, g_dwSNMPTimeout, 3);
+   UINT32 rcc = transport->doRequest(request, &response, g_snmpTimeout, 3);
 	delete request;
 	if (rcc == SNMP_ERR_SUCCESS)
    {
@@ -63,34 +63,34 @@ static UINT32 STPPortListHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Tr
          if ((bridge != NULL) && (bridge != node))
          {
             DbgPrintf(6, _T("STP: found designated bridge %s [%d] for node %s [%d] port %d"), 
-               bridge->Name(), bridge->Id(), node->Name(), node->Id(), oid[11]);
+               bridge->getName(), bridge->getId(), node->getName(), node->getId(), oid[11]);
             Interface *ifLocal = node->findBridgePort(oid[11]);
             if (ifLocal != NULL)
             {
                DbgPrintf(6, _T("STP: found local port %s [%d] for node %s [%d]"), 
-                  ifLocal->Name(), ifLocal->Id(), node->Name(), node->Id());
+                  ifLocal->getName(), ifLocal->getId(), node->getName(), node->getId());
                Interface *ifRemote = bridge->findBridgePort((UINT32)designatedPort[1]);
                if (ifRemote != NULL)
                {
                   DbgPrintf(6, _T("STP: found remote port %s [%d] on node %s [%d]"), 
-                     ifRemote->Name(), ifRemote->Id(), bridge->Name(), bridge->Id());
+                     ifRemote->getName(), ifRemote->getId(), bridge->getName(), bridge->getId());
                   
                   LL_NEIGHBOR_INFO info;
                   info.ifLocal = ifLocal->getIfIndex();
                   info.ifRemote = ifRemote->getIfIndex();
-                  info.objectId = bridge->Id();
+                  info.objectId = bridge->getId();
                   info.isPtToPt = true;
                   info.protocol = LL_PROTO_STP;
                   ((LinkLayerNeighbors *)arg)->addConnection(&info);
                }
                else
                {
-                  DbgPrintf(6, _T("STP: bridge port number %d is invalid for node %s [%d]"), (UINT32)designatedPort[1], bridge->Name(), bridge->Id());
+                  DbgPrintf(6, _T("STP: bridge port number %d is invalid for node %s [%d]"), (UINT32)designatedPort[1], bridge->getName(), bridge->getId());
                }
             }
             else
             {
-               DbgPrintf(6, _T("STP: bridge port number %d is invalid for node %s [%d]"), oid[11], node->Name(), node->Id());
+               DbgPrintf(6, _T("STP: bridge port number %d is invalid for node %s [%d]"), oid[11], node->getName(), node->getId());
             }
          }
       }
@@ -111,8 +111,8 @@ void AddSTPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 	if (!(node->getFlags() & NF_IS_STP))
 		return;
 
-	DbgPrintf(5, _T("STP: collecting topology information for node %s [%d]"), node->Name(), node->Id());
+	DbgPrintf(5, _T("STP: collecting topology information for node %s [%d]"), node->getName(), node->getId());
 	nbs->setData(node);
 	node->callSnmpEnumerate(_T(".1.3.6.1.2.1.17.2.15.1.3"), STPPortListHandler, nbs);
-	DbgPrintf(5, _T("STP: finished collecting topology information for node %s [%d]"), node->Name(), node->Id());
+	DbgPrintf(5, _T("STP: finished collecting topology information for node %s [%d]"), node->getName(), node->getId());
 }

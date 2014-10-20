@@ -44,7 +44,7 @@ public:
 	const TCHAR *GetName() { return m_name; }
 	Situation *GetParent() { return m_parent; }
 	
-	UINT32 CreateMessage(CSCPMessage *msg, UINT32 baseId);
+	UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
 
 	const TCHAR *GetAttribute(const TCHAR *attribute);
 	void UpdateAttribute(const TCHAR *attribute, const TCHAR *value);
@@ -79,7 +79,7 @@ public:
 	UINT32 GetId() { return m_id; }
 	const TCHAR *GetName() { return m_name; }
 	
-	void CreateMessage(CSCPMessage *msg);
+	void fillMessage(CSCPMessage *msg);
 	void UpdateFromMessage(CSCPMessage *msg);
 
 	void UpdateSituation(const TCHAR *instance, const TCHAR *attribute, const TCHAR *value);

@@ -1626,7 +1626,7 @@ UINT32 NXSL_VM::getFunctionAddress(const TCHAR *pszName)
    for(int i = 0; i < m_functions->size(); i++)
    {
       NXSL_Function *f = m_functions->get(i);
-      if (!_tcscmp(f->m_szName, pszName))
+      if (!_tcscmp(f->m_name, pszName))
          return f->m_dwAddr;
    }
    return INVALID_ADDRESS;

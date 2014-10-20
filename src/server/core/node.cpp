@@ -41,8 +41,8 @@ Node::Node() : DataCollectionTarget()
    m_dwFlags = 0;
    m_dwDynamicFlags = 0;
    m_zoneId = 0;
-   m_wAgentPort = AGENT_LISTEN_PORT;
-   m_wAuthMethod = AUTH_NONE;
+   m_agentPort = AGENT_LISTEN_PORT;
+   m_agentAuthMethod = AUTH_NONE;
    m_szSharedSecret[0] = 0;
    m_iStatusPollType = POLL_ICMP_PING;
    m_snmpVersion = SNMP_VERSION_1;
@@ -118,8 +118,8 @@ Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, U
    m_dwFlags = dwFlags;
    m_dwDynamicFlags = 0;
    m_zoneId = dwZone;
-   m_wAgentPort = AGENT_LISTEN_PORT;
-   m_wAuthMethod = AUTH_NONE;
+   m_agentPort = AGENT_LISTEN_PORT;
+   m_agentAuthMethod = AUTH_NONE;
    m_szSharedSecret[0] = 0;
    m_iStatusPollType = POLL_ICMP_PING;
    m_snmpVersion = SNMP_VERSION_1;
@@ -127,7 +127,7 @@ Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, U
 	char community[MAX_COMMUNITY_LENGTH];
    ConfigReadStrA(_T("DefaultCommunityString"), community, MAX_COMMUNITY_LENGTH, "public");
 	m_snmpSecurity = new SNMP_SecurityContext(community);
-   IpToStr(dwAddr, m_szName);    // Make default name from IP address
+   IpToStr(dwAddr, m_name);    // Make default name from IP address
    m_szObjectId[0] = 0;
    m_lastDiscoveryPoll = 0;
    m_lastStatusPoll = 0;
@@ -225,14 +225,14 @@ Node::~Node()
 /**
  * Create object from database data
  */
-BOOL Node::CreateFromDB(UINT32 dwId)
+BOOL Node::loadFromDatabase(UINT32 dwId)
 {
    int i, iNumRows;
    UINT32 dwSubnetId;
    NetObj *pObject;
    BOOL bResult = FALSE;
 
-   m_dwId = dwId;
+   m_id = dwId;
 
    if (!loadCommonProperties())
    {
@@ -272,9 +272,9 @@ BOOL Node::CreateFromDB(UINT32 dwId)
    m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 1);
    m_dwFlags = DBGetFieldULong(hResult, 0, 2);
    m_snmpVersion = DBGetFieldLong(hResult, 0, 3);
-   m_wAuthMethod = (WORD)DBGetFieldLong(hResult, 0, 4);
+   m_agentAuthMethod = (WORD)DBGetFieldLong(hResult, 0, 4);
    DBGetField(hResult, 0, 5, m_szSharedSecret, MAX_SECRET_LENGTH);
-   m_wAgentPort = (WORD)DBGetFieldLong(hResult, 0, 6);
+   m_agentPort = (WORD)DBGetFieldLong(hResult, 0, 6);
    m_iStatusPollType = DBGetFieldLong(hResult, 0, 7);
    DBGetField(hResult, 0, 8, m_szObjectId, MAX_OID_LEN * 4);
    DBGetField(hResult, 0, 9, m_szAgentVersion, MAX_AGENT_VERSION_LEN);
@@ -330,7 +330,7 @@ BOOL Node::CreateFromDB(UINT32 dwId)
 		if (hStmt == NULL)
 			return FALSE;
 
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
       hResult = DBSelectPrepared(hStmt);
       if (hResult == NULL)
 		{
@@ -348,7 +348,7 @@ BOOL Node::CreateFromDB(UINT32 dwId)
             nxlog_write(MSG_INVALID_SUBNET_ID, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
             break;
          }
-         else if (pObject->Type() != OBJECT_SUBNET)
+         else if (pObject->getObjectClass() != OBJECT_SUBNET)
          {
             nxlog_write(MSG_SUBNET_NOT_SUBNET, EVENTLOG_ERROR_TYPE, "dd", dwId, dwSubnetId);
             break;
@@ -372,7 +372,7 @@ BOOL Node::CreateFromDB(UINT32 dwId)
          if (!m_dcObjects->get(i)->loadThresholdsFromDB())
          {
             DbgPrintf(3, _T("Cannot load thresholds for DCI %d of node %d (%s)"),
-                      m_dcObjects->get(i)->getId(), dwId, m_szName);
+                      m_dcObjects->get(i)->getId(), dwId, m_name);
             bResult = FALSE;
          }
    }
@@ -387,21 +387,21 @@ BOOL Node::CreateFromDB(UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL Node::SaveToDB(DB_HANDLE hdb)
+BOOL Node::saveToDatabase(DB_HANDLE hdb)
 {
    // Lock object's access
-   LockData();
+   lockProperties();
 
    if (!saveCommonProperties(hdb))
 	{
-		UnlockData();
+		unlockProperties();
 		return FALSE;
 	}
 
    // Form and execute INSERT or UPDATE query
 	int snmpMethods = m_snmpSecurity->getAuthMethod() | (m_snmpSecurity->getPrivMethod() << 8);
 	DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("nodes"), _T("id"), m_dwId))
+   if (IsDatabaseRecordExist(hdb, _T("nodes"), _T("id"), m_id))
 	{
 		hStmt = DBPrepare(hdb,
 			_T("UPDATE nodes SET primary_ip=?,primary_name=?,snmp_port=?,node_flags=?,snmp_version=?,community=?,")
@@ -421,7 +421,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 	}
 	if (hStmt == NULL)
 	{
-		UnlockData();
+		unlockProperties();
 		return FALSE;
 	}
 
@@ -438,8 +438,8 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_snmpSecurity->getCommunity(), DB_BIND_STATIC);
 #endif
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_iStatusPollType);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_wAgentPort);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_wAuthMethod);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_agentPort);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_agentAuthMethod);
 	DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_szSharedSecret, DB_BIND_STATIC);
 	DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_szObjectId, DB_BIND_STATIC);
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_sysDescription, DB_BIND_STATIC);
@@ -469,7 +469,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)0);	// rack position
 	DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, (LONG)0);	// rack ID
 	DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);	// rack ID
-	DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -477,7 +477,7 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    // Save access list
    saveACLToDB(hdb);
 
-   UnlockData();
+   unlockProperties();
 
    // Save data collection items
    if (bResult)
@@ -489,9 +489,9 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
    }
 
 	// Clear modifications flag
-	LockData();
+	lockProperties();
    m_isModified = false;
-	UnlockData();
+	unlockProperties();
 
 	return bResult;
 }
@@ -499,9 +499,9 @@ BOOL Node::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-bool Node::deleteFromDB(DB_HANDLE hdb)
+bool Node::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = DataCollectionTarget::deleteFromDB(hdb);
+   bool success = DataCollectionTarget::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM nodes WHERE id=?"));
    if (success)
@@ -606,15 +606,15 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
 	int i, j, k;
 	TCHAR buffer[32];
 
-	LockData();
+	lockProperties();
 	if (m_vrrpInfo != NULL)
 	{
-		DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): m_vrrpInfo->size()=%d"), m_szName, (int)m_dwId, m_vrrpInfo->size());
+		DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): m_vrrpInfo->size()=%d"), m_name, (int)m_id, m_vrrpInfo->size());
 
 		for(i = 0; i < m_vrrpInfo->size(); i++)
 		{
 			VrrpRouter *router = m_vrrpInfo->getRouter(i);
-			DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): vrouter %d state=%d"), m_szName, (int)m_dwId, i, router->getState());
+			DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): vrouter %d state=%d"), m_name, (int)m_id, i, router->getState());
 			if (router->getState() != VRRP_STATE_MASTER)
 				continue;	// Do not add interfaces if router is not in master state
 
@@ -631,7 +631,7 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
 			for(j = 0; j < router->getVipCount(); j++)
 			{
 				UINT32 vip = router->getVip(j);
-				DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): checking VIP %s@%d"), m_szName, (int)m_dwId, IpToStr(vip, buffer), i);
+				DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): checking VIP %s@%d"), m_name, (int)m_id, IpToStr(vip, buffer), i);
 				if (vip != 0)
 				{
 					for(k = 0; k < ifList->size(); k++)
@@ -646,13 +646,13 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
 						iface.dwIpAddr = vip;
 						iface.dwIpNetMask = netmask;
 						ifList->add(&iface);
-						DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): added interface %s"), m_szName, (int)m_dwId, iface.szName);
+						DbgPrintf(6, _T("Node::addVrrpInterfaces(node=%s [%d]): added interface %s"), m_name, (int)m_id, iface.szName);
 					}
 				}
 			}
 		}
 	}
-	UnlockData();
+	unlockProperties();
 }
 
 /**
@@ -670,7 +670,7 @@ Interface *Node::findInterface(UINT32 ifIndex, UINT32 hostAddr)
 
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
          pInterface = (Interface *)m_pChildList[i];
 			if ((pInterface->getIfIndex() == ifIndex) || (ifIndex == INVALID_INDEX))
@@ -699,10 +699,10 @@ Interface *Node::findInterface(const TCHAR *name)
 
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
          pInterface = (Interface *)m_pChildList[i];
-			if (!_tcsicmp(pInterface->Name(), name) || !_tcsicmp(pInterface->getDescription(), name))
+			if (!_tcsicmp(pInterface->getName(), name) || !_tcsicmp(pInterface->getDescription(), name))
          {
             UnlockChildList();
             return pInterface;
@@ -723,7 +723,7 @@ Interface *Node::findInterfaceBySlotAndPort(UINT32 slot, UINT32 port)
 
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
          pInterface = (Interface *)m_pChildList[i];
 			if (pInterface->isPhysicalPort() && (pInterface->getSlotNumber() == slot) && (pInterface->getPortNumber() == port))
@@ -745,7 +745,7 @@ Interface *Node::findInterfaceByMAC(const BYTE *macAddr)
    Interface *iface = NULL;
    LockChildList(FALSE);
    for(UINT32 i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
 			if (!memcmp(((Interface *)m_pChildList[i])->getMacAddr(), macAddr, MAC_ADDR_LENGTH))
          {
@@ -771,7 +771,7 @@ Interface *Node::findInterfaceByIP(UINT32 ipAddr)
 
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
          pInterface = (Interface *)m_pChildList[i];
 			if (pInterface->IpAddr() == ipAddr)
@@ -794,7 +794,7 @@ Interface *Node::findBridgePort(UINT32 bridgePortNumber)
 
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
          pInterface = (Interface *)m_pChildList[i];
 			if (pInterface->getBridgePortNumber() == bridgePortNumber)
@@ -815,13 +815,13 @@ NetObj *Node::findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *ty
 	NetObj *cp = NULL;
    LockChildList(FALSE);
    for(UINT32 i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
          Interface *iface = (Interface *)m_pChildList[i];
 			cp = FindInterfaceConnectionPoint(iface->getMacAddr(), type);
 			if (cp != NULL)
 			{
-				*localIfId = iface->Id();
+				*localIfId = iface->getId();
 				memcpy(localMacAddr, iface->getMacAddr(), MAC_ADDR_LENGTH);
 				break;
 			}
@@ -838,7 +838,7 @@ AccessPoint *Node::findAccessPointByMAC(const BYTE *macAddr)
    AccessPoint *ap = NULL;
    LockChildList(FALSE);
    for(UINT32 i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Type() == OBJECT_ACCESSPOINT)
+      if (m_pChildList[i]->getObjectClass() == OBJECT_ACCESSPOINT)
       {
          if (!memcmp(((AccessPoint *)m_pChildList[i])->getMacAddr(), macAddr, MAC_ADDR_LENGTH))
          {
@@ -858,7 +858,7 @@ AccessPoint *Node::findAccessPointByRadioId(int rfIndex)
    AccessPoint *ap = NULL;
    LockChildList(FALSE);
    for(UINT32 i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Type() == OBJECT_ACCESSPOINT)
+      if (m_pChildList[i]->getObjectClass() == OBJECT_ACCESSPOINT)
       {
          if (((AccessPoint *)m_pChildList[i])->isMyRadio(rfIndex))
          {
@@ -878,7 +878,7 @@ AccessPoint *Node::findAccessPointByBSSID(const BYTE *bssid)
    AccessPoint *ap = NULL;
    LockChildList(FALSE);
    for(UINT32 i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Type() == OBJECT_ACCESSPOINT)
+      if (m_pChildList[i]->getObjectClass() == OBJECT_ACCESSPOINT)
       {
          if (!memcmp(((AccessPoint *)m_pChildList[i])->getMacAddr(), bssid, MAC_ADDR_LENGTH) ||
              ((AccessPoint *)m_pChildList[i])->isMyRadio(bssid))
@@ -900,7 +900,7 @@ BOOL Node::isMyIP(UINT32 dwIpAddr)
 
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
          if (((Interface *)m_pChildList[i])->IpAddr() == dwIpAddr)
          {
@@ -925,7 +925,7 @@ Interface *Node::createNewInterface(UINT32 dwIpAddr, UINT32 dwNetMask, const TCH
 	bool bAddToSubnet, bSyntheticMask = false;
 
 	DbgPrintf(5, _T("Node::createNewInterface(%08X, %08X, %s, %d, %d, bp=%d, slot=%d, port=%d) called for node %s [%d]"),
-	          dwIpAddr, dwNetMask, CHECK_NULL(name), dwIndex, dwType, bridgePort, slot, port, m_szName, m_dwId);
+	          dwIpAddr, dwNetMask, CHECK_NULL(name), dwIndex, dwType, bridgePort, slot, port, m_name, m_id);
 
    // Find subnet to place interface object to
 	if ((dwIpAddr != 0) && (dwType != IFTYPE_SOFTWARE_LOOPBACK) && ((dwIpAddr & 0xFF000000) != 0x7F000000))
@@ -933,8 +933,8 @@ Interface *Node::createNewInterface(UINT32 dwIpAddr, UINT32 dwNetMask, const TCH
 		pCluster = getMyCluster();
 		bAddToSubnet = (pCluster != NULL) ? !pCluster->isSyncAddr(dwIpAddr) : TRUE;
 		DbgPrintf(5, _T("Node::createNewInterface: node=%s [%d] cluster=%s [%d] add=%d"),
-		          m_szName, m_dwId, (pCluster != NULL) ? pCluster->Name() : _T("(null)"),
-					 (pCluster != NULL) ? pCluster->Id() : 0, bAddToSubnet);
+		          m_name, m_id, (pCluster != NULL) ? pCluster->getName() : _T("(null)"),
+					 (pCluster != NULL) ? pCluster->getId() : 0, bAddToSubnet);
 		if (bAddToSubnet)
 		{
 			pSubnet = FindSubnetForNode(m_zoneId, dwIpAddr);
@@ -999,8 +999,8 @@ Interface *Node::createNewInterface(UINT32 dwIpAddr, UINT32 dwNetMask, const TCH
    if (!m_isHidden)
       pInterface->unhide();
    if (!pInterface->isSystem())
-      PostEvent(EVENT_INTERFACE_ADDED, m_dwId, "dsaad", pInterface->Id(),
-                pInterface->Name(), pInterface->IpAddr(),
+      PostEvent(EVENT_INTERFACE_ADDED, m_id, "dsaad", pInterface->getId(),
+                pInterface->getName(), pInterface->IpAddr(),
                 pInterface->getIpNetMask(), pInterface->getIfIndex());
 
    // Bind node to appropriate subnet
@@ -1011,8 +1011,8 @@ Interface *Node::createNewInterface(UINT32 dwIpAddr, UINT32 dwNetMask, const TCH
       // Check if subnet mask is correct on interface
       if ((pSubnet->getIpNetMask() != pInterface->getIpNetMask()) && !pSubnet->isSyntheticMask() && (dwNetMask != 0xFFFFFFFF))
 		{
-         PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),
-                   pInterface->getIfIndex(), pInterface->Name(),
+         PostEvent(EVENT_INCORRECT_NETMASK, m_id, "idsaa", pInterface->getId(),
+                   pInterface->getIfIndex(), pInterface->getName(),
                    pInterface->getIpNetMask(), pSubnet->getIpNetMask());
 		}
    }
@@ -1027,7 +1027,7 @@ void Node::deleteInterface(Interface *pInterface)
 {
    UINT32 i;
 
-	DbgPrintf(5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d])"), m_szName, m_dwId, pInterface->Name(), pInterface->Id());
+	DbgPrintf(5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d])"), m_name, m_id, pInterface->getName(), pInterface->getId());
 
    // Check if we should unlink node from interface's subnet
    if ((pInterface->IpAddr() != 0) && !pInterface->isExcludedFromTopology())
@@ -1036,7 +1036,7 @@ void Node::deleteInterface(Interface *pInterface)
 
       LockChildList(FALSE);
       for(i = 0; i < m_dwChildCount; i++)
-         if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+         if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
             if (m_pChildList[i] != pInterface)
                if ((((Interface *)m_pChildList[i])->IpAddr() & ((Interface *)m_pChildList[i])->getIpNetMask()) ==
                    (pInterface->IpAddr() & pInterface->getIpNetMask()))
@@ -1056,9 +1056,9 @@ void Node::deleteInterface(Interface *pInterface)
             pSubnet->DeleteChild(this);
          }
 			DbgPrintf(5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d]): unlinked from subnet %s [%d]"),
-			          m_szName, m_dwId, pInterface->Name(), pInterface->Id(),
-						 (pSubnet != NULL) ? pSubnet->Name() : _T("(null)"),
-						 (pSubnet != NULL) ? pSubnet->Id() : 0);
+			          m_name, m_id, pInterface->getName(), pInterface->getId(),
+						 (pSubnet != NULL) ? pSubnet->getName() : _T("(null)"),
+						 (pSubnet != NULL) ? pSubnet->getId() : 0);
       }
    }
 	pInterface->deleteObject();
@@ -1076,7 +1076,7 @@ void Node::calculateCompoundStatus(BOOL bForcedRecalc)
 
    DataCollectionTarget::calculateCompoundStatus(bForcedRecalc);
    if (m_iStatus != iOldStatus)
-      PostEvent(dwEventCodes[m_iStatus], m_dwId, "d", iOldStatus);
+      PostEvent(dwEventCodes[m_iStatus], m_id, "d", iOldStatus);
 }
 
 /**
@@ -1102,8 +1102,8 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
    SetPollerInfo(nPoller, _T("wait for lock"));
    pollerLock();
    m_pollRequestor = pSession;
-   sendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_szName);
-   DbgPrintf(5, _T("Starting status poll for node %s (ID: %d)"), m_szName, m_dwId);
+   sendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_name);
+   DbgPrintf(5, _T("Starting status poll for node %s (ID: %d)"), m_name, m_id);
 
    // Read capability expiration time and current time
    tExpire = (time_t)ConfigReadULong(_T("CapabilityExpirationTime"), 604800);
@@ -1121,7 +1121,7 @@ restart_agent_check:
       TCHAR szBuffer[256];
       UINT32 dwResult;
 
-      DbgPrintf(6, _T("StatusPoll(%s): check SNMP"), m_szName);
+      DbgPrintf(6, _T("StatusPoll(%s): check SNMP"), m_name);
 		pTransport = createSnmpTransport();
 		if (pTransport != NULL)
       {
@@ -1133,7 +1133,7 @@ restart_agent_check:
             if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
             {
                m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
-               PostEventEx(pQueue, EVENT_SNMP_OK, m_dwId, NULL);
+               PostEventEx(pQueue, EVENT_SNMP_OK, m_id, NULL);
                sendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
             }
          }
@@ -1154,7 +1154,7 @@ restart_agent_check:
             else
             {
                m_dwDynamicFlags |= NDF_SNMP_UNREACHABLE;
-               PostEventEx(pQueue, EVENT_SNMP_FAIL, m_dwId, NULL);
+               PostEventEx(pQueue, EVENT_SNMP_FAIL, m_id, NULL);
                m_failTimeSNMP = tNow;
             }
          }
@@ -1162,15 +1162,15 @@ restart_agent_check:
       }
       else
       {
-	      DbgPrintf(6, _T("StatusPoll(%s): cannot create SNMP transport"), m_szName);
+	      DbgPrintf(6, _T("StatusPoll(%s): cannot create SNMP transport"), m_name);
       }
-      DbgPrintf(6, _T("StatusPoll(%s): SNMP check finished"), m_szName);
+      DbgPrintf(6, _T("StatusPoll(%s): SNMP check finished"), m_name);
    }
 
    // Check native agent connectivity
    if ((m_dwFlags & NF_IS_NATIVE_AGENT) && (!(m_dwFlags & NF_DISABLE_NXCP)) && (m_dwIpAddr != 0))
    {
-      DbgPrintf(6, _T("StatusPoll(%s): checking agent"), m_szName);
+      DbgPrintf(6, _T("StatusPoll(%s): checking agent"), m_name);
       SetPollerInfo(nPoller, _T("check agent"));
       sendPollerMsg(dwRqId, _T("Checking NetXMS agent connectivity\r\n"));
 
@@ -1178,17 +1178,17 @@ restart_agent_check:
 		agentLock();
       if (connectToAgent(&error, &socketError))
       {
-         DbgPrintf(7, _T("StatusPoll(%s): connected to agent"), m_szName);
+         DbgPrintf(7, _T("StatusPoll(%s): connected to agent"), m_name);
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
          {
             m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
-            PostEventEx(pQueue, EVENT_AGENT_OK, m_dwId, NULL);
+            PostEventEx(pQueue, EVENT_AGENT_OK, m_id, NULL);
             sendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with NetXMS agent restored\r\n"));
          }
       }
       else
       {
-         DbgPrintf(6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d"), m_szName, (int)error, (int)socketError);
+         DbgPrintf(6, _T("StatusPoll(%s): agent unreachable, error=%d, socketError=%d"), m_name, (int)error, (int)socketError);
          sendPollerMsg(dwRqId, POLLER_ERROR _T("NetXMS agent unreachable\r\n"));
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
          {
@@ -1204,34 +1204,34 @@ restart_agent_check:
          else
          {
             m_dwDynamicFlags |= NDF_AGENT_UNREACHABLE;
-            PostEventEx(pQueue, EVENT_AGENT_FAIL, m_dwId, NULL);
+            PostEventEx(pQueue, EVENT_AGENT_FAIL, m_id, NULL);
             m_failTimeAgent = tNow;
             //cancel file monitoring locally(on agent it is canceled if agent have fallen)
-            g_monitoringList.removeDisconectedNode(m_dwId);
+            g_monitoringList.removeDisconectedNode(m_id);
          }
       }
 		agentUnlock();
-      DbgPrintf(7, _T("StatusPoll(%s): agent check finished"), m_szName);
+      DbgPrintf(7, _T("StatusPoll(%s): agent check finished"), m_name);
    }
 
    SetPollerInfo(nPoller, _T("prepare polling list"));
 
    // Find service poller node object
-   LockData();
+   lockProperties();
    if (m_pollerNode != 0)
    {
 		UINT32 id = m_pollerNode;
-		UnlockData();
+		unlockProperties();
       pPollerNode = FindObjectById(id);
       if (pPollerNode != NULL)
       {
-         if (pPollerNode->Type() != OBJECT_NODE)
+         if (pPollerNode->getObjectClass() != OBJECT_NODE)
             pPollerNode = NULL;
       }
    }
 	else
 	{
-		UnlockData();
+		unlockProperties();
 	}
 
    // If nothing found, use management server
@@ -1259,37 +1259,37 @@ restart_agent_check:
 
    // Poll interfaces and services
    SetPollerInfo(nPoller, _T("child poll"));
-   DbgPrintf(7, _T("StatusPoll(%s): starting child object poll"), m_szName);
+   DbgPrintf(7, _T("StatusPoll(%s): starting child object poll"), m_name);
 	pCluster = getMyCluster();
 	pTransport = createSnmpTransport();
    for(i = 0; i < dwPollListSize; i++)
    {
-      switch(ppPollList[i]->Type())
+      switch(ppPollList[i]->getObjectClass())
       {
          case OBJECT_INTERFACE:
-			   DbgPrintf(7, _T("StatusPoll(%s): polling interface %d [%s]"), m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
+			   DbgPrintf(7, _T("StatusPoll(%s): polling interface %d [%s]"), m_name, ppPollList[i]->getId(), ppPollList[i]->getName());
             ((Interface *)ppPollList[i])->statusPoll(pSession, dwRqId, pQueue,
 					(pCluster != NULL) ? pCluster->isSyncAddr(((Interface *)ppPollList[i])->IpAddr()) : FALSE,
 					pTransport, m_icmpProxy);
             break;
          case OBJECT_NETWORKSERVICE:
-			   DbgPrintf(7, _T("StatusPoll(%s): polling network service %d [%s]"), m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
+			   DbgPrintf(7, _T("StatusPoll(%s): polling network service %d [%s]"), m_name, ppPollList[i]->getId(), ppPollList[i]->getName());
             ((NetworkService *)ppPollList[i])->statusPoll(pSession, dwRqId,
                                                           (Node *)pPollerNode, pQueue);
             break;
          case OBJECT_ACCESSPOINT:
-			   DbgPrintf(7, _T("StatusPoll(%s): polling access point %d [%s]"), m_szName, ppPollList[i]->Id(), ppPollList[i]->Name());
+			   DbgPrintf(7, _T("StatusPoll(%s): polling access point %d [%s]"), m_name, ppPollList[i]->getId(), ppPollList[i]->getName());
             ((AccessPoint *)ppPollList[i])->statusPoll(pSession, dwRqId, pQueue, this);
             break;
          default:
-            DbgPrintf(7, _T("StatusPoll(%s): skipping object %d [%s] class %d"), m_szName, ppPollList[i]->Id(), ppPollList[i]->Name(), ppPollList[i]->Type());
+            DbgPrintf(7, _T("StatusPoll(%s): skipping object %d [%s] class %d"), m_name, ppPollList[i]->getId(), ppPollList[i]->getName(), ppPollList[i]->getObjectClass());
             break;
       }
       ppPollList[i]->decRefCount();
    }
 	delete pTransport;
    safe_free(ppPollList);
-   DbgPrintf(7, _T("StatusPoll(%s): finished child object poll"), m_szName);
+   DbgPrintf(7, _T("StatusPoll(%s): finished child object poll"), m_name);
 
    // Check if entire node is down
 	// This check is disabled for nodes without IP address
@@ -1299,7 +1299,7 @@ restart_agent_check:
 		if (m_dwChildCount > 0)
 		{
 			for(i = 0, bAllDown = TRUE; i < m_dwChildCount; i++)
-				if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
+				if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
 					 (m_pChildList[i]->Status() != STATUS_CRITICAL) &&
 					 (m_pChildList[i]->Status() != STATUS_UNKNOWN) &&
 					 (m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
@@ -1323,7 +1323,7 @@ restart_agent_check:
 		   if (!(m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))
 		      bAllDown = FALSE;
 
-		DbgPrintf(6, _T("StatusPoll(%s): bAllDown=%s, dynFlags=0x%08X"), m_szName, bAllDown ? _T("true") : _T("false"), m_dwDynamicFlags);
+		DbgPrintf(6, _T("StatusPoll(%s): bAllDown=%s, dynFlags=0x%08X"), m_name, bAllDown ? _T("true") : _T("false"), m_dwDynamicFlags);
 		if (bAllDown)
 		{
 		   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
@@ -1338,7 +1338,7 @@ restart_agent_check:
 					// Set interfaces and network services to UNKNOWN state
 					LockChildList(FALSE);
 					for(i = 0, bAllDown = TRUE; i < m_dwChildCount; i++)
-						if (((m_pChildList[i]->Type() == OBJECT_INTERFACE) || (m_pChildList[i]->Type() == OBJECT_NETWORKSERVICE)) &&
+						if (((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) || (m_pChildList[i]->getObjectClass() == OBJECT_NETWORKSERVICE)) &&
 							 (m_pChildList[i]->Status() == STATUS_CRITICAL))
 						{
 							m_pChildList[i]->resetStatus();
@@ -1355,11 +1355,11 @@ restart_agent_check:
 					}
 					delete_and_null(pQueue);
 
-					PostEvent(EVENT_NODE_UNREACHABLE, m_dwId, NULL);
+					PostEvent(EVENT_NODE_UNREACHABLE, m_id, NULL);
 				}
 				else
 				{
-					PostEvent(EVENT_NODE_DOWN, m_dwId, NULL);
+					PostEvent(EVENT_NODE_DOWN, m_id, NULL);
 				}
 		      sendPollerMsg(dwRqId, POLLER_ERROR _T("Node is unreachable\r\n"));
 		   }
@@ -1375,7 +1375,7 @@ restart_agent_check:
 		   {
             int reason = (m_dwDynamicFlags & NDF_NETWORK_PATH_PROBLEM) ? 1 : 0;
 		      m_dwDynamicFlags &= ~(NDF_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_AGENT_UNREACHABLE | NDF_NETWORK_PATH_PROBLEM);
-		      PostEvent(EVENT_NODE_UP, m_dwId, "d", reason);
+		      PostEvent(EVENT_NODE_UP, m_id, "d", reason);
 		      sendPollerMsg(dwRqId, POLLER_INFO _T("Node recovered from unreachable state\r\n"));
 				goto restart_agent_check;
 		   }
@@ -1393,16 +1393,16 @@ restart_agent_check:
       if (getItemFromAgent(_T("System.Uptime"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
       {
          m_bootTime = time(NULL) - _tcstol(buffer, NULL, 0);
-			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from agent"), m_szName, m_dwId, (UINT32)m_bootTime);
+			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from agent"), m_name, m_id, (UINT32)m_bootTime);
       }
       else if (getItemFromSNMP(m_wSNMPPort, _T(".1.3.6.1.2.1.1.3.0"), MAX_RESULT_LENGTH, buffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
       {
          m_bootTime = time(NULL) - _tcstol(buffer, NULL, 0) / 100;   // sysUpTime is in hundredths of a second
-			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from SNMP"), m_szName, m_dwId, (UINT32)m_bootTime);
+			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from SNMP"), m_name, m_id, (UINT32)m_bootTime);
       }
       else
       {
-			DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get system uptime"), m_szName, m_dwId);
+			DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get system uptime"), m_name, m_id);
       }
    }
    else
@@ -1421,19 +1421,19 @@ restart_agent_check:
          if((UINT32)oldAgentuptime > (UINT32)m_agentUpTime)
          {
             //cancel file monitoring locally(on agent it is canceled if agent have fallen)
-            g_monitoringList.removeDisconectedNode(m_dwId);
+            g_monitoringList.removeDisconectedNode(m_id);
          }
       }
       else
       {
-         DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get agent uptime"), m_szName, m_dwId);
-         g_monitoringList.removeDisconectedNode(m_dwId);
+         DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get agent uptime"), m_name, m_id);
+         g_monitoringList.removeDisconectedNode(m_id);
          m_agentUpTime = 0;
       }
    }
    else
    {
-      g_monitoringList.removeDisconectedNode(m_dwId);
+      g_monitoringList.removeDisconectedNode(m_id);
       m_agentUpTime = 0;
    }
 
@@ -1449,7 +1449,7 @@ restart_agent_check:
 	{
 		if (g_pModuleList[i].pfStatusPollHook != NULL)
 		{
-			DbgPrintf(5, _T("StatusPoll(%s [%d]): calling hook in module %s"), m_szName, m_dwId, g_pModuleList[i].szName);
+			DbgPrintf(5, _T("StatusPoll(%s [%d]): calling hook in module %s"), m_name, m_id, g_pModuleList[i].szName);
 			g_pModuleList[i].pfStatusPollHook(this, pSession, dwRqId, nPoller);
 		}
 	}
@@ -1464,21 +1464,21 @@ restart_agent_check:
 
    if (dwOldFlags != m_dwFlags)
    {
-      PostEvent(EVENT_NODE_FLAGS_CHANGED, m_dwId, "xx", dwOldFlags, m_dwFlags);
-      LockData();
-      Modify();
-      UnlockData();
+      PostEvent(EVENT_NODE_FLAGS_CHANGED, m_id, "xx", dwOldFlags, m_dwFlags);
+      lockProperties();
+      setModified();
+      unlockProperties();
    }
 
    calculateCompoundStatus();
    m_lastStatusPoll = time(NULL);
-   sendPollerMsg(dwRqId, _T("Finished status poll for node %s\r\n"), m_szName);
+   sendPollerMsg(dwRqId, _T("Finished status poll for node %s\r\n"), m_name);
    sendPollerMsg(dwRqId, _T("Node status after poll is %s\r\n"), GetStatusAsText(m_iStatus, true));
    m_pollRequestor = NULL;
    if (dwRqId == 0)
       m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
    pollerUnlock();
-   DbgPrintf(5, _T("Finished status poll for node %s (ID: %d)"), m_szName, m_dwId);
+   DbgPrintf(5, _T("Finished status poll for node %s (ID: %d)"), m_name, m_id);
 }
 
 /**
@@ -1490,38 +1490,38 @@ bool Node::checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool is
 	if (node == NULL)
 		return false;
 
-	DbgPrintf(6, _T("Node::checkNetworkPathElement(%s [%d]): found %s: %s [%d]"), m_szName, m_dwId, nodeType, node->Name(), node->Id());
+	DbgPrintf(6, _T("Node::checkNetworkPathElement(%s [%d]): found %s: %s [%d]"), m_name, m_id, nodeType, node->getName(), node->getId());
 	if (node->isDown())
 	{
 		DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): %s %s [%d] is down"),
-					 m_szName, m_dwId, nodeType, node->Name(), node->Id());
-		sendPollerMsg(dwRqId, POLLER_WARNING _T("   %s %s is down\r\n"), nodeType, node->Name());
+					 m_name, m_id, nodeType, node->getName(), node->getId());
+		sendPollerMsg(dwRqId, POLLER_WARNING _T("   %s %s is down\r\n"), nodeType, node->getName());
 		return true;
 	}
 	if (isProxy && node->isNativeAgent() && (node->getRuntimeFlags() & NDF_AGENT_UNREACHABLE))
 	{
 		DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): agent on %s %s [%d] is down"),
-					 m_szName, m_dwId, nodeType, node->Name(), node->Id());
-		sendPollerMsg(dwRqId, POLLER_WARNING _T("   Agent on %s %s is down\r\n"), nodeType, node->Name());
+					 m_name, m_id, nodeType, node->getName(), node->getId());
+		sendPollerMsg(dwRqId, POLLER_WARNING _T("   Agent on %s %s is down\r\n"), nodeType, node->getName());
 		return true;
 	}
 	if (node->m_lastStatusPoll < time(NULL) - 1)
 	{
 		DbgPrintf(6, _T("Node::checkNetworkPathElement(%s [%d]): forced status poll on node %s [%d]"),
-					 m_szName, m_dwId, node->Name(), node->Id());
+					 m_name, m_id, node->getName(), node->getId());
 		node->statusPoll(NULL, 0, 0);
 		if (node->isDown())
 		{
 			DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): %s %s [%d] is down"),
-						 m_szName, m_dwId, nodeType, node->Name(), node->Id());
-			sendPollerMsg(dwRqId, POLLER_WARNING _T("   %s %s is down\r\n"), nodeType, node->Name());
+						 m_name, m_id, nodeType, node->getName(), node->getId());
+			sendPollerMsg(dwRqId, POLLER_WARNING _T("   %s %s is down\r\n"), nodeType, node->getName());
 			return true;
 		}
 		if (isProxy && node->isNativeAgent() && (node->getRuntimeFlags() & NDF_AGENT_UNREACHABLE))
 		{
 			DbgPrintf(5, _T("Node::checkNetworkPathElement(%s [%d]): agent on %s %s [%d] is down"),
-						 m_szName, m_dwId, nodeType, node->Name(), node->Id());
-			sendPollerMsg(dwRqId, POLLER_WARNING _T("   Agent on %s %s is down\r\n"), nodeType, node->Name());
+						 m_name, m_id, nodeType, node->getName(), node->getId());
+			sendPollerMsg(dwRqId, POLLER_WARNING _T("   Agent on %s %s is down\r\n"), nodeType, node->getName());
 			return true;
 		}
 	}
@@ -1560,30 +1560,30 @@ bool Node::checkNetworkPath(UINT32 dwRqId)
 	Interface *iface = findInterface(INVALID_INDEX, m_dwIpAddr);
 	if ((iface != NULL) && (iface->getPeerNodeId() != 0))
 	{
-		DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): found interface object for primary IP: %s [%d]"), m_szName, m_dwId, iface->Name(), iface->Id());
+		DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): found interface object for primary IP: %s [%d]"), m_name, m_id, iface->getName(), iface->getId());
 		if (checkNetworkPathElement(iface->getPeerNodeId(), _T("upstream switch"), false, dwRqId))
 			return true;
 	}
 	else
 	{
-		DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): cannot find interface object for primary IP"), m_szName, m_dwId);
+		DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): cannot find interface object for primary IP"), m_name, m_id);
 	}
 
    Node *mgmtNode = (Node *)FindObjectById(g_dwMgmtNode);
    if (mgmtNode == NULL)
 	{
-		DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): cannot find management node"), m_szName, m_dwId);
+		DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): cannot find management node"), m_name, m_id);
 		return false;
 	}
 
 	NetworkPath *trace = TraceRoute(mgmtNode, this);
    if (trace == NULL)
 	{
-		DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): trace not available"), m_szName, m_dwId);
+		DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): trace not available"), m_name, m_id);
 		return false;
 	}
 	DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): trace available, %d hops, %s"),
-	          m_szName, m_dwId, trace->getHopCount(), trace->isComplete() ? _T("complete") : _T("incomplete"));
+	          m_name, m_id, trace->getHopCount(), trace->isComplete() ? _T("complete") : _T("incomplete"));
 
 	// We will do path check in two passes
 	// If unreachable intermediate node will be found on first pass,
@@ -1596,30 +1596,30 @@ restart:
    for(int i = 0; i < trace->getHopCount(); i++)
    {
 		HOP_INFO *hop = trace->getHopInfo(i);
-      if ((hop->object == NULL) || (hop->object == this) || (hop->object->Type() != OBJECT_NODE))
+      if ((hop->object == NULL) || (hop->object == this) || (hop->object->getObjectClass() != OBJECT_NODE))
 			continue;
 
 		DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): checking upstream node %s [%d]"),
-		          m_szName, m_dwId, hop->object->Name(), hop->object->Id());
+		          m_name, m_id, hop->object->getName(), hop->object->getId());
       if (secondPass && !((Node *)hop->object)->isDown() && (((Node *)hop->object)->m_lastStatusPoll < now - 1))
 		{
 			DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): forced status poll on node %s [%d]"),
-			          m_szName, m_dwId, hop->object->Name(), hop->object->Id());
+			          m_name, m_id, hop->object->getName(), hop->object->getId());
 			((Node *)hop->object)->statusPoll(NULL, 0, 0);
 		}
 
       if (((Node *)hop->object)->isDown())
       {
 			DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): upstream node %s [%d] is down"),
-			          m_szName, m_dwId, hop->object->Name(), hop->object->Id());
-			sendPollerMsg(dwRqId, POLLER_WARNING _T("   Upstream node %s is down\r\n"), hop->object->Name());
+			          m_name, m_id, hop->object->getName(), hop->object->getId());
+			sendPollerMsg(dwRqId, POLLER_WARNING _T("   Upstream node %s is down\r\n"), hop->object->getName());
 			pathProblemFound = true;
 			break;
       }
    }
 	if (!secondPass && !pathProblemFound)
 	{
-		DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): will do second pass"), m_szName, m_dwId);
+		DbgPrintf(5, _T("Node::checkNetworkPath(%s [%d]): will do second pass"), m_name, m_id);
 		secondPass = true;
 		goto restart;
 	}
@@ -1643,11 +1643,11 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 			uuid_t guid;
 			ap->getGuid(i, guid);
 			NetObj *object = FindObjectByGUID(guid, -1);
-			if ((object != NULL) && (!object->isChild(m_dwId)))
+			if ((object != NULL) && (!object->isChild(m_id)))
 			{
 				object->AddChild(this);
 				AddParent(object);
-				DbgPrintf(5, _T("ConfPoll(%s): bound to policy object %s [%d]"), m_szName, object->Name(), object->Id());
+				DbgPrintf(5, _T("ConfPoll(%s): bound to policy object %s [%d]"), m_name, object->getName(), object->getId());
 			}
 		}
 
@@ -1679,7 +1679,7 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 		{
 			unbindList[i]->DeleteChild(this);
 			DeleteParent(unbindList[i]);
-			DbgPrintf(5, _T("ConfPoll(%s): unbound from policy object %s [%d]"), m_szName, unbindList[i]->Name(), unbindList[i]->Id());
+			DbgPrintf(5, _T("ConfPoll(%s): unbound from policy object %s [%d]"), m_name, unbindList[i]->getName(), unbindList[i]->getId());
 		}
 		safe_free(unbindList);
 
@@ -1687,7 +1687,7 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 	}
 	else
 	{
-	   DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::getPolicyInventory() failed: rcc=%d"), m_szName, rcc);
+	   DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::getPolicyInventory() failed: rcc=%d"), m_name, rcc);
 	}
 }
 
@@ -1705,15 +1705,15 @@ void Node::updatePrimaryIpAddr()
 		TCHAR buffer1[32], buffer2[32];
 
 		DbgPrintf(4, _T("IP address for node %s [%d] changed from %s to %s"),
-			m_szName, (int)m_dwId, IpToStr(m_dwIpAddr, buffer1), IpToStr(ipAddr, buffer2));
-		PostEvent(EVENT_IP_ADDRESS_CHANGED, m_dwId, "aa", ipAddr, m_dwIpAddr);
+			m_name, (int)m_id, IpToStr(m_dwIpAddr, buffer1), IpToStr(ipAddr, buffer2));
+		PostEvent(EVENT_IP_ADDRESS_CHANGED, m_id, "aa", ipAddr, m_dwIpAddr);
 
       if (m_dwFlags & NF_REMOTE_AGENT)
       {
-         LockData();
+         lockProperties();
          m_dwIpAddr = ipAddr;
-         Modify();
-         UnlockData();
+         setModified();
+         unlockProperties();
       }
       else
       {
@@ -1745,8 +1745,8 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
    SetPollerInfo(nPoller, _T("wait for lock"));
    pollerLock();
    m_pollRequestor = pSession;
-   sendPollerMsg(dwRqId, _T("Starting configuration poll for node %s\r\n"), m_szName);
-   DbgPrintf(4, _T("Starting configuration poll for node %s (ID: %d)"), m_szName, m_dwId);
+   sendPollerMsg(dwRqId, _T("Starting configuration poll for node %s\r\n"), m_name);
+   DbgPrintf(4, _T("Starting configuration poll for node %s (ID: %d)"), m_name, m_id);
 
    // Check for forced capabilities recheck
    if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)
@@ -1787,7 +1787,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
       // Check for CheckPoint SNMP agent on port 260
       if (ConfigReadInt(_T("EnableCheckPointSNMP"), 0))
       {
-         DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_szName);
+         DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_name);
          if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && (m_dwIpAddr != 0))
          {
 			   SNMP_Transport *pTransport = new SNMP_UDPTransport;
@@ -1795,10 +1795,10 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
             if (SnmpGet(SNMP_VERSION_1, pTransport,
                         _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
             {
-               LockData();
+               lockProperties();
                m_dwFlags |= NF_IS_CPSNMP | NF_IS_ROUTER;
                m_dwDynamicFlags &= ~NDF_CPSNMP_UNREACHABLE;
-               UnlockData();
+               unlockProperties();
                sendPollerMsg(dwRqId, POLLER_INFO _T("   CheckPoint SNMP agent on port 260 is active\r\n"));
             }
 			   delete pTransport;
@@ -1808,7 +1808,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
       // Generate event if node flags has been changed
       if (dwOldFlags != m_dwFlags)
       {
-         PostEvent(EVENT_NODE_FLAGS_CHANGED, m_dwId, "xx", dwOldFlags, m_dwFlags);
+         PostEvent(EVENT_NODE_FLAGS_CHANGED, m_id, "xx", dwOldFlags, m_dwFlags);
          hasChanges = true;
       }
 
@@ -1823,7 +1823,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 
 		// Check node name
 		sendPollerMsg(dwRqId, _T("Checking node name\r\n"));
-		UINT32 dwAddr = ntohl(_t_inet_addr(m_szName));
+		UINT32 dwAddr = ntohl(_t_inet_addr(m_name));
 		if ((g_flags & AF_RESOLVE_NODE_NAMES) &&
 			 (dwAddr != INADDR_NONE) &&
 			 (dwAddr != INADDR_ANY) &&
@@ -1833,7 +1833,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 	      SetPollerInfo(nPoller, _T("resolving name"));
 			if (resolveName(FALSE))
 			{
-				sendPollerMsg(dwRqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_szName);
+				sendPollerMsg(dwRqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
 				hasChanges = true;
 			}
 			else
@@ -1849,7 +1849,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 		      SetPollerInfo(nPoller, _T("resolving name"));
 				if (resolveName(TRUE))
 				{
-					sendPollerMsg(dwRqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_szName);
+					sendPollerMsg(dwRqId, POLLER_INFO _T("Node name resolved to %s\r\n"), m_name);
 					hasChanges = true;
 				}
 			}
@@ -1872,12 +1872,12 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 			Table *table;
 			if (getTableFromAgent(_T("System.InstalledProducts"), &table) == DCE_SUCCESS)
 			{
-				LockData();
+				lockProperties();
 				delete m_softwarePackages;
 				m_softwarePackages = new ObjectArray<SoftwarePackage>(table->getNumRows(), 16, true);
 				for(int i = 0; i < table->getNumRows(); i++)
 					m_softwarePackages->add(new SoftwarePackage(table, i));
-				UnlockData();
+				unlockProperties();
 				delete table;
 				sendPollerMsg(dwRqId, POLLER_INFO _T("Got information about %d installed software packages\r\n"), m_softwarePackages->size());
 			}
@@ -1888,7 +1888,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 			}
 		}
 
-		sendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n"), m_szName);
+		sendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n"), m_name);
 		sendPollerMsg(dwRqId, _T("Node configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
 
 		// Call hooks in loaded modules
@@ -1896,7 +1896,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 		{
 			if (g_pModuleList[i].pfConfPollHook != NULL)
 			{
-				DbgPrintf(5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_szName, m_dwId, g_pModuleList[i].szName);
+				DbgPrintf(5, _T("ConfigurationPoll(%s [%d]): calling hook in module %s"), m_name, m_id, g_pModuleList[i].szName);
 				if (g_pModuleList[i].pfConfPollHook(this, pSession, dwRqId, nPoller))
                hasChanges = true;
 			}
@@ -1915,13 +1915,13 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
       m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
    m_dwDynamicFlags &= ~NDF_RECHECK_CAPABILITIES;
    pollerUnlock();
-   DbgPrintf(4, _T("Finished configuration poll for node %s (ID: %d)"), m_szName, m_dwId);
+   DbgPrintf(4, _T("Finished configuration poll for node %s (ID: %d)"), m_name, m_id);
 
    if (hasChanges)
    {
-      LockData();
-      Modify();
-      UnlockData();
+      lockProperties();
+      setModified();
+      unlockProperties();
    }
 }
 
@@ -1930,7 +1930,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
  */
 bool Node::confPollAgent(UINT32 dwRqId)
 {
-   DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}"), m_szName, m_dwFlags, m_dwDynamicFlags);
+   DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}"), m_name, m_dwFlags, m_dwDynamicFlags);
 	if (((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)) ||
 	    (m_dwIpAddr == 0) || (m_dwFlags & NF_DISABLE_NXCP))
 		return false;
@@ -1938,9 +1938,9 @@ bool Node::confPollAgent(UINT32 dwRqId)
 	bool hasChanges = false;
 
 	sendPollerMsg(dwRqId, _T("   Checking NetXMS agent...\r\n"));
-   AgentConnection *pAgentConn = new AgentConnectionEx(m_dwId, htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+   AgentConnection *pAgentConn = new AgentConnectionEx(m_id, htonl(m_dwIpAddr), m_agentPort, m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(pAgentConn);
-   DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_szName);
+   DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_name);
 
    // Try to connect to agent
    UINT32 rcc;
@@ -1954,53 +1954,53 @@ bool Node::confPollAgent(UINT32 dwRqId)
          pAgentConn->setAuthData(AUTH_SHA1_HASH, secret);
          if (pAgentConn->connect(g_pServerKey, FALSE, &rcc))
          {
-            m_wAuthMethod = AUTH_SHA1_HASH;
+            m_agentAuthMethod = AUTH_SHA1_HASH;
             nx_strncpy(m_szSharedSecret, secret, MAX_SECRET_LENGTH);
-            DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - shared secret changed to system default"), m_szName);
+            DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - shared secret changed to system default"), m_name);
          }
       }
    }
 
    if (rcc == ERR_SUCCESS)
    {
-      DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connected"), m_szName);
-      LockData();
+      DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connected"), m_name);
+      lockProperties();
       m_dwFlags |= NF_IS_NATIVE_AGENT;
       if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
       {
          m_dwDynamicFlags &= ~NDF_AGENT_UNREACHABLE;
-         PostEvent(EVENT_AGENT_OK, m_dwId, NULL);
+         PostEvent(EVENT_AGENT_OK, m_id, NULL);
          sendPollerMsg(dwRqId, POLLER_INFO _T("   Connectivity with NetXMS agent restored\r\n"));
       }
 		else
 		{
          sendPollerMsg(dwRqId, POLLER_INFO _T("   NetXMS native agent is active\r\n"));
 		}
-      UnlockData();
+      unlockProperties();
 
 		TCHAR buffer[MAX_RESULT_LENGTH];
       if (pAgentConn->getParameter(_T("Agent.Version"), MAX_AGENT_VERSION_LEN, buffer) == ERR_SUCCESS)
       {
-         LockData();
+         lockProperties();
          if (_tcscmp(m_szAgentVersion, buffer))
          {
             _tcscpy(m_szAgentVersion, buffer);
             hasChanges = true;
             sendPollerMsg(dwRqId, _T("   NetXMS agent version changed to %s\r\n"), m_szAgentVersion);
          }
-         UnlockData();
+         unlockProperties();
       }
 
       if (pAgentConn->getParameter(_T("System.PlatformName"), MAX_PLATFORM_NAME_LEN, buffer) == ERR_SUCCESS)
       {
-         LockData();
+         lockProperties();
          if (_tcscmp(m_szPlatformName, buffer))
          {
             _tcscpy(m_szPlatformName, buffer);
             hasChanges = true;
             sendPollerMsg(dwRqId, _T("   Platform name changed to %s\r\n"), m_szPlatformName);
          }
-         UnlockData();
+         unlockProperties();
       }
 
       // Check IP forwarding status
@@ -2018,7 +2018,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
 			TranslateStr(buffer, _T("\r\n"), _T(" "));
 			TranslateStr(buffer, _T("\n"), _T(" "));
 			TranslateStr(buffer, _T("\r"), _T(" "));
-         LockData();
+         lockProperties();
          if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, buffer))
          {
 				safe_free(m_sysDescription);
@@ -2026,7 +2026,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
             hasChanges = true;
             sendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_sysDescription);
          }
-         UnlockData();
+         unlockProperties();
 		}
 
       // Check for 64 bit counter support.
@@ -2043,7 +2043,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
       UINT32 rcc = pAgentConn->getSupportedParameters(&plist, &tlist);
 		if (rcc == ERR_SUCCESS)
 		{
-			LockData();
+			lockProperties();
 			delete m_paramList;
 			delete m_tableList;
 			m_paramList = plist;
@@ -2063,11 +2063,11 @@ bool Node::confPollAgent(UINT32 dwRqId)
 			   }
          }
 
-			UnlockData();
+			unlockProperties();
 		}
 		else
 		{
-		   DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%d"), m_szName, rcc);
+		   DbgPrintf(5, _T("ConfPoll(%s): AgentConnection::getSupportedParameters() failed: rcc=%d"), m_name, rcc);
 		}
 
 		// Get supported Windows Performance Counters
@@ -2075,7 +2075,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
 		{
          sendPollerMsg(dwRqId, _T("   Reading list of available Windows Performance Counters...\r\n"));
 			ObjectArray<WinPerfObject> *perfObjects = WinPerfObject::getWinPerfObjectsFromNode(this, pAgentConn);
-			LockData();
+			lockProperties();
 			delete m_winPerfObjects;
 			m_winPerfObjects = perfObjects;
 			if (m_winPerfObjects != NULL)
@@ -2096,7 +2096,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
 					hasChanges = true;
 				}
 			}
-			UnlockData();
+			unlockProperties();
 		}
 
 		checkAgentPolicyBinding(pAgentConn);
@@ -2105,10 +2105,10 @@ bool Node::confPollAgent(UINT32 dwRqId)
    }
 	else
 	{
-      DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (error %d)"), m_szName, rcc);
+      DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (error %d)"), m_name, rcc);
 	}
    delete pAgentConn;
-   DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_szName);
+   DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_name);
 	return hasChanges;
 }
 
@@ -2133,11 +2133,11 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 	bool hasChanges = false;
 
    sendPollerMsg(dwRqId, _T("   Checking SNMP...\r\n"));
-   DbgPrintf(5, _T("ConfPoll(%s): calling SnmpCheckCommSettings()"), m_szName);
+   DbgPrintf(5, _T("ConfPoll(%s): calling SnmpCheckCommSettings()"), m_name);
 	SNMP_Transport *pTransport = createSnmpTransport();
 	if (pTransport == NULL)
 	{
-		DbgPrintf(5, _T("ConfPoll(%s): unable to create SNMP transport"), m_szName);
+		DbgPrintf(5, _T("ConfPoll(%s): unable to create SNMP transport"), m_name);
 		return false;
 	}
 
@@ -2151,17 +2151,17 @@ bool Node::confPollSnmp(UINT32 dwRqId)
    SNMP_SecurityContext *newCtx = SnmpCheckCommSettings(pTransport, &m_snmpVersion, m_snmpSecurity, &oids);
 	if (newCtx != NULL)
    {
-      LockData();
+      lockProperties();
 		delete m_snmpSecurity;
 		m_snmpSecurity = newCtx;
       m_dwFlags |= NF_IS_SNMP;
       if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
       {
          m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
-         PostEvent(EVENT_SNMP_OK, m_dwId, NULL);
+         PostEvent(EVENT_SNMP_OK, m_id, NULL);
          sendPollerMsg(dwRqId, POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
       }
-		UnlockData();
+		unlockProperties();
       sendPollerMsg(dwRqId, _T("   SNMP agent is active (version %s)\r\n"),
 			(m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
 
@@ -2171,13 +2171,13 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 			// Set snmp object ID to .0.0 if it cannot be read
 			_tcscpy(szBuffer, _T(".0.0"));
 		}
-		LockData();
+		lockProperties();
 		if (_tcscmp(m_szObjectId, szBuffer))
 		{
 			nx_strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
 			hasChanges = true;
 		}
-		UnlockData();
+		unlockProperties();
 
 		// Get system description
 		if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
@@ -2185,7 +2185,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 			TranslateStr(szBuffer, _T("\r\n"), _T(" "));
 			TranslateStr(szBuffer, _T("\n"), _T(" "));
 			TranslateStr(szBuffer, _T("\r"), _T(" "));
-			LockData();
+			lockProperties();
          if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, szBuffer))
          {
 				safe_free(m_sysDescription);
@@ -2193,19 +2193,19 @@ bool Node::confPollSnmp(UINT32 dwRqId)
             hasChanges = true;
             sendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_sysDescription);
          }
-			UnlockData();
+			unlockProperties();
 		}
 
 		// Select device driver
 		NetworkDeviceDriver *driver = FindDriverForNode(this, pTransport);
-		DbgPrintf(5, _T("ConfPoll(%s): selected device driver %s"), m_szName, driver->getName());
-		LockData();
+		DbgPrintf(5, _T("ConfPoll(%s): selected device driver %s"), m_name, driver->getName());
+		lockProperties();
 		if (driver != m_driver)
 		{
 			m_driver = driver;
 			sendPollerMsg(dwRqId, _T("   New network device driver selected: %s\r\n"), m_driver->getName());
 		}
-		UnlockData();
+		unlockProperties();
 
 		// Allow driver to gather additional info
 		m_driver->analyzeDevice(pTransport, m_szObjectId, &m_customAttributes, &m_driverData);
@@ -2214,7 +2214,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 		if (SnmpGet(m_snmpVersion, pTransport,
 		            _T(".1.3.6.1.2.1.1.5.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
 		{
-			LockData();
+			lockProperties();
 			if ((m_sysName == NULL) || _tcscmp(m_sysName, szBuffer))
          {
 				safe_free(m_sysName);
@@ -2222,21 +2222,21 @@ bool Node::confPollSnmp(UINT32 dwRqId)
             hasChanges = true;
             sendPollerMsg(dwRqId, _T("   System name changed to %s\r\n"), m_sysName);
          }
-			UnlockData();
+			unlockProperties();
 		}
 
       // Check IP forwarding
       if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.4.1.0"), 1))
       {
-			LockData();
+			lockProperties();
          m_dwFlags |= NF_IS_ROUTER;
-			UnlockData();
+			unlockProperties();
       }
       else
       {
-			LockData();
+			lockProperties();
          m_dwFlags &= ~NF_IS_ROUTER;
-			UnlockData();
+			unlockProperties();
       }
 
 		checkIfXTable(pTransport);
@@ -2245,27 +2245,27 @@ bool Node::confPollSnmp(UINT32 dwRqId)
       // Check for ENTITY-MIB support
       if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.47.1.4.1.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
       {
-			LockData();
+			lockProperties();
          m_dwFlags |= NF_HAS_ENTITY_MIB;
-			UnlockData();
+			unlockProperties();
 
 			ComponentTree *components = BuildComponentTree(this, pTransport);
-			LockData();
+			lockProperties();
 			if (m_components != NULL)
 				m_components->decRefCount();
 			m_components = components;
-			UnlockData();
+			unlockProperties();
       }
       else
       {
-			LockData();
+			lockProperties();
          m_dwFlags &= ~NF_HAS_ENTITY_MIB;
 			if (m_components != NULL)
 			{
 				m_components->decRefCount();
 				m_components = NULL;
 			}
-			UnlockData();
+			unlockProperties();
       }
 
       // Check for printer MIB support
@@ -2273,51 +2273,51 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 		SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43.5.1.1.17"), CountingSnmpWalkerCallback, &count, FALSE);
       if (count > 0)
       {
-			LockData();
+			lockProperties();
          m_dwFlags |= NF_IS_PRINTER;
-			UnlockData();
+			unlockProperties();
       }
       else
       {
-			LockData();
+			lockProperties();
          m_dwFlags &= ~NF_IS_PRINTER;
-			UnlockData();
+			unlockProperties();
       }
 
       // Check for CDP (Cisco Discovery Protocol) support
       if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), 1))
       {
-			LockData();
+			lockProperties();
          m_dwFlags |= NF_IS_CDP;
-			UnlockData();
+			unlockProperties();
       }
       else
       {
-			LockData();
+			lockProperties();
          m_dwFlags &= ~NF_IS_CDP;
-			UnlockData();
+			unlockProperties();
       }
 
       // Check for NDP (Nortel Discovery Protocol) support
       if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), 1))
       {
-			LockData();
+			lockProperties();
          m_dwFlags |= NF_IS_NDP;
-			UnlockData();
+			unlockProperties();
       }
       else
       {
-			LockData();
+			lockProperties();
          m_dwFlags &= ~NF_IS_NDP;
-			UnlockData();
+			unlockProperties();
       }
 
       // Check for LLDP (Link Layer Discovery Protocol) support
 		if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
 		{
-			LockData();
+			lockProperties();
 			m_dwFlags |= NF_IS_LLDP;
-			UnlockData();
+			unlockProperties();
 
          INT32 type;
          BYTE data[256];
@@ -2326,7 +2326,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
              (SnmpGetEx(pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, data, 256, SG_RAW_RESULT, &dataLen) == SNMP_ERR_SUCCESS))
 			{
             BuildLldpId(type, data, dataLen, szBuffer, 1024);
-				LockData();
+				lockProperties();
 				if ((m_lldpNodeId == NULL) || _tcscmp(m_lldpNodeId, szBuffer))
 				{
 					safe_free(m_lldpNodeId);
@@ -2334,34 +2334,34 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 					hasChanges = true;
 					sendPollerMsg(dwRqId, _T("   LLDP node ID changed to %s\r\n"), m_lldpNodeId);
 				}
-				UnlockData();
+				unlockProperties();
 			}
 
 			ObjectArray<LLDP_LOCAL_PORT_INFO> *lldpPorts = GetLLDPLocalPortInfo(pTransport);
-			LockData();
+			lockProperties();
 			delete m_lldpLocalPortInfo;
 			m_lldpLocalPortInfo = lldpPorts;
-			UnlockData();
+			unlockProperties();
 		}
 		else
 		{
-			LockData();
+			lockProperties();
 			m_dwFlags &= ~NF_IS_LLDP;
-			UnlockData();
+			unlockProperties();
 		}
 
       // Check for 802.1x support
       if (checkSNMPIntegerValue(pTransport, _T(".1.0.8802.1.1.1.1.1.1.0"), 1))
       {
-			LockData();
+			lockProperties();
          m_dwFlags |= NF_IS_8021X;
-			UnlockData();
+			unlockProperties();
       }
       else
       {
-			LockData();
+			lockProperties();
 			m_dwFlags &= ~NF_IS_8021X;
-			UnlockData();
+			unlockProperties();
       }
 
       checkOSPFSupport(pTransport);
@@ -2370,27 +2370,27 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 		VrrpInfo *vrrpInfo = GetVRRPInfo(this);
 		if (vrrpInfo != NULL)
 		{
-			LockData();
+			lockProperties();
 			m_dwFlags |= NF_IS_VRRP;
 			delete m_vrrpInfo;
 			m_vrrpInfo = vrrpInfo;
-			UnlockData();
+			unlockProperties();
 		}
 		else
 		{
-			LockData();
+			lockProperties();
 			m_dwFlags &= ~NF_IS_VRRP;
-			UnlockData();
+			unlockProperties();
 		}
 
 		// Get wireless controller data
 		if ((m_driver != NULL) && m_driver->isWirelessController(pTransport, &m_customAttributes, m_driverData))
 		{
-			DbgPrintf(5, _T("ConfPoll(%s): node is wireless controller, reading access point information"), m_szName);
+			DbgPrintf(5, _T("ConfPoll(%s): node is wireless controller, reading access point information"), m_name);
          sendPollerMsg(dwRqId, _T("   Reading wireless access point information\r\n"));
-			LockData();
+			lockProperties();
 			m_dwFlags |= NF_IS_WIFI_CONTROLLER;
-			UnlockData();
+			unlockProperties();
 
          int clusterMode = m_driver->getClusterMode(pTransport, &m_customAttributes, m_driverData);
 
@@ -2398,7 +2398,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 			if (aps != NULL)
 			{
 				sendPollerMsg(dwRqId, POLLER_INFO _T("   %d wireless access points found\r\n"), aps->size());
-				DbgPrintf(5, _T("ConfPoll(%s): got information about %d access points"), m_szName, aps->size());
+				DbgPrintf(5, _T("ConfPoll(%s): got information about %d access points"), m_name, aps->size());
 				int adopted = 0;
 				for(int i = 0; i < aps->size(); i++)
 				{
@@ -2427,10 +2427,10 @@ bool Node::confPollSnmp(UINT32 dwRqId)
                   }
 						ap = new AccessPoint((const TCHAR *)name, info->getMacAddr());
 						NetObjInsert(ap, TRUE);
-						DbgPrintf(5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_szName, ap->Name(), ap->Id());
+						DbgPrintf(5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_name, ap->getName(), ap->getId());
                   newAp = true;
 					}
-					ap->attachToNode(m_dwId);
+					ap->attachToNode(m_id);
                ap->setIpAddr(info->getIpAddr());
 					if ((info->getState() == AP_ADOPTED) || newAp)
                {
@@ -2441,34 +2441,34 @@ bool Node::confPollSnmp(UINT32 dwRqId)
                ap->updateState(info->getState());
 				}
 
-				LockData();
+				lockProperties();
 				m_adoptedApCount = adopted;
 				m_totalApCount = aps->size();
-				UnlockData();
+				unlockProperties();
 
 				delete aps;
 			}
 			else
 			{
-				DbgPrintf(5, _T("ConfPoll(%s): failed to read access point information"), m_szName);
+				DbgPrintf(5, _T("ConfPoll(%s): failed to read access point information"), m_name);
 				sendPollerMsg(dwRqId, POLLER_ERROR _T("   Failed to read access point information\r\n"));
 			}
 		}
 		else
 		{
-			LockData();
+			lockProperties();
 			m_dwFlags &= ~NF_IS_WIFI_CONTROLLER;
-			UnlockData();
+			unlockProperties();
 		}
    }
    else if (ConfigReadInt(_T("EnableCheckPointSNMP"), 0))
    {
       // Check for CheckPoint SNMP agent on port 161
-      DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP"), m_szName);
+      DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP"), m_name);
 		TCHAR szBuffer[4096];
 		if (SnmpGet(SNMP_VERSION_1, pTransport, _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
       {
-         LockData();
+         lockProperties();
          if (_tcscmp(m_szObjectId, _T(".1.3.6.1.4.1.2620.1.1")))
          {
             nx_strncpy(m_szObjectId, _T(".1.3.6.1.4.1.2620.1.1"), MAX_OID_LEN * 4);
@@ -2477,7 +2477,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 
          m_dwFlags |= NF_IS_SNMP | NF_IS_ROUTER;
          m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
-         UnlockData();
+         unlockProperties();
          sendPollerMsg(dwRqId, POLLER_INFO _T("   CheckPoint SNMP agent on port 161 is active\r\n"));
       }
    }
@@ -2493,30 +2493,30 @@ void Node::checkBridgeMib(SNMP_Transport *pTransport)
 	TCHAR szBuffer[4096];
    if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.17.1.1.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
    {
-		LockData();
+		lockProperties();
       m_dwFlags |= NF_IS_BRIDGE;
 		memcpy(m_baseBridgeAddress, szBuffer, 6);
-		UnlockData();
+		unlockProperties();
 
 		// Check for Spanning Tree (IEEE 802.1d) MIB support
 		if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.17.2.1.0"), 3))
 		{
-			LockData();
+			lockProperties();
 			m_dwFlags |= NF_IS_STP;
-			UnlockData();
+			unlockProperties();
 		}
 		else
 		{
-			LockData();
+			lockProperties();
 			m_dwFlags &= ~NF_IS_STP;
-			UnlockData();
+			unlockProperties();
 		}
    }
    else
    {
-		LockData();
+		lockProperties();
       m_dwFlags &= ~(NF_IS_BRIDGE | NF_IS_STP);
-		UnlockData();
+		unlockProperties();
    }
 }
 
@@ -2529,15 +2529,15 @@ void Node::checkIfXTable(SNMP_Transport *pTransport)
 	SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.31.1.1.1.1"), CountingSnmpWalkerCallback, &count, FALSE);
    if (count > 0)
    {
-		LockData();
+		lockProperties();
       m_dwFlags |= NF_HAS_IFXTABLE;
-		UnlockData();
+		unlockProperties();
    }
    else
    {
-		LockData();
+		lockProperties();
       m_dwFlags &= ~NF_HAS_IFXTABLE;
-		UnlockData();
+		unlockProperties();
    }
 }
 
@@ -2556,7 +2556,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
    pIfList = getInterfaceList();
    if (pIfList != NULL)
    {
-		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): got %d interfaces"), m_szName, m_dwId, pIfList->size());
+		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): got %d interfaces"), m_name, m_id, pIfList->size());
 		// Remove cluster virtual interfaces from list
 		if (pCluster != NULL)
 		{
@@ -2575,7 +2575,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
       ppDeleteList = (Interface **)malloc(sizeof(Interface *) * m_dwChildCount);
       for(i = 0, iDelCount = 0; i < (int)m_dwChildCount; i++)
       {
-         if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+         if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
          {
             Interface *pInterface = (Interface *)m_pChildList[i];
 				if (!pInterface->isManuallyCreated())
@@ -2602,9 +2602,9 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
       {
          for(j = 0; j < iDelCount; j++)
          {
-            sendPollerMsg(dwRqId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), ppDeleteList[j]->Name());
-            PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", ppDeleteList[j]->getIfIndex(),
-                      ppDeleteList[j]->Name(), ppDeleteList[j]->IpAddr(), ppDeleteList[j]->getIpNetMask());
+            sendPollerMsg(dwRqId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), ppDeleteList[j]->getName());
+            PostEvent(EVENT_INTERFACE_DELETED, m_id, "dsaa", ppDeleteList[j]->getIfIndex(),
+                      ppDeleteList[j]->getName(), ppDeleteList[j]->IpAddr(), ppDeleteList[j]->getIpNetMask());
             deleteInterface(ppDeleteList[j]);
          }
          hasChanges = TRUE;
@@ -2620,7 +2620,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
          LockChildList(FALSE);
          for(i = 0; i < (int)m_dwChildCount; i++)
          {
-            if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+            if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
             {
                Interface *pInterface = (Interface *)m_pChildList[i];
 
@@ -2634,12 +2634,12 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
 
                      BinToStr((BYTE *)pInterface->getMacAddr(), MAC_ADDR_LENGTH, szOldMac);
                      BinToStr(ifInfo->bMacAddr, MAC_ADDR_LENGTH, szNewMac);
-                     PostEvent(EVENT_MAC_ADDR_CHANGED, m_dwId, "idsss",
-                               pInterface->Id(), pInterface->getIfIndex(),
-                               pInterface->Name(), szOldMac, szNewMac);
+                     PostEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
+                               pInterface->getId(), pInterface->getIfIndex(),
+                               pInterface->getName(), szOldMac, szNewMac);
                      pInterface->setMacAddr(ifInfo->bMacAddr);
                   }
-                  if (_tcscmp(ifInfo->szName, pInterface->Name()))
+                  if (_tcscmp(ifInfo->szName, pInterface->getName()))
                   {
                      pInterface->setName(ifInfo->szName);
                   }
@@ -2701,7 +2701,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
       UINT32 dwCount;
 
       sendPollerMsg(dwRqId, POLLER_ERROR _T("Unable to get interface list from node\r\n"));
-		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): Unable to get interface list from node"), m_szName, m_dwId);
+		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): Unable to get interface list from node"), m_name, m_id);
 
       // Delete all existing interfaces in case of forced capability recheck
       if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)
@@ -2710,16 +2710,16 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
          ppDeleteList = (Interface **)malloc(sizeof(Interface *) * m_dwChildCount);
          for(i = 0, iDelCount = 0; i < (int)m_dwChildCount; i++)
          {
-				if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) && !((Interface *)m_pChildList[i])->isManuallyCreated())
+				if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && !((Interface *)m_pChildList[i])->isManuallyCreated())
                ppDeleteList[iDelCount++] = (Interface *)m_pChildList[i];
          }
          UnlockChildList();
          for(j = 0; j < iDelCount; j++)
          {
             sendPollerMsg(dwRqId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"),
-                          ppDeleteList[j]->Name());
-            PostEvent(EVENT_INTERFACE_DELETED, m_dwId, "dsaa", ppDeleteList[j]->getIfIndex(),
-                      ppDeleteList[j]->Name(), ppDeleteList[j]->IpAddr(), ppDeleteList[j]->getIpNetMask());
+                          ppDeleteList[j]->getName());
+            PostEvent(EVENT_INTERFACE_DELETED, m_id, "dsaa", ppDeleteList[j]->getIfIndex(),
+                      ppDeleteList[j]->getName(), ppDeleteList[j]->IpAddr(), ppDeleteList[j]->getIpNetMask());
             deleteInterface(ppDeleteList[j]);
          }
          safe_free(ppDeleteList);
@@ -2746,7 +2746,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
 						pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
 						TCHAR szMac[20];
 						MACToStr(macAddr, szMac);
-						DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_szName, m_dwId, szMac);
+						DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
                   createNewInterface(m_dwIpAddr, dwNetMask, NULL, NULL, 0, 0, pMacAddr);
 					}
             }
@@ -2764,10 +2764,10 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
                   BinToStr((BYTE *)pInterface->getMacAddr(), MAC_ADDR_LENGTH, szOldMac);
                   BinToStr(macAddr, MAC_ADDR_LENGTH, szNewMac);
 						DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): MAC change for unknown interface: %s to %s"),
-						          m_szName, m_dwId, szOldMac, szNewMac);
-                  PostEvent(EVENT_MAC_ADDR_CHANGED, m_dwId, "idsss",
-                            pInterface->Id(), pInterface->getIfIndex(),
-                            pInterface->Name(), szOldMac, szNewMac);
+						          m_name, m_id, szOldMac, szNewMac);
+                  PostEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
+                            pInterface->getId(), pInterface->getIfIndex(),
+                            pInterface->getName(), szOldMac, szNewMac);
                   pInterface->setMacAddr(macAddr);
 					}
 				}
@@ -2785,11 +2785,11 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
 				pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
 				TCHAR szMac[20];
 				MACToStr(macAddr, szMac);
-				DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_szName, m_dwId, szMac);
+				DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
          	createNewInterface(m_dwIpAddr, dwNetMask, NULL, NULL, 0, 0, pMacAddr);
 			}
       }
-		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): pflist == NULL, dwCount = %u"), m_szName, m_dwId, dwCount);
+		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): pflist == NULL, dwCount = %u"), m_name, m_id, dwCount);
    }
 
    checkSubnetBinding(pIfList);
@@ -2804,29 +2804,29 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
  */
 static void ApplyTemplate(NetObj *object, void *node)
 {
-   if ((object->Type() == OBJECT_TEMPLATE) && !object->isDeleted())
+   if ((object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted())
    {
       Template *pTemplate = (Template *)object;
 		if (pTemplate->isApplicable((Node *)node))
 		{
-			if (!pTemplate->isChild(((Node *)node)->Id()))
+			if (!pTemplate->isChild(((Node *)node)->getId()))
 			{
 				DbgPrintf(4, _T("Node::ApplyUserTemplates(): applying template %d \"%s\" to node %d \"%s\""),
-				          pTemplate->Id(), pTemplate->Name(), ((Node *)node)->Id(), ((Node *)node)->Name());
+				          pTemplate->getId(), pTemplate->getName(), ((Node *)node)->getId(), ((Node *)node)->getName());
 				pTemplate->applyToTarget((Node *)node);
-				PostEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", ((Node *)node)->Id(), ((Node *)node)->Name(), pTemplate->Id(), pTemplate->Name());
+				PostEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", ((Node *)node)->getId(), ((Node *)node)->getName(), pTemplate->getId(), pTemplate->getName());
 			}
 		}
 		else
 		{
-			if (pTemplate->isAutoRemoveEnabled() && pTemplate->isChild(((Node *)node)->Id()))
+			if (pTemplate->isAutoRemoveEnabled() && pTemplate->isChild(((Node *)node)->getId()))
 			{
 				DbgPrintf(4, _T("Node::ApplyUserTemplates(): removing template %d \"%s\" from node %d \"%s\""),
-				          pTemplate->Id(), pTemplate->Name(), ((Node *)node)->Id(), ((Node *)node)->Name());
+				          pTemplate->getId(), pTemplate->getName(), ((Node *)node)->getId(), ((Node *)node)->getName());
 				pTemplate->DeleteChild((Node *)node);
 				((Node *)node)->DeleteParent(pTemplate);
-				pTemplate->queueRemoveFromTarget(((Node *)node)->Id(), TRUE);
-				PostEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", ((Node *)node)->Id(), ((Node *)node)->Name(), pTemplate->Id(), pTemplate->Name());
+				pTemplate->queueRemoveFromTarget(((Node *)node)->getId(), TRUE);
+				PostEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", ((Node *)node)->getId(), ((Node *)node)->getName(), pTemplate->getId(), pTemplate->getName());
 			}
 		}
    }
@@ -2845,7 +2845,7 @@ void Node::applyUserTemplates()
  */
 static bool ContainerSelectionFilter(NetObj *object, void *userData)
 {
-   return (object->Type() == OBJECT_CONTAINER) && !object->isDeleted() && ((Container *)object)->isAutoBindEnabled();
+   return (object->getObjectClass() == OBJECT_CONTAINER) && !object->isDeleted() && ((Container *)object)->isAutoBindEnabled();
 }
 
 /**
@@ -2859,24 +2859,24 @@ void Node::updateContainerMembership()
       Container *pContainer = (Container *)containers->get(i);
 		if (pContainer->isSuitableForNode(this))
 		{
-			if (!pContainer->isChild(m_dwId))
+			if (!pContainer->isChild(m_id))
 			{
 				DbgPrintf(4, _T("Node::updateContainerMembership(): binding node %d \"%s\" to container %d \"%s\""),
-				          m_dwId, m_szName, pContainer->Id(), pContainer->Name());
+				          m_id, m_name, pContainer->getId(), pContainer->getName());
 				pContainer->AddChild(this);
 				AddParent(pContainer);
-				PostEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", m_dwId, m_szName, pContainer->Id(), pContainer->Name());
+				PostEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
 			}
 		}
 		else
 		{
-			if (pContainer->isAutoUnbindEnabled() && pContainer->isChild(m_dwId))
+			if (pContainer->isAutoUnbindEnabled() && pContainer->isChild(m_id))
 			{
 				DbgPrintf(4, _T("Node::updateContainerMembership(): removing node %d \"%s\" from container %d \"%s\""),
-				          m_dwId, m_szName, pContainer->Id(), pContainer->Name());
+				          m_id, m_name, pContainer->getId(), pContainer->getName());
 				pContainer->DeleteChild(this);
 				DeleteParent(pContainer);
-				PostEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_dwId, m_szName, pContainer->Id(), pContainer->Name());
+				PostEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
 			}
 		}
       pContainer->decRefCount();
@@ -2909,11 +2909,11 @@ void Node::doInstanceDiscovery()
 	{
 		DCItem *dci = rootItems.get(i);
 		DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): Updating instances for instance discovery DCI %s [%d]"),
-		          m_szName, m_dwId, dci->getName(), dci->getId());
+		          m_name, m_id, dci->getName(), dci->getId());
 		StringMap *instances = getInstanceList(dci);
 		if (instances != NULL)
 		{
-			DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): read %d values"), m_szName, m_dwId, instances->size());
+			DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): read %d values"), m_name, m_id, instances->size());
 			dci->filterInstanceList(instances);
 			updateInstances(dci, instances);
 			delete instances;
@@ -2921,7 +2921,7 @@ void Node::doInstanceDiscovery()
 		else
 		{
 			DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): failed to get instance list for DCI %s [%d]"),
-						 m_szName, m_dwId, dci->getName(), dci->getId());
+						 m_name, m_id, dci->getName(), dci->getId());
 		}
 		dci->setBusyFlag(FALSE);
 	}
@@ -2944,10 +2944,10 @@ StringMap *Node::getInstanceList(DCItem *dci)
          DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): proxy node [%d] not found"), dci->getName(), dci->getId(), dci->getProxyNode());
          return NULL;
       }
-      if (!node->isTrustedNode(m_dwId))
+      if (!node->isTrustedNode(m_id))
       {
          DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): this node (%s [%d]) is not trusted by proxy node %s [%d] not found"),
-                   dci->getName(), dci->getId(), m_szName, m_dwId, node->Name(), node->Id());
+                   dci->getName(), dci->getId(), m_name, m_id, node->getName(), node->getId());
          return NULL;
       }
    }
@@ -3008,10 +3008,10 @@ static bool CreateInstanceDCI(const TCHAR *key, const void *value, void *data)
    DCItem *root = ((CreateInstanceDCIData *)data)->root;
 
 	DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): creating new DCI for instance \"%s\""),
-	          object->Name(), object->Id(), root->getName(), root->getId(), key);
+	          object->getName(), object->getId(), root->getName(), root->getId(), key);
 
 	DCItem *dci = new DCItem(root);
-   dci->setTemplateId(object->Id(), root->getId());
+   dci->setTemplateId(object->getId(), root->getId());
 	dci->setInstance((const TCHAR *)value);
 	dci->setInstanceDiscoveryMethod(IDM_NONE);
 	dci->setInstanceDiscoveryData(key);
@@ -3035,7 +3035,7 @@ void Node::updateInstances(DCItem *root, StringMap *instances)
    {
 		DCObject *object = m_dcObjects->get(i);
 		if ((object->getType() != DCO_TYPE_ITEM) ||
-			 (object->getTemplateId() != m_dwId) ||
+			 (object->getTemplateId() != m_id) ||
 			 (object->getTemplateItemId() != root->getId()))
 			continue;
 
@@ -3044,14 +3044,14 @@ void Node::updateInstances(DCItem *root, StringMap *instances)
 		{
 			// found, remove value from instances
 			DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
-			          m_szName, m_dwId, root->getName(), root->getId(), dciInstance);
+			          m_name, m_id, root->getName(), root->getId(), dciInstance);
 			instances->remove(dciInstance);
 		}
 		else
 		{
 			// not found, delete DCI
 			DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCI will be deleted"),
-			          m_szName, m_dwId, root->getName(), root->getId(), dciInstance);
+			          m_name, m_id, root->getName(), root->getId(), dciInstance);
 			deleteList.add(object->getId());
 		}
    }
@@ -3077,14 +3077,14 @@ bool Node::connectToSMCLP()
    if (m_smclpConnection == NULL)
 	{
       m_smclpConnection = new SMCLP_Connection(m_dwIpAddr, 23);
-		DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): new connection created"), m_szName, m_dwId);
+		DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): new connection created"), m_name, m_id);
 	}
 	else
 	{
 		// Check if we already connected
 		if (m_smclpConnection->checkConnection())
 		{
-			DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): already connected"), m_szName, m_dwId);
+			DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): already connected"), m_name, m_id);
 			return true;
 		}
 
@@ -3092,7 +3092,7 @@ bool Node::connectToSMCLP()
 		m_smclpConnection->disconnect();
       delete m_smclpConnection;
       m_smclpConnection = new SMCLP_Connection(m_dwIpAddr, 23);
-		DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): existing connection reset"), m_szName, m_dwId);
+		DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): existing connection reset"), m_name, m_id);
 	}
 
    const TCHAR *login = getCustomAttribute(_T("iLO.login"));
@@ -3113,26 +3113,26 @@ BOOL Node::connectToAgent(UINT32 *error, UINT32 *socketError)
    // Create new agent connection object if needed
    if (m_pAgentConnection == NULL)
 	{
-      m_pAgentConnection = new AgentConnectionEx(m_dwId, htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
-		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_szName, m_dwId);
+      m_pAgentConnection = new AgentConnectionEx(m_id, htonl(m_dwIpAddr), m_agentPort, m_agentAuthMethod, m_szSharedSecret);
+		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_name, m_id);
 	}
 	else
 	{
 		// Check if we already connected
 		if (m_pAgentConnection->nop() == ERR_SUCCESS)
 		{
-			DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): already connected"), m_szName, m_dwId);
+			DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): already connected"), m_name, m_id);
 			return TRUE;
 		}
 
 		// Close current connection or clean up after broken connection
 		m_pAgentConnection->disconnect();
-		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): existing connection reset"), m_szName, m_dwId);
+		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): existing connection reset"), m_name, m_id);
 	}
-   m_pAgentConnection->setPort(m_wAgentPort);
-   m_pAgentConnection->setAuthData(m_wAuthMethod, m_szSharedSecret);
+   m_pAgentConnection->setPort(m_agentPort);
+   m_pAgentConnection->setAuthData(m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(m_pAgentConnection);
-	DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_szName, m_dwId, (int)m_wAgentPort);
+	DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
    bRet = m_pAgentConnection->connect(g_pServerKey, FALSE, error, socketError);
    if (bRet)
 	{
@@ -3209,7 +3209,7 @@ UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHA
 			dwResult = SNMP_ERR_COMM;
 		}
    }
-   DbgPrintf(7, _T("Node(%s)->GetItemFromSNMP(%s): dwResult=%d"), m_szName, param, dwResult);
+   DbgPrintf(7, _T("Node(%s)->GetItemFromSNMP(%s): dwResult=%d"), m_name, param, dwResult);
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS :
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
@@ -3244,7 +3244,7 @@ static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, SNMP_ObjectId *rowOid, size
    }
 
    SNMP_PDU *response;
-   UINT32 rc = snmp->doRequest(&request, &response, g_dwSNMPTimeout, 3);
+   UINT32 rc = snmp->doRequest(&request, &response, g_snmpTimeout, 3);
    if (rc == SNMP_ERR_SUCCESS)
    {
       if (((int)response->getNumVariables() >= columns->size()) &&
@@ -3421,7 +3421,7 @@ UINT32 Node::getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, T
       dwResult = SnmpGet(SNMP_VERSION_1, pTransport, szParam, NULL, 0, szBuffer, dwBufSize * sizeof(TCHAR), SG_STRING_RESULT);
 		delete pTransport;
    }
-   DbgPrintf(7, _T("Node(%s)->GetItemFromCheckPointSNMP(%s): dwResult=%d"), m_szName, szParam, dwResult);
+   DbgPrintf(7, _T("Node(%s)->GetItemFromCheckPointSNMP(%s): dwResult=%d"), m_name, szParam, dwResult);
    return (dwResult == SNMP_ERR_SUCCESS) ? DCE_SUCCESS :
       ((dwResult == SNMP_ERR_NO_OBJECT) ? DCE_NOT_SUPPORTED : DCE_COMM_ERROR);
 }
@@ -3466,18 +3466,18 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
             break;
          case ERR_REQUEST_TIMEOUT:
 				// Reset connection to agent after timeout
-				DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): timeout; resetting connection to agent..."), m_szName, szParam);
+				DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): timeout; resetting connection to agent..."), m_name, szParam);
 				delete_and_null(m_pAgentConnection);
             if (!connectToAgent())
                goto end_loop;
-				DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_szName, szParam);
+				DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_name, szParam);
             break;
       }
    }
 
 end_loop:
    agentUnlock();
-   DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d"), m_szName, szParam, dwError, dwResult);
+   DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): dwError=%d dwResult=%d"), m_name, szParam, dwError, dwResult);
    return dwResult;
 }
 
@@ -3523,18 +3523,18 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
             break;
          case ERR_REQUEST_TIMEOUT:
 				// Reset connection to agent after timeout
-				DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): timeout; resetting connection to agent..."), m_szName, name);
+				DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
 				delete_and_null(m_pAgentConnection);
             if (!connectToAgent())
                goto end_loop;
-				DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): connection to agent restored successfully"), m_szName, name);
+				DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
       }
    }
 
 end_loop:
    agentUnlock();
-   DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_szName, name, dwError, dwResult);
+   DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, dwResult);
    return dwResult;
 }
 
@@ -3583,18 +3583,18 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
             break;
          case ERR_REQUEST_TIMEOUT:
 				// Reset connection to agent after timeout
-				DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): timeout; resetting connection to agent..."), m_szName, name);
+				DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
 				delete_and_null(m_pAgentConnection);
             if (!connectToAgent())
                goto end_loop;
-				DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_szName, name);
+				DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_name, name);
             break;
       }
    }
 
 end_loop:
    agentUnlock();
-   DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_szName, name, dwError, dwResult);
+   DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): dwError=%d dwResult=%d"), m_name, name, dwError, dwResult);
    return dwResult;
 }
 
@@ -3646,7 +3646,7 @@ UINT32 Node::getItemFromSMCLP(const TCHAR *param, UINT32 bufSize, TCHAR *buffer)
 
 end_loop:
    smclpUnlock();
-   DbgPrintf(7, _T("Node(%s)->GetItemFromSMCLP(%s): result=%d"), m_szName, param, result);
+   DbgPrintf(7, _T("Node(%s)->GetItemFromSMCLP(%s): result=%d"), m_name, param, result);
    return result;
 }
 
@@ -3859,14 +3859,14 @@ UINT32 Node::getTableForClient(const TCHAR *name, Table **table)
 /**
  * Create CSCP message with object's data
  */
-void Node::CreateMessage(CSCPMessage *pMsg)
+void Node::fillMessage(CSCPMessage *pMsg)
 {
-   DataCollectionTarget::CreateMessage(pMsg);
+   DataCollectionTarget::fillMessage(pMsg);
 	pMsg->SetVariable(VID_PRIMARY_NAME, m_primaryName);
    pMsg->SetVariable(VID_FLAGS, m_dwFlags);
    pMsg->SetVariable(VID_RUNTIME_FLAGS, m_dwDynamicFlags);
-   pMsg->SetVariable(VID_AGENT_PORT, m_wAgentPort);
-   pMsg->SetVariable(VID_AUTH_METHOD, m_wAuthMethod);
+   pMsg->SetVariable(VID_AGENT_PORT, m_agentPort);
+   pMsg->SetVariable(VID_AUTH_METHOD, m_agentAuthMethod);
    pMsg->SetVariable(VID_SHARED_SECRET, m_szSharedSecret);
 	pMsg->SetVariableFromMBString(VID_SNMP_AUTH_OBJECT, m_snmpSecurity->getCommunity());
 	pMsg->SetVariableFromMBString(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity->getAuthPassword());
@@ -3905,10 +3905,10 @@ void Node::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from NXCP message
  */
-UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Node::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
    // Change flags
    if (pRequest->isFieldExist(VID_FLAGS))
@@ -3927,7 +3927,7 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		      }
 		      else
 		      {
-			      DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"), (int)m_zoneId, m_szName, (int)m_dwId);
+			      DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"), (int)m_zoneId, m_name, (int)m_id);
 		      }
          }
          else
@@ -3946,7 +3946,7 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		      }
 		      else
 		      {
-			      DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"), (int)m_zoneId, m_szName, (int)m_dwId);
+			      DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"), (int)m_zoneId, m_name, (int)m_id);
 		      }
          }
          else
@@ -3966,13 +3966,13 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       // Check if received IP address is one of node's interface addresses
       LockChildList(FALSE);
       for(i = 0; i < m_dwChildCount; i++)
-         if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
+         if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
              (m_pChildList[i]->IpAddr() == dwIpAddr))
             break;
       UnlockChildList();
       if (i == m_dwChildCount)
       {
-         UnlockData();
+         unlockProperties();
          return RCC_INVALID_IP_ADDR;
       }
 
@@ -4010,12 +4010,12 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 			// Check if received id is a valid node id
 			if (pObject == NULL)
 			{
-				UnlockData();
+				unlockProperties();
 				return RCC_INVALID_OBJECT_ID;
 			}
-			if (pObject->Type() != OBJECT_NODE)
+			if (pObject->getObjectClass() != OBJECT_NODE)
 			{
-				UnlockData();
+				unlockProperties();
 				return RCC_INVALID_OBJECT_ID;
 			}
 		}
@@ -4024,11 +4024,11 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
    // Change listen port of native agent
    if (pRequest->isFieldExist(VID_AGENT_PORT))
-      m_wAgentPort = pRequest->GetVariableShort(VID_AGENT_PORT);
+      m_agentPort = pRequest->GetVariableShort(VID_AGENT_PORT);
 
    // Change authentication method of native agent
    if (pRequest->isFieldExist(VID_AUTH_METHOD))
-      m_wAuthMethod = pRequest->GetVariableShort(VID_AUTH_METHOD);
+      m_agentAuthMethod = pRequest->GetVariableShort(VID_AUTH_METHOD);
 
    // Change shared secret of native agent
    if (pRequest->isFieldExist(VID_SHARED_SECRET))
@@ -4084,7 +4084,7 @@ UINT32 Node::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    if (pRequest->isFieldExist(VID_USE_IFXTABLE))
       m_nUseIfXTable = (BYTE)pRequest->GetVariableShort(VID_USE_IFXTABLE);
 
-   return DataCollectionTarget::ModifyFromMessage(pRequest, TRUE);
+   return DataCollectionTarget::modifyFromMessage(pRequest, TRUE);
 }
 
 /**
@@ -4097,7 +4097,7 @@ UINT32 Node::wakeUp()
    LockChildList(FALSE);
 
    for(i = 0; i < m_dwChildCount; i++)
-      if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
+      if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
           (m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
           (m_pChildList[i]->IpAddr() != 0))
       {
@@ -4169,7 +4169,7 @@ void Node::getInterfaceStatusFromAgent(UINT32 dwIndex, int *adminState, int *ope
  */
 void Node::writeParamListToMessage(CSCPMessage *pMsg, WORD flags)
 {
-   LockData();
+   lockProperties();
 
 	if ((flags & 0x01) && (m_paramList != NULL))
    {
@@ -4181,11 +4181,11 @@ void Node::writeParamListToMessage(CSCPMessage *pMsg, WORD flags)
       {
          dwId += m_paramList->get(i)->fillMessage(pMsg, dwId);
       }
-		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): sending %d parameters"), m_szName, m_paramList->size());
+		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): sending %d parameters"), m_name, m_paramList->size());
    }
    else
    {
-		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): m_paramList == NULL"), m_szName);
+		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): m_paramList == NULL"), m_name);
       pMsg->SetVariable(VID_NUM_PARAMETERS, (UINT32)0);
    }
 
@@ -4199,15 +4199,15 @@ void Node::writeParamListToMessage(CSCPMessage *pMsg, WORD flags)
       {
          dwId += m_tableList->get(i)->fillMessage(pMsg, dwId);
       }
-		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): sending %d tables"), m_szName, m_tableList->size());
+		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): sending %d tables"), m_name, m_tableList->size());
    }
    else
    {
-		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): m_tableList == NULL"), m_szName);
+		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): m_tableList == NULL"), m_name);
       pMsg->SetVariable(VID_NUM_TABLES, (UINT32)0);
    }
 
-	UnlockData();
+	unlockProperties();
 }
 
 /**
@@ -4215,7 +4215,7 @@ void Node::writeParamListToMessage(CSCPMessage *pMsg, WORD flags)
  */
 void Node::writeWinPerfObjectsToMessage(CSCPMessage *msg)
 {
-   LockData();
+   lockProperties();
 
 	if (m_winPerfObjects != NULL)
    {
@@ -4227,15 +4227,15 @@ void Node::writeWinPerfObjectsToMessage(CSCPMessage *msg)
 			WinPerfObject *o = m_winPerfObjects->get(i);
 			id = o->fillMessage(msg, id);
       }
-		DbgPrintf(6, _T("Node[%s]::writeWinPerfObjectsToMessage(): sending %d objects"), m_szName, m_winPerfObjects->size());
+		DbgPrintf(6, _T("Node[%s]::writeWinPerfObjectsToMessage(): sending %d objects"), m_name, m_winPerfObjects->size());
    }
    else
    {
-		DbgPrintf(6, _T("Node[%s]::writeWinPerfObjectsToMessage(): m_winPerfObjects == NULL"), m_szName);
+		DbgPrintf(6, _T("Node[%s]::writeWinPerfObjectsToMessage(): m_winPerfObjects == NULL"), m_name);
       msg->SetVariable(VID_NUM_OBJECTS, (UINT32)0);
    }
 
-	UnlockData();
+	unlockProperties();
 }
 
 /**
@@ -4243,7 +4243,7 @@ void Node::writeWinPerfObjectsToMessage(CSCPMessage *msg)
  */
 void Node::openParamList(ObjectArray<AgentParameterDefinition> **paramList)
 {
-   LockData();
+   lockProperties();
    *paramList = m_paramList;
 }
 
@@ -4252,7 +4252,7 @@ void Node::openParamList(ObjectArray<AgentParameterDefinition> **paramList)
  */
 void Node::openTableList(ObjectArray<AgentTableDefinition> **tableList)
 {
-   LockData();
+   lockProperties();
    *tableList = m_tableList;
 }
 
@@ -4288,15 +4288,15 @@ UINT32 Node::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServic
  */
 void Node::onObjectDelete(UINT32 dwObjectId)
 {
-	LockData();
+	lockProperties();
    if (dwObjectId == m_pollerNode)
    {
       // If deleted object is our poller node, change it to default
       m_pollerNode = 0;
-      Modify();
-      DbgPrintf(3, _T("Node \"%s\": poller node %d deleted"), m_szName, dwObjectId);
+      setModified();
+      DbgPrintf(3, _T("Node \"%s\": poller node %d deleted"), m_name, dwObjectId);
    }
-	UnlockData();
+	unlockProperties();
 }
 
 /**
@@ -4309,7 +4309,7 @@ void Node::checkOSPFSupport(SNMP_Transport *pTransport)
    if (SnmpGet(m_snmpVersion, pTransport,
                _T(".1.3.6.1.2.1.14.1.2.0"), NULL, 0, &nAdminStatus, sizeof(LONG), 0) == SNMP_ERR_SUCCESS)
    {
-		LockData();
+		lockProperties();
       if (nAdminStatus)
       {
          m_dwFlags |= NF_IS_OSPF;
@@ -4318,7 +4318,7 @@ void Node::checkOSPFSupport(SNMP_Transport *pTransport)
       {
          m_dwFlags &= ~NF_IS_OSPF;
       }
-		UnlockData();
+		unlockProperties();
    }
 }
 
@@ -4335,15 +4335,15 @@ AgentConnectionEx *Node::createAgentConnection()
        (m_dwDynamicFlags & NDF_UNREACHABLE))
       return NULL;
 
-   DbgPrintf(6, _T("Node::createAgentConnection(%s [%d])"), m_szName, (int)m_dwId);
-   conn = new AgentConnectionEx(m_dwId, htonl(m_dwIpAddr), m_wAgentPort, m_wAuthMethod, m_szSharedSecret);
+   DbgPrintf(6, _T("Node::createAgentConnection(%s [%d])"), m_name, (int)m_id);
+   conn = new AgentConnectionEx(m_id, htonl(m_dwIpAddr), m_agentPort, m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(conn);
    if (!conn->connect(g_pServerKey))
    {
       delete conn;
       conn = NULL;
    }
-	DbgPrintf(6, _T("Node::createAgentConnection(%s [%d]): conn=%p"), m_szName, (int)m_dwId, conn);
+	DbgPrintf(6, _T("Node::createAgentConnection(%s [%d]): conn=%p"), m_name, (int)m_id, conn);
    return conn;
 }
 
@@ -4391,7 +4391,7 @@ void Node::changeIPAddress(UINT32 dwIpAddr)
 
    pollerLock();
 
-   LockData();
+   lockProperties();
 
 	// check if primary name is an IP address
 	if (ntohl(ResolveHostName(m_primaryName)) == m_dwIpAddr)
@@ -4410,7 +4410,7 @@ void Node::changeIPAddress(UINT32 dwIpAddr)
 		for(i = 0; i < m_dwChildCount; i++)
 		{
 			m_pChildList[i]->resetStatus();
-			if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+			if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
 			{
 				if (((Interface *)m_pChildList[i])->isFake())
 				{
@@ -4420,9 +4420,9 @@ void Node::changeIPAddress(UINT32 dwIpAddr)
 		}
 		UnlockChildList();
 
-		Modify();
+		setModified();
 	}
-   UnlockData();
+   unlockProperties();
 
    agentLock();
    delete_and_null(m_pAgentConnection);
@@ -4440,7 +4440,7 @@ void Node::changeZone(UINT32 newZone)
 
    pollerLock();
 
-   LockData();
+   lockProperties();
 
    m_zoneId = newZone;
    m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
@@ -4451,7 +4451,7 @@ void Node::changeZone(UINT32 newZone)
 	NetObj **subnets = (NetObj **)malloc(sizeof(NetObj *) * m_dwParentCount);
 	UINT32 count = 0;
 	for(i = 0; i < m_dwParentCount; i++)
-		if (m_pParentList[i]->Type() == OBJECT_SUBNET)
+		if (m_pParentList[i]->getObjectClass() == OBJECT_SUBNET)
 			subnets[count++] = m_pParentList[i];
 	UnlockParentList();
 
@@ -4465,12 +4465,12 @@ void Node::changeZone(UINT32 newZone)
 	// Change zone ID on interfaces
 	LockChildList(FALSE);
 	for(i = 0; i < m_dwChildCount; i++)
-		if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+		if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
 			((Interface *)m_pChildList[i])->updateZoneId();
 	UnlockChildList();
 
-   Modify();
-   UnlockData();
+   setModified();
+   unlockProperties();
 
    agentLock();
    delete_and_null(m_pAgentConnection);
@@ -4488,7 +4488,7 @@ UINT32 Node::getInterfaceCount(Interface **ppInterface)
 
    LockChildList(FALSE);
    for(i = 0, dwCount = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+      if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
          dwCount++;
          *ppInterface = (Interface *)m_pChildList[i];
@@ -4555,7 +4555,7 @@ bool Node::getOutwardInterface(UINT32 destAddr, UINT32 *srcAddr, UINT32 *srcIfIn
    }
 	else
 	{
-		DbgPrintf(6, _T("Node::getOutwardInterface(%s [%d]): no routing table"), m_szName, m_dwId);
+		DbgPrintf(6, _T("Node::getOutwardInterface(%s [%d]): no routing table"), m_name, m_id);
 	}
    routingTableUnlock();
    return found;
@@ -4575,20 +4575,20 @@ bool Node::getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *
 	LockChildList(FALSE);
 	for(i = 0; i < m_dwChildCount; i++)
 	{
-		if (m_pChildList[i]->Type() == OBJECT_VPNCONNECTOR)
+		if (m_pChildList[i]->getObjectClass() == OBJECT_VPNCONNECTOR)
 		{
 			if (((VPNConnector *)m_pChildList[i])->isRemoteAddr(destAddr) &&
 				 ((VPNConnector *)m_pChildList[i])->isLocalAddr(srcAddr))
 			{
 				*nextHop = ((VPNConnector *)m_pChildList[i])->getPeerGatewayAddr();
-				*ifIndex = m_pChildList[i]->Id();
+				*ifIndex = m_pChildList[i]->getId();
 				*isVpn = true;
-            nx_strncpy(name, m_pChildList[i]->Name(), MAX_OBJECT_NAME);
+            nx_strncpy(name, m_pChildList[i]->getName(), MAX_OBJECT_NAME);
 				nextHopFound = true;
 				break;
 			}
 		}
-		else if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) && (m_pChildList[i]->IpAddr() != 0))
+		else if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && (m_pChildList[i]->IpAddr() != 0))
 		{
 			UINT32 mask = ((Interface *)m_pChildList[i])->getIpNetMask();
 			if ((destAddr & mask) == (m_pChildList[i]->IpAddr() & mask))
@@ -4596,7 +4596,7 @@ bool Node::getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *
 				*nextHop = destAddr;
 				*ifIndex = ((Interface *)m_pChildList[i])->getIfIndex();
 				*isVpn = false;
-            nx_strncpy(name, m_pChildList[i]->Name(), MAX_OBJECT_NAME);
+            nx_strncpy(name, m_pChildList[i]->getName(), MAX_OBJECT_NAME);
 				if (m_pChildList[i]->Status() == SEVERITY_NORMAL)  /* TODO: use separate link status */
 				{
 					// found operational interface
@@ -4637,7 +4637,7 @@ bool Node::getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *
             *isVpn = false;
             if (iface != NULL)
             {
-               nx_strncpy(name, iface->Name(), MAX_OBJECT_NAME);
+               nx_strncpy(name, iface->getName(), MAX_OBJECT_NAME);
             }
             else
             {
@@ -4650,7 +4650,7 @@ bool Node::getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *
    }
 	else
 	{
-		DbgPrintf(6, _T("Node::getNextHop(%s [%d]): no routing table"), m_szName, m_dwId);
+		DbgPrintf(6, _T("Node::getNextHop(%s [%d]): no routing table"), m_name, m_id);
 	}
    routingTableUnlock();
 
@@ -4675,7 +4675,7 @@ void Node::updateRoutingTable()
       DestroyRoutingTable(m_pRoutingTable);
       m_pRoutingTable = pRT;
       routingTableUnlock();
-		DbgPrintf(5, _T("Routing table updated for node %s [%d]"), m_szName, m_dwId);
+		DbgPrintf(5, _T("Routing table updated for node %s [%d]"), m_name, m_id);
    }
    m_lastRTUpdate = time(NULL);
    m_dwDynamicFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
@@ -4734,8 +4734,8 @@ void Node::setAgentProxy(AgentConnection *pConn)
 		Node *node = (Node *)g_idxNodeById.get(proxyNode);
       if (node != NULL)
       {
-         pConn->setProxy(htonl(node->m_dwIpAddr), node->m_wAgentPort,
-                         node->m_wAuthMethod, node->m_szSharedSecret);
+         pConn->setProxy(htonl(node->m_dwIpAddr), node->m_agentPort,
+                         node->m_agentAuthMethod, node->m_szSharedSecret);
       }
    }
 }
@@ -4754,62 +4754,62 @@ static bool NodeQueueComparator(void *key, void *element)
 void Node::prepareForDeletion()
 {
    // Prevent node from being queued for polling
-   LockData();
+   lockProperties();
    m_dwDynamicFlags |= NDF_POLLING_DISABLED | NDF_DELETE_IN_PROGRESS;
-   UnlockData();
+   unlockProperties();
 
 	if (g_statusPollQueue.remove(this, NodeQueueComparator))
 	{
 		m_dwDynamicFlags &= ~NDF_QUEUED_FOR_STATUS_POLL;
-		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from status poller queue"), m_szName, (int)m_dwId);
+		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from status poller queue"), m_name, (int)m_id);
 		decRefCount();
 	}
 
 	if (g_configPollQueue.remove(this, NodeQueueComparator))
 	{
 		m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
-		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from configuration poller queue"), m_szName, (int)m_dwId);
+		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from configuration poller queue"), m_name, (int)m_id);
 		decRefCount();
 	}
 
 	if (g_discoveryPollQueue.remove(this, NodeQueueComparator))
 	{
 		m_dwDynamicFlags &= ~NDF_QUEUED_FOR_DISCOVERY_POLL;
-		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from discovery poller queue"), m_szName, (int)m_dwId);
+		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from discovery poller queue"), m_name, (int)m_id);
 		decRefCount();
 	}
 
 	if (g_routePollQueue.remove(this, NodeQueueComparator))
 	{
 		m_dwDynamicFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
-		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from routing table poller queue"), m_szName, (int)m_dwId);
+		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from routing table poller queue"), m_name, (int)m_id);
 		decRefCount();
 	}
 
 	if (g_topologyPollQueue.remove(this, NodeQueueComparator))
 	{
 		m_dwDynamicFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
-		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from topology poller queue"), m_szName, (int)m_dwId);
+		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from topology poller queue"), m_name, (int)m_id);
 		decRefCount();
 	}
 
    // Wait for all pending polls
-	DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): waiting for outstanding polls to finish"), m_szName, (int)m_dwId);
+	DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): waiting for outstanding polls to finish"), m_name, (int)m_id);
    while(1)
    {
-      LockData();
+      lockProperties();
       if ((m_dwDynamicFlags &
             (NDF_QUEUED_FOR_STATUS_POLL | NDF_QUEUED_FOR_CONFIG_POLL |
              NDF_QUEUED_FOR_DISCOVERY_POLL | NDF_QUEUED_FOR_ROUTE_POLL |
 				 NDF_QUEUED_FOR_TOPOLOGY_POLL)) == 0)
       {
-         UnlockData();
+         unlockProperties();
          break;
       }
-      UnlockData();
+      unlockProperties();
       ThreadSleepMs(100);
    }
-	DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): no outstanding polls left"), m_szName, (int)m_dwId);
+	DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): no outstanding polls left"), m_name, (int)m_id);
 	DataCollectionTarget::prepareForDeletion();
 }
 
@@ -4850,7 +4850,7 @@ Cluster *Node::getMyCluster()
 
 	LockParentList(FALSE);
 	for(i = 0; i < m_dwParentCount; i++)
-		if (m_pParentList[i]->Type() == OBJECT_CLUSTER)
+		if (m_pParentList[i]->getObjectClass() == OBJECT_CLUSTER)
 		{
 			pCluster = (Cluster *)m_pParentList[i];
 			break;
@@ -4900,7 +4900,7 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 	// Set security
 	if (pTransport != NULL)
 	{
-		LockData();
+		lockProperties();
 		pTransport->setSnmpVersion(m_snmpVersion);
 		if (context == NULL)
 		{
@@ -4927,7 +4927,7 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 				pTransport->setSecurityContext(securityContext);
 			}
 		}
-		UnlockData();
+		unlockProperties();
 	}
 	return pTransport;
 }
@@ -4939,9 +4939,9 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
  */
 SNMP_SecurityContext *Node::getSnmpSecurityContext()
 {
-	LockData();
+	lockProperties();
 	SNMP_SecurityContext *ctx = new SNMP_SecurityContext(m_snmpSecurity);
-	UnlockData();
+	unlockProperties();
 	return ctx;
 }
 
@@ -4956,7 +4956,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 	UINT32 i, dwAddr;
 	TCHAR szBuffer[256];
 
-	DbgPrintf(4, _T("Resolving name for node %d [%s]..."), m_dwId, m_szName);
+	DbgPrintf(4, _T("Resolving name for node %d [%s]..."), m_id, m_name);
 
 	// Try to resolve primary IP
 	dwAddr = htonl(m_dwIpAddr);
@@ -4964,14 +4964,14 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 	if (hs != NULL)
 	{
 #ifdef UNICODE
-		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hs->h_name, -1, m_szName, MAX_OBJECT_NAME);
-		m_szName[MAX_OBJECT_NAME - 1] = 0;
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hs->h_name, -1, m_name, MAX_OBJECT_NAME);
+		m_name[MAX_OBJECT_NAME - 1] = 0;
 #else
-		nx_strncpy(m_szName, hs->h_name, MAX_OBJECT_NAME);
+		nx_strncpy(m_name, hs->h_name, MAX_OBJECT_NAME);
 #endif
 		if (!(g_flags & AF_USE_FQDN_FOR_NODE_NAMES))
 		{
-			TCHAR *pPoint = _tcschr(m_szName, _T('.'));
+			TCHAR *pPoint = _tcschr(m_name, _T('.'));
 			if (pPoint != NULL)
 			{
 				*pPoint = _T('\0');
@@ -4986,7 +4986,7 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 		LockChildList(FALSE);
 		for(i = 0; i < m_dwChildCount; i++)
 		{
-			if ((m_pChildList[i]->Type() == OBJECT_INTERFACE) &&
+			if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
 			    !((Interface *)m_pChildList[i])->isLoopback())
 			{
 				dwAddr = htonl(m_pChildList[i]->IpAddr());
@@ -4996,10 +4996,10 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 					if (hs != NULL)
 					{
 #ifdef UNICODE
-						MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hs->h_name, -1, m_szName, MAX_OBJECT_NAME);
-						m_szName[MAX_OBJECT_NAME - 1] = 0;
+						MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hs->h_name, -1, m_name, MAX_OBJECT_NAME);
+						m_name[MAX_OBJECT_NAME - 1] = 0;
 #else
-						nx_strncpy(m_szName, hs->h_name, MAX_OBJECT_NAME);
+						nx_strncpy(m_name, hs->h_name, MAX_OBJECT_NAME);
 #endif
 						bSuccess = TRUE;
 						break;
@@ -5012,13 +5012,13 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 		// Try to get hostname from agent if address resolution fails
 		if (!(bSuccess || useOnlyDNS))
 		{
-			DbgPrintf(4, _T("Resolving name for node %d [%s] via agent..."), m_dwId, m_szName);
+			DbgPrintf(4, _T("Resolving name for node %d [%s] via agent..."), m_id, m_name);
 			if (getItemFromAgent(_T("System.Hostname"), 256, szBuffer) == DCE_SUCCESS)
 			{
 				StrStrip(szBuffer);
 				if (szBuffer[0] != 0)
 				{
-					nx_strncpy(m_szName, szBuffer, MAX_OBJECT_NAME);
+					nx_strncpy(m_name, szBuffer, MAX_OBJECT_NAME);
 					bSuccess = TRUE;
 				}
 			}
@@ -5027,13 +5027,13 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 		// Try to get hostname from SNMP if other methods fails
 		if (!(bSuccess || useOnlyDNS))
 		{
-			DbgPrintf(4, _T("Resolving name for node %d [%s] via SNMP..."), m_dwId, m_szName);
+			DbgPrintf(4, _T("Resolving name for node %d [%s] via SNMP..."), m_id, m_name);
 			if (getItemFromSNMP(0, _T(".1.3.6.1.2.1.1.5.0"), 256, szBuffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
 			{
 				StrStrip(szBuffer);
 				if (szBuffer[0] != 0)
 				{
-					nx_strncpy(m_szName, szBuffer, MAX_OBJECT_NAME);
+					nx_strncpy(m_name, szBuffer, MAX_OBJECT_NAME);
 					bSuccess = TRUE;
 				}
 			}
@@ -5041,10 +5041,10 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 	}
 
 	if (bSuccess)
-		DbgPrintf(4, _T("Name for node %d was resolved to %s%s"), m_dwId, m_szName,
+		DbgPrintf(4, _T("Name for node %d was resolved to %s%s"), m_id, m_name,
 			bNameTruncated ? _T(" (truncated to host)") : _T(""));
 	else
-		DbgPrintf(4, _T("Name for node %d was not resolved"), m_dwId);
+		DbgPrintf(4, _T("Name for node %d was not resolved"), m_id);
 	return bSuccess;
 }
 
@@ -5118,9 +5118,9 @@ nxmap_ObjList *Node::buildIPTopology(UINT32 *pdwStatus, int radius, bool include
  */
 void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedSubnet, bool vpnLink, bool includeEndNodes)
 {
-	topology.addObject(m_dwId);
+	topology.addObject(m_id);
 	if (seedSubnet != 0)
-      topology.linkObjects(seedSubnet, m_dwId, vpnLink ? LINK_TYPE_VPN : LINK_TYPE_NORMAL);
+      topology.linkObjects(seedSubnet, m_id, vpnLink ? LINK_TYPE_VPN : LINK_TYPE_NORMAL);
 
 	if (nDepth > 0)
 	{
@@ -5131,11 +5131,11 @@ void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 s
 		LockParentList(FALSE);
 		for(i = 0; i < m_dwParentCount; i++)
 		{
-			if ((m_pParentList[i]->Id() == seedSubnet) || (m_pParentList[i]->Type() != OBJECT_SUBNET))
+			if ((m_pParentList[i]->getId() == seedSubnet) || (m_pParentList[i]->getObjectClass() != OBJECT_SUBNET))
 				continue;
 
-			topology.addObject(m_pParentList[i]->Id());
-			topology.linkObjects(m_dwId, m_pParentList[i]->Id());
+			topology.addObject(m_pParentList[i]->getId());
+			topology.linkObjects(m_id, m_pParentList[i]->getId());
 			m_pParentList[i]->incRefCount();
 			subnets.add((Subnet *)m_pParentList[i]);
 		}
@@ -5144,7 +5144,7 @@ void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 s
 		for(j = 0; j < subnets.size(); j++)
 		{
 			Subnet *s = subnets.get(j);
-			s->buildIPTopologyInternal(topology, nDepth, m_dwId, includeEndNodes);
+			s->buildIPTopologyInternal(topology, nDepth, m_id, includeEndNodes);
 			s->decRefCount();
 		}
 
@@ -5152,11 +5152,11 @@ void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 s
 		LockChildList(FALSE);
 		for(i = 0; i < m_dwChildCount; i++)
 		{
-			if (m_pChildList[i]->Type() != OBJECT_VPNCONNECTOR)
+			if (m_pChildList[i]->getObjectClass() != OBJECT_VPNCONNECTOR)
 				continue;
 
          Node *node = (Node *)FindObjectById(((VPNConnector *)m_pChildList[i])->getPeerGatewayId(), OBJECT_NODE);
-         if ((node != NULL) && (node->Id() != seedSubnet) && !topology.isObjectExist(node->Id()))
+         if ((node != NULL) && (node->getId() != seedSubnet) && !topology.isObjectExist(node->getId()))
          {
             node->incRefCount();
 			   peers.add(node);
@@ -5167,7 +5167,7 @@ void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 s
 		for(j = 0; j < peers.size(); j++)
 		{
 			Node *n = peers.get(j);
-			n->buildIPTopologyInternal(topology, nDepth - 1, m_dwId, true, includeEndNodes);
+			n->buildIPTopologyInternal(topology, nDepth - 1, m_id, true, includeEndNodes);
 			n->decRefCount();
 		}
    }
@@ -5188,8 +5188,8 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 	pollerLock();
    m_pollRequestor = pSession;
 
-   sendPollerMsg(dwRqId, _T("Starting topology poll for node %s\r\n"), m_szName);
-	DbgPrintf(4, _T("Started topology poll for node %s [%d]"), m_szName, m_dwId);
+   sendPollerMsg(dwRqId, _T("Starting topology poll for node %s\r\n"), m_name);
+	DbgPrintf(4, _T("Started topology poll for node %s [%d]"), m_name, m_id);
 
 	if (m_driver != NULL)
 	{
@@ -5204,7 +5204,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 			{
 				resolveVlanPorts(vlanList);
 				sendPollerMsg(dwRqId, POLLER_INFO _T("VLAN list successfully retrieved from node\r\n"));
-				DbgPrintf(4, _T("VLAN list retrieved from node %s [%d]"), m_szName, m_dwId);
+				DbgPrintf(4, _T("VLAN list retrieved from node %s [%d]"), m_name, m_id);
 				if (m_vlans != NULL)
 					m_vlans->decRefCount();
 				m_vlans = vlanList;
@@ -5212,22 +5212,22 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 			else
 			{
 				sendPollerMsg(dwRqId, POLLER_WARNING _T("Cannot get VLAN list\r\n"));
-				DbgPrintf(4, _T("Cannot retrieve VLAN list from node %s [%d]"), m_szName, m_dwId);
+				DbgPrintf(4, _T("Cannot retrieve VLAN list from node %s [%d]"), m_name, m_id);
 				if (m_vlans != NULL)
 					m_vlans->decRefCount();
 				m_vlans = NULL;
 			}
 			MutexUnlock(m_mutexTopoAccess);
 
-			LockData();
+			lockProperties();
 			UINT32 oldFlags = m_dwFlags;
 			if (vlanList != NULL)
 				m_dwFlags |= NF_HAS_VLANS;
 			else
 				m_dwFlags &= ~NF_HAS_VLANS;
 			if (oldFlags != m_dwFlags)
-				Modify();
-			UnlockData();
+				setModified();
+			unlockProperties();
 		}
 	}
 
@@ -5239,12 +5239,12 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 	MutexUnlock(m_mutexTopoAccess);
 	if (fdb != NULL)
 	{
-		DbgPrintf(4, _T("Switch forwarding database retrieved for node %s [%d]"), m_szName, m_dwId);
+		DbgPrintf(4, _T("Switch forwarding database retrieved for node %s [%d]"), m_name, m_id);
 	   sendPollerMsg(dwRqId, POLLER_INFO _T("Switch forwarding database retrieved\r\n"));
 	}
 	else
 	{
-		DbgPrintf(4, _T("Failed to get switch forwarding database from node %s [%d]"), m_szName, m_dwId);
+		DbgPrintf(4, _T("Failed to get switch forwarding database from node %s [%d]"), m_name, m_id);
 	   sendPollerMsg(dwRqId, POLLER_WARNING _T("Failed to get switch forwarding database\r\n"));
 	}
 
@@ -5252,7 +5252,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 	if (nbs != NULL)
 	{
 		sendPollerMsg(dwRqId, POLLER_INFO _T("Link layer topology retrieved (%d connections found)\r\n"), nbs->size());
-		DbgPrintf(4, _T("Link layer topology retrieved for node %s [%d] (%d connections found)"), m_szName, (int)m_dwId, nbs->size());
+		DbgPrintf(4, _T("Link layer topology retrieved for node %s [%d] (%d connections found)"), m_name, (int)m_id, nbs->size());
 
 		MutexLock(m_mutexTopoAccess);
 		if (m_linkLayerNeighbors != NULL)
@@ -5269,19 +5269,19 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
             continue;   // ignore cached information
 
 			NetObj *object = FindObjectById(ni->objectId);
-			if ((object != NULL) && (object->Type() == OBJECT_NODE))
+			if ((object != NULL) && (object->getObjectClass() == OBJECT_NODE))
 			{
 				DbgPrintf(5, _T("Node::topologyPoll(%s [%d]): found peer node %s [%d], localIfIndex=%d remoteIfIndex=%d"),
-				          m_szName, m_dwId, object->Name(), object->Id(), ni->ifLocal, ni->ifRemote);
+				          m_name, m_id, object->getName(), object->getId(), ni->ifLocal, ni->ifRemote);
 				Interface *ifLocal = findInterface(ni->ifLocal, INADDR_ANY);
 				Interface *ifRemote = ((Node *)object)->findInterface(ni->ifRemote, INADDR_ANY);
-				DbgPrintf(5, _T("Node::topologyPoll(%s [%d]): localIfObject=%s remoteIfObject=%s"), m_szName, m_dwId,
-				          (ifLocal != NULL) ? ifLocal->Name() : _T("(null)"),
-				          (ifRemote != NULL) ? ifRemote->Name() : _T("(null)"));
+				DbgPrintf(5, _T("Node::topologyPoll(%s [%d]): localIfObject=%s remoteIfObject=%s"), m_name, m_id,
+				          (ifLocal != NULL) ? ifLocal->getName() : _T("(null)"),
+				          (ifRemote != NULL) ? ifRemote->getName() : _T("(null)"));
 				if ((ifLocal != NULL) && (ifRemote != NULL))
 				{
 					// Update old peers for local and remote interfaces, if any
-					if ((ifRemote->getPeerInterfaceId() != 0) && (ifRemote->getPeerInterfaceId() != ifLocal->Id()))
+					if ((ifRemote->getPeerInterfaceId() != 0) && (ifRemote->getPeerInterfaceId() != ifLocal->getId()))
 					{
 						Interface *ifOldPeer = (Interface *)FindObjectById(ifRemote->getPeerInterfaceId(), OBJECT_INTERFACE);
 						if (ifOldPeer != NULL)
@@ -5289,7 +5289,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 							ifOldPeer->clearPeer();
 						}
 					}
-					if ((ifLocal->getPeerInterfaceId() != 0) && (ifLocal->getPeerInterfaceId() != ifRemote->Id()))
+					if ((ifLocal->getPeerInterfaceId() != 0) && (ifLocal->getPeerInterfaceId() != ifRemote->getId()))
 					{
 						Interface *ifOldPeer = (Interface *)FindObjectById(ifLocal->getPeerInterfaceId(), OBJECT_INTERFACE);
 						if (ifOldPeer != NULL)
@@ -5301,9 +5301,9 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
                ifLocal->setPeer((Node *)object, ifRemote, ni->protocol, false);
                ifRemote->setPeer(this, ifLocal, ni->protocol, true);
 					sendPollerMsg(dwRqId, _T("   Local interface %s linked to remote interface %s:%s\r\n"),
-					              ifLocal->Name(), object->Name(), ifRemote->Name());
+					              ifLocal->getName(), object->getName(), ifRemote->getName());
 					DbgPrintf(5, _T("Local interface %s:%s linked to remote interface %s:%s"),
-					          m_szName, ifLocal->Name(), object->Name(), ifRemote->Name());
+					          m_name, ifLocal->getName(), object->getName(), ifRemote->getName());
 				}
 			}
 		}
@@ -5311,16 +5311,16 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
       LockChildList(FALSE);
       for(DWORD i = 0; i < m_dwChildCount; i++)
       {
-         if (m_pChildList[i]->Type() != OBJECT_INTERFACE)
+         if (m_pChildList[i]->getObjectClass() != OBJECT_INTERFACE)
             continue;
 
          Interface *iface = (Interface *)m_pChildList[i];
 
          // Clear self-linked interfaces caused by bug in previous release
-         if ((iface->getPeerNodeId() == m_dwId) && (iface->getPeerInterfaceId() == iface->Id()))
+         if ((iface->getPeerNodeId() == m_id) && (iface->getPeerInterfaceId() == iface->getId()))
          {
             iface->clearPeer();
-            DbgPrintf(6, _T("Node::topologyPoll(%s [%d]): Self-linked interface %s [%d] fixed"), m_szName, m_dwId, iface->Name(), iface->Id());
+            DbgPrintf(6, _T("Node::topologyPoll(%s [%d]): Self-linked interface %s [%d] fixed"), m_name, m_id, iface->getName(), iface->getId());
          }
          // Remove outdated peer information
          else if (iface->getPeerNodeId() != 0)
@@ -5349,14 +5349,14 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 					   ifPeer->clearPeer();
 				   }
                iface->clearPeer();
-               DbgPrintf(6, _T("Node::topologyPoll(%s [%d]): Removed outdated peer information from interface %s [%d]"), m_szName, m_dwId, iface->Name(), iface->Id());
+               DbgPrintf(6, _T("Node::topologyPoll(%s [%d]): Removed outdated peer information from interface %s [%d]"), m_name, m_id, iface->getName(), iface->getId());
             }
          }
       }
       UnlockChildList();
 
 	   sendPollerMsg(dwRqId, _T("Link layer topology processed\r\n"));
-		DbgPrintf(4, _T("Link layer topology processed for node %s [%d]"), m_szName, m_dwId);
+		DbgPrintf(4, _T("Link layer topology processed for node %s [%d]"), m_name, m_id);
 	}
 	else
 	{
@@ -5374,7 +5374,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 			if (stations != NULL)
 			{
 				sendPollerMsg(dwRqId, _T("   %d wireless stations found\r\n"), stations->size());
-				DbgPrintf(6, _T("%d wireless stations found on controller node %s [%d]"), stations->size(), m_szName, m_dwId);
+				DbgPrintf(6, _T("%d wireless stations found on controller node %s [%d]"), stations->size(), m_name, m_id);
 
 				for(int i = 0; i < stations->size(); i++)
 				{
@@ -5383,7 +5383,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
                AccessPoint *ap = (ws->apMatchPolicy == AP_MATCH_BY_BSSID) ? findAccessPointByBSSID(ws->bssid) : findAccessPointByRadioId(ws->rfIndex);
 					if (ap != NULL)
 					{
-						ws->apObjectId = ap->Id();
+						ws->apObjectId = ap->getId();
 						ap->getRadioName(ws->rfIndex, ws->rfName, MAX_OBJECT_NAME);
 					}
 					else
@@ -5393,7 +5393,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 					}
 
 					Node *node = FindNodeByMAC(ws->macAddr);
-					ws->nodeId = (node != NULL) ? node->Id() : 0;
+					ws->nodeId = (node != NULL) ? node->getId() : 0;
                if ((node != NULL) && (ws->ipAddr == 0))
                {
                   Interface *iface = node->findInterfaceByMAC(ws->macAddr);
@@ -5405,10 +5405,10 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 				}
 			}
 
-			LockData();
+			lockProperties();
 			delete m_wirelessStations;
 			m_wirelessStations = stations;
-			UnlockData();
+			unlockProperties();
 		}
 	}
 
@@ -5417,7 +5417,7 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 	{
 		if (g_pModuleList[i].pfTopologyPollHook != NULL)
 		{
-			DbgPrintf(5, _T("TopologyPoll(%s [%d]): calling hook in module %s"), m_szName, m_dwId, g_pModuleList[i].szName);
+			DbgPrintf(5, _T("TopologyPoll(%s [%d]): calling hook in module %s"), m_name, m_id, g_pModuleList[i].szName);
 			g_pModuleList[i].pfTopologyPollHook(this, pSession, dwRqId, nPoller);
 		}
 	}
@@ -5426,13 +5426,13 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
    SetPollerInfo(nPoller, _T("hook"));
 	executeHookScript(_T("TopologyPoll"));
 
-   sendPollerMsg(dwRqId, _T("Finished topology poll for node %s\r\n"), m_szName);
+   sendPollerMsg(dwRqId, _T("Finished topology poll for node %s\r\n"), m_name);
 
 	m_lastTopologyPoll = time(NULL);
    m_dwDynamicFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
 	pollerUnlock();
 
-	DbgPrintf(4, _T("Finished topology poll for node %s [%d]"), m_szName, m_dwId);
+	DbgPrintf(4, _T("Finished topology poll for node %s [%d]"), m_name, m_id);
 }
 
 /**
@@ -5444,12 +5444,12 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
 	if (fdb == NULL)
 		return;
 
-	DbgPrintf(5, _T("Node::addHostConnections(%s [%d]): FDB retrieved"), m_szName, (int)m_dwId);
+	DbgPrintf(5, _T("Node::addHostConnections(%s [%d]): FDB retrieved"), m_name, (int)m_id);
 
 	LockChildList(FALSE);
 	for(int i = 0; i < (int)m_dwChildCount; i++)
 	{
-		if (m_pChildList[i]->Type() != OBJECT_INTERFACE)
+		if (m_pChildList[i]->getObjectClass() != OBJECT_INTERFACE)
 			continue;
 
 		Interface *ifLocal = (Interface *)m_pChildList[i];
@@ -5466,7 +5466,7 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
 
 					info.ifLocal = ifLocal->getIfIndex();
 					info.ifRemote = ifRemote->getIfIndex();
-					info.objectId = peerNode->Id();
+					info.objectId = peerNode->getId();
 					info.isPtToPt = true;
 					info.protocol = LL_PROTO_FDB;
 					nbs->addConnection(&info);
@@ -5487,7 +5487,7 @@ void Node::addExistingConnections(LinkLayerNeighbors *nbs)
 	LockChildList(FALSE);
 	for(int i = 0; i < (int)m_dwChildCount; i++)
 	{
-		if (m_pChildList[i]->Type() != OBJECT_INTERFACE)
+		if (m_pChildList[i]->getObjectClass() != OBJECT_INTERFACE)
 			continue;
 
 		Interface *ifLocal = (Interface *)m_pChildList[i];
@@ -5537,7 +5537,7 @@ void Node::resolveVlanPorts(VlanList *vlanList)
 					break;
 			}
 			if (iface != NULL)
-				vlan->resolvePort(j, (iface->getSlotNumber() << 16) | iface->getPortNumber(), iface->getIfIndex(), iface->Id());
+				vlan->resolvePort(j, (iface->getSlotNumber() << 16) | iface->getPortNumber(), iface->getIfIndex(), iface->getId());
 		}
 	}
 }
@@ -5575,7 +5575,7 @@ Subnet *Node::createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask)
    }
    s->AddNode(this);
    DbgPrintf(4, _T("Node::createSubnet(): Creating new subnet %s [%d] for node %s [%d]"),
-             s->Name(), s->Id(), m_szName, m_dwId);
+             s->getName(), s->getId(), m_name, m_id);
    return s;
 }
 
@@ -5592,7 +5592,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 	   pCluster = getMyCluster();
 
 	   // Check if we have subnet bindings for all interfaces
-	   DbgPrintf(5, _T("Checking subnet bindings for node %s [%d]"), m_szName, m_dwId);
+	   DbgPrintf(5, _T("Checking subnet bindings for node %s [%d]"), m_name, m_id);
 	   for(int i = 0; i < pIfList->size(); i++)
 	   {
 		   NX_INTERFACE_INFO *iface = pIfList->get(i);
@@ -5626,15 +5626,15 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 					   if (pSubnet->isSyntheticMask())
 					   {
 						   DbgPrintf(4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
-									    pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
+									    pSubnet->getName(), pSubnet->getId(), m_name, m_id);
 						   pSubnet->setCorrectMask(pInterface->IpAddr() & pInterface->getIpNetMask(), pInterface->getIpNetMask());
 					   }
 
 					   // Check if node is linked to this subnet
-					   if (!pSubnet->isChild(m_dwId))
+					   if (!pSubnet->isChild(m_id))
 					   {
 						   DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
-									    pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
+									    pSubnet->getName(), pSubnet->getId(), m_name, m_id);
 						   pSubnet->AddNode(this);
 					   }
 				   }
@@ -5650,8 +5650,8 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 			   // Check if subnet mask is correct on interface
 			   if ((pSubnet != NULL) && (pSubnet->getIpNetMask() != pInterface->getIpNetMask()) && (iface->dwIpNetMask != 0xFFFFFFFF))
 			   {
-				   PostEvent(EVENT_INCORRECT_NETMASK, m_dwId, "idsaa", pInterface->Id(),
-							    pInterface->getIfIndex(), pInterface->Name(),
+				   PostEvent(EVENT_INCORRECT_NETMASK, m_id, "idsaa", pInterface->getId(),
+							    pInterface->getIfIndex(), pInterface->getName(),
 							    pInterface->getIpNetMask(), pSubnet->getIpNetMask());
 			   }
 		   }
@@ -5667,10 +5667,10 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
       if (pSubnet != NULL)
       {
 		   // Check if node is linked to this subnet
-		   if (!pSubnet->isChild(m_dwId))
+		   if (!pSubnet->isChild(m_id))
 		   {
 			   DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
-						    pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
+						    pSubnet->getName(), pSubnet->getId(), m_name, m_id);
 			   pSubnet->AddNode(this);
 		   }
       }
@@ -5686,7 +5686,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
    ObjectArray<NetObj> unlinkList(m_dwParentCount, 8, false);
 	for(UINT32 i = 0; i < m_dwParentCount; i++)
 	{
-		if (m_pParentList[i]->Type() == OBJECT_SUBNET)
+		if (m_pParentList[i]->getObjectClass() == OBJECT_SUBNET)
 		{
 			Subnet *pSubnet = (Subnet *)m_pParentList[i];
 			if ((pSubnet->IpAddr() == (m_dwIpAddr & pSubnet->getIpNetMask())) && !(m_dwFlags & NF_REMOTE_AGENT))
@@ -5695,7 +5695,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
          UINT32 j;
 			for(j = 0; j < m_dwChildCount; j++)
 			{
-				if (m_pChildList[j]->Type() == OBJECT_INTERFACE)
+				if (m_pChildList[j]->getObjectClass() == OBJECT_INTERFACE)
 				{
 					if (((Interface *)m_pChildList[j])->isExcludedFromTopology())
 						continue;
@@ -5716,7 +5716,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 			if (j == m_dwChildCount)
 			{
 				DbgPrintf(4, _T("Node::CheckSubnetBinding(): Subnet %s [%d] is incorrect for node %s [%d]"),
-							 pSubnet->Name(), pSubnet->Id(), m_szName, m_dwId);
+							 pSubnet->getName(), pSubnet->getId(), m_name, m_id);
             unlinkList.add(pSubnet);
 			}
 		}
@@ -5744,8 +5744,8 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId)
 
    pollerLock();
    m_pollRequestor = pSession;
-   sendPollerMsg(dwRqId, _T("Starting interface names poll for node %s\r\n"), m_szName);
-   DbgPrintf(4, _T("Starting interface names poll for node %s (ID: %d)"), m_szName, m_dwId);
+   sendPollerMsg(dwRqId, _T("Starting interface names poll for node %s\r\n"), m_name);
+   DbgPrintf(4, _T("Starting interface names poll for node %s (ID: %d)"), m_name, m_id);
 
    // Retrieve interface list
    pIfList = getInterfaceList();
@@ -5757,14 +5757,14 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId)
          LockChildList(FALSE);
          for(i = 0; i < m_dwChildCount; i++)
          {
-            if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+            if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
             {
                Interface *pInterface = (Interface *)m_pChildList[i];
 
                if (pIfList->get(j)->dwIndex == pInterface->getIfIndex())
                {
-						sendPollerMsg(dwRqId, _T("   Checking interface %d (%s)\r\n"), pInterface->getIfIndex(), pInterface->Name());
-                  if (_tcscmp(pIfList->get(j)->szName, pInterface->Name()))
+						sendPollerMsg(dwRqId, _T("   Checking interface %d (%s)\r\n"), pInterface->getIfIndex(), pInterface->getName());
+                  if (_tcscmp(pIfList->get(j)->szName, pInterface->getName()))
                   {
                      pInterface->setName(pIfList->get(j)->szName);
 							sendPollerMsg(dwRqId, POLLER_WARNING _T("   Name of interface %d changed to %s\r\n"), pInterface->getIfIndex(), pIfList->get(j)->szName);
@@ -5789,9 +5789,9 @@ void Node::updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId)
    }
 
    // Finish poll
-	sendPollerMsg(dwRqId, _T("Finished interface names poll for node %s\r\n"), m_szName);
+	sendPollerMsg(dwRqId, _T("Finished interface names poll for node %s\r\n"), m_name);
    pollerUnlock();
-   DbgPrintf(4, _T("Finished interface names poll for node %s (ID: %d)"), m_szName, m_dwId);
+   DbgPrintf(4, _T("Finished interface names poll for node %s (ID: %d)"), m_name, m_id);
 }
 
 /**
@@ -5805,11 +5805,11 @@ NXSL_Array *Node::getParentsForNXSL()
 	LockParentList(FALSE);
 	for(UINT32 i = 0; i < m_dwParentCount; i++)
 	{
-		if (((m_pParentList[i]->Type() == OBJECT_CONTAINER) ||
-		     (m_pParentList[i]->Type() == OBJECT_CLUSTER) ||
-			  (m_pParentList[i]->Type() == OBJECT_SUBNET) ||
-			  (m_pParentList[i]->Type() == OBJECT_SERVICEROOT)) &&
-		    m_pParentList[i]->isTrustedNode(m_dwId))
+		if (((m_pParentList[i]->getObjectClass() == OBJECT_CONTAINER) ||
+		     (m_pParentList[i]->getObjectClass() == OBJECT_CLUSTER) ||
+			  (m_pParentList[i]->getObjectClass() == OBJECT_SUBNET) ||
+			  (m_pParentList[i]->getObjectClass() == OBJECT_SERVICEROOT)) &&
+		    m_pParentList[i]->isTrustedNode(m_id))
 		{
 			parents->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pParentList[i])));
 		}
@@ -5830,7 +5830,7 @@ NXSL_Array *Node::getInterfacesForNXSL()
 	LockChildList(FALSE);
 	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
-		if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+		if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
 		{
 			ifaces->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, m_pChildList[i])));
 		}
@@ -5914,10 +5914,10 @@ TCHAR *Node::expandText(const TCHAR *textTemplate)
                   pText[dwPos++] = '%';
                   break;
                case 'n':   // Name of the node
-                  dwSize += (UINT32)_tcslen(m_szName);
+                  dwSize += (UINT32)_tcslen(m_name);
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  _tcscpy(&pText[dwPos], m_szName);
-                  dwPos += (UINT32)_tcslen(m_szName);
+                  _tcscpy(&pText[dwPos], m_name);
+                  dwPos += (UINT32)_tcslen(m_name);
                   break;
                case 'a':   // IP address of the node
                   dwSize += 16;
@@ -5928,7 +5928,7 @@ TCHAR *Node::expandText(const TCHAR *textTemplate)
                case 'i':   // Node identifier
                   dwSize += 10;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  _sntprintf(&pText[dwPos], 11, _T("0x%08X"), m_dwId);
+                  _sntprintf(&pText[dwPos], 11, _T("0x%08X"), m_id);
                   dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'v':   // NetXMS server version
@@ -6049,11 +6049,11 @@ TCHAR *Node::expandText(const TCHAR *textTemplate)
  */
 bool Node::checkAgentTrapId(QWORD trapId)
 {
-	LockData();
+	lockProperties();
 	bool valid = (trapId > m_lastAgentTrapId);
 	if (valid)
 		m_lastAgentTrapId = trapId;
-	UnlockData();
+	unlockProperties();
 	return valid;
 }
 
@@ -6062,11 +6062,11 @@ bool Node::checkAgentTrapId(QWORD trapId)
  */
 bool Node::checkAgentPushRequestId(QWORD requestId)
 {
-	LockData();
+	lockProperties();
 	bool valid = (requestId > m_lastAgentPushRequestId);
 	if (valid)
 		m_lastAgentPushRequestId = requestId;
-	UnlockData();
+	unlockProperties();
 	return valid;
 }
 
@@ -6075,11 +6075,11 @@ bool Node::checkAgentPushRequestId(QWORD requestId)
  */
 ComponentTree *Node::getComponents()
 {
-	LockData();
+	lockProperties();
 	ComponentTree *components = m_components;
 	if (components != NULL)
 		components->incRefCount();
-	UnlockData();
+	unlockProperties();
 	return components;
 }
 
@@ -6095,7 +6095,7 @@ void Node::executeHookScript(const TCHAR *hookName)
 	NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
 	if (vm == NULL)
 	{
-		DbgPrintf(7, _T("Node::executeHookScript(%s [%u]): hook script \"%s\" not found"), m_szName, m_dwId, scriptName);
+		DbgPrintf(7, _T("Node::executeHookScript(%s [%u]): hook script \"%s\" not found"), m_name, m_id, scriptName);
 		return;
 	}
 
@@ -6103,7 +6103,7 @@ void Node::executeHookScript(const TCHAR *hookName)
 	if (!vm->run())
 	{
 		DbgPrintf(4, _T("Node::executeHookScript(%s [%u]): hook script \"%s\" execution error: %s"),
-		          m_szName, m_dwId, scriptName, vm->getErrorText());
+		          m_name, m_id, scriptName, vm->getErrorText());
 	}
    delete vm;
 }
@@ -6126,7 +6126,7 @@ bool Node::isDataCollectionDisabled()
 bool Node::getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *buffer)
 {
 	bool result = false;
-	LockData();
+	lockProperties();
 	if (m_lldpLocalPortInfo != NULL)
 	{
 		for(int i = 0; i < m_lldpLocalPortInfo->size(); i++)
@@ -6140,7 +6140,7 @@ bool Node::getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *bu
 			}
 		}
 	}
-	UnlockData();
+	unlockProperties();
 	return result;
 }
 
@@ -6149,7 +6149,7 @@ bool Node::getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *bu
  */
 void Node::writePackageListToMessage(CSCPMessage *msg)
 {
-	LockData();
+	lockProperties();
 	if (m_softwarePackages != NULL)
 	{
 		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_softwarePackages->size());
@@ -6165,7 +6165,7 @@ void Node::writePackageListToMessage(CSCPMessage *msg)
 	{
 		msg->SetVariable(VID_RCC, RCC_NO_SOFTWARE_PACKAGE_DATA);
 	}
-	UnlockData();
+	unlockProperties();
 }
 
 /**
@@ -6173,7 +6173,7 @@ void Node::writePackageListToMessage(CSCPMessage *msg)
  */
 void Node::writeWsListToMessage(CSCPMessage *msg)
 {
-	LockData();
+	lockProperties();
 	if (m_wirelessStations != NULL)
 	{
 		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_wirelessStations->size());
@@ -6196,7 +6196,7 @@ void Node::writeWsListToMessage(CSCPMessage *msg)
 	{
 		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)0);
 	}
-	UnlockData();
+	unlockProperties();
 }
 
 /**
@@ -6207,7 +6207,7 @@ ObjectArray<WirelessStationInfo> *Node::getWirelessStations()
 {
    ObjectArray<WirelessStationInfo> *ws = NULL;
 
-   LockData();
+   lockProperties();
    if ((m_wirelessStations != NULL) && (m_wirelessStations->size() > 0))
    {
       ws = new ObjectArray<WirelessStationInfo>(m_wirelessStations->size(), 16, true);
@@ -6218,6 +6218,6 @@ ObjectArray<WirelessStationInfo> *Node::getWirelessStations()
          ws->add(wsi);
       }
    }
-   UnlockData();
+   unlockProperties();
    return ws;
 }

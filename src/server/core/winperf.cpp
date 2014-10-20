@@ -99,7 +99,7 @@ ObjectArray<WinPerfObject> *WinPerfObject::getWinPerfObjectsFromNode(Node *node,
 		{
 			if (!objects->get(i)->readDataFromAgent(conn))
 			{
-				DbgPrintf(5, _T("WinPerfObject::getWinPerfObjectsFromNode(%s [%d]): cannot read data for object %s"), node->Name(), node->Id(), objects->get(i)->getName());
+				DbgPrintf(5, _T("WinPerfObject::getWinPerfObjectsFromNode(%s [%d]): cannot read data for object %s"), node->getName(), node->getId(), objects->get(i)->getName());
 				objects->remove(i);
 				i--;
 			}
@@ -109,7 +109,7 @@ ObjectArray<WinPerfObject> *WinPerfObject::getWinPerfObjectsFromNode(Node *node,
 	}
 	else
 	{
-		DbgPrintf(5, _T("WinPerfObject::getWinPerfObjectsFromNode(%s [%d]): cannot read PDH.Objects list"), node->Name(), node->Id());
+		DbgPrintf(5, _T("WinPerfObject::getWinPerfObjectsFromNode(%s [%d]): cannot read PDH.Objects list"), node->getName(), node->getId());
 		objects = NULL;
 	}
 	return objects;

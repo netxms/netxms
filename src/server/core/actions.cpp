@@ -338,7 +338,7 @@ static BOOL ExecuteActionScript(const TCHAR *scriptName, Event *event)
 	if (vm != NULL)
 	{
 		NetObj *object = FindObjectById(event->getSourceId());
-		if ((object != NULL) && (object->Type() == OBJECT_NODE))
+		if ((object != NULL) && (object->getObjectClass() == OBJECT_NODE))
 			vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
 		vm->setGlobalVariable(_T("$event"), new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)));
 

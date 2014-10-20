@@ -55,7 +55,7 @@ Queue *g_pItemQueue = NULL;
  */
 static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *pBuffer, UINT32 *error)
 {
-   if (dcTarget->Type() == OBJECT_CLUSTER)
+   if (dcTarget->getObjectClass() == OBJECT_CLUSTER)
    {
       if (pItem->isAggregateOnCluster())
       {
@@ -74,26 +74,26 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
             *error = dcTarget->getInternalItem(pItem->getName(), MAX_LINE_SIZE, pBuffer);
             break;
          case DS_SNMP_AGENT:
-			   if (dcTarget->Type() == OBJECT_NODE)
+			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 				   *error = ((Node *)dcTarget)->getItemFromSNMP(pItem->getSnmpPort(), pItem->getName(), MAX_LINE_SIZE, 
 					   pBuffer, pItem->isInterpretSnmpRawValue() ? (int)pItem->getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
 			   else
 				   *error = DCE_NOT_SUPPORTED;
             break;
          case DS_CHECKPOINT_AGENT:
-			   if (dcTarget->Type() == OBJECT_NODE)
+			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 	            *error = ((Node *)dcTarget)->getItemFromCheckPointSNMP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
 			   else
 				   *error = DCE_NOT_SUPPORTED;
             break;
          case DS_NATIVE_AGENT:
-			   if (dcTarget->Type() == OBJECT_NODE)
+			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 	            *error = ((Node *)dcTarget)->getItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
 			   else
 				   *error = DCE_NOT_SUPPORTED;
             break;
          case DS_WINPERF:
-			   if (dcTarget->Type() == OBJECT_NODE)
+			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 			   {
 				   TCHAR name[MAX_PARAM_NAME];
 				   _sntprintf(name, MAX_PARAM_NAME, _T("PDH.CounterValue(\"%s\",%d)"), pItem->getName(), pItem->getSampleCount());
@@ -105,7 +105,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
 			   }
             break;
          case DS_SMCLP:
-            if (dcTarget->Type() == OBJECT_NODE)
+            if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
 	            *error = ((Node *)dcTarget)->getItemFromSMCLP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
             }
@@ -131,7 +131,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
 static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32 *error)
 {
 	Table *result = NULL;
-   if (dcTarget->Type() == OBJECT_CLUSTER)
+   if (dcTarget->getObjectClass() == OBJECT_CLUSTER)
    {
       if (table->isAggregateOnCluster())
       {
@@ -147,7 +147,7 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
       switch(table->getDataSource())
       {
 		   case DS_NATIVE_AGENT:
-			   if (dcTarget->Type() == OBJECT_NODE)
+			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
 				   *error = ((Node *)dcTarget)->getTableFromAgent(table->getName(), &result);
                if ((*error == DCE_SUCCESS) && (result != NULL))
@@ -159,7 +159,7 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
             }
 			   break;
          case DS_SNMP_AGENT:
-			   if (dcTarget->Type() == OBJECT_NODE)
+			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
                *error = ((Node *)dcTarget)->getTableFromSNMP(table->getSnmpPort(), table->getName(), table->getColumns(), &result);
                if ((*error == DCE_SUCCESS) && (result != NULL))
@@ -194,20 +194,20 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 		if (pItem->isScheduledForDeletion())
 		{
 	      DbgPrintf(7, _T("DataCollector(): about to destroy DC object %d \"%s\" owner=%d"),
-			          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->Id() : -1);
-			pItem->deleteFromDB();
+			          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1);
+			pItem->deleteFromDatabase();
 			delete pItem;
 			continue;
 		}
 
       DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d proxy=%d"),
-		          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->Id() : -1, pItem->getProxyNode());
+		          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1, pItem->getProxyNode());
 		if (pItem->getProxyNode() != 0)
 		{
 			NetObj *object = FindObjectById(pItem->getProxyNode(), OBJECT_NODE);
 			if (object != NULL)
 			{
-				if (object->isTrustedNode((target != NULL) ? target->Id() : 0))
+				if (object->isTrustedNode((target != NULL) ? target->getId() : 0))
 				{
 					target = (Node *)object;
 					target->incRefCount();
@@ -287,7 +287,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
       {
 			Template *n = pItem->getTarget();
          DbgPrintf(3, _T("*** DataCollector: Attempt to collect information for non-existing node (DCI=%d \"%s\" target=%d proxy=%d)"),
-			          pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->Id() : -1, pItem->getProxyNode());
+			          pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->getId() : -1, pItem->getProxyNode());
       }
 
 		// Update item's last poll time and clear busy flag so item can be polled again
@@ -306,7 +306,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 static void QueueItems(NetObj *object, void *data)
 {
 	DbgPrintf(8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%d]"),
-				 object->Name(), object->Id());
+				 object->getName(), object->getId());
 	((DataCollectionTarget *)object)->queueItemsForPolling(g_pItemQueue);
 }
 

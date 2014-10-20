@@ -141,11 +141,11 @@ String LogHandle::buildObjectAccessConstraint(const UINT32 userId)
       {
 		   if (object->checkAccessRights(userId, OBJECT_ACCESS_READ))
 		   {
-            allowed->add(object->Id());
+            allowed->add(object->getId());
 		   }
          else
          {
-            restricted->add(object->Id());
+            restricted->add(object->getId());
          }
       }
       object->decRefCount();

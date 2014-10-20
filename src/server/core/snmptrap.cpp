@@ -298,7 +298,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
                                 _T("ip_addr,object_id,trap_oid,trap_varlist) VALUES ")
                                 _T("(") INT64_FMT _T(",%d,'%s',%d,'%s',%s)"),
                  m_qnTrapId, dwTimeStamp, IpToStr(dwOriginAddr, szBuffer),
-                 (pNode != NULL) ? pNode->Id() : (UINT32)0, pdu->getTrapId()->getValueAsText(),
+                 (pNode != NULL) ? pNode->getId() : (UINT32)0, pdu->getTrapId()->getValueAsText(),
                  (const TCHAR *)DBPrepareString(g_hCoreDB, pszTrapArgs));
       QueueSQLRequest(szQuery);
 
@@ -309,7 +309,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
       msg.SetVariable(VID_TRAP_LOG_MSG_BASE, (QWORD)m_qnTrapId);
       msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 1, dwTimeStamp);
       msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 2, dwOriginAddr);
-      msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 3, (pNode != NULL) ? pNode->Id() : (UINT32)0);
+      msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 3, (pNode != NULL) ? pNode->getId() : (UINT32)0);
       msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 4, (TCHAR *)pdu->getTrapId()->getValueAsText());
       msg.SetVariable(VID_TRAP_LOG_MSG_BASE + 5, pszTrapArgs);
       EnumerateClientSessions(BroadcastNewTrap, &msg);
@@ -321,7 +321,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
    // Process trap if it is coming from host registered in database
    if (pNode != NULL)
    {
-      DbgPrintf(4, _T("ProcessTrap: trap matched to node %s [%d]"), pNode->Name(), pNode->Id());
+      DbgPrintf(4, _T("ProcessTrap: trap matched to node %s [%d]"), pNode->getName(), pNode->getId());
       if ((pNode->Status() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
       {
          UINT32 i;
@@ -370,7 +370,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
 
          if (dwMatchLen > 0)
          {
-            GenerateTrapEvent(pNode->Id(), dwMatchIdx, pdu, (int)ntohs(pOrigin->sin_port));
+            GenerateTrapEvent(pNode->getId(), dwMatchIdx, pdu, (int)ntohs(pOrigin->sin_port));
          }
          else     // Process unmatched traps
          {
@@ -393,7 +393,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
 
                // Generate default event for unmatched traps
                const TCHAR *names[3] = { _T("oid"), NULL, _T("sourcePort") };
-               PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, pNode->Id(), "ssd", names, 
+               PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, pNode->getId(), "ssd", names, 
                   pdu->getTrapId()->getValueAsText(), pszTrapArgs, (int)ntohs(pOrigin->sin_port));
                free(pszTrapArgs);
             }
@@ -402,7 +402,7 @@ static void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transpo
       }
       else
       {
-         DbgPrintf(4, _T("ProcessTrap: Node %s [%d] is in UNMANAGED state, trap ignored"), pNode->Name(), pNode->Id());
+         DbgPrintf(4, _T("ProcessTrap: Node %s [%d] is in UNMANAGED state, trap ignored"), pNode->getName(), pNode->getId());
       }
    }
    else if (g_flags & AF_SNMP_TRAP_DISCOVERY)  // unknown node, discovery enabled
@@ -452,7 +452,7 @@ static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addr
 	Node *node = FindNodeByIP(0, ipAddr);
 	TCHAR buffer[32];
 	DbgPrintf(6, _T("SNMPTrapReceiver: looking for SNMP security context for node %s %s"),
-	          IpToStr(ipAddr, buffer), (node != NULL) ? node->Name() : _T("<unknown>"));
+	          IpToStr(ipAddr, buffer), (node != NULL) ? node->getName() : _T("<unknown>"));
 	return (node != NULL) ? node->getSnmpSecurityContext() : NULL;
 }
 

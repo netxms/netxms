@@ -67,28 +67,28 @@ void SaveObjects(DB_HANDLE hdb)
          if (object->getRefCount() == 0)
          {
    		   DBBegin(hdb);
-            if (object->deleteFromDB(hdb))
+            if (object->deleteFromDatabase(hdb))
             {
-               DbgPrintf(4, _T("Object %d \"%s\" deleted from database"), object->Id(), object->Name());
+               DbgPrintf(4, _T("Object %d \"%s\" deleted from database"), object->getId(), object->getName());
                DBCommit(hdb);
                NetObjDelete(object);
             }
             else
             {
                DBRollback(hdb);
-               DbgPrintf(4, _T("Call to deleteFromDB() failed for object %s [%d], transaction rollback"), object->Name(), object->Id());
+               DbgPrintf(4, _T("Call to deleteFromDatabase() failed for object %s [%d], transaction rollback"), object->getName(), object->getId());
             }
          }
          else
          {
             DbgPrintf(3, _T("* Syncer * Unable to delete object with id %d because it is being referenced %d time(s)"),
-                      object->Id(), object->getRefCount());
+                      object->getId(), object->getRefCount());
          }
       }
 		else if (object->isModified())
 		{
 		   DBBegin(hdb);
-			if (object->SaveToDB(hdb))
+			if (object->saveToDatabase(hdb))
 			{
 				DBCommit(hdb);
 			}

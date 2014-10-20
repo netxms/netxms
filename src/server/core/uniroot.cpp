@@ -50,7 +50,7 @@ void UniversalRoot::LinkChildObjects()
    DB_RESULT hResult;
 
    // Load child list and link objects
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%d"), m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%d"), m_id);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -63,7 +63,7 @@ void UniversalRoot::LinkChildObjects()
             LinkObject(pObject);
          else
             nxlog_write(MSG_ROOT_INVALID_CHILD_ID, EVENTLOG_WARNING_TYPE, "ds", 
-                        dwObjectId, g_szClassName[Type()]);
+                        dwObjectId, g_szClassName[getObjectClass()]);
       }
       DBFreeResult(hResult);
    }
@@ -72,22 +72,22 @@ void UniversalRoot::LinkChildObjects()
 /**
  * Save object to database
  */
-BOOL UniversalRoot::SaveToDB(DB_HANDLE hdb)
+BOOL UniversalRoot::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024];
    UINT32 i;
 
-   LockData();
+   lockProperties();
 
    saveCommonProperties(hdb);
 
    // Update members list
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_id);
    DBQuery(hdb, szQuery);
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_dwId, m_pChildList[i]->Id());
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_pChildList[i]->getId());
       DBQuery(hdb, szQuery);
    }
    UnlockChildList();
@@ -96,7 +96,7 @@ BOOL UniversalRoot::SaveToDB(DB_HANDLE hdb)
    saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
-   UnlockData();
+   unlockProperties();
    m_isModified = false;
    return TRUE;
 }

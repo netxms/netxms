@@ -64,7 +64,7 @@ Cluster::~Cluster()
 /**
  * Create object from database data
  */
-BOOL Cluster::CreateFromDB(UINT32 dwId)
+BOOL Cluster::loadFromDatabase(UINT32 dwId)
 {
 	TCHAR szQuery[256];
    BOOL bResult = FALSE;
@@ -73,7 +73,7 @@ BOOL Cluster::CreateFromDB(UINT32 dwId)
 	NetObj *pObject;
 	int i, nRows;
 
-   m_dwId = dwId;
+   m_id = dwId;
 
    if (!loadCommonProperties())
    {
@@ -81,7 +81,7 @@ BOOL Cluster::CreateFromDB(UINT32 dwId)
       return FALSE;
    }
 
-	_sntprintf(szQuery, 256, _T("SELECT cluster_type,zone_guid FROM clusters WHERE id=%d"), (int)m_dwId);
+	_sntprintf(szQuery, 256, _T("SELECT cluster_type,zone_guid FROM clusters WHERE id=%d"), (int)m_id);
 	hResult = DBSelect(g_hCoreDB, szQuery);
 	if (hResult == NULL)
 		return FALSE;
@@ -100,7 +100,7 @@ BOOL Cluster::CreateFromDB(UINT32 dwId)
    if (!m_isDeleted)
    {
 		// Load member nodes
-		_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT node_id FROM cluster_members WHERE cluster_id=%d"), m_dwId);
+		_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT node_id FROM cluster_members WHERE cluster_id=%d"), m_id);
 		hResult = DBSelect(g_hCoreDB, szQuery);
 		if (hResult != NULL)
 		{
@@ -111,20 +111,20 @@ BOOL Cluster::CreateFromDB(UINT32 dwId)
 				pObject = FindObjectById(dwNodeId);
 				if (pObject != NULL)
 				{
-					if (pObject->Type() == OBJECT_NODE)
+					if (pObject->getObjectClass() == OBJECT_NODE)
 					{
                   AddChild(pObject);
                   pObject->AddParent(this);
 					}
 					else
 					{
-                  nxlog_write(MSG_CLUSTER_MEMBER_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", m_dwId, dwNodeId);
+                  nxlog_write(MSG_CLUSTER_MEMBER_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", m_id, dwNodeId);
 						break;
 					}
 				}
 				else
 				{
-               nxlog_write(MSG_INVALID_CLUSTER_MEMBER, EVENTLOG_ERROR_TYPE, "dd", m_dwId, dwNodeId);
+               nxlog_write(MSG_INVALID_CLUSTER_MEMBER, EVENTLOG_ERROR_TYPE, "dd", m_id, dwNodeId);
 					break;
 				}
 			}
@@ -136,7 +136,7 @@ BOOL Cluster::CreateFromDB(UINT32 dwId)
 		// Load sync net list
 		if (bResult)
 		{
-			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT subnet_addr,subnet_mask FROM cluster_sync_subnets WHERE cluster_id=%d"), m_dwId);
+			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT subnet_addr,subnet_mask FROM cluster_sync_subnets WHERE cluster_id=%d"), m_id);
 			hResult = DBSelect(g_hCoreDB, szQuery);
 			if (hResult != NULL)
 			{
@@ -161,7 +161,7 @@ BOOL Cluster::CreateFromDB(UINT32 dwId)
 		// Load resources
 		if (bResult)
 		{
-			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT resource_id,resource_name,ip_addr,current_owner FROM cluster_resources WHERE cluster_id=%d"), m_dwId);
+			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT resource_id,resource_name,ip_addr,current_owner FROM cluster_resources WHERE cluster_id=%d"), m_id);
 			hResult = DBSelect(g_hCoreDB, szQuery);
 			if (hResult != NULL)
 			{
@@ -196,25 +196,25 @@ BOOL Cluster::CreateFromDB(UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL Cluster::SaveToDB(DB_HANDLE hdb)
+BOOL Cluster::saveToDatabase(DB_HANDLE hdb)
 {
 	TCHAR szQuery[4096], szIpAddr[16], szNetMask[16];
    BOOL bResult;
    UINT32 i;
 
    // Lock object's access
-   LockData();
+   lockProperties();
 
    saveCommonProperties(hdb);
 
-   if (IsDatabaseRecordExist(hdb, _T("clusters"), _T("id"), m_dwId))
+   if (IsDatabaseRecordExist(hdb, _T("clusters"), _T("id"), m_id))
       _sntprintf(szQuery, 4096,
                  _T("UPDATE clusters SET cluster_type=%d,zone_guid=%d WHERE id=%d"),
-                 (int)m_dwClusterType, (int)m_zoneId, (int)m_dwId);
+                 (int)m_dwClusterType, (int)m_zoneId, (int)m_id);
 	else
       _sntprintf(szQuery, 4096,
                  _T("INSERT INTO clusters (id,cluster_type,zone_guid) VALUES (%d,%d,%d)"),
-                 (int)m_dwId, (int)m_dwClusterType, (int)m_zoneId);
+                 (int)m_id, (int)m_dwClusterType, (int)m_zoneId);
    bResult = DBQuery(hdb, szQuery);
 
    // Save data collection items
@@ -228,15 +228,15 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 		// Save cluster members list
 		if (DBBegin(hdb))
 		{
-			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_members WHERE cluster_id=%d"), m_dwId);
+			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_members WHERE cluster_id=%d"), m_id);
 			DBQuery(hdb, szQuery);
 			LockChildList(FALSE);
 			for(i = 0; i < m_dwChildCount; i++)
 			{
-				if (m_pChildList[i]->Type() == OBJECT_NODE)
+				if (m_pChildList[i]->getObjectClass() == OBJECT_NODE)
 				{
 					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_members (cluster_id,node_id) VALUES (%d,%d)"),
-								 m_dwId, m_pChildList[i]->Id());
+								 m_id, m_pChildList[i]->getId());
 					bResult = DBQuery(hdb, szQuery);
 					if (!bResult)
 						break;
@@ -258,12 +258,12 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 		{
 			if (DBBegin(hdb))
 			{
-				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=%d"), m_dwId);
+				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=%d"), m_id);
 				DBQuery(hdb, szQuery);
 				for(i = 0; i < m_dwNumSyncNets; i++)
 				{
 					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_sync_subnets (cluster_id,subnet_addr,subnet_mask) VALUES (%d,'%s','%s')"),
-								 m_dwId, IpToStr(m_pSyncNetList[i].dwAddr, szIpAddr),
+								 m_id, IpToStr(m_pSyncNetList[i].dwAddr, szIpAddr),
 								 IpToStr(m_pSyncNetList[i].dwMask, szNetMask));
 					bResult = DBQuery(hdb, szQuery);
 					if (!bResult)
@@ -285,12 +285,12 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 		{
 			if (DBBegin(hdb))
 			{
-				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_resources WHERE cluster_id=%d"), m_dwId);
+				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_resources WHERE cluster_id=%d"), m_id);
 				DBQuery(hdb, szQuery);
 				for(i = 0; i < m_dwNumResources; i++)
 				{
 					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_resources (cluster_id,resource_id,resource_name,ip_addr,current_owner) VALUES (%d,%d,%s,'%s',%d)"),
-					           m_dwId, m_pResourceList[i].dwId, (const TCHAR *)DBPrepareString(hdb, m_pResourceList[i].szName),
+					           m_id, m_pResourceList[i].dwId, (const TCHAR *)DBPrepareString(hdb, m_pResourceList[i].szName),
 								  IpToStr(m_pResourceList[i].dwIpAddr, szIpAddr),
 								  m_pResourceList[i].dwCurrOwner);
 					bResult = DBQuery(hdb, szQuery);
@@ -315,7 +315,7 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
    // Clear modifications flag and unlock object
 	if (bResult)
 		m_isModified = false;
-   UnlockData();
+   unlockProperties();
 
    return bResult;
 }
@@ -323,9 +323,9 @@ BOOL Cluster::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-bool Cluster::deleteFromDB(DB_HANDLE hdb)
+bool Cluster::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = DataCollectionTarget::deleteFromDB(hdb);
+   bool success = DataCollectionTarget::deleteFromDatabase(hdb);
    if (success)
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM clusters WHERE id=?"));
@@ -340,11 +340,11 @@ bool Cluster::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void Cluster::CreateMessage(CSCPMessage *pMsg)
+void Cluster::fillMessage(CSCPMessage *pMsg)
 {
 	UINT32 i, dwId;
 
-   DataCollectionTarget::CreateMessage(pMsg);
+   DataCollectionTarget::fillMessage(pMsg);
    pMsg->SetVariable(VID_CLUSTER_TYPE, m_dwClusterType);
 	pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
 	pMsg->SetVariable(VID_NUM_SYNC_SUBNETS, m_dwNumSyncNets);
@@ -363,10 +363,10 @@ void Cluster::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from message
  */
-UINT32 Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Cluster::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
    // Change cluster type
    if (pRequest->isFieldExist(VID_CLUSTER_TYPE))
@@ -429,7 +429,7 @@ UINT32 Cluster::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_dwNumResources = dwCount;
 	}
 
-   return DataCollectionTarget::ModifyFromMessage(pRequest, TRUE);
+   return DataCollectionTarget::modifyFromMessage(pRequest, TRUE);
 }
 
 /**
@@ -440,7 +440,7 @@ bool Cluster::isSyncAddr(UINT32 dwAddr)
 	UINT32 i;
 	bool bRet = false;
 
-	LockData();
+	lockProperties();
 	for(i = 0; i < m_dwNumSyncNets; i++)
 	{
 		if ((dwAddr & m_pSyncNetList[i].dwMask) == m_pSyncNetList[i].dwAddr)
@@ -449,7 +449,7 @@ bool Cluster::isSyncAddr(UINT32 dwAddr)
 			break;
 		}
 	}
-	UnlockData();
+	unlockProperties();
 	return bRet;
 }
 
@@ -461,7 +461,7 @@ bool Cluster::isVirtualAddr(UINT32 dwAddr)
 	UINT32 i;
 	bool bRet = false;
 
-	LockData();
+	lockProperties();
 	for(i = 0; i < m_dwNumResources; i++)
 	{
 		if (m_pResourceList[i].dwIpAddr == dwAddr)
@@ -470,7 +470,7 @@ bool Cluster::isVirtualAddr(UINT32 dwAddr)
 			break;
 		}
 	}
-	UnlockData();
+	unlockProperties();
 	return bRet;
 }
 
@@ -490,7 +490,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
    LockChildList(FALSE);
    for(i = 0, dwPollListSize = 0; i < m_dwChildCount; i++)
       if ((m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
-			 (m_pChildList[i]->Type() == OBJECT_NODE))
+			 (m_pChildList[i]->getObjectClass() == OBJECT_NODE))
       {
          m_pChildList[i]->incRefCount();
 			((Node *)m_pChildList[i])->lockForStatusPoll();
@@ -499,7 +499,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
    UnlockChildList();
 
 	// Perform status poll on all member nodes
-	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling member nodes"), m_szName);
+	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling member nodes"), m_name);
 	for(i = 0, bAllDown = TRUE; i < dwPollListSize; i++)
 	{
 		((Node *)ppPollList[i])->statusPoll(pSession, dwRqId, nPoller);
@@ -512,7 +512,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 		if (!(m_dwFlags & CLF_DOWN))
 		{
 			m_dwFlags |= CLF_DOWN;
-			PostEvent(EVENT_CLUSTER_DOWN, m_dwId, NULL);
+			PostEvent(EVENT_CLUSTER_DOWN, m_id, NULL);
 		}
 	}
 	else
@@ -520,7 +520,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 		if (m_dwFlags & CLF_DOWN)
 		{
 			m_dwFlags &= ~CLF_DOWN;
-			PostEvent(EVENT_CLUSTER_UP, m_dwId, NULL);
+			PostEvent(EVENT_CLUSTER_UP, m_id, NULL);
 		}
 	}
 
@@ -530,31 +530,31 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 		pbResourceFound = (BYTE *)malloc(m_dwNumResources);
 		memset(pbResourceFound, 0, m_dwNumResources);
 
-		DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling resources"), m_szName);
+		DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling resources"), m_name);
 		for(i = 0; i < dwPollListSize; i++)
 		{
 			pIfList = ((Node *)ppPollList[i])->getInterfaceList();
 			if (pIfList != NULL)
 			{
-				LockData();
+				lockProperties();
 				for(j = 0; j < (UINT32)pIfList->size(); j++)
 				{
 					for(k = 0; k < m_dwNumResources; k++)
 					{
 						if (m_pResourceList[k].dwIpAddr == pIfList->get(j)->dwIpAddr)
 						{
-							if (m_pResourceList[k].dwCurrOwner != ppPollList[i]->Id())
+							if (m_pResourceList[k].dwCurrOwner != ppPollList[i]->getId())
 							{
 								DbgPrintf(5, _T("CLUSTER STATUS POLL [%s]: Resource %s owner changed"),
-											 m_szName, m_pResourceList[k].szName);
+											 m_name, m_pResourceList[k].szName);
 
 								// Resource moved or go up
 								if (m_pResourceList[k].dwCurrOwner == 0)
 								{
 									// Resource up
-									PostEvent(EVENT_CLUSTER_RESOURCE_UP, m_dwId, "dsds",
+									PostEvent(EVENT_CLUSTER_RESOURCE_UP, m_id, "dsds",
 												 m_pResourceList[k].dwId, m_pResourceList[k].szName,
-												 ppPollList[i]->Id(), ppPollList[i]->Name());
+												 ppPollList[i]->getId(), ppPollList[i]->getName());
 								}
 								else
 								{
@@ -562,31 +562,31 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 									NetObj *pObject;
 
 									pObject = FindObjectById(m_pResourceList[k].dwCurrOwner);
-									PostEvent(EVENT_CLUSTER_RESOURCE_MOVED, m_dwId, "dsdsds",
+									PostEvent(EVENT_CLUSTER_RESOURCE_MOVED, m_id, "dsdsds",
 												 m_pResourceList[k].dwId, m_pResourceList[k].szName,
 												 m_pResourceList[k].dwCurrOwner,
-												 (pObject != NULL) ? pObject->Name() : _T("<unknown>"),
-												 ppPollList[i]->Id(), ppPollList[i]->Name());
+												 (pObject != NULL) ? pObject->getName() : _T("<unknown>"),
+												 ppPollList[i]->getId(), ppPollList[i]->getName());
 								}
-								m_pResourceList[k].dwCurrOwner = ppPollList[i]->Id();
+								m_pResourceList[k].dwCurrOwner = ppPollList[i]->getId();
 								bModified = TRUE;
 							}
 							pbResourceFound[k] = 1;
 						}
 					}
 				}
-				UnlockData();
+				unlockProperties();
 				delete pIfList;
 			}
 			else
 			{
 				DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Cannot get interface list from %s"),
-							 m_szName, ppPollList[i]->Name());
+							 m_name, ppPollList[i]->getName());
 			}
 		}
 
 		// Check for missing virtual addresses
-		LockData();
+		lockProperties();
 		for(i = 0; i < m_dwNumResources; i++)
 		{
 			if ((!pbResourceFound[i]) && (m_pResourceList[i].dwCurrOwner != 0))
@@ -594,15 +594,15 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 				NetObj *pObject;
 
 				pObject = FindObjectById(m_pResourceList[i].dwCurrOwner);
-				PostEvent(EVENT_CLUSTER_RESOURCE_DOWN, m_dwId, "dsds",
+				PostEvent(EVENT_CLUSTER_RESOURCE_DOWN, m_id, "dsds",
 							 m_pResourceList[i].dwId, m_pResourceList[i].szName,
 							 m_pResourceList[i].dwCurrOwner,
-							 (pObject != NULL) ? pObject->Name() : _T("<unknown>"));
+							 (pObject != NULL) ? pObject->getName() : _T("<unknown>"));
 				m_pResourceList[i].dwCurrOwner = 0;
 				bModified = TRUE;
 			}
 		}
-		UnlockData();
+		unlockProperties();
 		safe_free(pbResourceFound);
 	}
 
@@ -613,14 +613,14 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 	}
 	safe_free(ppPollList);
 
-	LockData();
+	lockProperties();
 	if (bModified)
-		Modify();
+		setModified();
 	m_tmLastPoll = time(NULL);
 	m_dwFlags &= ~CLF_QUEUED_FOR_STATUS_POLL;
-	UnlockData();
+	unlockProperties();
 
-	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Finished"), m_szName);
+	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Finished"), m_name);
 }
 
 /**
@@ -631,7 +631,7 @@ bool Cluster::isResourceOnNode(UINT32 dwResource, UINT32 dwNode)
 	bool bRet = FALSE;
 	UINT32 i;
 
-	LockData();
+	lockProperties();
 	for(i = 0; i < m_dwNumResources; i++)
 	{
 		if (m_pResourceList[i].dwId == dwResource)
@@ -641,7 +641,7 @@ bool Cluster::isResourceOnNode(UINT32 dwResource, UINT32 dwNode)
 			break;
 		}
 	}
-	UnlockData();
+	unlockProperties();
 	return bRet;
 }
 
@@ -655,7 +655,7 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
    int valueCount = 0;
    for(UINT32 i = 0; i < m_dwChildCount; i++)
    {
-      if (m_pChildList[i]->Type() != OBJECT_NODE)
+      if (m_pChildList[i]->getObjectClass() != OBJECT_NODE)
          continue;
 
       Node *node = (Node *)m_pChildList[i];
@@ -719,7 +719,7 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
    int valueCount = 0;
    for(UINT32 i = 0; i < m_dwChildCount; i++)
    {
-      if (m_pChildList[i]->Type() != OBJECT_NODE)
+      if (m_pChildList[i]->getObjectClass() != OBJECT_NODE)
          continue;
 
       Node *node = (Node *)m_pChildList[i];

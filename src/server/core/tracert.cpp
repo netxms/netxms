@@ -74,7 +74,7 @@ void NetworkPath::fillMessage(CSCPMessage *msg)
 	UINT32 varId = VID_NETWORK_PATH_BASE;
 	for(int i = 0; i < m_hopCount; i++, varId += 5)
 	{
-		msg->SetVariable(varId++, m_path[i].object->Id());
+		msg->SetVariable(varId++, m_path[i].object->getId());
 		msg->SetVariable(varId++, m_path[i].nextHop);
 		msg->SetVariable(varId++, m_path[i].ifIndex);
 		msg->SetVariable(varId++, (WORD)(m_path[i].isVpn ? 1 : 0));

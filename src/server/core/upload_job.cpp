@@ -42,7 +42,7 @@ void FileUploadJob::init()
  * Constructor
  */
 FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, UINT32 userId, bool createOnHold)
-              : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node->Id(), userId, createOnHold)
+              : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node->getId(), userId, createOnHold)
 {
 	m_node = node;
 	node->incRefCount();

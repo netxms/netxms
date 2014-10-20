@@ -58,7 +58,7 @@ private:
    UINT32 m_dwSeverity;
    UINT32 m_dwFlags;
    UINT32 m_dwSource;
-	TCHAR m_szName[MAX_EVENT_NAME];
+	TCHAR m_name[MAX_EVENT_NAME];
    TCHAR *m_pszMessageText;
    TCHAR *m_pszMessageTemplate;
    time_t m_tTimeStamp;
@@ -78,7 +78,7 @@ public:
    UINT32 getSeverity() { return m_dwSeverity; }
    UINT32 getFlags() { return m_dwFlags; }
    UINT32 getSourceId() { return m_dwSource; }
-	const TCHAR *getName() { return m_szName; }
+	const TCHAR *getName() { return m_name; }
    const TCHAR *getMessage() { return m_pszMessageText; }
    const TCHAR *getUserTag() { return m_pszUserTag; }
    time_t getTimeStamp() { return m_tTimeStamp; }
@@ -115,7 +115,7 @@ public:
 class EPRule
 {
 private:
-   UINT32 m_dwId;
+   UINT32 m_id;
    uuid_t m_guid;
    UINT32 m_dwFlags;
    UINT32 m_dwNumSources;
@@ -146,15 +146,15 @@ private:
    void generateAlarm(Event *pEvent);
 
 public:
-   EPRule(UINT32 dwId);
-   EPRule(DB_RESULT hResult, int iRow);
-   EPRule(CSCPMessage *pMsg);
+   EPRule(UINT32 id);
+   EPRule(DB_RESULT hResult, int row);
+   EPRule(CSCPMessage *msg);
    EPRule(ConfigEntry *config);
    ~EPRule();
 
-   UINT32 getId() { return m_dwId; }
+   UINT32 getId() { return m_id; }
    BYTE *getGuid() { return m_guid; }
-   void setId(UINT32 dwNewId) { m_dwId = dwNewId; }
+   void setId(UINT32 dwNewId) { m_id = dwNewId; }
    bool loadFromDB();
 	void saveToDB(DB_HANDLE hdb);
    bool processEvent(Event *pEvent);

@@ -27,9 +27,9 @@
  */
 Zone::Zone() : NetObj()
 {
-   m_dwId = 0;
+   m_id = 0;
    m_zoneId = 0;
-   _tcscpy(m_szName, _T("Default"));
+   _tcscpy(m_name, _T("Default"));
    m_agentProxy = 0;
    m_snmpProxy = 0;
 	m_icmpProxy = 0;
@@ -43,9 +43,9 @@ Zone::Zone() : NetObj()
  */
 Zone::Zone(UINT32 zoneId, const TCHAR *name) : NetObj()
 {
-   m_dwId = 0;
+   m_id = 0;
    m_zoneId = zoneId;
-   nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
+   nx_strncpy(m_name, name, MAX_OBJECT_NAME);
    m_agentProxy = 0;
    m_snmpProxy = 0;
 	m_icmpProxy = 0;
@@ -67,12 +67,12 @@ Zone::~Zone()
 /**
  * Create object from database data
  */
-BOOL Zone::CreateFromDB(UINT32 dwId)
+BOOL Zone::loadFromDatabase(UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
 
-   m_dwId = dwId;
+   m_id = dwId;
 
    if (!loadCommonProperties())
       return FALSE;
@@ -92,7 +92,7 @@ BOOL Zone::CreateFromDB(UINT32 dwId)
       }
       else
       {
-			DbgPrintf(4, _T("Cannot load zone object %ld - missing record in \"zones\" table"), (long)m_dwId);
+			DbgPrintf(4, _T("Cannot load zone object %ld - missing record in \"zones\" table"), (long)m_id);
          return FALSE;
       }
    }
@@ -113,18 +113,18 @@ BOOL Zone::CreateFromDB(UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL Zone::SaveToDB(DB_HANDLE hdb)
+BOOL Zone::saveToDatabase(DB_HANDLE hdb)
 {
    BOOL bNewObject = TRUE;
    TCHAR szQuery[8192];
    DB_RESULT hResult;
 
-   LockData();
+   lockProperties();
 
    saveCommonProperties(hdb);
    
    // Check for object's existence in database
-   _sntprintf(szQuery, 8192, _T("SELECT id FROM zones WHERE id=%d"), m_dwId);
+   _sntprintf(szQuery, 8192, _T("SELECT id FROM zones WHERE id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -137,27 +137,27 @@ BOOL Zone::SaveToDB(DB_HANDLE hdb)
    if (bNewObject)
       _sntprintf(szQuery, 8192, _T("INSERT INTO zones (id,zone_guid,agent_proxy,snmp_proxy,icmp_proxy)")
                           _T(" VALUES (%d,%d,%d,%d,%d)"),
-                 m_dwId, m_zoneId, m_agentProxy, m_snmpProxy, m_icmpProxy);
+                 m_id, m_zoneId, m_agentProxy, m_snmpProxy, m_icmpProxy);
    else
       _sntprintf(szQuery, 8192, _T("UPDATE zones SET zone_guid=%d,agent_proxy=%d,")
                                 _T("snmp_proxy=%d,icmp_proxy=%d WHERE id=%d"),
-                 m_zoneId, m_agentProxy, m_snmpProxy, m_icmpProxy, m_dwId);
+                 m_zoneId, m_agentProxy, m_snmpProxy, m_icmpProxy, m_id);
    DBQuery(hdb, szQuery);
 
    saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
    m_isModified = false;
-   UnlockData();
+   unlockProperties();
    return TRUE;
 }
 
 /**
  * Delete zone object from database
  */
-bool Zone::deleteFromDB(DB_HANDLE hdb)
+bool Zone::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDB(hdb);
+   bool success = NetObj::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM zones WHERE id=?"));
    return success;
@@ -166,9 +166,9 @@ bool Zone::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Zone::CreateMessage(CSCPMessage *pMsg)
+void Zone::fillMessage(CSCPMessage *pMsg)
 {
-   NetObj::CreateMessage(pMsg);
+   NetObj::fillMessage(pMsg);
    pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
    pMsg->SetVariable(VID_AGENT_PROXY, m_agentProxy);
    pMsg->SetVariable(VID_SNMP_PROXY, m_snmpProxy);
@@ -178,10 +178,10 @@ void Zone::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from message
  */
-UINT32 Zone::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Zone::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
 	if (pRequest->isFieldExist(VID_AGENT_PROXY))
 		m_agentProxy = pRequest->GetVariableLong(VID_AGENT_PROXY);
@@ -192,7 +192,7 @@ UINT32 Zone::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	if (pRequest->isFieldExist(VID_ICMP_PROXY))
 		m_icmpProxy = pRequest->GetVariableLong(VID_ICMP_PROXY);
 
-   return NetObj::ModifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessage(pRequest, TRUE);
 }
 
 /**

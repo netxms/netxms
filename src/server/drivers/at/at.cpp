@@ -135,7 +135,7 @@ InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMa
             request->bindVariable(new SNMP_Variable(oid));
 
             SNMP_PDU *response;
-            UINT32 rcc = snmp->doRequest(request, &response, g_dwSNMPTimeout, 3);
+            UINT32 rcc = snmp->doRequest(request, &response, g_snmpTimeout, 3);
 	         delete request;
             if (rcc == SNMP_ERR_SUCCESS)
             {
@@ -239,7 +239,7 @@ VlanList *AlliedTelesisDriver::getVlans(SNMP_Transport *snmp, StringMap *attribu
       request->bindVariable(new SNMP_Variable(oid));
       
       SNMP_PDU *response;
-      if (snmp->doRequest(request, &response, g_dwSNMPTimeout, 3) == SNMP_ERR_SUCCESS)
+      if (snmp->doRequest(request, &response, g_snmpTimeout, 3) == SNMP_ERR_SUCCESS)
       {
          if ((response->getNumVariables() == 2) && 
              (response->getVariable(0)->getType() != ASN_NO_SUCH_OBJECT) &&

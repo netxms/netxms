@@ -33,7 +33,7 @@ BusinessService::BusinessService() : ServiceContainer()
    m_pollingDisabled = false;
 	m_lastPollTime = time_t(0);
 	m_lastPollStatus = STATUS_UNKNOWN;
-	_tcscpy(m_szName, _T("Default"));
+	_tcscpy(m_name, _T("Default"));
 }
 
 /**
@@ -45,7 +45,7 @@ BusinessService::BusinessService(const TCHAR *name) : ServiceContainer(name)
    m_pollingDisabled = false;
 	m_lastPollTime = time_t(0);
 	m_lastPollStatus = STATUS_UNKNOWN;
-	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
+	nx_strncpy(m_name, name, MAX_OBJECT_NAME);
 }
 
 /**
@@ -58,9 +58,9 @@ BusinessService::~BusinessService()
 /**
  * Create object from database data
  */
-BOOL BusinessService::CreateFromDB(UINT32 id)
+BOOL BusinessService::loadFromDatabase(UINT32 id)
 {
-	if (!ServiceContainer::CreateFromDB(id))
+	if (!ServiceContainer::loadFromDatabase(id))
 		return FALSE;
 
 	// now it doesn't make any sense but hopefully will do in the future
@@ -70,7 +70,7 @@ BOOL BusinessService::CreateFromDB(UINT32 id)
 		DbgPrintf(4, _T("Cannot prepare select from business_services"));
 		return FALSE;
 	}
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
 	if (hResult == NULL)
 	{
@@ -82,7 +82,7 @@ BOOL BusinessService::CreateFromDB(UINT32 id)
 	{
 		DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
-		DbgPrintf(4, _T("Cannot load biz service object %ld - record missing"), (long)m_dwId);
+		DbgPrintf(4, _T("Cannot load biz service object %ld - record missing"), (long)m_id);
 		return FALSE;
 	}
 
@@ -95,7 +95,7 @@ BOOL BusinessService::CreateFromDB(UINT32 id)
 /**
  * Save service to database
  */
-BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
+BOOL BusinessService::saveToDatabase(DB_HANDLE hdb)
 {
 	BOOL bNewObject = TRUE;
 
@@ -103,9 +103,9 @@ BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 	if (hStmt == NULL)
 		return FALSE;
 
-	LockData();
+	lockProperties();
 
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
 	if (hResult != NULL)
 	{
@@ -118,11 +118,11 @@ BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 											  _T("UPDATE business_services SET service_id=service_id WHERE service_id=?"));
 	if (hStmt == NULL)
 	{
-		UnlockData();
+		unlockProperties();
 		return FALSE;
 	}
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
-	UnlockData();
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+	unlockProperties();
 
 	if (!DBExecute(hStmt))
 	{
@@ -134,19 +134,19 @@ BOOL BusinessService::SaveToDB(DB_HANDLE hdb)
 
 	saveACLToDB(hdb);
 
-	LockData();
+	lockProperties();
 	m_isModified = false;
-	UnlockData();
+	unlockProperties();
 
-	return ServiceContainer::SaveToDB(hdb);
+	return ServiceContainer::saveToDatabase(hdb);
 }
 
 /**
  * Delete object from database
  */
-bool BusinessService::deleteFromDB(DB_HANDLE hdb)
+bool BusinessService::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = ServiceContainer::deleteFromDB(hdb);
+   bool success = ServiceContainer::deleteFromDatabase(hdb);
    if (success)
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM business_services WHERE service_id=?"));
@@ -157,20 +157,20 @@ bool BusinessService::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void BusinessService::CreateMessage(CSCPMessage *pMsg)
+void BusinessService::fillMessage(CSCPMessage *pMsg)
 {
-   ServiceContainer::CreateMessage(pMsg);
+   ServiceContainer::fillMessage(pMsg);
 }
 
 /**
  * Modify object from message
  */
-UINT32 BusinessService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 BusinessService::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
-   return ServiceContainer::ModifyFromMessage(pRequest, TRUE);
+   return ServiceContainer::modifyFromMessage(pRequest, TRUE);
 }
 
 /**
@@ -178,9 +178,9 @@ UINT32 BusinessService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLo
  */
 bool BusinessService::isReadyForPolling()
 {
-   LockData();
+   lockProperties();
 	bool ready = (time(NULL) - m_lastPollTime > g_slmPollingInterval) && !m_busy && !m_pollingDisabled;
-   UnlockData();
+   unlockProperties();
    return ready;
 }
 
@@ -189,9 +189,9 @@ bool BusinessService::isReadyForPolling()
  */
 void BusinessService::lockForPolling()
 {
-   LockData();
+   lockProperties();
 	m_busy = true;
-   UnlockData();
+   unlockProperties();
 }
 
 /**
@@ -199,16 +199,16 @@ void BusinessService::lockForPolling()
  */
 void BusinessService::poll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 {
-	DbgPrintf(5, _T("Started polling of business service %s [%d]"), m_szName, (int)m_dwId);
+	DbgPrintf(5, _T("Started polling of business service %s [%d]"), m_name, (int)m_id);
 	m_lastPollTime = time(NULL);
 
 	// Loop through the kids and execute their either scripts or thresholds
    LockChildList(FALSE);
 	for (UINT32 i = 0; i < m_dwChildCount; i++)
 	{
-		if (m_pChildList[i]->Type() == OBJECT_SLMCHECK)
+		if (m_pChildList[i]->getObjectClass() == OBJECT_SLMCHECK)
 			((SlmCheck *)m_pChildList[i])->execute();
-		else if (m_pChildList[i]->Type() == OBJECT_NODELINK)
+		else if (m_pChildList[i]->getObjectClass() == OBJECT_NODELINK)
 			((NodeLink*)m_pChildList[i])->execute();
 	}
    UnlockChildList();
@@ -217,7 +217,7 @@ void BusinessService::poll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 	calculateCompoundStatus();
 
 	m_lastPollStatus = m_iStatus;
-	DbgPrintf(5, _T("Finished polling of business service %s [%d]"), m_szName, (int)m_dwId);
+	DbgPrintf(5, _T("Finished polling of business service %s [%d]"), m_name, (int)m_id);
 	m_busy = false;
 }
 
@@ -229,7 +229,7 @@ void BusinessService::getApplicableTemplates(ServiceContainer *target, ObjectArr
 	LockChildList(FALSE);
 	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
-		if ((m_pChildList[i]->Type() == OBJECT_SLMCHECK) &&
+		if ((m_pChildList[i]->getObjectClass() == OBJECT_SLMCHECK) &&
           ((SlmCheck *)m_pChildList[i])->isTemplate())
 		{
 			m_pChildList[i]->incRefCount();
@@ -241,7 +241,7 @@ void BusinessService::getApplicableTemplates(ServiceContainer *target, ObjectArr
 	LockParentList(FALSE);
 	for(UINT32 i = 0; i < m_dwParentCount; i++)
 	{
-		if (m_pParentList[i]->Type() == OBJECT_BUSINESSSERVICE)
+		if (m_pParentList[i]->getObjectClass() == OBJECT_BUSINESSSERVICE)
 		{
 			((BusinessService *)m_pParentList[i])->getApplicableTemplates(target, templates);
 		}
@@ -255,22 +255,22 @@ void BusinessService::getApplicableTemplates(ServiceContainer *target, ObjectArr
 void BusinessService::prepareForDeletion()
 {
    // Prevent service from being queued for polling
-   LockData();
+   lockProperties();
    m_pollingDisabled = true;
-   UnlockData();
+   unlockProperties();
 
    // wait for outstanding poll to complete
    while(true)
    {
-      LockData();
+      lockProperties();
       if (!m_busy)
       {
-         UnlockData();
+         unlockProperties();
          break;
       }
-      UnlockData();
+      unlockProperties();
       ThreadSleep(100);
    }
-	DbgPrintf(4, _T("BusinessService::PrepareForDeletion(%s [%d]): no outstanding polls left"), m_szName, (int)m_dwId);
+	DbgPrintf(4, _T("BusinessService::PrepareForDeletion(%s [%d]): no outstanding polls left"), m_name, (int)m_id);
    ServiceContainer::prepareForDeletion();
 }

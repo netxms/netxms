@@ -34,7 +34,7 @@ static void DeleteEmptySubnets()
 		if (object->isEmpty())
 		{
 		   DbgPrintf(5, _T("DeleteEmptySubnets: subnet %s [%d] has %d refs, children: %d, parents: %d"),
-            object->Name(), object->Id(), object->getRefCount(), object->getChildCount(), object->getParentCount());
+            object->getName(), object->getId(), object->getRefCount(), object->getChildCount(), object->getParentCount());
 			object->deleteObject();
 		}
       object->decRefCount();

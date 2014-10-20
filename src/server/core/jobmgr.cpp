@@ -45,7 +45,7 @@ bool NXCORE_EXPORTABLE AddJob(ServerJob *job)
 	bool success = false;
 
 	NetObj *object = FindObjectById(job->getRemoteNode());
-	if ((object != NULL) && (object->Type() == OBJECT_NODE))
+	if ((object != NULL) && (object->getObjectClass() == OBJECT_NODE))
 	{
 		ServerJobQueue *queue = ((Node *)object)->getJobQueue();
 		queue->add(job);

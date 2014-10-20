@@ -663,7 +663,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport
  * Variables
  */
 extern UINT64 LIBNXSRV_EXPORTABLE g_flags;
-extern UINT32 LIBNXSRV_EXPORTABLE g_dwSNMPTimeout;
+extern UINT32 LIBNXSRV_EXPORTABLE g_snmpTimeout;
 extern UINT32 LIBNXSRV_EXPORTABLE g_debugLevel;
 
 /**

@@ -63,8 +63,8 @@ static void CreateManagementNode(UINT32 ipAddr, UINT32 netMask)
 	pNode->setName(GetLocalHostName(buffer, 256));
    pNode->configurationPoll(NULL, 0, -1, netMask);
    pNode->unhide();
-   g_dwMgmtNode = pNode->Id();   // Set local management node ID
-   PostEvent(EVENT_NODE_ADDED, pNode->Id(), NULL);
+   g_dwMgmtNode = pNode->getId();   // Set local management node ID
+   PostEvent(EVENT_NODE_ADDED, pNode->getId(), NULL);
 
 	// Bind to the root of service tree
 	g_pServiceRoot->AddChild(pNode);
@@ -124,11 +124,11 @@ static void CreateManagementNode(UINT32 ipAddr, UINT32 netMask)
  */
 static void CheckMgmtFlagCallback(NetObj *object, void *data)
 {
-	if ((g_dwMgmtNode != object->Id()) && ((Node *)object)->isLocalManagement())
+	if ((g_dwMgmtNode != object->getId()) && ((Node *)object)->isLocalManagement())
 	{
 		((Node *)object)->clearLocalMgmtFlag();
 		DbgPrintf(2, _T("Incorrectly set flag NF_IS_LOCAL_MGMT cleared from node %s [%d]"),
-					 object->Name(), object->Id());
+					 object->getName(), object->getId());
 	}
 }
 
@@ -163,9 +163,9 @@ void CheckForMgmtNode()
             if (!(pNode->getFlags() & NF_IS_LOCAL_MGMT))
             {
                pNode->setLocalMgmtFlag();
-               DbgPrintf(1, _T("Local management node %s [%d] was not have NF_IS_LOCAL_MGMT flag set"), pNode->Name(), pNode->Id());
+               DbgPrintf(1, _T("Local management node %s [%d] was not have NF_IS_LOCAL_MGMT flag set"), pNode->getName(), pNode->getId());
             }
-            g_dwMgmtNode = pNode->Id();   // Set local management node ID
+            g_dwMgmtNode = pNode->getId();   // Set local management node ID
             break;
          }
       }
@@ -200,7 +200,7 @@ void CheckForMgmtNode()
 		NetObj *mgmtNode = g_idxNodeById.find(LocalMgmtNodeComparator, NULL);
 		if (mgmtNode != NULL)
 		{
-			g_dwMgmtNode = mgmtNode->Id();
+			g_dwMgmtNode = mgmtNode->getId();
 		}
 		else
 		{
@@ -285,9 +285,9 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
       if (pObject == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pObject->Name(), pObject->Id());
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pObject->getName(), pObject->getId());
       SetPollerState((long)arg, szBuffer);
-		if (pObject->Type() == OBJECT_NODE)
+		if (pObject->getObjectClass() == OBJECT_NODE)
 		{
 			((Node *)pObject)->statusPoll(NULL, 0, (long)arg);
 			// Check if the node has to be deleted due to long downtime
@@ -297,7 +297,7 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
 				((Node*)pObject)->deleteObject();
 			}
 		}
-		else if (pObject->Type() == OBJECT_CLUSTER)
+		else if (pObject->getObjectClass() == OBJECT_CLUSTER)
 		{
 			((Cluster *)pObject)->statusPoll(NULL, 0, (long)arg);
 		}
@@ -330,7 +330,7 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->Name(), pNode->Id());
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->getName(), pNode->getId());
       SetPollerState((long)arg, szBuffer);
       ObjectTransactionStart();
       pNode->configurationPoll(NULL, 0, (long)arg, 0);
@@ -364,7 +364,7 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->Name(), pNode->Id());
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->getName(), pNode->getId());
       SetPollerState((long)arg, szBuffer);
       pNode->updateRoutingTable();
       pNode->decRefCount();
@@ -397,7 +397,7 @@ static void CheckPotentialNode(Node *node, UINT32 ipAddr, UINT32 ifIndex, BYTE *
       if (pInterface != NULL)
 		{
 			DbgPrintf(6, _T("DiscoveryPoller(): interface found: %s [%d] addr=%s mask=%s ifIndex=%d"),
-			          pInterface->Name(), pInterface->Id(), IpToStr(pInterface->IpAddr(), buffer),
+			          pInterface->getName(), pInterface->getId(), IpToStr(pInterface->IpAddr(), buffer),
 			          IpToStr(pInterface->getIpNetMask(), &buffer[16]), pInterface->getIfIndex());
          if ((ipAddr < 0xE0000000) && !IsBroadcastAddress(ipAddr, pInterface->getIpNetMask()))
          {
@@ -488,11 +488,11 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 			continue;
 		}
 
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->Name(), pNode->Id());
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->getName(), pNode->getId());
       SetPollerState((long)arg, szBuffer);
 
       DbgPrintf(4, _T("Starting discovery poll for node %s (%s) in zone %d"),
-		          pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr), (int)pNode->getZoneId());
+		          pNode->getName(), IpToStr(pNode->IpAddr(), szIpAddr), (int)pNode->getZoneId());
 
       // Retrieve and analize node's ARP cache
       pArpCache = pNode->getArpCache();
@@ -506,7 +506,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 
 		// Retrieve and analize node's routing table
       DbgPrintf(5, _T("Discovery poll for node %s (%s) - reading routing table"),
-                pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr));
+                pNode->getName(), IpToStr(pNode->IpAddr(), szIpAddr));
 		rt = pNode->getRoutingTable();
 		if (rt != NULL)
 		{
@@ -520,7 +520,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 		}
 
       DbgPrintf(4, _T("Finished discovery poll for node %s (%s)"),
-                pNode->Name(), IpToStr(pNode->IpAddr(), szIpAddr));
+                pNode->getName(), IpToStr(pNode->IpAddr(), szIpAddr));
       pNode->setDiscoveryPollTimeStamp();
       pNode->decRefCount();
    }
@@ -550,7 +550,7 @@ static THREAD_RESULT THREAD_CALL ConditionPoller(void *arg)
       if (pCond == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pCond->Name(), pCond->Id());
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pCond->getName(), pCond->getId());
       SetPollerState((long)arg, szBuffer);
       pCond->check();
       pCond->endPoll();
@@ -581,7 +581,7 @@ static THREAD_RESULT THREAD_CALL TopologyPoller(void *arg)
       if (node == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), node->Name(), node->Id());
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), node->getName(), node->getId());
       SetPollerState((long)arg, szBuffer);
 		node->topologyPoll(NULL, 0, CAST_FROM_POINTER(arg, int));
       node->decRefCount();
@@ -612,7 +612,7 @@ static THREAD_RESULT THREAD_CALL BusinessServicePoller(void *arg)
       if (service == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), service->Name(), service->Id());
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), service->getName(), service->getId());
       SetPollerState((long)arg, szBuffer);
 		service->poll(NULL, 0, CAST_FROM_POINTER(arg, int));
       service->decRefCount();
@@ -736,7 +736,7 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
  */
 static void QueueForPolling(NetObj *object, void *data)
 {
-	switch(object->Type())
+	switch(object->getObjectClass())
 	{
 		case OBJECT_NODE:
 			{
@@ -745,35 +745,35 @@ static void QueueForPolling(NetObj *object, void *data)
 				{
 					node->incRefCount();
 					node->lockForConfigurationPoll();
-					DbgPrintf(6, _T("Node %d \"%s\" queued for configuration poll"), (int)node->Id(), node->Name());
+					DbgPrintf(6, _T("Node %d \"%s\" queued for configuration poll"), (int)node->getId(), node->getName());
 					g_configPollQueue.Put(node);
 				}
 				if (node->isReadyForStatusPoll())
 				{
 					node->incRefCount();
 					node->lockForStatusPoll();
-					DbgPrintf(6, _T("Node %d \"%s\" queued for status poll"), (int)node->Id(), node->Name());
+					DbgPrintf(6, _T("Node %d \"%s\" queued for status poll"), (int)node->getId(), node->getName());
 					g_statusPollQueue.Put(node);
 				}
 				if (node->isReadyForRoutePoll())
 				{
 					node->incRefCount();
 					node->lockForRoutePoll();
-					DbgPrintf(6, _T("Node %d \"%s\" queued for routing table poll"), (int)node->Id(), node->Name());
+					DbgPrintf(6, _T("Node %d \"%s\" queued for routing table poll"), (int)node->getId(), node->getName());
 					g_routePollQueue.Put(node);
 				}
 				if (node->isReadyForDiscoveryPoll())
 				{
 					node->incRefCount();
 					node->lockForDiscoveryPoll();
-					DbgPrintf(6, _T("Node %d \"%s\" queued for discovery poll"), (int)node->Id(), node->Name());
+					DbgPrintf(6, _T("Node %d \"%s\" queued for discovery poll"), (int)node->getId(), node->getName());
 					g_discoveryPollQueue.Put(node);
 				}
 				if (node->isReadyForTopologyPoll())
 				{
 					node->incRefCount();
 					node->lockForTopologyPoll();
-					DbgPrintf(6, _T("Node %d \"%s\" queued for topology poll"), (int)node->Id(), node->Name());
+					DbgPrintf(6, _T("Node %d \"%s\" queued for topology poll"), (int)node->getId(), node->getName());
 					g_topologyPollQueue.Put(node);
 				}
 			}
@@ -784,7 +784,7 @@ static void QueueForPolling(NetObj *object, void *data)
 				if (cond->isReadyForPoll())
 				{
 					cond->lockForPoll();
-					DbgPrintf(6, _T("Condition %d \"%s\" queued for poll"), (int)object->Id(), object->Name());
+					DbgPrintf(6, _T("Condition %d \"%s\" queued for poll"), (int)object->getId(), object->getName());
 					g_conditionPollerQueue.Put(cond);
 				}
 			}
@@ -796,7 +796,7 @@ static void QueueForPolling(NetObj *object, void *data)
 				{
 					cluster->incRefCount();
 					cluster->lockForStatusPoll();
-					DbgPrintf(6, _T("Cluster %d \"%s\" queued for status poll"), (int)cluster->Id(), cluster->Name());
+					DbgPrintf(6, _T("Cluster %d \"%s\" queued for status poll"), (int)cluster->getId(), cluster->getName());
 					g_statusPollQueue.Put(cluster);
 				}
 			}
@@ -808,7 +808,7 @@ static void QueueForPolling(NetObj *object, void *data)
 				{
 					service->incRefCount();
 					service->lockForPolling();
-					DbgPrintf(6, _T("Business service %d \"%s\" queued for poll"), (int)object->Id(), object->Name());
+					DbgPrintf(6, _T("Business service %d \"%s\" queued for poll"), (int)object->getId(), object->getName());
 					g_businessServicePollerQueue.Put(service);
 				}
 			}

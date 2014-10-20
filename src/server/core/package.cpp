@@ -169,7 +169,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
 		pszErrorMsg = _T("");
 
       // Preset node id in notification message
-      msg.SetVariable(VID_OBJECT_ID, pNode->Id());
+      msg.SetVariable(VID_OBJECT_ID, pNode->getId());
 
       // Check if node is a management server itself
       if (!(pNode->getFlags() & NF_IS_LOCAL_MGMT))
@@ -343,7 +343,7 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
    for(i = 0; i < pStartup->nodeList->size(); i++)
    {
       pQueue->Put(pStartup->nodeList->get(i));
-      msg.SetVariable(VID_OBJECT_ID, pStartup->nodeList->get(i)->Id());
+      msg.SetVariable(VID_OBJECT_ID, pStartup->nodeList->get(i)->getId());
       msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_PENDING);
       pStartup->pSession->sendMessage(&msg);
       msg.deleteAllVariables();

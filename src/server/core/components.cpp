@@ -196,12 +196,12 @@ static UINT32 EntityWalker(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transpor
  */
 ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp)
 {
-	DbgPrintf(5, _T("Building component tree for node %s [%d]"), node->Name(), (int)node->Id());
+	DbgPrintf(5, _T("Building component tree for node %s [%d]"), node->getName(), (int)node->getId());
 	ObjectArray<Component> elements(16, 16);
 	ComponentTree *tree = NULL;
 	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.47.1.1.1.1.7"), EntityWalker, &elements, FALSE) == SNMP_ERR_SUCCESS)
 	{
-		DbgPrintf(6, _T("BuildComponentTree(%s [%d]): %d elements found"), node->Name(), (int)node->Id(), elements.size());
+		DbgPrintf(6, _T("BuildComponentTree(%s [%d]): %d elements found"), node->getName(), (int)node->getId(), elements.size());
 
 		Component *root = NULL;
 		for(int i = 0; i < elements.size(); i++)
@@ -218,15 +218,15 @@ ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp)
 		}
 		else
 		{
-			DbgPrintf(6, _T("BuildComponentTree(%s [%d]): root element not found"), node->Name(), (int)node->Id());
+			DbgPrintf(6, _T("BuildComponentTree(%s [%d]): root element not found"), node->getName(), (int)node->getId());
 			elements.setOwner(true);	// cause element destruction on exit
 		}
 	}
 	else
 	{
-		DbgPrintf(6, _T("BuildComponentTree(%s [%d]): SNMP WALK failed"), node->Name(), (int)node->Id());
+		DbgPrintf(6, _T("BuildComponentTree(%s [%d]): SNMP WALK failed"), node->getName(), (int)node->getId());
 		elements.setOwner(true);	// cause element destruction on exit
 	}
-	DbgPrintf(5, _T("BuildComponentTree(%s [%d]): %p"), node->Name(), (int)node->Id(), tree);
+	DbgPrintf(5, _T("BuildComponentTree(%s [%d]): %p"), node->getName(), (int)node->getId(), tree);
 	return tree;
 }

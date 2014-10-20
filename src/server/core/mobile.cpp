@@ -70,9 +70,9 @@ MobileDevice::~MobileDevice()
 /**
  * Create object from database data
  */
-BOOL MobileDevice::CreateFromDB(UINT32 dwId)
+BOOL MobileDevice::loadFromDatabase(UINT32 dwId)
 {
-   m_dwId = dwId;
+   m_id = dwId;
 
    if (!loadCommonProperties())
    {
@@ -81,7 +81,7 @@ BOOL MobileDevice::CreateFromDB(UINT32 dwId)
    }
 
 	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level FROM mobile_devices WHERE id=%d"), (int)m_dwId);
+	_sntprintf(query, 256, _T("SELECT device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level FROM mobile_devices WHERE id=%d"), (int)m_id);
 	DB_RESULT hResult = DBSelect(g_hCoreDB, query);
 	if (hResult == NULL)
 		return FALSE;
@@ -109,16 +109,16 @@ BOOL MobileDevice::CreateFromDB(UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL MobileDevice::SaveToDB(DB_HANDLE hdb)
+BOOL MobileDevice::saveToDatabase(DB_HANDLE hdb)
 {
    // Lock object's access
-   LockData();
+   lockProperties();
 
    saveCommonProperties(hdb);
 
    BOOL bResult;
 	DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("mobile_devices"), _T("id"), m_dwId))
+   if (IsDatabaseRecordExist(hdb, _T("mobile_devices"), _T("id"), m_id))
 		hStmt = DBPrepare(hdb, _T("UPDATE mobile_devices SET device_id=?,vendor=?,model=?,serial_number=?,os_name=?,os_version=?,user_id=?,battery_level=? WHERE id=?"));
 	else
 		hStmt = DBPrepare(hdb, _T("INSERT INTO mobile_devices (device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level,id) VALUES (?,?,?,?,?,?,?,?,?)"));
@@ -132,7 +132,7 @@ BOOL MobileDevice::SaveToDB(DB_HANDLE hdb)
 		DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_osVersion), DB_BIND_STATIC);
 		DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_userId), DB_BIND_STATIC);
 		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_batteryLevel);
-		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
 
 		bResult = DBExecute(hStmt);
 
@@ -158,7 +158,7 @@ BOOL MobileDevice::SaveToDB(DB_HANDLE hdb)
    // Clear modifications flag and unlock object
 	if (bResult)
 		m_isModified = false;
-   UnlockData();
+   unlockProperties();
 
    return bResult;
 }
@@ -166,9 +166,9 @@ BOOL MobileDevice::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-bool MobileDevice::deleteFromDB(DB_HANDLE hdb)
+bool MobileDevice::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = DataCollectionTarget::deleteFromDB(hdb);
+   bool success = DataCollectionTarget::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM mobile_devices WHERE id=?"));
    return success;
@@ -177,9 +177,9 @@ bool MobileDevice::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void MobileDevice::CreateMessage(CSCPMessage *msg)
+void MobileDevice::fillMessage(CSCPMessage *msg)
 {
-   DataCollectionTarget::CreateMessage(msg);
+   DataCollectionTarget::fillMessage(msg);
 	msg->SetVariable(VID_DEVICE_ID, CHECK_NULL_EX(m_deviceId));
 	msg->SetVariable(VID_VENDOR, CHECK_NULL_EX(m_vendor));
 	msg->SetVariable(VID_MODEL, CHECK_NULL_EX(m_model));
@@ -194,12 +194,12 @@ void MobileDevice::CreateMessage(CSCPMessage *msg)
 /**
  * Modify object from message
  */
-UINT32 MobileDevice::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 MobileDevice::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
-   return DataCollectionTarget::ModifyFromMessage(pRequest, TRUE);
+   return DataCollectionTarget::modifyFromMessage(pRequest, TRUE);
 }
 
 /**
@@ -207,7 +207,7 @@ UINT32 MobileDevice::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocke
  */
 void MobileDevice::updateSystemInfo(CSCPMessage *msg)
 {
-	LockData();
+	lockProperties();
 
 	m_lastReportTime = time(NULL);
 
@@ -229,8 +229,8 @@ void MobileDevice::updateSystemInfo(CSCPMessage *msg)
 	safe_free(m_userId);
 	m_userId = msg->GetVariableStr(VID_USER_NAME);
 
-	Modify();
-	UnlockData();
+	setModified();
+	unlockProperties();
 }
 
 /**
@@ -238,7 +238,7 @@ void MobileDevice::updateSystemInfo(CSCPMessage *msg)
  */
 void MobileDevice::updateStatus(CSCPMessage *msg)
 {
-	LockData();
+	lockProperties();
 
 	m_lastReportTime = time(NULL);
 
@@ -261,11 +261,11 @@ void MobileDevice::updateStatus(CSCPMessage *msg)
 
 	TCHAR temp[32];
 	DbgPrintf(5, _T("Mobile device %s [%d] updated from agent (battery=%d addr=%s loc=[%s %s])"),
-	          m_szName, (int)m_dwId, m_batteryLevel, IpToStr(m_dwIpAddr, temp),
+	          m_name, (int)m_id, m_batteryLevel, IpToStr(m_dwIpAddr, temp),
 				 m_geoLocation.getLatitudeAsString(), m_geoLocation.getLongitudeAsString());
 
-	Modify();
-	UnlockData();
+	setModified();
+	unlockProperties();
 }
 
 /**
@@ -332,9 +332,9 @@ void MobileDevice::calculateCompoundStatus(BOOL bForcedRecalc)
    // Assume normal status by default for mobile device
    if (m_iStatus == STATUS_UNKNOWN)
    {
-      LockData();
+      lockProperties();
       m_iStatus = STATUS_NORMAL;
-      Modify();
-      UnlockData();
+      setModified();
+      unlockProperties();
    }
 }

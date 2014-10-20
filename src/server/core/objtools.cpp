@@ -314,7 +314,7 @@ static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar,
             pInterface = pNode->findInterface(dwIndex, INADDR_ANY);
             if (pInterface != NULL)
             {
-               nx_strncpy(szBuffer, pInterface->Name(), 4096);
+               nx_strncpy(szBuffer, pInterface->getName(), 4096);
             }
             else
             {
@@ -378,7 +378,7 @@ static UINT32 TableHandler(UINT32 dwVersion, SNMP_Variable *pVar,
       }
    }
 
-   dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+   dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
    delete pRqPDU;
    if (dwResult == SNMP_ERR_SUCCESS)
    {

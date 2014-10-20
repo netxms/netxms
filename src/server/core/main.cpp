@@ -374,7 +374,7 @@ static void LoadGlobalConfig()
    g_icmpPingTimeout = ConfigReadInt(_T("IcmpPingTimeout"), 1500);
 	g_icmpPingSize = ConfigReadInt(_T("IcmpPingSize"), 46);
 	g_lockTimeout = ConfigReadInt(_T("LockTimeout"), 60000);
-	g_dwSNMPTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 2000);
+	g_snmpTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 2000);
 	g_agentCommandTimeout = ConfigReadInt(_T("AgentCommandTimeout"), 4000);
 	g_thresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
 	g_requiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
@@ -1039,11 +1039,11 @@ static void DumpIndexCallback(NetObj *object, void *data)
 		TCHAR buffer[16];
 		ConsolePrintf(d->console, _T("%08X [%-15s] %p %s\n"), object->IpAddr(),
 				IpToStr(object->IpAddr(), buffer),
-				object, object->Name());
+				object, object->getName());
 	}
 	else
 	{
-		ConsolePrintf(d->console, _T("%08X %p %s\n"), object->Id(), object, object->Name());
+		ConsolePrintf(d->console, _T("%08X %p %s\n"), object->getId(), object, object->getName());
 	}
 }
 
@@ -1214,7 +1214,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				NetObj *pObject = FindObjectById(dwNode);
 				if (pObject != NULL)
 				{
-					if (pObject->Type() == OBJECT_NODE)
+					if (pObject->getObjectClass() == OBJECT_NODE)
 					{
 						ComponentTree *components = ((Node *)pObject)->getComponents();
 						if (components != NULL)
@@ -1266,7 +1266,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				NetObj *pObject = FindObjectById(dwNode);
 				if (pObject != NULL)
 				{
-					if (pObject->Type() == OBJECT_NODE)
+					if (pObject->getObjectClass() == OBJECT_NODE)
 					{
                   ForwardingDatabase *fdb = ((Node *)pObject)->getSwitchForwardingDatabase();
 						if (fdb != NULL)
@@ -1417,13 +1417,13 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				pObject = FindObjectById(dwNode);
 				if (pObject != NULL)
 				{
-					if (pObject->Type() == OBJECT_NODE)
+					if (pObject->getObjectClass() == OBJECT_NODE)
 					{
 						ROUTING_TABLE *pRT;
 						TCHAR szIpAddr[16];
 						int i;
 
-						ConsolePrintf(pCtx, _T("Routing table for node %s:\n\n"), pObject->Name());
+						ConsolePrintf(pCtx, _T("Routing table for node %s:\n\n"), pObject->getName());
 						pRT = ((Node *)pObject)->getCachedRoutingTable();
 						if (pRT != NULL)
 						{
@@ -1490,7 +1490,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                      {
                         NetObj *object = FindObjectById(ni->objectId);
                         if (object != NULL)
-                           _sntprintf(peer, 256, _T("%s [%d]"), object->Name(), ni->objectId);
+                           _sntprintf(peer, 256, _T("%s [%d]"), object->getName(), ni->objectId);
                         else
                            _sntprintf(peer, 256, _T("[%d]"), ni->objectId);
                      }
@@ -1534,7 +1534,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				pObject = FindObjectById(dwNode);
 				if (pObject != NULL)
 				{
-					if (pObject->Type() == OBJECT_NODE)
+					if (pObject->getObjectClass() == OBJECT_NODE)
 					{
 						VlanList *vlans = ((Node *)pObject)->getVlans();
 						if (vlans != NULL)
@@ -1701,22 +1701,22 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				}
 				else
 				{
-					if ((pObject1->Type() == OBJECT_NODE) && (pObject2->Type() == OBJECT_NODE))
+					if ((pObject1->getObjectClass() == OBJECT_NODE) && (pObject2->getObjectClass() == OBJECT_NODE))
 					{
 						pTrace = TraceRoute((Node *)pObject1, (Node *)pObject2);
 						if (pTrace != NULL)
 						{
                      TCHAR sourceIp[32];
 							ConsolePrintf(pCtx, _T("Trace from %s to %s (%d hops, %s, source IP %s):\n"),
-									pObject1->Name(), pObject2->Name(), pTrace->getHopCount(),
+									pObject1->getName(), pObject2->getName(), pTrace->getHopCount(),
 									pTrace->isComplete() ? _T("complete") : _T("incomplete"),
                            IpToStr(pTrace->getSourceAddress(), sourceIp));
  							for(i = 0; i < pTrace->getHopCount(); i++)
 							{
 								HOP_INFO *hop = pTrace->getHopInfo(i);
 								ConsolePrintf(pCtx, _T("[%d] %s %s %s %d\n"),
-										hop->object->Id(),
-										hop->object->Name(),
+										hop->object->getId(),
+										hop->object->getName(),
 										IpToStr(hop->nextHop, szNextHop),
 										hop->isVpn ? _T("VPN Connector ID:") : _T("Interface Index: "),
 										hop->ifIndex);

@@ -177,7 +177,7 @@ String ColumnFilter::generateSql()
 							if (i > 0)
 								sql += _T(", ");
 							TCHAR buffer[32];
-							_sntprintf(buffer, 32, _T("%d"), (int)childObjects->get(i)->Id());
+							_sntprintf(buffer, 32, _T("%d"), (int)childObjects->get(i)->getId());
 							sql += (const TCHAR *)buffer;
                      childObjects->get(i)->decRefCount();
 						}

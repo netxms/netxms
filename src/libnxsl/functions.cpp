@@ -431,7 +431,7 @@ public:
 NXSL_TimeClass::NXSL_TimeClass()
                :NXSL_Class()
 {
-   _tcscpy(m_szName, _T("TIME"));
+   _tcscpy(m_name, _T("TIME"));
 }
 
 NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)

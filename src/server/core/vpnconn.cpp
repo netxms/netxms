@@ -59,7 +59,7 @@ VPNConnector::~VPNConnector()
 /**
  * Create object from database data
  */
-BOOL VPNConnector::CreateFromDB(UINT32 dwId)
+BOOL VPNConnector::loadFromDatabase(UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
@@ -67,13 +67,13 @@ BOOL VPNConnector::CreateFromDB(UINT32 dwId)
    NetObj *pObject;
    BOOL bResult = FALSE;
 
-   m_dwId = dwId;
+   m_id = dwId;
 
    if (!loadCommonProperties())
       return FALSE;
 
    // Load network lists
-   _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask FROM vpn_connector_networks WHERE vpn_id=%d AND network_type=0"), m_dwId);
+   _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask FROM vpn_connector_networks WHERE vpn_id=%d AND network_type=0"), m_id);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -86,7 +86,7 @@ BOOL VPNConnector::CreateFromDB(UINT32 dwId)
    }
    DBFreeResult(hResult);
 
-   _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask FROM vpn_connector_networks WHERE vpn_id=%d AND network_type=1"), m_dwId);
+   _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask FROM vpn_connector_networks WHERE vpn_id=%d AND network_type=1"), m_id);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
@@ -118,7 +118,7 @@ BOOL VPNConnector::CreateFromDB(UINT32 dwId)
          {
             nxlog_write(MSG_INVALID_NODE_ID_EX, NXLOG_ERROR, "dds", dwId, dwNodeId, _T("VPN connector"));
          }
-         else if (pObject->Type() != OBJECT_NODE)
+         else if (pObject->getObjectClass() != OBJECT_NODE)
          {
             nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, dwNodeId);
          }
@@ -146,7 +146,7 @@ BOOL VPNConnector::CreateFromDB(UINT32 dwId)
 /**
  * Save VPN connector object to database
  */
-BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
+BOOL VPNConnector::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024], szIpAddr[16], szNetMask[16];
    BOOL bNewObject = TRUE;
@@ -155,12 +155,12 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
    DB_RESULT hResult;
 
    // Lock object's access
-   LockData();
+   lockProperties();
 
    saveCommonProperties(hdb);
 
    // Check for object's existence in database
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM vpn_connectors WHERE id=%d"), m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM vpn_connectors WHERE id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -172,27 +172,27 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
    // Determine owning node's ID
    pNode = GetParentNode();
    if (pNode != NULL)
-      dwNodeId = pNode->Id();
+      dwNodeId = pNode->getId();
    else
       dwNodeId = 0;
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO vpn_connectors (id,node_id,peer_gateway) VALUES (%d,%d,%d)"),
-              m_dwId, dwNodeId, m_dwPeerGateway);
+              m_id, dwNodeId, m_dwPeerGateway);
    else
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("UPDATE vpn_connectors SET node_id=%d,peer_gateway=%d WHERE id=%d"),
-              dwNodeId, m_dwPeerGateway, m_dwId);
+              dwNodeId, m_dwPeerGateway, m_id);
    DBQuery(hdb, szQuery);
 
    // Save network list
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM vpn_connector_networks WHERE vpn_id=%d"), m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM vpn_connector_networks WHERE vpn_id=%d"), m_id);
    DBQuery(hdb, szQuery);
    for(i = 0; i < m_dwNumLocalNets; i++)
    {
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
 		           _T("INSERT INTO vpn_connector_networks (vpn_id,network_type,ip_addr,ip_netmask) VALUES (%d,0,'%s','%s')"),
-              m_dwId, IpToStr(m_pLocalNetList[i].dwAddr, szIpAddr),
+              m_id, IpToStr(m_pLocalNetList[i].dwAddr, szIpAddr),
               IpToStr(m_pLocalNetList[i].dwMask, szNetMask));
       DBQuery(hdb, szQuery);
    }
@@ -200,7 +200,7 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
    {
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
 			        _T("INSERT INTO vpn_connector_networks (vpn_id,network_type,ip_addr,ip_netmask) VALUES (%d,1,'%s','%s')"),
-              m_dwId, IpToStr(m_pRemoteNetList[i].dwAddr, szIpAddr),
+              m_id, IpToStr(m_pRemoteNetList[i].dwAddr, szIpAddr),
               IpToStr(m_pRemoteNetList[i].dwMask, szNetMask));
       DBQuery(hdb, szQuery);
    }
@@ -210,7 +210,7 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
 
    // Clear modifications flag and unlock object
    m_isModified = false;
-   UnlockData();
+   unlockProperties();
 
    return TRUE;
 }
@@ -218,9 +218,9 @@ BOOL VPNConnector::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete VPN connector object from database
  */
-bool VPNConnector::deleteFromDB(DB_HANDLE hdb)
+bool VPNConnector::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDB(hdb);
+   bool success = NetObj::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM vpn_connectors WHERE id=?"));
    if (success)
@@ -238,7 +238,7 @@ Node *VPNConnector::GetParentNode()
 
    LockParentList(FALSE);
    for(i = 0; i < m_dwParentCount; i++)
-      if (m_pParentList[i]->Type() == OBJECT_NODE)
+      if (m_pParentList[i]->getObjectClass() == OBJECT_NODE)
       {
          pNode = (Node *)m_pParentList[i];
          break;
@@ -250,11 +250,11 @@ Node *VPNConnector::GetParentNode()
 /**
  * Create NXCP message with object's data
  */
-void VPNConnector::CreateMessage(CSCPMessage *pMsg)
+void VPNConnector::fillMessage(CSCPMessage *pMsg)
 {
    UINT32 i, dwId;
 
-   NetObj::CreateMessage(pMsg);
+   NetObj::fillMessage(pMsg);
    pMsg->SetVariable(VID_PEER_GATEWAY, m_dwPeerGateway);
    pMsg->SetVariable(VID_NUM_LOCAL_NETS, m_dwNumLocalNets);
    pMsg->SetVariable(VID_NUM_REMOTE_NETS, m_dwNumRemoteNets);
@@ -275,10 +275,10 @@ void VPNConnector::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from message
  */
-UINT32 VPNConnector::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 VPNConnector::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
    // Peer gateway
    if (pRequest->isFieldExist(VID_PEER_GATEWAY))
@@ -323,7 +323,7 @@ UINT32 VPNConnector::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocke
       }
    }
 
-   return NetObj::ModifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessage(pRequest, TRUE);
 }
 
 /**
@@ -334,7 +334,7 @@ BOOL VPNConnector::isLocalAddr(UINT32 dwIpAddr)
    UINT32 i;
    BOOL bResult = FALSE;
 
-   LockData();
+   lockProperties();
 
    for(i = 0; i < m_dwNumLocalNets; i++)
       if ((dwIpAddr & m_pLocalNetList[i].dwMask) == m_pLocalNetList[i].dwAddr)
@@ -343,7 +343,7 @@ BOOL VPNConnector::isLocalAddr(UINT32 dwIpAddr)
          break;
       }
 
-   UnlockData();
+   unlockProperties();
    return bResult;
 }
 
@@ -355,7 +355,7 @@ BOOL VPNConnector::isRemoteAddr(UINT32 dwIpAddr)
    UINT32 i;
    BOOL bResult = FALSE;
 
-   LockData();
+   lockProperties();
 
    for(i = 0; i < m_dwNumRemoteNets; i++)
       if ((dwIpAddr & m_pRemoteNetList[i].dwMask) == m_pRemoteNetList[i].dwAddr)
@@ -364,7 +364,7 @@ BOOL VPNConnector::isRemoteAddr(UINT32 dwIpAddr)
          break;
       }
 
-   UnlockData();
+   unlockProperties();
    return bResult;
 }
 
@@ -379,7 +379,7 @@ UINT32 VPNConnector::getPeerGatewayAddr()
    pObject = FindObjectById(m_dwPeerGateway);
    if (pObject != NULL)
    {
-      if (pObject->Type() == OBJECT_NODE)
+      if (pObject->getObjectClass() == OBJECT_NODE)
          dwAddr = pObject->IpAddr();
    }
    return dwAddr;

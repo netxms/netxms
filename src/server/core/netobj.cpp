@@ -30,13 +30,13 @@ NetObj::NetObj()
    int i;
 
    m_dwRefCount = 0;
-   m_mutexData = MutexCreate();
+   m_mutexProperties = MutexCreate();
    m_mutexRefCount = MutexCreate();
    m_mutexACL = MutexCreate();
    m_rwlockParentList = RWLockCreate();
    m_rwlockChildList = RWLockCreate();
    m_iStatus = STATUS_UNKNOWN;
-   m_szName[0] = 0;
+   m_name[0] = 0;
    m_pszComments = NULL;
    m_isModified = false;
    m_isDeleted = false;
@@ -73,7 +73,7 @@ NetObj::NetObj()
  */
 NetObj::~NetObj()
 {
-   MutexDestroy(m_mutexData);
+   MutexDestroy(m_mutexProperties);
    MutexDestroy(m_mutexRefCount);
    MutexDestroy(m_mutexACL);
    RWLockDestroy(m_rwlockParentList);
@@ -89,7 +89,7 @@ NetObj::~NetObj()
 /**
  * Create object from database data
  */
-BOOL NetObj::CreateFromDB(UINT32 dwId)
+BOOL NetObj::loadFromDatabase(UINT32 dwId)
 {
    return FALSE;     // Abstract objects cannot be loaded from database
 }
@@ -97,7 +97,7 @@ BOOL NetObj::CreateFromDB(UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL NetObj::SaveToDB(DB_HANDLE hdb)
+BOOL NetObj::saveToDatabase(DB_HANDLE hdb)
 {
    return FALSE;     // Abstract objects cannot be saved to database
 }
@@ -122,7 +122,7 @@ static bool DeleteModuleDataCallback(const TCHAR *key, const void *value, void *
 /**
  * Delete object from database
  */
-bool NetObj::deleteFromDB(DB_HANDLE hdb)
+bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
 {
    // Delete ACL
    bool success = executeQueryOnObject(hdb, _T("DELETE FROM acl WHERE object_id=?"));
@@ -140,14 +140,14 @@ bool NetObj::deleteFromDB(DB_HANDLE hdb)
    // Delete alarms
    if (success && ConfigReadInt(_T("DeleteAlarmsOfDeletedObject"), 1))
    {
-      success = DeleteObjectAlarms(m_dwId, hdb);
+      success = DeleteObjectAlarms(m_id, hdb);
    }
 
    // Delete module data
    if (success && (m_moduleData != NULL))
    {
       ModuleDataDatabaseCallbackParams data;
-      data.id = m_dwId;
+      data.id = m_id;
       data.hdb = hdb;
       success = m_moduleData->forEach(DeleteModuleDataCallback, &data);
    }
@@ -174,13 +174,13 @@ bool NetObj::loadCommonProperties()
                              _T("WHERE object_id=?"));
 	if (hStmt != NULL)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != NULL)
 		{
 			if (DBGetNumRows(hResult) > 0)
 			{
-				DBGetField(hResult, 0, 0, m_szName, MAX_OBJECT_NAME);
+				DBGetField(hResult, 0, 0, m_name, MAX_OBJECT_NAME);
 				m_iStatus = DBGetFieldLong(hResult, 0, 1);
 				m_isDeleted = DBGetFieldLong(hResult, 0, 2) ? TRUE : FALSE;
 				m_bInheritAccessRights = DBGetFieldLong(hResult, 0, 3) ? TRUE : FALSE;
@@ -227,7 +227,7 @@ bool NetObj::loadCommonProperties()
 		hStmt = DBPrepare(g_hCoreDB, _T("SELECT attr_name,attr_value FROM object_custom_attributes WHERE object_id=?"));
 		if (hStmt != NULL)
 		{
-			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 			DB_RESULT hResult = DBSelectPrepared(hStmt);
 			if (hResult != NULL)
 			{
@@ -265,7 +265,7 @@ bool NetObj::loadCommonProperties()
 		success = loadTrustedNodes();
 
 	if (!success)
-		DbgPrintf(4, _T("NetObj::loadCommonProperties() failed for object %s [%ld] class=%d"), m_szName, (long)m_dwId, Type());
+		DbgPrintf(4, _T("NetObj::loadCommonProperties() failed for object %s [%ld] class=%d"), m_name, (long)m_id, getObjectClass());
 
    return success;
 }
@@ -295,7 +295,7 @@ static bool SaveModuleDataCallback(const TCHAR *key, const void *value, void *da
 bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 {
 	DB_STATEMENT hStmt;
-	if (IsDatabaseRecordExist(hdb, _T("object_properties"), _T("object_id"), m_dwId))
+	if (IsDatabaseRecordExist(hdb, _T("object_properties"), _T("object_id"), m_id))
 	{
 		hStmt = DBPrepare(hdb,
                     _T("UPDATE object_properties SET name=?,status=?,")
@@ -330,7 +330,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	_sntprintf(lat, 32, _T("%f"), m_geoLocation.getLatitude());
 	_sntprintf(lon, 32, _T("%f"), m_geoLocation.getLongitude());
 
-	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_szName, DB_BIND_STATIC);
+	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_iStatus);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(m_isDeleted ? 1 : 0));
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_bInheritAccessRights);
@@ -352,7 +352,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guid), DB_BIND_STATIC);
 	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, uuid_to_string(m_image, image), DB_BIND_STATIC);
 	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_submapId);
-	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt) ? true : false;
 	DBFreeStatement(hStmt);
@@ -361,14 +361,14 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
    if (success)
    {
 		TCHAR szQuery[512];
-		_sntprintf(szQuery, 512, _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), m_dwId);
+		_sntprintf(szQuery, 512, _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), m_id);
       success = DBQuery(hdb, szQuery) ? true : false;
 		if (success)
 		{
 			hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"));
 			if (hStmt != NULL)
 			{
-				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
             success = m_customAttributes.forEach(SaveAttributeCallback, hStmt);
 				DBFreeStatement(hStmt);
 			}
@@ -383,7 +383,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
    if (success && (m_moduleData != NULL))
    {
       ModuleDataDatabaseCallbackParams data;
-      data.id = m_dwId;
+      data.id = m_id;
       data.hdb = hdb;
       success = m_moduleData->forEach(SaveModuleDataCallback, &data);
    }
@@ -412,7 +412,7 @@ void NetObj::AddChild(NetObj *pObject)
    m_pChildList[m_dwChildCount++] = pObject;
    UnlockChildList();
 	incRefCount();
-   Modify();
+   setModified();
 }
 
 /**
@@ -433,7 +433,7 @@ void NetObj::AddParent(NetObj *pObject)
    m_pParentList[m_dwParentCount++] = pObject;
    UnlockParentList();
 	incRefCount();
-   Modify();
+   setModified();
 }
 
 /**
@@ -466,7 +466,7 @@ void NetObj::DeleteChild(NetObj *pObject)
    }
    UnlockChildList();
 	decRefCount();
-   Modify();
+   setModified();
 }
 
 /**
@@ -498,7 +498,7 @@ void NetObj::DeleteParent(NetObj *pObject)
    }
    UnlockParentList();
 	decRefCount();
-   Modify();
+   setModified();
 }
 
 /**
@@ -506,8 +506,8 @@ void NetObj::DeleteParent(NetObj *pObject)
  */
 void NetObj::onObjectDeleteCallback(NetObj *object, void *data)
 {
-	UINT32 currId = ((NetObj *)data)->Id();
-	if ((object->Id() != currId) && !object->isDeleted())
+	UINT32 currId = ((NetObj *)data)->getId();
+	if ((object->getId() != currId) && !object->isDeleted())
 		object->onObjectDelete(currId);
 }
 
@@ -518,24 +518,24 @@ void NetObj::onObjectDeleteCallback(NetObj *object, void *data)
  */
 void NetObj::deleteObject(NetObj *initiator)
 {
-   DbgPrintf(4, _T("Deleting object %d [%s]"), m_dwId, m_szName);
+   DbgPrintf(4, _T("Deleting object %d [%s]"), m_id, m_name);
 
 	// Prevent object change propagation until it's marked as deleted
 	// (to prevent the object's incorrect appearance in GUI
-	LockData();
+	lockProperties();
    m_isHidden = true;
-	UnlockData();
+	unlockProperties();
 
 	// Notify modules about object deletion
    CALL_ALL_MODULES(pfPreObjectDelete, (this));
 
    prepareForDeletion();
 
-   DbgPrintf(5, _T("NetObj::deleteObject(): deleting object %d from indexes"), m_dwId);
+   DbgPrintf(5, _T("NetObj::deleteObject(): deleting object %d from indexes"), m_id);
    NetObjDeleteFromIndexes(this);
 
    // Delete references to this object from child objects
-   DbgPrintf(5, _T("NetObj::deleteObject(): clearing child list for object %d"), m_dwId);
+   DbgPrintf(5, _T("NetObj::deleteObject(): clearing child list for object %d"), m_id);
    ObjectArray<NetObj> *deleteList = NULL;
    LockChildList(TRUE);
    for(UINT32 i = 0; i < m_dwChildCount; i++)
@@ -564,14 +564,14 @@ void NetObj::deleteObject(NetObj *initiator)
       for(int i = 0; i < deleteList->size(); i++)
       {
          NetObj *o = deleteList->get(i);
-         DbgPrintf(5, _T("NetObj::deleteObject(): calling deleteObject() on %s [%d]"), o->Name(), o->Id());
+         DbgPrintf(5, _T("NetObj::deleteObject(): calling deleteObject() on %s [%d]"), o->getName(), o->getId());
          o->deleteObject(this);
       }
       delete deleteList;
    }
 
    // Remove references to this object from parent objects
-   DbgPrintf(5, _T("NetObj::Delete(): clearing parent list for object %d"), m_dwId);
+   DbgPrintf(5, _T("NetObj::Delete(): clearing parent list for object %d"), m_id);
    LockParentList(TRUE);
    for(UINT32 i = 0; i < m_dwParentCount; i++)
    {
@@ -589,17 +589,17 @@ void NetObj::deleteObject(NetObj *initiator)
    m_dwParentCount = 0;
    UnlockParentList();
 
-   LockData();
+   lockProperties();
    m_isHidden = false;
    m_isDeleted = true;
-   Modify();
-   UnlockData();
+   setModified();
+   unlockProperties();
 
    // Notify all other objects about object deletion
-   DbgPrintf(5, _T("NetObj::deleteObject(): calling onObjectDelete(%d)"), m_dwId);
+   DbgPrintf(5, _T("NetObj::deleteObject(): calling onObjectDelete(%d)"), m_id);
 	g_idxObjectById.forEach(onObjectDeleteCallback, this);
 
-   DbgPrintf(4, _T("Object %d successfully deleted"), m_dwId);
+   DbgPrintf(4, _T("Object %d successfully deleted"), m_id);
 }
 
 /**
@@ -621,7 +621,7 @@ const TCHAR *NetObj::dbgGetChildList(TCHAR *szBuffer)
    LockChildList(FALSE);
    for(i = 0, pBuf = szBuffer; i < m_dwChildCount; i++)
    {
-      _sntprintf(pBuf, 10, _T("%d "), m_pChildList[i]->Id());
+      _sntprintf(pBuf, 10, _T("%d "), m_pChildList[i]->getId());
       while(*pBuf)
          pBuf++;
    }
@@ -643,7 +643,7 @@ const TCHAR *NetObj::dbgGetParentList(TCHAR *szBuffer)
    LockParentList(FALSE);
    for(i = 0; i < m_dwParentCount; i++)
    {
-      _sntprintf(pBuf, 10, _T("%d "), m_pParentList[i]->Id());
+      _sntprintf(pBuf, 10, _T("%d "), m_pParentList[i]->getId());
       while(*pBuf)
          pBuf++;
    }
@@ -661,9 +661,9 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
    if (m_iStatus == STATUS_UNMANAGED)
       return;
 
-   int mostCriticalAlarm = GetMostCriticalStatusForObject(m_dwId);
+   int mostCriticalAlarm = GetMostCriticalStatusForObject(m_id);
    int mostCriticalDCI = 
-      (Type() == OBJECT_NODE || Type() == OBJECT_MOBILEDEVICE || Type() == OBJECT_CLUSTER || Type() == OBJECT_ACCESSPOINT) ?
+      (getObjectClass() == OBJECT_NODE || getObjectClass() == OBJECT_MOBILEDEVICE || getObjectClass() == OBJECT_CLUSTER || getObjectClass() == OBJECT_ACCESSPOINT) ?
          ((DataCollectionTarget *)this)->getMostCriticalDCIStatus() : STATUS_UNKNOWN; 
 
    UINT32 i;
@@ -672,7 +672,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
    int nSingleThreshold, *pnThresholds;
    int nRating[5], iChildStatus, nThresholds[4];
 
-   LockData();
+   lockProperties();
    if (m_iStatusCalcAlg == SA_CALCULATE_DEFAULT)
    {
       iStatusAlg = GetDefaultStatusCalculation(&nSingleThreshold, &pnThresholds);
@@ -785,7 +785,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
       }
    }
 
-   UnlockData();
+   unlockProperties();
 
    // Cause parent object(s) to recalculate it's status
    if ((oldStatus != m_iStatus) || bForcedRecalc)
@@ -794,9 +794,9 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
       for(i = 0; i < m_dwParentCount; i++)
          m_pParentList[i]->calculateCompoundStatus();
       UnlockParentList();
-      LockData();
-      Modify();
-      UnlockData();
+      lockProperties();
+      setModified();
+      unlockProperties();
    }
 }
 
@@ -810,7 +810,7 @@ bool NetObj::loadACLFromDB()
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT user_id,access_rights FROM acl WHERE object_id=?"));
 	if (hStmt != NULL)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != NULL)
 		{
@@ -860,10 +860,10 @@ bool NetObj::saveACLToDB(DB_HANDLE hdb)
 
    // Save access list
    lockACL();
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM acl WHERE object_id=%d"), m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM acl WHERE object_id=%d"), m_id);
    if (DBQuery(hdb, szQuery))
    {
-      sp.dwObjectId = m_dwId;
+      sp.dwObjectId = m_id;
       sp.hdb = hdb;
       m_pAccessList->enumerateElements(EnumerationHandler, &sp);
       success = true;
@@ -895,14 +895,14 @@ static bool SendModuleDataCallback(const TCHAR *key, const void *value, void *da
 /**
  * Create NXCP message with object's data
  */
-void NetObj::CreateMessage(CSCPMessage *pMsg)
+void NetObj::fillMessage(CSCPMessage *pMsg)
 {
    UINT32 i, dwId;
 
-   pMsg->SetVariable(VID_OBJECT_CLASS, (WORD)Type());
-   pMsg->SetVariable(VID_OBJECT_ID, m_dwId);
+   pMsg->SetVariable(VID_OBJECT_CLASS, (WORD)getObjectClass());
+   pMsg->SetVariable(VID_OBJECT_ID, m_id);
 	pMsg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
-   pMsg->SetVariable(VID_OBJECT_NAME, m_szName);
+   pMsg->SetVariable(VID_OBJECT_NAME, m_name);
    pMsg->SetVariable(VID_OBJECT_STATUS, (WORD)m_iStatus);
    pMsg->SetVariable(VID_IP_ADDRESS, m_dwIpAddr);
    pMsg->SetVariable(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
@@ -911,13 +911,13 @@ void NetObj::CreateMessage(CSCPMessage *pMsg)
    LockParentList(FALSE);
    pMsg->SetVariable(VID_PARENT_CNT, m_dwParentCount);
    for(i = 0, dwId = VID_PARENT_ID_BASE; i < m_dwParentCount; i++, dwId++)
-      pMsg->SetVariable(dwId, m_pParentList[i]->Id());
+      pMsg->SetVariable(dwId, m_pParentList[i]->getId());
    UnlockParentList();
 
    LockChildList(FALSE);
    pMsg->SetVariable(VID_CHILD_CNT, m_dwChildCount);
    for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_dwChildCount; i++, dwId++)
-      pMsg->SetVariable(dwId, m_pChildList[i]->Id());
+      pMsg->SetVariable(dwId, m_pChildList[i]->getId());
    UnlockChildList();
 
    pMsg->SetVariable(VID_INHERIT_RIGHTS, (WORD)m_bInheritAccessRights);
@@ -973,7 +973,7 @@ static void BroadcastObjectChange(ClientSession *pSession, void *pArg)
  * Mark object as modified and put on client's notification queue
  * We assume that object is locked at the time of function call
  */
-void NetObj::Modify()
+void NetObj::setModified()
 {
    if (g_bModificationsLocked)
       return;
@@ -989,16 +989,16 @@ void NetObj::Modify()
 /**
  * Modify object from NXCP message
  */
-UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 NetObj::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    BOOL bRecalcStatus = FALSE;
 
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
    // Change object's name
    if (pRequest->isFieldExist(VID_OBJECT_NAME))
-      pRequest->GetVariableStr(VID_OBJECT_NAME, m_szName, MAX_OBJECT_NAME);
+      pRequest->GetVariableStr(VID_OBJECT_NAME, m_name, MAX_OBJECT_NAME);
 
    // Change object's status calculation/propagation algorithms
    if (pRequest->isFieldExist(VID_STATUS_CALCULATION_ALG))
@@ -1075,8 +1075,8 @@ UINT32 NetObj::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_submapId = pRequest->GetVariableLong(VID_SUBMAP_ID);
 	}
 
-   Modify();
-   UnlockData();
+   setModified();
+   unlockProperties();
 
    if (bRecalcStatus)
       calculateCompoundStatus(TRUE);
@@ -1154,9 +1154,9 @@ void NetObj::dropUserAccess(UINT32 dwUserId)
    unlockACL();
    if (modified)
    {
-      LockData();
-      Modify();
-      UnlockData();
+      lockProperties();
+      setModified();
+      unlockProperties();
    }
 }
 
@@ -1168,12 +1168,12 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
    UINT32 i;
    int oldStatus;
 
-   LockData();
+   lockProperties();
 
    if ((bIsManaged && (m_iStatus != STATUS_UNMANAGED)) ||
        ((!bIsManaged) && (m_iStatus == STATUS_UNMANAGED)))
    {
-      UnlockData();
+      unlockProperties();
       return;  // Status is already correct
    }
 
@@ -1181,11 +1181,11 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
    m_iStatus = (bIsManaged ? STATUS_UNKNOWN : STATUS_UNMANAGED);
 
    // Generate event if current object is a node
-   if (Type() == OBJECT_NODE)
-      PostEvent(bIsManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_dwId, "d", oldStatus);
+   if (getObjectClass() == OBJECT_NODE)
+      PostEvent(bIsManaged ? EVENT_NODE_UNKNOWN : EVENT_NODE_UNMANAGED, m_id, "d", oldStatus);
 
-   Modify();
-   UnlockData();
+   setModified();
+   unlockProperties();
 
    // Change status for child objects also
    LockChildList(FALSE);
@@ -1211,7 +1211,7 @@ bool NetObj::isChild(UINT32 id)
    bool bResult = false;
 
    // Check for our own ID (object ID should never change, so we may not lock object's data)
-   if (m_dwId == id)
+   if (m_id == id)
       bResult = true;
 
    // First, walk through our own child list
@@ -1219,7 +1219,7 @@ bool NetObj::isChild(UINT32 id)
    {
       LockChildList(FALSE);
       for(i = 0; i < m_dwChildCount; i++)
-         if (m_pChildList[i]->Id() == id)
+         if (m_pChildList[i]->getId() == id)
          {
             bResult = true;
             break;
@@ -1273,12 +1273,12 @@ void NetObj::addChildNodesToList(ObjectArray<Node> *nodeList, UINT32 dwUserId)
    // Walk through our own child list
    for(i = 0; i < m_dwChildCount; i++)
    {
-      if (m_pChildList[i]->Type() == OBJECT_NODE)
+      if (m_pChildList[i]->getObjectClass() == OBJECT_NODE)
       {
          // Check if this node already in the list
 			int j;
 			for(j = 0; j < nodeList->size(); j++)
-				if (nodeList->get(j)->Id() == m_pChildList[i]->Id())
+				if (nodeList->get(j)->getId() == m_pChildList[i]->getId())
                break;
          if (j == nodeList->size())
          {
@@ -1308,12 +1308,12 @@ void NetObj::addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList,
    // Walk through our own child list
    for(i = 0; i < m_dwChildCount; i++)
    {
-      if ((m_pChildList[i]->Type() == OBJECT_NODE) || (m_pChildList[i]->Type() == OBJECT_MOBILEDEVICE))
+      if ((m_pChildList[i]->getObjectClass() == OBJECT_NODE) || (m_pChildList[i]->getObjectClass() == OBJECT_MOBILEDEVICE))
       {
          // Check if this objects already in the list
 			int j;
 			for(j = 0; j < dctList->size(); j++)
-				if (dctList->get(j)->Id() == m_pChildList[i]->Id())
+				if (dctList->get(j)->getId() == m_pChildList[i]->getId())
                break;
          if (j == dctList->size())
          {
@@ -1343,9 +1343,9 @@ void NetObj::hide()
       m_pChildList[i]->hide();
    UnlockChildList();
 
-	LockData();
+	lockProperties();
    m_isHidden = true;
-   UnlockData();
+   unlockProperties();
 }
 
 /**
@@ -1355,11 +1355,11 @@ void NetObj::unhide()
 {
    UINT32 i;
 
-   LockData();
+   lockProperties();
    m_isHidden = false;
    if (!m_isSystem)
       EnumerateClientSessions(BroadcastObjectChange, this);
-   UnlockData();
+   unlockProperties();
 
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
@@ -1432,13 +1432,13 @@ void NetObj::prepareForDeletion()
  * Set object's comments.
  * NOTE: pszText should be dynamically allocated or NULL
  */
-void NetObj::setComments(TCHAR *pszText)
+void NetObj::setComments(TCHAR *text)
 {
-   LockData();
+   lockProperties();
    safe_free(m_pszComments);
-   m_pszComments = pszText;
-   Modify();
-   UnlockData();
+   m_pszComments = text;
+   setModified();
+   unlockProperties();
 }
 
 /**
@@ -1446,9 +1446,9 @@ void NetObj::setComments(TCHAR *pszText)
  */
 void NetObj::commentsToMessage(CSCPMessage *pMsg)
 {
-   LockData();
+   lockProperties();
    pMsg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_pszComments));
-   UnlockData();
+   unlockProperties();
 }
 
 /**
@@ -1460,7 +1460,7 @@ bool NetObj::loadTrustedNodes()
 	TCHAR query[256];
 	int i, count;
 
-	_sntprintf(query, 256, _T("SELECT target_node_id FROM trusted_nodes WHERE source_object_id=%d"), m_dwId);
+	_sntprintf(query, 256, _T("SELECT target_node_id FROM trusted_nodes WHERE source_object_id=%d"), m_id);
 	hResult = DBSelect(g_hCoreDB, query);
 	if (hResult != NULL)
 	{
@@ -1488,13 +1488,13 @@ bool NetObj::saveTrustedNodes(DB_HANDLE hdb)
 	UINT32 i;
 	bool rc = false;
 
-	_sntprintf(query, 256, _T("DELETE FROM trusted_nodes WHERE source_object_id=%d"), m_dwId);
+	_sntprintf(query, 256, _T("DELETE FROM trusted_nodes WHERE source_object_id=%d"), m_id);
 	if (DBQuery(hdb, query))
 	{
 		for(i = 0; i < m_dwNumTrustedNodes; i++)
 		{
 			_sntprintf(query, 256, _T("INSERT INTO trusted_nodes (source_object_id,target_node_id) VALUES (%d,%d)"),
-			           m_dwId, m_pdwTrustedNodes[i]);
+			           m_id, m_pdwTrustedNodes[i]);
 			if (!DBQuery(hdb, query))
 				break;
 		}
@@ -1516,7 +1516,7 @@ bool NetObj::isTrustedNode(UINT32 id)
 	{
 		UINT32 i;
 
-		LockData();
+		lockProperties();
 		for(i = 0, rc = false; i < m_dwNumTrustedNodes; i++)
 		{
 			if (m_pdwTrustedNodes[i] == id)
@@ -1525,7 +1525,7 @@ bool NetObj::isTrustedNode(UINT32 id)
 				break;
 			}
 		}
-		UnlockData();
+		unlockProperties();
 	}
 	else
 	{
@@ -1545,9 +1545,9 @@ NXSL_Array *NetObj::getParentsForNXSL()
 	LockParentList(FALSE);
 	for(UINT32 i = 0; i < m_dwParentCount; i++)
 	{
-		if ((m_pParentList[i]->Type() == OBJECT_CONTAINER) ||
-			 (m_pParentList[i]->Type() == OBJECT_SERVICEROOT) ||
-			 (m_pParentList[i]->Type() == OBJECT_NETWORK))
+		if ((m_pParentList[i]->getObjectClass() == OBJECT_CONTAINER) ||
+			 (m_pParentList[i]->getObjectClass() == OBJECT_SERVICEROOT) ||
+			 (m_pParentList[i]->getObjectClass() == OBJECT_NETWORK))
 		{
 			parents->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pParentList[i])));
 		}
@@ -1568,11 +1568,11 @@ NXSL_Array *NetObj::getChildrenForNXSL()
 	LockChildList(FALSE);
 	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
-		if (m_pChildList[i]->Type() == OBJECT_NODE)
+		if (m_pChildList[i]->getObjectClass() == OBJECT_NODE)
 		{
 			children->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pChildList[i])));
 		}
-		else if (m_pChildList[i]->Type() == OBJECT_INTERFACE)
+		else if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
 		{
 			children->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, m_pChildList[i])));
 		}
@@ -1594,8 +1594,8 @@ void NetObj::getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly)
 	LockChildList(FALSE);
 	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
-		if (!eventSourceOnly || IsEventSource(m_pChildList[i]->Type()))
-			list->put(m_pChildList[i]->Id(), m_pChildList[i]);
+		if (!eventSourceOnly || IsEventSource(m_pChildList[i]->getObjectClass()))
+			list->put(m_pChildList[i]->getId(), m_pChildList[i]);
 		m_pChildList[i]->getFullChildListInternal(list, eventSourceOnly);
 	}
 	UnlockChildList();
@@ -1627,7 +1627,7 @@ ObjectArray<NetObj> *NetObj::getChildList(int typeFilter)
 	ObjectArray<NetObj> *list = new ObjectArray<NetObj>((int)m_dwChildCount, 16, false);
 	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
-		if ((typeFilter == -1) || (typeFilter == m_pChildList[i]->Type()))
+		if ((typeFilter == -1) || (typeFilter == m_pChildList[i]->getObjectClass()))
 			list->add(m_pChildList[i]);
 	}
 	UnlockChildList();
@@ -1647,7 +1647,7 @@ ObjectArray<NetObj> *NetObj::getParentList(int typeFilter)
     ObjectArray<NetObj> *list = new ObjectArray<NetObj>((int)m_dwParentCount, 16, false);
     for(UINT32 i = 0; i < m_dwParentCount; i++)
     {
-        if ((typeFilter == -1) || (typeFilter == m_pParentList[i]->Type()))
+        if ((typeFilter == -1) || (typeFilter == m_pParentList[i]->getObjectClass()))
             list->add(m_pParentList[i]);
     }
     UnlockParentList();
@@ -1676,9 +1676,9 @@ bool NetObj::isEventSource()
  */
 ModuleData *NetObj::getModuleData(const TCHAR *module)
 {
-   LockData();
+   lockProperties();
    ModuleData *data = (m_moduleData != NULL) ? m_moduleData->get(module) : NULL;
-   UnlockData();
+   unlockProperties();
    return data;
 }
 
@@ -1687,11 +1687,11 @@ ModuleData *NetObj::getModuleData(const TCHAR *module)
  */
 void NetObj::setModuleData(const TCHAR *module, ModuleData *data)
 {
-   LockData();
+   lockProperties();
    if (m_moduleData == NULL)
       m_moduleData = new StringObjectMap<ModuleData>(true);
    m_moduleData->set(module, data);
-   UnlockData();
+   unlockProperties();
 }
 
 /**
@@ -1705,10 +1705,10 @@ void NetObj::addLocationToHistory()
    DB_RESULT hResult;
    if (!isLocationTableExists())
    {
-      DbgPrintf(4, _T("NetObj::addLocationToHistory: Geolocation history table will be created for object %s [%d]"), m_szName, m_dwId);
+      DbgPrintf(4, _T("NetObj::addLocationToHistory: Geolocation history table will be created for object %s [%d]"), m_name, m_id);
       if (!createLocationHistoryTable(hdb))
       {
-         DbgPrintf(4, _T("NetObj::addLocationToHistory: Error creating geolocation history table for object %s [%d]"), m_szName, m_dwId);
+         DbgPrintf(4, _T("NetObj::addLocationToHistory: Error creating geolocation history table for object %s [%d]"), m_name, m_id);
          return;
       }
    }
@@ -1729,7 +1729,7 @@ void NetObj::addLocationToHistory()
 			break;
 	}
    TCHAR preparedQuery[256];
-	_sntprintf(preparedQuery, 256, query, m_dwId);
+	_sntprintf(preparedQuery, 256, query, m_id);
 	DB_STATEMENT hStmt = DBPrepare(hdb, preparedQuery);
 
    if (hStmt == NULL)
@@ -1753,7 +1753,7 @@ void NetObj::addLocationToHistory()
    if (isSamePlace)
    {
       TCHAR query[256];
-      _sntprintf(query, 255, _T("UPDATE gps_history_%d SET end_timestamp = ? WHERE start_timestamp =? "), m_dwId);
+      _sntprintf(query, 255, _T("UPDATE gps_history_%d SET end_timestamp = ? WHERE start_timestamp =? "), m_id);
       hStmt = DBPrepare(hdb, query);
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
       DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, startTimestamp);
@@ -1762,7 +1762,7 @@ void NetObj::addLocationToHistory()
    {
       TCHAR query[256];
       _sntprintf(query, 255, _T("INSERT INTO gps_history_%d (latitude,longitude,")
-                       _T("accuracy,start_timestamp,end_timestamp) VALUES (?,?,?,?,?)"), m_dwId);
+                       _T("accuracy,start_timestamp,end_timestamp) VALUES (?,?,?,?,?)"), m_id);
       hStmt = DBPrepare(hdb, query);
 
       TCHAR lat[32], lon[32];
@@ -1786,7 +1786,7 @@ void NetObj::addLocationToHistory()
 
 onFail:
    DBFreeStatement(hStmt);
-   DbgPrintf(4, _T("NetObj::addLocationToHistory(%s [%d]): Failed to add location to history"), m_szName, m_dwId);
+   DbgPrintf(4, _T("NetObj::addLocationToHistory(%s [%d]): Failed to add location to history"), m_name, m_id);
    DBConnectionPoolReleaseConnection(hdb);
    return;
 }
@@ -1797,7 +1797,7 @@ onFail:
 bool NetObj::isLocationTableExists()
 {
    TCHAR table[256];
-   _sntprintf(table, 256, _T("gps_history_%d"), m_dwId);
+   _sntprintf(table, 256, _T("gps_history_%d"), m_id);
    int rc = DBIsTableExist(g_hCoreDB, table);
    if (rc == DBIsTableExist_Failure)
    {
@@ -1813,7 +1813,7 @@ bool NetObj::createLocationHistoryTable(DB_HANDLE hdb)
 {
    TCHAR szQuery[256], szQueryTemplate[256];
    MetaDataReadStr(_T("LocationHistory"), szQueryTemplate, 255, _T(""));
-   _sntprintf(szQuery, 256, szQueryTemplate, m_dwId);
+   _sntprintf(szQuery, 256, szQueryTemplate, m_id);
    if (!DBQuery(hdb, szQuery))
 		return false;
 
@@ -1825,7 +1825,7 @@ bool NetObj::createLocationHistoryTable(DB_HANDLE hdb)
  */
 void NetObj::setStatusCalculation(int method, int arg1, int arg2, int arg3, int arg4)
 {
-   LockData();
+   lockProperties();
    m_iStatusCalcAlg = method;
    switch(method)
    {
@@ -1841,8 +1841,8 @@ void NetObj::setStatusCalculation(int method, int arg1, int arg2, int arg3, int 
       default:
          break;
    }
-   Modify();
-   UnlockData();
+   setModified();
+   unlockProperties();
 }
 
 /**
@@ -1850,7 +1850,7 @@ void NetObj::setStatusCalculation(int method, int arg1, int arg2, int arg3, int 
  */
 void NetObj::setStatusPropagation(int method, int arg1, int arg2, int arg3, int arg4)
 {
-   LockData();
+   lockProperties();
    m_iStatusPropAlg = method;
    switch(method)
    {
@@ -1869,6 +1869,6 @@ void NetObj::setStatusPropagation(int method, int arg1, int arg2, int arg3, int 
       default:
          break;
    }
-   Modify();
-   UnlockData();
+   setModified();
+   unlockProperties();
 }

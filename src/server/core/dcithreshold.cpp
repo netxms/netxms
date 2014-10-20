@@ -29,7 +29,7 @@ Threshold::Threshold(DCItem *pRelatedItem)
 {
    m_id = 0;
    m_itemId = pRelatedItem->getId();
-   m_targetId = pRelatedItem->getTarget()->Id();
+   m_targetId = pRelatedItem->getTarget()->getId();
    m_eventCode = EVENT_THRESHOLD_REACHED;
    m_rearmEventCode = EVENT_THRESHOLD_REARMED;
    m_function = F_LAST;
@@ -106,7 +106,7 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 
    m_id = DBGetFieldULong(hResult, iRow, 0);
    m_itemId = pRelatedItem->getId();
-   m_targetId = pRelatedItem->getTarget()->Id();
+   m_targetId = pRelatedItem->getTarget()->getId();
    m_eventCode = DBGetFieldULong(hResult, iRow, 7);
    m_rearmEventCode = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 1, szBuffer, MAX_DB_STRING);
@@ -134,7 +134,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
 {
    createId();
    m_itemId = parentItem->getId();
-   m_targetId = parentItem->getTarget()->Id();
+   m_targetId = parentItem->getTarget()->getId();
    m_eventCode = EventCodeFromName(config->getSubEntryValue(_T("activationEvent"), 0, _T("SYS_THRESHOLD_REACHED")));
    m_rearmEventCode = EventCodeFromName(config->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_THRESHOLD_REARMED")));
    m_function = (BYTE)config->getSubEntryValueAsInt(_T("function"), 0, F_LAST);
@@ -273,12 +273,12 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
       {
          NXSL_Value *nxslValue = new NXSL_Value(value.getString());
          m_script->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, target)));
-         if (target->Type() == OBJECT_NODE)
+         if (target->getObjectClass() == OBJECT_NODE)
          {
             m_script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, target)));
          }
          m_script->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci)));
-         m_script->setGlobalVariable(_T("$isCluster"), new NXSL_Value((target->Type() == OBJECT_CLUSTER) ? 1 : 0));
+         m_script->setGlobalVariable(_T("$isCluster"), new NXSL_Value((target->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
          if (m_script->run(1, &nxslValue))
          {
             nxslValue = m_script->getResult();
@@ -290,14 +290,14 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          else
          {
             TCHAR buffer[1024];
-            _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->Name(), dci->getId(), m_id);
+            _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
             PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_script->getErrorText(), dci->getId());
          }
       }
       else
       {
          DbgPrintf(7, _T("Script not compiled for threshold %d of DCI %d of data collection target %s [%d]"),
-                   m_id, dci->getId(), target->Name(), target->Id());
+                   m_id, dci->getId(), target->getName(), target->getId());
       }
    }
    else
@@ -789,7 +789,7 @@ void Threshold::createNXMPRecord(String &str, int index)
 void Threshold::associate(DCItem *pItem)
 {
    m_itemId = pItem->getId();
-   m_targetId = pItem->getTarget()->Id();
+   m_targetId = pItem->getTarget()->getId();
    m_dataType = pItem->getDataType();
 }
 

@@ -26,8 +26,8 @@
  */
 Network::Network() : NetObj()
 {
-   m_dwId = BUILTIN_OID_NETWORK;
-   _tcscpy(m_szName, _T("Entire Network"));
+   m_id = BUILTIN_OID_NETWORK;
+   _tcscpy(m_name, _T("Entire Network"));
 	uuid_generate(m_guid);
 }
 
@@ -41,16 +41,16 @@ Network::~Network()
 /**
  * Save object to database
  */
-BOOL Network::SaveToDB(DB_HANDLE hdb)
+BOOL Network::saveToDatabase(DB_HANDLE hdb)
 {
-   LockData();
+   lockProperties();
 
    saveCommonProperties(hdb);
    saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
    m_isModified = false;
-   UnlockData();
+   unlockProperties();
    return TRUE;
 }
 

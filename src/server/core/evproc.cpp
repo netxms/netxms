@@ -216,7 +216,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
                    pEvent->getId(), pEvent->getFlags(), pEvent->getSeverity(),
 						 CHECK_NULL_EX(pEvent->getUserTag()),
                    (pEvent->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
-                   pObject->Name(), pEvent->getMessage());
+                   pObject->getName(), pEvent->getMessage());
       }
 
       // Pass event through event processing policy if it is not correlated

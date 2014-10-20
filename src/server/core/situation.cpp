@@ -50,7 +50,7 @@ static void NotifyClientsOnSituationChange(int code, Situation *st)
 
 	msg.SetCode(CMD_SITUATION_CHANGE);
 	msg.SetVariable(VID_NOTIFICATION_CODE, (WORD)code);
-	st->CreateMessage(&msg);
+	st->fillMessage(&msg);
    EnumerateClientSessions(SendSituationNotification, &msg);
 }
 
@@ -96,7 +96,7 @@ const TCHAR *SituationInstance::GetAttribute(const TCHAR *attribute)
 /**
  * Create NXCP message
  */
-UINT32 SituationInstance::CreateMessage(CSCPMessage *msg, UINT32 baseId)
+UINT32 SituationInstance::fillMessage(CSCPMessage *msg, UINT32 baseId)
 {
 	msg->SetVariable(baseId, m_name);
    m_attributes.fillMessage(msg, baseId + 1, baseId + 2);
@@ -294,7 +294,7 @@ SituationInstance *Situation::FindInstance(const TCHAR *name)
 /**
  * Create NXCP message
  */
-void Situation::CreateMessage(CSCPMessage *msg)
+void Situation::fillMessage(CSCPMessage *msg)
 {
 	int i;
 	UINT32 id;
@@ -308,7 +308,7 @@ void Situation::CreateMessage(CSCPMessage *msg)
 	
 	for(i = 0, id = VID_INSTANCE_LIST_BASE; i < m_numInstances; i++)
 	{
-		id = m_instanceList[i]->CreateMessage(msg, id);
+		id = m_instanceList[i]->fillMessage(msg, id);
 	}
 	
 	Unlock();
@@ -444,7 +444,7 @@ void SendSituationListToClient(ClientSession *session, CSCPMessage *msg)
 	for(int i = 0; i < list->size(); i++)
 	{
 		msg->deleteAllVariables();
-		((Situation *)list->get(i))->CreateMessage(msg);
+		((Situation *)list->get(i))->fillMessage(msg);
 		session->sendMessage(msg);
 	}
 
@@ -470,7 +470,7 @@ public:
 NXSL_SituationClass::NXSL_SituationClass()
                     :NXSL_Class()
 {
-   _tcscpy(m_szName, _T("Situation"));
+   _tcscpy(m_name, _T("Situation"));
 }
 
 NXSL_Value *NXSL_SituationClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)

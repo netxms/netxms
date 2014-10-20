@@ -104,7 +104,7 @@ struct NXSL_ExtMethod
 class LIBNXSL_EXPORTABLE NXSL_Class
 {
 protected:
-   TCHAR m_szName[MAX_CLASS_NAME];
+   TCHAR m_name[MAX_CLASS_NAME];
    StringObjectMap<NXSL_ExtMethod> *m_methods;
 
 public:
@@ -118,7 +118,7 @@ public:
 
 	virtual void onObjectDelete(NXSL_Object *object);
 
-   const TCHAR *getName() { return m_szName; }
+   const TCHAR *getName() { return m_name; }
 };
 
 /**
@@ -334,11 +334,11 @@ public:
 class NXSL_Function
 {
 public:
-   TCHAR m_szName[MAX_FUNCTION_NAME];
+   TCHAR m_name[MAX_FUNCTION_NAME];
    UINT32 m_dwAddr;
 
-   NXSL_Function() { m_szName[0] = 0; m_dwAddr = INVALID_ADDRESS; }
-   NXSL_Function(NXSL_Function *src) { nx_strncpy(m_szName, src->m_szName, MAX_FUNCTION_NAME); m_dwAddr = src->m_dwAddr; }
+   NXSL_Function() { m_name[0] = 0; m_dwAddr = INVALID_ADDRESS; }
+   NXSL_Function(NXSL_Function *src) { nx_strncpy(m_name, src->m_name, MAX_FUNCTION_NAME); m_dwAddr = src->m_dwAddr; }
 };
 
 /**
@@ -346,7 +346,7 @@ public:
  */
 struct NXSL_ExtFunction
 {
-   TCHAR m_szName[MAX_FUNCTION_NAME];
+   TCHAR m_name[MAX_FUNCTION_NAME];
    int (* m_pfHandler)(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
    int m_iNumArgs;   // Number of arguments or -1 for variable number
 };

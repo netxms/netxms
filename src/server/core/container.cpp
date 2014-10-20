@@ -53,7 +53,7 @@ Container::Container() : NetObj()
  */
 Container::Container(const TCHAR *pszName, UINT32 dwCategory) : NetObj()
 {
-   nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME);
+   nx_strncpy(m_name, pszName, MAX_OBJECT_NAME);
    m_pdwChildIdList = NULL;
    m_dwChildIdListSize = 0;
    m_dwCategory = dwCategory;
@@ -78,13 +78,13 @@ Container::~Container()
  *
  * @param dwId object ID
  */
-BOOL Container::CreateFromDB(UINT32 dwId)
+BOOL Container::loadFromDatabase(UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
    UINT32 i;
 
-   m_dwId = dwId;
+   m_id = dwId;
 
    if (!loadCommonProperties())
       return FALSE;
@@ -113,7 +113,7 @@ BOOL Container::CreateFromDB(UINT32 dwId)
 
 			m_bindFilter = NXSLCompileAndCreateVM(m_bindFilterSource, error, 256, new NXSL_ServerEnv);
 			if (m_bindFilter == NULL)
-				nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
+				nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
 		}
 	}
    DBFreeResult(hResult);
@@ -124,7 +124,7 @@ BOOL Container::CreateFromDB(UINT32 dwId)
    // Load child list for later linkage
    if (!m_isDeleted)
    {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%d"), m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%d"), m_id);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
       {
@@ -147,15 +147,15 @@ BOOL Container::CreateFromDB(UINT32 dwId)
  *
  * @param hdb database connection handle
  */
-BOOL Container::SaveToDB(DB_HANDLE hdb)
+BOOL Container::saveToDatabase(DB_HANDLE hdb)
 {
    // Lock object's access
-   LockData();
+   lockProperties();
 
    saveCommonProperties(hdb);
 
 	DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("containers"), _T("id"), m_dwId))
+   if (IsDatabaseRecordExist(hdb, _T("containers"), _T("id"), m_id))
 	{
 		hStmt = DBPrepare(hdb, _T("UPDATE containers SET category=?,object_class=?,flags=?,auto_bind_filter=? WHERE id=?"));
 	}
@@ -165,15 +165,15 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
 	}
 	if (hStmt == NULL)
 	{
-		UnlockData();
+		unlockProperties();
 		return FALSE;
 	}
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwCategory);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)Type());
+	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)getObjectClass());
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 4, DB_SQLTYPE_TEXT, m_bindFilterSource, DB_BIND_STATIC);
-	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_id);
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 
@@ -182,12 +182,12 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
 		TCHAR query[256];
 
 		// Update members list
-		_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_dwId);
+		_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_id);
 		DBQuery(hdb, query);
 		LockChildList(FALSE);
 		for(UINT32 i = 0; i < m_dwChildCount; i++)
 		{
-			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_dwId, m_pChildList[i]->Id());
+			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_pChildList[i]->getId());
 			DBQuery(hdb, query);
 		}
 		UnlockChildList();
@@ -199,16 +199,16 @@ BOOL Container::SaveToDB(DB_HANDLE hdb)
 		m_isModified = false;
 	}
 
-   UnlockData();
+   unlockProperties();
    return success;
 }
 
 /**
  * Delete object from database
  */
-bool Container::deleteFromDB(DB_HANDLE hdb)
+bool Container::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDB(hdb);
+   bool success = NetObj::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM containers WHERE id=?"));
    if (success)
@@ -234,7 +234,7 @@ void Container::linkChildObjects()
          if (pObject != NULL)
             linkObject(pObject);
          else
-            nxlog_write(MSG_INVALID_CONTAINER_MEMBER, EVENTLOG_ERROR_TYPE, "dd", m_dwId, m_pdwChildIdList[i]);
+            nxlog_write(MSG_INVALID_CONTAINER_MEMBER, EVENTLOG_ERROR_TYPE, "dd", m_id, m_pdwChildIdList[i]);
       }
 
       // Cleanup
@@ -253,19 +253,19 @@ void Container::calculateCompoundStatus(BOOL bForcedRecalc)
 
 	if ((m_iStatus == STATUS_UNKNOWN) && (m_dwChildIdListSize == 0))
    {
-		LockData();
+		lockProperties();
 		m_iStatus = STATUS_NORMAL;
-		Modify();
-		UnlockData();
+		setModified();
+		unlockProperties();
 	}
 }
 
 /**
  * Create NXCP message with object's data
  */
-void Container::CreateMessage(CSCPMessage *pMsg)
+void Container::fillMessage(CSCPMessage *pMsg)
 {
-   NetObj::CreateMessage(pMsg);
+   NetObj::fillMessage(pMsg);
    pMsg->SetVariable(VID_CATEGORY, m_dwCategory);
 	pMsg->SetVariable(VID_FLAGS, m_flags);
 	pMsg->SetVariable(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
@@ -274,10 +274,10 @@ void Container::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from message
  */
-UINT32 Container::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Container::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
    // Change flags
    if (pRequest->isFieldExist(VID_FLAGS))
@@ -291,7 +291,7 @@ UINT32 Container::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		safe_free(script);
 	}
 
-   return NetObj::ModifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessage(pRequest, TRUE);
 }
 
 /**
@@ -310,7 +310,7 @@ void Container::setAutoBindFilter(const TCHAR *script)
 
 			m_bindFilter = NXSLCompileAndCreateVM(m_bindFilterSource, error, 256, new NXSL_ServerEnv);
 			if (m_bindFilter == NULL)
-				nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
+				nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
 		}
 		else
 		{
@@ -322,7 +322,7 @@ void Container::setAutoBindFilter(const TCHAR *script)
 		delete_and_null(m_bindFilter);
 		safe_free_and_null(m_bindFilterSource);
 	}
-	Modify();
+	setModified();
 }
 
 /**
@@ -332,7 +332,7 @@ bool Container::isSuitableForNode(Node *node)
 {
 	bool result = false;
 
-	LockData();
+	lockProperties();
 	if ((m_flags & CF_AUTO_BIND) && (m_bindFilter != NULL))
 	{
 		m_bindFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
@@ -345,12 +345,12 @@ bool Container::isSuitableForNode(Node *node)
 		{
 			TCHAR buffer[1024];
 
-			_sntprintf(buffer, 1024, _T("Container::%s::%d"), m_szName, m_dwId);
-			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_bindFilter->getErrorText(), m_dwId);
-			nxlog_write(MSG_CONTAINER_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_dwId, m_szName, m_bindFilter->getErrorText());
+			_sntprintf(buffer, 1024, _T("Container::%s::%d"), m_name, m_id);
+			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_bindFilter->getErrorText(), m_id);
+			nxlog_write(MSG_CONTAINER_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, m_bindFilter->getErrorText());
 		}
 	}
-	UnlockData();
+	unlockProperties();
 	return result;
 }
 

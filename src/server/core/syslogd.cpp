@@ -288,14 +288,14 @@ static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
 
 	if (node != NULL)
    {
-      pRec->dwSourceObject = node->Id();
+      pRec->dwSourceObject = node->getId();
       if (pRec->szHostName[0] == 0)
 		{
 #ifdef UNICODE
-			WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, node->Name(), -1, pRec->szHostName, MAX_SYSLOG_HOSTNAME_LEN, NULL, NULL);
+			WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, node->getName(), -1, pRec->szHostName, MAX_SYSLOG_HOSTNAME_LEN, NULL, NULL);
 			pRec->szHostName[MAX_SYSLOG_HOSTNAME_LEN - 1] = 0;
 #else
-         nx_strncpy(pRec->szHostName, node->Name(), MAX_SYSLOG_HOSTNAME_LEN);
+         nx_strncpy(pRec->szHostName, node->getName(), MAX_SYSLOG_HOSTNAME_LEN);
 #endif
 		}
    }

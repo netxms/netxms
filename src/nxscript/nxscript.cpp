@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 
    func.m_iNumArgs = 0;
    func.m_pfHandler = F_new;
-   _tcscpy(func.m_szName, _T("new"));
+   _tcscpy(func.m_name, _T("new"));
 
    m_pTestClass = new NXSL_TestClass;
 

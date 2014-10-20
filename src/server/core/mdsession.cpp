@@ -584,7 +584,7 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
 				MobileDevice *md = FindMobileDeviceByDeviceID(deviceId);
 				if (md != NULL)
 				{
-					m_deviceObjectId = md->Id();
+					m_deviceObjectId = md->getId();
 					m_isAuthenticated = true;
 					_sntprintf(m_szUserName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_szHostName);
 					msg.SetVariable(VID_RCC, RCC_SUCCESS);

@@ -66,9 +66,9 @@ void Dashboard::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create object from database
  */
-BOOL Dashboard::CreateFromDB(UINT32 dwId)
+BOOL Dashboard::loadFromDatabase(UINT32 dwId)
 {
-	if (!Container::CreateFromDB(dwId))
+	if (!Container::loadFromDatabase(dwId))
 		return FALSE;
 
 	m_iStatus = STATUS_NORMAL;
@@ -108,13 +108,13 @@ BOOL Dashboard::CreateFromDB(UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL Dashboard::SaveToDB(DB_HANDLE hdb)
+BOOL Dashboard::saveToDatabase(DB_HANDLE hdb)
 {
-	LockData();
+	lockProperties();
 
 	// Check for object's existence in database
    DB_STATEMENT hStmt;
-	if (IsDatabaseRecordExist(hdb, _T("dashboards"), _T("id"), m_dwId))
+	if (IsDatabaseRecordExist(hdb, _T("dashboards"), _T("id"), m_id))
    {
       hStmt = DBPrepare(hdb, _T("UPDATE dashboards SET num_columns=?,options=? WHERE id=?"));
    }
@@ -127,7 +127,7 @@ BOOL Dashboard::SaveToDB(DB_HANDLE hdb)
 
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_numColumns);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_options);
-   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_dwId);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
    if (!DBExecute(hStmt))
 		goto fail;
    DBFreeStatement(hStmt);
@@ -136,7 +136,7 @@ BOOL Dashboard::SaveToDB(DB_HANDLE hdb)
    hStmt = DBPrepare(hdb, _T("DELETE FROM dashboard_elements WHERE dashboard_id=?"));
    if (hStmt == NULL)
 		goto fail;
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
    if (!DBExecute(hStmt))
 		goto fail;
    DBFreeStatement(hStmt);
@@ -144,7 +144,7 @@ BOOL Dashboard::SaveToDB(DB_HANDLE hdb)
    hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_elements (dashboard_id,element_id,element_type,element_data,layout_data) VALUES (?,?,?,?,?)"));
    if (hStmt == NULL)
 		goto fail;
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
    for(int i = 0; i < m_elements->size(); i++)
    {
 		DashboardElement *element = m_elements->get(i);
@@ -157,22 +157,22 @@ BOOL Dashboard::SaveToDB(DB_HANDLE hdb)
    }
 
    DBFreeStatement(hStmt);
-	UnlockData();
-	return Container::SaveToDB(hdb);
+	unlockProperties();
+	return Container::saveToDatabase(hdb);
 
 fail:
    if (hStmt != NULL)
       DBFreeStatement(hStmt);
-	UnlockData();
+	unlockProperties();
 	return FALSE;
 }
 
 /**
  * Delete object from database
  */
-bool Dashboard::deleteFromDB(DB_HANDLE hdb)
+bool Dashboard::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = Container::deleteFromDB(hdb);
+   bool success = Container::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM dashboards WHERE id=?"));
    if (success)
@@ -183,9 +183,9 @@ bool Dashboard::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Dashboard::CreateMessage(CSCPMessage *msg)
+void Dashboard::fillMessage(CSCPMessage *msg)
 {
-	Container::CreateMessage(msg);
+	Container::fillMessage(msg);
 	msg->SetVariable(VID_NUM_COLUMNS, (WORD)m_numColumns);
 	msg->SetVariable(VID_FLAGS, m_options);
 	msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
@@ -204,10 +204,10 @@ void Dashboard::CreateMessage(CSCPMessage *msg)
 /**
  * Modify object from NXCP message
  */
-UINT32 Dashboard::ModifyFromMessage(CSCPMessage *request, BOOL alreadyLocked)
+UINT32 Dashboard::modifyFromMessage(CSCPMessage *request, BOOL alreadyLocked)
 {
 	if (!alreadyLocked)
-		LockData();
+		lockProperties();
 
 	if (request->isFieldExist(VID_NUM_COLUMNS))
 		m_numColumns = (int)request->GetVariableShort(VID_NUM_COLUMNS);
@@ -232,7 +232,7 @@ UINT32 Dashboard::ModifyFromMessage(CSCPMessage *request, BOOL alreadyLocked)
 		}
 	}
 
-	return Container::ModifyFromMessage(request, TRUE);
+	return Container::modifyFromMessage(request, TRUE);
 }
 
 /**

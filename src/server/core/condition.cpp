@@ -74,13 +74,13 @@ Condition::~Condition()
 /**
  * Load object from database
  */
-BOOL Condition::CreateFromDB(UINT32 dwId)
+BOOL Condition::loadFromDatabase(UINT32 dwId)
 {
    TCHAR szQuery[512];
    DB_RESULT hResult;
    UINT32 i;
 
-   m_dwId = dwId;
+   m_id = dwId;
 
    if (!loadCommonProperties())
       return FALSE;
@@ -117,7 +117,7 @@ BOOL Condition::CreateFromDB(UINT32 dwId)
       m_script = new NXSL_VM(new NXSL_ServerEnv);
       if (!m_script->load(p))
       {
-         nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_dwId, m_szName, m_script->getErrorText());
+         nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_id, m_name, m_script->getErrorText());
          delete_and_null(m_script);
       }
       delete p;
@@ -125,7 +125,7 @@ BOOL Condition::CreateFromDB(UINT32 dwId)
    else
    {
       m_script = NULL;
-      nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_dwId, m_szName, szQuery);
+      nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_id, m_name, szQuery);
    }
 
    // Load DCI map
@@ -155,14 +155,14 @@ BOOL Condition::CreateFromDB(UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL Condition::SaveToDB(DB_HANDLE hdb)
+BOOL Condition::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR *pszEscScript, *pszQuery;
    DB_RESULT hResult;
    BOOL bNewObject = TRUE;
    UINT32 i;
 
-   LockData();
+   lockProperties();
 
    saveCommonProperties(hdb);
 
@@ -171,7 +171,7 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
    pszQuery = (TCHAR *)malloc(sizeof(TCHAR) * qlen);
 
    // Check for object's existence in database
-   _sntprintf(pszQuery, qlen, _T("SELECT id FROM conditions WHERE id=%d"), m_dwId);
+   _sntprintf(pszQuery, qlen, _T("SELECT id FROM conditions WHERE id=%d"), m_id);
    hResult = DBSelect(hdb, pszQuery);
    if (hResult != NULL)
    {
@@ -187,7 +187,7 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
 			                 _T("INSERT INTO conditions (id,activation_event,")
                           _T("deactivation_event,source_object,active_status,")
                           _T("inactive_status,script) VALUES (%d,%d,%d,%d,%d,%d,'%s')"),
-                m_dwId, m_activationEventCode, m_deactivationEventCode,
+                m_id, m_activationEventCode, m_deactivationEventCode,
                 m_sourceObject, m_activeStatus, m_inactiveStatus, pszEscScript);
    }
    else
@@ -197,19 +197,19 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
                           _T("deactivation_event=%d,source_object=%d,active_status=%d,")
                           _T("inactive_status=%d,script='%s' WHERE id=%d"),
                 m_activationEventCode, m_deactivationEventCode, m_sourceObject,
-                m_activeStatus, m_inactiveStatus, pszEscScript, m_dwId);
+                m_activeStatus, m_inactiveStatus, pszEscScript, m_id);
    }
    free(pszEscScript);
    DBQuery(hdb, pszQuery);
 
    // Save DCI mapping
-   _sntprintf(pszQuery, qlen, _T("DELETE FROM cond_dci_map WHERE condition_id=%d"), m_dwId);
+   _sntprintf(pszQuery, qlen, _T("DELETE FROM cond_dci_map WHERE condition_id=%d"), m_id);
    DBQuery(hdb, pszQuery);
    for(i = 0; i < m_dciCount; i++)
    {
       _sntprintf(pszQuery, qlen, _T("INSERT INTO cond_dci_map (condition_id,sequence_number,dci_id,node_id,")
                                  _T("dci_func,num_polls) VALUES (%d,%d,%d,%d,%d,%d)"),
-                m_dwId, i, m_dciList[i].id, m_dciList[i].nodeId,
+                m_id, i, m_dciList[i].id, m_dciList[i].nodeId,
                 m_dciList[i].function, m_dciList[i].polls);
       DBQuery(hdb, pszQuery);
    }
@@ -220,16 +220,16 @@ BOOL Condition::SaveToDB(DB_HANDLE hdb)
 
    // Unlock object and clear modification flag
    m_isModified = false;
-   UnlockData();
+   unlockProperties();
    return TRUE;
 }
 
 /**
  * Delete object from database
  */
-bool Condition::deleteFromDB(DB_HANDLE hdb)
+bool Condition::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDB(hdb);
+   bool success = NetObj::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM conditions WHERE id=?"));
    if (success)
@@ -240,11 +240,11 @@ bool Condition::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create NXCP message from object
  */
-void Condition::CreateMessage(CSCPMessage *pMsg)
+void Condition::fillMessage(CSCPMessage *pMsg)
 {
    UINT32 i, dwId;
 
-   NetObj::CreateMessage(pMsg);
+   NetObj::fillMessage(pMsg);
    pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_scriptSource));
    pMsg->SetVariable(VID_ACTIVATION_EVENT, m_activationEventCode);
    pMsg->SetVariable(VID_DEACTIVATION_EVENT, m_deactivationEventCode);
@@ -266,13 +266,13 @@ void Condition::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from NXCP message
  */
-UINT32 Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Condition::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    UINT32 i, dwId;
    NetObj *pObject;
 
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
    // Change script
    if (pRequest->isFieldExist(VID_SCRIPT))
@@ -288,7 +288,7 @@ UINT32 Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
          m_script = new NXSL_VM(new NXSL_ServerEnv);
          if (!m_script->load(p))
          {
-            nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_dwId, m_szName, m_script->getErrorText());
+            nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_id, m_name, m_script->getErrorText());
             delete_and_null(m_script);
          }
          delete p;
@@ -296,7 +296,7 @@ UINT32 Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       else
       {
          m_script = NULL;
-         nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_dwId, m_szName, szError);
+         nxlog_write(MSG_COND_SCRIPT_COMPILATION_ERROR, EVENTLOG_ERROR_TYPE, "dss", m_id, m_name, szError);
       }
    }
 
@@ -343,12 +343,12 @@ UINT32 Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
             pObject = FindObjectById(m_dciList[i].nodeId);
             if (pObject != NULL)
             {
-               if (pObject->Type() == OBJECT_NODE)
+               if (pObject->getObjectClass() == OBJECT_NODE)
                {
                   DCObject *pItem = ((Node *)pObject)->getDCObjectById(m_dciList[i].id);
                   if ((pItem != NULL) && (pItem->getType() == DCO_TYPE_ITEM))
                   {
-                     ((DCItem *)pItem)->updateCacheSize(m_dwId);
+                     ((DCItem *)pItem)->updateCacheSize(m_id);
                   }
                }
             }
@@ -360,7 +360,7 @@ UINT32 Condition::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       }
    }
 
-   return NetObj::ModifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessage(pRequest, TRUE);
 }
 
 /**
@@ -377,10 +377,10 @@ void Condition::lockForPoll()
  */
 void Condition::endPoll()
 {
-   LockData();
+   lockProperties();
    m_queuedForPolling = FALSE;
    m_lastPoll = time(NULL);
-   UnlockData();
+   unlockProperties();
    decRefCount();
 }
 
@@ -397,7 +397,7 @@ void Condition::check()
    if ((m_script == NULL) || (m_iStatus == STATUS_UNMANAGED))
       return;
 
-   LockData();
+   lockProperties();
    ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * m_dciCount);
    memset(ppValueList, 0, sizeof(NXSL_Value *) * m_dciCount);
    for(i = 0; i < m_dciCount; i++)
@@ -405,7 +405,7 @@ void Condition::check()
       pObject = FindObjectById(m_dciList[i].nodeId);
       if (pObject != NULL)
       {
-         if (pObject->Type() == OBJECT_NODE)
+         if (pObject->getObjectClass() == OBJECT_NODE)
          {
             DCObject *pItem = ((Node *)pObject)->getDCObjectById(m_dciList[i].id);
             if (pItem != NULL)
@@ -429,7 +429,7 @@ void Condition::check()
          ppValueList[i] = new NXSL_Value;
    }
    dwNumValues = m_dciCount;
-   UnlockData();
+   unlockProperties();
 
 	// Create array from values
 	NXSL_Array *array = new NXSL_Array;
@@ -439,7 +439,7 @@ void Condition::check()
 	}
    m_script->setGlobalVariable(_T("$values"), new NXSL_Value(array));
 
-   DbgPrintf(6, _T("Running evaluation script for condition %d \"%s\""), m_dwId, m_szName);
+   DbgPrintf(6, _T("Running evaluation script for condition %d \"%s\""), m_id, m_name);
    if (m_script->run(dwNumValues, ppValueList))
    {
       pValue = m_script->getResult();
@@ -448,30 +448,30 @@ void Condition::check()
          if (m_isActive)
          {
             // Deactivate condition
-            LockData();
+            lockProperties();
             m_iStatus = m_inactiveStatus;
             m_isActive = FALSE;
-            Modify();
-            UnlockData();
+            setModified();
+            unlockProperties();
 
             PostEvent(m_deactivationEventCode,
                       (m_sourceObject == 0) ? g_dwMgmtNode : m_sourceObject,
-                      "dsdd", m_dwId, m_szName, iOldStatus, m_iStatus);
+                      "dsdd", m_id, m_name, iOldStatus, m_iStatus);
 
             DbgPrintf(6, _T("Condition %d \"%s\" deactivated"),
-                      m_dwId, m_szName);
+                      m_id, m_name);
          }
          else
          {
             DbgPrintf(6, _T("Condition %d \"%s\" still inactive"),
-                      m_dwId, m_szName);
-            LockData();
+                      m_id, m_name);
+            lockProperties();
             if (m_iStatus != m_inactiveStatus)
             {
                m_iStatus = m_inactiveStatus;
-               Modify();
+               setModified();
             }
-            UnlockData();
+            unlockProperties();
          }
       }
       else
@@ -479,45 +479,45 @@ void Condition::check()
          if (!m_isActive)
          {
             // Activate condition
-            LockData();
+            lockProperties();
             m_iStatus = m_activeStatus;
             m_isActive = TRUE;
-            Modify();
-            UnlockData();
+            setModified();
+            unlockProperties();
 
             PostEvent(m_activationEventCode,
                       (m_sourceObject == 0) ? g_dwMgmtNode : m_sourceObject,
-                      "dsdd", m_dwId, m_szName, iOldStatus, m_iStatus);
+                      "dsdd", m_id, m_name, iOldStatus, m_iStatus);
 
             DbgPrintf(6, _T("Condition %d \"%s\" activated"),
-                      m_dwId, m_szName);
+                      m_id, m_name);
          }
          else
          {
             DbgPrintf(6, _T("Condition %d \"%s\" still active"),
-                      m_dwId, m_szName);
-            LockData();
+                      m_id, m_name);
+            lockProperties();
             if (m_iStatus != m_activeStatus)
             {
                m_iStatus = m_activeStatus;
-               Modify();
+               setModified();
             }
-            UnlockData();
+            unlockProperties();
          }
       }
    }
    else
    {
       nxlog_write(MSG_COND_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE,
-               "dss", m_dwId, m_szName, m_script->getErrorText());
+               "dss", m_id, m_name, m_script->getErrorText());
 
-      LockData();
+      lockProperties();
       if (m_iStatus != STATUS_UNKNOWN)
       {
          m_iStatus = STATUS_UNKNOWN;
-         Modify();
+         setModified();
       }
-      UnlockData();
+      unlockProperties();
    }
    free(ppValueList);
 
@@ -540,7 +540,7 @@ int Condition::getCacheSizeForDCI(UINT32 itemId, bool noLock)
    int nSize = 0;
 
    if (!noLock)
-      LockData();
+      lockProperties();
    for(i = 0; i < m_dciCount; i++)
    {
       if (m_dciList[i].id == itemId)
@@ -561,6 +561,6 @@ int Condition::getCacheSizeForDCI(UINT32 itemId, bool noLock)
       }
    }
    if (!noLock)
-      UnlockData();
+      unlockProperties();
    return nSize;
 }

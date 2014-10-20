@@ -118,7 +118,7 @@ NXSL_METHOD_DEFINITION(setStatusPropagation)
  */
 NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
 {
-   _tcscpy(m_szName, _T("NetObj"));
+   _tcscpy(m_name, _T("NetObj"));
 
    NXSL_REGISTER_METHOD(setStatusCalculation, -1);
    NXSL_REGISTER_METHOD(setStatusPropagation, -1);
@@ -133,11 +133,11 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
    NetObj *object = (NetObj *)pObject->getData();
    if (!_tcscmp(pszAttr, _T("name")))
    {
-      pValue = new NXSL_Value(object->Name());
+      pValue = new NXSL_Value(object->getName());
    }
    else if (!_tcscmp(pszAttr, _T("id")))
    {
-      pValue = new NXSL_Value(object->Id());
+      pValue = new NXSL_Value(object->getId());
    }
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
@@ -158,7 +158,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
    }
    else if (!_tcscmp(pszAttr, _T("type")))
    {
-      pValue = new NXSL_Value((LONG)object->Type());
+      pValue = new NXSL_Value((LONG)object->getObjectClass());
    }
    else if (!_tcscmp(pszAttr, _T("comments")))
    {
@@ -180,7 +180,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
  */
 NXSL_ZoneClass::NXSL_ZoneClass() : NXSL_Class()
 {
-   _tcscpy(m_szName, _T("Zone"));
+   _tcscpy(m_name, _T("Zone"));
 
    NXSL_REGISTER_METHOD(setStatusCalculation, -1);
    NXSL_REGISTER_METHOD(setStatusPropagation, -1);
@@ -214,11 +214,11 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    }
    else if (!_tcscmp(pszAttr, _T("id")))
    {
-      pValue = new NXSL_Value(zone->Id());
+      pValue = new NXSL_Value(zone->getId());
    }
    else if (!_tcscmp(pszAttr, _T("name")))
    {
-      pValue = new NXSL_Value(zone->Name());
+      pValue = new NXSL_Value(zone->getName());
    }
    else if (!_tcscmp(pszAttr, _T("snmpProxy")))
    {
@@ -314,7 +314,7 @@ NXSL_METHOD_DEFINITION(enableTopologyPolling)
  */
 NXSL_NodeClass::NXSL_NodeClass() : NXSL_Class()
 {
-   _tcscpy(m_szName, _T("Node"));
+   _tcscpy(m_name, _T("Node"));
 
    NXSL_REGISTER_METHOD(enableAgent, 1);
    NXSL_REGISTER_METHOD(enableConfigurationPolling, 1);
@@ -365,7 +365,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    }
    else if (!_tcscmp(pszAttr, _T("id")))
    {
-      pValue = new NXSL_Value(pNode->Id());
+      pValue = new NXSL_Value(pNode->getId());
    }
    else if (!_tcscmp(pszAttr, _T("ipAddr")))
    {
@@ -418,7 +418,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    }
    else if (!_tcscmp(pszAttr, _T("name")))
    {
-      pValue = new NXSL_Value(pNode->Name());
+      pValue = new NXSL_Value(pNode->getName());
    }
    else if (!_tcscmp(pszAttr, _T("platformName")))
    {
@@ -487,7 +487,7 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
  */
 NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_Class()
 {
-   _tcscpy(m_szName, _T("Interface"));
+   _tcscpy(m_name, _T("Interface"));
 
    NXSL_REGISTER_METHOD(setStatusCalculation, -1);
    NXSL_REGISTER_METHOD(setStatusPropagation, -1);
@@ -543,7 +543,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    }
    else if (!_tcscmp(pszAttr, _T("id")))
    {
-      pValue = new NXSL_Value(iface->Id());
+      pValue = new NXSL_Value(iface->getId());
    }
    else if (!_tcscmp(pszAttr, _T("ifIndex")))
    {
@@ -588,7 +588,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    }
    else if (!_tcscmp(pszAttr, _T("name")))
    {
-      pValue = new NXSL_Value(iface->Name());
+      pValue = new NXSL_Value(iface->getName());
    }
    else if (!_tcscmp(pszAttr, _T("node")))
 	{
@@ -617,7 +617,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 				Node *peerNode = peerIface->getParentNode();
 				if ((parentNode != NULL) && (peerNode != NULL))
 				{
-					if (peerNode->isTrustedNode(parentNode->Id()))
+					if (peerNode->isTrustedNode(parentNode->getId()))
 					{
 						pValue = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, peerIface));
 					}
@@ -626,13 +626,13 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 						// No access, return null
 						pValue = new NXSL_Value;
 						DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): access denied for node %s [%d]"),
-									 iface->Name(), iface->Id(), peerNode->Name(), peerNode->Id());
+									 iface->getName(), iface->getId(), peerNode->getName(), peerNode->getId());
 					}
 				}
 				else
 				{
 					pValue = new NXSL_Value;
-					DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): parentNode=%p peerNode=%p"), iface->Name(), iface->Id(), parentNode, peerNode);
+					DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): parentNode=%p peerNode=%p"), iface->getName(), iface->getId(), parentNode, peerNode);
 				}
 			}
 			else
@@ -653,7 +653,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 			if (g_flags & AF_CHECK_TRUSTED_NODES)
 			{
 				Node *parentNode = iface->getParentNode();
-				if ((parentNode != NULL) && (peerNode->isTrustedNode(parentNode->Id())))
+				if ((parentNode != NULL) && (peerNode->isTrustedNode(parentNode->getId())))
 				{
 					pValue = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, peerNode));
 				}
@@ -662,7 +662,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 					// No access, return null
 					pValue = new NXSL_Value;
 					DbgPrintf(4, _T("NXSL::Interface::peerNode(%s [%d]): access denied for node %s [%d]"),
-					          iface->Name(), iface->Id(), peerNode->Name(), peerNode->Id());
+					          iface->getName(), iface->getId(), peerNode->getName(), peerNode->getId());
 				}
 			}
 			else
@@ -726,7 +726,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
  */
 NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
 {
-   _tcscpy(m_szName, _T("Event"));
+   _tcscpy(m_name, _T("Event"));
 }
 
 /**
@@ -787,7 +787,7 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
  */
 NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
 {
-   _tcscpy(m_szName, _T("DCI"));
+   _tcscpy(m_name, _T("DCI"));
 }
 
 /**
@@ -851,7 +851,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
  */
 NXSL_SNMPTransportClass::NXSL_SNMPTransportClass() : NXSL_Class()
 {
-	_tcscpy(m_szName, _T("SNMP_Transport"));
+	_tcscpy(m_name, _T("SNMP_Transport"));
 }
 
 /**
@@ -885,7 +885,7 @@ void NXSL_SNMPTransportClass::onObjectDelete(NXSL_Object *object)
  */
 NXSL_SNMPVarBindClass::NXSL_SNMPVarBindClass() : NXSL_Class()
 {
-	_tcscpy(m_szName, _T("SNMP_VarBind"));
+	_tcscpy(m_name, _T("SNMP_VarBind"));
 }
 
 /**

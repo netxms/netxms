@@ -240,7 +240,7 @@ bool SummaryTable::filter(DataCollectionTarget *object)
 
    bool result = true;
    m_filter->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
-   if (object->Type() == OBJECT_NODE)
+   if (object->getObjectClass() == OBJECT_NODE)
       m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
    if (m_filter->run())
    {
@@ -289,9 +289,9 @@ Table *QuerySummaryTable(LONG tableId, UINT32 baseObjectId, UINT32 userId, UINT3
       *rcc = RCC_ACCESS_DENIED;
       return NULL;
    }
-   if ((object->Type() != OBJECT_CONTAINER) && (object->Type() != OBJECT_CLUSTER) &&
-       (object->Type() != OBJECT_SERVICEROOT) && (object->Type() != OBJECT_SUBNET) &&
-       (object->Type() != OBJECT_ZONE) && (object->Type() != OBJECT_NETWORK))
+   if ((object->getObjectClass() != OBJECT_CONTAINER) && (object->getObjectClass() != OBJECT_CLUSTER) &&
+       (object->getObjectClass() != OBJECT_SERVICEROOT) && (object->getObjectClass() != OBJECT_SUBNET) &&
+       (object->getObjectClass() != OBJECT_ZONE) && (object->getObjectClass() != OBJECT_NETWORK))
    {
       *rcc = RCC_INCOMPATIBLE_OPERATION;
       return NULL;
@@ -307,7 +307,7 @@ Table *QuerySummaryTable(LONG tableId, UINT32 baseObjectId, UINT32 userId, UINT3
    for(int i = 0; i < childObjects->size(); i++)
    {
       NetObj *obj = childObjects->get(i);
-      if (((obj->Type() != OBJECT_NODE) && (obj->Type() != OBJECT_MOBILEDEVICE)) || 
+      if (((obj->getObjectClass() != OBJECT_NODE) && (obj->getObjectClass() != OBJECT_MOBILEDEVICE)) || 
           !obj->checkAccessRights(userId, OBJECT_ACCESS_READ))
       {
          obj->decRefCount();

@@ -46,27 +46,27 @@ DataCollectionTarget::~DataCollectionTarget()
 /**
  * Delete object from database
  */
-bool DataCollectionTarget::deleteFromDB(DB_HANDLE hdb)
+bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = Template::deleteFromDB(hdb);
+   bool success = Template::deleteFromDatabase(hdb);
    if (success)
    {
       TCHAR query[256];
-      _sntprintf(query, 256, _T("DROP TABLE idata_%d"), (int)m_dwId);
+      _sntprintf(query, 256, _T("DROP TABLE idata_%d"), (int)m_id);
       success = DBQuery(hdb, query) ? true : false;
       if (success)
       {
-         _sntprintf(query, 256, _T("DROP TABLE tdata_rows_%d"), (int)m_dwId);
+         _sntprintf(query, 256, _T("DROP TABLE tdata_rows_%d"), (int)m_id);
          success = DBQuery(hdb, query) ? true : false;
       }
       if (success)
       {
-         _sntprintf(query, 256, _T("DROP TABLE tdata_records_%d"), (int)m_dwId);
+         _sntprintf(query, 256, _T("DROP TABLE tdata_records_%d"), (int)m_id);
          success = DBQuery(hdb, query) ? true : false;
       }
       if (success)
       {
-         _sntprintf(query, 256, _T("DROP TABLE tdata_%d"), (int)m_dwId);
+         _sntprintf(query, 256, _T("DROP TABLE tdata_%d"), (int)m_id);
          success = DBQuery(hdb, query) ? true : false;
       }
    }
@@ -76,20 +76,20 @@ bool DataCollectionTarget::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void DataCollectionTarget::CreateMessage(CSCPMessage *msg)
+void DataCollectionTarget::fillMessage(CSCPMessage *msg)
 {
-   Template::CreateMessage(msg);
+   Template::fillMessage(msg);
 }
 
 /**
  * Modify object from message
  */
-UINT32 DataCollectionTarget::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 DataCollectionTarget::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
-   return Template::ModifyFromMessage(pRequest, TRUE);
+   return Template::modifyFromMessage(pRequest, TRUE);
 }
 
 /**
@@ -153,7 +153,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
 
    lockDciAccess(true);	// write lock
 
-   DbgPrintf(5, _T("Applying DCO \"%s\" to target \"%s\""), dcObject->getName(), m_szName);
+   DbgPrintf(5, _T("Applying DCO \"%s\" to target \"%s\""), dcObject->getName(), m_name);
 
    // Check if that template item exists
 	int i;
@@ -210,9 +210,9 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
 
 	if (bResult)
 	{
-		LockData();
+		lockProperties();
 		m_isModified = true;
-		UnlockData();
+		unlockProperties();
 	}
    return bResult;
 }
@@ -339,7 +339,7 @@ UINT32 DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, UINT32 baseId
 {
 	UINT32 varId = baseId;
 
-	msg->SetVariable(varId++, m_dwId);
+	msg->SetVariable(varId++, m_id);
 	UINT32 countId = varId++;
 	UINT32 count = 0;
 
@@ -405,7 +405,7 @@ void DataCollectionTarget::queueItemsForPolling(Queue *pPollerQueue)
          object->setBusyFlag(TRUE);
          incRefCount();   // Increment reference count for each queued DCI
          pPollerQueue->Put(object);
-			DbgPrintf(8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_szName, object->getId(), object->getName());
+			DbgPrintf(8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_name, object->getId(), object->getName());
       }
    }
    unlockDciAccess();
@@ -444,8 +444,8 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
       LockChildList(FALSE);
       for(i = 0; i < m_dwChildCount; i++)
       {
-         if (((dwId == 0) && (!_tcsicmp(m_pChildList[i]->Name(), szArg))) ||
-             (dwId == m_pChildList[i]->Id()))
+         if (((dwId == 0) && (!_tcsicmp(m_pChildList[i]->getName(), szArg))) ||
+             (dwId == m_pChildList[i]->getId()))
          {
             pObject = m_pChildList[i];
             break;
@@ -474,7 +474,7 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
 		{
 			pObject = FindObjectById(dwId);
 			if (pObject != NULL)
-				if (pObject->Type() != OBJECT_CONDITION)
+				if (pObject->getObjectClass() != OBJECT_CONDITION)
 					pObject = NULL;
 		}
 		else
@@ -485,7 +485,7 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
 
       if (pObject != NULL)
       {
-			if (pObject->isTrustedNode(m_dwId))
+			if (pObject->isTrustedNode(m_id))
 			{
 				_sntprintf(buffer, bufSize, _T("%d"), pObject->Status());
 			}
@@ -517,8 +517,8 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
       LockChildList(FALSE);
       for(i = 0; i < m_dwChildCount; i++)
       {
-         if (((dwId == 0) && (!_tcsicmp(m_pChildList[i]->Name(), szArg))) ||
-             (dwId == m_pChildList[i]->Id()))
+         if (((dwId == 0) && (!_tcsicmp(m_pChildList[i]->getName(), szArg))) ||
+             (dwId == m_pChildList[i]->getId()))
          {
             pObject = m_pChildList[i];
             break;
@@ -607,11 +607,11 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
    if (vm != NULL)
    {
       vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, this)));
-      if (Type() == OBJECT_NODE)
+      if (getObjectClass() == OBJECT_NODE)
       {
          vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
       }
-      vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((Type() == OBJECT_CLUSTER) ? 1 : 0));
+      vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
       if (vm->run(&args))
       {
          NXSL_Value *value = vm->getResult();
@@ -620,8 +620,8 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
       }
       else
       {
-			DbgPrintf(4, _T("DataCollectionTarget(%s)->getScriptItem(%s): Script execution error: %s"), m_szName, param, vm->getErrorText());
-			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_dwId);
+			DbgPrintf(4, _T("DataCollectionTarget(%s)->getScriptItem(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
+			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
          rc = DCE_COMM_ERROR;
       }
       delete vm;
@@ -630,7 +630,7 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
    {
       args.setOwner(true);
    }
-   DbgPrintf(7, _T("DataCollectionTarget(%s)->getScriptItem(%s): rc=%d"), m_szName, param, rc);
+   DbgPrintf(7, _T("DataCollectionTarget(%s)->getScriptItem(%s): rc=%d"), m_name, param, rc);
    return rc;
 }
 
@@ -657,8 +657,8 @@ void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, T
             if (!rowAdded)
             {
                tableData->addRow();
-               tableData->set(0, m_szName);
-               tableData->setObjectId(tableData->getNumRows() - 1, m_dwId);
+               tableData->set(0, m_name);
+               tableData->setObjectId(tableData->getNumRows() - 1, m_id);
                rowAdded = true;
             }
             tableData->set(i + 1, ((DCItem *)object)->getLastValue());
@@ -692,7 +692,7 @@ int DataCollectionTarget::getMostCriticalDCIStatus()
       if (curr->isStatusDCO() && (curr->getType() == DCO_TYPE_ITEM) &&
           curr->hasValue() && (curr->getStatus() == ITEM_STATUS_ACTIVE))
       {
-         if (Type() == OBJECT_CLUSTER && !curr->isAggregateOnCluster())
+         if (getObjectClass() == OBJECT_CLUSTER && !curr->isAggregateOnCluster())
             continue; // Calculated only on those that are agregated on cluster
 
          ItemValue *value = ((DCItem *)curr)->getInternalLastValue();

@@ -41,7 +41,7 @@ static RWLOCK m_rwlockTemplateAccess;
 Event::Event()
 {
    m_qwId = 0;
-	m_szName[0] = 0;
+	m_name[0] = 0;
    m_qwRootId = 0;
    m_dwCode = 0;
    m_dwSeverity = 0;
@@ -61,7 +61,7 @@ Event::Event()
 Event::Event(Event *src)
 {
    m_qwId = src->m_qwId;
-   _tcscpy(m_szName, src->m_szName);
+   _tcscpy(m_name, src->m_name);
    m_qwRootId = src->m_qwRootId;
    m_dwCode = src->m_dwCode;
    m_dwSeverity = src->m_dwSeverity;
@@ -85,7 +85,7 @@ Event::Event(Event *src)
  */
 Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, const char *szFormat, const TCHAR **names, va_list args)
 {
-	_tcscpy(m_szName, pTemplate->szName);
+	_tcscpy(m_name, pTemplate->szName);
    m_tTimeStamp = time(NULL);
    m_qwId = CreateUniqueEventId();
    m_qwRootId = 0;
@@ -260,10 +260,10 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                   pText[dwPos++] = '%';
                   break;
                case 'n':   // Name of event source
-                  dwSize += (UINT32)_tcslen(pObject->Name());
+                  dwSize += (UINT32)_tcslen(pObject->getName());
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  _tcscpy(&pText[dwPos], pObject->Name());
-                  dwPos += (UINT32)_tcslen(pObject->Name());
+                  _tcscpy(&pText[dwPos], pObject->getName());
+                  dwPos += (UINT32)_tcslen(pObject->getName());
                   break;
                case 'a':   // IP address of event source
                   dwSize += 16;
@@ -320,10 +320,10 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                case 'N':   // Event name
 						if (event != NULL)
 						{
-							dwSize += (UINT32)_tcslen(event->m_szName);
+							dwSize += (UINT32)_tcslen(event->m_name);
 							pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-							_tcscpy(&pText[dwPos], event->m_szName);
-							dwPos += (UINT32)_tcslen(event->m_szName);
+							_tcscpy(&pText[dwPos], event->m_name);
+							dwPos += (UINT32)_tcslen(event->m_name);
 						}
                   break;
                case 's':   // Severity code
@@ -458,7 +458,7 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 							NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
 							if (vm != NULL)
 							{
-								if (pObject->Type() == OBJECT_NODE)
+								if (pObject->getObjectClass() == OBJECT_NODE)
 									vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
 								vm->setGlobalVariable(_T("$event"), (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)) : new NXSL_Value);
 								if (alarmMsg != NULL)

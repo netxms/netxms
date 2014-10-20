@@ -73,15 +73,15 @@ NetworkService::~NetworkService()
 /**
  * Save object to database
  */
-BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
+BOOL NetworkService::saveToDatabase(DB_HANDLE hdb)
 {
-   LockData();
+   lockProperties();
 
    saveCommonProperties(hdb);
 
    // Form and execute INSERT or UPDATE query
 	DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("network_services"), _T("id"), m_dwId))
+   if (IsDatabaseRecordExist(hdb, _T("network_services"), _T("id"), m_id))
    {
 		hStmt = DBPrepare(hdb, _T("UPDATE network_services SET node_id=?,")
                              _T("service_type=?,ip_bind_addr=?,")
@@ -100,7 +100,7 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
 	{
 	   TCHAR szIpAddr[32];
 
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_hostNode->Id());
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_hostNode->getId());
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_serviceType);
 		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, IpToStr(m_dwIpAddr, szIpAddr), DB_BIND_STATIC);
 		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_proto);
@@ -109,7 +109,7 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
 		DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_response, DB_BIND_STATIC);
 		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_pollerNode);
 		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
-		DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_id);
 
 		DBExecute(hStmt);
 
@@ -121,14 +121,14 @@ BOOL NetworkService::SaveToDB(DB_HANDLE hdb)
 
    // Unlock object and clear modification flag
    m_isModified = false;
-   UnlockData();
+   unlockProperties();
    return TRUE;
 }
 
 /**
  * Load properties from database
  */
-BOOL NetworkService::CreateFromDB(UINT32 dwId)
+BOOL NetworkService::loadFromDatabase(UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
@@ -136,7 +136,7 @@ BOOL NetworkService::CreateFromDB(UINT32 dwId)
    NetObj *pObject;
    BOOL bResult = FALSE;
 
-   m_dwId = dwId;
+   m_id = dwId;
 
    if (!loadCommonProperties())
       return FALSE;
@@ -169,7 +169,7 @@ BOOL NetworkService::CreateFromDB(UINT32 dwId)
          {
             nxlog_write(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE, "dds", dwId, dwHostNodeId, _T("network service"));
          }
-         else if (pObject->Type() != OBJECT_NODE)
+         else if (pObject->getObjectClass() != OBJECT_NODE)
          {
             nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, dwHostNodeId);
          }
@@ -191,7 +191,7 @@ BOOL NetworkService::CreateFromDB(UINT32 dwId)
                         "dds", dwId, m_pollerNode, _T("network service"));
                bResult = FALSE;
             }
-            else if (pObject->Type() != OBJECT_NODE)
+            else if (pObject->getObjectClass() != OBJECT_NODE)
             {
                nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, m_pollerNode);
                bResult = FALSE;
@@ -215,9 +215,9 @@ BOOL NetworkService::CreateFromDB(UINT32 dwId)
 /**
  * Delete object from database
  */
-bool NetworkService::deleteFromDB(DB_HANDLE hdb)
+bool NetworkService::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDB(hdb);
+   bool success = NetObj::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM network_services WHERE id=?"));
    return success;
@@ -226,9 +226,9 @@ bool NetworkService::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void NetworkService::CreateMessage(CSCPMessage *pMsg)
+void NetworkService::fillMessage(CSCPMessage *pMsg)
 {
-   NetObj::CreateMessage(pMsg);
+   NetObj::fillMessage(pMsg);
    pMsg->SetVariable(VID_SERVICE_TYPE, (WORD)m_serviceType);
    pMsg->SetVariable(VID_IP_PROTO, m_proto);
    pMsg->SetVariable(VID_IP_PORT, m_port);
@@ -241,10 +241,10 @@ void NetworkService::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from message
  */
-UINT32 NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 NetworkService::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
    // Polling node
    if (pRequest->isFieldExist(VID_POLLER_NODE_ID))
@@ -263,19 +263,19 @@ UINT32 NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLoc
          pObject = FindObjectById(dwNodeId);
          if (pObject != NULL)
          {
-            if (pObject->Type() == OBJECT_NODE)
+            if (pObject->getObjectClass() == OBJECT_NODE)
             {
                m_pollerNode = dwNodeId;
             }
             else
             {
-               UnlockData();
+               unlockProperties();
                return RCC_INVALID_OBJECT_ID;
             }
          }
          else
          {
-            UnlockData();
+            unlockProperties();
             return RCC_INVALID_OBJECT_ID;
          }
       }
@@ -315,7 +315,7 @@ UINT32 NetworkService::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLoc
       m_response = pRequest->GetVariableStr(VID_SERVICE_RESPONSE);
    }
 
-   return NetObj::ModifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessage(pRequest, TRUE);
 }
 
 /**
@@ -333,7 +333,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
       return;     // Service without host node, which is VERY strange
    }
 
-   sendPollerMsg(rqId, _T("   Starting status poll on network service %s\r\n"), m_szName);
+   sendPollerMsg(rqId, _T("   Starting status poll on network service %s\r\n"), m_name);
    sendPollerMsg(rqId, _T("      Current service status is %s\r\n"), GetStatusAsText(m_iStatus, true));
 
    if (m_pollerNode != 0)
@@ -355,7 +355,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
       UINT32 dwStatus;
 
       sendPollerMsg(rqId, _T("      Polling service from node %s [%s]\r\n"),
-                    pNode->Name(), IpToStr(pNode->IpAddr(), szBuffer));
+                    pNode->getName(), IpToStr(pNode->IpAddr(), szBuffer));
       if (pNode->checkNetworkService(&dwStatus, 
                                      (m_dwIpAddr == 0) ? m_hostNode->IpAddr() : m_dwIpAddr,
                                      m_serviceType, m_port, m_proto, 
@@ -383,7 +383,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
 	if ((newStatus == STATUS_CRITICAL) && (pNode->getRuntimeFlags() & NDF_NETWORK_PATH_PROBLEM))
 	{
 		newStatus = STATUS_UNKNOWN;
-		DbgPrintf(6, _T("StatusPoll(%s): Status for network service %s reset to UNKNOWN"), pNode->Name(), m_szName);
+		DbgPrintf(6, _T("StatusPoll(%s): Status for network service %s reset to UNKNOWN"), pNode->getName(), m_name);
 	}
    
    if (newStatus != oldStatus)
@@ -405,13 +405,13 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
 			sendPollerMsg(rqId, _T("      Service status changed to %s\r\n"), GetStatusAsText(m_iStatus, true));
 			PostEventEx(eventQueue, m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP : 
 							(m_iStatus == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
-							m_hostNode->Id(), "sdd", m_szName, m_dwId, m_serviceType);
-			LockData();
-			Modify();
-			UnlockData();
+							m_hostNode->getId(), "sdd", m_name, m_id, m_serviceType);
+			lockProperties();
+			setModified();
+			unlockProperties();
 		}
    }
-   sendPollerMsg(rqId, _T("   Finished status poll on network service %s\r\n"), m_szName);
+   sendPollerMsg(rqId, _T("   Finished status poll on network service %s\r\n"), m_name);
 }
 
 /**
@@ -419,13 +419,13 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
  */
 void NetworkService::onObjectDelete(UINT32 dwObjectId)
 {
-	LockData();
+	lockProperties();
    if (dwObjectId == m_pollerNode)
    {
       // If deleted object is our poller node, change it to default
       m_pollerNode = 0;
-      Modify();
-      DbgPrintf(3, _T("Service \"%s\": poller node %d deleted"), m_szName, dwObjectId);
+      setModified();
+      DbgPrintf(3, _T("Service \"%s\": poller node %d deleted"), m_name, dwObjectId);
    }
-	UnlockData();
+	unlockProperties();
 }

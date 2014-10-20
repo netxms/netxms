@@ -58,7 +58,7 @@ Template::Template() : NetObj()
  */
 Template::Template(const TCHAR *pszName) : NetObj()
 {
-   nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME);
+   nx_strncpy(m_name, pszName, MAX_OBJECT_NAME);
 	m_dcObjects = new ObjectArray<DCObject>(8, 16, true);
    m_dciLockStatus = -1;
 	m_flags = 0;
@@ -81,7 +81,7 @@ Template::Template(ConfigEntry *config) : NetObj()
    m_dciAccessLock = RWLockCreate();
 
 	// Name and version
-	nx_strncpy(m_szName, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
+	nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
 	m_dwVersion = config->getSubEntryValueAsUInt(_T("version"), 0, 0x00010000);
 	m_flags = config->getSubEntryValueAsUInt(_T("flags"), 0, 0);
 
@@ -138,7 +138,7 @@ void Template::destroyItems()
  */
 void Template::setAutoApplyFilter(const TCHAR *filter)
 {
-	LockData();
+	lockProperties();
 	safe_free(m_applyFilterSource);
 	delete m_applyFilter;
 	if (filter != NULL)
@@ -148,15 +148,15 @@ void Template::setAutoApplyFilter(const TCHAR *filter)
 		m_applyFilterSource = _tcsdup(filter);
 		m_applyFilter = NXSLCompileAndCreateVM(m_applyFilterSource, error, 256, new NXSL_ServerEnv);
 		if (m_applyFilter == NULL)
-			nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
+			nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
 	}
 	else
 	{
 		m_applyFilterSource = NULL;
 		m_applyFilter = NULL;
 	}
-	Modify();
-	UnlockData();
+	setModified();
+	unlockProperties();
 }
 
 /**
@@ -164,7 +164,7 @@ void Template::setAutoApplyFilter(const TCHAR *filter)
  *
  * @param dwId object ID
  */
-BOOL Template::CreateFromDB(UINT32 dwId)
+BOOL Template::loadFromDatabase(UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
@@ -172,7 +172,7 @@ BOOL Template::CreateFromDB(UINT32 dwId)
    NetObj *pObject;
    BOOL bResult = TRUE;
 
-   m_dwId = dwId;
+   m_id = dwId;
 
    if (!loadCommonProperties())
       return FALSE;
@@ -200,7 +200,7 @@ BOOL Template::CreateFromDB(UINT32 dwId)
 
 			m_applyFilter = NXSLCompileAndCreateVM(m_applyFilterSource, error, 256, new NXSL_ServerEnv);
 			if (m_applyFilter == NULL)
-				nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
+				nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
 		}
 	}
    DBFreeResult(hResult);
@@ -215,7 +215,7 @@ BOOL Template::CreateFromDB(UINT32 dwId)
    // Load related nodes list
    if (!m_isDeleted)
    {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT node_id FROM dct_node_map WHERE template_id=%d"), m_dwId);
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT node_id FROM dct_node_map WHERE template_id=%d"), m_id);
       hResult = DBSelect(g_hCoreDB, szQuery);
       if (hResult != NULL)
       {
@@ -226,19 +226,19 @@ BOOL Template::CreateFromDB(UINT32 dwId)
             pObject = FindObjectById(dwNodeId);
             if (pObject != NULL)
             {
-               if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_CLUSTER) || (pObject->Type() == OBJECT_MOBILEDEVICE))
+               if ((pObject->getObjectClass() == OBJECT_NODE) || (pObject->getObjectClass() == OBJECT_CLUSTER) || (pObject->getObjectClass() == OBJECT_MOBILEDEVICE))
                {
                   AddChild(pObject);
                   pObject->AddParent(this);
                }
                else
                {
-                  nxlog_write(MSG_DCT_MAP_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", m_dwId, dwNodeId);
+                  nxlog_write(MSG_DCT_MAP_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", m_id, dwNodeId);
                }
             }
             else
             {
-               nxlog_write(MSG_INVALID_DCT_MAP, EVENTLOG_ERROR_TYPE, "dd", m_dwId, dwNodeId);
+               nxlog_write(MSG_INVALID_DCT_MAP, EVENTLOG_ERROR_TYPE, "dd", m_id, dwNodeId);
             }
          }
          DBFreeResult(hResult);
@@ -253,18 +253,18 @@ BOOL Template::CreateFromDB(UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL Template::SaveToDB(DB_HANDLE hdb)
+BOOL Template::saveToDatabase(DB_HANDLE hdb)
 {
-   LockData();
+   lockProperties();
 
    if (!saveCommonProperties(hdb))
 	{
-		UnlockData();
+		unlockProperties();
 		return FALSE;
 	}
 
 	DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("templates"), _T("id"), m_dwId))
+   if (IsDatabaseRecordExist(hdb, _T("templates"), _T("id"), m_id))
 	{
 		hStmt = DBPrepare(hdb, _T("UPDATE templates SET version=?,flags=?,apply_filter=? WHERE id=?"));
 	}
@@ -274,14 +274,14 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
 	}
 	if (hStmt == NULL)
 	{
-		UnlockData();
+		unlockProperties();
 		return FALSE;
 	}
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwVersion);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 3, DB_SQLTYPE_TEXT, m_applyFilterSource, DB_BIND_STATIC);
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_id);
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 
@@ -290,12 +290,12 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
 		TCHAR query[256];
 
 		// Update members list
-		_sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%d"), m_dwId);
+		_sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%d"), m_id);
 		DBQuery(hdb, query);
 		LockChildList(FALSE);
 		for(UINT32 i = 0; i < m_dwChildCount; i++)
 		{
-			_sntprintf(query, 256, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (%d,%d)"), m_dwId, m_pChildList[i]->Id());
+			_sntprintf(query, 256, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (%d,%d)"), m_id, m_pChildList[i]->getId());
 			DBQuery(hdb, query);
 		}
 		UnlockChildList();
@@ -304,7 +304,7 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
 		saveACLToDB(hdb);
 	}
 
-   UnlockData();
+   unlockProperties();
 
    // Save data collection items
 	lockDciAccess(false);
@@ -313,9 +313,9 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
 	unlockDciAccess();
 
    // Clear modifications flag
-	LockData();
+	lockProperties();
    m_isModified = false;
-	UnlockData();
+	unlockProperties();
 
    return success;
 }
@@ -323,12 +323,12 @@ BOOL Template::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-bool Template::deleteFromDB(DB_HANDLE hdb)
+bool Template::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDB(hdb);
+   bool success = NetObj::deleteFromDatabase(hdb);
    if (success)
    {
-      if (Type() == OBJECT_TEMPLATE)
+      if (getObjectClass() == OBJECT_TEMPLATE)
       {
          success = executeQueryOnObject(hdb, _T("DELETE FROM templates WHERE id=?"));
          if (success)
@@ -360,7 +360,7 @@ void Template::loadItemsFromDB()
 				  _T("instd_method,instd_data,instd_filter,samples,comments FROM items WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != NULL)
 		{
@@ -379,7 +379,7 @@ void Template::loadItemsFromDB()
               _T("transformation_script,comments FROM dc_tables WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != NULL)
 		{
@@ -423,9 +423,9 @@ bool Template::addDCObject(DCObject *object, bool alreadyLocked)
 
 	if (success)
 	{
-		LockData();
-      Modify();
-		UnlockData();
+		lockProperties();
+      setModified();
+		unlockProperties();
 	}
    return success;
 }
@@ -452,10 +452,10 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
             deleteChildDCIs(dcObjectId);
          }
          // Destroy item
-			DbgPrintf(7, _T("Template::DeleteDCObject: deleting DCObject %d from object %d"), (int)dcObjectId, (int)m_dwId);
+			DbgPrintf(7, _T("Template::DeleteDCObject: deleting DCObject %d from object %d"), (int)dcObjectId, (int)m_id);
 			destroyItem(object, i);
          success = true;
-			DbgPrintf(7, _T("Template::DeleteDCObject: DCO deleted from object %d"), (int)m_dwId);
+			DbgPrintf(7, _T("Template::DeleteDCObject: DCO deleted from object %d"), (int)m_id);
          break;
       }
 	}
@@ -478,7 +478,7 @@ void Template::deleteChildDCIs(UINT32 dcObjectId)
       {
          destroyItem(subObject, i);
          i--;
-			DbgPrintf(7, _T("Template::DeleteDCObject: deleting DCObject %d created by DCObject %d instance discovery from object %d"), (int)subObject->getId(), (int)dcObjectId, (int)m_dwId);
+			DbgPrintf(7, _T("Template::DeleteDCObject: deleting DCObject %d created by DCObject %d instance discovery from object %d"), (int)subObject->getId(), (int)dcObjectId, (int)m_id);
       }
    }
 }
@@ -494,7 +494,7 @@ void Template::destroyItem(DCObject *object, int index)
    {
       // Physically delete DCI only if it is not busy
       // Busy DCIs will be deleted by data collector
-      object->deleteFromDB();
+      object->deleteFromDatabase();
       m_dcObjects->remove(index);
    }
    else
@@ -552,7 +552,7 @@ void Template::updateInstanceDiscoveryItems(DCItem *dci)
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-      if ((object->getType() == DCO_TYPE_ITEM) && (object->getTemplateId() == m_dwId) && (object->getTemplateItemId() == dci->getId()))
+      if ((object->getType() == DCO_TYPE_ITEM) && (object->getTemplateId() == m_id) && (object->getTemplateItemId() == dci->getId()))
       {
          object->updateFromTemplate(dci);
       }
@@ -592,7 +592,7 @@ BOOL Template::lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCu
 {
    BOOL bSuccess;
 
-   LockData();
+   lockProperties();
    if (m_dciLockStatus == -1)
    {
       m_dciLockStatus = sessionId;
@@ -606,7 +606,7 @@ BOOL Template::lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCu
          _tcscpy(pszCurrOwner, m_szCurrDCIOwner);
       bSuccess = FALSE;
    }
-   UnlockData();
+   unlockProperties();
    return bSuccess;
 }
 
@@ -617,19 +617,19 @@ BOOL Template::unlockDCIList(int sessionId)
 {
    BOOL bSuccess = FALSE;
 
-   LockData();
+   lockProperties();
    if (m_dciLockStatus == sessionId)
    {
       m_dciLockStatus = -1;
-      if (m_bDCIListModified && (Type() == OBJECT_TEMPLATE))
+      if (m_bDCIListModified && (getObjectClass() == OBJECT_TEMPLATE))
       {
          m_dwVersion++;
-         Modify();
+         setModified();
       }
       m_bDCIListModified = FALSE;
       bSuccess = TRUE;
    }
-   UnlockData();
+   unlockProperties();
    return bSuccess;
 }
 
@@ -819,9 +819,9 @@ void Template::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create NXCP message with object's data
  */
-void Template::CreateMessage(CSCPMessage *pMsg)
+void Template::fillMessage(CSCPMessage *pMsg)
 {
-   NetObj::CreateMessage(pMsg);
+   NetObj::fillMessage(pMsg);
    pMsg->SetVariable(VID_TEMPLATE_VERSION, m_dwVersion);
 	pMsg->SetVariable(VID_FLAGS, m_flags);
 	pMsg->SetVariable(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_applyFilterSource));
@@ -830,10 +830,10 @@ void Template::CreateMessage(CSCPMessage *pMsg)
 /**
  * Modify object from NXCP message
  */
-UINT32 Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Template::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
    // Change template version
    if (pRequest->isFieldExist(VID_TEMPLATE_VERSION))
@@ -855,7 +855,7 @@ UINT32 Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
 			m_applyFilter = NXSLCompileAndCreateVM(m_applyFilterSource, error, 256, new NXSL_ServerEnv);
 			if (m_applyFilter == NULL)
-				nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
+				nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
 		}
 		else
 		{
@@ -863,7 +863,7 @@ UINT32 Template::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		}
 	}
 
-   return NetObj::ModifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessage(pRequest, TRUE);
 }
 
 /**
@@ -875,7 +875,7 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
    BOOL bErrors = FALSE;
 
    // Link node to template
-   if (!isChild(target->Id()))
+   if (!isChild(target->getId()))
    {
       AddChild(target);
       target->AddParent(this);
@@ -883,27 +883,27 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
 
    pdwItemList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());
    DbgPrintf(2, _T("Apply %d items from template \"%s\" to target \"%s\""),
-             m_dcObjects->size(), m_szName, target->Name());
+             m_dcObjects->size(), m_name, target->getName());
 
    // Copy items
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
 		DCObject *object = m_dcObjects->get(i);
       pdwItemList[i] = object->getId();
-      if (!target->applyTemplateItem(m_dwId, object))
+      if (!target->applyTemplateItem(m_id, object))
       {
          bErrors = TRUE;
       }
    }
 
    // Clean items deleted from template
-   target->cleanDeletedTemplateItems(m_dwId, m_dcObjects->size(), pdwItemList);
+   target->cleanDeletedTemplateItems(m_id, m_dcObjects->size(), pdwItemList);
 
    // Cleanup
    free(pdwItemList);
 
    // Queue update if target is a cluster
-   if (target->Type() == OBJECT_CLUSTER)
+   if (target->getObjectClass() == OBJECT_CLUSTER)
    {
       target->queueUpdate();
    }
@@ -919,18 +919,18 @@ void Template::queueUpdate()
    UINT32 i;
    TEMPLATE_UPDATE_INFO *pInfo;
 
-   LockData();
+   lockProperties();
    for(i = 0; i < m_dwChildCount; i++)
-      if ((m_pChildList[i]->Type() == OBJECT_NODE) || (m_pChildList[i]->Type() == OBJECT_CLUSTER) || (m_pChildList[i]->Type() == OBJECT_MOBILEDEVICE))
+      if ((m_pChildList[i]->getObjectClass() == OBJECT_NODE) || (m_pChildList[i]->getObjectClass() == OBJECT_CLUSTER) || (m_pChildList[i]->getObjectClass() == OBJECT_MOBILEDEVICE))
       {
          incRefCount();
          pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
          pInfo->iUpdateType = APPLY_TEMPLATE;
          pInfo->pTemplate = this;
-         pInfo->targetId = m_pChildList[i]->Id();
+         pInfo->targetId = m_pChildList[i]->getId();
          g_pTemplateUpdateQueue->Put(pInfo);
       }
-   UnlockData();
+   unlockProperties();
 }
 
 /**
@@ -940,7 +940,7 @@ void Template::queueRemoveFromTarget(UINT32 targetId, BOOL bRemoveDCI)
 {
    TEMPLATE_UPDATE_INFO *pInfo;
 
-   LockData();
+   lockProperties();
    incRefCount();
    pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
    pInfo->iUpdateType = REMOVE_TEMPLATE;
@@ -948,7 +948,7 @@ void Template::queueRemoveFromTarget(UINT32 targetId, BOOL bRemoveDCI)
    pInfo->targetId = targetId;
    pInfo->bRemoveDCI = bRemoveDCI;
    g_pTemplateUpdateQueue->Put(pInfo);
-   UnlockData();
+   unlockProperties();
 }
 
 /**
@@ -992,7 +992,7 @@ UINT32 *Template::getDCIEventsList(UINT32 *pdwCount)
 void Template::createNXMPRecord(String &str)
 {
    str.addFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n\t\t\t<dataCollection>\n"),
-	                       m_dwId, (const TCHAR *)EscapeStringForXML2(m_szName), m_flags);
+	                       m_id, (const TCHAR *)EscapeStringForXML2(m_name), m_flags);
 
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
@@ -1000,14 +1000,14 @@ void Template::createNXMPRecord(String &str)
    unlockDciAccess();
 
    str += _T("\t\t\t</dataCollection>\n");
-	LockData();
+	lockProperties();
 	if (m_applyFilterSource != NULL)
 	{
 		str += _T("\t\t\t<filter>");
 		str.addDynamicString(EscapeStringForXML(m_applyFilterSource, -1));
 		str += _T("</filter>\n");
 	}
-	UnlockData();
+	unlockProperties();
 	str += _T("\t\t</template>\n");
 }
 
@@ -1047,15 +1047,15 @@ void Template::associateItems()
  */
 void Template::prepareForDeletion()
 {
-	if (Type() == OBJECT_TEMPLATE)
+	if (getObjectClass() == OBJECT_TEMPLATE)
 	{
 		UINT32 i;
 
 		LockChildList(FALSE);
 		for(i = 0; i < m_dwChildCount; i++)
 		{
-			if ((m_pChildList[i]->Type() == OBJECT_NODE) || (m_pChildList[i]->Type() == OBJECT_MOBILEDEVICE))
-				queueRemoveFromTarget(m_pChildList[i]->Id(), TRUE);
+			if ((m_pChildList[i]->getObjectClass() == OBJECT_NODE) || (m_pChildList[i]->getObjectClass() == OBJECT_MOBILEDEVICE))
+				queueRemoveFromTarget(m_pChildList[i]->getId(), TRUE);
 		}
 		UnlockChildList();
 	}
@@ -1069,7 +1069,7 @@ bool Template::isApplicable(Node *node)
 {
 	bool result = false;
 
-	LockData();
+	lockProperties();
 	if ((m_flags & TF_AUTO_APPLY) && (m_applyFilter != NULL))
 	{
 		m_applyFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
@@ -1082,12 +1082,12 @@ bool Template::isApplicable(Node *node)
 		{
 			TCHAR buffer[1024];
 
-			_sntprintf(buffer, 1024, _T("Template::%s::%d"), m_szName, m_dwId);
-			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_applyFilter->getErrorText(), m_dwId);
-			nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, m_applyFilter->getErrorText());
+			_sntprintf(buffer, 1024, _T("Template::%s::%d"), m_name, m_id);
+			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_applyFilter->getErrorText(), m_id);
+			nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, m_applyFilter->getErrorText());
 		}
 	}
-	UnlockData();
+	unlockProperties();
 	return result;
 }
 

@@ -48,9 +48,9 @@ Rack::~Rack()
 /**
  * Create object from database data
  */
-BOOL Rack::CreateFromDB(UINT32 id)
+BOOL Rack::loadFromDatabase(UINT32 id)
 {
-	if (!Container::CreateFromDB(id))
+	if (!Container::loadFromDatabase(id))
 		return FALSE;
 
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT height FROM racks WHERE id=?"));
@@ -77,13 +77,13 @@ BOOL Rack::CreateFromDB(UINT32 id)
 /**
  * Save object to database
  */
-BOOL Rack::SaveToDB(DB_HANDLE hdb)
+BOOL Rack::saveToDatabase(DB_HANDLE hdb)
 {
-	if (!Container::SaveToDB(hdb))
+	if (!Container::saveToDatabase(hdb))
 		return FALSE;
 
 	DB_STATEMENT hStmt;
-	if (IsDatabaseRecordExist(hdb, _T("racks"), _T("id"), m_dwId))
+	if (IsDatabaseRecordExist(hdb, _T("racks"), _T("id"), m_id))
 	{
 		hStmt = DBPrepare(hdb, _T("UPDATE racks SET height=? WHERE id=?"));
 	}
@@ -95,7 +95,7 @@ BOOL Rack::SaveToDB(DB_HANDLE hdb)
 		return FALSE;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)m_height);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 	return success;
@@ -104,9 +104,9 @@ BOOL Rack::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-bool Rack::deleteFromDB(DB_HANDLE hdb)
+bool Rack::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = Container::deleteFromDB(hdb);
+   bool success = Container::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM racks WHERE id=?"));
    return success;
@@ -115,22 +115,22 @@ bool Rack::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Rack::CreateMessage(CSCPMessage *pMsg)
+void Rack::fillMessage(CSCPMessage *pMsg)
 {
-   Container::CreateMessage(pMsg);
+   Container::fillMessage(pMsg);
    pMsg->SetVariable(VID_HEIGHT, (WORD)m_height);
 }
 
 /**
  * Modify object from message
  */
-UINT32 Rack::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Rack::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
 	if (pRequest->isFieldExist(VID_HEIGHT))
 		m_height = (int)pRequest->GetVariableShort(VID_HEIGHT);
 
-   return Container::ModifyFromMessage(pRequest, TRUE);
+   return Container::modifyFromMessage(pRequest, TRUE);
 }

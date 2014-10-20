@@ -83,7 +83,7 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
 			   DbgPrintf(3, _T("Event from trap: %d"), dwEventCode);
 
 			   szFormat[iNumArgs] = 0;
-			   PostEvent(dwEventCode, pNode->Id(), (iNumArgs > 0) ? szFormat : NULL,
+			   PostEvent(dwEventCode, pNode->getId(), (iNumArgs > 0) ? szFormat : NULL,
 						    pszArgList[0], pszArgList[1], pszArgList[2], pszArgList[3],
 						    pszArgList[4], pszArgList[5], pszArgList[6], pszArgList[7],
 						    pszArgList[8], pszArgList[9], pszArgList[10], pszArgList[11],
@@ -100,7 +100,7 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
       }
       else
       {
-         DbgPrintf(3, _T("AgentConnectionEx::onTrap(): node %s [%d] in in UNMANAGED state - trap ignored"), pNode->Name(), pNode->Id());
+         DbgPrintf(3, _T("AgentConnectionEx::onTrap(): node %s [%d] in in UNMANAGED state - trap ignored"), pNode->getName(), pNode->getId());
       }
    }
    else
@@ -154,13 +154,13 @@ void AgentConnectionEx::onDataPush(CSCPMessage *msg)
             target = (Node *)FindObjectById(objectId, OBJECT_NODE);
             if (target != NULL)
             {
-               if (target->isTrustedNode(sender->Id()))
+               if (target->isTrustedNode(sender->getId()))
                {
-                  DbgPrintf(5, _T("%s: agent data push: target set to %s [%d]"), sender->Name(), target->Name(), target->Id());
+                  DbgPrintf(5, _T("%s: agent data push: target set to %s [%d]"), sender->getName(), target->getName(), target->getId());
                }
                else
                {
-                  DbgPrintf(5, _T("%s: agent data push: not in trusted node list for target %s [%d]"), sender->Name(), target->Name(), target->Id());
+                  DbgPrintf(5, _T("%s: agent data push: not in trusted node list for target %s [%d]"), sender->getName(), target->getName(), target->getId());
                   target = NULL;
                }
             }
@@ -172,23 +172,23 @@ void AgentConnectionEx::onDataPush(CSCPMessage *msg)
 
          if (target != NULL)
          {
-		      DbgPrintf(5, _T("%s: agent data push: %s=%s"), target->Name(), name, value);
+		      DbgPrintf(5, _T("%s: agent data push: %s=%s"), target->getName(), name, value);
 		      DCObject *dci = target->getDCObjectByName(name);
 		      if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getStatus() == ITEM_STATUS_ACTIVE))
 		      {
-			      DbgPrintf(5, _T("%s: agent data push: found DCI %d"), target->Name(), dci->getId());
+			      DbgPrintf(5, _T("%s: agent data push: found DCI %d"), target->getName(), dci->getId());
 			      time_t t = time(NULL);
 			      target->processNewDCValue(dci, t, value);
 			      dci->setLastPollTime(t);
 		      }
 		      else
 		      {
-			      DbgPrintf(5, _T("%s: agent data push: DCI not found for %s"), target->Name(), name);
+			      DbgPrintf(5, _T("%s: agent data push: DCI not found for %s"), target->getName(), name);
 		      }
          }
          else
          {
-		      DbgPrintf(5, _T("%s: agent data push: target node not found or not accessible"), sender->Name());
+		      DbgPrintf(5, _T("%s: agent data push: target node not found or not accessible"), sender->getName());
          }
       }
 	}
@@ -218,8 +218,8 @@ void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
 	{
 	   TCHAR remoteFile[MAX_PATH];
       pMsg->GetVariableStr(VID_FILE_NAME, remoteFile, MAX_PATH);
-      ObjectArray<ClientSession>* result = g_monitoringList.findClientByFNameAndNodeID(remoteFile, object->Id());
-      DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for remote file %s on node %s [%d]"), result->size(), remoteFile, object->Name(), object->Id());
+      ObjectArray<ClientSession>* result = g_monitoringList.findClientByFNameAndNodeID(remoteFile, object->getId());
+      DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for remote file %s on node %s [%d]"), result->size(), remoteFile, object->getName(), object->getId());
       for(int i = 0; i < result->size(); i++)
       {
          result->get(i)->sendMessage(pMsg);
@@ -235,7 +235,7 @@ void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
             request.SetId(conn->generateRequestId());
             request.SetCode(CMD_CANCEL_FILE_MONITORING);
             request.SetVariable(VID_FILE_NAME, remoteFile);
-            request.SetVariable(VID_OBJECT_ID, node->Id());
+            request.SetVariable(VID_OBJECT_ID, node->getId());
             CSCPMessage* response = conn->customRequest(&request);
             delete response;
          }

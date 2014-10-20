@@ -98,7 +98,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
    if (dwResult == SNMP_ERR_SUCCESS)   // Still no errors
    {
       pRqPDU->bindVariable(new SNMP_Variable(pdwVarName, nameLength));
-      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
 
       // Analyze response
       if (dwResult == SNMP_ERR_SUCCESS)
@@ -220,7 +220,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport
       SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, (UINT32)InterlockedIncrement(&s_requestId), dwVersion);
       pRqPDU->bindVariable(new SNMP_Variable(pdwName, nameLength));
 	   SNMP_PDU *pRespPDU;
-      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
 
       // Analyze response
       if (dwResult == SNMP_ERR_SUCCESS)

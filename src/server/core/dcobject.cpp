@@ -27,7 +27,7 @@
  */
 DCObject::DCObject()
 {
-   m_dwId = 0;
+   m_id = 0;
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
    m_busy = 0;
@@ -36,7 +36,7 @@ DCObject::DCObject()
    m_iRetentionTime = 0;
    m_source = DS_INTERNAL;
    m_status = ITEM_STATUS_NOT_SUPPORTED;
-   m_szName[0] = 0;
+   m_name[0] = 0;
    m_szDescription[0] = 0;
 	m_systemTag[0] = 0;
    m_tLastPoll = 0;
@@ -63,7 +63,7 @@ DCObject::DCObject(const DCObject *pSrc)
 {
    UINT32 i;
 
-   m_dwId = pSrc->m_dwId;
+   m_id = pSrc->m_id;
    m_dwTemplateId = pSrc->m_dwTemplateId;
    m_dwTemplateItemId = pSrc->m_dwTemplateItemId;
    m_busy = 0;
@@ -73,7 +73,7 @@ DCObject::DCObject(const DCObject *pSrc)
    m_source = pSrc->m_source;
    m_status = pSrc->m_status;
    m_tLastPoll = 0;
-	_tcscpy(m_szName, pSrc->m_szName);
+	_tcscpy(m_name, pSrc->m_name);
 	_tcscpy(m_szDescription, pSrc->m_szDescription);
 	_tcscpy(m_systemTag, pSrc->m_systemTag);
    m_pNode = NULL;
@@ -114,14 +114,14 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
                int iPollingInterval, int iRetentionTime, Template *pNode,
                const TCHAR *pszDescription, const TCHAR *systemTag)
 {
-   m_dwId = dwId;
+   m_id = dwId;
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
-   nx_strncpy(m_szName, szName, MAX_ITEM_NAME);
+   nx_strncpy(m_name, szName, MAX_ITEM_NAME);
    if (pszDescription != NULL)
       nx_strncpy(m_szDescription, pszDescription, MAX_DB_STRING);
    else
-      _tcscpy(m_szDescription, m_szName);
+      _tcscpy(m_szDescription, m_name);
 	nx_strncpy(m_systemTag, CHECK_NULL_EX(systemTag), MAX_DB_STRING);
    m_source = iSource;
    m_iPollingInterval = iPollingInterval;
@@ -151,11 +151,11 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
  */
 DCObject::DCObject(ConfigEntry *config, Template *owner)
 {
-   m_dwId = CreateUniqueId(IDG_ITEM);
+   m_id = CreateUniqueId(IDG_ITEM);
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
-	nx_strncpy(m_szName, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
-   nx_strncpy(m_szDescription, config->getSubEntryValue(_T("description"), 0, m_szName), MAX_DB_STRING);
+	nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
+   nx_strncpy(m_szDescription, config->getSubEntryValue(_T("description"), 0, m_name), MAX_DB_STRING);
 	nx_strncpy(m_systemTag, config->getSubEntryValue(_T("systemTag"), 0, _T("")), MAX_DB_STRING);
 	m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
    m_iPollingInterval = config->getSubEntryValueAsInt(_T("interval"));
@@ -233,7 +233,7 @@ BOOL DCObject::loadCustomSchedules()
 
 	TCHAR query[256];
 
-   _sntprintf(query, 256, _T("SELECT schedule FROM dci_schedules WHERE item_id=%d"), m_dwId);
+   _sntprintf(query, 256, _T("SELECT schedule FROM dci_schedules WHERE item_id=%d"), m_id);
    DB_RESULT hResult = DBSelect(g_hCoreDB, query);
    if (hResult != NULL)
    {
@@ -264,14 +264,14 @@ bool DCObject::matchClusterResource()
 {
 	Cluster *pCluster;
 
-   if ((m_dwResourceId == 0) || (m_pNode->Type() != OBJECT_NODE))
+   if ((m_dwResourceId == 0) || (m_pNode->getObjectClass() != OBJECT_NODE))
 		return true;
 
 	pCluster = ((Node *)m_pNode)->getMyCluster();
 	if (pCluster == NULL)
 		return false;	// Has association, but cluster object cannot be found
 
-	return pCluster->isResourceOnNode(m_dwResourceId, m_pNode->Id());
+	return pCluster->isResourceOnNode(m_dwResourceId, m_pNode->getId());
 }
 
 /**
@@ -302,7 +302,7 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		{
 			if (m_pNode != NULL)
 			{
-				temp.addFormattedString(_T("%d"), m_pNode->Id());
+				temp.addFormattedString(_T("%d"), m_pNode->getId());
 			}
 			else
 			{
@@ -313,7 +313,7 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		{
 			if (m_pNode != NULL)
 			{
-				temp += m_pNode->Name();
+				temp += m_pNode->getName();
 			}
 			else
 			{
@@ -346,19 +346,19 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 					NXSL_Value *result = vm->getResult();
 					if (result != NULL)
 						temp += CHECK_NULL_EX(result->getValueAsCString());
-		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s executed successfully"), m_dwId, src, &macro[7]);
+		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s executed successfully"), m_id, src, &macro[7]);
 				}
 				else
 				{
 		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s execution error: %s"),
-					          m_dwId, src, &macro[7], vm->getErrorText());
-					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", &macro[7], vm->getErrorText(), m_dwId);
+					          m_id, src, &macro[7], vm->getErrorText());
+					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", &macro[7], vm->getErrorText(), m_id);
 				}
             delete vm;
 			}
 			else
 			{
-	         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Cannot find script %s"), m_dwId, src, &macro[7]);
+	         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Cannot find script %s"), m_id, src, &macro[7]);
 			}
 		}
 		temp += rest;
@@ -403,11 +403,11 @@ void DCObject::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExp
    lock();
    m_pNode = pNewNode;
 	if (dwNewId != 0)
-		m_dwId = dwNewId;
+		m_id = dwNewId;
 
 	if (doMacroExpansion)
 	{
-		expandMacros(m_szName, m_szName, MAX_ITEM_NAME);
+		expandMacros(m_name, m_name, MAX_ITEM_NAME);
 		expandMacros(m_szDescription, m_szDescription, MAX_DB_STRING);
 	}
 
@@ -419,11 +419,11 @@ void DCObject::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExp
  */
 void DCObject::setStatus(int status, bool generateEvent)
 {
-	if (generateEvent && (m_pNode != NULL) && (m_status != (BYTE)status) && IsEventSource(m_pNode->Type()))
+	if (generateEvent && (m_pNode != NULL) && (m_status != (BYTE)status) && IsEventSource(m_pNode->getObjectClass()))
 	{
 		static UINT32 eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
 		static const TCHAR *originName[8] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push"), _T("WinPerf"), _T("iLO"), _T("Script") };
-		PostEvent(eventCode[status], m_pNode->Id(), "dssds", m_dwId, m_szName, m_szDescription, m_source, originName[m_source]);
+		PostEvent(eventCode[status], m_pNode->getId(), "dssds", m_id, m_name, m_szDescription, m_source, originName[m_source]);
 	}
 	m_status = (BYTE)status;
 }
@@ -710,14 +710,14 @@ bool DCObject::isCacheLoaded()
  */
 bool DCObject::prepareForDeletion()
 {
-	DbgPrintf(9, _T("DCObject::prepareForDeletion for DCO %d"), m_dwId);
+	DbgPrintf(9, _T("DCObject::prepareForDeletion for DCO %d"), m_id);
 
 	lock();
    m_status = ITEM_STATUS_DISABLED;   // Prevent future polls
 	m_scheduledForDeletion = 1;
 	bool canDelete = (m_busy ? false : true);
    unlock();
-	DbgPrintf(9, _T("DCObject::prepareForDeletion: completed for DCO %d, canDelete=%d"), m_dwId, (int)canDelete);
+	DbgPrintf(9, _T("DCObject::prepareForDeletion: completed for DCO %d, canDelete=%d"), m_id, (int)canDelete);
 
 	return canDelete;
 }
@@ -728,10 +728,10 @@ bool DCObject::prepareForDeletion()
 void DCObject::createMessage(CSCPMessage *pMsg)
 {
 	lock();
-   pMsg->SetVariable(VID_DCI_ID, m_dwId);
+   pMsg->SetVariable(VID_DCI_ID, m_id);
 	pMsg->SetVariable(VID_DCOBJECT_TYPE, (WORD)getType());
    pMsg->SetVariable(VID_TEMPLATE_ID, m_dwTemplateId);
-   pMsg->SetVariable(VID_NAME, m_szName);
+   pMsg->SetVariable(VID_NAME, m_name);
    pMsg->SetVariable(VID_DESCRIPTION, m_szDescription);
    pMsg->SetVariable(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(m_transformationScriptSource));
    pMsg->SetVariable(VID_FLAGS, m_flags);
@@ -760,7 +760,7 @@ void DCObject::updateFromMessage(CSCPMessage *pMsg)
 {
    lock();
 
-   pMsg->GetVariableStr(VID_NAME, m_szName, MAX_ITEM_NAME);
+   pMsg->GetVariableStr(VID_NAME, m_name, MAX_ITEM_NAME);
    pMsg->GetVariableStr(VID_DESCRIPTION, m_szDescription, MAX_DB_STRING);
    pMsg->GetVariableStr(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
 	m_flags = pMsg->GetVariableShort(VID_FLAGS);
@@ -815,14 +815,14 @@ BOOL DCObject::saveToDB(DB_HANDLE hdb)
 	lock();
 
    // Save schedules
-   _sntprintf(query, 1024, _T("DELETE FROM dci_schedules WHERE item_id=%d"), (int)m_dwId);
+   _sntprintf(query, 1024, _T("DELETE FROM dci_schedules WHERE item_id=%d"), (int)m_id);
    BOOL success = DBQuery(hdb, query);
 	if (success)
    {
       for(UINT32 i = 0; i < m_dwNumSchedules; i++)
       {
          _sntprintf(query, 1024, _T("INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES (%d,%d,%s)"),
-                    m_dwId, i + 1, (const TCHAR *)DBPrepareString(hdb, m_ppScheduleList[i]));
+                    m_id, i + 1, (const TCHAR *)DBPrepareString(hdb, m_ppScheduleList[i]));
          success = DBQuery(hdb, query);
 			if (!success)
 				break;
@@ -837,10 +837,10 @@ BOOL DCObject::saveToDB(DB_HANDLE hdb)
 /**
  * Delete object and collected data from database
  */
-void DCObject::deleteFromDB()
+void DCObject::deleteFromDatabase()
 {
 	TCHAR query[256];
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM dci_schedules WHERE item_id=%d"), (int)m_dwId);
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM dci_schedules WHERE item_id=%d"), (int)m_id);
    QueueSQLRequest(query);
 }
 
@@ -875,7 +875,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 {
 	lock();
 
-   expandMacros(src->m_szName, m_szName, MAX_ITEM_NAME);
+   expandMacros(src->m_name, m_name, MAX_ITEM_NAME);
    expandMacros(src->m_szDescription, m_szDescription, MAX_DB_STRING);
 	expandMacros(src->m_systemTag, m_systemTag, MAX_DB_STRING);
 

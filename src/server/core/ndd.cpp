@@ -160,7 +160,7 @@ NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport)
 			selection[selected].driver = s_drivers[i];
 			selected++;
 			DbgPrintf(6, _T("FindDriverForNode(%s): found potential device driver %s with priority %d"),
-			          node->Name(), s_drivers[i]->getName(), pri);
+			          node->getName(), s_drivers[i]->getName(), pri);
 		}
 	}
 
