@@ -56,7 +56,7 @@ struct db_driver_t
 	DBDRV_RESULT (* m_fpDrvSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
 	DBDRV_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
 	DBDRV_RESULT (* m_fpDrvSelectPrepared)(DBDRV_CONNECTION, DBDRV_STATEMENT, DWORD *, WCHAR *);
-	BOOL (* m_fpDrvFetch)(DBDRV_ASYNC_RESULT);
+	bool (* m_fpDrvFetch)(DBDRV_ASYNC_RESULT);
 	LONG (* m_fpDrvGetFieldLength)(DBDRV_RESULT, int, int);
 	LONG (* m_fpDrvGetFieldLengthAsync)(DBDRV_RESULT, int);
 	WCHAR* (* m_fpDrvGetField)(DBDRV_RESULT, int, int, WCHAR *, int);

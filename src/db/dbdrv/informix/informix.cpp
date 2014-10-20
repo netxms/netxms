@@ -179,9 +179,9 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 // Initialize driver
 //
 
-extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
-	return TRUE;
+	return true;
 }
 
 
@@ -702,7 +702,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(INFORMIX_CONN *pConn, WCHAR 
 			SQLNumResultCols(pConn->sqlStatement, &wNumCols);
 			pResult->iNumCols = wNumCols;
 			pResult->pConn = pConn;
-			pResult->bNoMoreRows = FALSE;
+			pResult->noMoreRows = false;
 
 			// Get column names
 			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
@@ -747,14 +747,12 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(INFORMIX_CONN *pConn, WCHAR 
 	return pResult;
 }
 
-
-//
-// Fetch next result line from asynchronous SELECT results
-//
-
-extern "C" BOOL EXPORT DrvFetch(INFORMIX_ASYNC_QUERY_RESULT *pResult)
+/**
+ * Fetch next result line from asynchronous SELECT results
+ */
+extern "C" bool EXPORT DrvFetch(INFORMIX_ASYNC_QUERY_RESULT *pResult)
 {
-	BOOL bResult = FALSE;
+	bool bResult = false;
 
 	if (pResult != NULL)
 	{
@@ -764,7 +762,7 @@ extern "C" BOOL EXPORT DrvFetch(INFORMIX_ASYNC_QUERY_RESULT *pResult)
 		bResult = ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO));
 		if (!bResult)
 		{
-			pResult->bNoMoreRows = TRUE;
+			pResult->noMoreRows = true;
 		}
 	}
 	return bResult;
@@ -808,7 +806,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult, 
 	}
 
 	// Check if there are valid fetched row
-	if (pResult->bNoMoreRows)
+	if (pResult->noMoreRows)
 	{
 		return NULL;
 	}
@@ -951,13 +949,13 @@ extern "C" int EXPORT DrvIsTableExist(INFORMIX_CONN *pConn, const WCHAR *name)
 /**
  * DLL Entry point
  */
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+bool WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
 	{
 		DisableThreadLibraryCalls(hInstance);
 	}
-	return TRUE;
+	return true;
 }
 
 #endif

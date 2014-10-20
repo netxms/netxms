@@ -33,7 +33,7 @@ DECLARE_DRIVER_HEADER("ODBC")
 /**
  * Flag for enable/disable UNICODE
  */
-static BOOL m_useUnicode = TRUE;
+static bool m_useUnicode = true;
 
 /**
  * Convert ODBC state to NetXMS database error code and get error text
@@ -177,10 +177,10 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
-   m_useUnicode = ExtractNamedOptionValueAsBoolA(cmdLine, "unicode", TRUE);
-   return TRUE;
+   m_useUnicode = ExtractNamedOptionValueAsBoolA(cmdLine, "unicode", true);
+   return true;
 }
 
 /**
@@ -819,7 +819,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_
          SQLNumResultCols(pConn->sqlStatement, &wNumCols);
          pResult->iNumCols = wNumCols;
          pResult->pConn = pConn;
-         pResult->bNoMoreRows = FALSE;
+         pResult->noMoreRows = false;
 
 			// Get column names
 			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
@@ -864,9 +864,9 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" BOOL EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
+extern "C" bool EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 {
-   BOOL bResult = FALSE;
+   bool bResult = false;
 
    if (pResult != NULL)
    {
@@ -875,7 +875,7 @@ extern "C" BOOL EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
       iResult = SQLFetch(pResult->pConn->sqlStatement);
       bResult = ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO));
       if (!bResult)
-         pResult->bNoMoreRows = TRUE;
+         pResult->noMoreRows = true;
    }
    return bResult;
 }
@@ -918,7 +918,7 @@ extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pRe
       return NULL;
 
    // Check if there are valid fetched row
-   if (pResult->bNoMoreRows)
+   if (pResult->noMoreRows)
       return NULL;
 
    if ((iColumn >= 0) && (iColumn < pResult->iNumCols))
@@ -1090,11 +1090,11 @@ extern "C" int EXPORT DrvIsTableExist(ODBCDRV_CONN *pConn, const NETXMS_WCHAR *n
 /**
  * DLL Entry point
  */
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+bool WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
       DisableThreadLibraryCalls(hInstance);
-   return TRUE;
+   return true;
 }
 
 #endif

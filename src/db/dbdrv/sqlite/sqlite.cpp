@@ -116,7 +116,7 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 /**
  * Initialize driver
  */
-extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
    return sqlite3_threadsafe() &&	// Fail if SQLite compiled without threading support
 		    (sqlite3_initialize() == SQLITE_OK);
@@ -569,17 +569,17 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, WCHAR *p
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" BOOL EXPORT DrvFetch(DBDRV_ASYNC_RESULT hResult)
+extern "C" bool EXPORT DrvFetch(DBDRV_ASYNC_RESULT hResult)
 {
 	if (hResult == NULL)
-		return FALSE;
+		return false;
 
 	if (sqlite3_step(((SQLITE_CONN *)hResult)->pvm) == SQLITE_ROW)
 	{
 		((SQLITE_CONN *)hResult)->nNumCols = sqlite3_column_count(((SQLITE_CONN *)hResult)->pvm);
-		return TRUE;
+		return true;
 	}
-	return FALSE;
+	return false;
 }
 
 /**
@@ -697,11 +697,11 @@ extern "C" int EXPORT DrvIsTableExist(SQLITE_CONN *pConn, const WCHAR *name)
 /**
  * DLL Entry point
  */
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+bool WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
       DisableThreadLibraryCalls(hInstance);
-   return TRUE;
+   return true;
 }
 
 #endif

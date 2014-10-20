@@ -82,11 +82,9 @@
 #undef DWORD
 #endif
 
-
-//
-// Driver connection handle structure
-//
-
+/**
+ * Driver connection handle structure
+ */
 typedef struct
 {
    MUTEX mutexQuery;
@@ -95,11 +93,9 @@ typedef struct
    SQLHSTMT sqlStatement;
 } ODBCDRV_CONN;
 
-
-//
-// Prepared statement structure
-//
-
+/**
+ * Prepared statement structure
+ */
 typedef struct
 {
 	SQLHSTMT handle;
@@ -107,11 +103,9 @@ typedef struct
 	ODBCDRV_CONN *connection;
 } ODBCDRV_STATEMENT;
 
-
-//
-// Result buffer structure
-//
-
+/**
+ * Result buffer structure
+ */
 typedef struct
 {
    long iNumRows;
@@ -120,16 +114,14 @@ typedef struct
 	char **columnNames;
 } ODBCDRV_QUERY_RESULT;
 
-
-//
-// Async result buffer structure
-//
-
+/**
+ * Async result buffer structure
+ */
 typedef struct
 {
    long iNumCols;
    ODBCDRV_CONN *pConn;
-   BOOL bNoMoreRows;
+   bool noMoreRows;
 	char **columnNames;
 } ODBCDRV_ASYNC_QUERY_RESULT;
 

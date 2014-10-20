@@ -190,7 +190,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
 	return mysql_library_init(0, NULL, NULL) == 0;
 }
@@ -362,12 +362,12 @@ extern "C" void EXPORT DrvBind(MYSQL_STATEMENT *hStmt, int pos, int sqlType, int
 		switch(cType)
 		{
 			case DB_CTYPE_UINT32:
-				b->is_unsigned = TRUE;
+				b->is_unsigned = true;
 			case DB_CTYPE_INT32:
 				b->buffer_type = MYSQL_TYPE_LONG;
 				break;
 			case DB_CTYPE_UINT64:
-				b->is_unsigned = TRUE;
+				b->is_unsigned = true;
 			case DB_CTYPE_INT64:
 				b->buffer_type = MYSQL_TYPE_LONGLONG;
 				break;
@@ -822,7 +822,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pw
 		pResult->pHandle = mysql_use_result(pConn->pMySQL);
 		if (pResult->pHandle != NULL)
 		{
-			pResult->bNoMoreRows = FALSE;
+			pResult->noMoreRows = false;
 			pResult->iNumCols = mysql_num_fields(pResult->pHandle);
 			pResult->pCurrRow = NULL;
 			pResult->pulColLengths = (unsigned long *)malloc(sizeof(unsigned long) * pResult->iNumCols);
@@ -869,13 +869,13 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pw
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" BOOL EXPORT DrvFetch(MYSQL_ASYNC_RESULT *hResult)
+extern "C" bool EXPORT DrvFetch(MYSQL_ASYNC_RESULT *hResult)
 {
-	BOOL bResult = TRUE;
+	bool bResult = true;
 	
 	if (hResult == NULL)
 	{
-		bResult = FALSE;
+		bResult = false;
 	}
 	else
 	{
@@ -883,8 +883,8 @@ extern "C" BOOL EXPORT DrvFetch(MYSQL_ASYNC_RESULT *hResult)
 		hResult->pCurrRow = mysql_fetch_row(hResult->pHandle);
 		if (hResult->pCurrRow == NULL)
 		{
-			hResult->bNoMoreRows = TRUE;
-			bResult = FALSE;
+			hResult->noMoreRows = true;
+			bResult = false;
 			MutexUnlock(hResult->connection->mutexQueryLock);
 		}
 		else
@@ -916,7 +916,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(MYSQL_ASYNC_RESULT *hResult, int i
 		return 0;
 	
 	// Check if there are valid fetched row
-	if (hResult->bNoMoreRows || (hResult->pCurrRow == NULL))
+	if (hResult->noMoreRows || (hResult->pCurrRow == NULL))
 		return 0;
 	
 	// Check if column number is valid
@@ -938,7 +938,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(DBDRV_ASYNC_RESULT hResult, int iColum
 		return NULL;
 	
 	// Check if there are valid fetched row
-	if ((((MYSQL_ASYNC_RESULT *)hResult)->bNoMoreRows) ||
+	if ((((MYSQL_ASYNC_RESULT *)hResult)->noMoreRows) ||
 		(((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow == NULL))
 		return NULL;
 	
@@ -988,7 +988,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DBDRV_ASYNC_RESULT hResult)
 	if (hResult != NULL)
 	{
 		// Check if all result rows fetched
-		if (!((MYSQL_ASYNC_RESULT *)hResult)->bNoMoreRows)
+		if (!((MYSQL_ASYNC_RESULT *)hResult)->noMoreRows)
 		{
 			// Fetch remaining rows
 			while(mysql_fetch_row(((MYSQL_ASYNC_RESULT *)hResult)->pHandle) != NULL);
@@ -1054,11 +1054,11 @@ extern "C" int EXPORT DrvIsTableExist(MYSQL_CONN *pConn, const WCHAR *name)
 /**
  * DLL Entry point
  */
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+bool WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
 		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
+	return true;
 }
 
 #endif

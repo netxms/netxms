@@ -101,9 +101,9 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
-	return TRUE;
+	return true;
 }
 
 /**
@@ -1029,22 +1029,22 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *p
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" BOOL EXPORT DrvFetch(ORACLE_CONN *pConn)
+extern "C" bool EXPORT DrvFetch(ORACLE_CONN *pConn)
 {
-	BOOL success;
+	bool success;
 
 	if (pConn == NULL)
-		return FALSE;
+		return false;
 
 	sword rc = OCIStmtFetch2(pConn->handleStmt, pConn->handleError, 1, OCI_FETCH_NEXT, 0, OCI_DEFAULT);
 	if ((rc == OCI_SUCCESS) || (rc == OCI_SUCCESS_WITH_INFO))
 	{
-		success = TRUE;
+		success = true;
 	}
 	else
 	{
 		SetLastErrorText(pConn);
-		success = FALSE;
+		success = false;
 	}
 	return success;
 }
@@ -1273,11 +1273,11 @@ extern "C" int EXPORT DrvIsTableExist(ORACLE_CONN *pConn, const WCHAR *name)
 /**
  * DLL Entry point
  */
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+bool WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
 		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
+	return true;
 }
 
 #endif

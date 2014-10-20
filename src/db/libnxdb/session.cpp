@@ -187,7 +187,7 @@ static void DBReconnect(DB_HANDLE hConn)
 /**
  * Perform a non-SELECT SQL query
  */
-BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
+bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
 {
    DWORD dwResult;
 #ifdef UNICODE
@@ -242,7 +242,7 @@ BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
 #undef wcErrorText
 }
 
-BOOL LIBNXDB_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *query)
+bool LIBNXDB_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *query)
 {
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 
@@ -333,7 +333,7 @@ int LIBNXDB_EXPORTABLE DBGetColumnCount(DB_RESULT hResult)
 /**
  * Get column name
  */
-BOOL LIBNXDB_EXPORTABLE DBGetColumnName(DB_RESULT hResult, int column, TCHAR *buffer, int bufSize)
+bool LIBNXDB_EXPORTABLE DBGetColumnName(DB_RESULT hResult, int column, TCHAR *buffer, int bufSize)
 {
 	const char *name;
 
@@ -361,7 +361,7 @@ int LIBNXDB_EXPORTABLE DBGetColumnCountAsync(DB_ASYNC_RESULT hResult)
 /**
  * Get column name for async request
  */
-BOOL LIBNXDB_EXPORTABLE DBGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column, TCHAR *buffer, int bufSize)
+bool LIBNXDB_EXPORTABLE DBGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column, TCHAR *buffer, int bufSize)
 {
 	const char *name;
 
@@ -608,11 +608,11 @@ UINT32 LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iCol
 /**
  * Get field's value as integer array from byte array encoded in hex
  */
-BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn,
+bool LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn,
                                             int *pnArray, int nSize, int nDefault)
 {
    char pbBytes[128];
-   BOOL bResult;
+   bool bResult;
    int i, nLen;
    TCHAR *pszVal, szBuffer[256];
 
@@ -625,21 +625,21 @@ BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iCo
          pnArray[i] = pbBytes[i];
       for(; i < nSize; i++)
          pnArray[i] = nDefault;
-      bResult = TRUE;
+      bResult = true;
    }
    else
    {
       for(i = 0; i < nSize; i++)
          pnArray[i] = nDefault;
-      bResult = FALSE;
+      bResult = false;
    }
    return bResult;
 }
 
-BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iColumn,
+bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iColumn,
                                              BYTE *data, int nSize, int nDefault)
 {
-   BOOL bResult;
+   bool bResult;
    TCHAR *pszVal, szBuffer[256];
 
    pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
@@ -648,12 +648,12 @@ BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iC
       int bytes = (int)StrToBin(pszVal, data, nSize);
 		if (bytes < nSize)
 			memset(&data[bytes], 0, nSize - bytes);
-      bResult = TRUE;
+      bResult = true;
    }
    else
    {
 		memset(data, nDefault, nSize);
-      bResult = FALSE;
+      bResult = false;
    }
    return bResult;
 }
@@ -661,28 +661,28 @@ BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iC
 /**
  * Get field's value as GUID
  */
-BOOL LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn, uuid_t guid)
+bool LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn, uuid_t guid)
 {
    TCHAR *pszVal, szBuffer[256];
-   BOOL bResult;
+   bool bResult;
 
    pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
    if (pszVal != NULL)
    {
       if (uuid_parse(pszVal, guid) == 0)
       {
-         bResult = TRUE;
+         bResult = true;
       }
       else
       {
          uuid_clear(guid);
-         bResult = FALSE;
+         bResult = false;
       }
    }
    else
    {
       uuid_clear(guid);
-      bResult = FALSE;
+      bResult = false;
    }
    return bResult;
 }
@@ -785,7 +785,7 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *q
 /**
  * Fetch next row from asynchronous SELECT result
  */
-BOOL LIBNXDB_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult)
+bool LIBNXDB_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult)
 {
 	return hResult->m_driver->m_fpDrvFetch(hResult->m_data);
 }
@@ -1222,12 +1222,12 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, double 
 /**
  * Execute prepared statement (non-SELECT)
  */
-BOOL LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
+bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 {
    if (!IS_VALID_STATEMENT_HANDLE(hStmt))
    {
       _tcscpy(errorText, _T("Invalid statement handle"));
-      return FALSE;
+      return false;
    }
 
 #ifdef UNICODE
@@ -1288,7 +1288,7 @@ BOOL LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 /**
  * Execute prepared statement (non-SELECT)
  */
-BOOL LIBNXDB_EXPORTABLE DBExecute(DB_STATEMENT hStmt)
+bool LIBNXDB_EXPORTABLE DBExecute(DB_STATEMENT hStmt)
 {
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 	return DBExecuteEx(hStmt, errorText);
@@ -1384,10 +1384,10 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPrepared(DB_STATEMENT hStmt)
 /**
  * Begin transaction
  */
-BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
+bool LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
 {
    DWORD dwResult;
-   BOOL bRet = FALSE;
+   bool bRet = false;
 
    MutexLock(hConn->m_mutexTransLock);
    if (hConn->m_transactionLevel == 0)
@@ -1401,7 +1401,7 @@ BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
       if (dwResult == DBERR_SUCCESS)
       {
          hConn->m_transactionLevel++;
-         bRet = TRUE;
+         bRet = true;
 			__DBDbgPrintf(9, _T("BEGIN TRANSACTION successful (level %d)"), hConn->m_transactionLevel);
       }
       else
@@ -1413,7 +1413,7 @@ BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
    else
    {
       hConn->m_transactionLevel++;
-      bRet = TRUE;
+      bRet = true;
 		__DBDbgPrintf(9, _T("BEGIN TRANSACTION successful (level %d)"), hConn->m_transactionLevel);
    }
    return bRet;
@@ -1422,9 +1422,9 @@ BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
 /**
  * Commit transaction
  */
-BOOL LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
+bool LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
 {
-   BOOL bRet = FALSE;
+   bool bRet = false;
 
    MutexLock(hConn->m_mutexTransLock);
    if (hConn->m_transactionLevel > 0)
@@ -1433,7 +1433,7 @@ BOOL LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
       if (hConn->m_transactionLevel == 0)
          bRet = (hConn->m_driver->m_fpDrvCommit(hConn->m_connection) == DBERR_SUCCESS);
       else
-         bRet = TRUE;
+         bRet = true;
 		__DBDbgPrintf(9, _T("COMMIT TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
       MutexUnlock(hConn->m_mutexTransLock);
    }
@@ -1444,9 +1444,9 @@ BOOL LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
 /**
  * Rollback transaction
  */
-BOOL LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
+bool LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
 {
-   BOOL bRet = FALSE;
+   bool bRet = false;
 
    MutexLock(hConn->m_mutexTransLock);
    if (hConn->m_transactionLevel > 0)
@@ -1455,7 +1455,7 @@ BOOL LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
       if (hConn->m_transactionLevel == 0)
          bRet = (hConn->m_driver->m_fpDrvRollback(hConn->m_connection) == DBERR_SUCCESS);
       else
-         bRet = TRUE;
+         bRet = true;
 		__DBDbgPrintf(9, _T("ROLLBACK TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
       MutexUnlock(hConn->m_mutexTransLock);
    }
@@ -1647,7 +1647,7 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
 {
 	DB_RESULT hResult;
 	TCHAR syntaxId[256];
-	BOOL read = FALSE;
+	bool read = false;
 	int syntax;
 
    // Get database syntax
@@ -1657,7 +1657,7 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
       if (DBGetNumRows(hResult) > 0)
       {
          DBGetField(hResult, 0, 0, syntaxId, sizeof(syntaxId) / sizeof(TCHAR));
-			read = TRUE;
+			read = true;
       }
       else
       {
@@ -1676,7 +1676,7 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
 			if (DBGetNumRows(hResult) > 0)
 			{
 				DBGetField(hResult, 0, 0, syntaxId, sizeof(syntaxId) / sizeof(TCHAR));
-				read = TRUE;
+				read = true;
 			}
 			else
 			{

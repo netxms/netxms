@@ -92,7 +92,7 @@ typedef struct
    MYSQL_CONN *connection;
    MYSQL_RES *pHandle;
    MYSQL_ROW pCurrRow;
-   BOOL bNoMoreRows;
+   bool noMoreRows;
    int iNumCols;
    unsigned long *pulColLengths;
 } MYSQL_ASYNC_RESULT;

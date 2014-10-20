@@ -170,17 +170,17 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
    // Allocate environment
 	SQLHENV sqlEnv;
    long rc = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &sqlEnv);
 	if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
-		return FALSE;
+		return false;
 
 	rc = SQLSetEnvAttr(sqlEnv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
 	if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
-		return FALSE;
+		return false;
 
 	// Find correct driver
 	// Default is "SQL Native Client", but switch to "SQL Server Native Client 10.0" if found
@@ -198,7 +198,7 @@ extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 	}
 
    SQLFreeHandle(SQL_HANDLE_ENV, sqlEnv);
-   return TRUE;
+   return true;
 }
 
 /**
@@ -689,7 +689,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MSSQL_CONN *pConn, WCHAR *pw
          SQLNumResultCols(pConn->sqlStatement, &wNumCols);
          pResult->iNumCols = wNumCols;
          pResult->pConn = pConn;
-         pResult->bNoMoreRows = FALSE;
+         pResult->noMoreRows = false;
 			pResult->data = (WCHAR **)malloc(sizeof(WCHAR *) * pResult->iNumCols);
          memset(pResult->data, 0, sizeof(WCHAR *) * pResult->iNumCols);
          pResult->dataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE);
@@ -736,9 +736,9 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MSSQL_CONN *pConn, WCHAR *pw
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" BOOL EXPORT DrvFetch(MSSQL_ASYNC_QUERY_RESULT *pResult)
+extern "C" bool EXPORT DrvFetch(MSSQL_ASYNC_QUERY_RESULT *pResult)
 {
-   BOOL bResult = FALSE;
+   bool bResult = false;
 
    if (pResult != NULL)
    {
@@ -767,7 +767,7 @@ extern "C" BOOL EXPORT DrvFetch(MSSQL_ASYNC_QUERY_RESULT *pResult)
       }
       else
       {
-         pResult->bNoMoreRows = TRUE;
+         pResult->noMoreRows = true;
       }
    }
    return bResult;
@@ -798,7 +798,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(MSSQL_ASYNC_QUERY_RESULT *pResult, int
       return NULL;
 
    // Check if there are valid fetched row
-   if (pResult->bNoMoreRows)
+   if (pResult->noMoreRows)
       return NULL;
 
    if ((iColumn >= 0) && (iColumn < pResult->iNumCols))
@@ -938,9 +938,9 @@ extern "C" int EXPORT DrvIsTableExist(MSSQL_CONN *pConn, const WCHAR *name)
 /**
  * DLL Entry point
  */
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+bool WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
       DisableThreadLibraryCalls(hInstance);
-   return TRUE;
+   return true;
 }
