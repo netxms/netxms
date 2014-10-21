@@ -8,8 +8,8 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-bin_PROGRAMS = test-libnetxms
-test_libnxdb_SOURCES = test-libnxdb.cpp
+bin_PROGRAMS = test-libnxdb
+test_libnxdb_SOURCES = oracle.cpp test-libnxdb.cpp
 test_libnxdb_CPPFLAGS = -I@top_srcdir@/include -I../include
 test_libnxdb_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/db/libnxdb/libnxdb.la
 

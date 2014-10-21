@@ -1248,7 +1248,7 @@ int LIBNETXMS_EXPORTABLE ucs2_strlen(const UCS2CHAR *pStr);
 UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strncpy(UCS2CHAR *pDst, const UCS2CHAR *pSrc, int nDstLen);
 #endif
 #if !defined(UNICODE_UCS2) || !HAVE_WCSDUP
-UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2__tcsdup(const UCS2CHAR *pStr);
+UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strdup(const UCS2CHAR *pStr);
 #endif
 
 size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *dst, int dstLen);
