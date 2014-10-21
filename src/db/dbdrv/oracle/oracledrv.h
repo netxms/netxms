@@ -41,16 +41,22 @@
 #include <dbdrv.h>
 #include <oci.h>
 
-typedef struct
+/**
+ * Fetch buffer
+ */
+struct ORACLE_FETCH_BUFFER
 {
 	UCS2CHAR *pData;
    OCILobLocator *lobLocator;
 	ub2 nLength;
 	ub2 nCode;
 	sb2 isNull;
-} ORACLE_FETCH_BUFFER;
+};
 
-typedef struct
+/**
+ * Database connection
+ */
+struct ORACLE_CONN
 {
 	OCIEnv *handleEnv;
 	OCIServer *handleServer;
@@ -65,23 +71,59 @@ typedef struct
 	int nCols;
 	char **columnNames;
    ub4 prefetchLimit;
-} ORACLE_CONN;
+};
 
-typedef struct
+/**
+ * Batch bind data for single column
+ */
+class OracleBatchBind
+{
+private:
+   int m_cType;
+   ub2 m_oraType;
+   int m_size;
+   int m_allocated;
+   int m_elementSize;
+   bool m_string;
+   UCS2CHAR **m_strings;
+   void *m_data;
+
+public:
+   OracleBatchBind(int cType, int sqlType);
+   ~OracleBatchBind();
+
+   void addRow();
+   void set(void *value);
+   void *getData();
+   int getElementSize() { return m_elementSize; }
+   int getCType() { return m_cType; }
+   ub2 getOraType() { return m_oraType; }
+};
+
+/**
+ * Statement
+ */
+struct ORACLE_STATEMENT
 {
 	ORACLE_CONN *connection;
 	OCIStmt *handleStmt;
 	OCIError *handleError;
 	Array *bindings;
+   ObjectArray<OracleBatchBind> *batchBindings;
 	Array *buffers;
-} ORACLE_STATEMENT;
+   bool batchMode;
+   int batchSize;
+};
 
-typedef struct
+/**
+ * Result set
+ */
+struct ORACLE_RESULT
 {
 	int nRows;
 	int nCols;
 	WCHAR **pData;
 	char **columnNames;
-} ORACLE_RESULT;
+};
 
 #endif   /* _oracledrv_h_ */

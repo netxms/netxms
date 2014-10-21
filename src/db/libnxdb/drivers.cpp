@@ -190,6 +190,8 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    driver->m_fpDrvSetPrefetchLimit = (bool (*)(DBDRV_CONNECTION, int))DLGetSymbolAddrEx(driver->m_handle, "DrvSetPrefetchLimit", false);
 	driver->m_fpDrvPrepare = (DBDRV_STATEMENT (*)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvPrepare");
 	driver->m_fpDrvFreeStatement = (void (*)(DBDRV_STATEMENT))DLGetSymbolAddrEx(driver->m_handle, "DrvFreeStatement");
+	driver->m_fpDrvOpenBatch = (bool (*)(DBDRV_STATEMENT))DLGetSymbolAddrEx(driver->m_handle, "DrvOpenBatch", false);
+	driver->m_fpDrvNextBatchRow = (void (*)(DBDRV_STATEMENT))DLGetSymbolAddrEx(driver->m_handle, "DrvNextBatchRow", false);
 	driver->m_fpDrvBind = (void (*)(DBDRV_STATEMENT, int, int, int, void *, int))DLGetSymbolAddrEx(driver->m_handle, "DrvBind");
 	driver->m_fpDrvExecute = (DWORD (*)(DBDRV_CONNECTION, DBDRV_STATEMENT, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvExecute");
    driver->m_fpDrvQuery = (DWORD (*)(DBDRV_CONNECTION, const WCHAR *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvQuery");

@@ -2709,6 +2709,7 @@ AC_CONFIG_FILES([
 	tests/Makefile
 	tests/include/Makefile
 	tests/test-libnetxms/Makefile
+	tests/test-libnxdb/Makefile
 	tools/Makefile
 ])
 

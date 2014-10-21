@@ -4,7 +4,12 @@
 /**
  * Assert failure
  */
-#define Assert(c) do { if (!(c)) { _tprintf(_T("FAIL\nAssert failed at %hs:%d\n"), __FILE__, __LINE__); exit(1); } } while(0)
+#define Assert(c) do { if (!(c)) { _tprintf(_T("FAIL\n   Assert failed at %hs:%d\n"), __FILE__, __LINE__); exit(1); } } while(0)
+
+/**
+ * Assert failure with additional message
+ */
+#define AssertEx(c, m) do { if (!(c)) { _tprintf(_T("FAIL\n   %s\n   Assert failed at %hs:%d\n"), (m), __FILE__, __LINE__); exit(1); } } while(0)
 
 /**
  * Assert that two values are equal
@@ -17,9 +22,19 @@
 #define AssertTrue(x) Assert((x))
 
 /**
+ * Assert that value is TRUE with message
+ */
+#define AssertTrueEx(x, m) AssertEx((x), (m))
+
+/**
  * Assert that value is FALSE
  */
 #define AssertFalse(x) Assert(!(x))
+
+/**
+ * Assert that value is FALSE with message
+ */
+#define AssertFalseEx(x, m) AssertEx(!(x), (m))
 
 /**
  * Assert that value is NULL
@@ -30,6 +45,11 @@
  * Assert that value is not NULL
  */
 #define AssertNotNull(x) Assert((x) != NULL)
+
+/**
+ * Assert that value is not NULL with message
+ */
+#define AssertNotNullEx(x, m) AssertEx((x) != NULL, (m))
 
 /**
  * Show test start mark

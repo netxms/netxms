@@ -8,4 +8,13 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = include test-libnetxms test-libnxdb
+bin_PROGRAMS = test-libnetxms
+test_libnxdb_SOURCES = test-libnxdb.cpp
+test_libnxdb_CPPFLAGS = -I@top_srcdir@/include -I../include
+test_libnxdb_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/db/libnxdb/libnxdb.la
+
+if USE_INTERNAL_LIBTRE
+test_libnxdb_LDADD += @top_srcdir@/src/libtre/libnxtre.la
+endif
+
+EXTRA_DIST = test-libnxdb.vcproj

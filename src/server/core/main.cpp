@@ -321,14 +321,16 @@ static void LoadGlobalConfig()
 		// SQLite has troubles with multiple connections to the same database
 		// from different threads, and it does not speed up database access
 		// anyway, so we will not enable multiple connections for SQLite
-		if (g_dbSyntax != DB_SYNTAX_SQLITE)
+		//if (g_dbSyntax != DB_SYNTAX_SQLITE)
 		{
 			g_flags |= AF_ENABLE_MULTIPLE_DB_CONN;
 		}
+      /*
 		else
 		{
 			DbgPrintf(1, _T("Configuration parameter EnableMultipleDBConnections ignored because database engine is SQLite"));
 		}
+      */
 	}
 	if (ConfigReadInt(_T("RunNetworkDiscovery"), 0))
 		g_flags |= AF_ENABLE_NETWORK_DISCOVERY;

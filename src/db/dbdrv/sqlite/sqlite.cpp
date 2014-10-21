@@ -118,8 +118,11 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
  */
 extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
-   return sqlite3_threadsafe() &&	// Fail if SQLite compiled without threading support
-		    (sqlite3_initialize() == SQLITE_OK);
+   if (!sqlite3_threadsafe() ||	// Fail if SQLite compiled without threading support
+		 (sqlite3_initialize() != SQLITE_OK))
+      return false;
+   sqlite3_enable_shared_cache(1);
+   return true;
 }
 
 /**
@@ -181,7 +184,16 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(SQLITE_CONN *hConn, WCHAR *pwszQuer
    char *pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(hConn->mutexQueryLock);
 	sqlite3_stmt *stmt;
-	if (sqlite3_prepare_v2(hConn->pdb, pszQueryUTF8, -1, &stmt, NULL) != SQLITE_OK)
+
+retry:
+   int rc = sqlite3_prepare_v2(hConn->pdb, pszQueryUTF8, -1, &stmt, NULL);
+   if ((rc == SQLITE_LOCKED) || (rc == SQLITE_LOCKED_SHAREDCACHE))
+   {
+      // database locked by another thread, retry in 10 milliseconds
+      ThreadSleepMs(10);
+      goto retry;
+   }
+	else if (rc != SQLITE_OK)
    {
 		GetErrorMessage(hConn->pdb, errorText);
 		stmt = NULL;
@@ -244,6 +256,7 @@ extern "C" DWORD EXPORT DrvExecute(SQLITE_CONN *hConn, sqlite3_stmt *stmt, WCHAR
 	DWORD result;
 
 	MutexLock(hConn->mutexQueryLock);
+retry:
 	int rc = sqlite3_step(stmt);
 	if ((rc == SQLITE_DONE) || (rc == SQLITE_ROW))
 	{
@@ -257,6 +270,13 @@ extern "C" DWORD EXPORT DrvExecute(SQLITE_CONN *hConn, sqlite3_stmt *stmt, WCHAR
 		   result = DBERR_OTHER_ERROR;
 	   }
 	}
+   else if ((rc == SQLITE_LOCKED) || (rc == SQLITE_LOCKED_SHAREDCACHE))
+   {
+      // database locked by another thread, retry in 10 milliseconds
+      ThreadSleepMs(10);
+      sqlite3_reset(stmt);
+      goto retry;
+   }
 	else
 	{
 		GetErrorMessage(hConn->pdb, errorText);
@@ -285,10 +305,18 @@ static DWORD DrvQueryInternal(SQLITE_CONN *pConn, const char *pszQuery, WCHAR *e
    DWORD result;
 
    MutexLock(pConn->mutexQueryLock);
-   if (sqlite3_exec(pConn->pdb, pszQuery, NULL, NULL, NULL) == SQLITE_OK)
+retry:
+   int rc = sqlite3_exec(pConn->pdb, pszQuery, NULL, NULL, NULL);
+   if (rc == SQLITE_OK)
 	{
 		result = DBERR_SUCCESS;
 	}
+   else if ((rc == SQLITE_LOCKED) || (rc == SQLITE_LOCKED_SHAREDCACHE))
+   {
+      // database locked by another thread, retry in 10 milliseconds
+      ThreadSleepMs(10);
+      goto retry;
+   }
 	else
 	{
 		GetErrorMessage(pConn->pdb, errorText);
@@ -384,7 +412,15 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, D
    memset(result, 0, sizeof(SQLITE_RESULT));
 
 	MutexLock(hConn->mutexQueryLock);
-   if (sqlite3_exec(hConn->pdb, pszQueryUTF8, SelectCallback, result, NULL) != SQLITE_OK)
+retry:
+   int rc = sqlite3_exec(hConn->pdb, pszQueryUTF8, SelectCallback, result, NULL);
+   if ((rc == SQLITE_LOCKED) || (rc == SQLITE_LOCKED_SHAREDCACHE))
+   {
+      // database locked by another thread, retry in 10 milliseconds
+      ThreadSleepMs(10);
+      goto retry;
+   }
+   else if (rc != SQLITE_OK)
    {
 		GetErrorMessage(hConn->pdb, errorText);
 		DrvFreeResult(result);
@@ -414,7 +450,16 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(SQLITE_CONN *hConn, sqlite3_stm
 	while(1)
 	{
 		int rc = sqlite3_step(stmt);
-		if (((rc == SQLITE_DONE) || (rc ==SQLITE_ROW)) && firstRow)
+
+      if (firstRow && ((rc == SQLITE_LOCKED) || (rc == SQLITE_LOCKED_SHAREDCACHE)))
+      {
+         // database locked by another thread, retry in 10 milliseconds
+         ThreadSleepMs(10);
+         sqlite3_reset(stmt);
+         continue;
+      }
+
+		if (((rc == SQLITE_DONE) || (rc == SQLITE_ROW)) && firstRow)
 		{
 			firstRow = false;
 			for(int i = 0; i < nCols; i++)
@@ -550,10 +595,18 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, WCHAR *p
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(hConn->mutexQueryLock);
-	if (sqlite3_prepare(hConn->pdb, pszQueryUTF8, -1, &hConn->pvm, NULL) == SQLITE_OK)
+retry:
+   int rc = sqlite3_prepare(hConn->pdb, pszQueryUTF8, -1, &hConn->pvm, NULL);
+	if (rc == SQLITE_OK)
    {
       hResult = hConn;
 		*pdwError = DBERR_SUCCESS;
+   }
+   else if ((rc == SQLITE_LOCKED) || (rc == SQLITE_LOCKED_SHAREDCACHE))
+   {
+      // database locked by another thread, retry in 10 milliseconds
+      ThreadSleepMs(10);
+      goto retry;
    }
    else
    {
@@ -574,11 +627,20 @@ extern "C" bool EXPORT DrvFetch(DBDRV_ASYNC_RESULT hResult)
 	if (hResult == NULL)
 		return false;
 
-	if (sqlite3_step(((SQLITE_CONN *)hResult)->pvm) == SQLITE_ROW)
+retry:
+   int rc = sqlite3_step(((SQLITE_CONN *)hResult)->pvm);
+	if (rc == SQLITE_ROW)
 	{
 		((SQLITE_CONN *)hResult)->nNumCols = sqlite3_column_count(((SQLITE_CONN *)hResult)->pvm);
 		return true;
 	}
+   else if ((rc == SQLITE_LOCKED) || (rc == SQLITE_LOCKED_SHAREDCACHE))
+   {
+      // database locked by another thread, retry in 10 milliseconds
+      ThreadSleepMs(10);
+      sqlite3_reset(((SQLITE_CONN *)hResult)->pvm);
+      goto retry;
+   }
 	return false;
 }
 
@@ -652,7 +714,7 @@ extern "C" void EXPORT DrvFreeAsyncResult(DBDRV_ASYNC_RESULT hResult)
  */
 extern "C" DWORD EXPORT DrvBegin(SQLITE_CONN *pConn)
 {
-   return DrvQueryInternal(pConn, "BEGIN", NULL);
+   return DrvQueryInternal(pConn, "BEGIN IMMEDIATE", NULL);
 }
 
 /**

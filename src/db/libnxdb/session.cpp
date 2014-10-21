@@ -1096,6 +1096,25 @@ const TCHAR LIBNXDB_EXPORTABLE *DBGetStatementSource(DB_STATEMENT hStmt)
 }
 
 /**
+ * Open batch
+ */
+bool LIBNXDB_EXPORTABLE DBOpenBatch(DB_STATEMENT hStmt)
+{
+   if (!IS_VALID_STATEMENT_HANDLE(hStmt) || (hStmt->m_driver->m_fpDrvOpenBatch == NULL))
+      return false;
+   return hStmt->m_driver->m_fpDrvOpenBatch(hStmt->m_statement);
+}
+
+/**
+ * Start next batch row batch
+ */
+void LIBNXDB_EXPORTABLE DBNextBatchRow(DB_STATEMENT hStmt)
+{
+   if (IS_VALID_STATEMENT_HANDLE(hStmt) && (hStmt->m_driver->m_fpDrvNextBatchRow != NULL))
+      hStmt->m_driver->m_fpDrvNextBatchRow(hStmt->m_statement);
+}
+
+/**
  * Bind parameter (generic)
  */
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
