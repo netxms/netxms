@@ -215,7 +215,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 
 				// Authenticate
 				if (OCISessionBegin(pConn->handleService, pConn->handleError,
-				                    pConn->handleSession, OCI_CRED_RDBMS, OCI_STMT_CACHE) == OCI_SUCCESS)
+				                    pConn->handleSession, OCI_CRED_RDBMS, OCI_DEFAULT) == OCI_SUCCESS)
 				{
 					OCIAttrSet(pConn->handleService, OCI_HTYPE_SVCCTX, pConn->handleSession, 0,
 					           OCI_ATTR_SESSION, pConn->handleError);

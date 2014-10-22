@@ -790,11 +790,9 @@ int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	return 0;
 }
 
-
-//
-// Exit from script
-//
-
+/**
+ * Exit from script
+ */
 int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (argc > 1)
@@ -804,11 +802,9 @@ int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
    return NXSL_STOP_SCRIPT_EXECUTION;
 }
 
-
-//
-// Trim whitespace characters from the string
-//
-
+/**
+ * Trim whitespace characters from the string
+ */
 int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())
