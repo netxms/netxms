@@ -102,6 +102,7 @@ bool SaveBitmapToPng(HBITMAP hBitmap, const TCHAR *fileName)
          png_byte r = row[i];
          row[i] = row[i + 2];
          row[i + 2] = r;
+         row[i + 3] = 255;  // force set non-transparent
       }
    }
    png_init_io(png_ptr, fp);
