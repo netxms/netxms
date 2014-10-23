@@ -89,7 +89,9 @@
                style="push">
             <visibleWhen
                   checkEnabled="false">
-               <iterate>
+               <iterate
+                     ifEmpty="false"
+                     operator="and">
                   <or>
                      <instanceof
                            value="org.netxms.client.objects.AbstractNode">
