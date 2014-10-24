@@ -940,6 +940,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 	{
 		*ppResult = new NXSL_Value;
 	}
+   delete pdu;
 	return 0;
 }
 
