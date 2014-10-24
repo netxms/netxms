@@ -475,7 +475,7 @@ AC_ARG_WITH(dist,
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy nxlptest tools"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2"
-	SMSDRV_DIRS="websms"
+	SMSDRV_DIRS="kannel websms"
    HDLINK_DIRS="jira"
    PDSDRV_DIRS="rrdtool"
 	NXCONFIG="nxconfig"
@@ -1468,7 +1468,7 @@ fi
 
 if test "x$HAVE_LIBCURL" = "xyes"; then
   SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
-  SMSDRV_DIRS="$SMSDRV_DIRS websms"
+  SMSDRV_DIRS="$SMSDRV_DIRS kannel websms"
   HDLINK_DIRS="$HDLINK_DIRS jira"
   AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
@@ -2682,6 +2682,7 @@ AC_CONFIG_FILES([
 	src/server/smsdrv/Makefile
 	src/server/smsdrv/dummy/Makefile
 	src/server/smsdrv/generic/Makefile
+	src/server/smsdrv/kannel/Makefile
 	src/server/smsdrv/nxagent/Makefile
 	src/server/smsdrv/portech/Makefile
 	src/server/smsdrv/websms/Makefile
