@@ -692,7 +692,7 @@ public:
 	void setPhysicalPortFlag(bool isPhysical) { if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; setModified(); }
 	void setManualCreationFlag(bool isManual) { if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; setModified(); }
 	void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection);
-   void clearPeer() { m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; setModified(); }
+   void clearPeer() { lockProperties(); m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; setModified(); unlockProperties(); }
    void setDescription(const TCHAR *descr) { lockProperties(); nx_strncpy(m_description, descr, MAX_DB_STRING); setModified(); unlockProperties(); }
 
 	void updateZoneId();

@@ -5326,6 +5326,13 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
          else if (iface->getPeerNodeId() != 0)
          {
             Node *peerNode = (Node *)FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
+            if (peerNode == NULL)
+            {
+               DbgPrintf(6, _T("Node::topologyPoll(%s [%d]): peer node set but node object does not exist"), m_name, m_id);
+               iface->clearPeer();
+               continue;
+            }
+
             if (peerNode->isDown())
                continue; // Don't change information about down peers
 
