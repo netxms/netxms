@@ -1,6 +1,6 @@
 package com.radensolutions.reporting.service;
 
-import com.radensolutions.reporting.domain.Notification;
+import com.radensolutions.reporting.model.Notification;
 
 import java.util.List;
 import java.util.UUID;

@@ -32,7 +32,7 @@
         <level value="DEBUG"/>
     </logger>
 
-    <logger name="com.radensolutions.reporting.infrastructure.impl.TcpConnector">
+    <logger name="com.radensolutions.reporting.service.impl.TcpConnector">
         <level value="ERROR"/>
     </logger>
 </configuration>

@@ -1,6 +1,6 @@
 package com.radensolutions.reporting.service.impl;
 
-import com.radensolutions.reporting.domain.Notification;
+import com.radensolutions.reporting.model.Notification;
 import com.radensolutions.reporting.service.NotificationService;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
@@ -37,7 +37,8 @@ public class NotificationServiceImpl implements NotificationService {
     public void delete(UUID jobId) {
         final Query query = session.getCurrentSession().createQuery("from Notification where jobid = ?").setParameter(0, jobId);
         final List<Notification> list = checkedList(query.list(), Notification.class);
-        for (Notification notify : list)
+        for (Notification notify : list) {
             session.getCurrentSession().delete(notify);
+        }
     }
 }

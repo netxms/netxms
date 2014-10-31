@@ -1,7 +1,7 @@
 package com.radensolutions.reporting.service.impl;
 
-import com.radensolutions.reporting.domain.ReportResult;
-import com.radensolutions.reporting.domain.ReportResultDAO;
+import com.radensolutions.reporting.dao.ReportResultDAO;
+import com.radensolutions.reporting.model.ReportResult;
 import com.radensolutions.reporting.service.ReportResultService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,9 +39,9 @@ public class ReportResultServiceImpl implements ReportResultService {
     public UUID findReportId(UUID jobId) {
         UUID result = null;
         List<ReportResult> reportResult = reportResultDAO.findReportsResult(jobId);
-        if (reportResult.size() > 0)
+        if (reportResult.size() > 0) {
             result = reportResult.get(0).getReportId();
+        }
         return result;
     }
-
 }
