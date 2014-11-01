@@ -376,7 +376,11 @@ int LDAPConnection::readInPages(StringObjectMap<Entry> *userEntryList, StringObj
    LDAPControl *pageControl=NULL, *controls[2] = { NULL, NULL };
 	LDAPControl **returnedControls = NULL;
    ber_int_t totalCount = 0;
-   static ber_int_t pageSize = m_pageSize;
+#if defined(__sun)
+   unsigned int pageSize = m_pageSize;
+#else
+   ber_int_t pageSize = m_pageSize;
+#endif
    char pagingCriticality = 'T';
    struct berval *cookie = NULL;
 
