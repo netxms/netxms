@@ -1487,6 +1487,15 @@ if test "x$LDAP_SUPPORT" = "xyes"; then
 		AC_CHECK_LIB(ldap, ldapssl_init, [ 
 				AC_DEFINE(HAVE_LDAPSSL_INIT, 1, Define to 1 if you have ldapssl_init function)
 			])
+		AC_CHECK_LIB(ldap, ldap_control_create, [ 
+				AC_DEFINE(HAVE_LDAP_CONTROL_CREATE, 1, Define to 1 if you have ldap_control_create function)
+			])
+        AC_CHECK_LIB(ldap, ldap_parse_page_control, [ 
+                AC_DEFINE(HAVE_LDAP_PARSE_PAGE_CONTROL, 1, Define to 1 if you have ldap_parse_page_control function)
+            ])
+        AC_CHECK_LIB(ldap, ldap_create_page_control, [ 
+                AC_DEFINE(HAVE_LDAP_CREATE_PAGE_CONTROL, 1, Define to 1 if you have ldap_create_page_control function)
+            ])
 	fi
 	LDAP_SUPPORT="$HAVE_LDAP"
 fi

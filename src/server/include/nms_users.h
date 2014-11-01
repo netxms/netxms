@@ -21,6 +21,7 @@
 **/
 
 #if WITH_LDAP
+#define LDAP_DEPRECATED 1
 #ifdef _WIN32
 #include <winldap.h>
 #include <winber.h>
@@ -72,6 +73,7 @@ private:
    TCHAR m_groupClass[MAX_DB_STRING];
    int m_action;
    int m_secure;
+   int m_pageSize;
 
    void closeLDAPConnection();
    void initLDAP();
@@ -86,13 +88,15 @@ private:
 #else
    void prepareStringForInit(char *connectionLine);
 #endif // _WIN32
-#endif
+   int readInPages(StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList);
+   void fillLists(LDAPMessage *searchResult, StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList);
+#endif // WITH_LDAP
 
 public:
 #if WITH_LDAP
    LDAPConnection();
    ~LDAPConnection();
-#endif
+#endif // WITH_LDAP
 
    void syncUsers();
    UINT32 ldapUserLogin(const TCHAR *name, const TCHAR *password);

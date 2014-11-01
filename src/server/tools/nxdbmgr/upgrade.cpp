@@ -388,6 +388,17 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Upgrade from V339 to V340
+ */
+static BOOL H_UpgradeFromV339(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("LdapPageSize"), _T("1000"), 1, 0));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_value='1' WHERE var_name='LdapUserDeleteAction'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='340' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V338 to V339
  */
 static BOOL H_UpgradeFromV338(int currVersion, int newVersion)
@@ -8165,6 +8176,7 @@ static struct
    { 336, 337, H_UpgradeFromV336 },
    { 337, 338, H_UpgradeFromV337 },
    { 338, 339, H_UpgradeFromV338 },
+   { 339, 340, H_UpgradeFromV339 },
    { 0, 0, NULL }
 };
 

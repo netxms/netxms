@@ -39,6 +39,8 @@
 #define LDAP_SSL_PORT 636
 #endif
 
+#define LDAP_PAGE_OID "1.2.840.113556.1.4.319"
+
 /**
  * LDAP entry constructor
  */
@@ -63,6 +65,70 @@ Entry::~Entry()
 }
 
 #if WITH_LDAP
+
+#if !HAVE_LDAP_CREATE_PAGE_CONTROL
+int ldap_create_page_control(LDAP *ldap, ber_int_t pagesize,
+			     struct berval *cookie, char isCritical,
+			     LDAPControl **output)
+{
+	BerElement *ber;
+	int rc;
+
+	if (!ldap || !output)
+		return LDAP_PARAM_ERROR;
+
+	ber = ber_alloc_t(LBER_USE_DER);
+	if (!ber)
+		return LDAP_NO_MEMORY;
+
+	if (ber_printf(ber, "{io}", pagesize,
+			(cookie && cookie->bv_val) ? cookie->bv_val : "",
+			(cookie && cookie->bv_val) ? cookie->bv_len : 0)
+				== LBER_ERROR) {
+		ber_free(ber, 1);
+		return LDAP_ENCODING_ERROR;
+	}
+
+#if HAVE_LDAP_CONTROL_CREATE
+   rc = ldap_control_create(LDAP_PAGE_OID, 1, cookie, 0, output);
+#else
+	rc = ldap_create_control(LDAP_PAGE_OID, ber, isCritical, output);
+#endif
+
+	return rc;
+}
+#endif /* HAVE_LDAP_CREATE_PAGE_CONTROL */
+
+#if !HAVE_LDAP_PARSE_PAGE_CONTROL
+int ldap_parse_page_control(LDAP *ldap, LDAPControl **controls,
+			    ber_int_t *totalcount, struct berval **cookie)
+{
+	int i, rc;
+	BerElement *theBer;
+	LDAPControl *listCtrlp;
+
+	for (i = 0; controls[i] != NULL; i++) {
+		if (strcmp(controls[i]->ldctl_oid, LDAP_PAGE_OID) == 0) {
+			listCtrlp = controls[i];
+
+			theBer = ber_init(&listCtrlp->ldctl_value);
+			if (!theBer)
+				return LDAP_NO_MEMORY;
+
+			rc = ber_scanf(theBer, "{iO}", totalcount, cookie);
+			if (rc == LBER_ERROR) {
+				ber_free(theBer, 1);
+				return LDAP_DECODING_ERROR;
+			}
+
+			ber_free(theBer, 1);
+			return LDAP_SUCCESS;
+		}
+	}
+
+	return LDAP_CONTROL_NOT_FOUND;
+}
+#endif /* HAVE_LDAP_PARSE_PAGE_CONTROL */
 
 #ifdef _WIN32
 void LDAPConnection::prepareStringForInit(TCHAR *connectionLine)
@@ -230,6 +296,7 @@ void LDAPConnection::getAllSyncParameters()
    ConfigReadStr(_T("LdapGroupClass"), m_groupClass, MAX_DB_STRING, _T(""));
    ConfigReadStr(_T("LdapUserClass"), m_userClass, MAX_DB_STRING, _T(""));
    m_action = ConfigReadInt(_T("LdapUserDeleteAction"), 1); //default value - to disable user(value=1)
+   m_pageSize = ConfigReadInt(_T("LdapPageSize"), 1000); //default value - 1000
 }
 
 /**
@@ -251,13 +318,10 @@ void LDAPConnection::syncUsers()
 #else
    struct timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
 #endif
-   LDAPMessage *searchResult, *entry;
-   char *attribute;
-   BerElement *ber;
+   LDAPMessage *searchResult;
    StringObjectMap<Entry> *userEntryList = new StringObjectMap<Entry>(true); //as unique string ID is used dn
    StringObjectMap<Entry> *groupEntryList= new StringObjectMap<Entry>(true); //as unique string ID is used dn
 
-   //arg - contain LDAP link, search line,
    rc = ldap_search_ext_s(
             m_ldapConn,		// LDAP session handle
             m_searchBase,	// Search Base
@@ -271,15 +335,132 @@ void LDAPConnection::syncUsers()
             LDAP_NO_LIMIT,	// no size limit
             &searchResult );
 
-   if ( rc != LDAP_SUCCESS )
+   if (rc != LDAP_SUCCESS)
    {
-      TCHAR* error = getErrorString(rc);
-      DbgPrintf(1, _T("LDAPConnection::syncUsers(): LDAP could not get search results. Error code: %s"), error);
-      safe_free(error);
-      return;
+      if (rc == LDAP_SIZELIMIT_EXCEEDED)
+      {
+         rc == readInPages(userEntryList, groupEntryList);
+      }
+      else
+      {
+         TCHAR* error = getErrorString(rc);
+         DbgPrintf(1, _T("LDAPConnection::syncUsers(): LDAP could not get search results. Error code: %s"), error);
+         safe_free(error);
+      }
    }
-   bool update = false;
-   DbgPrintf(4, _T("LDAPConnection::syncUsers(): Found entry count: %d"), ldap_count_entries(m_ldapConn, searchResult));
+   else
+   {
+      fillLists(searchResult, userEntryList, groupEntryList);
+   }
+
+   ldap_msgfree(searchResult);
+   closeLDAPConnection();
+
+   if(rc == LDAP_SUCCESS)
+   {
+      //compare new LDAP list with old users
+      compareUserLists(userEntryList);
+      compareGroupList(groupEntryList);
+   }
+
+   delete userEntryList;
+   delete groupEntryList;
+}
+
+/**
+ * Reads and process each page
+ */
+int LDAPConnection::readInPages(StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList)
+{
+   DbgPrintf(7, _T("LDAPConnection::readInPages(): Getting LDAP results as a pages."));
+   LDAPControl *pageControl=NULL, *controls[2] = { NULL, NULL };
+	LDAPControl **returnedControls = NULL;
+   ber_int_t totalCount = 0;
+   static ber_int_t pageSize = m_pageSize;
+   char pagingCriticality = 'T';
+   struct berval *cookie = NULL;
+
+   LDAPMessage *searchResult;
+#ifdef _WIN32
+   struct l_timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
+#else
+   struct timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
+#endif
+   int rc;
+
+   do {
+      rc = ldap_create_page_control(m_ldapConn, pageSize, cookie, pagingCriticality, &pageControl);
+      if (rc != LDAP_SUCCESS)
+      {
+         TCHAR* error = getErrorString(rc);
+         DbgPrintf(1, _T("LDAPConnection::readInPages(): LDAP could not create page control. Error code: %s"), error);
+         break;
+      }
+
+      /* Insert the control into a list to be passed to the search. */
+      controls[0] = pageControl;
+
+      /* Search for entries in the directory using the parmeters. */
+      rc = ldap_search_ext_s(
+               m_ldapConn,		// LDAP session handle
+               m_searchBase,	// Search Base
+               LDAP_SCOPE_SUBTREE,	// Search Scope – everything below o=Acme
+               m_searchFilter, // Search Filter – only inetOrgPerson objects
+               NULL,	// returnAllAttributes – NULL means Yes
+               0,		// attributesOnly – False means we want values
+               controls,	// Server controls – Page controls
+               NULL,	// Client controls – There are none
+               &timeOut,	// search Timeout
+               LDAP_NO_LIMIT,	// no size limit
+               &searchResult );
+
+      if ((rc != LDAP_SUCCESS) && (rc != LDAP_PARTIAL_RESULTS)) {
+         TCHAR* error = getErrorString(rc);
+         DbgPrintf(1, _T("LDAPConnection::readInPages(): Not possible to get result page. Error code: %s"), error);
+         ldap_control_free(pageControl);
+         break;
+      }
+
+      /* Parse the results to retrieve the contols being returned. */
+      rc = ldap_parse_result(m_ldapConn, searchResult, NULL, NULL, NULL, NULL, &returnedControls, FALSE);
+      fillLists(searchResult, userEntryList, groupEntryList);
+      ldap_msgfree(searchResult);
+
+      /* Clear cookie */
+      if (cookie != NULL) {
+         ber_bvfree(cookie);
+         cookie = NULL;
+      }
+
+      /*
+       * Parse the page control returned to get the cookie and
+       * determine whether there are more pages.
+       */
+      rc = ldap_parse_page_control(m_ldapConn, returnedControls, &totalCount, &cookie);
+
+      /* Cleanup the controls used. */
+      if (returnedControls)
+         ldap_controls_free(returnedControls);
+
+      ldap_control_free(pageControl);
+
+   } while(cookie && cookie->bv_val && strlen(cookie->bv_val));
+   if (cookie != NULL) {
+      ber_bvfree(cookie);
+   }
+   return rc;
+}
+
+/**
+ * Fills lists of users and groups from search results
+ */
+void LDAPConnection::fillLists(LDAPMessage *searchResult, StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList)
+{
+   LDAPMessage *entry;
+   char *attribute;
+   BerElement *ber;
+	int i;
+   DbgPrintf(4, _T("LDAPConnection::fillLists(): Found entry count: %d"), ldap_count_entries(m_ldapConn, searchResult));
    for (entry = ldap_first_entry(m_ldapConn, searchResult); entry != NULL; entry = ldap_next_entry(m_ldapConn, entry))
    {
       Entry *newObj = new Entry();
@@ -293,7 +474,7 @@ void LDAPConnection::syncUsers()
       char *dn = ldap_get_dn(m_ldapConn, entry);
 #endif /* UNICODE */
 #endif /* _WIN32 */
-      DbgPrintf(4, _T("LDAPConnection::syncUsers(): Found dn: %s"), dn);
+      DbgPrintf(4, _T("LDAPConnection::fillLists(): Found dn: %s"), dn);
       TCHAR *value;
       for(i = 0, value = getAttrValue(entry, "objectClass", i); value != NULL; value = getAttrValue(entry, "objectClass", ++i))
       {
@@ -314,7 +495,7 @@ void LDAPConnection::syncUsers()
 
       if (newObj->m_type == LDAP_DEFAULT)
       {
-         DbgPrintf(4, _T("LDAPConnection::syncUsers(): %s is not a user nor a group"), dn);
+         DbgPrintf(4, _T("LDAPConnection::fillLists(): %s is not a user nor a group"), dn);
 #if defined(UNICODE) && !defined(_WIN32)
          free(dn);
          ldap_memfree(_dn);
@@ -346,7 +527,7 @@ void LDAPConnection::syncUsers()
             TCHAR *value = getAttrValue(entry, attribute, i);
             do
             {
-               DbgPrintf(4, _T("LDAPConnection::syncUsers(): member: %s"), value);
+               DbgPrintf(4, _T("LDAPConnection::fillLists(): member: %s"), value);
                newObj->m_memberList->addPreallocated(value);
                value = getAttrValue(entry, attribute, ++i);
             } while(value != NULL);
@@ -358,17 +539,17 @@ void LDAPConnection::syncUsers()
       //entry is added only if it was of a correct type
       if(newObj->m_type == LDAP_USER && newObj->m_loginName != NULL)
       {
-         DbgPrintf(4, _T("LDAPConnection::syncUsers(): User added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
+         DbgPrintf(4, _T("LDAPConnection::fillLists(): User added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
          userEntryList->set(dn, newObj);
       }
       else if(newObj->m_type == LDAP_GROUP && newObj->m_loginName != NULL)
       {
-         DbgPrintf(4, _T("LDAPConnection::syncUsers(): Group added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
+         DbgPrintf(4, _T("LDAPConnection::fillLists(): Group added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
          groupEntryList->set(dn, newObj);
       }
       else
       {
-         DbgPrintf(4, _T("LDAPConnection::syncUsers(): Unknown object is not added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
+         DbgPrintf(4, _T("LDAPConnection::fillLists(): Unknown object is not added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
          delete newObj;
       }
 #if defined(UNICODE) && !defined(_WIN32)
@@ -378,17 +559,8 @@ void LDAPConnection::syncUsers()
       ldap_memfree(dn);
 #endif
    }
-   ldap_msgfree(searchResult);
-
-   closeLDAPConnection();
-
-   //compare new LDAP list with old users
-   compareUserLists(userEntryList);
-   compareGroupList(groupEntryList);
-
-   delete userEntryList;
-   delete groupEntryList;
 }
+
 
 /**
  * Get attribute's value
