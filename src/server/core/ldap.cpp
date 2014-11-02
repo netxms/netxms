@@ -66,7 +66,7 @@ Entry::~Entry()
 
 #if WITH_LDAP
 
-#if !HAVE_LDAP_CREATE_PAGE_CONTROL
+#if !HAVE_LDAP_CREATE_PAGE_CONTROL && !defined(_WIN32)
 int ldap_create_page_control(LDAP *ldap, ber_int_t pagesize,
 			     struct berval *cookie, char isCritical,
 			     LDAPControl **output)
@@ -99,7 +99,7 @@ int ldap_create_page_control(LDAP *ldap, ber_int_t pagesize,
 }
 #endif /* HAVE_LDAP_CREATE_PAGE_CONTROL */
 
-#if !HAVE_LDAP_PARSE_PAGE_CONTROL
+#if !HAVE_LDAP_PARSE_PAGE_CONTROL && !defined(_WIN32)
 int ldap_parse_page_control(LDAP *ldap, LDAPControl **controls,
 			    ber_int_t *totalcount, struct berval **cookie)
 {
@@ -312,7 +312,6 @@ void LDAPConnection::syncUsers()
       return;
    }
 
-   int rc, i;
 #ifdef _WIN32
    struct l_timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
 #else
@@ -322,7 +321,7 @@ void LDAPConnection::syncUsers()
    StringObjectMap<Entry> *userEntryList = new StringObjectMap<Entry>(true); //as unique string ID is used dn
    StringObjectMap<Entry> *groupEntryList= new StringObjectMap<Entry>(true); //as unique string ID is used dn
 
-   rc = ldap_search_ext_s(
+   int rc = ldap_search_ext_s(
             m_ldapConn,		// LDAP session handle
             m_searchBase,	// Search Base
             LDAP_SCOPE_SUBTREE,	// Search Scope – everything below o=Acme
@@ -339,7 +338,7 @@ void LDAPConnection::syncUsers()
    {
       if (rc == LDAP_SIZELIMIT_EXCEEDED)
       {
-         rc == readInPages(userEntryList, groupEntryList);
+         rc = readInPages(userEntryList, groupEntryList);
       }
       else
       {
@@ -375,9 +374,12 @@ int LDAPConnection::readInPages(StringObjectMap<Entry> *userEntryList, StringObj
    DbgPrintf(7, _T("LDAPConnection::readInPages(): Getting LDAP results as a pages."));
    LDAPControl *pageControl=NULL, *controls[2] = { NULL, NULL };
 	LDAPControl **returnedControls = NULL;
-#ifdef __sun
+#if defined(__sun)
    unsigned int pageSize = m_pageSize;
    unsigned int totalCount = 0;
+#elif defined(_WIN32)
+   ULONG pageSize = m_pageSize;
+   ULONG totalCount = 0;
 #else
    ber_int_t pageSize = m_pageSize;
    ber_int_t totalCount = 0;
