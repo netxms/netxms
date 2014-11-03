@@ -494,7 +494,7 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
    else
    {
       if (!CopyFile(&st, oldName, newName))
-         return false;
+         return FALSE;
    }
    return TRUE;
 #endif /* _WIN32 */
@@ -520,6 +520,60 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
    safe_free(data->fileNameCode);
    delete data;
    return THREAD_OK;
+}
+
+/**
+ * Create folder
+ */
+static BOOL CreateFolder(TCHAR* directory)
+{
+   NX_STAT_STRUCT st;
+   TCHAR *previous = _tcsdup(directory);
+   TCHAR *ptr = _tcsrchr(previous, FS_PATH_SEPARATOR_CHAR);
+   BOOL result = FALSE;
+   if(ptr != NULL)
+   {
+      *ptr = 0;
+      if(CALL_STAT(previous, &st) != 0)
+      {
+         result = CreateFolder(previous);
+         if(result)
+         {
+            result = CALL_STAT(previous, &st) == 0;
+         }
+      }
+      else
+      {
+         if(S_ISDIR(st.st_mode))
+         {
+            result = TRUE;
+         }
+      }
+   }
+   else
+   {
+      result = TRUE;
+      st.st_mode = 0700;
+   }
+   safe_free(previous);
+
+   if(result)
+   {
+#ifdef _WIN32
+      if(CreateDirectory(directory, NULL)
+#else
+      if(_tmkdir(directory, st.st_mode) == 0)
+#endif /* _WIN32 */
+      {
+         result = TRUE;
+      }
+      else
+      {
+         result = FALSE;
+      }
+   }
+
+   return result;
 }
 
 /**
@@ -756,6 +810,39 @@ static BOOL ProcessCommands(UINT32 command, CSCPMessage *request, CSCPMessage *r
          else
          {
             response->SetVariable(VID_RCC, ERR_ACCESS_DENIED);
+         }
+         return TRUE;
+      }
+      case CMD_FILEMGR_CREATE_FOLDER:
+      {
+         TCHAR directory[MAX_PATH];
+         request->GetVariableStr(VID_FILE_NAME, directory, MAX_PATH);
+         response->SetId(request->GetId());
+         if (directory == NULL)
+         {
+            response->SetVariable(VID_RCC, RCC_IO_ERROR);
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): File name should be set."));
+            return TRUE;
+         }
+         ConvertPathToHost(directory);
+
+         bool rootFolder = request->GetVariableShort(VID_ROOT) ? 1 : 0;
+         if (CheckFullPath(directory, false) && session->isMasterServer())
+         {
+            if(CreateFolder(directory))
+            {
+               response->SetVariable(VID_RCC, ERR_SUCCESS);
+            }
+            else
+            {
+               AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Could not create directory"));
+               response->SetVariable(VID_RCC, RCC_IO_ERROR);
+            }
+         }
+         else
+         {
+            AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): Access denied"));
+            response->SetVariable(VID_RCC, RCC_ACCESS_DENIED);
          }
          return TRUE;
       }

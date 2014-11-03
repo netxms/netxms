@@ -498,6 +498,7 @@ typedef struct
 #define CMD_TAKE_SCREENSHOT            0x012E
 #define CMD_EXECUTE_SCRIPT             0x012F
 #define CMD_EXECUTE_SCRIPT_UPDATE      0x0130
+#define CMD_FILEMGR_CREATE_FOLDER      0x0131
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

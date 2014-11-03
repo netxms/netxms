@@ -6691,6 +6691,24 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       waitForRCC(msg.getMessageId());
       sendFile(msg.getMessageId(), localFile, listener);
    }
+   
+   /**
+    * Upload local file to server's file store
+    *
+    * @param localFile      local file
+    * @param serverFileName name under which file will be stored on server
+    * @throws IOException  if socket or file I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void createFolderOnAgent(String folder, long nodeId)
+      throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_FILEMGR_CREATE_FOLDER);
+      msg.setVariable(NXCPCodes.VID_FILE_NAME, folder);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
 
    /**
     * Download file from remote host via agent.
