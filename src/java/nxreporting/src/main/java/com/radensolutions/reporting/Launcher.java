@@ -3,6 +3,8 @@ package com.radensolutions.reporting;
 import com.radensolutions.reporting.service.Connector;
 import com.radensolutions.reporting.service.ReportManager;
 import com.radensolutions.reporting.service.ServerSettings;
+import net.sf.jasperreports.engine.DefaultJasperReportsContext;
+import net.sf.jasperreports.engine.query.QueryExecuterFactory;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +48,9 @@ public class Launcher {
         Connector connector = context.getBean(Connector.class);
         connector.start();
         log.info("Connector started");
+
+        DefaultJasperReportsContext jrContext = DefaultJasperReportsContext.getInstance();
+        jrContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "com.radensolutions.reporting.custom.NxclQueryExecutorFactory");
 
         ReportManager reportManager = context.getBean(ReportManager.class);
         reportManager.deploy();

@@ -14,4 +14,9 @@
         <server>127.0.0.1</server>
         <from>noreply@netxms.org</from>
     </smtp>
+    <netxms>
+        <server>127.0.0.1</server>
+        <login>admin</login>
+        <password></password>
+    </netxms>
 </config>

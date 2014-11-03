@@ -151,6 +151,26 @@ public class ServerSettings {
         return set;
     }
 
+    public String getNetxmsServer() {
+        return configuration.getString("netxms.server", "127.0.0.1");
+    }
+
+    public String getNetxmsLogin() {
+        return configuration.getString("netxms.login", "admin");
+    }
+
+    public String getNetxmsPassword() {
+        String password = null;
+        if (configuration.containsKey("netxms.encryptedPassword")) {
+            try {
+                password = EncryptedPassword.decrypt(getNetxmsLogin(), configuration.getString("netxms.encryptedPassword"));
+            } catch (Exception e) {
+                log.error("Unable to decrypt netxms.encryptedPassword", e);
+            }
+        }
+        return password != null ? password : configuration.getString("netxms.password", "");
+    }
+
     private enum DatabaseType {
         POSTGRESQL("org.postgresql.Driver", "org.hibernate.dialect.PostgreSQL9Dialect"),
         ORACLE("oracle.jdbc.driver.OracleDriver", "org.hibernate.dialect.Oracle10gDialect"),

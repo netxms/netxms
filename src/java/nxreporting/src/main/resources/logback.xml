@@ -35,4 +35,7 @@
     <logger name="com.radensolutions.reporting.service.impl.TcpConnector">
         <level value="ERROR"/>
     </logger>
+    <logger name="com.radensolutions.reporting.service.impl.SessionWorker">
+        <level value="ERROR"/>
+    </logger>
 </configuration>
