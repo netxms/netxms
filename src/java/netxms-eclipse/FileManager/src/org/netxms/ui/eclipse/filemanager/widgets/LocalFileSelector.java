@@ -30,7 +30,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
 public class LocalFileSelector extends AbstractSelector
 {
 	private File file = null;
-	private String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
+	private String[] filterExtensions = { "*" }; //$NON-NLS-1$
 	private String[] filterNames = { Messages.get().LocalFileSelector_AllFiles };
 	private int selectorType;
 
