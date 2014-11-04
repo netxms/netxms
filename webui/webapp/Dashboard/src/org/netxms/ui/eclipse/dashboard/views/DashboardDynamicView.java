@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
 
 /**
  * Dynamic dashboard view - change dashboard when selection in dashboard
@@ -44,6 +45,7 @@ public class DashboardDynamicView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.dashboard.views.DashboardDynamicView"; //$NON-NLS-1$
 
+   private IntermediateSelectionProvider selectionProvider;
 	private Dashboard dashboard = null;
 	private DashboardControl dbc = null;
 	private ISelectionService selectionService;
@@ -61,9 +63,12 @@ public class DashboardDynamicView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
+      selectionProvider = new IntermediateSelectionProvider();
+      getSite().setSelectionProvider(selectionProvider);
+      
 		parentComposite = parent;
 		if (dashboard != null)
-			dbc = new DashboardControl(parent, SWT.NONE, dashboard, this, false);
+			dbc = new DashboardControl(parent, SWT.NONE, dashboard, this, selectionProvider, false);
 
 		createActions();
 		contributeToActionBars();
@@ -154,7 +159,7 @@ public class DashboardDynamicView extends ViewPart
 		if (dbc != null)
 			dbc.dispose();
 		dashboard = object;
-		dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, false);
+		dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, selectionProvider, false);
 		parentComposite.layout();
 		setPartName(Messages.get().DashboardDynamicView_PartNamePrefix + dashboard.getObjectName());
 	}
@@ -172,7 +177,7 @@ public class DashboardDynamicView extends ViewPart
 		dashboard = (Dashboard)((NXCSession)ConsoleSharedData.getSession()).findObjectById(dashboard.getObjectId(), Dashboard.class);
 		if (dashboard != null)
 		{
-			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, false);
+			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, selectionProvider, false);
 			parentComposite.layout();
 			setPartName(Messages.get().DashboardDynamicView_PartNamePrefix + dashboard.getObjectName());
 		}

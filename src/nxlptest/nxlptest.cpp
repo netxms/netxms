@@ -60,13 +60,9 @@ static void TraceCallback(const TCHAR *format, va_list args)
 /**
  * Logger callback
  */
-static void LoggerCallback(int level, const TCHAR *format, ...)
+static void LoggerCallback(int level, const TCHAR *format, va_list args)
 {
-	va_list args;
-
-	va_start(args, format);
 	TraceCallback(format, args);
-	va_end(args);
 }
 
 /**

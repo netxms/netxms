@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 		else
 		{
 			if ((objects != null) && (objects.length > 0) && (objects[0] != null))
-				new DashboardControl(this, SWT.NONE, objects[0], viewPart, true);
+				new DashboardControl(this, SWT.NONE, objects[0], viewPart, getSelectionProvider(), true);
 		}
 	}
 	
@@ -88,7 +88,7 @@ public class EmbeddedDashboardElement extends ElementWidget
 		if (current >= objects.length)
 			current = 0;
 		if (objects[current] != null)
-			control = new DashboardControl(this, SWT.NONE, objects[current], viewPart, true);	/* TODO: set embedded=false if border=true */
+			control = new DashboardControl(this, SWT.NONE, objects[current], viewPart, getSelectionProvider(), true);	/* TODO: set embedded=false if border=true */
 		else
 			control = null;
 		getParent().layout(true, true);

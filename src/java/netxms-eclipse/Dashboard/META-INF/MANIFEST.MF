@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Dashboard
 Bundle-SymbolicName: org.netxms.ui.eclipse.dashboard;singleton:=true
-Bundle-Version: 1.2.11
+Bundle-Version: 1.2.17
 Bundle-Activator: org.netxms.ui.eclipse.dashboard.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",

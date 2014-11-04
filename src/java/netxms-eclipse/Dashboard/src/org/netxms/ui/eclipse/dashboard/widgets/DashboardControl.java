@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
@@ -73,18 +74,20 @@ public class DashboardControl extends Composite
 	private boolean modified = false;
 	private DashboardModifyListener modifyListener = null;
 	private IViewPart viewPart;
+	private IntermediateSelectionProvider selectionProvider;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public DashboardControl(Composite parent, int style, Dashboard dashboard, IViewPart viewPart, boolean embedded)
+	public DashboardControl(Composite parent, int style, Dashboard dashboard, IViewPart viewPart, IntermediateSelectionProvider selectionProvider, boolean embedded)
 	{
 		super(parent, style);
 		this.dashboard = dashboard;
 		this.embedded = embedded;
 		this.elements = new ArrayList<DashboardElement>(dashboard.getElements());
 		this.viewPart = viewPart;
+		this.selectionProvider = selectionProvider;
 		createContent();
 	}
 
@@ -92,7 +95,7 @@ public class DashboardControl extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public DashboardControl(Composite parent, int style, Dashboard dashboard, List<DashboardElement> elements, IViewPart viewPart, boolean modified)
+	public DashboardControl(Composite parent, int style, Dashboard dashboard, List<DashboardElement> elements, IViewPart viewPart, IntermediateSelectionProvider selectionProvider, boolean modified)
 	{
 		super(parent, style);
 		this.dashboard = dashboard;
@@ -100,6 +103,7 @@ public class DashboardControl extends Composite
 		this.modified = modified;
 		this.elements = new ArrayList<DashboardElement>(elements);
 		this.viewPart = viewPart;
+		this.selectionProvider = selectionProvider;
 		createContent();
 	}
 
@@ -596,4 +600,12 @@ public class DashboardControl extends Composite
 	{
 		return elements;
 	}
+
+   /**
+    * @return the selectionProvider
+    */
+   public IntermediateSelectionProvider getSelectionProvider()
+   {
+      return selectionProvider;
+   }
 }
