@@ -4,6 +4,7 @@ import com.radensolutions.reporting.model.ReportDefinition;
 import com.radensolutions.reporting.model.ReportResult;
 import org.netxms.api.client.reporting.ReportRenderFormat;
 
+import java.io.File;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -22,5 +23,5 @@ public interface ReportManager {
 
     boolean deleteResult(UUID reportId, UUID jobId);
 
-    byte[] renderResult(UUID reportId, UUID jobId, ReportRenderFormat format);
+    File renderResult(UUID reportId, UUID jobId, ReportRenderFormat format);
 }

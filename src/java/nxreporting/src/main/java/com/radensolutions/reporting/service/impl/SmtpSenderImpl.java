@@ -1,17 +1,16 @@
 package com.radensolutions.reporting.service.impl;
 
-import com.radensolutions.reporting.service.SmtpSender;
+import java.io.File;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
+import com.radensolutions.reporting.service.SmtpSender;
 
 @Component
 public class SmtpSenderImpl implements SmtpSender {
@@ -25,15 +24,15 @@ public class SmtpSenderImpl implements SmtpSender {
     private String from;
 
     @Override
-    public void mail(String to, String subject, String body, String fileName, byte[] fileContent) {
+    public void mail(String to, String subject, String body, String fileName, File file) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setFrom(from);
             helper.setTo(to);
             helper.setSubject(subject);
-            if (fileName != null && fileContent != null) {
-                helper.addAttachment(fileName, new ByteArrayResource(fileContent));
+            if (fileName != null && file != null) {
+                helper.addAttachment(fileName, file);
             }
             helper.setText(body);
             mailSender.send(message);

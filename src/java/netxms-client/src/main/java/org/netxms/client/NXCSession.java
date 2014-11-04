@@ -1404,7 +1404,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    protected void sendFile(final long requestId, final File file, ProgressListener listener)
       throws IOException, NXCException
    {
-      if (listener != null) listener.setTotalWorkAmount(file.length());
+      if (listener != null) 
+         listener.setTotalWorkAmount(file.length());
       final InputStream inputStream = new BufferedInputStream(new FileInputStream(file));
       sendFileStream(requestId, inputStream, listener);
       inputStream.close();
@@ -1418,10 +1419,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException
     * @throws NXCException
     */
-   protected void sendFile(final long requestId, final byte[] data, ProgressListener listener)
-      throws IOException, NXCException
+   protected void sendFile(final long requestId, final byte[] data, ProgressListener listener) throws IOException, NXCException
    {
-      if (listener != null) listener.setTotalWorkAmount(data.length);
+      if (listener != null) 
+         listener.setTotalWorkAmount(data.length);
       final InputStream inputStream = new ByteArrayInputStream(data);
       sendFileStream(requestId, inputStream, listener);
       inputStream.close();
@@ -1436,8 +1437,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException
     * @throws NXCException
     */
-   private void sendFileStream(final long requestId, final InputStream inputStream, ProgressListener listener)
-      throws IOException, NXCException
+   private void sendFileStream(final long requestId, final InputStream inputStream, ProgressListener listener) throws IOException, NXCException
    {
       NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_FILE_DATA, requestId);
       msg.setBinaryMessage(true);
@@ -1457,7 +1457,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          sendMessage(msg);
 
          bytesSent += bytesRead == -1 ? 0 : bytesRead;
-         if (listener != null) listener.markProgress(bytesSent);
+         if (listener != null) 
+            listener.markProgress(bytesSent);
 
          if (bytesRead < FILE_BUFFER_SIZE)
          {

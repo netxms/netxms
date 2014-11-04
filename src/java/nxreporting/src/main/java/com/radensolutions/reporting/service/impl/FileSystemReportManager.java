@@ -437,11 +437,11 @@ public class FileSystemReportManager implements ReportManager
 
     @SuppressWarnings("rawtypes")
     @Override
-    public byte[] renderResult(UUID reportId, UUID jobId, ReportRenderFormat format) {
-        byte[] result = null;
-
+    public File renderResult(UUID reportId, UUID jobId, ReportRenderFormat format) {
         final File outputDirectory = getOutputDirectory(reportId);
         final File dataFile = new File(outputDirectory, jobId.toString() + ".jrprint");
+        
+        File outputFile = new File(outputDirectory, jobId.toString() + "." + System.currentTimeMillis() + ".render");
 
         JRAbstractExporter exporter = null;
         switch (format) {
@@ -472,17 +472,20 @@ public class FileSystemReportManager implements ReportManager
         }
 
         exporter.setParameter(JRExporterParameter.INPUT_FILE, dataFile);
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, outputStream);
 
-        try {
-            exporter.exportReport();
-            result = outputStream.toByteArray();
-        } catch (JRException e) {
+        try 
+        {
+           exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, new FileOutputStream(outputFile));
+           exporter.exportReport();
+        } 
+        catch (Exception e) 
+        {
             log.error("Failed to render report", e);
+            outputFile.delete();
+            outputFile = null;
         }
 
-        return result;
+        return outputFile;
     }
 
     /**
@@ -573,7 +576,7 @@ public class FileSystemReportManager implements ReportManager
                     notification.getReportName(), reportDate);
 
             String fileName = null;
-            byte[] renderResult = null;
+            File renderResult = null;
             if (notification.getAttachFormatCode() != 0) {
                 ReportRenderFormat formatCode = ReportRenderFormat.valueOf(notification.getAttachFormatCode());
                 UUID jobId = notification.getJobId();
@@ -590,7 +593,11 @@ public class FileSystemReportManager implements ReportManager
             }
             text += "\n\nThis message is generated automatically by NetXMS.";
 
-            smtpSender.mail(notification.getMail(), "New report is available", text, fileName, renderResult);
+            if (renderResult != null)
+            {
+               smtpSender.mail(notification.getMail(), "New report is available", text, fileName, renderResult);
+               renderResult.delete();
+            }
         }
     }
 

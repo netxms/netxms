@@ -1,19 +1,18 @@
 package com.radensolutions.reporting.service.impl;
 
-import com.radensolutions.reporting.service.Connector;
-import org.netxms.base.NXCPMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Service;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import org.netxms.base.NXCPMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Service;
+import com.radensolutions.reporting.service.Connector;
 
 /**
  * TODO: REFACTOR!!!
@@ -82,7 +81,7 @@ public class TcpConnector implements Connector {
             }
         }
     }
-
+    
     @Override
     public String toString() {
         return "TcpConnector{" + "serverSocket=" + serverSocket + '}';

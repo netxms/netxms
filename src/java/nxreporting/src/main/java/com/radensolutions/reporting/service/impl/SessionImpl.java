@@ -1,13 +1,12 @@
 package com.radensolutions.reporting.service.impl;
 
-import com.radensolutions.reporting.service.ReportScheduler;
-import com.radensolutions.reporting.service.Session;
-import com.radensolutions.reporting.model.Notification;
-import com.radensolutions.reporting.model.ReportDefinition;
-import com.radensolutions.reporting.model.ReportResult;
-import com.radensolutions.reporting.service.Connector;
-import com.radensolutions.reporting.service.ReportManager;
-import com.radensolutions.reporting.service.NotificationService;
+import java.io.File;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.api.client.reporting.ReportRenderFormat;
 import org.netxms.base.CommonRCC;
@@ -18,10 +17,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.*;
+import com.radensolutions.reporting.model.Notification;
+import com.radensolutions.reporting.model.ReportDefinition;
+import com.radensolutions.reporting.model.ReportResult;
+import com.radensolutions.reporting.service.Connector;
+import com.radensolutions.reporting.service.MessageProcessingResult;
+import com.radensolutions.reporting.service.NotificationService;
+import com.radensolutions.reporting.service.ReportManager;
+import com.radensolutions.reporting.service.ReportScheduler;
+import com.radensolutions.reporting.service.Session;
 
 @Component
 public class SessionImpl implements Session {
@@ -37,9 +41,13 @@ public class SessionImpl implements Session {
     @Autowired
     private NotificationService notificationService;
 
-    @Override
-    public NXCPMessage processMessage(NXCPMessage message, OutputStream fileStream) {
+    /* (non-Javadoc)
+    * @see com.radensolutions.reporting.service.Session#processMessage(org.netxms.base.NXCPMessage)
+    */
+   @Override
+    public MessageProcessingResult processMessage(NXCPMessage message) {
         NXCPMessage reply = new NXCPMessage(NXCPCodes.CMD_REQUEST_COMPLETED, message.getMessageId());
+        File file = null;
         switch (message.getMessageCode()) {
             case NXCPCodes.CMD_ISC_CONNECT_TO_SERVICE: // ignore and reply "Ok"
             case NXCPCodes.CMD_KEEPALIVE:
@@ -69,7 +77,7 @@ public class SessionImpl implements Session {
                 listResults(message, reply);
                 break;
             case NXCPCodes.CMD_RS_RENDER_RESULT:
-                renderAndSendResult(message, reply, fileStream);
+                file = renderResult(message, reply);
                 break;
             case NXCPCodes.CMD_RS_DELETE_RESULT:
                 deleteResult(message, reply);
@@ -79,11 +87,15 @@ public class SessionImpl implements Session {
                 break;
             default:
                 reply.setVariableInt32(NXCPCodes.VID_RCC, CommonRCC.NOT_IMPLEMENTED);
+                break;
         }
-        return reply;
+        return new MessageProcessingResult(reply, file);
     }
 
-    private void listReports(NXCPMessage reply) {
+    /**
+    * @param reply
+    */
+   private void listReports(NXCPMessage reply) {
         final List<UUID> list = reportManager.listReports();
         reply.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, list.size());
         for (int i = 0, listSize = list.size(); i < listSize; i++) {
@@ -202,7 +214,7 @@ public class SessionImpl implements Session {
         return map;
     }
 
-    private void renderAndSendResult(NXCPMessage request, NXCPMessage reply, OutputStream fileStream) {
+    private File renderResult(NXCPMessage request, NXCPMessage reply) {
         final UUID reportId = request.getVariableAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
         final UUID jobId = request.getVariableAsUUID(NXCPCodes.VID_JOB_ID);
         final int formatCode = request.getVariableAsInteger(NXCPCodes.VID_RENDER_FORMAT);
@@ -210,14 +222,7 @@ public class SessionImpl implements Session {
 
         reply.setVariableInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
         sendNotify(SessionNotification.RS_RESULTS_MODIFIED, 0);
-        byte[] output = reportManager.renderResult(reportId, jobId, format);
-        if (output != null) {
-            try {
-                fileStream.write(output);
-            } catch (IOException e) {
-                logger.error("I/O error", e);
-            }
-        }
+        return reportManager.renderResult(reportId, jobId, format);
     }
 
     private void deleteResult(NXCPMessage request, NXCPMessage reply) {
@@ -274,5 +279,5 @@ public class SessionImpl implements Session {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
+    }    
 }

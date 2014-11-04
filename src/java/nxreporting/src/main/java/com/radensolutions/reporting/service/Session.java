@@ -2,8 +2,6 @@ package com.radensolutions.reporting.service;
 
 import org.netxms.base.NXCPMessage;
 
-import java.io.OutputStream;
-
 public interface Session {
     /**
      * Process incoming NXCP message and generate reply
@@ -12,7 +10,7 @@ public interface Session {
      * @param fileStream output stream for outgoing file
      * @return reply
      */
-    public NXCPMessage processMessage(NXCPMessage message, OutputStream fileStream);
+    public MessageProcessingResult processMessage(NXCPMessage message);
 
     /**
      * Send NXCP message to shserver

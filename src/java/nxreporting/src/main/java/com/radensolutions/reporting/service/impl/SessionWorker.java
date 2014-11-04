@@ -1,6 +1,12 @@
 package com.radensolutions.reporting.service.impl;
 
-import com.radensolutions.reporting.service.Session;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.Socket;
+import org.netxms.base.CompatTools;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPException;
 import org.netxms.base.NXCPMessage;
@@ -11,18 +17,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.Socket;
-import java.util.Arrays;
+import com.radensolutions.reporting.service.MessageProcessingResult;
+import com.radensolutions.reporting.service.Session;
 
 @Component
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 class SessionWorker implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(SessionWorker.class);
+
+    private static final int FILE_BUFFER_SIZE = 128 * 1024; // 128k
 
     final NXCPMessageReceiver messageReceiver = new NXCPMessageReceiver(262144, 4194304);   // 256KB, 4MB
     private final Socket socket;
@@ -47,17 +50,27 @@ class SessionWorker implements Runnable {
                     if (message.getMessageCode() != NXCPCodes.CMD_KEEPALIVE) {
                         log.debug("Request: " + message.toString());
                     }
-                    ByteArrayOutputStream fileStream = new ByteArrayOutputStream();
-                    final NXCPMessage reply = session.processMessage(message, fileStream);
-                    if (reply != null) {
+                    final MessageProcessingResult result = session.processMessage(message);
+                    if (result.response != null) {
                         if (message.getMessageCode() != NXCPCodes.CMD_KEEPALIVE) {
-                            log.debug("Reply: " + reply.toString());
+                            log.debug("Reply: " + result.response.toString());
                         }
-                        sendMessage(reply);
-                        if (fileStream.size() > 0) {
+                        sendMessage(result.response);
+                        if (result.file != null) {
                             log.debug("File data found, sending");
-                            final byte[] bytes = fileStream.toByteArray();
-                            sendFileData(message.getMessageId(), bytes);
+                            FileInputStream s = null;
+                            try
+                            {
+                               s = new FileInputStream(result.file);
+                               sendFileStream(message.getMessageId(), s);
+                            }
+                            catch(IOException e)
+                            {
+                               log.error("Unexpected I/O exception while sending rendered file");
+                            }
+                            if (s != null)
+                               s.close();
+                            result.file.delete();
                         }
                     }
                 }
@@ -93,23 +106,50 @@ class SessionWorker implements Runnable {
         return false;
     }
 
-    /**
-     * @param requestId
-     * @param data
-     * @throws java.io.IOException
-     */
-    private void sendFileData(final long requestId, final byte[] data) throws IOException {
-        NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_FILE_DATA, requestId);
-        msg.setBinaryMessage(true);
+   /**
+    * 
+    * @param requestId
+    * @param inputStream
+    * @throws IOException
+    */
+    public void sendFileStream(final long requestId, final InputStream inputStream) throws IOException
+    {
+       NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_FILE_DATA, requestId);
+       msg.setBinaryMessage(true);
 
-        for (int pos = 0; pos < data.length; pos += 16384) {
-            int len = Math.min(16384, data.length - pos);
-            msg.setBinaryData(Arrays.copyOfRange(data, pos, len));
-            sendMessage(msg);
-        }
+       boolean success = false;
+       final byte[] buffer = new byte[FILE_BUFFER_SIZE];
+       while(true)
+       {         
+          final int bytesRead = inputStream.read(buffer);
+          if (bytesRead < FILE_BUFFER_SIZE)
+          {
+             msg.setEndOfFile(true);
+          }
+
+          msg.setBinaryData(bytesRead  == -1 ? new byte[0] : CompatTools.arrayCopy(buffer, bytesRead));
+          sendMessage(msg);
+
+          if (bytesRead < FILE_BUFFER_SIZE)
+          {
+             success = true;
+             break;
+          }
+       }
+
+       if (!success)
+       {
+          NXCPMessage abortMessage = new NXCPMessage(NXCPCodes.CMD_ABORT_FILE_TRANSFER, requestId);
+          abortMessage.setBinaryMessage(true);
+          sendMessage(abortMessage);
+       }
     }
 
-    boolean isActive() {
+    /**
+    * @return
+    */
+   boolean isActive() 
+    {
         return active;
     }
 }
