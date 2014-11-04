@@ -42,6 +42,6 @@ public class NxclQueryExecutorFactory extends AbstractQueryExecuterFactory imple
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
+        NxclQueryExecutorFactory.applicationContext = applicationContext;
     }
 }
