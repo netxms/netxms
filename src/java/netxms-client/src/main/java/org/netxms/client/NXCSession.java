@@ -1446,17 +1446,17 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       final byte[] buffer = new byte[FILE_BUFFER_SIZE];
       long bytesSent = 0;
       while(true)
-      {
+      {         
          final int bytesRead = inputStream.read(buffer);
          if (bytesRead < FILE_BUFFER_SIZE)
          {
             msg.setEndOfFile(true);
          }
 
-         msg.setBinaryData(CompatTools.arrayCopy(buffer, bytesRead));
+         msg.setBinaryData(bytesRead  == -1 ? new byte[0] : CompatTools.arrayCopy(buffer, bytesRead));
          sendMessage(msg);
 
-         bytesSent += bytesRead;
+         bytesSent += bytesRead == -1 ? 0 : bytesRead;
          if (listener != null) listener.markProgress(bytesSent);
 
          if (bytesRead < FILE_BUFFER_SIZE)
