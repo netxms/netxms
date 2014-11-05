@@ -9,6 +9,7 @@
 - Code page option added to all client command line tools (nxalarm, nxevent, nxpush, nxsms)
 - Management console:
     - New dashboard element "DCI summary table"
+- Fixed issues: #667, #675
 
 
 *
