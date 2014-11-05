@@ -477,18 +477,24 @@ public class AgentFileManager extends ViewPart
          {
             mgr.add(actionUploadFile);
             //mgr.add(actionUploadFolder);
-            mgr.add(actionDownloadFile);
          }
          else
          {
             mgr.add(actionTailFile);
          }
+         mgr.add(actionDownloadFile);
          mgr.add(new Separator());
       }
       
-      mgr.add(actionRename);
+      if (selection.size() == 1)
+      {
+         if (((ServerFile)selection.getFirstElement()).isDirectory())
+         {
+            mgr.add(actionCreateDirectory);
+         }
+         mgr.add(actionRename);
+      }
       mgr.add(actionDelete);
-      mgr.add(actionCreateDirectory);
       mgr.add(new Separator());
       mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
       if ((selection.size() == 1) && ((ServerFile)selection.getFirstElement()).isDirectory())
