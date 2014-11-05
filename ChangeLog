@@ -2,6 +2,7 @@
 * 2.0-M1
 *
 
+- New hook script "AcceptNewNode" (can be used as additional filter for network discovery to avoid unnecessary communications)
 - SMS driver for Kannel gateway
 
 
