@@ -18,8 +18,21 @@
  */
 package org.netxms.ui.eclipse.filemanager.views;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URLEncoder;
+import java.util.Date;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -54,11 +67,15 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.ProgressListener;
 import org.netxms.client.AgentFile;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerFile;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -73,6 +90,7 @@ import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileFilter;
 import org.netxms.ui.eclipse.filemanager.views.helpers.ServerFileLabelProvider;
 import org.netxms.ui.eclipse.filemanager.views.helpers.ViewAgentFilesProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objecttools.views.FileViewer;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -103,7 +121,8 @@ public class AgentFileManager extends ViewPart
    private SortableTreeViewer viewer;
    private NXCSession session;
    private Action actionRefreshAll;
-   private Action actionUpload;
+   private Action actionUploadFile;
+   private Action actionUploadFolder;
    private Action actionDelete;
    private Action actionRename;
    private Action actionRefreshDirectory;
@@ -111,6 +130,7 @@ public class AgentFileManager extends ViewPart
    private Action actionDownloadFile;
    private Action actionTailFile;
    private long objectId = 0;
+   private String workspaceDir; 
 
    /*
     * (non-Javadoc)
@@ -125,6 +145,7 @@ public class AgentFileManager extends ViewPart
       session = (NXCSession)ConsoleSharedData.getSession();
       objectId = Long.parseLong(site.getSecondaryId());
       setPartName(String.format("File Manager - %s", session.getObjectName(objectId)));
+      workspaceDir = Platform.getInstanceLocation().getURL().getPath();
    }
 
    /*
@@ -312,13 +333,21 @@ public class AgentFileManager extends ViewPart
          }
       };
 
-      actionUpload = new Action("&Upload...") {
+      actionUploadFile = new Action("&Upload file...") {
          @Override
          public void run()
          {
             uploadFile();
          }
       };
+      
+     /* actionUploadFolder = new Action("&Upload folder...") {
+         @Override
+         public void run()
+         {
+            uploadFolder();
+         }
+      }; */
 
       actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
          @Override
@@ -353,7 +382,7 @@ public class AgentFileManager extends ViewPart
          @Override
          public void run()
          {
-            downloadFile();
+            startDownload();
          }
       };
 
@@ -436,11 +465,12 @@ public class AgentFileManager extends ViewPart
       {
          if (((ServerFile)selection.getFirstElement()).isDirectory())
          {
-            mgr.add(actionUpload);
+            mgr.add(actionUploadFile);
+            //mgr.add(actionUploadFolder);
+            mgr.add(actionDownloadFile);
          }
          else
          {
-            mgr.add(actionDownloadFile);
             mgr.add(actionTailFile);
          }
          mgr.add(new Separator());
@@ -526,7 +556,7 @@ public class AgentFileManager extends ViewPart
    }
    
    /**
-    * Upload file from agent to server
+    * Upload local file to agent
     */
    private void uploadFile()
    {
@@ -585,6 +615,94 @@ public class AgentFileManager extends ViewPart
          }.start();
       }
    }
+   
+   /**
+    * Upload local folder to agent
+    */
+   /*
+   private void uploadFolder()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.isEmpty())
+         return;
+
+      final Object[] objects = selection.toArray();
+      final ServerFile upladFolder = ((ServerFile)objects[0]).isDirectory() ? ((ServerFile)objects[0]) : ((ServerFile)objects[0])
+            .getParent();
+
+      final StartClientToAgentFolderUploadDialog dlg = new StartClientToAgentFolderUploadDialog(getSite().getShell());
+      if (dlg.open() == Window.OK)
+      {
+         final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         new ConsoleJob("Upload file to agent", null, Activator.PLUGIN_ID, null) {
+            @Override
+            protected void runInternal(final IProgressMonitor monitor) throws Exception
+            {
+               File folder = dlg.getLocalFile();
+               session.createFolderOnAgent(upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), objectId);
+               listFilesForFolder(folder, upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), monitor);
+               
+               upladFolder.setChildren(session.listAgentFiles(upladFolder, upladFolder.getFullName(), objectId));
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     viewer.refresh(upladFolder, true);
+                  }
+               });
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return Messages.get().UploadFileToServer_JobError;
+            }
+         }.start();
+      }
+   }   
+    */
+   
+   /**
+    * Recursively uploads files to agent and creates correct folders
+    * 
+    * @param folder
+    * @param upladFolder
+    * @param monitor
+    * @throws NXCException
+    * @throws IOException
+    */
+   public void listFilesForFolder(final File folder, final String upladFolder, final IProgressMonitor monitor) throws NXCException, IOException 
+   {
+      for (final File fileEntry : folder.listFiles()) 
+      {
+          if (fileEntry.isDirectory()) 
+          {
+             session.createFolderOnAgent(upladFolder+"/"+fileEntry.getName(), objectId);
+             listFilesForFolder(fileEntry, upladFolder+"/"+fileEntry.getName(), monitor);
+          } 
+          else 
+          {
+             session.uploadLocalFileToAgent(fileEntry, upladFolder+"/"+fileEntry.getName(), objectId, new ProgressListener() {
+                private long prevWorkDone = 0;
+
+                @Override
+                public void setTotalWorkAmount(long workTotal)
+                {
+                   monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + fileEntry.getAbsolutePath(),
+                         (int)workTotal);
+                }
+
+                @Override
+                public void markProgress(long workDone)
+                {
+                   monitor.worked((int)(workDone - prevWorkDone));
+                   prevWorkDone = workDone;
+                }
+             });
+             monitor.done(); 
+          }
+      }
+  }
 
    /**
     * Delete selected file
@@ -628,9 +746,11 @@ public class AgentFileManager extends ViewPart
       }.start();
    }
 
+   /**
+    * Starts file tail view&messages
+    */
    private void tailFile()
-   {
-      /*
+   {      
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.isEmpty())
          return;
@@ -642,7 +762,7 @@ public class AgentFileManager extends ViewPart
 
       final ServerFile sf = ((ServerFile)objects[0]);
 
-      ConsoleJob job = new ConsoleJob("Download file from agent", null, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob("Download file from agent and start tail", null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
          {
@@ -675,28 +795,149 @@ public class AgentFileManager extends ViewPart
          }
       };
       job.start();
-      */
    }
 
    /**
     * Download file from agent
     */
-   private void downloadFile()
+   private void startDownload()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.size() != 1)
          return;
 
       final ServerFile sf = (ServerFile)selection.getFirstElement();
-      if (sf.isDirectory())
-         return;
       
+      if (!sf.isDirectory())
+         downloadFile(sf.getFullName());
+
+      if (sf.isDirectory())
+      {
+         ConsoleJob job = new ConsoleJob(Messages.get().SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {				
+				//create zip from download folder wile download
+				FileOutputStream fos = new FileOutputStream(workspaceDir+File.separator+sf.getName()+".zip");
+				ZipOutputStream zos = new ZipOutputStream(fos);
+				downloadDir(sf, sf.getName(), zos);
+				
+				zos.close();
+				fos.close();
+				
+				//javascript for client to download this zip
+				final File zipArchive = new File(workspaceDir+File.separator+sf.getName()+".zip");
+				DownloadServiceHandler.addDownload(zipArchive.getName(), zipArchive.getName(), zipArchive, "application/octet-stream");
+	            runInUIThread(new Runnable() {
+	               @Override
+	               public void run()
+	               {
+	                  JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+	                  if( executor != null ) 
+	                  {
+	                     StringBuilder js = new StringBuilder();
+	                     js.append("var hiddenIFrameID = 'hiddenDownloader',");
+	                     js.append("   iframe = document.getElementById(hiddenIFrameID);");
+	                     js.append("if (iframe === null) {");
+	                     js.append("   iframe = document.createElement('iframe');");
+	                     js.append("   iframe.id = hiddenIFrameID;");
+	                     js.append("   iframe.style.display = 'none';");
+	                     js.append("   document.body.appendChild(iframe);");
+	                     js.append("}");
+	                     js.append("iframe.src = '");
+	                     js.append(DownloadServiceHandler.createDownloadUrl(zipArchive.getName()));
+	                     js.append("';");
+	                     executor.execute(js.toString());
+	                  }                 
+	               }
+	            });
+            }
+
+            @Override
+            protected String getErrorMessage()
+            {
+               return "Error while retrieving children of server file";
+            }
+         };
+         job.setUser(false);
+         job.start();
+      }
+   }
+   
+   public static void addToZipFile(String fileName, ZipOutputStream zos) throws FileNotFoundException, IOException 
+   {
+		File file = new File(fileName);
+		FileInputStream fis = new FileInputStream(file);
+		ZipEntry zipEntry = new ZipEntry(fileName+File.separator);
+		zos.putNextEntry(zipEntry);
+
+		byte[] bytes = new byte[1024];
+		int length;
+		while ((length = fis.read(bytes)) >= 0) 
+		{
+			zos.write(bytes, 0, length);
+		}
+
+		zos.closeEntry();
+		fis.close();
+	}
+   
+   /**
+    * Recursively download directory from agent to local pc
+    * 
+    * @param sf
+    * @param localFileName
+    * @throws IOException 
+    * @throws NXCException 
+    */
+   private void downloadDir(final ServerFile sf, String localFileName,ZipOutputStream zos) throws NXCException, IOException
+   {
+	   //create directory inside of zip
+      zos.putNextEntry(new ZipEntry(localFileName+File.separator));
+      zos.closeEntry();
+      ServerFile[] files = sf.getChildren();
+      if(files == null)
+      {
+         files = session.listAgentFiles(sf, sf.getFullName(), sf.getNodeId());
+      }
+      for(int i = 0; i < files.length; i++)
+      {
+         if(files[i].isDirectory())
+         {
+            downloadDir(files[i], localFileName+"/"+sf.getName(),zos);
+         }
+         else
+         {
+            final AgentFile file = session.downloadFileFromAgent(objectId,  files[i].getFullName(), 0, false);
+            
+    		FileInputStream fis = new FileInputStream(file.getFile());
+    		ZipEntry zipEntry = new ZipEntry(localFileName+"/"+files[i].getName());
+    		zos.putNextEntry(zipEntry);
+
+    		byte[] bytes = new byte[1024];
+    		int length;
+    		while ((length = fis.read(bytes)) >= 0) 
+    		{
+    			zos.write(bytes, 0, length);
+    		}
+
+    		zos.closeEntry();
+    		fis.close();
+         }
+      }
+   }
+   
+   /**
+    * Downloads file
+    */
+   private void downloadFile(final String remoteName)
+   {
       ConsoleJob job = new ConsoleJob("Download file from agent", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final AgentFile file = session.downloadFileFromAgent(objectId, sf.getFullName(), 0, false);
-            DownloadServiceHandler.addDownload(file.getFile().getName(), sf.getName(), file.getFile(), "application/octet-stream");
+            final AgentFile file = session.downloadFileFromAgent(objectId, remoteName, 0, false);
+            DownloadServiceHandler.addDownload(file.getFile().getName(), remoteName, file.getFile(), "application/octet-stream");
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -725,12 +966,12 @@ public class AgentFileManager extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Error while downloading file %s from node %s [%d]", sf.getFullName(), session.getObjectName(objectId), objectId);
+            return String.format("Error while downloading file %s from node %s [%d]", remoteName, session.getObjectName(objectId), objectId);
          }
       };
       job.start();
    }
-
+   
    /**
     * Rename selected file
     */
