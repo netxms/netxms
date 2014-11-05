@@ -2030,7 +2030,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
 		}
 
       // Check for 64 bit counter support.
-      // if Net.Interface.64BitCounters not supported by agent then use 
+      // if Net.Interface.64BitCounters not supported by agent then use
       // only presence of 64 bit parameters as indicator
       bool netIf64bitCounters = true;
 		if (pAgentConn->getParameter(_T("Net.Interface.64BitCounters"), MAX_DB_STRING, buffer) == ERR_SUCCESS)
@@ -4101,8 +4101,15 @@ UINT32 Node::wakeUp()
           (m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
           (m_pChildList[i]->IpAddr() != 0))
       {
-         dwResult = ((Interface *)m_pChildList[i])->wakeUp();
-         break;
+         if(memcmp(((Interface *)m_pChildList[i])->getMacAddr(), "\x00\x00\x00\x00\x00\x00", 6))
+         {
+            dwResult = ((Interface *)m_pChildList[i])->wakeUp();
+            break;
+         }
+         else
+         {
+            dwResult = RCC_NO_MAC_ADDRESS;
+         }
       }
 
    UnlockChildList();
