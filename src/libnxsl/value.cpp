@@ -799,11 +799,9 @@ void NXSL_Value::bitNot()
    }
 }
 
-
-//
-// Check if value is zero
-//
-
+/**
+ * Check if value is zero
+ */
 bool NXSL_Value::isZero()
 {
    bool bVal = false;
@@ -831,11 +829,9 @@ bool NXSL_Value::isZero()
    return bVal;
 }
 
-
-//
-// Check if value is not a zero
-//
-
+/**
+ * Check if value is not a zero
+ */
 bool NXSL_Value::isNonZero()
 {
    bool bVal = false;

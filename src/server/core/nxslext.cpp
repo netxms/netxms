@@ -1396,3 +1396,16 @@ void NXSL_ClientSessionEnv::trace(int level, const TCHAR *text)
 	}
    NXSL_ServerEnv::trace(level, text);
 }
+
+/**
+ * Call hook script
+ */
+NXSL_VM *FindHookScript(const TCHAR *hookName)
+{
+	TCHAR scriptName[MAX_PATH] = _T("Hook::");
+	nx_strncpy(&scriptName[6], hookName, MAX_PATH - 6);
+	NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+	if (vm == NULL)
+		DbgPrintf(7, _T("FindHookScript: hook script \"%s\" not found"), scriptName);
+   return vm;
+}

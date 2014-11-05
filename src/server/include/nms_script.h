@@ -146,20 +146,17 @@ public:
 	virtual void trace(int level, const TCHAR *text);
 };
 
-
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 void LoadScripts();
 void ReloadScript(UINT32 dwScriptId);
 BOOL IsValidScriptId(UINT32 dwId);
+NXSL_VM *FindHookScript(const TCHAR *hookName);
 
-
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 extern NXSL_Library *g_pScriptLibrary;
 
 extern NXSL_DciClass g_nxslDciClass;
