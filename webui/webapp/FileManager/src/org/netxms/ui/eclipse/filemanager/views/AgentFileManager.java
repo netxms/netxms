@@ -83,6 +83,7 @@ import org.netxms.ui.eclipse.console.DownloadServiceHandler;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.filemanager.Activator;
 import org.netxms.ui.eclipse.filemanager.Messages;
+import org.netxms.ui.eclipse.filemanager.dialogs.CreateFolderDialog;
 import org.netxms.ui.eclipse.filemanager.dialogs.RenameFileDialog;
 import org.netxms.ui.eclipse.filemanager.dialogs.StartClientToServerFileUploadDialog;
 import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileComparator;
@@ -129,6 +130,7 @@ public class AgentFileManager extends ViewPart
    private Action actionShowFilter;
    private Action actionDownloadFile;
    private Action actionTailFile;
+   private Action actionCreateDirectory;
    private long objectId = 0;
    private String workspaceDir; 
 
@@ -393,6 +395,14 @@ public class AgentFileManager extends ViewPart
             tailFile();
          }
       };
+      
+      actionCreateDirectory = new Action("&Create folder") {
+         @Override
+         public void run()
+         {
+            createFolder();
+         }
+      };
    }
 
    /**
@@ -478,6 +488,7 @@ public class AgentFileManager extends ViewPart
       
       mgr.add(actionRename);
       mgr.add(actionDelete);
+      mgr.add(actionCreateDirectory);
       mgr.add(new Separator());
       mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
       if ((selection.size() == 1) && ((ServerFile)selection.getFirstElement()).isDirectory())
@@ -1040,6 +1051,49 @@ public class AgentFileManager extends ViewPart
                   object.setParent(target);
                   target.addChield(object);
                   viewer.refresh(object.getParent(), true);
+               }
+            });
+         }
+      }.start();
+   }
+   
+   /**
+    * Create new folder
+    */
+   private void createFolder()
+   {      
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.isEmpty())
+         return;
+
+      final Object[] objects = selection.toArray();
+      final ServerFile parentFolder = ((ServerFile)objects[0]).isDirectory() ? ((ServerFile)objects[0]) : ((ServerFile)objects[0])
+            .getParent();
+
+      final CreateFolderDialog dlg = new CreateFolderDialog(getSite().getShell());
+      if (dlg.open() != Window.OK)
+         return;
+      
+      final String newFolder = dlg.getNewName();
+      
+      new ConsoleJob("Create folder job", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Error while create folder job";
+         }
+
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.createFolderOnAgent(parentFolder.getFullName()+"/"+newFolder, objectId);
+            parentFolder.setChildren(session.listAgentFiles(parentFolder, parentFolder.getFullName(), objectId));
+
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.refresh(parentFolder, true);
                }
             });
          }
