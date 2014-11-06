@@ -392,9 +392,11 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(UINT32 dwError)
       _T("Routing table unavailable"),
       _T("Switch forwarding database unavailable"),
       _T("Location history not available"),
-      _T("Object is in use and cannot be deleted")
+      _T("Object is in use and cannot be deleted"),
+      _T("Script compilation error"),
+      _T("Script execution error")
    };
-	return (dwError <= RCC_OBJECT_IN_USE) ? pszErrorText[dwError] : _T("No text message for this error");
+	return (dwError <= RCC_NXSL_EXECUTION_ERROR) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 #if defined(_WIN32) && !defined(UNDER_CE)

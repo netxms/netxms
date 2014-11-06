@@ -54,9 +54,9 @@ typedef struct
 /**
  * Calculate field size
  */
-static int CalculateFieldSize(CSCP_DF *field, bool networkByteOrder)
+static size_t CalculateFieldSize(CSCP_DF *field, bool networkByteOrder)
 {
-   int nSize;
+   size_t nSize;
 
    switch(field->bType)
    {
@@ -91,17 +91,17 @@ struct MessageField
 {
    UT_hash_handle hh;
    UINT32 id;
-   UINT32 size;
+   size_t size;
    CSCP_DF data;
 };
 
 /**
  * Create new hash entry wth given field size
  */
-inline MessageField *CreateMessageField(int fieldSize)
+inline MessageField *CreateMessageField(size_t fieldSize)
 {
-   int entrySize = sizeof(MessageField) - sizeof(CSCP_DF) + fieldSize;
-   MessageField *entry = (MessageField *)malloc(entrySize);
+   size_t entrySize = sizeof(MessageField) - sizeof(CSCP_DF) + fieldSize;
+   MessageField *entry = (MessageField *)calloc(1, entrySize);
    entry->size = entrySize;
    return entry;
 }
@@ -152,22 +152,22 @@ CSCPMessage::CSCPMessage(CSCP_MESSAGE *pMsg, int version)
 
    // Parse data fields
    int fieldCount = (int)ntohl(pMsg->dwNumVars);
-   UINT32 dwSize = ntohl(pMsg->dwSize);
-   UINT32 dwPos = CSCP_HEADER_SIZE;
+   size_t dwSize = ntohl(pMsg->dwSize);
+   size_t pos = CSCP_HEADER_SIZE;
    for(int f = 0; f < fieldCount; f++)
    {
-      CSCP_DF *field = (CSCP_DF *)(((BYTE *)pMsg) + dwPos);
+      CSCP_DF *field = (CSCP_DF *)(((BYTE *)pMsg) + pos);
 
       // Validate position inside message
-      if (dwPos > dwSize - 8)
+      if (pos > dwSize - 8)
          break;
-      if ((dwPos > dwSize - 12) && 
+      if ((pos > dwSize - 12) && 
           ((field->bType == CSCP_DT_STRING) || (field->bType == CSCP_DT_BINARY)))
          break;
 
       // Calculate and validate variable size
-      int fieldSize = CalculateFieldSize(field, true);
-      if (dwPos + fieldSize > dwSize)
+      size_t fieldSize = CalculateFieldSize(field, true);
+      if (pos + fieldSize > dwSize)
          break;
 
       // Create new entry
@@ -207,9 +207,9 @@ CSCPMessage::CSCPMessage(CSCP_MESSAGE *pMsg, int version)
 
       // Starting from version 2, all variables should be 8-byte aligned
       if (m_version >= 2)
-         dwPos += fieldSize + ((8 - (fieldSize % 8)) & 7);
+         pos += fieldSize + ((8 - (fieldSize % 8)) & 7);
       else
-         dwPos += fieldSize;
+         pos += fieldSize;
    }
 }
 
@@ -835,16 +835,16 @@ BYTE *CSCPMessage::getBinaryFieldPtr(UINT32 fieldId, size_t *size)
 CSCP_MESSAGE *CSCPMessage::createMessage()
 {
    // Calculate message size
-   UINT32 dwSize = CSCP_HEADER_SIZE;
+   size_t size = CSCP_HEADER_SIZE;
    UINT32 fieldCount = 0;
    MessageField *entry, *tmp;
    HASH_ITER(hh, m_fields, entry, tmp)
    {
-      int fieldSize = CalculateFieldSize(&entry->data, false);
+      size_t fieldSize = CalculateFieldSize(&entry->data, false);
       if (m_version >= 2)
-         dwSize += fieldSize + ((8 - (fieldSize % 8)) & 7);
+         size += fieldSize + ((8 - (fieldSize % 8)) & 7);
       else
-         dwSize += fieldSize;
+         size += fieldSize;
       fieldCount++;
    }
 
@@ -852,14 +852,14 @@ CSCP_MESSAGE *CSCPMessage::createMessage()
    // This is always the case starting from version 2 because
    // all variables are padded to 8 bytes boundary
    if (m_version < 2)
-      dwSize += (8 - (dwSize % 8)) & 7;
+      size += (8 - (size % 8)) & 7;
 
    // Create message
-   CSCP_MESSAGE *pMsg = (CSCP_MESSAGE *)malloc(dwSize);
-   memset(pMsg, 0, dwSize);
+   CSCP_MESSAGE *pMsg = (CSCP_MESSAGE *)malloc(size);
+   memset(pMsg, 0, size);
    pMsg->wCode = htons(m_code);
    pMsg->wFlags = htons(m_flags);
-   pMsg->dwSize = htonl(dwSize);
+   pMsg->dwSize = htonl((UINT32)size);
    pMsg->dwId = htonl(m_id);
    pMsg->dwNumVars = htonl(fieldCount);
 
@@ -867,7 +867,7 @@ CSCP_MESSAGE *CSCPMessage::createMessage()
    CSCP_DF *field = (CSCP_DF *)((char *)pMsg + CSCP_HEADER_SIZE);
    HASH_ITER(hh, m_fields, entry, tmp)
    {
-      int fieldSize = CalculateFieldSize(&entry->data, false);
+      size_t fieldSize = CalculateFieldSize(&entry->data, false);
       memcpy(field, &entry->data, fieldSize);
 
       // Convert numeric values to network format
@@ -1167,7 +1167,7 @@ String CSCPMessage::dump(CSCP_MESSAGE *pMsg, int version)
    }
    
    // Parse data fields
-   UINT32 pos = CSCP_HEADER_SIZE;
+   size_t pos = CSCP_HEADER_SIZE;
    for(int f = 0; f < numFields; f++)
    {
       CSCP_DF *field = (CSCP_DF *)(((BYTE *)pMsg) + pos);
@@ -1186,7 +1186,7 @@ String CSCPMessage::dump(CSCP_MESSAGE *pMsg, int version)
       }
 
       // Calculate and validate field size
-      int fieldSize = CalculateFieldSize(field, TRUE);
+      size_t fieldSize = CalculateFieldSize(field, TRUE);
       if (pos + fieldSize > size)
       {
          out += _T("  ** message format error (invalid field size)\n");

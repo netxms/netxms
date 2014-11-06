@@ -1388,8 +1388,8 @@ void NXSL_ClientSessionEnv::trace(int level, const TCHAR *text)
       size_t len = _tcslen(text);
       TCHAR *t = (TCHAR *)malloc((len + 2) * sizeof(TCHAR));
       memcpy(t, text, len * sizeof(TCHAR));
-      t[len - 1] = _T('\n');
-      t[len] = 0;
+      t[len] = _T('\n');
+      t[len + 1] = 0;
 		m_response->SetVariable(VID_MESSAGE, t);
 		m_session->sendMessage(m_response);
       free(t);

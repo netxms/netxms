@@ -10975,22 +10975,18 @@ void ClientSession::testDCITransformation(CSCPMessage *pRequest)
 /**
  * Execute script in object's context
  */
-void ClientSession::executeScript(CSCPMessage *pRequest)
+void ClientSession::executeScript(CSCPMessage *request)
 {
-   CSCPMessage msg, updateMessage;
+   CSCPMessage msg;
    bool success = false;
    NXSL_VM *vm = NULL;
-   TCHAR result[256];
 
    // Prepare response message
    msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(pRequest->GetId());
-   //Prepare update message
-   updateMessage.SetCode(CMD_EXECUTE_SCRIPT_UPDATE);
-   updateMessage.SetId(pRequest->GetId());
+   msg.SetId(request->GetId());
 
    // Get node id and check object class and access rights
-   NetObj *object = FindObjectById(pRequest->GetVariableLong(VID_OBJECT_ID));
+   NetObj *object = FindObjectById(request->GetVariableLong(VID_OBJECT_ID));
    if (object != NULL)
    {
       if ((object->getObjectClass() == OBJECT_NODE) ||
@@ -11002,10 +10998,11 @@ void ClientSession::executeScript(CSCPMessage *pRequest)
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
-				TCHAR *script = pRequest->GetVariableStr(VID_SCRIPT);
+				TCHAR *script = request->GetVariableStr(VID_SCRIPT);
 				if (script != NULL)
 				{
-               vm = NXSLCompileAndCreateVM(script, result, 256, new NXSL_ClientSessionEnv(this, &updateMessage));
+               TCHAR errorMessage[256];
+               vm = NXSLCompileAndCreateVM(script, errorMessage, 256, new NXSL_ClientSessionEnv(this, &msg));
                if (vm != NULL)
                {
                   vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
@@ -11014,12 +11011,14 @@ void ClientSession::executeScript(CSCPMessage *pRequest)
                      vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
                   }
                   msg.SetVariable(VID_RCC, RCC_SUCCESS);
-                  msg.SetVariable(VID_EXECUTION_RESULT, result);
                   sendMessage(&msg);
                   success = true;
                }
-               msg.SetVariable(VID_EXECUTION_RESULT, result);
-               msg.SetVariable(VID_RCC, RCC_COMM_FAILURE); //TODO: return correct errot(Compilation error)
+               else
+               {
+                  msg.SetVariable(VID_RCC, RCC_NXSL_COMPILATION_ERROR);
+                  msg.SetVariable(VID_ERROR_TEXT, errorMessage);
+               }
 					safe_free(script);
 				}
 				else
@@ -11045,23 +11044,23 @@ void ClientSession::executeScript(CSCPMessage *pRequest)
    // start execution
    if (success)
    {
+      msg.SetCode(CMD_EXECUTE_SCRIPT_UPDATE);
       if (vm->run())
       {
          TCHAR buffer[1024];
          const TCHAR *value = vm->getResult()->getValueAsCString();
          _sntprintf(buffer, 1024, _T("\n\n*** FINISHED ***\n\nResult: %s\n\n"), CHECK_NULL(value));
-         updateMessage.SetVariable(VID_MESSAGE, buffer);
-			updateMessage.SetVariable(VID_RCC, RCC_SUCCESS);
-         updateMessage.setEndOfSequence();
-         sendMessage(&updateMessage);
+         msg.SetVariable(VID_MESSAGE, buffer);
+			msg.SetVariable(VID_RCC, RCC_SUCCESS);
+         msg.setEndOfSequence();
+         sendMessage(&msg);
       }
       else
       {
-         nx_strncpy(result, vm->getErrorText(), 256);
-         updateMessage.SetVariable(VID_MESSAGE, result);
-			updateMessage.SetVariable(VID_RCC, RCC_EXEC_FAILED);
-         updateMessage.setEndOfSequence();
-         sendMessage(&updateMessage);
+         msg.SetVariable(VID_ERROR_TEXT, vm->getErrorText());
+			msg.SetVariable(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
+         msg.setEndOfSequence();
+         sendMessage(&msg);
       }
       delete vm;
    }
@@ -11089,39 +11088,39 @@ void ClientSession::sendJobList(UINT32 dwRqId)
 /**
  * Cancel server job
  */
-void ClientSession::cancelJob(CSCPMessage *pRequest)
+void ClientSession::cancelJob(CSCPMessage *request)
 {
 	CSCPMessage msg;
 
 	msg.SetCode(CMD_REQUEST_COMPLETED);
-	msg.SetId(pRequest->GetId());
-	msg.SetVariable(VID_RCC, ::CancelJob(m_dwUserId, pRequest));
+	msg.SetId(request->GetId());
+	msg.SetVariable(VID_RCC, ::CancelJob(m_dwUserId, request));
 	sendMessage(&msg);
 }
 
 /**
  * Put server job on hold
  */
-void ClientSession::holdJob(CSCPMessage *pRequest)
+void ClientSession::holdJob(CSCPMessage *request)
 {
 	CSCPMessage msg;
 
 	msg.SetCode(CMD_REQUEST_COMPLETED);
-	msg.SetId(pRequest->GetId());
-	msg.SetVariable(VID_RCC, ::HoldJob(m_dwUserId, pRequest));
+	msg.SetId(request->GetId());
+	msg.SetVariable(VID_RCC, ::HoldJob(m_dwUserId, request));
 	sendMessage(&msg);
 }
 
 /**
  * Allow server job on hold for execution
  */
-void ClientSession::unholdJob(CSCPMessage *pRequest)
+void ClientSession::unholdJob(CSCPMessage *request)
 {
 	CSCPMessage msg;
 
 	msg.SetCode(CMD_REQUEST_COMPLETED);
-	msg.SetId(pRequest->GetId());
-	msg.SetVariable(VID_RCC, ::UnholdJob(m_dwUserId, pRequest));
+	msg.SetId(request->GetId());
+	msg.SetVariable(VID_RCC, ::UnholdJob(m_dwUserId, request));
 	sendMessage(&msg);
 }
 
