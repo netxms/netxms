@@ -178,8 +178,7 @@ public class LoginJob implements IRunnableWithProgress
     * @return
     */
    private NXCSession createSession(String hostName, int port)
-   {
-encryptSession=false;      
+   {   
       // Read all registered extensions and create provider with minimal priority
       IConfigurationElement currentElement = null;
       int currentPriotity = 65536;
