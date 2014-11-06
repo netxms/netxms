@@ -575,7 +575,7 @@ const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer)
    // Copy word to buffer
    for(bptr = buffer; (*ptr != L' ') && (*ptr != L'\t') && (*ptr != 0); ptr++, bptr++)
       *bptr = *ptr;
-   *bptr=0;
+   *bptr = 0;
    return ptr;
 }
 
@@ -593,7 +593,7 @@ const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer)
    // Copy word to buffer
    for(bptr = buffer; (*ptr != ' ') && (*ptr != '\t') && (*ptr != 0); ptr++, bptr++)
       *bptr = *ptr;
-   *bptr=0;
+   *bptr = 0;
    return ptr;
 }
 

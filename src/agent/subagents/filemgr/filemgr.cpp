@@ -525,26 +525,26 @@ static BOOL MoveFile(TCHAR* oldName, TCHAR* newName)
 /**
  * Create folder
  */
-static BOOL CreateFolder(TCHAR* directory)
+static BOOL CreateFolder(const TCHAR *directory)
 {
    NX_STAT_STRUCT st;
    TCHAR *previous = _tcsdup(directory);
    TCHAR *ptr = _tcsrchr(previous, FS_PATH_SEPARATOR_CHAR);
    BOOL result = FALSE;
-   if(ptr != NULL)
+   if (ptr != NULL)
    {
       *ptr = 0;
-      if(CALL_STAT(previous, &st) != 0)
+      if (CALL_STAT(previous, &st) != 0)
       {
          result = CreateFolder(previous);
-         if(result)
+         if (result)
          {
-            result = CALL_STAT(previous, &st) == 0;
+            result = (CALL_STAT(previous, &st) == 0);
          }
       }
       else
       {
-         if(S_ISDIR(st.st_mode))
+         if (S_ISDIR(st.st_mode))
          {
             result = TRUE;
          }
@@ -552,25 +552,18 @@ static BOOL CreateFolder(TCHAR* directory)
    }
    else
    {
-      result = TRUE;
+      result = true;
       st.st_mode = 0700;
    }
    safe_free(previous);
 
-   if(result)
+   if (result)
    {
 #ifdef _WIN32
-      if(CreateDirectory(directory, NULL)
+      result = CreateDirectory(directory, NULL);
 #else
-      if(_tmkdir(directory, st.st_mode) == 0)
+      result = (_tmkdir(directory, st.st_mode) == 0);
 #endif /* _WIN32 */
-      {
-         result = TRUE;
-      }
-      else
-      {
-         result = FALSE;
-      }
    }
 
    return result;
