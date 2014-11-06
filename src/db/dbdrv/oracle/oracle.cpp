@@ -1085,7 +1085,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(ORACLE_CONN *pConn, ORACLE_STAT
 	ORACLE_RESULT *pResult = NULL;
 
 	MutexLock(pConn->mutexQueryLock);
-   OCIAttrSet(pConn->handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, 0, OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
+   OCIAttrSet(stmt->handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, 0, OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
 	if (OCIStmtExecute(pConn->handleService, stmt->handleStmt, pConn->handleError,
 	                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
 	{
