@@ -615,7 +615,8 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
       if (vm->run(&args))
       {
          NXSL_Value *value = vm->getResult();
-         nx_strncpy(buffer, value->getValueAsCString(), bufSize);
+         const TCHAR *dciValue = value->getValueAsCString();
+         nx_strncpy(buffer, CHECK_NULL_EX(dciValue), bufSize);
          rc = DCE_SUCCESS;
       }
       else
