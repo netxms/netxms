@@ -172,6 +172,8 @@ public class GeneralInfo extends TableElement
 		}
 		if (object.getGeolocation().getType() != GeoLocation.UNSET)
 			addPair(Messages.get().GeneralInfo_Location, object.getGeolocation().toString());
+		if (!object.getPostalAddress().isEmpty())
+         addPair("Postal Address", object.getPostalAddress().getAddressLine());
 	}
 
 	/* (non-Javadoc)

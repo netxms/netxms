@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.GeoLocationFormatException;
+import org.netxms.base.PostalAddress;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
@@ -53,6 +54,10 @@ public class Location extends PropertyPage
 	private Button radioTypeUndefined;
 	private Button radioTypeManual;
 	private Button radioTypeAuto;
+	private LabeledText country;
+   private LabeledText city;
+   private LabeledText streetAddress;
+   private LabeledText postcode;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -129,6 +134,26 @@ public class Location extends PropertyPage
 		radioTypeUndefined.addSelectionListener(listener);
 		radioTypeManual.addSelectionListener(listener);
 		radioTypeAuto.addSelectionListener(listener);
+		
+		country = new LabeledText(dialogArea, SWT.NONE);
+		country.setLabel("Country");
+		country.setText(object.getPostalAddress().country);
+		country.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+      
+      city = new LabeledText(dialogArea, SWT.NONE);
+      city.setLabel("City");
+      city.setText(object.getPostalAddress().city);
+      city.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+      
+      streetAddress = new LabeledText(dialogArea, SWT.NONE);
+      streetAddress.setLabel("Street address");
+      streetAddress.setText(object.getPostalAddress().streetAddress);
+      streetAddress.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+      
+      postcode = new LabeledText(dialogArea, SWT.NONE);
+      postcode.setLabel("Postcode");
+      postcode.setText(object.getPostalAddress().postcode);
+      postcode.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
       
 		return dialogArea;
 	}
@@ -165,7 +190,8 @@ public class Location extends PropertyPage
 		}
 		
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
-		md.setGeolocation(location);
+		md.setGeolocation(location);		
+		md.setPostalAddress(new PostalAddress(country.getText().trim(), city.getText().trim(), streetAddress.getText().trim(), postcode.getText().trim()));
 		
 		if (isApply)
 			setValid(false);

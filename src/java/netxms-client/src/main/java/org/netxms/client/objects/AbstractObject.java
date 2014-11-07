@@ -838,4 +838,12 @@ public abstract class AbstractObject
    {
       return (moduleData != null) ? moduleData.get(module) : null;
    }
+
+   /**
+    * @return the postalAddress
+    */
+   public PostalAddress getPostalAddress()
+   {
+      return postalAddress;
+   }
 }
