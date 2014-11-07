@@ -824,6 +824,11 @@ public class NXCPCodes
    public static final long VID_RECEIVE_OUTPUT = 482;
    public static final long VID_SESSION_STATE = 483;
    public static final long VID_PAGE_SIZE = 484;
+   public static final long VID_EXECUTION_END_FLAG = 485;
+   public static final long VID_COUNTRY = 486;
+   public static final long VID_CITY = 487;
+   public static final long VID_STREET_ADDRESS = 488;
+   public static final long VID_POSTCODE = 489;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

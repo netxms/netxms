@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.netxms.base.GeoLocation;
+import org.netxms.base.PostalAddress;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
@@ -98,6 +99,7 @@ public class NXCObjectModificationData
 	public static final long MODIFY_FILTER             = 0x0010000000000000L;
    public static final long MODIFY_PEER_GATEWAY       = 0x0020000000000000L;
    public static final long MODIFY_VPN_NETWORKS       = 0x0040000000000000L;
+   public static final long MODIFY_POSTAL_ADDRESS     = 0x0080000000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -173,6 +175,7 @@ public class NXCObjectModificationData
 	private long peerGatewayId;
 	private List<IpAddressListElement> localNetworks;
 	private List<IpAddressListElement> remoteNetworks;
+	private PostalAddress postalAddress;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1409,5 +1412,22 @@ public class NXCObjectModificationData
       this.localNetworks = localNetworks;
       this.remoteNetworks = remoteNetworks;
       flags |= MODIFY_VPN_NETWORKS;
+   }
+
+   /**
+    * @return the postalAddress
+    */
+   public PostalAddress getPostalAddress()
+   {
+      return postalAddress;
+   }
+
+   /**
+    * @param postalAddress the postalAddress to set
+    */
+   public void setPostalAddress(PostalAddress postalAddress)
+   {
+      this.postalAddress = postalAddress;
+      flags |= MODIFY_POSTAL_ADDRESS;
    }
 }

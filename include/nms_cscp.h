@@ -999,6 +999,10 @@ typedef struct
 #define VID_SESSION_STATE           ((UINT32)483)
 #define VID_PAGE_SIZE               ((UINT32)484)
 #define VID_EXECUTION_END_FLAG      ((UINT32)485)
+#define VID_COUNTRY                 ((UINT32)486)
+#define VID_CITY                    ((UINT32)487)
+#define VID_STREET_ADDRESS          ((UINT32)488)
+#define VID_POSTCODE                ((UINT32)489)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

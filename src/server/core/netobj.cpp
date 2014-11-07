@@ -66,6 +66,7 @@ NetObj::NetObj()
 	uuid_clear(m_image);
 	m_submapId = 0;
    m_moduleData = NULL;
+   m_postalAddress = new PostalAddress();
 }
 
 /**
@@ -84,6 +85,7 @@ NetObj::~NetObj()
 	safe_free(m_pdwTrustedNodes);
    safe_free(m_pszComments);
    delete m_moduleData;
+   delete m_postalAddress;
 }
 
 /**
@@ -170,7 +172,8 @@ bool NetObj::loadCommonProperties()
                              _T("status_translation,status_single_threshold,")
                              _T("status_thresholds,comments,is_system,")
 									  _T("location_type,latitude,longitude,location_accuracy,")
-									  _T("location_timestamp,guid,image,submap_id FROM object_properties ")
+									  _T("location_timestamp,guid,image,submap_id,country,city,")
+                             _T("street_address,postcode FROM object_properties ")
                              _T("WHERE object_id=?"));
 	if (hStmt != NULL)
 	{
@@ -213,6 +216,14 @@ bool NetObj::loadCommonProperties()
 				DBGetFieldGUID(hResult, 0, 19, m_guid);
 				DBGetFieldGUID(hResult, 0, 20, m_image);
 				m_submapId = DBGetFieldULong(hResult, 0, 21);
+
+            TCHAR country[64], city[64], streetAddress[256], postcode[32];
+            DBGetField(hResult, 0, 22, country, 64);
+            DBGetField(hResult, 0, 23, city, 64);
+            DBGetField(hResult, 0, 24, streetAddress, 256);
+            DBGetField(hResult, 0, 25, postcode, 32);
+            delete m_postalAddress;
+            m_postalAddress = new PostalAddress(country, city, streetAddress, postcode);
 
 				success = true;
 			}
@@ -305,7 +316,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("status_single_threshold=?,status_thresholds=?,")
                     _T("comments=?,is_system=?,location_type=?,latitude=?,")
 						  _T("longitude=?,location_accuracy=?,location_timestamp=?,")
-						  _T("guid=?,image=?,submap_id=? WHERE object_id=?"));
+						  _T("guid=?,image=?,submap_id=?,country=?,city=?,")
+                    _T("street_address=?,postcode=? WHERE object_id=?"));
 	}
 	else
 	{
@@ -315,8 +327,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("status_prop_alg,status_fixed_val,status_shift,status_translation,")
                     _T("status_single_threshold,status_thresholds,comments,is_system,")
 						  _T("location_type,latitude,longitude,location_accuracy,location_timestamp,")
-						  _T("guid,image,submap_id,object_id) ")
-                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+						  _T("guid,image,submap_id,country,city,street_address,postcode,object_id) ")
+                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -352,7 +364,11 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guid), DB_BIND_STATIC);
 	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, uuid_to_string(m_image, image), DB_BIND_STATIC);
 	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_submapId);
-	DBBind(hStmt, 23, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_postalAddress->getCountry(), DB_BIND_STATIC);
+	DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress->getCity(), DB_BIND_STATIC);
+	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress->getStreetAddress(), DB_BIND_STATIC);
+	DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress->getPostCode(), DB_BIND_STATIC);
+	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt) ? true : false;
 	DBFreeStatement(hStmt);
@@ -946,6 +962,11 @@ void NetObj::fillMessage(CSCPMessage *pMsg)
    m_pAccessList->fillMessage(pMsg);
 	m_geoLocation.fillMessage(*pMsg);
 
+   pMsg->SetVariable(VID_COUNTRY, m_postalAddress->getCountry());
+   pMsg->SetVariable(VID_CITY, m_postalAddress->getCity());
+   pMsg->SetVariable(VID_STREET_ADDRESS, m_postalAddress->getStreetAddress());
+   pMsg->SetVariable(VID_POSTCODE, m_postalAddress->getPostCode());
+
    if (m_moduleData != NULL)
    {
       pMsg->SetVariable(VID_MODULE_DATA_COUNT, (UINT16)m_moduleData->size());
@@ -1074,6 +1095,34 @@ UINT32 NetObj::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	{
 		m_submapId = pRequest->GetVariableLong(VID_SUBMAP_ID);
 	}
+
+   if (pRequest->isFieldExist(VID_COUNTRY))
+   {
+      TCHAR buffer[64];
+      pRequest->GetVariableStr(VID_COUNTRY, buffer, 64);
+      m_postalAddress->setCountry(buffer);
+   }
+
+   if (pRequest->isFieldExist(VID_CITY))
+   {
+      TCHAR buffer[64];
+      pRequest->GetVariableStr(VID_CITY, buffer, 64);
+      m_postalAddress->setCity(buffer);
+   }
+
+   if (pRequest->isFieldExist(VID_STREET_ADDRESS))
+   {
+      TCHAR buffer[256];
+      pRequest->GetVariableStr(VID_STREET_ADDRESS, buffer, 256);
+      m_postalAddress->setStreetAddress(buffer);
+   }
+
+   if (pRequest->isFieldExist(VID_POSTCODE))
+   {
+      TCHAR buffer[32];
+      pRequest->GetVariableStr(VID_POSTCODE, buffer, 32);
+      m_postalAddress->setPostCode(buffer);
+   }
 
    setModified();
    unlockProperties();

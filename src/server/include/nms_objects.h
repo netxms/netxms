@@ -328,8 +328,9 @@ protected:
    MUTEX m_mutexRefCount;     // Reference counter access mutex
    RWLOCK m_rwlockParentList; // Lock for parent list
    RWLOCK m_rwlockChildList;  // Lock for child list
-   UINT32 m_dwIpAddr;          // Every object should have an IP address
+   UINT32 m_dwIpAddr;
 	GeoLocation m_geoLocation;
+   PostalAddress *m_postalAddress;
    ClientSession *m_pollRequestor;
 	UINT32 m_submapId;				// Map object which should be open on drill-down request
 
@@ -402,6 +403,7 @@ public:
    UINT32 getTimeStamp() { return m_dwTimeStamp; }
 	void getGuid(uuid_t out) { memcpy(out, m_guid, UUID_LENGTH); }
 	const TCHAR *getComments() { return CHECK_NULL_EX(m_pszComments); }
+   PostalAddress *getPostalAddress() { return m_postalAddress; }
 
    bool isModified() { return m_isModified; }
    bool isDeleted() { return m_isDeleted; }

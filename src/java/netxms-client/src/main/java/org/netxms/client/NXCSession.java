@@ -4233,6 +4233,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          }
       }
       
+      if ((flags & NXCObjectModificationData.MODIFY_POSTAL_ADDRESS) != 0)
+      {
+         data.getPostalAddress().fillMessage(msg);
+      }
+      
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);

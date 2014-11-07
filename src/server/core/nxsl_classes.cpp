@@ -164,6 +164,22 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
    {
       pValue = new NXSL_Value(object->getComments());
    }
+   else if (!_tcscmp(pszAttr, _T("country")))
+   {
+      pValue = new NXSL_Value(object->getPostalAddress()->getCountry());
+   }
+   else if (!_tcscmp(pszAttr, _T("city")))
+   {
+      pValue = new NXSL_Value(object->getPostalAddress()->getCity());
+   }
+   else if (!_tcscmp(pszAttr, _T("streetAddress")))
+   {
+      pValue = new NXSL_Value(object->getPostalAddress()->getStreetAddress());
+   }
+   else if (!_tcscmp(pszAttr, _T("postcode")))
+   {
+      pValue = new NXSL_Value(object->getPostalAddress()->getPostCode());
+   }
 	else
 	{
 		const TCHAR *attrValue = object->getCustomAttribute(pszAttr);
@@ -197,9 +213,17 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value(zone->getAgentProxy());
    }
+   else if (!_tcscmp(pszAttr, _T("city")))
+   {
+      pValue = new NXSL_Value(zone->getPostalAddress()->getCity());
+   }
    else if (!_tcscmp(pszAttr, _T("comments")))
    {
       pValue = new NXSL_Value(zone->getComments());
+   }
+   else if (!_tcscmp(pszAttr, _T("country")))
+   {
+      pValue = new NXSL_Value(zone->getPostalAddress()->getCountry());
    }
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
@@ -220,6 +244,10 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value(zone->getName());
    }
+   else if (!_tcscmp(pszAttr, _T("postcode")))
+   {
+      pValue = new NXSL_Value(zone->getPostalAddress()->getPostCode());
+   }
    else if (!_tcscmp(pszAttr, _T("snmpProxy")))
    {
       pValue = new NXSL_Value(zone->getSnmpProxy());
@@ -227,6 +255,10 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    else if (!_tcscmp(pszAttr, _T("status")))
    {
       pValue = new NXSL_Value((LONG)zone->Status());
+   }
+   else if (!_tcscmp(pszAttr, _T("streetAddress")))
+   {
+      pValue = new NXSL_Value(zone->getPostalAddress()->getStreetAddress());
    }
    else if (!_tcscmp(pszAttr, _T("zoneId")))
    {
@@ -344,9 +376,17 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value((INT64)pNode->getBootTime());
    }
+   else if (!_tcscmp(pszAttr, _T("city")))
+   {
+      pValue = new NXSL_Value(pNode->getPostalAddress()->getCity());
+   }
    else if (!_tcscmp(pszAttr, _T("comments")))
    {
       pValue = new NXSL_Value(pNode->getComments());
+   }
+   else if (!_tcscmp(pszAttr, _T("country")))
+   {
+      pValue = new NXSL_Value(pNode->getPostalAddress()->getCountry());
    }
    else if (!_tcscmp(pszAttr, _T("driver")))
    {
@@ -424,6 +464,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value(pNode->getPlatformName());
    }
+   else if (!_tcscmp(pszAttr, _T("postcode")))
+   {
+      pValue = new NXSL_Value(pNode->getPostalAddress()->getPostCode());
+   }
    else if (!_tcscmp(pszAttr, _T("runtimeFlags")))
    {
       pValue = new NXSL_Value(pNode->getRuntimeFlags());
@@ -443,6 +487,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    else if (!_tcscmp(pszAttr, _T("status")))
    {
       pValue = new NXSL_Value((LONG)pNode->Status());
+   }
+   else if (!_tcscmp(pszAttr, _T("streetAddress")))
+   {
+      pValue = new NXSL_Value(pNode->getPostalAddress()->getStreetAddress());
    }
    else if (!_tcscmp(pszAttr, _T("sysDescription")))
    {

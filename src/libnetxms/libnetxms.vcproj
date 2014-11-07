@@ -430,6 +430,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\pa.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\qsort.c"
 				>
 			</File>

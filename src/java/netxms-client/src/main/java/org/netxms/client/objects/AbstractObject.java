@@ -32,6 +32,7 @@ import org.netxms.base.GeoLocation;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCommon;
+import org.netxms.base.PostalAddress;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.ModuleDataProvider;
 import org.netxms.client.NXCSession;
@@ -118,6 +119,7 @@ public abstract class AbstractObject
 	protected InetAddress primaryIP;
 	protected String comments;
 	protected GeoLocation geolocation;
+	protected PostalAddress postalAddress;
 	protected UUID image;
 	protected long submapId;
 	protected HashSet<Long> trustedNodes = new HashSet<Long>(0);
@@ -160,6 +162,7 @@ public abstract class AbstractObject
 		}
 		comments = "";
 		geolocation = new GeoLocation(false);
+		postalAddress = new PostalAddress();
 		image = NXCommon.EMPTY_GUID;
 
 		statusCalculationMethod = CALCULATE_DEFAULT;
@@ -200,6 +203,7 @@ public abstract class AbstractObject
 		status = ObjectStatus.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_STATUS));
 		comments = msg.getVariableAsString(NXCPCodes.VID_COMMENTS);
 		geolocation = new GeoLocation(msg);
+		postalAddress = new PostalAddress(msg);
 		image = msg.getVariableAsUUID(NXCPCodes.VID_IMAGE);
 		submapId = msg.getVariableAsInt64(NXCPCodes.VID_SUBMAP_ID);
 		if (image == null)

@@ -154,6 +154,10 @@ CREATE TABLE object_properties
 	location_timestamp integer not null,
 	image varchar(36) not null,
 	submap_id integer not null,
+   country varchar(63) null,
+   city varchar(63) null,
+   street_address varchar(255) null,
+   postcode varchar(31) null,
 	PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 

@@ -858,6 +858,33 @@ public:
 	int readLine(char *buffer, int size, UINT32 timeout = INFINITE);
 };
 
+/**
+ * Postal address representation
+ */
+class LIBNETXMS_EXPORTABLE PostalAddress
+{
+private:
+   TCHAR *m_country;
+   TCHAR *m_city;
+   TCHAR *m_streetAddress;
+   TCHAR *m_postcode;
+
+public:
+   PostalAddress();
+   PostalAddress(const TCHAR *country, const TCHAR *city, const TCHAR *streetAddress, const TCHAR *postcode);
+   ~PostalAddress();
+
+   const TCHAR *getCountry() { return CHECK_NULL_EX(m_country); }
+   const TCHAR *getCity() { return CHECK_NULL_EX(m_city); }
+   const TCHAR *getStreetAddress() { return CHECK_NULL_EX(m_streetAddress); }
+   const TCHAR *getPostCode() { return CHECK_NULL_EX(m_postcode); }
+
+   void setCountry(const TCHAR *country) { safe_free(m_country); m_country = _tcsdup_ex(country); }
+   void setCity(const TCHAR *city) { safe_free(m_city); m_city = _tcsdup_ex(city); }
+   void setStreetAddress(const TCHAR *streetAddress) { safe_free(m_streetAddress); m_streetAddress = _tcsdup_ex(streetAddress); }
+   void setPostCode(const TCHAR *postcode) { safe_free(m_postcode); m_postcode = _tcsdup_ex(postcode); }
+};
+
 #endif   /* __cplusplus */
 
 /**
