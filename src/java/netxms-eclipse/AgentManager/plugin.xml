@@ -39,10 +39,10 @@
       <view
             allowMultiple="true"
             category="org.netxms.ui.eclipse.viewcategory.config"
-            class="org.netxms.ui.eclipse.agentmanager.views.AgentScreenshotView"
+            class="org.netxms.ui.eclipse.agentmanager.views.ScreenshotView"
             icon="icons/image_obj.gif"
-            id="org.netxms.ui.eclipse.agentmanager.views.AgentScreenshotView"
-            name="Agent screenshot"
+            id="org.netxms.ui.eclipse.agentmanager.views.ScreenshotView"
+            name="Screenshot"
             restorable="false">
       </view>
    </extension>
@@ -62,11 +62,11 @@
                style="push">
          </action>
          <action
-               class="org.netxms.ui.eclipse.agentmanager.actions.OpenAgentScreenshot"
+               class="org.netxms.ui.eclipse.agentmanager.actions.TakeScreenshot"
                enablesFor="+"
                icon="icons/image_obj.gif"
-               id="org.netxms.ui.eclipse.agentmanager.popupActions.OpenAgentScreenshot_Node"
-               label="Get agent screenshot"
+               id="org.netxms.ui.eclipse.agentmanager.popupActions.TakeScreenshot_Node"
+               label="%menu.TakeScreenshot"
                menubarPath="objectmgmt"
                style="push">
          </action>
