@@ -1,0 +1,17 @@
+NetXMS Versioning Scheme
+
+1.x
+
+major.minor.release
+
+
+2.x
+
+major.minor.type.release
+
+type denotes release type:
+	0	development
+	1	release candidate
+	2	stable release
+
+so first release version is 2.0.2.0

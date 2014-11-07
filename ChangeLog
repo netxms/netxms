@@ -1,5 +1,5 @@
 *
-* 2.0-M1
+* 2.0.0.0
 *
 
 - New hook script "AcceptNewNode" (can be used as additional filter for network discovery to avoid unnecessary communications)

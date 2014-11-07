@@ -101,6 +101,7 @@ BOOL DownloadConfig(TCHAR *pszServer)
          msg.SetVariable(VID_VERSION_MAJOR, (WORD)NETXMS_VERSION_MAJOR);
          msg.SetVariable(VID_VERSION_MINOR, (WORD)NETXMS_VERSION_MINOR);
          msg.SetVariable(VID_VERSION_RELEASE, (WORD)NETXMS_VERSION_BUILD);
+         msg.SetVariable(VID_VERSION, NETXMS_VERSION_STRING);
 
          // Send request
          pRawMsg = msg.createMessage();
