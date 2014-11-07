@@ -54,6 +54,8 @@ public class SummaryTableWidget extends Composite
    private IViewPart viewPart;
    private SortableTableViewer viewer;
    private Action actionExportToCsv;
+   private Runnable timer;
+   private int autoRefreshInterval = 0;
 
    /**
     * Create summary table widget
@@ -81,6 +83,18 @@ public class SummaryTableWidget extends Composite
       actionExportToCsv = new ExportToCsvAction(viewPart, viewer, true);
       
       createPopupMenu();
+      
+      timer = new Runnable() {
+         @Override
+         public void run()
+         {
+            if (isDisposed())
+               return;
+            refresh();
+            if (autoRefreshInterval > 0)
+               getDisplay().timerExec(autoRefreshInterval, timer);
+         }
+      };
    }
 
    /**
@@ -175,5 +189,18 @@ public class SummaryTableWidget extends Composite
    public SortableTableViewer getViewer()
    {
       return viewer;
+   }
+   
+   /**
+    * Set automatic refresh interval. If less or equal 0, automatic refresh will be disabled.
+    * 
+    * @param interval auto refresh interval in seconds
+    */
+   public void setAutoRefresh(int interval)
+   {
+      getDisplay().timerExec(-1, timer);  // kill existing timer if any
+      autoRefreshInterval = interval * 1000;
+      if (autoRefreshInterval > 0)
+         getDisplay().timerExec(autoRefreshInterval, timer);
    }
 }
