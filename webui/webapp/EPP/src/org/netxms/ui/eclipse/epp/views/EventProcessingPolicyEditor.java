@@ -381,7 +381,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			}
 		};
 
-      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
+      actionShowFilter = new Action(Messages.get().EventProcessingPolicyEditor_ShowFilter, Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -639,7 +639,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	public void dispose()
 	{
 	   IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      settings.put("EventProcessingPolicyEditor.filterEnabled", filterEnabled);
+      settings.put("EventProcessingPolicyEditor.filterEnabled", filterEnabled); //$NON-NLS-1$
 	   
 		if (sessionListener != null)
 			session.removeListener(sessionListener);

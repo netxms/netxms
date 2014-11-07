@@ -45,7 +45,7 @@ public class ToggleDCIFilterHandler extends AbstractHandler implements IElementU
 		Object object = event.getApplicationContext();
 		if (object instanceof IEvaluationContext)
 		{
-			Object tab = ((IEvaluationContext)object).getVariable("org.netxms.ui.eclipse.objectview.ActiveTab");
+			Object tab = ((IEvaluationContext)object).getVariable("org.netxms.ui.eclipse.objectview.ActiveTab"); //$NON-NLS-1$
 			if ((tab != null) && (tab instanceof LastValues))
 			{
 				ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);

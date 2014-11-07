@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.SummaryTablesCache;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -61,7 +62,7 @@ public class SelectSummaryTableDialog extends Dialog
 	@Override
 	protected void configureShell(Shell newShell)
 	{
-		newShell.setText("Select DCI Summary Table");
+		newShell.setText(Messages.get().SelectSummaryTableDialog_Title);
 		super.configureShell(newShell);
 	}
 
@@ -77,7 +78,7 @@ public class SelectSummaryTableDialog extends Dialog
       layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
       dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText("Available DCI summary tables");
+		new Label(dialogArea, SWT.NONE).setText(Messages.get().SelectSummaryTableDialog_Label);
 		
       viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION);
       viewer.setContentProvider(new ArrayContentProvider());
@@ -127,7 +128,7 @@ public class SelectSummaryTableDialog extends Dialog
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.size() == 0)
 		{
-			MessageDialogHelper.openWarning(getShell(), "Warning", "You must select summary table from list and then press OK.");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().SelectSummaryTableDialog_Warning, Messages.get().SelectSummaryTableDialog_EmptySelectionWarning);
 			return;
 		}
 		table = (DciSummaryTableDescriptor)selection.getFirstElement();

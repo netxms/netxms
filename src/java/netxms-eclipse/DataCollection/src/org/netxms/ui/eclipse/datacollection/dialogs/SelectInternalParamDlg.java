@@ -49,8 +49,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		list.add(new AgentParameter("ConditionStatus(*)", Messages.get().SelectInternalParamDlg_DCI_ConditionStatus, DataCollectionItem.DT_INT)); //$NON-NLS-1$
 		list.add(new AgentParameter("Dummy", Messages.get().SelectInternalParamDlg_DCI_Dummy, DataCollectionItem.DT_INT)); //$NON-NLS-1$
 		list.add(new AgentParameter("Status", Messages.get().SelectInternalParamDlg_DCI_Status, DataCollectionItem.DT_INT)); //$NON-NLS-1$
-		list.add(new AgentParameter("PingTime", "Ping time of primary IP", DataCollectionItem.DT_UINT)); //$NON-NLS-1$
-		list.add(new AgentParameter("PingTime(*)", "Ping time of {instance}", DataCollectionItem.DT_UINT)); //$NON-NLS-1$
+		list.add(new AgentParameter("PingTime", Messages.get().SelectInternalParamDlg_PingTime_PrimaryIP, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
+		list.add(new AgentParameter("PingTime(*)", Messages.get().SelectInternalParamDlg_PingTime_Instance, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
 		
 		if ((object instanceof Template) || (object instanceof AbstractNode))
 		{
@@ -69,8 +69,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 			list.add(new AgentParameter("Server.AverageDCIQueuingTime", Messages.get().SelectInternalParamDlg_DCI_AvgDCIQueueTime, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
 			list.add(new AgentParameter("Server.AverageDCPollerQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgDCQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
 			list.add(new AgentParameter("Server.AverageStatusPollerQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgStatusPollerQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.AverageSyslogProcessingQueueSize", "Syslog processing queue for last minute", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-         list.add(new AgentParameter("Server.AverageSyslogWriterQueueSize", "Syslog writer queue for last minute", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AverageSyslogProcessingQueueSize", Messages.get().SelectInternalParamDlg_SyslogProcessingQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AverageSyslogWriterQueueSize", Messages.get().SelectInternalParamDlg_SyslogWriterQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
 			list.add(new AgentParameter("Server.TotalEventsProcessed", Messages.get().SelectInternalParamDlg_DCI_TotalEventsProcessed, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
 		}
 

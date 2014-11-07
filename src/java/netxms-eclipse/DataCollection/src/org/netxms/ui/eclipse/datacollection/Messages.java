@@ -330,6 +330,7 @@ public class Messages extends NLS
 	public static String OpenEditor_ErrorText;
 	public static String OpenSummaryTablesManager_CannotOpenView;
 	public static String OpenSummaryTablesManager_Error;
+   public static String OtherOptions_UseForStatusCalculation;
 	public static String RemoveTemplate_JobError;
 	public static String RemoveTemplate_JobTitle;
 	public static String SelectAgentParamDlg_CurrentValue;
@@ -367,12 +368,20 @@ public class Messages extends NLS
 	public static String SelectInternalParamDlg_DCI_TotalEventsProcessed;
 	public static String SelectInternalParamDlg_DCI_UserID;
 	public static String SelectInternalParamDlg_DCI_Vendor;
+   public static String SelectInternalParamDlg_PingTime_Instance;
+   public static String SelectInternalParamDlg_PingTime_PrimaryIP;
+   public static String SelectInternalParamDlg_SyslogProcessingQueue;
+   public static String SelectInternalParamDlg_SyslogWriterQueue;
    public static String SelectInternalParamDlg_TotalAPs;
    public static String SelectInternalParamDlg_UnadoptedAPs;
 	public static String SelectNodeDciDialog_Title;
 	public static String SelectNodeDciDialog_Warning;
 	public static String SelectNodeDciDialog_WarningText;
-	public static String ShowLastValues_Error;
+	public static String SelectSummaryTableDialog_EmptySelectionWarning;
+   public static String SelectSummaryTableDialog_Label;
+   public static String SelectSummaryTableDialog_Title;
+   public static String SelectSummaryTableDialog_Warning;
+   public static String ShowLastValues_Error;
 	public static String ShowLastValues_ErrorText;
 	public static String SummaryTable_JobError;
 	public static String SummaryTable_JobName;
@@ -409,6 +418,7 @@ public class Messages extends NLS
 	public static String SummaryTablesDynamicMenu_Error;
 	public static String SummaryTablesDynamicMenu_MenuName;
 	public static String SummaryTablesDynamicMenu_QueryTableJob;
+   public static String SummaryTableSelector_None;
 	public static String TableColumnLabelProvider_AVG;
 	public static String TableColumnLabelProvider_float;
 	public static String TableColumnLabelProvider_in32;

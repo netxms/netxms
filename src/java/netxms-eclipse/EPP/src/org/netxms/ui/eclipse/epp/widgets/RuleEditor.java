@@ -497,7 +497,7 @@ public class RuleEditor extends Composite
             {
                event = new EventTemplate(code);
                event.setSeverity(Severity.UNKNOWN);
-               event.setName("<" + code.toString() + ">");
+               event.setName("<" + code.toString() + ">"); //$NON-NLS-1$ //$NON-NLS-2$
             }
             sortedEvents.add(event);
          }

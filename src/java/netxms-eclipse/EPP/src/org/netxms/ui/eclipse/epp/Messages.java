@@ -32,6 +32,7 @@ public class Messages extends NLS
 	public static String EventProcessingPolicyEditor_SaveError;
 	public static String EventProcessingPolicyEditor_SaveJob_Error;
 	public static String EventProcessingPolicyEditor_SaveJob_Title;
+   public static String EventProcessingPolicyEditor_ShowFilter;
 	public static String OpenPolicyEditor_Error;
 	public static String OpenPolicyEditor_ErrorText;
 	public static String OpenSituationsManager_Error;

@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.datacollection.widgets;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
+import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.SummaryTablesCache;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectSummaryTableDialog;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
@@ -40,7 +41,7 @@ public class SummaryTableSelector extends AbstractSelector
    public SummaryTableSelector(Composite parent, int style, int options)
    {
       super(parent, style, options);
-      setText("<none>");
+      setText(Messages.get().SummaryTableSelector_None);
    }
 
    /* (non-Javadoc)
@@ -56,7 +57,7 @@ public class SummaryTableSelector extends AbstractSelector
          if (table != null)
             setText(table.getTitle());
          else
-            setText("<none>");
+            setText(Messages.get().SummaryTableSelector_None);
       }
    }
    
@@ -67,7 +68,7 @@ public class SummaryTableSelector extends AbstractSelector
    protected void clearButtonHandler()
    {
       table = null;
-      setText("<none>");
+      setText(Messages.get().SummaryTableSelector_None);
    }
 
    /**
@@ -89,7 +90,7 @@ public class SummaryTableSelector extends AbstractSelector
       if (table != null)
          setText(table.getTitle());
       else
-         setText("<none>");
+         setText(Messages.get().SummaryTableSelector_None);
    }
    
    /**

@@ -62,7 +62,7 @@ public class OtherOptions extends PropertyPage
       checkShowOnTooltip.setSelection(dci.isShowOnObjectTooltip());
 
       checkCalculateStatus = new Button(dialogArea, SWT.CHECK);
-      checkCalculateStatus.setText("Use this DCI for node status calculation");
+      checkCalculateStatus.setText(Messages.get().OtherOptions_UseForStatusCalculation);
       checkCalculateStatus.setSelection(dci.isUsedForNodeStatusCalculation());
       
 		return dialogArea;
