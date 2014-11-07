@@ -76,7 +76,7 @@ public class AddDashboardElementDlg extends Dialog
 		elementTypeSelector.add(Messages.get().AddDashboardElementDlg_Separator);
 		elementTypeSelector.add(Messages.get().AddDashboardElementDlg_TableValue);
 		elementTypeSelector.add(Messages.get().AddDashboardElementDlg_StatusMap);
-      elementTypeSelector.add("DCI Summary Table");
+      elementTypeSelector.add(Messages.get().AddDashboardElementDlg_DciSummaryTable);
 		elementTypeSelector.select(1);
 		
 		return dialogArea;

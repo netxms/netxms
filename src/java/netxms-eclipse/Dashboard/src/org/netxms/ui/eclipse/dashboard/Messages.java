@@ -32,6 +32,7 @@ public class Messages extends NLS
 	public static String AddDashboardElementDlg_BarChartForTable;
 	public static String AddDashboardElementDlg_CustomWidget;
 	public static String AddDashboardElementDlg_Dashboard;
+   public static String AddDashboardElementDlg_DciSummaryTable;
 	public static String AddDashboardElementDlg_GaugeChart;
 	public static String AddDashboardElementDlg_GeoMap;
 	public static String AddDashboardElementDlg_Label;
@@ -96,6 +97,7 @@ public class Messages extends NLS
 	public static String DashboardElements_Up;
 	public static String DashboardElementsLabelProvider_Bottom;
 	public static String DashboardElementsLabelProvider_Center;
+   public static String DashboardElementsLabelProvider_DciSummaryTable;
 	public static String DashboardElementsLabelProvider_Fill;
 	public static String DashboardElementsLabelProvider_FillFill;
 	public static String DashboardElementsLabelProvider_Left;
@@ -134,6 +136,8 @@ public class Messages extends NLS
 	public static String DashboardView_AddTubeChart;
 	public static String DashboardView_Confirmation;
 	public static String DashboardView_EditMode;
+   public static String DashboardView_GetEffectiveRights;
+   public static String DashboardView_GetEffectiveRightsError;
 	public static String DashboardView_InitError;
 	public static String DashboardView_PartNamePrefix;
 	public static String DashboardView_Refresh;
@@ -152,6 +156,9 @@ public class Messages extends NLS
 	public static String DciListLabelProvider_JobError;
 	public static String DciListLabelProvider_JobTitle;
 	public static String DciListLabelProvider_Unresolved;
+   public static String DciSummaryTable_BaseObject;
+   public static String DciSummaryTable_RefreshInterval;
+   public static String DciSummaryTable_SummaryTable;
 	public static String DialChart_LeftRed;
 	public static String DialChart_LeftYellow;
 	public static String DialChart_LegendInside;

@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DciSummaryTableConfig;
 import org.netxms.ui.eclipse.datacollection.widgets.SummaryTableSelector;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -56,7 +57,7 @@ public class DciSummaryTable extends PropertyPage
 		dialogArea.setLayout(layout);
 		
 		objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-		objectSelector.setLabel("Base object");
+		objectSelector.setLabel(Messages.get().DciSummaryTable_BaseObject);
 		objectSelector.setObjectClass(AbstractObject.class);
 		objectSelector.setObjectId(config.getBaseObjectId());
 		GridData gd = new GridData();
@@ -65,7 +66,7 @@ public class DciSummaryTable extends PropertyPage
 		objectSelector.setLayoutData(gd);
 		
 		tableSelector = new SummaryTableSelector(dialogArea, SWT.NONE, AbstractSelector.SHOW_CLEAR_BUTTON);
-		tableSelector.setLabel("Summary table");
+		tableSelector.setLabel(Messages.get().DciSummaryTable_SummaryTable);
 		tableSelector.setTableId(config.getTableId());
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -76,7 +77,7 @@ public class DciSummaryTable extends PropertyPage
       gd.verticalAlignment = SWT.TOP;
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      refreshInterval = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, "Refresh interval", 0, 10000, gd);
+      refreshInterval = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().DciSummaryTable_RefreshInterval, 0, 10000, gd);
       refreshInterval.setSelection(config.getRefreshInterval());
 		
 		return dialogArea;

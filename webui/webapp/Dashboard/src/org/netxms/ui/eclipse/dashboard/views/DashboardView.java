@@ -94,7 +94,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	   selectionProvider = new IntermediateSelectionProvider();
 	   getSite().setSelectionProvider(selectionProvider);
 	   
-	   ConsoleJob job = new ConsoleJob("Get effective rights", this, Activator.PLUGIN_ID, null) {
+	   ConsoleJob job = new ConsoleJob(Messages.get().DashboardView_GetEffectiveRights, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -104,7 +104,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get effective rights for dashboard object";
+            return Messages.get().DashboardView_GetEffectiveRightsError;
          }
       };
       job.start();
