@@ -293,7 +293,7 @@ public class TableConditionsEditor extends Composite
 		 */
 		public TableCondition getCondition()
 		{
-			return new TableCondition(columnCallback == null? "" : columnList.get(column.getSelectionIndex()), operation.getSelectionIndex(), value.getText());
+			return new TableCondition(columnCallback == null? column.getText() : columnList.get(column.getSelectionIndex()), operation.getSelectionIndex(), value.getText());
 		}	
 	}
 }

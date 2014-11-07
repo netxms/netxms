@@ -510,12 +510,10 @@ UINT32 SlmCheck::getOwnerId()
 	return ownerId;
 }
 
-
-//
-// Get related node object for use in NXSL script
-// Will return NXSL_Value of type NULL if there are no associated node
-//
-
+/**
+ * Get related node object for use in NXSL script
+ * Will return NXSL_Value of type NULL if there are no associated node
+ */
 NXSL_Value *SlmCheck::getNodeObjectForNXSL()
 {
 	NXSL_Value *value = NULL;

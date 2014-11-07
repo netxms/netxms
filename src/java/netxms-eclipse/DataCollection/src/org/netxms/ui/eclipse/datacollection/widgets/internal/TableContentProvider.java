@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.datacollection.views.helpers;
+package org.netxms.ui.eclipse.datacollection.widgets.internal;
 
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;

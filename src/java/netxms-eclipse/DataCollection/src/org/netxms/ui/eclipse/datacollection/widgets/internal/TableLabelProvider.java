@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.datacollection.views.helpers;
+package org.netxms.ui.eclipse.datacollection.widgets.internal;
 
 import org.eclipse.jface.viewers.ITableColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -33,12 +33,12 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
  */
 public class TableLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-   private final Color FOREGROUND_COLOR_DARK = new Color(Display.getCurrent(), 0, 0, 0);
-   private final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);
-   private final Color[] FOREGROUND_COLORS =
+   private static final Color FOREGROUND_COLOR_DARK = new Color(Display.getCurrent(), 0, 0, 0);
+   private static final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);
+   private static final Color[] FOREGROUND_COLORS =
       { null, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_LIGHT };
 
-	/* (non-Javadoc)
+   /* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
 	@Override
@@ -70,7 +70,7 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
       TableRow row = (TableRow)element;
       
       if (columnIndex >= row.size())
-      return null;
+         return null;
       
       TableCell cell = row.get(columnIndex);
       return (cell.getStatus() >= 0) && (cell.getStatus() < FOREGROUND_COLORS.length) ? FOREGROUND_COLORS[cell.getStatus()] : null;
@@ -89,16 +89,5 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
       
       TableCell cell = row.get(columnIndex);
       return (cell.getStatus() > 0) ? StatusDisplayInfo.getStatusColor(cell.getStatus()) : null;
-   }
-
-   /* (non-Javadoc)
-    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
-    */
-   @Override
-   public void dispose()
-   {
-      FOREGROUND_COLOR_DARK.dispose();
-      FOREGROUND_COLOR_LIGHT.dispose();
-      super.dispose();
    }
 }
