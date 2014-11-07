@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
+import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.views.ServerStoredAgentConfigEditorView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -61,7 +62,8 @@ public class OpenAgentConfigManager implements IWorkbenchWindowActionDelegate
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error while opening agent config manager ", "Error while opening agent config manager "+ e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenAgentConfigManager_Error, 
+				      String.format(Messages.get().OpenAgentConfigManager_ErrorMessage, e.getLocalizedMessage()));
 			}
 		}
 	}

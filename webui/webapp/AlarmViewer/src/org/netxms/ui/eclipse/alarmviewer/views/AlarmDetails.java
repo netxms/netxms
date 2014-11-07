@@ -398,12 +398,12 @@ public class AlarmDetails extends ViewPart
 		eventViewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		WidgetHelper.restoreTreeViewerSettings(eventViewer, settings, "AlarmDetails.Events");
+		WidgetHelper.restoreTreeViewerSettings(eventViewer, settings, "AlarmDetails.Events"); //$NON-NLS-1$
 		eventViewer.getControl().addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            WidgetHelper.saveTreeViewerSettings(eventViewer, settings, "AlarmDetails.Events");
+            WidgetHelper.saveTreeViewerSettings(eventViewer, settings, "AlarmDetails.Events"); //$NON-NLS-1$
          }
       });
 	}
@@ -508,7 +508,7 @@ public class AlarmDetails extends ViewPart
                      labelAccessDenied = new CLabel(eventViewer.getControl().getParent(), SWT.NONE);
                      toolkit.adapt(labelAccessDenied);
                      labelAccessDenied.setImage(StatusDisplayInfo.getStatusImage(Severity.CRITICAL));
-                     labelAccessDenied.setText("Cannot get list of related events - access denied");
+                     labelAccessDenied.setText(Messages.get().AlarmDetails_RelatedEvents_AccessDenied);
                      labelAccessDenied.moveAbove(null);
                      labelAccessDenied.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
                   }

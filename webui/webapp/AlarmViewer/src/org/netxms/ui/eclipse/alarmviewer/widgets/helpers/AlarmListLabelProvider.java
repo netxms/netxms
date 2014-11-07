@@ -128,7 +128,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
                case Alarm.HELPDESK_STATE_OPEN:
                   return ((Alarm)element).getHelpdeskReference();
                case Alarm.HELPDESK_STATE_CLOSED:
-                  return ((Alarm)element).getHelpdeskReference() + " (closed)";
+                  return ((Alarm)element).getHelpdeskReference() + Messages.get().AlarmListLabelProvider_Closed;
             }
             return null;
 		}

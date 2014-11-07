@@ -355,7 +355,6 @@ public class Messages extends NLS
 	public String SelectInternalParamDlg_DCI_AvgDCIQueueTime;
 	public String SelectInternalParamDlg_DCI_AvgDCQueue;
 	public String SelectInternalParamDlg_DCI_AvgStatusPollerQueue;
-	public String SelectInternalParamDlg_DCI_TotalEventsProcessed;
 	public String SelectInternalParamDlg_DCI_BatteryLevel;
 	public String SelectInternalParamDlg_DCI_ChildObjectStatus;
 	public String SelectInternalParamDlg_DCI_ConditionStatus;
@@ -368,6 +367,7 @@ public class Messages extends NLS
 	public String SelectInternalParamDlg_DCI_OSVersion;
 	public String SelectInternalParamDlg_DCI_SerialNumber;
 	public String SelectInternalParamDlg_DCI_Status;
+	public String SelectInternalParamDlg_DCI_TotalEventsProcessed;
 	public String SelectInternalParamDlg_DCI_UserID;
 	public String SelectInternalParamDlg_DCI_Vendor;
    public String SelectInternalParamDlg_TotalAPs;

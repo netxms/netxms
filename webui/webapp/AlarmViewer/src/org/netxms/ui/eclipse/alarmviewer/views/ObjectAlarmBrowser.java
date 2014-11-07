@@ -60,7 +60,7 @@ public class ObjectAlarmBrowser extends ViewPart
 	public void init(IViewSite site) throws PartInitException 
    {
       super.init(site);
-		for(String id : site.getSecondaryId().split("&")) 
+		for(String id : site.getSecondaryId().split("&"))  //$NON-NLS-1$
 		{
 		   try
 		   {
@@ -113,7 +113,7 @@ public class ObjectAlarmBrowser extends ViewPart
       for(Long id : objects)
       {
          if (sb.length() > 0)
-            sb.append(", ");
+            sb.append(", "); //$NON-NLS-1$
          sb.append(session.getObjectName(id));
       }
       content.showMessage(CompositeWithMessageBar.INFORMATION, String.format(Messages.get().ObjectAlarmBrowser_SelectedObjects, sb.toString()));

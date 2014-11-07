@@ -95,7 +95,7 @@ public class SaveStoredConfigDialog extends Dialog
       image.setImage(Activator.getImageDescriptor("icons/unsaved_config.png").createImage()); //$NON-NLS-1$
 
       final CLabel text = new CLabel(dialogArea, SWT.LEFT);
-      text.setText("Config content is not saved. \n Save it, discard changes or return to config.");
+      text.setText(Messages.get().SaveStoredConfigDialog_SaveWarning);
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;

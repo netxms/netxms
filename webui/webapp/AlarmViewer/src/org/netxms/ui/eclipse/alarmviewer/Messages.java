@@ -9,7 +9,6 @@ public class Messages extends NLS
 {
    private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.alarmviewer.messages"; //$NON-NLS-1$
 
-
    public String AcknowledgeAlarm_ErrorMessage;
    public String AcknowledgeAlarm_JobName;
    public String AcknowledgeAlarm_TaskName;
@@ -116,6 +115,22 @@ public class Messages extends NLS
    public String TerminateAlarm_ErrorMessage;
    public String TerminateAlarm_JobTitle;
    public String TerminateAlarm_TaskName;
+   public String AlarmDetails_RelatedEvents_AccessDenied;
+   public String AlarmList_CountLimitWarning;
+   public String AlarmList_CreateTicket;
+   public String AlarmList_HelpdeskId;
+   public String AlarmList_InternalError;
+   public String AlarmList_JobError_CreateTicket;
+   public String AlarmList_JobError_ShowTicket;
+   public String AlarmList_JobError_UnlinkTicket;
+   public String AlarmList_JobTitle_CreateTicket;
+   public String AlarmList_JobTitle_ShowTicket;
+   public String AlarmList_JobTitle_UnlinkTicket;
+   public String AlarmList_ShowTicketInBrowser;
+   public String AlarmList_UnlinkTicket;
+   public String AlarmNotifier_Error;
+   public String AlarmNotifier_SoundPlayError;
+   public String AlarmListLabelProvider_Closed;
 
    static
    {

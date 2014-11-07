@@ -154,7 +154,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       
       form = toolkit.createScrolledForm(formContainer);
       form.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-      form.setText("noname");
+      form.setText(Messages.get().ServerStoredAgentConfigEditorView_Noname);
       
       layout = new GridLayout();
       form.getBody().setLayout(layout);
@@ -166,7 +166,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       splitter.setWeights(new int[] { 20, 80 });       
       
       Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-      section.setText("Name");
+      section.setText(Messages.get().ServerStoredAgentConfigEditorView_Name);
       layout = new GridLayout();
       section.setLayout(layout);
       gridData = new GridData();
@@ -191,7 +191,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
 
       /**** Filter ****/
       section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-      section.setText("Filter");
+      section.setText(Messages.get().ServerStoredAgentConfigEditorView_Filter);
       section.setLayout(layout);
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
@@ -218,7 +218,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
 
       /**** Config ****/
       section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
-      section.setText("Configuration File");
+      section.setText(Messages.get().ServerStoredAgentConfigEditorView_ConfigFile);
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
@@ -288,7 +288,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
 
       final ConfigListElement element = (ConfigListElement)selection.getFirstElement();
 
-      new ConsoleJob(Messages.get().PackageManager_OpenDatabase, this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ServerStoredAgentConfigEditorView_JobTitle_GetContent, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -308,7 +308,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          @Override
          protected String getErrorMessage()
          {
-            return "Not possible to get config content";
+            return Messages.get().ServerStoredAgentConfigEditorView_JobError_GetContent;
          }
       }.start();
    }
@@ -386,7 +386,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          }
       };
 
-      actionCreate = new Action("Create new configuration", SharedIcons.ADD_OBJECT) {
+      actionCreate = new Action(Messages.get().ServerStoredAgentConfigEditorView_JobTitle_CreateNew, SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
@@ -394,7 +394,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          }
       };
 
-      actionDelete = new Action("Delete", SharedIcons.DELETE_OBJECT) {
+      actionDelete = new Action(Messages.get().ServerStoredAgentConfigEditorView_Delete, SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
@@ -402,7 +402,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          }
       };
 
-      actionMoveUp = new Action("Move up", SharedIcons.UP) {
+      actionMoveUp = new Action(Messages.get().ServerStoredAgentConfigEditorView_MoveUp, SharedIcons.UP) {
          @Override
          public void run()
          {
@@ -410,7 +410,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          }
       };
 
-      actionMoveDown = new Action("Move down", SharedIcons.DOWN) {
+      actionMoveDown = new Action(Messages.get().ServerStoredAgentConfigEditorView_MoveDown, SharedIcons.DOWN) {
          @Override
          public void run()
          {
@@ -454,7 +454,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          @Override
          protected String getErrorMessage()
          {
-            return "Not possible to move element up";
+            return Messages.get().ServerStoredAgentConfigEditorView_JobError_MoveUp;
          }
       }.start();
    }
@@ -494,7 +494,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          @Override
          protected String getErrorMessage()
          {
-            return "Not possible to move element down";
+            return Messages.get().ServerStoredAgentConfigEditorView_JobError_MoveDown;
          }
       }.start();
    }
@@ -529,7 +529,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          @Override
          protected String getErrorMessage()
          {
-            return "Not possible to delete config list";
+            return Messages.get().ServerStoredAgentConfigEditorView_JobError_Delete;
          }
       }.start();
    }
@@ -653,7 +653,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          @Override
          protected String getErrorMessage()
          {
-            return "Not possible to save config";
+            return Messages.get().ServerStoredAgentConfigEditorView_JobError_Save;
          }
       }.start();
    }
@@ -762,7 +762,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          @Override
          protected String getErrorMessage()
          {
-            return "Not possible to get config list";
+            return Messages.get().ServerStoredAgentConfigEditorView_JobError_GetList;
          }
       }.start();
    }

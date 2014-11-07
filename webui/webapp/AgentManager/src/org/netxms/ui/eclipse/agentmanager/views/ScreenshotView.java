@@ -42,6 +42,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.agentmanager.Activator;
+import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.console.DownloadServiceHandler;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -52,7 +53,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ScreenshotView extends ViewPart
 {
-   public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.ScreenshotView";
+   public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.ScreenshotView"; //$NON-NLS-1$
 
    private NXCSession session;
    private long nodeId;
@@ -75,7 +76,7 @@ public class ScreenshotView extends ViewPart
       session = (NXCSession)ConsoleSharedData.getSession();
       nodeId = Long.parseLong(site.getSecondaryId());
 
-      setPartName(String.format("Screenshot - %s", session.getObjectName(nodeId)));
+      setPartName(String.format(Messages.get().ScreenshotView_PartTitle, session.getObjectName(nodeId)));
    }
 
    /*
@@ -109,11 +110,11 @@ public class ScreenshotView extends ViewPart
    public void refresh()
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      new ConsoleJob("Take screenshot", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ScreenshotView_JobTitle, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            byteImage = session.takeScreenshot(nodeId, "Console");
+            byteImage = session.takeScreenshot(nodeId, "Console"); //$NON-NLS-1$
             final ImageData data = new ImageData(new ByteArrayInputStream(byteImage));
             runInUIThread(new Runnable() {
                @Override
@@ -128,7 +129,7 @@ public class ScreenshotView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot take screenshot";
+            return Messages.get().ScreenshotView_JobError;
          }
       }.start();
    }
@@ -147,7 +148,7 @@ public class ScreenshotView extends ViewPart
          }
       };
       
-      actionSave = new Action("Save...", SharedIcons.SAVE) {
+      actionSave = new Action(Messages.get().ScreenshotView_Save, SharedIcons.SAVE) {
          @Override
          public void run()
          {
@@ -162,22 +163,22 @@ public class ScreenshotView extends ViewPart
    private void saveImage()
    {
       String id = Long.toString(System.currentTimeMillis());
-      DownloadServiceHandler.addDownload(id, session.getObjectName(nodeId) + "-screenshot.png", byteImage, "application/octet-stream");
+      DownloadServiceHandler.addDownload(id, session.getObjectName(nodeId) + "-screenshot.png", byteImage, "application/octet-stream"); //$NON-NLS-1$ //$NON-NLS-2$
       JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
       if( executor != null ) 
       {
          StringBuilder js = new StringBuilder();
-         js.append("var hiddenIFrameID = 'hiddenDownloader',");
-         js.append("   iframe = document.getElementById(hiddenIFrameID);");
-         js.append("if (iframe === null) {");
-         js.append("   iframe = document.createElement('iframe');");
-         js.append("   iframe.id = hiddenIFrameID;");
-         js.append("   iframe.style.display = 'none';");
-         js.append("   document.body.appendChild(iframe);");
-         js.append("}");
-         js.append("iframe.src = '");
+         js.append("var hiddenIFrameID = 'hiddenDownloader',"); //$NON-NLS-1$
+         js.append("   iframe = document.getElementById(hiddenIFrameID);"); //$NON-NLS-1$
+         js.append("if (iframe === null) {"); //$NON-NLS-1$
+         js.append("   iframe = document.createElement('iframe');"); //$NON-NLS-1$
+         js.append("   iframe.id = hiddenIFrameID;"); //$NON-NLS-1$
+         js.append("   iframe.style.display = 'none';"); //$NON-NLS-1$
+         js.append("   document.body.appendChild(iframe);"); //$NON-NLS-1$
+         js.append("}"); //$NON-NLS-1$
+         js.append("iframe.src = '"); //$NON-NLS-1$
          js.append(DownloadServiceHandler.createDownloadUrl(id));
-         js.append("';");
+         js.append("';"); //$NON-NLS-1$
          executor.execute(js.toString());
       }
    }

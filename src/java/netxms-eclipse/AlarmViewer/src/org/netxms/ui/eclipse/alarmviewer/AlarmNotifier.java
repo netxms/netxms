@@ -193,7 +193,7 @@ public class AlarmNotifier
                }
                catch(IOException e)
                {
-                  Activator.logError("Cannot copy sound file", e);
+                  Activator.logError("Cannot copy sound file", e); //$NON-NLS-1$
                }
                finally
                {
@@ -278,7 +278,7 @@ public class AlarmNotifier
       }
       catch(ArrayIndexOutOfBoundsException e)
       {
-         Activator.logError("Invalid alarm severity", e);
+         Activator.logError("Invalid alarm severity", e); //$NON-NLS-1$
          fileName = null;
       }
       

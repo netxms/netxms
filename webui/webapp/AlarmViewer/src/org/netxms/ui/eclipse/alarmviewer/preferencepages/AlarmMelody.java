@@ -140,7 +140,7 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
 
             for(int i = 0; i < 5; i++)
             {
-               currentMelodyList.add(i, ps.getString("ALARM_NOTIFIER.MELODY." + AlarmNotifier.severityArray[i]));
+               currentMelodyList.add(i, ps.getString("ALARM_NOTIFIER.MELODY." + AlarmNotifier.severityArray[i])); //$NON-NLS-1$
             }
             melodyList.addAll(currentMelodyList);
 
@@ -267,7 +267,7 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
       }
       catch(IOException e)
       {
-         Activator.logError("Cannot copy sound file", e);
+         Activator.logError("Cannot copy sound file", e); //$NON-NLS-1$
       }
       finally
       {

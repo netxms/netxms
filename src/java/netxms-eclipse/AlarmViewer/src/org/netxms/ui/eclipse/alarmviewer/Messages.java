@@ -112,6 +112,22 @@ public class Messages extends NLS
    public static String TerminateAlarm_ErrorMessage;
    public static String TerminateAlarm_JobTitle;
    public static String TerminateAlarm_TaskName;
+   public static String AlarmDetails_RelatedEvents_AccessDenied;
+   public static String AlarmList_CountLimitWarning;
+   public static String AlarmList_CreateTicket;
+   public static String AlarmList_HelpdeskId;
+   public static String AlarmList_InternalError;
+   public static String AlarmList_JobError_CreateTicket;
+   public static String AlarmList_JobError_ShowTicket;
+   public static String AlarmList_JobError_UnlinkTicket;
+   public static String AlarmList_JobTitle_CreateTicket;
+   public static String AlarmList_JobTitle_ShowTicket;
+   public static String AlarmList_JobTitle_UnlinkTicket;
+   public static String AlarmList_ShowTicketInBrowser;
+   public static String AlarmList_UnlinkTicket;
+   public static String AlarmNotifier_Error;
+   public static String AlarmNotifier_SoundPlayError;
+   public static String AlarmListLabelProvider_Closed;
 
    static
    {

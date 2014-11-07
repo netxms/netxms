@@ -28,6 +28,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.agentmanager.views.ScreenshotView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -53,7 +54,7 @@ public class TakeScreenshot implements IObjectActionDelegate
          }
          catch(PartInitException e)
          {
-            MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening screenshot view: %s", e.getLocalizedMessage()));
+            MessageDialogHelper.openError(window.getShell(), Messages.get().TakeScreenshot_Error, String.format(Messages.get().TakeScreenshot_ErrorOpeningView, e.getLocalizedMessage()));
          }
       }
 	}

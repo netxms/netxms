@@ -63,6 +63,38 @@ public class Messages extends NLS
 	public static String SaveConfigDialog_Save;
 	public static String SaveConfigDialog_SaveApply;
 	public static String SaveConfigDialog_UnsavedChanges;
+   public static String OpenAgentConfigManager_Error;
+   public static String OpenAgentConfigManager_ErrorMessage;
+   public static String PackageDeploymentMonitor_RestartFailedInstallation;
+   public static String SaveStoredConfigDialog_SaveWarning;
+   public static String ScreenshotView_AllFiles;
+   public static String ScreenshotView_CannotCreateFile;
+   public static String ScreenshotView_CannotSaveImage;
+   public static String ScreenshotView_CopyToClipboard;
+   public static String ScreenshotView_Error;
+   public static String ScreenshotView_JobError;
+   public static String ScreenshotView_JobTitle;
+   public static String ScreenshotView_PartTitle;
+   public static String ScreenshotView_PngFiles;
+   public static String ScreenshotView_Save;
+   public static String ScreenshotView_SaveScreenshot;
+   public static String ServerStoredAgentConfigEditorView_ConfigFile;
+   public static String ServerStoredAgentConfigEditorView_Delete;
+   public static String ServerStoredAgentConfigEditorView_Filter;
+   public static String ServerStoredAgentConfigEditorView_JobError_Delete;
+   public static String ServerStoredAgentConfigEditorView_JobError_GetContent;
+   public static String ServerStoredAgentConfigEditorView_JobError_GetList;
+   public static String ServerStoredAgentConfigEditorView_JobError_MoveDown;
+   public static String ServerStoredAgentConfigEditorView_JobError_MoveUp;
+   public static String ServerStoredAgentConfigEditorView_JobError_Save;
+   public static String ServerStoredAgentConfigEditorView_JobTitle_CreateNew;
+   public static String ServerStoredAgentConfigEditorView_JobTitle_GetContent;
+   public static String ServerStoredAgentConfigEditorView_MoveDown;
+   public static String ServerStoredAgentConfigEditorView_MoveUp;
+   public static String ServerStoredAgentConfigEditorView_Name;
+   public static String ServerStoredAgentConfigEditorView_Noname;
+   public static String TakeScreenshot_Error;
+   public static String TakeScreenshot_ErrorOpeningView;
 	static
 	{
 		// initialize resource bundle

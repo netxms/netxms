@@ -117,7 +117,7 @@ public class PackageDeploymentMonitor extends ViewPart
 	
 	private void createActions()
 	{
-	   actionRedeploy = new Action("Restart failed installation", SharedIcons.RESTART) { 
+	   actionRedeploy = new Action(Messages.get().PackageDeploymentMonitor_RestartFailedInstallation, SharedIcons.RESTART) { 
          @Override
          public void run()
          {

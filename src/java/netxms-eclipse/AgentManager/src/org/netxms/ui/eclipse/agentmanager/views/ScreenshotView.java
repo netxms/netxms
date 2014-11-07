@@ -48,6 +48,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.agentmanager.Activator;
+import org.netxms.ui.eclipse.agentmanager.Messages;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -58,7 +59,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class ScreenshotView extends ViewPart
 {
-   public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.ScreenshotView";
+   public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.ScreenshotView"; //$NON-NLS-1$
 
    private NXCSession session;
    private long nodeId;
@@ -82,7 +83,7 @@ public class ScreenshotView extends ViewPart
       session = (NXCSession)ConsoleSharedData.getSession();
       nodeId = Long.parseLong(site.getSecondaryId());
 
-      setPartName(String.format("Screenshot - %s", session.getObjectName(nodeId)));
+      setPartName(String.format(Messages.get().ScreenshotView_PartTitle, session.getObjectName(nodeId)));
    }
 
    /*
@@ -116,11 +117,11 @@ public class ScreenshotView extends ViewPart
    public void refresh()
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      new ConsoleJob("Take screenshot", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ScreenshotView_JobTitle, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            byteImage = session.takeScreenshot(nodeId, "Console");
+            byteImage = session.takeScreenshot(nodeId, "Console"); //$NON-NLS-1$
             final ImageData data = new ImageData(new ByteArrayInputStream(byteImage));
             runInUIThread(new Runnable() {
                @Override
@@ -135,7 +136,7 @@ public class ScreenshotView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot take screenshot";
+            return Messages.get().ScreenshotView_JobError;
          }
       }.start();
    }
@@ -154,7 +155,7 @@ public class ScreenshotView extends ViewPart
          }
       };
       
-      actionCopyToClipboard = new Action("Copy to clipboard", SharedIcons.COPY) {
+      actionCopyToClipboard = new Action(Messages.get().ScreenshotView_CopyToClipboard, SharedIcons.COPY) {
          @Override
          public void run()
          {
@@ -164,7 +165,7 @@ public class ScreenshotView extends ViewPart
          }
       };
       
-      actionSave = new Action("Save...", SharedIcons.SAVE) {
+      actionSave = new Action(Messages.get().ScreenshotView_Save, SharedIcons.SAVE) {
          @Override
          public void run()
          {
@@ -179,10 +180,10 @@ public class ScreenshotView extends ViewPart
    private void saveImage()
    {
       FileDialog fd = new FileDialog(getSite().getShell(), SWT.SAVE);
-      fd.setText("Save Screenshot");
-      fd.setFilterExtensions(new String[] { "*.png", "*.*" });
-      fd.setFilterNames(new String[] { "PNG Files", "All Files" });
-      fd.setFileName(session.getObjectName(nodeId) + "-screenshot.png");
+      fd.setText(Messages.get().ScreenshotView_SaveScreenshot);
+      fd.setFilterExtensions(new String[] { "*.png", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+      fd.setFilterNames(new String[] { Messages.get().ScreenshotView_PngFiles, Messages.get().ScreenshotView_AllFiles });
+      fd.setFileName(session.getObjectName(nodeId) + "-screenshot.png"); //$NON-NLS-1$
       String name = fd.open();
       if (name == null)
          return;
@@ -194,20 +195,20 @@ public class ScreenshotView extends ViewPart
       }
       catch(IOException e)
       {
-         MessageDialogHelper.openError(getViewSite().getShell(), "Error",
-               String.format("Cannot create file %s: %s", name, e.getLocalizedMessage()));
+         MessageDialogHelper.openError(getViewSite().getShell(), Messages.get().ScreenshotView_Error,
+               String.format(Messages.get().ScreenshotView_CannotCreateFile, name, e.getLocalizedMessage()));
       }
       BufferedImage bi;
       try
       {
          bi = ImageIO.read(new ByteArrayInputStream(byteImage));
-         ImageIO.write(bi, "png", outputFile);
+         ImageIO.write(bi, "png", outputFile); //$NON-NLS-1$
       }
       catch(IOException e)
       {
 
-         MessageDialogHelper.openError(getViewSite().getShell(), "Error",
-               String.format("Cannot save image to %s: %s", name, e.getLocalizedMessage()));
+         MessageDialogHelper.openError(getViewSite().getShell(), Messages.get().ScreenshotView_Error,
+               String.format(Messages.get().ScreenshotView_CannotSaveImage, name, e.getLocalizedMessage()));
       }
    }
 

@@ -147,7 +147,7 @@ public class AlarmList extends CompositeWithMessageBar
 		      Messages.get().AlarmList_ColumnMessage, 
 		      Messages.get().AlarmList_ColumnCount, 
 		      Messages.get().AlarmList_Comments, 
-            "Helpdesk ID", 
+            Messages.get().AlarmList_HelpdeskId, 
 		      Messages.get().AlarmList_AckBy, 
 		      Messages.get().AlarmList_ColumnCreated, 
 		      Messages.get().AlarmList_ColumnLastChange
@@ -325,7 +325,7 @@ public class AlarmList extends CompositeWithMessageBar
       };
       actionTerminate.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Terminate"); //$NON-NLS-1$
 
-      actionCreateIssue = new Action("Create &ticket in helpdesk system", Activator.getImageDescriptor("icons/helpdesk_ticket.png")) {
+      actionCreateIssue = new Action(Messages.get().AlarmList_CreateTicket, Activator.getImageDescriptor("icons/helpdesk_ticket.png")) { //$NON-NLS-1$
          @Override
          public void run()
          {
@@ -333,7 +333,7 @@ public class AlarmList extends CompositeWithMessageBar
          }
       };
 
-      actionShowIssue = new Action("Show helpdesk ticket in &web browser", SharedIcons.BROWSER) {
+      actionShowIssue = new Action(Messages.get().AlarmList_ShowTicketInBrowser, SharedIcons.BROWSER) {
          @Override
          public void run()
          {
@@ -341,7 +341,7 @@ public class AlarmList extends CompositeWithMessageBar
          }
       };
 
-      actionUnlinkIssue = new Action("Unlink from helpdesk ticket") {
+      actionUnlinkIssue = new Action(Messages.get().AlarmList_UnlinkTicket) {
          @Override
          public void run()
          {
@@ -514,7 +514,7 @@ public class AlarmList extends CompositeWithMessageBar
          if (session.isTimedAlarmAckEnabled())
          {
             initializeTimeAcknowledge();
-            timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge"); //$NON-NLS-2$ //$NON-NLS-1$
+            timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge"); //$NON-NLS-1$
             for(Action act : timeAcknowledge)
             {
                timeAcknowledgeMenu.add(act);
@@ -652,7 +652,7 @@ public class AlarmList extends CompositeWithMessageBar
                }
                if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() >= session.getAlarmListDisplayLimit()))
                {
-                  showMessage(INFORMATION, String.format("Only %d most recent alarms shown", filteredAlarmList.size()));
+                  showMessage(INFORMATION, String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarmList.size()));
                }
                else
                {
@@ -855,7 +855,7 @@ public class AlarmList extends CompositeWithMessageBar
          return;
 
       final long id = ((Alarm)selection.getFirstElement()).getId();
-      new ConsoleJob("Create helpdesk ticket", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+      new ConsoleJob(Messages.get().AlarmList_JobTitle_CreateTicket, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -865,7 +865,7 @@ public class AlarmList extends CompositeWithMessageBar
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot create helpdesk ticket from alarm";
+            return Messages.get().AlarmList_JobError_CreateTicket;
          }
       }.start();
    }
@@ -880,7 +880,7 @@ public class AlarmList extends CompositeWithMessageBar
          return;
 
       final long id = ((Alarm)selection.getFirstElement()).getId();
-      new ConsoleJob("Show helpdesk ticket", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+      new ConsoleJob(Messages.get().AlarmList_JobTitle_ShowTicket, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -898,7 +898,7 @@ public class AlarmList extends CompositeWithMessageBar
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get URL for helpdesk ticket";
+            return Messages.get().AlarmList_JobError_ShowTicket;
          }
       }.start();
    }
@@ -913,7 +913,7 @@ public class AlarmList extends CompositeWithMessageBar
          return;
 
       final long id = ((Alarm)selection.getFirstElement()).getId();
-      new ConsoleJob("Unlink alarm from helpdesk ticket", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+      new ConsoleJob(Messages.get().AlarmList_JobTitle_UnlinkTicket, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -923,7 +923,7 @@ public class AlarmList extends CompositeWithMessageBar
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot unlink alarm from helpdesk ticket";
+            return Messages.get().AlarmList_JobError_UnlinkTicket;
          }
       }.start();
    }

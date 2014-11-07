@@ -58,7 +58,7 @@ public class AlarmNotifier
     */
    public static AlarmNotifier getInstance()
    {
-      return (AlarmNotifier)ConsoleSharedData.getProperty("AlarmNotifier");
+      return (AlarmNotifier)ConsoleSharedData.getProperty("AlarmNotifier"); //$NON-NLS-1$
    }
 
    /**
@@ -69,7 +69,7 @@ public class AlarmNotifier
    public static void attachSession(final NXCSession session, final Display display)
    {
       AlarmNotifier instance = new AlarmNotifier(session, display);
-      ConsoleSharedData.setProperty(display, "AlarmNotifier", instance);
+      ConsoleSharedData.setProperty(display, "AlarmNotifier", instance); //$NON-NLS-1$
    }
 
    /**
@@ -150,7 +150,7 @@ public class AlarmNotifier
                }
                catch(IOException e)
                {
-                  Activator.logError("Cannot copy sound file", e);
+                  Activator.logError("Cannot copy sound file", e); //$NON-NLS-1$
                }
                finally
                {
@@ -163,13 +163,13 @@ public class AlarmNotifier
          }
          catch(final Exception e)
          {
-            melodyName = "";
-            ps.setValue("ALARM_NOTIFIER.MELODY." + severity, "");
+            melodyName = ""; //$NON-NLS-1$
+            ps.setValue("ALARM_NOTIFIER.MELODY." + severity, ""); //$NON-NLS-1$ //$NON-NLS-2$
             MessageDialogHelper
                   .openError(
                         display.getActiveShell(),
-                        "Error",
-                        String.format("Alarm sound was not found locally and it was not possible to download it from server. Sound is removed and will not be played. Error: %s",
+                        Messages.get().AlarmNotifier_Error,
+                        String.format(Messages.get().AlarmNotifier_SoundPlayError,
                               e.getMessage()));
          }
       }
@@ -209,7 +209,7 @@ public class AlarmNotifier
       }
       catch(ArrayIndexOutOfBoundsException e)
       {
-         Activator.logError("Invalid alarm severity", e);
+         Activator.logError("Invalid alarm severity", e); //$NON-NLS-1$
          fileName = null;
       }
 

@@ -66,6 +66,38 @@ public class Messages extends NLS
 	public String SaveConfigDialog_Save;
 	public String SaveConfigDialog_SaveApply;
 	public String SaveConfigDialog_UnsavedChanges;
+   public String OpenAgentConfigManager_Error;
+   public String OpenAgentConfigManager_ErrorMessage;
+   public String PackageDeploymentMonitor_RestartFailedInstallation;
+   public String SaveStoredConfigDialog_SaveWarning;
+   public String ScreenshotView_AllFiles;
+   public String ScreenshotView_CannotCreateFile;
+   public String ScreenshotView_CannotSaveImage;
+   public String ScreenshotView_CopyToClipboard;
+   public String ScreenshotView_Error;
+   public String ScreenshotView_JobError;
+   public String ScreenshotView_JobTitle;
+   public String ScreenshotView_PartTitle;
+   public String ScreenshotView_PngFiles;
+   public String ScreenshotView_Save;
+   public String ScreenshotView_SaveScreenshot;
+   public String ServerStoredAgentConfigEditorView_ConfigFile;
+   public String ServerStoredAgentConfigEditorView_Delete;
+   public String ServerStoredAgentConfigEditorView_Filter;
+   public String ServerStoredAgentConfigEditorView_JobError_Delete;
+   public String ServerStoredAgentConfigEditorView_JobError_GetContent;
+   public String ServerStoredAgentConfigEditorView_JobError_GetList;
+   public String ServerStoredAgentConfigEditorView_JobError_MoveDown;
+   public String ServerStoredAgentConfigEditorView_JobError_MoveUp;
+   public String ServerStoredAgentConfigEditorView_JobError_Save;
+   public String ServerStoredAgentConfigEditorView_JobTitle_CreateNew;
+   public String ServerStoredAgentConfigEditorView_JobTitle_GetContent;
+   public String ServerStoredAgentConfigEditorView_MoveDown;
+   public String ServerStoredAgentConfigEditorView_MoveUp;
+   public String ServerStoredAgentConfigEditorView_Name;
+   public String ServerStoredAgentConfigEditorView_Noname;
+   public String TakeScreenshot_Error;
+   public String TakeScreenshot_ErrorOpeningView;
 	static
 	{
 		// initialize resource bundle
