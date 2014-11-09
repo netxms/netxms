@@ -115,7 +115,7 @@ public class SelectSummaryTableDialog extends Dialog
       gd.widthHint = 400;
       viewer.getControl().setLayoutData(gd);
 
-      viewer.setInput(SummaryTablesCache.getTables());      
+      viewer.setInput(SummaryTablesCache.getInstance().getTables());      
       return dialogArea;
 	}
 
