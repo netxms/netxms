@@ -672,6 +672,7 @@ private:
    void modifySummaryTable(CSCPMessage *request);
    void deleteSummaryTable(CSCPMessage *request);
    void querySummaryTable(CSCPMessage *request);
+   void queryAdHocSummaryTable(CSCPMessage *request);
    void forwardToReportingServer(CSCPMessage *request);
    void getSubnetAddressMap(CSCPMessage *request);
    void getEffectiveRights(CSCPMessage *request);
@@ -929,7 +930,7 @@ UINT32 UpdateObjectToolFromMessage(CSCPMessage *pMsg);
 
 UINT32 ModifySummaryTable(CSCPMessage *msg, LONG *newId);
 UINT32 DeleteSummaryTable(LONG tableId);
-Table *QuerySummaryTable(LONG tableId, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc);
+Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc);
 
 void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();

@@ -96,6 +96,16 @@ UINT32 DeleteSummaryTable(LONG tableId)
 }
 
 /**
+ * Create column definition from NXCP message
+ */
+SummaryTableColumn::SummaryTableColumn(CSCPMessage *msg, UINT32 baseId)
+{
+   msg->GetVariableStr(baseId, m_name, MAX_DB_STRING);
+   msg->GetVariableStr(baseId + 1, m_dciName, MAX_PARAM_NAME);
+   m_flags = msg->GetVariableLong(baseId + 2);
+}
+
+/**
  * Create column definition from configuration string
  */
 SummaryTableColumn::SummaryTableColumn(TCHAR *configStr)
@@ -136,7 +146,27 @@ SummaryTable::~SummaryTable()
 }
 
 /**
- * Create object from DB data
+ * Create ad-hoc summary table definition from NXCP message
+ */
+SummaryTable::SummaryTable(CSCPMessage *msg)
+{
+   m_title[0] = 0;
+   m_flags = 0;
+   m_filter = NULL;
+
+   int count = msg->getFieldAsInt32(VID_NUM_COLUMNS);
+   m_columns = new ObjectArray<SummaryTableColumn>(count, 16, true);
+   
+   UINT32 id = VID_COLUMN_INFO_BASE;
+   for(int i = 0; i < count; i++)
+   {
+      m_columns->add(new SummaryTableColumn(msg, id));
+      id += 10;
+   }
+}
+
+/**
+ * Create summary table definition from DB data
  */
 SummaryTable::SummaryTable(DB_RESULT hResult)
 {
@@ -276,7 +306,7 @@ Table *SummaryTable::createEmptyResultTable()
 /**
  * Query summary table
  */
-Table *QuerySummaryTable(LONG tableId, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc)
+Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc)
 {
    NetObj *object = FindObjectById(baseObjectId);
    if (object == NULL)
@@ -297,7 +327,7 @@ Table *QuerySummaryTable(LONG tableId, UINT32 baseObjectId, UINT32 userId, UINT3
       return NULL;
    }
 
-   SummaryTable *tableDefinition = SummaryTable::loadFromDB(tableId, rcc);
+   SummaryTable *tableDefinition = (adHocDefinition != NULL) ? adHocDefinition : SummaryTable::loadFromDB(tableId, rcc);
    if (tableDefinition == NULL)
       return NULL;
 

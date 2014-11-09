@@ -18,6 +18,7 @@
  */
 package org.netxms.client;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
@@ -174,4 +175,27 @@ public class DataCollectionTest extends SessionTest
 					
 		session.disconnect();
 	}
+
+   public void testAdHocDciSummaryTables() throws Exception
+   {
+      final NXCSession session = connect();
+
+      List<DciSummaryTableColumn> columns = new ArrayList<DciSummaryTableColumn>();
+      columns.add(new DciSummaryTableColumn("Usage", "System.CPU.Usage", 0));
+      columns.add(new DciSummaryTableColumn("I/O Wait", "System.CPU.IOWait", 0));
+
+      Table result = session.queryAdHocDciSummaryTable(2, columns);
+      System.out.println(result.getRowCount() + " rows in result set");
+      for(int i = 0; i < result.getColumnCount(); i++)
+         System.out.print(String.format(" | %-20s", result.getColumnDisplayName(i)));
+      System.out.println(" |");
+      for(TableRow r : result.getAllRows())
+      {
+         for(int i = 0; i < result.getColumnCount(); i++)
+            System.out.print(String.format(" | %-20s", r.get(i).getValue()));
+         System.out.println(" |");
+      }
+      
+      session.disconnect();
+   }
 }

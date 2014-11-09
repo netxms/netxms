@@ -1447,6 +1447,9 @@ void ClientSession::processingThread()
          case CMD_QUERY_SUMMARY_TABLE:
             querySummaryTable(pMsg);
             break;
+         case CMD_QUERY_ADHOC_SUMMARY_TABLE:
+            queryAdHocSummaryTable(pMsg);
+            break;
          case CMD_GET_SUBNET_ADDRESS_MAP:
             getSubnetAddressMap(pMsg);
             break;
@@ -13086,7 +13089,40 @@ void ClientSession::querySummaryTable(CSCPMessage *request)
    msg.SetId(request->GetId());
 
    UINT32 rcc;
-   Table *result = QuerySummaryTable((LONG)request->GetVariableLong(VID_SUMMARY_TABLE_ID),
+   Table *result = QuerySummaryTable((LONG)request->GetVariableLong(VID_SUMMARY_TABLE_ID), NULL,
+                                      request->GetVariableLong(VID_OBJECT_ID),
+                                      m_dwUserId, &rcc);
+   if (result != NULL)
+   {
+      debugPrintf(6, _T("querySummaryTable: %d rows in resulting table"), result->getNumRows());
+      msg.SetVariable(VID_RCC, RCC_SUCCESS);
+      result->fillMessage(msg, 0, -1);
+      delete result;
+   }
+   else
+   {
+      msg.SetVariable(VID_RCC, rcc);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Query ad hoc DCI summary table
+ */
+void ClientSession::queryAdHocSummaryTable(CSCPMessage *request)
+{
+   CSCPMessage msg;
+
+   // Prepare response message
+   msg.SetCode(CMD_REQUEST_COMPLETED);
+   msg.SetId(request->GetId());
+
+   SummaryTable *tableDefinition = new SummaryTable(request);
+
+   UINT32 rcc;
+   Table *result = QuerySummaryTable(0, tableDefinition,
                                       request->GetVariableLong(VID_OBJECT_ID),
                                       m_dwUserId, &rcc);
    if (result != NULL)

@@ -340,10 +340,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_TAKE_SCREENSHOT"),
       _T("CMD_EXECUTE_SCRIPT"),
       _T("CMD_EXECUTE_SCRIPT_UPDATE"),
-      _T("CMD_FILEMGR_CREATE_FOLDER")
+      _T("CMD_FILEMGR_CREATE_FOLDER"),
+      _T("CMD_QUERY_ADHOC_SUMMARY_TABLE")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_FILEMGR_CREATE_FOLDER))
+   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_QUERY_ADHOC_SUMMARY_TABLE))
       _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);

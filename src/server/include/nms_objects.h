@@ -267,6 +267,7 @@ public:
    TCHAR m_dciName[MAX_PARAM_NAME];
    UINT32 m_flags;
 
+   SummaryTableColumn(CSCPMessage *msg, UINT32 baseId);
    SummaryTableColumn(TCHAR *configStr);
 };
 
@@ -285,6 +286,8 @@ private:
 
 public:
    static SummaryTable *loadFromDB(LONG id, UINT32 *rcc);
+
+   SummaryTable(CSCPMessage *msg);
    ~SummaryTable();
 
    bool filter(DataCollectionTarget *node);

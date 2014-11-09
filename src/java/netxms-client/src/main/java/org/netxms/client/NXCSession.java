@@ -100,6 +100,7 @@ import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.DciPushData;
 import org.netxms.client.datacollection.DciSummaryTable;
+import org.netxms.client.datacollection.DciSummaryTableColumn;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.datacollection.GraphSettings;
@@ -7618,6 +7619,30 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_SUMMARY_TABLE);
       msg.setVariableInt32(NXCPCodes.VID_SUMMARY_TABLE_ID, tableId);
       msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) baseObjectId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      return new Table(response);
+   }
+
+   /**
+    * Query ad-hoc DCI summary table.
+    *
+    * @param baseObjectId base container object ID
+    * @return table with last values data for all nodes under given base container
+    * @throws IOException  if socket I/O error occurs
+    * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
+    */
+   public Table queryAdHocDciSummaryTable(long baseObjectId, List<DciSummaryTableColumn> columns) throws IOException, NetXMSClientException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_ADHOC_SUMMARY_TABLE);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) baseObjectId);
+      msg.setVariableInt32(NXCPCodes.VID_NUM_COLUMNS, columns.size());
+      long id = NXCPCodes.VID_COLUMN_INFO_BASE;
+      for(DciSummaryTableColumn c : columns)
+      {
+         c.fillMessage(msg, id);
+         id += 10;
+      }
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return new Table(response);

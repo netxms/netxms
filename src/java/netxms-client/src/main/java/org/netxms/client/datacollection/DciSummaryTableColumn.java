@@ -18,6 +18,8 @@
  */
 package org.netxms.client.datacollection;
 
+import org.netxms.base.NXCPMessage;
+
 /**
  * Column definition for DCI summary table
  */
@@ -50,6 +52,17 @@ public class DciSummaryTableColumn
 		name = src.name;
 		dciName = src.dciName;
 		flags = src.flags;
+	}
+	
+	/**
+	 * @param msg
+	 * @param baseId
+	 */
+	public void fillMessage(NXCPMessage msg, long baseId)
+	{
+	   msg.setVariable(baseId, name);
+      msg.setVariable(baseId + 1, dciName);
+      msg.setVariableInt32(baseId + 2, flags);
 	}
 
 	/**
