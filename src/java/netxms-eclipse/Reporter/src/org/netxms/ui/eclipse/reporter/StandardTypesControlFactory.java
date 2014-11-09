@@ -31,6 +31,7 @@ import org.netxms.ui.eclipse.reporter.widgets.NumericConditionFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.ObjectFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.ObjectListFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.SeverityFieldEditor;
+import org.netxms.ui.eclipse.reporter.widgets.SeverityListFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.StringFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.TimestampFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.UserFieldEditor;
@@ -79,6 +80,10 @@ public class StandardTypesControlFactory implements CustomControlFactory
       else if (type.equals("SEVERITY"))
       {
          fieldEditor = new SeverityFieldEditor(parameter, toolkit, parent);
+      }
+      else if (type.equals("SEVERITY_LIST"))
+      {
+         fieldEditor = new SeverityListFieldEditor(parameter, toolkit, parent);
       }
 		else if (type.equals("TIMESTAMP"))
 		{
