@@ -21,8 +21,6 @@ package org.netxms.ui.eclipse.reporter.widgets;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -31,40 +29,31 @@ import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
-import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.api.client.reporting.ReportParameter;
-import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
-import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
- * Field editor for "object" type field
+ * Field editor for "event code" type field
  */
-public class ObjectFieldEditor extends FieldEditor
+public class EventFieldEditor extends FieldEditor
 {
 	private static final String EMPTY_SELECTION_TEXT = "<any>";
 	
 	private CLabel text;
-	private long objectId = 0;
-	private WorkbenchLabelProvider labelProvider;
+	private long eventCode = 0;
 	
 	/**
 	 * @param parameter
 	 * @param toolkit
 	 * @param parent
 	 */
-	public ObjectFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
+	public EventFieldEditor(ReportParameter parameter, FormToolkit toolkit, Composite parent)
 	{
 		super(parameter, toolkit, parent);
-		labelProvider = new WorkbenchLabelProvider();
-		addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e)
-			{
-				labelProvider.dispose();
-			}
-		});
 	}
 
 	/* (non-Javadoc)
@@ -93,12 +82,12 @@ public class ObjectFieldEditor extends FieldEditor
 		
 		final ImageHyperlink selectionLink = toolkit.createImageHyperlink(content, SWT.NONE);
 		selectionLink.setImage(SharedIcons.IMG_FIND);
-		selectionLink.setToolTipText("Select object...");
+		selectionLink.setToolTipText("Select event...");
 		selectionLink.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
-				selectObject();
+				selectEvent();
 			}
 		});
 		
@@ -109,7 +98,7 @@ public class ObjectFieldEditor extends FieldEditor
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
-            objectId = 0;
+            eventCode = 0;
             text.setText(EMPTY_SELECTION_TEXT);
             text.setImage(null);
          }
@@ -119,24 +108,24 @@ public class ObjectFieldEditor extends FieldEditor
 	}
 	
 	/**
-	 * Select object
+	 * Select event
 	 */
-	private void selectObject()
+	private void selectEvent()
 	{
-		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, null);
+		EventSelectionDialog dlg = new EventSelectionDialog(getShell());
 		dlg.enableMultiSelection(false);
 		if (dlg.open() == Window.OK)
 		{
-			AbstractObject[] objects = dlg.getSelectedObjects(AbstractObject.class);
-			if (objects.length > 0)
+		   EventTemplate[] events = dlg.getSelectedEvents();
+			if (events.length > 0)
 			{
-				objectId = objects[0].getObjectId();
-				text.setText(objects[0].getObjectName());
-				text.setImage(labelProvider.getImage(objects[0]));
+				eventCode = events[0].getCode();
+				text.setText(events[0].getName());
+				text.setImage(StatusDisplayInfo.getStatusImage(events[0].getSeverity()));
 			}
 			else
 			{
-				objectId = 0;
+				eventCode = 0;
 				text.setText(EMPTY_SELECTION_TEXT);
 				text.setImage(null);
 			}
@@ -149,6 +138,6 @@ public class ObjectFieldEditor extends FieldEditor
 	@Override
 	public String getValue()
 	{
-		return Long.toString(objectId);
+		return Long.toString(eventCode);
 	}
 }

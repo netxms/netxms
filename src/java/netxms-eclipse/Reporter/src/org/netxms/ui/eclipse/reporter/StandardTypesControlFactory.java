@@ -25,6 +25,7 @@ import org.netxms.ui.eclipse.reporter.api.CustomControlFactory;
 import org.netxms.ui.eclipse.reporter.widgets.AlarmStateFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.BooleanFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.DateFieldEditor;
+import org.netxms.ui.eclipse.reporter.widgets.EventFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.FieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.NumberFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.NumericConditionFieldEditor;
@@ -60,6 +61,10 @@ public class StandardTypesControlFactory implements CustomControlFactory
       else if (type.equals("BOOLEAN"))
       {
          fieldEditor = new BooleanFieldEditor(parameter, toolkit, parent);
+      }
+      else if (type.equals("EVENT_CODE"))
+      {
+         fieldEditor = new EventFieldEditor(parameter, toolkit, parent);
       }
       else if (type.equals("NUMBER"))
       {

@@ -43,7 +43,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ObjectFieldEditor extends FieldEditor
 {
-	private static final String EMPTY_SELECTION_TEXT = "<none>";
+	private static final String EMPTY_SELECTION_TEXT = "<any>";
 	
 	private CLabel text;
 	private long objectId = 0;
@@ -76,8 +76,8 @@ public class ObjectFieldEditor extends FieldEditor
 		Composite content = toolkit.createComposite(parent, SWT.BORDER);
 		
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
-		layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
+		layout.numColumns = 3;
+		layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		content.setLayout(layout);
@@ -93,16 +93,27 @@ public class ObjectFieldEditor extends FieldEditor
 		
 		final ImageHyperlink selectionLink = toolkit.createImageHyperlink(content, SWT.NONE);
 		selectionLink.setImage(SharedIcons.IMG_FIND);
+		selectionLink.setToolTipText("Select object...");
 		selectionLink.addHyperlinkListener(new HyperlinkAdapter() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.ui.forms.events.HyperlinkAdapter#linkActivated(org.eclipse.ui.forms.events.HyperlinkEvent)
-			 */
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
 				selectObject();
 			}
 		});
+		
+		final ImageHyperlink clearLink = toolkit.createImageHyperlink(content, SWT.NONE);
+		clearLink.setImage(SharedIcons.IMG_CLEAR);
+		clearLink.setToolTipText("Clear selection");
+		clearLink.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            objectId = 0;
+            text.setText(EMPTY_SELECTION_TEXT);
+            text.setImage(null);
+         }
+      });
 		
 		return content;
 	}
