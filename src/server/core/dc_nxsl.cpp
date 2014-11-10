@@ -261,9 +261,7 @@ static int F_FindAllDCIs(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXS
 /**
  * Get min, max or average of DCI values for a period
  */
-typedef enum { DCI_MIN = 0, DCI_MAX = 1, DCI_AVG = 2, DCI_SUM = 3 } DciSqlFunc_t;
-
-static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm, DciSqlFunc_t sqlFunc)
+static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm, AggregationFunction func)
 {
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
@@ -279,64 +277,16 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
 	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
 	{
-		double result = 0;
-		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		TCHAR query[1024];
-      static const TCHAR *functions[] = { _T("min"), _T("max"), _T("avg"), _T("sum") };
-
-		if (g_dbSyntax == DB_SYNTAX_ORACLE)
-		{
-			_sntprintf(query, 1024, _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u ")
-				_T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"), 
-				functions[sqlFunc], node->getId());
-		}
-		else if (g_dbSyntax == DB_SYNTAX_MSSQL)
-		{
-			_sntprintf(query, 1024, _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata_%u ")
-				_T("WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"), 
-				functions[sqlFunc], node->getId());
-		}
-		else if (g_dbSyntax == DB_SYNTAX_PGSQL)
-		{
-			_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value::double precision,0)) FROM idata_%u ")
-				_T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"), 
-				functions[sqlFunc],	node->getId());
-		}
-		else
-		{
-			_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u ")
-				_T("WHERE item_id=? and idata_timestamp between ? and ?"), 
-				functions[sqlFunc],	node->getId());
-		}
-
-		DB_STATEMENT hStmt = DBPrepare(hdb, query);
-		if (hStmt != NULL)
-		{
-			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, argv[1]->getValueAsUInt32());
-			DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, argv[2]->getValueAsInt32());
-			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, argv[3]->getValueAsInt32());
-			DB_RESULT hResult = DBSelectPrepared(hStmt);
-			if (hResult != NULL)
-			{
-				if (DBGetNumRows(hResult) == 1)
-				{
-					result = DBGetFieldDouble(hResult, 0, 0);
-				}
-				*ppResult = new NXSL_Value(result);
-				DBFreeResult(hResult);
-			}
-			else
-			{
-				*ppResult = new NXSL_Value;	// Return NULL if prepared select failed
-			}
-			DBFreeStatement(hStmt);
-		}
-		else
-		{
-			*ppResult = new NXSL_Value;	// Return NULL if prepare failed
-		}
-
-		DBConnectionPoolReleaseConnection(hdb);
+      TCHAR *result = ((DCItem *)dci)->getAggregateValue(func, argv[2]->getValueAsInt32(), argv[3]->getValueAsInt32());
+      if (result != NULL)
+      {
+         *ppResult = new NXSL_Value(result);
+         free(result);
+      }
+      else
+      {
+		   *ppResult = new NXSL_Value;	// Return NULL if query failed
+      }
 	}
 	else
 	{
@@ -351,7 +301,7 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
  */
 static int F_GetMinDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	return F_GetDCIValueStat(argc, argv, ppResult, vm, DCI_MIN);
+	return F_GetDCIValueStat(argc, argv, ppResult, vm, DCI_AGG_MIN);
 }
 
 /**
@@ -359,7 +309,7 @@ static int F_GetMinDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
  */
 static int F_GetMaxDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	return F_GetDCIValueStat(argc, argv, ppResult, vm, DCI_MAX);
+	return F_GetDCIValueStat(argc, argv, ppResult, vm, DCI_AGG_MAX);
 }
 
 /**
@@ -367,7 +317,7 @@ static int F_GetMaxDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
  */
 static int F_GetAvgDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	return F_GetDCIValueStat(argc, argv, ppResult, vm, DCI_AVG);
+	return F_GetDCIValueStat(argc, argv, ppResult, vm, DCI_AGG_AVG);
 }
 
 /**
@@ -375,7 +325,7 @@ static int F_GetAvgDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
  */
 static int F_GetSumDCIValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	return F_GetDCIValueStat(argc, argv, ppResult, vm, DCI_SUM);
+	return F_GetDCIValueStat(argc, argv, ppResult, vm, DCI_AGG_SUM);
 }
 
 /**

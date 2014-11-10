@@ -153,6 +153,9 @@ SummaryTable::SummaryTable(CSCPMessage *msg)
    m_title[0] = 0;
    m_flags = 0;
    m_filter = NULL;
+   m_aggregationFunction = (AggregationFunction)msg->getFieldAsInt16(VID_FUNCTION);
+   m_periodStart = msg->getFieldAsTime(VID_TIME_FROM);
+   m_periodEnd = msg->getFieldAsTime(VID_TIME_TO);
 
    int count = msg->getFieldAsInt32(VID_NUM_COLUMNS);
    m_columns = new ObjectArray<SummaryTableColumn>(count, 16, true);
@@ -172,6 +175,10 @@ SummaryTable::SummaryTable(DB_RESULT hResult)
 {
    DBGetField(hResult, 0, 0, m_title, MAX_DB_STRING);
    m_flags = DBGetFieldULong(hResult, 0, 1);
+
+   m_aggregationFunction = DCI_AGG_LAST;
+   m_periodStart = 0;
+   m_periodEnd = 0;
 
    // Filter script
    TCHAR *filterSource = DBGetField(hResult, 0, 2, NULL, 0);
@@ -346,7 +353,7 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
 
       if (tableDefinition->filter((DataCollectionTarget *)obj))
       {
-         ((DataCollectionTarget *)obj)->getLastValuesSummary(tableDefinition, tableData);
+         ((DataCollectionTarget *)obj)->getDciValuesSummary(tableDefinition, tableData);
       }
       obj->decRefCount();
    }

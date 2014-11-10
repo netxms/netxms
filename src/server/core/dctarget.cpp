@@ -638,7 +638,7 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
 /**
  * Get last (current) DCI values for summary table.
  */
-void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, Table *tableData)
+void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData)
 {
    bool rowAdded = false;
    lockDciAccess(false);
@@ -662,9 +662,20 @@ void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, T
                tableData->setObjectId(tableData->getNumRows() - 1, m_id);
                rowAdded = true;
             }
-            tableData->set(i + 1, ((DCItem *)object)->getLastValue());
             tableData->setStatus(i + 1, ((DCItem *)object)->getThresholdSeverity());
             tableData->getColumnDefinitions()->get(i + 1)->setDataType(((DCItem *)object)->getDataType());
+            if (tableDefinition->getAggregationFunction() == F_LAST)
+            {
+               tableData->set(i + 1, ((DCItem *)object)->getLastValue());
+            }
+            else
+            {
+               tableData->set(i + 1, 
+                  ((DCItem *)object)->getAggregateValue(
+                     tableDefinition->getAggregationFunction(), 
+                     tableDefinition->getPeriodStart(), 
+                     tableDefinition->getPeriodEnd()));
+            }
          }
       }
    }

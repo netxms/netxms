@@ -1004,6 +1004,7 @@ typedef struct
 #define VID_CITY                    ((UINT32)487)
 #define VID_STREET_ADDRESS          ((UINT32)488)
 #define VID_POSTCODE                ((UINT32)489)
+#define VID_FUNCTION                ((UINT32)490)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -1234,6 +1234,66 @@ ItemValue *DCItem::getInternalLastValue()
 }
 
 /**
+ * Get aggregate value. Returned value must be deallocated by caller.
+ *
+ * @return dynamically allocated value or NULL on error
+ */
+TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, time_t periodEnd)
+{
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	TCHAR query[1024];
+   TCHAR *result = NULL;
+   
+   static const TCHAR *functions[] = { _T(""), _T("min"), _T("max"), _T("avg"), _T("sum") };
+
+	if (g_dbSyntax == DB_SYNTAX_ORACLE)
+	{
+		_sntprintf(query, 1024, _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u ")
+			_T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"), 
+			functions[func], m_pNode->getId());
+	}
+	else if (g_dbSyntax == DB_SYNTAX_MSSQL)
+	{
+		_sntprintf(query, 1024, _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata_%u ")
+			_T("WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"), 
+			functions[func], m_pNode->getId());
+	}
+	else if (g_dbSyntax == DB_SYNTAX_PGSQL)
+	{
+		_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value::double precision,0)) FROM idata_%u ")
+			_T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"), 
+			functions[func], m_pNode->getId());
+	}
+	else
+	{
+		_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u ")
+			_T("WHERE item_id=? and idata_timestamp between ? and ?"), 
+			functions[func], m_pNode->getId());
+	}
+
+	DB_STATEMENT hStmt = DBPrepare(hdb, query);
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)periodStart);
+		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)periodEnd);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			if (DBGetNumRows(hResult) == 1)
+			{
+				result = DBGetField(hResult, 0, 0, NULL, 0);
+			}
+			DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
+
+	DBConnectionPoolReleaseConnection(hdb);
+   return result;
+}
+
+/**
  * Clean expired data
  */
 void DCItem::deleteExpiredData()

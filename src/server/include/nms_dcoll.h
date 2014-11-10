@@ -375,6 +375,7 @@ public:
    NXSL_Value *getRawValueForNXSL();
    const TCHAR *getLastValue();
    ItemValue *getInternalLastValue();
+   TCHAR *getAggregateValue(AggregationFunction func, time_t periodStart, time_t periodEnd);
 
    virtual void createMessage(CSCPMessage *pMsg);
 #if defined(__SUNPRO_CC) || defined(__HP_aCC)

@@ -826,6 +826,18 @@ enum
 #define F_SCRIPT     6
 
 /**
+ * DCI aggregation functions
+ */
+enum AggregationFunction
+{
+   DCI_AGG_LAST = 0,
+   DCI_AGG_MIN = 1,
+   DCI_AGG_MAX = 2,
+   DCI_AGG_AVG = 3,
+   DCI_AGG_SUM = 4
+};
+
+/**
  * Threshold operations
  */
 #define OP_LE        0

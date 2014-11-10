@@ -281,6 +281,9 @@ private:
    UINT32 m_flags;
    ObjectArray<SummaryTableColumn> *m_columns;
    NXSL_VM *m_filter;
+   AggregationFunction m_aggregationFunction;
+   time_t m_periodStart;
+   time_t m_periodEnd;
 
    SummaryTable(DB_RESULT hResult);
 
@@ -295,6 +298,9 @@ public:
 
    int getNumColumns() { return m_columns->size(); }
    SummaryTableColumn *getColumn(int index) { return m_columns->get(index); }
+   AggregationFunction getAggregationFunction() { return m_aggregationFunction; }
+   time_t getPeriodStart() { return m_periodStart; }
+   time_t getPeriodEnd() { return m_periodEnd; }
 };
 
 /**
@@ -811,7 +817,7 @@ public:
    UINT32 getTableLastValues(UINT32 dciId, CSCPMessage *msg);
 	UINT32 getThresholdSummary(CSCPMessage *msg, UINT32 baseId);
 	UINT32 getPerfTabDCIList(CSCPMessage *pMsg);
-   void getLastValuesSummary(SummaryTable *tableDefinition, Table *tableData);
+   void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData);
 
    void updateDciCache();
    void cleanDCIData();

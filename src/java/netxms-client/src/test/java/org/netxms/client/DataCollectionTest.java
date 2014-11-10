@@ -19,7 +19,9 @@
 package org.netxms.client;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import org.netxms.client.constants.AggregationFunction;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
 import org.netxms.client.datacollection.DataCollectionItem;
@@ -184,7 +186,7 @@ public class DataCollectionTest extends SessionTest
       columns.add(new DciSummaryTableColumn("Usage", "System.CPU.Usage", 0));
       columns.add(new DciSummaryTableColumn("I/O Wait", "System.CPU.IOWait", 0));
 
-      Table result = session.queryAdHocDciSummaryTable(2, columns);
+      Table result = session.queryAdHocDciSummaryTable(2, columns, AggregationFunction.AVERAGE, new Date(System.currentTimeMillis() - 86400000), new Date());
       System.out.println(result.getRowCount() + " rows in result set");
       for(int i = 0; i < result.getColumnCount(); i++)
          System.out.print(String.format(" | %-20s", result.getColumnDisplayName(i)));
