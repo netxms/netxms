@@ -176,7 +176,7 @@ public class BrowserView extends ViewPart
 	 */
 	private static String getTitle(String html, String fallback)
 	{
-	   Pattern p = Pattern.compile("\\<html\\>.*\\<head\\>.*\\<title\\>(.*)\\</title\\>.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+	   Pattern p = Pattern.compile("\\<html\\>.*\\<head\\>.*\\<title\\>(.*)\\</title\\>.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
 	   Matcher m = p.matcher(html);
 	   if (m.matches())
 	   {

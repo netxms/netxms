@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,11 +28,12 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.views.HistoryView;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
- * Object action: open geolocation view
+ * Object action: open geolocation history view
  */
 public class OpenHistoryMap implements IObjectActionDelegate
 {
@@ -54,16 +55,15 @@ public class OpenHistoryMap implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		if(window != null)
+		if (window != null)
 		{	
-		   //Open dialog
 			try 
 			{
 				window.getActivePage().showView(HistoryView.ID, Long.toString(object.getObjectId()), IWorkbenchPage.VIEW_ACTIVATE);
 			} 
 			catch (PartInitException e) 
 			{
-				MessageDialogHelper.openError(window.getShell(), "Error while opening historical map", "Error while opening historical map: " + e.getMessage());
+				MessageDialogHelper.openError(window.getShell(), Messages.get().OpenHistoryMap_Error, String.format(Messages.get().OpenHistoryMap_CannotOpenView, e.getMessage()));
 			}
 		}
 	}

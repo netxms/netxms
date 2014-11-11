@@ -28,6 +28,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.nxsl.views.ScriptExecutor;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -57,7 +58,7 @@ public class ExecuteServerScript extends AbstractHandler
       }
       catch(PartInitException e)
       {
-         MessageDialogHelper.openError(window.getShell(), "Error", String.format("Error opening script execution view: %s", e.getLocalizedMessage()));
+         MessageDialogHelper.openError(window.getShell(), Messages.get().ExecuteServerScript_Error, String.format(Messages.get().ExecuteServerScript_ErrorMessage, e.getLocalizedMessage()));
       }
       return null;
    }

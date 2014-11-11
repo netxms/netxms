@@ -185,7 +185,7 @@
          point="org.eclipse.ui.contexts">
       <context
             id="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
-            name="AbstractCommandResults"
+            name="Abstract Command Results"
             parentId="org.eclipse.ui.contexts.window">
       </context>
       <context
@@ -242,13 +242,13 @@
             commandId="org.netxms.ui.eclipse.objecttools.commands.clear_output"
             contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="CTRL+L">
+            sequence="M1+L">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.clear_output"
             contextId="org.netxms.ui.eclipse.objecttools.context.FileViewer"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="CTRL+L">
+            sequence="M1+L">
       </key>
    </extension>
    <extension

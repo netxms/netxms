@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.TimePeriod;
+import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.widgets.TimePeriodSelector;
 
 public class TimeSelectionDialog extends Dialog
@@ -45,7 +46,7 @@ public class TimeSelectionDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Set time");  
+      newShell.setText(Messages.get().TimeSelectionDialog_Title);  
    }
    
    /* (non-Javadoc)

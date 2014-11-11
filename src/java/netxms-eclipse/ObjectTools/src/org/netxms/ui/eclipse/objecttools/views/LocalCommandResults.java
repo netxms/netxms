@@ -188,7 +188,7 @@ public class LocalCommandResults extends AbstractCommandResults
 				}
 				catch(IOException e)
 				{
-				   Activator.logError("Exception while running local command", e);
+				   Activator.logError("Exception while running local command", e); //$NON-NLS-1$
 				}
 				finally
 				{

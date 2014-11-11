@@ -277,7 +277,7 @@ public class General extends PropertyPage
 		textConfirmation.setEnabled(checkConfirmation.getSelection());
 		
       Group commandGroup = new Group(dialogArea, SWT.NONE);
-      commandGroup.setText("Show in commands");
+      commandGroup.setText(Messages.get().General_ShowInCommands);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -289,7 +289,7 @@ public class General extends PropertyPage
       commandGroup.setLayout(layout);
       
       checkCommand = new Button(commandGroup, SWT.CHECK);
-      checkCommand.setText("Show this tool in node commands");
+      checkCommand.setText(Messages.get().General_ShowInCommandsTooltip);
       checkCommand.setSelection((objectTool.getFlags() & ObjectTool.SHOW_IN_COMMANDS) != 0);
       checkCommand.addSelectionListener(new SelectionListener() {
          @Override
@@ -314,7 +314,7 @@ public class General extends PropertyPage
       checkCommand.setLayoutData(gd);
       
       textCommandName = new LabeledText(commandGroup, SWT.NONE);
-      textCommandName.setLabel("Command name");
+      textCommandName.setLabel(Messages.get().General_CommandName);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -323,7 +323,7 @@ public class General extends PropertyPage
       textCommandName.setEnabled(checkCommand.getSelection());
 		
       textCommandShortName = new LabeledText(commandGroup, SWT.NONE);
-      textCommandShortName.setLabel("Command short name");
+      textCommandShortName.setLabel(Messages.get().General_CommandShortName);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -380,7 +380,7 @@ public class General extends PropertyPage
       }
       catch(Exception e)
       {
-         Activator.logError("Exception in General.createIcon()", e);
+         Activator.logError("Exception in General.createIcon()", e); //$NON-NLS-1$
       }
 	}
 	
@@ -390,7 +390,7 @@ public class General extends PropertyPage
 	private void createIconSelector(Composite parent)
 	{
 	   Group group = new Group(parent, SWT.NONE);
-	   group.setText("Icon");
+	   group.setText(Messages.get().General_Icon);
 	   group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
 	   
 	   GridLayout layout = new GridLayout();
@@ -408,7 +408,7 @@ public class General extends PropertyPage
 	   
       Button link = new Button(group, SWT.PUSH);
       link.setImage(SharedIcons.IMG_FIND);
-      link.setToolTipText("Select...");
+      link.setToolTipText(Messages.get().General_Select);
       link.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -419,7 +419,7 @@ public class General extends PropertyPage
 
       link = new Button(group, SWT.PUSH);
       link.setImage(SharedIcons.IMG_CLEAR);
-      link.setToolTipText("Clear");
+      link.setToolTipText(Messages.get().General_Clear);
       link.addSelectionListener(new SelectionAdapter() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -440,8 +440,8 @@ public class General extends PropertyPage
 	private void selectIcon()
 	{
 	   FileDialog dlg = new FileDialog(getShell(), SWT.OPEN);
-	   dlg.setFilterExtensions(new String[] { "*.gif;*.jpg;*.png", "*.*" });
-      dlg.setFilterNames(new String[] { "Image Files", "All Files" });
+	   dlg.setFilterExtensions(new String[] { "*.gif;*.jpg;*.png", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+      dlg.setFilterNames(new String[] { Messages.get().General_ImageFiles, Messages.get().General_AllFiles });
       String fileName = dlg.open();
       if (fileName == null)
          return;
@@ -459,12 +459,12 @@ public class General extends PropertyPage
          else
          {
             image.dispose();
-            MessageDialogHelper.openError(getShell(), "Error", "Select image file is too large");
+            MessageDialogHelper.openError(getShell(), Messages.get().General_Error, Messages.get().General_ImageTooLarge);
          }
       }
       catch(Exception e)
       {
-         MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot load image file: %s", e.getLocalizedMessage()));
+         MessageDialogHelper.openError(getShell(), Messages.get().General_Error, String.format(Messages.get().General_CannotLoadImage, e.getLocalizedMessage()));
       }
 	}
 

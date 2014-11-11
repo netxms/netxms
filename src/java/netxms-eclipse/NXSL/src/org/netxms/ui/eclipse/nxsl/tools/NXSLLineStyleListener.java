@@ -50,10 +50,11 @@ public class NXSLLineStyleListener implements LineStyleListener, ExtendedModifyL
 	private static final Color KEYWORD_COLOR = new Color(Display.getCurrent(), 96, 0, 0);
 	private static final Color STRING_COLOR = new Color(Display.getCurrent(), 0, 0, 192);
 	
-	private static final String[] keywords = { "break", "classof", "continue", "do", "else", "exit", "for", "if", "ilike",
-	                                           "imatch", "int32", "int64", "like", "match", "print", "println",
-	                                           "real", "return", "string", "sub", "typeof", "uint32", "uint64",
-	                                           "use", "while" };
+	private static final String[] keywords = { 
+	   "abort", "array", "break", "case", "catch", "classof", "const", "continue", "default", "do",
+	   "else", "exit", "for", "foreach", "global", "if", "ilike", "imatch", "int32", "int64", "like",
+	   "match", "print", "println", "real", "return", "string", "sub", "switch", "try", "typeof",
+	   "uint32", "uint64", "use", "while" };
 	private static final String[] systemConstants = { "null", "NULL", "true", "TRUE", "false", "FALSE" };
 	
 	@SuppressWarnings("rawtypes")

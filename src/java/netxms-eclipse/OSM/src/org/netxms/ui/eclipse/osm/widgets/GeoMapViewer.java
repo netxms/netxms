@@ -80,7 +80,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 {
    private static final int START = 1;
    private static final int END = 2;
-   private static final String pointInformation[] = {"Start","End"};
+   private static final String pointInformation[] = {Messages.get().GeoMapViewer_Start, Messages.get().GeoMapViewer_End};
    
 	private static final Color MAP_BACKGROUND = new Color(Display.getCurrent(), 255, 255, 255);
    private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getCurrent(), 0, 0, 0);
@@ -142,8 +142,8 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		   this.historyObject = historyObject;		   
 		}
 		
-		imageZoomIn = Activator.getImageDescriptor("icons/map_zoom_in.png").createImage();
-      imageZoomOut = Activator.getImageDescriptor("icons/map_zoom_out.png").createImage();
+		imageZoomIn = Activator.getImageDescriptor("icons/map_zoom_in.png").createImage(); //$NON-NLS-1$
+      imageZoomOut = Activator.getImageDescriptor("icons/map_zoom_out.png").createImage(); //$NON-NLS-1$
 
 		labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 		mapLoader = new MapLoader(getDisplay());
@@ -530,7 +530,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
                {
                   color = SWT.COLOR_GREEN;
                   DateFormat df = RegionalSettings.getDateTimeFormat();
-                  toolTip.setText(String.format("%s\r\n%s - %s", 
+                  toolTip.setText(String.format("%s\r\n%s - %s",  //$NON-NLS-1$
                         history.get(i), df.format(history.get(i).getTimestamp()), df.format(history.get(i).getEndTimestamp())));
                   toolTip.setVisible(true);
                }
@@ -1058,11 +1058,11 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 */
 	private void updateHistory()
 	{
+       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	   ConsoleJob job = new ConsoleJob(Messages.get().GeoMapViewer_DownloadJob_Title, viewPart, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            NXCSession session = (NXCSession)ConsoleSharedData.getSession();
             history = session.getLocationHistory(historyObject.getObjectId(), timePeriod.getPeriodStart(), timePeriod.getPeriodEnd());
             for(int i = 0; i < history.size(); i++)
                locationTree.insert(history.get(i).getLatitude(), history.get(i).getLongitude(), history.get(i));

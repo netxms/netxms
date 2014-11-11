@@ -53,16 +53,25 @@ public class Messages extends NLS
    public String Filter_OIDShouldMatch;
    public String Filter_SNMPNeeded;
    public String General_AgentAction;
+   public String General_AllFiles;
+   public String General_CannotLoadImage;
+   public String General_Clear;
    public String General_Command;
+   public String General_CommandName;
+   public String General_CommandShortName;
    public String General_Confirmation;
    public String General_ConfirmationMessage;
    public String General_Description;
    public String General_DisableObjectToll;
+   public String General_Error;
    public String General_ExecOptions;
    public String General_FileOptions;
    public String General_FirstColumnValue;
    public String General_FollowFileChanges;
    public String General_GeneratesOutput;
+   public String General_Icon;
+   public String General_ImageFiles;
+   public String General_ImageTooLarge;
    public String General_LimitDownloadFileSizeLable;
    public String General_Name;
    public String General_OIDSuffix;
@@ -71,6 +80,9 @@ public class Messages extends NLS
    public String General_RegExp;
    public String General_RemoteFileName;
    public String General_RequiresConfirmation;
+   public String General_Select;
+   public String General_ShowInCommands;
+   public String General_ShowInCommandsTooltip;
    public String General_SNMPTableOptions;
    public String General_Title;
    public String General_URL;
@@ -147,6 +159,8 @@ public class Messages extends NLS
    public String ToolColumnLabelProvider_FmtIpAddr;
    public String ToolColumnLabelProvider_FmtMacAddr;
    public String ToolColumnLabelProvider_FmtString;
+   public String WakeupToolHandler_JobError;
+   public String WakeupToolHandler_JobName;
    static
    {
       // initialize resource bundle

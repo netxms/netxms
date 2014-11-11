@@ -87,15 +87,16 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 {
    private static final int START = 1;
    private static final int END = 2;
-   private static final String pointInformation[] = {"Start","End"};
+   private final String pointInformation[] = {Messages.get().GeoMapViewer_Start, Messages.get().GeoMapViewer_End};
    
-	private static final Color MAP_BACKGROUND = new Color(Display.getCurrent(), 255, 255, 255);
-   private static final Color INFO_BLOCK_BACKGROUND = new Color(Display.getCurrent(), 0, 0, 0);
-   private static final Color INFO_BLOCK_TEXT = new Color(Display.getCurrent(), 255, 255, 255);
-	private static final Color LABEL_BACKGROUND = new Color(Display.getCurrent(), 240, 254, 192);
-	private static final Color LABEL_TEXT = new Color(Display.getCurrent(), 0, 0, 0);
-	private static final Color BORDER_COLOR = new Color(Display.getCurrent(), 128, 128, 128);
-	private static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 0, 0, 255);
+	private final Color MAP_BACKGROUND = new Color(Display.getCurrent(), 255, 255, 255);
+   private final Color INFO_BLOCK_BACKGROUND = new Color(Display.getCurrent(), 0, 0, 0);
+   private final Color INFO_BLOCK_TEXT = new Color(Display.getCurrent(), 255, 255, 255);
+	private final Color LABEL_BACKGROUND = new Color(Display.getCurrent(), 240, 254, 192);
+	private final Color LABEL_TEXT = new Color(Display.getCurrent(), 0, 0, 0);
+	private final Color BORDER_COLOR = new Color(Display.getCurrent(), 128, 128, 128);
+	private final Color SELECTION_COLOR = new Color(Display.getCurrent(), 0, 0, 255);
+   private final Color TRACK_COLOR = new Color(Display.getCurrent(), 163, 73, 164);
 	
 	private static final Font TITLE_FONT = new Font(Display.getCurrent(), "Verdana", 10, SWT.BOLD);  //$NON-NLS-1$
 
@@ -147,8 +148,8 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		   this.historyObject = historyObject;		   
 		}
 		
-		imageZoomIn = Activator.getImageDescriptor("icons/map_zoom_in.png").createImage();
-      imageZoomOut = Activator.getImageDescriptor("icons/map_zoom_out.png").createImage();
+		imageZoomIn = Activator.getImageDescriptor("icons/map_zoom_in.png").createImage(); //$NON-NLS-1$
+      imageZoomOut = Activator.getImageDescriptor("icons/map_zoom_out.png").createImage(); //$NON-NLS-1$
 
 		labelProvider = WorkbenchLabelProvider.getDecoratingWorkbenchLabelProvider();
 		mapLoader = new MapLoader(getDisplay());

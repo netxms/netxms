@@ -57,6 +57,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
+import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.nxsl.dialogs.CreateScriptDialog;
 import org.netxms.ui.eclipse.nxsl.dialogs.SaveScriptDialog;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
@@ -106,7 +107,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       objectId = Long.parseLong(site.getSecondaryId());
       scriptLibraryManager = (ScriptLibraryManager)ConsoleSharedData.getSession();
 
-      setPartName("Execute Script - " +session.getObjectName(objectId));
+      setPartName(String.format(Messages.get().ScriptExecutor_PartName, session.getObjectName(objectId)));
    }
 
    /* (non-Javadoc)
@@ -124,14 +125,14 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       formContainer.setLayout(new FillLayout());      
       
       form = toolkit.createForm(formContainer);
-      form.setText("noname");
+      form.setText(Messages.get().ScriptExecutor_Noname);
       
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = 8;
       form.getBody().setLayout(layout);
 
       /**** Script list dropdown ****/
-      scriptCombo = WidgetHelper.createLabeledCombo(form.getBody(), SWT.READ_ONLY, "Script from library", WidgetHelper.DEFAULT_LAYOUT_DATA, toolkit);
+      scriptCombo = WidgetHelper.createLabeledCombo(form.getBody(), SWT.READ_ONLY, Messages.get().ScriptExecutor_LibScript, WidgetHelper.DEFAULT_LAYOUT_DATA, toolkit);
       updateScriptList(null); 
       scriptCombo.addSelectionListener( new SelectionListener() {
          @Override
@@ -170,7 +171,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       layout.marginBottom = 4;
       container.setLayout(layout);
       Section section = toolkit.createSection(container, Section.TITLE_BAR);
-      section.setText("Source");
+      section.setText(Messages.get().ScriptExecutor_Source);
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
@@ -180,7 +181,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       
       scriptEditor = new ScriptEditor(section, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, 0);
       section.setClient(scriptEditor);
-      scriptEditor.setText("");
+      scriptEditor.setText(""); //$NON-NLS-1$
       scriptEditor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)
@@ -197,7 +198,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       layout.marginTop = 4;
       container.setLayout(layout);
       section = toolkit.createSection(container, Section.TITLE_BAR);
-      section.setText("Output");
+      section.setText(Messages.get().ScriptExecutor_Output);
       gridData = new GridData();
       gridData.horizontalAlignment = GridData.FILL;
       gridData.grabExcessHorizontalSpace = true;
@@ -264,17 +265,17 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    {
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
       
-      actionSave = new Action("Save", SharedIcons.SAVE) {
+      actionSave = new Action(Messages.get().ScriptExecutor_Save, SharedIcons.SAVE) {
          @Override
          public void run()
          {
-            intermidiateSave(false);
+            intermediateSave(false);
          }
       };
       actionSave.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.save"); //$NON-NLS-1$
       handlerService.activateHandler(actionSave.getActionDefinitionId(), new ActionHandler(actionSave));
       
-      actionSaveAs = new Action("Save as...", SharedIcons.SAVE_AS) {
+      actionSaveAs = new Action(Messages.get().ScriptExecutor_SaveAs, SharedIcons.SAVE_AS) {
          @Override
          public void run()
          {
@@ -284,7 +285,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       actionSaveAs.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.save_as"); //$NON-NLS-1$
       handlerService.activateHandler(actionSaveAs.getActionDefinitionId(), new ActionHandler(actionSaveAs));
       
-      actionClear = new Action("Clear source", SharedIcons.CLEAR) {
+      actionClear = new Action(Messages.get().ScriptExecutor_Clear, SharedIcons.CLEAR) {
          @Override
          public void run()
          {
@@ -295,13 +296,13 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
             }
             scriptCombo.deselectAll();
             scriptCombo.clearSelection();
-            scriptEditor.setText("");
+            scriptEditor.setText(""); //$NON-NLS-1$
             output.clear();
-            form.setText("noname");
+            form.setText(Messages.get().ScriptExecutor_Noname);
          }
       };
 
-      actionClearOutput = new Action("Clear output", SharedIcons.CLEAR_LOG) {
+      actionClearOutput = new Action(Messages.get().ScriptExecutor_ClearOutput, SharedIcons.CLEAR_LOG) {
          @Override
          public void run()
          {
@@ -326,9 +327,9 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
             output.clear();
          }
       };
-      actionReload.setText("Reload script");
+      actionReload.setText(Messages.get().ScriptExecutor_Reload);
       
-      actionExecute = new Action("Execute", SharedIcons.EXECUTE) {
+      actionExecute = new Action(Messages.get().ScriptExecutor_Execute, SharedIcons.EXECUTE) {
          @Override
          public void run()
          {
@@ -350,7 +351,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       switch(rc)
       {
          case SaveScriptDialog.SAVE_ID:
-            intermidiateSave(onSelectionChange);
+            intermediateSave(onSelectionChange);
             break;
          case SaveScriptDialog.SAVE_AS_ID:
             createNewScript(onSelectionChange);
@@ -374,7 +375,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       final CreateScriptDialog dlg = new CreateScriptDialog(getSite().getShell(), null);
       if (dlg.open() == Window.OK)
       {
-         new ConsoleJob("Create new script", this, Activator.PLUGIN_ID, null) {
+         new ConsoleJob(Messages.get().ScriptExecutor_JobName_Create, this, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
@@ -390,7 +391,6 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
                         public void run()
                         {
                            scriptCombo.select(scriptCombo.indexOf(dlg.getName()));
-                           System.out.println("Trying to set newly created item");
                         }
                      };
                      updateScriptList(saveOnSelectionChange ? null : run);
@@ -402,7 +402,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
             @Override
             protected String getErrorMessage()
             {
-               return "Error modifying script";
+               return Messages.get().ScriptExecutor_JobError_Create;
             }
          }.start();
       }
@@ -417,7 +417,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       if (index == -1)
          return;
       
-      new ConsoleJob("Update script content", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ScriptExecutor_JobName_Update, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {            
@@ -437,7 +437,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          @Override
          protected String getErrorMessage()
          {
-            return "Not possible to get script content";
+            return Messages.get().ScriptExecutor_JobError_Update;
          }
       }.start();
    }
@@ -450,7 +450,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       final String script = scriptEditor.getText();
       consoleOutputStream = output.newOutputStream();
       actionExecute.setEnabled(false);
-      new ConsoleJob("Execute script", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ScriptExecutor_JobName_Execute, null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -460,7 +460,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          @Override
          protected String getErrorMessage()
          {
-            return "Error executing script";
+            return Messages.get().ScriptExecutor_JobError_Execute;
          } 
 
          /* (non-Javadoc)
@@ -495,7 +495,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    {
       final String selection = (scriptCombo.getSelectionIndex() != -1) ? scriptCombo.getItem(scriptCombo.getSelectionIndex()) : null;
             
-      new ConsoleJob("Update script list", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ScriptExecutor_JobName_ReadList, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -528,7 +528,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          @Override
          protected String getErrorMessage()
          {
-            return "Not possible to get script list";
+            return Messages.get().ScriptExecutor_JobError_ReadList;
          }
       }.start();
    }
@@ -536,10 +536,10 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    /**
     * Update script
     */
-   public void intermidiateSave(boolean saveOnSelectionChange)
+   public void intermediateSave(boolean saveOnSelectionChange)
    {
       final Script s = library.get( saveOnSelectionChange ? previousSelection : scriptCombo.getSelectionIndex());
-      new ConsoleJob("Update script", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ScriptExecutor_JobName_Update, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -557,7 +557,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          @Override
          protected String getErrorMessage()
          {
-            return "Not possible to save script";
+            return Messages.get().ScriptExecutor_JobError_Update;
          }
       }.start();
    }
@@ -631,8 +631,8 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       }
       catch(Exception e)
       {
-         MessageDialogHelper.openError(getViewSite().getShell(), "Error",
-               "Error while saving script: " + e.getMessage());
+         MessageDialogHelper.openError(getViewSite().getShell(), Messages.get().ScriptExecutor_Error,
+               String.format(Messages.get().ScriptExecutor_SaveError, e.getLocalizedMessage()));
       }
       clearDirtyFlags();
    }

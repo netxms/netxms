@@ -130,7 +130,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 				Menu rootMenu = toolsMenu;
 				for(int j = 0; j < path.length - 1; j++)
 				{
-               final String key = rootMenu.hashCode() + "@" + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
+               final String key = rootMenu.hashCode() + "@" + path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					Menu currMenu = menus.get(key);
 					if (currMenu == null)
 					{

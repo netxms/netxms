@@ -47,7 +47,7 @@ public class WakeupToolHandler implements ObjectToolHandler
    public void execute(final AbstractNode node, ObjectTool tool)
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      new ConsoleJob("Wakeup node", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().WakeupToolHandler_JobName, null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -57,7 +57,7 @@ public class WakeupToolHandler implements ObjectToolHandler
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot send wake-on-LAN packet to node";
+            return Messages.get().WakeupToolHandler_JobError;
          }
       }.start();
    }

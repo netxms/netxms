@@ -58,8 +58,8 @@ public class HistoryView extends ViewPart
       GraphSettings.TIME_UNIT_DAY, GraphSettings.TIME_UNIT_DAY };
    private static final int[] presetRanges = { 10, 30, 1, 2, 4, 12, 1, 2, 5, 7, 31, 365 };
    private static final String[] presetNames = 
-      { "10 minutes", "30 minutes", "1 hour", "2 hours", "4 hours", "12 hours", "Today",
-        "Last 2 days", "Last 5 days", "This week", "This month","This Year" };
+      { Messages.get().HistoryView_Preset10min, Messages.get().HistoryView_Preset30min, Messages.get().HistoryView_Preset1hour, Messages.get().HistoryView_Preset2hours, Messages.get().HistoryView_Preset4hours, Messages.get().HistoryView_Preset12hours, Messages.get().HistoryView_Preset1day,
+        Messages.get().HistoryView_Preset2days, Messages.get().HistoryView_Preset5days, Messages.get().HistoryView_Preset1week, Messages.get().HistoryView_Preset1month,Messages.get().HistoryView_Preset1year };
 
 	
 	protected GeoMapViewer map;
@@ -198,7 +198,7 @@ public class HistoryView extends ViewPart
          };
       }
       
-      setConfigurableTime = new Action("Set time frame") 
+      setConfigurableTime = new Action(Messages.get().HistoryView_CustomTimeFrame) 
       {
          @Override
          public void run()
@@ -229,7 +229,7 @@ public class HistoryView extends ViewPart
 	 */
 	protected void fillLocalPullDown(IMenuManager manager)
 	{
-	   MenuManager presets = new MenuManager("&Presets");
+	   MenuManager presets = new MenuManager(Messages.get().HistoryView_Presets);
       for(int i = 0; i < presetActions.length; i++)
          presets.add(presetActions[i]);
       
@@ -280,7 +280,7 @@ public class HistoryView extends ViewPart
 	 */
 	protected void fillContextMenu(final IMenuManager manager)
 	{
-	   MenuManager presets = new MenuManager("&Presets");
+	   MenuManager presets = new MenuManager(Messages.get().HistoryView_Presets);
       for(int i = 0; i < presetActions.length; i++)
          presets.add(presetActions[i]);
       

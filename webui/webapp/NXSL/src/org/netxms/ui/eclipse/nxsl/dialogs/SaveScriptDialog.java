@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.nxsl.Activator;
+import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -60,7 +61,7 @@ public class SaveScriptDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Unsaved changes");
+      newShell.setText(Messages.get().SaveScriptDialog_Title);
    }
 
    /*
@@ -71,10 +72,10 @@ public class SaveScriptDialog extends Dialog
    @Override
    protected void createButtonsForButtonBar(Composite parent)
    {
-      createButton(parent, SAVE_ID, "Save", false);
-      createButton(parent, SAVE_AS_ID, "Save as...", false);
-      createButton(parent, DISCARD_ID, "Discard", false);
-      createButton(parent, IDialogConstants.CANCEL_ID, "Cancel", false);
+      createButton(parent, SAVE_ID, Messages.get().SaveScriptDialog_Save, false);
+      createButton(parent, SAVE_AS_ID, Messages.get().SaveScriptDialog_SaveAs, false);
+      createButton(parent, DISCARD_ID, Messages.get().SaveScriptDialog_Discard, false);
+      createButton(parent, IDialogConstants.CANCEL_ID, Messages.get().SaveScriptDialog_Cancel, false);
       
       if (!showSave)
          getButton(SAVE_ID).setEnabled(false);
@@ -101,7 +102,7 @@ public class SaveScriptDialog extends Dialog
       image.setImage(Activator.getImageDescriptor("icons/unsaved_config.png").createImage()); //$NON-NLS-1$
 
       final CLabel text = new CLabel(dialogArea, SWT.LEFT);
-      text.setText("Script source has been modified. Please select one of the following actions:\n\t\"Save\"\t\tSave into currently selected library script\n\t\"Save as...\"\tSave as new library script\n\t\"Discard\"\tDiscard changes\n\t\"Cancel\"\t\tCancel requested operation and return to editing script");
+      text.setText(Messages.get().SaveScriptDialog_Message);
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;

@@ -50,16 +50,25 @@ public class Messages extends NLS
    public static String Filter_OIDShouldMatch;
    public static String Filter_SNMPNeeded;
    public static String General_AgentAction;
+   public static String General_AllFiles;
+   public static String General_CannotLoadImage;
+   public static String General_Clear;
    public static String General_Command;
+   public static String General_CommandName;
+   public static String General_CommandShortName;
    public static String General_Confirmation;
    public static String General_ConfirmationMessage;
    public static String General_Description;
    public static String General_DisableObjectToll;
+   public static String General_Error;
    public static String General_ExecOptions;
    public static String General_FileOptions;
    public static String General_FirstColumnValue;
    public static String General_FollowFileChanges;
    public static String General_GeneratesOutput;
+   public static String General_Icon;
+   public static String General_ImageFiles;
+   public static String General_ImageTooLarge;
    public static String General_LimitDownloadFileSizeLable;
    public static String General_Name;
    public static String General_OIDSuffix;
@@ -68,6 +77,9 @@ public class Messages extends NLS
    public static String General_RegExp;
    public static String General_RemoteFileName;
    public static String General_RequiresConfirmation;
+   public static String General_Select;
+   public static String General_ShowInCommands;
+   public static String General_ShowInCommandsTooltip;
    public static String General_SNMPTableOptions;
    public static String General_Title;
    public static String General_URL;
@@ -144,6 +156,8 @@ public class Messages extends NLS
    public static String ToolColumnLabelProvider_FmtIpAddr;
    public static String ToolColumnLabelProvider_FmtMacAddr;
    public static String ToolColumnLabelProvider_FmtString;
+   public static String WakeupToolHandler_JobError;
+   public static String WakeupToolHandler_JobName;
    static
    {
       // initialize resource bundle
