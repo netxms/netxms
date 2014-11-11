@@ -53,7 +53,7 @@ public class IPNeighbors extends AbstractNetworkMapView
 	 */
 	protected void buildMapPage()
 	{
-		mapPage = new NetworkMapPage(ID + "." + this.toString());
+		mapPage = new NetworkMapPage(ID + "." + this.toString()); //$NON-NLS-1$
 
 		long rootElementId = mapPage.createElementId();
 		mapPage.addElement(new NetworkMapObject(rootElementId, rootObject.getObjectId()));

@@ -155,7 +155,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		colors = new ColorCache();
 		
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		enableLongObjectName = ps.getBoolean("ENABLE_LONG_OBJECT_NAME");
+		enableLongObjectName = ps.getBoolean("ENABLE_LONG_OBJECT_NAME"); //$NON-NLS-1$
 		dciValueProvider = LinkDciValueProvider.getInstance();
 	}
 
@@ -452,12 +452,12 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
          ConnectionLocator nameLocator = new ConnectionLocator(connection.getConnectionFigure());
          nameLocator.setRelativePosition(PositionConstants.CENTER);
          
-         String labelString = "";
+         String labelString = ""; //$NON-NLS-1$
          if(hasName)
             labelString += link.getName();
          
          if(hasName && hasDciData)
-            labelString +="\n";
+            labelString +="\n"; //$NON-NLS-1$
          
          if(hasDciData)
          {

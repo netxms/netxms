@@ -146,13 +146,13 @@ public class MapLinkGeneral extends PropertyPage
 		   for(int i = 0; i < object.getStatusObject().size(); i++)
 		   {
 		      final AbstractObject obj = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(object.getStatusObject().get(i));
-	         list.add((obj != null) ? obj.getObjectName() : ("<" + Long.toString(object.getStatusObject().get(i)) + ">"));
+	         list.add((obj != null) ? obj.getObjectName() : ("<" + Long.toString(object.getStatusObject().get(i)) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
 		   }
 		}
       list.setEnabled(radioColorObject.getSelection());
       
       add = new Button(nodeSelectionGroup, SWT.PUSH);
-      add.setText("Add");
+      add.setText(Messages.get().MapLinkGeneral_Add);
       gd = new GridData();
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       gd.verticalAlignment = SWT.TOP;
@@ -173,7 +173,7 @@ public class MapLinkGeneral extends PropertyPage
       add.setEnabled(radioColorObject.getSelection());
       
       remove = new Button(nodeSelectionGroup, SWT.PUSH);
-      remove.setText("Delete");
+      remove.setText(Messages.get().MapLinkGeneral_Delete);
       gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
       gd.verticalAlignment = SWT.TOP;
       remove.setLayoutData(gd);
@@ -234,7 +234,7 @@ public class MapLinkGeneral extends PropertyPage
             for(AbstractObject obj : objects)
             {
                object.addStatusObject(obj.getObjectId());
-               list.add((obj != null) ? obj.getObjectName() : ("<" + Long.toString(obj.getObjectId()) + ">"));
+               list.add((obj != null) ? obj.getObjectName() : ("<" + Long.toString(obj.getObjectId()) + ">")); //$NON-NLS-1$ //$NON-NLS-2$
             }
          }
       }

@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -57,10 +58,10 @@ public class GeneralDCIContainerPropertyPage extends PropertyPage
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       dialogArea.setLayout(layout);    
       
-      backgroundColorSelector = WidgetHelper.createLabeledColorSelector(dialogArea, "Background Color", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      backgroundColorSelector = WidgetHelper.createLabeledColorSelector(dialogArea, Messages.get().GeneralDCIContainerPropertyPage_BkColor, WidgetHelper.DEFAULT_LAYOUT_DATA);
       backgroundColorSelector.setColorValue(ColorConverter.rgbFromInt(container.getBackgroundColor()));
       
-      textColorSelector = WidgetHelper.createLabeledColorSelector(dialogArea, "Text Color", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      textColorSelector = WidgetHelper.createLabeledColorSelector(dialogArea, Messages.get().GeneralDCIContainerPropertyPage_TextColor, WidgetHelper.DEFAULT_LAYOUT_DATA);
       textColorSelector.setColorValue(ColorConverter.rgbFromInt(container.getTextColor()));
       
       final SelectionListener listener = new SelectionListener() {
@@ -78,11 +79,11 @@ public class GeneralDCIContainerPropertyPage extends PropertyPage
       };
       
       borderCheckbox = new Button(dialogArea, SWT.CHECK);
-      borderCheckbox.setText("Show border");
+      borderCheckbox.setText(Messages.get().GeneralDCIContainerPropertyPage_ShowBorder);
       borderCheckbox.setSelection(container.isBorderRequired());
       borderCheckbox.addSelectionListener(listener);      
             
-      borderColorSelector = WidgetHelper.createLabeledColorSelector(dialogArea, "Text Color", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      borderColorSelector = WidgetHelper.createLabeledColorSelector(dialogArea, Messages.get().GeneralDCIContainerPropertyPage_BorderColor, WidgetHelper.DEFAULT_LAYOUT_DATA);
       borderColorSelector.setColorValue(ColorConverter.rgbFromInt(container.getBorderColor()));
       borderColorSelector.setEnabled(borderCheckbox.getSelection());
          

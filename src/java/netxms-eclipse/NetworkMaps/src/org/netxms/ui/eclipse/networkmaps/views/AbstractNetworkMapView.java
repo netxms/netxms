@@ -164,7 +164,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionFiguresIcons;
 	protected Action actionFiguresSmallLabels;
 	protected Action actionFiguresLargeLabels;
-	protected Action actionFiguresStatusIconOnly;
+	protected Action actionFiguresStatusIcons;
 	protected Action actionShowGrid;
 	protected Action actionAlignToGrid;
 	protected Action actionSnapToGrid;
@@ -193,7 +193,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       dciValueProvider = LinkDciValueProvider.getInstance();
 
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-      disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND");
+      disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND"); //$NON-NLS-1$
 
 		session = (NXCSession)ConsoleSharedData.getSession();
 		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
@@ -732,7 +732,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.LARGE_LABEL);
 		
-		actionFiguresStatusIconOnly = new Action("Show only status icon", Action.AS_RADIO_BUTTON) {
+		actionFiguresStatusIcons = new Action(Messages.get().AbstractNetworkMapView_StatusIcons, Action.AS_RADIO_BUTTON) {
          @Override
          public void run()
          {
@@ -745,7 +745,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
             actionShowStatusIcon.setEnabled(false);
          }
       };
-      actionFiguresStatusIconOnly.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.STATUS);
+      actionFiguresStatusIcons.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.STATUS);
 
 		actionShowGrid = new Action(Messages.get().AbstractNetworkMapView_ShowGrid, Action.AS_CHECK_BOX) {
 			@Override
@@ -784,7 +784,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 		
-		actionCopyImage = new Action("Copy map image to clipboard", SharedIcons.COPY) {
+		actionCopyImage = new Action(Messages.get().AbstractNetworkMapView_CopyToClipboard, SharedIcons.COPY) {
          @Override
          public void run()
          {
@@ -795,7 +795,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
          }
 		};
 		
-		actionHideLinkLabels = new Action("Hide link labels", Action.AS_CHECK_BOX) {
+		actionHideLinkLabels = new Action(Messages.get().AbstractNetworkMapView_HideLinkLabels, Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {         
@@ -867,7 +867,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		figureType.add(actionFiguresIcons);
 		figureType.add(actionFiguresSmallLabels);
 		figureType.add(actionFiguresLargeLabels);
-		figureType.add(actionFiguresStatusIconOnly);
+		figureType.add(actionFiguresStatusIcons);
 
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
@@ -1017,7 +1017,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		figureType.add(actionFiguresIcons);
 		figureType.add(actionFiguresSmallLabels);
 		figureType.add(actionFiguresLargeLabels);
-      figureType.add(actionFiguresStatusIconOnly);
+      figureType.add(actionFiguresStatusIcons);
 
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);

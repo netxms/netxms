@@ -273,7 +273,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		final ActionHandler addObjectHandler = new ActionHandler(actionAddObject);
 		handlerService.activateHandler(actionAddObject.getActionDefinitionId(), addObjectHandler);
 
-		actionAddDCIContainer = new Action("Add &DCI Container...") {
+		actionAddDCIContainer = new Action(Messages.get().PredefinedMap_AddDciContainer) {
          @Override
          public void run()
          {
@@ -285,7 +285,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       final ActionHandler addDCIContainerHandler = new ActionHandler(actionAddDCIContainer);
       handlerService.activateHandler(actionAddDCIContainer.getActionDefinitionId(), addDCIContainerHandler);
       
-      actionAddDCIImage = new Action("Add &DCI Image...") {
+      actionAddDCIImage = new Action(Messages.get().PredefinedMap_AddDciImage) {
          @Override
          public void run()
          {
@@ -337,7 +337,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		final ActionHandler removeHandler = new ActionHandler(actionRemove);
 		handlerService.activateHandler(actionRemove.getActionDefinitionId(), removeHandler);
 		
-		actionDCIContainerProperties = new Action("Properties") {
+		actionDCIContainerProperties = new Action(Messages.get().PredefinedMap_Properties) {
          @Override
          public void run()
          {
@@ -345,7 +345,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
          }
       };
       
-      actionDCIImageProperties = new Action("Properties") {
+      actionDCIImageProperties = new Action(Messages.get().PredefinedMap_Properties) {
          @Override
          public void run()
          {

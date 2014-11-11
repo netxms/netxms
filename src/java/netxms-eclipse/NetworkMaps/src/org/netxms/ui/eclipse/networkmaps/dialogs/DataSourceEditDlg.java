@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
 import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -60,7 +61,7 @@ public class DataSourceEditDlg extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Edit data source");
+		newShell.setText(Messages.get().DataSourceEditDlg_Title);
 	}
 
 	/* (non-Javadoc)
@@ -78,7 +79,7 @@ public class DataSourceEditDlg extends Dialog
 		dialogArea.setLayout(layout);
 		
 		dciSelector = new DciSelector(dialogArea, SWT.NONE, false);
-		dciSelector.setLabel("Data collection item");
+		dciSelector.setLabel(Messages.get().DataSourceEditDlg_DCI);
 		dciSelector.setDciId(dci.getNodeId(), dci.dciId);
 		dciSelector.setDcObjectType(dci.type);
 		GridData gd = new GridData();
@@ -89,7 +90,7 @@ public class DataSourceEditDlg extends Dialog
 		dciSelector.setLayoutData(gd);
 		
 		name = new LabeledText(dialogArea, SWT.NONE);
-		name.setLabel("Name");
+		name.setLabel(Messages.get().DataSourceEditDlg_Name);
 		name.setText(dci.name);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -98,7 +99,7 @@ public class DataSourceEditDlg extends Dialog
 		name.setLayoutData(gd);
       
 		formatString = new LabeledText(dialogArea, SWT.NONE);
-		formatString.setLabel("Format string");
+		formatString.setLabel(Messages.get().DataSourceEditDlg_FormatString);
 		formatString.setText(dci.formatString);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -109,7 +110,7 @@ public class DataSourceEditDlg extends Dialog
 		if (dci.type == SingleDciConfig.TABLE)
 		{
 			Group tableGroup = new Group(dialogArea, SWT.NONE);
-			tableGroup.setText("Table cell");
+			tableGroup.setText(Messages.get().DataSourceEditDlg_TableCell);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
@@ -120,7 +121,7 @@ public class DataSourceEditDlg extends Dialog
 			tableGroup.setLayout(layout);
 			
 			dataColumn = new LabeledText(tableGroup, SWT.NONE);
-			dataColumn.setLabel("Data column");
+			dataColumn.setLabel(Messages.get().DataSourceEditDlg_DataColumn);
 			dataColumn.setText(dci.getColumn());
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
@@ -128,7 +129,7 @@ public class DataSourceEditDlg extends Dialog
 			dataColumn.setLayoutData(gd);
 			
 			instance = new LabeledText(tableGroup, SWT.NONE);
-			instance.setLabel("Instance");
+			instance.setLabel(Messages.get().DataSourceEditDlg_Instance);
 			instance.setText(dci.getInstance());
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;

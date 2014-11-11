@@ -77,7 +77,7 @@ public class MapBackground extends PropertyPage
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
       final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-      disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND");
+      disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND"); //$NON-NLS-1$
 		
 		object = (NetworkMap)getElement().getAdapter(NetworkMap.class);
 
