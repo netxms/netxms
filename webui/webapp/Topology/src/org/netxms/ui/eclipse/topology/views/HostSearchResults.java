@@ -249,7 +249,7 @@ public class HostSearchResults extends ViewPart
                if (host != null)
                {
                   MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
-                        String.format("Node %1$s is connected to wireless access point %2$s/%3$s",
+                        String.format(Messages.get().HostSearchResults_NodeConnectedToWiFi,
                               host.getObjectName(), bridge.getObjectName(), iface.getObjectName()));
                }
                else
@@ -257,14 +257,14 @@ public class HostSearchResults extends ViewPart
                   if (cp.getLocalIpAddress() != null)
                   {
                      MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
-                           String.format("Node with IP address %1$s and MAC address %2$s is connected to wireless access point %3$s/%4$s",
+                           String.format(Messages.get().HostSearchResults_NodeIpMacConnectedToWiFi,
                                  cp.getLocalIpAddress().getHostAddress(), cp.getLocalMacAddress(),
                                  bridge.getObjectName(), iface.getObjectName()));
                   }
                   else
                   {
                      MessageDialogHelper.openInformation(shell, Messages.get().HostSearchResults_ConnectionPoint, 
-                           String.format("Node with MAC address %1$s is connected to wireless access point %2$s/%3$s",
+                           String.format(Messages.get().HostSearchResults_NodeMacConnectedToWiFi,
                                  cp.getLocalMacAddress(), bridge.getObjectName(), iface.getObjectName()));
                   }
                }

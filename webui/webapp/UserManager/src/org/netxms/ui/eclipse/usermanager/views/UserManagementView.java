@@ -302,7 +302,7 @@ public class UserManagementView extends ViewPart
 		};
 		actionChangePassword.setEnabled(false);
 		
-		actionEnable = new Action("Enable") {
+		actionEnable = new Action(Messages.get().UserManagementView_Enable) {
          @Override
          public void run()
          {
@@ -310,7 +310,7 @@ public class UserManagementView extends ViewPart
          }
       };      
     
-      actionDisable = new Action("Disable") {
+      actionDisable = new Action(Messages.get().UserManagementView_Disable) {
          @Override
          public void run()
          {
@@ -318,7 +318,7 @@ public class UserManagementView extends ViewPart
          }
       };
       
-      actionDetachUserFromLDAP = new Action("Detach user from LDAP") {
+      actionDetachUserFromLDAP = new Action(Messages.get().UserManagementView_DetachFromLDAP) {
          @Override
          public void run()
          {
@@ -534,7 +534,7 @@ public class UserManagementView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Error while enable";
+            return Messages.get().UserManagementView_EnableError;
          }
       }.start();
    }
@@ -560,7 +560,7 @@ public class UserManagementView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Error while disable";
+            return Messages.get().UserManagementView_DisableError;
          }
       }.start();
    }
@@ -587,7 +587,7 @@ public class UserManagementView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Error while detaching LDAP User";
+            return Messages.get().UserManagementView_DetachError;
          }
       }.start();
    }

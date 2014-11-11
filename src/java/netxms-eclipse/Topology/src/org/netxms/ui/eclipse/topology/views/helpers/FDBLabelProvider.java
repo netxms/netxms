@@ -57,15 +57,15 @@ public class FDBLabelProvider extends LabelProvider implements ITableLabelProvid
             return e.getAddress().toString();
          case SwitchForwardingDatabaseView.COLUMN_NODE:
             if (e.getNodeId() == 0)
-               return "";
+               return ""; //$NON-NLS-1$
             return session.getObjectName(e.getNodeId());
          case SwitchForwardingDatabaseView.COLUMN_PORT:
             if (e.getPort() == 0)
-               return "";
+               return ""; //$NON-NLS-1$
             return Integer.toString(e.getPort());
          case SwitchForwardingDatabaseView.COLUMN_VLAN:
             if (e.getVlanId() == 0)
-               return "";
+               return ""; //$NON-NLS-1$
             return Integer.toString(e.getVlanId());
       }
       return null;

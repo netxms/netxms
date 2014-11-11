@@ -75,6 +75,7 @@ public class Messages extends NLS
 	public String General_LoginName;
 	public String General_ObjectID;
    public String General_XMPPID;
+   public String GroupMembership_ColName;
 	public String Members_Add;
 	public String Members_Delete;
 	public String Members_JobError;
@@ -113,7 +114,9 @@ public class Messages extends NLS
 	public String SystemRights_ManageUsers;
 	public String SystemRights_ReadFiles;
 	public String SystemRights_RegisterAgents;
+   public String SystemRights_ReportingServerAccess;
 	public String SystemRights_SendSMS;
+   public String SystemRights_UnlinkTicket;
 	public String SystemRights_ViewAuditLog;
 	public String SystemRights_ViewEventConfig;
 	public String SystemRights_ViewEventLog;
@@ -136,7 +139,13 @@ public class Messages extends NLS
 	public String UserManagementView_DeleteJobError;
 	public String UserManagementView_DeleteJobName;
 	public String UserManagementView_Description;
-	public String UserManagementView_FullName;
+	public String UserManagementView_DetachError;
+   public String UserManagementView_DetachFromLDAP;
+   public String UserManagementView_Disable;
+   public String UserManagementView_DisableError;
+   public String UserManagementView_Enable;
+   public String UserManagementView_EnableError;
+   public String UserManagementView_FullName;
 	public String UserManagementView_GUID;
 	public String UserManagementView_Name;
 	public String UserManagementView_OpenJobError;

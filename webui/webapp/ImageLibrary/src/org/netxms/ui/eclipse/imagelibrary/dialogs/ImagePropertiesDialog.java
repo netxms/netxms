@@ -155,7 +155,7 @@ public class ImagePropertiesDialog extends Dialog
             LibraryImage image = imageLibrary.get(i);
             if(name.compareTo(image.getName()) == 0 && category.compareTo(image.getCategory()) == 0)
             {
-               MessageDialogHelper.openError(getShell(), "Image already exists", String.format("Image %s in %s category already exists.", name, category));
+               MessageDialogHelper.openError(getShell(), Messages.get().ImagePropertiesDialog_Error, String.format(Messages.get().ImagePropertiesDialog_ErrorText, name, category));
                return;
             }
          }

@@ -89,7 +89,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	{
 	   final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 	   
-	   currentIconSize = ps.getInt("IMAGE_LIBRARY.ZOOM");
+	   currentIconSize = ps.getInt("IMAGE_LIBRARY.ZOOM"); //$NON-NLS-1$
 	   if(currentIconSize == 0)
 	      currentIconSize = MIN_GRID_ICON_SIZE;
 	   
@@ -139,7 +139,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-			   ps.setValue("IMAGE_LIBRARY.ZOOM", currentIconSize);
+			   ps.setValue("IMAGE_LIBRARY.ZOOM", currentIconSize); //$NON-NLS-1$
 				ImageProvider.getInstance(display).removeUpdateListener(ImageLibrary.this);
 			}
 		});
@@ -361,6 +361,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			protected void runInternal(final IProgressMonitor monitor) throws Exception
 			{
             verifyImageFile(fileName);
+
 				final LibraryImage image = new LibraryImage();
 
 				final long fileSize = new File(fileName).length();

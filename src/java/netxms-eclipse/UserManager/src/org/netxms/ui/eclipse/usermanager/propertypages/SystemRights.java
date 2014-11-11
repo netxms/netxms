@@ -62,7 +62,7 @@ public class SystemRights extends PropertyPage
 		layout.marginHeight = 0;
 		dialogArea.setLayout(layout);
 		
-      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, "Unlink helpdesk tickets");
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, Messages.get().SystemRights_UnlinkTicket);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, Messages.get().SystemRights_ConfigureActions);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, Messages.get().SystemRights_ConfigureEvents);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, Messages.get().SystemRights_ViewEventConfig);
@@ -89,7 +89,7 @@ public class SystemRights extends PropertyPage
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, Messages.get().SystemRights_RegisterAgents);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, Messages.get().SystemRights_LoginAsMobile);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, Messages.get().SystemRights_ManageImageLibrary);
-      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, "Reporting server access");
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, Messages.get().SystemRights_ReportingServerAccess);
 		
 		return dialogArea;
 	}

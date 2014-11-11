@@ -46,6 +46,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.topology.Activator;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.helpers.RoutingTableComparator;
 import org.netxms.ui.eclipse.topology.views.helpers.RoutingTableLabelProvider;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -86,7 +87,7 @@ public class RoutingTableView extends ViewPart
 		}
 
 		session = (NXCSession)ConsoleSharedData.getSession();
-		setPartName(String.format("Routing Table - %s", session.getObjectName(rootObject)));
+		setPartName(String.format(Messages.get().RoutingTableView_Title, session.getObjectName(rootObject)));
 	}
 
 	/* (non-Javadoc)
@@ -95,7 +96,7 @@ public class RoutingTableView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { "Destination", "Next hop", "Interface", "Type" };
+		final String[] names = { Messages.get().RoutingTableView_Destination, Messages.get().RoutingTableView_NextHop, Messages.get().RoutingTableView_Interface, Messages.get().RoutingTableView_Type };
 		final int[] widths = { 180, 140, 200, 140 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_DESTINATION, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -217,7 +218,7 @@ public class RoutingTableView extends ViewPart
 	 */
 	private void refresh()
 	{
-	   new ConsoleJob("Read routing table", this, Activator.PLUGIN_ID, null) {
+	   new ConsoleJob(Messages.get().RoutingTableView_JobTitle, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -234,7 +235,7 @@ public class RoutingTableView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot get routing table for node %s", session.getObjectName(rootObject));
+            return String.format(Messages.get().RoutingTableView_JobError, session.getObjectName(rootObject));
          }
       }.start();
 	}

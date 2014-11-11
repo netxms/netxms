@@ -53,8 +53,8 @@ public class FDBComparator extends ViewerComparator
             result = fdb1.getAddress().compareTo(fdb2.getAddress());
             break;
          case SwitchForwardingDatabaseView.COLUMN_NODE:
-            String n1 = (fdb1.getNodeId() != 0) ? session.getObjectName(fdb1.getNodeId()) : "";
-            String n2 = (fdb2.getNodeId() != 0) ? session.getObjectName(fdb2.getNodeId()) : "";
+            String n1 = (fdb1.getNodeId() != 0) ? session.getObjectName(fdb1.getNodeId()) : ""; //$NON-NLS-1$
+            String n2 = (fdb2.getNodeId() != 0) ? session.getObjectName(fdb2.getNodeId()) : ""; //$NON-NLS-1$
             result = n1.compareToIgnoreCase(n2);
             break;
          case SwitchForwardingDatabaseView.COLUMN_PORT:

@@ -48,7 +48,7 @@ public class RoutingTableLabelProvider extends LabelProvider implements ITableLa
       switch(columnIndex)
       {
          case RoutingTableView.COLUMN_DESTINATION:
-            return r.getDestination().getHostAddress() + "/" + r.getPrefixLength();
+            return r.getDestination().getHostAddress() + "/" + r.getPrefixLength(); //$NON-NLS-1$
          case RoutingTableView.COLUMN_INTERFACE:
             return r.getIfName();
          case RoutingTableView.COLUMN_NEXT_HOP:

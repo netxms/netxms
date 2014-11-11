@@ -29,6 +29,7 @@ import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.RoutingTableView;
 
 /**
@@ -51,7 +52,7 @@ public class ShowRoutingTable implements IObjectActionDelegate
 		}
 		catch(PartInitException e)
 		{
-			MessageDialogHelper.openError(window.getShell(), "Error", String.format("Cannot open view: %s", e.getLocalizedMessage()));
+			MessageDialogHelper.openError(window.getShell(), Messages.get().ShowRoutingTable_Error, String.format(Messages.get().ShowRoutingTable_CannotOpenView, e.getLocalizedMessage()));
 		}
 	}
 	

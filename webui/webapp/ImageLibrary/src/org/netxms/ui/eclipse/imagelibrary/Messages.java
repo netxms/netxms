@@ -23,6 +23,8 @@ public class Messages extends NLS
 	public String ImageLibrary_UploadJob;
 	public String ImagePropertiesDialog_AllFiles;
 	public String ImagePropertiesDialog_Category;
+   public String ImagePropertiesDialog_Error;
+   public String ImagePropertiesDialog_ErrorText;
 	public String ImagePropertiesDialog_ImageFile;
 	public String ImagePropertiesDialog_ImageFiles;
 	public String ImagePropertiesDialog_ImageName;

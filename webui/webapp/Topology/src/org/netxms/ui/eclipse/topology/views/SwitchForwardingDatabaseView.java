@@ -46,6 +46,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.topology.Activator;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.helpers.FDBComparator;
 import org.netxms.ui.eclipse.topology.views.helpers.FDBLabelProvider;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -87,7 +88,7 @@ public class SwitchForwardingDatabaseView extends ViewPart
 		}
 
 		session = (NXCSession)ConsoleSharedData.getSession();
-		setPartName(String.format("FDB - %s", session.getObjectName(rootObject)));
+		setPartName(String.format(Messages.get().SwitchForwardingDatabaseView_Title, session.getObjectName(rootObject)));
 	}
 
 	/* (non-Javadoc)
@@ -96,7 +97,7 @@ public class SwitchForwardingDatabaseView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { "MAC Address", "Port", "Interface", "VLAN", "Node" };
+		final String[] names = { Messages.get().SwitchForwardingDatabaseView_ColMacAddr, Messages.get().SwitchForwardingDatabaseView_ColPort, Messages.get().SwitchForwardingDatabaseView_ConIface, Messages.get().SwitchForwardingDatabaseView_ColVlan, Messages.get().SwitchForwardingDatabaseView_ColNode };
 		final int[] widths = { 180, 100, 200, 100, 250 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_MAC_ADDRESS, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
@@ -218,7 +219,7 @@ public class SwitchForwardingDatabaseView extends ViewPart
 	 */
 	private void refresh()
 	{
-	   new ConsoleJob("Read switch forwarding database", this, Activator.PLUGIN_ID, null) {
+	   new ConsoleJob(Messages.get().SwitchForwardingDatabaseView_JobTitle, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -235,7 +236,7 @@ public class SwitchForwardingDatabaseView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot get switch forwarding database for node %s", session.getObjectName(rootObject));
+            return String.format(Messages.get().SwitchForwardingDatabaseView_JobError, session.getObjectName(rootObject));
          }
       }.start();
 	}
