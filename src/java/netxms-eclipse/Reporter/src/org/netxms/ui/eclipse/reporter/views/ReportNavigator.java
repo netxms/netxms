@@ -1,6 +1,8 @@
 package org.netxms.ui.eclipse.reporter.views;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -190,6 +192,15 @@ public class ReportNavigator extends ViewPart
 							notGeneratedReport.add(reportId);
 					}
 				}
+				Collections.sort(definitions, new Comparator<ReportDefinition>() {
+
+					@Override
+					public int compare(ReportDefinition o1, ReportDefinition o2)
+					{
+						return o1.getName().compareTo(o2.getName());
+					}
+
+				});
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
