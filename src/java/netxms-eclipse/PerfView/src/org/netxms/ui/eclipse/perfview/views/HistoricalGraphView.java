@@ -693,7 +693,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          };
       }
       
-      actionCopyImage = new Action("Copy map image to clipboard", SharedIcons.COPY) {
+      actionCopyImage = new Action(Messages.get().HistoricalGraphView_CopyToClipboard, SharedIcons.COPY) {
           @Override
           public void run()
           {

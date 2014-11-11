@@ -514,7 +514,7 @@ public class DataComparisonView extends ViewPart
 		actionVertical.setEnabled(chart.hasAxes());
 		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/bar_vertical.png")); //$NON-NLS-1$
 
-		actionCopyImage = new Action("Copy map image to clipboard", SharedIcons.COPY) {
+		actionCopyImage = new Action(Messages.get().DataComparisonView_CopyToClipboard, SharedIcons.COPY) {
 			@Override
 			public void run()
 			{

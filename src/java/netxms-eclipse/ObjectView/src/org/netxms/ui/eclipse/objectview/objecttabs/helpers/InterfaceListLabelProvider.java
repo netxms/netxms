@@ -107,7 +107,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 			case InterfacesTab.COLUMN_MAC_ADDRESS:
 				return iface.getMacAddress().toString();
 			case InterfacesTab.COLUMN_IP_ADDRESS:
-				return iface.getPrimaryIP().isAnyLocalAddress() ? null : iface.getPrimaryIP().getHostAddress() + "/" + iface.getSubnetMaskBits();
+				return iface.getPrimaryIP().isAnyLocalAddress() ? null : iface.getPrimaryIP().getHostAddress() + "/" + iface.getSubnetMaskBits(); //$NON-NLS-1$
 			case InterfacesTab.COLUMN_PEER_NAME:
 				return getPeerName(iface);
 			case InterfacesTab.COLUMN_PEER_MAC_ADDRESS:

@@ -102,7 +102,7 @@ public class InterfacesTab extends ObjectTab
 	      Messages.get().InterfacesTab_ColPeerNode, 
 	      Messages.get().InterfacesTab_ColPeerMAC, 
 	      Messages.get().InterfacesTab_ColPeerIP,
-	      "Peer Discovery Protocol",
+	      Messages.get().InterfacesTab_PeerDiscoveryProtocol,
 	      Messages.get().InterfacesTab_ColAdminState, 
 	      Messages.get().InterfacesTab_ColOperState, 
 	      Messages.get().InterfacesTab_ColExpState, 

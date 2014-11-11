@@ -11,6 +11,7 @@ public class Messages extends NLS
    public String DataComparisonView_3DView;
    public String DataComparisonView_AutoRefresh;
    public String DataComparisonView_BarChart;
+   public String DataComparisonView_CopyToClipboard;
    public String DataComparisonView_JobError;
    public String DataComparisonView_JobName;
    public String DataComparisonView_Legend;
@@ -75,6 +76,7 @@ public class Messages extends NLS
    public String HistoricalGraphView_AdjustX;
    public String HistoricalGraphView_AdjustY;
    public String HistoricalGraphView_Autorefresh;
+   public String HistoricalGraphView_CopyToClipboard;
    public String HistoricalGraphView_Error;
    public String HistoricalGraphView_ExtendedLegend;
    public String HistoricalGraphView_JobError;

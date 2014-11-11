@@ -44,6 +44,7 @@ import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.objectview.Activator;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.NodeListComparator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.NodeListLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -72,13 +73,13 @@ public class NodesTab extends ObjectTab
 	protected void createTabContent(Composite parent)
 	{
 		final String[] names = {
-		      "ID",
-		      "Name",
-		      "Primary IP",
-		      "Platform",
-		      "Agent Version",
-		      "Sys Description",
-		      "Status"
+		      Messages.get().NodesTab_ColId,
+		      Messages.get().NodesTab_ColName,
+		      Messages.get().NodesTab_ColPrimaryIP,
+		      Messages.get().NodesTab_ColPlatform,
+		      Messages.get().NodesTab_ColAgentVersion,
+		      Messages.get().NodesTab_ColSysDescr,
+		      Messages.get().NodesTab_ColStatus
 		};
 		final int[] widths = { 60, 150, 100, 150, 100, 300, 100 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
