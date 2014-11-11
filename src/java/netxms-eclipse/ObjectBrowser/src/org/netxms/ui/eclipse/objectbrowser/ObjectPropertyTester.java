@@ -35,7 +35,7 @@ public class ObjectPropertyTester extends PropertyTester
       if (!(receiver instanceof AbstractObject))
          return false;
       
-      if (property.equals("isAlarmsVisible"))
+      if (property.equals("isAlarmsVisible")) //$NON-NLS-1$
          return ((AbstractObject)receiver).isAlarmsVisible();
       
       return false;

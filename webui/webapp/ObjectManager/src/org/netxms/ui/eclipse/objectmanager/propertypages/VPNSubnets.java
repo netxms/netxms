@@ -44,6 +44,7 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.dialogs.AddAddressListElementDialog;
 import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AddressListElementComparator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -85,7 +86,7 @@ public class VPNSubnets extends PropertyPage
       dialogArea.setLayoutData(gd);
       
       objectSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-      objectSelector.setLabel("Peer gateway");
+      objectSelector.setLabel(Messages.get().VPNSubnets_PeerGateway);
       objectSelector.setObjectClass(AbstractObject.class);
       objectSelector.setObjectId(connector.getPeerGatewayId());
       gd = new GridData();
@@ -125,7 +126,7 @@ public class VPNSubnets extends PropertyPage
    private void networksLisr(Composite dialogArea, TableViewer viewList, final List<IpAddressListElement> data) 
    {
       Group clientArea = new Group(dialogArea, SWT.NONE);
-      clientArea.setText("Remote networks");      
+      clientArea.setText(Messages.get().VPNSubnets_RemoteNetworks);      
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       GridData gd = new GridData();
@@ -258,7 +259,7 @@ public class VPNSubnets extends PropertyPage
       final NXCObjectModificationData md = new NXCObjectModificationData(connector.getObjectId());
       md.setVpnNetworks(localNetworksElements, remoteNetworksElements);
       md.setPeerGatewayId(objectSelector.getObjectId());
-      new ConsoleJob("Save subnets for VPN", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().VPNSubnets_JobName, null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -283,7 +284,7 @@ public class VPNSubnets extends PropertyPage
          @Override
          protected String getErrorMessage()
          {
-            return "Error while saving subnets for VPN";
+            return Messages.get().VPNSubnets_JobError;
          }
       }.schedule();
       

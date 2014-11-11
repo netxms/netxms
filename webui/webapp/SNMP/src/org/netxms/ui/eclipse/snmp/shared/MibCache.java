@@ -76,7 +76,7 @@ public final class MibCache implements ConsoleLoginListener
 					if (!mibFile.exists() || (serverMibTimestamp.getTime() > mibFile.lastModified()))
 					{
 						File file = session.downloadMibFile();
-						Activator.logInfo("MIB file downloaded to: " + file.getPath() + " (size " + file.length() + " bytes)");
+						Activator.logInfo("MIB file downloaded to: " + file.getPath() + " (size " + file.length() + " bytes)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 						if (mibFile.exists())
 							mibFile.delete();
@@ -160,7 +160,7 @@ public final class MibCache implements ConsoleLoginListener
                }
                catch(Exception e)
                {
-                  Activator.logError("Cannot load MIB file", e);
+               Activator.logError("Cannot load MIB file", e); //$NON-NLS-1$
                }
             }
          }

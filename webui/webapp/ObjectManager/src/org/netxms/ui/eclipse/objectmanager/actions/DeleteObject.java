@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,15 @@ package org.netxms.ui.eclipse.objectmanager.actions;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.imagelibrary.Activator;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -36,7 +39,9 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class DeleteObject extends AbstractHandler
 {
-
+   /* (non-Javadoc)
+    * @see org.eclipse.core.commands.AbstractHandler#execute(org.eclipse.core.commands.ExecutionEvent)
+    */
    @Override
    public Object execute(ExecutionEvent event) throws ExecutionException
    {
@@ -58,21 +63,26 @@ public class DeleteObject extends AbstractHandler
       
       if(confirmed)
       {
-         for(Object o : ((IStructuredSelection)selection).toList())
+         final Object[] objects = ((IStructuredSelection)selection).toArray();
+         final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         new ConsoleJob(Messages.get().DeleteObject_JobName, null, Activator.PLUGIN_ID, null) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            if (!(o instanceof AbstractObject))
-               continue;
-            try
+               for(Object o : objects)
             {
-               ((NXCSession)ConsoleSharedData.getSession()).deleteObject(((AbstractObject)o).getObjectId());
+                  if (o instanceof AbstractObject)
+                     session.deleteObject(((AbstractObject)o).getObjectId());
             }
-            catch(Exception e)
+            }
+            
+            @Override
+            protected String getErrorMessage()
             {
-               MessageDialogHelper.openError(window.getShell(), "Error on deleting object", "Error on deleting object: " + e.getMessage());
+               return Messages.get().DeleteObject_JobError;
             }
+         }.start();
          }
-      }     
-      
       return null;
    }
 }

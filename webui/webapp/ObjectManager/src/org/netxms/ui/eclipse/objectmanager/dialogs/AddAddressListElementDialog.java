@@ -27,6 +27,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -56,7 +57,7 @@ public class AddAddressListElementDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Add network subnet element");
+		newShell.setText(Messages.get().AddAddressListElementDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -75,7 +76,7 @@ public class AddAddressListElementDialog extends Dialog
 		
 		
 		textAddr1 = new LabeledText(dialogArea, SWT.NONE);
-		textAddr1.setLabel("Network address");
+		textAddr1.setLabel(Messages.get().AddAddressListElementDialog_NetworkAddress);
 		textAddr1.setText("0.0.0.0"); //$NON-NLS-1$
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -84,7 +85,7 @@ public class AddAddressListElementDialog extends Dialog
 		textAddr1.setLayoutData(gd);		
 		
 		textAddr2 = new LabeledText(dialogArea, SWT.NONE);
-		textAddr2.setLabel("Network mask");
+		textAddr2.setLabel(Messages.get().AddAddressListElementDialog_NetworkMask);
 		textAddr2.setText("255.255.255.0"); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -107,7 +108,7 @@ public class AddAddressListElementDialog extends Dialog
 		}
 		catch(UnknownHostException e)
 		{
-			MessageDialogHelper.openWarning(getShell(), "Could not get address", "Address validation error");
+			MessageDialogHelper.openWarning(getShell(), Messages.get().AddAddressListElementDialog_Warning, Messages.get().AddAddressListElementDialog_AddressValidationError);
 			return;
 		}
 		super.okPressed();

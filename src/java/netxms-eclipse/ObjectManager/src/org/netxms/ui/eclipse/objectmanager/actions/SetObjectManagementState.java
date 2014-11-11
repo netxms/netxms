@@ -32,13 +32,23 @@ import org.netxms.ui.eclipse.imagelibrary.Activator;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
- * Delete selected object(s)
+ * Set object management state
  */
-public class DeleteObject extends AbstractHandler
+class SetObjectManagementState extends AbstractHandler
 {
+   private boolean managed;
+   
+   /**
+    * @param manage
+    */
+   protected SetObjectManagementState(boolean managed)
+   {
+      super();
+      this.managed = managed;
+   }
+   
    /* (non-Javadoc)
     * @see org.eclipse.core.commands.AbstractHandler#execute(org.eclipse.core.commands.ExecutionEvent)
     */
@@ -50,39 +60,25 @@ public class DeleteObject extends AbstractHandler
       if ((selection == null) || !(selection instanceof IStructuredSelection) || selection.isEmpty())
          return null;
       
-      String question;
-      if (((IStructuredSelection)selection).size() == 1)
-      {
-         question = String.format(Messages.get().DeleteObject_ConfirmQuestionSingular, ((AbstractObject)((IStructuredSelection)selection).getFirstElement()).getObjectName());
-      }
-      else
-      {
-         question = Messages.get().DeleteObject_ConfirmQuestionPlural;
-      }
-      boolean confirmed = MessageDialogHelper.openConfirm(window.getShell(), Messages.get().DeleteObject_ConfirmDelete, question);
-      
-      if(confirmed)
-      {
-         final Object[] objects = ((IStructuredSelection)selection).toArray();
-         final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-         new ConsoleJob(Messages.get().DeleteObject_JobName, null, Activator.PLUGIN_ID, null) {
-            @Override
-            protected void runInternal(IProgressMonitor monitor) throws Exception
+      final Object[] objects = ((IStructuredSelection)selection).toArray();
+      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      new ConsoleJob(Messages.get().SetObjectManagementState_JobTitle, null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            for(Object o : objects)
             {
-               for(Object o : objects)
-               {
-                  if (o instanceof AbstractObject)
-                     session.deleteObject(((AbstractObject)o).getObjectId());
-               }
+               if (o instanceof AbstractObject)
+                  session.setObjectManaged(((AbstractObject)o).getObjectId(), managed);
             }
-            
-            @Override
-            protected String getErrorMessage()
-            {
-               return Messages.get().DeleteObject_JobError;
-            }
-         }.start();
-      }     
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().SetObjectManagementState_JobError;
+         }
+      }.start();
       return null;
    }
 }

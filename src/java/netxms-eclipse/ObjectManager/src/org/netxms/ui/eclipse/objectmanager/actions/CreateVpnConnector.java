@@ -33,6 +33,7 @@ import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.objectmanager.Activator;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -60,12 +61,12 @@ public class CreateVpnConnector implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), "VPN Connector");
+		final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.get().CreateVpnConnector_ObjectType);
 		if (dlg.open() != Window.OK)
 			return;
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob("Creating VPN connector", part, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().CreateVpnConnector_JobName, part, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -76,7 +77,7 @@ public class CreateVpnConnector implements IObjectActionDelegate
 			@Override
 			protected String getErrorMessage()
 			{
-				return String.format("Cannot create VPN connector %s", dlg.getObjectName());
+				return String.format(Messages.get().CreateVpnConnector_JobError, dlg.getObjectName());
 			}
 		}.start();
 	}

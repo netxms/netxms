@@ -18,46 +18,16 @@
  */
 package org.netxms.ui.eclipse.objectmanager.actions;
 
-import org.eclipse.core.commands.AbstractHandler;
-import org.eclipse.core.commands.ExecutionEvent;
-import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.handlers.HandlerUtil;
-import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-
 /**
  * Set selected object(s) to unmanaged state
  */
-public class Unmanage extends AbstractHandler
+public class Unmanage extends SetObjectManagementState
 {
-
-   @Override
-   public Object execute(ExecutionEvent event) throws ExecutionException
+   /**
+    * Constructor
+    */
+   public Unmanage()
    {
-      IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(event);
-      ISelection selection = window.getActivePage().getSelection();
-      if ((selection == null) || !(selection instanceof IStructuredSelection) || selection.isEmpty())
-         return null;
-      
-      for(Object o : ((IStructuredSelection)selection).toList())
-      {
-         if (!(o instanceof AbstractObject))
-            continue;
-         try
-         {
-            ((NXCSession)ConsoleSharedData.getSession()).setObjectManaged(((AbstractObject)o).getObjectId(), false);
-         }
-         catch(Exception e)
-         {
-            MessageDialogHelper.openError(window.getShell(), "Error on change object state", "Error on change object state to unmanage: " + e.getMessage());
-         }
-      }
-      
-      return null;
+      super(false);
    }
 }

@@ -136,22 +136,22 @@ public class Location extends PropertyPage
 		radioTypeAuto.addSelectionListener(listener);
       
 		country = new LabeledText(dialogArea, SWT.NONE);
-		country.setLabel("Country");
+		country.setLabel(Messages.get().Location_Country);
 		country.setText(object.getPostalAddress().country);
 		country.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
       
       city = new LabeledText(dialogArea, SWT.NONE);
-      city.setLabel("City");
+      city.setLabel(Messages.get().Location_City);
       city.setText(object.getPostalAddress().city);
       city.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
       
       streetAddress = new LabeledText(dialogArea, SWT.NONE);
-      streetAddress.setLabel("Street address");
+      streetAddress.setLabel(Messages.get().Location_StreetAddress);
       streetAddress.setText(object.getPostalAddress().streetAddress);
       streetAddress.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
       
       postcode = new LabeledText(dialogArea, SWT.NONE);
-      postcode.setLabel("Postcode");
+      postcode.setLabel(Messages.get().Location_Postcode);
       postcode.setText(object.getPostalAddress().postcode);
       postcode.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
       

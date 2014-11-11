@@ -352,7 +352,7 @@ public class ObjectBrowser extends ViewPart
 				moveObject(SubtreeType.INFRASTRUCTURE);
 			}
 		};
-		actionMoveObject.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveObject");
+		actionMoveObject.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveObject"); //$NON-NLS-1$
 		
 		actionMoveTemplate = new Action(Messages.get().ObjectBrowser_MoveTemplate) {
 			@Override
@@ -361,7 +361,7 @@ public class ObjectBrowser extends ViewPart
 				moveObject(SubtreeType.TEMPLATES);
 			}
 		};
-		actionMoveTemplate.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveTemplate");
+		actionMoveTemplate.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveTemplate"); //$NON-NLS-1$
 		
 		actionMoveBusinessService = new Action(Messages.get().ObjectBrowser_MoveService) {
 			@Override
@@ -370,7 +370,7 @@ public class ObjectBrowser extends ViewPart
 				moveObject(SubtreeType.BUSINESS_SERVICES);
 			}
 		};
-		actionMoveBusinessService.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveBusinessService");
+		actionMoveBusinessService.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveBusinessService"); //$NON-NLS-1$
 		
 		actionMoveDashboard = new Action(Messages.get().ObjectBrowser_MoveDashboard) { 
          @Override
@@ -379,7 +379,7 @@ public class ObjectBrowser extends ViewPart
             moveObject(SubtreeType.DASHBOARDS);
          }
       };
-      actionMoveDashboard.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveDashboard");
+      actionMoveDashboard.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveDashboard"); //$NON-NLS-1$
       
       actionMoveMap = new Action(Messages.get().ObjectBrowser_MoveMap) { 
          @Override
@@ -388,7 +388,7 @@ public class ObjectBrowser extends ViewPart
             moveObject(SubtreeType.MAPS);
          }
       };
-      actionMoveMap.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveMap");
+      actionMoveMap.setId("org.netxms.ui.eclipse.objectbrowser.actions.moveMap"); //$NON-NLS-1$
       
       actionMovePolicy = new Action(Messages.get().ObjectBrowser_MovePolicy) { 
          @Override
@@ -397,7 +397,7 @@ public class ObjectBrowser extends ViewPart
             moveObject(SubtreeType.POLICIES);
          }
       };
-      actionMovePolicy.setId("org.netxms.ui.eclipse.objectbrowser.actions.movePolicy");
+      actionMovePolicy.setId("org.netxms.ui.eclipse.objectbrowser.actions.movePolicy"); //$NON-NLS-1$
 		
       actionHideUnmanaged = new Action(Messages.get().ObjectBrowser_HideUnmanaged, Action.AS_CHECK_BOX) {
 			@Override
@@ -407,7 +407,7 @@ public class ObjectBrowser extends ViewPart
 		      actionHideUnmanaged.setChecked(objectTree.isHideUnmanaged());
 			}
       };
-      actionHideUnmanaged.setId("org.netxms.ui.eclipse.objectbrowser.actions.hideUnmanaged");
+      actionHideUnmanaged.setId("org.netxms.ui.eclipse.objectbrowser.actions.hideUnmanaged"); //$NON-NLS-1$
       actionHideUnmanaged.setChecked(objectTree.isHideUnmanaged());
 
       actionHideTemplateChecks = new Action(Messages.get().ObjectBrowser_HideCheckTemplates, Action.AS_CHECK_BOX) {
@@ -418,7 +418,7 @@ public class ObjectBrowser extends ViewPart
 		      actionHideTemplateChecks.setChecked(objectTree.isHideTemplateChecks());
 			}
       };
-      actionHideTemplateChecks.setId("org.netxms.ui.eclipse.objectbrowser.actions.hideTemplateChecks");
+      actionHideTemplateChecks.setId("org.netxms.ui.eclipse.objectbrowser.actions.hideTemplateChecks"); //$NON-NLS-1$
       actionHideTemplateChecks.setChecked(objectTree.isHideTemplateChecks());
 
       actionShowFilter = new Action(Messages.get().ObjectBrowser_ShowFilter, Action.AS_CHECK_BOX) {
@@ -429,7 +429,7 @@ public class ObjectBrowser extends ViewPart
 				actionShowFilter.setChecked(objectTree.isFilterEnabled());
 			}
       };
-      actionShowFilter.setId("org.netxms.ui.eclipse.objectbrowser.actions.showFilter");
+      actionShowFilter.setId("org.netxms.ui.eclipse.objectbrowser.actions.showFilter"); //$NON-NLS-1$
       actionShowFilter.setChecked(objectTree.isFilterEnabled());
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.show_object_filter"); //$NON-NLS-1$
 		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
@@ -442,14 +442,14 @@ public class ObjectBrowser extends ViewPart
 				objectTree.enableStatusIndicator(actionShowStatusIndicator.isChecked());
 			}
       };
-      actionShowStatusIndicator.setId("org.netxms.ui.eclipse.objectbrowser.actions.showStatusIndicator");
+      actionShowStatusIndicator.setId("org.netxms.ui.eclipse.objectbrowser.actions.showStatusIndicator"); //$NON-NLS-1$
       actionShowStatusIndicator.setChecked(objectTree.isStatusIndicatorEnabled());
       actionShowStatusIndicator.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.show_status_indicator"); //$NON-NLS-1$
 		final ActionHandler showStatusIndicatorHandler = new ActionHandler(actionShowStatusIndicator);
 		handlerService.activateHandler(actionShowStatusIndicator.getActionDefinitionId(), showStatusIndicatorHandler);
 
       actionProperties = new PropertyDialogAction(getSite(), objectTree.getTreeViewer());
-      actionProperties.setId("org.netxms.ui.eclipse.objectbrowser.actions.properties");
+      actionProperties.setId("org.netxms.ui.eclipse.objectbrowser.actions.properties"); //$NON-NLS-1$
 	}
 
 	/**

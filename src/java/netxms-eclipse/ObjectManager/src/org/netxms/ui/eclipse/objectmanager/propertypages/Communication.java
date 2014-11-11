@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -112,7 +112,7 @@ public class Communication extends PropertyPage
 		});
 
       agentIsRemote = new Button(generalGroup, SWT.CHECK);
-      agentIsRemote.setText("This is address of remote management node");
+      agentIsRemote.setText(Messages.get().Communication_RemoteAgent);
       agentIsRemote.setSelection((node.getFlags() & AbstractNode.NF_REMOTE_AGENT) != 0);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -297,7 +297,7 @@ public class Communication extends PropertyPage
 
       // SNMP
       Group icmpGroup = new Group(dialogArea, SWT.NONE);
-      icmpGroup.setText("ICMP");
+      icmpGroup.setText(Messages.get().Communication_ICMP);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
