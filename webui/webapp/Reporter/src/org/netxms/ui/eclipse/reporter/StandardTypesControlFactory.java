@@ -50,55 +50,55 @@ public class StandardTypesControlFactory implements CustomControlFactory
 	{
 		FieldEditor fieldEditor = null;
 		final String type = parameter.getType();
-		if (type.equals("START_DATE") || type.equals("END_DATE"))
+		if (type.equals("START_DATE") || type.equals("END_DATE")) //$NON-NLS-1$ //$NON-NLS-2$
 		{
 			fieldEditor = new DateFieldEditor(parameter, toolkit, parent);
 		}
-      else if (type.equals("ALARM_STATE"))
+      else if (type.equals("ALARM_STATE")) //$NON-NLS-1$
       {
          fieldEditor = new AlarmStateFieldEditor(parameter, toolkit, parent);
       }
-      else if (type.equals("BOOLEAN"))
+      else if (type.equals("BOOLEAN")) //$NON-NLS-1$
       {
          fieldEditor = new BooleanFieldEditor(parameter, toolkit, parent);
       }
-      else if (type.equals("EVENT_CODE"))
+      else if (type.equals("EVENT_CODE")) //$NON-NLS-1$
       {
          fieldEditor = new EventFieldEditor(parameter, toolkit, parent);
       }
-      else if (type.equals("NUMBER"))
+      else if (type.equals("NUMBER")) //$NON-NLS-1$
       {
          fieldEditor = new NumberFieldEditor(parameter, toolkit, parent);
       }
-      else if (type.equals("NUMERIC_CONDITION"))
+      else if (type.equals("NUMERIC_CONDITION")) //$NON-NLS-1$
       {
          fieldEditor = new NumericConditionFieldEditor(parameter, toolkit, parent);
       }
-      else if (type.equals("OBJECT_ID"))
+      else if (type.equals("OBJECT_ID")) //$NON-NLS-1$
       {
          fieldEditor = new ObjectFieldEditor(parameter, toolkit, parent);
       }
-      else if (type.equals("OBJECT_ID_LIST"))
+      else if (type.equals("OBJECT_ID_LIST")) //$NON-NLS-1$
       {
          fieldEditor = new ObjectListFieldEditor(parameter, toolkit, parent);
       }
-      else if (type.equals("SEVERITY"))
+      else if (type.equals("SEVERITY")) //$NON-NLS-1$
       {
          fieldEditor = new SeverityFieldEditor(parameter, toolkit, parent);
       }
-      else if (type.equals("SEVERITY_LIST"))
+      else if (type.equals("SEVERITY_LIST")) //$NON-NLS-1$
       {
          fieldEditor = new SeverityListFieldEditor(parameter, toolkit, parent);
       }
-		else if (type.equals("TIMESTAMP"))
+		else if (type.equals("TIMESTAMP")) //$NON-NLS-1$
 		{
 			fieldEditor = new TimestampFieldEditor(parameter, toolkit, parent);
 		}
-		else if (type.equals("USER_ID"))
+		else if (type.equals("USER_ID")) //$NON-NLS-1$
 		{
 			fieldEditor = new UserFieldEditor(parameter, toolkit, parent, false);
 		}
-		else if (type.equals("USER_NAME"))
+		else if (type.equals("USER_NAME")) //$NON-NLS-1$
 		{
 			fieldEditor = new UserFieldEditor(parameter, toolkit, parent, true);
 		}

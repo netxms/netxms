@@ -63,12 +63,12 @@ public class NumericConditionFieldEditor extends FieldEditor
       content.setLayout(layout);
       
       condition = new Combo(content, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY);
-      condition.add("=");
-      condition.add("<>");
-      condition.add("<");
-      condition.add("<=");
-      condition.add(">");
-      condition.add(">=");
+      condition.add("="); //$NON-NLS-1$
+      condition.add("<>"); //$NON-NLS-1$
+      condition.add("<"); //$NON-NLS-1$
+      condition.add("<="); //$NON-NLS-1$
+      condition.add(">"); //$NON-NLS-1$
+      condition.add(">="); //$NON-NLS-1$
       condition.select(0);
       condition.setLayoutData(new GridData(SWT.FILL, SWT.BOTTOM, false, false));
       

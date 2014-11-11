@@ -38,6 +38,7 @@ import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.reporter.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -87,7 +88,7 @@ public class ObjectListFieldEditor extends FieldEditor
 		
 		ImageHyperlink link = toolkit.createImageHyperlink(content, SWT.NONE);
 		link.setImage(SharedIcons.IMG_ADD_OBJECT);
-		link.setText("Add...");
+		link.setText(Messages.get().ObjectListFieldEditor_Add);
 		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -101,7 +102,7 @@ public class ObjectListFieldEditor extends FieldEditor
 		
 		link = toolkit.createImageHyperlink(content, SWT.NONE);
 		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
-		link.setText("Delete");
+		link.setText(Messages.get().ObjectListFieldEditor_Delete);
 		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -150,7 +151,7 @@ public class ObjectListFieldEditor extends FieldEditor
 	public String getValue()
 	{
 		if (objects.size() == 0)
-			return "";
+			return ""; //$NON-NLS-1$
 		
 		StringBuilder sb = new StringBuilder();
 		for(AbstractObject o : objects.values())

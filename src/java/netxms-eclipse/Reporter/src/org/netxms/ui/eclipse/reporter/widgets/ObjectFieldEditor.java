@@ -36,6 +36,7 @@ import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.reporter.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -43,7 +44,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ObjectFieldEditor extends FieldEditor
 {
-	private static final String EMPTY_SELECTION_TEXT = "<any>";
+	private static final String EMPTY_SELECTION_TEXT = Messages.get().ObjectFieldEditor_Any;
 	
 	private CLabel text;
 	private long objectId = 0;
@@ -93,7 +94,7 @@ public class ObjectFieldEditor extends FieldEditor
 		
 		final ImageHyperlink selectionLink = toolkit.createImageHyperlink(content, SWT.NONE);
 		selectionLink.setImage(SharedIcons.IMG_FIND);
-		selectionLink.setToolTipText("Select object...");
+		selectionLink.setToolTipText(Messages.get().ObjectFieldEditor_SelectObject);
 		selectionLink.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -104,7 +105,7 @@ public class ObjectFieldEditor extends FieldEditor
 		
 		final ImageHyperlink clearLink = toolkit.createImageHyperlink(content, SWT.NONE);
 		clearLink.setImage(SharedIcons.IMG_CLEAR);
-		clearLink.setToolTipText("Clear selection");
+		clearLink.setToolTipText(Messages.get().ObjectFieldEditor_ClearSelection);
 		clearLink.addHyperlinkListener(new HyperlinkAdapter() {
          @Override
          public void linkActivated(HyperlinkEvent e)

@@ -41,7 +41,7 @@
       <page
             class="org.netxms.ui.eclipse.reporter.propertypages.General"
             id="org.netxms.ui.eclipse.reporter.propertypages.General#0"
-            name="General">
+            name="%propertyPage.name.General">
          <enabledWhen>
             <instanceof
                   value="org.netxms.api.client.reporting.ReportingJob">
@@ -51,7 +51,7 @@
       <page
             class="org.netxms.ui.eclipse.reporter.propertypages.Notifications"
             id="org.netxms.ui.eclipse.reporter.propertypages.Notifications#1"
-            name="Notifications">
+            name="%propertyPage.name.Notifications">
          <enabledWhen>
             <instanceof
                   value="org.netxms.api.client.reporting.ReportingJob">

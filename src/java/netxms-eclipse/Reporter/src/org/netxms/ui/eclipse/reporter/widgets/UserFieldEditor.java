@@ -36,6 +36,7 @@ import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.reporter.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
 
@@ -44,7 +45,7 @@ import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
  */
 public class UserFieldEditor extends FieldEditor
 {
-	private static final String EMPTY_SELECTION_TEXT = "<none>";
+	private static final String EMPTY_SELECTION_TEXT = Messages.get().UserFieldEditor_None;
 	private WorkbenchLabelProvider labelProvider;
 	private CLabel text;
 	private boolean returnName;

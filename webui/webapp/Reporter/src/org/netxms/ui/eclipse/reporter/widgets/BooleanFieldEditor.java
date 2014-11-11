@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.api.client.reporting.ReportParameter;
+import org.netxms.ui.eclipse.reporter.Messages;
 
 /**
  * Boolean field editor
@@ -49,9 +50,9 @@ public class BooleanFieldEditor extends FieldEditor
    protected Control createContent(Composite parent)
    {
       value = new Combo(parent, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY);
-      value.add("");
-      value.add("Yes");
-      value.add("No");
+      value.add(""); //$NON-NLS-1$
+      value.add(Messages.get().BooleanFieldEditor_Yes);
+      value.add(Messages.get().BooleanFieldEditor_No);
       value.select(0);
       return value;
    }

@@ -34,7 +34,7 @@ import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
  */
 public class ReportView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.reporter.views.ReportView";
+	public static final String ID = "org.netxms.ui.eclipse.reporter.views.ReportView"; //$NON-NLS-1$
 
 	private ReportExecutionForm executionForm;
 	private ISelectionListener selectionListener;

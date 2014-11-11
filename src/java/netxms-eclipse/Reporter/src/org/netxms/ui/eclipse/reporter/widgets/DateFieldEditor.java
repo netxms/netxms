@@ -40,6 +40,7 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.reporter.Activator;
+import org.netxms.ui.eclipse.reporter.Messages;
 import org.netxms.ui.eclipse.tools.ImageCache;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -93,7 +94,7 @@ public class DateFieldEditor extends FieldEditor
 			dateTime.setTime(new Date());
 		}
 		
-      final String[] dateElementNames = { "Year", "Month", "Day" };
+      final String[] dateElementNames = { Messages.get().DateFieldEditor_Year, Messages.get().DateFieldEditor_Month, Messages.get().DateFieldEditor_Day };
 		dateElements = new Combo[dateElementNames.length];
 		for(int idx = 0; idx <  dateElementNames.length; idx++)
 		{
@@ -107,7 +108,7 @@ public class DateFieldEditor extends FieldEditor
 		
 		final ImageHyperlink link = toolkit.createImageHyperlink(content, SWT.NONE);
 		link.setImage(imageCache.add(Activator.getImageDescriptor("icons/calendar.png"))); //$NON-NLS-1$
-		link.setToolTipText("Calendar");
+		link.setToolTipText(Messages.get().DateFieldEditor_Calendar);
 		link.addHyperlinkListener(new HyperlinkAdapter() {
          @Override
          public void linkActivated(HyperlinkEvent e)
@@ -135,7 +136,7 @@ public class DateFieldEditor extends FieldEditor
 			if (idx == 0)
 				value = dateElements[idx].getText();
 			else
-				value += ";" + dateElements[idx].getText();
+				value += ";" + dateElements[idx].getText(); //$NON-NLS-1$
 		}
 		return value;
 	}

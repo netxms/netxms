@@ -26,6 +26,7 @@ import org.netxms.api.client.reporting.ReportResult;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
+import org.netxms.ui.eclipse.reporter.Messages;
 import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -58,10 +59,10 @@ public class ReportResultLabelProvider extends LabelProvider implements ITableLa
 				return dateFormat.format(reportResult.getExecutionTime());
 			case ReportExecutionForm.RESULT_STARTED_BY:
             AbstractUserObject user = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(reportResult.getUserId());
-            return (user != null) ? user.getName() : ("[" + reportResult.getUserId() + "]");
+            return (user != null) ? user.getName() : ("[" + reportResult.getUserId() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case ReportExecutionForm.RESULT_STATUS:
-			   return "Success"; // TODO: get actual job status
+			   return Messages.get().ReportResultLabelProvider_Success; // TODO: get actual job status
 		}
-		return "<INTERNAL ERROR>";
+		return "<INTERNAL ERROR>"; //$NON-NLS-1$
 	}
 }

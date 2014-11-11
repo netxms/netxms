@@ -51,7 +51,7 @@ public class SeverityFieldEditor extends FieldEditor
    protected Control createContent(Composite parent)
    {
       severity = new Combo(parent, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY);
-      severity.add("");
+      severity.add(""); //$NON-NLS-1$
       for(int i = 0; i < Severity.UNKNOWN.getValue(); i++)
          severity.add(StatusDisplayInfo.getStatusText(i));
       severity.select(0);

@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.netxms.api.client.reporting.ReportParameter;
+import org.netxms.ui.eclipse.reporter.Messages;
 
 /**
  * Alarm state field editor
@@ -49,11 +50,11 @@ public class AlarmStateFieldEditor extends FieldEditor
    protected Control createContent(Composite parent)
    {
       state = new Combo(parent, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY);
-      state.add("");
-      state.add("Outstanding");
-      state.add("Acknowledged");
-      state.add("Resolved");
-      state.add("Terminated");
+      state.add(""); //$NON-NLS-1$
+      state.add(Messages.get().AlarmStateFieldEditor_Outstanding);
+      state.add(Messages.get().AlarmStateFieldEditor_Acknowledged);
+      state.add(Messages.get().AlarmStateFieldEditor_Resolved);
+      state.add(Messages.get().AlarmStateFieldEditor_Terminated);
       state.select(0);
       return state;
    }
