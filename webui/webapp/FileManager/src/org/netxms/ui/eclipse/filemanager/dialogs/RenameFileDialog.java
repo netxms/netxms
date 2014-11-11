@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ public class RenameFileDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().StartClientToServerFileUploadDialog_Title);
+		newShell.setText(Messages.get().RenameFileDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -77,7 +77,7 @@ public class RenameFileDialog extends Dialog
 		GridData gd;
 		
 		textOldFileName = new LabeledText(dialogArea, SWT.NONE);
-		textOldFileName.setLabel("Old file name");
+		textOldFileName.setLabel(Messages.get().RenameFileDialog_OldName);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -86,7 +86,7 @@ public class RenameFileDialog extends Dialog
       textOldFileName.setEditable(false);
       
       textNewFileName = new LabeledText(dialogArea, SWT.NONE);
-      textNewFileName.setLabel("New file name");
+      textNewFileName.setLabel(Messages.get().RenameFileDialog_NewName);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -102,9 +102,9 @@ public class RenameFileDialog extends Dialog
 	protected void okPressed()
 	{
 	   newFileName = textNewFileName.getText();
-	   if(newFileName.contains("/") || newFileName.contains("\\"))
+	   if (newFileName.contains("/") || newFileName.contains("\\")) //$NON-NLS-1$ //$NON-NLS-2$
 	   {
-	      MessageDialogHelper.openWarning(getShell(), "Rename file error", "File name should not contain '/' and '\\' symbols");
+	      MessageDialogHelper.openWarning(getShell(), Messages.get().RenameFileDialog_Warning, Messages.get().RenameFileDialog_WarningMessage);
 	      return;
 	   }
 	      

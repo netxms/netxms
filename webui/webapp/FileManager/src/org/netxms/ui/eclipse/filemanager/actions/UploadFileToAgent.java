@@ -85,7 +85,7 @@ public class UploadFileToAgent implements IObjectActionDelegate
 				   String remoteFileName = dlg.getRemoteFileName();
 				   if(!remoteFileName.isEmpty())
 				   {
-				      if(remoteFileName.endsWith("/") || remoteFileName.endsWith("\\"))
+				      if(remoteFileName.endsWith("/") || remoteFileName.endsWith("\\")) //$NON-NLS-1$ //$NON-NLS-2$
 				      {
 				         remoteFileName += dlg.getServerFile().getName();
 				      }

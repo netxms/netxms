@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.ui.eclipse.filemanager.Messages;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -54,7 +53,7 @@ public class CreateFolderDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().StartClientToServerFileUploadDialog_Title);
+		newShell.setText(Messages.get().CreateFolderDialog_Title);
 	}
 
 	/* (non-Javadoc)
@@ -72,7 +71,7 @@ public class CreateFolderDialog extends Dialog
 		dialogArea.setLayout(layout);
       
 		textNewDirectoryName = new LabeledText(dialogArea, SWT.NONE);
-		textNewDirectoryName.setLabel("New folder name");
+		textNewDirectoryName.setLabel(Messages.get().CreateFolderDialog_Label);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;

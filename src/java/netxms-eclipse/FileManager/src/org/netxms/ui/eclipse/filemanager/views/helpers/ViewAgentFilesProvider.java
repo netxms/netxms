@@ -56,7 +56,7 @@ public class ViewAgentFilesProvider implements ITreeContentProvider
 	{
 	   if(((ServerFile)parentElement).getChildren() == null)
 	   {
-         ConsoleJob job = new ConsoleJob(Messages.get().SelectServerFileDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
+         ConsoleJob job = new ConsoleJob(Messages.get().ViewAgentFilesProvider_JobTitle, null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
@@ -74,12 +74,12 @@ public class ViewAgentFilesProvider implements ITreeContentProvider
             @Override
             protected String getErrorMessage()
             {
-               return "Error while retrieving children of server file";
+               return Messages.get().ViewAgentFilesProvider_JobError;
             }
          };
          job.setUser(false);
          job.start();
-         return new ServerFile[] { new ServerFile("Loading...", ServerFile.PLACEHOLDER, (ServerFile)parentElement, ((ServerFile)parentElement).getNodeId()) };
+         return new ServerFile[] { new ServerFile(Messages.get().ViewAgentFilesProvider_Loading, ServerFile.PLACEHOLDER, (ServerFile)parentElement, ((ServerFile)parentElement).getNodeId()) };
 	   }
 		return ((ServerFile)parentElement).getChildren();
 	}
@@ -122,7 +122,4 @@ public class ViewAgentFilesProvider implements ITreeContentProvider
             list.add(e);      
       return list.toArray();
    }
-   
-   
-
 }

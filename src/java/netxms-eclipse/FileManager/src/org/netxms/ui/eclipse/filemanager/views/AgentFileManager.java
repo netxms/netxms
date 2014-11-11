@@ -39,7 +39,6 @@ import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -139,7 +138,7 @@ public class AgentFileManager extends ViewPart
 
       session = (NXCSession)ConsoleSharedData.getSession();
       objectId = Long.parseLong(site.getSecondaryId());
-      setPartName(String.format("File Manager - %s", session.getObjectName(objectId)));
+      setPartName(String.format(Messages.get().AgentFileManager_PartTitle, session.getObjectName(objectId)));
    }
 
    /*
@@ -170,7 +169,7 @@ public class AgentFileManager extends ViewPart
          }
       });
 
-      final String[] columnNames = { "Name", "Type", "Size", "Date modified" };
+      final String[] columnNames = { Messages.get().AgentFileManager_ColName, Messages.get().AgentFileManager_ColType, Messages.get().AgentFileManager_ColSize, Messages.get().AgentFileManager_ColDate };
       final int[] columnWidths = { 300, 120, 150, 150 };
       viewer = new SortableTreeViewer(content, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
       WidgetHelper.restoreTreeViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
@@ -311,7 +310,7 @@ public class AgentFileManager extends ViewPart
    private void createActions()
    {
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
-      actionRefreshDirectory = new Action("Refresh this folder", SharedIcons.REFRESH) {
+      actionRefreshDirectory = new Action(Messages.get().AgentFileManager_RefreshFolder, SharedIcons.REFRESH) {
          @Override
          public void run()
          {
@@ -327,7 +326,7 @@ public class AgentFileManager extends ViewPart
          }
       };
 
-      actionUploadFile = new Action("&Upload file...") {
+      actionUploadFile = new Action(Messages.get().AgentFileManager_UploadFile) {
          @Override
          public void run()
          {
@@ -335,7 +334,7 @@ public class AgentFileManager extends ViewPart
          }
       };
       
-      actionUploadFolder = new Action("&Upload folder...") {
+      actionUploadFolder = new Action(Messages.get().AgentFileManager_UploadFolder) {
          @Override
          public void run()
          {
@@ -343,7 +342,7 @@ public class AgentFileManager extends ViewPart
          }
       };
 
-      actionDelete = new Action("&Delete", SharedIcons.DELETE_OBJECT) {
+      actionDelete = new Action(Messages.get().AgentFileManager_Delete, SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
@@ -351,7 +350,7 @@ public class AgentFileManager extends ViewPart
          }
       };
 
-      actionRename = new Action("&Rename") {
+      actionRename = new Action(Messages.get().AgentFileManager_Rename) {
          @Override
          public void run()
          {
@@ -372,7 +371,7 @@ public class AgentFileManager extends ViewPart
       final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
 
-      actionDownloadFile = new Action("&Download...") {
+      actionDownloadFile = new Action(Messages.get().AgentFileManager_Download) {
          @Override
          public void run()
          {
@@ -380,7 +379,7 @@ public class AgentFileManager extends ViewPart
          }
       };
 
-      actionTailFile = new Action("&Show") {
+      actionTailFile = new Action(Messages.get().AgentFileManager_Show) {
          @Override
          public void run()
          {
@@ -388,7 +387,7 @@ public class AgentFileManager extends ViewPart
          }
       };
       
-      actionCreateDirectory = new Action("&Create folder") {
+      actionCreateDirectory = new Action(Messages.get().AgentFileManager_CreateFolder) {
          @Override
          public void run()
          {
@@ -505,7 +504,7 @@ public class AgentFileManager extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            files = session.listAgentFiles(null, "/", objectId);
+            files = session.listAgentFiles(null, "/", objectId); //$NON-NLS-1$
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -581,11 +580,11 @@ public class AgentFileManager extends ViewPart
       if (dlg.open() == Window.OK)
       {
          final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-         new ConsoleJob("Upload file to agent", null, Activator.PLUGIN_ID, null) {
+         new ConsoleJob(Messages.get().AgentFileManager_UploadFileJobTitle, null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(final IProgressMonitor monitor) throws Exception
             {
-               session.uploadLocalFileToAgent(dlg.getLocalFile(), upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), objectId, new ProgressListener() {
+               session.uploadLocalFileToAgent(dlg.getLocalFile(), upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), objectId, new ProgressListener() { //$NON-NLS-1$
                   private long prevWorkDone = 0;
 
                   @Override
@@ -641,13 +640,13 @@ public class AgentFileManager extends ViewPart
       if (dlg.open() == Window.OK)
       {
          final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-         new ConsoleJob("Upload file to agent", null, Activator.PLUGIN_ID, null) {
+         new ConsoleJob(Messages.get().AgentFileManager_UploadFolderJobTitle, null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(final IProgressMonitor monitor) throws Exception
             {
                File folder = dlg.getLocalFile();
-               session.createFolderOnAgent(upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), objectId);
-               listFilesForFolder(folder, upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), monitor);
+               session.createFolderOnAgent(upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), objectId); //$NON-NLS-1$
+               listFilesForFolder(folder, upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), monitor); //$NON-NLS-1$
                
                upladFolder.setChildren(session.listAgentFiles(upladFolder, upladFolder.getFullName(), objectId));
                runInUIThread(new Runnable() {
@@ -683,12 +682,12 @@ public class AgentFileManager extends ViewPart
       {
           if (fileEntry.isDirectory()) 
           {
-             session.createFolderOnAgent(upladFolder+"/"+fileEntry.getName(), objectId);
-             listFilesForFolder(fileEntry, upladFolder+"/"+fileEntry.getName(), monitor);
+             session.createFolderOnAgent(upladFolder+"/"+fileEntry.getName(), objectId); //$NON-NLS-1$
+             listFilesForFolder(fileEntry, upladFolder+"/"+fileEntry.getName(), monitor); //$NON-NLS-1$
           } 
           else 
           {
-             session.uploadLocalFileToAgent(fileEntry, upladFolder+"/"+fileEntry.getName(), objectId, new ProgressListener() {
+             session.uploadLocalFileToAgent(fileEntry, upladFolder+"/"+fileEntry.getName(), objectId, new ProgressListener() { //$NON-NLS-1$
                 private long prevWorkDone = 0;
 
                 @Override
@@ -768,11 +767,11 @@ public class AgentFileManager extends ViewPart
 
       final ServerFile sf = ((ServerFile)objects[0]);
 
-      ConsoleJob job = new ConsoleJob("Download file from agent and start tail", null, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob(Messages.get().AgentFileManager_DownloadJobTitle, null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Error while downloading %s file from %d node.", sf.getFullName(), objectId);
+            return String.format(Messages.get().AgentFileManager_DownloadJobError, sf.getFullName(), objectId);
          }
 
          @Override
@@ -793,8 +792,8 @@ public class AgentFileManager extends ViewPart
                   }
                   catch(Exception e)
                   {
-                     MessageDialogHelper.openError(window.getShell(), "Error opening view.",
-                           String.format("Error opening view: %s", e.getLocalizedMessage()));
+                     MessageDialogHelper.openError(window.getShell(), Messages.get().AgentFileManager_Error,
+                           String.format(Messages.get().AgentFileManager_OpenViewError, e.getLocalizedMessage()));
                   }
                }
             });
@@ -818,10 +817,10 @@ public class AgentFileManager extends ViewPart
       do
       {
          FileDialog fd = new FileDialog(getSite().getShell(), SWT.SAVE);
-         fd.setText("Select how to save file or directory");
-         String[] filterExtensions = { "*.*" };
+         fd.setText(Messages.get().AgentFileManager_StartDownloadDialogTitle);
+         String[] filterExtensions = { "*.*" }; //$NON-NLS-1$
          fd.setFilterExtensions(filterExtensions);
-         String[] filterNames = { "ALL" };
+         String[] filterNames = { Messages.get().AgentFileManager_AllFiles };
          fd.setFilterNames(filterNames);
          fd.setFileName(sf.getName());
          selected = fd.open();
@@ -846,7 +845,7 @@ public class AgentFileManager extends ViewPart
             @Override
             protected String getErrorMessage()
             {
-               return "Error while retrieving children of server file";
+               return Messages.get().AgentFileManager_DirectoryReadError;
             }
          };
          job.setUser(false);
@@ -875,11 +874,11 @@ public class AgentFileManager extends ViewPart
       {
          if(files[i].isDirectory())
          {
-            downloadDir(files[i], localFileName+"/"+sf.getName());
+            downloadDir(files[i], localFileName + "/" + sf.getName()); //$NON-NLS-1$
          }
          else
          {
-            downloadFile(localFileName+"/"+files[i].getName(), files[i].getFullName());
+            downloadFile(localFileName + "/" + files[i].getName(), files[i].getFullName()); //$NON-NLS-1$
          }
       }
    }
@@ -889,7 +888,7 @@ public class AgentFileManager extends ViewPart
     */
    private void downloadFile(final String localName, final String remoteName)
    {
-      ConsoleJob job = new ConsoleJob("Download file from agent", null, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob(Messages.get().AgentFileManager_DownloadFileFromAgent, null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -911,7 +910,7 @@ public class AgentFileManager extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Error while downloading file %s from node %s [%d]", remoteName, session.getObjectName(objectId), objectId);
+            return String.format(Messages.get().AgentFileManager_FileDownloadError, remoteName, session.getObjectName(objectId), objectId);
          }
       };
       job.start();
@@ -938,14 +937,14 @@ public class AgentFileManager extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Error while rename file job";
+            return Messages.get().AgentFileManager_RenameError;
          }
 
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             final ServerFile sf = (ServerFile)objects[0];
-            session.renameAgentFile(objectId, sf.getFullName(), sf.getParent().getFullName() + "/" + newName);
+            session.renameAgentFile(objectId, sf.getFullName(), sf.getParent().getFullName() + "/" + newName); //$NON-NLS-1$
 
             runInUIThread(new Runnable() {
                @Override
@@ -964,17 +963,17 @@ public class AgentFileManager extends ViewPart
     */
    private void moveFile(final ServerFile target, final ServerFile object)
    {
-      new ConsoleJob("Move file job", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+      new ConsoleJob(Messages.get().AgentFileManager_MoveFile, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
          @Override
          protected String getErrorMessage()
          {
-            return "Error while move file job";
+            return Messages.get().AgentFileManager_MoveError;
          }
 
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.renameAgentFile(objectId, object.getFullName(), target.getFullName() + "/" + object.getName());
+            session.renameAgentFile(objectId, object.getFullName(), target.getFullName() + "/" + object.getName()); //$NON-NLS-1$
 
             runInUIThread(new Runnable() {
                @Override
@@ -1010,17 +1009,17 @@ public class AgentFileManager extends ViewPart
       
       final String newFolder = dlg.getNewName();
       
-      new ConsoleJob("Create folder job", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+      new ConsoleJob(Messages.get().AgentFileManager_CreatingFolder, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
          @Override
          protected String getErrorMessage()
          {
-            return "Error while create folder job";
+            return Messages.get().AgentFileManager_FolderCreationError;
          }
 
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.createFolderOnAgent(parentFolder.getFullName()+"/"+newFolder, objectId);
+            session.createFolderOnAgent(parentFolder.getFullName() + "/" + newFolder, objectId); //$NON-NLS-1$
             parentFolder.setChildren(session.listAgentFiles(parentFolder, parentFolder.getFullName(), objectId));
 
             runInUIThread(new Runnable() {

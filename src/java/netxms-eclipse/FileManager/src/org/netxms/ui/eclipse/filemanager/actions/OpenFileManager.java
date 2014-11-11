@@ -27,6 +27,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.views.AgentFileManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -61,7 +62,8 @@ public class OpenFileManager implements IObjectActionDelegate
          }
          catch(PartInitException e)
          {
-            MessageDialogHelper.openError(window.getShell(), "Show node file list error", "Error: " + e.getMessage());
+            MessageDialogHelper.openError(window.getShell(), 
+                  Messages.get().OpenFileManager_Error, String.format(Messages.get().OpenFileManager_ErrorText, e.getMessage()));
          }
       }
    }

@@ -58,7 +58,7 @@ public class StartClientToAgentFolderUploadDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().StartClientToServerFileUploadDialog_Title);
+		newShell.setText(Messages.get().StartClientToAgentFolderUploadDialog_Title);
 	}
 
 	/* (non-Javadoc)

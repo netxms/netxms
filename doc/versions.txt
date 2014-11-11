@@ -5,13 +5,29 @@ NetXMS Versioning Scheme
 major.minor.release
 
 
-2.x
+2.x onward
 
-major.minor.type.release
+* Product version
+
+major.minor-qualifier
 
 type denotes release type:
-	0	development
-	1	release candidate
-	2	stable release
+	Mn	development milestone (like M3)
+	RCn	release candidate (like RC1)
+	RELEASE	stable release
 
-so first release version is 2.0.2.0
+so first 2.x version is 2.0-M1 and first release version is 2.0-RELEASE
+
+
+* Java API version
+
+major.minor-qualifier
+
+Same as product versioning
+
+
+* Eclipse plugins version
+
+major.minor.release
+
+release is internal number incremented after each plugin change. Major and minor corresponds to product version.
