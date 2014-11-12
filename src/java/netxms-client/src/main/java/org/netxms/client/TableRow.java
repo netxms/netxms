@@ -18,9 +18,10 @@
  */
 package org.netxms.client;
 
+import org.netxms.base.NXCPMessage;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.netxms.base.NXCPMessage;
 
 /**
  * Table row
@@ -113,5 +114,13 @@ public class TableRow
    public void setObjectId(long objectId)
    {
       this.objectId = objectId;
+   }
+
+   @Override
+   public String toString() {
+      return "TableRow{" +
+              "cells=" + cells +
+              ", objectId=" + objectId +
+              '}';
    }
 }

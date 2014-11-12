@@ -85,4 +85,12 @@ public class TableCell
    {
       this.status = status;
    }
+
+   @Override
+   public String toString() {
+      return "TableCell{" +
+              "value='" + value + '\'' +
+              ", status=" + status +
+              '}';
+   }
 }

@@ -123,4 +123,13 @@ public class DciSummaryTableColumn
 	{
 		return flags;
 	}
+
+	@Override
+	public String toString() {
+		return "DciSummaryTableColumn{" +
+				"name='" + name + '\'' +
+				", dciName='" + dciName + '\'' +
+				", flags=" + flags +
+				'}';
+	}
 }
