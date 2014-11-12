@@ -5,5 +5,5 @@ Eclipse addons required for NetXMS development:
 * Properties Editor: http://propedit.sourceforge.jp/eclipse/updates
 * "Target Management Terminal" from "Target Management Project 3.5". Update site: http://download.eclipse.org/tm/updates/3.5
 * BIRT Charting: http://download.eclipse.org/birt/update-site/3.7/
-* Babel Project: http://download.eclipse.org/technology/babel/update-site/R0.11.1/indigo
+* Babel Project: http://download.eclipse.org/technology/babel/update-site/R0.12.0/juno
 	Required locales: chinese (both), german, russian, spanish
