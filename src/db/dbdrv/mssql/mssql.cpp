@@ -189,7 +189,8 @@ extern "C" bool EXPORT DrvInit(const char *cmdLine)
 	rc = SQLDrivers(sqlEnv, SQL_FETCH_FIRST, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
 	while((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
 	{
-		if (!_tcscmp(name, _T("SQL Server Native Client 10.0")))
+		if (!_tcscmp(name, _T("SQL Server Native Client 10.0")) ||
+          !_tcscmp(name, _T("SQL Server Native Client 11.0")))
 		{
 			_tcscpy(s_driver, name);
 			break;
