@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 		{
 #ifndef _WIN32
          case 'c':
-            SetDefaultCodePage(optarg);
+            SetDefaultCodepage(optarg);
             break;
 #endif
 		   case 'V': // version

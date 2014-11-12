@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
             break;
 #ifndef _WIN32
          case 'c':
-            SetDefaultCodePage(optarg);
+            SetDefaultCodepage(optarg);
             break;
 #endif
          case 'd':
