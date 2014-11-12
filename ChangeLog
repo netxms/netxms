@@ -1,9 +1,11 @@
 *
-* 2.0.0.0
+* 2.0-M1
 *
 
 - New hook script "AcceptNewNode" (can be used as additional filter for network discovery to avoid unnecessary communications)
 - SMS driver for Kannel gateway
+- Oracle subagent: added parameter Oracle.CriticalStats.Deadlocks
+- Reporting server improved
 - Management console:
     - New dashboard element "DCI summary table"
 

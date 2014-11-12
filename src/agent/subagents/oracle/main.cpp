@@ -46,6 +46,7 @@ DatabaseQuery g_queries[] =
    { _T("INSTANCE"), MAKE_ORACLE_VERSION(7, 0), 0, _T("SELECT version,status,archiver,shutdown_pending FROM v$instance") },
    { _T("GLOBALSTATS"), MAKE_ORACLE_VERSION(7, 0), 0,
          _T("SELECT ")
+            _T("(SELECT s.value FROM v$sysstat s, v$statname n WHERE n.name='enqueue deadlocks' AND n.statistic#=s.statistic#) Deadlocks, ")
             _T("(SELECT s.value FROM v$sysstat s, v$statname n WHERE n.name='physical reads' AND n.statistic#=s.statistic#) PhysReads, ")
             _T("(SELECT s.value FROM v$sysstat s, v$statname n WHERE n.name='physical writes' AND n.statistic#=s.statistic#) PhysWrites, ")
             _T("(SELECT s.value FROM v$sysstat s, v$statname n WHERE n.name='session logical reads' AND n.statistic#=s.statistic#) LogicReads, ")
@@ -423,6 +424,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
 	{ _T("Oracle.CriticalStats.AutoArchivingOff(*)"), H_GlobalParameter, _T("GLOBALSTATS/AAOFF"), DCI_DT_STRING, _T("Oracle/CriticalStats: Archive logs enabled but auto archiving off ") },
 	{ _T("Oracle.CriticalStats.DatafilesNeedMediaRecovery(*)"), H_GlobalParameter, _T("GLOBALSTATS/DFNEEDREC"), DCI_DT_INT64, _T("Oracle/CriticalStats: Number of datafiles that need media recovery") },
+	{ _T("Oracle.CriticalStats.Deadlocks(*)"), H_GlobalParameter, _T("GLOBALSTATS/DEADLOCKS"), DCI_DT_INT64, _T("Oracle/CriticalStats: Cumulative number of deadlocks") },
 	{ _T("Oracle.CriticalStats.DFOffCount(*)"), H_GlobalParameter, _T("GLOBALSTATS/DFOFFCOUNT"), DCI_DT_INT, _T("Oracle/CriticalStats: Number of offline datafiles") },
 	{ _T("Oracle.CriticalStats.FailedJobs(*)"), H_GlobalParameter, _T("GLOBALSTATS/FAILEDJOBS"), DCI_DT_INT64, _T("Oracle/CriticalStats: Number of failed jobs") },
 	{ _T("Oracle.CriticalStats.FullSegmentsCount(*)"), H_GlobalParameter, _T("GLOBALSTATS/FULLSEGCNT"), DCI_DT_INT64, _T("Oracle/CriticalStats: Number of segments that cannot extend") },
