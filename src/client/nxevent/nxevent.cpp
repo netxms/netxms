@@ -23,11 +23,9 @@
 
 #include "nxevent.h"
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static BOOL m_bDebug = FALSE;
 static TCHAR m_szServer[MAX_DB_STRING] = _T("127.0.0.1");
 static TCHAR m_szLogin[MAX_DB_STRING] = _T("guest");
@@ -92,6 +90,12 @@ static DWORD SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
    return dwResult;
 }
 
+#ifdef _WIN32
+#define CMDLINE_OPTIONS "deho:P:T:u:vw:"
+#else
+#define CMDLINE_OPTIONS "c:deho:P:T:u:vw:"
+#endif
+
 /**
  * Entry point
  */
@@ -102,13 +106,16 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "deho:P:T:u:vw:")) != -1)
+   while((ch = getopt(argc, argv, CMDLINE_OPTIONS)) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
             printf("Usage: nxevent [<options>] <server> <event> [<param_1> [... <param_N>]]\n"
                    "Valid options are:\n"
+#ifndef _WIN32
+                   "   -c            : Codepage (default is " ICONV_DEFAULT_CODEPAGE ")\n"
+#endif
                    "   -d            : Turn on debug mode.\n"
                    "   -e            : Encrypt session.\n"
                    "   -h            : Display help and exit.\n"
@@ -122,6 +129,11 @@ int main(int argc, char *argv[])
                    "\n");
             bStart = FALSE;
             break;
+#ifndef _WIN32
+         case 'c':
+            SetDefaultCodePage(optarg);
+            break;
+#endif
          case 'd':
             m_bDebug = TRUE;
             break;

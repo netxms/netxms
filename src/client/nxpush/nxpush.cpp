@@ -62,6 +62,9 @@ static int optBatchSize = 0;
 #if HAVE_DECL_GETOPT_LONG
 static struct option longOptions[] =
 {
+#ifndef _WIN32
+	{ (char *)"codepage",  required_argument, NULL,        'c' },
+#endif
 	{ (char *)"version",   no_argument,       NULL,        'V' },
 	{ (char *)"help",      no_argument,       NULL,        'h' },
 	{ (char *)"verbose",   no_argument,       NULL,        'v' },
@@ -75,7 +78,11 @@ static struct option longOptions[] =
 };
 #endif
 
+#ifdef _WIN32
 #define SHORT_OPTIONS "Vhvqu:P:eH:b:"
+#else
+#define SHORT_OPTIONS "c:Vhvqu:P:eH:b:"
+#endif
 
 /**
  * Print usage info
@@ -83,50 +90,57 @@ static struct option longOptions[] =
 static void usage(char *argv0)
 {
 	_tprintf(
-_T("NetXMS PUSH  Version ") NETXMS_VERSION_STRING _T("\n")
-_T("Copyright (c) 2006-2011 Alex Kirhenshtein\n\n")
-_T("Usage: %hs [OPTIONS] [server] [@batch_file] [values]\n")
-_T("  \n")
-_T("Options:\n")
+      _T("NetXMS PUSH  Version ") NETXMS_VERSION_STRING _T("\n")
+      _T("Copyright (c) 2006-2011 Alex Kirhenshtein\n\n")
+      _T("Usage: %hs [OPTIONS] [server] [@batch_file] [values]\n")
+      _T("  \n")
+      _T("Options:\n")
 #if HAVE_GETOPT_LONG
-_T("  -V, --version              Display version information.\n")
-_T("  -h, --help                 Display this help message.\n")
-_T("  -v, --verbose              Enable verbose messages. Add twice for debug\n")
-_T("  -q, --quiet                Suppress all messages.\n\n")
-_T("  -u, --user     <user>      Login to server as user. Default is \"guest\".\n")
-_T("  -P, --password <password>  Specify user's password. Default is empty.\n")
-_T("  -e, --encrypt              Encrypt session.\n")
-_T("  -H, --host     <host>      Server address.\n\n")
-#else
-_T("  -V             Display version information.\n")
-_T("  -h             Display this help message.\n")
-_T("  -v             Enable verbose messages. Add twice for debug\n")
-_T("  -q             Suppress all messages.\n\n")
-_T("  -u <user>      Login to server as user. Default is \"guest\".\n")
-_T("  -P <password>  Specify user's password. Default is empty.\n")
-_T("  -e             Encrypt session.\n")
-_T("  -H <host>      Server address.\n\n")
+#ifndef _WIN32
+      _T("  -c, --codepage             Codepage (default is %hs)\n")
 #endif
-_T("Notes:\n")
-_T("  * Values should be given in the following format:\n")
-_T("    node:dci=value\n")
-_T("    where node and dci can be specified either by ID, object name, DNS name,\n")
-_T("    or IP address. If you wish to specify node by DNS name or IP address,\n")
-_T("    you should prefix it with @ character\n")
-_T("  * First parameter will be used as \"host\" if -H/--host is unset\n")
-_T("  * Name of batch file cannot contain character = (equality sign)\n")
-_T("\n")
-_T("Examples:\n")
-_T("  Push two values to server 10.0.0.1 as user \"sender\" with password \"passwd\":\n")
-_T("      nxpush -H 10.0.0.1 -u sender -P passwd 10:24=1 10:PushParam=4\n\n")
-_T("  Push values from file to server 10.0.0.1 as user \"guest\" without password:\n")
-_T("      nxpush 10.0.0.1 @file\n")
-	, argv0);
+      _T("  -V, --version              Display version information.\n")
+      _T("  -h, --help                 Display this help message.\n")
+      _T("  -v, --verbose              Enable verbose messages. Add twice for debug\n")
+      _T("  -q, --quiet                Suppress all messages.\n\n")
+      _T("  -u, --user     <user>      Login to server as user. Default is \"guest\".\n")
+      _T("  -P, --password <password>  Specify user's password. Default is empty.\n")
+      _T("  -e, --encrypt              Encrypt session.\n")
+      _T("  -H, --host     <host>      Server address.\n\n")
+#else
+      _T("  -c             Codepage (default is %hs)\n")
+      _T("  -V             Display version information.\n")
+      _T("  -h             Display this help message.\n")
+      _T("  -v             Enable verbose messages. Add twice for debug\n")
+      _T("  -q             Suppress all messages.\n\n")
+      _T("  -u <user>      Login to server as user. Default is \"guest\".\n")
+      _T("  -P <password>  Specify user's password. Default is empty.\n")
+      _T("  -e             Encrypt session.\n")
+      _T("  -H <host>      Server address.\n\n")
+#endif
+      _T("Notes:\n")
+      _T("  * Values should be given in the following format:\n")
+      _T("    node:dci=value\n")
+      _T("    where node and dci can be specified either by ID, object name, DNS name,\n")
+      _T("    or IP address. If you wish to specify node by DNS name or IP address,\n")
+      _T("    you should prefix it with @ character\n")
+      _T("  * First parameter will be used as \"host\" if -H/--host is unset\n")
+      _T("  * Name of batch file cannot contain character = (equality sign)\n")
+      _T("\n")
+      _T("Examples:\n")
+      _T("  Push two values to server 10.0.0.1 as user \"sender\" with password \"passwd\":\n")
+      _T("      nxpush -H 10.0.0.1 -u sender -P passwd 10:24=1 10:PushParam=4\n\n")
+      _T("  Push values from file to server 10.0.0.1 as user \"guest\" without password:\n")
+      _T("      nxpush 10.0.0.1 @file\n"), argv0
+#ifndef _WIN32
+      , ICONV_DEFAULT_CODEPAGE
+#endif
+      );
 }
 
-//
-// Entry point
-//
+/**
+ * Entry point
+ */
 int main(int argc, char *argv[])
 {
 	int ret = 0;
@@ -144,38 +158,43 @@ int main(int argc, char *argv[])
 	{
 		switch(c)
 		{
-		case 'V': // version
-			_tprintf(_T("nxpush (") NETXMS_VERSION_STRING _T(")\n"));
-			exit(0);
-			break;
-		case 'h': // help
-			usage(argv[0]);
-			exit(1);
-			break;
-		case 'v': // verbose
-			optVerbose++;
-			break;
-		case 'q': // quiet
-			optVerbose = 0;
-			break;
-		case 'u': // user
-			optUser = optarg;
-			break;
-		case 'e': // user
-			optEncrypt = TRUE;
-			break;
-		case 'P': // password
-			optPassword = optarg;
-			break;
-		case 'H': // host
-			optHost = optarg;
-			break;
-		case 'b': // batch size
-			optBatchSize = atoi(optarg); // 0 == unlimited
-			break;
-		case '?':
-			exit(3);
-			break;
+#ifndef _WIN32
+         case 'c':
+            SetDefaultCodePage(optarg);
+            break;
+#endif
+		   case 'V': // version
+			   _tprintf(_T("nxpush (") NETXMS_VERSION_STRING _T(")\n"));
+			   exit(0);
+			   break;
+		   case 'h': // help
+			   usage(argv[0]);
+			   exit(1);
+			   break;
+		   case 'v': // verbose
+			   optVerbose++;
+			   break;
+		   case 'q': // quiet
+			   optVerbose = 0;
+			   break;
+		   case 'u': // user
+			   optUser = optarg;
+			   break;
+		   case 'e': // user
+			   optEncrypt = TRUE;
+			   break;
+		   case 'P': // password
+			   optPassword = optarg;
+			   break;
+		   case 'H': // host
+			   optHost = optarg;
+			   break;
+		   case 'b': // batch size
+			   optBatchSize = atoi(optarg); // 0 == unlimited
+			   break;
+		   case '?':
+			   exit(3);
+			   break;
 		}
 	}
 	

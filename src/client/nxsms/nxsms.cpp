@@ -23,21 +23,23 @@
 
 #include "nxsms.h"
 
-
-//
-// Callback function for debug printing
-//
-
+/**
+ * Callback function for debug printing
+ */
 static void DebugCallback(TCHAR *pMsg)
 {
    _tprintf(_T("*debug* %s\n"), pMsg);
 }
 
+#ifdef _WIN32
+#define CMDLINE_OPTIONS "DehP:u:vw:"
+#else
+#define CMDLINE_OPTIONS "c:DehP:u:vw:"
+#endif
 
-//
-// main
-//
-
+/**
+ * main
+ */
 int main(int argc, char *argv[])
 {
 	TCHAR login[MAX_DB_STRING] = _T("guest"), password[MAX_DB_STRING] = _T("");
@@ -48,13 +50,16 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "DehP:u:vw:")) != -1)
+   while((ch = getopt(argc, argv, CMDLINE_OPTIONS)) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
             printf("Usage: nxsms [<options>] <server> <phone number> <message>\n"
                    "Valid options are:\n"
+#ifndef _WIN32
+                   "   -c            : Codepage (default is " ICONV_DEFAULT_CODEPAGE ")\n"
+#endif
                    "   -D            : Turn on debug mode.\n"
                    "   -e            : Encrypt session.\n"
                    "   -h            : Display help and exit.\n"
@@ -64,6 +69,11 @@ int main(int argc, char *argv[])
                    "   -w <seconds>  : Specify command timeout (default is 3 seconds).\n"
                    "\n");
             return 1;
+#ifndef _WIN32
+         case 'c':
+            SetDefaultCodePage(optarg);
+            break;
+#endif
          case 'D':
             isDebug = TRUE;
             break;

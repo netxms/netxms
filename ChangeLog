@@ -6,6 +6,7 @@
 - SMS driver for Kannel gateway
 - Oracle subagent: added parameter Oracle.CriticalStats.Deadlocks
 - Reporting server improved
+- Code page option added to all client command line tools (nxalarm, nxevent, nxpush, nxsms)
 - Management console:
     - New dashboard element "DCI summary table"
 

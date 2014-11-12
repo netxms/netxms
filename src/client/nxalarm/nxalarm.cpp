@@ -67,6 +67,12 @@ static void DebugCallback(TCHAR *pMsg)
    _tprintf(_T("*debug* %s\n"), pMsg);
 }
 
+#ifdef _WIN32
+#define CMDLINE_OPTIONS "Deho:P:sS:u:vw:"
+#else
+#define CMDLINE_OPTIONS "c:Deho:P:sS:u:vw:"
+#endif
+
 /**
  * main
  */
@@ -83,7 +89,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "Deho:P:sS:u:vw:")) != -1)
+   while((ch = getopt(argc, argv, CMDLINE_OPTIONS)) != -1)
    {
       switch(ch)
       {
@@ -97,6 +103,9 @@ int main(int argc, char *argv[])
 						 "   open <id>               : Open helpdesk issue from alarm\n"
 						 "   terminate <id>          : Terminate alarm\n"
                    "Valid options are:\n"
+#ifndef _WIN32
+                   "   -c            : Codepage (default is " ICONV_DEFAULT_CODEPAGE ")\n"
+#endif
                    "   -D             : Turn on debug mode.\n"
                    "   -e             : Encrypt session.\n"
                    "   -h             : Display help and exit.\n"
@@ -127,6 +136,11 @@ int main(int argc, char *argv[])
                    "Default format is %%I %%S %%H %%m\n"
                    "\n");
             return 1;
+#ifndef _WIN32
+         case 'c':
+            SetDefaultCodePage(optarg);
+            break;
+#endif
          case 'D':
             isDebug = true;
             break;
