@@ -2,50 +2,19 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NetXMS WebUI Core
 Bundle-SymbolicName: org.netxms.webui.core; singleton:=true
-Bundle-Version: 2.0.0.0
+Bundle-Version: 2.0.0
 Bundle-Activator: org.netxms.ui.eclipse.console.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",
  org.eclipse.rap.ui;bundle-version="2.3.0",
- org.eclipse.rap.ui.forms;bundle-version="2.3.0"
+ org.eclipse.rap.ui.forms;bundle-version="2.3.0",
+ org.netxms.ui.eclipse.clientlibrary;bundle-version="2.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Import-Package: javax.servlet;version="2.5.0",
  javax.servlet.http;version="2.5.0"
-Bundle-ClassPath: .,
- jar/simple-xml-2.6.4.jar,
- jar/certificate-manager-2.0.0.0.jar,
- jar/netxms-base-2.0.0.0.jar,
- jar/netxms-client-2.0.0.0.jar,
- jar/netxms-client-api-2.0.0.0.jar
-Export-Package: org.netxms.api.client,
- org.netxms.api.client.constants,
- org.netxms.api.client.images,
- org.netxms.api.client.mt,
- org.netxms.api.client.reporting,
- org.netxms.api.client.scripts,
- org.netxms.api.client.servermanager,
- org.netxms.api.client.services,
- org.netxms.api.client.users,
- org.netxms.base,
- org.netxms.client,
- org.netxms.client.agent.config,
- org.netxms.client.constants,
- org.netxms.client.dashboards,
- org.netxms.client.datacollection,
- org.netxms.client.events,
- org.netxms.client.log,
- org.netxms.client.maps,
- org.netxms.client.maps.configs,
- org.netxms.client.maps.elements,
- org.netxms.client.objects,
- org.netxms.client.objecttools,
- org.netxms.client.packages,
- org.netxms.client.situations,
- org.netxms.client.snmp,
- org.netxms.client.topology,
- org.netxms.client.xml,
- org.netxms.ui.eclipse.actions,
+Bundle-ClassPath: .
+Export-Package: org.netxms.ui.eclipse.actions,
  org.netxms.ui.eclipse.console,
  org.netxms.ui.eclipse.console.api,
  org.netxms.ui.eclipse.console.resources,
@@ -55,12 +24,4 @@ Export-Package: org.netxms.api.client,
  org.netxms.ui.eclipse.views,
  org.netxms.ui.eclipse.views.helpers,
  org.netxms.ui.eclipse.widgets,
- org.netxms.ui.eclipse.widgets.helpers,
- org.simpleframework.xml,
- org.simpleframework.xml.convert,
- org.simpleframework.xml.core,
- org.simpleframework.xml.filter,
- org.simpleframework.xml.strategy,
- org.simpleframework.xml.stream,
- org.simpleframework.xml.transform,
- org.simpleframework.xml.util
+ org.netxms.ui.eclipse.widgets.helpers
