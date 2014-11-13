@@ -294,6 +294,7 @@ public class NXCPVariable
 					break;
 			}
 		}
+		in.close();
 	}
 
 	/**
@@ -386,6 +387,7 @@ public class NXCPVariable
 			loBits = 0;
 		}
 		
+		in.close();
 		return new UUID(hiBits, loBits);
 	}
 	
@@ -411,6 +413,7 @@ public class NXCPVariable
 		catch(IOException e)
 		{
 		}
+		in.close();
 		return value;
 	}
 	
@@ -436,6 +439,7 @@ public class NXCPVariable
 		catch(IOException e)
 		{
 		}
+		in.close();
 		return value;
 	}
 

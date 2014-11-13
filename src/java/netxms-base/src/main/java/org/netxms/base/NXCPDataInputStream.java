@@ -24,8 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * @author Victor
- *
+ * Custom input stream for parsing NXCP messages
  */
 public class NXCPDataInputStream extends DataInputStream
 {
@@ -58,4 +57,19 @@ public class NXCPDataInputStream extends DataInputStream
 		long b4 = readUnsignedByte();
 		return (b1 << 24) + (b2 << 16) + (b3 << 8) + b4;
 	}
+
+   /* (non-Javadoc)
+    * @see java.io.FilterInputStream#close()
+    */
+   @Override
+   public void close()
+   {
+      try
+      {
+         super.close();
+      }
+      catch(IOException e)
+      {
+      }
+   }
 }

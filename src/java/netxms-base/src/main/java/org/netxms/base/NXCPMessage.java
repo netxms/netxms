@@ -89,7 +89,10 @@ public class NXCPMessage
 		if (messageCode == NXCPCodes.CMD_ENCRYPTED_MESSAGE)
 		{
 			if (ectx == null)
+			{
+			   inputStream.close();
 				throw new NXCPException(NXCPException.DECRYPTION_ERROR);
+			}
 			
 			int padding = inputStream.readByte();
 			inputStream.skipBytes(1);
@@ -110,7 +113,10 @@ public class NXCPMessage
 			CRC32 crc32 = new CRC32();
 			crc32.update(payload, 8, payload.length - 8);
 			if (payloadInputStream.readUnsignedInt() != crc32.getValue())
+			{
+			   payloadInputStream.close();
 				throw new NXCPException(NXCPException.DECRYPTION_ERROR);
+			}
 			
 			payloadInputStream.skip(4);
 			messageCode = payloadInputStream.readUnsignedShort();

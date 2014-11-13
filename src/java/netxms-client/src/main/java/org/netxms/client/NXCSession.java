@@ -3402,6 +3402,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       {
       }
 
+      inputStream.close();
       return rows;
    }
 

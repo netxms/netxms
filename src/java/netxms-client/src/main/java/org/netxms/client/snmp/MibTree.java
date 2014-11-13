@@ -79,7 +79,16 @@ public class MibTree
 				in = null;
 				BufferedInputStream bufferedInput = new BufferedInputStream(new FileInputStream(file));
 				if (bufferedInput.skip(headerSize) != headerSize)
+				{
+				   try
+				   {
+				      bufferedInput.close();
+				   }
+				   catch(IOException e)
+				   {
+				   }
 	            throw new NXCException(RCC.BAD_MIB_FILE_DATA);
+				}
 				in = new NXCPDataInputStream(new InflaterInputStream(bufferedInput));
 			}
 			else

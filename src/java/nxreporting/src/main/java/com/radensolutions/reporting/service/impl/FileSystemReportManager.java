@@ -176,50 +176,57 @@ public class FileSystemReportManager implements ReportManager
 
     private UUID unpackJar(File destination, File archive) throws IOException {
         JarFile jarFile = new JarFile(archive);
-        Manifest manifest = jarFile.getManifest();
-        Enumeration<JarEntry> entries = jarFile.entries();
-        while (entries.hasMoreElements()) {
-            JarEntry jarEntry = entries.nextElement();
-            if (jarEntry.isDirectory()) {
-                File destDir = new File(destination, jarEntry.getName());
-                if (!destDir.mkdirs()) {
-                    log.error("Can't crate directory " + destDir.getAbsolutePath());
-                }
-            }
+        try
+        {
+           Manifest manifest = jarFile.getManifest();
+           Enumeration<JarEntry> entries = jarFile.entries();
+           while (entries.hasMoreElements()) {
+               JarEntry jarEntry = entries.nextElement();
+               if (jarEntry.isDirectory()) {
+                   File destDir = new File(destination, jarEntry.getName());
+                   if (!destDir.mkdirs()) {
+                       log.error("Can't create directory " + destDir.getAbsolutePath());
+                   }
+               }
+           }
+   
+           entries = jarFile.entries();
+           while (entries.hasMoreElements()) {
+               JarEntry jarEntry = entries.nextElement();
+               File destinationFile = new File(destination, jarEntry.getName());
+   
+               InputStream inputStream = null;
+               FileOutputStream outputStream = null;
+               if (jarEntry.isDirectory()) {
+                   continue;
+               }
+               try {
+                   inputStream = jarFile.getInputStream(jarEntry);
+                   outputStream = new FileOutputStream(destinationFile);
+   
+                   byte[] buffer = new byte[1024];
+                   int len;
+                   assert inputStream != null;
+                   while ((len = inputStream.read(buffer)) > 0) {
+                       outputStream.write(buffer, 0, len);
+                   }
+               } finally {
+                   if (inputStream != null) {
+                       inputStream.close();
+                   }
+                   if (outputStream != null) {
+                       outputStream.close();
+                   }
+               }
+           }
+   
+           // TODO: handle possible exception
+           return UUID.fromString(manifest.getMainAttributes().getValue("Build-Id"));
         }
-
-        entries = jarFile.entries();
-        while (entries.hasMoreElements()) {
-            JarEntry jarEntry = entries.nextElement();
-            File destinationFile = new File(destination, jarEntry.getName());
-
-            InputStream inputStream = null;
-            FileOutputStream outputStream = null;
-            if (jarEntry.isDirectory()) {
-                continue;
-            }
-            try {
-                inputStream = jarFile.getInputStream(jarEntry);
-                outputStream = new FileOutputStream(destinationFile);
-
-                byte[] buffer = new byte[1024];
-                int len;
-                assert inputStream != null;
-                while ((len = inputStream.read(buffer)) > 0) {
-                    outputStream.write(buffer, 0, len);
-                }
-            } finally {
-                if (inputStream != null) {
-                    inputStream.close();
-                }
-                if (outputStream != null) {
-                    outputStream.close();
-                }
-            }
+        finally
+        {
+           jarFile.close();
         }
-
-        // TODO: handle possible exception
-        return UUID.fromString(manifest.getMainAttributes().getValue("Build-Id"));
     }
 
     private void compileReport(File reportDirectory) {
@@ -467,8 +474,9 @@ public class FileSystemReportManager implements ReportManager
                 exporter.setParameter(JRXlsExporterParameter.IS_IMAGE_BORDER_FIX_ENABLED, true);
                 exporter.setParameter(JRXlsExporterParameter.IS_FONT_SIZE_FIX_ENABLED, true);
                 exporter.setParameter(JRXlsExporterParameter.IS_IGNORE_GRAPHICS, false);
-
                 break;
+            default:
+               break;
         }
 
         exporter.setParameter(JRExporterParameter.INPUT_FILE, dataFile);
