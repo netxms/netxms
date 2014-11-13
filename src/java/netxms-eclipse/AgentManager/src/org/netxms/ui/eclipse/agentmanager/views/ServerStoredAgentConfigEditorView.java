@@ -267,7 +267,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          int rc = dlg.open();
          if (rc == SaveStoredConfigDialog.SAVE_ID)
          {
-            intermidiateSave();
+            intermediateSave();
             modified = false;
             firePropertyChange(PROP_DIRTY);
             actionSave.setEnabled(false);
@@ -380,7 +380,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
          @Override
          public void run()
          {
-            intermidiateSave();
+            intermediateSave();
             actionSave.setEnabled(false);
             modified = false;
          }
@@ -436,7 +436,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
 
       final ConfigListElement element2 = elements.get(index - 1);
 
-      new ConsoleJob(Messages.get().PackageManager_OpenDatabase, this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Move configuration up", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -476,7 +476,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
 
       final ConfigListElement elemen2 = elements.get(index + 1);
 
-      new ConsoleJob(Messages.get().PackageManager_OpenDatabase, this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Move configuration down", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -510,7 +510,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
 
       final ConfigListElement element = (ConfigListElement)selection.getFirstElement();
 
-      new ConsoleJob(Messages.get().PackageManager_OpenDatabase, this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Delete configuration", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -627,7 +627,10 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       }
    }
 
-   public void intermidiateSave()
+   /**
+    * 
+    */
+   public void intermediateSave()
    {
       if (content == null)
          return;
@@ -635,7 +638,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       content.setFilter(filterEditor.getText());
       content.setName(nameField.getText());
 
-      new ConsoleJob(Messages.get().PackageManager_OpenDatabase, this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Save configuration", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
