@@ -18,8 +18,6 @@
     <module>netxms-client-api</module>
     <module>netxms-client</module>
     <module>mobile-agent</module>
-    <module>certificate-manager</module>
-    <!--<module>netxms-agent</module>-->
   </modules>
 
   <distributionManagement>

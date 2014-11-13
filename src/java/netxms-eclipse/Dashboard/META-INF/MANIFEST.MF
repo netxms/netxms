@@ -2,22 +2,23 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Dashboard
 Bundle-SymbolicName: org.netxms.ui.eclipse.dashboard;singleton:=true
-Bundle-Version: 2.0.0.0
+Bundle-Version: 2.0.0
 Bundle-Activator: org.netxms.ui.eclipse.dashboard.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
- org.eclipse.core.runtime;bundle-version="3.7.0",
+Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
+ org.eclipse.core.runtime;bundle-version="3.8.0",
+ org.netxms.ui.eclipse.clientlibrary;bundle-version="2.0.0",
  org.netxms.ui.eclipse.console;bundle-version="2.0.0",
- org.netxms.ui.eclipse.charts;bundle-version="1.2.11",
+ org.netxms.ui.eclipse.charts;bundle-version="2.0.0",
  org.swtchart;bundle-version="0.7.9",
- org.netxms.ui.eclipse.networkmaps;bundle-version="1.2.17",
- org.netxms.ui.eclipse.osm;bundle-version="1.2.10",
+ org.netxms.ui.eclipse.networkmaps;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.osm;bundle-version="2.0.0",
  org.netxms.ui.eclipse.datacollection;bundle-version="2.0.0",
- org.netxms.ui.eclipse.alarmviewer;bundle-version="1.2.17",
- org.netxms.ui.eclipse.filemanager;bundle-version="1.2.17",
- org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.17",
- org.netxms.ui.eclipse.perfview;bundle-version="1.2.13",
- org.netxms.ui.eclipse.objectview;bundle-version="1.2.10"
+ org.netxms.ui.eclipse.alarmviewer;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.filemanager;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.objectbrowser;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.perfview;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.objectview;bundle-version="2.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.dashboard.api,

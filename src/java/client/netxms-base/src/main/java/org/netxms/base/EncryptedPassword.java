@@ -23,8 +23,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
+import javax.xml.bind.DatatypeConverter;
 
 /**
  * Utility class to encrypt and decrypt passwords in same way as nxcencpasswd do.
@@ -47,7 +46,7 @@ public class EncryptedPassword
    {
       byte[] key = MessageDigest.getInstance("MD5").digest(login.getBytes("UTF-8"));
       byte[] encrypted = IceCrypto.encrypt(Arrays.copyOf(password.getBytes("UTF-8"), 32), key);
-      return new BASE64Encoder().encode(encrypted);
+      return DatatypeConverter.printBase64Binary(encrypted);
    }
    
    /**
@@ -57,10 +56,10 @@ public class EncryptedPassword
     * @throws NoSuchAlgorithmException
     * @throws IOException
     */
-   public static String decrypt(String login, String password) throws NoSuchAlgorithmException, IOException
+   public static String decrypt(String login, String password) throws NoSuchAlgorithmException, IllegalArgumentException, IOException
    {
       byte[] key = MessageDigest.getInstance("MD5").digest(login.getBytes("UTF-8"));
-      byte[] encrypted = new BASE64Decoder().decodeBuffer(password);
+      byte[] encrypted = DatatypeConverter.parseBase64Binary(password);
       byte[] plainText = IceCrypto.decrypt(encrypted, key);
       int i;
       for(i = 0; i < plainText.length; i++)

@@ -36,7 +36,6 @@ Copyright (c) 2003-2014 Raden Solutions
       </win>
    </launcher>
 
-
    <vm>
    </vm>
 
@@ -325,6 +324,7 @@ Copyright (c) 2003-2014 Raden Solutions
       <plugin id="org.netxms.ui.eclipse.agentmanager"/>
       <plugin id="org.netxms.ui.eclipse.alarmviewer"/>
       <plugin id="org.netxms.ui.eclipse.charts"/>
+      <plugin id="org.netxms.ui.eclipse.clientlibrary"/>
       <plugin id="org.netxms.ui.eclipse.console"/>
       <plugin id="org.netxms.ui.eclipse.dashboard"/>
       <plugin id="org.netxms.ui.eclipse.datacollection"/>

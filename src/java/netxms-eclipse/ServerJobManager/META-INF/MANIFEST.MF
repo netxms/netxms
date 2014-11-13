@@ -2,11 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Server Job Manager Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.serverjobmanager;singleton:=true
-Bundle-Version: 1.2.10
+Bundle-Version: 2.0.0
 Bundle-Activator: org.netxms.ui.eclipse.serverjobmanager.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui;bundle-version="3.7.0",
  org.eclipse.core.runtime;bundle-version="3.7.0",
- org.netxms.ui.eclipse.console;bundle-version="1.2.10"
+ org.netxms.ui.eclipse.clientlibrary;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.console;bundle-version="2.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
