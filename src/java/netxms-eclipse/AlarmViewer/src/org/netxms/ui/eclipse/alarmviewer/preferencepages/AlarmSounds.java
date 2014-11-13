@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,10 +56,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 /**
  * Alarm melody
  */
-public class AlarmMelody extends PreferencePage implements IWorkbenchPreferencePage
+public class AlarmSounds extends PreferencePage implements IWorkbenchPreferencePage
 {
-   public static final String ID = "org.netxms.ui.eclipse.alarmviewer.views.AlarmMelodyView"; //$NON-NLS-1$
-
    private NXCSession session;
    private ServerFile[] serverFiles = null;
    private IPreferenceStore ps;
@@ -104,8 +102,8 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
 
       for(int i = 0; i < 5; i++)
       {
-         newCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY, StatusDisplayInfo.getStatusText(i),
-               WidgetHelper.DEFAULT_LAYOUT_DATA);
+         newCombo = WidgetHelper.createLabeledCombo(dialogArea, SWT.DROP_DOWN | SWT.READ_ONLY, 
+               StatusDisplayInfo.getStatusText(i), WidgetHelper.DEFAULT_LAYOUT_DATA);
          newCombo.setEnabled(false);
          comboList.add(i, newCombo);
       }
@@ -252,6 +250,7 @@ public class AlarmMelody extends PreferencePage implements IWorkbenchPreferenceP
     * @throws NXCException
     * @throws IOException
     */
+   @SuppressWarnings("resource")
    private static void downloadSoundFile(NXCSession session, String melodyName, URL workspaceUrl) throws NXCException, IOException
    {
       File serverFile = session.downloadFileFromServer(melodyName);

@@ -113,9 +113,9 @@
       </page>
       <page
             category="org.netxms.ui.eclipse.alarmviewer.preferencepages.Alarms"
-            class="org.netxms.ui.eclipse.alarmviewer.preferencepages.AlarmMelody"
-            id="org.netxms.ui.eclipse.alarmviewer.preferencepages.AlarmMelody"
-            name="%page.AlarmMelodies.name">
+            class="org.netxms.ui.eclipse.alarmviewer.preferencepages.AlarmSounds"
+            id="org.netxms.ui.eclipse.alarmviewer.preferencepages.AlarmSounds"
+            name="%page.AlarmSounds.name">
       </page>
    </extension>
    <extension
