@@ -759,6 +759,13 @@ extern "C" DWORD EXPORT DrvExecute(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt, W
 
    if (stmt->batchMode)
    {
+      if (stmt->batchSize == 0)
+      {
+         stmt->batchMode = false;
+         stmt->batchBindings->clear();
+         return DBERR_SUCCESS;   // empty batch
+      }
+
       for(int i = 0; i < stmt->batchBindings->size(); i++)
       {
          OracleBatchBind *b = stmt->batchBindings->get(i);
