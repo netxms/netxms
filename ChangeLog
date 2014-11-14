@@ -7,9 +7,10 @@
 - Oracle subagent: added parameter Oracle.CriticalStats.Deadlocks
 - Reporting server improved
 - Code page option added to all client command line tools (nxalarm, nxevent, nxpush, nxsms)
+- New NXSL functions: GetNodeTemplates
 - Management console:
     - New dashboard element "DCI summary table"
-- Fixed issues: #667, #675
+- Fixed issues: #634, #667, #675
 
 
 *

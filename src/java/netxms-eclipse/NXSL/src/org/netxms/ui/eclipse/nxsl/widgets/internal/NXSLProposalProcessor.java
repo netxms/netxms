@@ -47,7 +47,7 @@ public class NXSLProposalProcessor implements IContentAssistProcessor
 		"AddrInRange", "AddrInSubnet", "BindObject", "CreateContainer", "CreateSNMPTransport", "FindDCIByDescription",
 		"FindDCIByName", "FindNodeObject", "FindObject", "FindSituation", "GetAvgDCIValue", "GetConfigurationVariable",
 		"GetCustomAttribute", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName", "GetEventParameter",
-		"GetInterfaceName", "GetInterfaceObject", "GetMaxDCIValue", "GetMinDCIValue", "GetNodeInterfaces", "GetNodeParents",
+		"GetInterfaceName", "GetInterfaceObject", "GetMaxDCIValue", "GetMinDCIValue", "GetNodeInterfaces", "GetNodeParents", "GetNodeTemplates",
 		"GetObjectChildren", "GetObjectParents", "GetSituationAttribute", "PostEvent", "RemoveContainer", "RenameObject",
 		"SetCustomAttribute", "SetEventParameter", "SecondsToUptime", "SNMPGet", "SNMPGetValue", "SNMPSet", "SNMPWalk", "UnbindObject" };
 	private static final String[] BUILTIN_CONSTANTS = { "null", "true", "false" };

@@ -346,6 +346,25 @@ static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 }
 
 /**
+ * Get node object's templates
+ * First argument: node object
+ * Returns array of accessible template objects
+ */
+static int F_GetNodeTemplates(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	Node *node = (Node *)object->getData();
+	*ppResult = new NXSL_Value(node->getTemplatesForNXSL());
+	return 0;
+}
+
+/**
  * Get object's parents
  * First argument: NetXMS object (NetObj, Node, or Interface)
  * Returns array of accessible parent objects
@@ -1284,6 +1303,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { _T("GetInterfaceObject"), F_GetInterfaceObject, 2 },
    { _T("GetNodeInterfaces"), F_GetNodeInterfaces, 1 },
    { _T("GetNodeParents"), F_GetNodeParents, 1 },
+   { _T("GetNodeTemplates"), F_GetNodeTemplates, 1 },
    { _T("GetObjectChildren"), F_GetObjectChildren, 1 },
    { _T("GetObjectParents"), F_GetObjectParents, 1 },
 	{ _T("FindNodeObject"), F_FindNodeObject, 2 },

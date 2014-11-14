@@ -1224,6 +1224,7 @@ public:
    UINT32 getItemFromSMCLP(const TCHAR *param, UINT32 bufSize, TCHAR *buffer);
 
 	virtual NXSL_Array *getParentsForNXSL();
+	virtual NXSL_Array *getTemplatesForNXSL();
 	NXSL_Array *getInterfacesForNXSL();
 
    void openParamList(ObjectArray<AgentParameterDefinition> **paramList);

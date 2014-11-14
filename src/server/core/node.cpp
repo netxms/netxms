@@ -5834,6 +5834,28 @@ NXSL_Array *Node::getParentsForNXSL()
 }
 
 /**
+ * Get list of template type parent objects for NXSL script
+ */
+NXSL_Array *Node::getTemplatesForNXSL()
+{
+	NXSL_Array *parents = new NXSL_Array;
+	int index = 0;
+
+	LockParentList(FALSE);
+	for(UINT32 i = 0; i < m_dwParentCount; i++)
+	{
+		if ((m_pParentList[i]->Type() == OBJECT_TEMPLATE) &&
+		    m_pParentList[i]->isTrustedNode(m_dwId))
+		{
+			parents->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pParentList[i])));
+		}
+	}
+	UnlockParentList();
+
+	return parents;
+}
+
+/**
  * Get list of interface objects for NXSL script
  */
 NXSL_Array *Node::getInterfacesForNXSL()
