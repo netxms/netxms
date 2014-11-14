@@ -1009,16 +1009,13 @@ void DCTable::createNXMPRecord(String &str)
                           _T("\t\t\t\t\t<interval>%d</interval>\n")
                           _T("\t\t\t\t\t<retention>%d</retention>\n")
                           _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
-                          _T("\t\t\t\t\t<advancedSchedule>%d</advancedSchedule>\n")
-                          _T("\t\t\t\t\t<rawValueInOctetString>%d</rawValueInOctetString>\n")
+                          _T("\t\t\t\t\t<flags>%d</flags>\n")
                           _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n"),
 								  (int)m_id, (const TCHAR *)EscapeStringForXML2(m_name),
                           (const TCHAR *)EscapeStringForXML2(m_szDescription),
                           (int)m_source, m_iPollingInterval, m_iRetentionTime,
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
-								  (m_flags & DCF_ADVANCED_SCHEDULE) ? 1 : 0,
-								  (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? 1 : 0,
-								  (int)m_snmpPort);
+								  (int)m_flags, (int)m_snmpPort);
 
 	if (m_transformationScriptSource != NULL)
 	{

@@ -210,6 +210,7 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 	m_instanceFilter = NULL;
 	setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
 
+   // for compatibility with old format
 	if (config->getSubEntryValueAsInt(_T("allThresholds")))
 		m_flags |= DCF_ALL_THRESHOLDS;
 	if (config->getSubEntryValueAsInt(_T("rawValueInOctetString")))
@@ -1466,9 +1467,7 @@ void DCItem::createNXMPRecord(String &str)
                           _T("\t\t\t\t\t<instance>%s</instance>\n")
                           _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
                           _T("\t\t\t\t\t<delta>%d</delta>\n")
-                          _T("\t\t\t\t\t<advancedSchedule>%d</advancedSchedule>\n")
-                          _T("\t\t\t\t\t<allThresholds>%d</allThresholds>\n")
-                          _T("\t\t\t\t\t<rawValueInOctetString>%d</rawValueInOctetString>\n")
+                          _T("\t\t\t\t\t<flags>%d</flags>\n")
                           _T("\t\t\t\t\t<snmpRawValueType>%d</snmpRawValueType>\n")
                           _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n")
                           _T("\t\t\t\t\t<instanceDiscoveryMethod>%d</instanceDiscoveryMethod>\n"),
@@ -1477,9 +1476,7 @@ void DCItem::createNXMPRecord(String &str)
                           m_dataType, m_sampleCount, (int)m_source, m_iPollingInterval, m_iRetentionTime,
                           (const TCHAR *)EscapeStringForXML2(m_instance),
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
-								  (int)m_deltaCalculation, (m_flags & DCF_ADVANCED_SCHEDULE) ? 1 : 0,
-                          (m_flags & DCF_ALL_THRESHOLDS) ? 1 : 0,
-								  (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? 1 : 0,
+								  (int)m_deltaCalculation, (int)m_flags,
 								  (int)m_snmpRawValueType, (int)m_snmpPort, (int)m_instanceDiscoveryMethod);
 
 	if (m_transformationScriptSource != NULL)

@@ -197,7 +197,7 @@ protected:
    BYTE m_status;                // Item status: active, disabled or not supported
    BYTE m_busy;                  // 1 when item is queued for polling, 0 if not
 	BYTE m_scheduledForDeletion;  // 1 when item is scheduled for deletion, 0 if not
-	WORD m_flags;
+	UINT16 m_flags;
    UINT32 m_dwTemplateId;         // Related template's id
    UINT32 m_dwTemplateItemId;     // Related template item's id
    Template *m_pNode;             // Pointer to node or template object this item related to

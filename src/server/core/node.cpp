@@ -5844,8 +5844,8 @@ NXSL_Array *Node::getTemplatesForNXSL()
 	LockParentList(FALSE);
 	for(UINT32 i = 0; i < m_dwParentCount; i++)
 	{
-		if ((m_pParentList[i]->Type() == OBJECT_TEMPLATE) &&
-		    m_pParentList[i]->isTrustedNode(m_dwId))
+		if ((m_pParentList[i]->getObjectClass() == OBJECT_TEMPLATE) &&
+		    m_pParentList[i]->isTrustedNode(m_id))
 		{
 			parents->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pParentList[i])));
 		}

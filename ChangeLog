@@ -10,7 +10,7 @@
 - New NXSL functions: GetNodeTemplates
 - Management console:
     - New dashboard element "DCI summary table"
-- Fixed issues: #634, #667, #675
+- Fixed issues: #634, #667, #675, #678, #684
 
 
 *

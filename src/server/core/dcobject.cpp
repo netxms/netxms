@@ -163,7 +163,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
    m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
 	m_scheduledForDeletion = 0;
-	m_flags = 0;
+	m_flags = (UINT16)config->getSubEntryValueAsInt(_T("flags"));
    m_tLastPoll = 0;
    m_pNode = owner;
    m_hMutex = MutexCreateRecursive();
@@ -182,6 +182,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 	m_comments = NULL;
 	setTransformationScript(config->getSubEntryValue(_T("transformation")));
 
+   // for compatibility with old format
 	if (config->getSubEntryValueAsInt(_T("advancedSchedule")))
 		m_flags |= DCF_ADVANCED_SCHEDULE;
 
