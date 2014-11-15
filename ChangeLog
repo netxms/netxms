@@ -8,6 +8,7 @@
 - Reporting server improved
 - Code page option added to all client command line tools (nxalarm, nxevent, nxpush, nxsms)
 - New NXSL functions: GetNodeTemplates
+- New parameters in Windows agent: System.Update.LastDetectTime, System.Update.LastDownloadTime, System.Update.LastInstallTime
 - Management console:
     - New dashboard element "DCI summary table"
 - Fixed issues: #634, #667, #673, #674, #675, #678, #684

@@ -46,6 +46,7 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value);
 LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value);
+LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
 LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value);
 
@@ -174,7 +175,10 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("System.ConnectedUsers"), H_ConnectedUsers, NULL, DCI_DT_INT, DCIDESC_SYSTEM_CONNECTEDUSERS },
 	{ _T("System.ProcessCount"), H_ProcCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
 	{ _T("System.ServiceState(*)"), H_ServiceState, NULL, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },
-	{ _T("System.ThreadCount"), H_ThreadCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT }
+	{ _T("System.ThreadCount"), H_ThreadCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
+   { _T("System.Update.LastDetectTime"), H_SysUpdateTime, _T("Detect"), DCI_DT_INT64, _T("System update: last detect time") },
+   { _T("System.Update.LastDownloadTime"), H_SysUpdateTime, _T("Download"), DCI_DT_INT64, _T("System update: last download time") },
+   { _T("System.Update.LastInstallTime"), H_SysUpdateTime, _T("Install"), DCI_DT_INT64, _T("System update: last install time") }
 };
 
 /**

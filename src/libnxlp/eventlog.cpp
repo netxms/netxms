@@ -78,7 +78,7 @@ BOOL EventSource::load()
    HKEY hKey;
    TCHAR buffer[MAX_PATH], path[MAX_PATH], *curr, *next;
    HMODULE hModule;
-   DWORD size = MAX_PATH;
+   DWORD size = MAX_PATH * sizeof(TCHAR);
    BOOL isLoaded = FALSE;
 
    _sntprintf(buffer, MAX_PATH, _T("System\\CurrentControlSet\\Services\\EventLog\\%s\\%s"), m_logName, m_name);

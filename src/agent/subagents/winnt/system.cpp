@@ -1,6 +1,6 @@
 /* 
 ** Windows 2000+ NetXMS subagent
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -394,4 +394,56 @@ LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 	DWORD_PTR size = (DWORD_PTR)si.lpMaximumApplicationAddress - (DWORD_PTR)si.lpMinimumApplicationAddress;
 	ret_uint(pValue, (DWORD)(size / 1024 / 1024));
 	return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.Update.*Time parameters
+ */
+LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+{
+   TCHAR buffer[MAX_PATH];
+   _sntprintf(buffer, MAX_PATH, _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate\\Auto Update\\Results\\%s"), arg);
+
+   HKEY hKey;
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, buffer, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+      return SYSINFO_RC_ERROR;
+
+   LONG rc;
+   DWORD size = MAX_PATH * sizeof(TCHAR);
+   if (RegQueryValueEx(hKey, _T("LastSuccessTime"), NULL, NULL, (BYTE *)buffer, &size) == ERROR_SUCCESS)
+   {
+      // Date stored as YYYY-mm-dd HH:MM:SS in UTC
+      if (_tcslen(buffer) == 19)
+      {
+         struct tm t;
+         memset(&t, 0, sizeof(struct tm));
+         t.tm_isdst = 0;
+
+         buffer[4] = 0;
+         t.tm_year = _tcstol(buffer, NULL, 10) - 1900;
+
+         buffer[7] = 0;
+         t.tm_mon = _tcstol(&buffer[5], NULL, 10) - 1;
+
+         buffer[10] = 0;
+         t.tm_mday = _tcstol(&buffer[8], NULL, 10);
+
+         buffer[13] = 0;
+         t.tm_hour = _tcstol(&buffer[11], NULL, 10);
+
+         buffer[16] = 0;
+         t.tm_min = _tcstol(&buffer[14], NULL, 10);
+
+         t.tm_sec = _tcstol(&buffer[17], NULL, 10);
+
+         ret_int64(value, timegm(&t));
+         rc = SYSINFO_RC_SUCCESS;
+      }      
+   }
+   else
+   {
+      rc = SYSINFO_RC_ERROR;
+   }
+   RegCloseKey(hKey);
+	return rc;
 }
