@@ -32,6 +32,8 @@
 #include <fml32.h> 
 #include <tpadm.h>
 
+bool TuxedoConnect();
+void TuxedoDisconnect();
 bool CFgetString(FBFR32 *fb, FLDID32 fieldid, FLDOCC32 oc, char *buf, size_t size);
 
 #endif

@@ -26,8 +26,57 @@
  * Handlers
  */
 LONG H_DomainInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
+LONG H_QueueInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
 LONG H_QueuesList(const TCHAR *param, const TCHAR *arg, StringList *value);
 LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value);
+
+/**
+ * Connect count
+ */
+static int s_connectCount = 0;
+static MUTEX s_connectLock = MutexCreate();
+
+/**
+ * Connect to Tuxedo app
+ */
+bool TuxedoConnect()
+{
+   bool success = true;
+   MutexLock(s_connectLock);
+   if (s_connectCount == 0)
+   {
+      if (tpinit(NULL) != -1)
+      {
+         s_connectCount++;
+      }
+      else
+      {
+         AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%d)"), tperrno);
+         success = false;
+      }
+   }
+   else
+   {
+      s_connectCount++;
+   }
+   MutexUnlock(s_connectLock);
+   return success;
+}
+
+/**
+ * Disconnect from Tuxedo app
+ */
+void TuxedoDisconnect()
+{
+   MutexLock(s_connectLock);
+   if (s_connectCount > 0)
+   {
+      s_connectCount--;
+      if (s_connectCount == 0)
+         tpterm();
+   }
+   MutexUnlock(s_connectLock);
+}
 
 /**
  * Helper function to get string field
@@ -78,7 +127,15 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Tuxedo.Domain.Routes"), H_DomainInfo, _T("R"), DCI_DT_INT, _T("Tuxedo: bulletin board routing table entries") },
    { _T("Tuxedo.Domain.Servers"), H_DomainInfo, _T("S"), DCI_DT_INT, _T("Tuxedo: number of servers") },
    { _T("Tuxedo.Domain.Services"), H_DomainInfo, _T("s"), DCI_DT_INT, _T("Tuxedo: number of services") },
-   { _T("Tuxedo.Domain.State"), H_DomainInfo, _T("T"), DCI_DT_STRING, _T("Tuxedo domain state") }
+   { _T("Tuxedo.Domain.State"), H_DomainInfo, _T("T"), DCI_DT_STRING, _T("Tuxedo domain state") },
+   { _T("Tuxedo.Queue.Machine(*)"), H_QueueInfo, _T("M"), DCI_DT_STRING, _T("Tuxedo queue {instance}: hosting machine") },
+   { _T("Tuxedo.Queue.RequestsCurrent(*)"), H_QueueInfo, _T("r"), DCI_DT_STRING, _T("Tuxedo queue {instance}: current requests queued") },
+   { _T("Tuxedo.Queue.RequestsTotal(*)"), H_QueueInfo, _T("R"), DCI_DT_STRING, _T("Tuxedo queue {instance}: total requests queued") },
+   { _T("Tuxedo.Queue.Server(*)"), H_QueueInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo queue {instance}: server executable") },
+   { _T("Tuxedo.Queue.ServerCount(*)"), H_QueueInfo, _T("C"), DCI_DT_STRING, _T("Tuxedo queue {instance}: server count") },
+   { _T("Tuxedo.Queue.State(*)"), H_QueueInfo, _T("s"), DCI_DT_STRING, _T("Tuxedo queue {instance} state") },
+   { _T("Tuxedo.Queue.WorkloadsCurrent(*)"), H_QueueInfo, _T("w"), DCI_DT_STRING, _T("Tuxedo queue {instance}: current workloads queued") },
+   { _T("Tuxedo.Queue.WorkloadsTotal(*)"), H_QueueInfo, _T("W"), DCI_DT_STRING, _T("Tuxedo queue {instance}: total workloads queued") }
 };
 
 /**

@@ -44,19 +44,10 @@ static void QueryDomainInfo()
 {
    s_validData = false;
 
-   if (!tpinit(NULL))
-   {
-      AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%d)"), errno);
+   if (!TuxedoConnect())
       return;
-   }
 
 	FBFR32 *fb = (FBFR32 *)tpalloc("FML32", NULL, 4096);
-   if (fb == NULL)
-   {
-      AgentWriteDebugLog(3, _T("Tuxedo: Falloc32() call failed (%d)"), errno);
-      return;
-   }
-
 	CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
 	CFchg32(fb, TA_CLASS, 0, (char *)"T_DOMAIN", 0, FLD_STRING);
 
@@ -81,6 +72,7 @@ static void QueryDomainInfo()
 
    tpfree((char *)rsp);
    tpfree((char *)fb);
+   TuxedoDisconnect();
 }
 
 /**
