@@ -29,6 +29,9 @@ LONG H_DomainInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
 LONG H_QueueInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
 LONG H_QueuesList(const TCHAR *param, const TCHAR *arg, StringList *value);
 LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value);
+LONG H_ServiceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
+LONG H_ServicesList(const TCHAR *param, const TCHAR *arg, StringList *value);
+LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value);
 
 /**
  * Connect count
@@ -135,7 +138,11 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Tuxedo.Queue.ServerCount(*)"), H_QueueInfo, _T("C"), DCI_DT_STRING, _T("Tuxedo queue {instance}: server count") },
    { _T("Tuxedo.Queue.State(*)"), H_QueueInfo, _T("s"), DCI_DT_STRING, _T("Tuxedo queue {instance} state") },
    { _T("Tuxedo.Queue.WorkloadsCurrent(*)"), H_QueueInfo, _T("w"), DCI_DT_STRING, _T("Tuxedo queue {instance}: current workloads queued") },
-   { _T("Tuxedo.Queue.WorkloadsTotal(*)"), H_QueueInfo, _T("W"), DCI_DT_STRING, _T("Tuxedo queue {instance}: total workloads queued") }
+   { _T("Tuxedo.Queue.WorkloadsTotal(*)"), H_QueueInfo, _T("W"), DCI_DT_STRING, _T("Tuxedo queue {instance}: total workloads queued") },
+   { _T("Tuxedo.Service.Load(*)"), H_ServiceInfo, _T("L"), DCI_DT_INT, _T("Tuxedo service {instance} load") },
+   { _T("Tuxedo.Service.Priority(*)"), H_ServiceInfo, _T("P"), DCI_DT_INT, _T("Tuxedo service {instance} priority") },
+   { _T("Tuxedo.Service.RoutingName(*)"), H_ServiceInfo, _T("R"), DCI_DT_STRING, _T("Tuxedo service {instance} routing name") },
+   { _T("Tuxedo.Service.State(*)"), H_ServiceInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo service {instance} state") }
 };
 
 /**
@@ -143,7 +150,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-   { _T("Tuxedo.Queues"), H_QueuesList, NULL }
+   { _T("Tuxedo.Queues"), H_QueuesList, NULL },
+   { _T("Tuxedo.Services"), H_ServicesList, NULL }
 };
 
 /**
@@ -151,7 +159,8 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
-   { _T("Tuxedo.Queues"), H_QueuesTable, NULL, _T("NAME"), _T("Tuxedo queues") }
+   { _T("Tuxedo.Queues"), H_QueuesTable, NULL, _T("NAME"), _T("Tuxedo queues") },
+   { _T("Tuxedo.Services"), H_ServicesTable, NULL, _T("NAME"), _T("Tuxedo services") }
 };
 
 /**
