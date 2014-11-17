@@ -229,7 +229,7 @@ typedef int bool;
 
 typedef UINT64 QWORD;   // for compatibility
 typedef int socklen_t;
-typedef DWORD pid_t;
+typedef long pid_t;
 typedef LONG ssize_t;
 
 typedef signed __int8 int8_t;
