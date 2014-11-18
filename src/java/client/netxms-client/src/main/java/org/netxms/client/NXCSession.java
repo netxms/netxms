@@ -2227,10 +2227,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @param requiredClass required object class
     * @return Object with given ID or null if object cannot be found or is not an instance of required class
     */
-   public AbstractObject findObjectById(final long id, final Class<? extends AbstractObject> requiredClass)
+   public <T extends AbstractObject> T findObjectById(final long id, final Class<T> requiredClass)
    {
       AbstractObject object = findObjectById(id);
-      return requiredClass.isInstance(object) ? object : null;
+      //noinspection unchecked
+      return requiredClass.isInstance(object) ? (T) object : null;
    }
 
    /**
