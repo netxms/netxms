@@ -30,34 +30,30 @@
 #include <netdb.h>
 #endif
 
-
-//
-// Constants
-//
-
 #define MAX_LINE_SIZE      4096
 
-#define CMD_GET            0
-#define CMD_LIST           1
-#define CMD_CHECK_SERVICE  2
-#define CMD_GET_PARAMS     3
-#define CMD_GET_CONFIG     4
-#define CMD_TABLE          5
-#define CMD_GET_SCREENSHOT 6
+/**
+ * Operations
+ */
+enum Operation
+{
+   CMD_GET            = 0,
+   CMD_LIST           = 1,
+   CMD_CHECK_SERVICE  = 2,
+   CMD_GET_PARAMS     = 3,
+   CMD_GET_CONFIG     = 4,
+   CMD_TABLE          = 5,
+   CMD_GET_SCREENSHOT = 6
+};
 
+/**
+ * Verbose flag
+ */
+static BOOL s_verbose = TRUE;
 
-//
-// Static data
-//
-
-static int m_iAuthMethod = AUTH_NONE;
-static BOOL m_bVerbose = TRUE;
-
-
-//
-// Get single parameter
-//
-
+/**
+ * Get single parameter
+ */
 static int Get(AgentConnection *pConn, const TCHAR *pszParam, BOOL bShowName)
 {
    UINT32 dwError;
@@ -110,16 +106,28 @@ static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
    UINT32 rcc = pConn->getTable(pszParam, &table);
    if (rcc == ERR_SUCCESS)
    {
+      // calculate column widths and print headers
+      int *widths = (int *)calloc(table->getNumColumns(), sizeof(int));
+		_puttc(_T('|'), stdout);
 		for(int c = 0; c < table->getNumColumns(); c++)
 		{
-			_tprintf(_T("%-16s |"), table->getColumnName(c));
-		}
+         widths[c] = (int)_tcslen(table->getColumnName(c));
+   		for(int i = 0; i < table->getNumRows(); i++)
+         {
+            int len = (int)_tcslen(table->getAsString(i, c));
+            if (len > widths[c])
+               widths[c] = len;
+         }
+			_tprintf(_T(" %*s |"), -widths[c], table->getColumnName(c));
+      }
+
 		_puttc(_T('\n'), stdout);
 		for(int i = 0; i < table->getNumRows(); i++)
 		{
+   		_puttc(_T('|'), stdout);
 			for(int j = 0; j < table->getNumColumns(); j++)
 			{
-				_tprintf(_T("%-16s |"), table->getAsString(i, j));
+				_tprintf(_T(" %*s |"), -widths[j], table->getAsString(i, j));
 			}
 			_puttc(_T('\n'), stdout);
 		}
@@ -135,12 +143,12 @@ static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
 /**
  * Check network service state
  */
-static int CheckService(AgentConnection *pConn, int iServiceType, UINT32 dwServiceAddr,
+static int CheckService(AgentConnection *pConn, int serviceType, UINT32 dwServiceAddr,
                         WORD wProto, WORD wPort, const TCHAR *pszRequest, const TCHAR *pszResponse)
 {
    UINT32 dwStatus, dwError;
 
-   dwError = pConn->checkNetworkService(&dwStatus, dwServiceAddr, iServiceType, wPort,
+   dwError = pConn->checkNetworkService(&dwStatus, dwServiceAddr, serviceType, wPort,
                                         wProto, pszRequest, pszResponse);
    if (dwError == ERR_SUCCESS)
    {
@@ -250,19 +258,20 @@ static int GetScreenshot(AgentConnection *pConn, const char *sessionName, const 
 int main(int argc, char *argv[])
 {
    char *eptr;
-   BOOL bStart = TRUE, bBatchMode = FALSE, bShowNames = FALSE, bUseProxy = FALSE;
-   int i, ch, iPos, iExitCode = 3, iCommand = CMD_GET, iInterval = 0;
-   int iAuthMethod = AUTH_NONE, iProxyAuth = AUTH_NONE, iServiceType = NETSRV_SSH;
+   BOOL start = TRUE, batchMode = FALSE, showNames = FALSE, useProxy = FALSE;
+   int i, ch, iPos, iExitCode = 3, iInterval = 0;
+   int authMethod = AUTH_NONE, proxyAuth = AUTH_NONE, serviceType = NETSRV_SSH;
 #ifdef _WITH_ENCRYPTION
    int iEncryptionPolicy = ENCRYPTION_ALLOWED;
 #else
    int iEncryptionPolicy = ENCRYPTION_DISABLED;
 #endif
-   WORD wAgentPort = AGENT_LISTEN_PORT, wProxyPort = AGENT_LISTEN_PORT;
+   Operation operation = CMD_GET;
+   WORD agentPort = AGENT_LISTEN_PORT, proxyPort = AGENT_LISTEN_PORT;
    WORD wServicePort = 0, wServiceProto = 0;
    UINT32 dwTimeout = 5000, dwConnTimeout = 30000, dwServiceAddr = 0, dwError, dwAddr, dwProxyAddr;
    TCHAR szSecret[MAX_SECRET_LENGTH] = _T(""), szRequest[MAX_DB_STRING] = _T("");
-   TCHAR szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS, szResponse[MAX_DB_STRING] = _T("");
+   TCHAR keyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS, szResponse[MAX_DB_STRING] = _T("");
    char szProxy[MAX_OBJECT_NAME] = "";
 	TCHAR szProxySecret[MAX_SECRET_LENGTH] = _T("");
    RSA *pServerKey = NULL;
@@ -324,8 +333,8 @@ int main(int argc, char *argv[])
                      _T("   -W <seconds> : Set connection timeout (default is 30 seconds).\n")
                      _T("   -X <addr>    : Use proxy agent at given address.\n")
                      _T("   -Z <secret>  : Shared secret for proxy agent authentication.\n")
-                     _T("\n"), wAgentPort, wAgentPort);
-            bStart = FALSE;
+                     _T("\n"), agentPort, agentPort);
+            start = FALSE;
             break;
          case 'a':   // Auth method
          case 'A':
@@ -340,22 +349,22 @@ int main(int argc, char *argv[])
             else
             {
                printf("Invalid authentication method \"%s\"\n", optarg);
-               bStart = FALSE;
+               start = FALSE;
             }
             if (ch == 'a')
-               iAuthMethod = i;
+               authMethod = i;
             else
-               iProxyAuth = i;
+               proxyAuth = i;
             break;
          case 'b':   // Batch mode
-            bBatchMode = TRUE;
+            batchMode = TRUE;
             break;
          case 'i':   // Interval
             i = strtol(optarg, &eptr, 0);
             if ((*eptr != 0) || (i <= 0))
             {
                printf("Invalid interval \"%s\"\n", optarg);
-               bStart = FALSE;
+               start = FALSE;
             }
             else
             {
@@ -363,22 +372,22 @@ int main(int argc, char *argv[])
             }
             break;
          case 'E':
-            iCommand = CMD_GET_SCREENSHOT;
+            operation = CMD_GET_SCREENSHOT;
             break;
          case 'I':
-            iCommand = CMD_GET_PARAMS;
+            operation = CMD_GET_PARAMS;
             break;
          case 'C':
-            iCommand = CMD_GET_CONFIG;
+            operation = CMD_GET_CONFIG;
             break;
          case 'l':
-            iCommand = CMD_LIST;
+            operation = CMD_LIST;
             break;
          case 'T':
-            iCommand = CMD_TABLE;
+            operation = CMD_TABLE;
             break;
          case 'n':   // Show names
-            bShowNames = TRUE;
+            showNames = TRUE;
             break;
          case 'p':   // Agent's port number
          case 'P':   // Port number for service check
@@ -387,20 +396,20 @@ int main(int argc, char *argv[])
             if ((*eptr != 0) || (i < 0) || (i > 65535))
             {
                printf("Invalid port number \"%s\"\n", optarg);
-               bStart = FALSE;
+               start = FALSE;
             }
             else
             {
                if (ch == 'p')
-                  wAgentPort = (WORD)i;
+                  agentPort = (WORD)i;
                else if (ch == 'O')
-                  wProxyPort = (WORD)i;
+                  proxyPort = (WORD)i;
                else
                   wServicePort = (WORD)i;
             }
             break;
          case 'q':   // Quiet mode
-            m_bVerbose = FALSE;
+            s_verbose = FALSE;
             break;
          case 'r':   // Service check request string
 #ifdef UNICODE
@@ -427,54 +436,54 @@ int main(int argc, char *argv[])
 #endif
             break;
          case 'S':   // Check service
-            iCommand = CMD_CHECK_SERVICE;
+            operation = CMD_CHECK_SERVICE;
             dwServiceAddr = ntohl(inet_addr(optarg));
             if ((dwServiceAddr == INADDR_NONE) || (dwServiceAddr == INADDR_ANY))
             {
                _tprintf(_T("Invalid IP address \"%hs\"\n"), optarg);
-               bStart = FALSE;
+               start = FALSE;
             }
             break;
          case 't':   // Service type
-            iServiceType = strtol(optarg, &eptr, 0);
+            serviceType = strtol(optarg, &eptr, 0);
             if (*eptr != 0)
             {
 					if (!stricmp(optarg, "custom"))
 					{
-						iServiceType = NETSRV_CUSTOM;
+						serviceType = NETSRV_CUSTOM;
 					}
 					else if (!stricmp(optarg, "ftp"))
 					{
-						iServiceType = NETSRV_FTP;
+						serviceType = NETSRV_FTP;
 					}
 					else if (!stricmp(optarg, "http"))
 					{
-						iServiceType = NETSRV_HTTP;
+						serviceType = NETSRV_HTTP;
 					}
 					else if (!stricmp(optarg, "https"))
 					{
-						iServiceType = NETSRV_HTTPS;
+						serviceType = NETSRV_HTTPS;
 					}
 					else if (!stricmp(optarg, "pop3"))
 					{
-						iServiceType = NETSRV_POP3;
+						serviceType = NETSRV_POP3;
 					}
 					else if (!stricmp(optarg, "smtp"))
 					{
-						iServiceType = NETSRV_SMTP;
+						serviceType = NETSRV_SMTP;
 					}
 					else if (!stricmp(optarg, "ssh"))
 					{
-						iServiceType = NETSRV_SSH;
+						serviceType = NETSRV_SSH;
 					}
 					else if (!stricmp(optarg, "telnet"))
 					{
-						iServiceType = NETSRV_TELNET;
+						serviceType = NETSRV_TELNET;
 					}
 					else
 					{
 						_tprintf(_T("Invalid service type \"%hs\"\n"), optarg);
-						bStart = FALSE;
+						start = FALSE;
 					}
             }
             break;
@@ -483,7 +492,7 @@ int main(int argc, char *argv[])
             if ((*eptr != 0) || (i < 0) || (i > 65535))
             {
                _tprintf(_T("Invalid protocol number \"%hs\"\n"), optarg);
-               bStart = FALSE;
+               start = FALSE;
             }
             else
             {
@@ -492,14 +501,14 @@ int main(int argc, char *argv[])
             break;
          case 'v':   // Print version and exit
             _tprintf(_T("NetXMS GET command-line utility Version ") NETXMS_VERSION_STRING _T("\n"));
-            bStart = FALSE;
+            start = FALSE;
             break;
          case 'w':   // Command timeout
             i = strtol(optarg, &eptr, 0);
             if ((*eptr != 0) || (i < 1) || (i > 120))
             {
                _tprintf(_T("Invalid timeout \"%hs\"\n"), optarg);
-               bStart = FALSE;
+               start = FALSE;
             }
             else
             {
@@ -511,7 +520,7 @@ int main(int argc, char *argv[])
             if ((*eptr != 0) || (i < 1) || (i > 120))
             {
                printf("Invalid timeout \"%s\"\n", optarg);
-               bStart = FALSE;
+               start = FALSE;
             }
             else
             {
@@ -525,28 +534,28 @@ int main(int argc, char *argv[])
                 (iEncryptionPolicy > 3))
             {
                printf("Invalid encryption policy %d\n", iEncryptionPolicy);
-               bStart = FALSE;
+               start = FALSE;
             }
             break;
          case 'K':
 #ifdef UNICODE
-	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szKeyFile, MAX_PATH);
-				szKeyFile[MAX_PATH - 1] = 0;
+	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, keyFile, MAX_PATH);
+				keyFile[MAX_PATH - 1] = 0;
 #else
-            nx_strncpy(szKeyFile, optarg, MAX_PATH);
+            nx_strncpy(keyFile, optarg, MAX_PATH);
 #endif
             break;
 #else
          case 'e':
          case 'K':
             printf("ERROR: This tool was compiled without encryption support\n");
-            bStart = FALSE;
+            start = FALSE;
             break;
 #endif
          case 'X':   // Use proxy
             strncpy(szProxy, optarg, MAX_OBJECT_NAME);
 				szProxy[MAX_OBJECT_NAME - 1] = 0;
-            bUseProxy = TRUE;
+            useProxy = TRUE;
             break;
          case 'Z':   // Shared secret for proxy agent
 #ifdef UNICODE
@@ -557,7 +566,7 @@ int main(int argc, char *argv[])
 #endif
             break;
          case '?':
-            bStart = FALSE;
+            start = FALSE;
             break;
          default:
             break;
@@ -565,44 +574,44 @@ int main(int argc, char *argv[])
    }
 
    // Check parameter correctness
-   if (bStart)
+   if (start)
    {
-      if (argc - optind < (((iCommand == CMD_CHECK_SERVICE) || (iCommand == CMD_GET_PARAMS) || (iCommand == CMD_GET_CONFIG)) ? 1 : 2))
+      if (argc - optind < (((operation == CMD_CHECK_SERVICE) || (operation == CMD_GET_PARAMS) || (operation == CMD_GET_CONFIG)) ? 1 : 2))
       {
          printf("Required argument(s) missing.\nUse nxget -h to get complete command line syntax.\n");
-         bStart = FALSE;
+         start = FALSE;
       }
-      else if ((iAuthMethod != AUTH_NONE) && (szSecret[0] == 0))
+      else if ((authMethod != AUTH_NONE) && (szSecret[0] == 0))
       {
          printf("Shared secret not specified or empty\n");
-         bStart = FALSE;
+         start = FALSE;
       }
 
       // Load server key if requested
 #ifdef _WITH_ENCRYPTION
-      if ((iEncryptionPolicy != ENCRYPTION_DISABLED) && bStart)
+      if ((iEncryptionPolicy != ENCRYPTION_DISABLED) && start)
       {
          if (InitCryptoLib(0xFFFF, NULL))
          {
-            pServerKey = LoadRSAKeys(szKeyFile);
+            pServerKey = LoadRSAKeys(keyFile);
             if (pServerKey == NULL)
             {
-               _tprintf(_T("Error loading RSA keys from \"%s\"\n"), szKeyFile);
+               _tprintf(_T("Error loading RSA keys from \"%s\"\n"), keyFile);
                if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
-                  bStart = FALSE;
+                  start = FALSE;
             }
          }
          else
          {
             printf("Error initializing cryptografy module\n");
             if (iEncryptionPolicy == ENCRYPTION_REQUIRED)
-               bStart = FALSE;
+               start = FALSE;
          }
       }
 #endif
 
       // If everything is ok, start communications
-      if (bStart)
+      if (start)
       {
          // Initialize WinSock
 #ifdef _WIN32
@@ -610,30 +619,30 @@ int main(int argc, char *argv[])
          WSAStartup(2, &wsaData);
 #endif
          dwAddr = ResolveHostNameA(argv[optind]);
-         if (bUseProxy)
+         if (useProxy)
             dwProxyAddr = ResolveHostNameA(szProxy);
          if ((dwAddr == INADDR_ANY) || (dwAddr == INADDR_NONE))
          {
             fprintf(stderr, "Invalid host name or address \"%s\"\n", argv[optind]);
          }
-         else if (bUseProxy && ((dwProxyAddr == INADDR_ANY) || (dwProxyAddr == INADDR_NONE)))
+         else if (useProxy && ((dwProxyAddr == INADDR_ANY) || (dwProxyAddr == INADDR_NONE)))
          {
             fprintf(stderr, "Invalid host name or address \"%s\"\n", szProxy);
          }
          else
          {
-            AgentConnection conn(dwAddr, wAgentPort, iAuthMethod, szSecret);
+            AgentConnection conn(dwAddr, agentPort, authMethod, szSecret);
 
 				conn.setConnectionTimeout(dwConnTimeout);
             conn.setCommandTimeout(dwTimeout);
             conn.setEncryptionPolicy(iEncryptionPolicy);
-            if (bUseProxy)
-               conn.setProxy(dwProxyAddr, wProxyPort, iProxyAuth, szProxySecret);
-            if (conn.connect(pServerKey, m_bVerbose, &dwError))
+            if (useProxy)
+               conn.setProxy(dwProxyAddr, proxyPort, proxyAuth, szProxySecret);
+            if (conn.connect(pServerKey, s_verbose, &dwError))
             {
                do
                {
-                  switch(iCommand)
+                  switch(operation)
                   {
                      case CMD_GET:
                         iPos = optind + 1;
@@ -641,12 +650,12 @@ int main(int argc, char *argv[])
                         {
 #ifdef UNICODE
 									wcValue = WideStringFromMBString(argv[iPos++]);
-                           iExitCode = Get(&conn, wcValue, bShowNames);
+                           iExitCode = Get(&conn, wcValue, showNames);
 									free(wcValue);
 #else
-                           iExitCode = Get(&conn, argv[iPos++], bShowNames);
+                           iExitCode = Get(&conn, argv[iPos++], showNames);
 #endif
-                        } while((iExitCode == 0) && (bBatchMode) && (iPos < argc));
+                        } while((iExitCode == 0) && (batchMode) && (iPos < argc));
                         break;
                      case CMD_LIST:
 #ifdef UNICODE
@@ -667,7 +676,7 @@ int main(int argc, char *argv[])
 #endif
                         break;
                      case CMD_CHECK_SERVICE:
-                        iExitCode = CheckService(&conn, iServiceType, dwServiceAddr,
+                        iExitCode = CheckService(&conn, serviceType, dwServiceAddr,
                                                  wServiceProto, wServicePort, szRequest, szResponse);
                         break;
                      case CMD_GET_PARAMS:
