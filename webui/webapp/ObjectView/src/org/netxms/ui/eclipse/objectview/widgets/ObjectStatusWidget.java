@@ -27,23 +27,24 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 
 /**
- * Widget representing node status
+ * Widget representing object status
  */
-public class NodeStatusWidget extends Canvas implements PaintListener
+public class ObjectStatusWidget extends Canvas implements PaintListener
 {
-	private AbstractNode node;
+	private AbstractObject object;
 	
 	/**
 	 * @param parent
 	 */
-	public NodeStatusWidget(Composite parent, AbstractNode node)
+	public ObjectStatusWidget(Composite parent, AbstractObject object)
 	{
 		super(parent, SWT.NONE);
-		this.node = node;
+		this.object = object;
 		addPaintListener(this);
 		setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 	}
@@ -63,20 +64,21 @@ public class NodeStatusWidget extends Canvas implements PaintListener
 		e.gc.setForeground(SharedColors.getColor(SharedColors.TEXT_NORMAL, getDisplay()));
 		e.gc.setLineWidth(1);
 
-		e.gc.setBackground(StatusDisplayInfo.getStatusColor(node.getStatus()));
+		e.gc.setBackground(StatusDisplayInfo.getStatusColor(object.getStatus()));
 		e.gc.setAlpha(127);
 		e.gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
 		e.gc.setAlpha(255);
 		e.gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
 		
-		final String text = node.getObjectName() + "\n" + node.getPrimaryIP().getHostAddress(); //$NON-NLS-1$
+		final String text = (object instanceof AbstractNode) ?
+		      (object.getObjectName() + "\n" + object.getPrimaryIP().getHostAddress()) : //$NON-NLS-1$
+		      object.getObjectName();
 		
 		rect.x += 4;
 		rect.y += 4;
 		rect.width -= 8;
 		rect.height -= 8;
-		e.gc.setClipping(rect);
-		int h = e.gc.textExtent(text, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).y;
+		int h = e.gc.textExtent(text).y;
 		e.gc.drawText(text, rect.x, rect.y + (rect.height - h) / 2, SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER);
 	}
 
@@ -87,7 +89,7 @@ public class NodeStatusWidget extends Canvas implements PaintListener
 	public Point computeSize(int wHint, int hHint, boolean changed)
 	{
 		GC gc = new GC(getShell());
-		int h = gc.textExtent("MMM\nMMM", SWT.DRAW_TRANSPARENT | SWT.DRAW_DELIMITER).y; //$NON-NLS-1$
+		int h = gc.textExtent("MMM\nMMM").y; //$NON-NLS-1$
 		gc.dispose();
 		return new Point(160, h + 8);
 	}
@@ -95,9 +97,9 @@ public class NodeStatusWidget extends Canvas implements PaintListener
 	/**
 	 * @param node
 	 */
-	public void updateObject(AbstractNode node)
+	public void updateObject(AbstractObject object)
 	{
-		this.node = node;
+		this.object = object;
 		redraw();
 	}
 }

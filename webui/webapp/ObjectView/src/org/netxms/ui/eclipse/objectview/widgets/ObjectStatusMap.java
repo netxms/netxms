@@ -88,7 +88,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	private NXCSession session;
 	private Composite dataArea;
 	private List<Composite> sections = new ArrayList<Composite>();
-	private Map<Long, NodeStatusWidget> nodes = new HashMap<Long, NodeStatusWidget>();
+	private Map<Long, ObjectStatusWidget> statusWidgets = new HashMap<Long, ObjectStatusWidget>();
 	private ISelection selection = null;
 	private Set<ISelectionChangedListener> selectionListeners = new HashSet<ISelectionChangedListener>();
 	private MenuManager menuManager;
@@ -199,9 +199,9 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			s.dispose();
 		sections.clear();
 		
-		synchronized(nodes)
+		synchronized(statusWidgets)
 		{
-			nodes.clear();
+			statusWidgets.clear();
 		}
 		
 		if (groupObjects)
@@ -220,10 +220,11 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	private void buildFlatView()
 	{
 		AbstractObject root = session.findObjectById(rootObjectId);
-		if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot)))
+		if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster)))
 			return;
 		
-		List<AbstractObject> objects = new ArrayList<AbstractObject>(root.getAllChilds(AbstractObject.OBJECT_NODE));
+		List<AbstractObject> objects = 
+		      new ArrayList<AbstractObject>(root.getAllChilds(new int[] { AbstractObject.OBJECT_NODE, AbstractObject.OBJECT_CLUSTER }));
 		
 		// apply severity filter
 		if ((severityFilter & 0x1F) != 0x1F)
@@ -264,13 +265,12 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		clientArea.setLayout(clayout);
 		sections.add(clientArea);
 		
-		// Add nodes
 		for(AbstractObject o : objects)
 		{
-			if (!(o instanceof AbstractNode))
+			if (!((o instanceof AbstractNode) || (o instanceof Cluster)))
 				continue;
 
-			addNodeElement(clientArea, (AbstractNode)o);
+			addObjectElement(clientArea, o);
 		}
 	}
 	
@@ -280,7 +280,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	private void buildSection(long rootId, String namePrefix)
 	{
 		AbstractObject root = session.findObjectById(rootId);
-		if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot)))
+		if ((root == null) || !((root instanceof Container) || (root instanceof ServiceRoot) || (root instanceof Cluster)))
 			return;
 		
 		List<AbstractObject> objects = new ArrayList<AbstractObject>(Arrays.asList(root.getChildsAsArray()));
@@ -295,10 +295,10 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		Composite section = null;
 		Composite clientArea = null;
 		
-		// Add nodes
+		// Add nodes and clusters
 		for(AbstractObject o : objects)
 		{
-			if (!(o instanceof AbstractNode))
+			if (!((o instanceof AbstractNode) || (o instanceof Cluster)))
 				continue;
 			
 			if (((1 << o.getStatus().getValue()) & severityFilter) == 0)
@@ -342,13 +342,13 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 				sections.add(section);
 			}
 			
-			addNodeElement(clientArea, (AbstractNode)o);
+			addObjectElement(clientArea, o);
 		}
 		
 		// Add subcontainers
 		for(AbstractObject o : objects)
 		{
-			if (!(o instanceof Container) && !(o instanceof ServiceRoot))
+			if (!(o instanceof Container) && !(o instanceof ServiceRoot) && !(o instanceof Cluster))
 				continue;
 			
 			buildSection(o.getObjectId(), namePrefix + root.getObjectName() + " / "); //$NON-NLS-1$
@@ -356,11 +356,11 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	}
 	
 	/**
-	 * @param node
+	 * @param object
 	 */
-	private void addNodeElement(final Composite parent, final AbstractNode node)
+	private void addObjectElement(final Composite parent, final AbstractObject object)
 	{
-		NodeStatusWidget w = new NodeStatusWidget(parent, node);
+		ObjectStatusWidget w = new ObjectStatusWidget(parent, object);
 		w.setBackground(getBackground());
 		w.addMouseListener(new MouseListener() {
 			@Override
@@ -371,9 +371,9 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			@Override
 			public void mouseDown(MouseEvent e)
 			{
-				setSelection(new StructuredSelection(node));
+				setSelection(new StructuredSelection(object));
 				if (e.button == 1)
-					callDetailsProvider(node);
+					callDetailsProvider(object);
 			}
 			
 			@Override
@@ -390,9 +390,9 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		if (viewPart != null)
 			viewPart.getSite().registerContextMenu(menuManager, this);
 		
-		synchronized(nodes)
+		synchronized(statusWidgets)
 		{
-			nodes.put(node.getObjectId(), w);
+			statusWidgets.put(object.getObjectId(), w);
 		}
 	}
 
@@ -488,13 +488,13 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	 * 
 	 * @param node
 	 */
-	private void callDetailsProvider(AbstractNode node)
+	private void callDetailsProvider(AbstractObject object)
 	{
 		for(ObjectDetailsProvider p : detailsProviders.values())
 		{
-			if (p.canProvideDetails(node))
+			if (p.canProvideDetails(object))
 			{
-				p.provideDetails(node, viewPart);
+				p.provideDetails(object, viewPart);
 				break;
 			}
 		}
@@ -508,9 +508,9 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 		if (!((object instanceof AbstractNode) || (object instanceof Container) || (object instanceof Cluster) || (object instanceof ServiceRoot)))
 			return;
 		
-		synchronized(nodes)
+		synchronized(statusWidgets)
 		{
-			final NodeStatusWidget w = nodes.get(object.getObjectId());
+			final ObjectStatusWidget w = statusWidgets.get(object.getObjectId());
 			if (w != null)
 			{
 				getDisplay().asyncExec(new Runnable() {
@@ -518,7 +518,7 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 					public void run()
 					{
 						if (!w.isDisposed())
-							w.updateObject((AbstractNode)object);
+							w.updateObject(object);
 					}
 				});
 			}
@@ -541,9 +541,9 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 	 */
 	private void onObjectDelete(long objectId)
 	{
-		synchronized(nodes)
+		synchronized(statusWidgets)
 		{
-			if (nodes.containsKey(objectId))
+			if (statusWidgets.containsKey(objectId))
 			{
 				getDisplay().asyncExec(new Runnable() {
 					@Override

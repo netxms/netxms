@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.netxms.api.client.services.ServiceManager;
+import org.netxms.base.CompatTools;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -536,13 +537,13 @@ public abstract class AbstractObject
 		}
 		return list;
 	}
-
+	
 	/**
 	 * Internal worker function for getAllChilds
 	 * @param classFilter class filter
 	 * @param set result set
 	 */
-	private void getAllChildsInternal(int classFilter, Set<AbstractObject> set)
+	private void getAllChildsInternal(int[] classFilter, Set<AbstractObject> set)
 	{
 		synchronized(children)
 		{
@@ -552,7 +553,7 @@ public abstract class AbstractObject
 				AbstractObject obj = session.findObjectById(it.next());
 				if (obj != null)
 				{
-					if ((classFilter == -1) || (obj.getObjectClass() == classFilter))
+					if ((classFilter == null) || CompatTools.arrayContains(classFilter, obj.getObjectClass()))
 						set.add(obj);
 					obj.getAllChildsInternal(classFilter, set);
 				}
@@ -569,16 +570,29 @@ public abstract class AbstractObject
 	public Set<AbstractObject> getAllChilds(int classFilter)
 	{
 		Set<AbstractObject> result = new HashSet<AbstractObject>();
-		getAllChildsInternal(classFilter, result);
+		getAllChildsInternal((classFilter < 0) ? null : new int[] { classFilter }, result);
 		return result;
 	}
+
+   /**
+    * Get all child objects, direct and indirect
+    * 
+    * @param classFilter null to get all childs, or NetXMS class id(s) to retrieve objects of given class(es)
+    * @return set of child objects
+    */
+   public Set<AbstractObject> getAllChilds(int[] classFilter)
+   {
+      Set<AbstractObject> result = new HashSet<AbstractObject>();
+      getAllChildsInternal(classFilter, result);
+      return result;
+   }
 
 	/**
 	 * Internal worker function for getAllParents
 	 * @param classFilter class filter
 	 * @param set result set
 	 */
-	private void getAllParentsInternal(int classFilter, Set<AbstractObject> set)
+	private void getAllParentsInternal(int[] classFilter, Set<AbstractObject> set)
 	{
 		synchronized(parents)
 		{
@@ -588,7 +602,7 @@ public abstract class AbstractObject
 				AbstractObject obj = session.findObjectById(it.next());
 				if (obj != null)
 				{
-					if ((classFilter == -1) || (obj.getObjectClass() == classFilter))
+					if ((classFilter == null) || CompatTools.arrayContains(classFilter, obj.getObjectClass()))
 						set.add(obj);
 					obj.getAllParentsInternal(classFilter, set);
 				}
@@ -605,9 +619,22 @@ public abstract class AbstractObject
 	public Set<AbstractObject> getAllParents(int classFilter)
 	{
 		Set<AbstractObject> result = new HashSet<AbstractObject>();
-		getAllParentsInternal(classFilter, result);
+		getAllParentsInternal((classFilter < 0) ? null : new int[] { classFilter }, result);
 		return result;
 	}
+
+   /**
+    * Get all parent objects, direct and indirect
+    * 
+    * @param classFilter null to get all parents, or NetXMS class id(s) to retrieve objects of given class(es)
+    * @return set of parent objects
+    */
+   public Set<AbstractObject> getAllParents(int[] classFilter)
+   {
+      Set<AbstractObject> result = new HashSet<AbstractObject>();
+      getAllParentsInternal(classFilter, result);
+      return result;
+   }
 
 	/**
 	 * @return List of trusted nodes

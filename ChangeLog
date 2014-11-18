@@ -11,6 +11,7 @@
 - New parameters in Windows agent: System.Update.LastDetectTime, System.Update.LastDownloadTime, System.Update.LastInstallTime
 - Management console:
     - New dashboard element "DCI summary table"
+    - Cluster objects shown on status maps
 - Fixed issues: #634, #667, #673, #674, #675, #678, #684
 
 

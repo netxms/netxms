@@ -51,4 +51,19 @@ public class CompatTools
       System.arraycopy(source, 0, dst, 0, Math.min(source.length, newLength));
       return dst;
 	}
+	
+	/**
+	 * Check if array contains given value
+	 * 
+	 * @param array
+	 * @param value
+	 * @return
+	 */
+	public static boolean arrayContains(int[] array, int value)
+	{
+	   for(int i = 0; i < array.length; i++)
+	      if (array[i] == value)
+	         return true;
+	   return false;
+	}
 }
