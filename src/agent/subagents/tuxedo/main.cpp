@@ -25,6 +25,9 @@
 /**
  * Handlers
  */
+LONG H_ClientInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
+LONG H_ClientsList(const TCHAR *param, const TCHAR *arg, StringList *value);
+LONG H_ClientsTable(const TCHAR *param, const TCHAR *arg, Table *value);
 LONG H_DomainInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
 LONG H_MachineInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
 LONG H_MachinesList(const TCHAR *param, const TCHAR *arg, StringList *value);
@@ -129,6 +132,11 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
+   { _T("Tuxedo.Client.ActiveConversations(*)"), H_ClientInfo, _T("a"), DCI_DT_INT, _T("Tuxedo client {instance}: active conversations") },
+   { _T("Tuxedo.Client.ActiveRequests(*)"), H_ClientInfo, _T("A"), DCI_DT_INT, _T("Tuxedo client {instance} machine") },
+   { _T("Tuxedo.Client.Machine(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo client {instance} name") },
+   { _T("Tuxedo.Client.Name(*)"), H_ClientInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo client {instance} name") },
+   { _T("Tuxedo.Client.State(*)"), H_ClientInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo client {instance} state") },
 	{ _T("Tuxedo.Domain.ID"), H_DomainInfo, _T("I"), DCI_DT_STRING, _T("Tuxedo domain ID") },
    { _T("Tuxedo.Domain.Master"), H_DomainInfo, _T("M"), DCI_DT_STRING, _T("Tuxedo domain master/backup machines") },
    { _T("Tuxedo.Domain.Model"), H_DomainInfo, _T("m"), DCI_DT_STRING, _T("Tuxedo domain model") },
@@ -181,6 +189,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
+   { _T("Tuxedo.Clients"), H_ClientsList, NULL },
    { _T("Tuxedo.Machines"), H_MachinesList, NULL },
    { _T("Tuxedo.Queues"), H_QueuesList, NULL },
    { _T("Tuxedo.Servers"), H_ServersList, NULL },
@@ -192,6 +201,7 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
+   { _T("Tuxedo.Clients"), H_ClientsTable, NULL, _T("ID"), _T("Tuxedo clients") },
    { _T("Tuxedo.Machines"), H_MachinesTable, NULL, _T("ID"), _T("Tuxedo machines") },
    { _T("Tuxedo.Queues"), H_QueuesTable, NULL, _T("NAME"), _T("Tuxedo queues") },
    { _T("Tuxedo.Servers"), H_ServersTable, NULL, _T("ID"), _T("Tuxedo servers") },
