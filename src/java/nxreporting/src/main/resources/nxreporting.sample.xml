@@ -1,6 +1,6 @@
 <config>
-    <workspace>/Users/alk/Development/nxreporting/workspace</workspace>
-    <netxmsdConfig>/opt/netxms/etc//netxmsd.conf</netxmsdConfig>
+  <workspace>/opt/nxreporting/workspace</workspace>
+    <netxmsdConfig>/opt/netxms/etc/netxmsd.conf</netxmsdConfig>
     <datasources>
         <datasource>
             <id>secondary</id>
