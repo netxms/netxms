@@ -29,6 +29,9 @@ LONG H_DomainInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
 LONG H_QueueInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
 LONG H_QueuesList(const TCHAR *param, const TCHAR *arg, StringList *value);
 LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value);
+LONG H_ServerInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
+LONG H_ServersList(const TCHAR *param, const TCHAR *arg, StringList *value);
+LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value);
 LONG H_ServiceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
 LONG H_ServicesList(const TCHAR *param, const TCHAR *arg, StringList *value);
 LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value);
@@ -139,6 +142,18 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Tuxedo.Queue.State(*)"), H_QueueInfo, _T("s"), DCI_DT_STRING, _T("Tuxedo queue {instance} state") },
    { _T("Tuxedo.Queue.WorkloadsCurrent(*)"), H_QueueInfo, _T("w"), DCI_DT_STRING, _T("Tuxedo queue {instance}: current workloads queued") },
    { _T("Tuxedo.Queue.WorkloadsTotal(*)"), H_QueueInfo, _T("W"), DCI_DT_STRING, _T("Tuxedo queue {instance}: total workloads queued") },
+   { _T("Tuxedo.Server.ActiveRequests(*)"), H_ServerInfo, _T("A"), DCI_DT_INT, _T("Tuxedo server {instance}: active requests") },
+   { _T("Tuxedo.Server.BaseID(*)"), H_ServerInfo, _T("B"), DCI_DT_INT, _T("Tuxedo server {instance} base ID") },
+   { _T("Tuxedo.Server.CommandLine(*)"), H_ServerInfo, _T("C"), DCI_DT_STRING, _T("Tuxedo server {instance}: command line") },
+   { _T("Tuxedo.Server.CurrentService(*)"), H_ServerInfo, _T("c"), DCI_DT_STRING, _T("Tuxedo server {instance}: current service") },
+   { _T("Tuxedo.Server.Generation(*)"), H_ServerInfo, _T("G"), DCI_DT_INT, _T("Tuxedo server {instance}: generation") },
+   { _T("Tuxedo.Server.Group(*)"), H_ServerInfo, _T("g"), DCI_DT_STRING, _T("Tuxedo server {instance}: server group") },
+   { _T("Tuxedo.Server.Machine(*)"), H_ServerInfo, _T("M"), DCI_DT_STRING, _T("Tuxedo server {instance}: machine ID") },
+   { _T("Tuxedo.Server.Name(*)"), H_ServerInfo, _T("N"), DCI_DT_STRING, _T("Tuxedo server {instance} name") },
+   { _T("Tuxedo.Server.PID(*)"), H_ServerInfo, _T("P"), DCI_DT_INT, _T("Tuxedo server {instance} process ID") },
+   { _T("Tuxedo.Server.ProcessedRequests(*)"), H_ServerInfo, _T("R"), DCI_DT_INT, _T("Tuxedo server {instance}: processed requests") },
+   { _T("Tuxedo.Server.ProcessedWorkloads(*)"), H_ServerInfo, _T("W"), DCI_DT_INT, _T("Tuxedo server {instance}: processed workloads") },
+   { _T("Tuxedo.Server.State(*)"), H_ServerInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo server {instance} state") },
    { _T("Tuxedo.Service.Load(*)"), H_ServiceInfo, _T("L"), DCI_DT_INT, _T("Tuxedo service {instance} load") },
    { _T("Tuxedo.Service.Priority(*)"), H_ServiceInfo, _T("P"), DCI_DT_INT, _T("Tuxedo service {instance} priority") },
    { _T("Tuxedo.Service.RoutingName(*)"), H_ServiceInfo, _T("R"), DCI_DT_STRING, _T("Tuxedo service {instance} routing name") },
@@ -151,6 +166,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
    { _T("Tuxedo.Queues"), H_QueuesList, NULL },
+   { _T("Tuxedo.Servers"), H_ServersList, NULL },
    { _T("Tuxedo.Services"), H_ServicesList, NULL }
 };
 
@@ -160,6 +176,7 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
    { _T("Tuxedo.Queues"), H_QueuesTable, NULL, _T("NAME"), _T("Tuxedo queues") },
+   { _T("Tuxedo.Servers"), H_ServersTable, NULL, _T("NAME"), _T("Tuxedo servers") },
    { _T("Tuxedo.Services"), H_ServicesTable, NULL, _T("NAME"), _T("Tuxedo services") }
 };
 

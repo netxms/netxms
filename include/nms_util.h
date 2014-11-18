@@ -168,6 +168,20 @@ inline TCHAR *_tcsdup_ex(const TCHAR *s)
 #endif
 
 /**
+ * String conversion helpers
+ */
+#ifdef __cplusplus
+extern "C" {
+#endif
+WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString);
+WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString);
+char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString);
+char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString);
+#ifdef __cplusplus
+}
+#endif
+
+/**
  * Class for serial communications
  */
 #ifdef __cplusplus
@@ -746,8 +760,13 @@ public:
    void set(int nCol, double dData) { setAt(getNumRows() - 1, nCol, dData); }
    void set(int nCol, INT64 nData) { setAt(getNumRows() - 1, nCol, nData); }
    void set(int nCol, UINT64 qwData) { setAt(getNumRows() - 1, nCol, qwData); }
-   void set(int nCol, const TCHAR *pszData) { setAt(getNumRows() - 1, nCol, pszData); }
-   void setPreallocated(int nCol, TCHAR *pszData) { setPreallocatedAt(getNumRows() - 1, nCol, pszData); }
+   void set(int nCol, const TCHAR *data) { setAt(getNumRows() - 1, nCol, data); }
+#ifdef UNICODE
+   void set(int nCol, const char *data) { setPreallocatedAt(getNumRows() - 1, nCol, WideStringFromMBString(data)); }
+#else
+   void set(int nCol, const WCHAR *data) { setPreallocatedAt(getNumRows() - 1, nCol, MBStringFromWideString(data)); }
+#endif
+   void setPreallocated(int nCol, TCHAR *data) { setPreallocatedAt(getNumRows() - 1, nCol, data); }
 
    void setStatusAt(int row, int col, int status);
    void setStatus(int col, int status) { setStatusAt(getNumRows() - 1, col, status); }
@@ -1298,11 +1317,6 @@ int LIBNETXMS_EXPORTABLE nx_vfwscanf(FILE *fp, const WCHAR *format, va_list args
 int LIBNETXMS_EXPORTABLE nx_vswscanf(const WCHAR *str, const WCHAR *format, va_list args);
 
 #endif	/* _WIN32 */
-
-WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString);
-WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString);
-char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString);
-char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString);
 
 #ifdef _WITH_ENCRYPTION
 WCHAR LIBNETXMS_EXPORTABLE *ERR_error_string_W(int nError, WCHAR *pwszBuffer);

@@ -182,13 +182,8 @@ LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value)
          value->addRow();
          TuxedoService *s = (TuxedoService *)services->get(i)->value;
          value->set(0, s->m_name);
-#ifdef UNICODE
-         value->setPreallocated(1, WideStringFromMBString(s->m_state));
-         value->setPreallocated(2, WideStringFromMBString(s->m_routingName));
-#else
          value->set(1, s->m_state);
          value->set(2, s->m_routingName);
-#endif
          value->set(3, s->m_load);
          value->set(4, s->m_priority);
       }

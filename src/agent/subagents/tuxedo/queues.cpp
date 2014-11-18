@@ -225,15 +225,9 @@ LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value)
          value->addRow();
          TuxedoQueue *q = (TuxedoQueue *)queues->get(i)->value;
          value->set(0, q->m_name);
-#ifdef UNICODE
-         value->setPreallocated(1, WideStringFromMBString(q->m_lmid));
-         value->setPreallocated(2, WideStringFromMBString(q->m_serverName));
-         value->setPreallocated(3, WideStringFromMBString(q->m_state));
-#else
          value->set(1, q->m_lmid);
          value->set(2, q->m_serverName);
          value->set(3, q->m_state);
-#endif
          value->set(4, q->m_serverCount);
          value->set(5, q->m_requestsTotal);
          value->set(6, q->m_requestsCurrent);

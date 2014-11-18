@@ -354,6 +354,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\servers.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\services.cpp"
 				>
 			</File>
