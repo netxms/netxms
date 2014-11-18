@@ -346,6 +346,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\machines.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>

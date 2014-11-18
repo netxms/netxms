@@ -26,6 +26,9 @@
  * Handlers
  */
 LONG H_DomainInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
+LONG H_MachineInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
+LONG H_MachinesList(const TCHAR *param, const TCHAR *arg, StringList *value);
+LONG H_MachinesTable(const TCHAR *param, const TCHAR *arg, Table *value);
 LONG H_QueueInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
 LONG H_QueuesList(const TCHAR *param, const TCHAR *arg, StringList *value);
 LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value);
@@ -134,6 +137,19 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("Tuxedo.Domain.Servers"), H_DomainInfo, _T("S"), DCI_DT_INT, _T("Tuxedo: number of servers") },
    { _T("Tuxedo.Domain.Services"), H_DomainInfo, _T("s"), DCI_DT_INT, _T("Tuxedo: number of services") },
    { _T("Tuxedo.Domain.State"), H_DomainInfo, _T("T"), DCI_DT_STRING, _T("Tuxedo domain state") },
+   { _T("Tuxedo.Machine.Accessers(*)"), H_MachineInfo, _T("A"), DCI_DT_INT, _T("Tuxedo machine {instance}: accessers") },
+   { _T("Tuxedo.Machine.Bridge(*)"), H_MachineInfo, _T("B"), DCI_DT_STRING, _T("Tuxedo machine {instance} bridge") },
+   { _T("Tuxedo.Machine.Clients(*)"), H_MachineInfo, _T("C"), DCI_DT_INT, _T("Tuxedo machine {instance}: clients") },
+   { _T("Tuxedo.Machine.Conversations(*)"), H_MachineInfo, _T("o"), DCI_DT_INT, _T("Tuxedo machine {instance}: conversations") },
+   { _T("Tuxedo.Machine.Load(*)"), H_MachineInfo, _T("L"), DCI_DT_INT, _T("Tuxedo machine {instance}: load") },
+   { _T("Tuxedo.Machine.PhysicalID(*)"), H_MachineInfo, _T("P"), DCI_DT_STRING, _T("Tuxedo machine {instance} physical machine ID") },
+   { _T("Tuxedo.Machine.Role(*)"), H_MachineInfo, _T("R"), DCI_DT_STRING, _T("Tuxedo machine {instance} role") },
+   { _T("Tuxedo.Machine.SoftwareRelease(*)"), H_MachineInfo, _T("s"), DCI_DT_STRING, _T("Tuxedo machine {instance}: software release") },
+   { _T("Tuxedo.Machine.State(*)"), H_MachineInfo, _T("S"), DCI_DT_STRING, _T("Tuxedo machine {instance} state") },
+   { _T("Tuxedo.Machine.Type(*)"), H_MachineInfo, _T("T"), DCI_DT_STRING, _T("Tuxedo machine {instance} type") },
+   { _T("Tuxedo.Machine.WorkloadsInitiated(*)"), H_MachineInfo, _T("W"), DCI_DT_INT, _T("Tuxedo machine {instance}: workloads initiated") },
+   { _T("Tuxedo.Machine.WorkloadsProcessed(*)"), H_MachineInfo, _T("w"), DCI_DT_INT, _T("Tuxedo machine {instance}: workloads processed") },
+   { _T("Tuxedo.Machine.WorkstationClients(*)"), H_MachineInfo, _T("c"), DCI_DT_INT, _T("Tuxedo machine {instance}: workstation clients") },
    { _T("Tuxedo.Queue.Machine(*)"), H_QueueInfo, _T("M"), DCI_DT_STRING, _T("Tuxedo queue {instance}: hosting machine") },
    { _T("Tuxedo.Queue.RequestsCurrent(*)"), H_QueueInfo, _T("r"), DCI_DT_STRING, _T("Tuxedo queue {instance}: current requests queued") },
    { _T("Tuxedo.Queue.RequestsTotal(*)"), H_QueueInfo, _T("R"), DCI_DT_STRING, _T("Tuxedo queue {instance}: total requests queued") },
@@ -165,6 +181,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
+   { _T("Tuxedo.Machines"), H_MachinesList, NULL },
    { _T("Tuxedo.Queues"), H_QueuesList, NULL },
    { _T("Tuxedo.Servers"), H_ServersList, NULL },
    { _T("Tuxedo.Services"), H_ServicesList, NULL }
@@ -175,8 +192,9 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE s_tables[] =
 {
+   { _T("Tuxedo.Machines"), H_MachinesTable, NULL, _T("ID"), _T("Tuxedo machines") },
    { _T("Tuxedo.Queues"), H_QueuesTable, NULL, _T("NAME"), _T("Tuxedo queues") },
-   { _T("Tuxedo.Servers"), H_ServersTable, NULL, _T("NAME"), _T("Tuxedo servers") },
+   { _T("Tuxedo.Servers"), H_ServersTable, NULL, _T("ID"), _T("Tuxedo servers") },
    { _T("Tuxedo.Services"), H_ServicesTable, NULL, _T("NAME"), _T("Tuxedo services") }
 };
 
