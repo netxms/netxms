@@ -78,17 +78,17 @@ static void QueryServices()
    if (!TuxedoConnect())
       AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%d)"), errno);
 
-	FBFR32 *fb = (FBFR32 *)tpalloc("FML32", NULL, 4096);
-	CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
-	CFchg32(fb, TA_CLASS, 0, (char *)"T_SERVICE", 0, FLD_STRING);
+   FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
+   CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
+   CFchg32(fb, TA_CLASS, 0, (char *)"T_SERVICE", 0, FLD_STRING);
 
    bool readMore = true;
    long rsplen = 262144;
-   FBFR32 *rsp = (FBFR32 *)tpalloc("FML32", NULL, rsplen);
+   FBFR32 *rsp = (FBFR32 *)tpalloc((char *)"FML32", NULL, rsplen);
    while(readMore)
    {
       readMore = false;
-      if (tpcall(".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
+      if (tpcall((char *)".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
       {
          if (s_services == NULL)
             s_services = new StringObjectMap<TuxedoService>(true);
@@ -184,8 +184,8 @@ LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value)
          value->set(0, s->m_name);
          value->set(1, s->m_state);
          value->set(2, s->m_routingName);
-         value->set(3, s->m_load);
-         value->set(4, s->m_priority);
+         value->set(3, (INT32)s->m_load);
+         value->set(4, (INT32)s->m_priority);
       }
       delete services;
    }

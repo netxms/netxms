@@ -123,20 +123,20 @@ static void QueryMachines()
    if (!TuxedoConnect())
       AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%d)"), errno);
 
-	FBFR32 *fb = (FBFR32 *)tpalloc("FML32", NULL, 4096);
-	CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
-	CFchg32(fb, TA_CLASS, 0, (char *)"T_MACHINE", 0, FLD_STRING);
+   FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
+   CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
+   CFchg32(fb, TA_CLASS, 0, (char *)"T_MACHINE", 0, FLD_STRING);
 
    long flags = MIB_LOCAL;
-	CFchg32(fb, TA_FLAGS, 0, (char *)&flags, 0, FLD_LONG);
+   CFchg32(fb, TA_FLAGS, 0, (char *)&flags, 0, FLD_LONG);
 
    bool readMore = true;
    long rsplen = 262144;
-   FBFR32 *rsp = (FBFR32 *)tpalloc("FML32", NULL, rsplen);
+   FBFR32 *rsp = (FBFR32 *)tpalloc((char *)"FML32", NULL, rsplen);
    while(readMore)
    {
       readMore = false;
-      if (tpcall(".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
+      if (tpcall((char *)".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
       {
          if (s_machines == NULL)
             s_machines = new StringObjectMap<TuxedoMachine>(true);
@@ -251,13 +251,13 @@ LONG H_MachinesTable(const TCHAR *param, const TCHAR *arg, Table *value)
          value->set(4, m->m_role);
          value->set(5, m->m_bridge);
          value->set(6, m->m_swrelease);
-         value->set(7, m->m_accessers);
-         value->set(8, m->m_clients);
-         value->set(9, m->m_wsClients);
-         value->set(10, m->m_conversations);
-         value->set(11, m->m_load);
-         value->set(12, m->m_workloadsProcessed);
-         value->set(13, m->m_workloadsInitiated);
+         value->set(7, (INT32)m->m_accessers);
+         value->set(8, (INT32)m->m_clients);
+         value->set(9, (INT32)m->m_wsClients);
+         value->set(10, (INT32)m->m_conversations);
+         value->set(11, (INT32)m->m_load);
+         value->set(12, (INT32)m->m_workloadsProcessed);
+         value->set(13, (INT32)m->m_workloadsInitiated);
          value->set(14, m->m_tuxConfig);
          value->set(15, m->m_tuxDir);
          value->set(16, m->m_appDir);

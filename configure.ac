@@ -241,6 +241,15 @@ AC_ARG_WITH(jdk,
 	COMPONENTS="$COMPONENTS java"
 fi ])
 
+AC_ARG_WITH(tuxedo,
+[AS_HELP_STRING(--with-tuxedo,build Tuxedo-dependent components)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		TUXEDO_BASE="$withval"
+	fi
+	COMPONENTS="$COMPONENTS tuxedo"
+fi ])
+
 AC_ARG_WITH(sqlite,
 [AS_HELP_STRING(--with-sqlite,build SQLite database driver)],
 [ if test "x$withval" != "xno" ; then
@@ -474,7 +483,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy nxlptest tools"
-	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2"
+	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2 tuxedo"
 	SMSDRV_DIRS="kannel websms"
    HDLINK_DIRS="jira"
    PDSDRV_DIRS="rrdtool"
@@ -742,6 +751,11 @@ fi
 check_substr "$COMPONENTS" "java"
 if test $? = 0; then
 	SUBAGENT_DIRS="$SUBAGENT_DIRS java"
+fi
+
+check_substr "$COMPONENTS" "tuxedo"
+if test $? = 0; then
+	SUBAGENT_DIRS="$SUBAGENT_DIRS tuxedo"
 fi
 
 check_substr "$COMPONENTS" "sdk"
@@ -2429,6 +2443,38 @@ fi
 
 
 #--------------------------------------------------------------------
+# Tuxedo
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "tuxedo"
+if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LIBS="$LIBS"
+
+	if test "x$TUXEDO_BASE" != "x"; then
+		TUXEDO_CPPFLAGS="-I$TUXEDO_BASE/include"
+		TUXEDO_LDFLAGS="-L$TUXEDO_BASE/lib"
+		CPPFLAGS="$CPPFLAGS $TUXEDO_CPPFLAGS"
+		LDFLAGS="$LDFLAGS $TUXEDO_LDFLAGS"
+	fi
+	
+	AC_CHECK_HEADER(atmi.h,,AC_MSG_ERROR([*** Cannot find atmi.h - check your Tuxedo installation ***]))
+
+	# https://community.oracle.com/thread/2346582
+	if test "x$PLATFORM" = "xLinux"; then
+		TUXEDO_LDFLAGS="$TUXEDO_LDFLAGS -Xlinker --no-as-needed"
+		LDFLAGS="$LDFLAGS -Xlinker --no-as-needed"
+	fi
+	AC_CHECK_LIB(tux, tpinit, [], [AC_MSG_ERROR(libtux is required for Tuxedo support)])
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
+fi
+
+
+#--------------------------------------------------------------------
 # Other settings
 #--------------------------------------------------------------------
 
@@ -2518,6 +2564,8 @@ AC_SUBST(INFORMIX_LIBS)
 AC_SUBST(OBJECT_MODE)
 AC_SUBST(SQLFLAGS)
 AC_SUBST(SHLIB_SUFFIX)
+AC_SUBST(TUXEDO_CPPFLAGS)
+AC_SUBST(TUXEDO_LDFLAGS)
 
 #--------------------------------------------------------------------
 # Shared libs versions
@@ -2617,6 +2665,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/rpi/Makefile
 	src/agent/subagents/sms/Makefile
 	src/agent/subagents/sunos/Makefile
+	src/agent/subagents/tuxedo/Makefile
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
@@ -2899,6 +2948,13 @@ if test "x${INFORMIX_LDFLAGS}" != "x"; then
 fi
 if test "x${INFORMIX_LIBS}" != "x"; then
 	echo "Informix LIBS           : ${INFORMIX_LIBS}"
+fi
+
+if test "x${TUXEDO_CPPFLAGS}" != "x"; then
+	echo "Tuxedo CPPFLAGS         : ${TUXEDO_CPPFLAGS}"
+fi
+if test "x${TUXEDO_LDFLAGS}" != "x"; then
+	echo "Tuxedo LDFLAGS          : ${TUXEDO_LDFLAGS}"
 fi
 
 FLAGS_CPP="src/tools/nxdevcfg/flags.cpp"

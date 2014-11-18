@@ -147,20 +147,20 @@ static void QueryServers()
    if (!TuxedoConnect())
       AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%d)"), errno);
 
-	FBFR32 *fb = (FBFR32 *)tpalloc("FML32", NULL, 4096);
-	CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
-	CFchg32(fb, TA_CLASS, 0, (char *)"T_SERVER", 0, FLD_STRING);
+   FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
+   CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
+   CFchg32(fb, TA_CLASS, 0, (char *)"T_SERVER", 0, FLD_STRING);
 
    long flags = MIB_LOCAL;
-	CFchg32(fb, TA_FLAGS, 0, (char *)&flags, 0, FLD_LONG);
+   CFchg32(fb, TA_FLAGS, 0, (char *)&flags, 0, FLD_LONG);
 
    bool readMore = true;
    long rsplen = 262144;
-   FBFR32 *rsp = (FBFR32 *)tpalloc("FML32", NULL, rsplen);
+   FBFR32 *rsp = (FBFR32 *)tpalloc((char *)"FML32", NULL, rsplen);
    while(readMore)
    {
       readMore = false;
-      if (tpcall(".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
+      if (tpcall((char *)".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
       {
          if (s_servers == NULL)
             s_servers = new ObjectArray<TuxedoServer>(256, 256, true);
@@ -216,7 +216,7 @@ LONG H_ServersList(const TCHAR *param, const TCHAR *arg, StringList *value)
          TuxedoServer *s = s_servers->get(i);
          if (s != NULL)
          {
-            value->add(s->m_id);
+            value->add((INT32)s->m_id);
          }
       }
    }
@@ -280,32 +280,32 @@ LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value)
             continue;
 
          value->addRow();
-         value->set(0, s->m_id);
-         value->set(1, s->m_baseId);
+         value->set(0, (INT32)s->m_id);
+         value->set(1, (INT32)s->m_baseId);
          value->set(2, s->m_group);
          value->set(3, s->m_name);
          value->set(4, s->m_state);
          value->set(5, s->m_rqAddr);
          value->set(6, s->m_lmid);
-         value->set(7, s->m_pid);
-         value->set(8, s->m_generation);
-         value->set(9, s->m_curThreads);
-         value->set(10, s->m_minThreads);
-         value->set(11, s->m_maxThreads);
-         value->set(12, s->m_activeRequests);
+         value->set(7, (INT32)s->m_pid);
+         value->set(8, (INT32)s->m_generation);
+         value->set(9, (INT32)s->m_curThreads);
+         value->set(10, (INT32)s->m_minThreads);
+         value->set(11, (INT32)s->m_maxThreads);
+         value->set(12, (INT32)s->m_activeRequests);
          value->set(13, s->m_currService);
-         value->set(14, s->m_tranLevel);
-         value->set(15, s->m_totalRequests);
-         value->set(16, s->m_totalWorkloads);
-         value->set(17, s->m_convCount);
-         value->set(18, s->m_dequeueCount);
-         value->set(19, s->m_enqueueCount);
-         value->set(20, s->m_postCount);
-         value->set(21, s->m_reqCount);
-         value->set(22, s->m_subscribeCount);
-         value->set(23, s->m_txnCount);
-         value->set(24, s->m_timeStart);
-         value->set(25, s->m_timeRestart);
+         value->set(14, (INT32)s->m_tranLevel);
+         value->set(15, (INT32)s->m_totalRequests);
+         value->set(16, (INT32)s->m_totalWorkloads);
+         value->set(17, (INT32)s->m_convCount);
+         value->set(18, (INT32)s->m_dequeueCount);
+         value->set(19, (INT32)s->m_enqueueCount);
+         value->set(20, (INT32)s->m_postCount);
+         value->set(21, (INT32)s->m_reqCount);
+         value->set(22, (INT32)s->m_subscribeCount);
+         value->set(23, (INT32)s->m_txnCount);
+         value->set(24, (INT32)s->m_timeStart);
+         value->set(25, (INT32)s->m_timeRestart);
          value->set(26, s->m_envFile);
          value->set(27, s->m_cmdLine);
       }

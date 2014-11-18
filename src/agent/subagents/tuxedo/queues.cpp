@@ -103,20 +103,20 @@ static void QueryQueues()
    if (!TuxedoConnect())
       AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%d)"), errno);
 
-	FBFR32 *fb = (FBFR32 *)tpalloc("FML32", NULL, 4096);
-	CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
-	CFchg32(fb, TA_CLASS, 0, (char *)"T_QUEUE", 0, FLD_STRING);
+   FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
+   CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
+   CFchg32(fb, TA_CLASS, 0, (char *)"T_QUEUE", 0, FLD_STRING);
 
    long flags = MIB_LOCAL;
-	CFchg32(fb, TA_FLAGS, 0, (char *)&flags, 0, FLD_LONG);
+   CFchg32(fb, TA_FLAGS, 0, (char *)&flags, 0, FLD_LONG);
 
    bool readMore = true;
    long rsplen = 262144;
-   FBFR32 *rsp = (FBFR32 *)tpalloc("FML32", NULL, rsplen);
+   FBFR32 *rsp = (FBFR32 *)tpalloc((char *)"FML32", NULL, rsplen);
    while(readMore)
    {
       readMore = false;
-      if (tpcall(".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
+      if (tpcall((char *)".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
       {
          if (s_queues == NULL)
             s_queues = new StringObjectMap<TuxedoQueue>(true);
@@ -228,11 +228,11 @@ LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value)
          value->set(1, q->m_lmid);
          value->set(2, q->m_serverName);
          value->set(3, q->m_state);
-         value->set(4, q->m_serverCount);
-         value->set(5, q->m_requestsTotal);
-         value->set(6, q->m_requestsCurrent);
-         value->set(7, q->m_workloadsTotal);
-         value->set(8, q->m_workloadsCurrent);
+         value->set(4, (INT32)q->m_serverCount);
+         value->set(5, (INT32)q->m_requestsTotal);
+         value->set(6, (INT32)q->m_requestsCurrent);
+         value->set(7, (INT32)q->m_workloadsTotal);
+         value->set(8, (INT32)q->m_workloadsCurrent);
       }
       delete queues;
    }

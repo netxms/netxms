@@ -126,17 +126,17 @@ static void QueryClients()
    if (!TuxedoConnect())
       AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%d)"), errno);
 
-	FBFR32 *fb = (FBFR32 *)tpalloc("FML32", NULL, 4096);
-	CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
-	CFchg32(fb, TA_CLASS, 0, (char *)"T_CLIENT", 0, FLD_STRING);
+   FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
+   CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
+   CFchg32(fb, TA_CLASS, 0, (char *)"T_CLIENT", 0, FLD_STRING);
 
    bool readMore = true;
    long rsplen = 262144;
-   FBFR32 *rsp = (FBFR32 *)tpalloc("FML32", NULL, rsplen);
+   FBFR32 *rsp = (FBFR32 *)tpalloc((char *)"FML32", NULL, rsplen);
    while(readMore)
    {
       readMore = false;
-      if (tpcall(".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
+      if (tpcall((char *)".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
       {
          if (s_clients == NULL)
             s_clients = new StringObjectMap<TuxedoClient>(true);
@@ -251,17 +251,17 @@ LONG H_ClientsTable(const TCHAR *param, const TCHAR *arg, Table *value)
          value->set(3, c->m_state);
          value->set(4, c->m_serverGroup);
          value->set(5, c->m_userName);
-         value->set(6, c->m_idleTime);
-         value->set(7, c->m_pid);
-         value->set(8, c->m_activeRequests);
-         value->set(9, c->m_activeConv);
-         value->set(10, c->m_convCount);
-         value->set(11, c->m_dequeueCount);
-         value->set(12, c->m_enqueueCount);
-         value->set(13, c->m_postCount);
-         value->set(14, c->m_requestCount);
-         value->set(15, c->m_subscribeCount);
-         value->set(16, c->m_tranCount);
+         value->set(6, (INT32)c->m_idleTime);
+         value->set(7, (INT32)c->m_pid);
+         value->set(8, (INT32)c->m_activeRequests);
+         value->set(9, (INT32)c->m_activeConv);
+         value->set(10, (INT32)c->m_convCount);
+         value->set(11, (INT32)c->m_dequeueCount);
+         value->set(12, (INT32)c->m_enqueueCount);
+         value->set(13, (INT32)c->m_postCount);
+         value->set(14, (INT32)c->m_requestCount);
+         value->set(15, (INT32)c->m_subscribeCount);
+         value->set(16, (INT32)c->m_tranCount);
          value->set(17, c->m_wsc);
          value->set(18, c->m_wsClientId);
          value->set(19, c->m_netAddr);

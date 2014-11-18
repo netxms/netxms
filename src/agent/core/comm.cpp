@@ -377,7 +377,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
          {
             if (g_pSessionList[i]->getTimeStamp() < (now - (time_t)g_dwIdleTimeout))
 				{
-					DebugPrintf(i, 5, _T("Session disconnected by watchdog (last activity timestamp is ") TIME_T_FMT _T(")"), g_pSessionList[i]->getTimeStamp());
+					DebugPrintf(i, 5, _T("Session disconnected by watchdog (last activity timestamp is ") UINT64_FMT _T(")"), (UINT64)g_pSessionList[i]->getTimeStamp());
                g_pSessionList[i]->disconnect();
 				}
          }
