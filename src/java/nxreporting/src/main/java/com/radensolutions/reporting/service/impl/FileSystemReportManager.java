@@ -125,7 +125,7 @@ public class FileSystemReportManager implements ReportManager
         try {
             jasperReport = (JasperReport) JRLoader.loadObject(reportFile);
         } catch (JRException e) {
-            log.error("Can't load compiled report", e.getMessage());
+            log.error("Can't load compiled report", e);
         }
         return jasperReport;
     }
@@ -278,7 +278,6 @@ public class FileSystemReportManager implements ReportManager
     public boolean execute(int userId, UUID reportId, UUID jobId, final Map<String, String> parameters, Locale locale) {
         boolean ret = false;
 
-        // TODO: report now loaded twice, fix that!
         DataSource dataSource = null;
         final JasperReport report = loadReport(reportId);
         if (report != null) {
@@ -294,7 +293,7 @@ public class FileSystemReportManager implements ReportManager
         Connection connection = null;
         try {
             connection = dataSource.getConnection();
-            ret = realExecute(userId, reportId, jobId, parameters, locale, connection);
+            ret = realExecute(report, userId, reportId, jobId, parameters, locale, connection);
         } catch (SQLException e) {
             log.error("Can't get report connection", e);
         } finally {
@@ -309,10 +308,9 @@ public class FileSystemReportManager implements ReportManager
         return ret;
     }
 
-    private boolean realExecute(int userId, UUID reportId, UUID jobId, Map<String, String> parameters, Locale locale,
+    private boolean realExecute(JasperReport report, int userId, UUID reportId, UUID jobId, Map<String, String> parameters, Locale locale,
                                 Connection connection) {
         boolean ret = false;
-        final JasperReport report = loadReport(reportId);
         if (connection != null && report != null) {
             final File reportDirectory = getReportDirectory(reportId);
 
@@ -364,6 +362,16 @@ public class FileSystemReportManager implements ReportManager
             } else if ("END_DATE".equalsIgnoreCase(logicalType)) {
                 Date date = DateParameterParser.getDateTime(input, true);
                 localParameters.put(jrName, date.getTime() / 1000);
+            } else if ("SEVERITY_LIST".equalsIgnoreCase(logicalType)) {
+                localParameters.put(jrName, convertCommaSeparatedToIntList(input));
+            } else if ("OBJECT_ID_LIST".equalsIgnoreCase(logicalType)) {
+                localParameters.put(jrName, convertCommaSeparatedToIntList(input));
+            } else if ("EVENT_CODE".equalsIgnoreCase(logicalType)) {
+                if ("0".equals(input)) {
+                    localParameters.put(jrName, new ArrayList<Integer>(0));
+                } else { // not "<any>"
+                    localParameters.put(jrName, convertCommaSeparatedToIntList(input));
+                }
             } else if (Boolean.class.equals(valueClass)) {
                 localParameters.put(jrName, Boolean.parseBoolean(input));
             } else if (Date.class.equals(valueClass)) {
@@ -429,6 +437,24 @@ public class FileSystemReportManager implements ReportManager
         }
     }
 
+    private List<Integer> convertCommaSeparatedToIntList(String input) {
+        if (input == null) {
+            return null;
+        }
+
+        String[] strings = input.split(",");
+        List<Integer> ret = new ArrayList<Integer>(strings.length);
+        for (String s : strings) {
+            try {
+                ret.add(Integer.parseInt(s));
+            } catch (NumberFormatException e) {
+                // TODO: handle
+                log.error("Invalid ID in comma separated list: " + input);
+            }
+        }
+        return ret;
+    }
+
     @Override
     public List<ReportResult> listResults(UUID reportId, int userId) {
         return reportResultService.list(reportId, userId);
@@ -447,7 +473,7 @@ public class FileSystemReportManager implements ReportManager
     public File renderResult(UUID reportId, UUID jobId, ReportRenderFormat format) {
         final File outputDirectory = getOutputDirectory(reportId);
         final File dataFile = new File(outputDirectory, jobId.toString() + ".jrprint");
-        
+
         File outputFile = new File(outputDirectory, jobId.toString() + "." + System.currentTimeMillis() + ".render");
 
         JRAbstractExporter exporter = null;
@@ -481,13 +507,10 @@ public class FileSystemReportManager implements ReportManager
 
         exporter.setParameter(JRExporterParameter.INPUT_FILE, dataFile);
 
-        try 
-        {
-           exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, new FileOutputStream(outputFile));
-           exporter.exportReport();
-        } 
-        catch (Exception e) 
-        {
+        try {
+            exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, new FileOutputStream(outputFile));
+            exporter.exportReport();
+        } catch (Exception e) {
             log.error("Failed to render report", e);
             outputFile.delete();
             outputFile = null;
@@ -601,10 +624,9 @@ public class FileSystemReportManager implements ReportManager
             }
             text += "\n\nThis message is generated automatically by NetXMS.";
 
-            if (renderResult != null)
-            {
-               smtpSender.mail(notification.getMail(), "New report is available", text, fileName, renderResult);
-               renderResult.delete();
+            if (renderResult != null) {
+                smtpSender.mail(notification.getMail(), "New report is available", text, fileName, renderResult);
+                renderResult.delete();
             }
         }
     }

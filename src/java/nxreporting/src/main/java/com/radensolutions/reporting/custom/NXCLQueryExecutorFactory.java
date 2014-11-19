@@ -15,12 +15,12 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 @Component
-public class NxclQueryExecutorFactory extends AbstractQueryExecuterFactory implements ApplicationContextAware {
+public class NXCLQueryExecutorFactory extends AbstractQueryExecuterFactory implements ApplicationContextAware {
 
     // TODO: temporary hack
     private static ApplicationContext applicationContext;
 
-    public NxclQueryExecutorFactory() {
+    public NXCLQueryExecutorFactory() {
     }
 
     @Override
@@ -30,7 +30,7 @@ public class NxclQueryExecutorFactory extends AbstractQueryExecuterFactory imple
 
     @Override
     public JRQueryExecuter createQueryExecuter(JasperReportsContext jasperReportsContext, JRDataset dataset, Map<String, ? extends JRValueParameter> parameters) throws JRException {
-        NxclQueryExecutor queryExecutor = new NxclQueryExecutor(jasperReportsContext, dataset, parameters);
+        NXCLQueryExecutor queryExecutor = new NXCLQueryExecutor(jasperReportsContext, dataset, parameters);
         queryExecutor.setSettings(applicationContext.getBean(ServerSettings.class));
         return queryExecutor;
     }
@@ -42,6 +42,6 @@ public class NxclQueryExecutorFactory extends AbstractQueryExecuterFactory imple
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        NxclQueryExecutorFactory.applicationContext = applicationContext;
+        NXCLQueryExecutorFactory.applicationContext = applicationContext;
     }
 }

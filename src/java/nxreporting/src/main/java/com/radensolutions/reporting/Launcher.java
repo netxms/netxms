@@ -50,7 +50,7 @@ public class Launcher {
         log.info("Connector started");
 
         DefaultJasperReportsContext jrContext = DefaultJasperReportsContext.getInstance();
-        jrContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "com.radensolutions.reporting.custom.NxclQueryExecutorFactory");
+        jrContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "com.radensolutions.reporting.custom.NXCLQueryExecutorFactory");
 
         ReportManager reportManager = context.getBean(ReportManager.class);
         reportManager.deploy();

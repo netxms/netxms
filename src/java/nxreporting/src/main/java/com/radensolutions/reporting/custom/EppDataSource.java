@@ -1,8 +1,8 @@
 package com.radensolutions.reporting.custom;
 
-import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRField;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.events.EventProcessingPolicy;
@@ -11,6 +11,7 @@ import org.netxms.client.events.EventTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +19,7 @@ import java.util.Map;
 
 import static org.netxms.client.events.EventProcessingPolicyRule.*;
 
-public class EppDataSource implements JRDataSource {
+public class EppDataSource extends NXCLDataSource {
 
     private static final Logger log = LoggerFactory.getLogger(EppDataSource.class);
 
@@ -27,41 +28,37 @@ public class EppDataSource implements JRDataSource {
     private List<Row> rows = new ArrayList<Row>();
     private Row currentRow;
 
-    public void connect(String server, String login, String password) {
-        log.debug("Conncting to NetXMS server at " + server + " as " + login);
-        NXCSession session = new NXCSession(server, login, password);
-        try {
-            session.connect();
-            session.syncEventTemplates();
-            session.syncObjects();
-            EventProcessingPolicy epp = session.getEventProcessingPolicy();
+    protected EppDataSource() {
+        super(null, null);
+    }
 
-            for (ServerAction action : session.getActions()) {
-                actionMap.put(action.getId(), action);
+    @Override
+    public void loadData(NXCSession session) throws IOException, NXCException {
+        EventProcessingPolicy epp = session.getEventProcessingPolicy();
+
+        for (ServerAction action : session.getActions()) {
+            actionMap.put(action.getId(), action);
+        }
+
+        int ruleIndex = 0;
+        for (EventProcessingPolicyRule rule : epp.getRules()) {
+            List<Cell> filterRows = new ArrayList<Cell>();
+            List<Cell> actionRows = new ArrayList<Cell>();
+
+            processSources(session, rule, filterRows);
+            processEvents(session, rule, filterRows);
+            processAlarms(rule, actionRows);
+            processStop(rule, actionRows);
+
+            int count = Math.max(filterRows.size(), actionRows.size());
+            String name = rule.getComments();
+            if (rule.isDisabled()) {
+                name += " (disabled)";
             }
-
-            int ruleIndex = 0;
-            for (EventProcessingPolicyRule rule : epp.getRules()) {
-                List<Cell> filterRows = new ArrayList<Cell>();
-                List<Cell> actionRows = new ArrayList<Cell>();
-
-                processSources(session, rule, filterRows);
-                processEvents(session, rule, filterRows);
-                processAlarms(rule, actionRows);
-                processStop(rule, actionRows);
-
-                int count = Math.max(filterRows.size(), actionRows.size());
-                String name = rule.getComments();
-                if (rule.isDisabled()) {
-                    name += " (disabled)";
-                }
-                for (int i = 0; i < count; i++) {
-                    rows.add(new Row(ruleIndex, name, safePop(filterRows), safePop(actionRows)));
-                }
-                ruleIndex++;
+            for (int i = 0; i < count; i++) {
+                rows.add(new Row(ruleIndex, name, safePop(filterRows), safePop(actionRows)));
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            ruleIndex++;
         }
     }
 
