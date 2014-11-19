@@ -225,7 +225,7 @@ AC_ARG_WITH(all-static,
 ])
 
 AC_ARG_WITH(static-subagents,
-[AS_HELP_STRING(--with-static-subagents=list,define list of static subagents (separated by spaces))],
+[AS_HELP_STRING(--with-static-subagents-list,define list of static subagents (separated by spaces))],
 [
 	PROPOSED_STATIC_SUBAGENTS="$withval"
 ])
