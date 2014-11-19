@@ -640,6 +640,8 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
  */
 void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData)
 {
+   int offset = tableDefinition->isMultiInstance() ? 2 : 1;
+   int baseRow = tableData->getNumRows();
    bool rowAdded = false;
    lockDciAccess(false);
    for(int i = 0; i < tableDefinition->getNumColumns(); i++)
@@ -655,27 +657,53 @@ void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Ta
                !_tcsicmp(object->getName(), tc->m_dciName)
              ))
          {
-            if (!rowAdded)
+            int row;
+            if (tableDefinition->isMultiInstance())
             {
-               tableData->addRow();
-               tableData->set(0, m_name);
-               tableData->setObjectId(tableData->getNumRows() - 1, m_id);
-               rowAdded = true;
-            }
-            tableData->setStatus(i + 1, ((DCItem *)object)->getThresholdSeverity());
-            tableData->getColumnDefinitions()->get(i + 1)->setDataType(((DCItem *)object)->getDataType());
-            if (tableDefinition->getAggregationFunction() == F_LAST)
-            {
-               tableData->set(i + 1, ((DCItem *)object)->getLastValue());
+               // Find instance
+               const TCHAR *instance = ((DCItem *)object)->getInstance();
+               for(row = baseRow; row < tableData->getNumRows(); row++)
+               {
+                  const TCHAR *v = tableData->getAsString(row, 1);
+                  if (!_tcscmp(CHECK_NULL_EX(v), instance))
+                     break;
+               }
+               if (row == tableData->getNumRows())
+               {
+                  tableData->addRow();
+                  tableData->set(0, m_name);
+                  tableData->set(1, instance);
+                  tableData->setObjectId(tableData->getNumRows() - 1, m_id);
+               }
             }
             else
             {
-               tableData->set(i + 1, 
+               if (!rowAdded)
+               {
+                  tableData->addRow();
+                  tableData->set(0, m_name);
+                  tableData->setObjectId(tableData->getNumRows() - 1, m_id);
+                  rowAdded = true;
+               }
+               row = tableData->getNumRows() - 1;
+            }
+            tableData->setStatusAt(row, i + offset, ((DCItem *)object)->getThresholdSeverity());
+            tableData->getColumnDefinitions()->get(i + offset)->setDataType(((DCItem *)object)->getDataType());
+            if (tableDefinition->getAggregationFunction() == F_LAST)
+            {
+               tableData->setAt(row, i + offset, ((DCItem *)object)->getLastValue());
+            }
+            else
+            {
+               tableData->setAt(row, i + offset, 
                   ((DCItem *)object)->getAggregateValue(
                      tableDefinition->getAggregationFunction(), 
                      tableDefinition->getPeriodStart(), 
                      tableDefinition->getPeriodEnd()));
             }
+
+            if (!tableDefinition->isMultiInstance())
+               break;
          }
       }
    }

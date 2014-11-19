@@ -7639,14 +7639,15 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * @throws IOException  if socket I/O error occurs
     * @throws NetXMSClientException if NetXMS server returns an error or operation was timed out
     */
-   public Table queryAdHocDciSummaryTable(long baseObjectId, List<DciSummaryTableColumn> columns, AggregationFunction function, Date periodStart, Date periodEnd) throws IOException, NetXMSClientException
+   public Table queryAdHocDciSummaryTable(long baseObjectId, List<DciSummaryTableColumn> columns, AggregationFunction function, Date periodStart, Date periodEnd, boolean multiInstance) throws IOException, NetXMSClientException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_QUERY_ADHOC_SUMMARY_TABLE);
-      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int) baseObjectId);
+      msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)baseObjectId);
       msg.setVariableInt32(NXCPCodes.VID_NUM_COLUMNS, columns.size());
       msg.setVariableInt16(NXCPCodes.VID_FUNCTION, (function != null) ? function.getValue() : AggregationFunction.LAST.getValue());
       msg.setVariableInt64(NXCPCodes.VID_TIME_FROM, (periodStart != null) ? periodStart.getTime() / 1000 : 0);
       msg.setVariableInt64(NXCPCodes.VID_TIME_TO, (periodEnd != null) ? periodEnd.getTime() / 1000 : 0);
+      msg.setVariableInt32(NXCPCodes.VID_FLAGS, multiInstance ? 1 : 0);  // FIXME: define flags properly
       long id = NXCPCodes.VID_COLUMN_INFO_BASE;
       for(DciSummaryTableColumn c : columns)
       {

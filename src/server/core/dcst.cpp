@@ -151,7 +151,7 @@ SummaryTable::~SummaryTable()
 SummaryTable::SummaryTable(CSCPMessage *msg)
 {
    m_title[0] = 0;
-   m_flags = 0;
+   m_flags = msg->GetVariableLong(VID_FLAGS);
    m_filter = NULL;
    m_aggregationFunction = (AggregationFunction)msg->getFieldAsInt16(VID_FUNCTION);
    m_periodStart = msg->getFieldAsTime(VID_TIME_FROM);
@@ -303,6 +303,8 @@ Table *SummaryTable::createEmptyResultTable()
    result->setTitle(m_title);
    result->setExtendedFormat(true);
    result->addColumn(_T("Node"), DCI_DT_STRING);
+   if (m_flags & SUMMARY_TABLE_MULTI_INSTANCE)
+      result->addColumn(_T("Instance"), DCI_DT_STRING);
    for(int i = 0; i < m_columns->size(); i++)
    {
       result->addColumn(m_columns->get(i)->m_name, DCI_DT_STRING);

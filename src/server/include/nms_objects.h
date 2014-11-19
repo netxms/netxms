@@ -253,6 +253,11 @@ public:
 };
 
 /**
+ * Summary table flags
+ */
+#define SUMMARY_TABLE_MULTI_INSTANCE      0x0001
+
+/**
  * Summary table column flags
  */
 #define COLUMN_DEFINITION_REGEXP_MATCH    0x0001
@@ -301,6 +306,7 @@ public:
    AggregationFunction getAggregationFunction() { return m_aggregationFunction; }
    time_t getPeriodStart() { return m_periodStart; }
    time_t getPeriodEnd() { return m_periodEnd; }
+   bool isMultiInstance() { return (m_flags & SUMMARY_TABLE_MULTI_INSTANCE) ? true : false; }
 };
 
 /**

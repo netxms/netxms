@@ -177,26 +177,40 @@ public class DataCollectionTest extends SessionTest
 					
 		session.disconnect();
 	}
+	
+	private void printTable(Table t)
+	{
+      System.out.println(t.getRowCount() + " rows in result set");
+      for(int i = 0; i < t.getColumnCount(); i++)
+         System.out.print(String.format(" | %-20s", t.getColumnDisplayName(i)));
+      System.out.println(" |");
+      for(TableRow r : t.getAllRows())
+      {
+         for(int i = 0; i < t.getColumnCount(); i++)
+            System.out.print(String.format(" | %-20s", r.get(i).getValue()));
+         System.out.println(" |");
+      }
+	}
 
    public void testAdHocDciSummaryTables() throws Exception
    {
       final NXCSession session = connect();
 
+      // single instance
       List<DciSummaryTableColumn> columns = new ArrayList<DciSummaryTableColumn>();
       columns.add(new DciSummaryTableColumn("Usage", "System.CPU.Usage", 0));
       columns.add(new DciSummaryTableColumn("I/O Wait", "System.CPU.IOWait", 0));
 
-      Table result = session.queryAdHocDciSummaryTable(2, columns, AggregationFunction.AVERAGE, new Date(System.currentTimeMillis() - 86400000), new Date());
-      System.out.println(result.getRowCount() + " rows in result set");
-      for(int i = 0; i < result.getColumnCount(); i++)
-         System.out.print(String.format(" | %-20s", result.getColumnDisplayName(i)));
-      System.out.println(" |");
-      for(TableRow r : result.getAllRows())
-      {
-         for(int i = 0; i < result.getColumnCount(); i++)
-            System.out.print(String.format(" | %-20s", r.get(i).getValue()));
-         System.out.println(" |");
-      }
+      Table result = session.queryAdHocDciSummaryTable(2, columns, AggregationFunction.AVERAGE, new Date(System.currentTimeMillis() - 86400000), new Date(), false);
+      printTable(result);
+      
+      // multi instance
+      columns.clear();
+      columns.add(new DciSummaryTableColumn("Free %", "FileSystem\\.FreePerc\\(.*\\)", DciSummaryTableColumn.REGEXP_MATCH));
+      columns.add(new DciSummaryTableColumn("Free bytes", "FileSystem\\.Free\\(.*\\)", DciSummaryTableColumn.REGEXP_MATCH));
+
+      result = session.queryAdHocDciSummaryTable(2, columns, AggregationFunction.LAST, null, null, true);
+      printTable(result);
       
       session.disconnect();
    }
