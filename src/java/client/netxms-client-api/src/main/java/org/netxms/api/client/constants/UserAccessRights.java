@@ -39,6 +39,7 @@ public class UserAccessRights
    public static final long SYSTEM_ACCESS_XMPP_COMMANDS       = 0x04000000;
    public static final long SYSTEM_ACCESS_MANAGE_IMAGE_LIB    = 0x08000000;
    public static final long SYSTEM_ACCESS_UNLINK_ISSUES       = 0x10000000;
+   public static final long SYSTEM_ACCESS_VIEW_SYSLOG         = 0x20000000;
 	
 	public static final int OBJECT_ACCESS_READ          = 0x00000001;
 	public static final int OBJECT_ACCESS_MODIFY        = 0x00000002;

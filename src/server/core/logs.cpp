@@ -79,7 +79,7 @@ static NXCORE_LOG s_logs[] =
 			{ NULL, NULL, 0 }
 		}
 	},
-	{ _T("syslog"), _T("syslog"), _T("msg_id"), _T("source_object_id"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
+	{ _T("syslog"), _T("syslog"), _T("msg_id"), _T("source_object_id"), SYSTEM_ACCESS_VIEW_SYSLOG,
 		{
 			{ _T("msg_timestamp"), _T("Time"), LC_TIMESTAMP },
 			{ _T("source_object_id"), _T("Source"), LC_OBJECT_ID },

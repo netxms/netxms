@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,6 +77,7 @@ public class SystemRights extends PropertyPage
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, Messages.get().SystemRights_ViewEventLog);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, Messages.get().SystemRights_ViewAuditLog);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, Messages.get().SystemRights_ViewTrapLog);
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, "View syslog");
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, Messages.get().SystemRights_ManageMappingTables);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, Messages.get().SystemRights_EditServerConfig);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_READ_FILES, Messages.get().SystemRights_ReadFiles);
