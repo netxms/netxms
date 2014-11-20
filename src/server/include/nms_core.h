@@ -294,6 +294,7 @@ protected:
    virtual void onTrap(CSCPMessage *msg);
    virtual void onDataPush(CSCPMessage *msg);
    virtual void onFileMonitoringData(CSCPMessage *msg);
+	virtual void onSnmpTrap(CSCPMessage *pMsg);
 
 public:
    AgentConnectionEx(UINT32 nodeId, UINT32 ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :

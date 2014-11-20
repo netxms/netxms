@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -319,7 +319,7 @@ private:
 public:
    SNMP_MIBObject();
    SNMP_MIBObject(UINT32 dwOID, const TCHAR *pszName);
-   SNMP_MIBObject(UINT32 dwOID, const TCHAR *pszName, int iType, 
+   SNMP_MIBObject(UINT32 dwOID, const TCHAR *pszName, int iType,
                   int iStatus, int iAccess, const TCHAR *pszDescription,
 						const TCHAR *pszTextualConvention);
    ~SNMP_MIBObject();
@@ -531,7 +531,7 @@ private:
 	char m_contextName[SNMP_MAX_CONTEXT_NAME];
 	BYTE m_salt[8];
 	bool m_reportable;
-	
+
 	// The following attributes only used by parser and
 	// valid only for received PDUs
 	BYTE m_flags;
@@ -632,7 +632,7 @@ public:
       return 0;
    }
 
-   UINT32 doRequest(SNMP_PDU *request, SNMP_PDU **response, 
+   UINT32 doRequest(SNMP_PDU *request, SNMP_PDU **response,
                    UINT32 timeout = INFINITE, int numRetries = 1);
 
 	void setSecurityContext(SNMP_SecurityContext *ctx);
@@ -654,7 +654,7 @@ public:
  */
 class LIBNXSNMP_EXPORTABLE SNMP_UDPTransport : public SNMP_Transport
 {
-private:
+protected:
    SOCKET m_hSocket;
    struct sockaddr_in m_peerAddr;
 	bool m_connected;

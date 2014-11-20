@@ -43,16 +43,18 @@
 #endif
 
 
-//
-// Externals
-//
-
+/**
+ * Externals
+ */
 THREAD_RESULT THREAD_CALL ListenerThread(void *);
 THREAD_RESULT THREAD_CALL SessionWatchdog(void *);
 THREAD_RESULT THREAD_CALL TrapSender(void *);
 THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg);
+THREAD_RESULT THREAD_CALL SNMPTrapReciever(void *);
+THREAD_RESULT THREAD_CALL SNMPTrapSender(void *);
 
 void ShutdownTrapSender();
+void ShutdownSNMPTrapSender();
 
 void StartWatchdog();
 void StopWatchdog();
@@ -121,6 +123,7 @@ TCHAR g_szRegistrar[MAX_DB_STRING] = _T("not_set");
 TCHAR g_szListenAddress[MAX_PATH] = _T("*");
 TCHAR g_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 TCHAR g_masterAgent[MAX_PATH] = _T("not_set");
+TCHAR g_szSNMPTrapListenAddress[MAX_PATH] = _T("*");
 UINT16 g_wListenPort = AGENT_LISTEN_PORT;
 ObjectArray<ServerInfo> g_serverList(8, 8, true);
 UINT32 g_dwServerCount = 0;
@@ -129,6 +132,7 @@ UINT32 g_dwSNMPTimeout = 3000;
 time_t g_tmAgentStartTime;
 UINT32 g_dwStartupDelay = 0;
 UINT32 g_dwMaxSessions = 32;
+UINT32 g_dwSNMPTrapPort = 162;
 UINT32 g_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
 #ifdef _WIN32
 UINT16 g_sessionAgentPort = 28180;
@@ -165,6 +169,8 @@ static UINT32 m_dwEnabledCiphers = 0xFFFF;
 static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
 static THREAD m_thListener = INVALID_THREAD_HANDLE;
 static THREAD m_thTrapSender = INVALID_THREAD_HANDLE;
+static THREAD m_thSNMPTrapReciever = INVALID_THREAD_HANDLE;
+static THREAD m_thSNMPTrapSender = INVALID_THREAD_HANDLE;
 static THREAD m_thMasterAgentListener = INVALID_THREAD_HANDLE;
 static TCHAR s_processToWaitFor[MAX_PATH] = _T("");
 static TCHAR s_dumpDir[MAX_PATH] = _T("C:\\");
@@ -174,6 +180,7 @@ static UINT32 m_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
 static TCHAR s_dailyLogFileSuffix[64] = _T("");
 static Config *s_registry = NULL;
 static TCHAR s_executableName[MAX_PATH];
+static UINT32 g_messageNumber = time(NULL);
 
 #if defined(_WIN32)
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
@@ -204,6 +211,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableControlConnector"), CT_BOOLEAN, 0, 0, AF_ENABLE_CONTROL_CONNECTOR, 0, &g_dwFlags, NULL },
    { _T("EnableProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnableSNMPProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags, NULL },
+   { _T("EnableSNMPTrapProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_TRAP_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnableSubagentAutoload"), CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags, NULL },
    { _T("EnableWatchdog"), CT_BOOLEAN, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags, NULL },
    { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szEncryptedSharedSecret, NULL },
@@ -233,6 +241,8 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("SessionAgentPort"), CT_WORD, 0, 0, 0, 0, &g_sessionAgentPort, NULL },
    { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
 	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwSNMPTimeout, NULL },
+	{ _T("SNMPTrapListenAddress"), CT_STRING, 0, 0, 0, 0, &g_szSNMPTrapListenAddress, NULL },
+   { _T("SNMPTrapPort"), CT_LONG, 0, 0, 0, 0, &g_dwSNMPTrapPort, NULL },
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay, NULL },
    { _T("SubAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList, NULL },
    { _T("TimeOut"), CT_IGNORE, 0, 0, 0, 0, NULL, NULL },
@@ -966,6 +976,14 @@ BOOL Initialize()
    g_tmAgentStartTime = time(NULL);
 
 	m_thTrapSender = ThreadCreateEx(TrapSender, 0, NULL);
+
+	//Start trap proxy threads(recieve and send), if trap proxy is enabled
+	if(g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
+	{
+      m_thSNMPTrapSender = ThreadCreateEx(SNMPTrapSender, 0, NULL);
+      m_thSNMPTrapReciever = ThreadCreateEx(SNMPTrapReciever, 0, NULL);
+   }
+
 	if (g_dwFlags & AF_SUBAGENT_LOADER)
 	{
 		m_thMasterAgentListener = ThreadCreateEx(MasterAgentListener, 0, NULL);
@@ -1038,6 +1056,12 @@ void Shutdown()
 		ThreadJoin(m_thListener);
 	}
 	ThreadJoin(m_thTrapSender);
+	if(g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
+	{
+      ShutdownSNMPTrapSender();
+      //ThreadJoin(m_thSNMPTrapReciever);
+      //ThreadJoin(m_thSNMPTrapSender);
+	}
 
    UnloadAllSubAgents();
    nxlog_write(MSG_AGENT_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
@@ -1703,4 +1727,12 @@ int main(int argc, char *argv[])
    }
 
    return iExitCode;
+}
+
+UINT32 GetNewMessageID()
+{
+   MutexLock(g_hSessionListAccess);
+   g_messageNumber++;
+   MutexLock(g_hSessionListAccess);
+   return g_messageNumber;
 }

@@ -23,6 +23,12 @@
 #include "nxcore.h"
 
 /**
+ * Externals
+ */
+extern Queue g_nodePollerQueue;
+void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq);
+
+/**
  * Destructor for extended agent connection class
  */
 AgentConnectionEx::~AgentConnectionEx()
@@ -211,7 +217,7 @@ void AgentConnectionEx::printMsg(const TCHAR *format, ...)
  */
 void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
 {
-	NetObj *object = NULL;
+	Node *object = NULL;
 	if (m_nodeId != 0)
 		object = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
 	if (object != NULL)
@@ -227,15 +233,14 @@ void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
       if(result->size() == 0)
       {
          DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: unknown subscription will be canceled."));
-         Node *node = (Node *)object;
-         AgentConnection *conn = node->createAgentConnection();
+         AgentConnection *conn = object->createAgentConnection();
          if(conn != NULL)
          {
             CSCPMessage request;
             request.SetId(conn->generateRequestId());
             request.SetCode(CMD_CANCEL_FILE_MONITORING);
             request.SetVariable(VID_FILE_NAME, remoteFile);
-            request.SetVariable(VID_OBJECT_ID, node->getId());
+            request.SetVariable(VID_OBJECT_ID, object->getId());
             CSCPMessage* response = conn->customRequest(&request);
             delete response;
          }
@@ -248,6 +253,128 @@ void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
 		g_monitoringList.removeDisconectedNode(m_nodeId);
       DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: node object not found"));
 	}
+}
+
+/**
+ * Recieve trap sent throught proxy agent
+ */
+void AgentConnectionEx::onSnmpTrap(CSCPMessage *msg)
+{
+   Node *proxyNode = NULL;
+   TCHAR ipStringBuffer[4096];
+
+   static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
+	SNMP_Engine localEngine(engineId, 12);
+
+	DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): Received SNMP trap message from agent at %s, node ID %d"), IpToStr(getIpAddr(), ipStringBuffer), m_nodeId);
+	if (m_nodeId != 0)
+		proxyNode = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
+   if (proxyNode != NULL)
+   {
+      // Check for duplicate traps - only accept traps with ID
+      // higher than last received
+      bool acceptTrap;
+      UINT32 trapId = msg->GetId();
+      if (trapId != 0)
+      {
+         acceptTrap = proxyNode->checkSNMPTrapId(trapId);
+         DbgPrintf(5, _T("AgentConnectionEx::onSnmpTrap(): SNMP trapID is%s valid"), acceptTrap ? _T("") : _T(" not"));
+      }
+      else
+      {
+         acceptTrap = false;
+         DbgPrintf(5, _T("AgentConnectionEx::onSnmpTrap(): SNMP trap ID not provided"));
+      }
+
+      if (acceptTrap)
+      {
+         UINT32 originSenderIP = msg->GetVariableLong(VID_IP_ADDRESS);
+         UINT32 pduLenght = msg->GetVariableLong(VID_PDU_SIZE);
+         BYTE *pduBytes = (BYTE*)malloc(pduLenght);
+         msg->GetVariableBinary(VID_PDU, pduBytes, pduLenght);
+         Node *originNode = FindNodeByIP(0, originSenderIP); //create function
+
+         SNMP_ProxyTransport *pTransport;
+         if(originNode != NULL)
+            pTransport = (SNMP_ProxyTransport*)originNode->createSnmpTransport((WORD)msg->GetVariableShort(VID_PORT));
+
+         if(ConfigReadInt(_T("LogAllSNMPTraps"), FALSE) && originNode == NULL)
+         {
+            AgentConnection *pConn;
+
+            pConn = proxyNode->createAgentConnection();
+            if (pConn != NULL)
+            {
+               pTransport = new SNMP_ProxyTransport(pConn, originSenderIP, msg->GetVariableShort(VID_PORT));
+            }
+         }
+
+         if(pTransport != NULL)
+         {
+            pTransport->setWaitForResponse(false);
+            SNMP_PDU *pdu = new SNMP_PDU;
+            if(pdu->parse(pduBytes, pduLenght, (originNode != NULL) ? originNode->getSnmpSecurityContext() : NULL, true))
+            {
+               DbgPrintf(6, _T("SNMPTrapReceiver: received PDU of type %d"), pdu->getCommand());
+               if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
+               {
+                  if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_INFORM_REQUEST))
+                  {
+                     SNMP_SecurityContext *context = pTransport->getSecurityContext();
+                     context->setAuthoritativeEngine(localEngine);
+                  }
+                  struct sockaddr_in addr;
+                  addr.sin_family = AF_INET;
+                  addr.sin_addr.s_addr = htonl(originSenderIP);
+                  addr.sin_port = htons(msg->GetVariableShort(VID_PORT));
+                  ProcessTrap(pdu, &addr, pTransport, &localEngine, pdu->getCommand() == SNMP_INFORM_REQUEST);
+               }
+               else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
+               {
+                  // Engine ID discovery
+                  DbgPrintf(6, _T("SNMPTrapReceiver: EngineId discovery"));
+
+                  SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
+                  response->setReportable(false);
+                  response->setMessageId(pdu->getMessageId());
+                  response->setContextEngineId(localEngine.getId(), localEngine.getIdLen());
+
+                  SNMP_Variable *var = new SNMP_Variable(_T(".1.3.6.1.6.3.15.1.1.4.0"));
+                  var->setValueFromString(ASN_INTEGER, _T("2"));
+                  response->bindVariable(var);
+
+                  SNMP_SecurityContext *context = new SNMP_SecurityContext();
+                  localEngine.setTime((int)time(NULL));
+                  context->setAuthoritativeEngine(localEngine);
+                  context->setSecurityModel(SNMP_SECURITY_MODEL_USM);
+                  context->setAuthMethod(SNMP_AUTH_NONE);
+                  context->setPrivMethod(SNMP_ENCRYPT_NONE);
+                  pTransport->setSecurityContext(context);
+
+                  pTransport->sendMessage(response);
+                  delete response;
+               }
+               else if (pdu->getCommand() == SNMP_REPORT)
+               {
+                  DbgPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): REPORT PDU with error %s"), pdu->getVariable(0)->getName()->getValueAsText());
+               }
+               delete pdu;
+            }
+            else if (pdu->getCommand() == SNMP_REPORT)
+            {
+               DbgPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): REPORT PDU with error %s"), pdu->getVariable(0)->getName()->getValueAsText());
+            }
+         }
+         else
+         {
+            DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): not possible to find origin node with IP %s and not acepted traps from unknown source."), IpToStr(originSenderIP, ipStringBuffer));
+         }
+      }
+   }
+   else
+   {
+      DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): Cannot find node for IP address %s"), IpToStr(getIpAddr(), ipStringBuffer));
+   }
 }
 
 /**

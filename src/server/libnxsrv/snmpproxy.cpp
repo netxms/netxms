@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Server Library
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
@@ -32,6 +32,7 @@ SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *pConn, UINT32 dwIpAddr
 	m_dwIpAddr = dwIpAddr;
 	m_wPort = wPort;
 	m_pResponse = NULL;
+	m_waitForResponse = true;
 }
 
 /**
@@ -62,11 +63,14 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 		msg.SetVariable(VID_PDU, pBuffer, (UINT32)size);
       free(pBuffer);
 
-		m_pResponse = m_pAgentConnection->customRequest(&msg);
-		if (m_pResponse != NULL)
-		{
-			nRet = 1;
-		}
+      if(m_waitForResponse)
+      {
+         m_pResponse = m_pAgentConnection->customRequest(&msg);
+         if (m_pResponse != NULL)
+         {
+            nRet = 1;
+         }
+      }
    }
 
    return nRet;
@@ -75,7 +79,7 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 /**
  * Receive PDU
  */
-int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout, 
+int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
                                      struct sockaddr *pSender, socklen_t *piAddrSize,
                                      SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
 {

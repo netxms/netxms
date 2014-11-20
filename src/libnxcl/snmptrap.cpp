@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Client Library
 ** Copyright (C) 2003-2010 Victor Kirhenshtein
@@ -24,10 +24,9 @@
 #include "libnxcl.h"
 
 
-//
-// Fill trap configuration record from message
-//
-
+/**
+ * Fill trap configuration record from message
+ */
 static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
 {
    UINT32 i, dwId1, dwId2, dwId3, dwId4;
@@ -59,10 +58,9 @@ static void TrapCfgFromMsg(CSCPMessage *pMsg, NXC_TRAP_CFG_ENTRY *pTrap)
 }
 
 
-//
-// Process CMD_TRAP_CFG_UPDATE message
-//
-
+/**
+ * Process CMD_TRAP_CFG_UPDATE message
+ */
 void ProcessTrapCfgUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
    NXC_TRAP_CFG_ENTRY trapCfg;
@@ -76,7 +74,7 @@ void ProcessTrapCfgUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
       TrapCfgFromMsg(pMsg, &trapCfg);
 
    pSession->callEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &trapCfg);
-   
+
 	for(UINT32 i = 0; i < trapCfg.dwNumMaps; i++)
       safe_free(trapCfg.pMaps[i].pdwObjectId);
    safe_free(trapCfg.pMaps);
@@ -84,10 +82,9 @@ void ProcessTrapCfgUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
 }
 
 
-//
-// Copy NXC_TRAP_CFG_ENTRY
-//
-
+/**
+ * Copy NXC_TRAP_CFG_ENTRY
+ */
 void LIBNXCL_EXPORTABLE NXCCopyTrapCfgEntry(NXC_TRAP_CFG_ENTRY *dst, NXC_TRAP_CFG_ENTRY *src)
 {
 	memcpy(dst, src, sizeof(NXC_TRAP_CFG_ENTRY));
@@ -105,10 +102,9 @@ void LIBNXCL_EXPORTABLE NXCCopyTrapCfgEntry(NXC_TRAP_CFG_ENTRY *dst, NXC_TRAP_CF
 }
 
 
-//
-// Duplicate NXC_TRAP_CFG_ENTRY
-//
-
+/**
+ * Duplicate NXC_TRAP_CFG_ENTRY
+ */
 NXC_TRAP_CFG_ENTRY LIBNXCL_EXPORTABLE *NXCDuplicateTrapCfgEntry(NXC_TRAP_CFG_ENTRY *src)
 {
 	NXC_TRAP_CFG_ENTRY *dst = (NXC_TRAP_CFG_ENTRY *)malloc(sizeof(NXC_TRAP_CFG_ENTRY));
@@ -117,10 +113,9 @@ NXC_TRAP_CFG_ENTRY LIBNXCL_EXPORTABLE *NXCDuplicateTrapCfgEntry(NXC_TRAP_CFG_ENT
 }
 
 
-//
-// Destroy NXC_TRAP_CFG_ENTRY
-//
-
+/**
+ * Destroy NXC_TRAP_CFG_ENTRY
+ */
 void LIBNXCL_EXPORTABLE NXCDestroyTrapCfgEntry(NXC_TRAP_CFG_ENTRY *e)
 {
 	if (e == NULL)
@@ -134,10 +129,9 @@ void LIBNXCL_EXPORTABLE NXCDestroyTrapCfgEntry(NXC_TRAP_CFG_ENTRY *e)
 }
 
 
-//
-// Load trap configuration from server
-//
-
+/**
+ * Load trap configuration from server
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCLoadTrapCfg(NXC_SESSION hSession, UINT32 *pdwNumTraps, NXC_TRAP_CFG_ENTRY **ppTrapList)
 {
    CSCPMessage msg, *pResponse;
@@ -161,7 +155,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCLoadTrapCfg(NXC_SESSION hSession, UINT32 *pdwNumTra
             dwTrapId = pResponse->GetVariableLong(VID_TRAP_ID);
             if (dwTrapId != 0)  // 0 is end of list indicator
             {
-               pList = (NXC_TRAP_CFG_ENTRY *)realloc(pList, 
+               pList = (NXC_TRAP_CFG_ENTRY *)realloc(pList,
                            sizeof(NXC_TRAP_CFG_ENTRY) * (dwNumTraps + 1));
                pList[dwNumTraps].dwId = dwTrapId;
                TrapCfgFromMsg(pResponse, &pList[dwNumTraps]);
@@ -195,10 +189,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCLoadTrapCfg(NXC_SESSION hSession, UINT32 *pdwNumTra
 }
 
 
-//
-// Destroy list of traps
-//
-
+/**
+ * Destroy list of traps
+ */
 void LIBNXCL_EXPORTABLE NXCDestroyTrapList(UINT32 dwNumTraps, NXC_TRAP_CFG_ENTRY *pTrapList)
 {
    UINT32 i, j;
@@ -217,10 +210,9 @@ void LIBNXCL_EXPORTABLE NXCDestroyTrapList(UINT32 dwNumTraps, NXC_TRAP_CFG_ENTRY
 }
 
 
-//
-// Delete trap configuration record by ID
-//
-
+/**
+ * Delete trap configuration record by ID
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteTrap(NXC_SESSION hSession, UINT32 dwTrapId)
 {
    CSCPMessage msg;
@@ -237,10 +229,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteTrap(NXC_SESSION hSession, UINT32 dwTrapId)
 }
 
 
-//
-// Create new trap configuration record
-//
-
+/**
+ * Create new trap configuration record
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCCreateTrap(NXC_SESSION hSession, UINT32 *pdwTrapId)
 {
    CSCPMessage msg, *pResponse;
@@ -269,10 +260,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCCreateTrap(NXC_SESSION hSession, UINT32 *pdwTrapId)
 }
 
 
-//
-// Update trap configuration record
-//
-
+/**
+ * Update trap configuration record
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY *pTrap)
 {
    CSCPMessage msg;
@@ -283,13 +273,13 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY
    msg.SetCode(CMD_MODIFY_TRAP);
    msg.SetId(dwRqId);
    msg.SetVariable(VID_TRAP_ID, pTrap->dwId);
-   msg.SetVariable(VID_TRAP_OID_LEN, pTrap->dwOidLen); 
+   msg.SetVariable(VID_TRAP_OID_LEN, pTrap->dwOidLen);
    msg.setFieldInt32Array(VID_TRAP_OID, pTrap->dwOidLen, pTrap->pdwObjectId);
    msg.SetVariable(VID_EVENT_CODE, pTrap->dwEventCode);
    msg.SetVariable(VID_DESCRIPTION, pTrap->szDescription);
    msg.SetVariable(VID_USER_TAG, pTrap->szUserTag);
    msg.SetVariable(VID_TRAP_NUM_MAPS, pTrap->dwNumMaps);
-   for(i = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE, dwId4 = VID_TRAP_PFLAGS_BASE; 
+   for(i = 0, dwId1 = VID_TRAP_PLEN_BASE, dwId2 = VID_TRAP_PNAME_BASE, dwId3 = VID_TRAP_PDESCR_BASE, dwId4 = VID_TRAP_PFLAGS_BASE;
        i < pTrap->dwNumMaps; i++, dwId1++, dwId2++, dwId3++, dwId4++)
    {
       msg.SetVariable(dwId1, pTrap->pMaps[i].dwOidLen);
@@ -304,10 +294,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyTrap(NXC_SESSION hSession, NXC_TRAP_CFG_ENTRY
 }
 
 
-//
-// Process SNMP trap log records coming from server
-//
-
+/**
+ * Process SNMP trap log records coming from server
+ */
 void ProcessTrapLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
 {
    UINT32 i, dwNumRecords, dwId;
@@ -364,10 +353,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCSyncSNMPTrapLog(NXC_SESSION hSession, UINT32 dwMaxR
 }
 
 
-//
-// Get read-only trap configuration without parameter bindings
-//
-
+/**
+ * Get read-only trap configuration without parameter bindings
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCGetTrapCfgRO(NXC_SESSION hSession, UINT32 *pdwNumTraps,
                                          NXC_TRAP_CFG_ENTRY **ppTrapList)
 {

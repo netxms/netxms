@@ -33,6 +33,7 @@
 #include <nxqueue.h>
 #include <nxlog.h>
 #include "messages.h"
+#include "nxsnmp.h"
 
 #define LIBNXCL_NO_DECLARATIONS
 #include <nxclapi.h>
@@ -53,9 +54,9 @@
 #endif
 
 
-//
-// Version
-//
+/**
+ * Version
+ */
 
 #ifdef _DEBUG
 #define DEBUG_SUFFIX          _T("-debug")
@@ -96,10 +97,9 @@
 #define REGISTRY_FILE_NAME       _T("registry.dat")
 
 
-//
-// Constants
-//
-
+/**
+ * Constants
+ */
 #ifdef _WIN32
 #define DEFAULT_AGENT_SERVICE_NAME    _T("NetXMSAgentdW32")
 #define DEFAULT_AGENT_EVENT_SOURCE    _T("NetXMS Win32 Agent")
@@ -133,14 +133,14 @@
 #define AF_ENABLE_CONTROL_CONNECTOR 0x00040000
 #define AF_DISABLE_IPV4             0x00080000
 #define AF_DISABLE_IPV6             0x00100000
+#define AF_ENABLE_SNMP_TRAP_PROXY   0x00200000
 
 
 #ifdef _WIN32
 
-//
-// Request types for H_MemoryInfo
-//
-
+/**
+ * Request types for H_MemoryInfo
+ */
 #define MEMINFO_PHYSICAL_FREE       1
 #define MEMINFO_PHYSICAL_FREE_PCT   2
 #define MEMINFO_PHYSICAL_TOTAL      3
@@ -153,10 +153,9 @@
 #define MEMINFO_VIRTUAL_USED_PCT    10
 
 
-//
-// Request types for H_DiskInfo
-//
-
+/**
+ * Request types for H_DiskInfo
+ */
 #define DISKINFO_FREE_BYTES      1
 #define DISKINFO_USED_BYTES      2
 #define DISKINFO_TOTAL_BYTES     3
@@ -166,27 +165,24 @@
 #endif   /* _WIN32 */
 
 
-//
-// Request types for H_DirInfo
-//
-
+/**
+ * Request types for H_DirInfo
+ */
 #define DIRINFO_FILE_COUNT       1
 #define DIRINFO_FILE_SIZE        2
 
 
-//
-// Request types for H_FileTime
-//
-
+/**
+ * Request types for H_FileTime
+ */
 #define FILETIME_ATIME           1
 #define FILETIME_MTIME           2
 #define FILETIME_CTIME           3
 
 
-//
-// Action types
-//
-
+/**
+ * Action types
+ */
 #define AGENT_ACTION_EXEC        1
 #define AGENT_ACTION_SUBAGENT    2
 #define AGENT_ACTION_SHELLEXEC	3
@@ -378,10 +374,10 @@ public:
 	void updateTimeStamp() { m_ts = time(NULL); }
 
    bool canAcceptTraps() { return m_acceptTraps; }
-   
+
    virtual bool isMasterServer() { return m_masterServer; }
    virtual bool isControlServer() { return m_controlServer; }
-   
+
    virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId);
 };
 
@@ -394,7 +390,7 @@ private:
    UINT32 m_id;
    SOCKET m_socket;
    MUTEX m_mutex;
-   CSCP_BUFFER m_msgBuffer; 
+   CSCP_BUFFER m_msgBuffer;
    MsgWaitQueue m_msgQueue;
    UINT32 m_sessionId;
    TCHAR *m_sessionName;
@@ -423,6 +419,17 @@ public:
 
    bool testConnection();
    void takeScreenshot(CSCPMessage *msg);
+};
+
+/**
+ * Class to reciever traps
+ */
+class SNMP_TrapProxyTransport : public SNMP_UDPTransport
+{
+public:
+   SNMP_TrapProxyTransport(SOCKET hSocket);
+   int readMessage(BYTE **rawData, UINT32 timeout = INFINITE,
+                  struct sockaddr *sender = NULL, socklen_t *addrSize = NULL);
 };
 
 /**
@@ -526,6 +533,7 @@ bool SendControlMessage(CSCPMessage *msg);
 
 void StartSessionAgentConnector();
 SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName);
+UINT32 GetNewMessageID();
 
 #ifdef _WIN32
 
@@ -543,10 +551,9 @@ TCHAR *GetPdhErrorText(UINT32 dwError, TCHAR *pszBuffer, int iBufSize);
 #endif
 
 
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 extern UINT32 g_dwFlags;
 extern TCHAR g_szLogFile[];
 extern TCHAR g_szSharedSecret[];
@@ -557,6 +564,7 @@ extern TCHAR g_szRegistrar[];
 extern TCHAR g_szListenAddress[];
 extern TCHAR g_szConfigIncludeDir[];
 extern TCHAR g_masterAgent[];
+extern TCHAR g_szSNMPTrapListenAddress[];
 extern UINT16 g_wListenPort;
 extern ObjectArray<ServerInfo> g_serverList;
 extern UINT32 g_dwServerCount;
@@ -568,6 +576,7 @@ extern UINT32 g_dwMaxSessions;
 extern UINT32 g_dwExecTimeout;
 extern UINT32 g_dwSNMPTimeout;
 extern UINT32 g_debugLevel;
+extern UINT32 g_dwSNMPTrapPort;
 extern UINT16 g_sessionAgentPort;
 
 extern Config *g_config;

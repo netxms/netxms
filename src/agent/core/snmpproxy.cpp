@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
@@ -23,16 +23,16 @@
 #include "nxagentd.h"
 
 
-//
-// Constants
-//
+/**
+ * Constants
+ */
 
 #define SNMP_BUFFER_SIZE		65536
 
 
-//
-// Read PDU from network
-//
+/**
+ * Read PDU from network
+ */
 
 static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize)
 {
@@ -84,10 +84,9 @@ static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize)
 }
 
 
-//
-// Send SNMP request to target, receive response, and send it to server
-//
-
+/**
+ * Send SNMP request to target, receive response, and send it to server
+ */
 void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse)
 {
 	BYTE *pduIn, *pduOut;

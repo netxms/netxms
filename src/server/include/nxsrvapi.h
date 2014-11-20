@@ -480,6 +480,7 @@ protected:
    virtual void onTrap(CSCPMessage *pMsg);
 	virtual void onDataPush(CSCPMessage *msg);
 	virtual void onFileMonitoringData(CSCPMessage *msg);
+	virtual void onSnmpTrap(CSCPMessage *pMsg);
 	virtual bool processCustomMessage(CSCPMessage *pMsg);
 	virtual void onFileDownload(BOOL success);
 
@@ -551,6 +552,7 @@ protected:
 	CSCPMessage *m_pResponse;
 	UINT32 m_dwIpAddr;
 	WORD m_wPort;
+	bool m_waitForResponse;
 
 public:
 	SNMP_ProxyTransport(AgentConnection *pConn, UINT32 dwIpAddr, WORD wPort);
@@ -561,6 +563,7 @@ public:
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pdu);
    virtual UINT32 getPeerIpAddress();
+   bool setWaitForResponse(bool value) {m_waitForResponse = value;};
 };
 
 /**

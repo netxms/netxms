@@ -347,6 +347,9 @@ void AgentConnection::receiverThread()
                onFileMonitoringData(pMsg);
 					delete pMsg;
                break;
+            case CMD_SNMP_TRAP:
+               onSnmpTrap(pMsg);
+               break;
 				default:
 					if (processCustomMessage(pMsg))
 						delete pMsg;
@@ -701,10 +704,9 @@ InterfaceList *AgentConnection::getInterfaceList()
 }
 
 
-//
-// Get parameter value
-//
-
+/**
+ * Get parameter value
+ */
 UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TCHAR *pszBuffer)
 {
    CSCPMessage msg(m_nProtocolVersion), *pResponse;
@@ -745,10 +747,9 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
 }
 
 
-//
-// Get ARP cache
-//
-
+/**
+ * Get ARP cache
+ */
 ARP_CACHE *AgentConnection::getArpCache()
 {
    ARP_CACHE *pArpCache = NULL;
@@ -805,9 +806,9 @@ ARP_CACHE *AgentConnection::getArpCache()
 }
 
 
-//
-// Send dummy command to agent (can be used for keepalive)
-//
+/**
+ * Send dummy command to agent (can be used for keepalive)
+ */
 
 UINT32 AgentConnection::nop()
 {
@@ -824,10 +825,9 @@ UINT32 AgentConnection::nop()
 }
 
 
-//
-// Wait for request completion code
-//
-
+/**
+ * Wait for request completion code
+ */
 UINT32 AgentConnection::waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
 {
    CSCPMessage *pMsg;
@@ -928,6 +928,14 @@ void AgentConnection::onDataPush(CSCPMessage *pMsg)
  * actual monitoring data processing. Default implementation do nothing.
  */
 void AgentConnection::onFileMonitoringData(CSCPMessage *pMsg)
+{
+}
+
+/**
+ * SNMP trap handler. Should be overriden in derived classes to implement
+ * actual SNMP trap processing. Default implementation do nothing.
+ */
+void AgentConnection::onSnmpTrap(CSCPMessage *pMsg)
 {
 }
 

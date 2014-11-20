@@ -713,7 +713,7 @@ void CommSession::action(CSCPMessage *pRequest, CSCPMessage *pMsg)
       // Get action name and arguments
       TCHAR action[MAX_PARAM_NAME];
       pRequest->GetVariableStr(VID_ACTION_NAME, action, MAX_PARAM_NAME);
-      
+
       int numArgs = pRequest->getFieldAsInt32(VID_NUM_ARGS);
       StringList *args = new StringList;
       for(int i = 0; i < numArgs; i++)

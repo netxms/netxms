@@ -67,6 +67,7 @@ Node::Node() : DataCollectionTarget()
    m_pAgentConnection = NULL;
    m_smclpConnection = NULL;
 	m_lastAgentTrapId = 0;
+	m_lastSNMPTrapId = 0;
    m_lastAgentPushRequestId = 0;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
@@ -145,6 +146,7 @@ Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, U
    m_pAgentConnection = NULL;
    m_smclpConnection = NULL;
 	m_lastAgentTrapId = 0;
+	m_lastSNMPTrapId = 0;
    m_lastAgentPushRequestId = 0;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
@@ -6101,6 +6103,19 @@ bool Node::checkAgentTrapId(QWORD trapId)
 	bool valid = (trapId > m_lastAgentTrapId);
 	if (valid)
 		m_lastAgentTrapId = trapId;
+	unlockProperties();
+	return valid;
+}
+
+/**
+ * Check and update last agent SNMP trap ID
+ */
+bool Node::checkSNMPTrapId(UINT32 trapId)
+{
+	lockProperties();
+	bool valid = (trapId > m_lastSNMPTrapId);
+	if (valid)
+		m_lastSNMPTrapId = trapId;
 	unlockProperties();
 	return valid;
 }

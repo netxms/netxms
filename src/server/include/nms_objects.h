@@ -819,7 +819,7 @@ public:
 
 	virtual void fillMessage(CSCPMessage *pMsg);
    virtual UINT32 modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-   
+
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
@@ -1034,6 +1034,7 @@ protected:
    SMCLP_Connection *m_smclpConnection;
 	QWORD m_lastAgentTrapId;	     // ID of last received agent trap
    QWORD m_lastAgentPushRequestId; // ID of last received agent push request
+   UINT32 m_lastSNMPTrapId;
    UINT32 m_pollerNode;      // Node used for network service polling
    UINT32 m_agentProxy;      // Node used as proxy for agent connection
 	UINT32 m_snmpProxy;       // Node used as proxy for SNMP requests
@@ -1216,6 +1217,7 @@ public:
 
    BOOL connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL);
 	bool checkAgentTrapId(QWORD id);
+	bool checkSNMPTrapId(UINT32 id);
    bool checkAgentPushRequestId(QWORD id);
 
    bool connectToSMCLP();
