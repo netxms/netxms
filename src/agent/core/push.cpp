@@ -70,9 +70,11 @@ static void ProcessPushRequest(HPIPE hPipe)
 	TCHAR buffer[256];
 
 	AgentWriteDebugLog(5, _T("ProcessPushRequest: connection established"));
+   PipeMessageReceiver receiver(hPipe, 8192, 1048576);  // 8K initial, 1M max
 	while(true)
 	{
-		CSCPMessage *msg = ReadMessageFromPipe(hPipe, NULL);
+      MessageReceiverResult result;
+		CSCPMessage *msg = receiver.readMessage(5000, &result);
 		if (msg == NULL)
 			break;
 		AgentWriteDebugLog(6, _T("ProcessPushRequest: received message %s"), NXCPMessageCodeName(msg->GetCode(), buffer));

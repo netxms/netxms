@@ -273,14 +273,12 @@ void CommSession::readThread()
 
             if (pRawMsg->wCode == CMD_GET_NXCP_CAPS)
             {
-               CSCP_MESSAGE *pMsg;
-
-               pMsg = (CSCP_MESSAGE *)malloc(CSCP_HEADER_SIZE);
+               CSCP_MESSAGE *pMsg = (CSCP_MESSAGE *)malloc(NXCP_HEADER_SIZE);
                pMsg->dwId = htonl(pRawMsg->dwId);
                pMsg->wCode = htons((WORD)CMD_NXCP_CAPS);
                pMsg->wFlags = htons(MF_CONTROL);
                pMsg->dwNumVars = htonl(NXCP_VERSION << 24);
-               pMsg->dwSize = htonl(CSCP_HEADER_SIZE);
+               pMsg->dwSize = htonl(NXCP_HEADER_SIZE);
                sendRawMessage(pMsg, m_pCtx);
             }
          }
@@ -341,16 +339,14 @@ BOOL CommSession::sendRawMessage(CSCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx
    DebugPrintf(m_dwIndex, 6, _T("Sending message %s (size %d)"), NXCPMessageCodeName(ntohs(pMsg->wCode), szBuffer), ntohl(pMsg->dwSize));
    if ((pCtx != NULL) && (pCtx != PROXY_ENCRYPTION_CTX))
    {
-      CSCP_ENCRYPTED_MESSAGE *pEnMsg;
-
-      pEnMsg = CSCPEncryptMessage(pCtx, pMsg);
-      if (pEnMsg != NULL)
+      NXCP_ENCRYPTED_MESSAGE *enMsg = CSCPEncryptMessage(pCtx, pMsg);
+      if (enMsg != NULL)
       {
-         if (SendEx(m_hSocket, (const char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_socketWriteMutex) <= 0)
+         if (SendEx(m_hSocket, (const char *)enMsg, ntohl(enMsg->dwSize), 0, m_socketWriteMutex) <= 0)
          {
             bResult = FALSE;
          }
-         free(pEnMsg);
+         free(enMsg);
       }
    }
    else

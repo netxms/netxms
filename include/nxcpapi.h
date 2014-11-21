@@ -55,8 +55,10 @@ private:
    WORD m_code;
    WORD m_flags;
    UINT32 m_id;
-   MessageField *m_fields;   // Message fields
-   int m_version;    // Protocol version
+   MessageField *m_fields; // Message fields
+   int m_version;          // Protocol version
+   BYTE *m_data;           // binary data
+   size_t m_dataSize;      // binary data size
 
    void *set(UINT32 fieldId, BYTE type, const void *value, UINT32 size = 0);
    void *get(UINT32 fieldId, BYTE requiredType, BYTE *fieldType = NULL);
@@ -80,8 +82,13 @@ public:
    UINT32 GetId() { return m_id; }
    void SetId(UINT32 id) { m_id = id; }
 
+   bool isEndOfFile() { return (m_flags & MF_END_OF_FILE) ? true : false; }
    bool isEndOfSequence() { return (m_flags & MF_END_OF_SEQUENCE) ? true : false; }
    bool isReverseOrder() { return (m_flags & MF_REVERSE_ORDER) ? true : false; }
+   bool isBinary() { return (m_flags & MF_BINARY) ? true : false; }
+
+   BYTE *getBinaryData() { return m_data; }
+   size_t getBinaryDataSize() { return m_dataSize; }
 
    bool isFieldExist(UINT32 fieldId) { return find(fieldId) != NULL; }
    int getFieldType(UINT32 fieldId);
@@ -238,13 +245,90 @@ public:
 
 	virtual ~NXCPEncryptionContext();
 
-   CSCP_ENCRYPTED_MESSAGE *encryptMessage(CSCP_MESSAGE *msg);
-   bool decryptMessage(CSCP_ENCRYPTED_MESSAGE *msg, BYTE *decryptionBuffer);
+   NXCP_ENCRYPTED_MESSAGE *encryptMessage(CSCP_MESSAGE *msg);
+   bool decryptMessage(NXCP_ENCRYPTED_MESSAGE *msg, BYTE *decryptionBuffer);
 
 	int getCipher() { return m_cipher; }
 	BYTE *getSessionKey() { return m_sessionKey; }
 	int getKeyLength() { return m_keyLength; }
 	BYTE *getIV() { return m_iv; }
+};
+
+/**
+ * Message receiver result codes
+ */
+enum MessageReceiverResult
+{
+   MSGRECV_SUCCESS = 0,
+   MSGRECV_CLOSED = 1,
+   MSGRECV_TIMEOUT = 2,
+   MSGRECV_COMM_FAILURE = 3,
+   MSGRECV_DECRYPTION_FAILURE = 4
+};
+
+/**
+ * Message receiver - abstract base class
+ */
+class LIBNETXMS_EXPORTABLE AbstractMessageReceiver
+{
+private:
+   BYTE *m_buffer;
+   BYTE *m_decryptionBuffer;
+   NXCPEncryptionContext *m_encryptionContext;
+   size_t m_initialSize;
+   size_t m_size;
+   size_t m_maxSize;
+   size_t m_dataSize;
+   size_t m_bytesToSkip;
+
+   CSCPMessage *getMessageFromBuffer();
+
+protected:
+   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout) = 0;
+
+public:
+   AbstractMessageReceiver(size_t initialSize, size_t maxSize);
+   virtual ~AbstractMessageReceiver();
+
+   void setEncryptionContext(NXCPEncryptionContext *ctx) { m_encryptionContext = ctx; }
+
+   CSCPMessage *readMessage(UINT32 timeout, MessageReceiverResult *result);
+   CSCP_MESSAGE *getRawMessageBuffer() { return (CSCP_MESSAGE *)m_buffer; }
+};
+
+/**
+ * Message receiver - socket implementation
+ */
+class LIBNETXMS_EXPORTABLE SocketMessageReceiver : public AbstractMessageReceiver
+{
+private:
+   SOCKET m_socket;
+
+protected:
+   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout);
+
+public:
+   SocketMessageReceiver(SOCKET socket, size_t initialSize, size_t maxSize);
+   virtual ~SocketMessageReceiver();
+};
+
+/**
+ * Message receiver - UNIX socket/named pipe implementation
+ */
+class LIBNETXMS_EXPORTABLE PipeMessageReceiver : public AbstractMessageReceiver
+{
+private:
+   HPIPE m_pipe;
+#ifdef _WIN32
+	HANDLE m_readEvent;
+#endif
+
+protected:
+   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout);
+
+public:
+   PipeMessageReceiver(HPIPE pipe, size_t initialSize, size_t maxSize);
+   virtual ~PipeMessageReceiver();
 };
 
 #else    /* __cplusplus */
@@ -282,9 +366,9 @@ BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVers
 
 BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCallback)(int, const TCHAR *, va_list args));
 UINT32 LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers();
-CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *CSCPEncryptMessage(NXCPEncryptionContext *pCtx, CSCP_MESSAGE *pMsg);
+NXCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *CSCPEncryptMessage(NXCPEncryptionContext *pCtx, CSCP_MESSAGE *pMsg);
 BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(NXCPEncryptionContext *pCtx,
-                                             CSCP_ENCRYPTED_MESSAGE *pMsg,
+                                             NXCP_ENCRYPTED_MESSAGE *pMsg,
                                              BYTE *pDecryptionBuffer);
 UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
                                                   NXCPEncryptionContext **ppCtx,

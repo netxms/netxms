@@ -368,10 +368,10 @@ void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
    if (level <= (int)g_debugLevel)
    {
       va_list args;
-		TCHAR buffer[4096];
+		TCHAR buffer[8192];
 
       va_start(args, format);
-      _vsntprintf(buffer, 4096, format, args);
+      _vsntprintf(buffer, 8192, format, args);
       va_end(args);
 		DbgPrintf(level, _T("[CLSN-%d] %s"), m_id, buffer);
    }
@@ -382,109 +382,63 @@ void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
  */
 void ClientSession::readThread()
 {
-	UINT32 msgBufferSize = 1024;
-   CSCP_MESSAGE *pRawMsg;
-   CSCPMessage *pMsg;
-   BYTE *pDecryptionBuffer = NULL;
    TCHAR szBuffer[256];
-   int iErr;
    UINT32 i;
    NetObj *object;
-   WORD wFlags;
 
-   // Initialize raw message receiving function
-   RecvNXCPMessage(0, NULL, m_pMsgBuffer, 0, NULL, NULL, 0);
-
-   pRawMsg = (CSCP_MESSAGE *)malloc(msgBufferSize);
-#ifdef _WITH_ENCRYPTION
-   pDecryptionBuffer = (BYTE *)malloc(msgBufferSize);
-#endif
-   while(1)
+   SocketMessageReceiver receiver(m_hSocket, 4096, MAX_MSG_SIZE);
+   while(true)
    {
-		// Shrink buffer after receiving large message
-		if (msgBufferSize > 131072)
-		{
-			msgBufferSize = 131072;
-		   pRawMsg = (CSCP_MESSAGE *)realloc(pRawMsg, msgBufferSize);
-			if (pDecryptionBuffer != NULL)
-			   pDecryptionBuffer = (BYTE *)realloc(pDecryptionBuffer, msgBufferSize);
-		}
-
-      if ((iErr = RecvNXCPMessageEx(m_hSocket, &pRawMsg, m_pMsgBuffer, &msgBufferSize,
-		                              &m_pCtx, (pDecryptionBuffer != NULL) ? &pDecryptionBuffer : NULL,
-												900000, MAX_MSG_SIZE)) <= 0)  // timeout 15 minutes
-		{
-         debugPrintf(5, _T("RecvNXCPMessageEx failed (%d)"), iErr);
-         break;
-      }
-
-      // Receive timeout
-      if (iErr == 3)
-      {
-         debugPrintf(5, _T("RecvNXCPMessageEx: receive timeout"));
-         break;
-      }
-
-      // Check if message is too large
-      if (iErr == 1)
-      {
-         debugPrintf(4, _T("Received message %s is too large (%d bytes)"),
-                     NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
-                     ntohl(pRawMsg->dwSize));
-         continue;
-      }
+      MessageReceiverResult result;
+      CSCPMessage *msg = receiver.readMessage(900000, &result);
 
       // Check for decryption error
-      if (iErr == 2)
+      if (result == MSGRECV_DECRYPTION_FAILURE)
       {
          debugPrintf(4, _T("Unable to decrypt received message"));
          continue;
       }
 
-      // Check that actual received packet size is equal to encoded in packet
-      if ((int)ntohl(pRawMsg->dwSize) != iErr)
+      // Receive timeout
+      if (msg == NULL)
       {
-         debugPrintf(4, _T("Actual message size doesn't match wSize value (%d,%d)"), iErr, ntohl(pRawMsg->dwSize));
-         continue;   // Bad packet, wait for next
+         static TCHAR *reason[] = { _T("success"), _T("connection closed"), _T("timeout"), _T("communication failure"), _T("decryption failure") };
+         debugPrintf(5, _T("readThread: %s"), reason[result]);
+         break;
       }
 
       if (g_debugLevel >= 8)
       {
-         String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
+         String msgDump = CSCPMessage::dump(receiver.getRawMessageBuffer(), NXCP_VERSION);
          debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
       }
 
       // Special handling for raw messages
-      wFlags = ntohs(pRawMsg->wFlags);
-      if (wFlags & MF_BINARY)
+      if (msg->isBinary())
       {
-         // Convert message header to host format
-         UINT32 id = ntohl(pRawMsg->dwId);
-         UINT16 code = ntohs(pRawMsg->wCode);
-         UINT32 numVars = ntohl(pRawMsg->dwNumVars);
-         debugPrintf(6, _T("Received raw message %s"), NXCPMessageCodeName(code, szBuffer));
+         debugPrintf(6, _T("Received raw message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
 
-         if ((code == CMD_FILE_DATA) ||
-             (code == CMD_ABORT_FILE_TRANSFER))
+         if ((msg->GetCode() == CMD_FILE_DATA) ||
+             (msg->GetCode() == CMD_ABORT_FILE_TRANSFER))
          {
-            if ((m_hCurrFile != -1) && (m_dwFileRqId == id))
+            if ((m_hCurrFile != -1) && (m_dwFileRqId == msg->GetId()))
             {
-               if (code == CMD_FILE_DATA)
+               if (msg->GetCode() == CMD_FILE_DATA)
                {
-                  if (write(m_hCurrFile, pRawMsg->df, numVars) == (int)numVars)
+                  if (write(m_hCurrFile, msg->getBinaryData(), (int)msg->getBinaryDataSize()) == (int)msg->getBinaryDataSize())
                   {
-                     if (wFlags & MF_END_OF_FILE)
+                     if (msg->isEndOfFile())
                      {
 								debugPrintf(6, _T("Got end of file marker"));
-                        CSCPMessage msg;
+                        CSCPMessage response;
 
                         close(m_hCurrFile);
                         m_hCurrFile = -1;
 
-                        msg.SetCode(CMD_REQUEST_COMPLETED);
-                        msg.SetId(id);
-                        msg.SetVariable(VID_RCC, RCC_SUCCESS);
-                        sendMessage(&msg);
+                        response.SetCode(CMD_REQUEST_COMPLETED);
+                        response.SetId(msg->GetId());
+                        response.SetVariable(VID_RCC, RCC_SUCCESS);
+                        sendMessage(&response);
 
                         onFileUpload(TRUE);
                      }
@@ -493,15 +447,15 @@ void ClientSession::readThread()
                   {
 							debugPrintf(6, _T("I/O error"));
                      // I/O error
-                     CSCPMessage msg;
+                     CSCPMessage response;
 
                      close(m_hCurrFile);
                      m_hCurrFile = -1;
 
-                     msg.SetCode(CMD_REQUEST_COMPLETED);
-                     msg.SetId(id);
-                     msg.SetVariable(VID_RCC, RCC_IO_ERROR);
-                     sendMessage(&msg);
+                     response.SetCode(CMD_REQUEST_COMPLETED);
+                     response.SetId(msg->GetId());
+                     response.SetVariable(VID_RCC, RCC_IO_ERROR);
+                     sendMessage(&response);
 
                      onFileUpload(FALSE);
                   }
@@ -517,98 +471,94 @@ void ClientSession::readThread()
             }
             else
             {
-               AgentConnection *conn = (AgentConnection *)m_agentConn.get(id);
-               if(conn != NULL)
+               AgentConnection *conn = (AgentConnection *)m_agentConn.get(msg->GetId());
+               if (conn != NULL)
                {
-                  if (code == CMD_FILE_DATA)
+                  if (msg->GetCode() == CMD_FILE_DATA)
                   {
-
-                     if (conn->sendRawMessage(pRawMsg))//send raw message
+                     if (conn->sendMessage(msg))  //send raw message
                      {
-                        if (wFlags & MF_END_OF_FILE)
+                        if (msg->isEndOfFile())
                         {
                            debugPrintf(6, _T("Got end of file marker"));
                            //get response with specific ID if ok< then send ok, else send error
-                           m_agentConn.remove(id);
+                           m_agentConn.remove(msg->GetId());
                            delete conn;
-                           CSCPMessage msg;
 
-                           msg.SetCode(CMD_REQUEST_COMPLETED);
-                           msg.SetId(id);
-                           msg.SetVariable(VID_RCC, RCC_SUCCESS);
-                           sendMessage(&msg);
+                           CSCPMessage response;
+                           response.SetCode(CMD_REQUEST_COMPLETED);
+                           response.SetId(msg->GetId());
+                           response.SetVariable(VID_RCC, RCC_SUCCESS);
+                           sendMessage(&response);
                         }
                      }
                      else
                      {
                         debugPrintf(6, _T("Error while sending to agent"));
                         // I/O error
-                        CSCPMessage msg;
-                        m_agentConn.remove(id);
+                        m_agentConn.remove(msg->GetId());
                         delete conn;
 
-                        msg.SetCode(CMD_REQUEST_COMPLETED);
-                        msg.SetId(id);
-                        msg.SetVariable(VID_RCC, RCC_IO_ERROR); //set result that came from agent
-                        sendMessage(&msg);
+                        CSCPMessage response;
+                        response.SetCode(CMD_REQUEST_COMPLETED);
+                        response.SetId(msg->GetId());
+                        response.SetVariable(VID_RCC, RCC_IO_ERROR); //set result that came from agent
+                        sendMessage(&response);
                      }
                   }
                   else
                   {
                      // Resend abort message
-                     conn->sendRawMessage(pRawMsg);
-                     m_agentConn.remove(id);
+                     conn->sendMessage(msg);
+                     m_agentConn.remove(msg->GetId());
                      delete conn;
                   }
                }
                else
                {
-                  debugPrintf(4, _T("Out of state message (ID: %d)"), id);
+                  debugPrintf(4, _T("Out of state message (ID: %d)"), msg->GetId());
                }
             }
          }
+         delete msg;
       }
       else
       {
-         // Create message object from raw message
-         pMsg = new CSCPMessage(pRawMsg);
-         if ((pMsg->GetCode() == CMD_SESSION_KEY) && (pMsg->GetId() == m_dwEncryptionRqId))
+         if ((msg->GetCode() == CMD_SESSION_KEY) && (msg->GetId() == m_dwEncryptionRqId))
          {
-		      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
-            m_dwEncryptionResult = SetupEncryptionContext(pMsg, &m_pCtx, NULL, g_pServerKey, NXCP_VERSION);
+		      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
+            m_dwEncryptionResult = SetupEncryptionContext(msg, &m_pCtx, NULL, g_pServerKey, NXCP_VERSION);
+            receiver.setEncryptionContext(m_pCtx);
             ConditionSet(m_condEncryptionSetup);
             m_dwEncryptionRqId = 0;
-            delete pMsg;
+            delete msg;
          }
-         else if (pMsg->GetCode() == CMD_KEEPALIVE)
+         else if (msg->GetCode() == CMD_KEEPALIVE)
 			{
-		      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
-				respondToKeepalive(pMsg->GetId());
-				delete pMsg;
+		      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
+				respondToKeepalive(msg->GetId());
+				delete msg;
 			}
 			else
          {
-            m_pMessageQueue->Put(pMsg);
+            m_pMessageQueue->Put(msg);
          }
       }
    }
-   if (iErr < 0)
-      nxlog_write(MSG_SESSION_CLOSED, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
-   free(pRawMsg);
-#ifdef _WITH_ENCRYPTION
-   free(pDecryptionBuffer);
-#endif
 
 	// Finish update thread first
    m_pUpdateQueue->Put(INVALID_POINTER_VALUE);
    ThreadJoin(m_hUpdateThread);
 
    // Notify other threads to exit
-	while((pRawMsg = (CSCP_MESSAGE *)m_pSendQueue->Get()) != NULL)
-		free(pRawMsg);
+   CSCP_MESSAGE *rawMsg;
+	while((rawMsg = (CSCP_MESSAGE *)m_pSendQueue->Get()) != NULL)
+		free(rawMsg);
    m_pSendQueue->Put(INVALID_POINTER_VALUE);
-	while((pMsg = (CSCPMessage *)m_pMessageQueue->Get()) != NULL)
-		delete pMsg;
+
+   CSCPMessage *msg;
+	while((msg = (CSCPMessage *)m_pMessageQueue->Get()) != NULL)
+		delete msg;
    m_pMessageQueue->Put(INVALID_POINTER_VALUE);
 
    // Wait for other threads to finish
@@ -661,40 +611,39 @@ void ClientSession::readThread()
  */
 void ClientSession::writeThread()
 {
-   CSCP_MESSAGE *pRawMsg;
-   CSCP_ENCRYPTED_MESSAGE *pEnMsg;
-   TCHAR szBuffer[128];
-   BOOL bResult;
-
-   while(1)
+   while(true)
    {
-      pRawMsg = (CSCP_MESSAGE *)m_pSendQueue->GetOrBlock();
-      if (pRawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
+      CSCP_MESSAGE *rawMsg = (CSCP_MESSAGE *)m_pSendQueue->GetOrBlock();
+      if (rawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-		if (ntohs(pRawMsg->wCode) != CMD_ADM_MESSAGE)
-			debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
+		if (ntohs(rawMsg->wCode) != CMD_ADM_MESSAGE)
+      {
+         TCHAR buffer[256];
+			debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(rawMsg->wCode), buffer));
+      }
 
+      bool result;
       if (m_pCtx != NULL)
       {
-         pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
-         if (pEnMsg != NULL)
+         NXCP_ENCRYPTED_MESSAGE *enMsg = CSCPEncryptMessage(m_pCtx, rawMsg);
+         if (enMsg != NULL)
          {
-            bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));
-            free(pEnMsg);
+            result = (SendEx(m_hSocket, (char *)enMsg, ntohl(enMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(enMsg->dwSize));
+            free(enMsg);
          }
          else
          {
-            bResult = FALSE;
+            result = false;
          }
       }
       else
       {
-         bResult = (SendEx(m_hSocket, (const char *)pRawMsg, ntohl(pRawMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->dwSize));
+         result = (SendEx(m_hSocket, (const char *)rawMsg, ntohl(rawMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(rawMsg->dwSize));
       }
-      free(pRawMsg);
+      free(rawMsg);
 
-      if (!bResult)
+      if (!result)
       {
          closesocket(m_hSocket);
          m_hSocket = -1;
@@ -1566,38 +1515,40 @@ void ClientSession::onFileUpload(BOOL bSuccess)
  */
 void ClientSession::sendMessage(CSCPMessage *msg)
 {
-   TCHAR szBuffer[128];
-   BOOL bResult;
-
 	if (msg->GetCode() != CMD_ADM_MESSAGE)
-		debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
+   {
+      TCHAR buffer[128];
+		debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->GetCode(), buffer));
+   }
 
-	CSCP_MESSAGE *pRawMsg = msg->createMessage();
+	CSCP_MESSAGE *rawMsg = msg->createMessage();
    if ((g_debugLevel >= 8) && (msg->GetCode() != CMD_ADM_MESSAGE))
    {
-      String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
+      String msgDump = CSCPMessage::dump(rawMsg, NXCP_VERSION);
       debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
    }
+
+   bool result;
    if (m_pCtx != NULL)
    {
-      CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
-      if (pEnMsg != NULL)
+      NXCP_ENCRYPTED_MESSAGE *enMsg = CSCPEncryptMessage(m_pCtx, rawMsg);
+      if (enMsg != NULL)
       {
-         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));
-         free(pEnMsg);
+         result = (SendEx(m_hSocket, (char *)enMsg, ntohl(enMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(enMsg->dwSize));
+         free(enMsg);
       }
       else
       {
-         bResult = FALSE;
+         result = false;
       }
    }
    else
    {
-      bResult = (SendEx(m_hSocket, (const char *)pRawMsg, ntohl(pRawMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->dwSize));
+      result = (SendEx(m_hSocket, (const char *)rawMsg, ntohl(rawMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(rawMsg->dwSize));
    }
-   free(pRawMsg);
+   free(rawMsg);
 
-   if (!bResult)
+   if (!result)
    {
       closesocket(m_hSocket);
       m_hSocket = -1;
@@ -1609,29 +1560,29 @@ void ClientSession::sendMessage(CSCPMessage *msg)
  */
 void ClientSession::sendRawMessage(CSCP_MESSAGE *msg)
 {
-   TCHAR szBuffer[128];
-   BOOL bResult;
+   TCHAR buffer[128];
+	debugPrintf(6, _T("Sending raw message %s"), NXCPMessageCodeName(ntohs(msg->wCode), buffer));
 
-	debugPrintf(6, _T("Sending raw message %s"), NXCPMessageCodeName(ntohs(msg->wCode), szBuffer));
+   bool result;
    if (m_pCtx != NULL)
    {
-      CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(m_pCtx, msg);
-      if (pEnMsg != NULL)
+      NXCP_ENCRYPTED_MESSAGE *enMsg = CSCPEncryptMessage(m_pCtx, msg);
+      if (enMsg != NULL)
       {
-         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));
-         free(pEnMsg);
+         result = (SendEx(m_hSocket, (char *)enMsg, ntohl(enMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(enMsg->dwSize));
+         free(enMsg);
       }
       else
       {
-         bResult = FALSE;
+         result = false;
       }
    }
    else
    {
-      bResult = (SendEx(m_hSocket, (const char *)msg, ntohl(msg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(msg->dwSize));
+      result = (SendEx(m_hSocket, (const char *)msg, ntohl(msg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(msg->dwSize));
    }
 
-   if (!bResult)
+   if (!result)
    {
       closesocket(m_hSocket);
       m_hSocket = -1;

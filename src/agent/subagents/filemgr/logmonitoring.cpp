@@ -160,7 +160,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
    NX_FSTAT(hFile, &st);
    flData->setOffset((long)st.st_size);
    ThreadSleep(threadSleepTime);
-   int headerSize = CSCP_HEADER_SIZE + MAX_PATH*2;
+   int headerSize = NXCP_HEADER_SIZE + MAX_PATH*2;
 
    if (hFile == -1)
    {

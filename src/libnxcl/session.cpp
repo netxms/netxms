@@ -258,7 +258,7 @@ UINT32 NXCL_Session::WaitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
 BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
 {
    CSCP_MESSAGE *pRawMsg;
-   CSCP_ENCRYPTED_MESSAGE *pEnMsg;
+   NXCP_ENCRYPTED_MESSAGE *pEnMsg;
    BOOL bResult;
    TCHAR szBuffer[128];
 

@@ -32,10 +32,10 @@
 #define SERVER_LISTEN_PORT_FOR_MOBILES 4747
 #define MAX_DCI_STRING_VALUE           256
 #define CLIENT_CHALLENGE_SIZE				256
-#define CSCP_HEADER_SIZE               16
-#define CSCP_ENCRYPTION_HEADER_SIZE    16
-#define CSCP_EH_UNENCRYPTED_BYTES      8
-#define CSCP_EH_ENCRYPTED_BYTES        (CSCP_ENCRYPTION_HEADER_SIZE - CSCP_EH_UNENCRYPTED_BYTES)
+#define NXCP_HEADER_SIZE               16
+#define NXCP_ENCRYPTION_HEADER_SIZE    16
+#define NXCP_EH_UNENCRYPTED_BYTES      8
+#define NXCP_EH_ENCRYPTED_BYTES        (NXCP_ENCRYPTION_HEADER_SIZE - NXCP_EH_UNENCRYPTED_BYTES)
 #ifdef __64BIT__
 #define PROXY_ENCRYPTION_CTX           ((NXCPEncryptionContext *)_ULL(0xFFFFFFFFFFFFFFFF))
 #else
@@ -122,7 +122,7 @@ typedef struct
 {
    UINT32 dwChecksum;
    UINT32 dwReserved; // Align to 8-byte boundary
-} CSCP_ENCRYPTED_PAYLOAD_HEADER;
+} NXCP_ENCRYPTED_PAYLOAD_HEADER;
 
 /**
  * Encrypted message structure
@@ -134,7 +134,7 @@ typedef struct
    BYTE nReserved;
    UINT32 dwSize;    // Size of encrypted message (including encryption header and padding)
    BYTE data[1];     // Encrypted payload
-} CSCP_ENCRYPTED_MESSAGE;
+} NXCP_ENCRYPTED_MESSAGE;
 
 /**
  * DCI data header structure

@@ -422,7 +422,7 @@ void ISC::disconnect()
 BOOL ISC::sendMessage(CSCPMessage *pMsg)
 {
    CSCP_MESSAGE *pRawMsg;
-   CSCP_ENCRYPTED_MESSAGE *pEnMsg;
+   NXCP_ENCRYPTED_MESSAGE *pEnMsg;
    BOOL bResult;
 
 	if (!(m_flags & ISCF_IS_CONNECTED))

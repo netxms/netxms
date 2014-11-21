@@ -188,17 +188,6 @@
 #define AGENT_ACTION_SHELLEXEC	3
 
 /**
- * Pipe handle
- */
-#ifdef _WIN32
-#define HPIPE HANDLE
-#define INVALID_PIPE_HANDLE INVALID_HANDLE_VALUE
-#else
-#define HPIPE int
-#define INVALID_PIPE_HANDLE (-1)
-#endif
-
-/**
  * Action definition structure
  */
 typedef struct
@@ -240,9 +229,6 @@ private:
 	TCHAR m_name[MAX_SUBAGENT_NAME];
 	TCHAR m_user[MAX_ESA_USER_NAME];
 	HPIPE m_pipe;
-#ifdef _WIN32
-	HANDLE m_readEvent;
-#endif
 	bool m_connected;
 	MsgWaitQueue *m_msgQueue;
 	UINT32 m_requestId;
@@ -502,7 +488,6 @@ void ListListsFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListListsFromExtSubagents(StringList *list);
 void ListTablesFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListTablesFromExtSubagents(StringList *list);
-CSCPMessage *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent);
 bool SendMessageToPipe(HPIPE hPipe, CSCP_MESSAGE *msg);
 bool SendMessageToMasterAgent(CSCPMessage *msg);
 bool SendRawMessageToMasterAgent(CSCP_MESSAGE *msg);

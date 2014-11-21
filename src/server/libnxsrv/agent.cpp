@@ -269,7 +269,7 @@ void AgentConnection::receiverThread()
                {
                   if (m_downloadProgressCallback != NULL)
                   {
-                     m_downloadProgressCallback(pRawMsg->dwSize - (CSCP_HEADER_SIZE + 8), m_downloadProgressCallbackArg);
+                     m_downloadProgressCallback(pRawMsg->dwSize - (NXCP_HEADER_SIZE + 8), m_downloadProgressCallbackArg);
                   }
                }
             }
@@ -857,7 +857,7 @@ BOOL AgentConnection::sendMessage(CSCPMessage *pMsg)
 	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
    if (pCtx != NULL)
    {
-      CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(pCtx, pRawMsg);
+      NXCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(pCtx, pRawMsg);
       if (pEnMsg != NULL)
       {
          bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));
@@ -888,7 +888,7 @@ BOOL AgentConnection::sendRawMessage(CSCP_MESSAGE *pMsg)
 	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
    if (pCtx != NULL)
    {
-      CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(pCtx, pRawMsg);
+      NXCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(pCtx, pRawMsg);
       if (pEnMsg != NULL)
       {
          bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));

@@ -98,13 +98,13 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 
          if (pRawMsg->wCode == CMD_GET_NXCP_CAPS)
          {
-            pRawMsgOut = (CSCP_MESSAGE *)malloc(CSCP_HEADER_SIZE);
+            pRawMsgOut = (CSCP_MESSAGE *)malloc(NXCP_HEADER_SIZE);
             pRawMsgOut->dwId = htonl(pRawMsg->dwId);
             pRawMsgOut->wCode = htons((WORD)CMD_NXCP_CAPS);
             pRawMsgOut->wFlags = htons(MF_CONTROL);
             pRawMsgOut->dwNumVars = htonl(NXCP_VERSION << 24);
-            pRawMsgOut->dwSize = htonl(CSCP_HEADER_SIZE);
-				if (SendEx(sock, pRawMsgOut, CSCP_HEADER_SIZE, 0, NULL) != CSCP_HEADER_SIZE)
+            pRawMsgOut->dwSize = htonl(NXCP_HEADER_SIZE);
+				if (SendEx(sock, pRawMsgOut, NXCP_HEADER_SIZE, 0, NULL) != NXCP_HEADER_SIZE)
 					DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));
 				free(pRawMsgOut);
          }

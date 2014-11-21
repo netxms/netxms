@@ -122,9 +122,11 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 #endif
 			AgentWriteDebugLog(1, _T("Connected to master agent"));
 
+         PipeMessageReceiver receiver(s_pipe, 8192, 1048576);  // 8K initial, 1M max
 			while(!(g_dwFlags & AF_SHUTDOWN))
 			{
-				CSCPMessage *msg = ReadMessageFromPipe(s_pipe, NULL);
+            MessageReceiverResult result;
+				CSCPMessage *msg = receiver.readMessage(INFINITE, &result);
 				if ((msg == NULL) || (g_dwFlags & AF_SHUTDOWN))
 					break;
 

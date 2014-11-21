@@ -13,7 +13,7 @@
 - Management console:
     - New dashboard element "DCI summary table"
     - Cluster objects shown on status maps
-- Fixed issues: #565, #634, #667, #673, #674, #675, #678, #684, #688
+- Fixed issues: #381, #565, #634, #667, #673, #674, #675, #678, #684, #688
 
 
 *

@@ -209,7 +209,7 @@ UINT32 LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers()
 /**
  * Encrypt message
  */
-CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *CSCPEncryptMessage(NXCPEncryptionContext *pCtx, CSCP_MESSAGE *pMsg)
+NXCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *CSCPEncryptMessage(NXCPEncryptionContext *pCtx, CSCP_MESSAGE *pMsg)
 {
    return (pCtx != NULL) ? pCtx->encryptMessage(pMsg) : NULL;
 }
@@ -217,7 +217,7 @@ CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *CSCPEncryptMessage(NXCPEncryptionCo
 /**
  * Decrypt message
  */
-BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(NXCPEncryptionContext *pCtx, CSCP_ENCRYPTED_MESSAGE *pMsg, BYTE *pDecryptionBuffer)
+BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(NXCPEncryptionContext *pCtx, NXCP_ENCRYPTED_MESSAGE *pMsg, BYTE *pDecryptionBuffer)
 {
    return (pCtx != NULL) ? pCtx->decryptMessage(pMsg, pDecryptionBuffer) : FALSE;
 }
@@ -699,10 +699,10 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(UINT32 ciphers)
 /**
  * Encrypt message
  */
-CSCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(CSCP_MESSAGE *msg)
+NXCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(CSCP_MESSAGE *msg)
 {
    if (msg->wFlags & s_noEncryptionFlag)
-      return (CSCP_ENCRYPTED_MESSAGE *)nx_memdup(msg, ntohl(msg->dwSize));
+      return (NXCP_ENCRYPTED_MESSAGE *)nx_memdup(msg, ntohl(msg->dwSize));
 
 #ifdef _WITH_ENCRYPTION
    MutexLock(m_encryptorLock);
@@ -714,22 +714,22 @@ CSCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(CSCP_MESSAGE *msg)
    }
 
    UINT32 msgSize = ntohl(msg->dwSize);
-   CSCP_ENCRYPTED_MESSAGE *emsg = 
-      (CSCP_ENCRYPTED_MESSAGE *)malloc(msgSize + CSCP_ENCRYPTION_HEADER_SIZE + EVP_CIPHER_block_size(EVP_CIPHER_CTX_cipher(&m_encryptor)) + 8);
+   NXCP_ENCRYPTED_MESSAGE *emsg = 
+      (NXCP_ENCRYPTED_MESSAGE *)malloc(msgSize + NXCP_ENCRYPTION_HEADER_SIZE + EVP_CIPHER_block_size(EVP_CIPHER_CTX_cipher(&m_encryptor)) + 8);
    emsg->wCode = htons(CMD_ENCRYPTED_MESSAGE);
    emsg->nReserved = 0;
 
-   CSCP_ENCRYPTED_PAYLOAD_HEADER header;
+   NXCP_ENCRYPTED_PAYLOAD_HEADER header;
    header.dwChecksum = htonl(CalculateCRC32((BYTE *)msg, msgSize, 0));
    header.dwReserved = 0;
 
    int dataSize;
-   EVP_EncryptUpdate(&m_encryptor, emsg->data, &dataSize, (BYTE *)&header, CSCP_EH_ENCRYPTED_BYTES);
+   EVP_EncryptUpdate(&m_encryptor, emsg->data, &dataSize, (BYTE *)&header, NXCP_EH_ENCRYPTED_BYTES);
    msgSize = dataSize;
    EVP_EncryptUpdate(&m_encryptor, emsg->data + msgSize, &dataSize, (BYTE *)msg, ntohl(msg->dwSize));
    msgSize += dataSize;
    EVP_EncryptFinal_ex(&m_encryptor, emsg->data + msgSize, &dataSize);
-   msgSize += dataSize + CSCP_EH_UNENCRYPTED_BYTES;
+   msgSize += dataSize + NXCP_EH_UNENCRYPTED_BYTES;
 
    MutexUnlock(m_encryptorLock);
 
@@ -753,7 +753,7 @@ CSCP_ENCRYPTED_MESSAGE *NXCPEncryptionContext::encryptMessage(CSCP_MESSAGE *msg)
 /**
  * Decrypt message
  */
-bool NXCPEncryptionContext::decryptMessage(CSCP_ENCRYPTED_MESSAGE *msg, BYTE *decryptionBuffer)
+bool NXCPEncryptionContext::decryptMessage(NXCP_ENCRYPTED_MESSAGE *msg, BYTE *decryptionBuffer)
 {
 #ifdef _WITH_ENCRYPTION
    if (!EVP_DecryptInit_ex(&m_decryptor, NULL, NULL, m_sessionKey, m_iv))
@@ -762,15 +762,15 @@ bool NXCPEncryptionContext::decryptMessage(CSCP_ENCRYPTED_MESSAGE *msg, BYTE *de
    msg->dwSize = ntohl(msg->dwSize);
    int dataSize;
    EVP_DecryptUpdate(&m_decryptor, decryptionBuffer, &dataSize, msg->data,
-                     msg->dwSize - CSCP_EH_UNENCRYPTED_BYTES - msg->nPadding);
+                     msg->dwSize - NXCP_EH_UNENCRYPTED_BYTES - msg->nPadding);
    EVP_DecryptFinal(&m_decryptor, decryptionBuffer + dataSize, &dataSize);
 
-   CSCP_MESSAGE *clearMsg = (CSCP_MESSAGE *)(decryptionBuffer + CSCP_EH_ENCRYPTED_BYTES);
+   CSCP_MESSAGE *clearMsg = (CSCP_MESSAGE *)(decryptionBuffer + NXCP_EH_ENCRYPTED_BYTES);
    UINT32 msgSize = ntohl(clearMsg->dwSize);
    if (msgSize > msg->dwSize)
       return false;  // Message decrypted incorrectly, because it can't be larger than encrypted
    UINT32 crc32 = CalculateCRC32((BYTE *)clearMsg, msgSize, 0);
-   if (crc32 != ntohl(((CSCP_ENCRYPTED_PAYLOAD_HEADER *)decryptionBuffer)->dwChecksum))
+   if (crc32 != ntohl(((NXCP_ENCRYPTED_PAYLOAD_HEADER *)decryptionBuffer)->dwChecksum))
       return false;  // Bad checksum
 
    memcpy(msg, clearMsg, msgSize);

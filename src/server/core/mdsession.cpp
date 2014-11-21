@@ -296,7 +296,7 @@ void MobileDeviceSession::readThread()
 void MobileDeviceSession::writeThread()
 {
    CSCP_MESSAGE *pRawMsg;
-   CSCP_ENCRYPTED_MESSAGE *pEnMsg;
+   NXCP_ENCRYPTED_MESSAGE *pEnMsg;
    TCHAR szBuffer[128];
    BOOL bResult;
 
@@ -449,7 +449,7 @@ void MobileDeviceSession::sendMessage(CSCPMessage *msg)
    }
    if (m_pCtx != NULL)
    {
-      CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
+      NXCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
       if (pEnMsg != NULL)
       {
          bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));

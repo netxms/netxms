@@ -433,6 +433,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\snmptrapproxy.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\subagent.cpp"
 				>
 			</File>

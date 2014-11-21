@@ -148,13 +148,13 @@ void LIBNXSRV_EXPORTABLE DbgPrintf2(int level, const TCHAR *format, va_list args
 void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...)
 {
    va_list args;
-   TCHAR buffer[4096];
+   TCHAR buffer[8192];
 
    if (level > (int)g_debugLevel)
       return;     // Required application flag(s) not set
 
    va_start(args, format);
-   _vsntprintf(buffer, 4096, format, args);
+   _vsntprintf(buffer, 8192, format, args);
    va_end(args);
    nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", buffer);
 }

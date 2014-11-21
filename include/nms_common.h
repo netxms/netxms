@@ -1189,6 +1189,17 @@ typedef struct tagICMPHDR
 #endif
 
 /**
+ * Pipe handle
+ */
+#ifdef _WIN32
+#define HPIPE HANDLE
+#define INVALID_PIPE_HANDLE INVALID_HANDLE_VALUE
+#else
+#define HPIPE int
+#define INVALID_PIPE_HANDLE (-1)
+#endif
+
+/**
  * Memory debug
  */
 #ifdef NETXMS_MEMORY_DEBUG												

@@ -40,9 +40,6 @@ ExternalSubagent::ExternalSubagent(const TCHAR *name, const TCHAR *user)
 	m_msgQueue = new MsgWaitQueue();
 	m_requestId = 1;
 	m_mutexPipeWrite = MutexCreate();
-#ifdef _WIN32
-	m_readEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-#endif
 }
 
 /**
@@ -52,9 +49,6 @@ ExternalSubagent::~ExternalSubagent()
 {
 	delete m_msgQueue;
 	MutexDestroy(m_mutexPipeWrite);
-#ifdef _WIN32
-	CloseHandle(m_readEvent);
-#endif
 }
 
 /*
@@ -82,52 +76,6 @@ CSCPMessage *ExternalSubagent::waitForMessage(WORD code, UINT32 id)
 }
 
 /**
- * Read NXCP message from pipe
- */
-CSCPMessage *ReadMessageFromPipe(HPIPE hPipe, HANDLE hEvent)
-{
-	BYTE buffer[65536];
-	DWORD bytes;
-
-#ifdef _WIN32
-	if (hEvent != NULL)
-	{
-		OVERLAPPED ov;
-
-		memset(&ov, 0, sizeof(OVERLAPPED));
-		ov.hEvent = hEvent;
-		if (!ReadFile(hPipe, buffer, 65536, NULL, &ov))
-		{
-			if (GetLastError() != ERROR_IO_PENDING)
-				return NULL;
-		}
-		if (!GetOverlappedResult(hPipe, &ov, &bytes, TRUE))
-		{
-			return NULL;
-		}
-	}
-	else
-	{
-		if (!ReadFile(hPipe, buffer, 65536, &bytes, NULL))
-			return NULL;
-	}
-#else
-	NXCPEncryptionContext *dummyCtx = NULL;
-	CSCP_BUFFER nxcpBuffer;
-	RecvNXCPMessage(0, NULL, &nxcpBuffer, 0, NULL, NULL, 0);
-	bytes = RecvNXCPMessage(hPipe, (CSCP_MESSAGE *)buffer, &nxcpBuffer, 65536, &dummyCtx, NULL, INFINITE);
-#endif
-
-	if (bytes < CSCP_HEADER_SIZE)
-		return NULL;
-
-	if (ntohl(((CSCP_MESSAGE *)buffer)->dwSize) != bytes)
-		return NULL;	// message size given in header does not match number of received bytes
-
-	return new CSCPMessage((CSCP_MESSAGE *)buffer);
-}
-
-/**
  * Main connection thread
  */
 void ExternalSubagent::connect(HPIPE hPipe)
@@ -138,15 +86,16 @@ void ExternalSubagent::connect(HPIPE hPipe)
 	m_pipe = hPipe;
 	m_connected = true;
 	AgentWriteDebugLog(2, _T("ExternalSubagent(%s): connection established"), m_name);
+   PipeMessageReceiver receiver(hPipe, 8192, 1048576);  // 8K initial, 1M max
 	while(true)
 	{
-#ifdef _WIN32
-		CSCPMessage *msg = ReadMessageFromPipe(hPipe, m_readEvent);
-#else
-		CSCPMessage *msg = ReadMessageFromPipe(hPipe, NULL);
-#endif
+      MessageReceiverResult result;
+      CSCPMessage *msg = receiver.readMessage(INFINITE, &result);
 		if (msg == NULL)
+      {
+   		AgentWriteDebugLog(6, _T("ExternalSubagent(%s): receiver failure (%d)"), m_name, result);
 			break;
+      }
 		AgentWriteDebugLog(6, _T("ExternalSubagent(%s): received message %s"), m_name, NXCPMessageCodeName(msg->GetCode(), buffer));
       switch(msg->GetCode())
       {
@@ -888,7 +837,7 @@ void ShutdownExtSubagents()
 	{
 		if (s_subagents.get(i)->isConnected())
 		{
-         DebugPrintf(INVALID_INDEX, 1, _T("Sending SHUTDOWN command to external subagent %s\n"), s_subagents.get(i)->getName());
+         DebugPrintf(INVALID_INDEX, 1, _T("Sending SHUTDOWN command to external subagent %s"), s_subagents.get(i)->getName());
          s_subagents.get(i)->shutdown();
 		}
 	}

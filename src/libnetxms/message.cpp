@@ -116,6 +116,8 @@ CSCPMessage::CSCPMessage(int version)
    m_fields = NULL;
    m_flags = 0;
    m_version = version;
+   m_data = NULL;
+   m_dataSize = 0;
 }
 
 /**
@@ -128,12 +130,20 @@ CSCPMessage::CSCPMessage(CSCPMessage *pMsg)
    m_flags = pMsg->m_flags;
    m_version = pMsg->m_version;
    m_fields = NULL;
+   m_dataSize = pMsg->m_dataSize;
 
-   MessageField *entry, *tmp;
-   HASH_ITER(hh, pMsg->m_fields, entry, tmp)
+   if (m_flags & MF_BINARY)
    {
-      MessageField *f = (MessageField *)nx_memdup(entry, entry->size);
-      HASH_ADD_INT(m_fields, id, f);
+      m_data = (BYTE *)nx_memdup(pMsg->m_data, m_dataSize);
+   }
+   else
+   {
+      MessageField *entry, *tmp;
+      HASH_ITER(hh, pMsg->m_fields, entry, tmp)
+      {
+         MessageField *f = (MessageField *)nx_memdup(entry, entry->size);
+         HASH_ADD_INT(m_fields, id, f);
+      }
    }
 }
 
@@ -151,65 +161,77 @@ CSCPMessage::CSCPMessage(CSCP_MESSAGE *pMsg, int version)
    m_fields = NULL;
 
    // Parse data fields
-   int fieldCount = (int)ntohl(pMsg->dwNumVars);
-   size_t dwSize = ntohl(pMsg->dwSize);
-   size_t pos = CSCP_HEADER_SIZE;
-   for(int f = 0; f < fieldCount; f++)
+   if (m_flags & MF_BINARY)
    {
-      CSCP_DF *field = (CSCP_DF *)(((BYTE *)pMsg) + pos);
+      m_dataSize = (size_t)ntohl(pMsg->dwNumVars);
+      m_data = (BYTE *)nx_memdup(pMsg->df, m_dataSize);
+   }
+   else
+   {
+      m_data = NULL;
+      m_dataSize = 0;
 
-      // Validate position inside message
-      if (pos > dwSize - 8)
-         break;
-      if ((pos > dwSize - 12) && 
-          ((field->bType == CSCP_DT_STRING) || (field->bType == CSCP_DT_BINARY)))
-         break;
-
-      // Calculate and validate variable size
-      size_t fieldSize = CalculateFieldSize(field, true);
-      if (pos + fieldSize > dwSize)
-         break;
-
-      // Create new entry
-      MessageField *entry = CreateMessageField(fieldSize);
-      entry->id = ntohl(field->fieldId);
-      memcpy(&entry->data, field, fieldSize);
-
-      // Convert values to host format
-      entry->data.fieldId = ntohl(entry->data.fieldId);
-      switch(field->bType)
+      int fieldCount = (int)ntohl(pMsg->dwNumVars);
+      size_t dwSize = ntohl(pMsg->dwSize);
+      size_t pos = NXCP_HEADER_SIZE;
+      for(int f = 0; f < fieldCount; f++)
       {
-         case CSCP_DT_INT32:
-            entry->data.df_int32 = ntohl(entry->data.df_int32);
+         CSCP_DF *field = (CSCP_DF *)(((BYTE *)pMsg) + pos);
+
+         // Validate position inside message
+         if (pos > dwSize - 8)
             break;
-         case CSCP_DT_INT64:
-            entry->data.df_int64 = ntohq(entry->data.df_int64);
+         if ((pos > dwSize - 12) && 
+             ((field->bType == CSCP_DT_STRING) || (field->bType == CSCP_DT_BINARY)))
             break;
-         case CSCP_DT_INT16:
-            entry->data.df_int16 = ntohs(entry->data.df_int16);
+
+         // Calculate and validate variable size
+         size_t fieldSize = CalculateFieldSize(field, true);
+         if (pos + fieldSize > dwSize)
             break;
-         case CSCP_DT_FLOAT:
-            entry->data.df_real = ntohd(entry->data.df_real);
-            break;
-         case CSCP_DT_STRING:
+
+         // Create new entry
+         MessageField *entry = CreateMessageField(fieldSize);
+         entry->id = ntohl(field->fieldId);
+         memcpy(&entry->data, field, fieldSize);
+
+         // Convert values to host format
+         entry->data.fieldId = ntohl(entry->data.fieldId);
+         switch(field->bType)
+         {
+            case CSCP_DT_INT32:
+               entry->data.df_int32 = ntohl(entry->data.df_int32);
+               break;
+            case CSCP_DT_INT64:
+               entry->data.df_int64 = ntohq(entry->data.df_int64);
+               break;
+            case CSCP_DT_INT16:
+               entry->data.df_int16 = ntohs(entry->data.df_int16);
+               break;
+            case CSCP_DT_FLOAT:
+               entry->data.df_real = ntohd(entry->data.df_real);
+               break;
+            case CSCP_DT_STRING:
 #if !(WORDS_BIGENDIAN)
-            entry->data.df_string.dwLen = ntohl(entry->data.df_string.dwLen);
-            for(i = 0; i < entry->data.df_string.dwLen / 2; i++)
-               entry->data.df_string.szValue[i] = ntohs(entry->data.df_string.szValue[i]);
+               entry->data.df_string.dwLen = ntohl(entry->data.df_string.dwLen);
+               for(i = 0; i < entry->data.df_string.dwLen / 2; i++)
+                  entry->data.df_string.szValue[i] = ntohs(entry->data.df_string.szValue[i]);
 #endif
-            break;
-         case CSCP_DT_BINARY:
-            entry->data.df_string.dwLen = ntohl(entry->data.df_string.dwLen);
-            break;
+               break;
+            case CSCP_DT_BINARY:
+               entry->data.df_string.dwLen = ntohl(entry->data.df_string.dwLen);
+               break;
+         }
+
+         HASH_ADD_INT(m_fields, id, entry);
+
+         // Starting from version 2, all variables should be 8-byte aligned
+         if (m_version >= 2)
+            pos += fieldSize + ((8 - (fieldSize % 8)) & 7);
+         else
+            pos += fieldSize;
       }
 
-      HASH_ADD_INT(m_fields, id, entry);
-
-      // Starting from version 2, all variables should be 8-byte aligned
-      if (m_version >= 2)
-         pos += fieldSize + ((8 - (fieldSize % 8)) & 7);
-      else
-         pos += fieldSize;
    }
 }
 
@@ -290,6 +312,8 @@ CSCPMessage::CSCPMessage(const char *xml)
    m_fields = NULL;
    m_flags = 0;
    m_version = NXCP_VERSION;
+   m_data = NULL;
+   m_dataSize = 0;
 
 	// Parse XML
 	state.msg = this;
@@ -396,6 +420,7 @@ void CSCPMessage::processXMLData(void *state)
 CSCPMessage::~CSCPMessage()
 {
    deleteAllVariables();
+   safe_free(m_data);
 }
 
 /**
@@ -415,6 +440,9 @@ CSCP_DF *CSCPMessage::find(UINT32 fieldId)
  */
 void *CSCPMessage::set(UINT32 fieldId, BYTE bType, const void *pValue, UINT32 dwSize)
 {
+   if (m_flags & MF_BINARY)
+      return NULL;
+
    UINT32 dwLength;
 #if defined(UNICODE_UCS2) && defined(UNICODE)
 #define __buffer pValue
@@ -835,24 +863,33 @@ BYTE *CSCPMessage::getBinaryFieldPtr(UINT32 fieldId, size_t *size)
 CSCP_MESSAGE *CSCPMessage::createMessage()
 {
    // Calculate message size
-   size_t size = CSCP_HEADER_SIZE;
+   size_t size = NXCP_HEADER_SIZE;
    UINT32 fieldCount = 0;
-   MessageField *entry, *tmp;
-   HASH_ITER(hh, m_fields, entry, tmp)
+   if (m_flags & MF_BINARY)
    {
-      size_t fieldSize = CalculateFieldSize(&entry->data, false);
-      if (m_version >= 2)
-         size += fieldSize + ((8 - (fieldSize % 8)) & 7);
-      else
-         size += fieldSize;
-      fieldCount++;
-   }
-
-   // Message should be aligned to 8 bytes boundary
-   // This is always the case starting from version 2 because
-   // all variables are padded to 8 bytes boundary
-   if (m_version < 2)
+      size += m_dataSize;
+      fieldCount = (UINT32)m_dataSize;
       size += (8 - (size % 8)) & 7;
+   }
+   else
+   {
+      MessageField *entry, *tmp;
+      HASH_ITER(hh, m_fields, entry, tmp)
+      {
+         size_t fieldSize = CalculateFieldSize(&entry->data, false);
+         if (m_version >= 2)
+            size += fieldSize + ((8 - (fieldSize % 8)) & 7);
+         else
+            size += fieldSize;
+         fieldCount++;
+      }
+
+      // Message should be aligned to 8 bytes boundary
+      // This is always the case starting from version 2 because
+      // all fields are padded to 8 bytes boundary
+      if (m_version < 2)
+         size += (8 - (size % 8)) & 7;
+   }
 
    // Create message
    CSCP_MESSAGE *pMsg = (CSCP_MESSAGE *)malloc(size);
@@ -864,48 +901,55 @@ CSCP_MESSAGE *CSCPMessage::createMessage()
    pMsg->dwNumVars = htonl(fieldCount);
 
    // Fill data fields
-   CSCP_DF *field = (CSCP_DF *)((char *)pMsg + CSCP_HEADER_SIZE);
-   HASH_ITER(hh, m_fields, entry, tmp)
+   if (m_flags & MF_BINARY)
    {
-      size_t fieldSize = CalculateFieldSize(&entry->data, false);
-      memcpy(field, &entry->data, fieldSize);
-
-      // Convert numeric values to network format
-      field->fieldId = htonl(field->fieldId);
-      switch(field->bType)
-      {
-         case CSCP_DT_INT32:
-            field->df_int32 = htonl(field->df_int32);
-            break;
-         case CSCP_DT_INT64:
-            field->df_int64 = htonq(field->df_int64);
-            break;
-         case CSCP_DT_INT16:
-            field->df_int16 = htons(field->df_int16);
-            break;
-         case CSCP_DT_FLOAT:
-            field->df_real = htond(field->df_real);
-            break;
-         case CSCP_DT_STRING:
-#if !(WORDS_BIGENDIAN)
-            {
-               for(UINT32 i = 0; i < field->df_string.dwLen / 2; i++)
-                  field->df_string.szValue[i] = htons(field->df_string.szValue[i]);
-               field->df_string.dwLen = htonl(field->df_string.dwLen);
-            }
-#endif
-            break;
-         case CSCP_DT_BINARY:
-            field->df_string.dwLen = htonl(field->df_string.dwLen);
-            break;
-      }
-
-      if (m_version >= 2)
-         field = (CSCP_DF *)((char *)field + fieldSize + ((8 - (fieldSize % 8)) & 7));
-      else
-         field = (CSCP_DF *)((char *)field + fieldSize);
+      memcpy(pMsg->df, m_data, m_dataSize);
    }
+   else
+   {
+      CSCP_DF *field = (CSCP_DF *)((char *)pMsg + NXCP_HEADER_SIZE);
+      MessageField *entry, *tmp;
+      HASH_ITER(hh, m_fields, entry, tmp)
+      {
+         size_t fieldSize = CalculateFieldSize(&entry->data, false);
+         memcpy(field, &entry->data, fieldSize);
 
+         // Convert numeric values to network format
+         field->fieldId = htonl(field->fieldId);
+         switch(field->bType)
+         {
+            case CSCP_DT_INT32:
+               field->df_int32 = htonl(field->df_int32);
+               break;
+            case CSCP_DT_INT64:
+               field->df_int64 = htonq(field->df_int64);
+               break;
+            case CSCP_DT_INT16:
+               field->df_int16 = htons(field->df_int16);
+               break;
+            case CSCP_DT_FLOAT:
+               field->df_real = htond(field->df_real);
+               break;
+            case CSCP_DT_STRING:
+#if !(WORDS_BIGENDIAN)
+               {
+                  for(UINT32 i = 0; i < field->df_string.dwLen / 2; i++)
+                     field->df_string.szValue[i] = htons(field->df_string.szValue[i]);
+                  field->df_string.dwLen = htonl(field->df_string.dwLen);
+               }
+#endif
+               break;
+            case CSCP_DT_BINARY:
+               field->df_string.dwLen = htonl(field->df_string.dwLen);
+               break;
+         }
+
+         if (m_version >= 2)
+            field = (CSCP_DF *)((char *)field + fieldSize + ((8 - (fieldSize % 8)) & 7));
+         else
+            field = (CSCP_DF *)((char *)field + fieldSize);
+      }
+   }
    return pMsg;
 }
 
@@ -1167,7 +1211,7 @@ String CSCPMessage::dump(CSCP_MESSAGE *pMsg, int version)
    }
    
    // Parse data fields
-   size_t pos = CSCP_HEADER_SIZE;
+   size_t pos = NXCP_HEADER_SIZE;
    for(int f = 0; f < numFields; f++)
    {
       CSCP_DF *field = (CSCP_DF *)(((BYTE *)pMsg) + pos);
@@ -1237,7 +1281,7 @@ String CSCPMessage::dump(CSCP_MESSAGE *pMsg, int version)
       }
       free(convertedField);
 
-      // Starting from version 2, all variables should be 8-byte aligned
+      // Starting from version 2, all fields should be 8-byte aligned
       if (version >= 2)
          pos += fieldSize + ((8 - (fieldSize % 8)) & 7);
       else

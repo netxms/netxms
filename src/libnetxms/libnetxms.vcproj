@@ -418,6 +418,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\msgrecv.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\msgwq.cpp"
 				>
 			</File>
