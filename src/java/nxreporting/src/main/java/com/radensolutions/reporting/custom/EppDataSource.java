@@ -8,6 +8,7 @@ import org.netxms.client.ServerAction;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.client.objects.AbstractObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -162,7 +163,13 @@ public class EppDataSource extends NXCLDataSource {
             }
 
             for (Long objectId : sources) {
-                String objectName = session.findObjectById(objectId).getObjectName();
+                AbstractObject object = session.findObjectById(objectId);
+                final String objectName;
+                if (object != null) {
+                    objectName = object.getObjectName();
+                } else {
+                    objectName = "[" + objectId + "]";
+                }
                 filterRows.add(new Cell(objectName));
             }
         }

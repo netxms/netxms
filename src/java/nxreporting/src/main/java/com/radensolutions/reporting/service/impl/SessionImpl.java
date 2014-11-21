@@ -1,12 +1,9 @@
 package com.radensolutions.reporting.service.impl;
 
-import java.io.File;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.UUID;
+import com.radensolutions.reporting.model.Notification;
+import com.radensolutions.reporting.model.ReportDefinition;
+import com.radensolutions.reporting.model.ReportResult;
+import com.radensolutions.reporting.service.*;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.api.client.reporting.ReportRenderFormat;
 import org.netxms.base.CommonRCC;
@@ -17,15 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import com.radensolutions.reporting.model.Notification;
-import com.radensolutions.reporting.model.ReportDefinition;
-import com.radensolutions.reporting.model.ReportResult;
-import com.radensolutions.reporting.service.Connector;
-import com.radensolutions.reporting.service.MessageProcessingResult;
-import com.radensolutions.reporting.service.NotificationService;
-import com.radensolutions.reporting.service.ReportManager;
-import com.radensolutions.reporting.service.ReportScheduler;
-import com.radensolutions.reporting.service.Session;
+
+import java.io.File;
+import java.util.*;
 
 @Component
 public class SessionImpl implements Session {
@@ -185,7 +176,7 @@ public class SessionImpl implements Session {
                     reply.setVariable(varId, (UUID) jobDataMap.get("jobId"));
                     reply.setVariable(varId + 1, (UUID) jobDataMap.get("reportId"));
                     reply.setVariableInt32(varId + 2, (Integer) jobDataMap.get("userId"));
-                    reply.setVariableInt64(varId + 3, ((Date) jobDataMap.get("startDate")).getTime());
+                    reply.setVariableInt64(varId + 3, ((Date) jobDataMap.get("startDate")).getTime()); // TODO: NPE here?
                     reply.setVariableInt32(varId + 4, (Integer) jobDataMap.get("daysOfWeek"));
                     reply.setVariableInt32(varId + 5, (Integer) jobDataMap.get("daysOfMonth"));
                     reply.setVariableInt32(varId + 6, (Integer) jobDataMap.get("jobType"));
