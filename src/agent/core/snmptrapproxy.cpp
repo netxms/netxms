@@ -22,12 +22,15 @@
 
 #include "nxagentd.h"
 
-struct UdpMessage
+class UdpMessage
 {
+public:
    UINT32 ipAddr;
    short port;
    BYTE* rawMessage;
    int lenght;
+
+   ~UdpMessage() { safe_free(rawMessage); }
 };
 
 /**
@@ -163,11 +166,12 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
          DebugPrintf(INVALID_INDEX, 1, _T("Send SNMP thead stoped by que."));
          break;
       }
+      DebugPrintf(INVALID_INDEX, 1, _T("Got trap from queue"));
       bool sent = false;
 
       CSCPMessage *msg = new CSCPMessage();
       msg->SetCode(CMD_SNMP_TRAP);
-      msg->SetId(GetNewMessageID());
+      msg->SetId(GenerateMessageId());
       msg->SetVariable(VID_IP_ADDRESS, pdu->ipAddr);
       msg->SetVariable(VID_PORT, pdu->port);
       msg->SetVariable(VID_PDU_SIZE, pdu->lenght);
@@ -194,8 +198,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
          MutexUnlock(g_hSessionListAccess);
       }
 
-      free(msg);
-      safe_free(pdu->rawMessage);
+      delete msg;
       if(!sent)
       {
          DebugPrintf(INVALID_INDEX, 1, _T("Could not send forward trap to server"));
@@ -205,7 +208,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
       else
       {
          DebugPrintf(INVALID_INDEX, 1, _T("Trap sucesfully forwarded to server"));
-         safe_free(pdu);
+         delete pdu;
       }
    }
    delete SNMPTrapQueue;

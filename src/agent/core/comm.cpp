@@ -37,6 +37,15 @@ MUTEX g_hSessionListAccess;
  * Static data
  */
 static MUTEX m_mutexWatchdogActive = INVALID_MUTEX_HANDLE;
+static VolatileCounter s_messageId = (VolatileCounter)time(NULL);
+
+/**
+ * Generate new message ID
+ */
+UINT32 GenerateMessageId()
+{
+   return (UINT32)InterlockedIncrement(&s_messageId);
+}
 
 /**
  * Initialize session list

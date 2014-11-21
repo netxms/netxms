@@ -180,7 +180,6 @@ static UINT32 m_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
 static TCHAR s_dailyLogFileSuffix[64] = _T("");
 static Config *s_registry = NULL;
 static TCHAR s_executableName[MAX_PATH];
-static UINT32 g_messageNumber = time(NULL);
 
 #if defined(_WIN32)
 static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
@@ -1727,12 +1726,4 @@ int main(int argc, char *argv[])
    }
 
    return iExitCode;
-}
-
-UINT32 GetNewMessageID()
-{
-   MutexLock(g_hSessionListAccess);
-   g_messageNumber++;
-   MutexLock(g_hSessionListAccess);
-   return g_messageNumber;
 }

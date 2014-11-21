@@ -533,7 +533,8 @@ bool SendControlMessage(CSCPMessage *msg);
 
 void StartSessionAgentConnector();
 SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName);
-UINT32 GetNewMessageID();
+
+UINT32 GenerateMessageId();
 
 #ifdef _WIN32
 
