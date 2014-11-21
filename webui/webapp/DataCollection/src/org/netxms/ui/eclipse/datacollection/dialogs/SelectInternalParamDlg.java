@@ -55,6 +55,7 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		if ((object instanceof Template) || (object instanceof AbstractNode))
 		{
 			list.add(new AgentParameter("Net.IP.NextHop(*)", Messages.get().SelectInternalParamDlg_DCI_NextHop, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
+         list.add(new AgentParameter("NetSvc.ResponseTime(*)", "Network service {instance} response time", DataCollectionItem.DT_UINT)); //$NON-NLS-1$
 		}
 		
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).hasAgent()))

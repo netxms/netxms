@@ -3660,7 +3660,19 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 		return DCE_SUCCESS;
 	rc = DCE_SUCCESS;
 
-   if (MatchString(_T("Net.IP.NextHop(*)"), param, FALSE))
+   if (!_tcsicmp(param, _T("AgentStatus")))
+   {
+      if (m_dwFlags & NF_IS_NATIVE_AGENT)
+      {
+         buffer[0] = (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ? _T('1') : _T('0');
+         buffer[1] = 0;
+      }
+      else
+      {
+         rc = DCE_NOT_SUPPORTED;
+      }
+   }
+   else if (MatchString(_T("Net.IP.NextHop(*)"), param, FALSE))
    {
       if ((m_dwFlags & NF_IS_NATIVE_AGENT) || (m_dwFlags & NF_IS_SNMP))
 		{
@@ -3691,12 +3703,12 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
          rc = DCE_NOT_SUPPORTED;
 		}
    }
-   else if (!_tcsicmp(param, _T("AgentStatus")))
+   else if (MatchString(_T("NetSvc.ResponseTime(*)"), param, FALSE))
    {
-      if (m_dwFlags & NF_IS_NATIVE_AGENT)
+      NetObj *object = objectFromParameter(param);
+      if ((object != NULL) && (object->getObjectClass() == OBJECT_NETWORKSERVICE))
       {
-         buffer[0] = (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE) ? _T('1') : _T('0');
-         buffer[1] = 0;
+         _sntprintf(buffer, bufSize, _T("%u"), ((NetworkService *)object)->getResponseTime());
       }
       else
       {
@@ -4268,9 +4280,10 @@ void Node::openTableList(ObjectArray<AgentTableDefinition> **tableList)
  */
 UINT32 Node::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType,
                                 WORD wPort, WORD wProto, TCHAR *pszRequest,
-                                TCHAR *pszResponse)
+                                TCHAR *pszResponse, UINT32 *responseTime)
 {
    UINT32 dwError = ERR_NOT_CONNECTED;
+   *responseTime = 0;
 
    if ((m_dwFlags & NF_IS_NATIVE_AGENT) &&
        (!(m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)) &&
@@ -4281,8 +4294,7 @@ UINT32 Node::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServic
       pConn = createAgentConnection();
       if (pConn != NULL)
       {
-         dwError = pConn->checkNetworkService(pdwStatus, dwIpAddr, iServiceType,
-                                              wPort, wProto, pszRequest, pszResponse);
+         dwError = pConn->checkNetworkService(pdwStatus, dwIpAddr, iServiceType, wPort, wProto, pszRequest, pszResponse, responseTime);
          pConn->disconnect();
          delete pConn;
       }

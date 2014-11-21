@@ -6,7 +6,10 @@
 #include "main.h"
 #include "net.h"
 
-LONG H_CheckCustom(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+/**
+ * Check custom service - parameter handler
+ */
+LONG H_CheckCustom(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 
@@ -15,9 +18,9 @@ LONG H_CheckCustom(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	TCHAR szTimeout[64];
 	unsigned short nPort;
 
-   AgentGetParameterArgA(pszParam, 1, szHost, sizeof(szHost));
-   AgentGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
-   AgentGetParameterArg(pszParam, 3, szTimeout, sizeof(szTimeout));
+   AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
+   AgentGetParameterArg(param, 2, szPort, sizeof(szPort));
+   AgentGetParameterArg(param, 3, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0 || szPort[0] == 0)
 	{
@@ -31,11 +34,22 @@ LONG H_CheckCustom(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	}
 
 	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
-	ret_int(pValue, CheckCustom(szHost, 0, nPort, dwTimeout));
-	return nRet;
+   INT64 start = GetCurrentTimeMs();
+   int result = CheckCustom(szHost, 0, nPort, dwTimeout);
+   if (*arg == 'R')
+   {
+	   ret_int64(value, GetCurrentTimeMs() - start);
+   }
+   else
+   {
+	   ret_int(value, result);
+   }
+   return nRet;
 }
 
-
+/**
+ * Check custom service
+ */
 int CheckCustom(char *szAddr, UINT32 dwAddr, short nPort, UINT32 dwTimeout)
 {
 	int nRet;

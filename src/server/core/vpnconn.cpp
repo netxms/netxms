@@ -170,7 +170,7 @@ BOOL VPNConnector::saveToDatabase(DB_HANDLE hdb)
    }
 
    // Determine owning node's ID
-   pNode = GetParentNode();
+   pNode = getParentNode();
    if (pNode != NULL)
       dwNodeId = pNode->getId();
    else
@@ -231,7 +231,7 @@ bool VPNConnector::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Get connector's parent node
  */
-Node *VPNConnector::GetParentNode()
+Node *VPNConnector::getParentNode()
 {
    UINT32 i;
    Node *pNode = NULL;

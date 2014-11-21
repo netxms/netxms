@@ -1238,8 +1238,8 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
  * Check status of network service via agent
  */
 UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType,
-                                           WORD wPort, WORD wProto,
-                                           const TCHAR *pszRequest, const TCHAR *pszResponse)
+                                            WORD wPort, WORD wProto, const TCHAR *pszRequest, 
+                                            const TCHAR *pszResponse, UINT32 *responseTime)
 {
    UINT32 dwRqId, dwResult;
    CSCPMessage msg(m_nProtocolVersion), *pResponse;
@@ -1272,6 +1272,10 @@ UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, 
          if (dwResult == ERR_SUCCESS)
          {
             *pdwStatus = pResponse->GetVariableLong(VID_SERVICE_STATUS);
+            if (responseTime != NULL)
+            {
+               *responseTime = pResponse->GetVariableLong(VID_RESPONSE_TIME);
+            }
          }
          delete pResponse;
       }

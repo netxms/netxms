@@ -6,7 +6,10 @@
 #include "main.h"
 #include "net.h"
 
-LONG H_CheckPOP3(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+/**
+ * Check POP3 service - parameter handler
+ */
+LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	char szHost[256];
@@ -15,10 +18,10 @@ LONG H_CheckPOP3(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	TCHAR szTimeout[64];
 	bool bIsOk = false;
 
-	AgentGetParameterArgA(pszParam, 1, szHost, sizeof(szHost));
-	AgentGetParameterArgA(pszParam, 2, szUser, sizeof(szUser));
-	AgentGetParameterArgA(pszParam, 3, szPassword, sizeof(szPassword));
-   AgentGetParameterArg(pszParam, 4, szTimeout, sizeof(szTimeout));
+	AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
+	AgentGetParameterArgA(param, 2, szUser, sizeof(szUser));
+	AgentGetParameterArgA(param, 3, szPassword, sizeof(szPassword));
+   AgentGetParameterArg(param, 4, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0 || szUser[0] == 0 || szPassword[0] == 0)
 	{
@@ -26,10 +29,22 @@ LONG H_CheckPOP3(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	}
 
 	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
-	ret_int(pValue, CheckPOP3(szHost, 0, 110, szUser, szPassword, dwTimeout));
+   INT64 start = GetCurrentTimeMs();
+	int result = CheckPOP3(szHost, 0, 110, szUser, szPassword, dwTimeout);
+   if (*arg == 'R')
+   {
+	   ret_int64(value, GetCurrentTimeMs() - start);
+   }
+   else
+   {
+	   ret_int(value, result);
+   }
 	return nRet;
 }
 
+/**
+ * Check POP3 service
+ */
 int CheckPOP3(char *szAddr, UINT32 dwAddr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
 {
 	int nRet = 0;

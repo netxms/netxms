@@ -412,6 +412,36 @@ void DataCollectionTarget::queueItemsForPolling(Queue *pPollerQueue)
 }
 
 /**
+ * Get object from parameter
+ */
+NetObj *DataCollectionTarget::objectFromParameter(const TCHAR *param)
+{
+   TCHAR *eptr, arg[256];
+   AgentGetParameterArg(param, 1, arg, 256);
+   UINT32 objectId = _tcstoul(arg, &eptr, 0);
+   if (*eptr != 0)
+   {
+      // Argument is object's name
+      objectId = 0;
+   }
+
+   // Find child object with requested ID or name
+   NetObj *object = NULL;
+   LockChildList(FALSE);
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   {
+      if (((objectId == 0) && (!_tcsicmp(m_pChildList[i]->getName(), arg))) ||
+          (objectId == m_pChildList[i]->getId()))
+      {
+         object = m_pChildList[i];
+         break;
+      }
+   }
+   UnlockChildList();
+   return object;
+}
+
+/**
  * Get value for server's internal parameter
  */
 UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
@@ -428,34 +458,10 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
    }
    else if (MatchString(_T("ChildStatus(*)"), param, FALSE))
    {
-      TCHAR *pEnd, szArg[256];
-      UINT32 i, dwId;
-      NetObj *pObject = NULL;
-
-      AgentGetParameterArg(param, 1, szArg, 256);
-      dwId = _tcstoul(szArg, &pEnd, 0);
-      if (*pEnd != 0)
+      NetObj *object = objectFromParameter(param);
+      if (object != NULL)
       {
-         // Argument is object's name
-         dwId = 0;
-      }
-
-      // Find child object with requested ID or name
-      LockChildList(FALSE);
-      for(i = 0; i < m_dwChildCount; i++)
-      {
-         if (((dwId == 0) && (!_tcsicmp(m_pChildList[i]->getName(), szArg))) ||
-             (dwId == m_pChildList[i]->getId()))
-         {
-            pObject = m_pChildList[i];
-            break;
-         }
-      }
-      UnlockChildList();
-
-      if (pObject != NULL)
-      {
-         _sntprintf(buffer, bufSize, _T("%d"), pObject->Status());
+         _sntprintf(buffer, bufSize, _T("%d"), object->Status());
       }
       else
       {
@@ -501,34 +507,10 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
    }
    else if (MatchString(_T("PingTime(*)"), param, FALSE))
    {
-      TCHAR *pEnd, szArg[256];
-      UINT32 i, dwId;
-      NetObj *pObject = NULL;
-
-      AgentGetParameterArg(param, 1, szArg, 256);
-      dwId = _tcstoul(szArg, &pEnd, 0);
-      if (*pEnd != 0)
+      NetObj *object = objectFromParameter(param);
+      if ((object != NULL) && (object->getObjectClass() == OBJECT_INTERFACE))
       {
-         // Argument is object's name
-         dwId = 0;
-      }
-
-      // Find child object with requested ID or name
-      LockChildList(FALSE);
-      for(i = 0; i < m_dwChildCount; i++)
-      {
-         if (((dwId == 0) && (!_tcsicmp(m_pChildList[i]->getName(), szArg))) ||
-             (dwId == m_pChildList[i]->getId()))
-         {
-            pObject = m_pChildList[i];
-            break;
-         }
-      }
-      UnlockChildList();
-
-      if (pObject != NULL)
-      {
-         _sntprintf(buffer, bufSize, _T("%d"), ((Interface *)pObject)->getPingTime());
+         _sntprintf(buffer, bufSize, _T("%d"), ((Interface *)object)->getPingTime());
       }
       else
       {
@@ -543,7 +525,7 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
       LockChildList(FALSE);
       for(int i = 0; i < (int)m_dwChildCount; i++)
       {
-         if (m_pChildList[i]->IpAddr() == m_dwIpAddr)
+         if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && (m_pChildList[i]->IpAddr() == m_dwIpAddr))
          {
             pObject = m_pChildList[i];
             break;

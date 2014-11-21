@@ -410,11 +410,11 @@ DECLARE_SUBAGENT_ENTRY_POINT(PING)
 	return TRUE;
 }
 
+#ifdef _WIN32
+
 /**
  * DLL entry point
  */
-#ifdef _WIN32
-
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)

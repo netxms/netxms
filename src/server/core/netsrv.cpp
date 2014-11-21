@@ -37,6 +37,7 @@ NetworkService::NetworkService() : NetObj()
 	m_pendingStatus = -1;
 	m_pollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
+   m_responseTime = 0;
 }
 
 /**
@@ -58,6 +59,7 @@ NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
 	m_pendingStatus = -1;
 	m_pollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
+   m_responseTime = 0;
    m_isHidden = true;
 }
 
@@ -236,6 +238,7 @@ void NetworkService::fillMessage(CSCPMessage *pMsg)
    pMsg->SetVariable(VID_SERVICE_REQUEST, CHECK_NULL_EX(m_request));
    pMsg->SetVariable(VID_SERVICE_RESPONSE, CHECK_NULL_EX(m_response));
 	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
+	pMsg->SetVariable(VID_RESPONSE_TIME, m_responseTime);
 }
 
 /**
@@ -359,7 +362,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
       if (pNode->checkNetworkService(&dwStatus, 
                                      (m_dwIpAddr == 0) ? m_hostNode->IpAddr() : m_dwIpAddr,
                                      m_serviceType, m_port, m_proto, 
-                                     m_request, m_response) == ERR_SUCCESS)
+                                     m_request, m_response, &m_responseTime) == ERR_SUCCESS)
       {
          newStatus = (dwStatus == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
          sendPollerMsg(rqId, _T("      Agent reports service status [%d]\r\n"), dwStatus);

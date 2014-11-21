@@ -727,7 +727,7 @@ public:
 /**
  * Network service class
  */
-class NetworkService : public NetObj
+class NXCORE_EXPORTABLE NetworkService : public NetObj
 {
 protected:
    int m_serviceType;   // SSH, POP3, etc.
@@ -741,6 +741,7 @@ protected:
 	int m_pendingStatus;
 	int m_pollCount;
 	int m_requiredPollCount;
+   UINT32 m_responseTime;  // Response time from last poll
 
    virtual void onObjectDelete(UINT32 dwObjectId);
 
@@ -761,12 +762,14 @@ public:
 
    virtual void fillMessage(CSCPMessage *pMsg);
    virtual UINT32 modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+   UINT32 getResponseTime() { return m_responseTime; }
 };
 
 /**
  * VPN connector class
  */
-class VPNConnector : public NetObj
+class NXCORE_EXPORTABLE VPNConnector : public NetObj
 {
 protected:
    UINT32 m_dwPeerGateway;        // Object ID of peer gateway
@@ -775,7 +778,7 @@ protected:
    UINT32 m_dwNumRemoteNets;
    IP_NETWORK *m_pRemoteNetList;
 
-   Node *GetParentNode();
+   Node *getParentNode();
 
 public:
    VPNConnector();
@@ -804,6 +807,8 @@ class NXCORE_EXPORTABLE DataCollectionTarget : public Template
 {
 protected:
 	virtual bool isDataCollectionDisabled();
+
+   NetObj *objectFromParameter(const TCHAR *param);
 
 public:
    DataCollectionTarget();
@@ -1254,7 +1259,7 @@ public:
 
    void addService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
    UINT32 checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType, WORD wPort = 0,
-                             WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL);
+                              WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
 
    QWORD getLastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
    void setLastEventId(int nIndex, QWORD qwId) { if ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) m_qwLastEvents[nIndex] = qwId; }
