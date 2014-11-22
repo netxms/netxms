@@ -128,15 +128,15 @@ public class NetworkMapLink
 	 */
 	public NetworkMapLink(NXCPMessage msg, long baseId)
 	{
-		name = msg.getVariableAsString(baseId + 1);
-		type = msg.getVariableAsInteger(baseId);
-		element1 = msg.getVariableAsInt64(baseId + 4);
-		element2 = msg.getVariableAsInt64(baseId + 5);
-		connectorName1 = msg.getVariableAsString(baseId + 2);
-		connectorName2 = msg.getVariableAsString(baseId + 3);
-		flags = msg.getVariableAsInteger(baseId + 7);
+		name = msg.getFieldAsString(baseId + 1);
+		type = msg.getFieldAsInt32(baseId);
+		element1 = msg.getFieldAsInt64(baseId + 4);
+		element2 = msg.getFieldAsInt64(baseId + 5);
+		connectorName1 = msg.getFieldAsString(baseId + 2);
+		connectorName2 = msg.getFieldAsString(baseId + 3);
+		flags = msg.getFieldAsInt32(baseId + 7);
 		
-      String xml = msg.getVariableAsString(baseId + 6);
+      String xml = msg.getFieldAsString(baseId + 6);
 		try
       {
 		   config = ((xml != null) && !xml.isEmpty()) ? LinkConfig.createFromXml(xml) : new LinkConfig();
@@ -166,14 +166,14 @@ public class NetworkMapLink
          Logger.warning("NetworkMapLink", "Cannot create XML from config (" + config.toString() + ")", e);
       }
 	   
-		msg.setVariableInt16(baseId, type);
-		msg.setVariable(baseId + 1, name);
-		msg.setVariable(baseId + 2, connectorName1);
-		msg.setVariable(baseId + 3, connectorName2);
-		msg.setVariableInt32(baseId + 4, (int)element1);
-		msg.setVariableInt32(baseId + 5, (int)element2);
-		msg.setVariable(baseId + 6, xml);
-		msg.setVariableInt32(baseId + 7, flags);
+		msg.setFieldInt16(baseId, type);
+		msg.setField(baseId + 1, name);
+		msg.setField(baseId + 2, connectorName1);
+		msg.setField(baseId + 3, connectorName2);
+		msg.setFieldInt32(baseId + 4, (int)element1);
+		msg.setFieldInt32(baseId + 5, (int)element2);
+		msg.setField(baseId + 6, xml);
+		msg.setFieldInt32(baseId + 7, flags);
 	}
 
 	/**

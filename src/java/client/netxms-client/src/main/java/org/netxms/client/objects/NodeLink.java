@@ -36,7 +36,7 @@ public class NodeLink extends ServiceContainer
 	public NodeLink(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		nodeId = msg.getVariableAsInt64(NXCPCodes.VID_NODE_ID);
+		nodeId = msg.getFieldAsInt64(NXCPCodes.VID_NODE_ID);
 	}
 
 	/* (non-Javadoc)

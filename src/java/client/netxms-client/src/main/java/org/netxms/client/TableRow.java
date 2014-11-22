@@ -85,15 +85,15 @@ public class TableRow
       long varId = baseId;
       if (extendedFormat)
       {
-         msg.setVariableInt32(varId++, (int)objectId);
+         msg.setFieldInt32(varId++, (int)objectId);
          varId += 9;
       }
       for(TableCell c : cells)
       {
-         msg.setVariable(varId++, c.getValue());
+         msg.setField(varId++, c.getValue());
          if (extendedFormat)
          {
-            msg.setVariableInt16(varId++, c.getStatus());
+            msg.setFieldInt16(varId++, c.getStatus());
             varId += 8;
          }
       }

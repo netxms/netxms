@@ -93,12 +93,12 @@ public class PackageInfo
 	 */
 	public PackageInfo(NXCPMessage msg)
 	{
-		id = msg.getVariableAsInt64(NXCPCodes.VID_PACKAGE_ID);
-		name = msg.getVariableAsString(NXCPCodes.VID_PACKAGE_NAME);
-		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
-		fileName = msg.getVariableAsString(NXCPCodes.VID_FILE_NAME);
-		platform = msg.getVariableAsString(NXCPCodes.VID_PLATFORM_NAME);
-		version = msg.getVariableAsString(NXCPCodes.VID_PACKAGE_VERSION);
+		id = msg.getFieldAsInt64(NXCPCodes.VID_PACKAGE_ID);
+		name = msg.getFieldAsString(NXCPCodes.VID_PACKAGE_NAME);
+		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
+		fileName = msg.getFieldAsString(NXCPCodes.VID_FILE_NAME);
+		platform = msg.getFieldAsString(NXCPCodes.VID_PLATFORM_NAME);
+		version = msg.getFieldAsString(NXCPCodes.VID_PACKAGE_VERSION);
 	}
 	
 	/**
@@ -108,12 +108,12 @@ public class PackageInfo
 	 */
 	public void fillMessage(NXCPMessage msg)
 	{
-		msg.setVariableInt32(NXCPCodes.VID_PACKAGE_ID, (int)id);
-		msg.setVariable(NXCPCodes.VID_PACKAGE_NAME, name);
-		msg.setVariable(NXCPCodes.VID_DESCRIPTION, description);
-		msg.setVariable(NXCPCodes.VID_FILE_NAME, fileName);
-		msg.setVariable(NXCPCodes.VID_PLATFORM_NAME, platform);
-		msg.setVariable(NXCPCodes.VID_PACKAGE_VERSION, version);
+		msg.setFieldInt32(NXCPCodes.VID_PACKAGE_ID, (int)id);
+		msg.setField(NXCPCodes.VID_PACKAGE_NAME, name);
+		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
+		msg.setField(NXCPCodes.VID_FILE_NAME, fileName);
+		msg.setField(NXCPCodes.VID_PLATFORM_NAME, platform);
+		msg.setField(NXCPCodes.VID_PACKAGE_VERSION, version);
 	}
 
 	/**

@@ -44,12 +44,12 @@ public class RadioInterface
 	public RadioInterface(AccessPoint ap, NXCPMessage msg, long baseId)
 	{
 		accessPoint = ap;
-		index = msg.getVariableAsInteger(baseId);
-		name = msg.getVariableAsString(baseId + 1);
-		macAddress = new MacAddress(msg.getVariableAsBinary(baseId + 2));
-		channel = msg.getVariableAsInteger(baseId + 3);
-		powerDBm = msg.getVariableAsInteger(baseId + 4);
-		powerMW = msg.getVariableAsInteger(baseId + 5);
+		index = msg.getFieldAsInt32(baseId);
+		name = msg.getFieldAsString(baseId + 1);
+		macAddress = new MacAddress(msg.getFieldAsBinary(baseId + 2));
+		channel = msg.getFieldAsInt32(baseId + 3);
+		powerDBm = msg.getFieldAsInt32(baseId + 4);
+		powerMW = msg.getFieldAsInt32(baseId + 5);
 	}
 
 	/**

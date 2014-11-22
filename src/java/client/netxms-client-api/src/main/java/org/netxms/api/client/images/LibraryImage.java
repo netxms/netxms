@@ -74,11 +74,11 @@ public class LibraryImage implements Comparable<LibraryImage>
 	 */
 	public LibraryImage(final NXCPMessage msg, File imageFile)
 	{
-		guid = msg.getVariableAsUUID(NXCPCodes.VID_GUID);
-		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
-		category = msg.getVariableAsString(NXCPCodes.VID_CATEGORY);
-		mimeType = msg.getVariableAsString(NXCPCodes.VID_IMAGE_MIMETYPE);
-		imageProtected = msg.getVariableAsBoolean(NXCPCodes.VID_IMAGE_PROTECTED);
+		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
+		name = msg.getFieldAsString(NXCPCodes.VID_NAME);
+		category = msg.getFieldAsString(NXCPCodes.VID_CATEGORY);
+		mimeType = msg.getFieldAsString(NXCPCodes.VID_IMAGE_MIMETYPE);
+		imageProtected = msg.getFieldAsBoolean(NXCPCodes.VID_IMAGE_PROTECTED);
 
 		binaryData = new byte[(int)imageFile.length()];
 		InputStream in = null;
@@ -123,12 +123,12 @@ public class LibraryImage implements Comparable<LibraryImage>
 	{
 		if (guid != null)
 		{
-			msg.setVariable(NXCPCodes.VID_GUID, guid);
+			msg.setField(NXCPCodes.VID_GUID, guid);
 		}
-		msg.setVariable(NXCPCodes.VID_NAME, name);
+		msg.setField(NXCPCodes.VID_NAME, name);
 		if (category != null)
 		{
-			msg.setVariable(NXCPCodes.VID_CATEGORY, category);
+			msg.setField(NXCPCodes.VID_CATEGORY, category);
 		}
 	}
 

@@ -34,9 +34,9 @@ public class ConfigListElement implements Comparable<ConfigListElement>
     */
    public ConfigListElement(long base,  NXCPMessage response)
    {
-      this.id = response.getVariableAsInt64(base);
-      this.name = response.getVariableAsString(base+1);
-      this.sequenceNumber = response.getVariableAsInt64(base+2);
+      this.id = response.getFieldAsInt64(base);
+      this.name = response.getFieldAsString(base+1);
+      this.sequenceNumber = response.getFieldAsInt64(base+2);
    }
    
    public ConfigListElement()

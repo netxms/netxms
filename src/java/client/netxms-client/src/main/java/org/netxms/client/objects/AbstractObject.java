@@ -195,36 +195,36 @@ public abstract class AbstractObject
 		
 		this.session = session;
 		
-		objectId = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_ID);
-		guid = msg.getVariableAsUUID(NXCPCodes.VID_GUID);
-		objectName = msg.getVariableAsString(NXCPCodes.VID_OBJECT_NAME);
-		objectClass = msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_CLASS);
-		primaryIP = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
-		isDeleted = msg.getVariableAsBoolean(NXCPCodes.VID_IS_DELETED);
-		status = ObjectStatus.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_OBJECT_STATUS));
-		comments = msg.getVariableAsString(NXCPCodes.VID_COMMENTS);
+		objectId = msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_ID);
+		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
+		objectName = msg.getFieldAsString(NXCPCodes.VID_OBJECT_NAME);
+		objectClass = msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_CLASS);
+		primaryIP = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
+		isDeleted = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED);
+		status = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_STATUS));
+		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 		geolocation = new GeoLocation(msg);
 		postalAddress = new PostalAddress(msg);
-		image = msg.getVariableAsUUID(NXCPCodes.VID_IMAGE);
-		submapId = msg.getVariableAsInt64(NXCPCodes.VID_SUBMAP_ID);
+		image = msg.getFieldAsUUID(NXCPCodes.VID_IMAGE);
+		submapId = msg.getFieldAsInt64(NXCPCodes.VID_SUBMAP_ID);
 		if (image == null)
 			image = NXCommon.EMPTY_GUID;
 		
-		statusCalculationMethod = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_CALCULATION_ALG);
-		statusPropagationMethod = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_PROPAGATION_ALG);
-		fixedPropagatedStatus = ObjectStatus.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_FIXED_STATUS));
-		statusShift = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_SHIFT);
+		statusCalculationMethod = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_CALCULATION_ALG);
+		statusPropagationMethod = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_PROPAGATION_ALG);
+		fixedPropagatedStatus = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_FIXED_STATUS));
+		statusShift = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_SHIFT);
 		statusTransformation = new ObjectStatus[4];
-		statusTransformation[0] = ObjectStatus.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_1));
-		statusTransformation[1] = ObjectStatus.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_2));
-		statusTransformation[2] = ObjectStatus.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_3));
-		statusTransformation[3] = ObjectStatus.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_STATUS_TRANSLATION_4));
-		statusSingleThreshold = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_SINGLE_THRESHOLD);
+		statusTransformation[0] = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_STATUS_TRANSLATION_1));
+		statusTransformation[1] = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_STATUS_TRANSLATION_2));
+		statusTransformation[2] = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_STATUS_TRANSLATION_3));
+		statusTransformation[3] = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_STATUS_TRANSLATION_4));
+		statusSingleThreshold = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_SINGLE_THRESHOLD);
 		statusThresholds = new int[4];
-		statusThresholds[0] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_THRESHOLD_1);
-		statusThresholds[1] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_THRESHOLD_2);
-		statusThresholds[2] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_THRESHOLD_3);
-		statusThresholds[3] = msg.getVariableAsInteger(NXCPCodes.VID_STATUS_THRESHOLD_4);
+		statusThresholds[0] = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_THRESHOLD_1);
+		statusThresholds[1] = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_THRESHOLD_2);
+		statusThresholds[2] = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_THRESHOLD_3);
+		statusThresholds[3] = msg.getFieldAsInt32(NXCPCodes.VID_STATUS_THRESHOLD_4);
 		
 		// Status shift can be negative, but all int16 values read from message
 		// as unsigned, so we need to convert shift value
@@ -232,54 +232,54 @@ public abstract class AbstractObject
 			statusShift = statusShift - 65536;
 		
 		// Parents
-		count = msg.getVariableAsInteger(NXCPCodes.VID_PARENT_CNT);
+		count = msg.getFieldAsInt32(NXCPCodes.VID_PARENT_CNT);
 		for(i = 0, id = NXCPCodes.VID_PARENT_ID_BASE; i < count; i++, id++)
 		{
-			parents.add(msg.getVariableAsInt64(id));
+			parents.add(msg.getFieldAsInt64(id));
 		}
 
 		// Children
-		count = msg.getVariableAsInteger(NXCPCodes.VID_CHILD_CNT);
+		count = msg.getFieldAsInt32(NXCPCodes.VID_CHILD_CNT);
 		for(i = 0, id = NXCPCodes.VID_CHILD_ID_BASE; i < count; i++, id++)
 		{
-			children.add(msg.getVariableAsInt64(id));
+			children.add(msg.getFieldAsInt64(id));
 		}
 		
 		// Trusted nodes
-		count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_TRUSTED_NODES);
+		count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_TRUSTED_NODES);
 		if (count > 0)
 		{
-			Long[] nodes = msg.getVariableAsUInt32ArrayEx(NXCPCodes.VID_TRUSTED_NODES);
+			Long[] nodes = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_TRUSTED_NODES);
 			trustedNodes.addAll(Arrays.asList(nodes));
 		}
 		for(i = 0, id = NXCPCodes.VID_CHILD_ID_BASE; i < count; i++, id++)
 		{
-			children.add(msg.getVariableAsInt64(id));
+			children.add(msg.getFieldAsInt64(id));
 		}
 		
 		// Custom attributes
-		count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);
+		count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);
 		for(i = 0, id = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE; i < count; i++, id += 2)
 		{
-			customAttributes.put(msg.getVariableAsString(id), msg.getVariableAsString(id + 1));
+			customAttributes.put(msg.getFieldAsString(id), msg.getFieldAsString(id + 1));
 		}
 		
 		// Access list
-		inheritAccessRights = msg.getVariableAsBoolean(NXCPCodes.VID_INHERIT_RIGHTS);
-		count = msg.getVariableAsInteger(NXCPCodes.VID_ACL_SIZE);
+		inheritAccessRights = msg.getFieldAsBoolean(NXCPCodes.VID_INHERIT_RIGHTS);
+		count = msg.getFieldAsInt32(NXCPCodes.VID_ACL_SIZE);
 		for(i = 0, id = NXCPCodes.VID_ACL_USER_BASE, id2 = NXCPCodes.VID_ACL_RIGHTS_BASE; i < count; i++, id++, id2++)
 		{
-			accessList.add(new AccessListElement(msg.getVariableAsInt64(id), msg.getVariableAsInteger(id2)));
+			accessList.add(new AccessListElement(msg.getFieldAsInt64(id), msg.getFieldAsInt32(id2)));
 		}
 		
 		// Module-specific data
-		count = msg.getVariableAsInteger(NXCPCodes.VID_MODULE_DATA_COUNT);
+		count = msg.getFieldAsInt32(NXCPCodes.VID_MODULE_DATA_COUNT);
 		if (count > 0)
 		{
 		   moduleData = new HashMap<String, Object>(count);
 		   for(i = 0, id = NXCPCodes.VID_MODULE_DATA_BASE; i < count; i++, id += 0x100000)
 		   {
-		      String module = msg.getVariableAsString(id);
+		      String module = msg.getFieldAsString(id);
 		      ModuleDataProvider p = (ModuleDataProvider)ServiceManager.getServiceHandler(module, ModuleDataProvider.class);
 		      if (p != null)
 		      {

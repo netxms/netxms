@@ -48,14 +48,14 @@ public class Condition extends GenericObject
 	{
 		super(msg, session);
 		
-		script = msg.getVariableAsString(NXCPCodes.VID_SCRIPT);
-		activationEvent = msg.getVariableAsInteger(NXCPCodes.VID_ACTIVATION_EVENT);
-		deactivationEvent = msg.getVariableAsInteger(NXCPCodes.VID_DEACTIVATION_EVENT);
-		eventSourceObject = msg.getVariableAsInt64(NXCPCodes.VID_SOURCE_OBJECT);
-		activeStatus = msg.getVariableAsInteger(NXCPCodes.VID_ACTIVE_STATUS);
-		inactiveStatus = msg.getVariableAsInteger(NXCPCodes.VID_INACTIVE_STATUS);
+		script = msg.getFieldAsString(NXCPCodes.VID_SCRIPT);
+		activationEvent = msg.getFieldAsInt32(NXCPCodes.VID_ACTIVATION_EVENT);
+		deactivationEvent = msg.getFieldAsInt32(NXCPCodes.VID_DEACTIVATION_EVENT);
+		eventSourceObject = msg.getFieldAsInt64(NXCPCodes.VID_SOURCE_OBJECT);
+		activeStatus = msg.getFieldAsInt32(NXCPCodes.VID_ACTIVE_STATUS);
+		inactiveStatus = msg.getFieldAsInt32(NXCPCodes.VID_INACTIVE_STATUS);
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ITEMS);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
 		dciList = new ArrayList<ConditionDciInfo>(count);
 		
 		long varId = NXCPCodes.VID_DCI_LIST_BASE;

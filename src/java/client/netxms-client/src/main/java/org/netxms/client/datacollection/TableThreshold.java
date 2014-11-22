@@ -75,15 +75,15 @@ public class TableThreshold
 	protected TableThreshold(NXCPMessage msg, long baseId)
 	{
 		long varId = baseId;
-		id = msg.getVariableAsInt64(varId++);
-		activationEvent = msg.getVariableAsInteger(varId++);
-		deactivationEvent = msg.getVariableAsInteger(varId++);
+		id = msg.getFieldAsInt64(varId++);
+		activationEvent = msg.getFieldAsInt32(varId++);
+		deactivationEvent = msg.getFieldAsInt32(varId++);
 		
-		int groupCount = msg.getVariableAsInteger(varId++);
+		int groupCount = msg.getFieldAsInt32(varId++);
 		conditions = new ArrayList<List<TableCondition>>(groupCount);
 		for(int i = 0; i < groupCount; i++)
 		{
-			int condCount = msg.getVariableAsInteger(varId++);
+			int condCount = msg.getFieldAsInt32(varId++);
 			List<TableCondition> list = new ArrayList<TableCondition>(condCount);
 			for(int j = 0; j < condCount; j++)
 			{
@@ -106,18 +106,18 @@ public class TableThreshold
 	{
 		long varId = baseId;
 		
-		msg.setVariableInt32(varId++, (int)id);
-		msg.setVariableInt32(varId++, activationEvent);
-		msg.setVariableInt32(varId++, deactivationEvent);
-		msg.setVariableInt32(varId++, conditions.size());
+		msg.setFieldInt32(varId++, (int)id);
+		msg.setFieldInt32(varId++, activationEvent);
+		msg.setFieldInt32(varId++, deactivationEvent);
+		msg.setFieldInt32(varId++, conditions.size());
 		for(List<TableCondition> l : conditions)
 		{
-			msg.setVariableInt32(varId++, l.size());
+			msg.setFieldInt32(varId++, l.size());
 			for(TableCondition c : l)
 			{
-				msg.setVariable(varId++, c.getColumn());
-				msg.setVariableInt16(varId++, c.getOperation());
-				msg.setVariable(varId++, c.getValue());
+				msg.setField(varId++, c.getColumn());
+				msg.setFieldInt16(varId++, c.getOperation());
+				msg.setField(varId++, c.getValue());
 			}
 		}
 		

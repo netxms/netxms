@@ -39,11 +39,11 @@ public class Situation
 	 */
 	public Situation(NXCPMessage msg)
 	{
-		id = msg.getVariableAsInt64(NXCPCodes.VID_SITUATION_ID);
-		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
-		comments = msg.getVariableAsString(NXCPCodes.VID_COMMENTS);
+		id = msg.getFieldAsInt64(NXCPCodes.VID_SITUATION_ID);
+		name = msg.getFieldAsString(NXCPCodes.VID_NAME);
+		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_INSTANCE_COUNT);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_INSTANCE_COUNT);
 		instances = new ArrayList<SituationInstance>(count);
 		long varId = NXCPCodes.VID_INSTANCE_LIST_BASE;
 		for(int i = 0; i < count; i++)

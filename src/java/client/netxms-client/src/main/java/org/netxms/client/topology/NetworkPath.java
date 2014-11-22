@@ -39,8 +39,8 @@ public class NetworkPath
 	 */
 	public NetworkPath(NXCPMessage msg)
 	{
-		complete = msg.getVariableAsBoolean(NXCPCodes.VID_IS_COMPLETE);
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_HOP_COUNT);
+		complete = msg.getFieldAsBoolean(NXCPCodes.VID_IS_COMPLETE);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_HOP_COUNT);
 		path = new ArrayList<HopInfo>(count);
 		long varId = NXCPCodes.VID_NETWORK_PATH_BASE;
 		for(int i = 0; i < count; i++)

@@ -72,10 +72,10 @@ public class ObjectToolTableColumn
 	 */
 	protected ObjectToolTableColumn(NXCPMessage msg, long baseId)
 	{
-		name = msg.getVariableAsString(baseId);
-		snmpOid = msg.getVariableAsString(baseId + 1);
-		format = msg.getVariableAsInteger(baseId + 2);
-		substringIndex = msg.getVariableAsInteger(baseId + 3);
+		name = msg.getFieldAsString(baseId);
+		snmpOid = msg.getFieldAsString(baseId + 1);
+		format = msg.getFieldAsInt32(baseId + 2);
+		substringIndex = msg.getFieldAsInt32(baseId + 3);
 	}
 
 	/**

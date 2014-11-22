@@ -44,10 +44,10 @@ public class Dashboard extends GenericObject
 	public Dashboard(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		numColumns = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS);
-		options = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
+		numColumns = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
+		options = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<DashboardElement>(count);
 		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < count; i++)

@@ -117,28 +117,28 @@ public class EventProcessingPolicyRule
 	 */
 	public EventProcessingPolicyRule(NXCPMessage msg)
 	{
-		guid = msg.getVariableAsUUID(NXCPCodes.VID_GUID);
-		sources = Arrays.asList(msg.getVariableAsUInt32ArrayEx(NXCPCodes.VID_RULE_SOURCES));
-		events = Arrays.asList(msg.getVariableAsUInt32ArrayEx(NXCPCodes.VID_RULE_EVENTS));
-		script = msg.getVariableAsString(NXCPCodes.VID_SCRIPT);
-		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
-		alarmKey = msg.getVariableAsString(NXCPCodes.VID_ALARM_KEY);
-		alarmMessage = msg.getVariableAsString(NXCPCodes.VID_ALARM_MESSAGE);
-		alarmSeverity = Severity.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_ALARM_SEVERITY));
-		alarmTimeout = msg.getVariableAsInteger(NXCPCodes.VID_ALARM_TIMEOUT);
-		alarmTimeoutEvent = msg.getVariableAsInt64(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
-		actions = Arrays.asList(msg.getVariableAsUInt32ArrayEx(NXCPCodes.VID_RULE_ACTIONS));
-		situationId = msg.getVariableAsInt64(NXCPCodes.VID_SITUATION_ID);
-		situationInstance = msg.getVariableAsString(NXCPCodes.VID_SITUATION_INSTANCE);
-		comments = msg.getVariableAsString(NXCPCodes.VID_COMMENTS);
+		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
+		sources = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_SOURCES));
+		events = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_EVENTS));
+		script = msg.getFieldAsString(NXCPCodes.VID_SCRIPT);
+		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
+		alarmKey = msg.getFieldAsString(NXCPCodes.VID_ALARM_KEY);
+		alarmMessage = msg.getFieldAsString(NXCPCodes.VID_ALARM_MESSAGE);
+		alarmSeverity = Severity.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_ALARM_SEVERITY));
+		alarmTimeout = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_TIMEOUT);
+		alarmTimeoutEvent = msg.getFieldAsInt64(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
+		actions = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_ACTIONS));
+		situationId = msg.getFieldAsInt64(NXCPCodes.VID_SITUATION_ID);
+		situationInstance = msg.getFieldAsString(NXCPCodes.VID_SITUATION_INSTANCE);
+		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 		
-		int numAttrs = msg.getVariableAsInteger(NXCPCodes.VID_SITUATION_NUM_ATTRS);
+		int numAttrs = msg.getFieldAsInt32(NXCPCodes.VID_SITUATION_NUM_ATTRS);
 		situationAttributes = new HashMap<String, String>(numAttrs);
 		long varId = NXCPCodes.VID_SITUATION_ATTR_LIST_BASE;
 		for(int i = 0; i < numAttrs; i++)
 		{
-			final String attr = msg.getVariableAsString(varId++); 
-			final String value = msg.getVariableAsString(varId++);
+			final String attr = msg.getFieldAsString(varId++); 
+			final String value = msg.getFieldAsString(varId++);
 			situationAttributes.put(attr, value);
 		}
 	}
@@ -150,34 +150,34 @@ public class EventProcessingPolicyRule
 	 */
 	public void fillMessage(final NXCPMessage msg)
 	{
-		msg.setVariable(NXCPCodes.VID_GUID, guid);
-		msg.setVariableInt32(NXCPCodes.VID_FLAGS, flags);
-		msg.setVariable(NXCPCodes.VID_COMMENTS, comments);
-		msg.setVariable(NXCPCodes.VID_SCRIPT, script);
+		msg.setField(NXCPCodes.VID_GUID, guid);
+		msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
+		msg.setField(NXCPCodes.VID_COMMENTS, comments);
+		msg.setField(NXCPCodes.VID_SCRIPT, script);
 		
-		msg.setVariableInt32(NXCPCodes.VID_NUM_ACTIONS, actions.size());
-		msg.setVariable(NXCPCodes.VID_RULE_ACTIONS, actions.toArray(new Long[actions.size()]));
+		msg.setFieldInt32(NXCPCodes.VID_NUM_ACTIONS, actions.size());
+		msg.setField(NXCPCodes.VID_RULE_ACTIONS, actions.toArray(new Long[actions.size()]));
 		
-		msg.setVariableInt32(NXCPCodes.VID_NUM_EVENTS, events.size());
-		msg.setVariable(NXCPCodes.VID_RULE_EVENTS, events.toArray(new Long[events.size()]));
+		msg.setFieldInt32(NXCPCodes.VID_NUM_EVENTS, events.size());
+		msg.setField(NXCPCodes.VID_RULE_EVENTS, events.toArray(new Long[events.size()]));
 		
-		msg.setVariableInt32(NXCPCodes.VID_NUM_SOURCES, sources.size());
-		msg.setVariable(NXCPCodes.VID_RULE_SOURCES, sources.toArray(new Long[sources.size()]));
+		msg.setFieldInt32(NXCPCodes.VID_NUM_SOURCES, sources.size());
+		msg.setField(NXCPCodes.VID_RULE_SOURCES, sources.toArray(new Long[sources.size()]));
 		
-		msg.setVariable(NXCPCodes.VID_ALARM_KEY, alarmKey);
-		msg.setVariable(NXCPCodes.VID_ALARM_MESSAGE, alarmMessage);
-		msg.setVariableInt16(NXCPCodes.VID_ALARM_SEVERITY, alarmSeverity.getValue());
-		msg.setVariableInt32(NXCPCodes.VID_ALARM_TIMEOUT, alarmTimeout);
-		msg.setVariableInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT, (int)alarmTimeoutEvent);
+		msg.setField(NXCPCodes.VID_ALARM_KEY, alarmKey);
+		msg.setField(NXCPCodes.VID_ALARM_MESSAGE, alarmMessage);
+		msg.setFieldInt16(NXCPCodes.VID_ALARM_SEVERITY, alarmSeverity.getValue());
+		msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT, alarmTimeout);
+		msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT, (int)alarmTimeoutEvent);
 
-		msg.setVariableInt32(NXCPCodes.VID_SITUATION_ID, (int)situationId);
-		msg.setVariable(NXCPCodes.VID_SITUATION_INSTANCE, situationInstance);
-		msg.setVariableInt32(NXCPCodes.VID_SITUATION_NUM_ATTRS, situationAttributes.size());
+		msg.setFieldInt32(NXCPCodes.VID_SITUATION_ID, (int)situationId);
+		msg.setField(NXCPCodes.VID_SITUATION_INSTANCE, situationInstance);
+		msg.setFieldInt32(NXCPCodes.VID_SITUATION_NUM_ATTRS, situationAttributes.size());
 		long varId = NXCPCodes.VID_SITUATION_ATTR_LIST_BASE;
 		for(Entry<String, String> e : situationAttributes.entrySet())
 		{
-			msg.setVariable(varId++, e.getKey());
-			msg.setVariable(varId++, e.getValue());
+			msg.setField(varId++, e.getKey());
+			msg.setField(varId++, e.getValue());
 		}
 	}
 

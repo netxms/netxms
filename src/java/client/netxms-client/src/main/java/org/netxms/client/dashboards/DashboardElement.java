@@ -80,9 +80,9 @@ public class DashboardElement
 	 */
 	public DashboardElement(NXCPMessage msg, long baseId)
 	{
-		type = msg.getVariableAsInteger(baseId);
-		data = msg.getVariableAsString(baseId + 1);
-		layout = msg.getVariableAsString(baseId + 2);
+		type = msg.getFieldAsInt32(baseId);
+		data = msg.getFieldAsString(baseId + 1);
+		layout = msg.getFieldAsString(baseId + 2);
 	}
 	
 	/**
@@ -105,9 +105,9 @@ public class DashboardElement
 	 */
 	public void fillMessage(NXCPMessage msg, long baseId)
 	{
-		msg.setVariableInt16(baseId, type);
-		msg.setVariable(baseId + 1, data);
-		msg.setVariable(baseId + 2, layout);
+		msg.setFieldInt16(baseId, type);
+		msg.setField(baseId + 1, data);
+		msg.setField(baseId + 2, layout);
 	}
 	
 	/**

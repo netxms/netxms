@@ -71,11 +71,11 @@ public class ColumnDefinition
 	 */
 	protected ColumnDefinition(NXCPMessage msg, long baseId)
 	{
-		name = msg.getVariableAsString(baseId);
-		flags = msg.getVariableAsInteger(baseId + 1);
-		long[] oid = msg.getVariableAsUInt32Array(baseId + 2);
+		name = msg.getFieldAsString(baseId);
+		flags = msg.getFieldAsInt32(baseId + 1);
+		long[] oid = msg.getFieldAsUInt32Array(baseId + 2);
 		snmpObjectId = (oid != null) ? new SnmpObjectId(oid) : null;
-		displayName = msg.getVariableAsString(baseId + 3);
+		displayName = msg.getFieldAsString(baseId + 3);
 		if ((displayName == null) || (displayName.length() == 0))
 			displayName = name;
 	}
@@ -88,11 +88,11 @@ public class ColumnDefinition
 	 */
 	public void fillMessage(NXCPMessage msg, long baseId)
 	{
-		msg.setVariable(baseId, name);
-		msg.setVariableInt16(baseId + 1, flags);
+		msg.setField(baseId, name);
+		msg.setFieldInt16(baseId + 1, flags);
 		if (snmpObjectId != null)
 			snmpObjectId.setNXCPVariable(msg, baseId + 2);
-		msg.setVariable(baseId + 3, displayName);
+		msg.setField(baseId + 3, displayName);
 	}
 	
 	/**

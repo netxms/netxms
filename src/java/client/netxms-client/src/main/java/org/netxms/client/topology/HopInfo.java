@@ -41,11 +41,11 @@ public class HopInfo
 	 */
 	protected HopInfo(NXCPMessage msg, long baseId)
 	{
-		nodeId = msg.getVariableAsInt64(baseId);
-		nextHop = msg.getVariableAsInetAddress(baseId + 1);
-		ifIndex = msg.getVariableAsInteger(baseId + 2);
-		isVpn = msg.getVariableAsBoolean(baseId + 3);
-		name = msg.getVariableAsString(baseId + 4);
+		nodeId = msg.getFieldAsInt64(baseId);
+		nextHop = msg.getFieldAsInetAddress(baseId + 1);
+		ifIndex = msg.getFieldAsInt32(baseId + 2);
+		isVpn = msg.getFieldAsBoolean(baseId + 3);
+		name = msg.getFieldAsString(baseId + 4);
 	}
 
 	/**

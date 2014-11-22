@@ -47,19 +47,19 @@ public class Event
 	{
 		long varId = baseId;
 		
-		id = msg.getVariableAsInt64(varId++);
-		code = msg.getVariableAsInteger(varId++);
-		timeStamp = msg.getVariableAsDate(varId++);
-		sourceId = msg.getVariableAsInt64(varId++);
-		severity = msg.getVariableAsInteger(varId++);
-		message = msg.getVariableAsString(varId++);
-		userTag = msg.getVariableAsString(varId++);
+		id = msg.getFieldAsInt64(varId++);
+		code = msg.getFieldAsInt32(varId++);
+		timeStamp = msg.getFieldAsDate(varId++);
+		sourceId = msg.getFieldAsInt64(varId++);
+		severity = msg.getFieldAsInt32(varId++);
+		message = msg.getFieldAsString(varId++);
+		userTag = msg.getFieldAsString(varId++);
 		
-		int count = msg.getVariableAsInteger(varId++);
+		int count = msg.getFieldAsInt32(varId++);
 		parameters = new String[count];
 		for(int i = 0; i < count; i++)
 		{
-			parameters[i] = msg.getVariableAsString(varId++);
+			parameters[i] = msg.getFieldAsString(varId++);
 		}
 	}
 

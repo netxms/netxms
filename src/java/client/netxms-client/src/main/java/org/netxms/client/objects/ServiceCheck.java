@@ -45,12 +45,12 @@ public class ServiceCheck extends GenericObject
 	public ServiceCheck(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		checkType = msg.getVariableAsInteger(NXCPCodes.VID_SLMCHECK_TYPE);
-		template = msg.getVariableAsBoolean(NXCPCodes.VID_IS_TEMPLATE);
-		templateId = msg.getVariableAsInt64(NXCPCodes.VID_TEMPLATE_ID);
-		script = msg.getVariableAsString(NXCPCodes.VID_SCRIPT); 
+		checkType = msg.getFieldAsInt32(NXCPCodes.VID_SLMCHECK_TYPE);
+		template = msg.getFieldAsBoolean(NXCPCodes.VID_IS_TEMPLATE);
+		templateId = msg.getFieldAsInt64(NXCPCodes.VID_TEMPLATE_ID);
+		script = msg.getFieldAsString(NXCPCodes.VID_SCRIPT); 
 		threshold = new Threshold(msg, NXCPCodes.VID_THRESHOLD_BASE);
-		failureReason = msg.getVariableAsString(NXCPCodes.VID_REASON);
+		failureReason = msg.getFieldAsString(NXCPCodes.VID_REASON);
 	}
 
 	/* (non-Javadoc)

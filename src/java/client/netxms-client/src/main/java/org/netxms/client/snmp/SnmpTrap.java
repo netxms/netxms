@@ -52,30 +52,30 @@ public class SnmpTrap
 	 */
 	public SnmpTrap(final NXCPMessage msg)
 	{
-		id = msg.getVariableAsInt64(NXCPCodes.VID_TRAP_ID);
-		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
-		objectId = new SnmpObjectId(msg.getVariableAsUInt32Array(NXCPCodes.VID_TRAP_OID));
-		eventCode = msg.getVariableAsInteger(NXCPCodes.VID_EVENT_CODE);
-		userTag = msg.getVariableAsString(NXCPCodes.VID_USER_TAG);
+		id = msg.getFieldAsInt64(NXCPCodes.VID_TRAP_ID);
+		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
+		objectId = new SnmpObjectId(msg.getFieldAsUInt32Array(NXCPCodes.VID_TRAP_OID));
+		eventCode = msg.getFieldAsInt32(NXCPCodes.VID_EVENT_CODE);
+		userTag = msg.getFieldAsString(NXCPCodes.VID_USER_TAG);
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_TRAP_NUM_MAPS);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_TRAP_NUM_MAPS);
 		parameterMapping = new ArrayList<SnmpTrapParameterMapping>(count);
 		for(int i = 0; i < count; i++)
 		{
 			SnmpTrapParameterMapping pm;
-			long oidLen = msg.getVariableAsInt64(NXCPCodes.VID_TRAP_PLEN_BASE + i);
+			long oidLen = msg.getFieldAsInt64(NXCPCodes.VID_TRAP_PLEN_BASE + i);
 			if ((oidLen & 0x80000000) == 0)
 			{
 				// mapping by OID
-				pm = new SnmpTrapParameterMapping(new SnmpObjectId(msg.getVariableAsUInt32Array(NXCPCodes.VID_TRAP_PNAME_BASE + i)));
+				pm = new SnmpTrapParameterMapping(new SnmpObjectId(msg.getFieldAsUInt32Array(NXCPCodes.VID_TRAP_PNAME_BASE + i)));
 			}
 			else
 			{
 				// mapping by position
 				pm = new SnmpTrapParameterMapping((int)(oidLen & 0x7FFFFFFF));
 			}
-			pm.setDescription(msg.getVariableAsString(NXCPCodes.VID_TRAP_PDESCR_BASE + i));
-			pm.setFlags(msg.getVariableAsInteger(NXCPCodes.VID_TRAP_PFLAGS_BASE + i));
+			pm.setDescription(msg.getFieldAsString(NXCPCodes.VID_TRAP_PDESCR_BASE + i));
+			pm.setFlags(msg.getFieldAsInt32(NXCPCodes.VID_TRAP_PFLAGS_BASE + i));
 			parameterMapping.add(pm);
 		}
 	}
@@ -87,10 +87,10 @@ public class SnmpTrap
 	 */
 	public SnmpTrap(NXCPMessage msg, long baseId)
 	{
-		id = msg.getVariableAsInt64(baseId);
-		description = msg.getVariableAsString(baseId + 4);
-		objectId = new SnmpObjectId(msg.getVariableAsUInt32Array(baseId + 2));
-		eventCode = msg.getVariableAsInteger(baseId + 3);
+		id = msg.getFieldAsInt64(baseId);
+		description = msg.getFieldAsString(baseId + 4);
+		objectId = new SnmpObjectId(msg.getFieldAsUInt32Array(baseId + 2));
+		eventCode = msg.getFieldAsInt32(baseId + 3);
 		parameterMapping = new ArrayList<SnmpTrapParameterMapping>(0);
 	}
 	
@@ -101,13 +101,13 @@ public class SnmpTrap
 	 */
 	public void fillMessage(NXCPMessage msg)
 	{
-		msg.setVariableInt32(NXCPCodes.VID_TRAP_ID, (int)id);
-		msg.setVariableInt32(NXCPCodes.VID_EVENT_CODE, eventCode);
-		msg.setVariable(NXCPCodes.VID_DESCRIPTION, description);
-		msg.setVariable(NXCPCodes.VID_USER_TAG, userTag);
-		msg.setVariableInt32(NXCPCodes.VID_TRAP_OID_LEN, objectId.getLength());
+		msg.setFieldInt32(NXCPCodes.VID_TRAP_ID, (int)id);
+		msg.setFieldInt32(NXCPCodes.VID_EVENT_CODE, eventCode);
+		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
+		msg.setField(NXCPCodes.VID_USER_TAG, userTag);
+		msg.setFieldInt32(NXCPCodes.VID_TRAP_OID_LEN, objectId.getLength());
 		objectId.setNXCPVariable(msg, NXCPCodes.VID_TRAP_OID);
-		msg.setVariableInt32(NXCPCodes.VID_TRAP_NUM_MAPS, parameterMapping.size());
+		msg.setFieldInt32(NXCPCodes.VID_TRAP_NUM_MAPS, parameterMapping.size());
 		for(int i = 0; i < parameterMapping.size(); i++)
 		{
 			parameterMapping.get(i).fillMessage(msg, i);

@@ -72,22 +72,22 @@ public class ObjectToolDetails extends ObjectTool
 	public ObjectToolDetails(NXCPMessage msg)
 	{
 		modified = false;
-		id = msg.getVariableAsInt64(NXCPCodes.VID_TOOL_ID);
-		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
-		type = msg.getVariableAsInteger(NXCPCodes.VID_TOOL_TYPE);
-		data = msg.getVariableAsString(NXCPCodes.VID_TOOL_DATA);
-		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
-		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
-		snmpOid = msg.getVariableAsString(NXCPCodes.VID_TOOL_OID);
-		confirmationText = msg.getVariableAsString(NXCPCodes.VID_CONFIRMATION_TEXT);
-		commandName = msg.getVariableAsString(NXCPCodes.VID_COMMAND_NAME);
-      commandShortName = msg.getVariableAsString(NXCPCodes.VID_COMMAND_SHORT_NAME);
-		imageData = msg.getVariableAsBinary(NXCPCodes.VID_IMAGE_DATA);
+		id = msg.getFieldAsInt64(NXCPCodes.VID_TOOL_ID);
+		name = msg.getFieldAsString(NXCPCodes.VID_NAME);
+		type = msg.getFieldAsInt32(NXCPCodes.VID_TOOL_TYPE);
+		data = msg.getFieldAsString(NXCPCodes.VID_TOOL_DATA);
+		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
+		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
+		snmpOid = msg.getFieldAsString(NXCPCodes.VID_TOOL_OID);
+		confirmationText = msg.getFieldAsString(NXCPCodes.VID_CONFIRMATION_TEXT);
+		commandName = msg.getFieldAsString(NXCPCodes.VID_COMMAND_NAME);
+      commandShortName = msg.getFieldAsString(NXCPCodes.VID_COMMAND_SHORT_NAME);
+		imageData = msg.getFieldAsBinary(NXCPCodes.VID_IMAGE_DATA);
 		
-		Long[] acl = msg.getVariableAsUInt32ArrayEx(NXCPCodes.VID_ACL);
+		Long[] acl = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ACL);
 		accessList = (acl != null) ? new ArrayList<Long>(Arrays.asList(acl)) : new ArrayList<Long>(0);
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
 		columns = new ArrayList<ObjectToolTableColumn>(count);
 		long varId = NXCPCodes.VID_COLUMN_INFO_BASE;
 		for(int i = 0; i < count; i++)
@@ -106,31 +106,31 @@ public class ObjectToolDetails extends ObjectTool
 	 */
 	public void fillMessage(NXCPMessage msg)
 	{
-		msg.setVariableInt32(NXCPCodes.VID_TOOL_ID, (int)id);
-		msg.setVariable(NXCPCodes.VID_NAME, name);
-		msg.setVariable(NXCPCodes.VID_DESCRIPTION, description);
-		msg.setVariable(NXCPCodes.VID_TOOL_OID, snmpOid);
-		msg.setVariable(NXCPCodes.VID_CONFIRMATION_TEXT, confirmationText);
-		msg.setVariable(NXCPCodes.VID_TOOL_DATA, data);
-		msg.setVariableInt16(NXCPCodes.VID_TOOL_TYPE, type);
-		msg.setVariableInt32(NXCPCodes.VID_FLAGS, flags);
-		msg.setVariable(NXCPCodes.VID_COMMAND_NAME, commandName);
-      msg.setVariable(NXCPCodes.VID_COMMAND_SHORT_NAME, commandShortName);
+		msg.setFieldInt32(NXCPCodes.VID_TOOL_ID, (int)id);
+		msg.setField(NXCPCodes.VID_NAME, name);
+		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
+		msg.setField(NXCPCodes.VID_TOOL_OID, snmpOid);
+		msg.setField(NXCPCodes.VID_CONFIRMATION_TEXT, confirmationText);
+		msg.setField(NXCPCodes.VID_TOOL_DATA, data);
+		msg.setFieldInt16(NXCPCodes.VID_TOOL_TYPE, type);
+		msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
+		msg.setField(NXCPCodes.VID_COMMAND_NAME, commandName);
+      msg.setField(NXCPCodes.VID_COMMAND_SHORT_NAME, commandShortName);
 		if (imageData != null)
-		   msg.setVariable(NXCPCodes.VID_IMAGE_DATA, imageData);
+		   msg.setField(NXCPCodes.VID_IMAGE_DATA, imageData);
 
-		msg.setVariableInt32(NXCPCodes.VID_ACL_SIZE, accessList.size());
-		msg.setVariable(NXCPCodes.VID_ACL, accessList.toArray(new Long[accessList.size()]));
+		msg.setFieldInt32(NXCPCodes.VID_ACL_SIZE, accessList.size());
+		msg.setField(NXCPCodes.VID_ACL, accessList.toArray(new Long[accessList.size()]));
 		
-		msg.setVariableInt16(NXCPCodes.VID_NUM_COLUMNS, columns.size());
+		msg.setFieldInt16(NXCPCodes.VID_NUM_COLUMNS, columns.size());
 		long varId = NXCPCodes.VID_COLUMN_INFO_BASE;
 		for(int i = 0; i < columns.size(); i++)
 		{
 			ObjectToolTableColumn c = columns.get(i);
-			msg.setVariable(varId++, c.getName());
-			msg.setVariable(varId++, c.getSnmpOid());
-			msg.setVariableInt16(varId++, c.getFormat());
-			msg.setVariableInt16(varId++, c.getSubstringIndex());
+			msg.setField(varId++, c.getName());
+			msg.setField(varId++, c.getSnmpOid());
+			msg.setFieldInt16(varId++, c.getFormat());
+			msg.setFieldInt16(varId++, c.getSubstringIndex());
 		}
 	}
 

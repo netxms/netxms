@@ -74,17 +74,17 @@ public class ObjectTool
 	 */
 	public ObjectTool(NXCPMessage msg, long baseId)
 	{
-		id = msg.getVariableAsInt64(baseId);
-		name = msg.getVariableAsString(baseId + 1);
-		type = msg.getVariableAsInteger(baseId + 2);
-		data = msg.getVariableAsString(baseId + 3);
-		flags = msg.getVariableAsInteger(baseId + 4);
-		description = msg.getVariableAsString(baseId + 5);
-		snmpOid = msg.getVariableAsString(baseId + 6);
-		confirmationText = msg.getVariableAsString(baseId + 7);
-		commandName = msg.getVariableAsString(baseId + 8);
-      commandShortName = msg.getVariableAsString(baseId + 9);
-		imageData = msg.getVariableAsBinary(baseId + 10);
+		id = msg.getFieldAsInt64(baseId);
+		name = msg.getFieldAsString(baseId + 1);
+		type = msg.getFieldAsInt32(baseId + 2);
+		data = msg.getFieldAsString(baseId + 3);
+		flags = msg.getFieldAsInt32(baseId + 4);
+		description = msg.getFieldAsString(baseId + 5);
+		snmpOid = msg.getFieldAsString(baseId + 6);
+		confirmationText = msg.getFieldAsString(baseId + 7);
+		commandName = msg.getFieldAsString(baseId + 8);
+      commandShortName = msg.getFieldAsString(baseId + 9);
+		imageData = msg.getFieldAsBinary(baseId + 10);
 		
 		createDisplayName();
 	}

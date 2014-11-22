@@ -114,31 +114,31 @@ public class ColumnFilter
 	int fillMessage(final NXCPMessage msg, final long baseId)
 	{
 		int varCount = 1;
-		msg.setVariableInt16(baseId, type);
+		msg.setFieldInt16(baseId, type);
 		switch(type)
 		{
 			case EQUALS:
 			case LESS:
 			case GREATER:
 			case CHILDOF:
-				msg.setVariableInt64(baseId + 1, numericValue);
-				msg.setVariableInt16(baseId + 2, negated ? 1 : 0);
+				msg.setFieldInt64(baseId + 1, numericValue);
+				msg.setFieldInt16(baseId + 2, negated ? 1 : 0);
 				varCount += 2;
 				break;
 			case RANGE:
-				msg.setVariableInt64(baseId + 1, rangeFrom);
-				msg.setVariableInt64(baseId + 2, rangeTo);
-				msg.setVariableInt16(baseId + 3, negated ? 1 : 0);
+				msg.setFieldInt64(baseId + 1, rangeFrom);
+				msg.setFieldInt64(baseId + 2, rangeTo);
+				msg.setFieldInt16(baseId + 3, negated ? 1 : 0);
 				varCount += 3;
 				break;
 			case LIKE:
-				msg.setVariable(baseId + 1, like);
-				msg.setVariableInt16(baseId + 2, negated ? 1 : 0);
+				msg.setField(baseId + 1, like);
+				msg.setFieldInt16(baseId + 2, negated ? 1 : 0);
 				varCount += 2;
 				break;
 			case SET:
-				msg.setVariableInt16(baseId + 1, operation);
-				msg.setVariableInt16(baseId + 2, set.size());
+				msg.setFieldInt16(baseId + 1, operation);
+				msg.setFieldInt16(baseId + 2, set.size());
 				varCount += 2;
 				long varId = baseId + 3;
 				for(final ColumnFilter f : set)

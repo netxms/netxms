@@ -50,13 +50,13 @@ public class EventInfo
 		if (parent != null)
 			parent.addChild(this);
 		children = null;
-		id = msg.getVariableAsInt64(baseId);
-		code = msg.getVariableAsInteger(baseId + 2);
-		name = msg.getVariableAsString(baseId + 3);
-		severity = msg.getVariableAsInteger(baseId + 4);
-		sourceObjectId = msg.getVariableAsInt64(baseId + 5);
-		timeStamp = msg.getVariableAsDate(baseId + 6);
-		message = msg.getVariableAsString(baseId + 7);
+		id = msg.getFieldAsInt64(baseId);
+		code = msg.getFieldAsInt32(baseId + 2);
+		name = msg.getFieldAsString(baseId + 3);
+		severity = msg.getFieldAsInt32(baseId + 4);
+		sourceObjectId = msg.getFieldAsInt64(baseId + 5);
+		timeStamp = msg.getFieldAsDate(baseId + 6);
+		message = msg.getFieldAsString(baseId + 7);
 	}
 	
 	/**

@@ -128,23 +128,23 @@ public class Interface extends GenericObject
 	{
 		super(msg, session);
 		
-		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
-		subnetMask = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_NETMASK);
-		ifIndex = msg.getVariableAsInteger(NXCPCodes.VID_IF_INDEX);
-		ifType = msg.getVariableAsInteger(NXCPCodes.VID_IF_TYPE);
-		slot = msg.getVariableAsInteger(NXCPCodes.VID_IF_SLOT);
-		port = msg.getVariableAsInteger(NXCPCodes.VID_IF_PORT);
-		macAddress = new MacAddress(msg.getVariableAsBinary(NXCPCodes.VID_MAC_ADDR));
-		requiredPollCount = msg.getVariableAsInteger(NXCPCodes.VID_REQUIRED_POLLS);
-		peerNodeId = msg.getVariableAsInt64(NXCPCodes.VID_PEER_NODE_ID);
-		peerInterfaceId = msg.getVariableAsInt64(NXCPCodes.VID_PEER_INTERFACE_ID);
-		peerDiscoveryProtocol = LinkLayerDiscoveryProtocol.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_PEER_PROTOCOL));
-		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
-		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
-		adminState = msg.getVariableAsInteger(NXCPCodes.VID_ADMIN_STATE);
-		operState = msg.getVariableAsInteger(NXCPCodes.VID_OPER_STATE);
-		dot1xPaeState = msg.getVariableAsInteger(NXCPCodes.VID_DOT1X_PAE_STATE);
-		dot1xBackendState = msg.getVariableAsInteger(NXCPCodes.VID_DOT1X_BACKEND_STATE);
+		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
+		subnetMask = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_NETMASK);
+		ifIndex = msg.getFieldAsInt32(NXCPCodes.VID_IF_INDEX);
+		ifType = msg.getFieldAsInt32(NXCPCodes.VID_IF_TYPE);
+		slot = msg.getFieldAsInt32(NXCPCodes.VID_IF_SLOT);
+		port = msg.getFieldAsInt32(NXCPCodes.VID_IF_PORT);
+		macAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_MAC_ADDR));
+		requiredPollCount = msg.getFieldAsInt32(NXCPCodes.VID_REQUIRED_POLLS);
+		peerNodeId = msg.getFieldAsInt64(NXCPCodes.VID_PEER_NODE_ID);
+		peerInterfaceId = msg.getFieldAsInt64(NXCPCodes.VID_PEER_INTERFACE_ID);
+		peerDiscoveryProtocol = LinkLayerDiscoveryProtocol.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_PEER_PROTOCOL));
+		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
+		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
+		adminState = msg.getFieldAsInt32(NXCPCodes.VID_ADMIN_STATE);
+		operState = msg.getFieldAsInt32(NXCPCodes.VID_OPER_STATE);
+		dot1xPaeState = msg.getFieldAsInt32(NXCPCodes.VID_DOT1X_PAE_STATE);
+		dot1xBackendState = msg.getFieldAsInt32(NXCPCodes.VID_DOT1X_BACKEND_STATE);
 	}
 	
 	/**

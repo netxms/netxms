@@ -88,19 +88,19 @@ public abstract class AbstractUserObject
 	 */
 	public AbstractUserObject(final NXCPMessage msg)
 	{
-		id = msg.getVariableAsInt64(NXCPCodes.VID_USER_ID);
-		name = msg.getVariableAsString(NXCPCodes.VID_USER_NAME);
-		flags = msg.getVariableAsInteger(NXCPCodes.VID_USER_FLAGS);
-		systemRights = msg.getVariableAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
-		description = msg.getVariableAsString(NXCPCodes.VID_USER_DESCRIPTION);
-		guid = msg.getVariableAsUUID(NXCPCodes.VID_GUID);
+		id = msg.getFieldAsInt64(NXCPCodes.VID_USER_ID);
+		name = msg.getFieldAsString(NXCPCodes.VID_USER_NAME);
+		flags = msg.getFieldAsInt32(NXCPCodes.VID_USER_FLAGS);
+		systemRights = msg.getFieldAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
+		description = msg.getFieldAsString(NXCPCodes.VID_USER_DESCRIPTION);
+		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);
 		long varId = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE;
 		for(int i = 0; i < count; i++)
 		{
-			String name = msg.getVariableAsString(varId++);
-			String value = msg.getVariableAsString(varId++);
+			String name = msg.getFieldAsString(varId++);
+			String value = msg.getFieldAsString(varId++);
 			customAttributes.put(name, value);
 		}
 	}
@@ -110,20 +110,20 @@ public abstract class AbstractUserObject
 	 */
 	public void fillMessage(final NXCPMessage msg)
 	{
-		msg.setVariableInt32(NXCPCodes.VID_USER_ID, (int)id);
-		msg.setVariable(NXCPCodes.VID_USER_NAME, name);
-		msg.setVariableInt16(NXCPCodes.VID_USER_FLAGS, flags);
-		msg.setVariableInt64(NXCPCodes.VID_USER_SYS_RIGHTS, systemRights);
-		msg.setVariable(NXCPCodes.VID_USER_DESCRIPTION, description);
+		msg.setFieldInt32(NXCPCodes.VID_USER_ID, (int)id);
+		msg.setField(NXCPCodes.VID_USER_NAME, name);
+		msg.setFieldInt16(NXCPCodes.VID_USER_FLAGS, flags);
+		msg.setFieldInt64(NXCPCodes.VID_USER_SYS_RIGHTS, systemRights);
+		msg.setField(NXCPCodes.VID_USER_DESCRIPTION, description);
 		
-		msg.setVariableInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES, customAttributes.size());
+		msg.setFieldInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES, customAttributes.size());
 		long varId = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE;
 		Iterator<Entry<String, String>> it = customAttributes.entrySet().iterator();
 		while(it.hasNext())
 		{
 			Entry<String, String> e = it.next();
-			msg.setVariable(varId++, e.getKey());
-			msg.setVariable(varId++, e.getValue());
+			msg.setField(varId++, e.getKey());
+			msg.setField(varId++, e.getValue());
 		}
 	}
 

@@ -41,11 +41,11 @@ public class MappingTableDescriptor
 	 */
 	public MappingTableDescriptor(NXCPMessage msg, long baseId)
 	{
-		id = msg.getVariableAsInteger(baseId);
-		name = msg.getVariableAsString(baseId + 1);
-		description = msg.getVariableAsString(baseId + 2);
-		flags = msg.getVariableAsInteger(baseId + 3);
-		guid = msg.getVariableAsUUID(baseId + 4);
+		id = msg.getFieldAsInt32(baseId);
+		name = msg.getFieldAsString(baseId + 1);
+		description = msg.getFieldAsString(baseId + 2);
+		flags = msg.getFieldAsInt32(baseId + 3);
+		guid = msg.getFieldAsUUID(baseId + 4);
 	}
 	
 	/**

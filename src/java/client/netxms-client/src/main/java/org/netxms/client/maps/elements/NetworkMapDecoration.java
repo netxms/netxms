@@ -42,11 +42,11 @@ public class NetworkMapDecoration extends NetworkMapElement
 	protected NetworkMapDecoration(NXCPMessage msg, long baseId)
 	{
 		super(msg, baseId);
-		decorationType = msg.getVariableAsInteger(baseId + 10);
-		color = msg.getVariableAsInteger(baseId + 11);
-		title = msg.getVariableAsString(baseId + 12);
-		width = msg.getVariableAsInteger(baseId + 13);
-		height = msg.getVariableAsInteger(baseId + 14);
+		decorationType = msg.getFieldAsInt32(baseId + 10);
+		color = msg.getFieldAsInt32(baseId + 11);
+		title = msg.getFieldAsString(baseId + 12);
+		width = msg.getFieldAsInt32(baseId + 13);
+		height = msg.getFieldAsInt32(baseId + 14);
 	}
 	
 	/**
@@ -113,11 +113,11 @@ public class NetworkMapDecoration extends NetworkMapElement
 	public void fillMessage(NXCPMessage msg, long baseId)
 	{
 		super.fillMessage(msg, baseId);
-		msg.setVariableInt32(baseId + 10, decorationType);
-		msg.setVariableInt32(baseId + 11, color);
-		msg.setVariable(baseId + 12, title);
-		msg.setVariableInt32(baseId + 13, width);
-		msg.setVariableInt32(baseId + 14, height);
+		msg.setFieldInt32(baseId + 10, decorationType);
+		msg.setFieldInt32(baseId + 11, color);
+		msg.setField(baseId + 12, title);
+		msg.setFieldInt32(baseId + 13, width);
+		msg.setFieldInt32(baseId + 14, height);
 	}
 
 	/**

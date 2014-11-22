@@ -68,13 +68,13 @@ public class MappingTable
 	 */
 	public MappingTable(NXCPMessage msg)
 	{
-		id = msg.getVariableAsInteger(NXCPCodes.VID_MAPPING_TABLE_ID);
-		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
-		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
-		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
-      guid = msg.getVariableAsUUID(NXCPCodes.VID_GUID);
+		id = msg.getFieldAsInt32(NXCPCodes.VID_MAPPING_TABLE_ID);
+		name = msg.getFieldAsString(NXCPCodes.VID_NAME);
+		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
+		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
+      guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
 		data = new ArrayList<MappingTableEntry>(count);
 		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < count; i++)
@@ -91,20 +91,20 @@ public class MappingTable
 	 */
 	public void fillMessage(NXCPMessage msg)
 	{
-		msg.setVariableInt32(NXCPCodes.VID_MAPPING_TABLE_ID, id);
-		msg.setVariable(NXCPCodes.VID_NAME, name);
-		msg.setVariable(NXCPCodes.VID_DESCRIPTION, description);
-		msg.setVariableInt32(NXCPCodes.VID_FLAGS, flags);
+		msg.setFieldInt32(NXCPCodes.VID_MAPPING_TABLE_ID, id);
+		msg.setField(NXCPCodes.VID_NAME, name);
+		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
+		msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
 		if (guid != null)
-		   msg.setVariable(NXCPCodes.VID_GUID, guid);
+		   msg.setField(NXCPCodes.VID_GUID, guid);
 		
-		msg.setVariableInt32(NXCPCodes.VID_NUM_ELEMENTS, data.size());
+		msg.setFieldInt32(NXCPCodes.VID_NUM_ELEMENTS, data.size());
 		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
 		for(MappingTableEntry e : data)
 		{
-			msg.setVariable(varId++, e.getKey());
-			msg.setVariable(varId++, e.getValue());
-			msg.setVariable(varId++, e.getDescription());
+			msg.setField(varId++, e.getKey());
+			msg.setField(varId++, e.getValue());
+			msg.setField(varId++, e.getDescription());
 			varId += 7;
 		}
 	}

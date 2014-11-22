@@ -69,14 +69,14 @@ public class ReportingJob
 	 */
 	public ReportingJob(NXCPMessage msg, long varId)
 	{
-		jobId = msg.getVariableAsUUID(varId);
-		reportId = msg.getVariableAsUUID(varId + 1);
-		userId = msg.getVariableAsInteger(varId + 2);
-		startTime = msg.getVariableAsDate(varId + 3);
-		daysOfWeek = msg.getVariableAsInteger(varId + 4);
-		daysOfMonth = msg.getVariableAsInteger(varId + 5);
-		type = msg.getVariableAsInteger(varId + 6);
-		comments = msg.getVariableAsString(varId + 7);
+		jobId = msg.getFieldAsUUID(varId);
+		reportId = msg.getFieldAsUUID(varId + 1);
+		userId = msg.getFieldAsInt32(varId + 2);
+		startTime = msg.getFieldAsDate(varId + 3);
+		daysOfWeek = msg.getFieldAsInt32(varId + 4);
+		daysOfMonth = msg.getFieldAsInt32(varId + 5);
+		type = msg.getFieldAsInt32(varId + 6);
+		comments = msg.getFieldAsString(varId + 7);
 	}
 
 	/**

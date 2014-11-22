@@ -47,7 +47,7 @@ public class NetworkMapElement
 	 */
 	public static NetworkMapElement createMapElement(NXCPMessage msg, long baseId)
 	{
-		int type = msg.getVariableAsInteger(baseId + 1);
+		int type = msg.getFieldAsInt32(baseId + 1);
 		switch(type)
 		{
 			case MAP_ELEMENT_OBJECT:
@@ -71,11 +71,11 @@ public class NetworkMapElement
 	 */
 	protected NetworkMapElement(NXCPMessage msg, long baseId)
 	{
-		id = msg.getVariableAsInt64(baseId);
-		type = msg.getVariableAsInteger(baseId + 1);
-		x = msg.getVariableAsInteger(baseId + 2);
-		y = msg.getVariableAsInteger(baseId + 3);
-		flags = msg.getVariableAsInteger(baseId + 4);
+		id = msg.getFieldAsInt64(baseId);
+		type = msg.getFieldAsInt32(baseId + 1);
+		x = msg.getFieldAsInt32(baseId + 2);
+		y = msg.getFieldAsInt32(baseId + 3);
+		flags = msg.getFieldAsInt32(baseId + 4);
 	}
 	
 	/**
@@ -98,11 +98,11 @@ public class NetworkMapElement
 	 */
 	public void fillMessage(NXCPMessage msg, long baseId)
 	{
-		msg.setVariableInt32(baseId, (int)id);
-		msg.setVariableInt16(baseId + 1, type);
-		msg.setVariableInt32(baseId + 2, x);
-		msg.setVariableInt32(baseId + 3, y);
-		msg.setVariableInt32(baseId + 4, flags);
+		msg.setFieldInt32(baseId, (int)id);
+		msg.setFieldInt16(baseId + 1, type);
+		msg.setFieldInt32(baseId + 2, x);
+		msg.setFieldInt32(baseId + 3, y);
+		msg.setFieldInt32(baseId + 4, flags);
 	}
 
 	/**

@@ -35,7 +35,7 @@ public class NetworkMapObject extends NetworkMapElement
 	protected NetworkMapObject(NXCPMessage msg, long baseId)
 	{
 		super(msg, baseId);
-		objectId = msg.getVariableAsInt64(baseId + 10);
+		objectId = msg.getFieldAsInt64(baseId + 10);
 	}
 	
 	/**
@@ -66,7 +66,7 @@ public class NetworkMapObject extends NetworkMapElement
 	public void fillMessage(NXCPMessage msg, long baseId)
 	{
 		super.fillMessage(msg, baseId);
-		msg.setVariableInt32(baseId + 10, (int)objectId);
+		msg.setFieldInt32(baseId + 10, (int)objectId);
 	}
 
    /* (non-Javadoc)

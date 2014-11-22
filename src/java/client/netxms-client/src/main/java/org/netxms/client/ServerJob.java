@@ -54,14 +54,14 @@ public class ServerJob
 	{
 		long var = baseVarId;
 		
-		id = msg.getVariableAsInt64(var++);
-		jobType = msg.getVariableAsString(var++);
-		description = msg.getVariableAsString(var++);
-		nodeId = msg.getVariableAsInt64(var++);
-		status = msg.getVariableAsInteger(var++);
-		progress = msg.getVariableAsInteger(var++);
-		failureMessage = msg.getVariableAsString(var++);
-		userId = msg.getVariableAsInt64(var++);
+		id = msg.getFieldAsInt64(var++);
+		jobType = msg.getFieldAsString(var++);
+		description = msg.getFieldAsString(var++);
+		nodeId = msg.getFieldAsInt64(var++);
+		status = msg.getFieldAsInt32(var++);
+		progress = msg.getFieldAsInt32(var++);
+		failureMessage = msg.getFieldAsString(var++);
+		userId = msg.getFieldAsInt64(var++);
 	}
 	
 	/**
@@ -69,14 +69,14 @@ public class ServerJob
 	 */
 	ServerJob(final NXCPMessage msg)
 	{
-		id = msg.getVariableAsInt64(NXCPCodes.VID_JOB_ID);
-		userId = msg.getVariableAsInt64(NXCPCodes.VID_USER_ID);
-		jobType = msg.getVariableAsString(NXCPCodes.VID_JOB_TYPE);
-		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
-		nodeId = msg.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID);
-		status = msg.getVariableAsInteger(NXCPCodes.VID_JOB_STATUS);
-		progress = msg.getVariableAsInteger(NXCPCodes.VID_JOB_PROGRESS);
-		failureMessage = msg.getVariableAsString(NXCPCodes.VID_FAILURE_MESSAGE);
+		id = msg.getFieldAsInt64(NXCPCodes.VID_JOB_ID);
+		userId = msg.getFieldAsInt64(NXCPCodes.VID_USER_ID);
+		jobType = msg.getFieldAsString(NXCPCodes.VID_JOB_TYPE);
+		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
+		nodeId = msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID);
+		status = msg.getFieldAsInt32(NXCPCodes.VID_JOB_STATUS);
+		progress = msg.getFieldAsInt32(NXCPCodes.VID_JOB_PROGRESS);
+		failureMessage = msg.getFieldAsString(NXCPCodes.VID_FAILURE_MESSAGE);
 	}
 
 	/**

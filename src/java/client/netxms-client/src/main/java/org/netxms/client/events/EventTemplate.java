@@ -58,12 +58,12 @@ public class EventTemplate
 	 */
 	public EventTemplate(final NXCPMessage msg)
 	{
-		code = msg.getVariableAsInt64(NXCPCodes.VID_EVENT_CODE);
-		severity = Severity.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_SEVERITY));
-		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
-		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
-		message = msg.getVariableAsString(NXCPCodes.VID_MESSAGE);
-		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
+		code = msg.getFieldAsInt64(NXCPCodes.VID_EVENT_CODE);
+		severity = Severity.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_SEVERITY));
+		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
+		name = msg.getFieldAsString(NXCPCodes.VID_NAME);
+		message = msg.getFieldAsString(NXCPCodes.VID_MESSAGE);
+		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
 	}
 	
 	/**

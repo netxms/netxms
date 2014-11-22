@@ -79,14 +79,14 @@ public class SyslogRecord
 	 */
 	public SyslogRecord(NXCPMessage msg, long baseId)
 	{
-		id = msg.getVariableAsInt64(baseId);
-		timestamp = msg.getVariableAsDate(baseId + 1);
-		facility = msg.getVariableAsInteger(baseId + 2);
-		severity = msg.getVariableAsInteger(baseId + 3);
-		sourceObjectId = msg.getVariableAsInt64(baseId + 4);
-		hostname = msg.getVariableAsString(baseId + 5);
-		tag = msg.getVariableAsString(baseId + 6);
-		message = msg.getVariableAsString(baseId + 7);
+		id = msg.getFieldAsInt64(baseId);
+		timestamp = msg.getFieldAsDate(baseId + 1);
+		facility = msg.getFieldAsInt32(baseId + 2);
+		severity = msg.getFieldAsInt32(baseId + 3);
+		sourceObjectId = msg.getFieldAsInt64(baseId + 4);
+		hostname = msg.getFieldAsString(baseId + 5);
+		tag = msg.getFieldAsString(baseId + 6);
+		message = msg.getFieldAsString(baseId + 7);
 	}
 
 	/**

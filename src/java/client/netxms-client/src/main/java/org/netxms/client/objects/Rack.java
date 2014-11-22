@@ -36,7 +36,7 @@ public class Rack extends GenericObject
 	public Rack(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		height = msg.getVariableAsInteger(NXCPCodes.VID_HEIGHT);
+		height = msg.getFieldAsInt32(NXCPCodes.VID_HEIGHT);
 	}
 
 	/* (non-Javadoc)

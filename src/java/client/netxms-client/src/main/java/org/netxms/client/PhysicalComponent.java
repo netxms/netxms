@@ -63,18 +63,18 @@ public class PhysicalComponent
 	{
 		this.parent = parent;
 		
-		index = msg.getVariableAsInteger(baseId);
-		parentIndex = msg.getVariableAsInteger(baseId + 1);
-		phyClass = msg.getVariableAsInteger(baseId + 2);
-		ifIndex = msg.getVariableAsInteger(baseId + 3);
-		name = msg.getVariableAsString(baseId + 4);
-		description = msg.getVariableAsString(baseId + 5);
-		model = msg.getVariableAsString(baseId + 6);
-		serialNumber = msg.getVariableAsString(baseId + 7);
-		vendor = msg.getVariableAsString(baseId + 8);
-		firmware = msg.getVariableAsString(baseId + 9);
+		index = msg.getFieldAsInt32(baseId);
+		parentIndex = msg.getFieldAsInt32(baseId + 1);
+		phyClass = msg.getFieldAsInt32(baseId + 2);
+		ifIndex = msg.getFieldAsInt32(baseId + 3);
+		name = msg.getFieldAsString(baseId + 4);
+		description = msg.getFieldAsString(baseId + 5);
+		model = msg.getFieldAsString(baseId + 6);
+		serialNumber = msg.getFieldAsString(baseId + 7);
+		vendor = msg.getFieldAsString(baseId + 8);
+		firmware = msg.getFieldAsString(baseId + 9);
 		
-		int count = msg.getVariableAsInteger(baseId + 10);
+		int count = msg.getFieldAsInt32(baseId + 10);
 		subcomponents = new ArrayList<PhysicalComponent>(count);
 		long varId = baseId + 11;
 		for(int i = 0; i < count; i++)

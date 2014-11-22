@@ -51,13 +51,13 @@ public class NetworkService extends GenericObject
 	public NetworkService(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		serviceType = msg.getVariableAsInteger(NXCPCodes.VID_SERVICE_TYPE);
-		protocol = msg.getVariableAsInteger(NXCPCodes.VID_IP_PROTO);
-		port = msg.getVariableAsInteger(NXCPCodes.VID_IP_PORT);
-		request = msg.getVariableAsString(NXCPCodes.VID_SERVICE_REQUEST);
-		response = msg.getVariableAsString(NXCPCodes.VID_SERVICE_RESPONSE);
-		pollerNode = msg.getVariableAsInt64(NXCPCodes.VID_POLLER_NODE_ID);
-		pollCount = msg.getVariableAsInteger(NXCPCodes.VID_REQUIRED_POLLS);
+		serviceType = msg.getFieldAsInt32(NXCPCodes.VID_SERVICE_TYPE);
+		protocol = msg.getFieldAsInt32(NXCPCodes.VID_IP_PROTO);
+		port = msg.getFieldAsInt32(NXCPCodes.VID_IP_PORT);
+		request = msg.getFieldAsString(NXCPCodes.VID_SERVICE_REQUEST);
+		response = msg.getFieldAsString(NXCPCodes.VID_SERVICE_RESPONSE);
+		pollerNode = msg.getFieldAsInt64(NXCPCodes.VID_POLLER_NODE_ID);
+		pollCount = msg.getFieldAsInt32(NXCPCodes.VID_REQUIRED_POLLS);
 	}
 
 	/* (non-Javadoc)

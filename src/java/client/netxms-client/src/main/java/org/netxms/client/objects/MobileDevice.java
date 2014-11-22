@@ -45,15 +45,15 @@ public class MobileDevice extends GenericObject
 	public MobileDevice(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		deviceId = msg.getVariableAsString(NXCPCodes.VID_DEVICE_ID);
-		vendor = msg.getVariableAsString(NXCPCodes.VID_VENDOR);
-		model = msg.getVariableAsString(NXCPCodes.VID_MODEL);
-		serialNumber = msg.getVariableAsString(NXCPCodes.VID_SERIAL_NUMBER);
-		osName = msg.getVariableAsString(NXCPCodes.VID_OS_NAME);
-		osVersion = msg.getVariableAsString(NXCPCodes.VID_OS_VERSION);
-		userId = msg.getVariableAsString(NXCPCodes.VID_USER_ID);
-		batteryLevel = msg.getVariableAsInteger(NXCPCodes.VID_BATTERY_LEVEL);
-		lastReportTime = msg.getVariableAsDate(NXCPCodes.VID_LAST_CHANGE_TIME);
+		deviceId = msg.getFieldAsString(NXCPCodes.VID_DEVICE_ID);
+		vendor = msg.getFieldAsString(NXCPCodes.VID_VENDOR);
+		model = msg.getFieldAsString(NXCPCodes.VID_MODEL);
+		serialNumber = msg.getFieldAsString(NXCPCodes.VID_SERIAL_NUMBER);
+		osName = msg.getFieldAsString(NXCPCodes.VID_OS_NAME);
+		osVersion = msg.getFieldAsString(NXCPCodes.VID_OS_VERSION);
+		userId = msg.getFieldAsString(NXCPCodes.VID_USER_ID);
+		batteryLevel = msg.getFieldAsInt32(NXCPCodes.VID_BATTERY_LEVEL);
+		lastReportTime = msg.getFieldAsDate(NXCPCodes.VID_LAST_CHANGE_TIME);
 	}
 
 	/* (non-Javadoc)

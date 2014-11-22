@@ -30,24 +30,24 @@ public class VPNConnector extends GenericObject
    {
       super(msg, session);
       
-      peerGatewayId = msg.getVariableAsInt64(NXCPCodes.VID_PEER_GATEWAY);
+      peerGatewayId = msg.getFieldAsInt64(NXCPCodes.VID_PEER_GATEWAY);
       
       long varId = NXCPCodes.VID_VPN_NETWORK_BASE;
-      int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_LOCAL_NETS);
+      int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_LOCAL_NETS);
       localSubnets = new ArrayList<IpAddressListElement>(count);
       for(int i = 0; i < count; i++)
       {
-         InetAddress addr = msg.getVariableAsInetAddress(varId++);
-         InetAddress mask = msg.getVariableAsInetAddress(varId++);
+         InetAddress addr = msg.getFieldAsInetAddress(varId++);
+         InetAddress mask = msg.getFieldAsInetAddress(varId++);
          localSubnets.add(new IpAddressListElement(IpAddressListElement.SUBNET, addr, mask));
       }
 
-      count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_REMOTE_NETS);
+      count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_REMOTE_NETS);
       remoteSubnets = new ArrayList<IpAddressListElement>(count);
       for(int i = 0; i < count; i++)
       {
-         InetAddress addr = msg.getVariableAsInetAddress(varId++);
-         InetAddress mask = msg.getVariableAsInetAddress(varId++);
+         InetAddress addr = msg.getFieldAsInetAddress(varId++);
+         InetAddress mask = msg.getFieldAsInetAddress(varId++);
          remoteSubnets.add(new IpAddressListElement(IpAddressListElement.SUBNET, addr, mask));
       }
    }

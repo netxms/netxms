@@ -87,19 +87,19 @@ public class DataCollectionItem extends DataCollectionObject
 	{
 		super(owner, msg);
 		
-		dataType = msg.getVariableAsInteger(NXCPCodes.VID_DCI_DATA_TYPE);
-		deltaCalculation = msg.getVariableAsInteger(NXCPCodes.VID_DCI_DELTA_CALCULATION);
-		sampleCount = msg.getVariableAsInteger(NXCPCodes.VID_SAMPLE_COUNT);
-		instance = msg.getVariableAsString(NXCPCodes.VID_INSTANCE);
-		baseUnits = msg.getVariableAsInteger(NXCPCodes.VID_BASE_UNITS);
-		multiplier = msg.getVariableAsInteger(NXCPCodes.VID_MULTIPLIER);
-		customUnitName = msg.getVariableAsString(NXCPCodes.VID_CUSTOM_UNITS_NAME);
-		snmpRawValueType = msg.getVariableAsInteger(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE);
-		instanceDiscoveryMethod = msg.getVariableAsInteger(NXCPCodes.VID_INSTD_METHOD);
-		instanceDiscoveryData = msg.getVariableAsString(NXCPCodes.VID_INSTD_DATA);
-		instanceDiscoveryFilter = msg.getVariableAsString(NXCPCodes.VID_INSTD_FILTER);
+		dataType = msg.getFieldAsInt32(NXCPCodes.VID_DCI_DATA_TYPE);
+		deltaCalculation = msg.getFieldAsInt32(NXCPCodes.VID_DCI_DELTA_CALCULATION);
+		sampleCount = msg.getFieldAsInt32(NXCPCodes.VID_SAMPLE_COUNT);
+		instance = msg.getFieldAsString(NXCPCodes.VID_INSTANCE);
+		baseUnits = msg.getFieldAsInt32(NXCPCodes.VID_BASE_UNITS);
+		multiplier = msg.getFieldAsInt32(NXCPCodes.VID_MULTIPLIER);
+		customUnitName = msg.getFieldAsString(NXCPCodes.VID_CUSTOM_UNITS_NAME);
+		snmpRawValueType = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE);
+		instanceDiscoveryMethod = msg.getFieldAsInt32(NXCPCodes.VID_INSTD_METHOD);
+		instanceDiscoveryData = msg.getFieldAsString(NXCPCodes.VID_INSTD_DATA);
+		instanceDiscoveryFilter = msg.getFieldAsString(NXCPCodes.VID_INSTD_FILTER);
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_THRESHOLDS);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
 		thresholds = new ArrayList<Threshold>(count);
 		long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
 		for(int i = 0; i < count; i++, varId += 20)
@@ -138,24 +138,24 @@ public class DataCollectionItem extends DataCollectionObject
 	{
 		super.fillMessage(msg);
 		
-		msg.setVariableInt16(NXCPCodes.VID_DCOBJECT_TYPE, DCO_TYPE_ITEM);
-		msg.setVariableInt16(NXCPCodes.VID_DCI_DATA_TYPE, dataType);
-		msg.setVariableInt16(NXCPCodes.VID_DCI_DELTA_CALCULATION, deltaCalculation);
-		msg.setVariableInt16(NXCPCodes.VID_SAMPLE_COUNT, sampleCount);
-		msg.setVariable(NXCPCodes.VID_INSTANCE, instance);
-		msg.setVariableInt16(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE, snmpRawValueType);
-		msg.setVariableInt16(NXCPCodes.VID_BASE_UNITS, baseUnits);
-		msg.setVariableInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
+		msg.setFieldInt16(NXCPCodes.VID_DCOBJECT_TYPE, DCO_TYPE_ITEM);
+		msg.setFieldInt16(NXCPCodes.VID_DCI_DATA_TYPE, dataType);
+		msg.setFieldInt16(NXCPCodes.VID_DCI_DELTA_CALCULATION, deltaCalculation);
+		msg.setFieldInt16(NXCPCodes.VID_SAMPLE_COUNT, sampleCount);
+		msg.setField(NXCPCodes.VID_INSTANCE, instance);
+		msg.setFieldInt16(NXCPCodes.VID_SNMP_RAW_VALUE_TYPE, snmpRawValueType);
+		msg.setFieldInt16(NXCPCodes.VID_BASE_UNITS, baseUnits);
+		msg.setFieldInt32(NXCPCodes.VID_MULTIPLIER, multiplier);
 		if (customUnitName != null)
-			msg.setVariable(NXCPCodes.VID_CUSTOM_UNITS_NAME, customUnitName);
+			msg.setField(NXCPCodes.VID_CUSTOM_UNITS_NAME, customUnitName);
 		
-		msg.setVariableInt16(NXCPCodes.VID_INSTD_METHOD, instanceDiscoveryMethod);
+		msg.setFieldInt16(NXCPCodes.VID_INSTD_METHOD, instanceDiscoveryMethod);
 		if (instanceDiscoveryData != null)
-			msg.setVariable(NXCPCodes.VID_INSTD_DATA, instanceDiscoveryData);
+			msg.setField(NXCPCodes.VID_INSTD_DATA, instanceDiscoveryData);
 		if (instanceDiscoveryFilter != null)
-			msg.setVariable(NXCPCodes.VID_INSTD_FILTER, instanceDiscoveryFilter);
+			msg.setField(NXCPCodes.VID_INSTD_FILTER, instanceDiscoveryFilter);
 		
-		msg.setVariableInt32(NXCPCodes.VID_NUM_THRESHOLDS, thresholds.size());
+		msg.setFieldInt32(NXCPCodes.VID_NUM_THRESHOLDS, thresholds.size());
 		long varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
 		for(int i = 0; i < thresholds.size(); i++, varId +=10)
 		{

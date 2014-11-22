@@ -36,7 +36,7 @@ public class NetworkMapDCIImage  extends NetworkMapElement
 	protected NetworkMapDCIImage(NXCPMessage msg, long baseId)
 	{
 		super(msg, baseId);
-		String DCIImageConfigXML = msg.getVariableAsString(baseId+10);
+		String DCIImageConfigXML = msg.getFieldAsString(baseId+10);
 		try
       {
 		   imageOptions = DCIImageConfiguration.createFromXml(DCIImageConfigXML);
@@ -76,7 +76,7 @@ public class NetworkMapDCIImage  extends NetworkMapElement
       catch(Exception e)
       {
       }
-      msg.setVariable(baseId + 10, xml);
+      msg.setField(baseId + 10, xml);
 	}
 
    /**

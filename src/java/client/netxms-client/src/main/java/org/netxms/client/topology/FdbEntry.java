@@ -42,13 +42,13 @@ public class FdbEntry
     */
    public FdbEntry(NXCPMessage msg, long baseId)
    {
-      address = new MacAddress(msg.getVariableAsBinary(baseId));
-      interfaceIndex = msg.getVariableAsInteger(baseId + 1);
-      port = msg.getVariableAsInteger(baseId + 2);
-      nodeId = msg.getVariableAsInt64(baseId + 3);
-      vlanId = msg.getVariableAsInteger(baseId + 4);
-      type = msg.getVariableAsInteger(baseId + 5);
-      interfaceName = msg.getVariableAsString(baseId + 6);
+      address = new MacAddress(msg.getFieldAsBinary(baseId));
+      interfaceIndex = msg.getFieldAsInt32(baseId + 1);
+      port = msg.getFieldAsInt32(baseId + 2);
+      nodeId = msg.getFieldAsInt64(baseId + 3);
+      vlanId = msg.getFieldAsInt32(baseId + 4);
+      type = msg.getFieldAsInt32(baseId + 5);
+      interfaceName = msg.getFieldAsString(baseId + 6);
    }
 
    /**

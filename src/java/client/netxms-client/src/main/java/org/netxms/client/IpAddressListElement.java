@@ -40,9 +40,9 @@ public class IpAddressListElement
 	 */
 	protected IpAddressListElement(NXCPMessage msg, long baseId)
 	{
-		type = msg.getVariableAsInteger(baseId);
-		addr1 = msg.getVariableAsInetAddress(baseId + 1);
-		addr2 = msg.getVariableAsInetAddress(baseId + 2);
+		type = msg.getFieldAsInt32(baseId);
+		addr1 = msg.getFieldAsInetAddress(baseId + 1);
+		addr2 = msg.getFieldAsInetAddress(baseId + 2);
 	}
 
 	/**

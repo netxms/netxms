@@ -46,7 +46,7 @@ public class NXCPMessage
 	private int messageCode;
 	private int messageFlags;
 	private long messageId;
-	private Map<Long, NXCPVariable> variableMap = new HashMap<Long, NXCPVariable>(0);
+	private Map<Long, NXCPMessageField> fields = new HashMap<Long, NXCPMessageField>(0);
 	private long timestamp;
 	private byte[] binaryData = null;
 	private long controlData = 0;
@@ -164,15 +164,15 @@ public class NXCPMessage
 	
 				switch(df[4])
 				{
-					case NXCPVariable.TYPE_INT16:
+					case NXCPMessageField.TYPE_INT16:
 						break;
-					case NXCPVariable.TYPE_FLOAT:		// all these types requires additional 8 bytes
-					case NXCPVariable.TYPE_INTEGER:
-					case NXCPVariable.TYPE_INT64:
+					case NXCPMessageField.TYPE_FLOAT:		// all these types requires additional 8 bytes
+					case NXCPMessageField.TYPE_INTEGER:
+					case NXCPMessageField.TYPE_INT64:
 						inputStream.readFully(df, 8, 8);
 						break;
-					case NXCPVariable.TYPE_STRING:		// all these types has 4-byte length field followed by actual content
-					case NXCPVariable.TYPE_BINARY:
+					case NXCPMessageField.TYPE_STRING:		// all these types has 4-byte length field followed by actual content
+					case NXCPMessageField.TYPE_BINARY:
 						int size = inputStream.readInt();
 						byteArrayInputStream.reset();
 						df = new byte[size + 12];
@@ -187,8 +187,8 @@ public class NXCPMessage
 						break;
 				}
 	
-				final NXCPVariable variable = new NXCPVariable(df);
-				variableMap.put(variable.getVariableId(), variable);
+				final NXCPMessageField variable = new NXCPMessageField(df);
+				fields.put(variable.getVariableId(), variable);
 			}
 		}
 	}
@@ -241,143 +241,275 @@ public class NXCPMessage
 		this.timestamp = timestamp;
 	}
 
+	/**
+	 * Find field by ID
+	 * 
+	 * @param fieldId variable Id to find
+	 */
+	public NXCPMessageField findField(final long fieldId)
+	{
+		return fields.get(fieldId);
+	}
 
 	/**
-	 * @param varId variable Id to find
+	 * Set field as copy of another field
+	 * 
+	 * @param src source field
 	 */
-	public NXCPVariable findVariable(final long varId)
+	public void setField(final NXCPMessageField src)
 	{
-		return variableMap.get(varId);
+		fields.put(src.getVariableId(), src);
 	}
 
+	/**
+	 * Set field of BINARY type (array of bytes)
+	 * 
+	 * @param fieldId
+	 * @param value
+	 */
+	public void setField(final long fieldId, final byte[] value)
+	{
+		setField(new NXCPMessageField(fieldId, value));
+	}
+
+	/**
+	 * Set field of BINARY type (array of integers)
+	 * 
+	 * @param fieldId
+	 * @param value
+	 */
+	public void setField(final long fieldId, final long[] value)
+	{
+		setField(new NXCPMessageField(fieldId, value));
+	}
+
+   /**
+    * Set field of BINARY type (array of integers)
+    * 
+    * @param fieldId
+    * @param value
+    */
+	public void setField(final long fieldId, final Long[] value)
+	{
+		setField(new NXCPMessageField(fieldId, value));
+	}
+
+	/**
+	 * Set field of STRING type
+	 * 
+	 * @param fieldId
+	 * @param value
+	 */
+	public void setField(final long fieldId, final String value)
+	{
+		setField(new NXCPMessageField(fieldId, value));
+	}
+
+	/**
+	 * Set field of DOUBLE type
+	 * 
+	 * @param fieldId
+	 * @param value
+	 */
+	public void setField(final long fieldId, final Double value)
+	{
+		setField(new NXCPMessageField(fieldId, value));
+	}
+
+	/**
+	 * Set field of INETADDR type
+	 * 
+	 * @param fieldId
+	 * @param value
+	 */
+	public void setField(final long fieldId, final InetAddress value)
+	{
+		setField(new NXCPMessageField(fieldId, value));
+	}
+
+	/**
+	 * Set field of BINARY type to GUID value (byte array of length 16).
+	 * 
+	 * @param fieldId
+	 * @param value
+	 */
+	public void setField(final long fieldId, final UUID value)
+	{
+		setField(new NXCPMessageField(fieldId, value));
+	}
+
+	/**
+	 * Set field of type INT64
+	 * 
+	 * @param fieldId
+	 * @param value
+	 */
+	public void setFieldInt64(final long fieldId, final long value)
+	{
+		setField(new NXCPMessageField(fieldId, NXCPMessageField.TYPE_INT64, value));
+	}
+
+	/**
+	 * Set field of type INT32
+	 * 
+	 * @param fieldId
+	 * @param value
+	 */
+	public void setFieldInt32(final long fieldId, final int value)
+	{
+		setField(new NXCPMessageField(fieldId, NXCPMessageField.TYPE_INTEGER, (long)value));
+	}
+
+	/**
+	 * Set field of type INT16
+	 * 
+	 * @param fieldId
+	 * @param value
+	 */
+	public void setFieldInt16(final long fieldId, final int value)
+	{
+		setField(new NXCPMessageField(fieldId, NXCPMessageField.TYPE_INT16, (long)value));
+	}
 	
-	//
-	// Getters/Setters for variables
-	//
-	
-	public void setVariable(final NXCPVariable variable)
-	{
-		variableMap.put(variable.getVariableId(), variable);
-	}
-
-	public void setVariable(final long varId, final byte[] value)
-	{
-		setVariable(new NXCPVariable(varId, value));
-	}
-
-	public void setVariable(final long varId, final long[] value)
-	{
-		setVariable(new NXCPVariable(varId, value));
-	}
-
-	public void setVariable(final long varId, final Long[] value)
-	{
-		setVariable(new NXCPVariable(varId, value));
-	}
-
-	public void setVariable(final long varId, final String value)
-	{
-		setVariable(new NXCPVariable(varId, value));
-	}
-
-	public void setVariable(final long varId, final Double value)
-	{
-		setVariable(new NXCPVariable(varId, value));
-	}
-
-	public void setVariable(final long varId, final InetAddress value)
-	{
-		setVariable(new NXCPVariable(varId, value));
-	}
-
-	public void setVariable(final long varId, final UUID value)
-	{
-		setVariable(new NXCPVariable(varId, value));
-	}
-
-	public void setVariableInt64(final long varId, final long value)
-	{
-		setVariable(new NXCPVariable(varId, NXCPVariable.TYPE_INT64, value));
-	}
-
-	public void setVariableInt32(final long varId, final int value)
-	{
-		setVariable(new NXCPVariable(varId, NXCPVariable.TYPE_INTEGER, (long)value));
-	}
-
-	public void setVariableInt16(final long varId, final int value)
-	{
-		setVariable(new NXCPVariable(varId, NXCPVariable.TYPE_INT16, (long)value));
-	}
-	
-   public void setVariable(final long varId, final boolean value)
+   /**
+    * Set field of type INT16 to 1 if value is true and 0 otherwise.
+    * @param fieldId
+    * @param value
+    */
+   public void setField(final long fieldId, final boolean value)
    {
-      setVariable(new NXCPVariable(varId, NXCPVariable.TYPE_INT16, value ? 1L : 0L));
+      setField(new NXCPMessageField(fieldId, NXCPMessageField.TYPE_INT16, value ? 1L : 0L));
    }
    
-	public byte[] getVariableAsBinary(final long varId)
+	/**
+	 * Get field as byte array
+	 * 
+	 * @param fieldId
+	 * @return
+	 */
+	public byte[] getFieldAsBinary(final long fieldId)
 	{
-		final NXCPVariable var = findVariable(varId);
+		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsBinary() : null;
 	}
 	
-	public String getVariableAsString(final long varId)
+	/**
+	 * Get field as string
+	 * 
+	 * @param fieldId
+	 * @return
+	 */
+	public String getFieldAsString(final long fieldId)
 	{
-		final NXCPVariable var = findVariable(varId);
+		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsString() : "";
 	}
 	
-	public Double getVariableAsReal(final long varId)
+	/**
+	 * Get field as double
+	 * 
+	 * @param fieldId
+	 * @return
+	 */
+	public Double getFieldAsDouble(final long fieldId)
 	{
-		final NXCPVariable var = findVariable(varId);
+		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsReal() : 0;
 	}
 	
-	public int getVariableAsInteger(final long varId)
+	/**
+	 * Get field as 32 bit integer
+	 * 
+	 * @param fieldId
+	 * @return
+	 */
+	public int getFieldAsInt32(final long fieldId)
 	{
-		final NXCPVariable var = findVariable(varId);
+		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsInteger().intValue() : 0;
 	}
 	
-	public long getVariableAsInt64(final long varId)
+	/**
+	 * Get field as 64 bit integer
+	 * 
+	 * @param fieldId
+	 * @return
+	 */
+	public long getFieldAsInt64(final long fieldId)
 	{
-		final NXCPVariable var = findVariable(varId);
+		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsInteger() : 0;
 	}
 	
-	public InetAddress getVariableAsInetAddress(final long varId)
+	/**
+	 * Get field as InetAddress
+	 * 
+	 * @param fieldId
+	 * @return
+	 */
+	public InetAddress getFieldAsInetAddress(final long fieldId)
 	{
-		final NXCPVariable var = findVariable(varId);
+		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsInetAddress() : null;
 	}
 	
-	public UUID getVariableAsUUID(final long varId)
+	/**
+	 * Get field as UUID (GUID)
+	 * 
+	 * @param fieldId
+	 * @return
+	 */
+	public UUID getFieldAsUUID(final long fieldId)
 	{
-		final NXCPVariable var = findVariable(varId);
+		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsUUID() : null;
 	}
 	
-	public long[] getVariableAsUInt32Array(final long varId)
+	/**
+	 * Get field as array of 32 bit integers
+	 * 
+	 * @param fieldId
+	 * @return
+	 */
+	public long[] getFieldAsUInt32Array(final long fieldId)
 	{
-		final NXCPVariable var = findVariable(varId);
+		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsUInt32Array() : null;
 	}
 	
-	public Long[] getVariableAsUInt32ArrayEx(final long varId)
+	/**
+	 * Get field as array of 32 bit integers
+	 * 
+	 * @param fieldId
+	 * @return
+	 */
+	public Long[] getFieldAsUInt32ArrayEx(final long fieldId)
 	{
-		final NXCPVariable var = findVariable(varId);
+		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? var.getAsUInt32ArrayEx() : null;
 	}
 	
-	public boolean getVariableAsBoolean(final long varId)
+	/**
+	 * Get field as boolean
+	 * 
+	 * @param fieldId
+	 * @return
+	 */
+	public boolean getFieldAsBoolean(final long fieldId)
 	{
-		final NXCPVariable var = findVariable(varId);
+		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? (var.getAsInteger() != 0) : false;
 	}
 
-	public Date getVariableAsDate(final long varId)
+	/**
+	 * Get field as date
+	 * 
+	 * @param fieldId
+	 * @return
+	 */
+	public Date getFieldAsDate(final long fieldId)
 	{
-		final NXCPVariable var = findVariable(varId);
+		final NXCPMessageField var = findField(fieldId);
 		return (var != null) ? new Date(var.getAsInteger() * 1000) : null;
 	}
 
@@ -416,7 +548,7 @@ public class NXCPMessage
 		else
 		{
 			// Create byte array with all variables
-			for(final NXCPVariable nxcpVariable: variableMap.values())
+			for(final NXCPMessageField nxcpVariable: fields.values())
 			{
 				final byte[] field = nxcpVariable.createNXCPDataField();
 				outputStream.write(field);
@@ -431,7 +563,7 @@ public class NXCPMessage
 			outputStream.writeShort(messageFlags);
 			outputStream.writeInt(payload.length + HEADER_SIZE);	   // Size
 			outputStream.writeInt((int)messageId);
-			outputStream.writeInt(variableMap.size());
+			outputStream.writeInt(fields.size());
 			outputStream.write(payload);
 		}
 
@@ -593,6 +725,6 @@ public class NXCPMessage
 	public String toString()
 	{
 		return "NXCPMessage [messageCode=" + messageCode + ", messageFlags=" + messageFlags + ", messageId=" + messageId
-				+ ", variableMap=" + variableMap + ", timestamp=" + timestamp + "]";
+				+ ", variableMap=" + fields + ", timestamp=" + timestamp + "]";
 	}
 }

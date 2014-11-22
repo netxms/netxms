@@ -37,9 +37,9 @@ public class AgentParameter
 	 */
 	protected AgentParameter(final NXCPMessage msg, final long baseId)
 	{
-		name = msg.getVariableAsString(baseId);
-		description = msg.getVariableAsString(baseId + 1);
-		dataType = msg.getVariableAsInteger(baseId + 2);
+		name = msg.getFieldAsString(baseId);
+		description = msg.getFieldAsString(baseId + 1);
+		dataType = msg.getFieldAsInt32(baseId + 2);
 	}
 	
 	/**

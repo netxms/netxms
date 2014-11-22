@@ -60,9 +60,9 @@ public class DciSummaryTableColumn
 	 */
 	public void fillMessage(NXCPMessage msg, long baseId)
 	{
-	   msg.setVariable(baseId, name);
-      msg.setVariable(baseId + 1, dciName);
-      msg.setVariableInt32(baseId + 2, flags);
+	   msg.setField(baseId, name);
+      msg.setField(baseId + 1, dciName);
+      msg.setFieldInt32(baseId + 2, flags);
 	}
 
 	/**

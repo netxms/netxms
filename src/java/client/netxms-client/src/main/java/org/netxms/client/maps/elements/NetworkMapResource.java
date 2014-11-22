@@ -37,7 +37,7 @@ public class NetworkMapResource extends NetworkMapElement
 	public NetworkMapResource(NXCPMessage msg, long baseId)
 	{
 		super(msg, baseId);
-		type = msg.getVariableAsInteger(baseId + 10);
+		type = msg.getFieldAsInt32(baseId + 10);
 		data = null;
 	}
 
@@ -58,7 +58,7 @@ public class NetworkMapResource extends NetworkMapElement
 	public void fillMessage(NXCPMessage msg, long baseId)
 	{
 		super.fillMessage(msg, baseId);
-		msg.setVariableInt32(baseId + 10, type);
+		msg.setFieldInt32(baseId + 10, type);
 	}
 
 	/**

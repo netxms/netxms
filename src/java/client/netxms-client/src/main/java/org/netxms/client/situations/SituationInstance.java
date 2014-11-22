@@ -41,15 +41,15 @@ public class SituationInstance
 	protected SituationInstance(Situation parent, NXCPMessage msg, long baseId)
 	{
 		this.parent = parent;
-		name = msg.getVariableAsString(baseId);
+		name = msg.getFieldAsString(baseId);
 		
-		int count = msg.getVariableAsInteger(baseId + 1);
+		int count = msg.getFieldAsInt32(baseId + 1);
 		attributes = new HashMap<String, String>(count);
 		long varId = baseId + 2;
 		for(int i = 0; i < count; i++)
 		{
-			final String name = msg.getVariableAsString(varId++);
-			final String value = msg.getVariableAsString(varId++);
+			final String name = msg.getFieldAsString(varId++);
+			final String value = msg.getFieldAsString(varId++);
 			attributes.put(name, value);
 		}
 	}

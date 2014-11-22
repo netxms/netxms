@@ -40,9 +40,9 @@ public class Container extends GenericObject
 	public Container(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		category = msg.getVariableAsInteger(NXCPCodes.VID_CATEGORY);
-		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
-		autoBindFilter = msg.getVariableAsString(NXCPCodes.VID_AUTOBIND_FILTER);
+		category = msg.getFieldAsInt32(NXCPCodes.VID_CATEGORY);
+		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
+		autoBindFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
 	}
 
 	/* (non-Javadoc)

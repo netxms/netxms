@@ -42,12 +42,12 @@ public class SoftwarePackage
 	 */
 	protected SoftwarePackage(NXCPMessage msg, long baseId)
 	{
-		name = msg.getVariableAsString(baseId);
-		version = msg.getVariableAsString(baseId + 1);
-		vendor = msg.getVariableAsString(baseId + 2);
-		installDate = msg.getVariableAsDate(baseId + 3);
-		supportUrl = msg.getVariableAsString(baseId + 4);
-		description = msg.getVariableAsString(baseId + 5);
+		name = msg.getFieldAsString(baseId);
+		version = msg.getFieldAsString(baseId + 1);
+		vendor = msg.getFieldAsString(baseId + 2);
+		installDate = msg.getFieldAsDate(baseId + 3);
+		supportUrl = msg.getFieldAsString(baseId + 4);
+		description = msg.getFieldAsString(baseId + 5);
 	}
 
 	/**

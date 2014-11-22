@@ -77,9 +77,9 @@ public class ReportResult
 	public static ReportResult createFromMessage(NXCPMessage response, long base)
 	{
 		long id = base;
-		final UUID reportId = response.getVariableAsUUID(id++);
-		final Date date = response.getVariableAsDate(id++);
-		final int userId = response.getVariableAsInteger(id++);
+		final UUID reportId = response.getFieldAsUUID(id++);
+		final Date date = response.getFieldAsDate(id++);
+		final int userId = response.getFieldAsInt32(id++);
 		return new ReportResult(date, reportId, userId);
 	}
 }

@@ -50,10 +50,10 @@ public class AuthCertificate
 	 */
 	public AuthCertificate(NXCPMessage msg, long baseId)
 	{
-		id = msg.getVariableAsInt64(baseId);
-		type = msg.getVariableAsInteger(baseId + 1);
-		comments = msg.getVariableAsString(baseId + 2);
-		subject = msg.getVariableAsString(baseId + 3);
+		id = msg.getFieldAsInt64(baseId);
+		type = msg.getFieldAsInt32(baseId + 1);
+		comments = msg.getFieldAsString(baseId + 2);
+		subject = msg.getFieldAsString(baseId + 3);
 	}
 	
 	/**

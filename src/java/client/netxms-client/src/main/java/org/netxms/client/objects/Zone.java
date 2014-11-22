@@ -41,10 +41,10 @@ public class Zone extends GenericObject
 	public Zone(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
-		agentProxy = msg.getVariableAsInt64(NXCPCodes.VID_AGENT_PROXY);
-		snmpProxy = msg.getVariableAsInt64(NXCPCodes.VID_SNMP_PROXY);
-		icmpProxy = msg.getVariableAsInt64(NXCPCodes.VID_ICMP_PROXY);
+		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
+		agentProxy = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
+		snmpProxy = msg.getFieldAsInt64(NXCPCodes.VID_SNMP_PROXY);
+		icmpProxy = msg.getFieldAsInt64(NXCPCodes.VID_ICMP_PROXY);
 	}
 
 	/* (non-Javadoc)

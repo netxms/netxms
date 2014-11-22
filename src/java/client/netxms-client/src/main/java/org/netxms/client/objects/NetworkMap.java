@@ -70,20 +70,20 @@ public class NetworkMap extends GenericObject
 	public NetworkMap(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		mapType = msg.getVariableAsInteger(NXCPCodes.VID_MAP_TYPE);
-		layout = MapLayoutAlgorithm.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_LAYOUT));
-		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
-		background = msg.getVariableAsUUID(NXCPCodes.VID_BACKGROUND);
-		backgroundLocation = new GeoLocation(msg.getVariableAsReal(NXCPCodes.VID_BACKGROUND_LATITUDE), msg.getVariableAsReal(NXCPCodes.VID_BACKGROUND_LONGITUDE));
-		backgroundZoom = msg.getVariableAsInteger(NXCPCodes.VID_BACKGROUND_ZOOM);
-		seedObjectId = msg.getVariableAsInt64(NXCPCodes.VID_SEED_OBJECT);
-		defaultLinkColor = msg.getVariableAsInteger(NXCPCodes.VID_LINK_COLOR);
-		defaultLinkRouting = msg.getVariableAsInteger(NXCPCodes.VID_LINK_ROUTING);
-		backgroundColor = msg.getVariableAsInteger(NXCPCodes.VID_BACKGROUND_COLOR);
-		discoveryRadius = msg.getVariableAsInteger(NXCPCodes.VID_DISCOVERY_RADIUS);
-		filter = msg.getVariableAsString(NXCPCodes.VID_FILTER);
+		mapType = msg.getFieldAsInt32(NXCPCodes.VID_MAP_TYPE);
+		layout = MapLayoutAlgorithm.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_LAYOUT));
+		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
+		background = msg.getFieldAsUUID(NXCPCodes.VID_BACKGROUND);
+		backgroundLocation = new GeoLocation(msg.getFieldAsDouble(NXCPCodes.VID_BACKGROUND_LATITUDE), msg.getFieldAsDouble(NXCPCodes.VID_BACKGROUND_LONGITUDE));
+		backgroundZoom = msg.getFieldAsInt32(NXCPCodes.VID_BACKGROUND_ZOOM);
+		seedObjectId = msg.getFieldAsInt64(NXCPCodes.VID_SEED_OBJECT);
+		defaultLinkColor = msg.getFieldAsInt32(NXCPCodes.VID_LINK_COLOR);
+		defaultLinkRouting = msg.getFieldAsInt32(NXCPCodes.VID_LINK_ROUTING);
+		backgroundColor = msg.getFieldAsInt32(NXCPCodes.VID_BACKGROUND_COLOR);
+		discoveryRadius = msg.getFieldAsInt32(NXCPCodes.VID_DISCOVERY_RADIUS);
+		filter = msg.getFieldAsString(NXCPCodes.VID_FILTER);
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ELEMENTS);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
 		elements = new ArrayList<NetworkMapElement>(count);
 		long varId = NXCPCodes.VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < count; i++)
@@ -92,7 +92,7 @@ public class NetworkMap extends GenericObject
 			varId += 100;
 		}
 		
-		count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_LINKS);
+		count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_LINKS);
 		links = new ArrayList<NetworkMapLink>(count);
 		varId = NXCPCodes.VID_LINK_LIST_BASE;
 		for(int i = 0; i < count; i++)

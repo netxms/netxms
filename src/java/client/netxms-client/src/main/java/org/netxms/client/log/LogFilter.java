@@ -109,27 +109,27 @@ public class LogFilter
 	 */
 	public void fillMessage(final NXCPMessage msg)
 	{
-		msg.setVariableInt32(NXCPCodes.VID_NUM_FILTERS, columnFilters.size());
+		msg.setFieldInt32(NXCPCodes.VID_NUM_FILTERS, columnFilters.size());
 		long varId = NXCPCodes.VID_COLUMN_FILTERS_BASE;
 		for(final Entry<String, ColumnFilter> e : columnFilters.entrySet())
 		{
-			msg.setVariable(varId++, e.getKey());
+			msg.setField(varId++, e.getKey());
 			varId += e.getValue().fillMessage(msg, varId);
 		}
 		
 		if (orderingColumns != null)
 		{
-			msg.setVariableInt32(NXCPCodes.VID_NUM_ORDERING_COLUMNS, orderingColumns.size());
+			msg.setFieldInt32(NXCPCodes.VID_NUM_ORDERING_COLUMNS, orderingColumns.size());
 			varId = NXCPCodes.VID_ORDERING_COLUMNS_BASE;
 			for(final OrderingColumn c : orderingColumns)
 			{
-				msg.setVariable(varId++, c.getName());
-				msg.setVariableInt16(varId++, c.isDescending() ? 1 : 0);
+				msg.setField(varId++, c.getName());
+				msg.setFieldInt16(varId++, c.isDescending() ? 1 : 0);
 			}
 		}
 		else
 		{
-			msg.setVariableInt32(NXCPCodes.VID_NUM_ORDERING_COLUMNS, 0);
+			msg.setFieldInt32(NXCPCodes.VID_NUM_ORDERING_COLUMNS, 0);
 		}
 	}
 }

@@ -40,10 +40,10 @@ public class ClusterResource
 	 */
 	protected ClusterResource(NXCPMessage msg, long baseId)
 	{
-		id = msg.getVariableAsInt64(baseId);
-		name = msg.getVariableAsString(baseId + 1);
-		virtualAddress = msg.getVariableAsInetAddress(baseId + 2);
-		currentOwner = msg.getVariableAsInt64(baseId + 3);
+		id = msg.getFieldAsInt64(baseId);
+		name = msg.getFieldAsString(baseId + 1);
+		virtualAddress = msg.getFieldAsInetAddress(baseId + 2);
+		currentOwner = msg.getFieldAsInt64(baseId + 3);
 	}
 	
 	/**

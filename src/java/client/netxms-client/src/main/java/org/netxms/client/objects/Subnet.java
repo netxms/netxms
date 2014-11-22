@@ -37,8 +37,8 @@ public class Subnet extends GenericObject
 	{
 		super(msg, session);
 		
-		subnetMask = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_NETMASK);
-		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
+		subnetMask = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_NETMASK);
+		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
 	}
 	
 	/**

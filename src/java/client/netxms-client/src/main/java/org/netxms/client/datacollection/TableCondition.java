@@ -63,9 +63,9 @@ public class TableCondition
 	 */
 	protected TableCondition(NXCPMessage msg, long baseId)
 	{
-		column = msg.getVariableAsString(baseId);
-		operation = msg.getVariableAsInteger(baseId + 1);
-		value = msg.getVariableAsString(baseId + 2);
+		column = msg.getFieldAsString(baseId);
+		operation = msg.getFieldAsInt32(baseId + 1);
+		value = msg.getFieldAsString(baseId + 2);
 	}
 
 	/**

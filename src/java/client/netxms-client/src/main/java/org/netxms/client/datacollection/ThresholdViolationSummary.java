@@ -39,8 +39,8 @@ public class ThresholdViolationSummary
 	 */
 	public ThresholdViolationSummary(NXCPMessage msg, long baseId)
 	{
-		nodeId = msg.getVariableAsInt64(baseId);
-		int count = msg.getVariableAsInteger(baseId + 1);
+		nodeId = msg.getFieldAsInt64(baseId);
+		int count = msg.getFieldAsInt32(baseId + 1);
 		dciList = new ArrayList<DciValue>(count);
 		long varId = baseId + 2;
 		for(int i = 0; i < count; i++)

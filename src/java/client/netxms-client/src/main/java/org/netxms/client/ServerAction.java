@@ -64,13 +64,13 @@ public class ServerAction
 	 */
 	protected ServerAction(final NXCPMessage msg)
 	{
-		id = msg.getVariableAsInt64(NXCPCodes.VID_ACTION_ID);
-		type = msg.getVariableAsInteger(NXCPCodes.VID_ACTION_TYPE);
-		name = msg.getVariableAsString(NXCPCodes.VID_ACTION_NAME);
-		data = msg.getVariableAsString(NXCPCodes.VID_ACTION_DATA);
-		recipientAddress = msg.getVariableAsString(NXCPCodes.VID_RCPT_ADDR);
-		emailSubject = msg.getVariableAsString(NXCPCodes.VID_EMAIL_SUBJECT);
-		disabled = msg.getVariableAsBoolean(NXCPCodes.VID_IS_DISABLED);
+		id = msg.getFieldAsInt64(NXCPCodes.VID_ACTION_ID);
+		type = msg.getFieldAsInt32(NXCPCodes.VID_ACTION_TYPE);
+		name = msg.getFieldAsString(NXCPCodes.VID_ACTION_NAME);
+		data = msg.getFieldAsString(NXCPCodes.VID_ACTION_DATA);
+		recipientAddress = msg.getFieldAsString(NXCPCodes.VID_RCPT_ADDR);
+		emailSubject = msg.getFieldAsString(NXCPCodes.VID_EMAIL_SUBJECT);
+		disabled = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DISABLED);
 	}
 	
 	/**
@@ -79,13 +79,13 @@ public class ServerAction
 	 */
 	public void fillMessage(final NXCPMessage msg)
 	{
-		msg.setVariableInt32(NXCPCodes.VID_ACTION_ID, (int)id);
-		msg.setVariableInt16(NXCPCodes.VID_ACTION_TYPE, type);
-		msg.setVariable(NXCPCodes.VID_ACTION_NAME, name);
-		msg.setVariable(NXCPCodes.VID_ACTION_DATA, data);
-		msg.setVariable(NXCPCodes.VID_RCPT_ADDR, recipientAddress);
-		msg.setVariable(NXCPCodes.VID_EMAIL_SUBJECT, emailSubject);
-		msg.setVariableInt16(NXCPCodes.VID_IS_DISABLED, disabled ? 1 : 0);
+		msg.setFieldInt32(NXCPCodes.VID_ACTION_ID, (int)id);
+		msg.setFieldInt16(NXCPCodes.VID_ACTION_TYPE, type);
+		msg.setField(NXCPCodes.VID_ACTION_NAME, name);
+		msg.setField(NXCPCodes.VID_ACTION_DATA, data);
+		msg.setField(NXCPCodes.VID_RCPT_ADDR, recipientAddress);
+		msg.setField(NXCPCodes.VID_EMAIL_SUBJECT, emailSubject);
+		msg.setFieldInt16(NXCPCodes.VID_IS_DISABLED, disabled ? 1 : 0);
 	}
 
 	/**

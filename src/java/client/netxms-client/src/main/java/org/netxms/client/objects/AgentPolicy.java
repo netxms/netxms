@@ -40,9 +40,9 @@ public class AgentPolicy extends GenericObject
 	{
 		super(msg, session);
 		
-		policyType = msg.getVariableAsInteger(NXCPCodes.VID_POLICY_TYPE);
-		version = msg.getVariableAsInteger(NXCPCodes.VID_VERSION);
-		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
+		policyType = msg.getFieldAsInt32(NXCPCodes.VID_POLICY_TYPE);
+		version = msg.getFieldAsInt32(NXCPCodes.VID_VERSION);
+		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
 	}
 
 	/* (non-Javadoc)

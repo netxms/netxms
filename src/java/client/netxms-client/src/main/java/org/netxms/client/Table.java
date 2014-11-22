@@ -55,10 +55,10 @@ public class Table
 	 */
 	public Table(final NXCPMessage msg)
 	{
-		title = msg.getVariableAsString(NXCPCodes.VID_TABLE_TITLE);
-		source = msg.getVariableAsInteger(NXCPCodes.VID_DCI_SOURCE_TYPE);
+		title = msg.getFieldAsString(NXCPCodes.VID_TABLE_TITLE);
+		source = msg.getFieldAsInt32(NXCPCodes.VID_DCI_SOURCE_TYPE);
 		
-		final int columnCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_COLS);
+		final int columnCount = msg.getFieldAsInt32(NXCPCodes.VID_TABLE_NUM_COLS);
 		columns = new ArrayList<TableColumnDefinition>(columnCount);
 		long varId = NXCPCodes.VID_TABLE_COLUMN_INFO_BASE;
 		for(int i = 0; i < columnCount; i++, varId += 10L)
@@ -66,26 +66,26 @@ public class Table
 			columns.add(new TableColumnDefinition(msg, varId));
 		}
 
-		final int totalRowCount = msg.getVariableAsInteger(NXCPCodes.VID_TABLE_NUM_ROWS);
+		final int totalRowCount = msg.getFieldAsInt32(NXCPCodes.VID_TABLE_NUM_ROWS);
 		data = new ArrayList<TableRow>(totalRowCount);
 
-		extendedFormat = msg.getVariableAsBoolean(NXCPCodes.VID_TABLE_EXTENDED_FORMAT);
-		final int rowCount = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ROWS);
+		extendedFormat = msg.getFieldAsBoolean(NXCPCodes.VID_TABLE_EXTENDED_FORMAT);
+		final int rowCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ROWS);
 		varId = NXCPCodes.VID_TABLE_DATA_BASE;
 		for(int i = 0; i < rowCount; i++)
 		{
 			final TableRow row = new TableRow(columnCount);
 			if (extendedFormat)
 			{
-			   row.setObjectId(msg.getVariableAsInt64(varId++));
+			   row.setObjectId(msg.getFieldAsInt64(varId++));
 			   varId += 9;
 			}
 			for(int j = 0; j < columnCount; j++)
 			{
-            row.get(j).setValue(msg.getVariableAsString(varId++));
+            row.get(j).setValue(msg.getFieldAsString(varId++));
 			   if (extendedFormat)
 			   {
-			      int status = msg.getVariableAsInteger(varId++);
+			      int status = msg.getFieldAsInt32(varId++);
 	            row.get(j).setStatus((status == 65535) ? -1 : status);
 	            varId += 8;
 			   }
@@ -100,22 +100,22 @@ public class Table
 	 */
 	public void addDataFromMessage(final NXCPMessage msg)
 	{
-		final int rowCount = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ROWS);
+		final int rowCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ROWS);
 		long varId = NXCPCodes.VID_TABLE_DATA_BASE;
 		for(int i = 0; i < rowCount; i++)
 		{
 			final TableRow row = new TableRow(columns.size());
          if (extendedFormat)
          {
-            row.setObjectId(msg.getVariableAsInt64(varId++));
+            row.setObjectId(msg.getFieldAsInt64(varId++));
             varId += 9;
          }
          for(int j = 0; j < columns.size(); j++)
          {
-             row.get(j).setValue(msg.getVariableAsString(varId++));
+             row.get(j).setValue(msg.getFieldAsString(varId++));
              if (extendedFormat)
              {
-                row.get(j).setStatus(msg.getVariableAsInteger(varId++));
+                row.get(j).setStatus(msg.getFieldAsInt32(varId++));
                 varId += 8;
              }
          }
@@ -130,10 +130,10 @@ public class Table
 	 */
 	public void fillMessage(final NXCPMessage msg)
 	{
-		msg.setVariable(NXCPCodes.VID_TABLE_TITLE, title);
-		msg.setVariableInt16(NXCPCodes.VID_TABLE_EXTENDED_FORMAT, extendedFormat ? 1 : 0);
+		msg.setField(NXCPCodes.VID_TABLE_TITLE, title);
+		msg.setFieldInt16(NXCPCodes.VID_TABLE_EXTENDED_FORMAT, extendedFormat ? 1 : 0);
 		
-		msg.setVariableInt32(NXCPCodes.VID_TABLE_NUM_COLS, columns.size());
+		msg.setFieldInt32(NXCPCodes.VID_TABLE_NUM_COLS, columns.size());
 		long varId = NXCPCodes.VID_TABLE_COLUMN_INFO_BASE;
 		for(TableColumnDefinition c : columns)
 		{
@@ -141,7 +141,7 @@ public class Table
 			varId += 10;
 		}
 		
-		msg.setVariableInt32(NXCPCodes.VID_TABLE_NUM_ROWS, data.size());
+		msg.setFieldInt32(NXCPCodes.VID_TABLE_NUM_ROWS, data.size());
 		varId = NXCPCodes.VID_TABLE_DATA_BASE;
 		for(int i = 0; i < data.size(); i++)
 		{

@@ -56,13 +56,13 @@ public class DciSummaryTable
 	 */
 	public DciSummaryTable(NXCPMessage msg)
 	{
-		id = msg.getVariableAsInteger(NXCPCodes.VID_SUMMARY_TABLE_ID);
-		menuPath = msg.getVariableAsString(NXCPCodes.VID_MENU_PATH);
-		title = msg.getVariableAsString(NXCPCodes.VID_TITLE);
-		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
-		nodeFilter = msg.getVariableAsString(NXCPCodes.VID_FILTER);
+		id = msg.getFieldAsInt32(NXCPCodes.VID_SUMMARY_TABLE_ID);
+		menuPath = msg.getFieldAsString(NXCPCodes.VID_MENU_PATH);
+		title = msg.getFieldAsString(NXCPCodes.VID_TITLE);
+		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
+		nodeFilter = msg.getFieldAsString(NXCPCodes.VID_FILTER);
 		
-		String s = msg.getVariableAsString(NXCPCodes.VID_COLUMNS);
+		String s = msg.getFieldAsString(NXCPCodes.VID_COLUMNS);
 		if ((s != null) && (s.length() > 0))
 		{
 			String[] parts = s.split("\\^\\~\\^");
@@ -102,11 +102,11 @@ public class DciSummaryTable
 	 */
 	public void fillMessage(NXCPMessage msg)
 	{
-		msg.setVariableInt32(NXCPCodes.VID_SUMMARY_TABLE_ID, id);
-		msg.setVariable(NXCPCodes.VID_MENU_PATH, menuPath);
-		msg.setVariable(NXCPCodes.VID_TITLE, title);
-		msg.setVariableInt32(NXCPCodes.VID_FLAGS, flags);
-		msg.setVariable(NXCPCodes.VID_FILTER, nodeFilter);
+		msg.setFieldInt32(NXCPCodes.VID_SUMMARY_TABLE_ID, id);
+		msg.setField(NXCPCodes.VID_MENU_PATH, menuPath);
+		msg.setField(NXCPCodes.VID_TITLE, title);
+		msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
+		msg.setField(NXCPCodes.VID_FILTER, nodeFilter);
 		
 		StringBuilder sb = new StringBuilder();
 		for(DciSummaryTableColumn c : columns)
@@ -119,7 +119,7 @@ public class DciSummaryTable
 			sb.append("^#^");
 			sb.append(c.getFlags());
 		}
-		msg.setVariable(NXCPCodes.VID_COLUMNS, sb.toString());
+		msg.setField(NXCPCodes.VID_COLUMNS, sb.toString());
 	}
 
 	/**

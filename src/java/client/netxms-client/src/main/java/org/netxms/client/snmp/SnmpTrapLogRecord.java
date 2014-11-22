@@ -42,12 +42,12 @@ public class SnmpTrapLogRecord
 	 */
 	public SnmpTrapLogRecord(NXCPMessage msg, long baseId)
 	{
-		id = msg.getVariableAsInt64(baseId);
-		timestamp = msg.getVariableAsDate(baseId + 1);
-		sourceAddress = msg.getVariableAsInetAddress(baseId + 2);
-		sourceNode = msg.getVariableAsInt64(baseId + 3);
-		trapObjectId = msg.getVariableAsString(baseId + 4);
-		varbinds = msg.getVariableAsString(baseId + 5);
+		id = msg.getFieldAsInt64(baseId);
+		timestamp = msg.getFieldAsDate(baseId + 1);
+		sourceAddress = msg.getFieldAsInetAddress(baseId + 2);
+		sourceNode = msg.getFieldAsInt64(baseId + 3);
+		trapObjectId = msg.getFieldAsString(baseId + 4);
+		varbinds = msg.getFieldAsString(baseId + 5);
 	}
 
 	/**

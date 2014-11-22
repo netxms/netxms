@@ -37,7 +37,7 @@ public class AgentPolicyConfig extends AgentPolicy
 	public AgentPolicyConfig(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		fileContent = msg.getVariableAsString(NXCPCodes.VID_CONFIG_FILE_DATA);
+		fileContent = msg.getFieldAsString(NXCPCodes.VID_CONFIG_FILE_DATA);
 	}
 
 	/**

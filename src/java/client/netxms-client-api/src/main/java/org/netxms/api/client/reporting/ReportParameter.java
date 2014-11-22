@@ -41,13 +41,13 @@ public class ReportParameter
     */
    public ReportParameter(NXCPMessage msg, long baseId)
    {
-      index = msg.getVariableAsInteger(baseId);
-      name = msg.getVariableAsString(baseId + 1);
-      description = msg.getVariableAsString(baseId + 2);
-      type = msg.getVariableAsString(baseId + 3);
-      defaultValue = msg.getVariableAsString(baseId + 4);
-      dependsOn = msg.getVariableAsString(baseId + 5);
-      span = msg.getVariableAsInteger(baseId + 6);
+      index = msg.getFieldAsInt32(baseId);
+      name = msg.getFieldAsString(baseId + 1);
+      description = msg.getFieldAsString(baseId + 2);
+      type = msg.getFieldAsString(baseId + 3);
+      defaultValue = msg.getFieldAsString(baseId + 4);
+      dependsOn = msg.getFieldAsString(baseId + 5);
+      span = msg.getFieldAsInt32(baseId + 6);
    }
 
 	/**

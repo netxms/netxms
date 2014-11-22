@@ -47,14 +47,14 @@ public class ConnectionPoint
 	 */
 	public ConnectionPoint(NXCPMessage msg)
 	{
-		nodeId = msg.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID);
-		interfaceId = msg.getVariableAsInt64(NXCPCodes.VID_INTERFACE_ID);
-		interfaceIndex = msg.getVariableAsInteger(NXCPCodes.VID_IF_INDEX);
-		localNodeId = msg.getVariableAsInt64(NXCPCodes.VID_LOCAL_NODE_ID);
-		localInterfaceId = msg.getVariableAsInt64(NXCPCodes.VID_LOCAL_INTERFACE_ID);
-		localMacAddress = new MacAddress(msg.getVariableAsBinary(NXCPCodes.VID_MAC_ADDR));
-		localIpAddress = msg.getVariableAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
-		type = ConnectionPointType.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_CONNECTION_TYPE));
+		nodeId = msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID);
+		interfaceId = msg.getFieldAsInt64(NXCPCodes.VID_INTERFACE_ID);
+		interfaceIndex = msg.getFieldAsInt32(NXCPCodes.VID_IF_INDEX);
+		localNodeId = msg.getFieldAsInt64(NXCPCodes.VID_LOCAL_NODE_ID);
+		localInterfaceId = msg.getFieldAsInt64(NXCPCodes.VID_LOCAL_INTERFACE_ID);
+		localMacAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_MAC_ADDR));
+		localIpAddress = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
+		type = ConnectionPointType.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_CONNECTION_TYPE));
 	}
 
 	/**

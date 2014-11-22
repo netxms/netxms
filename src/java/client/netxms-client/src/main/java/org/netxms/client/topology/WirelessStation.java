@@ -41,13 +41,13 @@ public class WirelessStation
 	 */
 	public WirelessStation(NXCPMessage msg, long baseId)
 	{
-		macAddress = new MacAddress(msg.getVariableAsBinary(baseId));
-		ipAddress = msg.getVariableAsInetAddress(baseId + 1);
-		ssid = msg.getVariableAsString(baseId + 2);
-		vlan = msg.getVariableAsInteger(baseId + 3);
-		accessPointId = msg.getVariableAsInt64(baseId + 4);
-		radioInterface = msg.getVariableAsString(baseId + 6);
-		nodeObjectId = msg.getVariableAsInt64(baseId + 7);
+		macAddress = new MacAddress(msg.getFieldAsBinary(baseId));
+		ipAddress = msg.getFieldAsInetAddress(baseId + 1);
+		ssid = msg.getFieldAsString(baseId + 2);
+		vlan = msg.getFieldAsInt32(baseId + 3);
+		accessPointId = msg.getFieldAsInt64(baseId + 4);
+		radioInterface = msg.getFieldAsString(baseId + 6);
+		nodeObjectId = msg.getFieldAsInt64(baseId + 7);
 	}
 
 	/**

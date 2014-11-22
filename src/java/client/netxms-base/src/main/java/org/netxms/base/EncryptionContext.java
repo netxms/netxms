@@ -144,7 +144,7 @@ public final class EncryptionContext
 	 */
 	public static EncryptionContext createInstance(NXCPMessage request) throws NXCPException
 	{
-		int serverCiphers = request.getVariableAsInteger(NXCPCodes.VID_SUPPORTED_ENCRYPTION);
+		int serverCiphers = request.getFieldAsInt32(NXCPCodes.VID_SUPPORTED_ENCRYPTION);
 		int selectedCipher = -1;
 		for(int i = 0; i < CIPHERS.length; i++)
 		{
@@ -213,7 +213,7 @@ public final class EncryptionContext
 	 */
 	public byte[] getEncryptedSessionKey(NXCPMessage msg) throws GeneralSecurityException
 	{
-		byte[] pkeyBytes = msg.getVariableAsBinary(NXCPCodes.VID_PUBLIC_KEY);
+		byte[] pkeyBytes = msg.getFieldAsBinary(NXCPCodes.VID_PUBLIC_KEY);
 		PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(pkeyBytes));
 		Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
 		cipher.init(Cipher.ENCRYPT_MODE, publicKey);
@@ -229,7 +229,7 @@ public final class EncryptionContext
 	 */
 	public byte[] getEncryptedIv(NXCPMessage msg) throws GeneralSecurityException
 	{
-		byte[] pkeyBytes = msg.getVariableAsBinary(NXCPCodes.VID_PUBLIC_KEY);
+		byte[] pkeyBytes = msg.getFieldAsBinary(NXCPCodes.VID_PUBLIC_KEY);
 		PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(pkeyBytes));
 		Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding");
 		cipher.init(Cipher.ENCRYPT_MODE, publicKey);

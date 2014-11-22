@@ -41,9 +41,9 @@ public class DataCollectionTable extends DataCollectionObject
 	public DataCollectionTable(DataCollectionConfiguration owner, NXCPMessage msg)
 	{
 		super(owner, msg);
-		instanceColumn = msg.getVariableAsString(NXCPCodes.VID_INSTANCE_COLUMN);
+		instanceColumn = msg.getFieldAsString(NXCPCodes.VID_INSTANCE_COLUMN);
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
 		columns = new ArrayList<ColumnDefinition>(count);
 		long varId = NXCPCodes.VID_DCI_COLUMN_BASE;
 		for(int i = 0; i < count; i++)
@@ -52,7 +52,7 @@ public class DataCollectionTable extends DataCollectionObject
 			varId += 10;
 		}
 
-		count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_THRESHOLDS);
+		count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_THRESHOLDS);
 		thresholds = new ArrayList<TableThreshold>(count);
 		varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
 		for(int i = 0; i < count; i++)
@@ -86,16 +86,16 @@ public class DataCollectionTable extends DataCollectionObject
 	{
 		super.fillMessage(msg);
 		
-		msg.setVariableInt16(NXCPCodes.VID_DCOBJECT_TYPE, DCO_TYPE_TABLE);
-		msg.setVariable(NXCPCodes.VID_INSTANCE_COLUMN, instanceColumn);
-		msg.setVariableInt32(NXCPCodes.VID_NUM_COLUMNS, columns.size());
+		msg.setFieldInt16(NXCPCodes.VID_DCOBJECT_TYPE, DCO_TYPE_TABLE);
+		msg.setField(NXCPCodes.VID_INSTANCE_COLUMN, instanceColumn);
+		msg.setFieldInt32(NXCPCodes.VID_NUM_COLUMNS, columns.size());
 		long varId = NXCPCodes.VID_DCI_COLUMN_BASE;
 		for(int i = 0; i < columns.size(); i++)
 		{
 			columns.get(i).fillMessage(msg, varId);
 			varId += 10;
 		}
-		msg.setVariableInt32(NXCPCodes.VID_NUM_THRESHOLDS, thresholds.size());
+		msg.setFieldInt32(NXCPCodes.VID_NUM_THRESHOLDS, thresholds.size());
 		varId = NXCPCodes.VID_DCI_THRESHOLD_BASE;
 		for(int i = 0; i < thresholds.size(); i++)
 		{			

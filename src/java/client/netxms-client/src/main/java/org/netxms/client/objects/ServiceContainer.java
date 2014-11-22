@@ -34,9 +34,9 @@ public abstract class ServiceContainer extends GenericObject
 	public ServiceContainer(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		uptimeForDay = msg.getVariableAsReal(NXCPCodes.VID_UPTIME_DAY);
-		uptimeForWeek = msg.getVariableAsReal(NXCPCodes.VID_UPTIME_WEEK);
-		uptimeForMonth = msg.getVariableAsReal(NXCPCodes.VID_UPTIME_MONTH);
+		uptimeForDay = msg.getFieldAsDouble(NXCPCodes.VID_UPTIME_DAY);
+		uptimeForWeek = msg.getFieldAsDouble(NXCPCodes.VID_UPTIME_WEEK);
+		uptimeForMonth = msg.getFieldAsDouble(NXCPCodes.VID_UPTIME_MONTH);
 	}
 
 	/**

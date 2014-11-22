@@ -44,7 +44,7 @@ public class NetworkMapDCIContainer  extends NetworkMapElement
 	protected NetworkMapDCIContainer(NXCPMessage msg, long baseId)
 	{
 		super(msg, baseId);
-		DCIListXml = msg.getVariableAsString(baseId+10);
+		DCIListXml = msg.getFieldAsString(baseId+10);
 		try
       {
 		   DciContainerConfiguration conf = DciContainerConfiguration.createFromXml(DCIListXml);
@@ -126,7 +126,7 @@ public class NetworkMapDCIContainer  extends NetworkMapElement
       {
          DCIListXml = "";
       }
-      msg.setVariable(baseId + 10, DCIListXml);
+      msg.setField(baseId + 10, DCIListXml);
 	}
 	
 	/**

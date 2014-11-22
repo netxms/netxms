@@ -35,12 +35,12 @@ public class TableColumnDefinition
 	 */
 	protected TableColumnDefinition(NXCPMessage msg, long baseId)
 	{
-		name = msg.getVariableAsString(baseId);
-		dataType = msg.getVariableAsInteger(baseId + 1);
-		displayName = msg.getVariableAsString(baseId + 2);
+		name = msg.getFieldAsString(baseId);
+		dataType = msg.getFieldAsInt32(baseId + 1);
+		displayName = msg.getFieldAsString(baseId + 2);
 		if (displayName == null)
 			displayName = name;
-		instanceColumn = msg.getVariableAsBoolean(baseId + 3);
+		instanceColumn = msg.getFieldAsBoolean(baseId + 3);
 	}
 	
 	/**
@@ -49,10 +49,10 @@ public class TableColumnDefinition
 	 */
 	protected void fillMessage(NXCPMessage msg, long baseId)
 	{
-		msg.setVariable(baseId, name);
-		msg.setVariableInt32(baseId + 1, dataType);
-		msg.setVariable(baseId + 2, displayName);
-		msg.setVariableInt16(baseId + 3, instanceColumn ? 1 : 0);
+		msg.setField(baseId, name);
+		msg.setFieldInt32(baseId + 1, dataType);
+		msg.setField(baseId + 2, displayName);
+		msg.setFieldInt16(baseId + 3, instanceColumn ? 1 : 0);
 	}
 
 	/**

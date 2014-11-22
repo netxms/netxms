@@ -44,9 +44,9 @@ public class ReportDefinition
 	public ReportDefinition(UUID id, NXCPMessage msg)
 	{
       this.id = id;
-      name = msg.getVariableAsString(NXCPCodes.VID_NAME);
-      numberOfColumns = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS);
-      int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_ITEMS);
+      name = msg.getFieldAsString(NXCPCodes.VID_NAME);
+      numberOfColumns = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
+      int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
       long varId = NXCPCodes.VID_ROW_DATA_BASE;
       for(int i = 0; i < count; i++, varId += 10)
       {

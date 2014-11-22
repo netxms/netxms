@@ -39,10 +39,10 @@ public class PostalAddress
    
    public PostalAddress(NXCPMessage msg)
    {
-      country = msg.getVariableAsString(NXCPCodes.VID_COUNTRY);
-      city = msg.getVariableAsString(NXCPCodes.VID_CITY);
-      streetAddress = msg.getVariableAsString(NXCPCodes.VID_STREET_ADDRESS);
-      postcode = msg.getVariableAsString(NXCPCodes.VID_POSTCODE);
+      country = msg.getFieldAsString(NXCPCodes.VID_COUNTRY);
+      city = msg.getFieldAsString(NXCPCodes.VID_CITY);
+      streetAddress = msg.getFieldAsString(NXCPCodes.VID_STREET_ADDRESS);
+      postcode = msg.getFieldAsString(NXCPCodes.VID_POSTCODE);
    }
 
    /**Fill NXCP message
@@ -51,10 +51,10 @@ public class PostalAddress
     */
    public void fillMessage(NXCPMessage msg)
    {
-      msg.setVariable(NXCPCodes.VID_COUNTRY, country);
-      msg.setVariable(NXCPCodes.VID_CITY, city);
-      msg.setVariable(NXCPCodes.VID_STREET_ADDRESS, streetAddress);
-      msg.setVariable(NXCPCodes.VID_POSTCODE, postcode);
+      msg.setField(NXCPCodes.VID_COUNTRY, country);
+      msg.setField(NXCPCodes.VID_CITY, city);
+      msg.setField(NXCPCodes.VID_STREET_ADDRESS, streetAddress);
+      msg.setField(NXCPCodes.VID_POSTCODE, postcode);
    }
    
    /**

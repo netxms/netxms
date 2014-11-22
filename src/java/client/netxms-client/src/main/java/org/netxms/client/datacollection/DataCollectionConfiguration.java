@@ -57,7 +57,7 @@ public class DataCollectionConfiguration
 	public void open() throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_GET_NODE_DCI_LIST);
-		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
 		session.sendMessage(msg);
 		session.waitForRCC(msg.getMessageId());
 		
@@ -67,7 +67,7 @@ public class DataCollectionConfiguration
 			if (response.isEndOfSequence())
 				break;
 
-			int type = response.getVariableAsInteger(NXCPCodes.VID_DCOBJECT_TYPE);
+			int type = response.getFieldAsInt32(NXCPCodes.VID_DCOBJECT_TYPE);
 			DataCollectionObject dco;
 			switch(type)
 			{
@@ -96,7 +96,7 @@ public class DataCollectionConfiguration
 	public void close() throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_UNLOCK_NODE_DCI_LIST);
-		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
 		session.sendMessage(msg);
 		session.waitForRCC(msg.getMessageId());
 		items.clear();
@@ -149,11 +149,11 @@ public class DataCollectionConfiguration
 	public long createItem() throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_CREATE_NEW_DCI);
-		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-		msg.setVariableInt16(NXCPCodes.VID_DCOBJECT_TYPE, DataCollectionObject.DCO_TYPE_ITEM);
+		msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setFieldInt16(NXCPCodes.VID_DCOBJECT_TYPE, DataCollectionObject.DCO_TYPE_ITEM);
 		session.sendMessage(msg);
 		final NXCPMessage response = session.waitForRCC(msg.getMessageId());
-		long id = response.getVariableAsInt64(NXCPCodes.VID_DCI_ID);
+		long id = response.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
 		items.put(id, new DataCollectionItem(this, id));
 		return id;
 	}
@@ -168,11 +168,11 @@ public class DataCollectionConfiguration
 	public long createTable() throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_CREATE_NEW_DCI);
-		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-		msg.setVariableInt16(NXCPCodes.VID_DCOBJECT_TYPE, DataCollectionObject.DCO_TYPE_TABLE);
+		msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setFieldInt16(NXCPCodes.VID_DCOBJECT_TYPE, DataCollectionObject.DCO_TYPE_TABLE);
 		session.sendMessage(msg);
 		final NXCPMessage response = session.waitForRCC(msg.getMessageId());
-		long id = response.getVariableAsInt64(NXCPCodes.VID_DCI_ID);
+		long id = response.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
 		items.put(id, new DataCollectionTable(this, id));
 		return id;
 	}
@@ -202,7 +202,7 @@ public class DataCollectionConfiguration
 	public void modifyObject(DataCollectionObject dco) throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_MODIFY_NODE_DCI);
-		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
 		dco.fillMessage(msg);
 		session.sendMessage(msg);
 		session.waitForRCC(msg.getMessageId());
@@ -220,11 +220,11 @@ public class DataCollectionConfiguration
 	private void copyObjectsInternal(long destNodeId, long[] items, boolean move) throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_COPY_DCI);
-		msg.setVariableInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, (int)nodeId);
-		msg.setVariableInt32(NXCPCodes.VID_DESTINATION_OBJECT_ID, (int)destNodeId);
-		msg.setVariableInt16(NXCPCodes.VID_MOVE_FLAG, move ? 1 : 0);
-		msg.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, items.length);
-		msg.setVariable(NXCPCodes.VID_ITEM_LIST, items);
+		msg.setFieldInt32(NXCPCodes.VID_SOURCE_OBJECT_ID, (int)nodeId);
+		msg.setFieldInt32(NXCPCodes.VID_DESTINATION_OBJECT_ID, (int)destNodeId);
+		msg.setFieldInt16(NXCPCodes.VID_MOVE_FLAG, move ? 1 : 0);
+		msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, items.length);
+		msg.setField(NXCPCodes.VID_ITEM_LIST, items);
 		session.sendMessage(msg);
 		session.waitForRCC(msg.getMessageId());
 	}
@@ -265,8 +265,8 @@ public class DataCollectionConfiguration
 	public void clearCollectedData(long itemId) throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_CLEAR_DCI_DATA);
-		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-		msg.setVariableInt32(NXCPCodes.VID_DCI_ID, (int)itemId);
+		msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)itemId);
 		session.sendMessage(msg);
 		session.waitForRCC(msg.getMessageId());
 	}
@@ -282,10 +282,10 @@ public class DataCollectionConfiguration
 	public void setObjectStatus(long[] items, int status) throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_SET_DCI_STATUS);
-		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-		msg.setVariableInt16(NXCPCodes.VID_DCI_STATUS, status);
-		msg.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, items.length);
-		msg.setVariable(NXCPCodes.VID_ITEM_LIST, items);
+		msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status);
+		msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, items.length);
+		msg.setField(NXCPCodes.VID_ITEM_LIST, items);
 		session.sendMessage(msg);
 		session.waitForRCC(msg.getMessageId());
 	}
@@ -300,8 +300,8 @@ public class DataCollectionConfiguration
 	public void deleteObject(long itemId) throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_DELETE_NODE_DCI);
-		msg.setVariableInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
-		msg.setVariableInt32(NXCPCodes.VID_DCI_ID, (int)itemId);
+		msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+		msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)itemId);
 		session.sendMessage(msg);
 		session.waitForRCC(msg.getMessageId());
 		items.remove(itemId);

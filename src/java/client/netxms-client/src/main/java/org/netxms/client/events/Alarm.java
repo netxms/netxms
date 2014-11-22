@@ -72,28 +72,28 @@ public class Alarm
 	 */
 	public Alarm(NXCPMessage msg)
 	{
-		id = msg.getVariableAsInt64(NXCPCodes.VID_ALARM_ID);
-		currentSeverity = Severity.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_CURRENT_SEVERITY));
-		originalSeverity = Severity.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_ORIGINAL_SEVERITY));
-		repeatCount = msg.getVariableAsInteger(NXCPCodes.VID_REPEAT_COUNT);
-		state = msg.getVariableAsInteger(NXCPCodes.VID_STATE);
-		sticky = msg.getVariableAsBoolean(NXCPCodes.VID_IS_STICKY);
-		ackByUser = msg.getVariableAsInteger(NXCPCodes.VID_ACK_BY_USER);
-		resolvedByUser = msg.getVariableAsInteger(NXCPCodes.VID_RESOLVED_BY_USER);
-		terminateByUser = msg.getVariableAsInteger(NXCPCodes.VID_TERMINATED_BY_USER);
-		sourceEventId = msg.getVariableAsInt64(NXCPCodes.VID_EVENT_ID);
-		sourceEventCode = msg.getVariableAsInteger(NXCPCodes.VID_EVENT_CODE);
-		sourceObjectId = msg.getVariableAsInt64(NXCPCodes.VID_OBJECT_ID);
-		creationTime = new Date(msg.getVariableAsInt64(NXCPCodes.VID_CREATION_TIME) * 1000);
-		lastChangeTime = new Date(msg.getVariableAsInt64(NXCPCodes.VID_LAST_CHANGE_TIME) * 1000);
-		message = msg.getVariableAsString(NXCPCodes.VID_ALARM_MESSAGE);
-		key = msg.getVariableAsString(NXCPCodes.VID_ALARM_KEY);
-		helpdeskState = msg.getVariableAsInteger(NXCPCodes.VID_HELPDESK_STATE);
-		helpdeskReference = msg.getVariableAsString(NXCPCodes.VID_HELPDESK_REF);
-		timeout = msg.getVariableAsInteger(NXCPCodes.VID_ALARM_TIMEOUT);
-		timeoutEvent = msg.getVariableAsInteger(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
-		commentsCount = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COMMENTS);
-		ackTime = msg.getVariableAsInteger(NXCPCodes.VID_TIMESTAMP);
+		id = msg.getFieldAsInt64(NXCPCodes.VID_ALARM_ID);
+		currentSeverity = Severity.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_CURRENT_SEVERITY));
+		originalSeverity = Severity.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_ORIGINAL_SEVERITY));
+		repeatCount = msg.getFieldAsInt32(NXCPCodes.VID_REPEAT_COUNT);
+		state = msg.getFieldAsInt32(NXCPCodes.VID_STATE);
+		sticky = msg.getFieldAsBoolean(NXCPCodes.VID_IS_STICKY);
+		ackByUser = msg.getFieldAsInt32(NXCPCodes.VID_ACK_BY_USER);
+		resolvedByUser = msg.getFieldAsInt32(NXCPCodes.VID_RESOLVED_BY_USER);
+		terminateByUser = msg.getFieldAsInt32(NXCPCodes.VID_TERMINATED_BY_USER);
+		sourceEventId = msg.getFieldAsInt64(NXCPCodes.VID_EVENT_ID);
+		sourceEventCode = msg.getFieldAsInt32(NXCPCodes.VID_EVENT_CODE);
+		sourceObjectId = msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID);
+		creationTime = new Date(msg.getFieldAsInt64(NXCPCodes.VID_CREATION_TIME) * 1000);
+		lastChangeTime = new Date(msg.getFieldAsInt64(NXCPCodes.VID_LAST_CHANGE_TIME) * 1000);
+		message = msg.getFieldAsString(NXCPCodes.VID_ALARM_MESSAGE);
+		key = msg.getFieldAsString(NXCPCodes.VID_ALARM_KEY);
+		helpdeskState = msg.getFieldAsInt32(NXCPCodes.VID_HELPDESK_STATE);
+		helpdeskReference = msg.getFieldAsString(NXCPCodes.VID_HELPDESK_REF);
+		timeout = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_TIMEOUT);
+		timeoutEvent = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
+		commentsCount = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COMMENTS);
+		ackTime = msg.getFieldAsInt32(NXCPCodes.VID_TIMESTAMP);
 	}
 
 	/**

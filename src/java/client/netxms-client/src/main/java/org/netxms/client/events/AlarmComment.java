@@ -42,12 +42,12 @@ public class AlarmComment
 	 */
 	public AlarmComment(NXCPMessage msg, long baseId)
 	{
-		id = msg.getVariableAsInt64(baseId);
-		alarmId = msg.getVariableAsInt64(baseId + 1);
-		lastChangeTime = msg.getVariableAsDate(baseId + 2);
-		userId = msg.getVariableAsInt64(baseId + 3);
-		text = msg.getVariableAsString(baseId + 4);
-      userName = msg.getVariableAsString(baseId + 5);
+		id = msg.getFieldAsInt64(baseId);
+		alarmId = msg.getFieldAsInt64(baseId + 1);
+		lastChangeTime = msg.getFieldAsDate(baseId + 2);
+		userId = msg.getFieldAsInt64(baseId + 3);
+		text = msg.getFieldAsString(baseId + 4);
+      userName = msg.getFieldAsString(baseId + 5);
 	}
 
 	/**

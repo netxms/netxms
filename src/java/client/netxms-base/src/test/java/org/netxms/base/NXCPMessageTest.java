@@ -31,19 +31,19 @@ public class NXCPMessageTest extends TestCase
 		final byte[] byteTest = { 0x10, 0x20, 0x30 };
 		
 		final NXCPMessage msg = new NXCPMessage(1, 2);
-		msg.setVariable(1, "string value");
-		msg.setVariableInt16(2, 10);
-		msg.setVariableInt32(3, 20);
-		msg.setVariableInt64(4, 123456789L);
-		msg.setVariable(5, byteTest);
+		msg.setField(1, "string value");
+		msg.setFieldInt16(2, 10);
+		msg.setFieldInt32(3, 20);
+		msg.setFieldInt64(4, 123456789L);
+		msg.setField(5, byteTest);
 		
 		assertEquals(1, msg.getMessageCode());
 		assertEquals(2L, msg.getMessageId());
-		assertEquals("string value", msg.findVariable(1).getAsString());
-		assertEquals(10, msg.findVariable(2).getAsInteger().intValue());
-		assertEquals(20, msg.findVariable(3).getAsInteger().intValue());
-		assertEquals(123456789L, msg.findVariable(4).getAsInteger().longValue());
-		assertEquals(true, Arrays.equals(byteTest, msg.findVariable(5).getAsBinary()));
+		assertEquals("string value", msg.findField(1).getAsString());
+		assertEquals(10, msg.findField(2).getAsInteger().intValue());
+		assertEquals(20, msg.findField(3).getAsInteger().intValue());
+		assertEquals(123456789L, msg.findField(4).getAsInteger().longValue());
+		assertEquals(true, Arrays.equals(byteTest, msg.findField(5).getAsBinary()));
 	}
 
 	public void testMessageEncodingAndDecoding() throws Exception
@@ -51,11 +51,11 @@ public class NXCPMessageTest extends TestCase
 		final byte[] byteTest = { 0x10, 0x20, 0x30, 0x40, 0x50 };
 		
 		final NXCPMessage msg1 = new NXCPMessage(1, 2);
-		msg1.setVariable(1, "string value");
-		msg1.setVariableInt16(2, 10);
-		msg1.setVariableInt32(3, 20);
-		msg1.setVariableInt64(4, 123456789L);
-		msg1.setVariable(5, byteTest);
+		msg1.setField(1, "string value");
+		msg1.setFieldInt16(2, 10);
+		msg1.setFieldInt32(3, 20);
+		msg1.setFieldInt64(4, 123456789L);
+		msg1.setField(5, byteTest);
 	
 		final byte[] bytes = msg1.createNXCPMessage();
 		assertEquals(120, bytes.length);
@@ -64,11 +64,11 @@ public class NXCPMessageTest extends TestCase
 		
 		assertEquals(1, msg2.getMessageCode());
 		assertEquals(2L, msg2.getMessageId());
-		assertEquals("string value", msg2.findVariable(1).getAsString());
-		assertEquals(10, msg2.findVariable(2).getAsInteger().intValue());
-		assertEquals(20, msg2.findVariable(3).getAsInteger().intValue());
-		assertEquals(123456789L, msg2.findVariable(4).getAsInteger().longValue());
-		assertEquals(true, Arrays.equals(byteTest, msg2.findVariable(5).getAsBinary()));
+		assertEquals("string value", msg2.findField(1).getAsString());
+		assertEquals(10, msg2.findField(2).getAsInteger().intValue());
+		assertEquals(20, msg2.findField(3).getAsInteger().intValue());
+		assertEquals(123456789L, msg2.findField(4).getAsInteger().longValue());
+		assertEquals(true, Arrays.equals(byteTest, msg2.findField(5).getAsBinary()));
 	}
 	
 	/**
@@ -85,7 +85,7 @@ public class NXCPMessageTest extends TestCase
 	   System.out.println("   Cipher test passed");
 	   
       final NXCPMessage msg1 = new NXCPMessage(NXCPCodes.CMD_REQUEST_COMPLETED, 2);
-      msg1.setVariableInt32(NXCPCodes.VID_RCC, 0);
+      msg1.setFieldInt32(NXCPCodes.VID_RCC, 0);
       final byte[] bytes = msg1.createNXCPMessage();
       System.out.println("   Message encoded into " + bytes.length + " bytes");
       
@@ -96,7 +96,7 @@ public class NXCPMessageTest extends TestCase
       final NXCPMessage msg2 = new NXCPMessage(encryptedBytes, ctx);
       assertEquals(NXCPCodes.CMD_REQUEST_COMPLETED, msg2.getMessageCode());
       assertEquals(2L, msg2.getMessageId());
-      assertEquals(0, msg2.findVariable(NXCPCodes.VID_RCC).getAsInteger().intValue());
+      assertEquals(0, msg2.findField(NXCPCodes.VID_RCC).getAsInteger().intValue());
 	}
 	
 	public void testEncryptionAES256() throws Exception

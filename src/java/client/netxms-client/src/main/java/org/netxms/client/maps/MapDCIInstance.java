@@ -166,12 +166,12 @@ public class MapDCIInstance
       {
          return;
       }
-      msg.setVariableInt32(base++, (int)nodeID);
-      msg.setVariableInt32(base++, (int)dciID);
+      msg.setFieldInt32(base++, (int)nodeID);
+      msg.setFieldInt32(base++, (int)dciID);
       if(type == DataCollectionItem.DCO_TYPE_TABLE)
       {
-         msg.setVariable(base++, column);
-         msg.setVariable(base++, instance);         
+         msg.setField(base++, column);
+         msg.setField(base++, instance);         
       }
    }  
 

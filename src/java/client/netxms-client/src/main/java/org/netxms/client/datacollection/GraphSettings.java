@@ -102,23 +102,23 @@ public class GraphSettings
 	 */
 	public GraphSettings(final NXCPMessage msg, long baseId)
 	{
-		id = msg.getVariableAsInt64(baseId);
-		ownerId = msg.getVariableAsInt64(baseId + 1);
-		name = msg.getVariableAsString(baseId + 2);
+		id = msg.getFieldAsInt64(baseId);
+		ownerId = msg.getFieldAsInt64(baseId + 1);
+		name = msg.getFieldAsString(baseId + 2);
 		
 		String[] parts = name.split("->");
 		shortName = (parts.length > 1) ? parts[parts.length - 1] : name;
 		
-		int count = msg.getVariableAsInteger(baseId + 4);  // ACL size
-		long[] users = msg.getVariableAsUInt32Array(baseId + 5);
-		long[] rights = msg.getVariableAsUInt32Array(baseId + 6);
+		int count = msg.getFieldAsInt32(baseId + 4);  // ACL size
+		long[] users = msg.getFieldAsUInt32Array(baseId + 5);
+		long[] rights = msg.getFieldAsUInt32Array(baseId + 6);
 		accessList = new ArrayList<AccessListElement>(count);
 		for(int i = 0; i < count; i++)
 		{
 			accessList.add(new AccessListElement(users[i], (int)rights[i]));
 		}
 		
-		config = msg.getVariableAsString(baseId + 3);
+		config = msg.getFieldAsString(baseId + 3);
 	}
 	
 	/**

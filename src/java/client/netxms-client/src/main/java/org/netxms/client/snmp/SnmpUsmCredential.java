@@ -40,11 +40,11 @@ public class SnmpUsmCredential
 	 */
 	public SnmpUsmCredential(NXCPMessage msg, long baseId)
 	{
-		name = msg.getVariableAsString(baseId);
-		authMethod = msg.getVariableAsInteger(baseId + 1);
-		privMethod = msg.getVariableAsInteger(baseId + 2);
-		authPassword = msg.getVariableAsString(baseId + 3);
-		privPassword = msg.getVariableAsString(baseId + 4);
+		name = msg.getFieldAsString(baseId);
+		authMethod = msg.getFieldAsInt32(baseId + 1);
+		privMethod = msg.getFieldAsInt32(baseId + 2);
+		authPassword = msg.getFieldAsString(baseId + 3);
+		privPassword = msg.getFieldAsString(baseId + 4);
 	}
 	
 	/**
@@ -67,11 +67,11 @@ public class SnmpUsmCredential
 	 */
 	public void fillMessage(final NXCPMessage msg, long baseId)
 	{
-		msg.setVariable(baseId, name);
-		msg.setVariableInt16(baseId + 1, authMethod);
-		msg.setVariableInt16(baseId + 2, privMethod);
-		msg.setVariable(baseId + 3, authPassword);
-		msg.setVariable(baseId + 4, privPassword);
+		msg.setField(baseId, name);
+		msg.setFieldInt16(baseId + 1, authMethod);
+		msg.setFieldInt16(baseId + 2, privMethod);
+		msg.setField(baseId + 3, authPassword);
+		msg.setField(baseId + 4, privPassword);
 	}
 
 	/**

@@ -46,13 +46,13 @@ public class Cluster extends GenericObject
 	{
 		super(msg, session);
 		
-		clusterType = msg.getVariableAsInteger(NXCPCodes.VID_CLUSTER_TYPE);
-		zoneId = msg.getVariableAsInt64(NXCPCodes.VID_ZONE_ID);
+		clusterType = msg.getFieldAsInt32(NXCPCodes.VID_CLUSTER_TYPE);
+		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_SYNC_SUBNETS);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_SYNC_SUBNETS);
 		if (count > 0)
 		{
-			long[] sn = msg.getVariableAsUInt32Array(NXCPCodes.VID_SYNC_SUBNETS);
+			long[] sn = msg.getFieldAsUInt32Array(NXCPCodes.VID_SYNC_SUBNETS);
 			for(int i = 0; i < sn.length;)
 			{
 				InetAddress addr = inetAddressFromInt32(sn[i++]);
@@ -61,7 +61,7 @@ public class Cluster extends GenericObject
 			}
 		}
 		
-		count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_RESOURCES);
+		count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_RESOURCES);
 		long baseId = NXCPCodes.VID_RESOURCE_LIST_BASE;
 		for(int i = 0; i < count; i++, baseId += 10)
 		{

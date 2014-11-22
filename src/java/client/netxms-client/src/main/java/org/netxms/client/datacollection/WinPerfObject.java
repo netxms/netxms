@@ -40,7 +40,7 @@ public class WinPerfObject
 	 */
 	public static List<WinPerfObject> createListFromMessage(NXCPMessage msg)
 	{
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_OBJECTS);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_OBJECTS);
 		List<WinPerfObject> objects = new ArrayList<WinPerfObject>(count);
 		
 		long varId = NXCPCodes.VID_PARAM_LIST_BASE;
@@ -58,18 +58,18 @@ public class WinPerfObject
 	 */
 	private WinPerfObject(NXCPMessage msg, long baseId)
 	{
-		name = msg.getVariableAsString(baseId);
+		name = msg.getFieldAsString(baseId);
 		
-		int count = msg.getVariableAsInteger(baseId + 1);
+		int count = msg.getFieldAsInt32(baseId + 1);
 		counters = new ArrayList<WinPerfCounter>(count);
 		long varId = baseId + 3;
 		for(int i = 0; i < count; i++)
-			counters.add(new WinPerfCounter(this, msg.getVariableAsString(varId++)));
+			counters.add(new WinPerfCounter(this, msg.getFieldAsString(varId++)));
 		
-		count = msg.getVariableAsInteger(baseId + 2);
+		count = msg.getFieldAsInt32(baseId + 2);
 		instances = new ArrayList<String>(count);
 		for(int i = 0; i < count; i++)
-			instances.add(msg.getVariableAsString(varId++));
+			instances.add(msg.getFieldAsString(varId++));
 	}
 
 	/**

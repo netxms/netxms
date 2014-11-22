@@ -89,17 +89,17 @@ public class User extends AbstractUserObject
 	public User(final NXCPMessage msg)
 	{
 		super(msg);
-		authMethod = msg.getVariableAsInteger(NXCPCodes.VID_AUTH_METHOD);
-		fullName = msg.getVariableAsString(NXCPCodes.VID_USER_FULL_NAME);
-		certMappingMethod = msg.getVariableAsInteger(NXCPCodes.VID_CERT_MAPPING_METHOD);
-		certMappingData = msg.getVariableAsString(NXCPCodes.VID_CERT_MAPPING_DATA);
-		lastLogin = msg.getVariableAsDate(NXCPCodes.VID_LAST_LOGIN);
-		lastPasswordChange = msg.getVariableAsDate(NXCPCodes.VID_LAST_PASSWORD_CHANGE);
-		minPasswordLength = msg.getVariableAsInteger(NXCPCodes.VID_MIN_PASSWORD_LENGTH);
-		disabledUntil = msg.getVariableAsDate(NXCPCodes.VID_DISABLED_UNTIL);
-		authFailures = msg.getVariableAsInteger(NXCPCodes.VID_AUTH_FAILURES);
-		xmppId = msg.getVariableAsString(NXCPCodes.VID_XMPP_ID);
-		groups = msg.getVariableAsUInt32Array(NXCPCodes.VID_GROUPS);
+		authMethod = msg.getFieldAsInt32(NXCPCodes.VID_AUTH_METHOD);
+		fullName = msg.getFieldAsString(NXCPCodes.VID_USER_FULL_NAME);
+		certMappingMethod = msg.getFieldAsInt32(NXCPCodes.VID_CERT_MAPPING_METHOD);
+		certMappingData = msg.getFieldAsString(NXCPCodes.VID_CERT_MAPPING_DATA);
+		lastLogin = msg.getFieldAsDate(NXCPCodes.VID_LAST_LOGIN);
+		lastPasswordChange = msg.getFieldAsDate(NXCPCodes.VID_LAST_PASSWORD_CHANGE);
+		minPasswordLength = msg.getFieldAsInt32(NXCPCodes.VID_MIN_PASSWORD_LENGTH);
+		disabledUntil = msg.getFieldAsDate(NXCPCodes.VID_DISABLED_UNTIL);
+		authFailures = msg.getFieldAsInt32(NXCPCodes.VID_AUTH_FAILURES);
+		xmppId = msg.getFieldAsString(NXCPCodes.VID_XMPP_ID);
+		groups = msg.getFieldAsUInt32Array(NXCPCodes.VID_GROUPS);
 		if (groups == null)
 		   groups = new long[0];
 	}
@@ -110,16 +110,16 @@ public class User extends AbstractUserObject
 	public void fillMessage(final NXCPMessage msg)
 	{
 		super.fillMessage(msg);
-		msg.setVariableInt16(NXCPCodes.VID_AUTH_METHOD, authMethod);
-		msg.setVariable(NXCPCodes.VID_USER_FULL_NAME, fullName);
-		msg.setVariableInt16(NXCPCodes.VID_CERT_MAPPING_METHOD, certMappingMethod);
-		msg.setVariable(NXCPCodes.VID_CERT_MAPPING_DATA, certMappingData);
-		msg.setVariableInt16(NXCPCodes.VID_MIN_PASSWORD_LENGTH, minPasswordLength);
-		msg.setVariableInt32(NXCPCodes.VID_DISABLED_UNTIL, (disabledUntil != null) ? (int)(disabledUntil.getTime() / 1000) : 0);
-		msg.setVariable(NXCPCodes.VID_XMPP_ID, xmppId);
-		msg.setVariableInt32(NXCPCodes.VID_NUM_GROUPS, groups.length);
+		msg.setFieldInt16(NXCPCodes.VID_AUTH_METHOD, authMethod);
+		msg.setField(NXCPCodes.VID_USER_FULL_NAME, fullName);
+		msg.setFieldInt16(NXCPCodes.VID_CERT_MAPPING_METHOD, certMappingMethod);
+		msg.setField(NXCPCodes.VID_CERT_MAPPING_DATA, certMappingData);
+		msg.setFieldInt16(NXCPCodes.VID_MIN_PASSWORD_LENGTH, minPasswordLength);
+		msg.setFieldInt32(NXCPCodes.VID_DISABLED_UNTIL, (disabledUntil != null) ? (int)(disabledUntil.getTime() / 1000) : 0);
+		msg.setField(NXCPCodes.VID_XMPP_ID, xmppId);
+		msg.setFieldInt32(NXCPCodes.VID_NUM_GROUPS, groups.length);
 		if (groups.length > 0)
-		   msg.setVariable(NXCPCodes.VID_GROUPS, groups);
+		   msg.setField(NXCPCodes.VID_GROUPS, groups);
 	}
 
 	/**

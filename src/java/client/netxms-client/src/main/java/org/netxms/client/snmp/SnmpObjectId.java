@@ -114,7 +114,7 @@ public class SnmpObjectId
 	 */
 	public void setNXCPVariable(NXCPMessage msg, long varId)
 	{
-		msg.setVariable(varId, value);
+		msg.setField(varId, value);
 	}
 	
 	/**

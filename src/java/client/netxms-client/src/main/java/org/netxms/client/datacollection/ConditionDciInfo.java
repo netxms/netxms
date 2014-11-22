@@ -55,11 +55,11 @@ public class ConditionDciInfo
 	 */
 	public ConditionDciInfo(NXCPMessage msg, long baseId)
 	{
-		dciId = msg.getVariableAsInt64(baseId);
-		nodeId = msg.getVariableAsInt64(baseId + 1);
-		function = msg.getVariableAsInteger(baseId + 2);
-		polls = msg.getVariableAsInteger(baseId + 3);
-		type = msg.getVariableAsInteger(baseId + 4);
+		dciId = msg.getFieldAsInt64(baseId);
+		nodeId = msg.getFieldAsInt64(baseId + 1);
+		function = msg.getFieldAsInt32(baseId + 2);
+		polls = msg.getFieldAsInt32(baseId + 3);
+		type = msg.getFieldAsInt32(baseId + 4);
 	}
 	
 	/**

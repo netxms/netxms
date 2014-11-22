@@ -68,15 +68,15 @@ public class SnmpTrapParameterMapping
 	 */
 	public void fillMessage(NXCPMessage msg, int index)
 	{
-		msg.setVariableInt32(NXCPCodes.VID_TRAP_PFLAGS_BASE + index, flags);
-		msg.setVariable(NXCPCodes.VID_TRAP_PDESCR_BASE + index, description);
+		msg.setFieldInt32(NXCPCodes.VID_TRAP_PFLAGS_BASE + index, flags);
+		msg.setField(NXCPCodes.VID_TRAP_PDESCR_BASE + index, description);
 		if (type == BY_POSITION)
 		{
-			msg.setVariableInt32(NXCPCodes.VID_TRAP_PLEN_BASE + index, position | 0x80000000);
+			msg.setFieldInt32(NXCPCodes.VID_TRAP_PLEN_BASE + index, position | 0x80000000);
 		}
 		else
 		{
-			msg.setVariableInt32(NXCPCodes.VID_TRAP_PLEN_BASE + index, objectId.getLength());
+			msg.setFieldInt32(NXCPCodes.VID_TRAP_PLEN_BASE + index, objectId.getLength());
 			objectId.setNXCPVariable(msg, NXCPCodes.VID_TRAP_PNAME_BASE + index);
 		}
 	}

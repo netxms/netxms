@@ -29,7 +29,7 @@ import java.util.UUID;
 /**
  * NXCP message field (variable)
  */
-public class NXCPVariable
+public class NXCPMessageField
 {
 	public static final int TYPE_INTEGER = 0;
 	public static final int TYPE_STRING = 1;
@@ -98,7 +98,7 @@ public class NXCPVariable
 	 * @param varType
 	 * @param value
 	 */
-	public NXCPVariable(final long varId, final int varType, final Long value)
+	public NXCPMessageField(final long varId, final int varType, final Long value)
 	{
 		variableId = varId;
 		variableType = varType;
@@ -111,7 +111,7 @@ public class NXCPVariable
 	 * @param varId
 	 * @param value
 	 */
-	public NXCPVariable(final long varId, final String value)
+	public NXCPMessageField(final long varId, final String value)
 	{
 		variableId = varId;
 		variableType = TYPE_STRING;
@@ -122,7 +122,7 @@ public class NXCPVariable
 	 * @param varId
 	 * @param value
 	 */
-	public NXCPVariable(final long varId, final Double value)
+	public NXCPMessageField(final long varId, final Double value)
 	{
 		variableId = varId;
 		variableType = TYPE_FLOAT;
@@ -135,7 +135,7 @@ public class NXCPVariable
 	 * @param varId
 	 * @param value
 	 */
-	public NXCPVariable(final long varId, final byte[] value)
+	public NXCPMessageField(final long varId, final byte[] value)
 	{
 		variableId = varId;
 		variableType = TYPE_BINARY;
@@ -151,7 +151,7 @@ public class NXCPVariable
 	 * @param varId Variable ID
 	 * @param value Value
 	 */
-	public NXCPVariable(final long varId, final long[] value)
+	public NXCPMessageField(final long varId, final long[] value)
 	{
 		variableId = varId;
 		variableType = TYPE_BINARY;
@@ -178,7 +178,7 @@ public class NXCPVariable
 	 * @param varId Variable ID
 	 * @param value Value
 	 */
-	public NXCPVariable(final long varId, final Long[] value)
+	public NXCPMessageField(final long varId, final Long[] value)
 	{
 		variableId = varId;
 		variableType = TYPE_BINARY;
@@ -203,7 +203,7 @@ public class NXCPVariable
 	 * @param varId
 	 * @param value
 	 */
-	public NXCPVariable(final long varId, final InetAddress value)
+	public NXCPMessageField(final long varId, final InetAddress value)
 	{
 		variableId = varId;
 		variableType = TYPE_INTEGER;
@@ -218,7 +218,7 @@ public class NXCPVariable
 	 * @param varId
 	 * @param value
 	 */
-	public NXCPVariable(final long varId, final UUID value)
+	public NXCPMessageField(final long varId, final UUID value)
 	{
 		variableId = varId;
 		variableType = TYPE_BINARY;
@@ -245,7 +245,7 @@ public class NXCPVariable
 	 * @param nxcpDataField
 	 * @throws java.io.IOException
 	 */
-	public NXCPVariable(final byte[] nxcpDataField) throws IOException
+	public NXCPMessageField(final byte[] nxcpDataField) throws IOException
 	{
 		NXCPDataInputStream in = new NXCPDataInputStream(nxcpDataField);
 

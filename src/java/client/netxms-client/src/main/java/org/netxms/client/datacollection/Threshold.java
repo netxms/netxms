@@ -66,18 +66,18 @@ public class Threshold
 	{
 		long varId = baseId;
 		
-		id = msg.getVariableAsInt64(varId++);
-		fireEvent = msg.getVariableAsInteger(varId++);
-		rearmEvent = msg.getVariableAsInteger(varId++);
-		function = msg.getVariableAsInteger(varId++);
-		operation = msg.getVariableAsInteger(varId++);
-		sampleCount = msg.getVariableAsInteger(varId++);
-		script = msg.getVariableAsString(varId++);
-		repeatInterval = msg.getVariableAsInteger(varId++);
-		value = msg.getVariableAsString(varId++);
-		active = msg.getVariableAsBoolean(varId++);
-		currentSeverity = Severity.getByValue(msg.getVariableAsInteger(varId++));
-		lastEventTimestamp = msg.getVariableAsDate(varId);
+		id = msg.getFieldAsInt64(varId++);
+		fireEvent = msg.getFieldAsInt32(varId++);
+		rearmEvent = msg.getFieldAsInt32(varId++);
+		function = msg.getFieldAsInt32(varId++);
+		operation = msg.getFieldAsInt32(varId++);
+		sampleCount = msg.getFieldAsInt32(varId++);
+		script = msg.getFieldAsString(varId++);
+		repeatInterval = msg.getFieldAsInt32(varId++);
+		value = msg.getFieldAsString(varId++);
+		active = msg.getFieldAsBoolean(varId++);
+		currentSeverity = Severity.getByValue(msg.getFieldAsInt32(varId++));
+		lastEventTimestamp = msg.getFieldAsDate(varId);
 	}
 	
 	/**
@@ -130,15 +130,15 @@ public class Threshold
 	protected void fillMessage(final NXCPMessage msg, final long baseId)
 	{
 		long varId = baseId;
-		msg.setVariableInt32(varId++, (int)id);
-		msg.setVariableInt32(varId++, fireEvent);
-		msg.setVariableInt32(varId++, rearmEvent);
-		msg.setVariableInt16(varId++, function);
-		msg.setVariableInt16(varId++, operation);
-		msg.setVariableInt32(varId++, sampleCount);
-		msg.setVariable(varId++, script);
-		msg.setVariableInt32(varId++, repeatInterval);
-		msg.setVariable(varId++, value);
+		msg.setFieldInt32(varId++, (int)id);
+		msg.setFieldInt32(varId++, fireEvent);
+		msg.setFieldInt32(varId++, rearmEvent);
+		msg.setFieldInt16(varId++, function);
+		msg.setFieldInt16(varId++, operation);
+		msg.setFieldInt32(varId++, sampleCount);
+		msg.setField(varId++, script);
+		msg.setFieldInt32(varId++, repeatInterval);
+		msg.setField(varId++, value);
 	}
 
 	/**

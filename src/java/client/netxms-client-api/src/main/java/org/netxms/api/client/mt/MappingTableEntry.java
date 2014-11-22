@@ -49,9 +49,9 @@ public class MappingTableEntry
 	 */
 	protected MappingTableEntry(NXCPMessage msg, long baseId)
 	{
-		key = msg.getVariableAsString(baseId);
-		value = msg.getVariableAsString(baseId + 1);
-		description = msg.getVariableAsString(baseId + 2);
+		key = msg.getFieldAsString(baseId);
+		value = msg.getFieldAsString(baseId + 1);
+		description = msg.getFieldAsString(baseId + 2);
 	}
 
 	/**

@@ -52,7 +52,7 @@ public abstract class DciValue
 	 */
 	public static DciValue createFromMessage(long nodeId, NXCPMessage msg, long base)
 	{
-		int type = msg.getVariableAsInteger(base + 8);
+		int type = msg.getFieldAsInt32(base + 8);
 		switch(type)
 		{
 			case DataCollectionObject.DCO_TYPE_ITEM:
@@ -76,18 +76,18 @@ public abstract class DciValue
 		long var = base;
 	
 		this.nodeId = nodeId;
-		id = msg.getVariableAsInt64(var++);
-		name = msg.getVariableAsString(var++);
-		description = msg.getVariableAsString(var++);
-		source = msg.getVariableAsInteger(var++);
-		dataType = msg.getVariableAsInteger(var++);
-		value = msg.getVariableAsString(var++);
-		timestamp = new Date(msg.getVariableAsInt64(var++) * 1000);
-		status = msg.getVariableAsInteger(var++);
-		dcObjectType = msg.getVariableAsInteger(var++);
-		errorCount = msg.getVariableAsInteger(var++);
-		templateDciId = msg.getVariableAsInt64(var++);
-		if (msg.getVariableAsBoolean(var++))
+		id = msg.getFieldAsInt64(var++);
+		name = msg.getFieldAsString(var++);
+		description = msg.getFieldAsString(var++);
+		source = msg.getFieldAsInt32(var++);
+		dataType = msg.getFieldAsInt32(var++);
+		value = msg.getFieldAsString(var++);
+		timestamp = new Date(msg.getFieldAsInt64(var++) * 1000);
+		status = msg.getFieldAsInt32(var++);
+		dcObjectType = msg.getFieldAsInt32(var++);
+		errorCount = msg.getFieldAsInt32(var++);
+		templateDciId = msg.getFieldAsInt64(var++);
+		if (msg.getFieldAsBoolean(var++))
 			activeThreshold = new Threshold(msg, var);
 		else
 			activeThreshold = null;

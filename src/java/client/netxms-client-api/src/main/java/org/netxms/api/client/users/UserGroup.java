@@ -55,11 +55,11 @@ public class UserGroup extends AbstractUserObject
 	{
 		super(msg);
 
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_MEMBERS);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_MEMBERS);
 		members = new long[count];
 		for(int i = 0; i < count; i++)
 		{
-			members[i] = msg.getVariableAsInt64(NXCPCodes.VID_GROUP_MEMBER_BASE + i);
+			members[i] = msg.getFieldAsInt64(NXCPCodes.VID_GROUP_MEMBER_BASE + i);
 		}
 	}
 	
@@ -69,9 +69,9 @@ public class UserGroup extends AbstractUserObject
 	public void fillMessage(final NXCPMessage msg)
 	{
 		super.fillMessage(msg);
-		msg.setVariableInt32(NXCPCodes.VID_NUM_MEMBERS, members.length);
+		msg.setFieldInt32(NXCPCodes.VID_NUM_MEMBERS, members.length);
 		for(int i = 0; i < members.length; i++)
-			msg.setVariableInt32(NXCPCodes.VID_GROUP_MEMBER_BASE + i, (int)members[i]);
+			msg.setFieldInt32(NXCPCodes.VID_GROUP_MEMBER_BASE + i, (int)members[i]);
 	}
 
 	/**

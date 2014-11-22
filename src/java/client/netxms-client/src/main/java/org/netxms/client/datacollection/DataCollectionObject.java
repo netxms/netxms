@@ -92,29 +92,29 @@ public abstract class DataCollectionObject
 	protected DataCollectionObject(final DataCollectionConfiguration owner, final NXCPMessage msg)
 	{
 		this.owner = owner;
-		id = msg.getVariableAsInt64(NXCPCodes.VID_DCI_ID);
-		templateId = msg.getVariableAsInt64(NXCPCodes.VID_TEMPLATE_ID);
-		resourceId = msg.getVariableAsInt64(NXCPCodes.VID_RESOURCE_ID);
-		proxyNode = msg.getVariableAsInt64(NXCPCodes.VID_AGENT_PROXY);
-		pollingInterval = msg.getVariableAsInteger(NXCPCodes.VID_POLLING_INTERVAL);
-		retentionTime = msg.getVariableAsInteger(NXCPCodes.VID_RETENTION_TIME);
-		origin = msg.getVariableAsInteger(NXCPCodes.VID_DCI_SOURCE_TYPE);
-		status = msg.getVariableAsInteger(NXCPCodes.VID_DCI_STATUS);
-		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
-		transformationScript = msg.getVariableAsString(NXCPCodes.VID_TRANSFORMATION_SCRIPT);
-		name = msg.getVariableAsString(NXCPCodes.VID_NAME);
-		description = msg.getVariableAsString(NXCPCodes.VID_DESCRIPTION);
-		systemTag = msg.getVariableAsString(NXCPCodes.VID_SYSTEM_TAG);
-		perfTabSettings = msg.getVariableAsString(NXCPCodes.VID_PERFTAB_SETTINGS);
-		snmpPort = msg.getVariableAsInteger(NXCPCodes.VID_SNMP_PORT);
-		comments = msg.getVariableAsString(NXCPCodes.VID_COMMENTS);
+		id = msg.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
+		templateId = msg.getFieldAsInt64(NXCPCodes.VID_TEMPLATE_ID);
+		resourceId = msg.getFieldAsInt64(NXCPCodes.VID_RESOURCE_ID);
+		proxyNode = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
+		pollingInterval = msg.getFieldAsInt32(NXCPCodes.VID_POLLING_INTERVAL);
+		retentionTime = msg.getFieldAsInt32(NXCPCodes.VID_RETENTION_TIME);
+		origin = msg.getFieldAsInt32(NXCPCodes.VID_DCI_SOURCE_TYPE);
+		status = msg.getFieldAsInt32(NXCPCodes.VID_DCI_STATUS);
+		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
+		transformationScript = msg.getFieldAsString(NXCPCodes.VID_TRANSFORMATION_SCRIPT);
+		name = msg.getFieldAsString(NXCPCodes.VID_NAME);
+		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
+		systemTag = msg.getFieldAsString(NXCPCodes.VID_SYSTEM_TAG);
+		perfTabSettings = msg.getFieldAsString(NXCPCodes.VID_PERFTAB_SETTINGS);
+		snmpPort = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_PORT);
+		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_SCHEDULES);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_SCHEDULES);
 		schedules = new ArrayList<String>(count);
 		long varId = NXCPCodes.VID_DCI_SCHEDULE_BASE;
 		for(int i = 0; i < count; i++, varId++)
 		{
-			schedules.add(msg.getVariableAsString(varId));
+			schedules.add(msg.getFieldAsString(varId));
 		}
 	}
 
@@ -153,28 +153,28 @@ public abstract class DataCollectionObject
 	 */
 	public void fillMessage(final NXCPMessage msg)
 	{
-		msg.setVariableInt32(NXCPCodes.VID_DCI_ID, (int)id);
-		msg.setVariableInt32(NXCPCodes.VID_POLLING_INTERVAL, pollingInterval);
-		msg.setVariableInt32(NXCPCodes.VID_RETENTION_TIME, retentionTime);
-		msg.setVariableInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin);
-		msg.setVariableInt16(NXCPCodes.VID_DCI_STATUS, status);
-		msg.setVariable(NXCPCodes.VID_NAME, name);
-		msg.setVariable(NXCPCodes.VID_DESCRIPTION, description);
-		msg.setVariable(NXCPCodes.VID_SYSTEM_TAG, systemTag);
-		msg.setVariableInt16(NXCPCodes.VID_FLAGS, flags);
-		msg.setVariable(NXCPCodes.VID_TRANSFORMATION_SCRIPT, transformationScript);
-		msg.setVariableInt32(NXCPCodes.VID_RESOURCE_ID, (int)resourceId);
-		msg.setVariableInt32(NXCPCodes.VID_AGENT_PROXY, (int)proxyNode);
+		msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int)id);
+		msg.setFieldInt32(NXCPCodes.VID_POLLING_INTERVAL, pollingInterval);
+		msg.setFieldInt32(NXCPCodes.VID_RETENTION_TIME, retentionTime);
+		msg.setFieldInt16(NXCPCodes.VID_DCI_SOURCE_TYPE, origin);
+		msg.setFieldInt16(NXCPCodes.VID_DCI_STATUS, status);
+		msg.setField(NXCPCodes.VID_NAME, name);
+		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
+		msg.setField(NXCPCodes.VID_SYSTEM_TAG, systemTag);
+		msg.setFieldInt16(NXCPCodes.VID_FLAGS, flags);
+		msg.setField(NXCPCodes.VID_TRANSFORMATION_SCRIPT, transformationScript);
+		msg.setFieldInt32(NXCPCodes.VID_RESOURCE_ID, (int)resourceId);
+		msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int)proxyNode);
 		if (perfTabSettings != null)
-			msg.setVariable(NXCPCodes.VID_PERFTAB_SETTINGS, perfTabSettings);
-		msg.setVariableInt16(NXCPCodes.VID_SNMP_PORT, snmpPort);
-		msg.setVariable(NXCPCodes.VID_COMMENTS, comments);
+			msg.setField(NXCPCodes.VID_PERFTAB_SETTINGS, perfTabSettings);
+		msg.setFieldInt16(NXCPCodes.VID_SNMP_PORT, snmpPort);
+		msg.setField(NXCPCodes.VID_COMMENTS, comments);
 		
-		msg.setVariableInt32(NXCPCodes.VID_NUM_SCHEDULES, schedules.size());
+		msg.setFieldInt32(NXCPCodes.VID_NUM_SCHEDULES, schedules.size());
 		long varId = NXCPCodes.VID_DCI_SCHEDULE_BASE;
 		for(int i = 0; i < schedules.size(); i++)
 		{
-			msg.setVariable(varId++, schedules.get(i));
+			msg.setField(varId++, schedules.get(i));
 		}
 	}
 

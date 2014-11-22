@@ -48,11 +48,11 @@ public class GeoLocation
 	 */
 	public GeoLocation(final NXCPMessage msg)
 	{
-		type = msg.getVariableAsInteger(NXCPCodes.VID_GEOLOCATION_TYPE);
-		latitude = msg.getVariableAsReal(NXCPCodes.VID_LATITUDE);
-		longitude = msg.getVariableAsReal(NXCPCodes.VID_LONGITUDE);
-		accuracy = msg.getVariableAsInteger(NXCPCodes.VID_ACCURACY);
-		timestamp = msg.getVariableAsDate(NXCPCodes.VID_GEOLOCATION_TIMESTAMP);
+		type = msg.getFieldAsInt32(NXCPCodes.VID_GEOLOCATION_TYPE);
+		latitude = msg.getFieldAsDouble(NXCPCodes.VID_LATITUDE);
+		longitude = msg.getFieldAsDouble(NXCPCodes.VID_LONGITUDE);
+		accuracy = msg.getFieldAsInt32(NXCPCodes.VID_ACCURACY);
+		timestamp = msg.getFieldAsDate(NXCPCodes.VID_GEOLOCATION_TIMESTAMP);
 	}
 	
 	/**
@@ -62,11 +62,11 @@ public class GeoLocation
    public GeoLocation(long base, final NXCPMessage msg)
    {
       type = 0;
-      latitude = msg.getVariableAsReal(base);
-      longitude = msg.getVariableAsReal(base+1);
-      accuracy = msg.getVariableAsInteger(base+2);
-      timestamp = msg.getVariableAsDate(base+3);
-      endTimestamp = msg.getVariableAsDate(base+4);
+      latitude = msg.getFieldAsDouble(base);
+      longitude = msg.getFieldAsDouble(base+1);
+      accuracy = msg.getFieldAsInt32(base+2);
+      timestamp = msg.getFieldAsDate(base+3);
+      endTimestamp = msg.getFieldAsDate(base+4);
    }
 	
 	/**

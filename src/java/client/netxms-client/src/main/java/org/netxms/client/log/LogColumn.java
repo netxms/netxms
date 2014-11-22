@@ -49,9 +49,9 @@ public class LogColumn
 	 */
 	protected LogColumn(NXCPMessage msg, long baseId)
 	{
-		name = msg.getVariableAsString(baseId);
-		type = msg.getVariableAsInteger(baseId + 1);
-		description = msg.getVariableAsString(baseId + 2);
+		name = msg.getFieldAsString(baseId);
+		type = msg.getFieldAsInt32(baseId + 1);
+		description = msg.getFieldAsString(baseId + 2);
 	}
 
 	/**

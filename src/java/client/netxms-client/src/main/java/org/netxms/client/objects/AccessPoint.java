@@ -30,14 +30,14 @@ public class AccessPoint extends GenericObject
 	public AccessPoint(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		nodeId = msg.getVariableAsInt64(NXCPCodes.VID_NODE_ID);
-		macAddress = new MacAddress(msg.getVariableAsBinary(NXCPCodes.VID_MAC_ADDR));
-		state = AccessPointState.getByValue(msg.getVariableAsInteger(NXCPCodes.VID_STATE));
-		vendor = msg.getVariableAsString(NXCPCodes.VID_VENDOR);
-		model = msg.getVariableAsString(NXCPCodes.VID_MODEL);
-		serialNumber = msg.getVariableAsString(NXCPCodes.VID_SERIAL_NUMBER);
+		nodeId = msg.getFieldAsInt64(NXCPCodes.VID_NODE_ID);
+		macAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_MAC_ADDR));
+		state = AccessPointState.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_STATE));
+		vendor = msg.getFieldAsString(NXCPCodes.VID_VENDOR);
+		model = msg.getFieldAsString(NXCPCodes.VID_MODEL);
+		serialNumber = msg.getFieldAsString(NXCPCodes.VID_SERIAL_NUMBER);
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_RADIO_COUNT);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_RADIO_COUNT);
 		radios = new RadioInterface[count];
 		long varId = NXCPCodes.VID_RADIO_LIST_BASE;
 		for(int i = 0; i < count; i++)

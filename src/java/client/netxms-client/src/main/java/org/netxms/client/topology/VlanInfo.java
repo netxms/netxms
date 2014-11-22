@@ -37,14 +37,14 @@ public class VlanInfo
 	 */
 	public VlanInfo(NXCPMessage msg, long baseId)
 	{
-		vlanId = msg.getVariableAsInteger(baseId);
-		name = msg.getVariableAsString(baseId + 1);
+		vlanId = msg.getFieldAsInt32(baseId);
+		name = msg.getFieldAsString(baseId + 1);
 		
-		int count = msg.getVariableAsInteger(baseId + 2);
+		int count = msg.getFieldAsInt32(baseId + 2);
 		ports = new Port[count];
-		long[] sps = msg.getVariableAsUInt32Array(baseId + 3);
-		long[] indexes = msg.getVariableAsUInt32Array(baseId + 4);
-		long[] ids = msg.getVariableAsUInt32Array(baseId + 5);
+		long[] sps = msg.getFieldAsUInt32Array(baseId + 3);
+		long[] indexes = msg.getFieldAsUInt32Array(baseId + 4);
+		long[] ids = msg.getFieldAsUInt32Array(baseId + 5);
 		for(int i = 0; i < count; i++)
 			ports[i] = new Port(ids[i], indexes[i], (int)(sps[i] >> 16), (int)(sps[i] & 0xFFFF));
 	}

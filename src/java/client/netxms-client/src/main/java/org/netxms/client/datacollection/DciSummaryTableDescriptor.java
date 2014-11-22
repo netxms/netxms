@@ -38,10 +38,10 @@ public class DciSummaryTableDescriptor
 	 */
 	public DciSummaryTableDescriptor(NXCPMessage msg, long baseId)
 	{
-		id = msg.getVariableAsInteger(baseId);
-		menuPath = msg.getVariableAsString(baseId + 1);
-		title = msg.getVariableAsString(baseId + 2);
-		flags = msg.getVariableAsInteger(baseId + 3);
+		id = msg.getFieldAsInt32(baseId);
+		menuPath = msg.getFieldAsString(baseId + 1);
+		title = msg.getFieldAsString(baseId + 2);
+		flags = msg.getFieldAsInt32(baseId + 3);
 	}
 
 	/**

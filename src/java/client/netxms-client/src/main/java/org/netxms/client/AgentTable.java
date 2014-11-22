@@ -40,10 +40,10 @@ public class AgentTable
 	 */
 	protected AgentTable(final NXCPMessage msg, final long baseId)
 	{
-		name = msg.getVariableAsString(baseId + 1);
-		description = msg.getVariableAsString(baseId + 2);
+		name = msg.getFieldAsString(baseId + 1);
+		description = msg.getFieldAsString(baseId + 2);
 		
-		String t = msg.getVariableAsString(baseId + 3);
+		String t = msg.getFieldAsString(baseId + 3);
 		instanceColumns = (t != null) ? t.split("\\|") : new String[0];
 		Arrays.sort(instanceColumns, new Comparator<String>() {
 			@Override
@@ -53,7 +53,7 @@ public class AgentTable
 			}
 		});
 		
-		int count = msg.getVariableAsInteger(baseId) - 4;
+		int count = msg.getFieldAsInt32(baseId) - 4;
 		columns = new TableColumnDefinition[count];
 		long varId = baseId + 4;
 		for(int i = 0; i < count; i++)
@@ -138,8 +138,8 @@ public class AgentTable
 		
 		TableColumnDefinition(NXCPMessage msg, long baseId)
 		{
-			name = msg.getVariableAsString(baseId);
-			dataType = msg.getVariableAsInteger(baseId + 1);
+			name = msg.getFieldAsString(baseId);
+			dataType = msg.getFieldAsInt32(baseId + 1);
 		}
 	}
 }

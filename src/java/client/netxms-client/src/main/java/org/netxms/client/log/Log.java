@@ -52,9 +52,9 @@ public class Log
 	{
 		this.session = session;
 		this.name = name;
-		handle = msg.getVariableAsInteger(NXCPCodes.VID_LOG_HANDLE);
+		handle = msg.getFieldAsInt32(NXCPCodes.VID_LOG_HANDLE);
 		
-		int count = msg.getVariableAsInteger(NXCPCodes.VID_NUM_COLUMNS);
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_COLUMNS);
 		columns = new LinkedHashMap<String, LogColumn>(count);
 		long baseId = NXCPCodes.VID_COLUMN_INFO_BASE;
 		for(int i = 0; i < count; i++, baseId += 10)
@@ -115,11 +115,11 @@ public class Log
 	public void query(LogFilter filter) throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_QUERY_LOG);
-		msg.setVariableInt32(NXCPCodes.VID_LOG_HANDLE, handle);
+		msg.setFieldInt32(NXCPCodes.VID_LOG_HANDLE, handle);
 		filter.fillMessage(msg);
 		session.sendMessage(msg);
 		final NXCPMessage response = session.waitForRCC(msg.getMessageId(), 1800000);
-		numRecords = response.getVariableAsInt64(NXCPCodes.VID_NUM_ROWS);
+		numRecords = response.getFieldAsInt64(NXCPCodes.VID_NUM_ROWS);
 	}
 	
 	/**
@@ -149,10 +149,10 @@ public class Log
 	public Table retrieveData(long startRow, long rowCount, boolean refresh) throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_GET_LOG_DATA);
-		msg.setVariableInt32(NXCPCodes.VID_LOG_HANDLE, handle);
-		msg.setVariableInt64(NXCPCodes.VID_START_ROW, startRow);
-		msg.setVariableInt64(NXCPCodes.VID_NUM_ROWS, rowCount);
-		msg.setVariableInt16(NXCPCodes.VID_FORCE_RELOAD, refresh ? 1 : 0);
+		msg.setFieldInt32(NXCPCodes.VID_LOG_HANDLE, handle);
+		msg.setFieldInt64(NXCPCodes.VID_START_ROW, startRow);
+		msg.setFieldInt64(NXCPCodes.VID_NUM_ROWS, rowCount);
+		msg.setFieldInt16(NXCPCodes.VID_FORCE_RELOAD, refresh ? 1 : 0);
 		session.sendMessage(msg);
 		session.waitForRCC(msg.getMessageId(), 1800000);
 		return session.receiveTable(msg.getMessageId(), NXCPCodes.CMD_LOG_DATA);
@@ -177,7 +177,7 @@ public class Log
 	public void close() throws IOException, NXCException
 	{
 		NXCPMessage msg = session.newMessage(NXCPCodes.CMD_CLOSE_SERVER_LOG);
-		msg.setVariableInt32(NXCPCodes.VID_LOG_HANDLE, handle);
+		msg.setFieldInt32(NXCPCodes.VID_LOG_HANDLE, handle);
 		session.sendMessage(msg);
 		session.waitForRCC(msg.getMessageId());
 		handle = -1;

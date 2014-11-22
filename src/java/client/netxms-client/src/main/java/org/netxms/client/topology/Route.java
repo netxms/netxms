@@ -41,12 +41,12 @@ public class Route
     */
    public Route(NXCPMessage msg, long baseId)
    {
-      destination = msg.getVariableAsInetAddress(baseId);
-      prefixLength = msg.getVariableAsInteger(baseId + 1);
-      nextHop = msg.getVariableAsInetAddress(baseId + 2);
-      ifIndex = msg.getVariableAsInteger(baseId + 3);
-      type = msg.getVariableAsInteger(baseId + 4);
-      ifName = msg.getVariableAsString(baseId + 5);
+      destination = msg.getFieldAsInetAddress(baseId);
+      prefixLength = msg.getFieldAsInt32(baseId + 1);
+      nextHop = msg.getFieldAsInetAddress(baseId + 2);
+      ifIndex = msg.getFieldAsInt32(baseId + 3);
+      type = msg.getFieldAsInt32(baseId + 4);
+      ifName = msg.getFieldAsString(baseId + 5);
    }
 
    /**

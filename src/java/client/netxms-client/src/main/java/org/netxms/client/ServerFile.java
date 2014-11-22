@@ -37,9 +37,9 @@ public class ServerFile
 	 */
    protected ServerFile(NXCPMessage msg, long baseId)
    {
-      name = msg.getVariableAsString(baseId);
-      size = msg.getVariableAsInt64(baseId + 1);
-      modificationTime = msg.getVariableAsDate(baseId + 2);
+      name = msg.getFieldAsString(baseId);
+      size = msg.getFieldAsInt64(baseId + 1);
+      modificationTime = msg.getFieldAsDate(baseId + 2);
       setExtension();
 	}
    
@@ -51,10 +51,10 @@ public class ServerFile
     */
    protected ServerFile(NXCPMessage msg, long baseId, ServerFile parent, long nodeId)
    {
-      name = msg.getVariableAsString(baseId);
-      size = msg.getVariableAsInt64(baseId + 1);
-      modificationTime = msg.getVariableAsDate(baseId + 2);
-      type = (int)msg.getVariableAsInt64(baseId + 3);
+      name = msg.getFieldAsString(baseId);
+      size = msg.getFieldAsInt64(baseId + 1);
+      modificationTime = msg.getFieldAsDate(baseId + 2);
+      type = (int)msg.getFieldAsInt64(baseId + 3);
       this.parent = parent;
       this.nodeId = nodeId;
       setExtension();

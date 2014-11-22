@@ -42,9 +42,9 @@ public class Template extends GenericObject
 	{
 		super(msg, session);
 		
-		version = msg.getVariableAsInteger(NXCPCodes.VID_VERSION);
-		flags = msg.getVariableAsInteger(NXCPCodes.VID_FLAGS);
-		autoApplyFilter = msg.getVariableAsString(NXCPCodes.VID_AUTOBIND_FILTER);
+		version = msg.getFieldAsInt32(NXCPCodes.VID_VERSION);
+		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
+		autoApplyFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
 	}
 
 	/**
