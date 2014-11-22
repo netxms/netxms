@@ -82,16 +82,16 @@ public class Session
 		try
 		{
 			encryptionContext = EncryptionContext.createInstance(msg);
-			response.setVariable(NXCPCodes.VID_SESSION_KEY, encryptionContext.getEncryptedSessionKey(msg));
-			response.setVariable(NXCPCodes.VID_SESSION_IV, encryptionContext.getEncryptedIv(msg));
-			response.setVariableInt16(NXCPCodes.VID_CIPHER, encryptionContext.getCipher());
-			response.setVariableInt16(NXCPCodes.VID_KEY_LENGTH, encryptionContext.getKeyLength());
-			response.setVariableInt16(NXCPCodes.VID_IV_LENGTH, encryptionContext.getIvLength());
-			response.setVariableInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
+			response.setField(NXCPCodes.VID_SESSION_KEY, encryptionContext.getEncryptedSessionKey(msg));
+			response.setField(NXCPCodes.VID_SESSION_IV, encryptionContext.getEncryptedIv(msg));
+			response.setFieldInt16(NXCPCodes.VID_CIPHER, encryptionContext.getCipher());
+			response.setFieldInt16(NXCPCodes.VID_KEY_LENGTH, encryptionContext.getKeyLength());
+			response.setFieldInt16(NXCPCodes.VID_IV_LENGTH, encryptionContext.getIvLength());
+			response.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
 		}
 		catch(Exception e)
 		{
-			response.setVariableInt32(NXCPCodes.VID_RCC, RCC.NO_CIPHERS);
+			response.setFieldInt32(NXCPCodes.VID_RCC, RCC.NO_CIPHERS);
 		}
 		
 		sendMessage(response);
@@ -304,7 +304,7 @@ public class Session
 	public NXCPMessage waitForRCC(final long id, final int timeout) throws MobileAgentException
 	{
 		final NXCPMessage msg = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, id, timeout);
-		final int rcc = msg.getVariableAsInteger(NXCPCodes.VID_RCC);
+		final int rcc = msg.getFieldAsInt32(NXCPCodes.VID_RCC);
 		if (rcc != RCC.SUCCESS)
 		{
 			throw new MobileAgentException(rcc);
@@ -360,19 +360,19 @@ public class Session
 			sendMessage(request);
 			NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
 
-			if (response.getVariableAsInteger(NXCPCodes.VID_PROTOCOL_VERSION) != PROTOCOL_VERSION)
+			if (response.getFieldAsInt32(NXCPCodes.VID_PROTOCOL_VERSION) != PROTOCOL_VERSION)
 			{
-				Logger.warning("Session.connect", "connection failed, server protocol version is " + response.getVariableAsInteger(NXCPCodes.VID_PROTOCOL_VERSION));
+				Logger.warning("Session.connect", "connection failed, server protocol version is " + response.getFieldAsInt32(NXCPCodes.VID_PROTOCOL_VERSION));
 				throw new MobileAgentException(RCC.BAD_PROTOCOL);
 			}
 			
-			String serverVersion = response.getVariableAsString(NXCPCodes.VID_SERVER_VERSION); 
+			String serverVersion = response.getFieldAsString(NXCPCodes.VID_SERVER_VERSION); 
 
 			// Setup encryption if required
 			if (connUseEncryption)
 			{
 				request = newMessage(NXCPCodes.CMD_REQUEST_ENCRYPTION);
-				request.setVariableInt16(NXCPCodes.VID_USE_X509_KEY_FORMAT, 1);
+				request.setFieldInt16(NXCPCodes.VID_USE_X509_KEY_FORMAT, 1);
 				sendMessage(request);
 				waitForRCC(request.getMessageId());
 			}
@@ -380,14 +380,14 @@ public class Session
 			// Login to server
 			Logger.debug("Session.connect", "Connected to server version " + serverVersion + ", trying to login");
 			request = newMessage(NXCPCodes.CMD_LOGIN);
-			request.setVariable(NXCPCodes.VID_DEVICE_ID, connDeviceId);
-			request.setVariable(NXCPCodes.VID_LOGIN_NAME, connLoginName);
-			request.setVariable(NXCPCodes.VID_PASSWORD, connPassword);
-			request.setVariable(NXCPCodes.VID_LIBNXCL_VERSION, NXCommon.VERSION);
-			request.setVariable(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
+			request.setField(NXCPCodes.VID_DEVICE_ID, connDeviceId);
+			request.setField(NXCPCodes.VID_LOGIN_NAME, connLoginName);
+			request.setField(NXCPCodes.VID_PASSWORD, connPassword);
+			request.setField(NXCPCodes.VID_LIBNXCL_VERSION, NXCommon.VERSION);
+			request.setField(NXCPCodes.VID_OS_INFO, System.getProperty("os.name") + " " + System.getProperty("os.version"));
 			sendMessage(request);
 			response = waitForMessage(NXCPCodes.CMD_LOGIN_RESP, request.getMessageId());
-			int rcc = response.getVariableAsInteger(NXCPCodes.VID_RCC);
+			int rcc = response.getFieldAsInt32(NXCPCodes.VID_RCC);
 			Logger.debug("Session.connect", "CMD_LOGIN_RESP received, RCC=" + rcc);
 			if (rcc != RCC.SUCCESS)
 			{
@@ -476,17 +476,17 @@ public class Session
 	public void pushDciData(DciPushData[] data) throws IOException, MobileAgentException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_PUSH_DCI_DATA);
-		msg.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, data.length);
+		msg.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, data.length);
 		long varId = NXCPCodes.VID_PUSH_DCI_DATA_BASE;
 		for(DciPushData d : data)
 		{
-			msg.setVariableInt32(varId++, (int)d.nodeId);
+			msg.setFieldInt32(varId++, (int)d.nodeId);
 			if (d.nodeId == 0)
-				msg.setVariable(varId++, d.nodeName);
-			msg.setVariableInt32(varId++, (int)d.dciId);
+				msg.setField(varId++, d.nodeName);
+			msg.setFieldInt32(varId++, (int)d.dciId);
 			if (d.dciId == 0)
-				msg.setVariable(varId++, d.dciName);
-			msg.setVariable(varId++, d.value);
+				msg.setField(varId++, d.dciName);
+			msg.setField(varId++, d.value);
 		}
 		
 		sendMessage(msg);
@@ -536,13 +536,13 @@ public class Session
 	public void reportDeviceSystemInfo(String vendor, String model, String osName, String osVersion, String serialNumber, String userId) throws IOException, MobileAgentException
 	{
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_REPORT_DEVICE_INFO);
-		msg.setVariable(NXCPCodes.VID_VENDOR, vendor);
-		msg.setVariable(NXCPCodes.VID_MODEL, model);
-		msg.setVariable(NXCPCodes.VID_OS_NAME, osName);
-		msg.setVariable(NXCPCodes.VID_OS_VERSION, osVersion);
-		msg.setVariable(NXCPCodes.VID_SERIAL_NUMBER, serialNumber);
+		msg.setField(NXCPCodes.VID_VENDOR, vendor);
+		msg.setField(NXCPCodes.VID_MODEL, model);
+		msg.setField(NXCPCodes.VID_OS_NAME, osName);
+		msg.setField(NXCPCodes.VID_OS_VERSION, osVersion);
+		msg.setField(NXCPCodes.VID_SERIAL_NUMBER, serialNumber);
 		if (userId != null)
-			msg.setVariable(NXCPCodes.VID_USER_NAME, userId);
+			msg.setField(NXCPCodes.VID_USER_NAME, userId);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
@@ -562,25 +562,25 @@ public class Session
 		NXCPMessage msg = newMessage(NXCPCodes.CMD_REPORT_DEVICE_STATUS);
 		
 		if (address != null)
-			msg.setVariable(NXCPCodes.VID_IP_ADDRESS, address);
+			msg.setField(NXCPCodes.VID_IP_ADDRESS, address);
 		else
-			msg.setVariableInt32(NXCPCodes.VID_IP_ADDRESS, 0);
+			msg.setFieldInt32(NXCPCodes.VID_IP_ADDRESS, 0);
 		
 		if (location != null)
 		{
-			msg.setVariable(NXCPCodes.VID_LATITUDE, location.getLatitude());
-			msg.setVariable(NXCPCodes.VID_LONGITUDE, location.getLongitude());
-			msg.setVariableInt16(NXCPCodes.VID_GEOLOCATION_TYPE, location.getType());
-			msg.setVariableInt16(NXCPCodes.VID_ACCURACY, location.getAccuracy());
-			msg.setVariableInt64(NXCPCodes.VID_GEOLOCATION_TIMESTAMP, location.getTimestamp() != null ? location.getTimestamp().getTime() / 1000 : 0);
+			msg.setField(NXCPCodes.VID_LATITUDE, location.getLatitude());
+			msg.setField(NXCPCodes.VID_LONGITUDE, location.getLongitude());
+			msg.setFieldInt16(NXCPCodes.VID_GEOLOCATION_TYPE, location.getType());
+			msg.setFieldInt16(NXCPCodes.VID_ACCURACY, location.getAccuracy());
+			msg.setFieldInt64(NXCPCodes.VID_GEOLOCATION_TIMESTAMP, location.getTimestamp() != null ? location.getTimestamp().getTime() / 1000 : 0);
 		}
 		else
 		{
-			msg.setVariableInt16(NXCPCodes.VID_GEOLOCATION_TYPE, GeoLocation.UNSET);
+			msg.setFieldInt16(NXCPCodes.VID_GEOLOCATION_TYPE, GeoLocation.UNSET);
 		}
 		
-		msg.setVariableInt32(NXCPCodes.VID_FLAGS, flags);
-		msg.setVariableInt32(NXCPCodes.VID_BATTERY_LEVEL, batteryLevel);
+		msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
+		msg.setFieldInt32(NXCPCodes.VID_BATTERY_LEVEL, batteryLevel);
 		sendMessage(msg);
 		waitForRCC(msg.getMessageId());
 	}
