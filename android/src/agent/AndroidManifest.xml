@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.netxms.agent.android" android:versionName="1.2.17" android:versionCode="4">
-	<uses-sdk android:targetSdkVersion="20" android:minSdkVersion="8"></uses-sdk>
+	<uses-sdk android:targetSdkVersion="22" android:minSdkVersion="8"></uses-sdk>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />

@@ -161,6 +161,10 @@ public class DeviceInfoHelper
 				return "ANDROID (JELLY_BEAN_MR2)";
 			case Build.VERSION_CODES.KITKAT:
 				return "ANDROID (KITKAT)";
+			case Build.VERSION_CODES.KITKAT_WATCH:
+				return "ANDROID (KITKAT_WATCH)";
+			case Build.VERSION_CODES.LOLLIPOP:
+				return "ANDROID (LOLLIPOP)";
 		}
 		return "ANDROID (UNKNOWN)";
 	}
