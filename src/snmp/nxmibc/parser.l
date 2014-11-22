@@ -90,11 +90,9 @@ static void PushState(int nState)
 
 static void PopState(void);
 
-
-//
-// Coint newlines in a text block
-//
-
+/**
+ * Count newlines in a text block
+ */
 static void CountNewlines(char *pszStr, int len)
 {
    int i;

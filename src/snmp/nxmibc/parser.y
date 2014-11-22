@@ -1143,6 +1143,7 @@ AgentCapabilitiesAssignment:
     PRODUCT_RELEASE_SYM CharString
     SnmpStatusPart
     SnmpDescriptionPart
+    SnmpReferencePart
     ModuleCapabilitiesList
     AssignedIdentifier
 {
@@ -1153,7 +1154,7 @@ AgentCapabilitiesAssignment:
    $$->iSyntax = MIB_TYPE_AGENTCAP;
    $$->pszDescription = $6;
    delete $$->pOID;
-   $$->pOID = $8;
+   $$->pOID = $9;
    safe_free($4);
 }
 ;
