@@ -1,0 +1,74 @@
+-- ============================================================================
+-- Copyright (c) 2004-2013 Hangzhou H3C Tech. Co., Ltd. All rights reserved.
+-- Description:  This MIB file is used for configuration of L2TP(Layer 2
+--               Tunneling Protocol).
+--               include :1.L2TP statistics information
+-- Reference:
+-- Version: V1.0
+-- History:
+-- V1.0 2013/7/5 created by yanbotao
+-- ============================================================================
+HH3C-L2TP-MIB DEFINITIONS ::= BEGIN
+IMPORTS
+    hh3cCommon
+        FROM HH3C-OID-MIB
+    Integer32, Counter32, OBJECT-TYPE, MODULE-IDENTITY
+        FROM SNMPv2-SMI;
+
+hh3cL2tp MODULE-IDENTITY
+    LAST-UPDATED "201307051518Z"            -- July 05, 2013 at 15:18 GMT
+    ORGANIZATION
+        "Hangzhou H3C Tech. Co., Ltd."
+    CONTACT-INFO
+        "Platform Team Hangzhou H3C Tech. Co., Ltd.
+        Hai-Dian District Beijing P.R. China
+        http://www.h3c.com
+        Zip:100085
+        "
+    DESCRIPTION
+        "This MIB contains objects to manage configuration of L2TP.
+        There are no constraints on this MIB."
+        REVISION "201307051518Z"                -- July 05, 2013 at 15:18 GMT
+    DESCRIPTION
+        "The initial revision of this MIB module."
+    ::= { hh3cCommon 139 }
+
+--
+-- Node definitions
+--
+--
+-- Definitions of significant branches
+--
+hh3cL2tpObjects         OBJECT IDENTIFIER  ::= { hh3cL2tp 1 }
+hh3cL2tpScalar          OBJECT IDENTIFIER  ::= { hh3cL2tpObjects 1 }
+hh3cL2tpStats           OBJECT IDENTIFIER  ::= { hh3cL2tpScalar 1 }
+
+--
+-- The L2TP Scalar Status and Statistics Group
+--
+
+hh3cL2tpStatsTotalTunnels OBJECT-TYPE
+    SYNTAX          Counter32
+    MAX-ACCESS      read-only
+    STATUS          current
+    DESCRIPTION
+        "The total number of tunnels at the time of querying."
+    ::= { hh3cL2tpStats 1 }
+
+hh3cL2tpStatsTotalSessions OBJECT-TYPE
+    SYNTAX        Counter32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "The total number of sessions at the time of querying."
+    ::= { hh3cL2tpStats 2 }
+
+hh3cL2tpSessionRate  OBJECT-TYPE
+    SYNTAX        Integer32
+    MAX-ACCESS    read-only
+    STATUS        current
+    DESCRIPTION
+        "The number of sessions that were created in the previous second."
+    ::= { hh3cL2tpStats 3 }
+
+END

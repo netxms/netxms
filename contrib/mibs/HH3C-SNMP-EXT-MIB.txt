@@ -1,0 +1,264 @@
+-- ==========================================================================
+-- Copyright (c) 2004-2013 Hangzhou H3C Tech. Co., Ltd. All rights reserved.
+--
+-- Description: The purpose of this MIB file is to provide the object definition
+--              of the SNMP (Simple Network Management Protocol) extended
+--              information.
+-- Reference:
+-- Version: V1.4
+-- History:
+-- V1.0 2009-04-07  Initial version, created by Lisong
+-- V1.1 2010-03-12  Added hh3cSnmpExtReadCommunitySingle and
+--                  hh3cSnmpExtWriteCommunitySingle by SongHao
+-- V1.2 2011-08-11  Added hh3cSnmpCommunityExTable by duyanbing
+-- V1.3 2013-04-08  Changed MAX-ACCESS of hh3cSnmpCommunityExName by duyanbing
+-- V1.4 2013-05-16  Added hh3cSnmpExtMaxContextNum and
+--                  hh3cSnmpExtContextTable by gaoyanping
+-- ==========================================================================
+HH3C-SNMP-EXT-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+        TruthValue, RowStatus
+    FROM SNMPv2-TC
+        OBJECT-TYPE, MODULE-IDENTITY, Integer32
+    FROM SNMPv2-SMI
+        SnmpAdminString, SnmpSecurityModel
+    FROM SNMP-FRAMEWORK-MIB
+        hh3cCommon
+    FROM HH3C-OID-MIB;
+
+hh3cSnmpExt MODULE-IDENTITY
+    LAST-UPDATED "200904071700Z"
+    ORGANIZATION
+        "Hangzhou H3C Technologies Co., Ltd."
+    CONTACT-INFO
+        "Platform Team H3C Technologies Co., Ltd.
+         Hai-Dian District Beijing P.R. China
+         Http://www.h3c.com
+         Zip: 100085"
+    DESCRIPTION
+        "This MIB file is to provide the object definition of the SNMP extended
+         information."
+    REVISION "200904071700Z"
+    DESCRIPTION
+        "The initial version of this MIB file."
+    ::= { hh3cCommon 104 }
+--
+-- Object definitions
+--
+hh3cSnmpExtScalarObjects OBJECT IDENTIFIER ::= { hh3cSnmpExt 1 }
+
+hh3cSnmpExtTables        OBJECT IDENTIFIER ::= { hh3cSnmpExt 2 }
+
+hh3cSnmpExtNotifications OBJECT IDENTIFIER ::= { hh3cSnmpExt 3 }
+
+--
+-- Scalar Objects
+--
+    hh3cSnmpExtSnmpChannel OBJECT-TYPE
+        SYNTAX          Integer32(1..65535)
+        MAX-ACCESS      read-write
+        STATUS current
+        DESCRIPTION
+            "The channel number used by SNMP."
+        DEFVAL { 161 }
+        ::= { hh3cSnmpExtScalarObjects 1 }
+
+    hh3cSnmpExtReadCommunitySingle OBJECT-TYPE
+        SYNTAX          SnmpAdminString (SIZE(1..32))
+        MAX-ACCESS      read-write
+        STATUS          current
+        DESCRIPTION     "The first read community."
+        ::= { hh3cSnmpExtScalarObjects 2 }
+
+    hh3cSnmpExtWriteCommunitySingle OBJECT-TYPE
+        SYNTAX          SnmpAdminString (SIZE(1..32))
+        MAX-ACCESS      read-write
+        STATUS          current
+        DESCRIPTION     "The first write community."
+        ::= { hh3cSnmpExtScalarObjects 3 }
+
+    hh3cSnmpExtMaxContextNum OBJECT-TYPE
+        SYNTAX          Integer32(1..65535)
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION     "The maximum number of contexts."
+        ::= { hh3cSnmpExtScalarObjects 4 }
+
+--
+-- Table Objects
+--
+    hh3cSnmpExtCommunityTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF Hh3cSnmpExtCommunityEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "Modify the extended properties of SNMP community or
+                         user."
+        ::= { hh3cSnmpExtTables 1 }
+
+    hh3cSnmpExtCommunityEntry OBJECT-TYPE
+        SYNTAX          Hh3cSnmpExtCommunityEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "The entry of hh3cSnmpExtCommunityTable."
+        INDEX {
+                hh3cSnmpExtCommunitySecurityLevel,
+                hh3cSnmpExtCommunitySecurityName
+              }
+        ::= { hh3cSnmpExtCommunityTable 1 }
+
+    Hh3cSnmpExtCommunityEntry ::= SEQUENCE {
+        hh3cSnmpExtCommunitySecurityLevel
+            SnmpSecurityModel,
+        hh3cSnmpExtCommunitySecurityName
+            SnmpAdminString,
+        hh3cSnmpExtCommunityName
+            OCTET STRING,
+        hh3cSnmpExtCommunityAclNum
+            Integer32
+    }
+
+    hh3cSnmpExtCommunitySecurityLevel OBJECT-TYPE
+        SYNTAX          SnmpSecurityModel
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "The Security Model of the specified community or user.
+                         This object may not take the 'any' (0) value."
+        ::= { hh3cSnmpExtCommunityEntry 1 }
+
+    hh3cSnmpExtCommunitySecurityName OBJECT-TYPE
+        SYNTAX          SnmpAdminString (SIZE(1..32))
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "The Security Name of the specified community or user."
+        ::= { hh3cSnmpExtCommunityEntry 2 }
+
+    hh3cSnmpExtCommunityName OBJECT-TYPE
+        SYNTAX          OCTET STRING(SIZE(1..32))
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION     "The specified community name."
+        ::= { hh3cSnmpExtCommunityEntry 3 }
+
+    hh3cSnmpExtCommunityAclNum OBJECT-TYPE
+        SYNTAX          Integer32 (0|2000..2999)
+        MAX-ACCESS      read-write
+        STATUS          current
+        DESCRIPTION     "The specified ACL (Access Control List) number used by
+                         the community or the user."
+        DEFVAL          {0}
+        ::= { hh3cSnmpExtCommunityEntry 4 }
+
+    hh3cSnmpCommunityExTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF Hh3cSnmpCommunityExEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "Modify the extended properties of SNMP community."
+        ::= { hh3cSnmpExtTables 2 }
+
+    hh3cSnmpCommunityExEntry OBJECT-TYPE
+        SYNTAX          Hh3cSnmpCommunityExEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "The entry of hh3cSnmpCommunityExTable."
+        INDEX {
+                 hh3cSnmpCommunityExName
+              }
+        ::= { hh3cSnmpCommunityExTable 1 }
+
+    Hh3cSnmpCommunityExEntry ::= SEQUENCE {
+        hh3cSnmpCommunityExName
+            OCTET STRING,
+        hh3cSnmpCommunityExWrite
+            TruthValue,
+        hh3cSnmpCommunityExViewName
+            OCTET STRING,
+        hh3cSnmpCommunityExAclNum
+            Integer32,
+        hh3cSnmpCommunityExRowStatus
+            RowStatus
+    }
+
+    hh3cSnmpCommunityExName OBJECT-TYPE
+        SYNTAX          OCTET STRING(SIZE(1..32))
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION     "The specified community name."
+        ::= { hh3cSnmpCommunityExEntry 1 }
+
+    hh3cSnmpCommunityExWrite OBJECT-TYPE
+        SYNTAX          TruthValue
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION
+        "Represents the community can write or not.
+        'true' : the community can write.
+        'false': the community can read only."
+        DEFVAL      { false }
+        ::= { hh3cSnmpCommunityExEntry 2 }
+
+    hh3cSnmpCommunityExViewName OBJECT-TYPE
+        SYNTAX          OCTET STRING(SIZE(1..32))
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION     "A family of view subtrees that the Community can operate."
+        ::= { hh3cSnmpCommunityExEntry 3 }
+
+    hh3cSnmpCommunityExAclNum OBJECT-TYPE
+        SYNTAX          Integer32 (0|2000..2999)
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION     "The specified ACL (Access Control List) number used by the community."
+        DEFVAL          {0}
+        ::= { hh3cSnmpCommunityExEntry 4 }
+
+    hh3cSnmpCommunityExRowStatus OBJECT-TYPE
+        SYNTAX          RowStatus
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION     "The status of this table entry."
+        ::= { hh3cSnmpCommunityExEntry 5 }
+
+    hh3cSnmpExtContextTable OBJECT-TYPE
+        SYNTAX SEQUENCE OF Hh3cSnmpExtContextEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "Modify the extended properties of SNMP context."
+        ::= { hh3cSnmpExtTables 3 }
+
+    hh3cSnmpExtContextEntry OBJECT-TYPE
+        SYNTAX          Hh3cSnmpExtContextEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "The entry of hh3cSnmpExtContextTable."
+        INDEX {
+                hh3cSnmpExtContextName
+              }
+        ::= { hh3cSnmpExtContextTable 1 }
+
+    Hh3cSnmpExtContextEntry ::= SEQUENCE {
+        hh3cSnmpExtContextName
+            SnmpAdminString,
+        hh3cSnmpExtContextRowStatus
+            RowStatus
+     }
+
+    hh3cSnmpExtContextName OBJECT-TYPE
+        SYNTAX          SnmpAdminString (SIZE(1..32))
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION     "The specified context name."
+        ::= { hh3cSnmpExtContextEntry 1 }
+
+    hh3cSnmpExtContextRowStatus OBJECT-TYPE
+        SYNTAX          RowStatus
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION     "The status of this table entry."
+        ::= { hh3cSnmpExtContextEntry 2 }
+
+--
+-- Notification Objects
+--
+
+END

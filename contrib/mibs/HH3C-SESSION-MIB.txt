@@ -1,0 +1,110 @@
+-- =========================================================================
+-- Copyright (c) 2004-2014 Hangzhou H3C Tech. Co., Ltd. All rights reserved.
+--
+-- Description: The MIB is designed to set session configuration or get session information.
+-- Reference:
+-- Version: V1.0
+-- History:
+--  V1.0 2013-12-20 created by liqian 04379
+--       Initial version.
+-- =========================================================================
+HH3C-SESSION-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+        hh3cCommon
+    FROM HH3C-OID-MIB
+        Unsigned32, OBJECT-TYPE, MODULE-IDENTITY
+    FROM SNMPv2-SMI;
+
+hh3cSession MODULE-IDENTITY
+    LAST-UPDATED "201312200000Z"
+    ORGANIZATION
+        "Hangzhou H3C Technologies Co., Ltd."
+    CONTACT-INFO
+        "Platform Team Hangzhou H3C Technologies Co., Ltd.
+         Hai-Dian District Beijing P.R. China
+         http://www.h3c.com
+         Zip:100085"
+    DESCRIPTION
+        "The MIB is designed to manage sessions."
+
+    -- Revision History
+    REVISION     "201312200000Z"  -- December 26, 2013
+    DESCRIPTION  "Initial version."
+
+    ::= { hh3cCommon 149 }
+
+--
+-- Table definitions
+--
+
+hh3cSessionTables OBJECT IDENTIFIER ::= { hh3cSession 1 }
+-- ----------------------------------------------------------------------
+  -- Session statistic table
+-- ----------------------------------------------------------------------
+hh3cSessionStatTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF Hh3cSessionStatEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+    "The statistics of sessions."
+::= { hh3cSessionTables 1 }
+
+hh3cSessionStatEntry OBJECT-TYPE
+    SYNTAX  Hh3cSessionStatEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+    "An entry (conceptual row) representing session statistics information."
+    INDEX { hh3cSessionStatChassis, hh3cSessionStatSlot, hh3cSessionStatCPUID }
+::= { hh3cSessionStatTable 1 }
+
+Hh3cSessionStatEntry ::= SEQUENCE {
+    hh3cSessionStatChassis          Unsigned32,
+    hh3cSessionStatSlot             Unsigned32,
+    hh3cSessionStatCPUID            Unsigned32,
+    hh3cSessionStatCount            Unsigned32,
+    hh3cSessionStatCreateRate       Unsigned32
+    }
+
+hh3cSessionStatChassis   OBJECT-TYPE
+    SYNTAX Unsigned32(0..65534)
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+    "An IRF member device ID."
+::= { hh3cSessionStatEntry  1 }
+
+hh3cSessionStatSlot    OBJECT-TYPE
+    SYNTAX Unsigned32(0..65534)
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+    "The slot where the card resides."
+::= { hh3cSessionStatEntry  2 }
+
+hh3cSessionStatCPUID   OBJECT-TYPE
+    SYNTAX Unsigned32(0..7)
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+    "CPU ID."
+::= { hh3cSessionStatEntry  3 }
+
+hh3cSessionStatCount  OBJECT-TYPE
+    SYNTAX Unsigned32
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+    "The number of current sessions."
+::= { hh3cSessionStatEntry  4 }
+
+hh3cSessionStatCreateRate     OBJECT-TYPE
+    SYNTAX Unsigned32
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+    "The number of sessions per second."
+::= { hh3cSessionStatEntry  5 }
+
+END
