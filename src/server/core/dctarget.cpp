@@ -551,6 +551,17 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
 }
 
 /**
+ * Parser array definition in script parameters
+ * Should be in form $(elem1, elem2, ...)
+ */
+static NXSL_Value *ParseArrayDefinition(TCHAR **start)
+{
+   TCHAR *p = *start + 2;
+
+   return NULL;
+}
+
+/**
  * Get parameter value from NXSL script
  */
 UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
@@ -572,16 +583,106 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
       *p = 0;
       p++;
 
-      TCHAR *s;
-      do
+      TCHAR *s = p;
+      int state = 1; // normal text
+
+      for(; state > 0; p++)
       {
-         s = _tcschr(p, _T(','));
-         if (s != NULL)
-            *s = 0;
-         Trim(p);
-         args.add(new NXSL_Value(p));
-         p = s + 1;
-      } while(s != NULL);
+         switch(*p)
+         {
+            case '"':
+               if (state == 1)
+               {
+                  state = 2;
+                  s = p + 1;
+               }
+               else
+               {
+                  state = 3;
+                  *p = 0;
+                  args.add(new NXSL_Value(s));
+               }
+               break;
+            case ',':
+               if (state == 1)
+               {
+                  *p = 0;
+                  Trim(s);
+                  args.add(new NXSL_Value(s));
+                  s = p + 1;
+               }
+               else if (state == 3)
+               {
+                  state = 1;
+                  s = p + 1;
+               }
+               break;
+            case 0:
+               if (state == 1)
+               {
+                  Trim(s);
+                  args.add(new NXSL_Value(s));
+                  state = 0;
+               }
+               else
+               {
+                  state = -1; // error
+               }
+               break;
+            case ' ':
+               break;
+            case '\\':
+               if (state == 2)
+               {
+                  memmove(p, p + 1, _tcslen(p) * sizeof(TCHAR));
+                  switch(*p)
+                  {
+                     case 'r':
+                        *p = '\r';
+                        break;
+                     case 'n':
+                        *p = '\n';
+                        break;
+                     case 't':
+                        *p = '\t';
+                        break;
+                     default:
+                        break;
+                  }
+               }
+               else if (state == 3)
+               {
+                  state = -1;
+               }
+               break;
+            case '$':
+               if ((state == 0) && (*(p + 1) == '('))
+               {
+                  NXSL_Value *v = ParseArrayDefinition(&p);
+                  if (v != NULL)
+                  {
+                     args.add(v);
+                     state = 3;
+                  }
+                  else
+                  {
+                     state = -1;
+                  }
+                  break;
+               }
+               // intentionally no break here
+            default:
+               if (state == 3)
+                  state = -1;
+               break;
+         }
+      }
+
+      if (state == -1)
+      {
+         // argument parsing error
+         return DCE_NOT_SUPPORTED;
+      }
    }
 
    UINT32 rc = DCE_NOT_SUPPORTED;
