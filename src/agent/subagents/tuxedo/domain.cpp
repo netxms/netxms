@@ -47,13 +47,13 @@ static void QueryDomainInfo()
    if (!TuxedoConnect())
       return;
 
-	FBFR32 *fb = (FBFR32 *)tpalloc("FML32", NULL, 4096);
+	FBFR32 *fb = (FBFR32 *)tpalloc((char *)"FML32", NULL, 4096);
 	CFchg32(fb, TA_OPERATION, 0, (char *)"GET", 0, FLD_STRING);
 	CFchg32(fb, TA_CLASS, 0, (char *)"T_DOMAIN", 0, FLD_STRING);
 
    long rsplen = 8192;
-   FBFR32 *rsp = (FBFR32 *)tpalloc("FML32", NULL, rsplen);
-   if (tpcall(".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
+   FBFR32 *rsp = (FBFR32 *)tpalloc((char *)"FML32", NULL, rsplen);
+   if (tpcall((char *)".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
    {
       CFgetString(rsp, TA_DOMAINID, 0, s_domainId, sizeof(s_domainId));
       CFgetString(rsp, TA_MASTER, 0, s_master, sizeof(s_master));
