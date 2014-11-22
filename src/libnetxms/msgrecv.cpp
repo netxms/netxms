@@ -146,7 +146,7 @@ NXCPMessage *AbstractMessageReceiver::readMessage(UINT32 timeout, MessageReceive
  */
 const TCHAR *AbstractMessageReceiver::resultToText(MessageReceiverResult result)
 {
-   static TCHAR *text[] = { 
+   static const TCHAR *text[] = { 
       _T("MSGRECV_SUCCESS"), 
       _T("MSGRECV_CLOSED"), 
       _T("MSGRECV_TIMEOUT"), 
