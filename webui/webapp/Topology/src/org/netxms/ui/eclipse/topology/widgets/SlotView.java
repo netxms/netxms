@@ -213,12 +213,6 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		
 		Point ext = gc.textExtent(label);
 		gc.drawText(label, x + (PORT_WIDTH - ext.x) / 2, y + (PORT_HEIGHT - ext.y) / 2);
-
-		if (p.getStatus() != ObjectStatus.NORMAL)
-		{
-			// draw status icon
-			gc.drawImage(StatusDisplayInfo.getStatusImage(p.getStatus()), rect.x + rect.width - 18, rect.y + rect.height - 18);
-		}
 	}
 
 	/* (non-Javadoc)
