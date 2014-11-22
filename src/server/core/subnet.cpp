@@ -164,12 +164,12 @@ bool Subnet::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void Subnet::fillMessage(CSCPMessage *pMsg)
+void Subnet::fillMessage(NXCPMessage *pMsg)
 {
    NetObj::fillMessage(pMsg);
-   pMsg->SetVariable(VID_IP_NETMASK, m_dwIpNetMask);
-   pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
-	pMsg->SetVariable(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));
+   pMsg->setField(VID_IP_NETMASK, m_dwIpNetMask);
+   pMsg->setField(VID_ZONE_ID, m_zoneId);
+	pMsg->setField(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));
 }
 
 /**

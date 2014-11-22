@@ -137,10 +137,10 @@ class NXSL_ClientSessionEnv : public NXSL_ServerEnv
 {
 protected:
 	ClientSession *m_session;
-	CSCPMessage *m_response;
+	NXCPMessage *m_response;
 
 public:
-	NXSL_ClientSessionEnv(ClientSession *session, CSCPMessage *response);
+	NXSL_ClientSessionEnv(ClientSession *session, NXCPMessage *response);
 
 	virtual void print(NXSL_Value *value);
 	virtual void trace(int level, const TCHAR *text);

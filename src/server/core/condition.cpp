@@ -240,25 +240,25 @@ bool Condition::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message from object
  */
-void Condition::fillMessage(CSCPMessage *pMsg)
+void Condition::fillMessage(NXCPMessage *pMsg)
 {
    UINT32 i, dwId;
 
    NetObj::fillMessage(pMsg);
-   pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_scriptSource));
-   pMsg->SetVariable(VID_ACTIVATION_EVENT, m_activationEventCode);
-   pMsg->SetVariable(VID_DEACTIVATION_EVENT, m_deactivationEventCode);
-   pMsg->SetVariable(VID_SOURCE_OBJECT, m_sourceObject);
-   pMsg->SetVariable(VID_ACTIVE_STATUS, (WORD)m_activeStatus);
-   pMsg->SetVariable(VID_INACTIVE_STATUS, (WORD)m_inactiveStatus);
-   pMsg->SetVariable(VID_NUM_ITEMS, m_dciCount);
+   pMsg->setField(VID_SCRIPT, CHECK_NULL_EX(m_scriptSource));
+   pMsg->setField(VID_ACTIVATION_EVENT, m_activationEventCode);
+   pMsg->setField(VID_DEACTIVATION_EVENT, m_deactivationEventCode);
+   pMsg->setField(VID_SOURCE_OBJECT, m_sourceObject);
+   pMsg->setField(VID_ACTIVE_STATUS, (WORD)m_activeStatus);
+   pMsg->setField(VID_INACTIVE_STATUS, (WORD)m_inactiveStatus);
+   pMsg->setField(VID_NUM_ITEMS, m_dciCount);
    for(i = 0, dwId = VID_DCI_LIST_BASE; (i < m_dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
    {
-      pMsg->SetVariable(dwId++, m_dciList[i].id);
-      pMsg->SetVariable(dwId++, m_dciList[i].nodeId);
-      pMsg->SetVariable(dwId++, (WORD)m_dciList[i].function);
-      pMsg->SetVariable(dwId++, (WORD)m_dciList[i].polls);
-      pMsg->SetVariable(dwId++, (WORD)GetDCObjectType(m_dciList[i].nodeId, m_dciList[i].id));
+      pMsg->setField(dwId++, m_dciList[i].id);
+      pMsg->setField(dwId++, m_dciList[i].nodeId);
+      pMsg->setField(dwId++, (WORD)m_dciList[i].function);
+      pMsg->setField(dwId++, (WORD)m_dciList[i].polls);
+      pMsg->setField(dwId++, (WORD)GetDCObjectType(m_dciList[i].nodeId, m_dciList[i].id));
       dwId += 5;
    }
 }
@@ -266,7 +266,7 @@ void Condition::fillMessage(CSCPMessage *pMsg)
 /**
  * Modify object from NXCP message
  */
-UINT32 Condition::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Condition::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    UINT32 i, dwId;
    NetObj *pObject;
@@ -281,7 +281,7 @@ UINT32 Condition::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
       safe_free(m_scriptSource);
       delete m_script;
-      m_scriptSource = pRequest->GetVariableStr(VID_SCRIPT);
+      m_scriptSource = pRequest->getFieldAsString(VID_SCRIPT);
       NXSL_Program *p = (NXSL_Program *)NXSLCompile(m_scriptSource, szError, 1024);
       if (p != NULL)
       {
@@ -302,38 +302,38 @@ UINT32 Condition::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
    // Change activation event
    if (pRequest->isFieldExist(VID_ACTIVATION_EVENT))
-      m_activationEventCode = pRequest->GetVariableLong(VID_ACTIVATION_EVENT);
+      m_activationEventCode = pRequest->getFieldAsUInt32(VID_ACTIVATION_EVENT);
 
    // Change deactivation event
    if (pRequest->isFieldExist(VID_DEACTIVATION_EVENT))
-      m_deactivationEventCode = pRequest->GetVariableLong(VID_DEACTIVATION_EVENT);
+      m_deactivationEventCode = pRequest->getFieldAsUInt32(VID_DEACTIVATION_EVENT);
 
    // Change source object
    if (pRequest->isFieldExist(VID_SOURCE_OBJECT))
-      m_sourceObject = pRequest->GetVariableLong(VID_SOURCE_OBJECT);
+      m_sourceObject = pRequest->getFieldAsUInt32(VID_SOURCE_OBJECT);
 
    // Change active status
    if (pRequest->isFieldExist(VID_ACTIVE_STATUS))
-      m_activeStatus = pRequest->GetVariableShort(VID_ACTIVE_STATUS);
+      m_activeStatus = pRequest->getFieldAsUInt16(VID_ACTIVE_STATUS);
 
    // Change inactive status
    if (pRequest->isFieldExist(VID_INACTIVE_STATUS))
-      m_inactiveStatus = pRequest->GetVariableShort(VID_INACTIVE_STATUS);
+      m_inactiveStatus = pRequest->getFieldAsUInt16(VID_INACTIVE_STATUS);
 
    // Change DCI list
    if (pRequest->isFieldExist(VID_NUM_ITEMS))
    {
       safe_free(m_dciList);
-      m_dciCount = pRequest->GetVariableLong(VID_NUM_ITEMS);
+      m_dciCount = pRequest->getFieldAsUInt32(VID_NUM_ITEMS);
       if (m_dciCount > 0)
       {
          m_dciList = (INPUT_DCI *)malloc(sizeof(INPUT_DCI) * m_dciCount);
          for(i = 0, dwId = VID_DCI_LIST_BASE; (i < m_dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
          {
-            m_dciList[i].id = pRequest->GetVariableLong(dwId++);
-            m_dciList[i].nodeId = pRequest->GetVariableLong(dwId++);
-            m_dciList[i].function = pRequest->GetVariableShort(dwId++);
-            m_dciList[i].polls = pRequest->GetVariableShort(dwId++);
+            m_dciList[i].id = pRequest->getFieldAsUInt32(dwId++);
+            m_dciList[i].nodeId = pRequest->getFieldAsUInt32(dwId++);
+            m_dciList[i].function = pRequest->getFieldAsUInt16(dwId++);
+            m_dciList[i].polls = pRequest->getFieldAsUInt16(dwId++);
             dwId += 6;
          }
 

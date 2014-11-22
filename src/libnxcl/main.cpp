@@ -188,17 +188,17 @@ void LIBNXCL_EXPORTABLE NXCGetLastLockOwner(NXC_SESSION hSession, TCHAR *pszBuff
  */
 UINT32 LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *message)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
 	CHECK_SESSION_HANDLE();
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_SEND_SMS);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_RCPT_ADDR, phone);
-   msg.SetVariable(VID_MESSAGE, message);
+   msg.setCode(CMD_SEND_SMS);
+   msg.setId(dwRqId);
+   msg.setField(VID_RCPT_ADDR, phone);
+   msg.setField(VID_MESSAGE, message);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -209,15 +209,15 @@ UINT32 LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *
  */
 UINT32 LIBNXCL_EXPORTABLE NXCCheckConnection(NXC_SESSION hSession)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
 	CHECK_SESSION_HANDLE();
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_KEEPALIVE);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_KEEPALIVE);
+   msg.setId(dwRqId);
    if (!((NXCL_Session *)hSession)->SendMsg(&msg))
 		return RCC_COMM_FAILURE;
 
@@ -246,7 +246,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCGenerateMessageId(NXC_SESSION hSession)
 /**
  * Send prepared NXCP message
  */
-BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, CSCPMessage *msg)
+BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, NXCPMessage *msg)
 {
 	CHECK_SESSION_HANDLE();
    return ((NXCL_Session *)hSession)->SendMsg(msg);
@@ -255,7 +255,7 @@ BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, CSCPMessage *msg)
 /**
  * Wait for message
  */
-CSCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, UINT32 dwRqId)
+NXCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, UINT32 dwRqId)
 {
 	return (hSession != NULL) ? ((NXCL_Session *)hSession)->WaitForMessage(wCode, dwRqId) : NULL;
 }

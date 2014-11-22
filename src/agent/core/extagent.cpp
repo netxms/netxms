@@ -54,12 +54,12 @@ ExternalSubagent::~ExternalSubagent()
 /*
  * Send message to external subagent
  */
-bool ExternalSubagent::sendMessage(CSCPMessage *msg)
+bool ExternalSubagent::sendMessage(NXCPMessage *msg)
 {
 	TCHAR buffer[256];
-	AgentWriteDebugLog(6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->GetCode(), buffer));
+	AgentWriteDebugLog(6, _T("ExternalSubagent::sendMessage(%s): sending message %s"), m_name, NXCPMessageCodeName(msg->getCode(), buffer));
 
-	CSCP_MESSAGE *rawMsg = msg->createMessage();
+	NXCP_MESSAGE *rawMsg = msg->createMessage();
 	MutexLock(m_mutexPipeWrite);
    bool success = SendMessageToPipe(m_pipe, rawMsg);
 	MutexUnlock(m_mutexPipeWrite);
@@ -70,7 +70,7 @@ bool ExternalSubagent::sendMessage(CSCPMessage *msg)
 /**
  * Wait for specific message to arrive
  */
-CSCPMessage *ExternalSubagent::waitForMessage(WORD code, UINT32 id)
+NXCPMessage *ExternalSubagent::waitForMessage(WORD code, UINT32 id)
 {
 	return m_msgQueue->waitForMessage(code, id, 5000);	// 5 sec timeout
 }
@@ -90,14 +90,14 @@ void ExternalSubagent::connect(HPIPE hPipe)
 	while(true)
 	{
       MessageReceiverResult result;
-      CSCPMessage *msg = receiver.readMessage(INFINITE, &result);
+      NXCPMessage *msg = receiver.readMessage(INFINITE, &result);
 		if (msg == NULL)
       {
-   		AgentWriteDebugLog(6, _T("ExternalSubagent(%s): receiver failure (%d)"), m_name, result);
+         AgentWriteDebugLog(6, _T("ExternalSubagent(%s): receiver failure (%s)"), m_name, AbstractMessageReceiver::resultToText(result));
 			break;
       }
-		AgentWriteDebugLog(6, _T("ExternalSubagent(%s): received message %s"), m_name, NXCPMessageCodeName(msg->GetCode(), buffer));
-      switch(msg->GetCode())
+		AgentWriteDebugLog(6, _T("ExternalSubagent(%s): received message %s"), m_name, NXCPMessageCodeName(msg->getCode(), buffer));
+      switch(msg->getCode())
       {
          case CMD_PUSH_DCI_DATA:
             MutexLock(g_hSessionListAccess);
@@ -130,9 +130,9 @@ void ExternalSubagent::connect(HPIPE hPipe)
  */
 void ExternalSubagent::shutdown()
 {
-	CSCPMessage msg;
-	msg.SetCode(CMD_SHUTDOWN);
-	msg.SetId(m_requestId++);
+	NXCPMessage msg;
+	msg.setCode(CMD_SHUTDOWN);
+	msg.setId(m_requestId++);
 	sendMessage(&msg);
 }
 
@@ -141,26 +141,26 @@ void ExternalSubagent::shutdown()
  */
 NETXMS_SUBAGENT_PARAM *ExternalSubagent::getSupportedParameters(UINT32 *count)
 {
-	CSCPMessage msg;
+	NXCPMessage msg;
 	NETXMS_SUBAGENT_PARAM *result = NULL;
 
-	msg.SetCode(CMD_GET_PARAMETER_LIST);
-	msg.SetId(m_requestId++);
+	msg.setCode(CMD_GET_PARAMETER_LIST);
+	msg.setId(m_requestId++);
 	if (sendMessage(&msg))
 	{
-		CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.GetId());
+		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
 		if (response != NULL)
 		{
-			if (response->GetVariableLong(VID_RCC) == ERR_SUCCESS)
+			if (response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
 			{
-				*count = response->GetVariableLong(VID_NUM_PARAMETERS);
+				*count = response->getFieldAsUInt32(VID_NUM_PARAMETERS);
 				result = (NETXMS_SUBAGENT_PARAM *)malloc(*count * sizeof(NETXMS_SUBAGENT_PARAM));
 				UINT32 varId = VID_PARAM_LIST_BASE;
 				for(UINT32 i = 0; i < *count; i++)
 				{
-					response->GetVariableStr(varId++, result[i].name, MAX_PARAM_NAME);
-					response->GetVariableStr(varId++, result[i].description, MAX_DB_STRING);
-					result[i].dataType = (int)response->GetVariableShort(varId++);
+					response->getFieldAsString(varId++, result[i].name, MAX_PARAM_NAME);
+					response->getFieldAsString(varId++, result[i].description, MAX_DB_STRING);
+					result[i].dataType = (int)response->getFieldAsUInt16(varId++);
 				}
 			}
 			delete response;
@@ -174,24 +174,24 @@ NETXMS_SUBAGENT_PARAM *ExternalSubagent::getSupportedParameters(UINT32 *count)
  */
 NETXMS_SUBAGENT_LIST *ExternalSubagent::getSupportedLists(UINT32 *count)
 {
-	CSCPMessage msg;
+	NXCPMessage msg;
 	NETXMS_SUBAGENT_LIST *result = NULL;
 
-	msg.SetCode(CMD_GET_ENUM_LIST);
-	msg.SetId(m_requestId++);
+	msg.setCode(CMD_GET_ENUM_LIST);
+	msg.setId(m_requestId++);
 	if (sendMessage(&msg))
 	{
-		CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.GetId());
+		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
 		if (response != NULL)
 		{
-			if (response->GetVariableLong(VID_RCC) == ERR_SUCCESS)
+			if (response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
 			{
-				*count = response->GetVariableLong(VID_NUM_ENUMS);
+				*count = response->getFieldAsUInt32(VID_NUM_ENUMS);
 				result = (NETXMS_SUBAGENT_LIST *)malloc(*count * sizeof(NETXMS_SUBAGENT_LIST));
 				UINT32 varId = VID_ENUM_LIST_BASE;
 				for(UINT32 i = 0; i < *count; i++)
 				{
-					response->GetVariableStr(varId++, result[i].name, MAX_PARAM_NAME);
+					response->getFieldAsString(varId++, result[i].name, MAX_PARAM_NAME);
 				}
 			}
 			delete response;
@@ -205,26 +205,26 @@ NETXMS_SUBAGENT_LIST *ExternalSubagent::getSupportedLists(UINT32 *count)
  */
 NETXMS_SUBAGENT_TABLE *ExternalSubagent::getSupportedTables(UINT32 *count)
 {
-	CSCPMessage msg;
+	NXCPMessage msg;
 	NETXMS_SUBAGENT_TABLE *result = NULL;
 
-	msg.SetCode(CMD_GET_TABLE_LIST);
-	msg.SetId(m_requestId++);
+	msg.setCode(CMD_GET_TABLE_LIST);
+	msg.setId(m_requestId++);
 	if (sendMessage(&msg))
 	{
-		CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.GetId());
+		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
 		if (response != NULL)
 		{
-			if (response->GetVariableLong(VID_RCC) == ERR_SUCCESS)
+			if (response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
 			{
-				*count = response->GetVariableLong(VID_NUM_TABLES);
+				*count = response->getFieldAsUInt32(VID_NUM_TABLES);
 				result = (NETXMS_SUBAGENT_TABLE *)malloc(*count * sizeof(NETXMS_SUBAGENT_TABLE));
 				UINT32 varId = VID_TABLE_LIST_BASE;
 				for(UINT32 i = 0; i < *count; i++)
 				{
-					response->GetVariableStr(varId++, result[i].name, MAX_PARAM_NAME);
-					response->GetVariableStr(varId++, result[i].instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
-					response->GetVariableStr(varId++, result[i].description, MAX_DB_STRING);
+					response->getFieldAsString(varId++, result[i].name, MAX_PARAM_NAME);
+					response->getFieldAsString(varId++, result[i].instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
+					response->getFieldAsString(varId++, result[i].description, MAX_DB_STRING);
 				}
 			}
 			delete response;
@@ -236,7 +236,7 @@ NETXMS_SUBAGENT_TABLE *ExternalSubagent::getSupportedTables(UINT32 *count)
 /**
  * List supported parameters
  */
-void ExternalSubagent::listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
+void ExternalSubagent::listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
 	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_PARAM *list = getSupportedParameters(&paramCount);
@@ -246,9 +246,9 @@ void ExternalSubagent::listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *
 
 		for(UINT32 i = 0; i < paramCount; i++)
 		{
-			msg->SetVariable(id++, list[i].name);
-			msg->SetVariable(id++, list[i].description);
-			msg->SetVariable(id++, (WORD)list[i].dataType);
+			msg->setField(id++, list[i].name);
+			msg->setField(id++, list[i].description);
+			msg->setField(id++, (WORD)list[i].dataType);
 		}
 		*baseId = id;
 		*count += paramCount;
@@ -274,7 +274,7 @@ void ExternalSubagent::listParameters(StringList *list)
 /**
  * List supported lists
  */
-void ExternalSubagent::listLists(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
+void ExternalSubagent::listLists(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
 	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_LIST *list = getSupportedLists(&paramCount);
@@ -284,7 +284,7 @@ void ExternalSubagent::listLists(CSCPMessage *msg, UINT32 *baseId, UINT32 *count
 
 		for(UINT32 i = 0; i < paramCount; i++)
 		{
-			msg->SetVariable(id++, list[i].name);
+			msg->setField(id++, list[i].name);
 		}
 		*baseId = id;
 		*count += paramCount;
@@ -310,7 +310,7 @@ void ExternalSubagent::listLists(StringList *list)
 /**
  * List supported tables
  */
-void ExternalSubagent::listTables(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
+void ExternalSubagent::listTables(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
 	UINT32 paramCount = 0;
 	NETXMS_SUBAGENT_TABLE *list = getSupportedTables(&paramCount);
@@ -320,9 +320,9 @@ void ExternalSubagent::listTables(CSCPMessage *msg, UINT32 *baseId, UINT32 *coun
 
 		for(UINT32 i = 0; i < paramCount; i++)
 		{
-			msg->SetVariable(id++, list[i].name);
-			msg->SetVariable(id++, list[i].instanceColumns);
-			msg->SetVariable(id++, list[i].description);
+			msg->setField(id++, list[i].name);
+			msg->setField(id++, list[i].instanceColumns);
+			msg->setField(id++, list[i].description);
 		}
 		*baseId = id;
 		*count += paramCount;
@@ -350,20 +350,20 @@ void ExternalSubagent::listTables(StringList *list)
  */
 UINT32 ExternalSubagent::getParameter(const TCHAR *name, TCHAR *buffer)
 {
-	CSCPMessage msg;
+	NXCPMessage msg;
 	UINT32 rcc;
 
-	msg.SetCode(CMD_GET_PARAMETER);
-	msg.SetId(m_requestId++);
-	msg.SetVariable(VID_PARAMETER, name);
+	msg.setCode(CMD_GET_PARAMETER);
+	msg.setId(m_requestId++);
+	msg.setField(VID_PARAMETER, name);
 	if (sendMessage(&msg))
 	{
-		CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.GetId());
+		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
 		if (response != NULL)
 		{
-			rcc = response->GetVariableLong(VID_RCC);
+			rcc = response->getFieldAsUInt32(VID_RCC);
 			if (rcc == ERR_SUCCESS)
-				response->GetVariableStr(VID_VALUE, buffer, MAX_RESULT_LENGTH);
+				response->getFieldAsString(VID_VALUE, buffer, MAX_RESULT_LENGTH);
 			delete response;
 		}
 		else
@@ -383,18 +383,18 @@ UINT32 ExternalSubagent::getParameter(const TCHAR *name, TCHAR *buffer)
  */
 UINT32 ExternalSubagent::getTable(const TCHAR *name, Table *value)
 {
-	CSCPMessage msg;
+	NXCPMessage msg;
 	UINT32 rcc;
 
-	msg.SetCode(CMD_GET_TABLE);
-	msg.SetId(m_requestId++);
-	msg.SetVariable(VID_PARAMETER, name);
+	msg.setCode(CMD_GET_TABLE);
+	msg.setId(m_requestId++);
+	msg.setField(VID_PARAMETER, name);
 	if (sendMessage(&msg))
 	{
-		CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.GetId());
+		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
 		if (response != NULL)
 		{
-			rcc = response->GetVariableLong(VID_RCC);
+			rcc = response->getFieldAsUInt32(VID_RCC);
 			if (rcc == ERR_SUCCESS)
 				value->updateFromMessage(response);
 			delete response;
@@ -416,23 +416,23 @@ UINT32 ExternalSubagent::getTable(const TCHAR *name, Table *value)
  */
 UINT32 ExternalSubagent::getList(const TCHAR *name, StringList *value)
 {
-	CSCPMessage msg;
+	NXCPMessage msg;
 	UINT32 rcc;
 
-	msg.SetCode(CMD_GET_LIST);
-	msg.SetId(m_requestId++);
-	msg.SetVariable(VID_PARAMETER, name);
+	msg.setCode(CMD_GET_LIST);
+	msg.setId(m_requestId++);
+	msg.setField(VID_PARAMETER, name);
 	if (sendMessage(&msg))
 	{
-		CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.GetId());
+		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
 		if (response != NULL)
 		{
-			rcc = response->GetVariableLong(VID_RCC);
+			rcc = response->getFieldAsUInt32(VID_RCC);
 			if (rcc == ERR_SUCCESS)
 			{
-            UINT32 count = response->GetVariableLong(VID_NUM_STRINGS);
+            UINT32 count = response->getFieldAsUInt32(VID_NUM_STRINGS);
             for(UINT32 i = 0; i < count; i++)
-					value->addPreallocated(response->GetVariableStr(VID_ENUM_VALUE_BASE + i));
+					value->addPreallocated(response->getFieldAsString(VID_ENUM_VALUE_BASE + i));
 			}
 			delete response;
 		}
@@ -635,7 +635,7 @@ cleanup:
 /*
  * Send message to external subagent
  */
-bool SendMessageToPipe(HPIPE hPipe, CSCP_MESSAGE *msg)
+bool SendMessageToPipe(HPIPE hPipe, NXCP_MESSAGE *msg)
 {
 	bool success = false;
 
@@ -644,16 +644,16 @@ bool SendMessageToPipe(HPIPE hPipe, CSCP_MESSAGE *msg)
       return false;
 
 	DWORD bytes = 0;
-   if (WriteFile(hPipe, msg, ntohl(msg->dwSize), &bytes, NULL))
+   if (WriteFile(hPipe, msg, ntohl(msg->size), &bytes, NULL))
 	{
-		success = (bytes == ntohl(msg->dwSize));
+		success = (bytes == ntohl(msg->size));
 	}
 #else
    if (hPipe == -1)
       return false;
 
-	int bytes = SendEx(hPipe, msg, ntohl(msg->dwSize), 0, NULL); 
-	success = (bytes == ntohl(msg->dwSize));
+	int bytes = SendEx(hPipe, msg, ntohl(msg->size), 0, NULL); 
+	success = (bytes == ntohl(msg->size));
 #endif
 	return success;
 }
@@ -687,7 +687,7 @@ bool AddExternalSubagent(const TCHAR *config)
 /**
  * Add parameters from external providers to NXCP message
  */
-void ListParametersFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
+void ListParametersFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
@@ -715,7 +715,7 @@ void ListParametersFromExtSubagents(StringList *list)
 /**
  * Add lists from external providers to NXCP message
  */
-void ListListsFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
+void ListListsFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
 	for(int i = 0; i < s_subagents.size(); i++)
 	{
@@ -743,7 +743,7 @@ void ListListsFromExtSubagents(StringList *list)
 /**
  * Add tables from external providers to NXCP message
  */
-void ListTablesFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
+void ListTablesFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
 	for(int i = 0; i < s_subagents.size(); i++)
 	{

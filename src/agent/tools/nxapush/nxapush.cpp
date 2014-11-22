@@ -338,22 +338,22 @@ static BOOL Send()
 {
 	BOOL success = FALSE;
 
-	CSCPMessage msg;
-	msg.SetCode(CMD_PUSH_DCI_DATA);
-   msg.SetVariable(VID_OBJECT_ID, optObjectId);
+	NXCPMessage msg;
+	msg.setCode(CMD_PUSH_DCI_DATA);
+   msg.setField(VID_OBJECT_ID, optObjectId);
    s_data->fillMessage(&msg, VID_NUM_ITEMS, VID_PUSH_DCI_DATA_BASE);
 
 	// Send response to pipe
-	CSCP_MESSAGE *rawMsg = msg.createMessage();
+	NXCP_MESSAGE *rawMsg = msg.createMessage();
 #ifdef _WIN32
 	DWORD bytes;
-	if (!WriteFile(s_hPipe, rawMsg, ntohl(rawMsg->dwSize), &bytes, NULL))
+	if (!WriteFile(s_hPipe, rawMsg, ntohl(rawMsg->size), &bytes, NULL))
 		goto cleanup;
-	if (bytes != ntohl(rawMsg->dwSize))
+	if (bytes != ntohl(rawMsg->size))
 		goto cleanup;
 #else
-	int bytes = SendEx(s_hPipe, rawMsg, ntohl(rawMsg->dwSize), 0, NULL); 
-	if (bytes != (int)ntohl(rawMsg->dwSize))
+	int bytes = SendEx(s_hPipe, rawMsg, ntohl(rawMsg->size), 0, NULL); 
+	if (bytes != (int)ntohl(rawMsg->size))
 		goto cleanup;
 #endif
 

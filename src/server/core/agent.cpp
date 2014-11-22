@@ -38,7 +38,7 @@ AgentConnectionEx::~AgentConnectionEx()
 /**
  * Trap processor
  */
-void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
+void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
 {
    UINT32 dwEventCode;
    int i, iNumArgs;
@@ -60,7 +60,7 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
 		   // agents prior to 1.1.6 will not send trap id
 		   // we should accept trap in that case to maintain compatibility
 		   bool acceptTrap;
-		   QWORD trapId = pMsg->GetVariableInt64(VID_TRAP_ID);
+		   QWORD trapId = pMsg->getFieldAsUInt64(VID_TRAP_ID);
 		   if (trapId != 0)
 		   {
 			   acceptTrap = pNode->checkAgentTrapId(trapId);
@@ -74,18 +74,18 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
 
 		   if (acceptTrap)
 		   {
-			   dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
+			   dwEventCode = pMsg->getFieldAsUInt32(VID_EVENT_CODE);
 			   if ((dwEventCode == 0) && pMsg->isFieldExist(VID_EVENT_NAME))
 			   {
 				   TCHAR eventName[256];
-				   pMsg->GetVariableStr(VID_EVENT_NAME, eventName, 256);
+				   pMsg->getFieldAsString(VID_EVENT_NAME, eventName, 256);
 				   dwEventCode = EventCodeFromName(eventName, 0);
 			   }
-			   iNumArgs = (int)pMsg->GetVariableShort(VID_NUM_ARGS);
+			   iNumArgs = (int)pMsg->getFieldAsUInt16(VID_NUM_ARGS);
 			   if (iNumArgs > 32)
 				   iNumArgs = 32;
 			   for(i = 0; i < iNumArgs; i++)
-				   pszArgList[i] = pMsg->GetVariableStr(VID_EVENT_ARG_BASE + i);
+				   pszArgList[i] = pMsg->getFieldAsString(VID_EVENT_ARG_BASE + i);
 			   DbgPrintf(3, _T("Event from trap: %d"), dwEventCode);
 
 			   szFormat[iNumArgs] = 0;
@@ -118,12 +118,12 @@ void AgentConnectionEx::onTrap(CSCPMessage *pMsg)
 /**
  * Handler for data push
  */
-void AgentConnectionEx::onDataPush(CSCPMessage *msg)
+void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 {
 	TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
 
-	msg->GetVariableStr(VID_NAME, name, MAX_PARAM_NAME);
-	msg->GetVariableStr(VID_VALUE, value, MAX_RESULT_LENGTH);
+	msg->getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
+	msg->getFieldAsString(VID_VALUE, value, MAX_RESULT_LENGTH);
 
    Node *sender = NULL;
 	if (m_nodeId != 0)
@@ -138,7 +138,7 @@ void AgentConnectionEx::onDataPush(CSCPMessage *msg)
 		// agents prior to 1.2.10 will not send request id
 		// we should accept data in that case to maintain compatibility
 		bool acceptRequest;
-		QWORD requestId = msg->GetVariableInt64(VID_REQUEST_ID);
+		QWORD requestId = msg->getFieldAsUInt64(VID_REQUEST_ID);
 		if (requestId != 0)
 		{
 			acceptRequest = sender->checkAgentPushRequestId(requestId);
@@ -153,7 +153,7 @@ void AgentConnectionEx::onDataPush(CSCPMessage *msg)
 		if (acceptRequest)
 		{
          Node *target;
-         UINT32 objectId = msg->GetVariableLong(VID_OBJECT_ID);
+         UINT32 objectId = msg->getFieldAsUInt32(VID_OBJECT_ID);
          if (objectId != 0)
          {
             // push on behalf of other node
@@ -215,7 +215,7 @@ void AgentConnectionEx::printMsg(const TCHAR *format, ...)
 /**
  * Recieve file monitoring information and resend to all required user sessions
  */
-void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
+void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
 {
 	Node *object = NULL;
 	if (m_nodeId != 0)
@@ -223,7 +223,7 @@ void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
 	if (object != NULL)
 	{
 	   TCHAR remoteFile[MAX_PATH];
-      pMsg->GetVariableStr(VID_FILE_NAME, remoteFile, MAX_PATH);
+      pMsg->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
       ObjectArray<ClientSession>* result = g_monitoringList.findClientByFNameAndNodeID(remoteFile, object->getId());
       DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for remote file %s on node %s [%d]"), result->size(), remoteFile, object->getName(), object->getId());
       for(int i = 0; i < result->size(); i++)
@@ -236,12 +236,12 @@ void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
          AgentConnection *conn = object->createAgentConnection();
          if(conn != NULL)
          {
-            CSCPMessage request;
-            request.SetId(conn->generateRequestId());
-            request.SetCode(CMD_CANCEL_FILE_MONITORING);
-            request.SetVariable(VID_FILE_NAME, remoteFile);
-            request.SetVariable(VID_OBJECT_ID, object->getId());
-            CSCPMessage* response = conn->customRequest(&request);
+            NXCPMessage request;
+            request.setId(conn->generateRequestId());
+            request.setCode(CMD_CANCEL_FILE_MONITORING);
+            request.setField(VID_FILE_NAME, remoteFile);
+            request.setField(VID_OBJECT_ID, object->getId());
+            NXCPMessage* response = conn->customRequest(&request);
             delete response;
          }
          delete conn;
@@ -258,7 +258,7 @@ void AgentConnectionEx::onFileMonitoringData(CSCPMessage *pMsg)
 /**
  * Recieve trap sent throught proxy agent
  */
-void AgentConnectionEx::onSnmpTrap(CSCPMessage *msg)
+void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
 {
    Node *proxyNode = NULL;
    TCHAR ipStringBuffer[4096];
@@ -274,7 +274,7 @@ void AgentConnectionEx::onSnmpTrap(CSCPMessage *msg)
       // Check for duplicate traps - only accept traps with ID
       // higher than last received
       bool acceptTrap;
-      UINT32 trapId = msg->GetId();
+      UINT32 trapId = msg->getId();
       if (trapId != 0)
       {
          acceptTrap = proxyNode->checkSNMPTrapId(trapId);
@@ -288,15 +288,15 @@ void AgentConnectionEx::onSnmpTrap(CSCPMessage *msg)
 
       if (acceptTrap)
       {
-         UINT32 originSenderIP = msg->GetVariableLong(VID_IP_ADDRESS);
-         UINT32 pduLenght = msg->GetVariableLong(VID_PDU_SIZE);
+         UINT32 originSenderIP = msg->getFieldAsUInt32(VID_IP_ADDRESS);
+         UINT32 pduLenght = msg->getFieldAsUInt32(VID_PDU_SIZE);
          BYTE *pduBytes = (BYTE*)malloc(pduLenght);
-         msg->GetVariableBinary(VID_PDU, pduBytes, pduLenght);
+         msg->getFieldAsBinary(VID_PDU, pduBytes, pduLenght);
          Node *originNode = FindNodeByIP(0, originSenderIP); //create function
 
          SNMP_ProxyTransport *pTransport;
          if(originNode != NULL)
-            pTransport = (SNMP_ProxyTransport*)originNode->createSnmpTransport((WORD)msg->GetVariableShort(VID_PORT));
+            pTransport = (SNMP_ProxyTransport*)originNode->createSnmpTransport((WORD)msg->getFieldAsUInt16(VID_PORT));
 
          if(ConfigReadInt(_T("LogAllSNMPTraps"), FALSE) && originNode == NULL)
          {
@@ -305,7 +305,7 @@ void AgentConnectionEx::onSnmpTrap(CSCPMessage *msg)
             pConn = proxyNode->createAgentConnection();
             if (pConn != NULL)
             {
-               pTransport = new SNMP_ProxyTransport(pConn, originSenderIP, msg->GetVariableShort(VID_PORT));
+               pTransport = new SNMP_ProxyTransport(pConn, originSenderIP, msg->getFieldAsUInt16(VID_PORT));
             }
          }
 
@@ -326,7 +326,7 @@ void AgentConnectionEx::onSnmpTrap(CSCPMessage *msg)
                   struct sockaddr_in addr;
                   addr.sin_family = AF_INET;
                   addr.sin_addr.s_addr = htonl(originSenderIP);
-                  addr.sin_port = htons(msg->GetVariableShort(VID_PORT));
+                  addr.sin_port = htons(msg->getFieldAsUInt16(VID_PORT));
                   ProcessTrap(pdu, &addr, pTransport, &localEngine, pdu->getCommand() == SNMP_INFORM_REQUEST);
                }
                else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
@@ -383,11 +383,11 @@ void AgentConnectionEx::onSnmpTrap(CSCPMessage *msg)
 UINT32 AgentConnectionEx::deployPolicy(AgentPolicy *policy)
 {
 	UINT32 rqId, rcc;
-	CSCPMessage msg(getProtocolVersion());
+	NXCPMessage msg(getProtocolVersion());
 
    rqId = generateRequestId();
-   msg.SetId(rqId);
-	msg.SetCode(CMD_DEPLOY_AGENT_POLICY);
+   msg.setId(rqId);
+	msg.setCode(CMD_DEPLOY_AGENT_POLICY);
 	if (policy->createDeploymentMessage(&msg))
 	{
 		if (sendMessage(&msg))
@@ -412,11 +412,11 @@ UINT32 AgentConnectionEx::deployPolicy(AgentPolicy *policy)
 UINT32 AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
 {
 	UINT32 rqId, rcc;
-	CSCPMessage msg(getProtocolVersion());
+	NXCPMessage msg(getProtocolVersion());
 
    rqId = generateRequestId();
-   msg.SetId(rqId);
-	msg.SetCode(CMD_UNINSTALL_AGENT_POLICY);
+   msg.setId(rqId);
+	msg.setCode(CMD_UNINSTALL_AGENT_POLICY);
 	if (policy->createUninstallMessage(&msg))
 	{
 		if (sendMessage(&msg))

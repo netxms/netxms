@@ -93,15 +93,15 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
    }
    else
    {
-      pCtx->pMsg->SetVariable(VID_MESSAGE, szBuffer);
+      pCtx->pMsg->setField(VID_MESSAGE, szBuffer);
 		if (pCtx->session != NULL)
 		{
 			pCtx->session->postMessage(pCtx->pMsg);
 		}
 		else
 		{
-			CSCP_MESSAGE *pRawMsg = pCtx->pMsg->createMessage();
-			SendEx(pCtx->hSocket, pRawMsg, ntohl(pRawMsg->dwSize), 0, pCtx->socketMutex);
+			NXCP_MESSAGE *pRawMsg = pCtx->pMsg->createMessage();
+			SendEx(pCtx->hSocket, pRawMsg, ntohl(pRawMsg->size), 0, pCtx->socketMutex);
 			free(pRawMsg);
 		}
    }

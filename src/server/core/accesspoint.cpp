@@ -196,42 +196,42 @@ bool AccessPoint::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void AccessPoint::fillMessage(CSCPMessage *msg)
+void AccessPoint::fillMessage(NXCPMessage *msg)
 {
    DataCollectionTarget::fillMessage(msg);
-	msg->SetVariable(VID_NODE_ID, m_nodeId);
-	msg->SetVariable(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
-	msg->SetVariable(VID_VENDOR, CHECK_NULL_EX(m_vendor));
-	msg->SetVariable(VID_MODEL, CHECK_NULL_EX(m_model));
-	msg->SetVariable(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
-   msg->SetVariable(VID_STATE, (UINT16)m_state);
+	msg->setField(VID_NODE_ID, m_nodeId);
+	msg->setField(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
+	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
+	msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
+	msg->setField(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
+   msg->setField(VID_STATE, (UINT16)m_state);
 
    if (m_radioInterfaces != NULL)
    {
-      msg->SetVariable(VID_RADIO_COUNT, (WORD)m_radioInterfaces->size());
+      msg->setField(VID_RADIO_COUNT, (WORD)m_radioInterfaces->size());
       UINT32 varId = VID_RADIO_LIST_BASE;
       for(int i = 0; i < m_radioInterfaces->size(); i++)
       {
          RadioInterfaceInfo *rif = m_radioInterfaces->get(i);
-         msg->SetVariable(varId++, (UINT32)rif->index);
-         msg->SetVariable(varId++, rif->name);
-         msg->SetVariable(varId++, rif->macAddr, MAC_ADDR_LENGTH);
-         msg->SetVariable(varId++, rif->channel);
-         msg->SetVariable(varId++, (UINT32)rif->powerDBm);
-         msg->SetVariable(varId++, (UINT32)rif->powerMW);
+         msg->setField(varId++, (UINT32)rif->index);
+         msg->setField(varId++, rif->name);
+         msg->setField(varId++, rif->macAddr, MAC_ADDR_LENGTH);
+         msg->setField(varId++, rif->channel);
+         msg->setField(varId++, (UINT32)rif->powerDBm);
+         msg->setField(varId++, (UINT32)rif->powerMW);
          varId += 4;
       }
    }
    else
    {
-      msg->SetVariable(VID_RADIO_COUNT, (WORD)0);
+      msg->setField(VID_RADIO_COUNT, (WORD)0);
    }
 }
 
 /**
  * Modify object from message
  */
-UINT32 AccessPoint::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 AccessPoint::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       lockProperties();

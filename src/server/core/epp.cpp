@@ -152,45 +152,45 @@ EPRule::EPRule(DB_RESULT hResult, int row)
 /**
  * Construct event policy rule from NXCP message
  */
-EPRule::EPRule(CSCPMessage *msg)
+EPRule::EPRule(NXCPMessage *msg)
 {
 	UINT32 i, id, count;
 	TCHAR *name, *value;
 
-   m_dwFlags = msg->GetVariableLong(VID_FLAGS);
-   m_id = msg->GetVariableLong(VID_RULE_ID);
-   msg->GetVariableBinary(VID_GUID, m_guid, UUID_LENGTH);
-   m_pszComment = msg->GetVariableStr(VID_COMMENTS);
+   m_dwFlags = msg->getFieldAsUInt32(VID_FLAGS);
+   m_id = msg->getFieldAsUInt32(VID_RULE_ID);
+   msg->getFieldAsBinary(VID_GUID, m_guid, UUID_LENGTH);
+   m_pszComment = msg->getFieldAsString(VID_COMMENTS);
 
-   m_dwNumActions = msg->GetVariableLong(VID_NUM_ACTIONS);
+   m_dwNumActions = msg->getFieldAsUInt32(VID_NUM_ACTIONS);
    m_pdwActionList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumActions);
    msg->getFieldAsInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
 
-   m_dwNumEvents = msg->GetVariableLong(VID_NUM_EVENTS);
+   m_dwNumEvents = msg->getFieldAsUInt32(VID_NUM_EVENTS);
    m_pdwEventList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumEvents);
    msg->getFieldAsInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
 
-   m_dwNumSources = msg->GetVariableLong(VID_NUM_SOURCES);
+   m_dwNumSources = msg->getFieldAsUInt32(VID_NUM_SOURCES);
    m_pdwSourceList = (UINT32 *)malloc(sizeof(UINT32) * m_dwNumSources);
    msg->getFieldAsInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
 
-   msg->GetVariableStr(VID_ALARM_KEY, m_szAlarmKey, MAX_DB_STRING);
-   msg->GetVariableStr(VID_ALARM_MESSAGE, m_szAlarmMessage, MAX_DB_STRING);
-   m_iAlarmSeverity = msg->GetVariableShort(VID_ALARM_SEVERITY);
-	m_dwAlarmTimeout = msg->GetVariableLong(VID_ALARM_TIMEOUT);
-	m_dwAlarmTimeoutEvent = msg->GetVariableLong(VID_ALARM_TIMEOUT_EVENT);
+   msg->getFieldAsString(VID_ALARM_KEY, m_szAlarmKey, MAX_DB_STRING);
+   msg->getFieldAsString(VID_ALARM_MESSAGE, m_szAlarmMessage, MAX_DB_STRING);
+   m_iAlarmSeverity = msg->getFieldAsUInt16(VID_ALARM_SEVERITY);
+	m_dwAlarmTimeout = msg->getFieldAsUInt32(VID_ALARM_TIMEOUT);
+	m_dwAlarmTimeoutEvent = msg->getFieldAsUInt32(VID_ALARM_TIMEOUT_EVENT);
 
-	m_dwSituationId = msg->GetVariableLong(VID_SITUATION_ID);
-   msg->GetVariableStr(VID_SITUATION_INSTANCE, m_szSituationInstance, MAX_DB_STRING);
-   count = msg->GetVariableLong(VID_SITUATION_NUM_ATTRS);
+	m_dwSituationId = msg->getFieldAsUInt32(VID_SITUATION_ID);
+   msg->getFieldAsString(VID_SITUATION_INSTANCE, m_szSituationInstance, MAX_DB_STRING);
+   count = msg->getFieldAsUInt32(VID_SITUATION_NUM_ATTRS);
    for(i = 0, id = VID_SITUATION_ATTR_LIST_BASE; i < count; i++)
    {
-   	name = msg->GetVariableStr(id++);
-   	value = msg->GetVariableStr(id++);
+   	name = msg->getFieldAsString(id++);
+   	value = msg->getFieldAsString(id++);
    	m_situationAttrList.setPreallocated(name, value);
    }
 
-   m_pszScript = msg->GetVariableStr(VID_SCRIPT);
+   m_pszScript = msg->getFieldAsString(VID_SCRIPT);
    if ((m_pszScript != NULL) && (*m_pszScript != 0))
    {
       TCHAR szError[256];
@@ -704,26 +704,26 @@ void EPRule::saveToDB(DB_HANDLE hdb)
 /**
  * Create NXCP message with rule's data
  */
-void EPRule::createMessage(CSCPMessage *msg)
+void EPRule::createMessage(NXCPMessage *msg)
 {
-   msg->SetVariable(VID_FLAGS, m_dwFlags);
-   msg->SetVariable(VID_RULE_ID, m_id);
-   msg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
-   msg->SetVariable(VID_ALARM_SEVERITY, (WORD)m_iAlarmSeverity);
-   msg->SetVariable(VID_ALARM_KEY, m_szAlarmKey);
-   msg->SetVariable(VID_ALARM_MESSAGE, m_szAlarmMessage);
-   msg->SetVariable(VID_ALARM_TIMEOUT, m_dwAlarmTimeout);
-   msg->SetVariable(VID_ALARM_TIMEOUT_EVENT, m_dwAlarmTimeoutEvent);
-   msg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_pszComment));
-   msg->SetVariable(VID_NUM_ACTIONS, m_dwNumActions);
-   msg->setFieldInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
-   msg->SetVariable(VID_NUM_EVENTS, m_dwNumEvents);
-   msg->setFieldInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
-   msg->SetVariable(VID_NUM_SOURCES, m_dwNumSources);
-   msg->setFieldInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
-   msg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_pszScript));
-	msg->SetVariable(VID_SITUATION_ID, m_dwSituationId);
-	msg->SetVariable(VID_SITUATION_INSTANCE, m_szSituationInstance);
+   msg->setField(VID_FLAGS, m_dwFlags);
+   msg->setField(VID_RULE_ID, m_id);
+   msg->setField(VID_GUID, m_guid, UUID_LENGTH);
+   msg->setField(VID_ALARM_SEVERITY, (WORD)m_iAlarmSeverity);
+   msg->setField(VID_ALARM_KEY, m_szAlarmKey);
+   msg->setField(VID_ALARM_MESSAGE, m_szAlarmMessage);
+   msg->setField(VID_ALARM_TIMEOUT, m_dwAlarmTimeout);
+   msg->setField(VID_ALARM_TIMEOUT_EVENT, m_dwAlarmTimeoutEvent);
+   msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_pszComment));
+   msg->setField(VID_NUM_ACTIONS, m_dwNumActions);
+   msg->setFieldFromInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
+   msg->setField(VID_NUM_EVENTS, m_dwNumEvents);
+   msg->setFieldFromInt32Array(VID_RULE_EVENTS, m_dwNumEvents, m_pdwEventList);
+   msg->setField(VID_NUM_SOURCES, m_dwNumSources);
+   msg->setFieldFromInt32Array(VID_RULE_SOURCES, m_dwNumSources, m_pdwSourceList);
+   msg->setField(VID_SCRIPT, CHECK_NULL_EX(m_pszScript));
+	msg->setField(VID_SITUATION_ID, m_dwSituationId);
+	msg->setField(VID_SITUATION_INSTANCE, m_szSituationInstance);
    m_situationAttrList.fillMessage(msg, VID_SITUATION_NUM_ATTRS, VID_SITUATION_ATTR_LIST_BASE);
 }
 
@@ -849,16 +849,16 @@ void EventPolicy::processEvent(Event *pEvent)
 void EventPolicy::sendToClient(ClientSession *pSession, UINT32 dwRqId)
 {
    UINT32 i;
-   CSCPMessage msg;
+   NXCPMessage msg;
 
    readLock();
-   msg.SetCode(CMD_EPP_RECORD);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_EPP_RECORD);
+   msg.setId(dwRqId);
    for(i = 0; i < m_dwNumRules; i++)
    {
       m_ppRuleList[i]->createMessage(&msg);
       pSession->sendMessage(&msg);
-      msg.deleteAllVariables();
+      msg.deleteAllFields();
    }
    unlock();
 }

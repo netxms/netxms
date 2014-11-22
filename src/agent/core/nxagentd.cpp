@@ -1211,8 +1211,8 @@ static void InitConfig()
  */
 static void InitiateExtSubagentShutdown()
 {
-   CSCPMessage msg;
-   msg.SetCode(CMD_SHUTDOWN);
+   NXCPMessage msg;
+   msg.setCode(CMD_SHUTDOWN);
    if (SendControlMessage(&msg))
       _tprintf(_T("Control message sent successfully to master agent\n"));
    else

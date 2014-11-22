@@ -44,7 +44,7 @@ static MUTEX s_socketLock = MutexCreate();
 /**
  * Protocol buffer
  */
-static CSCP_BUFFER s_msgBuffer;
+static NXCP_BUFFER s_msgBuffer;
 
 /**
  * Connect to master agent
@@ -81,13 +81,13 @@ static bool ConnectToMasterAgent()
 /**
  * Send message to master agent
  */
-static bool SendMsg(CSCPMessage *msg)
+static bool SendMsg(NXCPMessage *msg)
 {
    if (s_socket == INVALID_SOCKET)
       return false;
 
-   CSCP_MESSAGE *rawMsg = msg->createMessage();
-   bool success = (SendEx(s_socket, rawMsg, ntohl(rawMsg->dwSize), 0, s_socketLock) == ntohl(rawMsg->dwSize));
+   NXCP_MESSAGE *rawMsg = msg->createMessage();
+   bool success = (SendEx(s_socket, rawMsg, ntohl(rawMsg->size), 0, s_socketLock) == ntohl(rawMsg->size));
    free(rawMsg);
    return success;
 }
@@ -97,12 +97,12 @@ static bool SendMsg(CSCPMessage *msg)
  */
 static void Login()
 {
-   CSCPMessage msg;
-   msg.SetCode(CMD_LOGIN);
+   NXCPMessage msg;
+   msg.setCode(CMD_LOGIN);
 
    DWORD sid;
    ProcessIdToSessionId(GetCurrentProcessId(), &sid);
-   msg.SetVariable(VID_SESSION_ID, (UINT32)sid);
+   msg.setField(VID_SESSION_ID, (UINT32)sid);
 
    DWORD size;
    WTS_CONNECTSTATE_CLASS *state;
@@ -127,20 +127,20 @@ static void Login()
       WTSFreeMemory(state);
    }
 
-   msg.SetVariable(VID_SESSION_STATE, sessionState);
+   msg.setField(VID_SESSION_STATE, sessionState);
 
    TCHAR *sessionName;
    if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sid, WTSWinStationName, &sessionName, &size))
    {
       if (*sessionName != 0)
       {
-         msg.SetVariable(VID_NAME, sessionName);
+         msg.setField(VID_NAME, sessionName);
       }
       else
       {
          TCHAR buffer[256];
          _sntprintf(buffer, 256, _T("%s-%d"), (sessionState == USER_SESSION_DISCONNECTED) ? _T("Disconnected") : ((sessionState == USER_SESSION_IDLE) ? _T("Idle") : _T("Session")), sid);
-         msg.SetVariable(VID_NAME, buffer);
+         msg.setField(VID_NAME, buffer);
       }
       WTSFreeMemory(sessionName);
    }
@@ -149,7 +149,7 @@ static void Login()
    size = 256;
    if (GetUserName(userName, &size))
    {
-      msg.SetVariable(VID_USER_NAME, userName);
+      msg.setField(VID_USER_NAME, userName);
    }
 
    SendMsg(&msg);
@@ -158,23 +158,23 @@ static void Login()
 /**
  * Process request from master agent
  */
-static void ProcessRequest(CSCPMessage *request)
+static void ProcessRequest(NXCPMessage *request)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
 
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(request->GetId());
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
 
-   switch(request->GetCode())
+   switch(request->getCode())
    {
       case CMD_KEEPALIVE:
-         msg.SetVariable(VID_RCC, ERR_SUCCESS);
+         msg.setField(VID_RCC, ERR_SUCCESS);
          break;
       case CMD_TAKE_SCREENSHOT:
          TakeScreenshot(&msg);
          break;
       default:
-         msg.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
+         msg.setField(VID_RCC, ERR_UNKNOWN_COMMAND);
          break;
    }
 
@@ -189,7 +189,7 @@ static void ProcessMessages()
    NXCPEncryptionContext *dummyCtx = NULL;
    RecvNXCPMessage(0, NULL, &s_msgBuffer, 0, NULL, NULL, 0);
    UINT32 rawMsgSize = 65536;
-   CSCP_MESSAGE *rawMsg = (CSCP_MESSAGE *)malloc(rawMsgSize);
+   NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)malloc(rawMsgSize);
    while(1)
    {
       int err = RecvNXCPMessageEx(s_socket, &rawMsg, &s_msgBuffer, &rawMsgSize, &dummyCtx, NULL, 900000, 4 * 1024 * 1024);
@@ -212,18 +212,18 @@ static void ProcessMessages()
       }
 
       // Check that actual received packet size is equal to encoded in packet
-      if ((int)ntohl(rawMsg->dwSize) != err)
+      if ((int)ntohl(rawMsg->size) != err)
       {
-         _tprintf(_T("Actual message size doesn't match wSize value (%d,%d)"), err, ntohl(rawMsg->dwSize));
+         _tprintf(_T("Actual message size doesn't match wSize value (%d,%d)"), err, ntohl(rawMsg->size));
          continue;   // Bad packet, wait for next
       }
 
-      UINT16 flags = ntohs(rawMsg->wFlags);
+      UINT16 flags = ntohs(rawMsg->flags);
       if (!(flags & MF_BINARY))
       {
-         CSCPMessage *msg = new CSCPMessage(rawMsg);
+         NXCPMessage *msg = new NXCPMessage(rawMsg);
          TCHAR msgCodeName[256];
-         _tprintf(_T("Received message %s\n"), NXCPMessageCodeName(msg->GetCode(), msgCodeName));
+         _tprintf(_T("Received message %s\n"), NXCPMessageCodeName(msg->getCode(), msgCodeName));
          ProcessRequest(msg);
          delete msg;
       }

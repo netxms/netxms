@@ -61,7 +61,7 @@ private:
 	time_t m_lastNotification;
 	NetObj *m_resolvedObject;
 	MUTEX m_notificationLock;
-	CSCPMessage m_notificationMessage;
+	NXCPMessage m_notificationMessage;
 	bool m_blockNextJobsOnFailure;
 
 	static THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *);
@@ -109,7 +109,7 @@ public:
 
 	void setOwningQueue(ServerJobQueue *queue);
 
-	void fillMessage(CSCPMessage *msg);
+	void fillMessage(NXCPMessage *msg);
 };
 
 /**
@@ -138,17 +138,17 @@ public:
 
 	void jobCompleted(ServerJob *job);
 
-	UINT32 fillMessage(CSCPMessage *msg, UINT32 *varIdBase);
+	UINT32 fillMessage(NXCPMessage *msg, UINT32 *varIdBase);
 };
 
 /**
  * Job manager API
  */
 bool NXCORE_EXPORTABLE AddJob(ServerJob *job);
-void GetJobList(CSCPMessage *msg);
-UINT32 NXCORE_EXPORTABLE CancelJob(UINT32 userId, CSCPMessage *msg);
-UINT32 NXCORE_EXPORTABLE HoldJob(UINT32 userId, CSCPMessage *msg);
-UINT32 NXCORE_EXPORTABLE UnholdJob(UINT32 userId, CSCPMessage *msg);
+void GetJobList(NXCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE CancelJob(UINT32 userId, NXCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE HoldJob(UINT32 userId, NXCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE UnholdJob(UINT32 userId, NXCPMessage *msg);
 
 /**
  * File upload job
@@ -201,7 +201,7 @@ protected:
 	virtual const TCHAR *getAdditionalInfo();
 
 	static void progressCallback(size_t size, void *arg);
-	static void fileResendCallback(CSCP_MESSAGE *msg, void *arg);
+	static void fileResendCallback(NXCP_MESSAGE *msg, void *arg);
 
 public:
 	FileDownloadJob(Node *node, const TCHAR *remoteName, UINT32 maxFileSize, bool follow, ClientSession *session, UINT32 requestId);

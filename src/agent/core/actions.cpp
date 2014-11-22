@@ -174,14 +174,14 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
 {
    ActionExecutorData *data = (ActionExecutorData *)arg;
    
-   CSCPMessage msg;
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(data->m_requestId);
-   msg.SetVariable(VID_RCC, ERR_SUCCESS);
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(data->m_requestId);
+   msg.setField(VID_RCC, ERR_SUCCESS);
    data->m_session->sendMessage(&msg);
 
-   msg.SetCode(CMD_COMMAND_OUTPUT);
-   msg.deleteAllVariables();
+   msg.setCode(CMD_COMMAND_OUTPUT);
+   msg.deleteAllFields();
 
    FILE *pipe = _tpopen(data->m_cmdLine, _T("r"));
    if (pipe != NULL)
@@ -194,9 +194,9 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
          if (ret == NULL)
             break;
          
-         msg.SetVariable(VID_MESSAGE, line);
+         msg.setField(VID_MESSAGE, line);
          data->m_session->sendMessage(&msg);
-         msg.deleteAllVariables();
+         msg.deleteAllFields();
       }
       pclose(pipe);
    }
@@ -206,7 +206,7 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
 
       TCHAR buffer[1024];
       _sntprintf(buffer, 1024, _T("Failed to execute command %s"), data->m_cmdLine);
-      msg.SetVariable(VID_MESSAGE, buffer);
+      msg.setField(VID_MESSAGE, buffer);
    }
 
    msg.setEndOfSequence();

@@ -54,19 +54,19 @@ static void Help()
 
 static BOOL ExecCommand(char *pszCmd)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    BOOL bConnClosed = FALSE;
    WORD wCode;
    TCHAR *pszText;
 
-   msg.SetCode(CMD_ADM_REQUEST);
-   msg.SetId(g_dwRqId++);
+   msg.setCode(CMD_ADM_REQUEST);
+   msg.setId(g_dwRqId++);
 #ifdef UNICODE
    WCHAR *wcmd = WideStringFromMBString(pszCmd);
-   msg.SetVariable(VID_COMMAND, wcmd);
+   msg.setField(VID_COMMAND, wcmd);
    free(wcmd);
 #else
-   msg.SetVariable(VID_COMMAND, pszCmd);
+   msg.setField(VID_COMMAND, pszCmd);
 #endif
    SendMsg(&msg);
 
@@ -80,11 +80,11 @@ static BOOL ExecCommand(char *pszCmd)
          break;
       }
 
-      wCode = pResponse->GetCode();
+      wCode = pResponse->getCode();
       switch(wCode)
       {
          case CMD_ADM_MESSAGE:
-            pszText = pResponse->GetVariableStr(VID_MESSAGE);
+            pszText = pResponse->getFieldAsString(VID_MESSAGE);
             if (pszText != NULL)
             {
 #if defined(_WIN32) || !defined(UNICODE)

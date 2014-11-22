@@ -644,22 +644,22 @@ void Event::setParameter(int index, const TCHAR *name, const TCHAR *value)
 /**
  * Fill message with event data
  */
-void Event::prepareMessage(CSCPMessage *pMsg)
+void Event::prepareMessage(NXCPMessage *pMsg)
 {
 	UINT32 dwId = VID_EVENTLOG_MSG_BASE;
 
-	pMsg->SetVariable(VID_NUM_RECORDS, (UINT32)1);
-	pMsg->SetVariable(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
-	pMsg->SetVariable(dwId++, m_qwId);
-	pMsg->SetVariable(dwId++, m_dwCode);
-	pMsg->SetVariable(dwId++, (UINT32)m_tTimeStamp);
-	pMsg->SetVariable(dwId++, m_dwSource);
-	pMsg->SetVariable(dwId++, (WORD)m_dwSeverity);
-	pMsg->SetVariable(dwId++, CHECK_NULL(m_pszMessageText));
-	pMsg->SetVariable(dwId++, CHECK_NULL(m_pszUserTag));
-	pMsg->SetVariable(dwId++, (UINT32)m_parameters.size());
+	pMsg->setField(VID_NUM_RECORDS, (UINT32)1);
+	pMsg->setField(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
+	pMsg->setField(dwId++, m_qwId);
+	pMsg->setField(dwId++, m_dwCode);
+	pMsg->setField(dwId++, (UINT32)m_tTimeStamp);
+	pMsg->setField(dwId++, m_dwSource);
+	pMsg->setField(dwId++, (WORD)m_dwSeverity);
+	pMsg->setField(dwId++, CHECK_NULL(m_pszMessageText));
+	pMsg->setField(dwId++, CHECK_NULL(m_pszUserTag));
+	pMsg->setField(dwId++, (UINT32)m_parameters.size());
 	for(int i = 0; i < m_parameters.size(); i++)
-		pMsg->SetVariable(dwId++, (TCHAR *)m_parameters.get(i));
+		pMsg->setField(dwId++, (TCHAR *)m_parameters.get(i));
 }
 
 /**

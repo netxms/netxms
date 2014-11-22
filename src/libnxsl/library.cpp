@@ -157,14 +157,14 @@ NXSL_VM *NXSL_Library::createVM(const TCHAR *name, NXSL_Environment *env)
 /**
  * Fill NXCP message with script data
  */
-void NXSL_Library::fillMessage(CSCPMessage *pMsg)
+void NXSL_Library::fillMessage(NXCPMessage *pMsg)
 {
    UINT32 i, dwId;
 
-   pMsg->SetVariable(VID_NUM_SCRIPTS, m_dwNumScripts);
+   pMsg->setField(VID_NUM_SCRIPTS, m_dwNumScripts);
    for(i = 0, dwId = VID_SCRIPT_LIST_BASE; i < m_dwNumScripts; i++)
    {
-      pMsg->SetVariable(dwId++, m_pdwIdList[i]);
-      pMsg->SetVariable(dwId++, m_ppszNames[i]);
+      pMsg->setField(dwId++, m_pdwIdList[i]);
+      pMsg->setField(dwId++, m_ppszNames[i]);
    }
 }

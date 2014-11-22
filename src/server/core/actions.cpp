@@ -290,22 +290,22 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 	rcc = isc->connect(ISC_SERVICE_EVENT_FORWARDER);
 	if (rcc == ISC_ERR_SUCCESS)
 	{
-		CSCPMessage msg;
+		NXCPMessage msg;
 		NetObj *object;
 
-		msg.SetId(1);
-		msg.SetCode(CMD_FORWARD_EVENT);
+		msg.setId(1);
+		msg.setCode(CMD_FORWARD_EVENT);
 		object = FindObjectById(event->getSourceId());
 		if (object != NULL)
 		{
-			msg.SetVariable(VID_IP_ADDRESS, object->IpAddr());
-			msg.SetVariable(VID_EVENT_CODE, event->getCode());
-			msg.SetVariable(VID_EVENT_NAME, event->getName());
+			msg.setField(VID_IP_ADDRESS, object->IpAddr());
+			msg.setField(VID_EVENT_CODE, event->getCode());
+			msg.setField(VID_EVENT_NAME, event->getName());
 			if (event->getUserTag() != NULL)
-				msg.SetVariable(VID_USER_TAG, event->getUserTag());
-			msg.SetVariable(VID_NUM_ARGS, (WORD)event->getParametersCount());
+				msg.setField(VID_USER_TAG, event->getUserTag());
+			msg.setField(VID_NUM_ARGS, (WORD)event->getParametersCount());
 			for(i = 0; i < event->getParametersCount(); i++)
-				msg.SetVariable(VID_EVENT_ARG_BASE + i, event->getParameter(i));
+				msg.setField(VID_EVENT_ARG_BASE + i, event->getParameter(i));
 
 			if (isc->sendMessage(&msg))
 			{
@@ -605,29 +605,29 @@ UINT32 DeleteActionFromDB(UINT32 dwActionId)
 /**
  * Modify action record from message
  */
-UINT32 ModifyActionFromMessage(CSCPMessage *pMsg)
+UINT32 ModifyActionFromMessage(NXCPMessage *pMsg)
 {
    UINT32 i, dwResult = RCC_INVALID_ACTION_ID;
    UINT32 dwActionId;
 	TCHAR name[MAX_OBJECT_NAME];
 
-   pMsg->GetVariableStr(VID_ACTION_NAME, name, MAX_OBJECT_NAME);
+   pMsg->getFieldAsString(VID_ACTION_NAME, name, MAX_OBJECT_NAME);
 	if (!IsValidObjectName(name, TRUE))
 		return RCC_INVALID_OBJECT_NAME;
 
-   dwActionId = pMsg->GetVariableLong(VID_ACTION_ID);
+   dwActionId = pMsg->getFieldAsUInt32(VID_ACTION_ID);
    RWLockWriteLock(m_rwlockActionListAccess, INFINITE);
 
    // Find action with given id
    for(i = 0; i < m_dwNumActions; i++)
       if (m_pActionList[i].dwId == dwActionId)
       {
-         m_pActionList[i].bIsDisabled = pMsg->GetVariableShort(VID_IS_DISABLED);
-         m_pActionList[i].iType = pMsg->GetVariableShort(VID_ACTION_TYPE);
+         m_pActionList[i].bIsDisabled = pMsg->getFieldAsUInt16(VID_IS_DISABLED);
+         m_pActionList[i].iType = pMsg->getFieldAsUInt16(VID_ACTION_TYPE);
          safe_free(m_pActionList[i].pszData);
-         m_pActionList[i].pszData = pMsg->GetVariableStr(VID_ACTION_DATA);
-         pMsg->GetVariableStr(VID_EMAIL_SUBJECT, m_pActionList[i].szEmailSubject, MAX_EMAIL_SUBJECT_LEN);
-         pMsg->GetVariableStr(VID_RCPT_ADDR, m_pActionList[i].szRcptAddr, MAX_RCPT_ADDR_LEN);
+         m_pActionList[i].pszData = pMsg->getFieldAsString(VID_ACTION_DATA);
+         pMsg->getFieldAsString(VID_EMAIL_SUBJECT, m_pActionList[i].szEmailSubject, MAX_EMAIL_SUBJECT_LEN);
+         pMsg->getFieldAsString(VID_RCPT_ADDR, m_pActionList[i].szRcptAddr, MAX_RCPT_ADDR_LEN);
 			_tcscpy(m_pActionList[i].szName, name);
 
          SaveActionToDB(&m_pActionList[i]);
@@ -646,14 +646,14 @@ UINT32 ModifyActionFromMessage(CSCPMessage *pMsg)
 /**
  * Fill CSCP message with action's data
  */
-void FillActionInfoMessage(CSCPMessage *pMsg, NXC_ACTION *pAction)
+void FillActionInfoMessage(NXCPMessage *pMsg, NXC_ACTION *pAction)
 {
-   pMsg->SetVariable(VID_IS_DISABLED, (WORD)pAction->bIsDisabled);
-   pMsg->SetVariable(VID_ACTION_TYPE, (WORD)pAction->iType);
-   pMsg->SetVariable(VID_ACTION_DATA, CHECK_NULL_EX(pAction->pszData));
-   pMsg->SetVariable(VID_EMAIL_SUBJECT, pAction->szEmailSubject);
-   pMsg->SetVariable(VID_ACTION_NAME, pAction->szName);
-   pMsg->SetVariable(VID_RCPT_ADDR, pAction->szRcptAddr);
+   pMsg->setField(VID_IS_DISABLED, (WORD)pAction->bIsDisabled);
+   pMsg->setField(VID_ACTION_TYPE, (WORD)pAction->iType);
+   pMsg->setField(VID_ACTION_DATA, CHECK_NULL_EX(pAction->pszData));
+   pMsg->setField(VID_EMAIL_SUBJECT, pAction->szEmailSubject);
+   pMsg->setField(VID_ACTION_NAME, pAction->szName);
+   pMsg->setField(VID_RCPT_ADDR, pAction->szRcptAddr);
 }
 
 /**
@@ -662,25 +662,25 @@ void FillActionInfoMessage(CSCPMessage *pMsg, NXC_ACTION *pAction)
 void SendActionsToClient(ClientSession *pSession, UINT32 dwRqId)
 {
    UINT32 i;
-   CSCPMessage msg;
+   NXCPMessage msg;
 
    // Prepare message
-   msg.SetCode(CMD_ACTION_DATA);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_ACTION_DATA);
+   msg.setId(dwRqId);
 
    RWLockReadLock(m_rwlockActionListAccess, INFINITE);
 
    for(i = 0; i < m_dwNumActions; i++)
    {
-      msg.SetVariable(VID_ACTION_ID, m_pActionList[i].dwId);
+      msg.setField(VID_ACTION_ID, m_pActionList[i].dwId);
       FillActionInfoMessage(&msg, &m_pActionList[i]);
       pSession->sendMessage(&msg);
-      msg.deleteAllVariables();
+      msg.deleteAllFields();
    }
 
    RWLockUnlock(m_rwlockActionListAccess);
 
    // Send end-of-list flag
-   msg.SetVariable(VID_ACTION_ID, (UINT32)0);
+   msg.setField(VID_ACTION_ID, (UINT32)0);
    pSession->sendMessage(&msg);
 }

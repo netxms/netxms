@@ -285,14 +285,14 @@ bool SlmCheck::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void SlmCheck::fillMessage(CSCPMessage *pMsg)
+void SlmCheck::fillMessage(NXCPMessage *pMsg)
 {
 	NetObj::fillMessage(pMsg);
-	pMsg->SetVariable(VID_SLMCHECK_TYPE, UINT32(m_type));
-	pMsg->SetVariable(VID_SCRIPT, CHECK_NULL_EX(m_script));
-	pMsg->SetVariable(VID_REASON, m_reason);
-	pMsg->SetVariable(VID_TEMPLATE_ID, m_templateId);
-	pMsg->SetVariable(VID_IS_TEMPLATE, (WORD)(m_isTemplate ? 1 : 0));
+	pMsg->setField(VID_SLMCHECK_TYPE, UINT32(m_type));
+	pMsg->setField(VID_SCRIPT, CHECK_NULL_EX(m_script));
+	pMsg->setField(VID_REASON, m_reason);
+	pMsg->setField(VID_TEMPLATE_ID, m_templateId);
+	pMsg->setField(VID_IS_TEMPLATE, (WORD)(m_isTemplate ? 1 : 0));
 	if (m_threshold != NULL)
 		m_threshold->createMessage(pMsg, VID_THRESHOLD_BASE);
 }
@@ -300,17 +300,17 @@ void SlmCheck::fillMessage(CSCPMessage *pMsg)
 /**
  * Modify object from message
  */
-UINT32 SlmCheck::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 SlmCheck::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
 	if (!bAlreadyLocked)
 		lockProperties();
 
 	if (pRequest->isFieldExist(VID_SLMCHECK_TYPE))
-		m_type = CheckType(pRequest->GetVariableLong(VID_SLMCHECK_TYPE));
+		m_type = CheckType(pRequest->getFieldAsUInt32(VID_SLMCHECK_TYPE));
 
 	if (pRequest->isFieldExist(VID_SCRIPT))
 	{
-		TCHAR *script = pRequest->GetVariableStr(VID_SCRIPT);
+		TCHAR *script = pRequest->getFieldAsString(VID_SCRIPT);
 		setScript(script);
 		safe_free(script);
 	}

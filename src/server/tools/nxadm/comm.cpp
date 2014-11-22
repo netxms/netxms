@@ -43,8 +43,8 @@ DWORD g_dwRqId = 1;
 // Static data
 //
 
-static CSCP_MESSAGE *m_pRawMsg;
-static CSCP_BUFFER *m_pRecvBuffer;
+static NXCP_MESSAGE *m_pRawMsg;
+static NXCP_BUFFER *m_pRecvBuffer;
 
 /**
  * Connect to server
@@ -77,8 +77,8 @@ BOOL Connect()
    }
 
    // Initialize receiver
-   m_pRawMsg = (CSCP_MESSAGE *)malloc(MAX_MSG_SIZE);
-   m_pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+   m_pRawMsg = (NXCP_MESSAGE *)malloc(MAX_MSG_SIZE);
+   m_pRecvBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
    RecvNXCPMessage(0, NULL, m_pRecvBuffer, 0, NULL, NULL, 0);
 
    return TRUE;
@@ -100,19 +100,19 @@ void Disconnect()
 /**
  * Send message to server
  */
-void SendMsg(CSCPMessage *pMsg)
+void SendMsg(NXCPMessage *pMsg)
 {
-   CSCP_MESSAGE *pRawMsg;
+   NXCP_MESSAGE *pRawMsg;
 
    pRawMsg = pMsg->createMessage();
-   SendEx(g_hSocket, pRawMsg, ntohl(pRawMsg->dwSize), 0, NULL);
+   SendEx(g_hSocket, pRawMsg, ntohl(pRawMsg->size), 0, NULL);
    free(pRawMsg);
 }
 
 /**
  * Receive message
  */
-CSCPMessage *RecvMsg()
+NXCPMessage *RecvMsg()
 {
    int iError;
 	static NXCPEncryptionContext *pDummyCtx = NULL;
@@ -124,5 +124,5 @@ CSCPMessage *RecvMsg()
          return NULL;   // Communication error or closed connection
    } while(iError == 1);
 
-   return new CSCPMessage(m_pRawMsg);
+   return new NXCPMessage(m_pRawMsg);
 }

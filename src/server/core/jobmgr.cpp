@@ -70,7 +70,7 @@ void UnregisterJob(UINT32 jobId)
  */
 struct __job_callback_data
 {
-	CSCPMessage *msg;
+	NXCPMessage *msg;
 	UINT32 jobCount;
 	UINT32 baseId;
 };
@@ -82,7 +82,7 @@ static void JobListCallback(NetObj *object, void *data)
 	jcb->jobCount += queue->fillMessage(jcb->msg, &jcb->baseId);
 }
 
-void GetJobList(CSCPMessage *msg)
+void GetJobList(NXCPMessage *msg)
 {
 	struct __job_callback_data jcb;
 
@@ -90,17 +90,17 @@ void GetJobList(CSCPMessage *msg)
 	jcb.jobCount = 0;
 	jcb.baseId = VID_JOB_LIST_BASE;
 	g_idxNodeById.forEach(JobListCallback, &jcb);
-	msg->SetVariable(VID_JOB_COUNT, jcb.jobCount);
+	msg->setField(VID_JOB_COUNT, jcb.jobCount);
 }
 
 
 /**
  * Implementatoin for job status changing operations: cancel, hold, unhold
  */
-static UINT32 ChangeJobStatus(UINT32 userId, CSCPMessage *msg, int operation)
+static UINT32 ChangeJobStatus(UINT32 userId, NXCPMessage *msg, int operation)
 {
 	UINT32 rcc = RCC_INVALID_JOB_ID;
-	UINT32 jobId = msg->GetVariableLong(VID_JOB_ID);
+	UINT32 jobId = msg->getFieldAsUInt32(VID_JOB_ID);
 	Node *node = (Node *)s_jobNodes.get(jobId);
 	if (node != NULL)
 	{
@@ -143,7 +143,7 @@ static UINT32 ChangeJobStatus(UINT32 userId, CSCPMessage *msg, int operation)
 /**
  * Cancel job
  */
-UINT32 NXCORE_EXPORTABLE CancelJob(UINT32 userId, CSCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE CancelJob(UINT32 userId, NXCPMessage *msg)
 {
 	return ChangeJobStatus(userId, msg, CANCEL_JOB);
 }
@@ -152,7 +152,7 @@ UINT32 NXCORE_EXPORTABLE CancelJob(UINT32 userId, CSCPMessage *msg)
 /**
  * Hold job
  */
-UINT32 NXCORE_EXPORTABLE HoldJob(UINT32 userId, CSCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE HoldJob(UINT32 userId, NXCPMessage *msg)
 {
 	return ChangeJobStatus(userId, msg, HOLD_JOB);
 }
@@ -161,7 +161,7 @@ UINT32 NXCORE_EXPORTABLE HoldJob(UINT32 userId, CSCPMessage *msg)
 /**
  * Unhold job
  */
-UINT32 NXCORE_EXPORTABLE UnholdJob(UINT32 userId, CSCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE UnholdJob(UINT32 userId, NXCPMessage *msg)
 {
 	return ChangeJobStatus(userId, msg, UNHOLD_JOB);
 }

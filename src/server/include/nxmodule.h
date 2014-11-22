@@ -51,7 +51,7 @@ public:
    ModuleData();
    virtual ~ModuleData();
 
-   virtual void fillMessage(CSCPMessage *msg, UINT32 baseId);
+   virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
    virtual bool saveToDatabase(DB_HANDLE hdb, UINT32 objectId);
    virtual bool deleteFromDatabase(DB_HANDLE hdb, UINT32 objectId);
 };
@@ -67,8 +67,8 @@ typedef struct
 	void (* pfShutdown)();
 	void (* pfLoadObjects)();
 	void (* pfLinkObjects)();
-   int (* pfClientCommandHandler)(UINT32 dwCommand, CSCPMessage *pMsg, ClientSession *pSession);
-   int (* pfMobileDeviceCommandHandler)(UINT32 dwCommand, CSCPMessage *pMsg, MobileDeviceSession *pSession);
+   int (* pfClientCommandHandler)(UINT32 dwCommand, NXCPMessage *pMsg, ClientSession *pSession);
+   int (* pfMobileDeviceCommandHandler)(UINT32 dwCommand, NXCPMessage *pMsg, MobileDeviceSession *pSession);
    BOOL (* pfTrapHandler)(SNMP_PDU *pdu, Node *pNode);
    BOOL (* pfEventHandler)(Event *event);
    void (* pfAlarmChangeHook)(UINT32 changeCode, NXC_ALARM *alarm);
@@ -81,11 +81,11 @@ typedef struct
 	void (* pfPostObjectCreate)(NetObj *object);
 	void (* pfPostObjectLoad)(NetObj *object);
 	void (* pfPreObjectDelete)(NetObj *object);
-	NetObj *(* pfCreateObject)(int objectClass, const TCHAR *name, NetObj *parent, CSCPMessage *msg);
+	NetObj *(* pfCreateObject)(int objectClass, const TCHAR *name, NetObj *parent, NXCPMessage *msg);
 	BOOL (* pfIsValidParentClass)(int childClass, int parentClass);
 	BOOL (* pfAcceptNewNode)(UINT32 ipAddr, UINT32 ipNetMask, UINT32 zoneId, BYTE *macAddr);
-	UINT32 (* pfValidateObjectCreation)(int objectClass, const TCHAR *name, UINT32 ipAddr, UINT32 zoneId, CSCPMessage *request);
-   UINT32 (* pfAdditionalLoginCheck)(UINT32 userId, CSCPMessage *request);
+	UINT32 (* pfValidateObjectCreation)(int objectClass, const TCHAR *name, UINT32 ipAddr, UINT32 zoneId, NXCPMessage *request);
+   UINT32 (* pfAdditionalLoginCheck)(UINT32 userId, NXCPMessage *request);
    void (* pfClientSessionClose)(ClientSession *session);
    NXCORE_LOG *logs;
    HMODULE hModule;

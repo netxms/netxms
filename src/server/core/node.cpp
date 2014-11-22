@@ -3873,53 +3873,53 @@ UINT32 Node::getTableForClient(const TCHAR *name, Table **table)
 /**
  * Create CSCP message with object's data
  */
-void Node::fillMessage(CSCPMessage *pMsg)
+void Node::fillMessage(NXCPMessage *pMsg)
 {
    DataCollectionTarget::fillMessage(pMsg);
-	pMsg->SetVariable(VID_PRIMARY_NAME, m_primaryName);
-   pMsg->SetVariable(VID_FLAGS, m_dwFlags);
-   pMsg->SetVariable(VID_RUNTIME_FLAGS, m_dwDynamicFlags);
-   pMsg->SetVariable(VID_AGENT_PORT, m_agentPort);
-   pMsg->SetVariable(VID_AUTH_METHOD, m_agentAuthMethod);
-   pMsg->SetVariable(VID_SHARED_SECRET, m_szSharedSecret);
-	pMsg->SetVariableFromMBString(VID_SNMP_AUTH_OBJECT, m_snmpSecurity->getCommunity());
-	pMsg->SetVariableFromMBString(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity->getAuthPassword());
-	pMsg->SetVariableFromMBString(VID_SNMP_PRIV_PASSWORD, m_snmpSecurity->getPrivPassword());
-	pMsg->SetVariable(VID_SNMP_USM_METHODS, (WORD)((WORD)m_snmpSecurity->getAuthMethod() | ((WORD)m_snmpSecurity->getPrivMethod() << 8)));
-   pMsg->SetVariable(VID_SNMP_OID, m_szObjectId);
-   pMsg->SetVariable(VID_SNMP_PORT, m_wSNMPPort);
-   pMsg->SetVariable(VID_SNMP_VERSION, (WORD)m_snmpVersion);
-   pMsg->SetVariable(VID_AGENT_VERSION, m_szAgentVersion);
-   pMsg->SetVariable(VID_PLATFORM_NAME, m_szPlatformName);
-   pMsg->SetVariable(VID_POLLER_NODE_ID, m_pollerNode);
-   pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
-   pMsg->SetVariable(VID_AGENT_PROXY, m_agentProxy);
-   pMsg->SetVariable(VID_SNMP_PROXY, m_snmpProxy);
-   pMsg->SetVariable(VID_ICMP_PROXY, m_icmpProxy);
-	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
-	pMsg->SetVariable(VID_SYS_NAME, CHECK_NULL_EX(m_sysName));
-	pMsg->SetVariable(VID_SYS_DESCRIPTION, CHECK_NULL_EX(m_sysDescription));
-   pMsg->SetVariable(VID_BOOT_TIME, (UINT32)m_bootTime);
-	pMsg->SetVariable(VID_BRIDGE_BASE_ADDRESS, m_baseBridgeAddress, 6);
+	pMsg->setField(VID_PRIMARY_NAME, m_primaryName);
+   pMsg->setField(VID_FLAGS, m_dwFlags);
+   pMsg->setField(VID_RUNTIME_FLAGS, m_dwDynamicFlags);
+   pMsg->setField(VID_AGENT_PORT, m_agentPort);
+   pMsg->setField(VID_AUTH_METHOD, m_agentAuthMethod);
+   pMsg->setField(VID_SHARED_SECRET, m_szSharedSecret);
+	pMsg->setFieldFromMBString(VID_SNMP_AUTH_OBJECT, m_snmpSecurity->getCommunity());
+	pMsg->setFieldFromMBString(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity->getAuthPassword());
+	pMsg->setFieldFromMBString(VID_SNMP_PRIV_PASSWORD, m_snmpSecurity->getPrivPassword());
+	pMsg->setField(VID_SNMP_USM_METHODS, (WORD)((WORD)m_snmpSecurity->getAuthMethod() | ((WORD)m_snmpSecurity->getPrivMethod() << 8)));
+   pMsg->setField(VID_SNMP_OID, m_szObjectId);
+   pMsg->setField(VID_SNMP_PORT, m_wSNMPPort);
+   pMsg->setField(VID_SNMP_VERSION, (WORD)m_snmpVersion);
+   pMsg->setField(VID_AGENT_VERSION, m_szAgentVersion);
+   pMsg->setField(VID_PLATFORM_NAME, m_szPlatformName);
+   pMsg->setField(VID_POLLER_NODE_ID, m_pollerNode);
+   pMsg->setField(VID_ZONE_ID, m_zoneId);
+   pMsg->setField(VID_AGENT_PROXY, m_agentProxy);
+   pMsg->setField(VID_SNMP_PROXY, m_snmpProxy);
+   pMsg->setField(VID_ICMP_PROXY, m_icmpProxy);
+	pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
+	pMsg->setField(VID_SYS_NAME, CHECK_NULL_EX(m_sysName));
+	pMsg->setField(VID_SYS_DESCRIPTION, CHECK_NULL_EX(m_sysDescription));
+   pMsg->setField(VID_BOOT_TIME, (UINT32)m_bootTime);
+	pMsg->setField(VID_BRIDGE_BASE_ADDRESS, m_baseBridgeAddress, 6);
 	if (m_lldpNodeId != NULL)
-		pMsg->SetVariable(VID_LLDP_NODE_ID, m_lldpNodeId);
-	pMsg->SetVariable(VID_USE_IFXTABLE, (WORD)m_nUseIfXTable);
+		pMsg->setField(VID_LLDP_NODE_ID, m_lldpNodeId);
+	pMsg->setField(VID_USE_IFXTABLE, (WORD)m_nUseIfXTable);
 	if (m_vrrpInfo != NULL)
 	{
-		pMsg->SetVariable(VID_VRRP_VERSION, (WORD)m_vrrpInfo->getVersion());
-		pMsg->SetVariable(VID_VRRP_VR_COUNT, (WORD)m_vrrpInfo->size());
+		pMsg->setField(VID_VRRP_VERSION, (WORD)m_vrrpInfo->getVersion());
+		pMsg->setField(VID_VRRP_VR_COUNT, (WORD)m_vrrpInfo->size());
 	}
 	if (m_driver != NULL)
 	{
-		pMsg->SetVariable(VID_DRIVER_NAME, m_driver->getName());
-		pMsg->SetVariable(VID_DRIVER_VERSION, m_driver->getVersion());
+		pMsg->setField(VID_DRIVER_NAME, m_driver->getName());
+		pMsg->setField(VID_DRIVER_VERSION, m_driver->getVersion());
 	}
 }
 
 /**
  * Modify object from NXCP message
  */
-UINT32 Node::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Node::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       lockProperties();
@@ -3929,7 +3929,7 @@ UINT32 Node::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    {
       bool wasRemoteAgent = ((m_dwFlags & NF_REMOTE_AGENT) != 0);
       m_dwFlags &= NF_SYSTEM_FLAGS;
-      m_dwFlags |= pRequest->GetVariableLong(VID_FLAGS) & NF_USER_FLAGS;
+      m_dwFlags |= pRequest->getFieldAsUInt32(VID_FLAGS) & NF_USER_FLAGS;
       if (wasRemoteAgent && !(m_dwFlags & NF_REMOTE_AGENT) && (m_dwIpAddr != 0))
       {
          if (IsZoningEnabled())
@@ -3975,7 +3975,7 @@ UINT32 Node::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    {
       UINT32 i, dwIpAddr;
 
-      dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
+      dwIpAddr = pRequest->getFieldAsUInt32(VID_IP_ADDRESS);
 
       // Check if received IP address is one of node's interface addresses
       LockChildList(FALSE);
@@ -4006,7 +4006,7 @@ UINT32 Node::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change primary host name
    if (pRequest->isFieldExist(VID_PRIMARY_NAME))
    {
-		pRequest->GetVariableStr(VID_PRIMARY_NAME, m_primaryName, MAX_DNS_NAME);
+		pRequest->getFieldAsString(VID_PRIMARY_NAME, m_primaryName, MAX_DNS_NAME);
 		m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
 	}
 
@@ -4016,7 +4016,7 @@ UINT32 Node::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       UINT32 dwNodeId;
       NetObj *pObject;
 
-      dwNodeId = pRequest->GetVariableLong(VID_POLLER_NODE_ID);
+      dwNodeId = pRequest->getFieldAsUInt32(VID_POLLER_NODE_ID);
 		if (dwNodeId != 0)
 		{
 			pObject = FindObjectById(dwNodeId);
@@ -4038,65 +4038,65 @@ UINT32 Node::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
    // Change listen port of native agent
    if (pRequest->isFieldExist(VID_AGENT_PORT))
-      m_agentPort = pRequest->GetVariableShort(VID_AGENT_PORT);
+      m_agentPort = pRequest->getFieldAsUInt16(VID_AGENT_PORT);
 
    // Change authentication method of native agent
    if (pRequest->isFieldExist(VID_AUTH_METHOD))
-      m_agentAuthMethod = pRequest->GetVariableShort(VID_AUTH_METHOD);
+      m_agentAuthMethod = pRequest->getFieldAsUInt16(VID_AUTH_METHOD);
 
    // Change shared secret of native agent
    if (pRequest->isFieldExist(VID_SHARED_SECRET))
-      pRequest->GetVariableStr(VID_SHARED_SECRET, m_szSharedSecret, MAX_SECRET_LENGTH);
+      pRequest->getFieldAsString(VID_SHARED_SECRET, m_szSharedSecret, MAX_SECRET_LENGTH);
 
    // Change SNMP protocol version
    if (pRequest->isFieldExist(VID_SNMP_VERSION))
 	{
-      m_snmpVersion = pRequest->GetVariableShort(VID_SNMP_VERSION);
+      m_snmpVersion = pRequest->getFieldAsUInt16(VID_SNMP_VERSION);
 		m_snmpSecurity->setSecurityModel((m_snmpVersion == SNMP_VERSION_3) ? SNMP_SECURITY_MODEL_USM : SNMP_SECURITY_MODEL_V2C);
 	}
 
    // Change SNMP port
    if (pRequest->isFieldExist(VID_SNMP_PORT))
-		m_wSNMPPort = pRequest->GetVariableShort(VID_SNMP_PORT);
+		m_wSNMPPort = pRequest->getFieldAsUInt16(VID_SNMP_PORT);
 
    // Change SNMP authentication data
    if (pRequest->isFieldExist(VID_SNMP_AUTH_OBJECT))
 	{
 		char mbBuffer[256];
 
-      pRequest->GetVariableStrA(VID_SNMP_AUTH_OBJECT, mbBuffer, 256);
+      pRequest->getFieldAsMBString(VID_SNMP_AUTH_OBJECT, mbBuffer, 256);
 		m_snmpSecurity->setAuthName(mbBuffer);
 
-		pRequest->GetVariableStrA(VID_SNMP_AUTH_PASSWORD, mbBuffer, 256);
+		pRequest->getFieldAsMBString(VID_SNMP_AUTH_PASSWORD, mbBuffer, 256);
 		m_snmpSecurity->setAuthPassword(mbBuffer);
 
-		pRequest->GetVariableStrA(VID_SNMP_PRIV_PASSWORD, mbBuffer, 256);
+		pRequest->getFieldAsMBString(VID_SNMP_PRIV_PASSWORD, mbBuffer, 256);
 		m_snmpSecurity->setPrivPassword(mbBuffer);
 
-		WORD methods = pRequest->GetVariableShort(VID_SNMP_USM_METHODS);
+		WORD methods = pRequest->getFieldAsUInt16(VID_SNMP_USM_METHODS);
 		m_snmpSecurity->setAuthMethod((int)(methods & 0xFF));
 		m_snmpSecurity->setPrivMethod((int)(methods >> 8));
 	}
 
    // Change proxy node
    if (pRequest->isFieldExist(VID_AGENT_PROXY))
-      m_agentProxy = pRequest->GetVariableLong(VID_AGENT_PROXY);
+      m_agentProxy = pRequest->getFieldAsUInt32(VID_AGENT_PROXY);
 
    // Change SNMP proxy node
    if (pRequest->isFieldExist(VID_SNMP_PROXY))
-      m_snmpProxy = pRequest->GetVariableLong(VID_SNMP_PROXY);
+      m_snmpProxy = pRequest->getFieldAsUInt32(VID_SNMP_PROXY);
 
    // Change ICMP proxy node
    if (pRequest->isFieldExist(VID_ICMP_PROXY))
-      m_icmpProxy = pRequest->GetVariableLong(VID_ICMP_PROXY);
+      m_icmpProxy = pRequest->getFieldAsUInt32(VID_ICMP_PROXY);
 
    // Number of required polls
    if (pRequest->isFieldExist(VID_REQUIRED_POLLS))
-      m_iRequiredPollCount = (int)pRequest->GetVariableShort(VID_REQUIRED_POLLS);
+      m_iRequiredPollCount = (int)pRequest->getFieldAsUInt16(VID_REQUIRED_POLLS);
 
    // Enable/disable usage of ifXTable
    if (pRequest->isFieldExist(VID_USE_IFXTABLE))
-      m_nUseIfXTable = (BYTE)pRequest->GetVariableShort(VID_USE_IFXTABLE);
+      m_nUseIfXTable = (BYTE)pRequest->getFieldAsUInt16(VID_USE_IFXTABLE);
 
    return DataCollectionTarget::modifyFromMessage(pRequest, TRUE);
 }
@@ -4188,13 +4188,13 @@ void Node::getInterfaceStatusFromAgent(UINT32 dwIndex, int *adminState, int *ope
 /**
  * Put list of supported parameters into NXCP message
  */
-void Node::writeParamListToMessage(CSCPMessage *pMsg, WORD flags)
+void Node::writeParamListToMessage(NXCPMessage *pMsg, WORD flags)
 {
    lockProperties();
 
 	if ((flags & 0x01) && (m_paramList != NULL))
    {
-      pMsg->SetVariable(VID_NUM_PARAMETERS, (UINT32)m_paramList->size());
+      pMsg->setField(VID_NUM_PARAMETERS, (UINT32)m_paramList->size());
 
 		int i;
 		UINT32 dwId;
@@ -4207,12 +4207,12 @@ void Node::writeParamListToMessage(CSCPMessage *pMsg, WORD flags)
    else
    {
 		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): m_paramList == NULL"), m_name);
-      pMsg->SetVariable(VID_NUM_PARAMETERS, (UINT32)0);
+      pMsg->setField(VID_NUM_PARAMETERS, (UINT32)0);
    }
 
 	if ((flags & 0x02) && (m_tableList != NULL))
    {
-		pMsg->SetVariable(VID_NUM_TABLES, (UINT32)m_tableList->size());
+		pMsg->setField(VID_NUM_TABLES, (UINT32)m_tableList->size());
 
 		int i;
 		UINT32 dwId;
@@ -4225,7 +4225,7 @@ void Node::writeParamListToMessage(CSCPMessage *pMsg, WORD flags)
    else
    {
 		DbgPrintf(6, _T("Node[%s]::writeParamListToMessage(): m_tableList == NULL"), m_name);
-      pMsg->SetVariable(VID_NUM_TABLES, (UINT32)0);
+      pMsg->setField(VID_NUM_TABLES, (UINT32)0);
    }
 
 	unlockProperties();
@@ -4234,13 +4234,13 @@ void Node::writeParamListToMessage(CSCPMessage *pMsg, WORD flags)
 /**
  * Put list of supported Windows performance counters into NXCP message
  */
-void Node::writeWinPerfObjectsToMessage(CSCPMessage *msg)
+void Node::writeWinPerfObjectsToMessage(NXCPMessage *msg)
 {
    lockProperties();
 
 	if (m_winPerfObjects != NULL)
    {
-		msg->SetVariable(VID_NUM_OBJECTS, (UINT32)m_winPerfObjects->size());
+		msg->setField(VID_NUM_OBJECTS, (UINT32)m_winPerfObjects->size());
 
 		UINT32 id = VID_PARAM_LIST_BASE;
       for(int i = 0; i < m_winPerfObjects->size(); i++)
@@ -4253,7 +4253,7 @@ void Node::writeWinPerfObjectsToMessage(CSCPMessage *msg)
    else
    {
 		DbgPrintf(6, _T("Node[%s]::writeWinPerfObjectsToMessage(): m_winPerfObjects == NULL"), m_name);
-      msg->SetVariable(VID_NUM_OBJECTS, (UINT32)0);
+      msg->setField(VID_NUM_OBJECTS, (UINT32)0);
    }
 
 	unlockProperties();
@@ -6210,23 +6210,23 @@ bool Node::getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *bu
 /**
  * Fill NXCP message with software package list
  */
-void Node::writePackageListToMessage(CSCPMessage *msg)
+void Node::writePackageListToMessage(NXCPMessage *msg)
 {
 	lockProperties();
 	if (m_softwarePackages != NULL)
 	{
-		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_softwarePackages->size());
+		msg->setField(VID_NUM_ELEMENTS, (UINT32)m_softwarePackages->size());
 		UINT32 varId = VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < m_softwarePackages->size(); i++)
 		{
 			m_softwarePackages->get(i)->fillMessage(msg, varId);
 			varId += 10;
 		}
-		msg->SetVariable(VID_RCC, RCC_SUCCESS);
+		msg->setField(VID_RCC, RCC_SUCCESS);
 	}
 	else
 	{
-		msg->SetVariable(VID_RCC, RCC_NO_SOFTWARE_PACKAGE_DATA);
+		msg->setField(VID_RCC, RCC_NO_SOFTWARE_PACKAGE_DATA);
 	}
 	unlockProperties();
 }
@@ -6234,30 +6234,30 @@ void Node::writePackageListToMessage(CSCPMessage *msg)
 /**
  * Write list of registered wireless stations to NXCP message
  */
-void Node::writeWsListToMessage(CSCPMessage *msg)
+void Node::writeWsListToMessage(NXCPMessage *msg)
 {
 	lockProperties();
 	if (m_wirelessStations != NULL)
 	{
-		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_wirelessStations->size());
+		msg->setField(VID_NUM_ELEMENTS, (UINT32)m_wirelessStations->size());
 		UINT32 varId = VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < m_wirelessStations->size(); i++)
 		{
 			WirelessStationInfo *ws = m_wirelessStations->get(i);
-			msg->SetVariable(varId++, ws->macAddr, MAC_ADDR_LENGTH);
-			msg->SetVariable(varId++, ws->ipAddr);
-			msg->SetVariable(varId++, ws->ssid);
-			msg->SetVariable(varId++, (WORD)ws->vlan);
-			msg->SetVariable(varId++, ws->apObjectId);
-			msg->SetVariable(varId++, (UINT32)ws->rfIndex);
-			msg->SetVariable(varId++, ws->rfName);
-			msg->SetVariable(varId++, ws->nodeId);
+			msg->setField(varId++, ws->macAddr, MAC_ADDR_LENGTH);
+			msg->setField(varId++, ws->ipAddr);
+			msg->setField(varId++, ws->ssid);
+			msg->setField(varId++, (WORD)ws->vlan);
+			msg->setField(varId++, ws->apObjectId);
+			msg->setField(varId++, (UINT32)ws->rfIndex);
+			msg->setField(varId++, ws->rfName);
+			msg->setField(varId++, ws->nodeId);
 			varId += 2;
 		}
 	}
 	else
 	{
-		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)0);
+		msg->setField(VID_NUM_ELEMENTS, (UINT32)0);
 	}
 	unlockProperties();
 }

@@ -191,7 +191,7 @@ static void ReplaceObject(NXC_OBJECT *pObject, NXC_OBJECT *pNewObject)
 // Create new object from message
 //
 
-static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
+static NXC_OBJECT *NewObjectFromMsg(NXCPMessage *pMsg)
 {
    NXC_OBJECT *pObject;
    UINT32 i, dwId1, dwId2, dwCount;
@@ -202,12 +202,12 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    memset(pObject, 0, sizeof(NXC_OBJECT));
 
    // Common attributes
-   pObject->dwId = pMsg->GetVariableLong(VID_OBJECT_ID);
-   pObject->iClass = pMsg->GetVariableShort(VID_OBJECT_CLASS);
-   pMsg->GetVariableStr(VID_OBJECT_NAME, pObject->szName, MAX_OBJECT_NAME);
-   pObject->iStatus = pMsg->GetVariableShort(VID_OBJECT_STATUS);
-   pObject->dwIpAddr = pMsg->GetVariableLong(VID_IP_ADDRESS);
-   pObject->bIsDeleted = pMsg->GetVariableShort(VID_IS_DELETED);
+   pObject->dwId = pMsg->getFieldAsUInt32(VID_OBJECT_ID);
+   pObject->iClass = pMsg->getFieldAsUInt16(VID_OBJECT_CLASS);
+   pMsg->getFieldAsString(VID_OBJECT_NAME, pObject->szName, MAX_OBJECT_NAME);
+   pObject->iStatus = pMsg->getFieldAsUInt16(VID_OBJECT_STATUS);
+   pObject->dwIpAddr = pMsg->getFieldAsUInt32(VID_IP_ADDRESS);
+   pObject->bIsDeleted = pMsg->getFieldAsUInt16(VID_IS_DELETED);
    pObject->iStatusCalcAlg = pMsg->getFieldAsInt16(VID_STATUS_CALCULATION_ALG);
    pObject->iStatusPropAlg = pMsg->getFieldAsInt16(VID_STATUS_PROPAGATION_ALG);
    pObject->iFixedStatus = pMsg->getFieldAsInt16(VID_FIXED_STATUS);
@@ -221,13 +221,13 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    pObject->iStatusThresholds[1] = pMsg->getFieldAsInt16(VID_STATUS_THRESHOLD_2);
    pObject->iStatusThresholds[2] = pMsg->getFieldAsInt16(VID_STATUS_THRESHOLD_3);
    pObject->iStatusThresholds[3] = pMsg->getFieldAsInt16(VID_STATUS_THRESHOLD_4);
-   pObject->pszComments = pMsg->GetVariableStr(VID_COMMENTS);
+   pObject->pszComments = pMsg->getFieldAsString(VID_COMMENTS);
 
-	pObject->geolocation.type = (int)pMsg->GetVariableShort(VID_GEOLOCATION_TYPE);
+	pObject->geolocation.type = (int)pMsg->getFieldAsUInt16(VID_GEOLOCATION_TYPE);
 	pObject->geolocation.latitude = pMsg->getFieldAsDouble(VID_LATITUDE);
 	pObject->geolocation.longitude = pMsg->getFieldAsDouble(VID_LONGITUDE);
 
-	pObject->dwNumTrustedNodes = pMsg->GetVariableLong(VID_NUM_TRUSTED_NODES);
+	pObject->dwNumTrustedNodes = pMsg->getFieldAsUInt32(VID_NUM_TRUSTED_NODES);
 	if (pObject->dwNumTrustedNodes > 0)
 	{
 		pObject->pdwTrustedNodes = (UINT32 *)malloc(sizeof(UINT32) * pObject->dwNumTrustedNodes);
@@ -236,158 +236,158 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
 
 	// Custom attributes
 	pObject->pCustomAttrs = new StringMap;
-	dwCount = pMsg->GetVariableLong(VID_NUM_CUSTOM_ATTRIBUTES);
+	dwCount = pMsg->getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
 	for(i = 0, dwId1 = VID_CUSTOM_ATTRIBUTES_BASE; i < dwCount; i++, dwId1 += 2)
 	{
-		pObject->pCustomAttrs->setPreallocated(pMsg->GetVariableStr(dwId1), pMsg->GetVariableStr(dwId1 + 1));
+		pObject->pCustomAttrs->setPreallocated(pMsg->getFieldAsString(dwId1), pMsg->getFieldAsString(dwId1 + 1));
 	}
 
    // Parents
-   pObject->dwNumParents = pMsg->GetVariableLong(VID_PARENT_CNT);
+   pObject->dwNumParents = pMsg->getFieldAsUInt32(VID_PARENT_CNT);
    pObject->pdwParentList = (UINT32 *)malloc(sizeof(UINT32) * pObject->dwNumParents);
    for(i = 0, dwId1 = VID_PARENT_ID_BASE; i < pObject->dwNumParents; i++, dwId1++)
-      pObject->pdwParentList[i] = pMsg->GetVariableLong(dwId1);
+      pObject->pdwParentList[i] = pMsg->getFieldAsUInt32(dwId1);
 
    // Childs
-   pObject->dwNumChilds = pMsg->GetVariableLong(VID_CHILD_CNT);
+   pObject->dwNumChilds = pMsg->getFieldAsUInt32(VID_CHILD_CNT);
    pObject->pdwChildList = (UINT32 *)malloc(sizeof(UINT32) * pObject->dwNumChilds);
    for(i = 0, dwId1 = VID_CHILD_ID_BASE; i < pObject->dwNumChilds; i++, dwId1++)
-      pObject->pdwChildList[i] = pMsg->GetVariableLong(dwId1);
+      pObject->pdwChildList[i] = pMsg->getFieldAsUInt32(dwId1);
 
    // Access control
-   pObject->bInheritRights = pMsg->GetVariableShort(VID_INHERIT_RIGHTS);
-   pObject->dwAclSize = pMsg->GetVariableLong(VID_ACL_SIZE);
+   pObject->bInheritRights = pMsg->getFieldAsUInt16(VID_INHERIT_RIGHTS);
+   pObject->dwAclSize = pMsg->getFieldAsUInt32(VID_ACL_SIZE);
    pObject->pAccessList = (NXC_ACL_ENTRY *)malloc(sizeof(NXC_ACL_ENTRY) * pObject->dwAclSize);
    for(i = 0, dwId1 = VID_ACL_USER_BASE, dwId2 = VID_ACL_RIGHTS_BASE; 
        i < pObject->dwAclSize; i++, dwId1++, dwId2++)
    {
-      pObject->pAccessList[i].dwUserId = pMsg->GetVariableLong(dwId1);
-      pObject->pAccessList[i].dwAccessRights = pMsg->GetVariableLong(dwId2);
+      pObject->pAccessList[i].dwUserId = pMsg->getFieldAsUInt32(dwId1);
+      pObject->pAccessList[i].dwAccessRights = pMsg->getFieldAsUInt32(dwId2);
    }
 
    // Class-specific attributes
    switch(pObject->iClass)
    {
       case OBJECT_INTERFACE:
-			pObject->iface.dwFlags = pMsg->GetVariableLong(VID_FLAGS);
-         pObject->iface.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);
-         pObject->iface.dwIfIndex = pMsg->GetVariableLong(VID_IF_INDEX);
-         pObject->iface.dwIfType = pMsg->GetVariableLong(VID_IF_TYPE);
-         pObject->iface.dwSlot = pMsg->GetVariableLong(VID_IF_SLOT);
-         pObject->iface.dwPort = pMsg->GetVariableLong(VID_IF_PORT);
-         pMsg->GetVariableBinary(VID_MAC_ADDR, pObject->iface.bMacAddr, MAC_ADDR_LENGTH);
-			pObject->iface.wRequiredPollCount = pMsg->GetVariableShort(VID_REQUIRED_POLLS);
-			pObject->iface.adminState = (BYTE)pMsg->GetVariableShort(VID_ADMIN_STATE);
-			pObject->iface.operState = (BYTE)pMsg->GetVariableShort(VID_OPER_STATE);
+			pObject->iface.dwFlags = pMsg->getFieldAsUInt32(VID_FLAGS);
+         pObject->iface.dwIpNetMask = pMsg->getFieldAsUInt32(VID_IP_NETMASK);
+         pObject->iface.dwIfIndex = pMsg->getFieldAsUInt32(VID_IF_INDEX);
+         pObject->iface.dwIfType = pMsg->getFieldAsUInt32(VID_IF_TYPE);
+         pObject->iface.dwSlot = pMsg->getFieldAsUInt32(VID_IF_SLOT);
+         pObject->iface.dwPort = pMsg->getFieldAsUInt32(VID_IF_PORT);
+         pMsg->getFieldAsBinary(VID_MAC_ADDR, pObject->iface.bMacAddr, MAC_ADDR_LENGTH);
+			pObject->iface.wRequiredPollCount = pMsg->getFieldAsUInt16(VID_REQUIRED_POLLS);
+			pObject->iface.adminState = (BYTE)pMsg->getFieldAsUInt16(VID_ADMIN_STATE);
+			pObject->iface.operState = (BYTE)pMsg->getFieldAsUInt16(VID_OPER_STATE);
          break;
       case OBJECT_NODE:
-			pMsg->GetVariableStr(VID_PRIMARY_NAME, pObject->node.szPrimaryName, MAX_DNS_NAME);
-         pObject->node.dwFlags = pMsg->GetVariableLong(VID_FLAGS);
-         pObject->node.dwRuntimeFlags = pMsg->GetVariableLong(VID_RUNTIME_FLAGS);
-         pObject->node.dwNodeType = pMsg->GetVariableLong(VID_NODE_TYPE);
-         pObject->node.dwPollerNode = pMsg->GetVariableLong(VID_POLLER_NODE_ID);
-         pObject->node.dwProxyNode = pMsg->GetVariableLong(VID_AGENT_PROXY);
-         pObject->node.dwSNMPProxy = pMsg->GetVariableLong(VID_SNMP_PROXY);
-         pObject->node.dwZoneId = pMsg->GetVariableLong(VID_ZONE_ID);
-         pObject->node.wAgentPort = pMsg->GetVariableShort(VID_AGENT_PORT);
-         pObject->node.wAuthMethod = pMsg->GetVariableShort(VID_AUTH_METHOD);
-         pMsg->GetVariableStr(VID_SHARED_SECRET, pObject->node.szSharedSecret, MAX_SECRET_LENGTH);
-         pObject->node.pszAuthName = pMsg->GetVariableStr(VID_SNMP_AUTH_OBJECT);
-         pObject->node.pszAuthPassword = pMsg->GetVariableStr(VID_SNMP_AUTH_PASSWORD);
-         pObject->node.pszPrivPassword = pMsg->GetVariableStr(VID_SNMP_PRIV_PASSWORD);
-			methods = pMsg->GetVariableShort(VID_SNMP_USM_METHODS);
+			pMsg->getFieldAsString(VID_PRIMARY_NAME, pObject->node.szPrimaryName, MAX_DNS_NAME);
+         pObject->node.dwFlags = pMsg->getFieldAsUInt32(VID_FLAGS);
+         pObject->node.dwRuntimeFlags = pMsg->getFieldAsUInt32(VID_RUNTIME_FLAGS);
+         pObject->node.dwNodeType = pMsg->getFieldAsUInt32(VID_NODE_TYPE);
+         pObject->node.dwPollerNode = pMsg->getFieldAsUInt32(VID_POLLER_NODE_ID);
+         pObject->node.dwProxyNode = pMsg->getFieldAsUInt32(VID_AGENT_PROXY);
+         pObject->node.dwSNMPProxy = pMsg->getFieldAsUInt32(VID_SNMP_PROXY);
+         pObject->node.dwZoneId = pMsg->getFieldAsUInt32(VID_ZONE_ID);
+         pObject->node.wAgentPort = pMsg->getFieldAsUInt16(VID_AGENT_PORT);
+         pObject->node.wAuthMethod = pMsg->getFieldAsUInt16(VID_AUTH_METHOD);
+         pMsg->getFieldAsString(VID_SHARED_SECRET, pObject->node.szSharedSecret, MAX_SECRET_LENGTH);
+         pObject->node.pszAuthName = pMsg->getFieldAsString(VID_SNMP_AUTH_OBJECT);
+         pObject->node.pszAuthPassword = pMsg->getFieldAsString(VID_SNMP_AUTH_PASSWORD);
+         pObject->node.pszPrivPassword = pMsg->getFieldAsString(VID_SNMP_PRIV_PASSWORD);
+			methods = pMsg->getFieldAsUInt16(VID_SNMP_USM_METHODS);
 			pObject->node.wSnmpAuthMethod = methods & 0xFF;
 			pObject->node.wSnmpPrivMethod = methods >> 8;
-         pObject->node.pszSnmpObjectId = pMsg->GetVariableStr(VID_SNMP_OID);
-         pObject->node.nSNMPVersion = (BYTE)pMsg->GetVariableShort(VID_SNMP_VERSION);
-			pObject->node.wSnmpPort = pMsg->GetVariableShort(VID_SNMP_PORT);
-         pMsg->GetVariableStr(VID_AGENT_VERSION, pObject->node.szAgentVersion, MAX_AGENT_VERSION_LEN);
-         pMsg->GetVariableStr(VID_PLATFORM_NAME, pObject->node.szPlatformName, MAX_PLATFORM_NAME_LEN);
-			pObject->node.wRequiredPollCount = pMsg->GetVariableShort(VID_REQUIRED_POLLS);
-         pMsg->GetVariableStr(VID_SYS_DESCRIPTION, pObject->node.szSysDescription, MAX_DB_STRING);
-			pObject->node.nUseIfXTable = (BYTE)pMsg->GetVariableShort(VID_USE_IFXTABLE);
-         pMsg->GetVariableBinary(VID_BRIDGE_BASE_ADDRESS, pObject->node.bridgeBaseAddress, MAC_ADDR_LENGTH);
+         pObject->node.pszSnmpObjectId = pMsg->getFieldAsString(VID_SNMP_OID);
+         pObject->node.nSNMPVersion = (BYTE)pMsg->getFieldAsUInt16(VID_SNMP_VERSION);
+			pObject->node.wSnmpPort = pMsg->getFieldAsUInt16(VID_SNMP_PORT);
+         pMsg->getFieldAsString(VID_AGENT_VERSION, pObject->node.szAgentVersion, MAX_AGENT_VERSION_LEN);
+         pMsg->getFieldAsString(VID_PLATFORM_NAME, pObject->node.szPlatformName, MAX_PLATFORM_NAME_LEN);
+			pObject->node.wRequiredPollCount = pMsg->getFieldAsUInt16(VID_REQUIRED_POLLS);
+         pMsg->getFieldAsString(VID_SYS_DESCRIPTION, pObject->node.szSysDescription, MAX_DB_STRING);
+			pObject->node.nUseIfXTable = (BYTE)pMsg->getFieldAsUInt16(VID_USE_IFXTABLE);
+         pMsg->getFieldAsBinary(VID_BRIDGE_BASE_ADDRESS, pObject->node.bridgeBaseAddress, MAC_ADDR_LENGTH);
          break;
       case OBJECT_SUBNET:
-         pObject->subnet.dwIpNetMask = pMsg->GetVariableLong(VID_IP_NETMASK);
-         pObject->subnet.dwZoneId = pMsg->GetVariableLong(VID_ZONE_ID);
+         pObject->subnet.dwIpNetMask = pMsg->getFieldAsUInt32(VID_IP_NETMASK);
+         pObject->subnet.dwZoneId = pMsg->getFieldAsUInt32(VID_ZONE_ID);
          break;
       case OBJECT_CONTAINER:
-         pObject->container.dwCategory = pMsg->GetVariableLong(VID_CATEGORY);
-			pObject->container.dwFlags = pMsg->GetVariableLong(VID_FLAGS);
-			pObject->container.pszAutoBindFilter = pMsg->GetVariableStr(VID_AUTOBIND_FILTER);
+         pObject->container.dwCategory = pMsg->getFieldAsUInt32(VID_CATEGORY);
+			pObject->container.dwFlags = pMsg->getFieldAsUInt32(VID_FLAGS);
+			pObject->container.pszAutoBindFilter = pMsg->getFieldAsString(VID_AUTOBIND_FILTER);
          break;
       case OBJECT_TEMPLATE:
-         pObject->dct.dwVersion = pMsg->GetVariableLong(VID_TEMPLATE_VERSION);
-			pObject->dct.dwFlags = pMsg->GetVariableLong(VID_FLAGS);
-			pObject->dct.pszAutoApplyFilter = pMsg->GetVariableStr(VID_AUTOBIND_FILTER);
+         pObject->dct.dwVersion = pMsg->getFieldAsUInt32(VID_TEMPLATE_VERSION);
+			pObject->dct.dwFlags = pMsg->getFieldAsUInt32(VID_FLAGS);
+			pObject->dct.pszAutoApplyFilter = pMsg->getFieldAsString(VID_AUTOBIND_FILTER);
          break;
       case OBJECT_NETWORKSERVICE:
-         pObject->netsrv.iServiceType = (int)pMsg->GetVariableShort(VID_SERVICE_TYPE);
-         pObject->netsrv.wProto = pMsg->GetVariableShort(VID_IP_PROTO);
-         pObject->netsrv.wPort = pMsg->GetVariableShort(VID_IP_PORT);
-         pObject->netsrv.dwPollerNode = pMsg->GetVariableLong(VID_POLLER_NODE_ID);
-         pObject->netsrv.pszRequest = pMsg->GetVariableStr(VID_SERVICE_REQUEST);
-         pObject->netsrv.pszResponse = pMsg->GetVariableStr(VID_SERVICE_RESPONSE);
-			pObject->netsrv.wRequiredPollCount = pMsg->GetVariableShort(VID_REQUIRED_POLLS);
+         pObject->netsrv.iServiceType = (int)pMsg->getFieldAsUInt16(VID_SERVICE_TYPE);
+         pObject->netsrv.wProto = pMsg->getFieldAsUInt16(VID_IP_PROTO);
+         pObject->netsrv.wPort = pMsg->getFieldAsUInt16(VID_IP_PORT);
+         pObject->netsrv.dwPollerNode = pMsg->getFieldAsUInt32(VID_POLLER_NODE_ID);
+         pObject->netsrv.pszRequest = pMsg->getFieldAsString(VID_SERVICE_REQUEST);
+         pObject->netsrv.pszResponse = pMsg->getFieldAsString(VID_SERVICE_RESPONSE);
+			pObject->netsrv.wRequiredPollCount = pMsg->getFieldAsUInt16(VID_REQUIRED_POLLS);
          break;
       case OBJECT_ZONE:
-         pObject->zone.dwZoneId = pMsg->GetVariableLong(VID_ZONE_ID);
-         pObject->zone.dwAgentProxy = pMsg->GetVariableLong(VID_AGENT_PROXY);
-         pObject->zone.dwSnmpProxy = pMsg->GetVariableLong(VID_SNMP_PROXY);
-         pObject->zone.dwIcmpProxy = pMsg->GetVariableLong(VID_ICMP_PROXY);
+         pObject->zone.dwZoneId = pMsg->getFieldAsUInt32(VID_ZONE_ID);
+         pObject->zone.dwAgentProxy = pMsg->getFieldAsUInt32(VID_AGENT_PROXY);
+         pObject->zone.dwSnmpProxy = pMsg->getFieldAsUInt32(VID_SNMP_PROXY);
+         pObject->zone.dwIcmpProxy = pMsg->getFieldAsUInt32(VID_ICMP_PROXY);
          break;
       case OBJECT_VPNCONNECTOR:
-         pObject->vpnc.dwPeerGateway = pMsg->GetVariableLong(VID_PEER_GATEWAY);
-         pObject->vpnc.dwNumLocalNets = pMsg->GetVariableLong(VID_NUM_LOCAL_NETS);
+         pObject->vpnc.dwPeerGateway = pMsg->getFieldAsUInt32(VID_PEER_GATEWAY);
+         pObject->vpnc.dwNumLocalNets = pMsg->getFieldAsUInt32(VID_NUM_LOCAL_NETS);
          pObject->vpnc.pLocalNetList = (IP_NETWORK *)malloc(sizeof(IP_NETWORK) * pObject->vpnc.dwNumLocalNets);
          for(i = 0, dwId1 = VID_VPN_NETWORK_BASE; i < pObject->vpnc.dwNumLocalNets; i++)
          {
-            pObject->vpnc.pLocalNetList[i].dwAddr = pMsg->GetVariableLong(dwId1++);
-            pObject->vpnc.pLocalNetList[i].dwMask = pMsg->GetVariableLong(dwId1++);
+            pObject->vpnc.pLocalNetList[i].dwAddr = pMsg->getFieldAsUInt32(dwId1++);
+            pObject->vpnc.pLocalNetList[i].dwMask = pMsg->getFieldAsUInt32(dwId1++);
          }
-         pObject->vpnc.dwNumRemoteNets = pMsg->GetVariableLong(VID_NUM_REMOTE_NETS);
+         pObject->vpnc.dwNumRemoteNets = pMsg->getFieldAsUInt32(VID_NUM_REMOTE_NETS);
          pObject->vpnc.pRemoteNetList = (IP_NETWORK *)malloc(sizeof(IP_NETWORK) * pObject->vpnc.dwNumRemoteNets);
          for(i = 0; i < pObject->vpnc.dwNumRemoteNets; i++)
          {
-            pObject->vpnc.pRemoteNetList[i].dwAddr = pMsg->GetVariableLong(dwId1++);
-            pObject->vpnc.pRemoteNetList[i].dwMask = pMsg->GetVariableLong(dwId1++);
+            pObject->vpnc.pRemoteNetList[i].dwAddr = pMsg->getFieldAsUInt32(dwId1++);
+            pObject->vpnc.pRemoteNetList[i].dwMask = pMsg->getFieldAsUInt32(dwId1++);
          }
          break;
       case OBJECT_CONDITION:
-         pObject->cond.dwActivationEvent = pMsg->GetVariableLong(VID_ACTIVATION_EVENT);
-         pObject->cond.dwDeactivationEvent = pMsg->GetVariableLong(VID_DEACTIVATION_EVENT);
-         pObject->cond.dwSourceObject = pMsg->GetVariableLong(VID_SOURCE_OBJECT);
-         pObject->cond.pszScript = pMsg->GetVariableStr(VID_SCRIPT);
-         pObject->cond.wActiveStatus = pMsg->GetVariableShort(VID_ACTIVE_STATUS);
-         pObject->cond.wInactiveStatus = pMsg->GetVariableShort(VID_INACTIVE_STATUS);
-         pObject->cond.dwNumDCI = pMsg->GetVariableLong(VID_NUM_ITEMS);
+         pObject->cond.dwActivationEvent = pMsg->getFieldAsUInt32(VID_ACTIVATION_EVENT);
+         pObject->cond.dwDeactivationEvent = pMsg->getFieldAsUInt32(VID_DEACTIVATION_EVENT);
+         pObject->cond.dwSourceObject = pMsg->getFieldAsUInt32(VID_SOURCE_OBJECT);
+         pObject->cond.pszScript = pMsg->getFieldAsString(VID_SCRIPT);
+         pObject->cond.wActiveStatus = pMsg->getFieldAsUInt16(VID_ACTIVE_STATUS);
+         pObject->cond.wInactiveStatus = pMsg->getFieldAsUInt16(VID_INACTIVE_STATUS);
+         pObject->cond.dwNumDCI = pMsg->getFieldAsUInt32(VID_NUM_ITEMS);
          pObject->cond.pDCIList = (INPUT_DCI *)malloc(sizeof(INPUT_DCI) * pObject->cond.dwNumDCI);
          for(i = 0, dwId1 = VID_DCI_LIST_BASE; i < pObject->cond.dwNumDCI; i++)
          {
-            pObject->cond.pDCIList[i].id = pMsg->GetVariableLong(dwId1++);
-            pObject->cond.pDCIList[i].nodeId = pMsg->GetVariableLong(dwId1++);
-            pObject->cond.pDCIList[i].function = pMsg->GetVariableShort(dwId1++);
-            pObject->cond.pDCIList[i].polls = pMsg->GetVariableShort(dwId1++);
+            pObject->cond.pDCIList[i].id = pMsg->getFieldAsUInt32(dwId1++);
+            pObject->cond.pDCIList[i].nodeId = pMsg->getFieldAsUInt32(dwId1++);
+            pObject->cond.pDCIList[i].function = pMsg->getFieldAsUInt16(dwId1++);
+            pObject->cond.pDCIList[i].polls = pMsg->getFieldAsUInt16(dwId1++);
             dwId1 += 6;
          }
          break;
       case OBJECT_CLUSTER:
-			pObject->cluster.dwZoneId = pMsg->GetVariableLong(VID_ZONE_ID);
-         pObject->cluster.dwClusterType = pMsg->GetVariableLong(VID_CLUSTER_TYPE);
-         pObject->cluster.dwNumSyncNets = pMsg->GetVariableLong(VID_NUM_SYNC_SUBNETS);
+			pObject->cluster.dwZoneId = pMsg->getFieldAsUInt32(VID_ZONE_ID);
+         pObject->cluster.dwClusterType = pMsg->getFieldAsUInt32(VID_CLUSTER_TYPE);
+         pObject->cluster.dwNumSyncNets = pMsg->getFieldAsUInt32(VID_NUM_SYNC_SUBNETS);
          pObject->cluster.pSyncNetList = (IP_NETWORK *)malloc(sizeof(IP_NETWORK) * pObject->cluster.dwNumSyncNets);
 			pMsg->getFieldAsInt32Array(VID_SYNC_SUBNETS, pObject->cluster.dwNumSyncNets * 2, (UINT32 *)pObject->cluster.pSyncNetList);
-			pObject->cluster.dwNumResources = pMsg->GetVariableLong(VID_NUM_RESOURCES);
+			pObject->cluster.dwNumResources = pMsg->getFieldAsUInt32(VID_NUM_RESOURCES);
 			if (pObject->cluster.dwNumResources > 0)
 			{
 				pObject->cluster.pResourceList = (CLUSTER_RESOURCE *)malloc(sizeof(CLUSTER_RESOURCE) * pObject->cluster.dwNumResources);
 				for(i = 0, dwId1 = VID_RESOURCE_LIST_BASE; i < pObject->cluster.dwNumResources; i++, dwId1 += 6)
 				{
-					pObject->cluster.pResourceList[i].dwId = pMsg->GetVariableLong(dwId1++);
-					pMsg->GetVariableStr(dwId1++, pObject->cluster.pResourceList[i].szName, MAX_DB_STRING);
-					pObject->cluster.pResourceList[i].dwIpAddr = pMsg->GetVariableLong(dwId1++);
-					pObject->cluster.pResourceList[i].dwCurrOwner = pMsg->GetVariableLong(dwId1++);
+					pObject->cluster.pResourceList[i].dwId = pMsg->getFieldAsUInt32(dwId1++);
+					pMsg->getFieldAsString(dwId1++, pObject->cluster.pResourceList[i].szName, MAX_DB_STRING);
+					pObject->cluster.pResourceList[i].dwIpAddr = pMsg->getFieldAsUInt32(dwId1++);
+					pObject->cluster.pResourceList[i].dwCurrOwner = pMsg->getFieldAsUInt32(dwId1++);
 				}
 			}
          break;
@@ -398,16 +398,14 @@ static NXC_OBJECT *NewObjectFromMsg(CSCPMessage *pMsg)
    return pObject;
 }
 
-
-//
-// Process object information received from server
-//
-
-void NXCL_Session::processObjectUpdate(CSCPMessage *pMsg)
+/**
+ * Process object information received from server
+ */
+void NXCL_Session::processObjectUpdate(NXCPMessage *pMsg)
 {
    NXC_OBJECT *pObject, *pNewObject;
 
-   switch(pMsg->GetCode())
+   switch(pMsg->getCode())
    {
       case CMD_OBJECT_LIST_END:
          if (!(m_dwFlags & NXC_SF_HAS_OBJECT_CACHE))
@@ -467,7 +465,7 @@ void NXCL_Session::processObjectUpdate(CSCPMessage *pMsg)
 
 UINT32 NXCL_Session::syncObjects(const TCHAR *pszCacheFile, BOOL bSyncComments)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRetCode, dwRqId;
 
    dwRqId = CreateRqId();
@@ -479,10 +477,10 @@ UINT32 NXCL_Session::syncObjects(const TCHAR *pszCacheFile, BOOL bSyncComments)
    if (pszCacheFile != NULL)
       loadObjectsFromCache(pszCacheFile);
 
-   msg.SetCode(CMD_GET_OBJECTS);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_TIMESTAMP, m_dwTimeStamp);
-   msg.SetVariable(VID_SYNC_COMMENTS, (WORD)bSyncComments);
+   msg.setCode(CMD_GET_OBJECTS);
+   msg.setId(dwRqId);
+   msg.setField(VID_TIMESTAMP, m_dwTimeStamp);
+   msg.setField(VID_SYNC_COMMENTS, (WORD)bSyncComments);
    SendMsg(&msg);
 
    dwRetCode = WaitForRCC(dwRqId);
@@ -522,13 +520,13 @@ UINT32 LIBNXCL_EXPORTABLE NXCSyncObjectSet(NXC_SESSION hSession, UINT32 *idList,
    UINT32 dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Build request message
-   CSCPMessage msg;
-   msg.SetCode(CMD_GET_SELECTED_OBJECTS);
-   msg.SetId(dwRqId);
-	msg.SetVariable(VID_SYNC_COMMENTS, (WORD)(syncComments ? 1 : 0));
-	msg.SetVariable(VID_FLAGS, (WORD)(flags | OBJECT_SYNC_SEND_UPDATES));	// C library requres objects to go in update messages
-   msg.SetVariable(VID_NUM_OBJECTS, length);
-	msg.setFieldInt32Array(VID_OBJECT_LIST, length, idList);
+   NXCPMessage msg;
+   msg.setCode(CMD_GET_SELECTED_OBJECTS);
+   msg.setId(dwRqId);
+	msg.setField(VID_SYNC_COMMENTS, (WORD)(syncComments ? 1 : 0));
+	msg.setField(VID_FLAGS, (WORD)(flags | OBJECT_SYNC_SEND_UPDATES));	// C library requres objects to go in update messages
+   msg.setField(VID_NUM_OBJECTS, length);
+	msg.setFieldFromInt32Array(VID_OBJECT_LIST, length, idList);
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
@@ -869,147 +867,147 @@ void LIBNXCL_EXPORTABLE NXCUnlockObjectIndex(NXC_SESSION hSession)
 
 UINT32 LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDATE *pUpdate)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId, i, dwId1, dwId2;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Build request message
-   msg.SetCode(CMD_MODIFY_OBJECT);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, pUpdate->dwObjectId);
+   msg.setCode(CMD_MODIFY_OBJECT);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, pUpdate->dwObjectId);
    if (pUpdate->qwFlags & OBJ_UPDATE_NAME)
-      msg.SetVariable(VID_OBJECT_NAME, pUpdate->pszName);
+      msg.setField(VID_OBJECT_NAME, pUpdate->pszName);
    if (pUpdate->qwFlags & OBJ_UPDATE_PRIMARY_NAME)
-      msg.SetVariable(VID_PRIMARY_NAME, pUpdate->pszPrimaryName);
+      msg.setField(VID_PRIMARY_NAME, pUpdate->pszPrimaryName);
    if (pUpdate->qwFlags & OBJ_UPDATE_AGENT_PORT)
-      msg.SetVariable(VID_AGENT_PORT, (WORD)pUpdate->iAgentPort);
+      msg.setField(VID_AGENT_PORT, (WORD)pUpdate->iAgentPort);
    if (pUpdate->qwFlags & OBJ_UPDATE_AGENT_AUTH)
-      msg.SetVariable(VID_AUTH_METHOD, (WORD)pUpdate->iAuthType);
+      msg.setField(VID_AUTH_METHOD, (WORD)pUpdate->iAuthType);
    if (pUpdate->qwFlags & OBJ_UPDATE_AGENT_SECRET)
-      msg.SetVariable(VID_SHARED_SECRET, pUpdate->pszSecret);
+      msg.setField(VID_SHARED_SECRET, pUpdate->pszSecret);
    if (pUpdate->qwFlags & OBJ_UPDATE_SNMP_AUTH)
 	{
-      msg.SetVariable(VID_SNMP_AUTH_OBJECT, pUpdate->pszAuthName);
-      msg.SetVariable(VID_SNMP_AUTH_PASSWORD, CHECK_NULL_EX(pUpdate->pszAuthPassword));
-      msg.SetVariable(VID_SNMP_PRIV_PASSWORD, CHECK_NULL_EX(pUpdate->pszPrivPassword));
-		msg.SetVariable(VID_SNMP_USM_METHODS, (WORD)(pUpdate->wSnmpAuthMethod | (pUpdate->wSnmpPrivMethod << 8)));
+      msg.setField(VID_SNMP_AUTH_OBJECT, pUpdate->pszAuthName);
+      msg.setField(VID_SNMP_AUTH_PASSWORD, CHECK_NULL_EX(pUpdate->pszAuthPassword));
+      msg.setField(VID_SNMP_PRIV_PASSWORD, CHECK_NULL_EX(pUpdate->pszPrivPassword));
+		msg.setField(VID_SNMP_USM_METHODS, (WORD)(pUpdate->wSnmpAuthMethod | (pUpdate->wSnmpPrivMethod << 8)));
 	}
    if (pUpdate->qwFlags & OBJ_UPDATE_SNMP_VERSION)
-      msg.SetVariable(VID_SNMP_VERSION, pUpdate->wSNMPVersion);
+      msg.setField(VID_SNMP_VERSION, pUpdate->wSNMPVersion);
    if (pUpdate->qwFlags & OBJ_UPDATE_CHECK_REQUEST)
-      msg.SetVariable(VID_SERVICE_REQUEST, pUpdate->pszRequest);
+      msg.setField(VID_SERVICE_REQUEST, pUpdate->pszRequest);
    if (pUpdate->qwFlags & OBJ_UPDATE_CHECK_RESPONSE)
-      msg.SetVariable(VID_SERVICE_RESPONSE, pUpdate->pszResponse);
+      msg.setField(VID_SERVICE_RESPONSE, pUpdate->pszResponse);
    if (pUpdate->qwFlags & OBJ_UPDATE_IP_PROTO)
-      msg.SetVariable(VID_IP_PROTO, pUpdate->wProto);
+      msg.setField(VID_IP_PROTO, pUpdate->wProto);
    if (pUpdate->qwFlags & OBJ_UPDATE_IP_PORT)
-      msg.SetVariable(VID_IP_PORT, pUpdate->wPort);
+      msg.setField(VID_IP_PORT, pUpdate->wPort);
    if (pUpdate->qwFlags & OBJ_UPDATE_SERVICE_TYPE)
-      msg.SetVariable(VID_SERVICE_TYPE, (WORD)pUpdate->iServiceType);
+      msg.setField(VID_SERVICE_TYPE, (WORD)pUpdate->iServiceType);
    if (pUpdate->qwFlags & OBJ_UPDATE_POLLER_NODE)
-      msg.SetVariable(VID_POLLER_NODE_ID, pUpdate->dwPollerNode);
+      msg.setField(VID_POLLER_NODE_ID, pUpdate->dwPollerNode);
    if (pUpdate->qwFlags & OBJ_UPDATE_PROXY_NODE)
-      msg.SetVariable(VID_AGENT_PROXY, pUpdate->dwProxyNode);
+      msg.setField(VID_AGENT_PROXY, pUpdate->dwProxyNode);
    if (pUpdate->qwFlags & OBJ_UPDATE_SNMP_PROXY)
-      msg.SetVariable(VID_SNMP_PROXY, pUpdate->dwSNMPProxy);
+      msg.setField(VID_SNMP_PROXY, pUpdate->dwSNMPProxy);
    if (pUpdate->qwFlags & OBJ_UPDATE_IP_ADDR)
-      msg.SetVariable(VID_IP_ADDRESS, pUpdate->dwIpAddr);
+      msg.setField(VID_IP_ADDRESS, pUpdate->dwIpAddr);
    if (pUpdate->qwFlags & OBJ_UPDATE_PEER_GATEWAY)
-      msg.SetVariable(VID_PEER_GATEWAY, pUpdate->dwPeerGateway);
+      msg.setField(VID_PEER_GATEWAY, pUpdate->dwPeerGateway);
    if (pUpdate->qwFlags & OBJ_UPDATE_FLAGS)
-      msg.SetVariable(VID_FLAGS, pUpdate->dwObjectFlags);
+      msg.setField(VID_FLAGS, pUpdate->dwObjectFlags);
    if (pUpdate->qwFlags & OBJ_UPDATE_ACT_EVENT)
-      msg.SetVariable(VID_ACTIVATION_EVENT, pUpdate->dwActivationEvent);
+      msg.setField(VID_ACTIVATION_EVENT, pUpdate->dwActivationEvent);
    if (pUpdate->qwFlags & OBJ_UPDATE_DEACT_EVENT)
-      msg.SetVariable(VID_DEACTIVATION_EVENT, pUpdate->dwDeactivationEvent);
+      msg.setField(VID_DEACTIVATION_EVENT, pUpdate->dwDeactivationEvent);
    if (pUpdate->qwFlags & OBJ_UPDATE_SOURCE_OBJECT)
-      msg.SetVariable(VID_SOURCE_OBJECT, pUpdate->dwSourceObject);
+      msg.setField(VID_SOURCE_OBJECT, pUpdate->dwSourceObject);
    if (pUpdate->qwFlags & OBJ_UPDATE_ACTIVE_STATUS)
-      msg.SetVariable(VID_ACTIVE_STATUS, (WORD)pUpdate->nActiveStatus);
+      msg.setField(VID_ACTIVE_STATUS, (WORD)pUpdate->nActiveStatus);
    if (pUpdate->qwFlags & OBJ_UPDATE_INACTIVE_STATUS)
-      msg.SetVariable(VID_INACTIVE_STATUS, (WORD)pUpdate->nInactiveStatus);
+      msg.setField(VID_INACTIVE_STATUS, (WORD)pUpdate->nInactiveStatus);
    if (pUpdate->qwFlags & OBJ_UPDATE_SCRIPT)
-      msg.SetVariable(VID_SCRIPT, pUpdate->pszScript);
+      msg.setField(VID_SCRIPT, pUpdate->pszScript);
    if (pUpdate->qwFlags & OBJ_UPDATE_CLUSTER_TYPE)
-      msg.SetVariable(VID_CLUSTER_TYPE, pUpdate->dwClusterType);
+      msg.setField(VID_CLUSTER_TYPE, pUpdate->dwClusterType);
    if (pUpdate->qwFlags & OBJ_UPDATE_REQUIRED_POLLS)
-      msg.SetVariable(VID_REQUIRED_POLLS, pUpdate->wRequiredPollCount);
+      msg.setField(VID_REQUIRED_POLLS, pUpdate->wRequiredPollCount);
    if (pUpdate->qwFlags & OBJ_UPDATE_USE_IFXTABLE)
-      msg.SetVariable(VID_USE_IFXTABLE, (WORD)pUpdate->nUseIfXTable);
+      msg.setField(VID_USE_IFXTABLE, (WORD)pUpdate->nUseIfXTable);
    if (pUpdate->qwFlags & OBJ_UPDATE_STATUS_ALG)
    {
-      msg.SetVariable(VID_STATUS_CALCULATION_ALG, (WORD)pUpdate->iStatusCalcAlg);
-      msg.SetVariable(VID_STATUS_PROPAGATION_ALG, (WORD)pUpdate->iStatusPropAlg);
-      msg.SetVariable(VID_FIXED_STATUS, (WORD)pUpdate->iFixedStatus);
-      msg.SetVariable(VID_STATUS_SHIFT, (WORD)pUpdate->iStatusShift);
-      msg.SetVariable(VID_STATUS_TRANSLATION_1, (WORD)pUpdate->iStatusTrans[0]);
-      msg.SetVariable(VID_STATUS_TRANSLATION_2, (WORD)pUpdate->iStatusTrans[1]);
-      msg.SetVariable(VID_STATUS_TRANSLATION_3, (WORD)pUpdate->iStatusTrans[2]);
-      msg.SetVariable(VID_STATUS_TRANSLATION_4, (WORD)pUpdate->iStatusTrans[3]);
-      msg.SetVariable(VID_STATUS_SINGLE_THRESHOLD, (WORD)pUpdate->iStatusSingleTh);
-      msg.SetVariable(VID_STATUS_THRESHOLD_1, (WORD)pUpdate->iStatusThresholds[0]);
-      msg.SetVariable(VID_STATUS_THRESHOLD_2, (WORD)pUpdate->iStatusThresholds[1]);
-      msg.SetVariable(VID_STATUS_THRESHOLD_3, (WORD)pUpdate->iStatusThresholds[2]);
-      msg.SetVariable(VID_STATUS_THRESHOLD_4, (WORD)pUpdate->iStatusThresholds[3]);
+      msg.setField(VID_STATUS_CALCULATION_ALG, (WORD)pUpdate->iStatusCalcAlg);
+      msg.setField(VID_STATUS_PROPAGATION_ALG, (WORD)pUpdate->iStatusPropAlg);
+      msg.setField(VID_FIXED_STATUS, (WORD)pUpdate->iFixedStatus);
+      msg.setField(VID_STATUS_SHIFT, (WORD)pUpdate->iStatusShift);
+      msg.setField(VID_STATUS_TRANSLATION_1, (WORD)pUpdate->iStatusTrans[0]);
+      msg.setField(VID_STATUS_TRANSLATION_2, (WORD)pUpdate->iStatusTrans[1]);
+      msg.setField(VID_STATUS_TRANSLATION_3, (WORD)pUpdate->iStatusTrans[2]);
+      msg.setField(VID_STATUS_TRANSLATION_4, (WORD)pUpdate->iStatusTrans[3]);
+      msg.setField(VID_STATUS_SINGLE_THRESHOLD, (WORD)pUpdate->iStatusSingleTh);
+      msg.setField(VID_STATUS_THRESHOLD_1, (WORD)pUpdate->iStatusThresholds[0]);
+      msg.setField(VID_STATUS_THRESHOLD_2, (WORD)pUpdate->iStatusThresholds[1]);
+      msg.setField(VID_STATUS_THRESHOLD_3, (WORD)pUpdate->iStatusThresholds[2]);
+      msg.setField(VID_STATUS_THRESHOLD_4, (WORD)pUpdate->iStatusThresholds[3]);
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_NETWORK_LIST)
    {
-      msg.SetVariable(VID_NUM_LOCAL_NETS, pUpdate->dwNumLocalNets);
-      msg.SetVariable(VID_NUM_REMOTE_NETS, pUpdate->dwNumRemoteNets);
+      msg.setField(VID_NUM_LOCAL_NETS, pUpdate->dwNumLocalNets);
+      msg.setField(VID_NUM_REMOTE_NETS, pUpdate->dwNumRemoteNets);
       for(i = 0, dwId1 = VID_VPN_NETWORK_BASE; i < pUpdate->dwNumLocalNets; i++)
       {
-         msg.SetVariable(dwId1++, pUpdate->pLocalNetList[i].dwAddr);
-         msg.SetVariable(dwId1++, pUpdate->pLocalNetList[i].dwMask);
+         msg.setField(dwId1++, pUpdate->pLocalNetList[i].dwAddr);
+         msg.setField(dwId1++, pUpdate->pLocalNetList[i].dwMask);
       }
       for(i = 0; i < pUpdate->dwNumRemoteNets; i++)
       {
-         msg.SetVariable(dwId1++, pUpdate->pRemoteNetList[i].dwAddr);
-         msg.SetVariable(dwId1++, pUpdate->pRemoteNetList[i].dwMask);
+         msg.setField(dwId1++, pUpdate->pRemoteNetList[i].dwAddr);
+         msg.setField(dwId1++, pUpdate->pRemoteNetList[i].dwMask);
       }
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_ACL)
    {
-      msg.SetVariable(VID_ACL_SIZE, pUpdate->dwAclSize);
-      msg.SetVariable(VID_INHERIT_RIGHTS, (WORD)pUpdate->bInheritRights);
+      msg.setField(VID_ACL_SIZE, pUpdate->dwAclSize);
+      msg.setField(VID_INHERIT_RIGHTS, (WORD)pUpdate->bInheritRights);
       for(i = 0, dwId1 = VID_ACL_USER_BASE, dwId2 = VID_ACL_RIGHTS_BASE;
           i < pUpdate->dwAclSize; i++, dwId1++, dwId2++)
       {
-         msg.SetVariable(dwId1, pUpdate->pAccessList[i].dwUserId);
-         msg.SetVariable(dwId2, pUpdate->pAccessList[i].dwAccessRights);
+         msg.setField(dwId1, pUpdate->pAccessList[i].dwUserId);
+         msg.setField(dwId2, pUpdate->pAccessList[i].dwAccessRights);
       }
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_DCI_LIST)
    {
-      msg.SetVariable(VID_NUM_ITEMS, pUpdate->dwNumDCI);
+      msg.setField(VID_NUM_ITEMS, pUpdate->dwNumDCI);
       for(i = 0, dwId1 = VID_DCI_LIST_BASE; i < pUpdate->dwNumDCI; i++)
       {
-         msg.SetVariable(dwId1++, pUpdate->pDCIList[i].id);
-         msg.SetVariable(dwId1++, pUpdate->pDCIList[i].nodeId);
-         msg.SetVariable(dwId1++, (WORD)pUpdate->pDCIList[i].function);
-         msg.SetVariable(dwId1++, (WORD)pUpdate->pDCIList[i].polls);
+         msg.setField(dwId1++, pUpdate->pDCIList[i].id);
+         msg.setField(dwId1++, pUpdate->pDCIList[i].nodeId);
+         msg.setField(dwId1++, (WORD)pUpdate->pDCIList[i].function);
+         msg.setField(dwId1++, (WORD)pUpdate->pDCIList[i].polls);
          dwId1 += 6;
       }
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_SYNC_NETS)
    {
-      msg.SetVariable(VID_NUM_SYNC_SUBNETS, pUpdate->dwNumSyncNets);
-		msg.setFieldInt32Array(VID_SYNC_SUBNETS, pUpdate->dwNumSyncNets * 2, (UINT32 *)pUpdate->pSyncNetList);
+      msg.setField(VID_NUM_SYNC_SUBNETS, pUpdate->dwNumSyncNets);
+		msg.setFieldFromInt32Array(VID_SYNC_SUBNETS, pUpdate->dwNumSyncNets * 2, (UINT32 *)pUpdate->pSyncNetList);
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_RESOURCES)
    {
-      msg.SetVariable(VID_NUM_RESOURCES, pUpdate->dwNumResources);
+      msg.setField(VID_NUM_RESOURCES, pUpdate->dwNumResources);
       for(i = 0, dwId1 = VID_RESOURCE_LIST_BASE; i < pUpdate->dwNumResources; i++, dwId1 += 7)
       {
-         msg.SetVariable(dwId1++, pUpdate->pResourceList[i].dwId);
-         msg.SetVariable(dwId1++, pUpdate->pResourceList[i].szName);
-         msg.SetVariable(dwId1++, pUpdate->pResourceList[i].dwIpAddr);
+         msg.setField(dwId1++, pUpdate->pResourceList[i].dwId);
+         msg.setField(dwId1++, pUpdate->pResourceList[i].szName);
+         msg.setField(dwId1++, pUpdate->pResourceList[i].dwIpAddr);
       }
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_TRUSTED_NODES)
    {
-      msg.SetVariable(VID_NUM_TRUSTED_NODES, pUpdate->dwNumTrustedNodes);
-		msg.setFieldInt32Array(VID_TRUSTED_NODES, pUpdate->dwNumTrustedNodes, pUpdate->pdwTrustedNodes);
+      msg.setField(VID_NUM_TRUSTED_NODES, pUpdate->dwNumTrustedNodes);
+		msg.setFieldFromInt32Array(VID_TRUSTED_NODES, pUpdate->dwNumTrustedNodes, pUpdate->pdwTrustedNodes);
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_CUSTOM_ATTRS)
    {
@@ -1017,16 +1015,16 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDAT
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_AUTOBIND)
    {
-		msg.SetVariable(VID_AUTOBIND_FILTER, CHECK_NULL_EX(pUpdate->pszAutoBindFilter));
+		msg.setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(pUpdate->pszAutoBindFilter));
    }
    if (pUpdate->qwFlags & OBJ_UPDATE_GEOLOCATION)
    {
-		msg.SetVariable(VID_GEOLOCATION_TYPE, (WORD)pUpdate->geolocation.type);
-		msg.SetVariable(VID_LATITUDE, pUpdate->geolocation.latitude);
-		msg.SetVariable(VID_LONGITUDE, pUpdate->geolocation.longitude);
+		msg.setField(VID_GEOLOCATION_TYPE, (WORD)pUpdate->geolocation.type);
+		msg.setField(VID_LATITUDE, pUpdate->geolocation.latitude);
+		msg.setField(VID_LONGITUDE, pUpdate->geolocation.longitude);
 	}
    if (pUpdate->qwFlags & OBJ_UPDATE_SNMP_PORT)
-      msg.SetVariable(VID_SNMP_PORT, pUpdate->wSnmpPort);
+      msg.setField(VID_SNMP_PORT, pUpdate->wSnmpPort);
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
@@ -1043,16 +1041,16 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyObject(NXC_SESSION hSession, NXC_OBJECT_UPDAT
 UINT32 LIBNXCL_EXPORTABLE NXCSetObjectMgmtStatus(NXC_SESSION hSession, UINT32 dwObjectId, 
                                                 BOOL bIsManaged)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Build request message
-   msg.SetCode(CMD_SET_OBJECT_MGMT_STATUS);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
-   msg.SetVariable(VID_MGMT_STATUS, (WORD)bIsManaged);
+   msg.setCode(CMD_SET_OBJECT_MGMT_STATUS);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, dwObjectId);
+   msg.setField(VID_MGMT_STATUS, (WORD)bIsManaged);
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
@@ -1070,40 +1068,40 @@ UINT32 LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
                                          NXC_OBJECT_CREATE_INFO *pCreateInfo, 
                                          UINT32 *pdwObjectId)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Build request message
-   msg.SetCode(CMD_CREATE_OBJECT);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_PARENT_ID, pCreateInfo->dwParentId);
-   msg.SetVariable(VID_OBJECT_CLASS, (WORD)pCreateInfo->iClass);
-   msg.SetVariable(VID_OBJECT_NAME, pCreateInfo->pszName);
+   msg.setCode(CMD_CREATE_OBJECT);
+   msg.setId(dwRqId);
+   msg.setField(VID_PARENT_ID, pCreateInfo->dwParentId);
+   msg.setField(VID_OBJECT_CLASS, (WORD)pCreateInfo->iClass);
+   msg.setField(VID_OBJECT_NAME, pCreateInfo->pszName);
 	if (pCreateInfo->pszComments != NULL)
-	   msg.SetVariable(VID_COMMENTS, pCreateInfo->pszComments);
+	   msg.setField(VID_COMMENTS, pCreateInfo->pszComments);
    switch(pCreateInfo->iClass)
    {
       case OBJECT_NODE:
 			if (pCreateInfo->cs.node.pszPrimaryName != NULL)
-				msg.SetVariable(VID_PRIMARY_NAME, pCreateInfo->cs.node.pszPrimaryName);
-         msg.SetVariable(VID_IP_ADDRESS, pCreateInfo->cs.node.dwIpAddr);
-         msg.SetVariable(VID_IP_NETMASK, pCreateInfo->cs.node.dwNetMask);
-         msg.SetVariable(VID_CREATION_FLAGS, pCreateInfo->cs.node.dwCreationFlags);
-         msg.SetVariable(VID_AGENT_PROXY, pCreateInfo->cs.node.dwProxyNode);
-         msg.SetVariable(VID_SNMP_PROXY, pCreateInfo->cs.node.dwSNMPProxy);
+				msg.setField(VID_PRIMARY_NAME, pCreateInfo->cs.node.pszPrimaryName);
+         msg.setField(VID_IP_ADDRESS, pCreateInfo->cs.node.dwIpAddr);
+         msg.setField(VID_IP_NETMASK, pCreateInfo->cs.node.dwNetMask);
+         msg.setField(VID_CREATION_FLAGS, pCreateInfo->cs.node.dwCreationFlags);
+         msg.setField(VID_AGENT_PROXY, pCreateInfo->cs.node.dwProxyNode);
+         msg.setField(VID_SNMP_PROXY, pCreateInfo->cs.node.dwSNMPProxy);
          break;
       case OBJECT_CONTAINER:
-         msg.SetVariable(VID_CATEGORY, pCreateInfo->cs.container.dwCategory);
+         msg.setField(VID_CATEGORY, pCreateInfo->cs.container.dwCategory);
          break;
       case OBJECT_NETWORKSERVICE:
-         msg.SetVariable(VID_SERVICE_TYPE, (WORD)pCreateInfo->cs.netsrv.iServiceType);
-         msg.SetVariable(VID_IP_PROTO, pCreateInfo->cs.netsrv.wProto);
-         msg.SetVariable(VID_IP_PORT, pCreateInfo->cs.netsrv.wPort);
-         msg.SetVariable(VID_SERVICE_REQUEST, pCreateInfo->cs.netsrv.pszRequest);
-         msg.SetVariable(VID_SERVICE_RESPONSE, pCreateInfo->cs.netsrv.pszResponse);
-			msg.SetVariable(VID_CREATE_STATUS_DCI, (WORD)(pCreateInfo->cs.netsrv.createStatusDci ? 1 : 0));
+         msg.setField(VID_SERVICE_TYPE, (WORD)pCreateInfo->cs.netsrv.iServiceType);
+         msg.setField(VID_IP_PROTO, pCreateInfo->cs.netsrv.wProto);
+         msg.setField(VID_IP_PORT, pCreateInfo->cs.netsrv.wPort);
+         msg.setField(VID_SERVICE_REQUEST, pCreateInfo->cs.netsrv.pszRequest);
+         msg.setField(VID_SERVICE_RESPONSE, pCreateInfo->cs.netsrv.pszResponse);
+			msg.setField(VID_CREATE_STATUS_DCI, (WORD)(pCreateInfo->cs.netsrv.createStatusDci ? 1 : 0));
          break;
       default:
          break;
@@ -1117,10 +1115,10 @@ UINT32 LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 300000);
    if (pResponse != NULL)
    {
-      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
-         *pdwObjectId = pResponse->GetVariableLong(VID_OBJECT_ID);
+         *pdwObjectId = pResponse->getFieldAsUInt32(VID_OBJECT_ID);
       }
       delete pResponse;
    }
@@ -1140,18 +1138,18 @@ UINT32 LIBNXCL_EXPORTABLE NXCCreateObject(NXC_SESSION hSession,
 static UINT32 ChangeObjectBinding(NXCL_Session *pSession, UINT32 dwParentObject,
                                  UINT32 dwChildObject, BOOL bBind, BOOL bRemoveDCI)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = pSession->CreateRqId();
 
    // Build request message
-   msg.SetCode(bBind ? CMD_BIND_OBJECT : CMD_UNBIND_OBJECT);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_PARENT_ID, dwParentObject);
-   msg.SetVariable(VID_CHILD_ID, dwChildObject);
+   msg.setCode(bBind ? CMD_BIND_OBJECT : CMD_UNBIND_OBJECT);
+   msg.setId(dwRqId);
+   msg.setField(VID_PARENT_ID, dwParentObject);
+   msg.setField(VID_CHILD_ID, dwChildObject);
    if (!bBind)
-      msg.SetVariable(VID_REMOVE_DCI, (WORD)bRemoveDCI);
+      msg.setField(VID_REMOVE_DCI, (WORD)bRemoveDCI);
 
    // Send request
    pSession->SendMsg(&msg);
@@ -1203,16 +1201,16 @@ UINT32 LIBNXCL_EXPORTABLE NXCRemoveTemplate(NXC_SESSION hSession, UINT32 dwTempl
 
 UINT32 LIBNXCL_EXPORTABLE NXCAddClusterNode(NXC_SESSION hSession, UINT32 clusterId, UINT32 nodeId)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Build request message
-	msg.SetCode(CMD_ADD_CLUSTER_NODE);
-   msg.SetId(dwRqId);
-	msg.SetVariable(VID_PARENT_ID, clusterId);
-	msg.SetVariable(VID_CHILD_ID, nodeId);
+	msg.setCode(CMD_ADD_CLUSTER_NODE);
+   msg.setId(dwRqId);
+	msg.setField(VID_PARENT_ID, clusterId);
+	msg.setField(VID_CHILD_ID, nodeId);
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
@@ -1228,15 +1226,15 @@ UINT32 LIBNXCL_EXPORTABLE NXCAddClusterNode(NXC_SESSION hSession, UINT32 cluster
 
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteObject(NXC_SESSION hSession, UINT32 dwObject)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId, rcc;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Build request message
-   msg.SetCode(CMD_DELETE_OBJECT);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwObject);
+   msg.setCode(CMD_DELETE_OBJECT);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, dwObject);
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
@@ -1262,13 +1260,13 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteObject(NXC_SESSION hSession, UINT32 dwObject)
 
 UINT32 LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_SESSION hSession, NXC_CC_LIST **ppList)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRqId, dwRetCode = RCC_SUCCESS, dwNumCats = 0, dwCatId = 0;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_CONTAINER_CAT_LIST);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GET_CONTAINER_CAT_LIST);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    *ppList = (NXC_CC_LIST *)malloc(sizeof(NXC_CC_LIST));
@@ -1280,16 +1278,16 @@ UINT32 LIBNXCL_EXPORTABLE NXCLoadCCList(NXC_SESSION hSession, NXC_CC_LIST **ppLi
       pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_CONTAINER_CAT_DATA, dwRqId);
       if (pResponse != NULL)
       {
-         dwCatId = pResponse->GetVariableLong(VID_CATEGORY_ID);
+         dwCatId = pResponse->getFieldAsUInt32(VID_CATEGORY_ID);
          if (dwCatId != 0)  // 0 is end of list indicator
          {
             (*ppList)->pElements = (NXC_CONTAINER_CATEGORY *)realloc((*ppList)->pElements, 
                sizeof(NXC_CONTAINER_CATEGORY) * ((*ppList)->dwNumElements + 1));
             (*ppList)->pElements[(*ppList)->dwNumElements].dwId = dwCatId;
-            pResponse->GetVariableStr(VID_CATEGORY_NAME, 
+            pResponse->getFieldAsString(VID_CATEGORY_NAME, 
                (*ppList)->pElements[(*ppList)->dwNumElements].szName, MAX_OBJECT_NAME);
             (*ppList)->pElements[(*ppList)->dwNumElements].pszDescription =
-               pResponse->GetVariableStr(VID_DESCRIPTION);
+               pResponse->getFieldAsString(VID_DESCRIPTION);
             (*ppList)->dwNumElements++;
          }
          delete pResponse;
@@ -1340,15 +1338,15 @@ UINT32 LIBNXCL_EXPORTABLE NXCPollNode(NXC_SESSION hSession, UINT32 dwObjectId, i
                                      void (* pfCallback)(TCHAR *, void *), void *pArg)
 {
    UINT32 dwRetCode, dwRqId;
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    TCHAR *pszMsg;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_POLL_NODE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
-   msg.SetVariable(VID_POLL_TYPE, (WORD)iPollType);
+   msg.setCode(CMD_POLL_NODE);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, dwObjectId);
+   msg.setField(VID_POLL_TYPE, (WORD)iPollType);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    do
@@ -1357,10 +1355,10 @@ UINT32 LIBNXCL_EXPORTABLE NXCPollNode(NXC_SESSION hSession, UINT32 dwObjectId, i
       pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_POLLING_INFO, dwRqId, 120000);
       if (pResponse != NULL)
       {
-         dwRetCode = pResponse->GetVariableLong(VID_RCC);
+         dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
          if ((dwRetCode == RCC_OPERATION_IN_PROGRESS) && (pfCallback != NULL))
          {
-            pszMsg = pResponse->GetVariableStr(VID_POLLER_MESSAGE);
+            pszMsg = pResponse->getFieldAsString(VID_POLLER_MESSAGE);
             pfCallback(pszMsg, pArg);
             free(pszMsg);
          }
@@ -1384,13 +1382,13 @@ UINT32 LIBNXCL_EXPORTABLE NXCPollNode(NXC_SESSION hSession, UINT32 dwObjectId, i
 UINT32 LIBNXCL_EXPORTABLE NXCWakeUpNode(NXC_SESSION hSession, UINT32 dwObjectId)
 {
    UINT32 dwRqId;
-   CSCPMessage msg;
+   NXCPMessage msg;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_WAKEUP_NODE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
+   msg.setCode(CMD_WAKEUP_NODE);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, dwObjectId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
@@ -1404,7 +1402,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetSupportedParameters(NXC_SESSION hSession, UINT32
                                                    UINT32 *pdwNumParams, 
                                                    NXC_AGENT_PARAM **ppParamList)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 i, dwId, dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -1413,9 +1411,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetSupportedParameters(NXC_SESSION hSession, UINT32
    *ppParamList = NULL;
 
    // Build request message
-   msg.SetCode(CMD_GET_PARAMETER_LIST);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.setCode(CMD_GET_PARAMETER_LIST);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, dwNodeId);
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
@@ -1424,16 +1422,16 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetSupportedParameters(NXC_SESSION hSession, UINT32
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
-         *pdwNumParams = pResponse->GetVariableLong(VID_NUM_PARAMETERS);
+         *pdwNumParams = pResponse->getFieldAsUInt32(VID_NUM_PARAMETERS);
          *ppParamList = (NXC_AGENT_PARAM *)malloc(sizeof(NXC_AGENT_PARAM) * *pdwNumParams);
          for(i = 0, dwId = VID_PARAM_LIST_BASE; i < *pdwNumParams; i++)
          {
-            pResponse->GetVariableStr(dwId++, (*ppParamList)[i].szName, MAX_PARAM_NAME);
-            pResponse->GetVariableStr(dwId++, (*ppParamList)[i].szDescription, MAX_DB_STRING);
-            (*ppParamList)[i].iDataType = (int)pResponse->GetVariableShort(dwId++);
+            pResponse->getFieldAsString(dwId++, (*ppParamList)[i].szName, MAX_PARAM_NAME);
+            pResponse->getFieldAsString(dwId++, (*ppParamList)[i].szDescription, MAX_DB_STRING);
+            (*ppParamList)[i].iDataType = (int)pResponse->getFieldAsUInt16(dwId++);
          }
       }
       delete pResponse;
@@ -1789,7 +1787,7 @@ void NXCL_Session::loadObjectsFromCache(const TCHAR *pszFile)
 UINT32 LIBNXCL_EXPORTABLE NXCGetAgentConfig(NXC_SESSION hSession, UINT32 dwNodeId,
                                            TCHAR **ppszConfig)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
@@ -1797,9 +1795,9 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetAgentConfig(NXC_SESSION hSession, UINT32 dwNodeI
    *ppszConfig = NULL;
 
    // Build request message
-   msg.SetCode(CMD_GET_AGENT_CONFIG);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.setCode(CMD_GET_AGENT_CONFIG);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, dwNodeId);
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
@@ -1808,10 +1806,10 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetAgentConfig(NXC_SESSION hSession, UINT32 dwNodeI
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 60000);
    if (pResponse != NULL)
    {
-      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
-         *ppszConfig = pResponse->GetVariableStr(VID_CONFIG_FILE);
+         *ppszConfig = pResponse->getFieldAsString(VID_CONFIG_FILE);
       }
       delete pResponse;
    }
@@ -1831,17 +1829,17 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetAgentConfig(NXC_SESSION hSession, UINT32 dwNodeI
 UINT32 LIBNXCL_EXPORTABLE NXCUpdateAgentConfig(NXC_SESSION hSession, UINT32 dwNodeId,
                                               TCHAR *pszConfig, BOOL bApply)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Build request message
-   msg.SetCode(CMD_UPDATE_AGENT_CONFIG);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
-   msg.SetVariable(VID_CONFIG_FILE, pszConfig);
-   msg.SetVariable(VID_APPLY_FLAG, (WORD)bApply);
+   msg.setCode(CMD_UPDATE_AGENT_CONFIG);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, dwNodeId);
+   msg.setField(VID_CONFIG_FILE, pszConfig);
+   msg.setField(VID_APPLY_FLAG, (WORD)bApply);
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
@@ -1858,14 +1856,14 @@ UINT32 LIBNXCL_EXPORTABLE NXCExecuteAction(NXC_SESSION hSession, UINT32 dwObject
                                           TCHAR *pszAction)
 {
    UINT32 dwRqId;
-   CSCPMessage msg;
+   NXCPMessage msg;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_EXECUTE_ACTION);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
-   msg.SetVariable(VID_ACTION_NAME, pszAction);
+   msg.setCode(CMD_EXECUTE_ACTION);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, dwObjectId);
+   msg.setField(VID_ACTION_NAME, pszAction);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
@@ -1879,21 +1877,21 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetObjectComments(NXC_SESSION hSession,
                                               UINT32 dwObjectId, TCHAR **ppszText)
 {
    UINT32 dwRqId, dwResult;
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_OBJECT_COMMENTS);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
+   msg.setCode(CMD_GET_OBJECT_COMMENTS);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, dwObjectId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwResult = pResponse->GetVariableLong(VID_RCC);
+      dwResult = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwResult == RCC_SUCCESS)
-         *ppszText = pResponse->GetVariableStr(VID_COMMENTS);
+         *ppszText = pResponse->getFieldAsString(VID_COMMENTS);
    }
    else
    {
@@ -1911,14 +1909,14 @@ UINT32 LIBNXCL_EXPORTABLE NXCUpdateObjectComments(NXC_SESSION hSession,
                                                  UINT32 dwObjectId, TCHAR *pszText)
 {
    UINT32 dwRqId;
-   CSCPMessage msg;
+   NXCPMessage msg;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_UPDATE_OBJECT_COMMENTS);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
-   msg.SetVariable(VID_COMMENTS, pszText);
+   msg.setCode(CMD_UPDATE_OBJECT_COMMENTS);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, dwObjectId);
+   msg.setField(VID_COMMENTS, pszText);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }
@@ -1985,25 +1983,25 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetDCIEventsList(NXC_SESSION hSession, UINT32 dwObj
                                              UINT32 **ppdwList, UINT32 *pdwListSize)
 {
    UINT32 dwRqId, dwResult;
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
 
    *ppdwList = NULL;
    *pdwListSize = 0;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_DCI_EVENTS_LIST);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
+   msg.setCode(CMD_GET_DCI_EVENTS_LIST);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, dwObjectId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwResult = pResponse->GetVariableLong(VID_RCC);
+      dwResult = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwResult == RCC_SUCCESS)
       {
-         *pdwListSize = pResponse->GetVariableLong(VID_NUM_EVENTS);
+         *pdwListSize = pResponse->getFieldAsUInt32(VID_NUM_EVENTS);
          if (*pdwListSize > 0)
          {
             *ppdwList = (UINT32 *)malloc(sizeof(UINT32) * (*pdwListSize));

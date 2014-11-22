@@ -31,12 +31,12 @@
 UINT32 LIBNXCL_EXPORTABLE NXCGetGraphList(NXC_SESSION hSession, UINT32 *pdwNumGraphs, NXC_GRAPH **ppGraphList)
 {
    UINT32 i, j, dwId, dwRqId, dwResult;
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_GRAPH_LIST);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GET_GRAPH_LIST);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
 	*pdwNumGraphs = 0;
@@ -45,21 +45,21 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetGraphList(NXC_SESSION hSession, UINT32 *pdwNumGr
 	pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
 	if (pResponse != NULL)
 	{
-		dwResult = pResponse->GetVariableLong(VID_RCC);
+		dwResult = pResponse->getFieldAsUInt32(VID_RCC);
 		if (dwResult == RCC_SUCCESS)
 		{
-			*pdwNumGraphs = pResponse->GetVariableLong(VID_NUM_GRAPHS);
+			*pdwNumGraphs = pResponse->getFieldAsUInt32(VID_NUM_GRAPHS);
 			if (*pdwNumGraphs > 0)
 			{
 				*ppGraphList = (NXC_GRAPH *)malloc(sizeof(NXC_GRAPH) * (*pdwNumGraphs));
 				memset(*ppGraphList, 0, sizeof(NXC_GRAPH) * (*pdwNumGraphs));
 				for(i = 0, dwId = VID_GRAPH_LIST_BASE; i < *pdwNumGraphs; i++)
 				{
-					(*ppGraphList)[i].dwId = pResponse->GetVariableLong(dwId++);
-					(*ppGraphList)[i].dwOwner = pResponse->GetVariableLong(dwId++);
-					(*ppGraphList)[i].pszName = pResponse->GetVariableStr(dwId++);
-					(*ppGraphList)[i].pszConfig = pResponse->GetVariableStr(dwId++);
-					(*ppGraphList)[i].dwAclSize = pResponse->GetVariableLong(dwId++);
+					(*ppGraphList)[i].dwId = pResponse->getFieldAsUInt32(dwId++);
+					(*ppGraphList)[i].dwOwner = pResponse->getFieldAsUInt32(dwId++);
+					(*ppGraphList)[i].pszName = pResponse->getFieldAsString(dwId++);
+					(*ppGraphList)[i].pszConfig = pResponse->getFieldAsString(dwId++);
+					(*ppGraphList)[i].dwAclSize = pResponse->getFieldAsUInt32(dwId++);
 					if ((*ppGraphList)[i].dwAclSize > 0)
 					{
 						UINT32 *pdwData;
@@ -118,13 +118,13 @@ void LIBNXCL_EXPORTABLE NXCDestroyGraphList(UINT32 dwNumGraphs, NXC_GRAPH *pList
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteGraph(NXC_SESSION hSession, UINT32 dwGraphId)
 {
    UINT32 dwRqId;
-   CSCPMessage msg;
+   NXCPMessage msg;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_DELETE_GRAPH);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_GRAPH_ID, dwGraphId);
+   msg.setCode(CMD_DELETE_GRAPH);
+   msg.setId(dwRqId);
+   msg.setField(VID_GRAPH_ID, dwGraphId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -138,20 +138,20 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteGraph(NXC_SESSION hSession, UINT32 dwGraphId)
 UINT32 LIBNXCL_EXPORTABLE NXCDefineGraph(NXC_SESSION hSession, NXC_GRAPH *pGraph)
 {
    UINT32 i, dwId, dwRqId;
-   CSCPMessage msg;
+   NXCPMessage msg;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_SAVE_GRAPH);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_GRAPH_ID, pGraph->dwId);
-	msg.SetVariable(VID_NAME, pGraph->pszName);
-	msg.SetVariable(VID_GRAPH_CONFIG, pGraph->pszConfig);
-	msg.SetVariable(VID_ACL_SIZE, pGraph->dwAclSize);
+   msg.setCode(CMD_SAVE_GRAPH);
+   msg.setId(dwRqId);
+   msg.setField(VID_GRAPH_ID, pGraph->dwId);
+	msg.setField(VID_NAME, pGraph->pszName);
+	msg.setField(VID_GRAPH_CONFIG, pGraph->pszConfig);
+	msg.setField(VID_ACL_SIZE, pGraph->dwAclSize);
 	for(i = 0, dwId = VID_GRAPH_ACL_BASE; i < pGraph->dwAclSize; i++)
 	{
-		msg.SetVariable(dwId++, pGraph->pACL[i].dwUserId);
-		msg.SetVariable(dwId++, pGraph->pACL[i].dwAccess);
+		msg.setField(dwId++, pGraph->pACL[i].dwUserId);
+		msg.setField(dwId++, pGraph->pACL[i].dwAccess);
 	}
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    

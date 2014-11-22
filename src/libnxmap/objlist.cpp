@@ -106,7 +106,7 @@ nxmap_ObjList::nxmap_ObjList()
    m_linkList = new ObjectArray<ObjLink>(16, 16, true);
 }
 
-nxmap_ObjList::nxmap_ObjList(CSCPMessage *msg)
+nxmap_ObjList::nxmap_ObjList(NXCPMessage *msg)
 {
    m_objectList = new IntegerArray<UINT32>(16, 16);
    m_linkList = new ObjectArray<ObjLink>(16, 16, true);
@@ -118,13 +118,13 @@ nxmap_ObjList::nxmap_ObjList(CSCPMessage *msg)
 	for(int i = 0; i < linksCount; i++, dwId += 3)
 	{
       ObjLink *obj = new ObjLink();
-		obj->id1 = msg->GetVariableLong(dwId++);
-		obj->id2 = msg->GetVariableLong(dwId++);
-		obj->type = (int)msg->GetVariableShort(dwId++);
-		msg->GetVariableStr(dwId++, obj->port1, MAX_CONNECTOR_NAME);
-		msg->GetVariableStr(dwId++, obj->port2, MAX_CONNECTOR_NAME);
-		obj->config = msg->GetVariableStr(dwId++);
-		obj->flags = msg->GetVariableLong(dwId++);
+		obj->id1 = msg->getFieldAsUInt32(dwId++);
+		obj->id2 = msg->getFieldAsUInt32(dwId++);
+		obj->type = (int)msg->getFieldAsUInt16(dwId++);
+		msg->getFieldAsString(dwId++, obj->port1, MAX_CONNECTOR_NAME);
+		msg->getFieldAsString(dwId++, obj->port2, MAX_CONNECTOR_NAME);
+		obj->config = msg->getFieldAsString(dwId++);
+		obj->flags = msg->getFieldAsUInt32(dwId++);
 		m_linkList->add(obj);
 	}
 }
@@ -309,26 +309,26 @@ void nxmap_ObjList::linkObjectsEx(UINT32 id1, UINT32 id2, const TCHAR *port1, co
 /**
  * Create NXCP message
  */
-void nxmap_ObjList::createMessage(CSCPMessage *msg)
+void nxmap_ObjList::createMessage(NXCPMessage *msg)
 {
 	// Object list
-	msg->SetVariable(VID_NUM_OBJECTS, m_objectList->size());
+	msg->setField(VID_NUM_OBJECTS, m_objectList->size());
 	if (m_objectList->size() > 0)
-		msg->setFieldInt32Array(VID_OBJECT_LIST, m_objectList);
+		msg->setFieldFromInt32Array(VID_OBJECT_LIST, m_objectList);
 
 	// Links between objects
-	msg->SetVariable(VID_NUM_LINKS, m_linkList->size());
+	msg->setField(VID_NUM_LINKS, m_linkList->size());
    UINT32 dwId = VID_OBJECT_LINKS_BASE;
 	for(int i = 0; i < m_linkList->size(); i++, dwId += 3)
 	{
       ObjLink *l = m_linkList->get(i);
-		msg->SetVariable(dwId++, l->id1);
-		msg->SetVariable(dwId++, l->id2);
-		msg->SetVariable(dwId++, (WORD)l->type);
-		msg->SetVariable(dwId++, l->port1);
-		msg->SetVariable(dwId++, l->port2);
-		msg->SetVariable(dwId++, CHECK_NULL_EX(m_linkList->get(i)->config));
-		msg->SetVariable(dwId++, m_linkList->get(i)->flags);
+		msg->setField(dwId++, l->id1);
+		msg->setField(dwId++, l->id2);
+		msg->setField(dwId++, (WORD)l->type);
+		msg->setField(dwId++, l->port1);
+		msg->setField(dwId++, l->port2);
+		msg->setField(dwId++, CHECK_NULL_EX(m_linkList->get(i)->config));
+		msg->setField(dwId++, m_linkList->get(i)->flags);
 	}
 }
 

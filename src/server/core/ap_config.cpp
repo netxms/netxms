@@ -140,16 +140,16 @@ BOOL AgentPolicyConfig::loadFromDatabase(UINT32 dwId)
 // Create NXCP message with policy data
 //
 
-void AgentPolicyConfig::fillMessage(CSCPMessage *msg)
+void AgentPolicyConfig::fillMessage(NXCPMessage *msg)
 {
 	AgentPolicy::fillMessage(msg);
-	msg->SetVariable(VID_CONFIG_FILE_DATA, CHECK_NULL_EX(m_fileContent));
+	msg->setField(VID_CONFIG_FILE_DATA, CHECK_NULL_EX(m_fileContent));
 }
 
 /**
  * Modify policy from message
  */
-UINT32 AgentPolicyConfig::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 AgentPolicyConfig::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       lockProperties();
@@ -157,7 +157,7 @@ UINT32 AgentPolicyConfig::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlready
 	if (pRequest->isFieldExist(VID_CONFIG_FILE_DATA))
 	{
 		safe_free(m_fileContent);
-		m_fileContent = pRequest->GetVariableStr(VID_CONFIG_FILE_DATA);
+		m_fileContent = pRequest->getFieldAsString(VID_CONFIG_FILE_DATA);
 	}
 
 	return AgentPolicy::modifyFromMessage(pRequest, TRUE);
@@ -168,7 +168,7 @@ UINT32 AgentPolicyConfig::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlready
 // Create deployment message
 //
 
-bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
+bool AgentPolicyConfig::createDeploymentMessage(NXCPMessage *msg)
 {
 	if (!AgentPolicy::createDeploymentMessage(msg))
 		return false;
@@ -178,10 +178,10 @@ bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
 
 #ifdef UNICODE
 	char *fd = MBStringFromWideString(m_fileContent);
-	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)fd, (UINT32)strlen(fd));
+	msg->setField(VID_CONFIG_FILE_DATA, (BYTE *)fd, (UINT32)strlen(fd));
 	free(fd);
 #else
-	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, (UINT32)strlen(m_fileContent));
+	msg->setField(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, (UINT32)strlen(m_fileContent));
 #endif
 	return true;
 }
@@ -191,7 +191,7 @@ bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
 // Create uninstall message
 //
 
-bool AgentPolicyConfig::createUninstallMessage(CSCPMessage *msg)
+bool AgentPolicyConfig::createUninstallMessage(NXCPMessage *msg)
 {
 	return AgentPolicy::createUninstallMessage(msg);
 }

@@ -433,7 +433,7 @@ bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 dwUserId, UINT32 dwGroupId)
  * Fill message with group membership information for given user.
  * Access to user database must be locked.
  */
-void FillGroupMembershipInfo(CSCPMessage *msg, UINT32 userId)
+void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId)
 {
    UINT32 *list = (UINT32 *)malloc(sizeof(UINT32) * m_userCount);
    UINT32 count = 0;
@@ -444,9 +444,9 @@ void FillGroupMembershipInfo(CSCPMessage *msg, UINT32 userId)
          list[count++] = m_users[i]->getId();
 		}
    }
-   msg->SetVariable(VID_NUM_GROUPS, count);
+   msg->setField(VID_NUM_GROUPS, count);
    if (count > 0)
-      msg->setFieldInt32Array(VID_GROUPS, count, list);
+      msg->setFieldFromInt32Array(VID_GROUPS, count, list);
    free(list);
 }
 
@@ -890,12 +890,12 @@ UINT32 NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, UINT32 *pd
 /**
  * Modify user database object
  */
-UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg)
 {
    UINT32 id, fields, dwResult = RCC_INVALID_USER_ID;
 	int i;
 
-	id = msg->GetVariableLong(VID_USER_ID);
+	id = msg->getFieldAsUInt32(VID_USER_ID);
 
    MutexLock(m_mutexUserDatabaseAccess);
 
@@ -905,10 +905,10 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg)
       {
 			TCHAR name[MAX_USER_NAME];
 
-			fields = msg->GetVariableLong(VID_FIELDS);
+			fields = msg->getFieldAsUInt32(VID_FIELDS);
 			if (fields & USER_MODIFY_LOGIN_NAME)
 			{
-				msg->GetVariableStr(VID_USER_NAME, name, MAX_USER_NAME);
+				msg->getFieldAsString(VID_USER_NAME, name, MAX_USER_NAME);
 				if (!IsValidObjectName(name))
 				{
 					dwResult = RCC_INVALID_OBJECT_NAME;

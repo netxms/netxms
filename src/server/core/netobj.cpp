@@ -893,7 +893,7 @@ bool NetObj::saveACLToDB(DB_HANDLE hdb)
  */
 struct SendModuleDataCallbackData
 {
-   CSCPMessage *msg;
+   NXCPMessage *msg;
    UINT32 id;
 };
 
@@ -902,7 +902,7 @@ struct SendModuleDataCallbackData
  */
 static bool SendModuleDataCallback(const TCHAR *key, const void *value, void *data)
 {
-   ((SendModuleDataCallbackData *)data)->msg->SetVariable(((SendModuleDataCallbackData *)data)->id, key);
+   ((SendModuleDataCallbackData *)data)->msg->setField(((SendModuleDataCallbackData *)data)->id, key);
    ((ModuleData *)value)->fillMessage(((SendModuleDataCallbackData *)data)->msg, ((SendModuleDataCallbackData *)data)->id + 1);
    ((SendModuleDataCallbackData *)data)->id += 0x100000;
    return true;
@@ -911,65 +911,65 @@ static bool SendModuleDataCallback(const TCHAR *key, const void *value, void *da
 /**
  * Create NXCP message with object's data
  */
-void NetObj::fillMessage(CSCPMessage *pMsg)
+void NetObj::fillMessage(NXCPMessage *pMsg)
 {
    UINT32 i, dwId;
 
-   pMsg->SetVariable(VID_OBJECT_CLASS, (WORD)getObjectClass());
-   pMsg->SetVariable(VID_OBJECT_ID, m_id);
-	pMsg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
-   pMsg->SetVariable(VID_OBJECT_NAME, m_name);
-   pMsg->SetVariable(VID_OBJECT_STATUS, (WORD)m_iStatus);
-   pMsg->SetVariable(VID_IP_ADDRESS, m_dwIpAddr);
-   pMsg->SetVariable(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
-   pMsg->SetVariable(VID_IS_SYSTEM, (WORD)(m_isSystem ? 1 : 0));
+   pMsg->setField(VID_OBJECT_CLASS, (WORD)getObjectClass());
+   pMsg->setField(VID_OBJECT_ID, m_id);
+	pMsg->setField(VID_GUID, m_guid, UUID_LENGTH);
+   pMsg->setField(VID_OBJECT_NAME, m_name);
+   pMsg->setField(VID_OBJECT_STATUS, (WORD)m_iStatus);
+   pMsg->setField(VID_IP_ADDRESS, m_dwIpAddr);
+   pMsg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
+   pMsg->setField(VID_IS_SYSTEM, (WORD)(m_isSystem ? 1 : 0));
 
    LockParentList(FALSE);
-   pMsg->SetVariable(VID_PARENT_CNT, m_dwParentCount);
+   pMsg->setField(VID_PARENT_CNT, m_dwParentCount);
    for(i = 0, dwId = VID_PARENT_ID_BASE; i < m_dwParentCount; i++, dwId++)
-      pMsg->SetVariable(dwId, m_pParentList[i]->getId());
+      pMsg->setField(dwId, m_pParentList[i]->getId());
    UnlockParentList();
 
    LockChildList(FALSE);
-   pMsg->SetVariable(VID_CHILD_CNT, m_dwChildCount);
+   pMsg->setField(VID_CHILD_CNT, m_dwChildCount);
    for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_dwChildCount; i++, dwId++)
-      pMsg->SetVariable(dwId, m_pChildList[i]->getId());
+      pMsg->setField(dwId, m_pChildList[i]->getId());
    UnlockChildList();
 
-   pMsg->SetVariable(VID_INHERIT_RIGHTS, (WORD)m_bInheritAccessRights);
-   pMsg->SetVariable(VID_STATUS_CALCULATION_ALG, (WORD)m_iStatusCalcAlg);
-   pMsg->SetVariable(VID_STATUS_PROPAGATION_ALG, (WORD)m_iStatusPropAlg);
-   pMsg->SetVariable(VID_FIXED_STATUS, (WORD)m_iFixedStatus);
-   pMsg->SetVariable(VID_STATUS_SHIFT, (WORD)m_iStatusShift);
-   pMsg->SetVariable(VID_STATUS_TRANSLATION_1, (WORD)m_iStatusTranslation[0]);
-   pMsg->SetVariable(VID_STATUS_TRANSLATION_2, (WORD)m_iStatusTranslation[1]);
-   pMsg->SetVariable(VID_STATUS_TRANSLATION_3, (WORD)m_iStatusTranslation[2]);
-   pMsg->SetVariable(VID_STATUS_TRANSLATION_4, (WORD)m_iStatusTranslation[3]);
-   pMsg->SetVariable(VID_STATUS_SINGLE_THRESHOLD, (WORD)m_iStatusSingleThreshold);
-   pMsg->SetVariable(VID_STATUS_THRESHOLD_1, (WORD)m_iStatusThresholds[0]);
-   pMsg->SetVariable(VID_STATUS_THRESHOLD_2, (WORD)m_iStatusThresholds[1]);
-   pMsg->SetVariable(VID_STATUS_THRESHOLD_3, (WORD)m_iStatusThresholds[2]);
-   pMsg->SetVariable(VID_STATUS_THRESHOLD_4, (WORD)m_iStatusThresholds[3]);
-   pMsg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_pszComments));
-	pMsg->SetVariable(VID_IMAGE, m_image, UUID_LENGTH);
-	pMsg->SetVariable(VID_SUBMAP_ID, m_submapId);
-	pMsg->SetVariable(VID_NUM_TRUSTED_NODES, m_dwNumTrustedNodes);
+   pMsg->setField(VID_INHERIT_RIGHTS, (WORD)m_bInheritAccessRights);
+   pMsg->setField(VID_STATUS_CALCULATION_ALG, (WORD)m_iStatusCalcAlg);
+   pMsg->setField(VID_STATUS_PROPAGATION_ALG, (WORD)m_iStatusPropAlg);
+   pMsg->setField(VID_FIXED_STATUS, (WORD)m_iFixedStatus);
+   pMsg->setField(VID_STATUS_SHIFT, (WORD)m_iStatusShift);
+   pMsg->setField(VID_STATUS_TRANSLATION_1, (WORD)m_iStatusTranslation[0]);
+   pMsg->setField(VID_STATUS_TRANSLATION_2, (WORD)m_iStatusTranslation[1]);
+   pMsg->setField(VID_STATUS_TRANSLATION_3, (WORD)m_iStatusTranslation[2]);
+   pMsg->setField(VID_STATUS_TRANSLATION_4, (WORD)m_iStatusTranslation[3]);
+   pMsg->setField(VID_STATUS_SINGLE_THRESHOLD, (WORD)m_iStatusSingleThreshold);
+   pMsg->setField(VID_STATUS_THRESHOLD_1, (WORD)m_iStatusThresholds[0]);
+   pMsg->setField(VID_STATUS_THRESHOLD_2, (WORD)m_iStatusThresholds[1]);
+   pMsg->setField(VID_STATUS_THRESHOLD_3, (WORD)m_iStatusThresholds[2]);
+   pMsg->setField(VID_STATUS_THRESHOLD_4, (WORD)m_iStatusThresholds[3]);
+   pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_pszComments));
+	pMsg->setField(VID_IMAGE, m_image, UUID_LENGTH);
+	pMsg->setField(VID_SUBMAP_ID, m_submapId);
+	pMsg->setField(VID_NUM_TRUSTED_NODES, m_dwNumTrustedNodes);
 	if (m_dwNumTrustedNodes > 0)
-		pMsg->setFieldInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
+		pMsg->setFieldFromInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
 
    m_customAttributes.fillMessage(pMsg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
 
    m_pAccessList->fillMessage(pMsg);
 	m_geoLocation.fillMessage(*pMsg);
 
-   pMsg->SetVariable(VID_COUNTRY, m_postalAddress->getCountry());
-   pMsg->SetVariable(VID_CITY, m_postalAddress->getCity());
-   pMsg->SetVariable(VID_STREET_ADDRESS, m_postalAddress->getStreetAddress());
-   pMsg->SetVariable(VID_POSTCODE, m_postalAddress->getPostCode());
+   pMsg->setField(VID_COUNTRY, m_postalAddress->getCountry());
+   pMsg->setField(VID_CITY, m_postalAddress->getCity());
+   pMsg->setField(VID_STREET_ADDRESS, m_postalAddress->getStreetAddress());
+   pMsg->setField(VID_POSTCODE, m_postalAddress->getPostCode());
 
    if (m_moduleData != NULL)
    {
-      pMsg->SetVariable(VID_MODULE_DATA_COUNT, (UINT16)m_moduleData->size());
+      pMsg->setField(VID_MODULE_DATA_COUNT, (UINT16)m_moduleData->size());
       SendModuleDataCallbackData data;
       data.msg = pMsg;
       data.id = VID_MODULE_DATA_BASE;
@@ -977,7 +977,7 @@ void NetObj::fillMessage(CSCPMessage *pMsg)
    }
    else
    {
-      pMsg->SetVariable(VID_MODULE_DATA_COUNT, (UINT16)0);
+      pMsg->setField(VID_MODULE_DATA_COUNT, (UINT16)0);
    }
 }
 
@@ -1010,7 +1010,7 @@ void NetObj::setModified()
 /**
  * Modify object from NXCP message
  */
-UINT32 NetObj::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 NetObj::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    BOOL bRecalcStatus = FALSE;
 
@@ -1019,7 +1019,7 @@ UINT32 NetObj::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
    // Change object's name
    if (pRequest->isFieldExist(VID_OBJECT_NAME))
-      pRequest->GetVariableStr(VID_OBJECT_NAME, m_name, MAX_OBJECT_NAME);
+      pRequest->getFieldAsString(VID_OBJECT_NAME, m_name, MAX_OBJECT_NAME);
 
    // Change object's status calculation/propagation algorithms
    if (pRequest->isFieldExist(VID_STATUS_CALCULATION_ALG))
@@ -1042,7 +1042,7 @@ UINT32 NetObj::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
 	// Change image
 	if (pRequest->isFieldExist(VID_IMAGE))
-		pRequest->GetVariableBinary(VID_IMAGE, m_image, UUID_LENGTH);
+		pRequest->getFieldAsBinary(VID_IMAGE, m_image, UUID_LENGTH);
 
    // Change object's ACL
    if (pRequest->isFieldExist(VID_ACL_SIZE))
@@ -1050,19 +1050,19 @@ UINT32 NetObj::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       UINT32 i, dwNumElements;
 
       lockACL();
-      dwNumElements = pRequest->GetVariableLong(VID_ACL_SIZE);
-      m_bInheritAccessRights = pRequest->GetVariableShort(VID_INHERIT_RIGHTS);
+      dwNumElements = pRequest->getFieldAsUInt32(VID_ACL_SIZE);
+      m_bInheritAccessRights = pRequest->getFieldAsUInt16(VID_INHERIT_RIGHTS);
       m_pAccessList->deleteAll();
       for(i = 0; i < dwNumElements; i++)
-         m_pAccessList->addElement(pRequest->GetVariableLong(VID_ACL_USER_BASE + i),
-                                   pRequest->GetVariableLong(VID_ACL_RIGHTS_BASE +i));
+         m_pAccessList->addElement(pRequest->getFieldAsUInt32(VID_ACL_USER_BASE + i),
+                                   pRequest->getFieldAsUInt32(VID_ACL_RIGHTS_BASE +i));
       unlockACL();
    }
 
 	// Change trusted nodes list
    if (pRequest->isFieldExist(VID_NUM_TRUSTED_NODES))
    {
-      m_dwNumTrustedNodes = pRequest->GetVariableLong(VID_NUM_TRUSTED_NODES);
+      m_dwNumTrustedNodes = pRequest->getFieldAsUInt32(VID_NUM_TRUSTED_NODES);
 		m_pdwTrustedNodes = (UINT32 *)realloc(m_pdwTrustedNodes, sizeof(UINT32) * m_dwNumTrustedNodes);
 		pRequest->getFieldAsInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
    }
@@ -1073,12 +1073,12 @@ UINT32 NetObj::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
       UINT32 i, dwId, dwNumElements;
       TCHAR *name, *value;
 
-      dwNumElements = pRequest->GetVariableLong(VID_NUM_CUSTOM_ATTRIBUTES);
+      dwNumElements = pRequest->getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
       m_customAttributes.clear();
       for(i = 0, dwId = VID_CUSTOM_ATTRIBUTES_BASE; i < dwNumElements; i++)
       {
-      	name = pRequest->GetVariableStr(dwId++);
-      	value = pRequest->GetVariableStr(dwId++);
+      	name = pRequest->getFieldAsString(dwId++);
+      	value = pRequest->getFieldAsString(dwId++);
       	if ((name != NULL) && (value != NULL))
 	      	m_customAttributes.setPreallocated(name, value);
       }
@@ -1093,34 +1093,34 @@ UINT32 NetObj::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 
 	if (pRequest->isFieldExist(VID_SUBMAP_ID))
 	{
-		m_submapId = pRequest->GetVariableLong(VID_SUBMAP_ID);
+		m_submapId = pRequest->getFieldAsUInt32(VID_SUBMAP_ID);
 	}
 
    if (pRequest->isFieldExist(VID_COUNTRY))
    {
       TCHAR buffer[64];
-      pRequest->GetVariableStr(VID_COUNTRY, buffer, 64);
+      pRequest->getFieldAsString(VID_COUNTRY, buffer, 64);
       m_postalAddress->setCountry(buffer);
    }
 
    if (pRequest->isFieldExist(VID_CITY))
    {
       TCHAR buffer[64];
-      pRequest->GetVariableStr(VID_CITY, buffer, 64);
+      pRequest->getFieldAsString(VID_CITY, buffer, 64);
       m_postalAddress->setCity(buffer);
    }
 
    if (pRequest->isFieldExist(VID_STREET_ADDRESS))
    {
       TCHAR buffer[256];
-      pRequest->GetVariableStr(VID_STREET_ADDRESS, buffer, 256);
+      pRequest->getFieldAsString(VID_STREET_ADDRESS, buffer, 256);
       m_postalAddress->setStreetAddress(buffer);
    }
 
    if (pRequest->isFieldExist(VID_POSTCODE))
    {
       TCHAR buffer[32];
-      pRequest->GetVariableStr(VID_POSTCODE, buffer, 32);
+      pRequest->getFieldAsString(VID_POSTCODE, buffer, 32);
       m_postalAddress->setPostCode(buffer);
    }
 
@@ -1493,10 +1493,10 @@ void NetObj::setComments(TCHAR *text)
 /**
  * Copy object's comments to NXCP message
  */
-void NetObj::commentsToMessage(CSCPMessage *pMsg)
+void NetObj::commentsToMessage(NXCPMessage *pMsg)
 {
    lockProperties();
-   pMsg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_pszComments));
+   pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_pszComments));
    unlockProperties();
 }
 

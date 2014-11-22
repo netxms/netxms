@@ -100,18 +100,18 @@ VlanInfo *VlanList::findByName(const TCHAR *name)
 /**
  * Fill NXCP  message with vlans data
  */
-void VlanList::fillMessage(CSCPMessage *msg)
+void VlanList::fillMessage(NXCPMessage *msg)
 {
-	msg->SetVariable(VID_NUM_VLANS, (UINT32)m_size);
+	msg->setField(VID_NUM_VLANS, (UINT32)m_size);
 	UINT32 varId = VID_VLAN_LIST_BASE;
 	for(int i = 0; i < m_size; i++)
 	{
-		msg->SetVariable(varId++, (UINT16)m_vlans[i]->getVlanId());
-		msg->SetVariable(varId++, m_vlans[i]->getName());
-		msg->SetVariable(varId++, (UINT32)m_vlans[i]->getNumPorts());
-		msg->setFieldInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getPorts());
-		msg->setFieldInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIndexes());
-		msg->setFieldInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIds());
+		msg->setField(varId++, (UINT16)m_vlans[i]->getVlanId());
+		msg->setField(varId++, m_vlans[i]->getName());
+		msg->setField(varId++, (UINT32)m_vlans[i]->getNumPorts());
+		msg->setFieldFromInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getPorts());
+		msg->setFieldFromInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIndexes());
+		msg->setFieldFromInt32Array(varId++, (UINT32)m_vlans[i]->getNumPorts(), m_vlans[i]->getIfIds());
 		varId += 4;
 	}
 }

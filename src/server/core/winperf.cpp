@@ -69,17 +69,17 @@ bool WinPerfObject::readDataFromAgent(AgentConnection *conn)
  *
  * @return next available variable ID
  */
-UINT32 WinPerfObject::fillMessage(CSCPMessage *msg, UINT32 baseId)
+UINT32 WinPerfObject::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
-	msg->SetVariable(baseId, m_name);
-	msg->SetVariable(baseId + 1, (UINT32)m_counters->size());
-	msg->SetVariable(baseId + 2, (UINT32)m_instances->size());
+	msg->setField(baseId, m_name);
+	msg->setField(baseId + 1, (UINT32)m_counters->size());
+	msg->setField(baseId + 2, (UINT32)m_instances->size());
 
 	UINT32 varId = baseId + 3;
 	for(int i = 0; i < m_counters->size(); i++)
-		msg->SetVariable(varId++, m_counters->get(i));
+		msg->setField(varId++, m_counters->get(i));
 	for(int i = 0; i < m_instances->size(); i++)
-		msg->SetVariable(varId++, m_instances->get(i));
+		msg->setField(varId++, m_instances->get(i));
 	return varId;
 }
 

@@ -76,7 +76,7 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void DataCollectionTarget::fillMessage(CSCPMessage *msg)
+void DataCollectionTarget::fillMessage(NXCPMessage *msg)
 {
    Template::fillMessage(msg);
 }
@@ -84,7 +84,7 @@ void DataCollectionTarget::fillMessage(CSCPMessage *msg)
 /**
  * Modify object from message
  */
-UINT32 DataCollectionTarget::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 DataCollectionTarget::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       lockProperties();
@@ -122,7 +122,7 @@ void DataCollectionTarget::cleanDCIData()
 /**
  * Get last collected values of given table
  */
-UINT32 DataCollectionTarget::getTableLastValues(UINT32 dciId, CSCPMessage *msg)
+UINT32 DataCollectionTarget::getTableLastValues(UINT32 dciId, NXCPMessage *msg)
 {
 	UINT32 rcc = RCC_INVALID_DCI_ID;
 
@@ -295,7 +295,7 @@ void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveD
 /**
  * Get list of DCIs to be shown on performance tab
  */
-UINT32 DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
+UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg)
 {
 	lockDciAccess(false);
 
@@ -308,15 +308,15 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
           (object->getStatus() == ITEM_STATUS_ACTIVE) &&
           object->matchClusterResource())
 		{
-			pMsg->SetVariable(dwId++, object->getId());
-			pMsg->SetVariable(dwId++, object->getDescription());
-			pMsg->SetVariable(dwId++, (WORD)object->getStatus());
-			pMsg->SetVariable(dwId++, object->getPerfTabSettings());
-			pMsg->SetVariable(dwId++, (WORD)object->getType());
-			pMsg->SetVariable(dwId++, object->getTemplateItemId());
+			pMsg->setField(dwId++, object->getId());
+			pMsg->setField(dwId++, object->getDescription());
+			pMsg->setField(dwId++, (WORD)object->getStatus());
+			pMsg->setField(dwId++, object->getPerfTabSettings());
+			pMsg->setField(dwId++, (WORD)object->getType());
+			pMsg->setField(dwId++, object->getTemplateItemId());
 			if (object->getType() == DCO_TYPE_ITEM)
 			{
-				pMsg->SetVariable(dwId++, ((DCItem *)object)->getInstance());
+				pMsg->setField(dwId++, ((DCItem *)object)->getInstance());
 				dwId += 3;
 			}
 			else
@@ -326,7 +326,7 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
 			dwCount++;
 		}
 	}
-   pMsg->SetVariable(VID_NUM_ITEMS, dwCount);
+   pMsg->setField(VID_NUM_ITEMS, dwCount);
 
 	unlockDciAccess();
    return RCC_SUCCESS;
@@ -335,11 +335,11 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
 /**
  * Get threshold violation summary into NXCP message
  */
-UINT32 DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, UINT32 baseId)
+UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId)
 {
 	UINT32 varId = baseId;
 
-	msg->SetVariable(varId++, m_id);
+	msg->setField(varId++, m_id);
 	UINT32 countId = varId++;
 	UINT32 count = 0;
 
@@ -358,7 +358,7 @@ UINT32 DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, UINT32 baseId
 		}
 	}
 	unlockDciAccess();
-	msg->SetVariable(countId, count);
+	msg->setField(countId, count);
    return varId;
 }
 

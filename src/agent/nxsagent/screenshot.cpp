@@ -25,7 +25,7 @@
 /**
  * Take screenshot
  */
-void TakeScreenshot(CSCPMessage *response)
+void TakeScreenshot(NXCPMessage *response)
 {
    UINT32 rcc = ERR_INTERNAL_ERROR;
 
@@ -69,5 +69,5 @@ void TakeScreenshot(CSCPMessage *response)
       DeleteDC(dc);
    }
    
-   response->SetVariable(VID_RCC, rcc);
+   response->setField(VID_RCC, rcc);
 }

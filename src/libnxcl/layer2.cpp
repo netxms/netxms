@@ -31,21 +31,21 @@
 
 UINT32 LIBNXCL_EXPORTABLE NXCQueryL2Topology(NXC_SESSION hSession, UINT32 dwNodeId, void **ppTopology)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRetCode, dwRqId;
 
 	*ppTopology = NULL;
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_QUERY_L2_TOPOLOGY);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.setCode(CMD_QUERY_L2_TOPOLOGY);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, dwNodeId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
 		{
 			*ppTopology = new nxmap_ObjList(pResponse);
@@ -66,28 +66,28 @@ UINT32 LIBNXCL_EXPORTABLE NXCQueryL2Topology(NXC_SESSION hSession, UINT32 dwNode
 
 UINT32 LIBNXCL_EXPORTABLE NXCFindConnectionPoint(NXC_SESSION hSession, UINT32 objectId, NXC_CONNECTION_POINT *cpInfo)
 {
-   CSCPMessage msg, *response;
+   NXCPMessage msg, *response;
    UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-	msg.SetCode(CMD_FIND_NODE_CONNECTION);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, objectId);
+	msg.setCode(CMD_FIND_NODE_CONNECTION);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, objectId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    response = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (response != NULL)
    {
-      dwRetCode = response->GetVariableLong(VID_RCC);
+      dwRetCode = response->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
 		{
-			cpInfo->remoteNodeId = response->GetVariableLong(VID_OBJECT_ID);
-			cpInfo->remoteInterfaceId = response->GetVariableLong(VID_INTERFACE_ID);
-			cpInfo->remoteIfIndex = response->GetVariableLong(VID_IF_INDEX);
-			cpInfo->localNodeId = response->GetVariableLong(VID_LOCAL_NODE_ID);
-			cpInfo->localInterfaceId = response->GetVariableLong(VID_LOCAL_INTERFACE_ID);
-			response->GetVariableBinary(VID_MAC_ADDR, cpInfo->localMacAddr, MAC_ADDR_LENGTH);
+			cpInfo->remoteNodeId = response->getFieldAsUInt32(VID_OBJECT_ID);
+			cpInfo->remoteInterfaceId = response->getFieldAsUInt32(VID_INTERFACE_ID);
+			cpInfo->remoteIfIndex = response->getFieldAsUInt32(VID_IF_INDEX);
+			cpInfo->localNodeId = response->getFieldAsUInt32(VID_LOCAL_NODE_ID);
+			cpInfo->localInterfaceId = response->getFieldAsUInt32(VID_LOCAL_INTERFACE_ID);
+			response->getFieldAsBinary(VID_MAC_ADDR, cpInfo->localMacAddr, MAC_ADDR_LENGTH);
 		}
       delete response;
    }
@@ -105,28 +105,28 @@ UINT32 LIBNXCL_EXPORTABLE NXCFindConnectionPoint(NXC_SESSION hSession, UINT32 ob
 
 UINT32 LIBNXCL_EXPORTABLE NXCFindMACAddress(NXC_SESSION hSession, BYTE *macAddr, NXC_CONNECTION_POINT *cpInfo)
 {
-   CSCPMessage msg, *response;
+   NXCPMessage msg, *response;
    UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-	msg.SetCode(CMD_FIND_MAC_LOCATION);
-   msg.SetId(dwRqId);
-	msg.SetVariable(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
+	msg.setCode(CMD_FIND_MAC_LOCATION);
+   msg.setId(dwRqId);
+	msg.setField(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    response = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (response != NULL)
    {
-      dwRetCode = response->GetVariableLong(VID_RCC);
+      dwRetCode = response->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
 		{
-			cpInfo->remoteNodeId = response->GetVariableLong(VID_OBJECT_ID);
-			cpInfo->remoteInterfaceId = response->GetVariableLong(VID_INTERFACE_ID);
-			cpInfo->remoteIfIndex = response->GetVariableLong(VID_IF_INDEX);
-			cpInfo->localNodeId = response->GetVariableLong(VID_LOCAL_NODE_ID);
-			cpInfo->localInterfaceId = response->GetVariableLong(VID_LOCAL_INTERFACE_ID);
-			response->GetVariableBinary(VID_MAC_ADDR, cpInfo->localMacAddr, MAC_ADDR_LENGTH);
+			cpInfo->remoteNodeId = response->getFieldAsUInt32(VID_OBJECT_ID);
+			cpInfo->remoteInterfaceId = response->getFieldAsUInt32(VID_INTERFACE_ID);
+			cpInfo->remoteIfIndex = response->getFieldAsUInt32(VID_IF_INDEX);
+			cpInfo->localNodeId = response->getFieldAsUInt32(VID_LOCAL_NODE_ID);
+			cpInfo->localInterfaceId = response->getFieldAsUInt32(VID_LOCAL_INTERFACE_ID);
+			response->getFieldAsBinary(VID_MAC_ADDR, cpInfo->localMacAddr, MAC_ADDR_LENGTH);
 		}
       delete response;
    }

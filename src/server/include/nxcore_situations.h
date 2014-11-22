@@ -44,7 +44,7 @@ public:
 	const TCHAR *GetName() { return m_name; }
 	Situation *GetParent() { return m_parent; }
 	
-	UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
+	UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
 
 	const TCHAR *GetAttribute(const TCHAR *attribute);
 	void UpdateAttribute(const TCHAR *attribute, const TCHAR *value);
@@ -76,11 +76,11 @@ public:
 	void SaveToDatabase();
 	void DeleteFromDatabase();
 	
-	UINT32 GetId() { return m_id; }
+	UINT32 getId() { return m_id; }
 	const TCHAR *GetName() { return m_name; }
 	
-	void fillMessage(CSCPMessage *msg);
-	void UpdateFromMessage(CSCPMessage *msg);
+	void fillMessage(NXCPMessage *msg);
+	void UpdateFromMessage(NXCPMessage *msg);
 
 	void UpdateSituation(const TCHAR *instance, const TCHAR *attribute, const TCHAR *value);
 	BOOL DeleteInstance(const TCHAR *instance);
@@ -97,7 +97,7 @@ Situation *FindSituationById(UINT32 id);
 Situation *FindSituationByName(const TCHAR *name);
 Situation *CreateSituation(const TCHAR *name);
 UINT32 DeleteSituation(UINT32 id);
-void SendSituationListToClient(ClientSession *session, CSCPMessage *msg);
+void SendSituationListToClient(ClientSession *session, NXCPMessage *msg);
 
 
 #endif

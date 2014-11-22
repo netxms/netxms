@@ -99,7 +99,7 @@ void MsgWaitQueue::clear()
       }
       else
       {
-         delete (CSCPMessage *)(m_elements[i].msg);
+         delete (NXCPMessage *)(m_elements[i].msg);
       }
    }
    m_size = 0;
@@ -111,7 +111,7 @@ void MsgWaitQueue::clear()
 /**
  * Put message into queue
  */
-void MsgWaitQueue::put(CSCPMessage *pMsg)
+void MsgWaitQueue::put(NXCPMessage *pMsg)
 {
    lock();
 
@@ -128,9 +128,9 @@ void MsgWaitQueue::put(CSCPMessage *pMsg)
       for(pos = 0; m_elements[pos].msg != NULL; pos++);
    }
 	
-   m_elements[pos].code = pMsg->GetCode();
+   m_elements[pos].code = pMsg->getCode();
    m_elements[pos].isBinary = 0;
-   m_elements[pos].id = pMsg->GetId();
+   m_elements[pos].id = pMsg->getId();
    m_elements[pos].ttl = m_holdTime;
    m_elements[pos].msg = pMsg;
    m_size++;
@@ -149,7 +149,7 @@ void MsgWaitQueue::put(CSCPMessage *pMsg)
 /**
  * Put raw message into queue
  */
-void MsgWaitQueue::put(CSCP_MESSAGE *pMsg)
+void MsgWaitQueue::put(NXCP_MESSAGE *pMsg)
 {
    lock();
 
@@ -166,9 +166,9 @@ void MsgWaitQueue::put(CSCP_MESSAGE *pMsg)
       for(pos = 0; m_elements[pos].msg != NULL; pos++);
    }
 
-   m_elements[pos].code = pMsg->wCode;
+   m_elements[pos].code = pMsg->code;
    m_elements[pos].isBinary = 1;
-   m_elements[pos].id = pMsg->dwId;
+   m_elements[pos].id = pMsg->id;
    m_elements[pos].ttl = m_holdTime;
    m_elements[pos].msg = pMsg;
    m_size++;
@@ -305,7 +305,7 @@ void MsgWaitQueue::housekeeperThread()
             }
             else
             {
-               delete (CSCPMessage *)(m_elements[i].msg);
+               delete (NXCPMessage *)(m_elements[i].msg);
             }
             m_elements[i].msg = NULL;
             m_size--;

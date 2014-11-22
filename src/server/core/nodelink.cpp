@@ -161,23 +161,23 @@ bool NodeLink::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void NodeLink::fillMessage(CSCPMessage *pMsg)
+void NodeLink::fillMessage(NXCPMessage *pMsg)
 {
 	ServiceContainer::fillMessage(pMsg);
-	pMsg->SetVariable(VID_NODE_ID, m_nodeId);
+	pMsg->setField(VID_NODE_ID, m_nodeId);
 }
 
 /**
  * Modify object from message
  */
-UINT32 NodeLink::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 NodeLink::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
 	if (!bAlreadyLocked)
 		lockProperties();
 
 	if (pRequest->isFieldExist(VID_NODE_ID))
 	{
-		m_nodeId = pRequest->GetVariableLong(VID_NODE_ID);
+		m_nodeId = pRequest->getFieldAsUInt32(VID_NODE_ID);
 	}
 
 	return ServiceContainer::modifyFromMessage(pRequest, TRUE);

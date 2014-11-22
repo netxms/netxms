@@ -726,57 +726,57 @@ bool DCObject::prepareForDeletion()
 /**
  * Create NXCP message with object data
  */
-void DCObject::createMessage(CSCPMessage *pMsg)
+void DCObject::createMessage(NXCPMessage *pMsg)
 {
 	lock();
-   pMsg->SetVariable(VID_DCI_ID, m_id);
-	pMsg->SetVariable(VID_DCOBJECT_TYPE, (WORD)getType());
-   pMsg->SetVariable(VID_TEMPLATE_ID, m_dwTemplateId);
-   pMsg->SetVariable(VID_NAME, m_name);
-   pMsg->SetVariable(VID_DESCRIPTION, m_szDescription);
-   pMsg->SetVariable(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(m_transformationScriptSource));
-   pMsg->SetVariable(VID_FLAGS, m_flags);
-   pMsg->SetVariable(VID_SYSTEM_TAG, m_systemTag);
-   pMsg->SetVariable(VID_POLLING_INTERVAL, (UINT32)m_iPollingInterval);
-   pMsg->SetVariable(VID_RETENTION_TIME, (UINT32)m_iRetentionTime);
-   pMsg->SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_source);
-   pMsg->SetVariable(VID_DCI_STATUS, (WORD)m_status);
-	pMsg->SetVariable(VID_RESOURCE_ID, m_dwResourceId);
-	pMsg->SetVariable(VID_AGENT_PROXY, m_dwProxyNode);
-	pMsg->SetVariable(VID_SNMP_PORT, m_snmpPort);
+   pMsg->setField(VID_DCI_ID, m_id);
+	pMsg->setField(VID_DCOBJECT_TYPE, (WORD)getType());
+   pMsg->setField(VID_TEMPLATE_ID, m_dwTemplateId);
+   pMsg->setField(VID_NAME, m_name);
+   pMsg->setField(VID_DESCRIPTION, m_szDescription);
+   pMsg->setField(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(m_transformationScriptSource));
+   pMsg->setField(VID_FLAGS, m_flags);
+   pMsg->setField(VID_SYSTEM_TAG, m_systemTag);
+   pMsg->setField(VID_POLLING_INTERVAL, (UINT32)m_iPollingInterval);
+   pMsg->setField(VID_RETENTION_TIME, (UINT32)m_iRetentionTime);
+   pMsg->setField(VID_DCI_SOURCE_TYPE, (WORD)m_source);
+   pMsg->setField(VID_DCI_STATUS, (WORD)m_status);
+	pMsg->setField(VID_RESOURCE_ID, m_dwResourceId);
+	pMsg->setField(VID_AGENT_PROXY, m_dwProxyNode);
+	pMsg->setField(VID_SNMP_PORT, m_snmpPort);
 	if (m_comments != NULL)
-		pMsg->SetVariable(VID_COMMENTS, m_comments);
+		pMsg->setField(VID_COMMENTS, m_comments);
 	if (m_pszPerfTabSettings != NULL)
-		pMsg->SetVariable(VID_PERFTAB_SETTINGS, m_pszPerfTabSettings);
-   pMsg->SetVariable(VID_NUM_SCHEDULES, m_dwNumSchedules);
+		pMsg->setField(VID_PERFTAB_SETTINGS, m_pszPerfTabSettings);
+   pMsg->setField(VID_NUM_SCHEDULES, m_dwNumSchedules);
    for(UINT32 i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
-      pMsg->SetVariable(dwId, m_ppScheduleList[i]);
+      pMsg->setField(dwId, m_ppScheduleList[i]);
    unlock();
 }
 
 /**
  * Update data collection object from NXCP message
  */
-void DCObject::updateFromMessage(CSCPMessage *pMsg)
+void DCObject::updateFromMessage(NXCPMessage *pMsg)
 {
    lock();
 
-   pMsg->GetVariableStr(VID_NAME, m_name, MAX_ITEM_NAME);
-   pMsg->GetVariableStr(VID_DESCRIPTION, m_szDescription, MAX_DB_STRING);
-   pMsg->GetVariableStr(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
-	m_flags = pMsg->GetVariableShort(VID_FLAGS);
-   m_source = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
-   m_iPollingInterval = pMsg->GetVariableLong(VID_POLLING_INTERVAL);
-   m_iRetentionTime = pMsg->GetVariableLong(VID_RETENTION_TIME);
-   setStatus(pMsg->GetVariableShort(VID_DCI_STATUS), true);
-	m_dwResourceId = pMsg->GetVariableLong(VID_RESOURCE_ID);
-	m_dwProxyNode = pMsg->GetVariableLong(VID_AGENT_PROXY);
+   pMsg->getFieldAsString(VID_NAME, m_name, MAX_ITEM_NAME);
+   pMsg->getFieldAsString(VID_DESCRIPTION, m_szDescription, MAX_DB_STRING);
+   pMsg->getFieldAsString(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
+	m_flags = pMsg->getFieldAsUInt16(VID_FLAGS);
+   m_source = (BYTE)pMsg->getFieldAsUInt16(VID_DCI_SOURCE_TYPE);
+   m_iPollingInterval = pMsg->getFieldAsUInt32(VID_POLLING_INTERVAL);
+   m_iRetentionTime = pMsg->getFieldAsUInt32(VID_RETENTION_TIME);
+   setStatus(pMsg->getFieldAsUInt16(VID_DCI_STATUS), true);
+	m_dwResourceId = pMsg->getFieldAsUInt32(VID_RESOURCE_ID);
+	m_dwProxyNode = pMsg->getFieldAsUInt32(VID_AGENT_PROXY);
 	safe_free(m_pszPerfTabSettings);
-	m_pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
-	m_snmpPort = pMsg->GetVariableShort(VID_SNMP_PORT);
-   TCHAR *pszStr = pMsg->GetVariableStr(VID_TRANSFORMATION_SCRIPT);
+	m_pszPerfTabSettings = pMsg->getFieldAsString(VID_PERFTAB_SETTINGS);
+	m_snmpPort = pMsg->getFieldAsUInt16(VID_SNMP_PORT);
+   TCHAR *pszStr = pMsg->getFieldAsString(VID_TRANSFORMATION_SCRIPT);
    safe_free_and_null(m_comments);
-   m_comments = pMsg->GetVariableStr(VID_COMMENTS);
+   m_comments = pMsg->getFieldAsString(VID_COMMENTS);
    setTransformationScript(pszStr);
    safe_free(pszStr);
 
@@ -785,13 +785,13 @@ void DCObject::updateFromMessage(CSCPMessage *pMsg)
       free(m_ppScheduleList[i]);
    safe_free_and_null(m_ppScheduleList);
 
-   m_dwNumSchedules = pMsg->GetVariableLong(VID_NUM_SCHEDULES);
+   m_dwNumSchedules = pMsg->getFieldAsUInt32(VID_NUM_SCHEDULES);
    if (m_dwNumSchedules > 0)
    {
       m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
       for(UINT32 i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
       {
-         TCHAR *pszStr = pMsg->GetVariableStr(dwId);
+         TCHAR *pszStr = pMsg->getFieldAsString(dwId);
          if (pszStr != NULL)
          {
             m_ppScheduleList[i] = pszStr;

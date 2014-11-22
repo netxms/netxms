@@ -472,25 +472,25 @@ BOOL NetworkMap::loadFromDatabase(UINT32 dwId)
 /**
  * Fill NXCP message with object's data
  */
-void NetworkMap::fillMessage(CSCPMessage *msg)
+void NetworkMap::fillMessage(NXCPMessage *msg)
 {
 	NetObj::fillMessage(msg);
 
-	msg->SetVariable(VID_MAP_TYPE, (WORD)m_mapType);
-	msg->SetVariable(VID_LAYOUT, (WORD)m_layout);
-	msg->SetVariable(VID_FLAGS, m_flags);
-	msg->SetVariable(VID_SEED_OBJECT, m_seedObject);
-	msg->SetVariable(VID_DISCOVERY_RADIUS, (UINT32)m_discoveryRadius);
-	msg->SetVariable(VID_BACKGROUND, m_background, UUID_LENGTH);
-	msg->SetVariable(VID_BACKGROUND_LATITUDE, m_backgroundLatitude);
-	msg->SetVariable(VID_BACKGROUND_LONGITUDE, m_backgroundLongitude);
-	msg->SetVariable(VID_BACKGROUND_ZOOM, (WORD)m_backgroundZoom);
-	msg->SetVariable(VID_LINK_COLOR, (UINT32)m_defaultLinkColor);
-	msg->SetVariable(VID_LINK_ROUTING, (WORD)m_defaultLinkRouting);
-	msg->SetVariable(VID_BACKGROUND_COLOR, (UINT32)m_backgroundColor);
-   msg->SetVariable(VID_FILTER, CHECK_NULL_EX(m_filterSource));
+	msg->setField(VID_MAP_TYPE, (WORD)m_mapType);
+	msg->setField(VID_LAYOUT, (WORD)m_layout);
+	msg->setField(VID_FLAGS, m_flags);
+	msg->setField(VID_SEED_OBJECT, m_seedObject);
+	msg->setField(VID_DISCOVERY_RADIUS, (UINT32)m_discoveryRadius);
+	msg->setField(VID_BACKGROUND, m_background, UUID_LENGTH);
+	msg->setField(VID_BACKGROUND_LATITUDE, m_backgroundLatitude);
+	msg->setField(VID_BACKGROUND_LONGITUDE, m_backgroundLongitude);
+	msg->setField(VID_BACKGROUND_ZOOM, (WORD)m_backgroundZoom);
+	msg->setField(VID_LINK_COLOR, (UINT32)m_defaultLinkColor);
+	msg->setField(VID_LINK_ROUTING, (WORD)m_defaultLinkRouting);
+	msg->setField(VID_BACKGROUND_COLOR, (UINT32)m_backgroundColor);
+   msg->setField(VID_FILTER, CHECK_NULL_EX(m_filterSource));
 
-	msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
+	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
 	UINT32 varId = VID_ELEMENT_LIST_BASE;
 	for(int i = 0; i < m_elements->size(); i++)
 	{
@@ -498,7 +498,7 @@ void NetworkMap::fillMessage(CSCPMessage *msg)
 		varId += 100;
 	}
 
-	msg->SetVariable(VID_NUM_LINKS, (UINT32)m_links->size());
+	msg->setField(VID_NUM_LINKS, (UINT32)m_links->size());
 	varId = VID_LINK_LIST_BASE;
 	for(int i = 0; i < m_links->size(); i++)
 	{
@@ -510,49 +510,49 @@ void NetworkMap::fillMessage(CSCPMessage *msg)
 /**
  * Update network map object from NXCP message
  */
-UINT32 NetworkMap::modifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
+UINT32 NetworkMap::modifyFromMessage(NXCPMessage *request, BOOL bAlreadyLocked)
 {
 	if (!bAlreadyLocked)
 		lockProperties();
 
 	if (request->isFieldExist(VID_MAP_TYPE))
-		m_mapType = (int)request->GetVariableShort(VID_MAP_TYPE);
+		m_mapType = (int)request->getFieldAsUInt16(VID_MAP_TYPE);
 
 	if (request->isFieldExist(VID_LAYOUT))
-		m_layout = (int)request->GetVariableShort(VID_LAYOUT);
+		m_layout = (int)request->getFieldAsUInt16(VID_LAYOUT);
 
 	if (request->isFieldExist(VID_FLAGS))
-		m_flags = request->GetVariableLong(VID_FLAGS);
+		m_flags = request->getFieldAsUInt32(VID_FLAGS);
 
 	if (request->isFieldExist(VID_SEED_OBJECT))
-		m_seedObject = request->GetVariableLong(VID_SEED_OBJECT);
+		m_seedObject = request->getFieldAsUInt32(VID_SEED_OBJECT);
 
 	if (request->isFieldExist(VID_DISCOVERY_RADIUS))
-		m_discoveryRadius = (int)request->GetVariableLong(VID_DISCOVERY_RADIUS);
+		m_discoveryRadius = (int)request->getFieldAsUInt32(VID_DISCOVERY_RADIUS);
 
 	if (request->isFieldExist(VID_LINK_COLOR))
-		m_defaultLinkColor = (int)request->GetVariableLong(VID_LINK_COLOR);
+		m_defaultLinkColor = (int)request->getFieldAsUInt32(VID_LINK_COLOR);
 
 	if (request->isFieldExist(VID_LINK_ROUTING))
-		m_defaultLinkRouting = (int)request->GetVariableShort(VID_LINK_ROUTING);
+		m_defaultLinkRouting = (int)request->getFieldAsUInt16(VID_LINK_ROUTING);
 
 	if (request->isFieldExist(VID_BACKGROUND_COLOR))
-		m_backgroundColor = (int)request->GetVariableLong(VID_BACKGROUND_COLOR);
+		m_backgroundColor = (int)request->getFieldAsUInt32(VID_BACKGROUND_COLOR);
 
    if (request->isFieldExist(VID_FILTER))
-		m_backgroundColor = (int)request->GetVariableLong(VID_FILTER);
+		m_backgroundColor = (int)request->getFieldAsUInt32(VID_FILTER);
 
 	if (request->isFieldExist(VID_BACKGROUND))
 	{
-		request->GetVariableBinary(VID_BACKGROUND, m_background, UUID_LENGTH);
+		request->getFieldAsBinary(VID_BACKGROUND, m_background, UUID_LENGTH);
 		m_backgroundLatitude = request->getFieldAsDouble(VID_BACKGROUND_LATITUDE);
 		m_backgroundLongitude = request->getFieldAsDouble(VID_BACKGROUND_LONGITUDE);
-		m_backgroundZoom = (int)request->GetVariableShort(VID_BACKGROUND_ZOOM);
+		m_backgroundZoom = (int)request->getFieldAsUInt16(VID_BACKGROUND_ZOOM);
 	}
 
    if (request->isFieldExist(VID_FILTER))
    {
-      TCHAR *filter = request->GetVariableStr(VID_FILTER);
+      TCHAR *filter = request->getFieldAsString(VID_FILTER);
       if (filter != NULL)
          StrStrip(filter);
       setFilter(filter);
@@ -563,14 +563,14 @@ UINT32 NetworkMap::modifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 	{
 		m_elements->clear();
 
-		int numElements = (int)request->GetVariableLong(VID_NUM_ELEMENTS);
+		int numElements = (int)request->getFieldAsUInt32(VID_NUM_ELEMENTS);
 		if (numElements > 0)
 		{
 			UINT32 varId = VID_ELEMENT_LIST_BASE;
 			for(int i = 0; i < numElements; i++)
 			{
 				NetworkMapElement *e;
-				int type = (int)request->GetVariableShort(varId + 1);
+				int type = (int)request->getFieldAsUInt16(varId + 1);
 				switch(type)
 				{
 					case MAP_ELEMENT_OBJECT:
@@ -598,7 +598,7 @@ UINT32 NetworkMap::modifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 		}
 
 		m_links->clear();
-		int numLinks = request->GetVariableLong(VID_NUM_LINKS);
+		int numLinks = request->getFieldAsUInt32(VID_NUM_LINKS);
 		if (numLinks > 0)
 		{
 			UINT32 varId = VID_LINK_LIST_BASE;

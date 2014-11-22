@@ -143,7 +143,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
 {
    DT_STARTUP_INFO *pStartup = (DT_STARTUP_INFO *)pArg;
    Node *pNode;
-   CSCPMessage msg;
+   NXCPMessage msg;
    BOOL bSuccess;
    AgentConnection *pAgentConn;
    const TCHAR *pszErrorMsg;
@@ -155,8 +155,8 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
       dwMaxWait += 20 - (dwMaxWait % 20);
 
    // Prepare notification message
-   msg.SetCode(CMD_INSTALLER_INFO);
-   msg.SetId(pStartup->dwRqId);
+   msg.setCode(CMD_INSTALLER_INFO);
+   msg.setId(pStartup->dwRqId);
 
    while(1)
    {
@@ -169,13 +169,13 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
 		pszErrorMsg = _T("");
 
       // Preset node id in notification message
-      msg.SetVariable(VID_OBJECT_ID, pNode->getId());
+      msg.setField(VID_OBJECT_ID, pNode->getId());
 
       // Check if node is a management server itself
       if (!(pNode->getFlags() & NF_IS_LOCAL_MGMT))
       {
          // Change deployment status to "Initializing"
-         msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INITIALIZE);
+         msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INITIALIZE);
          pStartup->pSession->sendMessage(&msg);
 
          // Create agent connection
@@ -207,7 +207,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
             if (bCheckOK)
             {
                // Change deployment status to "File Transfer"
-               msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_TRANSFER);
+               msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_TRANSFER);
                pStartup->pSession->sendMessage(&msg);
 
                // Upload package file to agent
@@ -226,7 +226,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                      pAgentConn->disconnect();
 
                      // Change deployment status to "Package installation"
-                     msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INSTALLATION);
+                     msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_INSTALLATION);
                      pStartup->pSession->sendMessage(&msg);
 
                      // Wait for agent's restart
@@ -297,9 +297,9 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
       }
 
       // Finish node processing
-      msg.SetVariable(VID_DEPLOYMENT_STATUS, 
+      msg.setField(VID_DEPLOYMENT_STATUS, 
          bSuccess ? (WORD)DEPLOYMENT_STATUS_COMPLETED : (WORD)DEPLOYMENT_STATUS_FAILED);
-      msg.SetVariable(VID_ERROR_MESSAGE, pszErrorMsg);
+      msg.setField(VID_ERROR_MESSAGE, pszErrorMsg);
       pStartup->pSession->sendMessage(&msg);
       pNode->decRefCount();
    }
@@ -313,7 +313,7 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
 {
    DT_STARTUP_INFO *pStartup = (DT_STARTUP_INFO *)pArg;
    int i, numThreads;
-   CSCPMessage msg;
+   NXCPMessage msg;
    Queue *pQueue;
    THREAD *pThreadList;
 
@@ -338,15 +338,15 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
    pStartup->pQueue = pQueue;
 
    // Send initial status for each node and queue them for deployment
-   msg.SetCode(CMD_INSTALLER_INFO);
-   msg.SetId(pStartup->dwRqId);
+   msg.setCode(CMD_INSTALLER_INFO);
+   msg.setId(pStartup->dwRqId);
    for(i = 0; i < pStartup->nodeList->size(); i++)
    {
       pQueue->Put(pStartup->nodeList->get(i));
-      msg.SetVariable(VID_OBJECT_ID, pStartup->nodeList->get(i)->getId());
-      msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_PENDING);
+      msg.setField(VID_OBJECT_ID, pStartup->nodeList->get(i)->getId());
+      msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_PENDING);
       pStartup->pSession->sendMessage(&msg);
-      msg.deleteAllVariables();
+      msg.deleteAllFields();
    }
 
    // Start worker threads
@@ -359,7 +359,7 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
       ThreadJoin(pThreadList[i]);
 
    // Send final notification to client
-   msg.SetVariable(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_FINISHED);
+   msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_FINISHED);
    pStartup->pSession->sendMessage(&msg);
    pStartup->pSession->decRefCount();
 

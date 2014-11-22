@@ -32,16 +32,16 @@ static QWORD s_requestId = (QWORD)time(NULL) << 32;
  */
 bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId)
 {
-	CSCPMessage msg;
+	NXCPMessage msg;
 	bool success = false;
 
 	AgentWriteDebugLog(6, _T("PushData: \"%s\" = \"%s\""), parameter, value);
 
-	msg.SetCode(CMD_PUSH_DCI_DATA);
-	msg.SetVariable(VID_NAME, parameter);
-	msg.SetVariable(VID_VALUE, value);
-   msg.SetVariable(VID_OBJECT_ID, objectId);
-   msg.SetVariable(VID_REQUEST_ID, s_requestId++); 
+	msg.setCode(CMD_PUSH_DCI_DATA);
+	msg.setField(VID_NAME, parameter);
+	msg.setField(VID_VALUE, value);
+   msg.setField(VID_OBJECT_ID, objectId);
+   msg.setField(VID_REQUEST_ID, s_requestId++); 
 
    if (g_dwFlags & AF_SUBAGENT_LOADER)
    {
@@ -74,20 +74,20 @@ static void ProcessPushRequest(HPIPE hPipe)
 	while(true)
 	{
       MessageReceiverResult result;
-		CSCPMessage *msg = receiver.readMessage(5000, &result);
+		NXCPMessage *msg = receiver.readMessage(5000, &result);
 		if (msg == NULL)
 			break;
-		AgentWriteDebugLog(6, _T("ProcessPushRequest: received message %s"), NXCPMessageCodeName(msg->GetCode(), buffer));
-		if (msg->GetCode() == CMD_PUSH_DCI_DATA)
+		AgentWriteDebugLog(6, _T("ProcessPushRequest: received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+		if (msg->getCode() == CMD_PUSH_DCI_DATA)
 		{
-         UINT32 objectId = msg->GetVariableLong(VID_OBJECT_ID);
-			UINT32 count = msg->GetVariableLong(VID_NUM_ITEMS);
+         UINT32 objectId = msg->getFieldAsUInt32(VID_OBJECT_ID);
+			UINT32 count = msg->getFieldAsUInt32(VID_NUM_ITEMS);
 			UINT32 varId = VID_PUSH_DCI_DATA_BASE;
 			for(DWORD i = 0; i < count; i++)
 			{
 				TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
-				msg->GetVariableStr(varId++, name, MAX_PARAM_NAME);
-				msg->GetVariableStr(varId++, value, MAX_RESULT_LENGTH);
+				msg->getFieldAsString(varId++, name, MAX_PARAM_NAME);
+				msg->getFieldAsString(varId++, value, MAX_RESULT_LENGTH);
 				PushData(name, value, objectId);
 			}
 		}

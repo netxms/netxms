@@ -174,7 +174,7 @@ ModuleData::~ModuleData()
 /**
  * Fill NXCP message with module data
  */
-void ModuleData::fillMessage(CSCPMessage *msg, UINT32 baseId)
+void ModuleData::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
 }
 

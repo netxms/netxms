@@ -254,7 +254,7 @@ ServerJob *ServerJobQueue::findJob(UINT32 jobId)
  * Fill NXCP message with jobs' information
  * Increments base variable id; returns number of jobs added to message
  */
-UINT32 ServerJobQueue::fillMessage(CSCPMessage *msg, UINT32 *varIdBase)
+UINT32 ServerJobQueue::fillMessage(NXCPMessage *msg, UINT32 *varIdBase)
 {
 	UINT32 id = *varIdBase;
 	int i;
@@ -262,14 +262,14 @@ UINT32 ServerJobQueue::fillMessage(CSCPMessage *msg, UINT32 *varIdBase)
 	MutexLock(m_accessMutex);
 	for(i = 0; i < m_jobCount; i++, id += 2)
 	{
-		msg->SetVariable(id++, m_jobList[i]->getId());
-		msg->SetVariable(id++, m_jobList[i]->getType());
-		msg->SetVariable(id++, m_jobList[i]->getDescription());
-		msg->SetVariable(id++, m_jobList[i]->getRemoteNode());
-		msg->SetVariable(id++, (WORD)m_jobList[i]->getStatus());
-		msg->SetVariable(id++, (WORD)m_jobList[i]->getProgress());
-		msg->SetVariable(id++, m_jobList[i]->getFailureMessage());
-		msg->SetVariable(id++, m_jobList[i]->getUserId());
+		msg->setField(id++, m_jobList[i]->getId());
+		msg->setField(id++, m_jobList[i]->getType());
+		msg->setField(id++, m_jobList[i]->getDescription());
+		msg->setField(id++, m_jobList[i]->getRemoteNode());
+		msg->setField(id++, (WORD)m_jobList[i]->getStatus());
+		msg->setField(id++, (WORD)m_jobList[i]->getProgress());
+		msg->setField(id++, m_jobList[i]->getFailureMessage());
+		msg->setField(id++, m_jobList[i]->getUserId());
 	}
 	MutexUnlock(m_accessMutex);
 	*varIdBase = id;

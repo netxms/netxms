@@ -86,7 +86,7 @@ public:
    UINT64 getRootId() { return m_qwRootId; }
    void setRootId(UINT64 qwId) { m_qwRootId = qwId; }
 
-   void prepareMessage(CSCPMessage *pMsg);
+   void prepareMessage(NXCPMessage *pMsg);
 
    void expandMessageText();
    TCHAR *expandText(const TCHAR *textTemplate, const TCHAR *alarmMsg = NULL, const TCHAR *alarmKey = NULL);
@@ -148,7 +148,7 @@ private:
 public:
    EPRule(UINT32 id);
    EPRule(DB_RESULT hResult, int row);
-   EPRule(CSCPMessage *msg);
+   EPRule(NXCPMessage *msg);
    EPRule(ConfigEntry *config);
    ~EPRule();
 
@@ -158,7 +158,7 @@ public:
    bool loadFromDB();
 	void saveToDB(DB_HANDLE hdb);
    bool processEvent(Event *pEvent);
-   void createMessage(CSCPMessage *pMsg);
+   void createMessage(NXCPMessage *pMsg);
    void createNXMPRecord(String &str);
 
    bool isActionInUse(UINT32 dwActionId);

@@ -526,7 +526,7 @@ public:
    NXSL_Program *findScript(const TCHAR *name);
    NXSL_VM *createVM(const TCHAR *name, NXSL_Environment *env);
 
-   void fillMessage(CSCPMessage *pMsg);
+   void fillMessage(NXCPMessage *pMsg);
 };
 
 /**

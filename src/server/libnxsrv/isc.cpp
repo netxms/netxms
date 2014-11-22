@@ -154,20 +154,20 @@ void ISC::printMessage(const TCHAR *format, ...)
  */
 void ISC::receiverThread()
 {
-   CSCPMessage *pMsg;
-   CSCP_MESSAGE *pRawMsg;
-   CSCP_BUFFER *pMsgBuffer;
+   NXCPMessage *pMsg;
+   NXCP_MESSAGE *pRawMsg;
+   NXCP_BUFFER *pMsgBuffer;
    BYTE *pDecryptionBuffer = NULL;
    int err;
    TCHAR szBuffer[128], szIpAddr[16];
 	SOCKET nSocket;
 
    // Initialize raw message receiving function
-   pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+   pMsgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
    RecvNXCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL, 0);
 
    // Allocate space for raw message
-   pRawMsg = (CSCP_MESSAGE *)malloc(RECEIVER_BUFFER_SIZE);
+   pRawMsg = (NXCP_MESSAGE *)malloc(RECEIVER_BUFFER_SIZE);
 #ifdef _WITH_ENCRYPTION
    pDecryptionBuffer = (BYTE *)malloc(RECEIVER_BUFFER_SIZE);
 #endif
@@ -189,8 +189,8 @@ void ISC::receiverThread()
       if (err == 1)
       {
          printMessage(_T("Received too large message %s (%d bytes)"), 
-                  NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
-                  ntohl(pRawMsg->dwSize));
+                  NXCPMessageCodeName(ntohs(pRawMsg->code), szBuffer),
+                  ntohl(pRawMsg->size));
          continue;
       }
 
@@ -209,23 +209,23 @@ void ISC::receiverThread()
       }
 
       // Check that actual received packet size is equal to encoded in packet
-      if ((int)ntohl(pRawMsg->dwSize) != err)
+      if ((int)ntohl(pRawMsg->size) != err)
       {
-         printMessage(_T("RecvMsg: Bad packet length [dwSize=%d ActualSize=%d]"), ntohl(pRawMsg->dwSize), err);
+         printMessage(_T("RecvMsg: Bad packet length [size=%d ActualSize=%d]"), ntohl(pRawMsg->size), err);
          continue;   // Bad packet, wait for next
       }
 
-		if (ntohs(pRawMsg->wFlags) & MF_BINARY)
+		if (ntohs(pRawMsg->flags) & MF_BINARY)
 		{
          // Convert message header to host format
          DbgPrintf(6, _T("ISC: Received raw message %s from peer at %s"),
-			          NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer), IpToStr(m_addr, szIpAddr));
+			          NXCPMessageCodeName(ntohs(pRawMsg->code), szBuffer), IpToStr(m_addr, szIpAddr));
          onBinaryMessage(pRawMsg);
 		}
 		else
 		{
 			// Create message object from raw message
-			pMsg = new CSCPMessage(pRawMsg, m_protocolVersion);
+			pMsg = new NXCPMessage(pRawMsg, m_protocolVersion);
          if (onMessage(pMsg))
          {
             // message was consumed by handler
@@ -419,27 +419,27 @@ void ISC::disconnect()
 /**
  * Send message to peer
  */
-BOOL ISC::sendMessage(CSCPMessage *pMsg)
+BOOL ISC::sendMessage(NXCPMessage *pMsg)
 {
-   CSCP_MESSAGE *pRawMsg;
+   NXCP_MESSAGE *pRawMsg;
    NXCP_ENCRYPTED_MESSAGE *pEnMsg;
    BOOL bResult;
 
 	if (!(m_flags & ISCF_IS_CONNECTED))
 		return FALSE;
 
-   if (pMsg->GetId() == 0)
+   if (pMsg->getId() == 0)
    {
-      pMsg->SetId((UINT32)InterlockedIncrement(&m_requestId));
+      pMsg->setId((UINT32)InterlockedIncrement(&m_requestId));
    }
 
    pRawMsg = pMsg->createMessage();
    if (m_ctx != NULL)
    {
-      pEnMsg = CSCPEncryptMessage(m_ctx, pRawMsg);
+      pEnMsg = m_ctx->encryptMessage(pRawMsg);
       if (pEnMsg != NULL)
       {
-         bResult = (SendEx(m_socket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_socketLock) == (int)ntohl(pEnMsg->dwSize));
+         bResult = (SendEx(m_socket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, m_socketLock) == (int)ntohl(pEnMsg->size));
          free(pEnMsg);
       }
       else
@@ -449,7 +449,7 @@ BOOL ISC::sendMessage(CSCPMessage *pMsg)
    }
    else
    {
-      bResult = (SendEx(m_socket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0, m_socketLock) == (int)ntohl(pRawMsg->dwSize));
+      bResult = (SendEx(m_socket, (char *)pRawMsg, ntohl(pRawMsg->size), 0, m_socketLock) == (int)ntohl(pRawMsg->size));
    }
    free(pRawMsg);
    return bResult;
@@ -460,13 +460,13 @@ BOOL ISC::sendMessage(CSCPMessage *pMsg)
  */
 UINT32 ISC::waitForRCC(UINT32 rqId, UINT32 timeOut)
 {
-   CSCPMessage *pMsg;
+   NXCPMessage *pMsg;
    UINT32 dwRetCode;
 
    pMsg = m_msgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, rqId, timeOut);
    if (pMsg != NULL)
    {
-      dwRetCode = pMsg->GetVariableLong(VID_RCC);
+      dwRetCode = pMsg->getFieldAsUInt32(VID_RCC);
       delete pMsg;
    }
    else
@@ -482,13 +482,13 @@ UINT32 ISC::waitForRCC(UINT32 rqId, UINT32 timeOut)
 UINT32 ISC::setupEncryption(RSA *pServerKey)
 {
 #ifdef _WITH_ENCRYPTION
-   CSCPMessage msg(m_protocolVersion), *pResp;
+   NXCPMessage msg(m_protocolVersion), *pResp;
    UINT32 dwRqId, dwError, dwResult;
 
    dwRqId = (UINT32)InterlockedIncrement(&m_requestId);
 
    PrepareKeyRequestMsg(&msg, pServerKey, false);
-   msg.SetId(dwRqId);
+   msg.setId(dwRqId);
    if (sendMessage(&msg))
    {
       pResp = waitForMessage(CMD_SESSION_KEY, dwRqId, m_commandTimeout);
@@ -536,12 +536,12 @@ UINT32 ISC::setupEncryption(RSA *pServerKey)
  */
 UINT32 ISC::nop()
 {
-   CSCPMessage msg(m_protocolVersion);
+   NXCPMessage msg(m_protocolVersion);
    UINT32 dwRqId;
 
    dwRqId = (UINT32)InterlockedIncrement(&m_requestId);
-   msg.SetCode(CMD_KEEPALIVE);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_KEEPALIVE);
+   msg.setId(dwRqId);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, m_commandTimeout);
    else
@@ -553,13 +553,13 @@ UINT32 ISC::nop()
  */
 UINT32 ISC::connectToService(UINT32 service)
 {
-   CSCPMessage msg(m_protocolVersion);
+   NXCPMessage msg(m_protocolVersion);
    UINT32 dwRqId;
 
    dwRqId = (UINT32)InterlockedIncrement(&m_requestId);
-   msg.SetCode(CMD_ISC_CONNECT_TO_SERVICE);
-   msg.SetId(dwRqId);
-	msg.SetVariable(VID_SERVICE_ID, service);
+   msg.setCode(CMD_ISC_CONNECT_TO_SERVICE);
+   msg.setId(dwRqId);
+	msg.setField(VID_SERVICE_ID, service);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, m_commandTimeout);
    else
@@ -569,7 +569,7 @@ UINT32 ISC::connectToService(UINT32 service)
 /**
  * Binary message handler. Default implementation do nothing.
  */
-void ISC::onBinaryMessage(CSCP_MESSAGE *rawMsg)
+void ISC::onBinaryMessage(NXCP_MESSAGE *rawMsg)
 {
 }
 
@@ -577,7 +577,7 @@ void ISC::onBinaryMessage(CSCP_MESSAGE *rawMsg)
  * Incoming message handler. Default implementation do nothing and return false.
  * Should return true if message was consumed and shou8ld not be put into wait queue
  */
-bool ISC::onMessage(CSCPMessage *msg)
+bool ISC::onMessage(NXCPMessage *msg)
 {
    return false;
 }

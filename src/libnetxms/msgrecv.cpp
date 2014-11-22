@@ -50,16 +50,16 @@ AbstractMessageReceiver::~AbstractMessageReceiver()
 /**
  * Get message from buffer
  */
-CSCPMessage *AbstractMessageReceiver::getMessageFromBuffer()
+NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer()
 {
-   CSCPMessage *msg = NULL;
+   NXCPMessage *msg = NULL;
 
    if (m_dataSize >= NXCP_HEADER_SIZE)
    {
-      size_t msgSize = (size_t)ntohl(((CSCP_MESSAGE *)m_buffer)->dwSize);
+      size_t msgSize = (size_t)ntohl(((NXCP_MESSAGE *)m_buffer)->size);
       if (msgSize <= m_dataSize)
       {
-         if (ntohs(((CSCP_MESSAGE *)m_buffer)->wCode) == CMD_ENCRYPTED_MESSAGE)
+         if (ntohs(((NXCP_MESSAGE *)m_buffer)->code) == CMD_ENCRYPTED_MESSAGE)
          {
             if ((m_encryptionContext != NULL) && (m_encryptionContext != PROXY_ENCRYPTION_CTX))
             {
@@ -67,13 +67,13 @@ CSCPMessage *AbstractMessageReceiver::getMessageFromBuffer()
                   m_decryptionBuffer = (BYTE *)malloc(m_size);
                if (m_encryptionContext->decryptMessage((NXCP_ENCRYPTED_MESSAGE *)m_buffer, m_decryptionBuffer))
                {
-                  msg = new CSCPMessage((CSCP_MESSAGE *)m_buffer);
+                  msg = new NXCPMessage((NXCP_MESSAGE *)m_buffer);
                }
             }
          }
          else
          {
-            msg = new CSCPMessage((CSCP_MESSAGE *)m_buffer);
+            msg = new NXCPMessage((NXCP_MESSAGE *)m_buffer);
          }
          m_dataSize -= msgSize;
          if (m_dataSize > 0)
@@ -103,9 +103,9 @@ CSCPMessage *AbstractMessageReceiver::getMessageFromBuffer()
 /**
  * Read message from communication channel
  */
-CSCPMessage *AbstractMessageReceiver::readMessage(UINT32 timeout, MessageReceiverResult *result)
+NXCPMessage *AbstractMessageReceiver::readMessage(UINT32 timeout, MessageReceiverResult *result)
 {
-   CSCPMessage *msg;
+   NXCPMessage *msg;
    while(true)
    {
       msg = getMessageFromBuffer();
@@ -139,6 +139,21 @@ CSCPMessage *AbstractMessageReceiver::readMessage(UINT32 timeout, MessageReceive
       }
    }
    return msg;
+}
+
+/**
+ * Convert result to text
+ */
+const TCHAR *AbstractMessageReceiver::resultToText(MessageReceiverResult result)
+{
+   static TCHAR *text[] = { 
+      _T("MSGRECV_SUCCESS"), 
+      _T("MSGRECV_CLOSED"), 
+      _T("MSGRECV_TIMEOUT"), 
+      _T("MSGRECV_COMM_FAILURE"), 
+      _T("MSGRECV_DECRYPTION_FAILURE") 
+   };
+   return ((result >= MSGRECV_SUCCESS) && (result <= MSGRECV_DECRYPTION_FAILURE)) ? text[result] : _T("UNKNOWN");
 }
 
 /**

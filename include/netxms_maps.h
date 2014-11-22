@@ -100,7 +100,7 @@ protected:
 public:
    nxmap_ObjList();
    nxmap_ObjList(nxmap_ObjList *src);
-   nxmap_ObjList(CSCPMessage *msg);
+   nxmap_ObjList(NXCPMessage *msg);
    ~nxmap_ObjList();
 
    void addObject(UINT32 id);
@@ -114,7 +114,7 @@ public:
    UINT32 getNumLinks() { return m_linkList->size(); }
    ObjectArray<ObjLink> *getLinks() { return m_linkList; }
 
-	void createMessage(CSCPMessage *pMsg);
+	void createMessage(NXCPMessage *pMsg);
 
 	bool isLinkExist(UINT32 objectId1, UINT32 objectId2);
 	bool isObjectExist(UINT32 objectId);
@@ -163,11 +163,11 @@ protected:
 public:
 	NetworkMapElement(UINT32 id, UINT32 flags = 0);
 	NetworkMapElement(UINT32 id, Config *config, UINT32 flags = 0);
-	NetworkMapElement(CSCPMessage *msg, UINT32 baseId);
+	NetworkMapElement(NXCPMessage *msg, UINT32 baseId);
 	virtual ~NetworkMapElement();
 
 	virtual void updateConfig(Config *config);
-	virtual void fillMessage(CSCPMessage *msg, UINT32 baseId);
+	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
 
 	UINT32 getId() { return m_id; }
 	LONG getType() { return m_type; }
@@ -189,11 +189,11 @@ protected:
 public:
 	NetworkMapObject(UINT32 id, UINT32 objectId, UINT32 flags = 0);
 	NetworkMapObject(UINT32 id, Config *config, UINT32 flags = 0);
-	NetworkMapObject(CSCPMessage *msg, UINT32 baseId);
+	NetworkMapObject(NXCPMessage *msg, UINT32 baseId);
 	virtual ~NetworkMapObject();
 
 	virtual void updateConfig(Config *config);
-	virtual void fillMessage(CSCPMessage *msg, UINT32 baseId);
+	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
 
 	UINT32 getObjectId() { return m_objectId; }
 };
@@ -213,11 +213,11 @@ protected:
 public:
 	NetworkMapDecoration(UINT32 id, LONG decorationType, UINT32 flags = 0);
 	NetworkMapDecoration(UINT32 id, Config *config, UINT32 flags = 0);
-	NetworkMapDecoration(CSCPMessage *msg, UINT32 baseId);
+	NetworkMapDecoration(NXCPMessage *msg, UINT32 baseId);
 	virtual ~NetworkMapDecoration();
 
 	virtual void updateConfig(Config *config);
-	virtual void fillMessage(CSCPMessage *msg, UINT32 baseId);
+	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
 
 	LONG getDecorationType() { return m_decorationType; }
 	UINT32 getColor() { return m_color; }
@@ -238,11 +238,11 @@ protected:
 public:
 	NetworkMapDCIContainer(UINT32 id, TCHAR* objectDCIList, UINT32 flags = 0);
 	NetworkMapDCIContainer(UINT32 id, Config *config, UINT32 flags = 0);
-	NetworkMapDCIContainer(CSCPMessage *msg, UINT32 baseId);
+	NetworkMapDCIContainer(NXCPMessage *msg, UINT32 baseId);
 	virtual ~NetworkMapDCIContainer();
 
 	virtual void updateConfig(Config *config);
-	virtual void fillMessage(CSCPMessage *msg, UINT32 baseId);
+	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
 
 	TCHAR* getObjectDCIList() { return m_xmlDCIList; }
 };
@@ -258,11 +258,11 @@ protected:
 public:
 	NetworkMapDCIImage(UINT32 id, TCHAR* objectDCIList, UINT32 flags = 0);
 	NetworkMapDCIImage(UINT32 id, Config *config, UINT32 flags = 0);
-	NetworkMapDCIImage(CSCPMessage *msg, UINT32 baseId);
+	NetworkMapDCIImage(NXCPMessage *msg, UINT32 baseId);
 	virtual ~NetworkMapDCIImage();
 
 	virtual void updateConfig(Config *config);
-	virtual void fillMessage(CSCPMessage *msg, UINT32 baseId);
+	virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
 
 	TCHAR* getObjectDCIList() { return m_config; }
 };
@@ -284,10 +284,10 @@ protected:
 
 public:
 	NetworkMapLink(UINT32 e1, UINT32 e2, int type);
-	NetworkMapLink(CSCPMessage *msg, UINT32 baseId);
+	NetworkMapLink(NXCPMessage *msg, UINT32 baseId);
 	virtual ~NetworkMapLink();
 
-	void fillMessage(CSCPMessage *msg, UINT32 baseId);
+	void fillMessage(NXCPMessage *msg, UINT32 baseId);
 
 	UINT32 getElement1() { return m_element1; }
 	UINT32 getElement2() { return m_element2; }

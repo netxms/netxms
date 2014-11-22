@@ -507,7 +507,7 @@ void Template::destroyItem(DCObject *object, int index)
 /**
  * Modify data collection object from NXCP message
  */
-bool Template::updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId)
+bool Template::updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId)
 {
    bool success = false;
 
@@ -638,11 +638,11 @@ BOOL Template::unlockDCIList(int sessionId)
  */
 void Template::sendItemsToClient(ClientSession *pSession, UINT32 dwRqId)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
 
    // Prepare message
-   msg.SetId(dwRqId);
-   msg.SetCode(CMD_NODE_DCI);
+   msg.setId(dwRqId);
+   msg.setCode(CMD_NODE_DCI);
 
    lockDciAccess(false);
 
@@ -651,7 +651,7 @@ void Template::sendItemsToClient(ClientSession *pSession, UINT32 dwRqId)
    {
 		m_dcObjects->get(i)->createMessage(&msg);
 		pSession->sendMessage(&msg);
-		msg.deleteAllVariables();
+		msg.deleteAllFields();
    }
 
    unlockDciAccess();
@@ -819,36 +819,36 @@ void Template::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create NXCP message with object's data
  */
-void Template::fillMessage(CSCPMessage *pMsg)
+void Template::fillMessage(NXCPMessage *pMsg)
 {
    NetObj::fillMessage(pMsg);
-   pMsg->SetVariable(VID_TEMPLATE_VERSION, m_dwVersion);
-	pMsg->SetVariable(VID_FLAGS, m_flags);
-	pMsg->SetVariable(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_applyFilterSource));
+   pMsg->setField(VID_TEMPLATE_VERSION, m_dwVersion);
+	pMsg->setField(VID_FLAGS, m_flags);
+	pMsg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_applyFilterSource));
 }
 
 /**
  * Modify object from NXCP message
  */
-UINT32 Template::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Template::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       lockProperties();
 
    // Change template version
    if (pRequest->isFieldExist(VID_TEMPLATE_VERSION))
-      m_dwVersion = pRequest->GetVariableLong(VID_TEMPLATE_VERSION);
+      m_dwVersion = pRequest->getFieldAsUInt32(VID_TEMPLATE_VERSION);
 
    // Change flags
    if (pRequest->isFieldExist(VID_FLAGS))
-		m_flags = pRequest->GetVariableLong(VID_FLAGS);
+		m_flags = pRequest->getFieldAsUInt32(VID_FLAGS);
 
    // Change apply filter
 	if (pRequest->isFieldExist(VID_AUTOBIND_FILTER))
 	{
 		safe_free(m_applyFilterSource);
 		delete m_applyFilter;
-		m_applyFilterSource = pRequest->GetVariableStr(VID_AUTOBIND_FILTER);
+		m_applyFilterSource = pRequest->getFieldAsString(VID_AUTOBIND_FILTER);
 		if (m_applyFilterSource != NULL)
 		{
 			TCHAR error[256];
@@ -1097,7 +1097,7 @@ bool Template::isApplicable(Node *node)
  * derived from DataCollectionTarget actual values will always be empty strings
  * with data type DCI_DT_NULL.
  */
-UINT32 Template::getLastValues(CSCPMessage *msg, bool objectTooltipOnly, bool includeNoValueObjects)
+UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool includeNoValueObjects)
 {
    lockDciAccess(false);
 
@@ -1122,7 +1122,7 @@ UINT32 Template::getLastValues(CSCPMessage *msg, bool objectTooltipOnly, bool in
 			}
 		}
 	}
-   msg->SetVariable(VID_NUM_ITEMS, dwCount);
+   msg->setField(VID_NUM_ITEMS, dwCount);
 
    unlockDciAccess();
    return RCC_SUCCESS;

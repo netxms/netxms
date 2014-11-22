@@ -118,14 +118,14 @@ bool StringMap::getBoolean(const TCHAR *key, bool defaultValue)
 /**
  * Fill NXCP message with map data
  */
-void StringMap::fillMessage(CSCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId)
+void StringMap::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId)
 {
-   msg->SetVariable(sizeFieldId, (UINT32)size());
+   msg->setField(sizeFieldId, (UINT32)size());
    UINT32 id = baseFieldId;
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      msg->SetVariable(id++, m_ignoreCase ? entry->originalKey : entry->key);
-      msg->SetVariable(id++, (TCHAR *)entry->value);
+      msg->setField(id++, m_ignoreCase ? entry->originalKey : entry->key);
+      msg->setField(id++, (TCHAR *)entry->value);
    }
 }

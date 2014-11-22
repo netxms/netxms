@@ -513,40 +513,40 @@ ThresholdCheckResult Threshold::checkError(UINT32 dwErrorCount)
 /**
  * Fill DCI_THRESHOLD with object's data ready to send over the network
  */
-void Threshold::createMessage(CSCPMessage *msg, UINT32 baseId)
+void Threshold::createMessage(NXCPMessage *msg, UINT32 baseId)
 {
 	UINT32 varId = baseId;
 
-	msg->SetVariable(varId++, m_id);
-	msg->SetVariable(varId++, m_eventCode);
-	msg->SetVariable(varId++, m_rearmEventCode);
-	msg->SetVariable(varId++, (WORD)m_function);
-	msg->SetVariable(varId++, (WORD)m_operation);
-	msg->SetVariable(varId++, (UINT32)m_sampleCount);
-	msg->SetVariable(varId++, CHECK_NULL_EX(m_scriptSource));
-	msg->SetVariable(varId++, (UINT32)m_repeatInterval);
-	msg->SetVariable(varId++, m_value.getString());
-	msg->SetVariable(varId++, (WORD)m_isReached);
-	msg->SetVariable(varId++, (WORD)m_currentSeverity);
-	msg->SetVariable(varId++, (UINT32)m_lastEventTimestamp);
+	msg->setField(varId++, m_id);
+	msg->setField(varId++, m_eventCode);
+	msg->setField(varId++, m_rearmEventCode);
+	msg->setField(varId++, (WORD)m_function);
+	msg->setField(varId++, (WORD)m_operation);
+	msg->setField(varId++, (UINT32)m_sampleCount);
+	msg->setField(varId++, CHECK_NULL_EX(m_scriptSource));
+	msg->setField(varId++, (UINT32)m_repeatInterval);
+	msg->setField(varId++, m_value.getString());
+	msg->setField(varId++, (WORD)m_isReached);
+	msg->setField(varId++, (WORD)m_currentSeverity);
+	msg->setField(varId++, (UINT32)m_lastEventTimestamp);
 }
 
 /**
  * Update threshold object from NXCP message
  */
-void Threshold::updateFromMessage(CSCPMessage *msg, UINT32 baseId)
+void Threshold::updateFromMessage(NXCPMessage *msg, UINT32 baseId)
 {
 	TCHAR buffer[MAX_DCI_STRING_VALUE];
 	UINT32 varId = baseId + 1;	// Skip ID field
 
-	m_eventCode = msg->GetVariableLong(varId++);
-	m_rearmEventCode = msg->GetVariableLong(varId++);
-   m_function = (BYTE)msg->GetVariableShort(varId++);
-   m_operation = (BYTE)msg->GetVariableShort(varId++);
-   m_sampleCount = (int)msg->GetVariableLong(varId++);
-   setScript(msg->GetVariableStr(varId++));
-	m_repeatInterval = (int)msg->GetVariableLong(varId++);
-	m_value = msg->GetVariableStr(varId++, buffer, MAX_DCI_STRING_VALUE);
+	m_eventCode = msg->getFieldAsUInt32(varId++);
+	m_rearmEventCode = msg->getFieldAsUInt32(varId++);
+   m_function = (BYTE)msg->getFieldAsUInt16(varId++);
+   m_operation = (BYTE)msg->getFieldAsUInt16(varId++);
+   m_sampleCount = (int)msg->getFieldAsUInt32(varId++);
+   setScript(msg->getFieldAsString(varId++));
+	m_repeatInterval = (int)msg->getFieldAsUInt32(varId++);
+	m_value = msg->getFieldAsString(varId++, buffer, MAX_DCI_STRING_VALUE);
 }
 
 /**

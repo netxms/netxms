@@ -43,18 +43,18 @@ static MUTEX m_mutexStoreAccess = INVALID_MUTEX_HANDLE;
 /**
  * Create X509 certificate structure from login message
  */
-X509 *CertificateFromLoginMessage(CSCPMessage *pMsg)
+X509 *CertificateFromLoginMessage(NXCPMessage *pMsg)
 {
 	UINT32 dwLen;
 	BYTE *pData;
 	OPENSSL_CONST BYTE *p;
 	X509 *pCert = NULL;
 
-	dwLen = pMsg->GetVariableBinary(VID_CERTIFICATE, NULL, 0);
+	dwLen = pMsg->getFieldAsBinary(VID_CERTIFICATE, NULL, 0);
 	if (dwLen > 0)
 	{
 		pData = (BYTE *)malloc(dwLen);
-		pMsg->GetVariableBinary(VID_CERTIFICATE, pData, dwLen);
+		pMsg->getFieldAsBinary(VID_CERTIFICATE, pData, dwLen);
 		p = pData;
 		pCert = d2i_X509(NULL, &p, dwLen);
 		free(pData);

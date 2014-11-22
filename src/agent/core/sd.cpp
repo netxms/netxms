@@ -35,10 +35,10 @@ static void ProcessStorageDiscoveryRequest(HPIPE hPipe)
 	while(true)
 	{
       MessageReceiverResult result;
-		CSCPMessage *msg = receiver.readMessage(INFINITE, &result);
+		NXCPMessage *msg = receiver.readMessage(INFINITE, &result);
 		if (msg == NULL)
 			break;
-		AgentWriteDebugLog(6, _T("ProcessStorageDiscoveryRequest: received message %s"), NXCPMessageCodeName(msg->GetCode(), buffer));
+		AgentWriteDebugLog(6, _T("ProcessStorageDiscoveryRequest: received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
 		delete msg;
 	}
 	AgentWriteDebugLog(5, _T("ProcessStorageDiscoveryRequest: connection closed"));

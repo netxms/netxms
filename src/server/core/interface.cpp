@@ -707,44 +707,44 @@ void Interface::paeStatusPoll(ClientSession *pSession, UINT32 rqId, SNMP_Transpo
 /**
  * Create NXCP message with object's data
  */
-void Interface::fillMessage(CSCPMessage *pMsg)
+void Interface::fillMessage(NXCPMessage *pMsg)
 {
    NetObj::fillMessage(pMsg);
-   pMsg->SetVariable(VID_IF_INDEX, m_dwIfIndex);
-   pMsg->SetVariable(VID_IF_TYPE, m_dwIfType);
-   pMsg->SetVariable(VID_IF_SLOT, m_slotNumber);
-   pMsg->SetVariable(VID_IF_PORT, m_portNumber);
-   pMsg->SetVariable(VID_IP_NETMASK, m_dwIpNetMask);
-   pMsg->SetVariable(VID_MAC_ADDR, m_bMacAddr, MAC_ADDR_LENGTH);
-	pMsg->SetVariable(VID_FLAGS, m_flags);
-	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
-	pMsg->SetVariable(VID_PEER_NODE_ID, m_peerNodeId);
-	pMsg->SetVariable(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
-	pMsg->SetVariable(VID_PEER_PROTOCOL, (INT16)m_peerDiscoveryProtocol);
-	pMsg->SetVariable(VID_DESCRIPTION, m_description);
-	pMsg->SetVariable(VID_ADMIN_STATE, m_adminState);
-	pMsg->SetVariable(VID_OPER_STATE, m_operState);
-	pMsg->SetVariable(VID_DOT1X_PAE_STATE, m_dot1xPaeAuthState);
-	pMsg->SetVariable(VID_DOT1X_BACKEND_STATE, m_dot1xBackendAuthState);
-	pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
+   pMsg->setField(VID_IF_INDEX, m_dwIfIndex);
+   pMsg->setField(VID_IF_TYPE, m_dwIfType);
+   pMsg->setField(VID_IF_SLOT, m_slotNumber);
+   pMsg->setField(VID_IF_PORT, m_portNumber);
+   pMsg->setField(VID_IP_NETMASK, m_dwIpNetMask);
+   pMsg->setField(VID_MAC_ADDR, m_bMacAddr, MAC_ADDR_LENGTH);
+	pMsg->setField(VID_FLAGS, m_flags);
+	pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
+	pMsg->setField(VID_PEER_NODE_ID, m_peerNodeId);
+	pMsg->setField(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
+	pMsg->setField(VID_PEER_PROTOCOL, (INT16)m_peerDiscoveryProtocol);
+	pMsg->setField(VID_DESCRIPTION, m_description);
+	pMsg->setField(VID_ADMIN_STATE, m_adminState);
+	pMsg->setField(VID_OPER_STATE, m_operState);
+	pMsg->setField(VID_DOT1X_PAE_STATE, m_dot1xPaeAuthState);
+	pMsg->setField(VID_DOT1X_BACKEND_STATE, m_dot1xBackendAuthState);
+	pMsg->setField(VID_ZONE_ID, m_zoneId);
 }
 
 /**
  * Modify object from message
  */
-UINT32 Interface::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Interface::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       lockProperties();
 
    // Number of required polls
    if (pRequest->isFieldExist(VID_REQUIRED_POLLS))
-      m_requiredPollCount = (int)pRequest->GetVariableShort(VID_REQUIRED_POLLS);
+      m_requiredPollCount = (int)pRequest->getFieldAsUInt16(VID_REQUIRED_POLLS);
 
 	// Expected interface state
 	if (pRequest->isFieldExist(VID_EXPECTED_STATE))
 	{
-      UINT32 expectedState = pRequest->GetVariableShort(VID_EXPECTED_STATE);
+      UINT32 expectedState = pRequest->getFieldAsUInt16(VID_EXPECTED_STATE);
 		m_flags &= ~IF_EXPECTED_STATE_MASK;
 		m_flags |= expectedState << 28;
 	}
@@ -752,7 +752,7 @@ UINT32 Interface::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 	// Flags
 	if (pRequest->isFieldExist(VID_FLAGS))
 	{
-      UINT32 newFlags = pRequest->GetVariableLong(VID_FLAGS);
+      UINT32 newFlags = pRequest->getFieldAsUInt32(VID_FLAGS);
       newFlags &= IF_USER_FLAGS_MASK;
 		m_flags &= ~IF_USER_FLAGS_MASK;
 		m_flags |= newFlags;

@@ -142,17 +142,17 @@ void AccessList::enumerateElements(void (* pHandler)(UINT32, UINT32, void *), vo
 /**
  * Fill NXCP message with ACL's data
  */
-void AccessList::fillMessage(CSCPMessage *pMsg)
+void AccessList::fillMessage(NXCPMessage *pMsg)
 {
    UINT32 i, dwId1, dwId2;
 
    lock();
-   pMsg->SetVariable(VID_ACL_SIZE, m_dwNumElements);
+   pMsg->setField(VID_ACL_SIZE, m_dwNumElements);
    for(i = 0, dwId1 = VID_ACL_USER_BASE, dwId2 = VID_ACL_RIGHTS_BASE;
        i < m_dwNumElements; i++, dwId1++, dwId2++)
    {
-      pMsg->SetVariable(dwId1, m_pElements[i].dwUserId);
-      pMsg->SetVariable(dwId2, m_pElements[i].dwAccessRights);
+      pMsg->setField(dwId1, m_pElements[i].dwUserId);
+      pMsg->setField(dwId2, m_pElements[i].dwAccessRights);
    }
    unlock();
 }

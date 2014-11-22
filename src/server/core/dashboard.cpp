@@ -183,20 +183,20 @@ bool Dashboard::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Dashboard::fillMessage(CSCPMessage *msg)
+void Dashboard::fillMessage(NXCPMessage *msg)
 {
 	Container::fillMessage(msg);
-	msg->SetVariable(VID_NUM_COLUMNS, (WORD)m_numColumns);
-	msg->SetVariable(VID_FLAGS, m_options);
-	msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
+	msg->setField(VID_NUM_COLUMNS, (WORD)m_numColumns);
+	msg->setField(VID_FLAGS, m_options);
+	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
 
 	UINT32 varId = VID_ELEMENT_LIST_BASE;
 	for(int i = 0; i < m_elements->size(); i++)
 	{
 		DashboardElement *element = m_elements->get(i);
-		msg->SetVariable(varId++, (WORD)element->m_type);
-		msg->SetVariable(varId++, CHECK_NULL_EX(element->m_data));
-		msg->SetVariable(varId++, CHECK_NULL_EX(element->m_layout));
+		msg->setField(varId++, (WORD)element->m_type);
+		msg->setField(varId++, CHECK_NULL_EX(element->m_data));
+		msg->setField(varId++, CHECK_NULL_EX(element->m_layout));
 		varId += 7;
 	}
 }
@@ -204,29 +204,29 @@ void Dashboard::fillMessage(CSCPMessage *msg)
 /**
  * Modify object from NXCP message
  */
-UINT32 Dashboard::modifyFromMessage(CSCPMessage *request, BOOL alreadyLocked)
+UINT32 Dashboard::modifyFromMessage(NXCPMessage *request, BOOL alreadyLocked)
 {
 	if (!alreadyLocked)
 		lockProperties();
 
 	if (request->isFieldExist(VID_NUM_COLUMNS))
-		m_numColumns = (int)request->GetVariableShort(VID_NUM_COLUMNS);
+		m_numColumns = (int)request->getFieldAsUInt16(VID_NUM_COLUMNS);
 
 	if (request->isFieldExist(VID_FLAGS))
-		m_options = (int)request->GetVariableLong(VID_FLAGS);
+		m_options = (int)request->getFieldAsUInt32(VID_FLAGS);
 
 	if (request->isFieldExist(VID_NUM_ELEMENTS))
 	{
 		m_elements->clear();
 
-		int count = (int)request->GetVariableLong(VID_NUM_ELEMENTS);
+		int count = (int)request->getFieldAsUInt32(VID_NUM_ELEMENTS);
 		UINT32 varId = VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < count; i++)
 		{
 			DashboardElement *e = new DashboardElement;
-			e->m_type = (int)request->GetVariableShort(varId++);
-			e->m_data = request->GetVariableStr(varId++);
-			e->m_layout = request->GetVariableStr(varId++);
+			e->m_type = (int)request->getFieldAsUInt16(varId++);
+			e->m_data = request->getFieldAsString(varId++);
+			e->m_layout = request->getFieldAsString(varId++);
 			varId += 7;
 			m_elements->add(e);
 		}

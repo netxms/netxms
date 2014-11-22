@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -79,27 +79,31 @@
  */
 typedef struct
 {
-   UINT32 fieldId;      // Field identifier
-   BYTE  bType;         // Data type
-   BYTE  bPadding;      // Padding
-   WORD wInt16;
+   UINT32 fieldId;  // Field identifier
+   BYTE type;       // Data type
+   BYTE padding;    // Padding
+   WORD int16;
    union
    {
-      UINT32 dwInteger;
-      UINT64 qwInt64;
-      double dFloat;
+      INT32 int32;
+      INT64 int64;
+      UINT32 uint32;
+      UINT64 uint64;
+      double real;
       struct
       {
-         UINT32 dwLen;
-         WORD szValue[1];
+         UINT32 length;
+         WORD value[1]; // actual size depends on length value
       } string;
    } data;
-} CSCP_DF;
+} NXCP_MESSAGE_FIELD;
 
-#define df_int16  wInt16
-#define df_int32  data.dwInteger
-#define df_int64  data.qwInt64
-#define df_real   data.dFloat
+#define df_int16  int16
+#define df_int32  data.int32
+#define df_uint32 data.uint32
+#define df_int64  data.int64
+#define df_uint64 data.uint64
+#define df_real   data.real
 #define df_string data.string
 
 /**
@@ -107,13 +111,13 @@ typedef struct
  */
 typedef struct
 {
-   UINT16 wCode;       // Message (command) code
-   UINT16 wFlags;      // Message flags
-   UINT32 dwSize;     // Message size (including header) in bytes
-   UINT32 dwId;       // Unique message identifier
-   UINT32 dwNumVars;  // Number of variables in message
-   CSCP_DF df[1];    // Data fields
-} CSCP_MESSAGE;
+   UINT16 code;      // Message (command) code
+   UINT16 flags;     // Message flags
+   UINT32 size;      // Message size (including header) in bytes
+   UINT32 id;        // Unique message identifier
+   UINT32 numFields; // Number of fields in message
+   NXCP_MESSAGE_FIELD fields[1];    // Data fields - actual length depends on value in numFields
+} NXCP_MESSAGE;
 
 /**
  * Encrypted payload header
@@ -129,10 +133,10 @@ typedef struct
  */
 typedef struct
 {
-   WORD wCode;       // Should be CMD_ENCRYPTED_MESSAGE
-   BYTE nPadding;    // Number of bytes added to the end of message
-   BYTE nReserved;
-   UINT32 dwSize;    // Size of encrypted message (including encryption header and padding)
+   WORD code;       // Should be CMD_ENCRYPTED_MESSAGE
+   BYTE padding;    // Number of bytes added to the end of message
+   BYTE reserved;
+   UINT32 size;    // Size of encrypted message (including encryption header and padding)
    BYTE data[1];     // Encrypted payload
 } NXCP_ENCRYPTED_MESSAGE;
 
@@ -178,12 +182,12 @@ typedef struct
 /**
  * Data types
  */
-#define CSCP_DT_INT32      0
-#define CSCP_DT_STRING     1
-#define CSCP_DT_INT64      2
-#define CSCP_DT_INT16      3
-#define CSCP_DT_BINARY     4
-#define CSCP_DT_FLOAT      5
+#define NXCP_DT_INT32      0
+#define NXCP_DT_STRING     1
+#define NXCP_DT_INT64      2
+#define NXCP_DT_INT16      3
+#define NXCP_DT_BINARY     4
+#define NXCP_DT_FLOAT      5
 
 /**
  * Message flags
@@ -1181,15 +1185,11 @@ typedef struct
 
 #define VID_LOC_LIST_BASE           ((UINT32)0x10000000)
 
-//
-// Inline functions
-//
-
 #ifdef __cplusplus
 
-inline BOOL IsBinaryMsg(CSCP_MESSAGE *pMsg)
+inline BOOL IsBinaryMsg(NXCP_MESSAGE *msg)
 {
-   return ntohs(pMsg->wFlags) & MF_BINARY;
+   return ntohs(msg->flags) & MF_BINARY;
 }
 
 #endif

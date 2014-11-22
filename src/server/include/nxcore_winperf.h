@@ -41,7 +41,7 @@ public:
 
 	bool readDataFromAgent(AgentConnection *conn);
 
-	UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
+	UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
 
 	const TCHAR *getName() { return m_name; }
 };

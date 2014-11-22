@@ -283,10 +283,10 @@ BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
 /**
  * Decode SQL string and set as NXCP variable's value
  */
-void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr)
+void DecodeSQLStringAndSetVariable(NXCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr)
 {
    DecodeSQLString(pszStr);
-   pMsg->SetVariable(dwVarId, pszStr);
+   pMsg->setField(dwVarId, pszStr);
 }
 
 /**

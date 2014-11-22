@@ -34,31 +34,31 @@ UINT32 LIBNXCL_EXPORTABLE NXCExportConfiguration(NXC_SESSION hSession, TCHAR *ps
                                                 UINT32 dwNumTraps, UINT32 *pdwTrapList,
                                                 TCHAR **ppszContent)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRqId, dwResult;
 
    *ppszContent = NULL;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_EXPORT_CONFIGURATION);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_DESCRIPTION, pszDescr);
-   msg.SetVariable(VID_NUM_EVENTS, dwNumEvents);
-   msg.setFieldInt32Array(VID_EVENT_LIST, dwNumEvents, pdwEventList);
-   msg.SetVariable(VID_NUM_OBJECTS, dwNumTemplates);
-   msg.setFieldInt32Array(VID_OBJECT_LIST, dwNumTemplates, pdwTemplateList);
-   msg.SetVariable(VID_NUM_TRAPS, dwNumTraps);
-   msg.setFieldInt32Array(VID_TRAP_LIST, dwNumTraps, pdwTrapList);
+   msg.setCode(CMD_EXPORT_CONFIGURATION);
+   msg.setId(dwRqId);
+   msg.setField(VID_DESCRIPTION, pszDescr);
+   msg.setField(VID_NUM_EVENTS, dwNumEvents);
+   msg.setFieldFromInt32Array(VID_EVENT_LIST, dwNumEvents, pdwEventList);
+   msg.setField(VID_NUM_OBJECTS, dwNumTemplates);
+   msg.setFieldFromInt32Array(VID_OBJECT_LIST, dwNumTemplates, pdwTemplateList);
+   msg.setField(VID_NUM_TRAPS, dwNumTraps);
+   msg.setFieldFromInt32Array(VID_TRAP_LIST, dwNumTraps, pdwTrapList);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwResult = pResponse->GetVariableLong(VID_RCC);
+      dwResult = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwResult == RCC_SUCCESS)
       {
-         *ppszContent = pResponse->GetVariableStr(VID_NXMP_CONTENT);
+         *ppszContent = pResponse->getFieldAsString(VID_NXMP_CONTENT);
       }
       delete pResponse;
    }
@@ -77,28 +77,28 @@ UINT32 LIBNXCL_EXPORTABLE NXCExportConfiguration(NXC_SESSION hSession, TCHAR *ps
 UINT32 LIBNXCL_EXPORTABLE NXCImportConfiguration(NXC_SESSION hSession, TCHAR *pszContent,
                                                 UINT32 dwFlags, TCHAR *pszErrorText, int nErrorLen)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_IMPORT_CONFIGURATION);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_NXMP_CONTENT, pszContent);
-   msg.SetVariable(VID_FLAGS, dwFlags);
+   msg.setCode(CMD_IMPORT_CONFIGURATION);
+   msg.setId(dwRqId);
+   msg.setField(VID_NXMP_CONTENT, pszContent);
+   msg.setField(VID_FLAGS, dwFlags);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwResult = pResponse->GetVariableLong(VID_RCC);
+      dwResult = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwResult == RCC_SUCCESS)
       {
          *pszErrorText = 0;
       }
       else
       {
-         pResponse->GetVariableStr(VID_ERROR_TEXT, pszErrorText, nErrorLen);
+         pResponse->getFieldAsString(VID_ERROR_TEXT, pszErrorText, nErrorLen);
       }
       delete pResponse;
    }

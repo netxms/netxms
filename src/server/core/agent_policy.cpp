@@ -221,29 +221,29 @@ BOOL AgentPolicy::loadFromDatabase(UINT32 dwId)
 // Create NXCP message with policy data
 //
 
-void AgentPolicy::fillMessage(CSCPMessage *msg)
+void AgentPolicy::fillMessage(NXCPMessage *msg)
 {
 	NetObj::fillMessage(msg);
-	msg->SetVariable(VID_POLICY_TYPE, (WORD)m_policyType);
-	msg->SetVariable(VID_VERSION, m_version);
-	msg->SetVariable(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
+	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);
+	msg->setField(VID_VERSION, m_version);
+	msg->setField(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
 }
 
 /**
  * Modify policy from message
  */
-UINT32 AgentPolicy::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 AgentPolicy::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       lockProperties();
 
 	if (pRequest->isFieldExist(VID_VERSION))
-		m_version = pRequest->GetVariableLong(VID_VERSION);
+		m_version = pRequest->getFieldAsUInt32(VID_VERSION);
 
 	if (pRequest->isFieldExist(VID_DESCRIPTION))
 	{
 		safe_free(m_description);
-		m_description = pRequest->GetVariableStr(VID_DESCRIPTION);
+		m_description = pRequest->getFieldAsString(VID_DESCRIPTION);
 	}
 
    return NetObj::modifyFromMessage(pRequest, TRUE);
@@ -254,10 +254,10 @@ UINT32 AgentPolicy::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked
 // Create deployment message
 //
 
-bool AgentPolicy::createDeploymentMessage(CSCPMessage *msg)
+bool AgentPolicy::createDeploymentMessage(NXCPMessage *msg)
 {
-	msg->SetVariable(VID_POLICY_TYPE, (WORD)m_policyType);
-	msg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
+	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);
+	msg->setField(VID_GUID, m_guid, UUID_LENGTH);
 	return true;
 }
 
@@ -266,9 +266,9 @@ bool AgentPolicy::createDeploymentMessage(CSCPMessage *msg)
 // Create uninstall message
 //
 
-bool AgentPolicy::createUninstallMessage(CSCPMessage *msg)
+bool AgentPolicy::createUninstallMessage(NXCPMessage *msg)
 {
-	msg->SetVariable(VID_POLICY_TYPE, (WORD)m_policyType);
-	msg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
+	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);
+	msg->setField(VID_GUID, m_guid, UUID_LENGTH);
 	return true;
 }

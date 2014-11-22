@@ -701,28 +701,28 @@ void DCTable::deleteFromDatabase()
 /**
  * Create NXCP message with item data
  */
-void DCTable::createMessage(CSCPMessage *pMsg)
+void DCTable::createMessage(NXCPMessage *pMsg)
 {
 	DCObject::createMessage(pMsg);
 
    lock();
-	pMsg->SetVariable(VID_NUM_COLUMNS, (UINT32)m_columns->size());
+	pMsg->setField(VID_NUM_COLUMNS, (UINT32)m_columns->size());
 	UINT32 varId = VID_DCI_COLUMN_BASE;
 	for(int i = 0; i < m_columns->size(); i++)
 	{
 		DCTableColumn *column = m_columns->get(i);
-		pMsg->SetVariable(varId++, column->getName());
-		pMsg->SetVariable(varId++, column->getFlags());
+		pMsg->setField(varId++, column->getName());
+		pMsg->setField(varId++, column->getFlags());
 		SNMP_ObjectId *oid = column->getSnmpOid();
 		if (oid != NULL)
-			pMsg->setFieldInt32Array(varId++, (UINT32)oid->getLength(), oid->getValue());
+			pMsg->setFieldFromInt32Array(varId++, (UINT32)oid->getLength(), oid->getValue());
 		else
 			varId++;
-		pMsg->SetVariable(varId++, column->getDisplayName());
+		pMsg->setField(varId++, column->getDisplayName());
 		varId += 6;
 	}
 
-	pMsg->SetVariable(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
+	pMsg->setField(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
    varId = VID_DCI_THRESHOLD_BASE;
    for(int i = 0; i < m_thresholds->size(); i++)
    {
@@ -735,14 +735,14 @@ void DCTable::createMessage(CSCPMessage *pMsg)
 /**
  * Update data collection object from NXCP message
  */
-void DCTable::updateFromMessage(CSCPMessage *pMsg)
+void DCTable::updateFromMessage(NXCPMessage *pMsg)
 {
 	DCObject::updateFromMessage(pMsg);
 
    lock();
 
 	m_columns->clear();
-	int count = (int)pMsg->GetVariableLong(VID_NUM_COLUMNS);
+	int count = (int)pMsg->getFieldAsUInt32(VID_NUM_COLUMNS);
 	UINT32 varId = VID_DCI_COLUMN_BASE;
 	for(int i = 0; i < count; i++)
 	{
@@ -750,7 +750,7 @@ void DCTable::updateFromMessage(CSCPMessage *pMsg)
 		varId += 10;
 	}
 
-	count = (int)pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
+	count = (int)pMsg->getFieldAsUInt32(VID_NUM_THRESHOLDS);
    ObjectArray<DCTableThreshold> *newThresholds = new ObjectArray<DCTableThreshold>(count, 8, true);
 	varId = VID_DCI_THRESHOLD_BASE;
 	for(int i = 0; i < count; i++)
@@ -776,7 +776,7 @@ void DCTable::updateFromMessage(CSCPMessage *pMsg)
 /**
  * Get last collected value
  */
-void DCTable::fillLastValueMessage(CSCPMessage *msg)
+void DCTable::fillLastValueMessage(NXCPMessage *msg)
 {
    lock();
 	if (m_lastValue != NULL)
@@ -789,21 +789,21 @@ void DCTable::fillLastValueMessage(CSCPMessage *msg)
 /**
  * Get summary of last collected value (to show along simple DCI values)
  */
-void DCTable::fillLastValueSummaryMessage(CSCPMessage *pMsg, UINT32 dwId)
+void DCTable::fillLastValueSummaryMessage(NXCPMessage *pMsg, UINT32 dwId)
 {
 	lock();
-   pMsg->SetVariable(dwId++, m_id);
-   pMsg->SetVariable(dwId++, m_name);
-   pMsg->SetVariable(dwId++, m_szDescription);
-   pMsg->SetVariable(dwId++, (WORD)m_source);
-   pMsg->SetVariable(dwId++, (WORD)DCI_DT_NULL);  // compatibility: data type
-   pMsg->SetVariable(dwId++, _T(""));             // compatibility: value
-   pMsg->SetVariable(dwId++, (UINT32)m_tLastPoll);
-   pMsg->SetVariable(dwId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
-	pMsg->SetVariable(dwId++, (WORD)getType());
-	pMsg->SetVariable(dwId++, m_dwErrorCount);
-	pMsg->SetVariable(dwId++, m_dwTemplateItemId);
-   pMsg->SetVariable(dwId++, (WORD)0);            // compatibility: number of thresholds
+   pMsg->setField(dwId++, m_id);
+   pMsg->setField(dwId++, m_name);
+   pMsg->setField(dwId++, m_szDescription);
+   pMsg->setField(dwId++, (WORD)m_source);
+   pMsg->setField(dwId++, (WORD)DCI_DT_NULL);  // compatibility: data type
+   pMsg->setField(dwId++, _T(""));             // compatibility: value
+   pMsg->setField(dwId++, (UINT32)m_tLastPoll);
+   pMsg->setField(dwId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
+	pMsg->setField(dwId++, (WORD)getType());
+	pMsg->setField(dwId++, m_dwErrorCount);
+	pMsg->setField(dwId++, m_dwTemplateItemId);
+   pMsg->setField(dwId++, (WORD)0);            // compatibility: number of thresholds
 
 	unlock();
 }

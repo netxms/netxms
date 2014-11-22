@@ -365,8 +365,8 @@ public:
    virtual bool isControlServer() = 0;
    virtual const InetAddress& getServerAddress() = 0;
 
-   virtual void sendMessage(CSCPMessage *pMsg) = 0;
-   virtual void sendRawMessage(CSCP_MESSAGE *pMsg) = 0;
+   virtual void sendMessage(NXCPMessage *pMsg) = 0;
+   virtual void sendRawMessage(NXCP_MESSAGE *pMsg) = 0;
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) = 0;
    virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
 };
@@ -428,7 +428,7 @@ typedef struct
 
 #define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20110301)
 
-class CSCPMessage;
+class NXCPMessage;
 
 /**
  * Subagent initialization structure
@@ -440,7 +440,7 @@ typedef struct
    TCHAR version[32];
 	BOOL (* init)(Config *);   // Called to initialize subagent. Can be NULL.
    void (* shutdown)();       // Called at subagent unload. Can be NULL.
-   BOOL (* commandHandler)(UINT32 command, CSCPMessage *request, CSCPMessage *response, AbstractCommSession *session);
+   BOOL (* commandHandler)(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
    UINT32 numParameters;
    NETXMS_SUBAGENT_PARAM *parameters;
    UINT32 numLists;

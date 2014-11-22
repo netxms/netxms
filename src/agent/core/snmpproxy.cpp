@@ -87,7 +87,7 @@ static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize)
 /**
  * Send SNMP request to target, receive response, and send it to server
  */
-void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse)
+void ProxySNMPRequest(NXCPMessage *pRequest, NXCPMessage *pResponse)
 {
 	BYTE *pduIn, *pduOut;
 	UINT32 dwSizeIn, dwSizeOut;
@@ -95,21 +95,21 @@ void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse)
 	int nRetries;
 	struct sockaddr_in addr;
 
-	dwSizeIn = pRequest->GetVariableLong(VID_PDU_SIZE);
+	dwSizeIn = pRequest->getFieldAsUInt32(VID_PDU_SIZE);
 	if (dwSizeIn > 0)
 	{
 		pduIn = (BYTE *)malloc(dwSizeIn);
 		if (pduIn != NULL)
 		{
-			pRequest->GetVariableBinary(VID_PDU, pduIn, dwSizeIn);
+			pRequest->getFieldAsBinary(VID_PDU, pduIn, dwSizeIn);
 
 			hSocket = socket(AF_INET, SOCK_DGRAM, 0);
 			if (hSocket != INVALID_SOCKET)
 			{
 				memset(&addr, 0, sizeof(struct sockaddr_in));
 				addr.sin_family = AF_INET;
-				addr.sin_addr.s_addr = htonl(pRequest->GetVariableLong(VID_IP_ADDRESS));
-				addr.sin_port = htons(pRequest->GetVariableShort(VID_PORT));
+				addr.sin_addr.s_addr = htonl(pRequest->getFieldAsUInt32(VID_IP_ADDRESS));
+				addr.sin_port = htons(pRequest->getFieldAsUInt16(VID_PORT));
 				if (connect(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != -1)
 				{
 					pduOut = (BYTE *)malloc(SNMP_BUFFER_SIZE);
@@ -121,39 +121,39 @@ void ProxySNMPRequest(CSCPMessage *pRequest, CSCPMessage *pResponse)
 							{
 								if (ReadPDU(hSocket, pduOut, &dwSizeOut))
 								{
-									pResponse->SetVariable(VID_PDU_SIZE, dwSizeOut);
-									pResponse->SetVariable(VID_PDU, pduOut, dwSizeOut);
+									pResponse->setField(VID_PDU_SIZE, dwSizeOut);
+									pResponse->setField(VID_PDU, pduOut, dwSizeOut);
 									break;
 								}
 							}
 						}
 						free(pduOut);
-						pResponse->SetVariable(VID_RCC, (nRetries == 3) ? ERR_REQUEST_TIMEOUT : ERR_SUCCESS);
+						pResponse->setField(VID_RCC, (nRetries == 3) ? ERR_REQUEST_TIMEOUT : ERR_SUCCESS);
 					}
 					else
 					{
-						pResponse->SetVariable(VID_RCC, ERR_OUT_OF_RESOURCES);
+						pResponse->setField(VID_RCC, ERR_OUT_OF_RESOURCES);
 					}
 				}
 				else
 				{
-					pResponse->SetVariable(VID_RCC, ERR_SOCKET_ERROR);
+					pResponse->setField(VID_RCC, ERR_SOCKET_ERROR);
 				}
 				closesocket(hSocket);
 			}
 			else
 			{
-				pResponse->SetVariable(VID_RCC, ERR_SOCKET_ERROR);
+				pResponse->setField(VID_RCC, ERR_SOCKET_ERROR);
 			}
 			free(pduIn);
 		}
 		else
 		{
-			pResponse->SetVariable(VID_RCC, ERR_OUT_OF_RESOURCES);
+			pResponse->setField(VID_RCC, ERR_OUT_OF_RESOURCES);
 		}
 	}
 	else
 	{
-		pResponse->SetVariable(VID_RCC, ERR_MALFORMED_COMMAND);
+		pResponse->setField(VID_RCC, ERR_MALFORMED_COMMAND);
 	}
 }

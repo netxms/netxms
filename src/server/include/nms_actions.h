@@ -33,8 +33,8 @@ void CleanupActions();
 BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const TCHAR *alarmMsg, const TCHAR *alarmKey);
 UINT32 CreateNewAction(const TCHAR *pszName, UINT32 *pdwId);
 UINT32 DeleteActionFromDB(UINT32 dwActionId);
-UINT32 ModifyActionFromMessage(CSCPMessage *pMsg);
-void FillActionInfoMessage(CSCPMessage *pMsg, NXC_ACTION *pAction);
+UINT32 ModifyActionFromMessage(NXCPMessage *pMsg);
+void FillActionInfoMessage(NXCPMessage *pMsg, NXC_ACTION *pAction);
 void SendActionsToClient(ClientSession *pSession, UINT32 dwRqId);
 
 #endif   /* _nms_actions_ */

@@ -684,7 +684,7 @@ UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue)
 /**
  * Put complete list of supported parameters into NXCP message
  */
-void GetParameterList(CSCPMessage *pMsg)
+void GetParameterList(NXCPMessage *pMsg)
 {
    int i;
    UINT32 dwId, count;
@@ -694,40 +694,40 @@ void GetParameterList(CSCPMessage *pMsg)
    {
 		if (m_pParamList[i].dataType != DCI_DT_DEPRECATED)
 		{
-			pMsg->SetVariable(dwId++, m_pParamList[i].name);
-			pMsg->SetVariable(dwId++, m_pParamList[i].description);
-			pMsg->SetVariable(dwId++, (WORD)m_pParamList[i].dataType);
+			pMsg->setField(dwId++, m_pParamList[i].name);
+			pMsg->setField(dwId++, m_pParamList[i].description);
+			pMsg->setField(dwId++, (WORD)m_pParamList[i].dataType);
 			count++;
 		}
    }
 	ListParametersFromExtProviders(pMsg, &dwId, &count);
 	ListParametersFromExtSubagents(pMsg, &dwId, &count);
-   pMsg->SetVariable(VID_NUM_PARAMETERS, count);
+   pMsg->setField(VID_NUM_PARAMETERS, count);
 
 	// Push parameters
-   pMsg->SetVariable(VID_NUM_PUSH_PARAMETERS, (UINT32)m_iNumPushParams);
+   pMsg->setField(VID_NUM_PUSH_PARAMETERS, (UINT32)m_iNumPushParams);
    for(i = 0, dwId = VID_PUSHPARAM_LIST_BASE; i < m_iNumPushParams; i++)
    {
-      pMsg->SetVariable(dwId++, m_pPushParamList[i].name);
-      pMsg->SetVariable(dwId++, m_pPushParamList[i].description);
-      pMsg->SetVariable(dwId++, (WORD)m_pPushParamList[i].dataType);
+      pMsg->setField(dwId++, m_pPushParamList[i].name);
+      pMsg->setField(dwId++, m_pPushParamList[i].description);
+      pMsg->setField(dwId++, (WORD)m_pPushParamList[i].dataType);
    }
 
 	// Lists
-   pMsg->SetVariable(VID_NUM_ENUMS, (UINT32)m_iNumEnums);
+   pMsg->setField(VID_NUM_ENUMS, (UINT32)m_iNumEnums);
    for(i = 0, dwId = VID_ENUM_LIST_BASE; i < m_iNumEnums; i++)
    {
-      pMsg->SetVariable(dwId++, m_pEnumList[i].name);
+      pMsg->setField(dwId++, m_pEnumList[i].name);
    }
 	ListListsFromExtSubagents(pMsg, &dwId, &count);
 
 	// Tables
-   pMsg->SetVariable(VID_NUM_TABLES, (UINT32)m_iNumTables);
+   pMsg->setField(VID_NUM_TABLES, (UINT32)m_iNumTables);
    for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
    {
-      pMsg->SetVariable(dwId++, m_pTableList[i].name);
-		pMsg->SetVariable(dwId++, m_pTableList[i].instanceColumns);
-		pMsg->SetVariable(dwId++, m_pTableList[i].description);
+      pMsg->setField(dwId++, m_pTableList[i].name);
+		pMsg->setField(dwId++, m_pTableList[i].instanceColumns);
+		pMsg->setField(dwId++, m_pTableList[i].description);
    }
 	ListTablesFromExtSubagents(pMsg, &dwId, &count);
 }
@@ -735,17 +735,17 @@ void GetParameterList(CSCPMessage *pMsg)
 /**
  * Put list of supported tables into NXCP message
  */
-void GetTableList(CSCPMessage *pMsg)
+void GetTableList(NXCPMessage *pMsg)
 {
    int i;
    UINT32 dwId, count;
 
-   pMsg->SetVariable(VID_NUM_TABLES, (UINT32)m_iNumTables);
+   pMsg->setField(VID_NUM_TABLES, (UINT32)m_iNumTables);
    for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
    {
-      pMsg->SetVariable(dwId++, m_pTableList[i].name);
-		pMsg->SetVariable(dwId++, m_pTableList[i].instanceColumns);
-		pMsg->SetVariable(dwId++, m_pTableList[i].description);
+      pMsg->setField(dwId++, m_pTableList[i].name);
+		pMsg->setField(dwId++, m_pTableList[i].instanceColumns);
+		pMsg->setField(dwId++, m_pTableList[i].description);
    }
 	ListTablesFromExtSubagents(pMsg, &dwId, &count);
 }
@@ -753,15 +753,15 @@ void GetTableList(CSCPMessage *pMsg)
 /**
  * Put list of supported lists (enums) into NXCP message
  */
-void GetEnumList(CSCPMessage *pMsg)
+void GetEnumList(NXCPMessage *pMsg)
 {
    int i;
    UINT32 dwId, count;
 
-   pMsg->SetVariable(VID_NUM_ENUMS, (UINT32)m_iNumEnums);
+   pMsg->setField(VID_NUM_ENUMS, (UINT32)m_iNumEnums);
    for(i = 0, dwId = VID_ENUM_LIST_BASE; i < m_iNumEnums; i++)
    {
-      pMsg->SetVariable(dwId++, m_pEnumList[i].name);
+      pMsg->setField(dwId++, m_pEnumList[i].name);
    }
 	ListListsFromExtSubagents(pMsg, &dwId, &count);
 }

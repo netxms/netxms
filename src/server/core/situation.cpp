@@ -36,7 +36,7 @@ static ObjectIndex s_idxSituations;
 
 static void SendSituationNotification(ClientSession *pSession, void *pArg)
 {
-   pSession->onSituationChange((CSCPMessage *)pArg);
+   pSession->onSituationChange((NXCPMessage *)pArg);
 }
 
 
@@ -46,10 +46,10 @@ static void SendSituationNotification(ClientSession *pSession, void *pArg)
 
 static void NotifyClientsOnSituationChange(int code, Situation *st)
 {
-	CSCPMessage msg;
+	NXCPMessage msg;
 
-	msg.SetCode(CMD_SITUATION_CHANGE);
-	msg.SetVariable(VID_NOTIFICATION_CODE, (WORD)code);
+	msg.setCode(CMD_SITUATION_CHANGE);
+	msg.setField(VID_NOTIFICATION_CODE, (WORD)code);
 	st->fillMessage(&msg);
    EnumerateClientSessions(SendSituationNotification, &msg);
 }
@@ -96,9 +96,9 @@ const TCHAR *SituationInstance::GetAttribute(const TCHAR *attribute)
 /**
  * Create NXCP message
  */
-UINT32 SituationInstance::fillMessage(CSCPMessage *msg, UINT32 baseId)
+UINT32 SituationInstance::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
-	msg->SetVariable(baseId, m_name);
+	msg->setField(baseId, m_name);
    m_attributes.fillMessage(msg, baseId + 1, baseId + 2);
    return baseId + m_attributes.size() * 2 + 2;
 }
@@ -294,17 +294,17 @@ SituationInstance *Situation::FindInstance(const TCHAR *name)
 /**
  * Create NXCP message
  */
-void Situation::fillMessage(CSCPMessage *msg)
+void Situation::fillMessage(NXCPMessage *msg)
 {
 	int i;
 	UINT32 id;
 	
 	Lock();
 	
-	msg->SetVariable(VID_SITUATION_ID, m_id);
-	msg->SetVariable(VID_NAME, CHECK_NULL_EX(m_name));
-	msg->SetVariable(VID_COMMENTS, CHECK_NULL_EX(m_comments));
-	msg->SetVariable(VID_INSTANCE_COUNT, (UINT32)m_numInstances);
+	msg->setField(VID_SITUATION_ID, m_id);
+	msg->setField(VID_NAME, CHECK_NULL_EX(m_name));
+	msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
+	msg->setField(VID_INSTANCE_COUNT, (UINT32)m_numInstances);
 	
 	for(i = 0, id = VID_INSTANCE_LIST_BASE; i < m_numInstances; i++)
 	{
@@ -317,18 +317,18 @@ void Situation::fillMessage(CSCPMessage *msg)
 /**
  * Update situation configuration from NXCP message
  */
-void Situation::UpdateFromMessage(CSCPMessage *msg)
+void Situation::UpdateFromMessage(NXCPMessage *msg)
 {
 	Lock();
 	if (msg->isFieldExist(VID_NAME))
 	{
 		safe_free(m_name);
-		m_name = msg->GetVariableStr(VID_NAME);
+		m_name = msg->getFieldAsString(VID_NAME);
 	}
 	if (msg->isFieldExist(VID_COMMENTS))
 	{
 		safe_free(m_comments);
-		m_comments = msg->GetVariableStr(VID_COMMENTS);
+		m_comments = msg->getFieldAsString(VID_COMMENTS);
 	}
 	SaveToDatabase();
 	Unlock();
@@ -352,7 +352,7 @@ BOOL SituationsInit()
    	for(int i = 0; i < count; i++)
    	{
    		Situation *s = new Situation(result, i);
-			s_idxSituations.put(s->GetId(), (NetObj *)s);
+			s_idxSituations.put(s->getId(), (NetObj *)s);
 		}
    	DBFreeResult(result);
 	}
@@ -399,7 +399,7 @@ Situation *CreateSituation(const TCHAR *name)
 	Situation *st;
 	
 	st = new Situation(name);
-	s_idxSituations.put(st->GetId(), (NetObj *)st);
+	s_idxSituations.put(st->getId(), (NetObj *)st);
    st->SaveToDatabase();
 	NotifyClientsOnSituationChange(SITUATION_CREATE, st);
 	return st;
@@ -433,17 +433,17 @@ UINT32 DeleteSituation(UINT32 id)
 /**
  * Send all situations to client
  */
-void SendSituationListToClient(ClientSession *session, CSCPMessage *msg)
+void SendSituationListToClient(ClientSession *session, NXCPMessage *msg)
 {
 	ObjectArray<NetObj> *list = s_idxSituations.getObjects(false);
 
-	msg->SetVariable(VID_SITUATION_COUNT, (UINT32)list->size());
+	msg->setField(VID_SITUATION_COUNT, (UINT32)list->size());
 	session->sendMessage(msg);
 	
-	msg->SetCode(CMD_SITUATION_DATA);
+	msg->setCode(CMD_SITUATION_DATA);
 	for(int i = 0; i < list->size(); i++)
 	{
-		msg->deleteAllVariables();
+		msg->deleteAllFields();
 		((Situation *)list->get(i))->fillMessage(msg);
 		session->sendMessage(msg);
 	}
@@ -486,7 +486,7 @@ NXSL_Value *NXSL_SituationClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    }
    else if (!_tcscmp(pszAttr, _T("id")))
    {
-      value = new NXSL_Value(instance->GetParent()->GetId());
+      value = new NXSL_Value(instance->GetParent()->getId());
    }
    else if (!_tcscmp(pszAttr, _T("instance")))
    {

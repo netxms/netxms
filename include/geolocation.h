@@ -64,7 +64,7 @@ public:
 	GeoLocation(int type, double lat, double lon, int accuracy = 0, time_t timestamp = 0);
 	GeoLocation(int type, const TCHAR *lat, const TCHAR *lon, int accuracy = 0, time_t timestamp = 0);
 	GeoLocation(const GeoLocation &src);
-	GeoLocation(CSCPMessage &msg);
+	GeoLocation(NXCPMessage &msg);
 	~GeoLocation();
 
 	GeoLocation& operator =(const GeoLocation &src);
@@ -79,7 +79,7 @@ public:
 	time_t getTimestamp() { return m_timestamp; }
    bool sameLocation(double lat, double lon, int oldAccurasy);
 
-	void fillMessage(CSCPMessage &msg);
+	void fillMessage(NXCPMessage &msg);
 };
 
 

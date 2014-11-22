@@ -228,23 +228,23 @@ bool NetworkService::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void NetworkService::fillMessage(CSCPMessage *pMsg)
+void NetworkService::fillMessage(NXCPMessage *pMsg)
 {
    NetObj::fillMessage(pMsg);
-   pMsg->SetVariable(VID_SERVICE_TYPE, (WORD)m_serviceType);
-   pMsg->SetVariable(VID_IP_PROTO, m_proto);
-   pMsg->SetVariable(VID_IP_PORT, m_port);
-   pMsg->SetVariable(VID_POLLER_NODE_ID, m_pollerNode);
-   pMsg->SetVariable(VID_SERVICE_REQUEST, CHECK_NULL_EX(m_request));
-   pMsg->SetVariable(VID_SERVICE_RESPONSE, CHECK_NULL_EX(m_response));
-	pMsg->SetVariable(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
-	pMsg->SetVariable(VID_RESPONSE_TIME, m_responseTime);
+   pMsg->setField(VID_SERVICE_TYPE, (WORD)m_serviceType);
+   pMsg->setField(VID_IP_PROTO, m_proto);
+   pMsg->setField(VID_IP_PORT, m_port);
+   pMsg->setField(VID_POLLER_NODE_ID, m_pollerNode);
+   pMsg->setField(VID_SERVICE_REQUEST, CHECK_NULL_EX(m_request));
+   pMsg->setField(VID_SERVICE_RESPONSE, CHECK_NULL_EX(m_response));
+	pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
+	pMsg->setField(VID_RESPONSE_TIME, m_responseTime);
 }
 
 /**
  * Modify object from message
  */
-UINT32 NetworkService::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 NetworkService::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       lockProperties();
@@ -254,7 +254,7 @@ UINT32 NetworkService::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLoc
    {
       UINT32 dwNodeId;
 
-      dwNodeId = pRequest->GetVariableLong(VID_POLLER_NODE_ID);
+      dwNodeId = pRequest->getFieldAsUInt32(VID_POLLER_NODE_ID);
       if (dwNodeId == 0)
       {
          m_pollerNode = 0;
@@ -286,36 +286,36 @@ UINT32 NetworkService::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLoc
 
    // Listen IP address
    if (pRequest->isFieldExist(VID_IP_ADDRESS))
-      m_dwIpAddr = pRequest->GetVariableLong(VID_IP_ADDRESS);
+      m_dwIpAddr = pRequest->getFieldAsUInt32(VID_IP_ADDRESS);
 
    // Service type
    if (pRequest->isFieldExist(VID_SERVICE_TYPE))
-      m_serviceType = (int)pRequest->GetVariableShort(VID_SERVICE_TYPE);
+      m_serviceType = (int)pRequest->getFieldAsUInt16(VID_SERVICE_TYPE);
 
    // IP protocol
    if (pRequest->isFieldExist(VID_IP_PROTO))
-      m_proto = pRequest->GetVariableShort(VID_IP_PROTO);
+      m_proto = pRequest->getFieldAsUInt16(VID_IP_PROTO);
 
    // TCP/UDP port
    if (pRequest->isFieldExist(VID_IP_PORT))
-      m_port = pRequest->GetVariableShort(VID_IP_PORT);
+      m_port = pRequest->getFieldAsUInt16(VID_IP_PORT);
 
    // Number of required polls
    if (pRequest->isFieldExist(VID_REQUIRED_POLLS))
-      m_requiredPollCount = (int)pRequest->GetVariableShort(VID_REQUIRED_POLLS);
+      m_requiredPollCount = (int)pRequest->getFieldAsUInt16(VID_REQUIRED_POLLS);
 
    // Check request
    if (pRequest->isFieldExist(VID_SERVICE_REQUEST))
    {
       safe_free(m_request);
-      m_request = pRequest->GetVariableStr(VID_SERVICE_REQUEST);
+      m_request = pRequest->getFieldAsString(VID_SERVICE_REQUEST);
    }
 
    // Check response
    if (pRequest->isFieldExist(VID_SERVICE_RESPONSE))
    {
       safe_free(m_response);
-      m_response = pRequest->GetVariableStr(VID_SERVICE_RESPONSE);
+      m_response = pRequest->getFieldAsString(VID_SERVICE_RESPONSE);
    }
 
    return NetObj::modifyFromMessage(pRequest, TRUE);

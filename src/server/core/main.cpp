@@ -522,10 +522,10 @@ static void SendConsoleMessage(ClientSession *session, void *arg)
 {
 	if (session->isConsoleOpen())
 	{
-		CSCPMessage msg;
+		NXCPMessage msg;
 
-		msg.SetCode(CMD_ADM_MESSAGE);
-		msg.SetVariable(VID_MESSAGE, (TCHAR *)arg);
+		msg.setCode(CMD_ADM_MESSAGE);
+		msg.setField(VID_MESSAGE, (TCHAR *)arg);
 		session->postMessage(&msg);
 	}
 }

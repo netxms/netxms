@@ -148,8 +148,8 @@ public:
    ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, NetObj *target, DCItem *dci);
    ThresholdCheckResult checkError(UINT32 dwErrorCount);
 
-   void createMessage(CSCPMessage *msg, UINT32 baseId);
-   void updateFromMessage(CSCPMessage *msg, UINT32 baseId);
+   void createMessage(NXCPMessage *msg, UINT32 baseId);
+   void updateFromMessage(NXCPMessage *msg, UINT32 baseId);
 
    void createId();
    UINT32 getRequiredCacheSize() { return ((m_function == F_LAST) || (m_function == F_ERROR)) ? 0 : m_sampleCount; }
@@ -277,8 +277,8 @@ public:
    void setTemplateId(UINT32 dwTemplateId, UINT32 dwItemId)
          { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
 
-   virtual void createMessage(CSCPMessage *pMsg);
-   virtual void updateFromMessage(CSCPMessage *pMsg);
+   virtual void createMessage(NXCPMessage *pMsg);
+   virtual void updateFromMessage(NXCPMessage *pMsg);
 
    virtual void changeBinding(UINT32 dwNewId, Template *pNode, BOOL doMacroExpansion);
 
@@ -370,19 +370,19 @@ public:
 
 	virtual bool hasValue();
 
-   void fillLastValueMessage(CSCPMessage *pMsg, UINT32 dwId);
+   void fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId);
    NXSL_Value *getValueForNXSL(int nFunction, int nPolls);
    NXSL_Value *getRawValueForNXSL();
    const TCHAR *getLastValue();
    ItemValue *getInternalLastValue();
    TCHAR *getAggregateValue(AggregationFunction func, time_t periodStart, time_t periodEnd);
 
-   virtual void createMessage(CSCPMessage *pMsg);
+   virtual void createMessage(NXCPMessage *pMsg);
 #if defined(__SUNPRO_CC) || defined(__HP_aCC)
    using DCObject::updateFromMessage;
 #endif
-   void updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
-   void fillMessageWithThresholds(CSCPMessage *msg);
+   void updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
+   void fillMessageWithThresholds(NXCPMessage *msg);
 
    virtual void changeBinding(UINT32 dwNewId, Template *pNode, BOOL doMacroExpansion);
 
@@ -421,7 +421,7 @@ private:
 
 public:
 	DCTableColumn(const DCTableColumn *src);
-	DCTableColumn(CSCPMessage *msg, UINT32 baseId);
+	DCTableColumn(NXCPMessage *msg, UINT32 baseId);
 	DCTableColumn(DB_RESULT hResult, int row);
    DCTableColumn(ConfigEntry *e);
 	~DCTableColumn();
@@ -478,14 +478,14 @@ private:
 
 public:
    DCTableConditionGroup();
-   DCTableConditionGroup(CSCPMessage *msg, UINT32 *baseId);
+   DCTableConditionGroup(NXCPMessage *msg, UINT32 *baseId);
    DCTableConditionGroup(DCTableConditionGroup *src);
    DCTableConditionGroup(ConfigEntry *e);
    ~DCTableConditionGroup();
 
    bool check(Table *value, int row);
 
-   UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
+   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
 
    ObjectArray<DCTableCondition> *getConditions() { return m_conditions; }
 };
@@ -507,7 +507,7 @@ private:
 public:
    DCTableThreshold();
    DCTableThreshold(DB_RESULT hResult, int row);
-   DCTableThreshold(CSCPMessage *msg, UINT32 *baseId);
+   DCTableThreshold(NXCPMessage *msg, UINT32 *baseId);
    DCTableThreshold(DCTableThreshold *src);
    DCTableThreshold(ConfigEntry *e);
    ~DCTableThreshold();
@@ -517,7 +517,7 @@ public:
    ThresholdCheckResult check(Table *value, int row, const TCHAR *instance);
 
    bool saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq);
-   UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
+   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
    void createNXMPRecord(String &str, int id);
 
    UINT32 getId() { return m_id; }
@@ -565,16 +565,16 @@ public:
    virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus);
    virtual void processNewError();
 
-   virtual void createMessage(CSCPMessage *pMsg);
-   virtual void updateFromMessage(CSCPMessage *pMsg);
+   virtual void createMessage(NXCPMessage *pMsg);
+   virtual void updateFromMessage(NXCPMessage *pMsg);
 
 	virtual void deleteExpiredData();
 	virtual bool deleteAllData();
 
    virtual void createNXMPRecord(String &str);
 
-	void fillLastValueMessage(CSCPMessage *msg);
-   void fillLastValueSummaryMessage(CSCPMessage *pMsg, UINT32 dwId);
+	void fillLastValueMessage(NXCPMessage *msg);
+   void fillLastValueSummaryMessage(NXCPMessage *pMsg, UINT32 dwId);
 
    int getColumnDataType(const TCHAR *name);
    ObjectArray<DCTableColumn> *getColumns() { return m_columns; }
@@ -592,7 +592,7 @@ public:
  */
 BOOL InitDataCollector();
 void DeleteAllItemsForNode(UINT32 dwNodeId);
-void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags);
+void WriteFullParamListToMessage(NXCPMessage *pMsg, WORD flags);
 int GetDCObjectType(UINT32 nodeId, UINT32 dciId);
 
 void CalculateItemValueDiff(ItemValue &result, int nDataType, ItemValue &value1, ItemValue &value2);

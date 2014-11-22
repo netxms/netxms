@@ -169,13 +169,13 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
       DebugPrintf(INVALID_INDEX, 1, _T("Got trap from queue"));
       bool sent = false;
 
-      CSCPMessage *msg = new CSCPMessage();
-      msg->SetCode(CMD_SNMP_TRAP);
-      msg->SetId(GenerateMessageId());
-      msg->SetVariable(VID_IP_ADDRESS, pdu->ipAddr);
-      msg->SetVariable(VID_PORT, pdu->port);
-      msg->SetVariable(VID_PDU_SIZE, pdu->lenght);
-      msg->SetVariable(VID_PDU, pdu->rawMessage, pdu->lenght);
+      NXCPMessage *msg = new NXCPMessage();
+      msg->setCode(CMD_SNMP_TRAP);
+      msg->setId(GenerateMessageId());
+      msg->setField(VID_IP_ADDRESS, pdu->ipAddr);
+      msg->setField(VID_PORT, pdu->port);
+      msg->setField(VID_PDU_SIZE, pdu->lenght);
+      msg->setField(VID_PDU, pdu->rawMessage, pdu->lenght);
 
       if (g_dwFlags & AF_SUBAGENT_LOADER)
       {
@@ -184,7 +184,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
       else
       {
          MutexLock(g_hSessionListAccess);
-         for(int i = 0; i < g_dwMaxSessions; i++)
+         for(UINT32 i = 0; i < g_dwMaxSessions; i++)
          {
             if (g_pSessionList[i] != NULL)
             {

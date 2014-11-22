@@ -460,7 +460,7 @@ public:
 /**
  * NXCP message class
  */
-class CSCPMessage;
+class NXCPMessage;
 
 /**
  * String map class
@@ -484,7 +484,7 @@ public:
 	UINT32 getULong(const TCHAR *key, UINT32 defaultValue);
 	bool getBoolean(const TCHAR *key, bool defaultValue);
 
-   void fillMessage(CSCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId);
+   void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId);
 };
 
 /**
@@ -546,7 +546,7 @@ struct StringSetEntry;
 /**
  * NXCP message
  */
-class CSCPMessage;
+class NXCPMessage;
 
 /**
  * String set class
@@ -574,8 +574,8 @@ public:
    void addAllPreallocated(TCHAR **strings, int count);
    void forEach(bool (*cb)(const TCHAR *, void *), void *userData);
 
-   void fillMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId);
-   void addAllFromMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
+   void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId);
+   void addAllFromMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
 
    String getAll(const TCHAR *separator);
 };
@@ -608,7 +608,7 @@ public:
    }
 };
 
-class CSCPMessage;
+class NXCPMessage;
 
 /**
  * Table column definition
@@ -623,11 +623,11 @@ private:
 
 public:
    TableColumnDefinition(const TCHAR *name, const TCHAR *displayName, INT32 dataType, bool isInstance);
-   TableColumnDefinition(CSCPMessage *msg, UINT32 baseId);
+   TableColumnDefinition(NXCPMessage *msg, UINT32 baseId);
    TableColumnDefinition(TableColumnDefinition *src);
    ~TableColumnDefinition();
 
-   void fillMessage(CSCPMessage *msg, UINT32 baseId);
+   void fillMessage(NXCPMessage *msg, UINT32 baseId);
 
    const TCHAR *getName() { return m_name; }
    const TCHAR *getDisplayName() { return m_displayName; }
@@ -710,17 +710,17 @@ private:
    int m_source;
    bool m_extendedFormat;
 
-	void createFromMessage(CSCPMessage *msg);
+	void createFromMessage(NXCPMessage *msg);
 	void destroy();
 
 public:
    Table();
    Table(Table *src);
-   Table(CSCPMessage *msg);
+   Table(NXCPMessage *msg);
    virtual ~Table();
 
-	int fillMessage(CSCPMessage &msg, int offset, int rowLimit);
-	void updateFromMessage(CSCPMessage *msg);
+	int fillMessage(NXCPMessage &msg, int offset, int rowLimit);
+	void updateFromMessage(NXCPMessage *msg);
 
    void addAll(Table *src);
    void copyRow(Table *src, int row);

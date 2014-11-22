@@ -59,7 +59,7 @@ Table::Table() : RefCountObject()
 /**
  * Create table from NXCP message
  */
-Table::Table(CSCPMessage *msg) : RefCountObject()
+Table::Table(NXCPMessage *msg) : RefCountObject()
 {
    m_columns = new ObjectArray<TableColumnDefinition>(8, 8, true);
 	createFromMessage(msg);
@@ -105,14 +105,14 @@ void Table::destroy()
 /**
  * Create table from NXCP message
  */
-void Table::createFromMessage(CSCPMessage *msg)
+void Table::createFromMessage(NXCPMessage *msg)
 {
 	int i;
 	UINT32 dwId;
 
-	int rows = msg->GetVariableLong(VID_TABLE_NUM_ROWS);
-	int columns = msg->GetVariableLong(VID_TABLE_NUM_COLS);
-	m_title = msg->GetVariableStr(VID_TABLE_TITLE);
+	int rows = msg->getFieldAsUInt32(VID_TABLE_NUM_ROWS);
+	int columns = msg->getFieldAsUInt32(VID_TABLE_NUM_COLS);
+	m_title = msg->getFieldAsString(VID_TABLE_TITLE);
    m_source = msg->getFieldAsInt16(VID_DCI_SOURCE_TYPE);
    m_extendedFormat = msg->getFieldAsBoolean(VID_TABLE_EXTENDED_FORMAT);
 
@@ -123,7 +123,7 @@ void Table::createFromMessage(CSCPMessage *msg)
    if (msg->isFieldExist(VID_INSTANCE_COLUMN))
    {
       TCHAR name[MAX_COLUMN_NAME];
-      msg->GetVariableStr(VID_INSTANCE_COLUMN, name, MAX_COLUMN_NAME);
+      msg->getFieldAsString(VID_INSTANCE_COLUMN, name, MAX_COLUMN_NAME);
       for(i = 0; i < m_columns->size(); i++)
       {
          if (!_tcsicmp(m_columns->get(i)->getName(), name))
@@ -141,12 +141,12 @@ void Table::createFromMessage(CSCPMessage *msg)
 		m_data->add(row);
       if (m_extendedFormat)
       {
-         row->setObjectId(msg->GetVariableLong(dwId++));
+         row->setObjectId(msg->getFieldAsUInt32(dwId++));
          dwId += 9;
       }
       for(int j = 0; j < columns; j++)
       {
-         TCHAR *value = msg->GetVariableStr(dwId++);
+         TCHAR *value = msg->getFieldAsString(dwId++);
          if (m_extendedFormat)
          {
             row->setPreallocated(j, value, msg->getFieldAsInt16(dwId++));
@@ -163,7 +163,7 @@ void Table::createFromMessage(CSCPMessage *msg)
 /**
  * Update table from NXCP message
  */
-void Table::updateFromMessage(CSCPMessage *msg)
+void Table::updateFromMessage(NXCPMessage *msg)
 {
 	destroy();
    delete m_data; // will be re-created by createFromMessage
@@ -173,24 +173,24 @@ void Table::updateFromMessage(CSCPMessage *msg)
 /**
  * Fill NXCP message with table data
  */
-int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
+int Table::fillMessage(NXCPMessage &msg, int offset, int rowLimit)
 {
 	UINT32 id;
 
-	msg.SetVariable(VID_TABLE_TITLE, CHECK_NULL_EX(m_title));
-   msg.SetVariable(VID_DCI_SOURCE_TYPE, (UINT16)m_source);
-   msg.SetVariable(VID_TABLE_EXTENDED_FORMAT, (UINT16)(m_extendedFormat ? 1 : 0));
+	msg.setField(VID_TABLE_TITLE, CHECK_NULL_EX(m_title));
+   msg.setField(VID_DCI_SOURCE_TYPE, (UINT16)m_source);
+   msg.setField(VID_TABLE_EXTENDED_FORMAT, (UINT16)(m_extendedFormat ? 1 : 0));
 
 	if (offset == 0)
 	{
-		msg.SetVariable(VID_TABLE_NUM_ROWS, (UINT32)m_data->size());
-		msg.SetVariable(VID_TABLE_NUM_COLS, (UINT32)m_columns->size());
+		msg.setField(VID_TABLE_NUM_ROWS, (UINT32)m_data->size());
+		msg.setField(VID_TABLE_NUM_COLS, (UINT32)m_columns->size());
 
       id = VID_TABLE_COLUMN_INFO_BASE;
       for(int i = 0; i < m_columns->size(); i++, id += 10)
          m_columns->get(i)->fillMessage(&msg, id);
 	}
-	msg.SetVariable(VID_TABLE_OFFSET, (UINT32)offset);
+	msg.setField(VID_TABLE_OFFSET, (UINT32)offset);
 
 	int stopRow = (rowLimit == -1) ? m_data->size() : min(m_data->size(), offset + rowLimit);
    id = VID_TABLE_DATA_BASE;
@@ -199,21 +199,21 @@ int Table::fillMessage(CSCPMessage &msg, int offset, int rowLimit)
       TableRow *r = m_data->get(row);
       if (m_extendedFormat)
       {
-			msg.SetVariable(id++, r->getObjectId());
+			msg.setField(id++, r->getObjectId());
          id += 9;
       }
 		for(int col = 0; col < m_columns->size(); col++) 
 		{
 			const TCHAR *tmp = r->getValue(col);
-			msg.SetVariable(id++, CHECK_NULL_EX(tmp));
+			msg.setField(id++, CHECK_NULL_EX(tmp));
          if (m_extendedFormat)
          {
-            msg.SetVariable(id++, (UINT16)r->getStatus(col));
+            msg.setField(id++, (UINT16)r->getStatus(col));
             id += 8;
          }
 		}
 	}
-	msg.SetVariable(VID_NUM_ROWS, (UINT32)(stopRow - offset));
+	msg.setField(VID_NUM_ROWS, (UINT32)(stopRow - offset));
 
 	if (stopRow == m_data->size())
 		msg.setEndOfSequence();
@@ -536,16 +536,16 @@ TableColumnDefinition::TableColumnDefinition(TableColumnDefinition *src)
 /**
  * Create table column definition from NXCP message
  */
-TableColumnDefinition::TableColumnDefinition(CSCPMessage *msg, UINT32 baseId)
+TableColumnDefinition::TableColumnDefinition(NXCPMessage *msg, UINT32 baseId)
 {
-   m_name = msg->GetVariableStr(baseId);
+   m_name = msg->getFieldAsString(baseId);
    if (m_name == NULL)
       m_name = _tcsdup(_T("(null)"));
-   m_dataType = msg->GetVariableLong(baseId + 1);
-   m_displayName = msg->GetVariableStr(baseId + 2);
+   m_dataType = msg->getFieldAsUInt32(baseId + 1);
+   m_displayName = msg->getFieldAsString(baseId + 2);
    if (m_displayName == NULL)
       m_displayName = _tcsdup(m_name);
-   m_instanceColumn = msg->GetVariableShort(baseId + 3) ? true : false;
+   m_instanceColumn = msg->getFieldAsUInt16(baseId + 3) ? true : false;
 }
 
 /**
@@ -560,10 +560,10 @@ TableColumnDefinition::~TableColumnDefinition()
 /**
  * Fill message with table column definition data
  */
-void TableColumnDefinition::fillMessage(CSCPMessage *msg, UINT32 baseId)
+void TableColumnDefinition::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
-   msg->SetVariable(baseId, m_name);
-   msg->SetVariable(baseId + 1, (UINT32)m_dataType);
-   msg->SetVariable(baseId + 2, m_displayName);
-   msg->SetVariable(baseId + 3, (WORD)(m_instanceColumn ? 1 : 0));
+   msg->setField(baseId, m_name);
+   msg->setField(baseId + 1, (UINT32)m_dataType);
+   msg->setField(baseId + 2, m_displayName);
+   msg->setField(baseId + 3, (WORD)(m_instanceColumn ? 1 : 0));
 }

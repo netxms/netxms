@@ -490,35 +490,35 @@ void DCItem::checkThresholds(ItemValue &value)
 /**
  * Create NXCP message with item data
  */
-void DCItem::createMessage(CSCPMessage *pMsg)
+void DCItem::createMessage(NXCPMessage *pMsg)
 {
 	DCObject::createMessage(pMsg);
 
    lock();
-   pMsg->SetVariable(VID_INSTANCE, m_instance);
-   pMsg->SetVariable(VID_DCI_DATA_TYPE, (WORD)m_dataType);
-   pMsg->SetVariable(VID_DCI_DELTA_CALCULATION, (WORD)m_deltaCalculation);
-   pMsg->SetVariable(VID_SAMPLE_COUNT, (WORD)m_sampleCount);
-	pMsg->SetVariable(VID_BASE_UNITS, (WORD)m_nBaseUnits);
-	pMsg->SetVariable(VID_MULTIPLIER, (UINT32)m_nMultiplier);
-	pMsg->SetVariable(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
-	pMsg->SetVariable(VID_INSTD_METHOD, m_instanceDiscoveryMethod);
+   pMsg->setField(VID_INSTANCE, m_instance);
+   pMsg->setField(VID_DCI_DATA_TYPE, (WORD)m_dataType);
+   pMsg->setField(VID_DCI_DELTA_CALCULATION, (WORD)m_deltaCalculation);
+   pMsg->setField(VID_SAMPLE_COUNT, (WORD)m_sampleCount);
+	pMsg->setField(VID_BASE_UNITS, (WORD)m_nBaseUnits);
+	pMsg->setField(VID_MULTIPLIER, (UINT32)m_nMultiplier);
+	pMsg->setField(VID_SNMP_RAW_VALUE_TYPE, m_snmpRawValueType);
+	pMsg->setField(VID_INSTD_METHOD, m_instanceDiscoveryMethod);
 	if (m_instanceDiscoveryData != NULL)
-		pMsg->SetVariable(VID_INSTD_DATA, m_instanceDiscoveryData);
+		pMsg->setField(VID_INSTD_DATA, m_instanceDiscoveryData);
 	if (m_instanceFilterSource != NULL)
-		pMsg->SetVariable(VID_INSTD_FILTER, m_instanceFilterSource);
+		pMsg->setField(VID_INSTD_FILTER, m_instanceFilterSource);
 	if (m_customUnitName != NULL)
-		pMsg->SetVariable(VID_CUSTOM_UNITS_NAME, m_customUnitName);
+		pMsg->setField(VID_CUSTOM_UNITS_NAME, m_customUnitName);
 	if (m_thresholds != NULL)
 	{
-		pMsg->SetVariable(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
+		pMsg->setField(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
 		UINT32 dwId = VID_DCI_THRESHOLD_BASE;
 		for(int i = 0; i < m_thresholds->size(); i++, dwId += 20)
 			m_thresholds->get(i)->createMessage(pMsg, dwId);
 	}
 	else
 	{
-		pMsg->SetVariable(VID_NUM_THRESHOLDS, (UINT32)0);
+		pMsg->setField(VID_NUM_THRESHOLDS, (UINT32)0);
 	}
    unlock();
 }
@@ -543,32 +543,32 @@ void DCItem::deleteFromDatabase()
 /**
  * Update item from NXCP message
  */
-void DCItem::updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId)
+void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId)
 {
 	DCObject::updateFromMessage(pMsg);
 
    lock();
 
-   pMsg->GetVariableStr(VID_INSTANCE, m_instance, MAX_DB_STRING);
-   m_dataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
-   m_deltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
-	m_sampleCount = (int)pMsg->GetVariableShort(VID_SAMPLE_COUNT);
-	m_nBaseUnits = pMsg->GetVariableShort(VID_BASE_UNITS);
-	m_nMultiplier = (int)pMsg->GetVariableLong(VID_MULTIPLIER);
+   pMsg->getFieldAsString(VID_INSTANCE, m_instance, MAX_DB_STRING);
+   m_dataType = (BYTE)pMsg->getFieldAsUInt16(VID_DCI_DATA_TYPE);
+   m_deltaCalculation = (BYTE)pMsg->getFieldAsUInt16(VID_DCI_DELTA_CALCULATION);
+	m_sampleCount = (int)pMsg->getFieldAsUInt16(VID_SAMPLE_COUNT);
+	m_nBaseUnits = pMsg->getFieldAsUInt16(VID_BASE_UNITS);
+	m_nMultiplier = (int)pMsg->getFieldAsUInt32(VID_MULTIPLIER);
 	safe_free(m_customUnitName);
-	m_customUnitName = pMsg->GetVariableStr(VID_CUSTOM_UNITS_NAME);
-	m_snmpRawValueType = pMsg->GetVariableShort(VID_SNMP_RAW_VALUE_TYPE);
-	m_instanceDiscoveryMethod = pMsg->GetVariableShort(VID_INSTD_METHOD);
+	m_customUnitName = pMsg->getFieldAsString(VID_CUSTOM_UNITS_NAME);
+	m_snmpRawValueType = pMsg->getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
+	m_instanceDiscoveryMethod = pMsg->getFieldAsUInt16(VID_INSTD_METHOD);
 
 	safe_free(m_instanceDiscoveryData);
-	m_instanceDiscoveryData = pMsg->GetVariableStr(VID_INSTD_DATA);
+	m_instanceDiscoveryData = pMsg->getFieldAsString(VID_INSTD_DATA);
 
-   TCHAR *pszStr = pMsg->GetVariableStr(VID_INSTD_FILTER);
+   TCHAR *pszStr = pMsg->getFieldAsString(VID_INSTD_FILTER);
 	setInstanceFilter(pszStr);
    safe_free(pszStr);
 
    // Update thresholds
-   UINT32 dwNum = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
+   UINT32 dwNum = pMsg->getFieldAsUInt32(VID_NUM_THRESHOLDS);
    UINT32 *newThresholds = (UINT32 *)malloc(sizeof(UINT32) * dwNum);
    *ppdwMapIndex = (UINT32 *)malloc(dwNum * sizeof(UINT32));
    *ppdwMapId = (UINT32 *)malloc(dwNum * sizeof(UINT32));
@@ -577,7 +577,7 @@ void DCItem::updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
    // Read all new threshold ids from message
    for(UINT32 i = 0, dwId = VID_DCI_THRESHOLD_BASE; i < dwNum; i++, dwId += 10)
    {
-      newThresholds[i] = pMsg->GetVariableLong(dwId);
+      newThresholds[i] = pMsg->getFieldAsUInt32(dwId);
    }
 
    // Check if some thresholds was deleted, and reposition others if needed
@@ -1093,29 +1093,29 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
 /**
  * Put last value into CSCP message
  */
-void DCItem::fillLastValueMessage(CSCPMessage *pMsg, UINT32 dwId)
+void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)
 {
 	lock();
-   pMsg->SetVariable(dwId++, m_id);
-   pMsg->SetVariable(dwId++, m_name);
-   pMsg->SetVariable(dwId++, m_szDescription);
-   pMsg->SetVariable(dwId++, (WORD)m_source);
+   pMsg->setField(dwId++, m_id);
+   pMsg->setField(dwId++, m_name);
+   pMsg->setField(dwId++, m_szDescription);
+   pMsg->setField(dwId++, (WORD)m_source);
    if (m_dwCacheSize > 0)
    {
-      pMsg->SetVariable(dwId++, (WORD)m_dataType);
-      pMsg->SetVariable(dwId++, (TCHAR *)m_ppValueCache[0]->getString());
-      pMsg->SetVariable(dwId++, m_ppValueCache[0]->getTimeStamp());
+      pMsg->setField(dwId++, (WORD)m_dataType);
+      pMsg->setField(dwId++, (TCHAR *)m_ppValueCache[0]->getString());
+      pMsg->setField(dwId++, m_ppValueCache[0]->getTimeStamp());
    }
    else
    {
-      pMsg->SetVariable(dwId++, (WORD)DCI_DT_NULL);
-      pMsg->SetVariable(dwId++, _T(""));
-      pMsg->SetVariable(dwId++, (UINT32)0);
+      pMsg->setField(dwId++, (WORD)DCI_DT_NULL);
+      pMsg->setField(dwId++, _T(""));
+      pMsg->setField(dwId++, (UINT32)0);
    }
-   pMsg->SetVariable(dwId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
-	pMsg->SetVariable(dwId++, (WORD)getType());
-	pMsg->SetVariable(dwId++, m_dwErrorCount);
-	pMsg->SetVariable(dwId++, m_dwTemplateItemId);
+   pMsg->setField(dwId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
+	pMsg->setField(dwId++, (WORD)getType());
+	pMsg->setField(dwId++, m_dwErrorCount);
+	pMsg->setField(dwId++, m_dwTemplateItemId);
 
 	int i;
    for(i = 0; i < getThresholdCount(); i++)
@@ -1125,12 +1125,12 @@ void DCItem::fillLastValueMessage(CSCPMessage *pMsg, UINT32 dwId)
    }
 	if (i < getThresholdCount())
 	{
-      pMsg->SetVariable(dwId++, (WORD)1);
+      pMsg->setField(dwId++, (WORD)1);
 		m_thresholds->get(i)->createMessage(pMsg, dwId);
 	}
 	else
 	{
-      pMsg->SetVariable(dwId++, (WORD)0);
+      pMsg->setField(dwId++, (WORD)0);
 	}
 
 	unlock();
@@ -1623,11 +1623,11 @@ bool DCItem::testTransformation(DataCollectionTarget *object, const TCHAR *scrip
 /**
  * Fill NXCP message with thresholds
  */
-void DCItem::fillMessageWithThresholds(CSCPMessage *msg)
+void DCItem::fillMessageWithThresholds(NXCPMessage *msg)
 {
 	lock();
 
-	msg->SetVariable(VID_NUM_THRESHOLDS, (UINT32)getThresholdCount());
+	msg->setField(VID_NUM_THRESHOLDS, (UINT32)getThresholdCount());
 	UINT32 id = VID_DCI_THRESHOLD_BASE;
 	for(int i = 0; i < getThresholdCount(); i++, id += 20)
 	{

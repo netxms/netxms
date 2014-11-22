@@ -129,7 +129,7 @@ static void SendNewRecord(ClientSession *pSession, void *pArg)
 	{
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_AUDIT_RECORD;
-      pUpdate->pData = new CSCPMessage((CSCPMessage *)pArg);
+      pUpdate->pData = new NXCPMessage((NXCPMessage *)pArg);
       pSession->queueUpdate(pUpdate);
 	}
 }
@@ -143,7 +143,7 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32
 {
 	String text, query;
 	va_list args;
-	CSCPMessage msg;
+	NXCPMessage msg;
 
 	va_start(args, format);
 	text.addFormattedStringV(format, args);
@@ -154,14 +154,14 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32
 		userId, (const TCHAR *)DBPrepareString(g_hCoreDB, workstation), sessionId, objectId, (const TCHAR *)DBPrepareString(g_hCoreDB, text));
 	QueueSQLRequest(query);
 
-	msg.SetCode(CMD_AUDIT_RECORD);
-	msg.SetVariable(VID_SUBSYSTEM, subsys);
-	msg.SetVariable(VID_SUCCESS_AUDIT, (WORD)isSuccess);
-	msg.SetVariable(VID_USER_ID, userId);
-	msg.SetVariable(VID_WORKSTATION, workstation);
-   msg.SetVariable(VID_SESSION_ID, sessionId);
-	msg.SetVariable(VID_OBJECT_ID, objectId);
-	msg.SetVariable(VID_MESSAGE, (const TCHAR *)text);
+	msg.setCode(CMD_AUDIT_RECORD);
+	msg.setField(VID_SUBSYSTEM, subsys);
+	msg.setField(VID_SUCCESS_AUDIT, (WORD)isSuccess);
+	msg.setField(VID_USER_ID, userId);
+	msg.setField(VID_WORKSTATION, workstation);
+   msg.setField(VID_SESSION_ID, sessionId);
+	msg.setField(VID_OBJECT_ID, objectId);
+	msg.setField(VID_MESSAGE, (const TCHAR *)text);
 	EnumerateClientSessions(SendNewRecord, &msg);
 
 	if (m_auditServerAddr != 0)

@@ -34,11 +34,11 @@ static void ProcessControlRequest(HPIPE hPipe)
 	while(true)
 	{
       MessageReceiverResult result;
-		CSCPMessage *msg = receiver.readMessage(5000, &result);
+		NXCPMessage *msg = receiver.readMessage(5000, &result);
 		if (msg == NULL)
 			break;
-		AgentWriteDebugLog(6, _T("ProcessControlRequest: received message %s"), NXCPMessageCodeName(msg->GetCode(), buffer));
-		if (msg->GetCode() == CMD_SHUTDOWN)
+		AgentWriteDebugLog(6, _T("ProcessControlRequest: received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+		if (msg->getCode() == CMD_SHUTDOWN)
 		{
          ShutdownExtSubagents();
 		}
@@ -235,7 +235,7 @@ void StartControlConnector()
 /**
  * Send control message
  */
-bool SendControlMessage(CSCPMessage *msg)
+bool SendControlMessage(NXCPMessage *msg)
 {
 #ifdef _WIN32
    HANDLE hPipe = NULL;
@@ -274,16 +274,16 @@ reconnect:
 #endif
 
    bool success = false;
-	CSCP_MESSAGE *rawMsg = msg->createMessage();
+	NXCP_MESSAGE *rawMsg = msg->createMessage();
 #ifdef _WIN32
 	DWORD bytes;
-	if (!WriteFile(hPipe, rawMsg, ntohl(rawMsg->dwSize), &bytes, NULL))
+	if (!WriteFile(hPipe, rawMsg, ntohl(rawMsg->size), &bytes, NULL))
 		goto cleanup;
-	if (bytes != ntohl(rawMsg->dwSize))
+	if (bytes != ntohl(rawMsg->size))
 		goto cleanup;
 #else
-	int bytes = SendEx(hPipe, rawMsg, ntohl(rawMsg->dwSize), 0, NULL); 
-	if (bytes != (int)ntohl(rawMsg->dwSize))
+	int bytes = SendEx(hPipe, rawMsg, ntohl(rawMsg->size), 0, NULL); 
+	if (bytes != (int)ntohl(rawMsg->size))
 		goto cleanup;
 #endif
    success = true;

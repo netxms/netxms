@@ -25,26 +25,26 @@
 /**
  * Create log filter object from NXCP message
  */
-LogFilter::LogFilter(CSCPMessage *msg)
+LogFilter::LogFilter(NXCPMessage *msg)
 {
-	m_numColumnFilters = (int)msg->GetVariableLong(VID_NUM_FILTERS);
+	m_numColumnFilters = (int)msg->getFieldAsUInt32(VID_NUM_FILTERS);
 	m_columnFilters = (ColumnFilter **)malloc(sizeof(ColumnFilter *) * m_numColumnFilters);
 	UINT32 varId = VID_COLUMN_FILTERS_BASE;
 	for(int i = 0; i < m_numColumnFilters; i++)
 	{
 		TCHAR column[256];
-		msg->GetVariableStr(varId++, column, 256);
+		msg->getFieldAsString(varId++, column, 256);
 		m_columnFilters[i] = new ColumnFilter(msg, column, varId);
 		varId += m_columnFilters[i]->getVariableCount();
 	}
 
-	m_numOrderingColumns = (int)msg->GetVariableLong(VID_NUM_ORDERING_COLUMNS);
+	m_numOrderingColumns = (int)msg->getFieldAsUInt32(VID_NUM_ORDERING_COLUMNS);
 	m_orderingColumns = (OrderingColumn *)malloc(sizeof(OrderingColumn) * m_numOrderingColumns);
 	varId = VID_ORDERING_COLUMNS_BASE;
 	for(int i = 0; i < m_numOrderingColumns; i++)
 	{
-		msg->GetVariableStr(varId++, m_orderingColumns[i].name, MAX_COLUMN_NAME_LEN);
-		m_orderingColumns[i].descending = msg->GetVariableShort(varId++) ? true : false;
+		msg->getFieldAsString(varId++, m_orderingColumns[i].name, MAX_COLUMN_NAME_LEN);
+		m_orderingColumns[i].descending = msg->getFieldAsUInt16(varId++) ? true : false;
 	}
 }
 

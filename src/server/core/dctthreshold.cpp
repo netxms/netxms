@@ -222,17 +222,17 @@ DCTableConditionGroup::DCTableConditionGroup(DCTableConditionGroup *src)
 /**
  * Create condition group from NXCP message
  */
-DCTableConditionGroup::DCTableConditionGroup(CSCPMessage *msg, UINT32 *baseId)
+DCTableConditionGroup::DCTableConditionGroup(NXCPMessage *msg, UINT32 *baseId)
 {
    UINT32 varId = *baseId;
-   int count = msg->GetVariableLong(varId++);
+   int count = msg->getFieldAsUInt32(varId++);
    m_conditions = new ObjectArray<DCTableCondition>(count, 8, true);
    for(int i = 0; i < count; i++)
    {
       TCHAR column[MAX_COLUMN_NAME], value[MAX_RESULT_LENGTH];
-      msg->GetVariableStr(varId++, column, MAX_COLUMN_NAME);
-      int op = (int)msg->GetVariableShort(varId++);
-      msg->GetVariableStr(varId++, value, MAX_RESULT_LENGTH);
+      msg->getFieldAsString(varId++, column, MAX_COLUMN_NAME);
+      int op = (int)msg->getFieldAsUInt16(varId++);
+      msg->getFieldAsString(varId++, value, MAX_RESULT_LENGTH);
       m_conditions->add(new DCTableCondition(column, op, value));
    }
    *baseId = varId;
@@ -275,16 +275,16 @@ DCTableConditionGroup::~DCTableConditionGroup()
 /**
  * Fill NXCP mesage
  */
-UINT32 DCTableConditionGroup::fillMessage(CSCPMessage *msg, UINT32 baseId)
+UINT32 DCTableConditionGroup::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
    UINT32 varId = baseId;
-   msg->SetVariable(varId++, (UINT32)m_conditions->size());
+   msg->setField(varId++, (UINT32)m_conditions->size());
    for(int i = 0; i < m_conditions->size(); i++)
    {
       DCTableCondition *c = m_conditions->get(i);
-      msg->SetVariable(varId++, c->getColumn());
-      msg->SetVariable(varId++, (UINT16)c->getOperation());
-      msg->SetVariable(varId++, c->getValue());
+      msg->setField(varId++, c->getColumn());
+      msg->setField(varId++, (UINT16)c->getOperation());
+      msg->setField(varId++, c->getValue());
    }
    return varId;
 }
@@ -343,15 +343,15 @@ DCTableThreshold::DCTableThreshold(DB_RESULT hResult, int row)
 /**
  * Create table threshold from NXCP message
  */
-DCTableThreshold::DCTableThreshold(CSCPMessage *msg, UINT32 *baseId)
+DCTableThreshold::DCTableThreshold(NXCPMessage *msg, UINT32 *baseId)
 {
    UINT32 varId = *baseId;
-   m_id = msg->GetVariableLong(varId++);
+   m_id = msg->getFieldAsUInt32(varId++);
    if (m_id == 0)
       m_id = CreateUniqueId(IDG_THRESHOLD);
-   m_activationEvent = msg->GetVariableLong(varId++);
-   m_deactivationEvent = msg->GetVariableLong(varId++);
-   int count = (int)msg->GetVariableLong(varId++);
+   m_activationEvent = msg->getFieldAsUInt32(varId++);
+   m_deactivationEvent = msg->getFieldAsUInt32(varId++);
+   int count = (int)msg->getFieldAsUInt32(varId++);
    m_groups = new ObjectArray<DCTableConditionGroup>(count, 4, true);
    *baseId = varId;
    for(int i = 0; i < count; i++)
@@ -475,13 +475,13 @@ bool DCTableThreshold::saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq)
 /**
  * Fill NXCP message with threshold data
  */
-UINT32 DCTableThreshold::fillMessage(CSCPMessage *msg, UINT32 baseId)
+UINT32 DCTableThreshold::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
    UINT32 varId = baseId;
-   msg->SetVariable(varId++, m_id);
-   msg->SetVariable(varId++, m_activationEvent);
-   msg->SetVariable(varId++, m_deactivationEvent);
-   msg->SetVariable(varId++, (UINT32)m_groups->size());
+   msg->setField(varId++, m_id);
+   msg->setField(varId++, m_activationEvent);
+   msg->setField(varId++, m_deactivationEvent);
+   msg->setField(varId++, (UINT32)m_groups->size());
    for(int i = 0; i < m_groups->size(); i++)
    {
       varId = m_groups->get(i)->fillMessage(msg, varId);

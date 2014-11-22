@@ -94,7 +94,7 @@ void ServerJob::notifyClients(bool isStatusChange)
 	m_lastNotification = t;
 
 	MutexLock(m_notificationLock);
-	m_notificationMessage.SetCode(CMD_JOB_CHANGE_NOTIFICATION);
+	m_notificationMessage.setCode(CMD_JOB_CHANGE_NOTIFICATION);
 	fillMessage(&m_notificationMessage);
 	EnumerateClientSessions(ServerJob::sendNotification, this);
 	MutexUnlock(m_notificationLock);
@@ -267,19 +267,19 @@ void ServerJob::setDescription(const TCHAR *description)
 /**
  * Fill NXCP message with job's data
  */
-void ServerJob::fillMessage(CSCPMessage *msg)
+void ServerJob::fillMessage(NXCPMessage *msg)
 {
-	msg->SetVariable(VID_JOB_ID, m_id);
-	msg->SetVariable(VID_USER_ID, m_userId);
-	msg->SetVariable(VID_JOB_TYPE, m_type);
-	msg->SetVariable(VID_OBJECT_ID, m_remoteNode);
-	msg->SetVariable(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
-	msg->SetVariable(VID_JOB_STATUS, (WORD)m_status);
-	msg->SetVariable(VID_JOB_PROGRESS, (WORD)m_progress);
+	msg->setField(VID_JOB_ID, m_id);
+	msg->setField(VID_USER_ID, m_userId);
+	msg->setField(VID_JOB_TYPE, m_type);
+	msg->setField(VID_OBJECT_ID, m_remoteNode);
+	msg->setField(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
+	msg->setField(VID_JOB_STATUS, (WORD)m_status);
+	msg->setField(VID_JOB_PROGRESS, (WORD)m_progress);
 	if (m_status == JOB_FAILED)
-		msg->SetVariable(VID_FAILURE_MESSAGE, (m_failureMessage != NULL) ? m_failureMessage : _T("Internal error"));
+		msg->setField(VID_FAILURE_MESSAGE, (m_failureMessage != NULL) ? m_failureMessage : _T("Internal error"));
 	else
-		msg->SetVariable(VID_FAILURE_MESSAGE, CHECK_NULL_EX(m_failureMessage));
+		msg->setField(VID_FAILURE_MESSAGE, CHECK_NULL_EX(m_failureMessage));
 }
 
 /**

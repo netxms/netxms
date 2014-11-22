@@ -234,8 +234,8 @@ private:
 	UINT32 m_requestId;
 	MUTEX m_mutexPipeWrite;
 
-	bool sendMessage(CSCPMessage *msg);
-	CSCPMessage *waitForMessage(WORD code, UINT32 id);
+	bool sendMessage(NXCPMessage *msg);
+	NXCPMessage *waitForMessage(WORD code, UINT32 id);
 	UINT32 waitForRCC(UINT32 id);
 	NETXMS_SUBAGENT_PARAM *getSupportedParameters(UINT32 *count);
 	NETXMS_SUBAGENT_LIST *getSupportedLists(UINT32 *count);
@@ -254,11 +254,11 @@ public:
 	UINT32 getParameter(const TCHAR *name, TCHAR *buffer);
 	UINT32 getTable(const TCHAR *name, Table *value);
 	UINT32 getList(const TCHAR *name, StringList *value);
-	void listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
+	void listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listParameters(StringList *list);
-	void listLists(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
+	void listLists(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listLists(StringList *list);
-	void listTables(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
+	void listTables(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listTables(StringList *list);
    void shutdown();
 };
@@ -298,7 +298,7 @@ private:
    SOCKET m_hSocket;
    Queue *m_pSendQueue;
    Queue *m_pMessageQueue;
-   CSCP_BUFFER *m_pMsgBuffer;
+   NXCP_BUFFER *m_pMsgBuffer;
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
    THREAD m_hProxyReadThread;
@@ -316,19 +316,19 @@ private:
    SOCKET m_hProxySocket;     // Socket for proxy connection
 	MUTEX m_socketWriteMutex;
 
-	BOOL sendRawMessage(CSCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx);
-   void authenticate(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   void getConfig(CSCPMessage *pMsg);
-   void updateConfig(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   void getParameter(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   void getList(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   void getTable(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   void action(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   void recvFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   void getLocalFile(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   void cancelFileMonitoring(CSCPMessage *pRequest, CSCPMessage *pMsg);
-   UINT32 upgrade(CSCPMessage *pRequest);
-   UINT32 setupProxyConnection(CSCPMessage *pRequest);
+	BOOL sendRawMessage(NXCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx);
+   void authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg);
+   void getConfig(NXCPMessage *pMsg);
+   void updateConfig(NXCPMessage *pRequest, NXCPMessage *pMsg);
+   void getParameter(NXCPMessage *pRequest, NXCPMessage *pMsg);
+   void getList(NXCPMessage *pRequest, NXCPMessage *pMsg);
+   void getTable(NXCPMessage *pRequest, NXCPMessage *pMsg);
+   void action(NXCPMessage *pRequest, NXCPMessage *pMsg);
+   void recvFile(NXCPMessage *pRequest, NXCPMessage *pMsg);
+   void getLocalFile(NXCPMessage *pRequest, NXCPMessage *pMsg);
+   void cancelFileMonitoring(NXCPMessage *pRequest, NXCPMessage *pMsg);
+   UINT32 upgrade(NXCPMessage *pRequest);
+   UINT32 setupProxyConnection(NXCPMessage *pRequest);
 
    void readThread();
    void writeThread();
@@ -347,8 +347,8 @@ public:
    void run();
    void disconnect();
 
-   virtual void sendMessage(CSCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
-   virtual void sendRawMessage(CSCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->dwSize))); }
+   virtual void sendMessage(NXCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
+   virtual void sendRawMessage(NXCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->size))); }
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
 
 	virtual const InetAddress& getServerAddress() { return m_serverAddr; }
@@ -376,7 +376,7 @@ private:
    UINT32 m_id;
    SOCKET m_socket;
    MUTEX m_mutex;
-   CSCP_BUFFER m_msgBuffer;
+   NXCP_BUFFER m_msgBuffer;
    MsgWaitQueue m_msgQueue;
    UINT32 m_sessionId;
    TCHAR *m_sessionName;
@@ -385,7 +385,7 @@ private:
    VolatileCounter m_requestId;
 
    void readThread();
-   bool sendMessage(CSCPMessage *msg);
+   bool sendMessage(NXCPMessage *msg);
    UINT32 nextRequestId() { return InterlockedIncrement(&m_requestId); }
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
@@ -404,7 +404,7 @@ public:
    const TCHAR *getUserName() { return CHECK_NULL(m_userName); }
 
    bool testConnection();
-   void takeScreenshot(CSCPMessage *msg);
+   void takeScreenshot(NXCPMessage *msg);
 };
 
 /**
@@ -454,15 +454,15 @@ BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList);
 UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue);
 UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue);
 UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue);
-void GetParameterList(CSCPMessage *pMsg);
-void GetEnumList(CSCPMessage *pMsg);
-void GetTableList(CSCPMessage *pMsg);
+void GetParameterList(NXCPMessage *pMsg);
+void GetEnumList(NXCPMessage *pMsg);
+void GetTableList(NXCPMessage *pMsg);
 BOOL LoadSubAgent(TCHAR *szModuleName);
 void UnloadAllSubAgents();
 BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
                   BOOL (* SubAgentInit)(NETXMS_SUBAGENT_INFO **, Config *),
                   const TCHAR *pszEntryPoint);
-BOOL ProcessCmdBySubAgent(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, AbstractCommSession *session);
+BOOL ProcessCmdBySubAgent(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, AbstractCommSession *session);
 BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
                LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
                const TCHAR *pszSubAgent, const TCHAR *pszDescription);
@@ -475,22 +475,22 @@ UINT32 ExecuteShellCommand(TCHAR *pszCommand, StringList *pArgs);
 void StartParamProvidersPoller();
 bool AddParametersProvider(const TCHAR *line);
 LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer);
-void ListParametersFromExtProviders(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
+void ListParametersFromExtProviders(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListParametersFromExtProviders(StringList *list);
 
 bool AddExternalSubagent(const TCHAR *config);
 UINT32 GetParameterValueFromExtSubagent(const TCHAR *name, TCHAR *buffer);
 UINT32 GetTableValueFromExtSubagent(const TCHAR *name, Table *value);
 UINT32 GetListValueFromExtSubagent(const TCHAR *name, StringList *value);
-void ListParametersFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
+void ListParametersFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListParametersFromExtSubagents(StringList *list);
-void ListListsFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
+void ListListsFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListListsFromExtSubagents(StringList *list);
-void ListTablesFromExtSubagents(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
+void ListTablesFromExtSubagents(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 void ListTablesFromExtSubagents(StringList *list);
-bool SendMessageToPipe(HPIPE hPipe, CSCP_MESSAGE *msg);
-bool SendMessageToMasterAgent(CSCPMessage *msg);
-bool SendRawMessageToMasterAgent(CSCP_MESSAGE *msg);
+bool SendMessageToPipe(HPIPE hPipe, NXCP_MESSAGE *msg);
+bool SendMessageToMasterAgent(NXCPMessage *msg);
+bool SendRawMessageToMasterAgent(NXCP_MESSAGE *msg);
 void ShutdownExtSubagents();
 
 void RegisterApplicationAgent(const TCHAR *name);
@@ -503,7 +503,7 @@ UINT32 UpgradeAgent(TCHAR *pszPkgFile);
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **ppArgList);
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, ...);
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, va_list args);
-void ForwardTrap(CSCPMessage *msg);
+void ForwardTrap(NXCPMessage *msg);
 
 Config *OpenRegistry();
 void CloseRegistry(bool modified);
@@ -514,7 +514,7 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId);
 void StartStorageDiscoveryConnector();
 
 void StartControlConnector();
-bool SendControlMessage(CSCPMessage *msg);
+bool SendControlMessage(NXCPMessage *msg);
 
 void StartSessionAgentConnector();
 SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName);

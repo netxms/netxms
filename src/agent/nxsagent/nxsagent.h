@@ -33,7 +33,7 @@
 #include <nxcpapi.h>
 #include <wtsapi32.h>
 
-void TakeScreenshot(CSCPMessage *response);
+void TakeScreenshot(NXCPMessage *response);
 bool SaveBitmapToPng(HBITMAP hBitmap, const TCHAR *fileName);
 
 #endif

@@ -43,16 +43,16 @@ NetworkMapLink::NetworkMapLink(UINT32 e1, UINT32 e2, int type)
 /**
  * Constuctor: create link object from NXCP message
  */
-NetworkMapLink::NetworkMapLink(CSCPMessage *msg, UINT32 baseId)
+NetworkMapLink::NetworkMapLink(NXCPMessage *msg, UINT32 baseId)
 {
-	m_type = msg->GetVariableShort(baseId);
-	m_name = msg->GetVariableStr(baseId + 1);
-	m_connectorName1 = msg->GetVariableStr(baseId + 2);
-	m_connectorName2 = msg->GetVariableStr(baseId + 3);
-	m_element1 = msg->GetVariableLong(baseId + 4);
-	m_element2 = msg->GetVariableLong(baseId + 5);
-	m_config = msg->GetVariableStr(baseId + 6);
-	m_flags = msg->GetVariableLong(baseId + 7);
+	m_type = msg->getFieldAsUInt16(baseId);
+	m_name = msg->getFieldAsString(baseId + 1);
+	m_connectorName1 = msg->getFieldAsString(baseId + 2);
+	m_connectorName2 = msg->getFieldAsString(baseId + 3);
+	m_element1 = msg->getFieldAsUInt32(baseId + 4);
+	m_element2 = msg->getFieldAsUInt32(baseId + 5);
+	m_config = msg->getFieldAsString(baseId + 6);
+	m_flags = msg->getFieldAsUInt32(baseId + 7);
 }
 
 
@@ -108,16 +108,16 @@ void NetworkMapLink::setConnector2Name(const TCHAR *name)
 /**
  * Fill NXCP message
  */
-void NetworkMapLink::fillMessage(CSCPMessage *msg, UINT32 baseId)
+void NetworkMapLink::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
-	msg->SetVariable(baseId, (WORD)m_type);
-	msg->SetVariable(baseId + 1, getName());
-	msg->SetVariable(baseId + 2, getConnector1Name());
-	msg->SetVariable(baseId + 3, getConnector2Name());
-	msg->SetVariable(baseId + 4, m_element1);
-	msg->SetVariable(baseId + 5, m_element2);
-	msg->SetVariable(baseId + 6, m_config);
-   msg->SetVariable(baseId + 7, m_flags);
+	msg->setField(baseId, (WORD)m_type);
+	msg->setField(baseId + 1, getName());
+	msg->setField(baseId + 2, getConnector1Name());
+	msg->setField(baseId + 3, getConnector2Name());
+	msg->setField(baseId + 4, m_element1);
+	msg->setField(baseId + 5, m_element2);
+	msg->setField(baseId + 6, m_config);
+   msg->setField(baseId + 7, m_flags);
 }
 
 

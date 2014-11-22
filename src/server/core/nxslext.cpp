@@ -1379,7 +1379,7 @@ void NXSL_ServerEnv::print(NXSL_Value *value)
 /**
  * Constructor for environment intended for passing script's output to client
  */
-NXSL_ClientSessionEnv::NXSL_ClientSessionEnv(ClientSession *session, CSCPMessage *response) : NXSL_ServerEnv()
+NXSL_ClientSessionEnv::NXSL_ClientSessionEnv(ClientSession *session, NXCPMessage *response) : NXSL_ServerEnv()
 {
    m_session = session;
    m_response = response;
@@ -1393,7 +1393,7 @@ void NXSL_ClientSessionEnv::print(NXSL_Value *value)
 	if (m_session != NULL && m_response != NULL)
 	{
 		const TCHAR *text = value->getValueAsCString();
-		m_response->SetVariable(VID_MESSAGE, text);
+		m_response->setField(VID_MESSAGE, text);
 		m_session->sendMessage(m_response);
 	}
 }
@@ -1410,7 +1410,7 @@ void NXSL_ClientSessionEnv::trace(int level, const TCHAR *text)
       memcpy(t, text, len * sizeof(TCHAR));
       t[len] = _T('\n');
       t[len + 1] = 0;
-		m_response->SetVariable(VID_MESSAGE, t);
+		m_response->setField(VID_MESSAGE, t);
 		m_session->sendMessage(m_response);
       free(t);
 	}

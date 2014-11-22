@@ -190,7 +190,7 @@ void NXCL_Session::destroyAllObjects()
 // Wait for specific message
 //
 
-CSCPMessage *NXCL_Session::WaitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut)
+NXCPMessage *NXCL_Session::WaitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut)
 {
    if (m_dwFlags & NXC_SF_CONN_BROKEN)
       return NULL;
@@ -203,7 +203,7 @@ CSCPMessage *NXCL_Session::WaitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTime
 // Wait for specific raw message
 //
 
-CSCP_MESSAGE *NXCL_Session::WaitForRawMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut)
+NXCP_MESSAGE *NXCL_Session::WaitForRawMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut)
 {
    if (m_dwFlags & NXC_SF_CONN_BROKEN)
       return NULL;
@@ -219,7 +219,7 @@ CSCP_MESSAGE *NXCL_Session::WaitForRawMessage(WORD wCode, UINT32 dwId, UINT32 dw
 
 UINT32 NXCL_Session::WaitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
 {
-   CSCPMessage *pResponse;
+   NXCPMessage *pResponse;
    UINT32 dwRetCode;
 
    if (m_dwFlags & NXC_SF_CONN_BROKEN)
@@ -231,13 +231,13 @@ UINT32 NXCL_Session::WaitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
       pResponse = WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId, dwTimeOut);
       if (pResponse != NULL)
       {
-         dwRetCode = pResponse->GetVariableLong(VID_RCC);
+         dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
          if (dwRetCode == RCC_COMPONENT_LOCKED)
          {
             _tcscpy(m_szLastLock, _T("<unknown>"));
             if (pResponse->isFieldExist(VID_LOCKED_BY))
             {
-               pResponse->GetVariableStr(VID_LOCKED_BY, m_szLastLock, MAX_LOCKINFO_LEN);
+               pResponse->getFieldAsString(VID_LOCKED_BY, m_szLastLock, MAX_LOCKINFO_LEN);
             }
          }
          delete pResponse;
@@ -255,9 +255,9 @@ UINT32 NXCL_Session::WaitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
 // Send CSCP message
 //
 
-BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
+BOOL NXCL_Session::SendMsg(NXCPMessage *pMsg)
 {
-   CSCP_MESSAGE *pRawMsg;
+   NXCP_MESSAGE *pRawMsg;
    NXCP_ENCRYPTED_MESSAGE *pEnMsg;
    BOOL bResult;
    TCHAR szBuffer[128];
@@ -265,15 +265,15 @@ BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
    if (m_dwFlags & NXC_SF_CONN_BROKEN)
       return FALSE;
 
-   DebugPrintf(_T("SendMsg(\"%s\", id:%d)"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
+   DebugPrintf(_T("SendMsg(\"%s\", id:%d)"), NXCPMessageCodeName(pMsg->getCode(), szBuffer), pMsg->getId());
    pRawMsg = pMsg->createMessage();
 	MutexLock(m_mutexSendMsg);
    if (m_pCtx != NULL)
    {
-      pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
+      pEnMsg = m_pCtx->encryptMessage(pRawMsg);
       if (pEnMsg != NULL)
       {
-         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, NULL) == (int)ntohl(pEnMsg->dwSize));
+         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, NULL) == (int)ntohl(pEnMsg->size));
          free(pEnMsg);
       }
       else
@@ -283,7 +283,7 @@ BOOL NXCL_Session::SendMsg(CSCPMessage *pMsg)
    }
    else
    {
-      bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0, NULL) == (int)ntohl(pRawMsg->dwSize));
+      bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->size), 0, NULL) == (int)ntohl(pRawMsg->size));
    }
 	MutexUnlock(m_mutexSendMsg);
    free(pRawMsg);
@@ -382,7 +382,7 @@ void NXCL_Session::CompleteSync(int nSyncOp, UINT32 dwRetCode)
 /**
  * Process DCIs coming from server
  */
-void NXCL_Session::processDCI(CSCPMessage *pMsg)
+void NXCL_Session::processDCI(NXCPMessage *pMsg)
 {
 	if (pMsg->isEndOfSequence())
 	{
@@ -396,47 +396,47 @@ void NXCL_Session::processDCI(CSCPMessage *pMsg)
       m_pItemList->dwNumItems++;
       m_pItemList->pItems = (NXC_DCI *)realloc(m_pItemList->pItems,
                                     sizeof(NXC_DCI) * m_pItemList->dwNumItems);
-      m_pItemList->pItems[i].dwId = pMsg->GetVariableLong(VID_DCI_ID);
-      m_pItemList->pItems[i].dwTemplateId = pMsg->GetVariableLong(VID_TEMPLATE_ID);
-      m_pItemList->pItems[i].dwResourceId = pMsg->GetVariableLong(VID_RESOURCE_ID);
-      m_pItemList->pItems[i].dwProxyNode = pMsg->GetVariableLong(VID_AGENT_PROXY);
-      m_pItemList->pItems[i].iDataType = (BYTE)pMsg->GetVariableShort(VID_DCI_DATA_TYPE);
-      m_pItemList->pItems[i].iPollingInterval = (int)pMsg->GetVariableLong(VID_POLLING_INTERVAL);
-      m_pItemList->pItems[i].iRetentionTime = (int)pMsg->GetVariableLong(VID_RETENTION_TIME);
-      m_pItemList->pItems[i].iSource = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
-      m_pItemList->pItems[i].iStatus = (BYTE)pMsg->GetVariableShort(VID_DCI_STATUS);
-      m_pItemList->pItems[i].iDeltaCalculation = (BYTE)pMsg->GetVariableShort(VID_DCI_DELTA_CALCULATION);
-		m_pItemList->pItems[i].wFlags = pMsg->GetVariableShort(VID_FLAGS);
-		m_pItemList->pItems[i].wSnmpRawType = (BYTE)pMsg->GetVariableShort(VID_SNMP_RAW_VALUE_TYPE);
-		m_pItemList->pItems[i].pszFormula = pMsg->GetVariableStr(VID_TRANSFORMATION_SCRIPT);
-      pMsg->GetVariableStr(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
-      pMsg->GetVariableStr(VID_DESCRIPTION, m_pItemList->pItems[i].szDescription, MAX_DB_STRING);
-      pMsg->GetVariableStr(VID_INSTANCE, m_pItemList->pItems[i].szInstance, MAX_DB_STRING);
-		pMsg->GetVariableStr(VID_SYSTEM_TAG, m_pItemList->pItems[i].szSystemTag, MAX_DB_STRING);
-		m_pItemList->pItems[i].nBaseUnits = (int)pMsg->GetVariableShort(VID_BASE_UNITS);
-		m_pItemList->pItems[i].nMultiplier = (int)pMsg->GetVariableLong(VID_MULTIPLIER);
-		m_pItemList->pItems[i].pszCustomUnitName = pMsg->GetVariableStr(VID_CUSTOM_UNITS_NAME);
-		m_pItemList->pItems[i].pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
-		m_pItemList->pItems[i].nSnmpPort = pMsg->GetVariableShort(VID_SNMP_PORT);
-      m_pItemList->pItems[i].dwNumSchedules = pMsg->GetVariableLong(VID_NUM_SCHEDULES);
-      m_pItemList->pItems[i].comments = pMsg->GetVariableStr(VID_COMMENTS);
+      m_pItemList->pItems[i].dwId = pMsg->getFieldAsUInt32(VID_DCI_ID);
+      m_pItemList->pItems[i].dwTemplateId = pMsg->getFieldAsUInt32(VID_TEMPLATE_ID);
+      m_pItemList->pItems[i].dwResourceId = pMsg->getFieldAsUInt32(VID_RESOURCE_ID);
+      m_pItemList->pItems[i].dwProxyNode = pMsg->getFieldAsUInt32(VID_AGENT_PROXY);
+      m_pItemList->pItems[i].iDataType = (BYTE)pMsg->getFieldAsUInt16(VID_DCI_DATA_TYPE);
+      m_pItemList->pItems[i].iPollingInterval = (int)pMsg->getFieldAsUInt32(VID_POLLING_INTERVAL);
+      m_pItemList->pItems[i].iRetentionTime = (int)pMsg->getFieldAsUInt32(VID_RETENTION_TIME);
+      m_pItemList->pItems[i].iSource = (BYTE)pMsg->getFieldAsUInt16(VID_DCI_SOURCE_TYPE);
+      m_pItemList->pItems[i].iStatus = (BYTE)pMsg->getFieldAsUInt16(VID_DCI_STATUS);
+      m_pItemList->pItems[i].iDeltaCalculation = (BYTE)pMsg->getFieldAsUInt16(VID_DCI_DELTA_CALCULATION);
+		m_pItemList->pItems[i].flags = pMsg->getFieldAsUInt16(VID_FLAGS);
+		m_pItemList->pItems[i].wSnmpRawType = (BYTE)pMsg->getFieldAsUInt16(VID_SNMP_RAW_VALUE_TYPE);
+		m_pItemList->pItems[i].pszFormula = pMsg->getFieldAsString(VID_TRANSFORMATION_SCRIPT);
+      pMsg->getFieldAsString(VID_NAME, m_pItemList->pItems[i].szName, MAX_ITEM_NAME);
+      pMsg->getFieldAsString(VID_DESCRIPTION, m_pItemList->pItems[i].szDescription, MAX_DB_STRING);
+      pMsg->getFieldAsString(VID_INSTANCE, m_pItemList->pItems[i].szInstance, MAX_DB_STRING);
+		pMsg->getFieldAsString(VID_SYSTEM_TAG, m_pItemList->pItems[i].szSystemTag, MAX_DB_STRING);
+		m_pItemList->pItems[i].nBaseUnits = (int)pMsg->getFieldAsUInt16(VID_BASE_UNITS);
+		m_pItemList->pItems[i].nMultiplier = (int)pMsg->getFieldAsUInt32(VID_MULTIPLIER);
+		m_pItemList->pItems[i].pszCustomUnitName = pMsg->getFieldAsString(VID_CUSTOM_UNITS_NAME);
+		m_pItemList->pItems[i].pszPerfTabSettings = pMsg->getFieldAsString(VID_PERFTAB_SETTINGS);
+		m_pItemList->pItems[i].nSnmpPort = pMsg->getFieldAsUInt16(VID_SNMP_PORT);
+      m_pItemList->pItems[i].dwNumSchedules = pMsg->getFieldAsUInt32(VID_NUM_SCHEDULES);
+      m_pItemList->pItems[i].comments = pMsg->getFieldAsString(VID_COMMENTS);
       m_pItemList->pItems[i].ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_pItemList->pItems[i].dwNumSchedules);
       for(j = 0, dwId = VID_DCI_SCHEDULE_BASE; j < m_pItemList->pItems[i].dwNumSchedules; j++, dwId++)
-         m_pItemList->pItems[i].ppScheduleList[j] = pMsg->GetVariableStr(dwId);
-      m_pItemList->pItems[i].dwNumThresholds = pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
+         m_pItemList->pItems[i].ppScheduleList[j] = pMsg->getFieldAsString(dwId);
+      m_pItemList->pItems[i].dwNumThresholds = pMsg->getFieldAsUInt32(VID_NUM_THRESHOLDS);
       m_pItemList->pItems[i].pThresholdList =
          (NXC_DCI_THRESHOLD *)malloc(sizeof(NXC_DCI_THRESHOLD) * m_pItemList->pItems[i].dwNumThresholds);
       for(j = 0, dwId = VID_DCI_THRESHOLD_BASE; j < m_pItemList->pItems[i].dwNumThresholds; j++, dwId++)
       {
-			m_pItemList->pItems[i].pThresholdList[j].id = pMsg->GetVariableLong(dwId++);
-         m_pItemList->pItems[i].pThresholdList[j].activationEvent = pMsg->GetVariableLong(dwId++);
-         m_pItemList->pItems[i].pThresholdList[j].rearmEvent = pMsg->GetVariableLong(dwId++);
-         m_pItemList->pItems[i].pThresholdList[j].function = pMsg->GetVariableShort(dwId++);
-         m_pItemList->pItems[i].pThresholdList[j].operation = pMsg->GetVariableShort(dwId++);
-         m_pItemList->pItems[i].pThresholdList[j].sampleCount = pMsg->GetVariableLong(dwId++);
-         m_pItemList->pItems[i].pThresholdList[j].script = pMsg->GetVariableStr(dwId++);
-         m_pItemList->pItems[i].pThresholdList[j].repeatInterval = (LONG)pMsg->GetVariableLong(dwId++);
-			pMsg->GetVariableStr(dwId++, m_pItemList->pItems[i].pThresholdList[j].value, MAX_STRING_VALUE);
+			m_pItemList->pItems[i].pThresholdList[j].id = pMsg->getFieldAsUInt32(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].activationEvent = pMsg->getFieldAsUInt32(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].rearmEvent = pMsg->getFieldAsUInt32(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].function = pMsg->getFieldAsUInt16(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].operation = pMsg->getFieldAsUInt16(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].sampleCount = pMsg->getFieldAsUInt32(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].script = pMsg->getFieldAsString(dwId++);
+         m_pItemList->pItems[i].pThresholdList[j].repeatInterval = (LONG)pMsg->getFieldAsUInt32(dwId++);
+			pMsg->getFieldAsString(dwId++, m_pItemList->pItems[i].pThresholdList[j].value, MAX_STRING_VALUE);
       }
    }
 }
@@ -447,7 +447,7 @@ void NXCL_Session::processDCI(CSCPMessage *pMsg)
  */
 UINT32 NXCL_Session::OpenNodeDCIList(UINT32 dwNodeId, NXC_DCI_LIST **ppItemList)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRetCode, dwRqId;
 
    dwRqId = CreateRqId();
@@ -458,9 +458,9 @@ UINT32 NXCL_Session::OpenNodeDCIList(UINT32 dwNodeId, NXC_DCI_LIST **ppItemList)
    m_pItemList->dwNumItems = 0;
    m_pItemList->pItems = NULL;
 
-   msg.SetCode(CMD_GET_NODE_DCI_LIST);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
+   msg.setCode(CMD_GET_NODE_DCI_LIST);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, dwNodeId);
    SendMsg(&msg);
 
    dwRetCode = WaitForRCC(dwRqId);
@@ -493,7 +493,7 @@ UINT32 NXCL_Session::OpenNodeDCIList(UINT32 dwNodeId, NXC_DCI_LIST **ppItemList)
  */
 UINT32 NXCL_Session::LoadEventDB()
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRetCode, dwRqId;
 
    dwRqId = CreateRqId();
@@ -502,8 +502,8 @@ UINT32 NXCL_Session::LoadEventDB()
    destroyEventDB();
    MutexLock(m_mutexEventAccess);
 
-   msg.SetCode(CMD_LOAD_EVENT_DB);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_LOAD_EVENT_DB);
+   msg.setId(dwRqId);
    SendMsg(&msg);
 
    dwRetCode = WaitForRCC(dwRqId);
@@ -693,14 +693,12 @@ void NXCL_Session::destroyUserDB()
    m_dwFlags &= ~NXC_SF_USERDB_LOADED;
 }
 
-
-//
-// Process user record from network
-//
-
-void NXCL_Session::processUserDBRecord(CSCPMessage *pMsg)
+/**
+ * Process user record from network
+ */
+void NXCL_Session::processUserDBRecord(NXCPMessage *pMsg)
 {
-   switch(pMsg->GetCode())
+   switch(pMsg->getCode())
    {
       case CMD_USER_DB_EOF:
          CompleteSync(SYNC_USER_DB, RCC_SUCCESS);
@@ -717,19 +715,17 @@ void NXCL_Session::processUserDBRecord(CSCPMessage *pMsg)
    }
 }
 
-
-//
-// Process user database update
-//
-
-void NXCL_Session::processUserDBUpdate(CSCPMessage *pMsg)
+/**
+ * Process user database update
+ */
+void NXCL_Session::processUserDBUpdate(NXCPMessage *pMsg)
 {
    int iCode;
    UINT32 dwUserId;
    NXC_USER *pUser;
 
-   iCode = pMsg->GetVariableShort(VID_UPDATE_TYPE);
-   dwUserId = pMsg->GetVariableLong(VID_USER_ID);
+   iCode = pMsg->getFieldAsUInt16(VID_UPDATE_TYPE);
+   dwUserId = pMsg->getFieldAsUInt32(VID_USER_ID);
    pUser = FindUserById(dwUserId);
 
    switch(iCode)
@@ -743,7 +739,7 @@ void NXCL_Session::processUserDBUpdate(CSCPMessage *pMsg)
 
             // Process common fields
             m_pUserList[m_dwNumUsers].dwId = dwUserId;
-            pMsg->GetVariableStr(VID_USER_NAME, m_pUserList[m_dwNumUsers].szName, MAX_USER_NAME);
+            pMsg->getFieldAsString(VID_USER_NAME, m_pUserList[m_dwNumUsers].szName, MAX_USER_NAME);
             pUser = &m_pUserList[m_dwNumUsers];
             m_dwNumUsers++;
          }
@@ -761,7 +757,7 @@ void NXCL_Session::processUserDBUpdate(CSCPMessage *pMsg)
          break;
       case USER_DB_DELETE:
          if (pUser != NULL)
-            pUser->wFlags |= UF_DELETED;
+            pUser->flags |= UF_DELETED;
          break;
       default:
          break;
@@ -817,15 +813,15 @@ BOOL NXCL_Session::GetUserDB(NXC_USER **ppUserList, UINT32 *pdwNumUsers)
 
 UINT32 NXCL_Session::LoadUserDB(void)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRetCode, dwRqId;
 
    dwRqId = CreateRqId();
    PrepareForSync(SYNC_USER_DB);
    destroyUserDB();
 
-   msg.SetCode(CMD_LOAD_USER_DB);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_LOAD_USER_DB);
+   msg.setId(dwRqId);
    SendMsg(&msg);
 
    dwRetCode = WaitForRCC(dwRqId);
@@ -861,15 +857,15 @@ UINT32 NXCL_Session::SendFile(UINT32 dwRqId, TCHAR *pszFileName, long ofset)
 
 UINT32 NXCL_Session::SetSubscriptionStatus(UINT32 dwChannels, int nOperation)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = CreateRqId();
 
-   msg.SetCode(CMD_CHANGE_SUBSCRIPTION);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_FLAGS, dwChannels);
-   msg.SetVariable(VID_OPERATION, (WORD)nOperation);
+   msg.setCode(CMD_CHANGE_SUBSCRIPTION);
+   msg.setId(dwRqId);
+   msg.setField(VID_FLAGS, dwChannels);
+   msg.setField(VID_OPERATION, (WORD)nOperation);
    SendMsg(&msg);
 
    return WaitForRCC(dwRqId);
@@ -957,13 +953,13 @@ void NXCL_Session::abortFileTransfer()
  */
 UINT32 NXCL_Session::SimpleCommand(WORD wCmd)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = CreateRqId();
 
-   msg.SetCode(wCmd);
-   msg.SetId(dwRqId);
+   msg.setCode(wCmd);
+   msg.setId(dwRqId);
    SendMsg(&msg);
 
    return WaitForRCC(dwRqId);
@@ -972,13 +968,13 @@ UINT32 NXCL_Session::SimpleCommand(WORD wCmd)
 /**
  * Parse login response message
  */
-void NXCL_Session::parseLoginMessage(CSCPMessage *pMsg)
+void NXCL_Session::parseLoginMessage(NXCPMessage *pMsg)
 {
-   m_dwUserId = pMsg->GetVariableLong(VID_USER_ID);
-   m_systemAccess = pMsg->GetVariableInt64(VID_USER_SYS_RIGHTS);
-   if (pMsg->GetVariableShort(VID_CHANGE_PASSWD_FLAG))
+   m_dwUserId = pMsg->getFieldAsUInt32(VID_USER_ID);
+   m_systemAccess = pMsg->getFieldAsUInt64(VID_USER_SYS_RIGHTS);
+   if (pMsg->getFieldAsUInt16(VID_CHANGE_PASSWD_FLAG))
       m_dwFlags |= NXC_SF_CHANGE_PASSWD;
-   if (!pMsg->GetVariableShort(VID_DBCONN_STATUS))
+   if (!pMsg->getFieldAsUInt16(VID_DBCONN_STATUS))
       m_dwFlags |= NXC_SF_BAD_DBCONN;
 }
 
@@ -1009,11 +1005,11 @@ THREAD_RESULT THREAD_CALL NXCL_Session::watchdogThreadStarter(void *pArg)
 
 void NXCL_Session::watchdogThread()
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
    BOOL bConnBroken = FALSE;
 
-   msg.SetCode(CMD_KEEPALIVE);
+   msg.setCode(CMD_KEEPALIVE);
    while(1)
    {
       if (ConditionWait(m_condStopThreads, 30000))
@@ -1021,7 +1017,7 @@ void NXCL_Session::watchdogThread()
 
       // Send keepalive message
       dwRqId = CreateRqId();
-      msg.SetId(dwRqId);
+      msg.setId(dwRqId);
 
       if (SendMsg(&msg))
       {
@@ -1047,11 +1043,11 @@ void NXCL_Session::watchdogThread()
 /**
  * Handler for CMD_NOTIFY message
  */
-void NXCL_Session::onNotify(CSCPMessage *pMsg)
+void NXCL_Session::onNotify(NXCPMessage *pMsg)
 {
    UINT32 dwCode;
 
-   dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
+   dwCode = pMsg->getFieldAsUInt32(VID_NOTIFICATION_CODE);
    if (dwCode == NX_NOTIFY_SHUTDOWN)
    {
       // Stop watchdog and set broken connection flag
@@ -1065,5 +1061,5 @@ void NXCL_Session::onNotify(CSCPMessage *pMsg)
       m_dwFlags |= NXC_SF_CONN_BROKEN;
    }
    callEventHandler(NXC_EVENT_NOTIFICATION, dwCode,
-                    CAST_TO_POINTER(pMsg->GetVariableLong(VID_NOTIFICATION_DATA), void *));
+                    CAST_TO_POINTER(pMsg->getFieldAsUInt32(VID_NOTIFICATION_DATA), void *));
 }

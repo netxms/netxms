@@ -502,7 +502,7 @@ static void UpdateTableList(NetObj *object, void *data)
 	((Node *)object)->closeTableList();
 }
 
-void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags)
+void WriteFullParamListToMessage(NXCPMessage *pMsg, WORD flags)
 {
    // Gather full parameter list
 	if (flags & 0x01)
@@ -511,7 +511,7 @@ void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags)
 		g_idxNodeById.forEach(UpdateParamList, &fullList);
 
 		// Put list into the message
-		pMsg->SetVariable(VID_NUM_PARAMETERS, (UINT32)fullList.size());
+		pMsg->setField(VID_NUM_PARAMETERS, (UINT32)fullList.size());
       UINT32 varId = VID_PARAM_LIST_BASE;
 		for(int i = 0; i < fullList.size(); i++)
 		{
@@ -526,7 +526,7 @@ void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags)
 		g_idxNodeById.forEach(UpdateTableList, &fullList);
 
 		// Put list into the message
-		pMsg->SetVariable(VID_NUM_TABLES, (UINT32)fullList.size());
+		pMsg->setField(VID_NUM_TABLES, (UINT32)fullList.size());
       UINT32 varId = VID_TABLE_LIST_BASE;
 		for(int i = 0; i < fullList.size(); i++)
 		{

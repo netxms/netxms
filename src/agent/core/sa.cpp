@@ -115,10 +115,10 @@ void SessionAgentConnector::disconnect()
 /**
  * Send message
  */
-bool SessionAgentConnector::sendMessage(CSCPMessage *msg)
+bool SessionAgentConnector::sendMessage(NXCPMessage *msg)
 {
-   CSCP_MESSAGE *rawMsg = msg->createMessage();
-   bool success = (SendEx(m_socket, rawMsg, ntohl(rawMsg->dwSize), 0, m_mutex) == ntohl(rawMsg->dwSize));
+   NXCP_MESSAGE *rawMsg = msg->createMessage();
+   bool success = (SendEx(m_socket, rawMsg, ntohl(rawMsg->size), 0, m_mutex) == ntohl(rawMsg->size));
    free(rawMsg);
    return success;
 }
@@ -131,7 +131,7 @@ void SessionAgentConnector::readThread()
    NXCPEncryptionContext *dummyCtx = NULL;
    RecvNXCPMessage(0, NULL, &m_msgBuffer, 0, NULL, NULL, 0);
    UINT32 rawMsgSize = 65536;
-   CSCP_MESSAGE *rawMsg = (CSCP_MESSAGE *)malloc(rawMsgSize);
+   NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)malloc(rawMsgSize);
    while(1)
    {
       int err = RecvNXCPMessageEx(m_socket, &rawMsg, &m_msgBuffer, &rawMsgSize, &dummyCtx, NULL, 300000, 4 * 1024 * 1024);
@@ -154,33 +154,33 @@ void SessionAgentConnector::readThread()
       }
 
       // Check that actual received packet size is equal to encoded in packet
-      if ((int)ntohl(rawMsg->dwSize) != err)
+      if ((int)ntohl(rawMsg->size) != err)
       {
-         DebugPrintf(INVALID_INDEX, 5, _T("Session agent connector %d: actual message size doesn't match wSize value (%d,%d)"), m_id, err, ntohl(rawMsg->dwSize));
+         DebugPrintf(INVALID_INDEX, 5, _T("Session agent connector %d: actual message size doesn't match wSize value (%d,%d)"), m_id, err, ntohl(rawMsg->size));
          continue;   // Bad packet, wait for next
       }
 
       if (g_debugLevel >= 8)
       {
-         String msgDump = CSCPMessage::dump(rawMsg, NXCP_VERSION);
+         String msgDump = NXCPMessage::dump(rawMsg, NXCP_VERSION);
          DebugPrintf(INVALID_INDEX, 8, _T("SA-%d: Message dump:\n%s"), m_id, (const TCHAR *)msgDump);
       }
 
-      UINT16 flags = ntohs(rawMsg->wFlags);
+      UINT16 flags = ntohs(rawMsg->flags);
       if (!(flags & MF_BINARY))
       {
          // Create message object from raw message
-         CSCPMessage *msg = new CSCPMessage(rawMsg);
-         if (msg->GetCode() == CMD_LOGIN)
+         NXCPMessage *msg = new NXCPMessage(rawMsg);
+         if (msg->getCode() == CMD_LOGIN)
          {
-            m_sessionId = msg->GetVariableLong(VID_SESSION_ID);
+            m_sessionId = msg->getFieldAsUInt32(VID_SESSION_ID);
             m_sessionState = msg->getFieldAsInt16(VID_SESSION_STATE);
 
             safe_free(m_sessionName);
-            m_sessionName = msg->GetVariableStr(VID_NAME);
+            m_sessionName = msg->getFieldAsString(VID_NAME);
 
             safe_free(m_userName);
-            m_userName = msg->GetVariableStr(VID_USER_NAME);
+            m_userName = msg->getFieldAsString(VID_USER_NAME);
 
             delete msg;
             DebugPrintf(INVALID_INDEX, 5, _T("Session agent connector %d: login as %s@%s [%d]"), m_id, getUserName(), getSessionName(), m_sessionId);
@@ -201,14 +201,14 @@ void SessionAgentConnector::readThread()
  */
 bool SessionAgentConnector::testConnection()
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
 
-   msg.SetCode(CMD_KEEPALIVE);
-   msg.SetId(nextRequestId());
+   msg.setCode(CMD_KEEPALIVE);
+   msg.setId(nextRequestId());
    if (!sendMessage(&msg))
       return false;
 
-   CSCPMessage *response = m_msgQueue.waitForMessage(CMD_REQUEST_COMPLETED, msg.GetId(), 5000);
+   NXCPMessage *response = m_msgQueue.waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), 5000);
    if (response == NULL)
       return false;
 
@@ -219,37 +219,37 @@ bool SessionAgentConnector::testConnection()
 /**
  * Take screenshot via session agent
  */
-void SessionAgentConnector::takeScreenshot(CSCPMessage *masterResponse)
+void SessionAgentConnector::takeScreenshot(NXCPMessage *masterResponse)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
 
-   msg.SetCode(CMD_TAKE_SCREENSHOT);
-   msg.SetId(nextRequestId());
+   msg.setCode(CMD_TAKE_SCREENSHOT);
+   msg.setId(nextRequestId());
    if (!sendMessage(&msg))
    {
-      masterResponse->SetVariable(VID_RCC, ERR_CONNECTION_BROKEN);
+      masterResponse->setField(VID_RCC, ERR_CONNECTION_BROKEN);
       return;
    }
 
-   CSCPMessage *response = m_msgQueue.waitForMessage(CMD_REQUEST_COMPLETED, msg.GetId(), 5000);
+   NXCPMessage *response = m_msgQueue.waitForMessage(CMD_REQUEST_COMPLETED, msg.getId(), 5000);
    if (response == NULL)
    {
-      masterResponse->SetVariable(VID_RCC, ERR_REQUEST_TIMEOUT);
+      masterResponse->setField(VID_RCC, ERR_REQUEST_TIMEOUT);
       return;
    }
 
-   UINT32 rcc = response->GetVariableLong(VID_RCC);
+   UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
    if (rcc == ERR_SUCCESS)
    {
-      masterResponse->SetVariable(VID_RCC, ERR_SUCCESS);
+      masterResponse->setField(VID_RCC, ERR_SUCCESS);
       size_t imageSize;
       BYTE *image = response->getBinaryFieldPtr(VID_FILE_DATA, &imageSize);
       if (image != NULL)
-         masterResponse->SetVariable(VID_FILE_DATA, image, (UINT32)imageSize);
+         masterResponse->setField(VID_FILE_DATA, image, (UINT32)imageSize);
    }
    else
    {
-      masterResponse->SetVariable(VID_RCC, rcc);
+      masterResponse->setField(VID_RCC, rcc);
    }
 
    delete response;

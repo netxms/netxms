@@ -95,36 +95,36 @@ GeoLocation::GeoLocation(const GeoLocation &src)
 /**
  * Create geolocation object from data in NXCP message
  */
-GeoLocation::GeoLocation(CSCPMessage &msg)
+GeoLocation::GeoLocation(NXCPMessage &msg)
 {
-	m_type = (int)msg.GetVariableShort(VID_GEOLOCATION_TYPE);
+	m_type = (int)msg.getFieldAsUInt16(VID_GEOLOCATION_TYPE);
 
-   if (msg.getFieldType(VID_LATITUDE) == CSCP_DT_INT32)
+   if (msg.getFieldType(VID_LATITUDE) == NXCP_DT_INT32)
 	   m_lat = (double)msg.getFieldAsInt32(VID_LATITUDE) / 1000000;
    else
 	   m_lat = msg.getFieldAsDouble(VID_LATITUDE);
 
-   if (msg.getFieldType(VID_LONGITUDE) == CSCP_DT_INT32)
+   if (msg.getFieldType(VID_LONGITUDE) == NXCP_DT_INT32)
 	   m_lon = (double)msg.getFieldAsInt32(VID_LONGITUDE) / 1000000;
    else
    	m_lon = msg.getFieldAsDouble(VID_LONGITUDE);
 
-	m_accuracy = (int)msg.GetVariableShort(VID_ACCURACY);
+	m_accuracy = (int)msg.getFieldAsUInt16(VID_ACCURACY);
 
    m_timestamp = 0;
    int ft = msg.getFieldType(VID_GEOLOCATION_TIMESTAMP);
-   if (ft == CSCP_DT_INT64)
+   if (ft == NXCP_DT_INT64)
    {
-      m_timestamp = (time_t)msg.GetVariableInt64(VID_GEOLOCATION_TIMESTAMP);
+      m_timestamp = (time_t)msg.getFieldAsUInt64(VID_GEOLOCATION_TIMESTAMP);
    }
-   else if (ft == CSCP_DT_INT32)
+   else if (ft == NXCP_DT_INT32)
    {
-      m_timestamp = (time_t)msg.GetVariableLong(VID_GEOLOCATION_TIMESTAMP);
+      m_timestamp = (time_t)msg.getFieldAsUInt32(VID_GEOLOCATION_TIMESTAMP);
    }
-   else if (ft == CSCP_DT_STRING)
+   else if (ft == NXCP_DT_STRING)
    {
       char ts[256];
-      msg.GetVariableStrA(VID_GEOLOCATION_TIMESTAMP, ts, 256);
+      msg.getFieldAsMBString(VID_GEOLOCATION_TIMESTAMP, ts, 256);
 
       struct tm timeBuff;
       if (strptime(ts, "%Y/%m/%d %H:%M:%S", &timeBuff) != NULL)
@@ -167,13 +167,13 @@ GeoLocation& GeoLocation::operator =(const GeoLocation &src)
 /**
  * Fill NXCP message
  */
-void GeoLocation::fillMessage(CSCPMessage &msg)
+void GeoLocation::fillMessage(NXCPMessage &msg)
 {
-	msg.SetVariable(VID_GEOLOCATION_TYPE, (WORD)m_type);
-	msg.SetVariable(VID_LATITUDE, m_lat);
-	msg.SetVariable(VID_LONGITUDE, m_lon);
-	msg.SetVariable(VID_ACCURACY, (WORD)m_accuracy);
-	msg.SetVariable(VID_GEOLOCATION_TIMESTAMP, (QWORD)m_timestamp);
+	msg.setField(VID_GEOLOCATION_TYPE, (WORD)m_type);
+	msg.setField(VID_LATITUDE, m_lat);
+	msg.setField(VID_LONGITUDE, m_lon);
+	msg.setField(VID_ACCURACY, (WORD)m_accuracy);
+	msg.setField(VID_GEOLOCATION_TIMESTAMP, (QWORD)m_timestamp);
 }
 
 /**

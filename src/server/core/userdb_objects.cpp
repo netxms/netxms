@@ -91,31 +91,31 @@ bool UserDatabaseObject::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Fill NXCP message with object data
  */
-void UserDatabaseObject::fillMessage(CSCPMessage *msg)
+void UserDatabaseObject::fillMessage(NXCPMessage *msg)
 {
-   msg->SetVariable(VID_USER_ID, m_id);
-   msg->SetVariable(VID_USER_NAME, m_name);
-   msg->SetVariable(VID_USER_FLAGS, (WORD)m_flags);
-   msg->SetVariable(VID_USER_SYS_RIGHTS, m_systemRights);
-   msg->SetVariable(VID_USER_DESCRIPTION, m_description);
-   msg->SetVariable(VID_GUID, m_guid, UUID_LENGTH);
+   msg->setField(VID_USER_ID, m_id);
+   msg->setField(VID_USER_NAME, m_name);
+   msg->setField(VID_USER_FLAGS, (WORD)m_flags);
+   msg->setField(VID_USER_SYS_RIGHTS, m_systemRights);
+   msg->setField(VID_USER_DESCRIPTION, m_description);
+   msg->setField(VID_GUID, m_guid, UUID_LENGTH);
    m_attributes.fillMessage(msg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
 }
 
 /**
  * Modify object from NXCP message
  */
-void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
+void UserDatabaseObject::modifyFromMessage(NXCPMessage *msg)
 {
 	UINT32 flags, fields;
 
-	fields = msg->GetVariableLong(VID_FIELDS);
+	fields = msg->getFieldAsUInt32(VID_FIELDS);
 	DbgPrintf(5, _T("UserDatabaseObject::modifyFromMessage(): id=%d fields=%08X"), m_id, fields);
 
 	if (fields & USER_MODIFY_DESCRIPTION)
-	   msg->GetVariableStr(VID_USER_DESCRIPTION, m_description, MAX_USER_DESCR);
+	   msg->getFieldAsString(VID_USER_DESCRIPTION, m_description, MAX_USER_DESCR);
 	if (fields & USER_MODIFY_LOGIN_NAME)
-	   msg->GetVariableStr(VID_USER_NAME, m_name, MAX_USER_NAME);
+	   msg->getFieldAsString(VID_USER_NAME, m_name, MAX_USER_NAME);
 
 	// Update custom attributes only if VID_NUM_CUSTOM_ATTRIBUTES exist -
 	// older client versions may not be aware of custom attributes
@@ -124,22 +124,22 @@ void UserDatabaseObject::modifyFromMessage(CSCPMessage *msg)
 		UINT32 i, varId, count;
 		TCHAR *name, *value;
 
-		count = msg->GetVariableLong(VID_NUM_CUSTOM_ATTRIBUTES);
+		count = msg->getFieldAsUInt32(VID_NUM_CUSTOM_ATTRIBUTES);
 		m_attributes.clear();
 		for(i = 0, varId = VID_CUSTOM_ATTRIBUTES_BASE; i < count; i++)
 		{
-			name = msg->GetVariableStr(varId++);
-			value = msg->GetVariableStr(varId++);
+			name = msg->getFieldAsString(varId++);
+			value = msg->getFieldAsString(varId++);
 			m_attributes.setPreallocated((name != NULL) ? name : _tcsdup(_T("")), (value != NULL) ? value : _tcsdup(_T("")));
 		}
 	}
 
 	if ((m_id != 0) && (fields & USER_MODIFY_ACCESS_RIGHTS))
-		m_systemRights = msg->GetVariableInt64(VID_USER_SYS_RIGHTS);
+		m_systemRights = msg->getFieldAsUInt64(VID_USER_SYS_RIGHTS);
 
 	if (fields & USER_MODIFY_FLAGS)
 	{
-	   flags = msg->GetVariableShort(VID_USER_FLAGS);
+	   flags = msg->getFieldAsUInt16(VID_USER_FLAGS);
 	   //Null dn if user is detached from LDAP
       if((m_flags & UF_LDAP_USER) && !(flags & UF_LDAP_USER))
          setDn(NULL);
@@ -535,20 +535,20 @@ void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)
 /**
  * Fill NXCP message with user data
  */
-void User::fillMessage(CSCPMessage *msg)
+void User::fillMessage(NXCPMessage *msg)
 {
 	UserDatabaseObject::fillMessage(msg);
 
-   msg->SetVariable(VID_USER_FULL_NAME, m_fullName);
-   msg->SetVariable(VID_AUTH_METHOD, (WORD)m_authMethod);
-	msg->SetVariable(VID_CERT_MAPPING_METHOD, (WORD)m_certMappingMethod);
-	msg->SetVariable(VID_CERT_MAPPING_DATA, CHECK_NULL_EX(m_certMappingData));
-	msg->SetVariable(VID_LAST_LOGIN, (UINT32)m_lastLogin);
-	msg->SetVariable(VID_LAST_PASSWORD_CHANGE, (UINT32)m_lastPasswordChange);
-	msg->SetVariable(VID_MIN_PASSWORD_LENGTH, (WORD)m_minPasswordLength);
-	msg->SetVariable(VID_DISABLED_UNTIL, (UINT32)m_disabledUntil);
-	msg->SetVariable(VID_AUTH_FAILURES, (UINT32)m_authFailures);
-   msg->SetVariable(VID_XMPP_ID, m_xmppId);
+   msg->setField(VID_USER_FULL_NAME, m_fullName);
+   msg->setField(VID_AUTH_METHOD, (WORD)m_authMethod);
+	msg->setField(VID_CERT_MAPPING_METHOD, (WORD)m_certMappingMethod);
+	msg->setField(VID_CERT_MAPPING_DATA, CHECK_NULL_EX(m_certMappingData));
+	msg->setField(VID_LAST_LOGIN, (UINT32)m_lastLogin);
+	msg->setField(VID_LAST_PASSWORD_CHANGE, (UINT32)m_lastPasswordChange);
+	msg->setField(VID_MIN_PASSWORD_LENGTH, (WORD)m_minPasswordLength);
+	msg->setField(VID_DISABLED_UNTIL, (UINT32)m_disabledUntil);
+	msg->setField(VID_AUTH_FAILURES, (UINT32)m_authFailures);
+   msg->setField(VID_XMPP_ID, m_xmppId);
 
    FillGroupMembershipInfo(msg, m_id);
 }
@@ -556,31 +556,31 @@ void User::fillMessage(CSCPMessage *msg)
 /**
  * Modify user object from NXCP message
  */
-void User::modifyFromMessage(CSCPMessage *msg)
+void User::modifyFromMessage(NXCPMessage *msg)
 {
 	UserDatabaseObject::modifyFromMessage(msg);
 
-	UINT32 fields = msg->GetVariableLong(VID_FIELDS);
+	UINT32 fields = msg->getFieldAsUInt32(VID_FIELDS);
 
 	if (fields & USER_MODIFY_FULL_NAME)
-		msg->GetVariableStr(VID_USER_FULL_NAME, m_fullName, MAX_USER_FULLNAME);
+		msg->getFieldAsString(VID_USER_FULL_NAME, m_fullName, MAX_USER_FULLNAME);
 	if (fields & USER_MODIFY_AUTH_METHOD)
-	   m_authMethod = msg->GetVariableShort(VID_AUTH_METHOD);
+	   m_authMethod = msg->getFieldAsUInt16(VID_AUTH_METHOD);
 	if (fields & USER_MODIFY_PASSWD_LENGTH)
-	   m_minPasswordLength = msg->GetVariableShort(VID_MIN_PASSWORD_LENGTH);
+	   m_minPasswordLength = msg->getFieldAsUInt16(VID_MIN_PASSWORD_LENGTH);
 	if (fields & USER_MODIFY_TEMP_DISABLE)
-	   m_disabledUntil = (time_t)msg->GetVariableLong(VID_DISABLED_UNTIL);
+	   m_disabledUntil = (time_t)msg->getFieldAsUInt32(VID_DISABLED_UNTIL);
 	if (fields & USER_MODIFY_CERT_MAPPING)
 	{
-		m_certMappingMethod = msg->GetVariableShort(VID_CERT_MAPPING_METHOD);
+		m_certMappingMethod = msg->getFieldAsUInt16(VID_CERT_MAPPING_METHOD);
 		safe_free(m_certMappingData);
-		m_certMappingData = msg->GetVariableStr(VID_CERT_MAPPING_DATA);
+		m_certMappingData = msg->getFieldAsString(VID_CERT_MAPPING_DATA);
 	}
 	if (fields & USER_MODIFY_XMPP_ID)
-		msg->GetVariableStr(VID_XMPP_ID, m_xmppId, MAX_XMPP_ID_LEN);
+		msg->getFieldAsString(VID_XMPP_ID, m_xmppId, MAX_XMPP_ID_LEN);
    if (fields & USER_MODIFY_GROUP_MEMBERSHIP)
    {
-      int count = (int)msg->GetVariableLong(VID_NUM_GROUPS);
+      int count = (int)msg->getFieldAsUInt32(VID_NUM_GROUPS);
       UINT32 *groups = NULL;
       if (count > 0)
       {
@@ -890,40 +890,40 @@ int Group::getMembers(UINT32 **members)
 /**
  * Fill NXCP message with user group data
  */
-void Group::fillMessage(CSCPMessage *msg)
+void Group::fillMessage(NXCPMessage *msg)
 {
    UINT32 varId;
 	int i;
 
 	UserDatabaseObject::fillMessage(msg);
 
-   msg->SetVariable(VID_NUM_MEMBERS, (UINT32)m_memberCount);
+   msg->setField(VID_NUM_MEMBERS, (UINT32)m_memberCount);
    for(i = 0, varId = VID_GROUP_MEMBER_BASE; i < m_memberCount; i++, varId++)
-      msg->SetVariable(varId, m_members[i]);
+      msg->setField(varId, m_members[i]);
 }
 
 /**
  * Modify group object from NXCP message
  */
-void Group::modifyFromMessage(CSCPMessage *msg)
+void Group::modifyFromMessage(NXCPMessage *msg)
 {
 	int i;
 	UINT32 varId, fields;
 
 	UserDatabaseObject::modifyFromMessage(msg);
 
-	fields = msg->GetVariableLong(VID_FIELDS);
+	fields = msg->getFieldAsUInt32(VID_FIELDS);
 	if (fields & USER_MODIFY_MEMBERS)
 	{
       UINT32 *members = m_members;
       int count = m_memberCount;
-		m_memberCount = msg->GetVariableLong(VID_NUM_MEMBERS);
+		m_memberCount = msg->getFieldAsUInt32(VID_NUM_MEMBERS);
 		if (m_memberCount > 0)
 		{
 			m_members = (UINT32 *)malloc(sizeof(UINT32) * m_memberCount);
 			for(i = 0, varId = VID_GROUP_MEMBER_BASE; i < m_memberCount; i++, varId++)
          {
-				m_members[i] = msg->GetVariableLong(varId);
+				m_members[i] = msg->getFieldAsUInt32(varId);
 
             // check if new member
             bool found = false;

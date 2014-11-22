@@ -30,7 +30,7 @@ char g_szFailedDir[1024] = "";
 /**
  * Command handler
  */
-BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, AbstractCommSession *session)
+BOOL CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, AbstractCommSession *session)
 {
 	BOOL bHandled = TRUE;
 	WORD wType, wPort;
@@ -44,11 +44,11 @@ BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespo
 		return FALSE;
 	}
 
-	wType = pRequest->GetVariableShort(VID_SERVICE_TYPE);
-	wPort = pRequest->GetVariableShort(VID_IP_PORT);
-	dwAddress = pRequest->GetVariableLong(VID_IP_ADDRESS);
-	pRequest->GetVariableStrA(VID_SERVICE_REQUEST, szRequest, sizeof(szRequest));
-	pRequest->GetVariableStrA(VID_SERVICE_RESPONSE, szResponse, sizeof(szResponse));
+	wType = pRequest->getFieldAsUInt16(VID_SERVICE_TYPE);
+	wPort = pRequest->getFieldAsUInt16(VID_IP_PORT);
+	dwAddress = pRequest->getFieldAsUInt32(VID_IP_ADDRESS);
+	pRequest->getFieldAsMBString(VID_SERVICE_REQUEST, szRequest, sizeof(szRequest));
+	pRequest->getFieldAsMBString(VID_SERVICE_RESPONSE, szResponse, sizeof(szResponse));
 
    INT64 start = GetCurrentTimeMs();
 
@@ -57,20 +57,20 @@ BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespo
 		case NETSRV_CUSTOM:
 			// unsupported for now
 			nRet = CheckCustom(NULL, dwAddress, wPort, 0);
-			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-			pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
+			pResponse->setField(VID_RCC, ERR_SUCCESS);
+			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			break;
 		case NETSRV_SSH:
 			nRet = CheckSSH(NULL, dwAddress, wPort, NULL, NULL, 0);
 
-			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-			pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
+			pResponse->setField(VID_RCC, ERR_SUCCESS);
+			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			break;
 		case NETSRV_TELNET:
 			nRet = CheckTelnet(NULL, dwAddress, wPort, NULL, NULL, 0);
 
-			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-			pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
+			pResponse->setField(VID_RCC, ERR_SUCCESS);
+			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			break;
 		case NETSRV_POP3:
 			{
@@ -88,8 +88,8 @@ BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespo
 
 				}
 
-				pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-				pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
+				pResponse->setField(VID_RCC, ERR_SUCCESS);
+				pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			}
 			break;
 		case NETSRV_SMTP:
@@ -98,12 +98,12 @@ BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespo
 			if (szRequest[0] != 0)
 			{
 				nRet = CheckSMTP(NULL, dwAddress, wPort, szRequest, 0);
-				pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-				pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
+				pResponse->setField(VID_RCC, ERR_SUCCESS);
+				pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			}
 
-			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-			pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
+			pResponse->setField(VID_RCC, ERR_SUCCESS);
+			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			break;
 		case NETSRV_FTP:
 			bHandled = FALSE;
@@ -133,8 +133,8 @@ BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespo
                }
 				}
 
-				pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-				pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
+				pResponse->setField(VID_RCC, ERR_SUCCESS);
+				pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			}
 			break;
 		default:
@@ -145,7 +145,7 @@ BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespo
    if (bHandled)
    {
       INT64 elapsed = GetCurrentTimeMs() - start;
-      pResponse->SetVariable(VID_RESPONSE_TIME, (INT32)elapsed);
+      pResponse->setField(VID_RESPONSE_TIME, (INT32)elapsed);
    }
 	return bHandled;
 }

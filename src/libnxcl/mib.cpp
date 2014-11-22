@@ -35,14 +35,14 @@
 UINT32 LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, const TCHAR *pszName)
 {
    UINT32 dwRqId, dwRetCode;
-   CSCPMessage msg;
+   NXCPMessage msg;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
    dwRetCode = ((NXCL_Session *)hSession)->PrepareFileTransfer(pszName, dwRqId);
    if (dwRetCode == RCC_SUCCESS)
    {
-      msg.SetCode(CMD_GET_MIB);
-      msg.SetId(dwRqId);
+      msg.setCode(CMD_GET_MIB);
+      msg.setId(dwRqId);
       ((NXCL_Session *)hSession)->SendMsg(&msg);
 
       // Loading file can take time, so timeout is 300 sec. instead of default
@@ -59,20 +59,20 @@ UINT32 LIBNXCL_EXPORTABLE NXCDownloadMIBFile(NXC_SESSION hSession, const TCHAR *
 UINT32 LIBNXCL_EXPORTABLE NXCGetMIBFileTimeStamp(NXC_SESSION hSession, UINT32 *pdwTimeStamp)
 {
    UINT32 dwRqId, dwRetCode;
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_MIB_TIMESTAMP);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GET_MIB_TIMESTAMP);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
-         *pdwTimeStamp = pResponse->GetVariableLong(VID_TIMESTAMP);
+         *pdwTimeStamp = pResponse->getFieldAsUInt32(VID_TIMESTAMP);
       delete pResponse;
    }
    else

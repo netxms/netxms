@@ -75,7 +75,7 @@ public:
 	int getHopCount() { return m_hopCount; }
 	HOP_INFO *getHopInfo(int index) { return ((index >= 0) && (index < m_hopCount)) ? &m_path[index] : NULL; }
 
-	void fillMessage(CSCPMessage *msg);
+	void fillMessage(NXCPMessage *msg);
 };
 
 /**
@@ -139,7 +139,7 @@ public:
 	int getMacCountOnPort(UINT32 ifIndex);
 
    void print(CONSOLE_CTX ctx, Node *owner);
-   void fillMessage(CSCPMessage *msg);
+   void fillMessage(NXCPMessage *msg);
 };
 
 /**

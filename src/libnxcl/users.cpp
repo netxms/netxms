@@ -26,33 +26,33 @@
 /**
  * Fill user record with data from message
  */
-void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser)
+void UpdateUserFromMessage(NXCPMessage *pMsg, NXC_USER *pUser)
 {
    // Process common fields
-   pUser->dwId = pMsg->GetVariableLong(VID_USER_ID);
-   pMsg->GetVariableStr(VID_USER_NAME, pUser->szName, MAX_USER_NAME);
-   pUser->wFlags = pMsg->GetVariableShort(VID_USER_FLAGS);
-   pUser->dwSystemRights = pMsg->GetVariableInt64(VID_USER_SYS_RIGHTS);
-   pMsg->GetVariableStr(VID_USER_DESCRIPTION, pUser->szDescription, MAX_USER_DESCR);
-   pMsg->GetVariableBinary(VID_GUID, pUser->guid, UUID_LENGTH);
+   pUser->dwId = pMsg->getFieldAsUInt32(VID_USER_ID);
+   pMsg->getFieldAsString(VID_USER_NAME, pUser->szName, MAX_USER_NAME);
+   pUser->flags = pMsg->getFieldAsUInt16(VID_USER_FLAGS);
+   pUser->dwSystemRights = pMsg->getFieldAsUInt64(VID_USER_SYS_RIGHTS);
+   pMsg->getFieldAsString(VID_USER_DESCRIPTION, pUser->szDescription, MAX_USER_DESCR);
+   pMsg->getFieldAsBinary(VID_GUID, pUser->guid, UUID_LENGTH);
 
    // Process group-specific fields
    if (pUser->dwId & GROUP_FLAG)
    {
       UINT32 i, dwId;
 
-      pUser->dwNumMembers = pMsg->GetVariableLong(VID_NUM_MEMBERS);
+      pUser->dwNumMembers = pMsg->getFieldAsUInt32(VID_NUM_MEMBERS);
       pUser->pdwMemberList = (UINT32 *)realloc(pUser->pdwMemberList, sizeof(UINT32) * pUser->dwNumMembers);
       for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < pUser->dwNumMembers; i++, dwId++)
-         pUser->pdwMemberList[i] = pMsg->GetVariableLong(dwId);
+         pUser->pdwMemberList[i] = pMsg->getFieldAsUInt32(dwId);
 		pUser->pszCertMappingData = NULL;
    }
    else     // User-specific data
    {
-      pUser->nAuthMethod = pMsg->GetVariableShort(VID_AUTH_METHOD);
-      pMsg->GetVariableStr(VID_USER_FULL_NAME, pUser->szFullName, MAX_USER_FULLNAME);
-		pUser->nCertMappingMethod = pMsg->GetVariableShort(VID_CERT_MAPPING_METHOD);
-		pUser->pszCertMappingData = pMsg->GetVariableStr(VID_CERT_MAPPING_DATA);
+      pUser->nAuthMethod = pMsg->getFieldAsUInt16(VID_AUTH_METHOD);
+      pMsg->getFieldAsString(VID_USER_FULL_NAME, pUser->szFullName, MAX_USER_FULLNAME);
+		pUser->nCertMappingMethod = pMsg->getFieldAsUInt16(VID_CERT_MAPPING_METHOD);
+		pUser->pszCertMappingData = pMsg->getFieldAsString(VID_CERT_MAPPING_DATA);
       pUser->pdwMemberList = NULL;
    }
 }
@@ -97,23 +97,23 @@ BOOL LIBNXCL_EXPORTABLE NXCGetUserDB(NXC_SESSION hSession, NXC_USER **ppUserList
 UINT32 LIBNXCL_EXPORTABLE NXCCreateUser(NXC_SESSION hSession, TCHAR *pszName,
                                        BOOL bIsGroup, UINT32 *pdwNewId)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_CREATE_USER);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_USER_NAME, pszName);
-   msg.SetVariable(VID_IS_GROUP, (WORD)bIsGroup);
+   msg.setCode(CMD_CREATE_USER);
+   msg.setId(dwRqId);
+   msg.setField(VID_USER_NAME, pszName);
+   msg.setField(VID_IS_GROUP, (WORD)bIsGroup);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
-         *pdwNewId = pResponse->GetVariableLong(VID_USER_ID);
+         *pdwNewId = pResponse->getFieldAsUInt32(VID_USER_ID);
       delete pResponse;
    }
    else
@@ -130,14 +130,14 @@ UINT32 LIBNXCL_EXPORTABLE NXCCreateUser(NXC_SESSION hSession, TCHAR *pszName,
 
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteUser(NXC_SESSION hSession, UINT32 dwId)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_DELETE_USER);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_USER_ID, dwId);
+   msg.setCode(CMD_DELETE_USER);
+   msg.setId(dwRqId);
+   msg.setField(VID_USER_ID, dwId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -175,34 +175,34 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyUser(NXC_SESSION hSession, NXC_USER *pUserInf
 
 UINT32 LIBNXCL_EXPORTABLE NXCModifyUserEx(NXC_SESSION hSession, NXC_USER *pUserInfo, UINT32 dwFields)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 i, dwId, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Fill in request
-   msg.SetCode(CMD_UPDATE_USER);
-   msg.SetId(dwRqId);
-	msg.SetVariable(VID_FIELDS, dwFields);
-   msg.SetVariable(VID_USER_ID, pUserInfo->dwId);
-   msg.SetVariable(VID_USER_NAME, pUserInfo->szName);
-   msg.SetVariable(VID_USER_DESCRIPTION, pUserInfo->szDescription);
-   msg.SetVariable(VID_USER_FLAGS, pUserInfo->wFlags);
-   msg.SetVariable(VID_USER_SYS_RIGHTS, pUserInfo->dwSystemRights);
+   msg.setCode(CMD_UPDATE_USER);
+   msg.setId(dwRqId);
+	msg.setField(VID_FIELDS, dwFields);
+   msg.setField(VID_USER_ID, pUserInfo->dwId);
+   msg.setField(VID_USER_NAME, pUserInfo->szName);
+   msg.setField(VID_USER_DESCRIPTION, pUserInfo->szDescription);
+   msg.setField(VID_USER_FLAGS, pUserInfo->flags);
+   msg.setField(VID_USER_SYS_RIGHTS, pUserInfo->dwSystemRights);
 
    // Group-specific fields
    if (pUserInfo->dwId & GROUP_FLAG)
    {
-      msg.SetVariable(VID_NUM_MEMBERS, pUserInfo->dwNumMembers);
+      msg.setField(VID_NUM_MEMBERS, pUserInfo->dwNumMembers);
       for(i = 0, dwId = VID_GROUP_MEMBER_BASE; i < pUserInfo->dwNumMembers; i++, dwId++)
-         msg.SetVariable(dwId, pUserInfo->pdwMemberList[i]);
+         msg.setField(dwId, pUserInfo->pdwMemberList[i]);
    }
    else     // User-specific fields
    {
-      msg.SetVariable(VID_USER_FULL_NAME, pUserInfo->szFullName);
-      msg.SetVariable(VID_AUTH_METHOD, (WORD)pUserInfo->nAuthMethod);
-		msg.SetVariable(VID_CERT_MAPPING_METHOD, (WORD)pUserInfo->nCertMappingMethod);
-		msg.SetVariable(VID_CERT_MAPPING_DATA, CHECK_NULL_EX(pUserInfo->pszCertMappingData));
+      msg.setField(VID_USER_FULL_NAME, pUserInfo->szFullName);
+      msg.setField(VID_AUTH_METHOD, (WORD)pUserInfo->nAuthMethod);
+		msg.setField(VID_CERT_MAPPING_METHOD, (WORD)pUserInfo->nCertMappingMethod);
+		msg.setField(VID_CERT_MAPPING_DATA, CHECK_NULL_EX(pUserInfo->pszCertMappingData));
    }
 
    ((NXCL_Session *)hSession)->SendMsg(&msg);
@@ -219,17 +219,17 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyUserEx(NXC_SESSION hSession, NXC_USER *pUserI
 UINT32 LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, UINT32 userId,
                                         const TCHAR *newPassword, const TCHAR *oldPassword)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_SET_PASSWORD);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_USER_ID, userId);
-   msg.SetVariable(VID_PASSWORD, newPassword);
+   msg.setCode(CMD_SET_PASSWORD);
+   msg.setId(dwRqId);
+   msg.setField(VID_USER_ID, userId);
+   msg.setField(VID_PASSWORD, newPassword);
 	if (oldPassword != NULL)
-	   msg.SetVariable(VID_OLD_PASSWORD, oldPassword);
+	   msg.setField(VID_OLD_PASSWORD, oldPassword);
 
 	((NXCL_Session *)hSession)->SendMsg(&msg);
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -243,24 +243,24 @@ UINT32 LIBNXCL_EXPORTABLE NXCSetPassword(NXC_SESSION hSession, UINT32 userId,
 UINT32 LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, UINT32 dwUserId,
                                             TCHAR *pszVarName, TCHAR *pszValue, UINT32 dwSize)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_USER_VARIABLE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_NAME, pszVarName);
+   msg.setCode(CMD_GET_USER_VARIABLE);
+   msg.setId(dwRqId);
+   msg.setField(VID_NAME, pszVarName);
    if (dwUserId != CURRENT_USER)
-      msg.SetVariable(VID_USER_ID, dwUserId);
+      msg.setField(VID_USER_ID, dwUserId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwResult = pResponse->GetVariableLong(VID_RCC);
+      dwResult = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwResult == RCC_SUCCESS)
-         pResponse->GetVariableStr(VID_VALUE, pszValue, dwSize);
+         pResponse->getFieldAsString(VID_VALUE, pszValue, dwSize);
       delete pResponse;
    }
    else
@@ -279,17 +279,17 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetUserVariable(NXC_SESSION hSession, UINT32 dwUser
 UINT32 LIBNXCL_EXPORTABLE NXCSetUserVariable(NXC_SESSION hSession, UINT32 dwUserId,
                                             TCHAR *pszVarName, TCHAR *pszValue)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_SET_USER_VARIABLE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_NAME, pszVarName);
-   msg.SetVariable(VID_VALUE, pszValue);
+   msg.setCode(CMD_SET_USER_VARIABLE);
+   msg.setId(dwRqId);
+   msg.setField(VID_NAME, pszVarName);
+   msg.setField(VID_VALUE, pszValue);
    if (dwUserId != CURRENT_USER)
-      msg.SetVariable(VID_USER_ID, dwUserId);
+      msg.setField(VID_USER_ID, dwUserId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -304,18 +304,18 @@ UINT32 LIBNXCL_EXPORTABLE NXCCopyUserVariable(NXC_SESSION hSession, UINT32 dwSrc
                                              UINT32 dwDstUserId, TCHAR *pszVarName,
                                              BOOL bMove)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_COPY_USER_VARIABLE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_NAME, pszVarName);
+   msg.setCode(CMD_COPY_USER_VARIABLE);
+   msg.setId(dwRqId);
+   msg.setField(VID_NAME, pszVarName);
    if (dwSrcUserId != CURRENT_USER)
-      msg.SetVariable(VID_USER_ID, dwSrcUserId);
-   msg.SetVariable(VID_DST_USER_ID, dwDstUserId);
-   msg.SetVariable(VID_MOVE_FLAG, (WORD)bMove);
+      msg.setField(VID_USER_ID, dwSrcUserId);
+   msg.setField(VID_DST_USER_ID, dwDstUserId);
+   msg.setField(VID_MOVE_FLAG, (WORD)bMove);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -329,16 +329,16 @@ UINT32 LIBNXCL_EXPORTABLE NXCCopyUserVariable(NXC_SESSION hSession, UINT32 dwSrc
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteUserVariable(NXC_SESSION hSession, UINT32 dwUserId,
                                                TCHAR *pszVarName)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_DELETE_USER_VARIABLE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_NAME, pszVarName);
+   msg.setCode(CMD_DELETE_USER_VARIABLE);
+   msg.setId(dwRqId);
+   msg.setField(VID_NAME, pszVarName);
    if (dwUserId != CURRENT_USER)
-      msg.SetVariable(VID_USER_ID, dwUserId);
+      msg.setField(VID_USER_ID, dwUserId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -353,30 +353,30 @@ UINT32 LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, UINT32 dwUs
                                               TCHAR *pszPattern, UINT32 *pdwNumVars,
                                               TCHAR ***pppszVarList)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 i, dwId, dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_ENUM_USER_VARIABLES);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_SEARCH_PATTERN, pszPattern);
+   msg.setCode(CMD_ENUM_USER_VARIABLES);
+   msg.setId(dwRqId);
+   msg.setField(VID_SEARCH_PATTERN, pszPattern);
    if (dwUserId != CURRENT_USER)
-      msg.SetVariable(VID_USER_ID, dwUserId);
+      msg.setField(VID_USER_ID, dwUserId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwResult = pResponse->GetVariableLong(VID_RCC);
+      dwResult = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwResult == RCC_SUCCESS)
       {
-         *pdwNumVars = pResponse->GetVariableLong(VID_NUM_VARIABLES);
+         *pdwNumVars = pResponse->getFieldAsUInt32(VID_NUM_VARIABLES);
          if (*pdwNumVars > 0)
          {
             *pppszVarList = (TCHAR **)malloc(sizeof(TCHAR *) * (*pdwNumVars));
             for(i = 0, dwId = VID_VARLIST_BASE; i < *pdwNumVars; i++, dwId++)
-               (*pppszVarList)[i] = pResponse->GetVariableStr(dwId);
+               (*pppszVarList)[i] = pResponse->getFieldAsString(dwId);
          }
          else
          {
@@ -401,13 +401,13 @@ UINT32 LIBNXCL_EXPORTABLE NXCEnumUserVariables(NXC_SESSION hSession, UINT32 dwUs
 UINT32 LIBNXCL_EXPORTABLE NXCGetSessionList(NXC_SESSION hSession, UINT32 *pdwNumSessions,
                                            NXC_CLIENT_SESSION_INFO **ppList)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 i, dwId, dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_SESSION_LIST);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GET_SESSION_LIST);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    *pdwNumSessions = 0;
@@ -416,20 +416,20 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetSessionList(NXC_SESSION hSession, UINT32 *pdwNum
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwResult = pResponse->GetVariableLong(VID_RCC);
+      dwResult = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwResult == RCC_SUCCESS)
       {
-         *pdwNumSessions = pResponse->GetVariableLong(VID_NUM_SESSIONS);
+         *pdwNumSessions = pResponse->getFieldAsUInt32(VID_NUM_SESSIONS);
          if (*pdwNumSessions > 0)
          {
             *ppList = (NXC_CLIENT_SESSION_INFO *)malloc(sizeof(NXC_CLIENT_SESSION_INFO) * (*pdwNumSessions));
             for(i = 0; i < *pdwNumSessions; i++)
             {
                dwId = i * 100;
-               (*ppList)[i].dwSessionId = pResponse->GetVariableLong(dwId++);
-               (*ppList)[i].nCipher = pResponse->GetVariableShort(dwId++);
-               pResponse->GetVariableStr(dwId++, (*ppList)[i].szUserName, MAX_USER_NAME);
-               pResponse->GetVariableStr(dwId++, (*ppList)[i].szClientApp, MAX_DB_STRING);
+               (*ppList)[i].dwSessionId = pResponse->getFieldAsUInt32(dwId++);
+               (*ppList)[i].nCipher = pResponse->getFieldAsUInt16(dwId++);
+               pResponse->getFieldAsString(dwId++, (*ppList)[i].szUserName, MAX_USER_NAME);
+               pResponse->getFieldAsString(dwId++, (*ppList)[i].szClientApp, MAX_DB_STRING);
             }
          }
       }
@@ -450,14 +450,14 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetSessionList(NXC_SESSION hSession, UINT32 *pdwNum
 
 UINT32 LIBNXCL_EXPORTABLE NXCKillSession(NXC_SESSION hSession, UINT32 dwSessionId)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_KILL_SESSION);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_SESSION_ID, dwSessionId);
+   msg.setCode(CMD_KILL_SESSION);
+   msg.setId(dwRqId);
+   msg.setField(VID_SESSION_ID, dwSessionId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);

@@ -27,9 +27,9 @@
  *
  * @return RCC ready to be sent to client
  */
-UINT32 ModifySummaryTable(CSCPMessage *msg, LONG *newId)
+UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId)
 {
-   LONG id = msg->GetVariableLong(VID_SUMMARY_TABLE_ID);
+   LONG id = msg->getFieldAsUInt32(VID_SUMMARY_TABLE_ID);
    if (id == 0)
    {
       id = CreateUniqueId(IDG_DCI_SUMMARY_TABLE);
@@ -51,11 +51,11 @@ UINT32 ModifySummaryTable(CSCPMessage *msg, LONG *newId)
    UINT32 rcc;
    if (hStmt != NULL)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, msg->GetVariableStr(VID_MENU_PATH), DB_BIND_DYNAMIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, msg->GetVariableStr(VID_TITLE), DB_BIND_DYNAMIC);
-      DBBind(hStmt, 3, DB_SQLTYPE_TEXT, msg->GetVariableStr(VID_FILTER), DB_BIND_DYNAMIC);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, msg->GetVariableLong(VID_FLAGS));
-      DBBind(hStmt, 5, DB_SQLTYPE_TEXT, msg->GetVariableStr(VID_COLUMNS), DB_BIND_DYNAMIC);
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, msg->getFieldAsString(VID_MENU_PATH), DB_BIND_DYNAMIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, msg->getFieldAsString(VID_TITLE), DB_BIND_DYNAMIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_TEXT, msg->getFieldAsString(VID_FILTER), DB_BIND_DYNAMIC);
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, msg->getFieldAsUInt32(VID_FLAGS));
+      DBBind(hStmt, 5, DB_SQLTYPE_TEXT, msg->getFieldAsString(VID_COLUMNS), DB_BIND_DYNAMIC);
       DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, id);
 
       rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
@@ -98,11 +98,11 @@ UINT32 DeleteSummaryTable(LONG tableId)
 /**
  * Create column definition from NXCP message
  */
-SummaryTableColumn::SummaryTableColumn(CSCPMessage *msg, UINT32 baseId)
+SummaryTableColumn::SummaryTableColumn(NXCPMessage *msg, UINT32 baseId)
 {
-   msg->GetVariableStr(baseId, m_name, MAX_DB_STRING);
-   msg->GetVariableStr(baseId + 1, m_dciName, MAX_PARAM_NAME);
-   m_flags = msg->GetVariableLong(baseId + 2);
+   msg->getFieldAsString(baseId, m_name, MAX_DB_STRING);
+   msg->getFieldAsString(baseId + 1, m_dciName, MAX_PARAM_NAME);
+   m_flags = msg->getFieldAsUInt32(baseId + 2);
 }
 
 /**
@@ -148,10 +148,10 @@ SummaryTable::~SummaryTable()
 /**
  * Create ad-hoc summary table definition from NXCP message
  */
-SummaryTable::SummaryTable(CSCPMessage *msg)
+SummaryTable::SummaryTable(NXCPMessage *msg)
 {
    m_title[0] = 0;
-   m_flags = msg->GetVariableLong(VID_FLAGS);
+   m_flags = msg->getFieldAsUInt32(VID_FLAGS);
    m_filter = NULL;
    m_aggregationFunction = (AggregationFunction)msg->getFieldAsInt16(VID_FUNCTION);
    m_periodStart = msg->getFieldAsTime(VID_TIME_FROM);

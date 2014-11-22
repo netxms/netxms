@@ -154,8 +154,8 @@ public:
 	virtual bool saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void fillMessage(CSCPMessage *msg);
-	virtual void modifyFromMessage(CSCPMessage *msg);
+	virtual void fillMessage(NXCPMessage *msg);
+	virtual void modifyFromMessage(NXCPMessage *msg);
 
 	UINT32 getId() { return m_id; }
 	const TCHAR *getName() { return m_name; }
@@ -214,8 +214,8 @@ public:
 	virtual bool saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void fillMessage(CSCPMessage *msg);
-	virtual void modifyFromMessage(CSCPMessage *msg);
+	virtual void fillMessage(NXCPMessage *msg);
+	virtual void modifyFromMessage(NXCPMessage *msg);
 
 	const TCHAR *getFullName() { return m_fullName; }
 	int getGraceLogins() { return m_graceLogins; }
@@ -257,8 +257,8 @@ public:
 	Group(UINT32 id, const TCHAR *name);
 	virtual ~Group();
 
-	virtual void fillMessage(CSCPMessage *msg);
-	virtual void modifyFromMessage(CSCPMessage *msg);
+	virtual void fillMessage(NXCPMessage *msg);
+	virtual void modifyFromMessage(NXCPMessage *msg);
 
 	virtual bool saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -302,7 +302,7 @@ public:
 
    void enumerateElements(void (* pHandler)(UINT32, UINT32, void *), void *pArg);
 
-   void fillMessage(CSCPMessage *pMsg);
+   void fillMessage(NXCPMessage *pMsg);
 };
 
 /**
@@ -322,7 +322,7 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
 bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 dwUserId, UINT32 dwGroupId);
 UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id);
 UINT32 NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, UINT32 *pdwId);
-UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg);
 UserDatabaseObject NXCORE_EXPORTABLE **OpenUserDatabase(int *count);
 void NXCORE_EXPORTABLE CloseUserDatabase();
 const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name);
@@ -338,7 +338,7 @@ UserDatabaseObject* GetUser(const TCHAR* dn);
 THREAD_RESULT THREAD_CALL SyncLDAPUsers(void *arg);
 bool UserNameIsUnique(TCHAR* name, UINT32 id);
 bool GroupNameIsUnique(TCHAR* name, UINT32 id);
-void FillGroupMembershipInfo(CSCPMessage *msg, UINT32 userId);
+void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId);
 void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups);
 void DumpUsers(CONSOLE_CTX pCtx);
 

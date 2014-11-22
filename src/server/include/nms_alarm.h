@@ -30,17 +30,17 @@ bool InitAlarmManager();
 void ShutdownAlarmManager();
 
 void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession);
-void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm);
+void FillAlarmInfoMessage(NXCPMessage *pMsg, NXC_ALARM *pAlarm);
 void DeleteAlarmNotes(DB_HANDLE hdb, UINT32 alarmId);
 void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId);
 
-UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 dwAlarmId, CSCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 dwAlarmId, NXCPMessage *msg);
 ObjectArray<NXC_ALARM> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId);
-UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 dwAlarmId, CSCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 dwAlarmId, NXCPMessage *msg);
 NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 dwAlarmId);
 NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(const TCHAR *hdref);  
 int GetMostCriticalStatusForObject(UINT32 dwObjectId);
-void GetAlarmStats(CSCPMessage *pMsg);
+void GetAlarmStats(NXCPMessage *pMsg);
 
 void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
                                       int iSeverity, UINT32 dwTimeout,
@@ -55,7 +55,7 @@ void NXCORE_EXPORTABLE DeleteAlarm(UINT32 dwAlarmId, bool objectCleanup);
 UINT32 AddAlarmComment(const TCHAR *hdref, const TCHAR *text, UINT32 userId);
 UINT32 UpdateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId);
 UINT32 DeleteAlarmCommentByID(UINT32 alarmId, UINT32 noteId);
-UINT32 GetAlarmComments(UINT32 alarmId, CSCPMessage *msg);
+UINT32 GetAlarmComments(UINT32 alarmId, NXCPMessage *msg);
 
 bool DeleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb);
 

@@ -174,29 +174,29 @@ void ForwardingDatabase::print(CONSOLE_CTX ctx, Node *owner)
 /**
  * Fill NXCP message with FDB data
  */
-void ForwardingDatabase::fillMessage(CSCPMessage *msg)
+void ForwardingDatabase::fillMessage(NXCPMessage *msg)
 {
    Node *node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
-   msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_fdbSize);
+   msg->setField(VID_NUM_ELEMENTS, (UINT32)m_fdbSize);
    UINT32 fieldId = VID_ELEMENT_LIST_BASE;
 	for(int i = 0; i < m_fdbSize; i++)
    {
-      msg->SetVariable(fieldId++, m_fdb[i].macAddr, MAC_ADDR_LENGTH);
-      msg->SetVariable(fieldId++, m_fdb[i].ifIndex);
-      msg->SetVariable(fieldId++, m_fdb[i].port);
-      msg->SetVariable(fieldId++, m_fdb[i].nodeObject);
-      msg->SetVariable(fieldId++, m_fdb[i].vlanId);
-      msg->SetVariable(fieldId++, m_fdb[i].type);
+      msg->setField(fieldId++, m_fdb[i].macAddr, MAC_ADDR_LENGTH);
+      msg->setField(fieldId++, m_fdb[i].ifIndex);
+      msg->setField(fieldId++, m_fdb[i].port);
+      msg->setField(fieldId++, m_fdb[i].nodeObject);
+      msg->setField(fieldId++, m_fdb[i].vlanId);
+      msg->setField(fieldId++, m_fdb[i].type);
       Interface *iface = (node != NULL) ? node->findInterface(m_fdb[i].ifIndex, INADDR_ANY) : NULL;
       if (iface != NULL)
       {
-         msg->SetVariable(fieldId++, iface->getName());
+         msg->setField(fieldId++, iface->getName());
       }
       else
       {
          TCHAR buffer[32];
          _sntprintf(buffer, 32, _T("[%d]"), m_fdb[i].ifIndex);
-         msg->SetVariable(fieldId++, buffer);
+         msg->setField(fieldId++, buffer);
       }
       fieldId += 3;
    }

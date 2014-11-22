@@ -1473,7 +1473,7 @@ typedef struct
    uuid_t guid;
    UINT32 dwId;
    UINT64 dwSystemRights;
-   WORD wFlags;
+   WORD flags;
    WORD nAuthMethod;        // Only for users
    UINT32 dwNumMembers;     // Only for groups
    UINT32 *pdwMemberList;   // Only for groups
@@ -1517,7 +1517,7 @@ typedef struct
    BYTE iDataType;
    BYTE iStatus;
    BYTE iDeltaCalculation;
-	WORD wFlags;
+	WORD flags;
    UINT32 dwNumThresholds;
    NXC_DCI_THRESHOLD *pThresholdList;
    TCHAR *pszFormula;
@@ -2039,7 +2039,7 @@ private:
    TCHAR *m_text;
 
 public:
-   AlarmComment(CSCPMessage *msg, UINT32 baseId);
+   AlarmComment(NXCPMessage *msg, UINT32 baseId);
    ~AlarmComment();
 
    UINT32 getId() { return m_id; }
@@ -2071,8 +2071,8 @@ void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
 
 /** Low-level messaging **/
 UINT32 LIBNXCL_EXPORTABLE NXCGenerateMessageId(NXC_SESSION hSession);
-BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, CSCPMessage *msg);
-CSCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, UINT32 dwRqId);
+BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, NXCPMessage *msg);
+NXCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, UINT32 dwRqId);
 UINT32 LIBNXCL_EXPORTABLE NXCWaitForRCC(NXC_SESSION hSession, UINT32 dwRqId);
 
 /** Session management **/

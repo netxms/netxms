@@ -177,24 +177,24 @@ bool MobileDevice::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void MobileDevice::fillMessage(CSCPMessage *msg)
+void MobileDevice::fillMessage(NXCPMessage *msg)
 {
    DataCollectionTarget::fillMessage(msg);
-	msg->SetVariable(VID_DEVICE_ID, CHECK_NULL_EX(m_deviceId));
-	msg->SetVariable(VID_VENDOR, CHECK_NULL_EX(m_vendor));
-	msg->SetVariable(VID_MODEL, CHECK_NULL_EX(m_model));
-	msg->SetVariable(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
-	msg->SetVariable(VID_OS_NAME, CHECK_NULL_EX(m_osName));
-	msg->SetVariable(VID_OS_VERSION, CHECK_NULL_EX(m_osVersion));
-	msg->SetVariable(VID_USER_ID, CHECK_NULL_EX(m_userId));
-	msg->SetVariable(VID_BATTERY_LEVEL, (UINT32)m_batteryLevel);
-	msg->SetVariable(VID_LAST_CHANGE_TIME, (QWORD)m_lastReportTime);
+	msg->setField(VID_DEVICE_ID, CHECK_NULL_EX(m_deviceId));
+	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
+	msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
+	msg->setField(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
+	msg->setField(VID_OS_NAME, CHECK_NULL_EX(m_osName));
+	msg->setField(VID_OS_VERSION, CHECK_NULL_EX(m_osVersion));
+	msg->setField(VID_USER_ID, CHECK_NULL_EX(m_userId));
+	msg->setField(VID_BATTERY_LEVEL, (UINT32)m_batteryLevel);
+	msg->setField(VID_LAST_CHANGE_TIME, (QWORD)m_lastReportTime);
 }
 
 /**
  * Modify object from message
  */
-UINT32 MobileDevice::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 MobileDevice::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       lockProperties();
@@ -205,29 +205,29 @@ UINT32 MobileDevice::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocke
 /**
  * Update system information from NXCP message
  */
-void MobileDevice::updateSystemInfo(CSCPMessage *msg)
+void MobileDevice::updateSystemInfo(NXCPMessage *msg)
 {
 	lockProperties();
 
 	m_lastReportTime = time(NULL);
 
 	safe_free(m_vendor);
-	m_vendor = msg->GetVariableStr(VID_VENDOR);
+	m_vendor = msg->getFieldAsString(VID_VENDOR);
 
 	safe_free(m_model);
-	m_model = msg->GetVariableStr(VID_MODEL);
+	m_model = msg->getFieldAsString(VID_MODEL);
 
 	safe_free(m_serialNumber);
-	m_serialNumber = msg->GetVariableStr(VID_SERIAL_NUMBER);
+	m_serialNumber = msg->getFieldAsString(VID_SERIAL_NUMBER);
 
 	safe_free(m_osName);
-	m_osName = msg->GetVariableStr(VID_OS_NAME);
+	m_osName = msg->getFieldAsString(VID_OS_NAME);
 
 	safe_free(m_osVersion);
-	m_osVersion = msg->GetVariableStr(VID_OS_VERSION);
+	m_osVersion = msg->getFieldAsString(VID_OS_VERSION);
 
 	safe_free(m_userId);
-	m_userId = msg->GetVariableStr(VID_USER_NAME);
+	m_userId = msg->getFieldAsString(VID_USER_NAME);
 
 	setModified();
 	unlockProperties();
@@ -236,17 +236,17 @@ void MobileDevice::updateSystemInfo(CSCPMessage *msg)
 /**
  * Update status from NXCP message
  */
-void MobileDevice::updateStatus(CSCPMessage *msg)
+void MobileDevice::updateStatus(NXCPMessage *msg)
 {
 	lockProperties();
 
 	m_lastReportTime = time(NULL);
 
    int type = msg->getFieldType(VID_BATTERY_LEVEL);
-   if (type == CSCP_DT_INT32)
-		m_batteryLevel = (int)msg->GetVariableLong(VID_BATTERY_LEVEL);
-   else if (type == CSCP_DT_INT16)
-		m_batteryLevel = (int)msg->GetVariableShort(VID_BATTERY_LEVEL);
+   if (type == NXCP_DT_INT32)
+		m_batteryLevel = msg->getFieldAsInt32(VID_BATTERY_LEVEL);
+   else if (type == NXCP_DT_INT16)
+		m_batteryLevel = (int)msg->getFieldAsInt16(VID_BATTERY_LEVEL);
 	else
 		m_batteryLevel = -1;
 
@@ -257,7 +257,7 @@ void MobileDevice::updateStatus(CSCPMessage *msg)
    }
 
 	if (msg->isFieldExist(VID_IP_ADDRESS))
-		m_dwIpAddr = msg->GetVariableLong(VID_IP_ADDRESS);
+		m_dwIpAddr = msg->getFieldAsUInt32(VID_IP_ADDRESS);
 
 	TCHAR temp[32];
 	DbgPrintf(5, _T("Mobile device %s [%d] updated from agent (battery=%d addr=%s loc=[%s %s])"),

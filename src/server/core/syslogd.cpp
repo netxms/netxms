@@ -662,19 +662,19 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
 /**
  * Create NXCP message from NX_SYSLOG_RECORD structure
  */
-void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_SYSLOG_RECORD *pRec)
+void CreateMessageFromSyslogMsg(NXCPMessage *pMsg, NX_SYSLOG_RECORD *pRec)
 {
    UINT32 dwId = VID_SYSLOG_MSG_BASE;
 
-   pMsg->SetVariable(VID_NUM_RECORDS, (UINT32)1);
-   pMsg->SetVariable(dwId++, pRec->qwMsgId);
-   pMsg->SetVariable(dwId++, (UINT32)pRec->tmTimeStamp);
-   pMsg->SetVariable(dwId++, (WORD)pRec->nFacility);
-   pMsg->SetVariable(dwId++, (WORD)pRec->nSeverity);
-   pMsg->SetVariable(dwId++, pRec->dwSourceObject);
-   pMsg->SetVariableFromMBString(dwId++, pRec->szHostName);
-   pMsg->SetVariableFromMBString(dwId++, pRec->szTag);
-	pMsg->SetVariableFromMBString(dwId++, pRec->szMessage);
+   pMsg->setField(VID_NUM_RECORDS, (UINT32)1);
+   pMsg->setField(dwId++, pRec->qwMsgId);
+   pMsg->setField(dwId++, (UINT32)pRec->tmTimeStamp);
+   pMsg->setField(dwId++, (WORD)pRec->nFacility);
+   pMsg->setField(dwId++, (WORD)pRec->nSeverity);
+   pMsg->setField(dwId++, pRec->dwSourceObject);
+   pMsg->setFieldFromMBString(dwId++, pRec->szHostName);
+   pMsg->setFieldFromMBString(dwId++, pRec->szTag);
+	pMsg->setFieldFromMBString(dwId++, pRec->szMessage);
 }
 
 /**

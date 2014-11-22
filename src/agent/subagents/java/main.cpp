@@ -78,7 +78,7 @@ static NETXMS_SUBAGENT_INFO g_subAgentInfo =
    NETXMS_VERSION_STRING,
    SubAgentInit,
    SubAgentShutdown,
-   NULL,                         // BOOL (*commandhandler)(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session)
+   NULL,                         // BOOL (*commandhandler)(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, void *session)
    0,                            // numParamaters
    NULL,                         // parameters
    0,                            // numLists

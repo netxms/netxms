@@ -69,8 +69,8 @@ void RemovePendingFileTransferRequests(ClientSession *session)
 class RSConnector : public ISC
 {
 protected:
-   virtual void onBinaryMessage(CSCP_MESSAGE *rawMsg);
-   virtual bool onMessage(CSCPMessage *msg);
+   virtual void onBinaryMessage(NXCP_MESSAGE *rawMsg);
+   virtual bool onMessage(NXCPMessage *msg);
 
 public:
    RSConnector(UINT32 addr, WORD port) : ISC(addr, port)
@@ -91,15 +91,15 @@ public:
  */
 static void NotifyUserSessions(ClientSession *session, void *arg)
 {
-   session->sendMessage((CSCPMessage *)arg);
+   session->sendMessage((NXCPMessage *)arg);
 }
 
 /**
  * Custom handler for reporting server messages
  */
-bool RSConnector::onMessage(CSCPMessage *msg)
+bool RSConnector::onMessage(NXCPMessage *msg)
 {
-   if (msg->GetCode() == CMD_RS_NOTIFY)
+   if (msg->getCode() == CMD_RS_NOTIFY)
    {
       EnumerateClientSessions(NotifyUserSessions, msg);
       return true;
@@ -110,20 +110,20 @@ bool RSConnector::onMessage(CSCPMessage *msg)
 /**
  * Custom handler for binary messages
  */
-void RSConnector::onBinaryMessage(CSCP_MESSAGE *rawMsg)
+void RSConnector::onBinaryMessage(NXCP_MESSAGE *rawMsg)
 {
-   if ((ntohs(rawMsg->wCode) != CMD_FILE_DATA) && (ntohs(rawMsg->wCode) != CMD_ABORT_FILE_TRANSFER))
+   if ((ntohs(rawMsg->code) != CMD_FILE_DATA) && (ntohs(rawMsg->code) != CMD_ABORT_FILE_TRANSFER))
       return;
 
    MutexLock(s_fileRequestLock);
    for(int i = 0; i < s_fileRequests.size(); i++)
    {
       FileRequest *f = s_fileRequests.get(i);
-      if (f->serverRequestId == ntohl(rawMsg->dwId))
+      if (f->serverRequestId == ntohl(rawMsg->id))
       {
-         rawMsg->dwId = htonl(f->originalRequestId);
+         rawMsg->id = htonl(f->originalRequestId);
          f->session->sendRawMessage(rawMsg);
-         if ((ntohs(rawMsg->wFlags) & MF_END_OF_FILE) || (ntohs(rawMsg->wCode) == CMD_ABORT_FILE_TRANSFER))
+         if ((ntohs(rawMsg->flags) & MF_END_OF_FILE) || (ntohs(rawMsg->code) == CMD_ABORT_FILE_TRANSFER))
          {
             s_fileRequests.remove(i);
          }
@@ -172,33 +172,33 @@ THREAD_RESULT THREAD_CALL ReportingServerConnector(void *arg)
 /**
  * Forward client message to reporting server
  */
-CSCPMessage *ForwardMessageToReportingServer(CSCPMessage *request, ClientSession *session)
+NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession *session)
 {
    if (m_connector == NULL || !m_connector->connected())
       return NULL;
 
-   UINT32 originalId = request->GetId();
+   UINT32 originalId = request->getId();
    UINT32 rqId = m_connector->generateMessageId();
-   request->SetId(rqId);
-   request->SetVariable(VID_USER_ID, session->getUserId());
+   request->setId(rqId);
+   request->setField(VID_USER_ID, session->getUserId());
 
    // File transfer requests
-   if (request->GetCode() == CMD_RS_RENDER_RESULT)
+   if (request->getCode() == CMD_RS_RENDER_RESULT)
    {
       MutexLock(s_fileRequestLock);
       s_fileRequests.add(new FileRequest(originalId, rqId, session));
       MutexUnlock(s_fileRequestLock);
    }
 
-   CSCPMessage *reply = NULL;
+   NXCPMessage *reply = NULL;
    if (m_connector->sendMessage(request))
    {
-      reply = m_connector->waitForMessage(CMD_REQUEST_COMPLETED, request->GetId(), 600000);
+      reply = m_connector->waitForMessage(CMD_REQUEST_COMPLETED, request->getId(), 600000);
    }
 
    if (reply != NULL)
    {
-      reply->SetId(originalId);
+      reply->setId(originalId);
    }
 
    return reply;

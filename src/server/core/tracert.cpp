@@ -67,18 +67,18 @@ void NetworkPath::addHop(UINT32 nextHop, NetObj *currentObject, UINT32 ifIndex, 
 /**
  * Fill NXCP message with trace data
  */
-void NetworkPath::fillMessage(CSCPMessage *msg)
+void NetworkPath::fillMessage(NXCPMessage *msg)
 {
-	msg->SetVariable(VID_HOP_COUNT, (WORD)m_hopCount);
-	msg->SetVariable(VID_IS_COMPLETE, (WORD)(m_complete ? 1 : 0));
+	msg->setField(VID_HOP_COUNT, (WORD)m_hopCount);
+	msg->setField(VID_IS_COMPLETE, (WORD)(m_complete ? 1 : 0));
 	UINT32 varId = VID_NETWORK_PATH_BASE;
 	for(int i = 0; i < m_hopCount; i++, varId += 5)
 	{
-		msg->SetVariable(varId++, m_path[i].object->getId());
-		msg->SetVariable(varId++, m_path[i].nextHop);
-		msg->SetVariable(varId++, m_path[i].ifIndex);
-		msg->SetVariable(varId++, (WORD)(m_path[i].isVpn ? 1 : 0));
-		msg->SetVariable(varId++, m_path[i].name);
+		msg->setField(varId++, m_path[i].object->getId());
+		msg->setField(varId++, m_path[i].nextHop);
+		msg->setField(varId++, m_path[i].ifIndex);
+		msg->setField(varId++, (WORD)(m_path[i].isVpn ? 1 : 0));
+		msg->setField(varId++, m_path[i].name);
 	}
 }
 

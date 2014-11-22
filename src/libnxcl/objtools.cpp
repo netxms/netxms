@@ -31,13 +31,13 @@
 UINT32 LIBNXCL_EXPORTABLE NXCGetObjectTools(NXC_SESSION hSession, UINT32 *pdwNumTools,
                                            NXC_OBJECT_TOOL **ppToolList)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 i, dwResult, dwRqId, dwId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_OBJECT_TOOLS);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GET_OBJECT_TOOLS);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    *pdwNumTools = 0;
@@ -46,22 +46,22 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetObjectTools(NXC_SESSION hSession, UINT32 *pdwNum
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwResult = pResponse->GetVariableLong(VID_RCC);
+      dwResult = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwResult == RCC_SUCCESS)
       {
-         *pdwNumTools = pResponse->GetVariableLong(VID_NUM_TOOLS);
+         *pdwNumTools = pResponse->getFieldAsUInt32(VID_NUM_TOOLS);
          *ppToolList = (NXC_OBJECT_TOOL *)malloc(sizeof(NXC_OBJECT_TOOL) * (*pdwNumTools));
          memset(*ppToolList, 0, sizeof(NXC_OBJECT_TOOL) * (*pdwNumTools));
          for(i = 0, dwId = VID_OBJECT_TOOLS_BASE; i < *pdwNumTools; i++, dwId += 10)
          {
-            (*ppToolList)[i].dwId = pResponse->GetVariableLong(dwId);
-            pResponse->GetVariableStr(dwId + 1, (*ppToolList)[i].szName, MAX_DB_STRING);
-            (*ppToolList)[i].wType = pResponse->GetVariableShort(dwId + 2);
-            (*ppToolList)[i].pszData = pResponse->GetVariableStr(dwId + 3);
-            (*ppToolList)[i].dwFlags = pResponse->GetVariableLong(dwId + 4);
-            pResponse->GetVariableStr(dwId + 5, (*ppToolList)[i].szDescription, MAX_DB_STRING);
-            (*ppToolList)[i].pszMatchingOID = pResponse->GetVariableStr(dwId + 6);
-            (*ppToolList)[i].pszConfirmationText = pResponse->GetVariableStr(dwId + 7);
+            (*ppToolList)[i].dwId = pResponse->getFieldAsUInt32(dwId);
+            pResponse->getFieldAsString(dwId + 1, (*ppToolList)[i].szName, MAX_DB_STRING);
+            (*ppToolList)[i].wType = pResponse->getFieldAsUInt16(dwId + 2);
+            (*ppToolList)[i].pszData = pResponse->getFieldAsString(dwId + 3);
+            (*ppToolList)[i].dwFlags = pResponse->getFieldAsUInt32(dwId + 4);
+            pResponse->getFieldAsString(dwId + 5, (*ppToolList)[i].szDescription, MAX_DB_STRING);
+            (*ppToolList)[i].pszMatchingOID = pResponse->getFieldAsString(dwId + 6);
+            (*ppToolList)[i].pszConfirmationText = pResponse->getFieldAsString(dwId + 7);
          }
       }
       delete pResponse;
@@ -102,15 +102,15 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(UINT32 dwNumTools, NXC_OBJECT_T
 UINT32 LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, UINT32 dwNodeId,
                                              UINT32 dwToolId, Table **ppData)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwResult, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_EXEC_TABLE_TOOL);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_OBJECT_ID, dwNodeId);
-   msg.SetVariable(VID_TOOL_ID, dwToolId);
+   msg.setCode(CMD_EXEC_TABLE_TOOL);
+   msg.setId(dwRqId);
+   msg.setField(VID_OBJECT_ID, dwNodeId);
+   msg.setField(VID_TOOL_ID, dwToolId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    *ppData = NULL;
@@ -121,7 +121,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, UINT32 dwNod
       pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_TABLE_DATA, dwRqId, 180000);
       if (pResponse != NULL)
       {
-         dwResult = pResponse->GetVariableLong(VID_RCC);
+         dwResult = pResponse->getFieldAsUInt32(VID_RCC);
          if (dwResult == RCC_SUCCESS)
          {
 				*ppData = new Table(pResponse);
@@ -144,14 +144,14 @@ UINT32 LIBNXCL_EXPORTABLE NXCExecuteTableTool(NXC_SESSION hSession, UINT32 dwNod
 
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteObjectTool(NXC_SESSION hSession, UINT32 dwToolId)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_DELETE_OBJECT_TOOL);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_TOOL_ID, dwToolId);
+   msg.setCode(CMD_DELETE_OBJECT_TOOL);
+   msg.setId(dwRqId);
+   msg.setField(VID_TOOL_ID, dwToolId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -165,33 +165,33 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteObjectTool(NXC_SESSION hSession, UINT32 dwToo
 UINT32 LIBNXCL_EXPORTABLE NXCGetObjectToolDetails(NXC_SESSION hSession, UINT32 dwToolId,
                                                  NXC_OBJECT_TOOL_DETAILS **ppData)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_OBJECT_TOOL_DETAILS);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_TOOL_ID, dwToolId);
+   msg.setCode(CMD_GET_OBJECT_TOOL_DETAILS);
+   msg.setId(dwRqId);
+   msg.setField(VID_TOOL_ID, dwToolId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwResult = pResponse->GetVariableLong(VID_RCC);
+      dwResult = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwResult == RCC_SUCCESS)
       {
          *ppData = (NXC_OBJECT_TOOL_DETAILS *)malloc(sizeof(NXC_OBJECT_TOOL_DETAILS));
          memset(*ppData, 0, sizeof(NXC_OBJECT_TOOL_DETAILS));
          (*ppData)->dwId = dwToolId;
-         (*ppData)->dwFlags = pResponse->GetVariableLong(VID_FLAGS);
-         (*ppData)->wType = pResponse->GetVariableShort(VID_TOOL_TYPE);
-         (*ppData)->pszData = pResponse->GetVariableStr(VID_TOOL_DATA);
-         (*ppData)->pszConfirmationText = pResponse->GetVariableStr(VID_CONFIRMATION_TEXT);
-         pResponse->GetVariableStr(VID_NAME, (*ppData)->szName, MAX_DB_STRING);
-         pResponse->GetVariableStr(VID_DESCRIPTION, (*ppData)->szDescription, MAX_DB_STRING);
-         (*ppData)->pszMatchingOID = pResponse->GetVariableStr(VID_TOOL_OID);
-         (*ppData)->dwACLSize = pResponse->GetVariableLong(VID_ACL_SIZE);
+         (*ppData)->dwFlags = pResponse->getFieldAsUInt32(VID_FLAGS);
+         (*ppData)->wType = pResponse->getFieldAsUInt16(VID_TOOL_TYPE);
+         (*ppData)->pszData = pResponse->getFieldAsString(VID_TOOL_DATA);
+         (*ppData)->pszConfirmationText = pResponse->getFieldAsString(VID_CONFIRMATION_TEXT);
+         pResponse->getFieldAsString(VID_NAME, (*ppData)->szName, MAX_DB_STRING);
+         pResponse->getFieldAsString(VID_DESCRIPTION, (*ppData)->szDescription, MAX_DB_STRING);
+         (*ppData)->pszMatchingOID = pResponse->getFieldAsString(VID_TOOL_OID);
+         (*ppData)->dwACLSize = pResponse->getFieldAsUInt32(VID_ACL_SIZE);
          (*ppData)->pdwACL = (UINT32 *)malloc(sizeof(UINT32) * (*ppData)->dwACLSize);
          pResponse->getFieldAsInt32Array(VID_ACL, (*ppData)->dwACLSize, (*ppData)->pdwACL);
          if (((*ppData)->wType == TOOL_TYPE_TABLE_SNMP) ||
@@ -199,14 +199,14 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetObjectToolDetails(NXC_SESSION hSession, UINT32 d
          {
             UINT32 i, dwId;
 
-            (*ppData)->wNumColumns = pResponse->GetVariableShort(VID_NUM_COLUMNS);
+            (*ppData)->wNumColumns = pResponse->getFieldAsUInt16(VID_NUM_COLUMNS);
             (*ppData)->pColList = (NXC_OBJECT_TOOL_COLUMN *)malloc(sizeof(NXC_OBJECT_TOOL_COLUMN) * (*ppData)->wNumColumns);
             for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < (UINT32)(*ppData)->wNumColumns; i++)
             {
-               pResponse->GetVariableStr(dwId++, (*ppData)->pColList[i].szName, MAX_DB_STRING);
-               pResponse->GetVariableStr(dwId++, (*ppData)->pColList[i].szOID, MAX_DB_STRING);
-               (*ppData)->pColList[i].nFormat = (int)pResponse->GetVariableShort(dwId++);
-               (*ppData)->pColList[i].nSubstr = (int)pResponse->GetVariableShort(dwId++);
+               pResponse->getFieldAsString(dwId++, (*ppData)->pColList[i].szName, MAX_DB_STRING);
+               pResponse->getFieldAsString(dwId++, (*ppData)->pColList[i].szOID, MAX_DB_STRING);
+               (*ppData)->pColList[i].nFormat = (int)pResponse->getFieldAsUInt16(dwId++);
+               (*ppData)->pColList[i].nSubstr = (int)pResponse->getFieldAsUInt16(dwId++);
             }
          }
       }
@@ -243,23 +243,23 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolDetails(NXC_OBJECT_TOOL_DETAILS *pDa
 
 UINT32 LIBNXCL_EXPORTABLE NXCGenerateObjectToolId(NXC_SESSION hSession, UINT32 *pdwToolId)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Prepare message
-   msg.SetCode(CMD_GENERATE_OBJECT_TOOL_ID);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GENERATE_OBJECT_TOOL_ID);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    
    // Wait for reply
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
-         *pdwToolId = pResponse->GetVariableLong(VID_TOOL_ID);
+         *pdwToolId = pResponse->getFieldAsUInt32(VID_TOOL_ID);
    }
    else
    {
@@ -276,37 +276,37 @@ UINT32 LIBNXCL_EXPORTABLE NXCGenerateObjectToolId(NXC_SESSION hSession, UINT32 *
 UINT32 LIBNXCL_EXPORTABLE NXCUpdateObjectTool(NXC_SESSION hSession,
                                              NXC_OBJECT_TOOL_DETAILS *pData)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Prepare message
-   msg.SetCode(CMD_UPDATE_OBJECT_TOOL);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_TOOL_ID, pData->dwId);
-   msg.SetVariable(VID_NAME, pData->szName);
-   msg.SetVariable(VID_TOOL_TYPE, pData->wType);
-   msg.SetVariable(VID_FLAGS, pData->dwFlags);
-   msg.SetVariable(VID_DESCRIPTION, pData->szDescription);
-   msg.SetVariable(VID_TOOL_DATA, pData->pszData);
-   msg.SetVariable(VID_CONFIRMATION_TEXT, CHECK_NULL_EX(pData->pszConfirmationText));
-   msg.SetVariable(VID_ACL_SIZE, pData->dwACLSize);
-   msg.SetVariable(VID_TOOL_OID, CHECK_NULL_EX(pData->pszMatchingOID));
-   msg.setFieldInt32Array(VID_ACL, pData->dwACLSize, pData->pdwACL);
+   msg.setCode(CMD_UPDATE_OBJECT_TOOL);
+   msg.setId(dwRqId);
+   msg.setField(VID_TOOL_ID, pData->dwId);
+   msg.setField(VID_NAME, pData->szName);
+   msg.setField(VID_TOOL_TYPE, pData->wType);
+   msg.setField(VID_FLAGS, pData->dwFlags);
+   msg.setField(VID_DESCRIPTION, pData->szDescription);
+   msg.setField(VID_TOOL_DATA, pData->pszData);
+   msg.setField(VID_CONFIRMATION_TEXT, CHECK_NULL_EX(pData->pszConfirmationText));
+   msg.setField(VID_ACL_SIZE, pData->dwACLSize);
+   msg.setField(VID_TOOL_OID, CHECK_NULL_EX(pData->pszMatchingOID));
+   msg.setFieldFromInt32Array(VID_ACL, pData->dwACLSize, pData->pdwACL);
    if ((pData->wType == TOOL_TYPE_TABLE_SNMP) ||
        (pData->wType == TOOL_TYPE_TABLE_AGENT))
    {
       int i;
       UINT32 dwId;
 
-      msg.SetVariable(VID_NUM_COLUMNS, pData->wNumColumns);
+      msg.setField(VID_NUM_COLUMNS, pData->wNumColumns);
       for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < (int)pData->wNumColumns; i++)
       {
-         msg.SetVariable(dwId++, pData->pColList[i].szName);
-         msg.SetVariable(dwId++, pData->pColList[i].szOID);
-         msg.SetVariable(dwId++, (WORD)pData->pColList[i].nFormat);
-         msg.SetVariable(dwId++, (WORD)pData->pColList[i].nSubstr);
+         msg.setField(dwId++, pData->pColList[i].szName);
+         msg.setField(dwId++, pData->pColList[i].szOID);
+         msg.setField(dwId++, (WORD)pData->pColList[i].nFormat);
+         msg.setField(dwId++, (WORD)pData->pColList[i].nSubstr);
       }
    }
 
@@ -361,16 +361,16 @@ BOOL LIBNXCL_EXPORTABLE NXCIsAppropriateTool(NXC_OBJECT_TOOL *pTool, NXC_OBJECT 
 
 UINT32 LIBNXCL_EXPORTABLE NXCExecuteServerCommand(NXC_SESSION hSession, UINT32 nodeId, const TCHAR *command)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Build request message
-	msg.SetCode(CMD_EXECUTE_SERVER_COMMAND);
-   msg.SetId(dwRqId);
-	msg.SetVariable(VID_OBJECT_ID, nodeId);
-	msg.SetVariable(VID_COMMAND, command);
+	msg.setCode(CMD_EXECUTE_SERVER_COMMAND);
+   msg.setId(dwRqId);
+	msg.setField(VID_OBJECT_ID, nodeId);
+	msg.setField(VID_COMMAND, command);
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);

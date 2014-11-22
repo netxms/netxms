@@ -250,39 +250,39 @@ Node *VPNConnector::getParentNode()
 /**
  * Create NXCP message with object's data
  */
-void VPNConnector::fillMessage(CSCPMessage *pMsg)
+void VPNConnector::fillMessage(NXCPMessage *pMsg)
 {
    UINT32 i, dwId;
 
    NetObj::fillMessage(pMsg);
-   pMsg->SetVariable(VID_PEER_GATEWAY, m_dwPeerGateway);
-   pMsg->SetVariable(VID_NUM_LOCAL_NETS, m_dwNumLocalNets);
-   pMsg->SetVariable(VID_NUM_REMOTE_NETS, m_dwNumRemoteNets);
+   pMsg->setField(VID_PEER_GATEWAY, m_dwPeerGateway);
+   pMsg->setField(VID_NUM_LOCAL_NETS, m_dwNumLocalNets);
+   pMsg->setField(VID_NUM_REMOTE_NETS, m_dwNumRemoteNets);
 
    for(i = 0, dwId = VID_VPN_NETWORK_BASE; i < m_dwNumLocalNets; i++)
    {
-      pMsg->SetVariable(dwId++, m_pLocalNetList[i].dwAddr);
-      pMsg->SetVariable(dwId++, m_pLocalNetList[i].dwMask);
+      pMsg->setField(dwId++, m_pLocalNetList[i].dwAddr);
+      pMsg->setField(dwId++, m_pLocalNetList[i].dwMask);
    }
 
    for(i = 0; i < m_dwNumRemoteNets; i++)
    {
-      pMsg->SetVariable(dwId++, m_pRemoteNetList[i].dwAddr);
-      pMsg->SetVariable(dwId++, m_pRemoteNetList[i].dwMask);
+      pMsg->setField(dwId++, m_pRemoteNetList[i].dwAddr);
+      pMsg->setField(dwId++, m_pRemoteNetList[i].dwMask);
    }
 }
 
 /**
  * Modify object from message
  */
-UINT32 VPNConnector::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 VPNConnector::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       lockProperties();
 
    // Peer gateway
    if (pRequest->isFieldExist(VID_PEER_GATEWAY))
-      m_dwPeerGateway = pRequest->GetVariableLong(VID_PEER_GATEWAY);
+      m_dwPeerGateway = pRequest->getFieldAsUInt32(VID_PEER_GATEWAY);
 
    // Network list
    if ((pRequest->isFieldExist(VID_NUM_LOCAL_NETS)) &&
@@ -290,14 +290,14 @@ UINT32 VPNConnector::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocke
    {
       UINT32 i, dwId = VID_VPN_NETWORK_BASE;
 
-      m_dwNumLocalNets = pRequest->GetVariableLong(VID_NUM_LOCAL_NETS);
+      m_dwNumLocalNets = pRequest->getFieldAsUInt32(VID_NUM_LOCAL_NETS);
       if (m_dwNumLocalNets > 0)
       {
          m_pLocalNetList = (IP_NETWORK *)realloc(m_pLocalNetList, sizeof(IP_NETWORK) * m_dwNumLocalNets);
          for(i = 0; i < m_dwNumLocalNets; i++)
          {
-            m_pLocalNetList[i].dwAddr = pRequest->GetVariableLong(dwId++);
-            m_pLocalNetList[i].dwMask = pRequest->GetVariableLong(dwId++);
+            m_pLocalNetList[i].dwAddr = pRequest->getFieldAsUInt32(dwId++);
+            m_pLocalNetList[i].dwMask = pRequest->getFieldAsUInt32(dwId++);
          }
       }
       else
@@ -306,14 +306,14 @@ UINT32 VPNConnector::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocke
          m_pLocalNetList = NULL;
       }
 
-      m_dwNumRemoteNets = pRequest->GetVariableLong(VID_NUM_REMOTE_NETS);
+      m_dwNumRemoteNets = pRequest->getFieldAsUInt32(VID_NUM_REMOTE_NETS);
       if (m_dwNumRemoteNets > 0)
       {
          m_pRemoteNetList = (IP_NETWORK *)realloc(m_pRemoteNetList, sizeof(IP_NETWORK) * m_dwNumRemoteNets);
          for(i = 0; i < m_dwNumRemoteNets; i++)
          {
-            m_pRemoteNetList[i].dwAddr = pRequest->GetVariableLong(dwId++);
-            m_pRemoteNetList[i].dwMask = pRequest->GetVariableLong(dwId++);
+            m_pRemoteNetList[i].dwAddr = pRequest->getFieldAsUInt32(dwId++);
+            m_pRemoteNetList[i].dwMask = pRequest->getFieldAsUInt32(dwId++);
          }
       }
       else

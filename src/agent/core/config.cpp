@@ -59,9 +59,9 @@ BOOL DownloadConfig(TCHAR *pszServer)
    struct sockaddr_in sa;
    BOOL bRet = FALSE;
    TCHAR szBuffer[MAX_RESULT_LENGTH], *pszConfig;
-   CSCPMessage msg, *pResponse;
-   CSCP_MESSAGE *pRawMsg;
-   CSCP_BUFFER *pBuffer;
+   NXCPMessage msg, *pResponse;
+   NXCP_MESSAGE *pRawMsg;
+   NXCP_BUFFER *pBuffer;
    NXCPEncryptionContext *pDummyCtx = NULL;
    int nLen;
 
@@ -93,35 +93,35 @@ BOOL DownloadConfig(TCHAR *pszServer)
       if (connect(hSocket, (struct sockaddr *)&sa, sizeof(sa)) != -1)
       {
          // Prepare request
-         msg.SetCode(CMD_GET_MY_CONFIG);
-         msg.SetId(1);
+         msg.setCode(CMD_GET_MY_CONFIG);
+         msg.setId(1);
          if (H_PlatformName(NULL, NULL, szBuffer) != SYSINFO_RC_SUCCESS)
             _tcscpy(szBuffer, _T("error"));
-         msg.SetVariable(VID_PLATFORM_NAME, szBuffer);
-         msg.SetVariable(VID_VERSION_MAJOR, (WORD)NETXMS_VERSION_MAJOR);
-         msg.SetVariable(VID_VERSION_MINOR, (WORD)NETXMS_VERSION_MINOR);
-         msg.SetVariable(VID_VERSION_RELEASE, (WORD)NETXMS_VERSION_BUILD);
-         msg.SetVariable(VID_VERSION, NETXMS_VERSION_STRING);
+         msg.setField(VID_PLATFORM_NAME, szBuffer);
+         msg.setField(VID_VERSION_MAJOR, (WORD)NETXMS_VERSION_MAJOR);
+         msg.setField(VID_VERSION_MINOR, (WORD)NETXMS_VERSION_MINOR);
+         msg.setField(VID_VERSION_RELEASE, (WORD)NETXMS_VERSION_BUILD);
+         msg.setField(VID_VERSION, NETXMS_VERSION_STRING);
 
          // Send request
          pRawMsg = msg.createMessage();
-         nLen = ntohl(pRawMsg->dwSize);
+         nLen = ntohl(pRawMsg->size);
          if (SendEx(hSocket, pRawMsg, nLen, 0, NULL) == nLen)
          {
-            pRawMsg = (CSCP_MESSAGE *)realloc(pRawMsg, MAX_MSG_SIZE);
-            pBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+            pRawMsg = (NXCP_MESSAGE *)realloc(pRawMsg, MAX_MSG_SIZE);
+            pBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
             RecvNXCPMessage(0, NULL, pBuffer, 0, NULL, NULL, 0);
 
             nLen = RecvNXCPMessage(hSocket, pRawMsg, pBuffer, MAX_MSG_SIZE,
                                    &pDummyCtx, NULL, 30000);
             if (nLen >= 16)
             {
-               pResponse = new CSCPMessage(pRawMsg);
-               if ((pResponse->GetCode() == CMD_REQUEST_COMPLETED) &&
-                   (pResponse->GetId() == 1) &&
-                   (pResponse->GetVariableLong(VID_RCC) == 0))
+               pResponse = new NXCPMessage(pRawMsg);
+               if ((pResponse->getCode() == CMD_REQUEST_COMPLETED) &&
+                   (pResponse->getId() == 1) &&
+                   (pResponse->getFieldAsUInt32(VID_RCC) == 0))
                {
-                  pszConfig = pResponse->GetVariableStr(VID_CONFIG_FILE);
+                  pszConfig = pResponse->getFieldAsString(VID_CONFIG_FILE);
                   if (pszConfig != NULL)
                   {
                      bRet = SaveConfig(pszConfig);

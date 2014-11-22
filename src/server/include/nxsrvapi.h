@@ -318,7 +318,7 @@ public:
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }
 
-	void fillMessage(CSCPMessage *msg);
+	void fillMessage(NXCPMessage *msg);
 };
 
 /**
@@ -354,7 +354,7 @@ private:
 	TCHAR **m_serverList;
 
 public:
-	AgentPolicyInfo(CSCPMessage *msg);
+	AgentPolicyInfo(NXCPMessage *msg);
 	~AgentPolicyInfo();
 
 	int size() { return m_size; }
@@ -374,11 +374,11 @@ private:
    int m_dataType;
 
 public:
-   AgentParameterDefinition(CSCPMessage *msg, UINT32 baseId);
+   AgentParameterDefinition(NXCPMessage *msg, UINT32 baseId);
    AgentParameterDefinition(AgentParameterDefinition *src);
    ~AgentParameterDefinition();
 
-   UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
+   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
 
    const TCHAR *getName() { return m_name; }
    const TCHAR *getDescription() { return m_description; }
@@ -412,11 +412,11 @@ private:
    ObjectArray<AgentTableColumnDefinition> *m_columns;
 
 public:
-   AgentTableDefinition(CSCPMessage *msg, UINT32 baseId);
+   AgentTableDefinition(NXCPMessage *msg, UINT32 baseId);
    AgentTableDefinition(AgentTableDefinition *src);
    ~AgentTableDefinition();
 
-   UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
+   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
 
    const TCHAR *getName() { return m_name; }
    const TCHAR *getDescription() { return m_description; }
@@ -461,7 +461,7 @@ private:
 	void (*m_downloadProgressCallback)(size_t, void *);
 	void *m_downloadProgressCallbackArg;
 	bool m_deleteFileOnDownloadFailure;
-	void (*m_sendToClientMessageCallback)(CSCP_MESSAGE*, void *);
+	void (*m_sendToClientMessageCallback)(NXCP_MESSAGE*, void *);
 	bool m_fileUploadInProgress;
 
    void receiverThread();
@@ -474,14 +474,14 @@ protected:
    UINT32 authenticate(BOOL bProxyData);
    UINT32 setupProxyConnection();
    UINT32 getIpAddr() { return ntohl(m_dwAddr); }
-	UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(CSCP_MESSAGE*, void *), void *cbArg);
+	UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(NXCP_MESSAGE*, void *), void *cbArg);
 
    virtual void printMsg(const TCHAR *format, ...);
-   virtual void onTrap(CSCPMessage *pMsg);
-	virtual void onDataPush(CSCPMessage *msg);
-	virtual void onFileMonitoringData(CSCPMessage *msg);
-	virtual void onSnmpTrap(CSCPMessage *pMsg);
-	virtual bool processCustomMessage(CSCPMessage *pMsg);
+   virtual void onTrap(NXCPMessage *pMsg);
+	virtual void onDataPush(NXCPMessage *msg);
+	virtual void onFileMonitoringData(NXCPMessage *msg);
+	virtual void onSnmpTrap(NXCPMessage *pMsg);
+	virtual bool processCustomMessage(NXCPMessage *pMsg);
 	virtual void onFileDownload(BOOL success);
 
    void lock() { MutexLock(m_mutexDataLock); }
@@ -489,8 +489,8 @@ protected:
 	NXCPEncryptionContext *acquireEncryptionContext();
 
 public:
-   BOOL sendMessage(CSCPMessage *pMsg);
-   CSCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut) { return m_pMsgWaitQueue->waitForMessage(wCode, dwId, dwTimeOut); }
+   BOOL sendMessage(NXCPMessage *pMsg);
+   NXCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut) { return m_pMsgWaitQueue->waitForMessage(wCode, dwId, dwTimeOut); }
    AgentConnection(UINT32 ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
    virtual ~AgentConnection();
 
@@ -522,8 +522,8 @@ public:
    UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
 
 	UINT32 generateRequestId() { return m_dwRequestId++; }
-	CSCPMessage *customRequest(CSCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false, void (*downloadProgressCallback)(size_t, void *) = NULL,
-	                           void (*fileResendCallback)(CSCP_MESSAGE*, void *) = NULL, void *cbArg = NULL);
+	NXCPMessage *customRequest(NXCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false, void (*downloadProgressCallback)(size_t, void *) = NULL,
+	                           void (*fileResendCallback)(NXCP_MESSAGE*, void *) = NULL, void *cbArg = NULL);
 
    UINT32 getNumDataLines() { return m_dwNumDataLines; }
    const TCHAR *getDataLine(UINT32 dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }
@@ -539,7 +539,7 @@ public:
    void setPort(WORD wPort) { m_wPort = wPort; }
    void setAuthData(int method, const TCHAR *secret);
    void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
-   BOOL sendRawMessage(CSCP_MESSAGE *pMsg);
+   BOOL sendRawMessage(NXCP_MESSAGE *pMsg);
 };
 
 /**
@@ -549,7 +549,7 @@ class LIBNXSRV_EXPORTABLE SNMP_ProxyTransport : public SNMP_Transport
 {
 protected:
 	AgentConnection *m_pAgentConnection;
-	CSCPMessage *m_pResponse;
+	NXCPMessage *m_pResponse;
 	UINT32 m_dwIpAddr;
 	WORD m_wPort;
 	bool m_waitForResponse;
@@ -563,7 +563,8 @@ public:
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pdu);
    virtual UINT32 getPeerIpAddress();
-   bool setWaitForResponse(bool value) {m_waitForResponse = value;};
+
+   void setWaitForResponse(bool wait) { m_waitForResponse = wait; }
 };
 
 /**
@@ -603,8 +604,8 @@ protected:
    void unlock() { MutexUnlock(m_mutexDataLock); }
 
    virtual void printMessage(const TCHAR *format, ...);
-   virtual void onBinaryMessage(CSCP_MESSAGE *rawMsg);
-   virtual bool onMessage(CSCPMessage *msg);
+   virtual void onBinaryMessage(NXCP_MESSAGE *rawMsg);
+   virtual bool onMessage(NXCPMessage *msg);
 
 public:
    ISC();
@@ -615,8 +616,8 @@ public:
 	void disconnect();
    bool connected() { return m_flags & ISCF_IS_CONNECTED; };
 
-   BOOL sendMessage(CSCPMessage *msg);
-   CSCPMessage *waitForMessage(WORD code, UINT32 id, UINT32 timeOut) { return m_msgWaitQueue->waitForMessage(code, id, timeOut); }
+   BOOL sendMessage(NXCPMessage *msg);
+   NXCPMessage *waitForMessage(WORD code, UINT32 id, UINT32 timeOut) { return m_msgWaitQueue->waitForMessage(code, id, timeOut); }
    UINT32 waitForRCC(UINT32 rqId, UINT32 timeOut);
    UINT32 generateMessageId() { return (UINT32)InterlockedIncrement(&m_requestId); }
 

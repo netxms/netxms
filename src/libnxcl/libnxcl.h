@@ -162,13 +162,13 @@ public:
    // Methods
 private:
    void destroyAllObjects();
-   void processDCI(CSCPMessage *pMsg);
+   void processDCI(NXCPMessage *pMsg);
    void destroyEventDB();
    void destroyUserDB();
-   void processUserDBRecord(CSCPMessage *pMsg);
-   void processUserDBUpdate(CSCPMessage *pMsg);
+   void processUserDBRecord(NXCPMessage *pMsg);
+   void processUserDBUpdate(NXCPMessage *pMsg);
 
-   void processObjectUpdate(CSCPMessage *pMsg);
+   void processObjectUpdate(NXCPMessage *pMsg);
    void addObject(NXC_OBJECT *pObject, BOOL bSortIndex);
    void loadObjectsFromCache(const TCHAR *pszCacheFile);
 
@@ -185,9 +185,9 @@ public:
    void SetRecvThread(THREAD hThread) { m_hRecvThread = hThread; }
    void StartWatchdogThread(void);
 
-   BOOL SendMsg(CSCPMessage *pMsg);
-   CSCPMessage *WaitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut = 0);
-   CSCP_MESSAGE *WaitForRawMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut = 0);
+   BOOL SendMsg(NXCPMessage *pMsg);
+   NXCPMessage *WaitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut = 0);
+   NXCP_MESSAGE *WaitForRawMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut = 0);
    UINT32 WaitForRCC(UINT32 dwRqId, UINT32 dwTimeOut = 0);
    UINT32 CreateRqId(void) { return m_dwMsgId++; }
    UINT32 SendFile(UINT32 dwRqId, TCHAR *pszFileName, long offset);
@@ -238,8 +238,8 @@ public:
    void setClientData(void *pData) { m_pClientData = pData; }
    void *getClientData() { return m_pClientData; }
 
-   void onNotify(CSCPMessage *pMsg);
-   void parseLoginMessage(CSCPMessage *pMsg);
+   void onNotify(NXCPMessage *pMsg);
+   void parseLoginMessage(NXCPMessage *pMsg);
    UINT32 getCurrentUserId() { return m_dwUserId; }
    UINT64 getCurrentSystemAccess() { return m_systemAccess; }
    BOOL needPasswordChange() { return (m_dwFlags & NXC_SF_CHANGE_PASSWD) ? TRUE : FALSE; }
@@ -265,19 +265,19 @@ inline void NXCL_Session::callEventHandler(UINT32 dwEvent, UINT32 dwCode, void *
 //
 
 void DestroyObject(NXC_OBJECT *pObject);
-void UpdateUserFromMessage(CSCPMessage *pMsg, NXC_USER *pUser);
+void UpdateUserFromMessage(NXCPMessage *pMsg, NXC_USER *pUser);
 
-void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
-void ProcessEventDBUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
-void ProcessEventLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg);
-void ProcessSyslogRecords(NXCL_Session *pSession, CSCPMessage *pMsg);
-void ProcessTrapLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg);
-void ProcessTrapCfgUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
-void ProcessActionUpdate(NXCL_Session *pSession, CSCPMessage *pMsg);
-void ProcessEventDBRecord(NXCL_Session *pSession, CSCPMessage *pMsg);
-void ProcessUserDBUpdate(CSCPMessage *pMsg);
-void ProcessSituationChange(NXCL_Session *pSession, CSCPMessage *pMsg);
-void ProcessDCI(NXCL_Session *pSession, CSCPMessage *pMsg);
+void ProcessAlarmUpdate(NXCL_Session *pSession, NXCPMessage *pMsg);
+void ProcessEventDBUpdate(NXCL_Session *pSession, NXCPMessage *pMsg);
+void ProcessEventLogRecords(NXCL_Session *pSession, NXCPMessage *pMsg);
+void ProcessSyslogRecords(NXCL_Session *pSession, NXCPMessage *pMsg);
+void ProcessTrapLogRecords(NXCL_Session *pSession, NXCPMessage *pMsg);
+void ProcessTrapCfgUpdate(NXCL_Session *pSession, NXCPMessage *pMsg);
+void ProcessActionUpdate(NXCL_Session *pSession, NXCPMessage *pMsg);
+void ProcessEventDBRecord(NXCL_Session *pSession, NXCPMessage *pMsg);
+void ProcessUserDBUpdate(NXCPMessage *pMsg);
+void ProcessSituationChange(NXCL_Session *pSession, NXCPMessage *pMsg);
+void ProcessDCI(NXCL_Session *pSession, NXCPMessage *pMsg);
 
 void DebugPrintf(const TCHAR *format, ...);
 

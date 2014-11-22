@@ -340,42 +340,42 @@ bool Cluster::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void Cluster::fillMessage(CSCPMessage *pMsg)
+void Cluster::fillMessage(NXCPMessage *pMsg)
 {
 	UINT32 i, dwId;
 
    DataCollectionTarget::fillMessage(pMsg);
-   pMsg->SetVariable(VID_CLUSTER_TYPE, m_dwClusterType);
-	pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
-	pMsg->SetVariable(VID_NUM_SYNC_SUBNETS, m_dwNumSyncNets);
+   pMsg->setField(VID_CLUSTER_TYPE, m_dwClusterType);
+	pMsg->setField(VID_ZONE_ID, m_zoneId);
+	pMsg->setField(VID_NUM_SYNC_SUBNETS, m_dwNumSyncNets);
 	if (m_dwNumSyncNets > 0)
-		pMsg->setFieldInt32Array(VID_SYNC_SUBNETS, m_dwNumSyncNets * 2, (UINT32 *)m_pSyncNetList);
-	pMsg->SetVariable(VID_NUM_RESOURCES, m_dwNumResources);
+		pMsg->setFieldFromInt32Array(VID_SYNC_SUBNETS, m_dwNumSyncNets * 2, (UINT32 *)m_pSyncNetList);
+	pMsg->setField(VID_NUM_RESOURCES, m_dwNumResources);
 	for(i = 0, dwId = VID_RESOURCE_LIST_BASE; i < m_dwNumResources; i++, dwId += 6)
 	{
-		pMsg->SetVariable(dwId++, m_pResourceList[i].dwId);
-		pMsg->SetVariable(dwId++, m_pResourceList[i].szName);
-		pMsg->SetVariable(dwId++, m_pResourceList[i].dwIpAddr);
-		pMsg->SetVariable(dwId++, m_pResourceList[i].dwCurrOwner);
+		pMsg->setField(dwId++, m_pResourceList[i].dwId);
+		pMsg->setField(dwId++, m_pResourceList[i].szName);
+		pMsg->setField(dwId++, m_pResourceList[i].dwIpAddr);
+		pMsg->setField(dwId++, m_pResourceList[i].dwCurrOwner);
 	}
 }
 
 /**
  * Modify object from message
  */
-UINT32 Cluster::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Cluster::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       lockProperties();
 
    // Change cluster type
    if (pRequest->isFieldExist(VID_CLUSTER_TYPE))
-      m_dwClusterType = pRequest->GetVariableLong(VID_CLUSTER_TYPE);
+      m_dwClusterType = pRequest->getFieldAsUInt32(VID_CLUSTER_TYPE);
 
    // Change sync subnets
    if (pRequest->isFieldExist(VID_NUM_SYNC_SUBNETS))
 	{
-      m_dwNumSyncNets = pRequest->GetVariableLong(VID_NUM_SYNC_SUBNETS);
+      m_dwNumSyncNets = pRequest->getFieldAsUInt32(VID_NUM_SYNC_SUBNETS);
 		if (m_dwNumSyncNets > 0)
 		{
 			m_pSyncNetList = (IP_NETWORK *)realloc(m_pSyncNetList, sizeof(IP_NETWORK) * m_dwNumSyncNets);
@@ -393,16 +393,16 @@ UINT32 Cluster::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
 		UINT32 i, j, dwId, dwCount;
 		CLUSTER_RESOURCE *pList;
 
-      dwCount = pRequest->GetVariableLong(VID_NUM_RESOURCES);
+      dwCount = pRequest->getFieldAsUInt32(VID_NUM_RESOURCES);
 		if (dwCount > 0)
 		{
 			pList = (CLUSTER_RESOURCE *)malloc(sizeof(CLUSTER_RESOURCE) * dwCount);
 			memset(pList, 0, sizeof(CLUSTER_RESOURCE) * dwCount);
 			for(i = 0, dwId = VID_RESOURCE_LIST_BASE; i < dwCount; i++, dwId += 7)
 			{
-				pList[i].dwId = pRequest->GetVariableLong(dwId++);
-				pRequest->GetVariableStr(dwId++, pList[i].szName, MAX_DB_STRING);
-				pList[i].dwIpAddr = pRequest->GetVariableLong(dwId++);
+				pList[i].dwId = pRequest->getFieldAsUInt32(dwId++);
+				pRequest->getFieldAsString(dwId++, pList[i].szName, MAX_DB_STRING);
+				pList[i].dwIpAddr = pRequest->getFieldAsUInt32(dwId++);
 			}
 
 			// Update current owner information in existing resources

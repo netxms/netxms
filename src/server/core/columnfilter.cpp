@@ -25,36 +25,36 @@
 /**
  * Create column filter object from NXCP message
  */
-ColumnFilter::ColumnFilter(CSCPMessage *msg, const TCHAR *column, UINT32 baseId)
+ColumnFilter::ColumnFilter(NXCPMessage *msg, const TCHAR *column, UINT32 baseId)
 {
 	UINT32 varId;
 
 	m_column = _tcsdup(column);
-	m_type = (int)msg->GetVariableShort(baseId);
+	m_type = (int)msg->getFieldAsUInt16(baseId);
 	switch(m_type)
 	{
 		case FILTER_EQUALS:
 		case FILTER_LESS:
 		case FILTER_GREATER:
 		case FILTER_CHILDOF:
-			m_value.numericValue = msg->GetVariableInt64(baseId + 1);
-			m_negated = msg->GetVariableShort(baseId + 2) ? true : false;
+			m_value.numericValue = msg->getFieldAsUInt64(baseId + 1);
+			m_negated = msg->getFieldAsUInt16(baseId + 2) ? true : false;
 			m_varCount = 3;
 			break;
 		case FILTER_RANGE:
-			m_value.range.start = msg->GetVariableInt64(baseId + 1);
-			m_value.range.end = msg->GetVariableInt64(baseId + 2);
-			m_negated = msg->GetVariableShort(baseId + 3) ? true : false;
+			m_value.range.start = msg->getFieldAsUInt64(baseId + 1);
+			m_value.range.end = msg->getFieldAsUInt64(baseId + 2);
+			m_negated = msg->getFieldAsUInt16(baseId + 3) ? true : false;
 			m_varCount = 4;
 			break;
 		case FILTER_LIKE:
-			m_value.like = msg->GetVariableStr(baseId + 1);
-			m_negated = msg->GetVariableShort(baseId + 2) ? true : false;
+			m_value.like = msg->getFieldAsString(baseId + 1);
+			m_negated = msg->getFieldAsUInt16(baseId + 2) ? true : false;
 			m_varCount = 3;
 			break;
 		case FILTER_SET:
-			m_value.set.operation = msg->GetVariableShort(baseId + 1);
-			m_value.set.count = msg->GetVariableShort(baseId + 2);
+			m_value.set.operation = msg->getFieldAsUInt16(baseId + 1);
+			m_value.set.count = msg->getFieldAsUInt16(baseId + 2);
 			m_varCount = 3;
 
 			m_value.set.filters = (ColumnFilter **)malloc(sizeof(ColumnFilter *) * m_value.set.count);

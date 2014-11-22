@@ -126,7 +126,7 @@ void MonitoredFileList::Unlock()
 struct SendMessageData
 {
    InetAddress ip;
-   CSCPMessage *pMsg;
+   NXCPMessage *pMsg;
 };
 
 /**
@@ -151,7 +151,7 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
    int hFile, threadSleepTime = 1;
    BYTE* readBytes = NULL;
    BOOL bResult = FALSE;
-   CSCPMessage *pMsg;
+   NXCPMessage *pMsg;
    UINT32 readSize;
 
    bool follow = true;
@@ -182,10 +182,10 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
                readSize = MAX_MSG_SIZE - headerSize;
                newOffset = flData->getOffset() + readSize;
             }
-            pMsg = new CSCPMessage();
-            pMsg->SetCode(CMD_FILE_MONITORING);
-            pMsg->SetId(0);
-            pMsg->SetVariable(VID_FILE_NAME, flData->getFileId(), MAX_PATH);
+            pMsg = new NXCPMessage();
+            pMsg->setCode(CMD_FILE_MONITORING);
+            pMsg->setId(0);
+            pMsg->setField(VID_FILE_NAME, flData->getFileId(), MAX_PATH);
 
             lseek(hFile, flData->getOffset(), SEEK_SET);
             readBytes = (BYTE*)malloc(readSize);
@@ -193,10 +193,10 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
             AgentWriteDebugLog(6, _T("SendFileUpdatesOverNXCP: %d bytes will be sent."), readSize);
 #ifdef UNICODE
             TCHAR *text = WideStringFromMBString((char *)readBytes);
-            pMsg->SetVariable(VID_FILE_DATA, text, readSize);
+            pMsg->setField(VID_FILE_DATA, text, readSize);
             free(text);
 #else
-            pMsg->SetVariable(VID_FILE_DATA, (char *)readBytes, readSize);
+            pMsg->setField(VID_FILE_DATA, (char *)readBytes, readSize);
 #endif
             flData->setOffset(newOffset);
 

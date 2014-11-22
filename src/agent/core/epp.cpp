@@ -46,7 +46,7 @@ public:
 	int getPollInterval() { return m_pollInterval; }
 	void poll();
 	LONG getValue(const TCHAR *name, TCHAR *buffer);
-	void listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
+	void listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listParameters(StringList *list);
 };
 
@@ -149,7 +149,7 @@ void ParamProvider::poll()
  */
 struct ParameterListCallbackData
 {
-   CSCPMessage *msg;
+   NXCPMessage *msg;
    UINT32 id;
    UINT32 count;
 };
@@ -159,9 +159,9 @@ struct ParameterListCallbackData
  */
 static bool ParameterListCallback(const TCHAR *key, const void *value, void *data)
 {
-	((ParameterListCallbackData *)data)->msg->SetVariable(((ParameterListCallbackData *)data)->id++, key);
-	((ParameterListCallbackData *)data)->msg->SetVariable(((ParameterListCallbackData *)data)->id++, _T(""));
-	((ParameterListCallbackData *)data)->msg->SetVariable(((ParameterListCallbackData *)data)->id++, (WORD)DCI_DT_STRING);
+	((ParameterListCallbackData *)data)->msg->setField(((ParameterListCallbackData *)data)->id++, key);
+	((ParameterListCallbackData *)data)->msg->setField(((ParameterListCallbackData *)data)->id++, _T(""));
+	((ParameterListCallbackData *)data)->msg->setField(((ParameterListCallbackData *)data)->id++, (WORD)DCI_DT_STRING);
 	((ParameterListCallbackData *)data)->count++;
    return true;
 }
@@ -169,7 +169,7 @@ static bool ParameterListCallback(const TCHAR *key, const void *value, void *dat
 /**
  * List available parameters
  */
-void ParamProvider::listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
+void ParamProvider::listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
    ParameterListCallbackData data;
    data.msg = msg;
@@ -290,7 +290,7 @@ LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer)
 /**
  * Add parameters from external providers to NXCP message
  */
-void ListParametersFromExtProviders(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
+void ListParametersFromExtProviders(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
 	for(int i = 0; i < s_providers.size(); i++)
 	{

@@ -106,48 +106,48 @@ static void UpdateObjectStatus(UINT32 objectId)
 /**
  * Fill NXCP message with alarm data
  */
-void FillAlarmInfoMessage(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
+void FillAlarmInfoMessage(NXCPMessage *pMsg, NXC_ALARM *pAlarm)
 {
-   pMsg->SetVariable(VID_ALARM_ID, pAlarm->dwAlarmId);
-   pMsg->SetVariable(VID_ACK_BY_USER, pAlarm->dwAckByUser);
-   pMsg->SetVariable(VID_RESOLVED_BY_USER, pAlarm->dwResolvedByUser);
-   pMsg->SetVariable(VID_TERMINATED_BY_USER, pAlarm->dwTermByUser);
-   pMsg->SetVariable(VID_EVENT_CODE, pAlarm->dwSourceEventCode);
-   pMsg->SetVariable(VID_EVENT_ID, pAlarm->qwSourceEventId);
-   pMsg->SetVariable(VID_OBJECT_ID, pAlarm->dwSourceObject);
-   pMsg->SetVariable(VID_CREATION_TIME, pAlarm->dwCreationTime);
-   pMsg->SetVariable(VID_LAST_CHANGE_TIME, pAlarm->dwLastChangeTime);
-   pMsg->SetVariable(VID_ALARM_KEY, pAlarm->szKey);
-   pMsg->SetVariable(VID_ALARM_MESSAGE, pAlarm->szMessage);
-   pMsg->SetVariable(VID_STATE, (WORD)(pAlarm->nState & ALARM_STATE_MASK));	// send only state to client, without flags
-   pMsg->SetVariable(VID_IS_STICKY, (WORD)((pAlarm->nState & ALARM_STATE_STICKY) ? 1 : 0));
-   pMsg->SetVariable(VID_CURRENT_SEVERITY, (WORD)pAlarm->nCurrentSeverity);
-   pMsg->SetVariable(VID_ORIGINAL_SEVERITY, (WORD)pAlarm->nOriginalSeverity);
-   pMsg->SetVariable(VID_HELPDESK_STATE, (WORD)pAlarm->nHelpDeskState);
-   pMsg->SetVariable(VID_HELPDESK_REF, pAlarm->szHelpDeskRef);
-   pMsg->SetVariable(VID_REPEAT_COUNT, pAlarm->dwRepeatCount);
-   pMsg->SetVariable(VID_ALARM_TIMEOUT, pAlarm->dwTimeout);
-   pMsg->SetVariable(VID_ALARM_TIMEOUT_EVENT, pAlarm->dwTimeoutEvent);
-   pMsg->SetVariable(VID_NUM_COMMENTS, pAlarm->noteCount);
-   pMsg->SetVariable(VID_TIMESTAMP, (UINT32)((pAlarm->ackTimeout != 0) ? (pAlarm->ackTimeout - time(NULL)) : 0));
+   pMsg->setField(VID_ALARM_ID, pAlarm->dwAlarmId);
+   pMsg->setField(VID_ACK_BY_USER, pAlarm->dwAckByUser);
+   pMsg->setField(VID_RESOLVED_BY_USER, pAlarm->dwResolvedByUser);
+   pMsg->setField(VID_TERMINATED_BY_USER, pAlarm->dwTermByUser);
+   pMsg->setField(VID_EVENT_CODE, pAlarm->dwSourceEventCode);
+   pMsg->setField(VID_EVENT_ID, pAlarm->qwSourceEventId);
+   pMsg->setField(VID_OBJECT_ID, pAlarm->dwSourceObject);
+   pMsg->setField(VID_CREATION_TIME, pAlarm->dwCreationTime);
+   pMsg->setField(VID_LAST_CHANGE_TIME, pAlarm->dwLastChangeTime);
+   pMsg->setField(VID_ALARM_KEY, pAlarm->szKey);
+   pMsg->setField(VID_ALARM_MESSAGE, pAlarm->szMessage);
+   pMsg->setField(VID_STATE, (WORD)(pAlarm->nState & ALARM_STATE_MASK));	// send only state to client, without flags
+   pMsg->setField(VID_IS_STICKY, (WORD)((pAlarm->nState & ALARM_STATE_STICKY) ? 1 : 0));
+   pMsg->setField(VID_CURRENT_SEVERITY, (WORD)pAlarm->nCurrentSeverity);
+   pMsg->setField(VID_ORIGINAL_SEVERITY, (WORD)pAlarm->nOriginalSeverity);
+   pMsg->setField(VID_HELPDESK_STATE, (WORD)pAlarm->nHelpDeskState);
+   pMsg->setField(VID_HELPDESK_REF, pAlarm->szHelpDeskRef);
+   pMsg->setField(VID_REPEAT_COUNT, pAlarm->dwRepeatCount);
+   pMsg->setField(VID_ALARM_TIMEOUT, pAlarm->dwTimeout);
+   pMsg->setField(VID_ALARM_TIMEOUT_EVENT, pAlarm->dwTimeoutEvent);
+   pMsg->setField(VID_NUM_COMMENTS, pAlarm->noteCount);
+   pMsg->setField(VID_TIMESTAMP, (UINT32)((pAlarm->ackTimeout != 0) ? (pAlarm->ackTimeout - time(NULL)) : 0));
 }
 
 /**
  * Fill NXCP message with event data from SQL query
  * Expected field order: event_id,event_code,event_name,severity,source_object_id,event_timestamp,message
  */
-static void FillEventData(CSCPMessage *msg, UINT32 baseId, DB_RESULT hResult, int row, QWORD rootId)
+static void FillEventData(NXCPMessage *msg, UINT32 baseId, DB_RESULT hResult, int row, QWORD rootId)
 {
 	TCHAR buffer[MAX_EVENT_MSG_LENGTH];
 
-	msg->SetVariable(baseId, DBGetFieldUInt64(hResult, row, 0));
-	msg->SetVariable(baseId + 1, rootId);
-	msg->SetVariable(baseId + 2, DBGetFieldULong(hResult, row, 1));
-	msg->SetVariable(baseId + 3, DBGetField(hResult, row, 2, buffer, MAX_DB_STRING));
-	msg->SetVariable(baseId + 4, (WORD)DBGetFieldLong(hResult, row, 3));	// severity
-	msg->SetVariable(baseId + 5, DBGetFieldULong(hResult, row, 4));  // source object
-	msg->SetVariable(baseId + 6, DBGetFieldULong(hResult, row, 5));  // timestamp
-	msg->SetVariable(baseId + 7, DBGetField(hResult, row, 6, buffer, MAX_EVENT_MSG_LENGTH));
+	msg->setField(baseId, DBGetFieldUInt64(hResult, row, 0));
+	msg->setField(baseId + 1, rootId);
+	msg->setField(baseId + 2, DBGetFieldULong(hResult, row, 1));
+	msg->setField(baseId + 3, DBGetField(hResult, row, 2, buffer, MAX_DB_STRING));
+	msg->setField(baseId + 4, (WORD)DBGetFieldLong(hResult, row, 3));	// severity
+	msg->setField(baseId + 5, DBGetFieldULong(hResult, row, 4));  // source object
+	msg->setField(baseId + 6, DBGetFieldULong(hResult, row, 5));  // timestamp
+	msg->setField(baseId + 7, DBGetField(hResult, row, 6, buffer, MAX_EVENT_MSG_LENGTH));
 }
 
 /**
@@ -155,7 +155,7 @@ static void FillEventData(CSCPMessage *msg, UINT32 baseId, DB_RESULT hResult, in
  *
  * @return number of consumed variable identifiers
  */
-static UINT32 GetCorrelatedEvents(QWORD eventId, CSCPMessage *msg, UINT32 baseId, DB_HANDLE hdb)
+static UINT32 GetCorrelatedEvents(QWORD eventId, NXCPMessage *msg, UINT32 baseId, DB_HANDLE hdb)
 {
 	UINT32 varId = baseId;
 	DB_STATEMENT hStmt = DBPrepare(hdb,
@@ -189,7 +189,7 @@ static UINT32 GetCorrelatedEvents(QWORD eventId, CSCPMessage *msg, UINT32 baseId
 /**
  * Fill NXCP message with alarm's related events
  */
-static void FillAlarmEventsMessage(CSCPMessage *msg, UINT32 alarmId)
+static void FillAlarmEventsMessage(NXCPMessage *msg, UINT32 alarmId)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	const TCHAR *query;
@@ -226,7 +226,7 @@ static void FillAlarmEventsMessage(CSCPMessage *msg, UINT32 alarmId)
 				varId += GetCorrelatedEvents(eventId, msg, varId, hdb);
 			}
 			DBFreeResult(hResult);
-			msg->SetVariable(VID_NUM_ELEMENTS, (varId - VID_ELEMENT_LIST_BASE) / 10);
+			msg->setField(VID_NUM_ELEMENTS, (varId - VID_ELEMENT_LIST_BASE) / 10);
 		}
 		DBFreeStatement(hStmt);
 	}
@@ -881,9 +881,9 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
    DWORD dwUserId = pSession->getUserId();
 
    // Prepare message
-   CSCPMessage msg;
-   msg.SetCode(CMD_ALARM_DATA);
-   msg.SetId(dwRqId);
+   NXCPMessage msg;
+   msg.setCode(CMD_ALARM_DATA);
+   msg.setId(dwRqId);
 
    MutexLock(m_mutex);
    for(int i = 0; i < m_alarmList->size(); i++)
@@ -896,14 +896,14 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
          {
             FillAlarmInfoMessage(&msg, alarm);
             pSession->sendMessage(&msg);
-            msg.deleteAllVariables();
+            msg.deleteAllFields();
          }
       }
    }
    MutexUnlock(m_mutex);
 
    // Send end-of-list indicator
-   msg.SetVariable(VID_ALARM_ID, (UINT32)0);
+   msg.setField(VID_ALARM_ID, (UINT32)0);
    pSession->sendMessage(&msg);
 }
 
@@ -911,7 +911,7 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
  * Get alarm with given ID into NXCP message
  * Should return RCC that can be sent to client
  */
-UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 dwAlarmId, CSCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 dwAlarmId, NXCPMessage *msg)
 {
    UINT32 dwRet = RCC_INVALID_ALARM_ID;
 
@@ -935,7 +935,7 @@ UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 dwAlarmId, CSCPMessage *msg)
  * Get all related events for alarm with given ID into NXCP message
  * Should return RCC that can be sent to client
  */
-UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 dwAlarmId, CSCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 dwAlarmId, NXCPMessage *msg)
 {
    UINT32 dwRet = RCC_INVALID_ALARM_ID;
 
@@ -1024,17 +1024,17 @@ int GetMostCriticalStatusForObject(UINT32 dwObjectId)
 /**
  * Fill message with alarm stats
  */
-void GetAlarmStats(CSCPMessage *pMsg)
+void GetAlarmStats(NXCPMessage *pMsg)
 {
    UINT32 dwCount[5];
 
    MutexLock(m_mutex);
-   pMsg->SetVariable(VID_NUM_ALARMS, m_alarmList->size());
+   pMsg->setField(VID_NUM_ALARMS, m_alarmList->size());
    memset(dwCount, 0, sizeof(UINT32) * 5);
    for(int i = 0; i < m_alarmList->size(); i++)
       dwCount[m_alarmList->get(i)->nCurrentSeverity]++;
    MutexUnlock(m_mutex);
-   pMsg->setFieldInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
+   pMsg->setFieldFromInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
 }
 
 /**
@@ -1278,7 +1278,7 @@ UINT32 DeleteAlarmCommentByID(UINT32 alarmId, UINT32 noteId)
 /**
  * Get alarm's comments
  */
-UINT32 GetAlarmComments(UINT32 alarmId, CSCPMessage *msg)
+UINT32 GetAlarmComments(UINT32 alarmId, NXCPMessage *msg)
 {
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	UINT32 rcc = RCC_DB_FAILURE;
@@ -1291,25 +1291,25 @@ UINT32 GetAlarmComments(UINT32 alarmId, CSCPMessage *msg)
 		if (hResult != NULL)
 		{
 			int count = DBGetNumRows(hResult);
-			msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)count);
+			msg->setField(VID_NUM_ELEMENTS, (UINT32)count);
 
 			UINT32 varId = VID_ELEMENT_LIST_BASE;
 			for(int i = 0; i < count; i++)
 			{
-				msg->SetVariable(varId++, DBGetFieldULong(hResult, i, 0));
-				msg->SetVariable(varId++, alarmId);
-				msg->SetVariable(varId++, DBGetFieldULong(hResult, i, 1));
+				msg->setField(varId++, DBGetFieldULong(hResult, i, 0));
+				msg->setField(varId++, alarmId);
+				msg->setField(varId++, DBGetFieldULong(hResult, i, 1));
             UINT32 userId = DBGetFieldULong(hResult, i, 2);
-				msg->SetVariable(varId++, userId);
+				msg->setField(varId++, userId);
 				
             TCHAR *text = DBGetField(hResult, i, 3, NULL, 0);
-				msg->SetVariable(varId++, CHECK_NULL_EX(text));
+				msg->setField(varId++, CHECK_NULL_EX(text));
 				safe_free(text);
 
             TCHAR userName[MAX_USER_NAME];
             if (ResolveUserId(userId, userName, MAX_USER_NAME))
             {
-   				msg->SetVariable(varId++, userName);
+   				msg->setField(varId++, userName);
             }
             else
             {

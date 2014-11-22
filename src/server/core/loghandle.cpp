@@ -48,17 +48,17 @@ LogHandle::~LogHandle()
 /**
  * Get column information
  */
-void LogHandle::getColumnInfo(CSCPMessage &msg)
+void LogHandle::getColumnInfo(NXCPMessage &msg)
 {
 	UINT32 count = 0;
 	UINT32 varId = VID_COLUMN_INFO_BASE;
 	for(int i = 0; m_log->columns[i].name != NULL; i++, count++, varId += 7)
 	{
-		msg.SetVariable(varId++, m_log->columns[i].name);
-		msg.SetVariable(varId++, (WORD)m_log->columns[i].type);
-		msg.SetVariable(varId++, m_log->columns[i].description);
+		msg.setField(varId++, m_log->columns[i].name);
+		msg.setField(varId++, (WORD)m_log->columns[i].type);
+		msg.setField(varId++, m_log->columns[i].description);
 	}
-	msg.SetVariable(VID_NUM_COLUMNS, count);
+	msg.setField(VID_NUM_COLUMNS, count);
 }
 
 /**

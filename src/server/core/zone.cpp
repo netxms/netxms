@@ -166,31 +166,31 @@ bool Zone::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Zone::fillMessage(CSCPMessage *pMsg)
+void Zone::fillMessage(NXCPMessage *pMsg)
 {
    NetObj::fillMessage(pMsg);
-   pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
-   pMsg->SetVariable(VID_AGENT_PROXY, m_agentProxy);
-   pMsg->SetVariable(VID_SNMP_PROXY, m_snmpProxy);
-   pMsg->SetVariable(VID_ICMP_PROXY, m_icmpProxy);
+   pMsg->setField(VID_ZONE_ID, m_zoneId);
+   pMsg->setField(VID_AGENT_PROXY, m_agentProxy);
+   pMsg->setField(VID_SNMP_PROXY, m_snmpProxy);
+   pMsg->setField(VID_ICMP_PROXY, m_icmpProxy);
 }
 
 /**
  * Modify object from message
  */
-UINT32 Zone::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Zone::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       lockProperties();
 
 	if (pRequest->isFieldExist(VID_AGENT_PROXY))
-		m_agentProxy = pRequest->GetVariableLong(VID_AGENT_PROXY);
+		m_agentProxy = pRequest->getFieldAsUInt32(VID_AGENT_PROXY);
 
 	if (pRequest->isFieldExist(VID_SNMP_PROXY))
-		m_snmpProxy = pRequest->GetVariableLong(VID_SNMP_PROXY);
+		m_snmpProxy = pRequest->getFieldAsUInt32(VID_SNMP_PROXY);
 
 	if (pRequest->isFieldExist(VID_ICMP_PROXY))
-		m_icmpProxy = pRequest->GetVariableLong(VID_ICMP_PROXY);
+		m_icmpProxy = pRequest->getFieldAsUInt32(VID_ICMP_PROXY);
 
    return NetObj::modifyFromMessage(pRequest, TRUE);
 }

@@ -263,30 +263,30 @@ void Container::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create NXCP message with object's data
  */
-void Container::fillMessage(CSCPMessage *pMsg)
+void Container::fillMessage(NXCPMessage *pMsg)
 {
    NetObj::fillMessage(pMsg);
-   pMsg->SetVariable(VID_CATEGORY, m_dwCategory);
-	pMsg->SetVariable(VID_FLAGS, m_flags);
-	pMsg->SetVariable(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
+   pMsg->setField(VID_CATEGORY, m_dwCategory);
+	pMsg->setField(VID_FLAGS, m_flags);
+	pMsg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
 }
 
 /**
  * Modify object from message
  */
-UINT32 Container::modifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Container::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
       lockProperties();
 
    // Change flags
    if (pRequest->isFieldExist(VID_FLAGS))
-		m_flags = pRequest->GetVariableLong(VID_FLAGS);
+		m_flags = pRequest->getFieldAsUInt32(VID_FLAGS);
 
    // Change auto-bind filter
 	if (pRequest->isFieldExist(VID_AUTOBIND_FILTER))
 	{
-		TCHAR *script = pRequest->GetVariableStr(VID_AUTOBIND_FILTER);
+		TCHAR *script = pRequest->getFieldAsString(VID_AUTOBIND_FILTER);
 		setAutoBindFilter(script);
 		safe_free(script);
 	}

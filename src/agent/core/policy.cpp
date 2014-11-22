@@ -82,7 +82,7 @@ static int GetPolicyType(uuid_t guid)
 /**
  * Deploy configuration file
  */
-static UINT32 DeployConfig(UINT32 session, uuid_t guid, CSCPMessage *msg)
+static UINT32 DeployConfig(UINT32 session, uuid_t guid, NXCPMessage *msg)
 {
 	TCHAR path[MAX_PATH], name[64], tail;
 	int fh;
@@ -96,11 +96,11 @@ static UINT32 DeployConfig(UINT32 session, uuid_t guid, CSCPMessage *msg)
 	fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
 	if (fh != -1)
 	{
-		UINT32 size = msg->GetVariableBinary(VID_CONFIG_FILE_DATA, NULL, 0);
+		UINT32 size = msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, NULL, 0);
 		BYTE *data = (BYTE *)malloc(size);
 		if (data != NULL)
 		{
-			msg->GetVariableBinary(VID_CONFIG_FILE_DATA, data, size);
+			msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, data, size);
 			if (write(fh, data, size) == size)
 			{
 		      DebugPrintf(session, 3, _T("Configuration file %s saved successfully"), path);
@@ -130,7 +130,7 @@ static UINT32 DeployConfig(UINT32 session, uuid_t guid, CSCPMessage *msg)
 /**
  * Deploy log parser policy
  */
-static UINT32 DeployLogParser(UINT32 session, uuid_t guid, CSCPMessage *msg)
+static UINT32 DeployLogParser(UINT32 session, uuid_t guid, NXCPMessage *msg)
 {
 	return ERR_NOT_IMPLEMENTED;
 }
@@ -138,13 +138,13 @@ static UINT32 DeployLogParser(UINT32 session, uuid_t guid, CSCPMessage *msg)
 /**
  * Deploy policy on agent
  */
-UINT32 DeployPolicy(CommSession *session, CSCPMessage *request)
+UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 {
 	UINT32 type, rcc;
 	uuid_t guid;
 
-	type = request->GetVariableShort(VID_POLICY_TYPE);
-	request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
+	type = request->getFieldAsUInt16(VID_POLICY_TYPE);
+	request->getFieldAsBinary(VID_GUID, guid, UUID_LENGTH);
 
 	switch(type)
 	{
@@ -169,7 +169,7 @@ UINT32 DeployPolicy(CommSession *session, CSCPMessage *request)
 /**
  * Remove configuration file
  */
-static UINT32 RemoveConfig(UINT32 session, uuid_t guid,  CSCPMessage *msg)
+static UINT32 RemoveConfig(UINT32 session, uuid_t guid,  NXCPMessage *msg)
 {
 	TCHAR path[MAX_PATH], name[64], tail;
 	UINT32 rcc;
@@ -193,7 +193,7 @@ static UINT32 RemoveConfig(UINT32 session, uuid_t guid,  CSCPMessage *msg)
 /**
  * Remove log parser file
  */
-static UINT32 RemoveLogParser(UINT32 session, uuid_t guid,  CSCPMessage *msg)
+static UINT32 RemoveLogParser(UINT32 session, uuid_t guid,  NXCPMessage *msg)
 {
 	TCHAR path[MAX_PATH], name[64], tail;
 	UINT32 rcc;
@@ -217,14 +217,14 @@ static UINT32 RemoveLogParser(UINT32 session, uuid_t guid,  CSCPMessage *msg)
 /**
  * Uninstall policy from agent
  */
-UINT32 UninstallPolicy(CommSession *session, CSCPMessage *request)
+UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request)
 {
 	UINT32 rcc;
 	int type;
 	uuid_t guid;
 	TCHAR buffer[64];
 
-	request->GetVariableBinary(VID_GUID, guid, UUID_LENGTH);
+	request->getFieldAsBinary(VID_GUID, guid, UUID_LENGTH);
 	type = GetPolicyType(guid);
 
 	switch(type)
@@ -250,14 +250,14 @@ UINT32 UninstallPolicy(CommSession *session, CSCPMessage *request)
 /**
  * Get policy inventory
  */
-UINT32 GetPolicyInventory(CommSession *session, CSCPMessage *msg)
+UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg)
 {
 	Config *registry = OpenRegistry();
 
 	ObjectArray<ConfigEntry> *list = registry->getSubEntries(_T("/policyRegistry"), NULL);
 	if (list != NULL)
 	{
-		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)list->size());
+		msg->setField(VID_NUM_ELEMENTS, (UINT32)list->size());
 		UINT32 varId = VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < list->size(); i++, varId += 7)
 		{
@@ -267,16 +267,16 @@ UINT32 GetPolicyInventory(CommSession *session, CSCPMessage *msg)
 			if (MatchString(_T("policy-*"), e->getName(), TRUE))
 			{
 				uuid_parse(&(e->getName()[7]), guid);
-				msg->SetVariable(varId++, guid, UUID_LENGTH);
-				msg->SetVariable(varId++, (WORD)e->getSubEntryValueAsInt(_T("type")));
-				msg->SetVariable(varId++, e->getSubEntryValue(_T("server")));
+				msg->setField(varId++, guid, UUID_LENGTH);
+				msg->setField(varId++, (WORD)e->getSubEntryValueAsInt(_T("type")));
+				msg->setField(varId++, e->getSubEntryValue(_T("server")));
 			}
 		}
 		delete list;
 	}
 	else
 	{
-		msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)0);
+		msg->setField(VID_NUM_ELEMENTS, (UINT32)0);
 	}
 	
 	CloseRegistry(false);

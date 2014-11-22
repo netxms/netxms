@@ -66,21 +66,21 @@ void UnregisterClientSession(int id)
 static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
 {
    int i, iSleepTime;
-   CSCPMessage msg;
+   NXCPMessage msg;
 
    // Read configuration
    iSleepTime = ConfigReadInt(_T("KeepAliveInterval"), 60);
 
    // Prepare keepalive message
-   msg.SetCode(CMD_KEEPALIVE);
-   msg.SetId(0);
+   msg.setCode(CMD_KEEPALIVE);
+   msg.setId(0);
 
    while(1)
    {
       if (SleepAndCheckForShutdown(iSleepTime))
          break;
 
-      msg.SetVariable(VID_TIMESTAMP, (UINT32)time(NULL));
+      msg.setField(VID_TIMESTAMP, (UINT32)time(NULL));
       RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
       for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
          if (m_pSessionList[i] != NULL)
