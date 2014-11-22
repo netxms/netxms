@@ -10,6 +10,7 @@
 - New NXSL functions: GetNodeTemplates
 - New parameters in Windows agent: System.Update.LastDetectTime, System.Update.LastDownloadTime, System.Update.LastInstallTime
 - Network service response time can be monitored
+- Added driver for HP A-series and V-series switches
 - Management console:
     - New dashboard element "DCI summary table"
     - Cluster objects shown on status maps

@@ -9,5 +9,5 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 SUBDIRS = lib airespace at baystack cat2900xl catalyst cisco-esw cisco-sb \
-	  dell-pwc dlink ers8000 h3c mikrotik netscreen ntws ping3 procurve \
+	  dell-pwc dlink ers8000 h3c hpsw mikrotik netscreen ntws ping3 procurve \
 	  symbol-ws ubnt
