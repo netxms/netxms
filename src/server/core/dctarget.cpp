@@ -551,14 +551,135 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
 }
 
 /**
- * Parser array definition in script parameters
- * Should be in form $(elem1, elem2, ...)
+ * Parse value list
  */
-static NXSL_Value *ParseArrayDefinition(TCHAR **start)
+static bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args)
 {
-   TCHAR *p = *start + 2;
+   TCHAR *p = *start;
 
-   return NULL;
+   *p = 0;
+   p++;
+
+   TCHAR *s = p;
+   int state = 1; // normal text
+
+   for(; state > 0; p++)
+   {
+      switch(*p)
+      {
+         case '"':
+            if (state == 1)
+            {
+               state = 2;
+               s = p + 1;
+            }
+            else
+            {
+               state = 3;
+               *p = 0;
+               args.add(new NXSL_Value(s));
+            }
+            break;
+         case ',':
+            if (state == 1)
+            {
+               *p = 0;
+               Trim(s);
+               args.add(new NXSL_Value(s));
+               s = p + 1;
+            }
+            else if (state == 3)
+            {
+               state = 1;
+               s = p + 1;
+            }
+            break;
+         case 0:
+            if (state == 1)
+            {
+               Trim(s);
+               args.add(new NXSL_Value(s));
+               state = 0;
+            }
+            else
+            {
+               state = -1; // error
+            }
+            break;
+         case ' ':
+            break;
+         case ')':
+            if (state == 1)
+            {
+               *p = 0;
+               Trim(s);
+               args.add(new NXSL_Value(s));
+               state = 0;
+            }
+            else if (state == 3)
+            {
+               state = 0;
+            }
+            break;
+         case '\\':
+            if (state == 2)
+            {
+               memmove(p, p + 1, _tcslen(p) * sizeof(TCHAR));
+               switch(*p)
+               {
+                  case 'r':
+                     *p = '\r';
+                     break;
+                  case 'n':
+                     *p = '\n';
+                     break;
+                  case 't':
+                     *p = '\t';
+                     break;
+                  default:
+                     break;
+               }
+            }
+            else if (state == 3)
+            {
+               state = -1;
+            }
+            break;
+         case '%':
+            if ((state == 1) && (*(p + 1) == '('))
+            {
+               p++;
+               ObjectArray<NXSL_Value> elements(16, 16, false);
+               if (ParseValueList(&p, elements))
+               {
+                  NXSL_Array *array = new NXSL_Array();
+                  for(int i = 0; i < elements.size(); i++)
+                  {
+                     array->set(i, elements.get(i));
+                  }
+                  args.add(new NXSL_Value(array));
+                  state = 3;
+               }
+               else
+               {
+                  state = -1;
+                  elements.clear();
+               }
+            }
+            else if (state == 3)
+            {
+               state = -1;
+            }
+            break;
+         default:
+            if (state == 3)
+               state = -1;
+            break;
+      }
+   }
+
+   *start = p - 1;
+   return (state != -1);
 }
 
 /**
@@ -580,107 +701,10 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
          return DCE_NOT_SUPPORTED;
       name[_tcslen(name) - 1] = 0;
 
-      *p = 0;
-      p++;
-
-      TCHAR *s = p;
-      int state = 1; // normal text
-
-      for(; state > 0; p++)
-      {
-         switch(*p)
-         {
-            case '"':
-               if (state == 1)
-               {
-                  state = 2;
-                  s = p + 1;
-               }
-               else
-               {
-                  state = 3;
-                  *p = 0;
-                  args.add(new NXSL_Value(s));
-               }
-               break;
-            case ',':
-               if (state == 1)
-               {
-                  *p = 0;
-                  Trim(s);
-                  args.add(new NXSL_Value(s));
-                  s = p + 1;
-               }
-               else if (state == 3)
-               {
-                  state = 1;
-                  s = p + 1;
-               }
-               break;
-            case 0:
-               if (state == 1)
-               {
-                  Trim(s);
-                  args.add(new NXSL_Value(s));
-                  state = 0;
-               }
-               else
-               {
-                  state = -1; // error
-               }
-               break;
-            case ' ':
-               break;
-            case '\\':
-               if (state == 2)
-               {
-                  memmove(p, p + 1, _tcslen(p) * sizeof(TCHAR));
-                  switch(*p)
-                  {
-                     case 'r':
-                        *p = '\r';
-                        break;
-                     case 'n':
-                        *p = '\n';
-                        break;
-                     case 't':
-                        *p = '\t';
-                        break;
-                     default:
-                        break;
-                  }
-               }
-               else if (state == 3)
-               {
-                  state = -1;
-               }
-               break;
-            case '$':
-               if ((state == 0) && (*(p + 1) == '('))
-               {
-                  NXSL_Value *v = ParseArrayDefinition(&p);
-                  if (v != NULL)
-                  {
-                     args.add(v);
-                     state = 3;
-                  }
-                  else
-                  {
-                     state = -1;
-                  }
-                  break;
-               }
-               // intentionally no break here
-            default:
-               if (state == 3)
-                  state = -1;
-               break;
-         }
-      }
-
-      if (state == -1)
+      if (!ParseValueList(&p, args))
       {
          // argument parsing error
+         args.clear();
          return DCE_NOT_SUPPORTED;
       }
    }
