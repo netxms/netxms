@@ -107,7 +107,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReciever(void *pArg)
       return THREAD_OK;
    }
 
-   DebugPrintf(INVALID_INDEX, 1, _T("Start message listenning for SNMP traps"));
+   DebugPrintf(INVALID_INDEX, 3, _T("Start message listenning for SNMP traps"));
 
    SNMP_TrapProxyTransport *pTransport; //rewrite class to support
 
@@ -137,7 +137,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReciever(void *pArg)
          message->lenght = iBytes;
          message->rawMessage = rawMessage;
          SNMPTrapQueue->Put(message);
-         DebugPrintf(INVALID_INDEX, 1, _T("Got trap and put it in the sending que."));
+         DebugPrintf(INVALID_INDEX, 6, _T("Got trap and put it in the sending que."));
       }
       else
       {
@@ -159,14 +159,14 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
    SNMPTrapQueue = new Queue;
    while(1)
    {
-      DebugPrintf(INVALID_INDEX, 1, _T("Started SNMP Trap sender thread & wait for message."));
+      DebugPrintf(INVALID_INDEX, 8, _T("Started SNMP Trap sender thread & wait for message."));
       UdpMessage *pdu = (UdpMessage *)SNMPTrapQueue->GetOrBlock();
       if (pdu == INVALID_POINTER_VALUE)
       {
-         DebugPrintf(INVALID_INDEX, 1, _T("Send SNMP thead stoped by que."));
+         DebugPrintf(INVALID_INDEX, 5, _T("Send SNMP thead stoped by que."));
          break;
       }
-      DebugPrintf(INVALID_INDEX, 1, _T("Got trap from queue"));
+      DebugPrintf(INVALID_INDEX, 6, _T("Got trap from queue"));
       bool sent = false;
 
       NXCPMessage *msg = new NXCPMessage();
@@ -201,13 +201,13 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
       delete msg;
       if(!sent)
       {
-         DebugPrintf(INVALID_INDEX, 1, _T("Could not send forward trap to server"));
+         DebugPrintf(INVALID_INDEX, 6, _T("Could not send forward trap to server"));
          SNMPTrapQueue->Put(pdu);
 			ThreadSleep(1);
       }
       else
       {
-         DebugPrintf(INVALID_INDEX, 1, _T("Trap sucesfully forwarded to server"));
+         DebugPrintf(INVALID_INDEX, 6, _T("Trap sucesfully forwarded to server"));
          delete pdu;
       }
    }

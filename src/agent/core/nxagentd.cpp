@@ -1058,8 +1058,8 @@ void Shutdown()
 	if(g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
 	{
       ShutdownSNMPTrapSender();
-      //ThreadJoin(m_thSNMPTrapReciever);
-      //ThreadJoin(m_thSNMPTrapSender);
+      ThreadJoin(m_thSNMPTrapReciever);
+      ThreadJoin(m_thSNMPTrapSender);
 	}
 
    UnloadAllSubAgents();
