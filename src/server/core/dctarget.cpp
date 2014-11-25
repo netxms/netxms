@@ -145,7 +145,7 @@ UINT32 DataCollectionTarget::getTableLastValues(UINT32 dciId, NXCPMessage *msg)
 
 /**
  * Apply DCI from template
- * pItem passed to this method should be a template's DCI
+ * dcObject passed to this method should be a template's DCI
  */
 bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject)
 {
@@ -367,11 +367,11 @@ UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId
  */
 bool DataCollectionTarget::processNewDCValue(DCObject *dco, time_t currTime, void *value)
 {
-   bool updateState;
+   bool updateStatus;
 	lockDciAccess(false);
-	bool result = dco->processNewValue(currTime, value, &updateState);
+	bool result = dco->processNewValue(currTime, value, &updateStatus);
 	unlockDciAccess();
-	if(updateState)
+	if (updateStatus)
 	{
       calculateCompoundStatus(FALSE);
    }

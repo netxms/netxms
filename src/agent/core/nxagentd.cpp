@@ -50,7 +50,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *);
 THREAD_RESULT THREAD_CALL SessionWatchdog(void *);
 THREAD_RESULT THREAD_CALL TrapSender(void *);
 THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg);
-THREAD_RESULT THREAD_CALL SNMPTrapReciever(void *);
+THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *);
 THREAD_RESULT THREAD_CALL SNMPTrapSender(void *);
 
 void ShutdownTrapSender();
@@ -165,28 +165,28 @@ static TCHAR *m_pszShExtParamList = NULL;
 static TCHAR *m_pszParamProviderList = NULL;
 static TCHAR *m_pszExtSubagentList = NULL;
 static TCHAR *m_pszAppAgentList = NULL;
-static UINT32 m_dwEnabledCiphers = 0xFFFF;
-static THREAD m_thSessionWatchdog = INVALID_THREAD_HANDLE;
-static THREAD m_thListener = INVALID_THREAD_HANDLE;
-static THREAD m_thTrapSender = INVALID_THREAD_HANDLE;
-static THREAD m_thSNMPTrapReciever = INVALID_THREAD_HANDLE;
-static THREAD m_thSNMPTrapSender = INVALID_THREAD_HANDLE;
-static THREAD m_thMasterAgentListener = INVALID_THREAD_HANDLE;
+static UINT32 s_enabledCiphers = 0xFFFF;
+static THREAD s_sessionWatchdogThread = INVALID_THREAD_HANDLE;
+static THREAD s_listenerThread = INVALID_THREAD_HANDLE;
+static THREAD s_eventSenderThread = INVALID_THREAD_HANDLE;
+static THREAD s_snmpTrapReceiverThread = INVALID_THREAD_HANDLE;
+static THREAD s_snmpTrapSenderThread = INVALID_THREAD_HANDLE;
+static THREAD s_masterAgentListenerThread = INVALID_THREAD_HANDLE;
 static TCHAR s_processToWaitFor[MAX_PATH] = _T("");
 static TCHAR s_dumpDir[MAX_PATH] = _T("C:\\");
-static UINT32 m_dwMaxLogSize = 16384 * 1024;
-static UINT32 m_dwLogHistorySize = 4;
-static UINT32 m_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
+static UINT32 s_maxLogSize = 16384 * 1024;
+static UINT32 s_logHistorySize = 4;
+static UINT32 s_logRotationMode = NXLOG_ROTATION_BY_SIZE;
 static TCHAR s_dailyLogFileSuffix[64] = _T("");
 static Config *s_registry = NULL;
 static TCHAR s_executableName[MAX_PATH];
 
 #if defined(_WIN32)
-static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
+static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
 #endif
 
 #if !defined(_WIN32)
-static pid_t m_pid;
+static pid_t s_pid;
 #endif
 
 /**
@@ -206,7 +206,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DisableIPv6"), CT_BOOLEAN, 0, 0, AF_DISABLE_IPV6, 0, &g_dwFlags, NULL },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, s_dumpDir, NULL },
    { _T("EnableActions"), CT_BOOLEAN, 0, 0, AF_ENABLE_ACTIONS, 0, &g_dwFlags, NULL },
-   { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &m_dwEnabledCiphers, NULL },
+   { _T("EnabledCiphers"), CT_LONG, 0, 0, 0, 0, &s_enabledCiphers, NULL },
    { _T("EnableControlConnector"), CT_BOOLEAN, 0, 0, AF_ENABLE_CONTROL_CONNECTOR, 0, &g_dwFlags, NULL },
    { _T("EnableProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnableSNMPProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags, NULL },
@@ -226,11 +226,11 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, NULL },
    { _T("ListenPort"), CT_WORD, 0, 0, 0, 0, &g_wListenPort, NULL },
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, NULL },
-   { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &m_dwLogHistorySize, NULL },
-   { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &m_dwLogRotationMode, NULL },
+   { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &s_logHistorySize, NULL },
+   { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &s_logRotationMode, NULL },
    { _T("LogUnresolvedSymbols"), CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags, NULL },
    { _T("MasterServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList, NULL },
-   { _T("MaxLogSize"), CT_LONG, 0, 0, 0, 0, &m_dwMaxLogSize, NULL },
+   { _T("MaxLogSize"), CT_LONG, 0, 0, 0, 0, &s_maxLogSize, NULL },
    { _T("MaxSessions"), CT_LONG, 0, 0, 0, 0, &g_dwMaxSessions, NULL },
    { _T("PlatformSuffix"), CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix, NULL },
    { _T("RequireAuthentication"), CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags, NULL },
@@ -519,7 +519,7 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
    {
       if (g_dwFlags & AF_HIDE_WINDOW)
       {
-         ConditionSet(m_hCondShutdown);
+         ConditionSet(s_shutdownCondition);
       }
       else
       {
@@ -534,7 +534,7 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
 				  (int)g_debugLevel, szPlatformSuffixOption,
-              (unsigned long)m_pid);
+              (unsigned long)s_pid);
 	DebugPrintf(INVALID_INDEX, 1, _T("Restarting agent with command line '%s'"), szCmdLine);
    return ExecuteCommand(szCmdLine, NULL, NULL);
 #endif
@@ -712,7 +712,7 @@ BOOL Initialize()
    // Open log file
 	if (!(g_dwFlags & AF_USE_SYSLOG))
 	{
-		if (!nxlog_set_rotation_policy((int)m_dwLogRotationMode, (int)m_dwMaxLogSize, (int)m_dwLogHistorySize, s_dailyLogFileSuffix))
+		if (!nxlog_set_rotation_policy((int)s_logRotationMode, (int)s_maxLogSize, (int)s_logHistorySize, s_dailyLogFileSuffix))
 			if (!(g_dwFlags & AF_DAEMON))
 				_tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
 	}
@@ -768,7 +768,7 @@ BOOL Initialize()
    DebugPrintf(INVALID_INDEX, 1, _T("Subagent API initialized"));
 
    // Initialize cryptografy
-   if (!InitCryptoLib(m_dwEnabledCiphers, DebugPrintfCallback))
+   if (!InitCryptoLib(s_enabledCiphers, DebugPrintfCallback))
    {
       nxlog_write(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       return FALSE;
@@ -974,24 +974,24 @@ BOOL Initialize()
    // Agent start time
    g_tmAgentStartTime = time(NULL);
 
-	m_thTrapSender = ThreadCreateEx(TrapSender, 0, NULL);
+	s_eventSenderThread = ThreadCreateEx(TrapSender, 0, NULL);
 
 	//Start trap proxy threads(recieve and send), if trap proxy is enabled
 	if(g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
 	{
-      m_thSNMPTrapSender = ThreadCreateEx(SNMPTrapSender, 0, NULL);
-      m_thSNMPTrapReciever = ThreadCreateEx(SNMPTrapReciever, 0, NULL);
+      s_snmpTrapSenderThread = ThreadCreateEx(SNMPTrapSender, 0, NULL);
+      s_snmpTrapReceiverThread = ThreadCreateEx(SNMPTrapReceiver, 0, NULL);
    }
 
 	if (g_dwFlags & AF_SUBAGENT_LOADER)
 	{
-		m_thMasterAgentListener = ThreadCreateEx(MasterAgentListener, 0, NULL);
+		s_masterAgentListenerThread = ThreadCreateEx(MasterAgentListener, 0, NULL);
 	}
 	else
 	{
 		// Start network listener and session watchdog
-		m_thListener = ThreadCreateEx(ListenerThread, 0, NULL);
-		m_thSessionWatchdog = ThreadCreateEx(SessionWatchdog, 0, NULL);
+		s_listenerThread = ThreadCreateEx(ListenerThread, 0, NULL);
+		s_sessionWatchdogThread = ThreadCreateEx(SessionWatchdog, 0, NULL);
 		StartPushConnector();
 		StartStorageDiscoveryConnector();
       StartSessionAgentConnector();
@@ -1007,7 +1007,7 @@ BOOL Initialize()
    }
 
 #if defined(_WIN32)
-   m_hCondShutdown = ConditionCreate(TRUE);
+   s_shutdownCondition = ConditionCreate(TRUE);
 #endif
    ThreadSleep(1);
 
@@ -1046,20 +1046,20 @@ void Shutdown()
 	if (g_dwFlags & AF_SUBAGENT_LOADER)
 	{
 		// TODO: shall we inform master agent listener about shutdown?
-		//ThreadJoin(m_thMasterAgentListener);
+		//ThreadJoin(s_masterAgentListenerThread);
 	}
 	else
 	{
 		ShutdownTrapSender();
-		ThreadJoin(m_thSessionWatchdog);
-		ThreadJoin(m_thListener);
+		ThreadJoin(s_sessionWatchdogThread);
+		ThreadJoin(s_listenerThread);
 	}
-	ThreadJoin(m_thTrapSender);
+	ThreadJoin(s_eventSenderThread);
 	if(g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
 	{
       ShutdownSNMPTrapSender();
-      ThreadJoin(m_thSNMPTrapReciever);
-      ThreadJoin(m_thSNMPTrapSender);
+      ThreadJoin(s_snmpTrapReceiverThread);
+      ThreadJoin(s_snmpTrapSenderThread);
 	}
 
    UnloadAllSubAgents();
@@ -1068,7 +1068,7 @@ void Shutdown()
 
    // Notify main thread about shutdown
 #ifdef _WIN32
-   ConditionSet(m_hCondShutdown);
+   ConditionSet(s_shutdownCondition);
 #endif
 
    // Remove PID file
@@ -1087,7 +1087,7 @@ void Main()
    if (g_dwFlags & AF_DAEMON)
    {
 #if defined(_WIN32)
-      ConditionWait(m_hCondShutdown, INFINITE);
+      ConditionWait(s_shutdownCondition, INFINITE);
 #else
       StartMainLoop(SignalHandler, NULL);
 #endif
@@ -1102,7 +1102,7 @@ void Main()
          hWnd = GetConsoleHWND();
          if (hWnd != NULL)
             ShowWindow(hWnd, SW_HIDE);
-         ConditionWait(m_hCondShutdown, INFINITE);
+         ConditionWait(s_shutdownCondition, INFINITE);
          ThreadSleep(1);
       }
       else
@@ -1615,7 +1615,7 @@ int main(int argc, char *argv[])
                }
 					if (iExitCode == 0)
                {
-						m_pid = getpid();
+						s_pid = getpid();
 						if (Initialize())
 						{
 							FILE *fp;
@@ -1624,7 +1624,7 @@ int main(int argc, char *argv[])
 							fp = _tfopen(g_szPidFile, _T("w"));
 							if (fp != NULL)
 							{
-								_ftprintf(fp, _T("%d"), m_pid);
+								_ftprintf(fp, _T("%d"), s_pid);
 								fclose(fp);
 							}
 							Main();
@@ -1640,8 +1640,8 @@ int main(int argc, char *argv[])
 #endif   /* _WIN32 */
 
 #if defined(_WIN32)
-					if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
-						ConditionDestroy(m_hCondShutdown);
+					if (s_shutdownCondition != INVALID_CONDITION_HANDLE)
+						ConditionDestroy(s_shutdownCondition);
 #endif
 #ifdef _WIN32
 					LIBNETXMS_EXCEPTION_HANDLER
