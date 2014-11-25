@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -272,7 +272,7 @@ static int F_GetDCIValueStat(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
-	
+
 	Node *node = (Node *)object->getData();
 	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
 	if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
@@ -445,7 +445,7 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 
 	if ((origin != -1) && (dataType != -1) && (pollingInterval > 0) && (retentionTime > 0))
 	{
-		DCItem *dci = new DCItem(CreateUniqueId(IDG_ITEM), argv[2]->getValueAsCString(), 
+		DCItem *dci = new DCItem(CreateUniqueId(IDG_ITEM), argv[2]->getValueAsCString(),
 			origin, dataType, pollingInterval, retentionTime, node, argv[3]->getValueAsCString());
 		node->addDCObject(dci);
 		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci));
@@ -456,6 +456,48 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	}
 	return 0;
 }
+
+/**
+ * Push DCI value
+ * Format: PushDCIData(node, dciId, value)
+ * No return value
+ */
+ static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+ {
+   if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->isInteger() || argv[2]->isNull())
+		return NXSL_ERR_NOT_INTEGER;
+
+   NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+	DataCollectionTarget *node = (Node *)object->getData();
+
+	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
+
+   if(((DCItem *)dci)->getDataType() != NXSL_DT_STRING)
+      if(!argv[2]->convert(NXSL_DT_STRING))
+         return NXSL_ERR_TYPE_CAST;
+
+   bool sucess = false;
+   time_t t = time(NULL);
+   UINT32 stringSize = 0;
+   TCHAR *value = _tcsdup(argv[2]->getValueAsString(&stringSize));
+   sucess = node->processNewDCValue(dci, t, value);
+   safe_free(value);
+
+   if(!sucess)
+   {
+      return NXSL_ERR_INTERNAL;
+   }
+   else
+   {
+      dci->setLastPollTime(t);
+      return 0;
+   }
+ }
 
 /**
  * Additional NXSL functions for DCI manipulation
@@ -475,7 +517,8 @@ static NXSL_ExtFunction m_nxslDCIFunctions[] =
    { _T("GetDCIValueByName"), F_GetDCIValueByName, 2 },
 	{ _T("GetMaxDCIValue"), F_GetMaxDCIValue, 4 },
 	{ _T("GetMinDCIValue"), F_GetMinDCIValue, 4 },
-	{ _T("GetSumDCIValue"), F_GetSumDCIValue, 4 }
+	{ _T("GetSumDCIValue"), F_GetSumDCIValue, 4 },
+   { _T("PushDCIData"), F_PushDCIData, 3 }
 };
 
 /**
