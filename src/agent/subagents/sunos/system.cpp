@@ -25,6 +25,7 @@
 #include <sys/systeminfo.h>
 #include <sys/swap.h>
 #include <sys/param.h>
+#include <sys/types.h>
 
 /**
  * Handler for System.Uname parameter
