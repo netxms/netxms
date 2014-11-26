@@ -34,7 +34,7 @@ LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
    char szSysStr[7][64];
    int i;
    LONG nRet = SYSINFO_RC_SUCCESS;
-   static int nSysCode[7] = 
+   static int nSysCode[7] =
    {
       SI_SYSNAME,
       SI_HOSTNAME,
@@ -67,39 +67,8 @@ LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
  */
 LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 {
-   kstat_ctl_t *kc;
-   kstat_t *kp;
-   kstat_named_t *kn;
-   DWORD hz, secs;
-   LONG nRet = SYSINFO_RC_ERROR;
-
-   hz = sysconf(_SC_CLK_TCK);
-
-   // Open kstat
-   kstat_lock();
-   kc = kstat_open();
-   if (kc != NULL)
-   {
-      // read uptime counter
-      kp = kstat_lookup(kc, (char *)"unix", 0, (char *)"system_misc");
-      if (kp != NULL)
-      {
-         if(kstat_read(kc, kp, 0) != -1)
-         {
-            kn = (kstat_named_t *)kstat_data_lookup(kp, (char *)"clk_intr");
-            if (kn != NULL)
-            {
-               secs = kn->value.ul / hz;
-               ret_uint(pValue, secs);
-               nRet = SYSINFO_RC_SUCCESS;
-            }
-         }
-      }
-      kstat_close(kc);
-   }
-   kstat_unlock();
-
-   return nRet;
+   ret_uint(pValue, gethrtime()/1000000000);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -292,7 +261,7 @@ static bool ReadVMInfo(kstat_ctl_t *kc, struct vminfo *info)
          memcpy(info, kp->ks_data, sizeof(struct vminfo));
          success = true;
       }
-      else 
+      else
       {
          AgentWriteDebugLog(6, _T("SunOS: kstat_read failed in ReadVMInfo"));
       }
