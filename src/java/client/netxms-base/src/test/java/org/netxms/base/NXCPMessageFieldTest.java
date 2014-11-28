@@ -127,38 +127,40 @@ public class NXCPMessageFieldTest extends TestCase
 		assertEquals(true, Arrays.equals(byteArray, var2.getAsBinary()));
 	}
 
-	
-	//
-	// Test getAsInetAddress()
-	//
-	
+	/**
+	 * Test getAsInetAddress()
+	 */	
 	public void testGetAsInetAddress() throws Exception
 	{
-		final NXCPMessageField variable = new NXCPMessageField(1, NXCPMessageField.TYPE_INTEGER, 0x0A000102L);
+		final NXCPMessageField v1 = new NXCPMessageField(1, NXCPMessageField.TYPE_INTEGER, 0x0A000102L);
 
-		assertEquals(1, variable.getVariableId());
-		assertEquals(NXCPMessageField.TYPE_INTEGER, variable.getVariableType());
-		assertEquals(InetAddress.getByName("10.0.1.2"), variable.getAsInetAddress());
+		assertEquals(1, v1.getVariableId());
+		assertEquals(NXCPMessageField.TYPE_INTEGER, v1.getVariableType());
+		assertEquals(InetAddress.getByName("10.0.1.2"), v1.getAsInetAddress());
+
+      final NXCPMessageField v2 = new NXCPMessageField(2, InetAddress.getByName("10.22.1.2"));
+
+      assertEquals(2, v2.getVariableId());
+      assertEquals(NXCPMessageField.TYPE_INETADDR, v2.getVariableType());
+      assertEquals(InetAddress.getByName("10.22.1.2"), v2.getAsInetAddress());
 	}
 
-	
-	//
-	// Test set variable from InetAddress
-	//
-	
+	/**
+	 * Test set variable from InetAddress
+	 */
 	public void testSetAsInetAddress() throws Exception
 	{
 		final InetAddress addr = InetAddress.getByName("217.4.172.12");
 		final NXCPMessageField variable = new NXCPMessageField(1, addr);
 
 		assertEquals(1, variable.getVariableId());
-		assertEquals(NXCPMessageField.TYPE_INTEGER, variable.getVariableType());
+		assertEquals(NXCPMessageField.TYPE_INETADDR, variable.getVariableType());
 		assertEquals(InetAddress.getByName("217.4.172.12"), variable.getAsInetAddress());
 	}
 	
-	//
-	// Passing UUIDs in variables
-	//
+	/**
+	 * Passing UUIDs in variables
+	 */
 	public void testUUIDConstruction() throws Exception
 	{
 		final String uuidName = "13f2cac0-eadf-11b1-9163-e3f1397b9128";

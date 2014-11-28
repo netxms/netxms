@@ -42,6 +42,9 @@ static size_t CalculateFieldSize(NXCP_MESSAGE_FIELD *field, bool networkByteOrde
       case NXCP_DT_INT16:
          nSize = 8;
          break;
+      case NXCP_DT_INETADDR:
+         nSize = 32;
+         break;
       case NXCP_DT_STRING:
       case NXCP_DT_BINARY:
          if (networkByteOrder)
@@ -193,6 +196,12 @@ NXCPMessage::NXCPMessage(NXCP_MESSAGE *msg, int version)
             case NXCP_DT_BINARY:
                entry->data.df_string.length = ntohl(entry->data.df_string.length);
                break;
+            case NXCP_DT_INETADDR:
+               if (entry->data.df_inetaddr.family == NXCP_AF_INET)
+               {
+                  entry->data.df_inetaddr.addr.v4 = ntohl(entry->data.df_inetaddr.addr.v4);
+               }
+               break;
          }
 
          HASH_ADD_INT(m_fields, id, entry);
@@ -231,7 +240,7 @@ NXCP_MESSAGE_FIELD *NXCPMessage::find(UINT32 fieldId)
  * Argument size (data size) contains data length in bytes for DT_BINARY type
  * and maximum number of characters for DT_STRING type (0 means no limit)
  */
-void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, size_t size)
+void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSigned, size_t size)
 {
    if (m_flags & MF_BINARY)
       return NULL;
@@ -291,12 +300,27 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, size_t size
          if ((entry->data.df_string.length > 0) && (value != NULL))
             memcpy(entry->data.df_string.value, value, entry->data.df_string.length);
          break;
+      case NXCP_DT_INETADDR:
+         entry = CreateMessageField(32);
+         entry->data.df_inetaddr.family = (((InetAddress *)value)->getFamily() == AF_INET) ? NXCP_AF_INET : NXCP_AF_INET6;
+         entry->data.df_inetaddr.maskBits = (BYTE)((InetAddress *)value)->getMaskBits();
+         if (((InetAddress *)value)->getFamily() == AF_INET)
+         {
+            entry->data.df_inetaddr.addr.v4 = ((InetAddress *)value)->getAddressV4();
+         }
+         else
+         {
+            memcpy(entry->data.df_inetaddr.addr.v6, ((InetAddress *)value)->getAddressV6(), 16);
+         }
+         break;
       default:
          return NULL;  // Invalid data type, unable to handle
    }
    entry->id = fieldId;
    entry->data.fieldId = fieldId;
    entry->data.type = type;
+   if (isSigned)
+      entry->data.flags |= NXCP_MFF_SIGNED;
 
    // add or replace field
    MessageField *curr;
@@ -313,13 +337,17 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, size_t size
 }
 
 /**
- * get field value
+ * Get field value
  */
 void *NXCPMessage::get(UINT32 fieldId, BYTE requiredType, BYTE *fieldType)
 {
    NXCP_MESSAGE_FIELD *field = find(fieldId);
    if (field == NULL)
       return NULL;      // No such field
+
+   // Data type check exception - return IPv4 address as INT32 if requested
+   if ((requiredType == NXCP_DT_INT32) && (field->type == NXCP_DT_INETADDR) && (field->df_inetaddr.family == NXCP_AF_INET))
+      return &field->df_inetaddr.addr.v4;
 
    // Check data type
    if ((requiredType != 0xFF) && (field->type != requiredType))
@@ -333,7 +361,7 @@ void *NXCPMessage::get(UINT32 fieldId, BYTE requiredType, BYTE *fieldType)
 }
 
 /**
- * get 16 bit field as boolean
+ * Get 16 bit field as boolean
  */
 bool NXCPMessage::getFieldAsBoolean(UINT32 fieldId)
 {
@@ -451,10 +479,35 @@ time_t NXCPMessage::getFieldAsTime(UINT32 fieldId)
 }
 
 /**
- * get string variable
- * If szBuffer is NULL, memory block of required size will be allocated
- * for result; if szBuffer is not NULL, entire result or part of it will
- * be placed to szBuffer and pointer to szBuffer will be returned.
+ * Get field as inet address
+ */
+InetAddress NXCPMessage::getFieldAsInetAddress(UINT32 fieldId)
+{
+   NXCP_MESSAGE_FIELD *f = find(fieldId);
+   if (f == NULL)
+      return InetAddress();
+
+   if (f->type == NXCP_DT_INETADDR)
+   {
+      InetAddress a = 
+         (f->df_inetaddr.family == NXCP_AF_INET) ?
+            InetAddress(f->df_inetaddr.addr.v4) :
+            InetAddress(f->df_inetaddr.addr.v6);
+      a.setMaskBits(f->df_inetaddr.maskBits);
+      return a;
+   }
+   else if (f->type == NXCP_DT_INT32)
+   {
+      return InetAddress(f->df_uint32);
+   }
+   return InetAddress();
+}
+
+/**
+ * Get string field
+ * If buffer is NULL, memory block of required size will be allocated
+ * for result; if buffer is not NULL, entire result or part of it will
+ * be placed to buffer and pointer to buffer will be returned.
  * Note: bufferSize is buffer size in characters, not bytes!
  */
 TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, TCHAR *buffer, size_t bufferSize)
@@ -726,6 +779,12 @@ NXCP_MESSAGE *NXCPMessage::createMessage()
             case NXCP_DT_BINARY:
                field->df_string.length = htonl(field->df_string.length);
                break;
+            case NXCP_DT_INETADDR:
+               if (field->df_inetaddr.family == NXCP_AF_INET)
+               {
+                  field->df_inetaddr.addr.v4 = htonl(field->df_inetaddr.addr.v4);
+               }
+               break;
          }
 
          if (m_version >= 2)
@@ -769,7 +828,7 @@ void NXCPMessage::setFieldFromMBString(UINT32 fieldId, const char *value)
  */
 void NXCPMessage::setFieldFromInt32Array(UINT32 fieldId, UINT32 dwNumElements, const UINT32 *pdwData)
 {
-   UINT32 *pdwBuffer = (UINT32 *)set(fieldId, NXCP_DT_BINARY, pdwData, dwNumElements * sizeof(UINT32));
+   UINT32 *pdwBuffer = (UINT32 *)set(fieldId, NXCP_DT_BINARY, pdwData, false, dwNumElements * sizeof(UINT32));
    if (pdwBuffer != NULL)
    {
       pdwBuffer++;   // First UINT32 is a length field
@@ -783,7 +842,7 @@ void NXCPMessage::setFieldFromInt32Array(UINT32 fieldId, UINT32 dwNumElements, c
  */
 void NXCPMessage::setFieldFromInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data)
 {
-   UINT32 *pdwBuffer = (UINT32 *)set(fieldId, NXCP_DT_BINARY, data->getBuffer(), data->size() * sizeof(UINT32));
+   UINT32 *pdwBuffer = (UINT32 *)set(fieldId, NXCP_DT_BINARY, data->getBuffer(), false, data->size() * sizeof(UINT32));
    if (pdwBuffer != NULL)
    {
       pdwBuffer++;   // First UINT32 is a length field
@@ -839,7 +898,7 @@ bool NXCPMessage::setFieldFromFile(UINT32 fieldId, const TCHAR *pszFileName)
    pFile = _tfopen(pszFileName, _T("rb"));
    if (pFile != NULL)
    {
-      pBuffer = (BYTE *)set(fieldId, NXCP_DT_BINARY, NULL, size);
+      pBuffer = (BYTE *)set(fieldId, NXCP_DT_BINARY, NULL, false, size);
       if (pBuffer != NULL)
       {
          if (fread(pBuffer + sizeof(UINT32), 1, size, pFile) == size)

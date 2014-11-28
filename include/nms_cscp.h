@@ -26,7 +26,7 @@
 /**
  * Constants
  */
-#define NXCP_VERSION                   2
+#define NXCP_VERSION                   3
 
 #define SERVER_LISTEN_PORT_FOR_CLIENTS 4701
 #define SERVER_LISTEN_PORT_FOR_MOBILES 4747
@@ -75,13 +75,24 @@
 #endif
 
 /**
+ * Message field flags
+ */
+#define NXCP_MFF_SIGNED   0x01
+
+/**
+ * Address family ID for NXCP
+ */
+#define NXCP_AF_INET    0
+#define NXCP_AF_INET6   1
+
+/**
  * NXCP data field structure
  */
 typedef struct
 {
    UINT32 fieldId;  // Field identifier
    BYTE type;       // Data type
-   BYTE padding;    // Padding
+   BYTE flags;      // flags (may by type-dependent)
    WORD int16;
    union
    {
@@ -95,16 +106,28 @@ typedef struct
          UINT32 length;
          WORD value[1]; // actual size depends on length value
       } string;
+      struct
+      {
+         union
+         {
+            UINT32 v4;
+            BYTE v6[16];
+         } addr;
+         BYTE family;
+         BYTE maskBits;
+         BYTE padding[6];
+      } inetaddr;
    } data;
 } NXCP_MESSAGE_FIELD;
 
-#define df_int16  int16
-#define df_int32  data.int32
-#define df_uint32 data.uint32
-#define df_int64  data.int64
-#define df_uint64 data.uint64
-#define df_real   data.real
-#define df_string data.string
+#define df_int16    int16
+#define df_int32    data.int32
+#define df_uint32   data.uint32
+#define df_int64    data.int64
+#define df_uint64   data.uint64
+#define df_real     data.real
+#define df_string   data.string
+#define df_inetaddr data.inetaddr
 
 /**
  * Message structure
@@ -188,6 +211,7 @@ typedef struct
 #define NXCP_DT_INT16      3
 #define NXCP_DT_BINARY     4
 #define NXCP_DT_FLOAT      5
+#define NXCP_DT_INETADDR   6
 
 /**
  * Message flags

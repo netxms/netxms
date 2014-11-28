@@ -21,6 +21,7 @@ package org.netxms.base;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -37,14 +38,20 @@ public class NXCPMessageField
 	public static final int TYPE_INT16 = 3;
 	public static final int TYPE_BINARY = 4;
 	public static final int TYPE_FLOAT = 5;
+   public static final int TYPE_INETADDR = 6;
+   
+   private static final int SIGNED = 0x01;
+   
+   private static final byte[] PADDING = new byte[16];
 
-	private long variableId;
-	private int variableType;
+	private long id;
+	private int type;
 
 	private Long integerValue;
 	private Double realValue;
 	private String stringValue;
 	private byte[] binaryValue;
+	private InetAddressEx inetAddressValue;
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
@@ -56,12 +63,13 @@ public class NXCPMessageField
 		String NEW_LINE = System.getProperty("line.separator");
 
 		result.append(this.getClass().getName() + " Object {" + NEW_LINE);
-		result.append(" variableId = " + Long.toString(variableId) + NEW_LINE);
-		result.append(" variableType = " + variableType + NEW_LINE);
+		result.append(" variableId = " + Long.toString(id) + NEW_LINE);
+		result.append(" variableType = " + type + NEW_LINE);
 		result.append(" integerValue = " + integerValue + NEW_LINE);
 		result.append(" realValue = " + realValue + NEW_LINE);
 		result.append(" stringValue = " + stringValue + NEW_LINE);
 		result.append(" binaryValue = " + Arrays.toString(binaryValue) + NEW_LINE);
+      result.append(" inetAddressValue = " + inetAddressValue.toString() + NEW_LINE);
 		result.append("}");
 
 		return result.toString();
@@ -100,8 +108,8 @@ public class NXCPMessageField
 	 */
 	public NXCPMessageField(final long varId, final int varType, final Long value)
 	{
-		variableId = varId;
-		variableType = varType;
+		id = varId;
+		type = varType;
 		integerValue = value;
 		stringValue = integerValue.toString();
 		realValue = integerValue.doubleValue();
@@ -113,8 +121,8 @@ public class NXCPMessageField
 	 */
 	public NXCPMessageField(final long varId, final String value)
 	{
-		variableId = varId;
-		variableType = TYPE_STRING;
+		id = varId;
+		type = TYPE_STRING;
 		setStringValue(value);
 	}
 
@@ -124,8 +132,8 @@ public class NXCPMessageField
 	 */
 	public NXCPMessageField(final long varId, final Double value)
 	{
-		variableId = varId;
-		variableType = TYPE_FLOAT;
+		id = varId;
+		type = TYPE_FLOAT;
 		realValue = value;
 		stringValue = value.toString();
 		integerValue = realValue.longValue();
@@ -137,8 +145,8 @@ public class NXCPMessageField
 	 */
 	public NXCPMessageField(final long varId, final byte[] value)
 	{
-		variableId = varId;
-		variableType = TYPE_BINARY;
+		id = varId;
+		type = TYPE_BINARY;
 		binaryValue = value;
 		stringValue = "";
 		integerValue = (long)0;
@@ -153,8 +161,8 @@ public class NXCPMessageField
 	 */
 	public NXCPMessageField(final long varId, final long[] value)
 	{
-		variableId = varId;
-		variableType = TYPE_BINARY;
+		id = varId;
+		type = TYPE_BINARY;
 
 		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(value.length * 4);
 		final DataOutputStream out = new DataOutputStream(byteStream);
@@ -180,8 +188,8 @@ public class NXCPMessageField
 	 */
 	public NXCPMessageField(final long varId, final Long[] value)
 	{
-		variableId = varId;
-		variableType = TYPE_BINARY;
+		id = varId;
+		type = TYPE_BINARY;
 
 		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(value.length * 4);
 		final DataOutputStream out = new DataOutputStream(byteStream);
@@ -205,13 +213,12 @@ public class NXCPMessageField
 	 */
 	public NXCPMessageField(final long varId, final InetAddress value)
 	{
-		variableId = varId;
-		variableType = TYPE_INTEGER;
-		
-		byte[] addr = value.getAddress();
-		integerValue = ((long)(addr[0] & 0xFF) << 24) | ((long)(addr[1] & 0xFF) << 16) | ((long)(addr[2] & 0xFF) << 8) | (long)(addr[3] & 0xFF);
-		realValue = integerValue.doubleValue();
-		stringValue = integerValue.toString();
+		id = varId;
+      type = TYPE_INETADDR;
+      inetAddressValue = new InetAddressEx(value, (value instanceof Inet4Address) ? 32 : 128);
+      stringValue = inetAddressValue.toString();
+      integerValue = (long)0;
+      realValue = (double)0;
 	}
 
 	/**
@@ -220,8 +227,8 @@ public class NXCPMessageField
 	 */
 	public NXCPMessageField(final long varId, final UUID value)
 	{
-		variableId = varId;
-		variableType = TYPE_BINARY;
+		id = varId;
+		type = TYPE_BINARY;
 
 		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(16);
 		final DataOutputStream out = new DataOutputStream(byteStream);
@@ -249,22 +256,22 @@ public class NXCPMessageField
 	{
 		NXCPDataInputStream in = new NXCPDataInputStream(nxcpDataField);
 
-		variableId = (long)in.readUnsignedInt();
-		variableType = in.readUnsignedByte();
-		in.skipBytes(1);	// Skip padding
-		if (variableType == TYPE_INT16)
+		id = (long)in.readUnsignedInt();
+		type = in.readUnsignedByte();
+		int flags = in.readUnsignedByte();
+		if (type == TYPE_INT16)
 		{
-			integerValue = (long)in.readUnsignedShort();
+			integerValue = (long)(((flags & SIGNED) != 0) ? in.readShort() : in.readUnsignedShort());
 			realValue = integerValue.doubleValue();
 			stringValue = integerValue.toString();
 		}
 		else
 		{
 			in.skipBytes(2);
-			switch(variableType)
+			switch(type)
 			{
 				case TYPE_INTEGER:
-					integerValue = in.readUnsignedInt();
+					integerValue = ((flags & SIGNED) != 0) ? in.readInt() : in.readUnsignedInt();
 					realValue = integerValue.doubleValue();
 					stringValue = integerValue.toString();
 					break;
@@ -292,6 +299,16 @@ public class NXCPMessageField
 					binaryValue = new byte[in.readInt()];
 					in.readFully(binaryValue);
 					break;
+				case TYPE_INETADDR:
+				   binaryValue = new byte[16];
+				   in.readFully(binaryValue);
+				   int family = in.readUnsignedByte();
+				   int bits = in.readUnsignedByte();
+				   in.skipBytes(6);
+				   inetAddressValue = new InetAddressEx(
+				         InetAddress.getByAddress((family == 0) ? Arrays.copyOf(binaryValue, 4) : binaryValue), bits);
+				   stringValue = inetAddressValue.toString();
+				   break;
 			}
 		}
 		in.close();
@@ -338,32 +355,91 @@ public class NXCPMessageField
 	}
 
 	/**
-	 * Get variable's value as IP address
+	 * Get field's value as IP address
 	 * 
-	 * @return Variable's value as IP address
+	 * @return Field's value as IP address
 	 */
 	public InetAddress getAsInetAddress()
 	{
-		final byte[] addr = new byte[4];
-		final long intVal = integerValue.longValue();
-		InetAddress inetAddr;
-		
-		addr[0] =  (byte)((intVal & 0xFF000000) >> 24);
-		addr[1] =  (byte)((intVal & 0x00FF0000) >> 16);
-		addr[2] =  (byte)((intVal & 0x0000FF00) >> 8);
-		addr[3] =  (byte)(intVal & 0x000000FF);
-		
-		try
-		{
-			inetAddr = InetAddress.getByAddress(addr);
-		}
-		catch(UnknownHostException e)
-		{
-			inetAddr = null;
-		}
-		return inetAddr;
+	   if (type == TYPE_INETADDR)
+	   {
+	      return inetAddressValue.address;
+	   }
+	   else if (type == TYPE_BINARY)
+	   {
+         try
+         {
+            return InetAddress.getByAddress(binaryValue);
+         }
+         catch(UnknownHostException e)
+         {
+            return null;
+         }
+	   }
+	   else
+	   {
+   		final byte[] addr = new byte[4];
+   		final long intVal = integerValue.longValue();
+   		
+   		addr[0] =  (byte)((intVal & 0xFF000000) >> 24);
+   		addr[1] =  (byte)((intVal & 0x00FF0000) >> 16);
+   		addr[2] =  (byte)((intVal & 0x0000FF00) >> 8);
+   		addr[3] =  (byte)(intVal & 0x000000FF);
+   		
+   		try
+   		{
+   			return InetAddress.getByAddress(addr);
+   		}
+   		catch(UnknownHostException e)
+   		{
+   			return null;
+   		}
+	   }
 	}
-	
+
+   /**
+    * Get field's value as IP address/mask pair
+    * 
+    * @return Field's value as IP address/mask pair
+    */
+   public InetAddressEx getAsInetAddressEx()
+   {
+      if (type == TYPE_INETADDR)
+      {
+         return inetAddressValue;
+      }
+      else if (type == TYPE_BINARY)
+      {
+         try
+         {
+            return new InetAddressEx(InetAddress.getByAddress(binaryValue), binaryValue.length * 8);
+         }
+         catch(UnknownHostException e)
+         {
+            return null;
+         }
+      }
+      else
+      {
+         final byte[] addr = new byte[4];
+         final long intVal = integerValue.longValue();
+         
+         addr[0] =  (byte)((intVal & 0xFF000000) >> 24);
+         addr[1] =  (byte)((intVal & 0x00FF0000) >> 16);
+         addr[2] =  (byte)((intVal & 0x0000FF00) >> 8);
+         addr[3] =  (byte)(intVal & 0x000000FF);
+         
+         try
+         {
+            return new InetAddressEx(InetAddress.getByAddress(addr), 32);
+         }
+         catch(UnknownHostException e)
+         {
+            return null;
+         }
+      }
+   }
+   
 	/**
 	 * Get variable's value as UUID
 	 * 
@@ -371,7 +447,7 @@ public class NXCPMessageField
 	 */
 	public UUID getAsUUID()
 	{
-		if ((variableType != TYPE_BINARY) || (binaryValue == null) || (binaryValue.length != 16))
+		if ((type != TYPE_BINARY) || (binaryValue == null) || (binaryValue.length != 16))
 			return null;
 		
 		NXCPDataInputStream in = new NXCPDataInputStream(binaryValue);
@@ -399,7 +475,7 @@ public class NXCPMessageField
 	 */
 	public long[] getAsUInt32Array()
 	{
-		if ((variableType != TYPE_BINARY) || (binaryValue == null))
+		if ((type != TYPE_BINARY) || (binaryValue == null))
 			return null;
 		
 		int count = binaryValue.length / 4;
@@ -425,7 +501,7 @@ public class NXCPMessageField
 	 */
 	public Long[] getAsUInt32ArrayEx()
 	{
-		if ((variableType != TYPE_BINARY) || (binaryValue == null))
+		if ((type != TYPE_BINARY) || (binaryValue == null))
 			return null;
 		
 		int count = binaryValue.length / 4;
@@ -448,7 +524,7 @@ public class NXCPMessageField
 	 */
 	public long getVariableId()
 	{
-		return variableId;
+		return id;
 	}
 
 	/**
@@ -456,7 +532,7 @@ public class NXCPMessageField
 	 */
 	public void setVariableId(final long variableId)
 	{
-		this.variableId = variableId;
+		this.id = variableId;
 	}
 
 	/**
@@ -464,7 +540,7 @@ public class NXCPMessageField
 	 */
 	public int getVariableType()
 	{
-		return variableType;
+		return type;
 	}
 
 	/**
@@ -475,7 +551,7 @@ public class NXCPMessageField
 	{
 		final int size;
 
-		switch(variableType)
+		switch(type)
 		{
 			case TYPE_INTEGER:
 				size = 12;
@@ -493,6 +569,9 @@ public class NXCPMessageField
 			case TYPE_BINARY:
 				size = binaryValue.length + 12;
 				break;
+			case TYPE_INETADDR:
+			   size = 32;
+			   break;
 			default:
 				size = 8;
 				break;
@@ -511,17 +590,17 @@ public class NXCPMessageField
 		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(calculateBinarySize());
 		final DataOutputStream out = new DataOutputStream(byteStream);
 
-		out.writeInt(Long.valueOf(variableId).intValue());
-		out.writeByte(Long.valueOf(variableType).byteValue());
+		out.writeInt(Long.valueOf(id).intValue());
+		out.writeByte(Long.valueOf(type).byteValue());
 		out.writeByte(0);		// Padding
-		if (variableType == TYPE_INT16)
+		if (type == TYPE_INT16)
 		{
 			out.writeShort(integerValue.shortValue());
 		}
 		else
 		{
 			out.writeShort(0);	// Padding
-			switch(variableType)
+			switch(type)
 			{
 				case TYPE_INTEGER:
 					out.writeInt(integerValue.intValue());
@@ -540,6 +619,21 @@ public class NXCPMessageField
 					out.writeInt(binaryValue.length);
 					out.write(binaryValue);
 					break;
+				case TYPE_INETADDR:
+				   if (inetAddressValue.address instanceof Inet4Address)
+				   {
+                  out.write(inetAddressValue.address.getAddress());
+                  out.write(PADDING, 0, 12);
+	               out.writeByte(0);
+				   }
+				   else
+				   {
+	               out.write(inetAddressValue.address.getAddress());
+	               out.writeByte(1);
+				   }
+				   out.writeByte(inetAddressValue.mask);
+               out.write(PADDING, 0, 6);
+				   break;
 			}
 		}
 
@@ -547,7 +641,7 @@ public class NXCPMessageField
 		final int rem = byteStream.size() % 8;
 		if (rem != 0)
 		{
-			out.write(new byte[8 - rem]);
+			out.write(PADDING, 0, 8 - rem);
 		}
 
 		return byteStream.toByteArray();

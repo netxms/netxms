@@ -60,7 +60,7 @@ private:
    BYTE *m_data;           // binary data
    size_t m_dataSize;      // binary data size
 
-   void *set(UINT32 fieldId, BYTE type, const void *value, size_t size = 0);
+   void *set(UINT32 fieldId, BYTE type, const void *value, bool isSigned = false, size_t size = 0);
    void *get(UINT32 fieldId, BYTE requiredType, BYTE *fieldType = NULL);
    NXCP_MESSAGE_FIELD *find(UINT32 fieldId);
 
@@ -89,16 +89,17 @@ public:
    bool isFieldExist(UINT32 fieldId) { return find(fieldId) != NULL; }
    int getFieldType(UINT32 fieldId);
 
-   void setField(UINT32 fieldId, INT16 value) { set(fieldId, NXCP_DT_INT16, &value); }
-   void setField(UINT32 fieldId, UINT16 value) { set(fieldId, NXCP_DT_INT16, &value); }
-   void setField(UINT32 fieldId, INT32 value) { set(fieldId, NXCP_DT_INT32, &value); }
-   void setField(UINT32 fieldId, UINT32 value) { set(fieldId, NXCP_DT_INT32, &value); }
-   void setField(UINT32 fieldId, INT64 value) { set(fieldId, NXCP_DT_INT64, &value); }
-   void setField(UINT32 fieldId, UINT64 value) { set(fieldId, NXCP_DT_INT64, &value); }
+   void setField(UINT32 fieldId, INT16 value) { set(fieldId, NXCP_DT_INT16, &value, true); }
+   void setField(UINT32 fieldId, UINT16 value) { set(fieldId, NXCP_DT_INT16, &value, false); }
+   void setField(UINT32 fieldId, INT32 value) { set(fieldId, NXCP_DT_INT32, &value, true); }
+   void setField(UINT32 fieldId, UINT32 value) { set(fieldId, NXCP_DT_INT32, &value, false); }
+   void setField(UINT32 fieldId, INT64 value) { set(fieldId, NXCP_DT_INT64, &value, true); }
+   void setField(UINT32 fieldId, UINT64 value) { set(fieldId, NXCP_DT_INT64, &value, false); }
    void setField(UINT32 fieldId, double value) { set(fieldId, NXCP_DT_FLOAT, &value); }
    void setField(UINT32 fieldId, const TCHAR *value) { if (value != NULL) set(fieldId, NXCP_DT_STRING, value); }
-   void setField(UINT32 fieldId, const TCHAR *value, UINT32 maxLen) { if (value != NULL) set(fieldId, NXCP_DT_STRING, value, maxLen); }
-   void setField(UINT32 fieldId, BYTE *value, size_t size) { set(fieldId, NXCP_DT_BINARY, value, size); }
+   void setField(UINT32 fieldId, const TCHAR *value, size_t maxLen) { if (value != NULL) set(fieldId, NXCP_DT_STRING, value, false, maxLen); }
+   void setField(UINT32 fieldId, BYTE *value, size_t size) { set(fieldId, NXCP_DT_BINARY, value, false, size); }
+   void setField(UINT32 fieldId, const InetAddress &value) { set(fieldId, NXCP_DT_INETADDR, (void *)&value); }
 #ifdef UNICODE
    void setFieldFromMBString(UINT32 fieldId, const char *value);
 #else
@@ -125,6 +126,7 @@ public:
 	char *getFieldAsMBString(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0);
 	char *getFieldAsUtf8String(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0);
    UINT32 getFieldAsBinary(UINT32 fieldId, BYTE *buffer, size_t bufferSize);
+   InetAddress getFieldAsInetAddress(UINT32 fieldId);
 
    void deleteAllFields();
 
