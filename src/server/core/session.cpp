@@ -2594,16 +2594,20 @@ void ClientSession::onNewEvent(Event *pEvent)
 {
    UPDATE_INFO *pUpdate;
    NXCPMessage *msg;
-
-   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_EVENTS))
+   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_EVENTS) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_EVENT_LOG))
    {
-      pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-      pUpdate->dwCategory = INFO_CAT_EVENT;
-      msg = new NXCPMessage;
-      msg->setCode(CMD_EVENTLOG_RECORDS);
-      pEvent->prepareMessage(msg);
-      pUpdate->pData = msg;
-      m_pUpdateQueue->Put(pUpdate);
+      NetObj *object = FindObjectById(pEvent->getSourceId());
+      //If can't find object - just send to all events, if object found send to thous who have rights
+      if (object == NULL || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+         pUpdate->dwCategory = INFO_CAT_EVENT;
+         msg = new NXCPMessage;
+         msg->setCode(CMD_EVENTLOG_RECORDS);
+         pEvent->prepareMessage(msg);
+         pUpdate->pData = msg;
+         m_pUpdateQueue->Put(pUpdate);
+      }
    }
 }
 
@@ -8198,13 +8202,17 @@ void ClientSession::KillSession(NXCPMessage *pRequest)
 void ClientSession::onSyslogMessage(NX_SYSLOG_RECORD *pRec)
 {
    UPDATE_INFO *pUpdate;
-
-   if (isAuthenticated() && isSubscribed(NXC_CHANNEL_SYSLOG))
+   if (isAuthenticated() && isSubscribed(NXC_CHANNEL_SYSLOG) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_SYSLOG))
    {
-      pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-      pUpdate->dwCategory = INFO_CAT_SYSLOG_MSG;
-      pUpdate->pData = nx_memdup(pRec, sizeof(NX_SYSLOG_RECORD));
-      m_pUpdateQueue->Put(pUpdate);
+      NetObj *object = FindObjectById(pRec->dwSourceObject);
+      //If can't find object - just send to all events, if object found send to thous who have rights
+      if (object == NULL || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+      {
+         pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+         pUpdate->dwCategory = INFO_CAT_SYSLOG_MSG;
+         pUpdate->pData = nx_memdup(pRec, sizeof(NX_SYSLOG_RECORD));
+         m_pUpdateQueue->Put(pUpdate);
+      }
    }
 }
 
@@ -8327,12 +8335,17 @@ void ClientSession::sendSyslog(NXCPMessage *pRequest)
 void ClientSession::onNewSNMPTrap(NXCPMessage *pMsg)
 {
    UPDATE_INFO *pUpdate;
-   if (isAuthenticated() && isSubscribed(NXC_CHANNEL_SNMP_TRAPS))
+   if (isAuthenticated() && isSubscribed(NXC_CHANNEL_SNMP_TRAPS) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_TRAP_LOG))
    {
-      pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
-      pUpdate->dwCategory = INFO_CAT_SNMP_TRAP;
-      pUpdate->pData = new NXCPMessage(pMsg);
-      m_pUpdateQueue->Put(pUpdate);
+      NetObj *object = FindObjectById(pMsg->getFieldAsUInt32(VID_TRAP_LOG_MSG_BASE + 3));
+      //If can't find object - just send to all events, if object found send to thous who have rights
+      if (object == NULL || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+      {
+         pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
+         pUpdate->dwCategory = INFO_CAT_SNMP_TRAP;
+         pUpdate->pData = new NXCPMessage(pMsg);
+         m_pUpdateQueue->Put(pUpdate);
+      }
    }
 }
 
