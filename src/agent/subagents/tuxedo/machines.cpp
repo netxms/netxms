@@ -174,7 +174,7 @@ static void QueryMachines()
 /**
  * Handler for Tuxedo.Machines list
  */
-LONG H_MachinesList(const TCHAR *param, const TCHAR *arg, StringList *value)
+LONG H_MachinesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -205,7 +205,7 @@ LONG H_MachinesList(const TCHAR *param, const TCHAR *arg, StringList *value)
 /**
  * Handler for Tuxedo.Machines table
  */
-LONG H_MachinesTable(const TCHAR *param, const TCHAR *arg, Table *value)
+LONG H_MachinesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -278,7 +278,7 @@ LONG H_MachinesTable(const TCHAR *param, const TCHAR *arg, Table *value)
 /**
  * Handler for Tuxedo.Machine.* parameters
  */
-LONG H_MachineInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_MachineInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR id[32];
    if (!AgentGetParameterArg(param, 1, id, 32))

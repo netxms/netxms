@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -31,7 +31,7 @@ static void H_GetParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
    UINT32 dwErrorCode;
 
    pRequest->getFieldAsString(VID_PARAMETER, name, MAX_PARAM_NAME);
-   dwErrorCode = GetParameterValue(0, name, value);
+   dwErrorCode = GetParameterValue(0, name, value, NULL);
    pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
       pMsg->setField(VID_VALUE, value);
@@ -47,7 +47,7 @@ static void H_GetTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
    UINT32 dwErrorCode;
 
    pRequest->getFieldAsString(VID_PARAMETER, name, MAX_PARAM_NAME);
-   dwErrorCode = GetTableValue(0, name, &value);
+   dwErrorCode = GetTableValue(0, name, &value, NULL);
    pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
 		value.fillMessage(*pMsg, 0, -1);
@@ -63,7 +63,7 @@ static void H_GetList(NXCPMessage *pRequest, NXCPMessage *pMsg)
    UINT32 dwErrorCode;
 
    pRequest->getFieldAsString(VID_PARAMETER, name, MAX_PARAM_NAME);
-   dwErrorCode = GetListValue(0, name, &value);
+   dwErrorCode = GetListValue(0, name, &value, NULL);
    pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
@@ -135,7 +135,7 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 
             TCHAR buffer[256];
 				AgentWriteDebugLog(6, _T("Received message %s from master agent"), NXCPMessageCodeName(msg->getCode(), buffer));
-				
+
 				NXCPMessage response;
 				response.setCode(CMD_REQUEST_COMPLETED);
 				response.setId(msg->getId());

@@ -26,7 +26,7 @@
 /**
  * Disk used/free space information
  */
-LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    int nRet = SYSINFO_RC_ERROR;
    struct statvfs sv;
@@ -79,7 +79,7 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for FileSystem.Volumes table
  */
-LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -168,7 +168,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
 /**
  * Handler for FileSystem.MountPoints list
  */
-LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 

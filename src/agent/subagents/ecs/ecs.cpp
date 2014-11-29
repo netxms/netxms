@@ -161,7 +161,7 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 // Hanlder functions
 //
 
-static LONG H_DoHttp(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_DoHttp(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG ret = SYSINFO_RC_ERROR;
 	char szArg[256];
@@ -207,7 +207,7 @@ static LONG H_DoHttp(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 }
 
 
-static LONG H_LoadTime(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+static LONG H_LoadTime(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG ret = SYSINFO_RC_ERROR;
 	char url[256];

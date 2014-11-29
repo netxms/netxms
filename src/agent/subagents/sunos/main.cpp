@@ -27,28 +27,28 @@
 // Hanlder functions
 //
 
-LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table);
-LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_IOStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_IOStatsTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_KStat(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value);
-LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue);
-LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_NetInterfaceLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_NetIfDescription(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_NetInterfaceStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue);
-LONG H_SysProcCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
+LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCommSession *session);
+LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_IOStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_IOStatsTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_KStat(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session);
+LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_NetInterfaceLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_NetIfDescription(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_NetInterfaceStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session);
+LONG H_SysProcCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 
 
 //
@@ -87,7 +87,7 @@ void kstat_unlock()
 // Detect support for source packages
 //
 
-static LONG H_SourcePkg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_SourcePkg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    ret_int(pValue, 1);
    return SYSINFO_RC_SUCCESS;

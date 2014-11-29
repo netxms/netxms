@@ -75,7 +75,7 @@ static BOOL GetAttributeValue(ATA_SMART_VALUES *pSmartValues, BYTE bAttr,
 // Handler for PhysicalDisk.*
 //
 
-LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValue)
+LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_ERROR, nDisk, nCmd;
 	char szBuffer[MAX_PATH];

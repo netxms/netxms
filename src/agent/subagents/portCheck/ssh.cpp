@@ -9,7 +9,7 @@
 /**
  * Check SSH service - parameter handler
  */
-LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 

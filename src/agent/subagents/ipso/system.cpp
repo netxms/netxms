@@ -41,7 +41,7 @@
 // Handler for System.Uptime
 //
 
-LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
+LONG H_Uptime(char *pszParam, char *pArg, char *pValue, AbstractCommSession *session)
 {
 	static int mib[2] = { CTL_KERN, KERN_BOOTTIME };
 	time_t nNow;
@@ -74,7 +74,7 @@ LONG H_Uptime(char *pszParam, char *pArg, char *pValue)
 // Handler for System.Uname
 //
 
-LONG H_Uname(char *pszParam, char *pArg, char *pValue)
+LONG H_Uname(char *pszParam, char *pArg, char *pValue, AbstractCommSession *session)
 {
 	struct utsname utsName;
 	int nRet = SYSINFO_RC_ERROR;
@@ -96,7 +96,7 @@ LONG H_Uname(char *pszParam, char *pArg, char *pValue)
    return nRet;
 }
 
-LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
+LONG H_Hostname(char *pszParam, char *pArg, char *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szBuff[128];
@@ -110,7 +110,7 @@ LONG H_Hostname(char *pszParam, char *pArg, char *pValue)
    return nRet;
 }
 
-LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
+LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
    char szArg[128] = {0};
@@ -140,7 +140,7 @@ LONG H_CpuLoad(char *pszParam, char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_CpuCount(char *pszParam, char *pArg, char *pValue)
+LONG H_CpuCount(char *pszParam, char *pArg, char *pValue, AbstractCommSession *session
 {
 	int nRet = SYSINFO_RC_ERROR;
 	static int mib[2] = { CTL_HW, HW_NCPU };
@@ -162,7 +162,7 @@ LONG H_CpuCount(char *pszParam, char *pArg, char *pValue)
 // Handler for System.ProcessCount and Process.Count(*) parameters
 //
 
-LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
+LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue, AbstractCommSession *session)
 {
 	char *kp, szArg[128] = "";
 	int i, nCount, nResult = -1;
@@ -210,7 +210,7 @@ LONG H_ProcessCount(char *pszParam, char *pArg, char *pValue)
 // Handler for System.Memory.* parameters
 //
 
-LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue)
+LONG H_MemoryInfo(char *pszParam, char *pArg, char *pValue, AbstractCommSession *session)
 {
 	struct vmtotal vmStat;
 	DWORD dwPageSize, dwPhysMem;
@@ -284,7 +284,7 @@ printf("PageSize = %d\n",dwPageSize);
 // Handler for System.ProcessList enum
 //
 
-LONG H_ProcessList(char *pszParam, char *pArg, StringList *pValue)
+LONG H_ProcessList(char *pszParam, char *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	int i, nCount = -1;
 	char *kp;

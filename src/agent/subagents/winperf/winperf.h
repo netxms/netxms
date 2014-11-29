@@ -111,9 +111,9 @@ TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize);
 void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError);
 WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDataType);
 BOOL AddCounterFromConfig(TCHAR *pszStr);
-BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *),
+BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *),
                   TCHAR *pArg, int iDataType, TCHAR *pszDescription);
-LONG H_CollectedCounterData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
+LONG H_CollectedCounterData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 
 
 //

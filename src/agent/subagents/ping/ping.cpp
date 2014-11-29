@@ -126,7 +126,7 @@ retry:
 /**
  * Hanlder for immediate ping request
  */
-static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	TCHAR szHostName[256], szTimeOut[32], szPacketSize[32];
 	UINT32 dwAddr, dwTimeOut = m_dwTimeout, dwRTT, dwPacketSize = m_dwDefPacketSize;
@@ -164,7 +164,7 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for poller information
  */
-static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	TCHAR szTarget[MAX_DB_STRING];
 	UINT32 i, dwIpAddr;
@@ -219,7 +219,7 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 /**
  * Handler for configured target list
  */
-static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
+static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
 	UINT32 i;
 	TCHAR szBuffer[MAX_DB_STRING + 64], szIpAddr[16];

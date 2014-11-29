@@ -25,7 +25,7 @@
 /**
  * Handler for ACPI.ThermalZone.CurrentTemp(*)
  */
-LONG H_ACPITZCurrTemp(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_ACPITZCurrTemp(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	WMI_QUERY_CONTEXT ctx;
 	IEnumWbemClassObject *pEnumObject = NULL;
@@ -79,7 +79,7 @@ LONG H_ACPITZCurrTemp(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for ACPI.ThermalZones list
  */
-LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
+LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
 	WMI_QUERY_CONTEXT ctx;
 	IEnumWbemClassObject *pEnumObject = NULL;

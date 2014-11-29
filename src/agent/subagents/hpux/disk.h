@@ -32,8 +32,8 @@ enum
 	DISK_USED_PERC
 };
 
-LONG H_DiskInfo(const char *, const char *, char *);
-LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value);
-LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value);
+LONG H_DiskInfo(const char *, const char *, char *, AbstractCommSession *);
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 
 #endif // __DISK_H__

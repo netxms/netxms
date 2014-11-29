@@ -316,7 +316,7 @@ static BOOL MatchProcess(DWORD pid, HANDLE hProcess, HMODULE hModule, BOOL bExtM
 //    <window>   - window title
 //
 
-LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR buffer[256], procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
    int attr, type, i, procCount, counter;
@@ -390,7 +390,7 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for System.ProcessCount
  */
-LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    DWORD dwSize, *pdwProcList;
    PERFORMANCE_INFORMATION pi;
@@ -416,7 +416,7 @@ LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for Process.Count(*) and Process.CountEx(*)
  */
-LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
 
@@ -462,7 +462,7 @@ LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for System.ProcessList list
  */
-LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    DWORD i, dwSize, dwNumProc, *pdwProcList;
    LONG iResult = SYSINFO_RC_SUCCESS;
@@ -535,7 +535,7 @@ LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 /**
  * Handler for System.Processes table
  */
-LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
+LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *)
 {
    DWORD i, dwSize, dwNumProc, *pdwProcList;
    LONG iResult = SYSINFO_RC_SUCCESS;

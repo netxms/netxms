@@ -52,7 +52,7 @@ static MUTEX m_processListLock = INVALID_MUTEX_HANDLE;
 // Handler for System.ProcessCount parameter
 //
 
-LONG H_SysProcessCount(const char *pszParam, const char *pArg, char *pValue)
+LONG H_SysProcessCount(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	struct pst_dynamic pd;
 	LONG nRet = SYSINFO_RC_ERROR;
@@ -125,7 +125,7 @@ static struct pst_status *GetProcessList(int *pnNumProcs)
 // Handler for System.ThreadCount parameter
 //
 
-LONG H_SysThreadCount(const char *pszParam, const char *pArg, char *pValue)
+LONG H_SysThreadCount(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	LONG nRet;
 	struct pst_status *pList;
@@ -154,7 +154,7 @@ LONG H_SysThreadCount(const char *pszParam, const char *pArg, char *pValue)
 // Handler for Process.Count(*) parameter
 //
 
-LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
+LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	struct pst_status *pst;
 	int i, nCount, nTotal;
@@ -196,7 +196,7 @@ LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue)
 //    <cmdline>  - command line
 //
 
-LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue)
+LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szBuffer[256] = "";
@@ -312,7 +312,7 @@ LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue)
 // Handler for System.ProcessList enum
 //
 
-LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	int i, nCount;

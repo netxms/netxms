@@ -30,7 +30,7 @@
 /**
  * Handler for System.Uname parameter
  */
-LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    char szSysStr[7][64];
    int i;
@@ -66,7 +66,7 @@ LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.Uptime parameter
  */
-LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    ret_uint(pValue, gethrtime()/1000000000);
    return SYSINFO_RC_SUCCESS;
@@ -75,7 +75,7 @@ LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.Hostname parameter
  */
-LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 #ifdef UNICODE
    char buffer[MAX_RESULT_LENGTH];
@@ -92,7 +92,7 @@ LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.CPU.LoadAvg
  */
-LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    kstat_ctl_t *kc;
    kstat_t *kp;
@@ -127,7 +127,7 @@ LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.KStat(*)
  */
-LONG H_KStat(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_KStat(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    char *eptr, szModule[128], szName[128], szInstance[16], szStat[128];
    LONG nInstance;
@@ -156,7 +156,7 @@ LONG H_KStat(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.CPU.Count
  */
-LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    return ReadKStatValue("unix", 0, "system_misc", "ncpus", pValue, NULL);
 }
@@ -360,7 +360,7 @@ static UINT64 GetSwapCounter(UINT64 *cnt)
 /**
  * Handler for System.Memory.* parameters
  */
-LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    LONG nRet = SYSINFO_RC_SUCCESS;
    kstat_named_t kn;

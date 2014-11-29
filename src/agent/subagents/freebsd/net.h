@@ -33,12 +33,12 @@
 #define IF_INFO_PACKETS_OUT      8
 #define IF_INFO_SPEED            9
 
-LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_NetIfAdmStatus(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_NetIfLink(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *);
-LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *);
-LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *);
-LONG H_NetIfInfoFromKVM(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetIfAdmStatus(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetIfLink(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetIfInfoFromKVM(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
 #endif // __NET_H__

@@ -73,7 +73,7 @@ static struct
 /**
  * Handler for PDH.Version parameter
  */
-static LONG H_PdhVersion(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_PdhVersion(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    DWORD dwVersion;
 
@@ -86,7 +86,7 @@ static LONG H_PdhVersion(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 /**
  * Handler for WinPerf.Features parameter
  */
-static LONG H_WinPerfFeatures(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_WinPerfFeatures(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    ret_uint(pValue, WINPERF_AUTOMATIC_SAMPLE_COUNT | WINPERF_REMOTE_COUNTER_CONFIG);
    return SYSINFO_RC_SUCCESS;
@@ -95,11 +95,11 @@ static LONG H_WinPerfFeatures(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 /**
  * Value of CPU utilization counter
  */
-static LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    LONG nProcessor, nRet = SYSINFO_RC_SUCCESS;
    TCHAR *pEnd, szBuffer[16];
-   
+
    if (!AgentGetParameterArg(pszParam, 1, szBuffer, 16))
       return SYSINFO_RC_UNSUPPORTED;
 
@@ -138,7 +138,7 @@ static LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Value of given counter collected by one of the collector threads
  */
-LONG H_CollectedCounterData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_CollectedCounterData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    switch(((WINPERF_COUNTER *)pArg)->wType)
    {
@@ -158,7 +158,7 @@ LONG H_CollectedCounterData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVa
 /**
  * Value of given performance counter
  */
-static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    HQUERY hQuery;
    HCOUNTER hCounter;
@@ -286,7 +286,7 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 /**
  * List of available performance objects
  */
-static LONG H_PdhObjects(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
+static LONG H_PdhObjects(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
    TCHAR *pszObject, *pszObjList, szHostName[256];
    LONG iResult = SYSINFO_RC_ERROR;
@@ -298,7 +298,7 @@ static LONG H_PdhObjects(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
    {
       dwSize = 256000;
       pszObjList = (TCHAR *)malloc(sizeof(TCHAR) * dwSize);
-      if ((rc = PdhEnumObjects(NULL, szHostName, pszObjList, &dwSize, 
+      if ((rc = PdhEnumObjects(NULL, szHostName, pszObjList, &dwSize,
                                PERF_DETAIL_WIZARD, TRUE)) == ERROR_SUCCESS)
       {
          for(pszObject = pszObjList; *pszObject != 0; pszObject += _tcslen(pszObject) + 1)
@@ -317,7 +317,7 @@ static LONG H_PdhObjects(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 /**
  * List of available performance items for given object
  */
-static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
+static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
    TCHAR *pszElement, *pszCounterList, *pszInstanceList, szHostName[256], szObject[256];
    LONG iResult = SYSINFO_RC_ERROR;
@@ -334,7 +334,7 @@ static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, StringLis
          pszCounterList = (TCHAR *)malloc(sizeof(TCHAR) * dwSize1);
          pszInstanceList = (TCHAR *)malloc(sizeof(TCHAR) * dwSize2);
          rc = PdhEnumObjectItems(NULL, szHostName, szObject,
-                                 pszCounterList, &dwSize1, pszInstanceList, &dwSize2, 
+                                 pszCounterList, &dwSize1, pszInstanceList, &dwSize2,
                                  PERF_DETAIL_WIZARD, 0);
          if ((rc == ERROR_SUCCESS) || (rc == PDH_MORE_DATA))
          {
@@ -362,7 +362,7 @@ static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, StringLis
  * Value of specific performance parameter, which is mapped one-to-one to
  * performance counter. Actually, it's an alias for PDH.CounterValue(xxx) parameter.
  */
-static LONG H_CounterAlias(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_CounterAlias(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    return H_PdhCounterValue(NULL, pArg, pValue);
 }
@@ -370,7 +370,7 @@ static LONG H_CounterAlias(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVal
 /**
  * Handler for System.Memory.Physical.FreePerc parameter
  */
-static LONG H_FreeMemoryPct(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_FreeMemoryPct(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
    LONG rc = H_PdhCounterValue(NULL, pArg, buffer);
@@ -453,7 +453,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 /**
  * Add new parameter to list
  */
-BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *), TCHAR *pArg, int iDataType, TCHAR *pszDescription)
+BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *), TCHAR *pArg, int iDataType, TCHAR *pszDescription)
 {
    DWORD i;
 
@@ -465,7 +465,7 @@ BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR 
    {
       // Extend list
       m_info.numParameters++;
-      m_info.parameters = 
+      m_info.parameters =
          (NETXMS_SUBAGENT_PARAM *)realloc(m_info.parameters,
                   sizeof(NETXMS_SUBAGENT_PARAM) * m_info.numParameters);
    }
@@ -475,7 +475,7 @@ BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR 
    m_info.parameters[i].arg = pArg;
    m_info.parameters[i].dataType = iDataType;
    nx_strncpy(m_info.parameters[i].description, pszDescription, MAX_DB_STRING);
-   
+
    return TRUE;
 }
 
@@ -494,8 +494,8 @@ static void AddPredefinedCounters()
       pCnt = AddCounter(m_counterList[i].pszCounterName, m_counterList[i].iClass,
                         m_counterList[i].iNumSamples, m_counterList[i].iDataType);
       if (pCnt != NULL)
-         AddParameter(m_counterList[i].pszParamName, H_CollectedCounterData, 
-                      (TCHAR *)pCnt, m_counterList[i].iDCIDataType, 
+         AddParameter(m_counterList[i].pszParamName, H_CollectedCounterData,
+                      (TCHAR *)pCnt, m_counterList[i].iDCIDataType,
                       m_counterList[i].pszDescription);
    }
 
@@ -598,7 +598,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
                *pEnd = 0;
             StrStrip(pItem);
             if (!AddCounterFromConfig(pItem))
-               AgentWriteLog(EVENTLOG_WARNING_TYPE, 
+               AgentWriteLog(EVENTLOG_WARNING_TYPE,
                                _T("Unable to add counter from configuration file. ")
                                _T("Original configuration record: %s"), pItem);
          }

@@ -174,7 +174,7 @@ void StopDrbdCollector()
 /**
  * Get list of configured DRBD devices
  */
-LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue)
+LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	TCHAR szBuffer[1024];
 
@@ -197,7 +197,7 @@ LONG H_DRBDDeviceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *pValue
 /**
  * Get DRBD version
  */
-LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	switch(*pArg)
@@ -221,7 +221,7 @@ LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Get information for specific DRBD device
  */
-LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nDev;
 	TCHAR szDev[256], *eptr;

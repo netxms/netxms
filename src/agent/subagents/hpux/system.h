@@ -41,21 +41,21 @@ enum
 };
 
 
-LONG H_ProcessList(const char *, const char *, StringList *);
-LONG H_Uptime(const char *, const char *, char *);
-LONG H_Uname(const char *, const char *, char *);
-LONG H_Hostname(const char *, const char *, char *);
-LONG H_Hostname(const char *, const char *, char *);
-LONG H_CpuLoad(const char *, const char *, char *);
-LONG H_CpuUsage(const char *, const char *, char *);
-LONG H_ProcessCount(const char *, const char *, char *);
-LONG H_ProcessInfo(const char *, const char *, char *);
-LONG H_SysProcessCount(const char *, const char *, char *);
-LONG H_SysThreadCount(const char *, const char *, char *);
-LONG H_MemoryInfo(const char *, const char *, char *);
-LONG H_SourcePkgSupport(const char *, const char *, char *);
-LONG H_ConnectedUsers(const char *, const char *, char *);
-LONG H_OpenFiles(const char *, const char *, char *);
+LONG H_ProcessList(const char *, const char *, StringList *, AbstractCommSession *);
+LONG H_Uptime(const char *, const char *, char *, AbstractCommSession *);
+LONG H_Uname(const char *, const char *, char *, AbstractCommSession *);
+LONG H_Hostname(const char *, const char *, char *, AbstractCommSession *);
+LONG H_Hostname(const char *, const char *, char *, AbstractCommSession *);
+LONG H_CpuLoad(const char *, const char *, char *, AbstractCommSession *);
+LONG H_CpuUsage(const char *, const char *, char *, AbstractCommSession *);
+LONG H_ProcessCount(const char *, const char *, char *, AbstractCommSession *);
+LONG H_ProcessInfo(const char *, const char *, char *, AbstractCommSession *);
+LONG H_SysProcessCount(const char *, const char *, char *, AbstractCommSession *);
+LONG H_SysThreadCount(const char *, const char *, char *, AbstractCommSession *);
+LONG H_MemoryInfo(const char *, const char *, char *, AbstractCommSession *);
+LONG H_SourcePkgSupport(const char *, const char *, char *, AbstractCommSession *);
+LONG H_ConnectedUsers(const char *, const char *, char *, AbstractCommSession *);
+LONG H_OpenFiles(const char *, const char *, char *, AbstractCommSession *);
 
 void StartCpuUsageCollector(void);
 void ShutdownCpuUsageCollector(void);

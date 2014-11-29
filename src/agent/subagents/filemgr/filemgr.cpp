@@ -728,7 +728,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
       {
          TCHAR fileName[MAX_PATH];
          request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
-         ExpandFileName(fileName, fileName, MAX_PATH, false);
+         ExpandFileName(fileName, fileName, MAX_PATH, session->isMasterServer());
          response->setId(request->getId());
 
       	if (session->isMasterServer() && CheckFullPath(fileName, false))
@@ -759,7 +759,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          response->setId(request->getId());
          TCHAR fileName[MAX_PATH];
          request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
-         ExpandFileName(fileName, fileName, MAX_PATH, false);
+         ExpandFileName(fileName, fileName, MAX_PATH, session->isMasterServer());
 
          if (session->isMasterServer() && CheckFullPath(fileName, false))
          {

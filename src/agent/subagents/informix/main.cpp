@@ -40,7 +40,7 @@ DBParameterGroup g_paramGroup[] = {
 // Handler functions
 //
 
-LONG H_DatabaseParameter(const TCHAR *parameter, const TCHAR *argument, TCHAR *value)
+LONG H_DatabaseParameter(const TCHAR *parameter, const TCHAR *argument, TCHAR *value, AbstractCommSession *session)
 {
 	LONG ret = SYSINFO_RC_UNSUPPORTED;
 	TCHAR dbId[MAX_STR];

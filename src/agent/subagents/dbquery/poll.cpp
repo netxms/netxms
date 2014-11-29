@@ -346,7 +346,7 @@ bool AddConfigurableQueryFromConfig(const TCHAR *config, Query **createdQuery)
 /**
  * Get poll results - single value
  */
-LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR name[MAX_QUERY_NAME_LEN];
    AgentGetParameterArg(param, 1, name, MAX_QUERY_NAME_LEN);
@@ -377,7 +377,7 @@ LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 /**
  * Get poll results - table
  */
-LONG H_PollResultTable(const TCHAR *param, const TCHAR *arg, Table *value)
+LONG H_PollResultTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    TCHAR name[MAX_QUERY_NAME_LEN];
    AgentGetParameterArg(param, 1, name, MAX_QUERY_NAME_LEN);

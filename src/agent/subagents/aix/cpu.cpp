@@ -385,7 +385,7 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
 /**
  * Handler for System.CPU.Usage.* parameters
  */
-LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int count;
 
@@ -409,7 +409,7 @@ LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.CPU.Usage.*(*) parameters (CPU-specific versions)
  */
-LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int count, cpu;
 	TCHAR buffer[256], *eptr;
@@ -442,7 +442,7 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.CPU.Count parameter
  */
-LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    perfstat_cpu_total_t cpuTotals;
    if (perfstat_cpu_total(NULL, &cpuTotals, sizeof(perfstat_cpu_total_t), 1) != 1)

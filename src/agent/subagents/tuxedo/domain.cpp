@@ -78,7 +78,7 @@ static void QueryDomainInfo()
 /**
  * Handler for Tuxedo.Domain.* parameters
  */
-LONG H_DomainInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_DomainInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 

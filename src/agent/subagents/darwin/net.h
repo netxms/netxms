@@ -21,11 +21,11 @@
 #ifndef __NET_H__
 #define __NET_H__
 
-LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_NetIfAdmStatus(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_NetIfLink(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *);
-LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *);
-LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *);
+LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetIfAdmStatus(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetIfLink(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 
 #endif // __NET_H__

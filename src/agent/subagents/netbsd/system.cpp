@@ -37,7 +37,7 @@
 
 #include "system.h"
 
-LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
+LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	int mib[2] = { CTL_KERN, KERN_BOOTTIME };
 	time_t nNow;
@@ -65,7 +65,7 @@ LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
    return nUptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
-LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
+LONG H_Uname(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	struct utsname utsName;
 	int nRet = SYSINFO_RC_ERROR;
@@ -87,7 +87,7 @@ LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
    return nRet;
 }
 
-LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue)
+LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szBuff[128];
@@ -101,7 +101,7 @@ LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue)
    return nRet;
 }
 
-LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
    	char szArg[128] = {0};
@@ -131,12 +131,12 @@ LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	return SYSINFO_RC_UNSUPPORTED;
 }
 
-LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	int mib[] = {CTL_HW, HW_NCPU};
@@ -153,7 +153,7 @@ LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
+LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -255,7 +255,7 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 //
 // stub
 //
-LONG H_SourcePkgSupport(const char *pszParam, const char *pArg, char *pValue)
+LONG H_SourcePkgSupport(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	ret_int(pValue, 1);
 	return SYSINFO_RC_SUCCESS;

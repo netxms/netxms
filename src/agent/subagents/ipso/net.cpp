@@ -140,7 +140,7 @@ static char *IndexToName(int nIndex, char *pszName, BOOL *pbIsLogical)
 // Handler for Net.IP.Forwarding parameter
 //
 
-LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
+LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue, AbstractCommSession *session)
 {
 	int nVer = (int)pArg;
 	int nRet = SYSINFO_RC_ERROR;
@@ -163,7 +163,7 @@ LONG H_NetIpForwarding(char *pszParam, char *pArg, char *pValue)
 // Handler for Net.Interface.XXX parameters
 //
 
-LONG H_NetIfStats(char *pszParam, char *pArg, char *pValue)
+LONG H_NetIfStats(char *pszParam, char *pArg, char *pValue, AbstractCommSession *session)
 {
 	LONG nTemp, nRet = SYSINFO_RC_SUCCESS;
 	char szName[MAX_IF_NAME], szRequest[256];
@@ -260,7 +260,7 @@ static void ArpCallback(char *pszPath, CBP *pArg)
 // Handler for Net.ArpCache enum
 //
 
-LONG H_NetArpCache(char *pszParam, char *pArg, StringList *pValue)
+LONG H_NetArpCache(char *pszParam, char *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	CBP data;
@@ -277,7 +277,7 @@ LONG H_NetArpCache(char *pszParam, char *pArg, StringList *pValue)
 	return nRet;
 }
 
-LONG H_NetRoutingTable(char *pszParam, char *pArg, StringList *pValue)
+LONG H_NetRoutingTable(char *pszParam, char *pArg, StringList *pValue, AbstractCommSession *session)
 {
 #define sa2sin(x) ((struct sockaddr_in *)x)
 #define ROUNDUP(a) \
@@ -551,7 +551,7 @@ static void IpAddrCallback(char *pszPath, IFLIST *pList)
 // Handler for Net.InterfaceList enum
 //
 
-LONG H_NetIfList(char *pszParam, char *pArg, StringList *pValue)
+LONG H_NetIfList(char *pszParam, char *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	int i, nSize, nHandle;
 	IFLIST ifList;

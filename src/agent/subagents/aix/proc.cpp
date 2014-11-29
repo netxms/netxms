@@ -92,7 +92,7 @@ retry_getprocs:
 /**
  * Handler for System.ProcessList enum
  */
-LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	LONG nRet;
 	PROCENTRY *pList;
@@ -125,7 +125,7 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 /**
  * Handler for System.ProcessCount parameter
  */
-LONG H_SysProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_SysProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nprocs;
 	pid_t index = 0;
@@ -141,7 +141,7 @@ LONG H_SysProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.ThreadCount parameter
  */
-LONG H_SysThreadCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_SysThreadCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet;
 	PROCENTRY *pList;
@@ -169,7 +169,7 @@ LONG H_SysThreadCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for Process.Count(*) parameter
  */
-LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet;
 	PROCENTRY *pList;
@@ -202,7 +202,7 @@ LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for Process.xxx(*) parameters
  */
-LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szBuffer[256] = "";

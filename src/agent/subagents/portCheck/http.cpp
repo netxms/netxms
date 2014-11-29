@@ -38,7 +38,7 @@ static void SaveResponse(char *host, UINT32 ip, char *buffer)
 /**
  * Check HTTP/HTTPS service - parameter handler
  */
-LONG H_CheckHTTP(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_CheckHTTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 

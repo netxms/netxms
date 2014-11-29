@@ -655,7 +655,7 @@ void CommSession::getParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
    UINT32 dwErrorCode;
 
    pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
-   dwErrorCode = GetParameterValue(m_dwIndex, szParameter, szValue);
+   dwErrorCode = GetParameterValue(m_dwIndex, szParameter, szValue, this);
    pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
       pMsg->setField(VID_VALUE, szValue);
@@ -671,7 +671,7 @@ void CommSession::getList(NXCPMessage *pRequest, NXCPMessage *pMsg)
    pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
 
    StringList value;
-   UINT32 dwErrorCode = GetListValue(m_dwIndex, szParameter, &value);
+   UINT32 dwErrorCode = GetListValue(m_dwIndex, szParameter, &value, this);
    pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
@@ -691,7 +691,7 @@ void CommSession::getTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
    pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
 
    Table value;
-   UINT32 dwErrorCode = GetTableValue(m_dwIndex, szParameter, &value);
+   UINT32 dwErrorCode = GetTableValue(m_dwIndex, szParameter, &value, this);
    pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
@@ -723,7 +723,7 @@ void CommSession::action(NXCPMessage *pRequest, NXCPMessage *pMsg)
       }
       else
       {
-         UINT32 rcc = ExecAction(action, args);
+         UINT32 rcc = ExecAction(action, args, this);
          pMsg->setField(VID_RCC, rcc);
          delete args;
       }

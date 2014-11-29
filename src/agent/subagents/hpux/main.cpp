@@ -24,7 +24,7 @@
 /**
  * Detect support for source packages
  */
-static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
+static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	ret_int(pValue, 1); // assume that we have sane build env
 	return SYSINFO_RC_SUCCESS;
@@ -33,7 +33,7 @@ static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
 /**
  * Handler for shutdown/restart actions
  */
-static LONG H_Shutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData)
+static LONG H_Shutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData, AbstractCommSession *session)
 {
    chdir("/");
    char cmd[128];

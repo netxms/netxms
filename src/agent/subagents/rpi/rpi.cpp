@@ -36,7 +36,7 @@ extern time_t g_sensorUpdateTime;
 /**
  * Sensor reading
  */
-static LONG H_Sensors(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+static LONG H_Sensors(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG ret;
 	if (time(NULL) - g_sensorUpdateTime <= 60)

@@ -196,7 +196,7 @@ static DatabaseInstance *FindInstance(const TCHAR *id)
 /**
  * Handler for parameters without instance
  */
-static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR id[MAX_STR];
    if (!AgentGetParameterArg(param, 1, id, MAX_STR))
@@ -212,7 +212,7 @@ static LONG H_GlobalParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value
 /**
  * Handler for parameters with instance
  */
-static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR id[MAX_STR];
    if (!AgentGetParameterArg(param, 1, id, MAX_STR))
@@ -251,7 +251,7 @@ static LONG H_InstanceParameter(const TCHAR *param, const TCHAR *arg, TCHAR *val
 /**
  * Handler for Oracle.DBInfo.Version parameter
  */
-static LONG H_DatabaseVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+static LONG H_DatabaseVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR id[MAX_STR];
    if (!AgentGetParameterArg(param, 1, id, MAX_STR))
@@ -269,7 +269,7 @@ static LONG H_DatabaseVersion(const TCHAR *param, const TCHAR *arg, TCHAR *value
 /**
  * Handler for Oracle.DBInfo.IsReachable parameter
  */
-static LONG H_DatabaseConnectionStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+static LONG H_DatabaseConnectionStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR id[MAX_STR];
    if (!AgentGetParameterArg(param, 1, id, MAX_STR))
@@ -286,7 +286,7 @@ static LONG H_DatabaseConnectionStatus(const TCHAR *param, const TCHAR *arg, TCH
 /**
  * Handler for generic list parameter
  */
-static LONG H_TagList(const TCHAR *param, const TCHAR *arg, StringList *value)
+static LONG H_TagList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    TCHAR id[MAX_STR];
    if (!AgentGetParameterArg(param, 1, id, MAX_STR))
@@ -302,7 +302,7 @@ static LONG H_TagList(const TCHAR *param, const TCHAR *arg, StringList *value)
 /**
  * Handler for generic table queries
  */
-static LONG H_TableQuery(const TCHAR *param, const TCHAR *arg, Table *value)
+static LONG H_TableQuery(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    TCHAR id[MAX_STR];
    if (!AgentGetParameterArg(param, 1, id, MAX_STR))

@@ -199,7 +199,7 @@ typedef struct
       TCHAR *pszCmdLine;      // to TCHAR
       struct __subagentAction
       {
-         LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *);
+         LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *, AbstractCommSession *);
          const TCHAR *pArg;
          TCHAR szSubagentName[MAX_PATH];
       } sa;
@@ -445,15 +445,15 @@ BOOL DownloadConfig(TCHAR *pszServer);
 
 BOOL InitParameterList();
 
-void AddParameter(const TCHAR *szName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *), const TCHAR *pArg,
+void AddParameter(const TCHAR *szName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *), const TCHAR *pArg,
                   int iDataType, const TCHAR *pszDescription);
 void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description);
-void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *), const TCHAR *arg);
-void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *), const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description);
+void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg);
+void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *), const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description);
 BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList);
-UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue);
-UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue);
-UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue);
+UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue, AbstractCommSession *session);
+UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue, AbstractCommSession *session);
+UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue, AbstractCommSession *session);
 void GetParameterList(NXCPMessage *pMsg);
 void GetEnumList(NXCPMessage *pMsg);
 void GetTableList(NXCPMessage *pMsg);
@@ -464,10 +464,10 @@ BOOL InitSubAgent(HMODULE hModule, const TCHAR *pszModuleName,
                   const TCHAR *pszEntryPoint);
 BOOL ProcessCmdBySubAgent(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, AbstractCommSession *session);
 BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
-               LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
+               LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *, AbstractCommSession *session),
                const TCHAR *pszSubAgent, const TCHAR *pszDescription);
 BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec);
-UINT32 ExecAction(const TCHAR *action, StringList *args);
+UINT32 ExecAction(const TCHAR *action, StringList *args, AbstractCommSession *session);
 UINT32 ExecActionWithOutput(CommSession *session, UINT32 requestId, const TCHAR *action, StringList *args);
 UINT32 ExecuteCommand(TCHAR *pszCommand, StringList *pArgs, pid_t *pid);
 UINT32 ExecuteShellCommand(TCHAR *pszCommand, StringList *pArgs);

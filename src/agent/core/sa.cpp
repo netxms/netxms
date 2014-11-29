@@ -431,7 +431,7 @@ SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName)
 /**
  * Get table of registered session agents
  */
-LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value)
+LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    value->addColumn(_T("SESSION_ID"), DCI_DT_UINT, _T("Session ID"), true);
    value->addColumn(_T("SESSION_NAME"), DCI_DT_STRING, _T("Session"));

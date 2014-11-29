@@ -225,7 +225,7 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 /**
  * Handlers for System.CPU.Usage parameters
  */
-LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    LONG nRet = SYSINFO_RC_SUCCESS;
 

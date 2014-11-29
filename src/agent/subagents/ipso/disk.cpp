@@ -25,7 +25,7 @@
 #include <sys/param.h>
 #include <sys/mount.h>
 
-LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
+LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szArg[512] = {0};

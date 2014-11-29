@@ -411,7 +411,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 /**
  * Handler for Agent.ActiveConnections parameter
  */
-LONG H_ActiveConnections(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+LONG H_ActiveConnections(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    int nCounter;
    UINT32 i;

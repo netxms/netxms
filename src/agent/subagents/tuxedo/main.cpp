@@ -25,22 +25,22 @@
 /**
  * Handlers
  */
-LONG H_ClientInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
-LONG H_ClientsList(const TCHAR *param, const TCHAR *arg, StringList *value);
-LONG H_ClientsTable(const TCHAR *param, const TCHAR *arg, Table *value);
-LONG H_DomainInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
-LONG H_MachineInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
-LONG H_MachinesList(const TCHAR *param, const TCHAR *arg, StringList *value);
-LONG H_MachinesTable(const TCHAR *param, const TCHAR *arg, Table *value);
-LONG H_QueueInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
-LONG H_QueuesList(const TCHAR *param, const TCHAR *arg, StringList *value);
-LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value);
-LONG H_ServerInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
-LONG H_ServersList(const TCHAR *param, const TCHAR *arg, StringList *value);
-LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value);
-LONG H_ServiceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
-LONG H_ServicesList(const TCHAR *param, const TCHAR *arg, StringList *value);
-LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value);
+LONG H_ClientInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ClientsList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_ClientsTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_DomainInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_MachineInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_MachinesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_MachinesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_QueueInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_QueuesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_ServerInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ServersList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_ServiceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ServicesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 
 /**
  * Connect count

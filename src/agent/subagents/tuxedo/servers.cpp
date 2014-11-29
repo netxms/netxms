@@ -198,7 +198,7 @@ static void QueryServers()
 /**
  * Handler for Tuxedo.Servers list
  */
-LONG H_ServersList(const TCHAR *param, const TCHAR *arg, StringList *value)
+LONG H_ServersList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -231,7 +231,7 @@ LONG H_ServersList(const TCHAR *param, const TCHAR *arg, StringList *value)
 /**
  * Handler for Tuxedo.Servers table
  */
-LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value)
+LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -321,7 +321,7 @@ LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value)
 /**
  * Handler for Tuxedo.Server.* parameters
  */
-LONG H_ServerInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_ServerInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR buffer[32];
    if (!AgentGetParameterArg(param, 1, buffer, 32))

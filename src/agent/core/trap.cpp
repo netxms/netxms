@@ -223,7 +223,7 @@ void ForwardTrap(NXCPMessage *msg)
 /**
  * Handler for trap statistic DCIs
  */
-LONG H_AgentTraps(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_AgentTraps(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	switch(arg[0])
 	{

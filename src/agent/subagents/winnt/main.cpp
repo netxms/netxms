@@ -25,30 +25,30 @@
 /**
  * Externlals
  */
-LONG H_ActiveUserSessions(const TCHAR *cmd, const TCHAR *arg, StringList *value);
-LONG H_AgentDesktop(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
-LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value);
-LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
-LONG H_Desktops(const TCHAR *cmd, const TCHAR *arg, StringList *value);
-LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value);
-LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
-LONG H_IPRoutingTable(const TCHAR *cmd, const TCHAR *arg, StringList *pValue);
-LONG H_NetInterface64bitSupport(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_RemoteShareStatus(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
-LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
-LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value);
-LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value);
-LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value);
-LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value);
+LONG H_ActiveUserSessions(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_AgentDesktop(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_Desktops(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
+LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_IPRoutingTable(const TCHAR *cmd, const TCHAR *arg, StringList *pValue, AbstractCommSession *session);
+LONG H_NetInterface64bitSupport(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_RemoteShareStatus(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
+LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session);
+LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, AbstractCommSession *session);
+LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 
 /**
  * Optional imports
@@ -117,7 +117,7 @@ static BOOL SetCurrentPrivilege(LPCTSTR pszPrivilege, BOOL bEnablePrivilege)
 /**
  * Shutdown system
  */
-static LONG H_ActionShutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData)
+static LONG H_ActionShutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData, AbstractCommSession *session)
 {
 	LONG nRet = ERR_INTERNAL_ERROR;
 

@@ -136,20 +136,20 @@ enum
 // Handlers
 //
 
-LONG H_DiskInfo(char *, char *, char *);
-LONG H_ProcessList(char *, char *, StringList *);
-LONG H_Uptime(char *, char *, char *);
-LONG H_Uname(char *, char *, char *);
-LONG H_Hostname(char *, char *, char *);
-LONG H_CpuCount(char *, char *, char *);
-LONG H_CpuLoad(char *, char *, char *);
-LONG H_CpuUsage(char *, char *, char *);
-LONG H_ProcessCount(char *, char *, char *);
-LONG H_MemoryInfo(char *, char *, char *);
-LONG H_NetIpForwarding(char *, char *, char *);
-LONG H_NetIfStats(char *, char *, char *);
-LONG H_NetArpCache(char *, char *, StringList *);
-LONG H_NetIfList(char *, char *, StringList *);
-LONG H_NetRoutingTable(char *, char *, StringList *);
+LONG H_DiskInfo(char *, char *, char *, AbstractCommSession *);
+LONG H_ProcessList(char *, char *, StringList *, AbstractCommSession *);
+LONG H_Uptime(char *, char *, char *, AbstractCommSession *);
+LONG H_Uname(char *, char *, char *, AbstractCommSession *);
+LONG H_Hostname(char *, char *, char *, AbstractCommSession *);
+LONG H_CpuCount(char *, char *, char *, AbstractCommSession *);
+LONG H_CpuLoad(char *, char *, char *, AbstractCommSession *);
+LONG H_CpuUsage(char *, char *, char *, AbstractCommSession *);
+LONG H_ProcessCount(char *, char *, char *, AbstractCommSession *);
+LONG H_MemoryInfo(char *, char *, char *, AbstractCommSession *);
+LONG H_NetIpForwarding(char *, char *, char *, AbstractCommSession *);
+LONG H_NetIfStats(char *, char *, char *, AbstractCommSession *);
+LONG H_NetArpCache(char *, char *, StringList *, AbstractCommSession *);
+LONG H_NetIfList(char *, char *, StringList *, AbstractCommSession *);
+LONG H_NetRoutingTable(char *, char *, StringList *, AbstractCommSession *);
 
 #endif /* __IPSO_H__ */

@@ -542,7 +542,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 /**
  * Handler function for external (user-defined) parameters
  */
-LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalParameter called for \"%s\" \"%s\""), cmd, arg);
    StringList values;
@@ -557,7 +557,7 @@ LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler function for external (user-defined) lists
  */
-LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    DebugPrintf(INVALID_INDEX, 4, _T("H_ExternalList called for \"%s\" \"%s\""), cmd, arg);
    StringList values;

@@ -25,7 +25,7 @@
 
 #include "disk.h"
 
-LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
+LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct statvfs s;
@@ -99,7 +99,7 @@ LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue)
 /**
  * Handler for FileSystem.Volumes table
  */
-LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -185,7 +185,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
 /**
  * Handler for FileSystem.MountPoints list
  */
-LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 

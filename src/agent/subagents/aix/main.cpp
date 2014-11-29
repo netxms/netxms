@@ -27,28 +27,28 @@
 // Hanlder functions
 //
 
-LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value);
-LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value);
-LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value);
-LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value);
-LONG H_NetInterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue);
-LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue);
-LONG H_SysProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_SysThreadCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
-LONG H_VirtualMemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue);
+LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
+LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_NetInterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session);
+LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session);
+LONG H_SysProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_SysThreadCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_VirtualMemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 
 
 //
@@ -67,7 +67,7 @@ static THREAD m_hCPUStatThread = INVALID_THREAD_HANDLE;
 /**
  * Detect support for source packages
  */
-static LONG H_SourcePkg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_SourcePkg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	ret_int(pValue, 1);
 	return SYSINFO_RC_SUCCESS;

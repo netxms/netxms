@@ -62,7 +62,7 @@ THREAD_RESULT THREAD_CALL ParserThreadEventLog(void *arg)
 /**
  * Get parser statistics
  */
-static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	TCHAR name[256];
 
@@ -106,7 +106,7 @@ static LONG H_ParserStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Get list of configured parsers
  */
-static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+static LONG H_ParserList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
 	for(int i = 0; i < s_parsers.size(); i++)
 		value->add(s_parsers.get(i)->getName());

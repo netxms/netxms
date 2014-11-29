@@ -35,7 +35,7 @@ static TCHAR m_szDevice[MAX_PATH];
 /**
  * Handler for SMS.SerialConfig and SMS.DeviceModel
  */
-static LONG H_StringConst(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_StringConst(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	ret_string(pValue, pArg);
 	return SYSINFO_RC_SUCCESS;
@@ -44,7 +44,7 @@ static LONG H_StringConst(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValu
 /**
  * Handler for SMS.Send action
  */
-static LONG H_SendSMS(const TCHAR *pszAction, StringList *pArgs, const TCHAR *pData)
+static LONG H_SendSMS(const TCHAR *pszAction, StringList *pArgs, const TCHAR *pData, AbstractCommSession *session)
 {
 	if (pArgs->size() < 2)
 		return ERR_BAD_ARGUMENTS;

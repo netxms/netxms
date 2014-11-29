@@ -30,7 +30,7 @@
 /**
  * Hander for System.CPU.Count parameter
  */
-LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	struct vario v;
 	LONG nRet;
@@ -50,7 +50,7 @@ LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.Uname parameter
  */
-LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet;
 	struct utsname un;
@@ -74,7 +74,7 @@ LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.Uptime parameter
  */
-LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	int fd;
@@ -102,7 +102,7 @@ LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.Hostname parameter
  */
-LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet;
 	struct utsname un;
@@ -122,7 +122,7 @@ LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.Memory.Physical.xxx parameters
  */
-LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	struct vminfo vmi;
 	LONG nRet;
@@ -159,7 +159,7 @@ LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for virtual and swap memory parameters
  */
-LONG H_VirtualMemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_VirtualMemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	perfstat_memory_total_t memStats;
 	LONG nRet;
@@ -229,7 +229,7 @@ static BOOL kread(int kmem, off_t offset, void *buffer, size_t buflen)
 /**
  * Handler for System.LoadAvg parameters
  */
-LONG H_LoadAvg(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_LoadAvg(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG rc;
 	perfstat_cpu_total_t info;

@@ -252,7 +252,7 @@ static DWORD CalculateAverageTime(QWORD *opcount, QWORD *times)
 // Get total I/O stat value
 //
 
-LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value)
+LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value, AbstractCommSession *session)
 {
 	LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -293,7 +293,7 @@ LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value)
 // Get I/O stat for specific device
 //
 
-LONG H_IOStats(const char *cmd, const char *arg, char *value)
+LONG H_IOStats(const char *cmd, const char *arg, char *value, AbstractCommSession *session)
 {
 	char device[MAX_PATH];
 	struct stat devInfo;

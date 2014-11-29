@@ -126,7 +126,7 @@ static void QueryServices()
 /**
  * Handler for Tuxedo.Services list
  */
-LONG H_ServicesList(const TCHAR *param, const TCHAR *arg, StringList *value)
+LONG H_ServicesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -157,7 +157,7 @@ LONG H_ServicesList(const TCHAR *param, const TCHAR *arg, StringList *value)
 /**
  * Handler for Tuxedo.Services table
  */
-LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value)
+LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -200,7 +200,7 @@ LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value)
 /**
  * Handler for Tuxedo.Service.* parameters
  */
-LONG H_ServiceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_ServiceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR serviceName[128];
    if (!AgentGetParameterArg(param, 1, serviceName, 128))

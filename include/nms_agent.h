@@ -377,7 +377,7 @@ public:
 typedef struct
 {
    TCHAR name[MAX_PARAM_NAME];
-   LONG (* handler)(const TCHAR *, const TCHAR *, TCHAR *);
+   LONG (* handler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
    const TCHAR *arg;
    int dataType;		// Use DT_DEPRECATED to indicate deprecated parameter
    TCHAR description[MAX_DB_STRING];
@@ -399,7 +399,7 @@ typedef struct
 typedef struct
 {
    TCHAR name[MAX_PARAM_NAME];
-   LONG (* handler)(const TCHAR *, const TCHAR *, StringList *);
+   LONG (* handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
    const TCHAR *arg;
 } NETXMS_SUBAGENT_LIST;
 
@@ -409,7 +409,7 @@ typedef struct
 typedef struct
 {
    TCHAR name[MAX_PARAM_NAME];
-   LONG (* handler)(const TCHAR *, const TCHAR *, Table *);
+   LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *);
    const TCHAR *arg;
    TCHAR instanceColumns[MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS];
    TCHAR description[MAX_DB_STRING];
@@ -421,7 +421,7 @@ typedef struct
 typedef struct
 {
    TCHAR name[MAX_PARAM_NAME];
-   LONG (* handler)(const TCHAR *, StringList *, const TCHAR *);
+   LONG (* handler)(const TCHAR *, StringList *, const TCHAR *, AbstractCommSession *);
    const TCHAR *arg;
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_ACTION;

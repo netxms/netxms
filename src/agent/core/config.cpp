@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -25,7 +25,7 @@
 /**
  * Externals
  */
-LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 /**
  * Max NXCP message size
@@ -95,7 +95,7 @@ BOOL DownloadConfig(TCHAR *pszServer)
          // Prepare request
          msg.setCode(CMD_GET_MY_CONFIG);
          msg.setId(1);
-         if (H_PlatformName(NULL, NULL, szBuffer) != SYSINFO_RC_SUCCESS)
+         if (H_PlatformName(NULL, NULL, szBuffer, NULL) != SYSINFO_RC_SUCCESS)
             _tcscpy(szBuffer, _T("error"));
          msg.setField(VID_PLATFORM_NAME, szBuffer);
          msg.setField(VID_VERSION_MAJOR, (WORD)NETXMS_VERSION_MAJOR);

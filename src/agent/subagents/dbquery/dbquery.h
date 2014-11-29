@@ -121,12 +121,12 @@ public:
 /**
  * handlers
  */
-LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value);
-LONG H_DirectQueryTable(const TCHAR *param, const TCHAR *arg, Table *value);
-LONG H_DirectQueryConfigurable(const TCHAR *param, const TCHAR *arg, TCHAR *value);
-LONG H_DirectQueryConfigurableTable(const TCHAR *param, const TCHAR *arg, Table *value);
-LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value);
-LONG H_PollResultTable(const TCHAR *param, const TCHAR *arg, Table *value);
+LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_DirectQueryTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_DirectQueryConfigurable(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_DirectQueryConfigurableTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_PollResultTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 
 /**
  * Functions

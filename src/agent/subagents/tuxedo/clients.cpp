@@ -174,7 +174,7 @@ static void QueryClients()
 /**
  * Handler for Tuxedo.Clients list
  */
-LONG H_ClientsList(const TCHAR *param, const TCHAR *arg, StringList *value)
+LONG H_ClientsList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -205,7 +205,7 @@ LONG H_ClientsList(const TCHAR *param, const TCHAR *arg, StringList *value)
 /**
  * Handler for Tuxedo.Clients table
  */
-LONG H_ClientsTable(const TCHAR *param, const TCHAR *arg, Table *value)
+LONG H_ClientsTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -280,7 +280,7 @@ LONG H_ClientsTable(const TCHAR *param, const TCHAR *arg, Table *value)
 /**
  * Handler for Tuxedo.Client.* parameters
  */
-LONG H_ClientInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_ClientInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR id[80];
    if (!AgentGetParameterArg(param, 1, id, 80))

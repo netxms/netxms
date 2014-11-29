@@ -89,7 +89,7 @@ static bool GetInterfaceData()
 /**
  * Get interface data
  */
-LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	char ifName[IF_NAMESIZE], *eptr;
 
@@ -206,7 +206,7 @@ static void GetNDDInfo(char *pszDevice, BYTE *pMacAddr, DWORD *pdwType)
 /**
  * Handler for Net.InterfaceList enum
  */
-LONG H_NetInterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
+LONG H_NetInterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
 	LONG nRet;
 	struct ifconf ifc;
@@ -299,7 +299,7 @@ retry_ifconf:
 /**
  * Handler for Net.Interface.AdminStatus parameter
  */
-LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char ifName[IF_NAMESIZE], *eptr;

@@ -24,7 +24,7 @@ static PyThreadState *m_gtState = NULL;
  * Handlers
  *
  */
-static LONG H_Param(char *pszParam, char *pArg, char *pValue)
+static LONG H_Param(char *pszParam, char *pArg, char *pValue, AbstractCommSession *session)
 {
 	ret_uint(pValue, 0x01000000);
 	return SYSINFO_RC_SUCCESS;

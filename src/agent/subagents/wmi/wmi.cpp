@@ -25,10 +25,10 @@
 /**
  * Externals
  */
-LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, StringList *value);
-LONG H_ACPITZCurrTemp(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_SecurityCenterDisplayName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_SecurityCenterProductState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_ACPIThermalZones(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session);
+LONG H_ACPITZCurrTemp(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SecurityCenterDisplayName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SecurityCenterProductState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 /**
  * Convert variant to string value
@@ -192,7 +192,7 @@ void CloseWMIQuery(WMI_QUERY_CONTEXT *ctx)
  * Handler for generic WMI query
  * Format: WMI.Query(namespace, query, property)
  */
-static LONG H_WMIQuery(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+static LONG H_WMIQuery(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	WMI_QUERY_CONTEXT ctx;
 	IEnumWbemClassObject *pEnumObject = NULL;
@@ -265,7 +265,7 @@ static LONG H_WMIQuery(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for WMI.NameSpaces list
  */
-static LONG H_WMINameSpaces(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
+static LONG H_WMINameSpaces(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
 	WMI_QUERY_CONTEXT ctx;
 	IEnumWbemClassObject *pEnumObject = NULL;
@@ -300,7 +300,7 @@ static LONG H_WMINameSpaces(const TCHAR *pszParam, const TCHAR *pArg, StringList
 /**
  * Handler for WMI.Classes list
  */
-static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
+static LONG H_WMIClasses(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
 	WMI_QUERY_CONTEXT ctx;
 	IEnumWbemClassObject *pEnumObject = NULL;

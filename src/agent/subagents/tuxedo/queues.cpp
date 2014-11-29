@@ -165,7 +165,7 @@ static void QueryQueues()
 /**
  * Handler for Tuxedo.Queues list
  */
-LONG H_QueuesList(const TCHAR *param, const TCHAR *arg, StringList *value)
+LONG H_QueuesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -196,7 +196,7 @@ LONG H_QueuesList(const TCHAR *param, const TCHAR *arg, StringList *value)
 /**
  * Handler for Tuxedo.Queues table
  */
-LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value)
+LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -247,7 +247,7 @@ LONG H_QueuesTable(const TCHAR *param, const TCHAR *arg, Table *value)
 /**
  * Handler for Tuxedo.Queue.* parameters
  */
-LONG H_QueueInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_QueueInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR queueName[32];
    if (!AgentGetParameterArg(param, 1, queueName, 32))

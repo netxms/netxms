@@ -326,7 +326,7 @@ static void GetUsage(int source, int cpu, int count, TCHAR *value)
 	ret_double(value, usage);
 }
 
-LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int count;
 
@@ -347,7 +347,7 @@ LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int count, cpu;
 	TCHAR buffer[256], *eptr;
@@ -378,7 +378,7 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	ret_uint(pValue, m_maxCPU);
 	return SYSINFO_RC_SUCCESS;

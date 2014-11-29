@@ -9,7 +9,7 @@
 /**
  * Check POP3 service - parameter handler
  */
-LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	char szHost[256];

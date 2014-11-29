@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
@@ -51,7 +51,7 @@ void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...)
       va_start(args, pszFormat);
       _vsntprintf(szBuffer, 4096, pszFormat, args);
       va_end(args);
-      
+
       if (dwSessionId != INVALID_INDEX)
          nxlog_write(MSG_DEBUG_SESSION, EVENTLOG_DEBUG_TYPE, "ds", dwSessionId, szBuffer);
       else
@@ -80,7 +80,7 @@ void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath)
    int i, nLen;
 
    // Strip path from original file name, if any
-   for(i = (int)_tcslen(pszFileName) - 1; 
+   for(i = (int)_tcslen(pszFileName) - 1;
        (i >= 0) && (pszFileName[i] != '\\') && (pszFileName[i] != '/'); i--);
 
    // Create full path to the file store
@@ -107,7 +107,7 @@ BOOL WaitForProcess(const TCHAR *name)
 	_sntprintf(param, MAX_PATH, _T("Process.Count(%s)"), name);
 	while(1)
 	{
-		rc = GetParameterValue(INVALID_INDEX, param, value);
+		rc = GetParameterValue(INVALID_INDEX, param, value, NULL);
 		switch(rc)
 		{
 			case ERR_SUCCESS:
@@ -143,8 +143,8 @@ TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufSize)
 {
    TCHAR *msgBuf;
 
-   if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-                     FORMAT_MESSAGE_FROM_HMODULE | 
+   if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                     FORMAT_MESSAGE_FROM_HMODULE |
                      FORMAT_MESSAGE_IGNORE_INSERTS,
                      GetModuleHandle(_T("PDH.DLL")), dwError,
                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language

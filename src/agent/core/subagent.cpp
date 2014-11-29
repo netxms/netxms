@@ -257,7 +257,7 @@ void UnloadAllSubAgents()
 /**
  * Enumerate loaded subagents
  */
-LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    UINT32 i;
    TCHAR szBuffer[MAX_PATH + 32];
@@ -281,7 +281,7 @@ LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 /**
  * Enumerate loaded subagents as a table
  */
-LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
+LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    value->addColumn(_T("NAME"));
    value->addColumn(_T("VERSION"));
@@ -300,7 +300,7 @@ LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
 /**
  * Handler for Agent.IsSubagentLoaded
  */
-LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	TCHAR name[256];
 

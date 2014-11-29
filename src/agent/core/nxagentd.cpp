@@ -465,7 +465,7 @@ static THREAD_RESULT THREAD_CALL ShutdownThread(void *pArg)
 /**
  * Restart agent
  */
-static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *data)
+static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *data, AbstractCommSession *session)
 {
 	DebugPrintf(INVALID_INDEX, 1, _T("H_RestartAgent() called"));
 

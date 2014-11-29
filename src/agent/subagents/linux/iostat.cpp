@@ -258,7 +258,7 @@ static DWORD GetSampleDelta(IOSTAT_SAMPLE *samples, int metric)
 // Handlers for agent parameters
 //
 
-LONG H_IoStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_IoStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_UNSUPPORTED;
 
@@ -291,7 +291,7 @@ LONG H_IoStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return nRet;
 }
 
-LONG H_IoStatsTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_IoStatsTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int metric = CAST_FROM_POINTER(pArg, int);
 
@@ -335,7 +335,7 @@ LONG H_IoStatsTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return SYSINFO_RC_SUCCESS;
 }
 
-LONG H_DiskQueue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_DiskQueue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_UNSUPPORTED;
 
@@ -356,7 +356,7 @@ LONG H_DiskQueue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return nRet;
 }
 
-LONG H_DiskQueueTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_DiskQueueTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	MutexLock(m_dataAccess);
 

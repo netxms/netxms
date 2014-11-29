@@ -25,7 +25,7 @@
 /**
  * Handler for System.ServiceState parameter
  */
-LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session, AbstractCommSession *session)
 {
    SC_HANDLE hManager, hService;
    TCHAR szServiceName[MAX_PATH];
@@ -75,7 +75,7 @@ LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for System.Services list
  */
-LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value)
+LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session, AbstractCommSession *session)
 {
    SC_HANDLE hManager = OpenSCManager(NULL, NULL, GENERIC_READ);
    if (hManager == NULL)
@@ -105,7 +105,7 @@ LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value)
 /**
  * Handler for System.Services table
  */
-LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value)
+LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, AbstractCommSession *session)
 {
    SC_HANDLE hManager = OpenSCManager(NULL, NULL, GENERIC_READ);
    if (hManager == NULL)
@@ -211,7 +211,7 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value)
 /**
  * Handler for System.ThreadCount
  */
-LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    PERFORMANCE_INFORMATION pi;
    pi.cb = sizeof(PERFORMANCE_INFORMATION);
@@ -224,7 +224,7 @@ LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for System.ConnectedUsers parameter
  */
-LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    LONG nRet;
    WTS_SESSION_INFO *pSessionList;
@@ -250,7 +250,7 @@ LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.ActiveUserSessions enum
  */
-LONG H_ActiveUserSessions(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value)
+LONG H_ActiveUserSessions(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
    LONG nRet;
    WTS_SESSION_INFO *pSessionList;
@@ -309,7 +309,7 @@ static BOOL CALLBACK WindowStationsEnumCallback(LPTSTR lpszWindowStation, LPARAM
 /**
  * Handler for System.WindowStations list
  */
-LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    return EnumWindowStations(WindowStationsEnumCallback, (LONG_PTR)value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
@@ -326,7 +326,7 @@ static BOOL CALLBACK DesktopsEnumCallback(LPTSTR lpszDesktop, LPARAM lParam)
 /**
  * Handler for System.Desktops list
  */
-LONG H_Desktops(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+LONG H_Desktops(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    TCHAR wsName[256];
    AgentGetParameterArg(cmd, 1, wsName, 256);
@@ -342,7 +342,7 @@ LONG H_Desktops(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 /**
  * Handler for Agent.Desktop parameter
  */
-LONG H_AgentDesktop(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_AgentDesktop(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    HWINSTA ws = GetProcessWindowStation();
    if (ws == NULL)
@@ -386,7 +386,7 @@ LONG H_AgentDesktop(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for System.AppAddressSpace
  */
-LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	SYSTEM_INFO si;
 
@@ -399,7 +399,7 @@ LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.Update.*Time parameters
  */
-LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR buffer[MAX_PATH];
    _sntprintf(buffer, MAX_PATH, _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate\\Auto Update\\Results\\%s"), arg);

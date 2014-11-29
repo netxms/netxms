@@ -28,7 +28,7 @@
  * Usage: Net.RemoteShareStatus(share,domain,login,password)
  *    or: Net.RemoteShareStatusText(share,domain,login,password)
  */
-LONG H_RemoteShareStatus(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_RemoteShareStatus(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	TCHAR share[MAX_PATH], domain[64], login[64], password[256];
 #ifdef UNICODE
@@ -92,7 +92,7 @@ LONG H_RemoteShareStatus(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Get local ARP cache
  */
-LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    MIB_IPNETTABLE *arpCache;
    DWORD i, j, dwError, dwSize;
@@ -197,7 +197,7 @@ static const bool AdapterIndexToName(DWORD index, TCHAR *name)
 /**
  * Net.InterfaceList list handler
  */
-LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    LONG result = SYSINFO_RC_SUCCESS;
 
@@ -246,7 +246,7 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 /**
  * Get IP statistics
  */
-LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    MIB_IPSTATS ips;
    LONG iResult = SYSINFO_RC_SUCCESS;
@@ -274,7 +274,7 @@ LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Get interface statistics
  */
-LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    LONG iResult = SYSINFO_RC_SUCCESS;
    TCHAR *eptr, szBuffer[256];
@@ -408,7 +408,7 @@ LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Get IP routing table
  */
-LONG H_IPRoutingTable(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value)
+LONG H_IPRoutingTable(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
    MIB_IPFORWARDTABLE *pRoutingTable;
    DWORD i, dwError, dwSize;
@@ -449,7 +449,7 @@ LONG H_IPRoutingTable(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value)
 /**
  * Support for 64 bit interface counters
  */
-LONG H_NetInterface64bitSupport(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_NetInterface64bitSupport(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    ret_int(value, (imp_GetIfEntry2 != NULL) ? 1 : 0);
    return SYSINFO_RC_SUCCESS;

@@ -75,7 +75,7 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *use
  * 
  * TODO: Unicode support!
  */
-static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *value)
+static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    int ret = SYSINFO_RC_ERROR;
    int retCode = PC_ERR_BAD_PARAMS;
