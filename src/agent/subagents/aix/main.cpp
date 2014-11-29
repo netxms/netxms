@@ -300,7 +300,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(AIX)
  */
 extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
-   return H_NetInterfaceList(_T("Net.InterfaceList"), NULL, pValue) == SYSINFO_RC_SUCCESS;
+   return H_NetInterfaceList(_T("Net.InterfaceList"), NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
 }  
 
 /*

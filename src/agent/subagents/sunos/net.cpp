@@ -416,7 +416,7 @@ LONG H_NetInterfaceLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
    LONG nRet = SYSINFO_RC_ERROR;
 
    // try to get status using kstat()
-   nRet = H_NetInterfaceStats(pszParam, (const TCHAR *)"link_up", pValue);
+   nRet = H_NetInterfaceStats(pszParam, (const TCHAR *)"link_up", pValue, NULL);
    if (nRet == SYSINFO_RC_SUCCESS)
    {
       return SYSINFO_RC_SUCCESS;
