@@ -1138,6 +1138,14 @@ restart_agent_check:
                PostEventEx(pQueue, EVENT_SNMP_OK, m_id, NULL);
                sendPollerMsg(dwRqId, POLLER_INFO _T("Connectivity with SNMP agent restored\r\n"));
             }
+
+            // Update authoritative engine data for SNMPv3
+            if ((pTransport->getSnmpVersion() == SNMP_VERSION_3) && (pTransport->getAuthoritativeEngine() != NULL))
+            {
+         		lockProperties();
+               m_snmpSecurity->setAuthoritativeEngine(*pTransport->getAuthoritativeEngine());
+               unlockProperties();
+            }
          }
          else
          {

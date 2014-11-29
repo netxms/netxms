@@ -73,6 +73,8 @@ void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
 {
 	delete m_securityContext;
 	m_securityContext = ctx;
+   delete m_authoritativeEngine;
+   m_authoritativeEngine = (m_securityContext->getAuthoritativeEngine().getIdLen() > 0) ? new SNMP_Engine(&m_securityContext->getAuthoritativeEngine()) : NULL;
 }
 
 /**
@@ -132,8 +134,9 @@ retry:
 						}
 
 						// Cache context engine ID
-						if ((m_contextEngine == NULL) && ((*response)->getContextEngineIdLength() != 0))
+                  if (((m_contextEngine == NULL) || (m_contextEngine->getIdLen() == 0)) && ((*response)->getContextEngineIdLength() != 0))
 						{
+                     delete m_contextEngine;
 							m_contextEngine = new SNMP_Engine((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
 						}
 

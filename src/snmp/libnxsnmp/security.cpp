@@ -182,7 +182,7 @@ void SNMP_SecurityContext::setPrivPassword(const char *password)
 /**
  * Set authoritative engine ID
  */
-void SNMP_SecurityContext::setAuthoritativeEngine(SNMP_Engine &engine)
+void SNMP_SecurityContext::setAuthoritativeEngine(const SNMP_Engine &engine)
 {
 	m_authoritativeEngine = engine;
 	recalculateKeys();
