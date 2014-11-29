@@ -196,7 +196,7 @@ static LONG H_PdhCounterValue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
 					}
 				}
 				MutexUnlock(s_autoCountersLock);
-				return (counter != NULL) ? H_CollectedCounterData(pszParam, (const TCHAR *)counter, pValue) : SYSINFO_RC_UNSUPPORTED;
+				return (counter != NULL) ? H_CollectedCounterData(pszParam, (const TCHAR *)counter, pValue, session) : SYSINFO_RC_UNSUPPORTED;
 			}
 		}
 	}
@@ -364,7 +364,7 @@ static LONG H_PdhObjectItems(const TCHAR *pszParam, const TCHAR *pArg, StringLis
  */
 static LONG H_CounterAlias(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   return H_PdhCounterValue(NULL, pArg, pValue);
+   return H_PdhCounterValue(NULL, pArg, pValue, session);
 }
 
 /**
@@ -373,7 +373,7 @@ static LONG H_CounterAlias(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVal
 static LONG H_FreeMemoryPct(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    TCHAR buffer[MAX_RESULT_LENGTH];
-   LONG rc = H_PdhCounterValue(NULL, pArg, buffer);
+   LONG rc = H_PdhCounterValue(NULL, pArg, buffer, session);
    if (rc != SYSINFO_RC_SUCCESS)
       return rc;
 
@@ -570,7 +570,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
    if (newName != NULL)
       counter = newName;
    TCHAR value[MAX_RESULT_LENGTH];
-   if (H_PdhCounterValue(NULL, counter, value) == SYSINFO_RC_SUCCESS)
+   if (H_PdhCounterValue(NULL, counter, value, NULL) == SYSINFO_RC_SUCCESS)
    {
       AgentWriteDebugLog(4, _T("WinPerf: \"\\Memory\\Free & Zero Page List Bytes\" is supported"));
       AddParameter(_T("System.Memory.Physical.Free"), H_CounterAlias, (TCHAR *)counter, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE);

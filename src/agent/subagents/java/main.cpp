@@ -94,7 +94,7 @@ static NETXMS_SUBAGENT_INFO g_subAgentInfo =
 
 ;
 
-LONG actionHandler (const TCHAR *pszAction, StringList *pArgList, const TCHAR *id)
+LONG actionHandler(const TCHAR *pszAction, StringList *pArgList, const TCHAR *id, AbstractCommSession *session)
 {
    LONG result = SYSINFO_RC_SUCCESS;
    // route the call to SubAgent
@@ -119,7 +119,7 @@ LONG actionHandler (const TCHAR *pszAction, StringList *pArgList, const TCHAR *i
 }
 
 
-LONG parameterHandler (const TCHAR *pszParam, const TCHAR *id, TCHAR *pValue)
+LONG parameterHandler (const TCHAR *pszParam, const TCHAR *id, TCHAR *pValue, AbstractCommSession *session)
 {
    try
    {
@@ -136,7 +136,7 @@ LONG parameterHandler (const TCHAR *pszParam, const TCHAR *id, TCHAR *pValue)
 }
 
 
-LONG listParameterHandler (const TCHAR *cmd, const TCHAR *id, StringList *value)
+LONG listParameterHandler (const TCHAR *cmd, const TCHAR *id, StringList *value, AbstractCommSession *session)
 {
    try
    {
@@ -156,7 +156,7 @@ LONG listParameterHandler (const TCHAR *cmd, const TCHAR *id, StringList *value)
 }
 
 
-LONG tableParameterHandler (const TCHAR *cmd, const TCHAR *id, Table *table)
+LONG tableParameterHandler (const TCHAR *cmd, const TCHAR *id, Table *table, AbstractCommSession *session)
 {
    try
    {

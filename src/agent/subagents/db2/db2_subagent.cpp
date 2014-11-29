@@ -753,7 +753,7 @@ static BOOL PerformQueries(const PTHREAD_INFO threadInfo)
    return TRUE;
 }
 
-static LONG GetParameter(const TCHAR* parameter, const TCHAR* arg, TCHAR* value)
+static LONG GetParameter(const TCHAR *parameter, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    Dci dci = StringToDci(arg);
 
@@ -793,7 +793,7 @@ static LONG GetParameter(const TCHAR* parameter, const TCHAR* arg, TCHAR* value)
    return SYSINFO_RC_SUCCESS;
 }
 
-static const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry, const TCHAR* entryName)
+static const PDB2_INFO GetConfigs(Config *config, ConfigEntry *configEntry, const TCHAR *entryName)
 {
    ObjectArray<ConfigEntry> *entryList = configEntry->getSubEntries(_T("*"));
    if (entryList->size() == 0)

@@ -25,7 +25,7 @@
 /**
  * Handler for System.ServiceState parameter
  */
-LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session, AbstractCommSession *session)
+LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    SC_HANDLE hManager, hService;
    TCHAR szServiceName[MAX_PATH];
@@ -75,7 +75,7 @@ LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 /**
  * Handler for System.Services list
  */
-LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session, AbstractCommSession *session)
+LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
    SC_HANDLE hManager = OpenSCManager(NULL, NULL, GENERIC_READ);
    if (hManager == NULL)
