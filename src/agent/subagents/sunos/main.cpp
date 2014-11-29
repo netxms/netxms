@@ -305,5 +305,5 @@ DECLARE_SUBAGENT_ENTRY_POINT(SUNOS)
  */
 extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
-   return H_NetIfList(_T("Net.InterfaceList"), NULL, pValue) == SYSINFO_RC_SUCCESS;
+   return H_NetIfList(_T("Net.InterfaceList"), NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
 }

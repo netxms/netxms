@@ -143,10 +143,10 @@ DECLARE_SUBAGENT_ENTRY_POINT(FREEBSD)
 
 extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
-	return H_NetIfList(_T("Net.InterfaceList"), NULL, pValue) == SYSINFO_RC_SUCCESS;
+	return H_NetIfList(_T("Net.InterfaceList"), NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
 }
 
 extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
 {
-	return H_NetArpCache(_T("Net.ArpCache"), NULL, pValue) == SYSINFO_RC_SUCCESS;
+	return H_NetArpCache(_T("Net.ArpCache"), NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
 }
