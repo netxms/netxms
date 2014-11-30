@@ -58,8 +58,12 @@ public:
    long m_activeRequests;
    char m_currService[128];
    long m_tranLevel;
+   long m_count;
+   long m_running;
 
    TuxedoServer(FBFR32 *fb, FLDOCC32 index);
+   TuxedoServer(TuxedoServer *src);
+   void addInstance(TuxedoServer *s);
 };
 
 /**
@@ -97,6 +101,8 @@ TuxedoServer::TuxedoServer(FBFR32 *fb, FLDOCC32 index)
    m_activeRequests = 0;
    m_currService[0] = 0;
    m_tranLevel = 0;
+   m_count = 0;
+   m_running = 0;
 
    CFget32(fb, TA_SRVID, index, (char *)&m_id, NULL, FLD_LONG);
    CFget32(fb, TA_BASESRVID, index, (char *)&m_baseId, NULL, FLD_LONG);
@@ -131,10 +137,71 @@ TuxedoServer::TuxedoServer(FBFR32 *fb, FLDOCC32 index)
 }
 
 /**
+ * Create server object from another server object
+ */
+TuxedoServer::TuxedoServer(TuxedoServer *src)
+{
+   m_id = src->m_id;
+   m_baseId = src->m_baseId;
+   strcpy(m_group, src->m_group);
+   strcpy(m_name, src->m_name);
+   strcpy(m_state, src->m_state);
+   strcpy(m_cmdLine, src->m_cmdLine);
+   strcpy(m_envFile, src->m_envFile);
+   strcpy(m_rqAddr, src->m_rqAddr);
+   strcpy(m_lmid, src->m_lmid);
+   m_min = src->m_min;
+   m_max = src->m_max;
+   m_generation = src->m_generation;
+   m_pid = src->m_pid;
+   m_minThreads = src->m_minThreads;
+   m_maxThreads = src->m_maxThreads;
+   m_curThreads = src->m_curThreads;
+   m_timeStart = src->m_timeStart;
+   m_timeRestart = src->m_timeRestart;
+   m_convCount = src->m_convCount;
+   m_dequeueCount = src->m_dequeueCount;
+   m_enqueueCount = src->m_enqueueCount;
+   m_postCount = src->m_postCount;
+   m_reqCount = src->m_reqCount;
+   m_subscribeCount = src->m_subscribeCount;
+   m_txnCount = src->m_txnCount;
+   m_totalRequests = src->m_totalRequests;
+   m_totalWorkloads = src->m_totalWorkloads;
+   m_activeRequests = src->m_activeRequests;
+   strcpy(m_currService, src->m_currService);
+   m_tranLevel = src->m_tranLevel;
+   m_count = 1;
+   m_running = !strcmp(src->m_state, "ACTIVE") ? 1 : 0;
+}
+
+/**
+ * Add new instance information
+ */
+void TuxedoServer::addInstance(TuxedoServer *s)
+{
+   m_count++;
+   if (!strcmp(s->m_state, "ACTIVE"))
+      m_running++;
+   m_curThreads += s->m_curThreads;
+   m_convCount += s->m_convCount;
+   m_dequeueCount += s->m_dequeueCount;
+   m_enqueueCount += s->m_enqueueCount;
+   m_postCount += s->m_postCount;
+   m_reqCount += s->m_reqCount;
+   m_subscribeCount += s->m_subscribeCount;
+   m_txnCount += s->m_txnCount;
+   m_totalRequests += s->m_totalRequests;
+   m_totalWorkloads += s->m_totalWorkloads;
+   m_activeRequests += s->m_activeRequests;
+}
+
+/**
  * Service list
  */
 static MUTEX s_lock = MutexCreate();
 static time_t s_lastQuery = 0;
+static ObjectArray<TuxedoServer> *s_serverInstances = NULL;
 static ObjectArray<TuxedoServer> *s_servers = NULL;
 
 /**
@@ -142,6 +209,7 @@ static ObjectArray<TuxedoServer> *s_servers = NULL;
  */
 static void QueryServers()
 {
+   delete_and_null(s_serverInstances);
    delete_and_null(s_servers);
 
    if (!TuxedoConnect())
@@ -162,15 +230,15 @@ static void QueryServers()
       readMore = false;
       if (tpcall((char *)".TMIB", (char *)fb, 0, (char **)&rsp, &rsplen, 0) != -1)
       {
-         if (s_servers == NULL)
-            s_servers = new ObjectArray<TuxedoServer>(256, 256, true);
+         if (s_serverInstances == NULL)
+            s_serverInstances = new ObjectArray<TuxedoServer>(256, 256, true);
 
          long count = 0;
          CFget32(rsp, TA_OCCURS, 0, (char *)&count, NULL, FLD_LONG);
          for(int i = 0; i < (int)count; i++)
          {
             TuxedoServer *s = new TuxedoServer(rsp, (FLDOCC32)i);
-            s_servers->set((int)s->m_id, s);
+            s_serverInstances->set((int)s->m_id, s);
          }
 
          long more = 0;
@@ -193,6 +261,62 @@ static void QueryServers()
    tpfree((char *)rsp);
    tpfree((char *)fb);
    TuxedoDisconnect();
+
+   // Create summary list
+   s_servers = new ObjectArray<TuxedoServer>(1024, 1024, true);
+   TuxedoServer *base = NULL;
+   for(int id = 0; id < s_serverInstances->size(); id++)
+   {
+      TuxedoServer *s = s_serverInstances->get(id);
+      if (s == NULL)
+         continue;
+
+      if (s->m_baseId == s->m_id)
+      {
+         if (base != NULL)
+            s_servers->set(base->m_baseId, base);
+         base = new TuxedoServer(s);
+      }
+      else if (base != NULL)
+      {
+         base->addInstance(s);
+      }
+   }
+   if (base != NULL)
+      s_servers->set(base->m_baseId, base);
+}
+
+/**
+ * Handler for Tuxedo.ServerInstances list
+ */
+LONG H_ServerInstancesList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   LONG rc = SYSINFO_RC_SUCCESS;
+
+   MutexLock(s_lock);
+   if (time(NULL) - s_lastQuery > 5)
+   {
+      QueryServers();
+      s_lastQuery = time(NULL);
+   }
+
+   if (s_serverInstances != NULL)
+   {
+      for(int i = 0; i < s_serverInstances->size(); i++)
+      {
+         TuxedoServer *s = s_serverInstances->get(i);
+         if (s != NULL)
+         {
+            value->add((INT32)s->m_id);
+         }
+      }
+   }
+   else
+   {
+      rc = SYSINFO_RC_ERROR;
+   }
+   MutexUnlock(s_lock);
+   return rc;
 }
 
 /**
@@ -216,7 +340,7 @@ LONG H_ServersList(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
          TuxedoServer *s = s_servers->get(i);
          if (s != NULL)
          {
-            value->add((INT32)s->m_id);
+            value->add((INT32)s->m_baseId);
          }
       }
    }
@@ -229,9 +353,9 @@ LONG H_ServersList(const TCHAR *param, const TCHAR *arg, StringList *value, Abst
 }
 
 /**
- * Handler for Tuxedo.Servers table
+ * Handler for Tuxedo.ServerInstances table
  */
-LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
+LONG H_ServerInstancesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -242,7 +366,7 @@ LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
       s_lastQuery = time(NULL);
    }
 
-   if (s_servers != NULL)
+   if (s_serverInstances != NULL)
    {
       value->addColumn(_T("ID"), DCI_DT_INT, _T("ID"), true);
       value->addColumn(_T("BASE_ID"), DCI_DT_INT, _T("Base ID"));
@@ -273,9 +397,9 @@ LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
       value->addColumn(_T("ENV_FILE"), DCI_DT_STRING, _T("Environment File"));
       value->addColumn(_T("CMDLINE"), DCI_DT_STRING, _T("Command Line"));
 
-      for(int i = 0; i < s_servers->size(); i++)
+      for(int i = 0; i < s_serverInstances->size(); i++)
       {
-         TuxedoServer *s = s_servers->get(i);
+         TuxedoServer *s = s_serverInstances->get(i);
          if (s == NULL)
             continue;
 
@@ -319,9 +443,87 @@ LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value, Abstract
 }
 
 /**
- * Handler for Tuxedo.Server.* parameters
+ * Handler for Tuxedo.Servers table
  */
-LONG H_ServerInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+LONG H_ServersTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   LONG rc = SYSINFO_RC_SUCCESS;
+
+   MutexLock(s_lock);
+   if (time(NULL) - s_lastQuery > 5)
+   {
+      QueryServers();
+      s_lastQuery = time(NULL);
+   }
+
+   if (s_servers != NULL)
+   {
+      value->addColumn(_T("BASE_ID"), DCI_DT_INT, _T("Base ID"), true);
+      value->addColumn(_T("GROUP"), DCI_DT_STRING, _T("Group"));
+      value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+      value->addColumn(_T("MIN"), DCI_DT_INT, _T("Min"));
+      value->addColumn(_T("MAX"), DCI_DT_INT, _T("Max"));
+      value->addColumn(_T("RUNNING"), DCI_DT_INT, _T("Running"));
+      value->addColumn(_T("LMID"), DCI_DT_STRING, _T("Machine"));
+      value->addColumn(_T("THREADS"), DCI_DT_INT, _T("Threads"));
+      value->addColumn(_T("THREADS_MIN"), DCI_DT_INT, _T("Min Threads"));
+      value->addColumn(_T("THREADS_MAX"), DCI_DT_INT, _T("Max Threads"));
+      value->addColumn(_T("ACTIVE_REQUESTS"), DCI_DT_INT, _T("Active Requests"));
+      value->addColumn(_T("PROCESSED_REQUESTS"), DCI_DT_INT, _T("Processed Requests"));
+      value->addColumn(_T("PROCESSED_WORKLOADS"), DCI_DT_INT, _T("Processed Workloads"));
+      value->addColumn(_T("CONVERSATIONS"), DCI_DT_INT, _T("Conversations"));
+      value->addColumn(_T("DEQUEUE_COUNT"), DCI_DT_INT, _T("Dequeue Ops"));
+      value->addColumn(_T("ENQUEUE_COUNT"), DCI_DT_INT, _T("Enqueue Ops"));
+      value->addColumn(_T("POSTS"), DCI_DT_INT, _T("Posts"));
+      value->addColumn(_T("INITIATED_REQUESTS"), DCI_DT_INT, _T("Initiated Requests"));
+      value->addColumn(_T("SUBSCRIPTIONS"), DCI_DT_INT, _T("Subscriptions"));
+      value->addColumn(_T("TRANSACTIONS"), DCI_DT_INT, _T("Transactions"));
+      value->addColumn(_T("ENV_FILE"), DCI_DT_STRING, _T("Environment File"));
+      value->addColumn(_T("CMDLINE"), DCI_DT_STRING, _T("Command Line"));
+
+      for(int i = 0; i < s_servers->size(); i++)
+      {
+         TuxedoServer *s = s_servers->get(i);
+         if (s == NULL)
+            continue;
+
+         value->addRow();
+         value->set(0, (INT32)s->m_baseId);
+         value->set(1, s->m_group);
+         value->set(2, s->m_name);
+         value->set(3, (INT32)s->m_min);
+         value->set(4, (INT32)s->m_max);
+         value->set(5, (INT32)s->m_running);
+         value->set(6, s->m_lmid);
+         value->set(7, (INT32)s->m_curThreads);
+         value->set(8, (INT32)s->m_minThreads);
+         value->set(9, (INT32)s->m_maxThreads);
+         value->set(10, (INT32)s->m_activeRequests);
+         value->set(11, (INT32)s->m_totalRequests);
+         value->set(12, (INT32)s->m_totalWorkloads);
+         value->set(13, (INT32)s->m_convCount);
+         value->set(14, (INT32)s->m_dequeueCount);
+         value->set(15, (INT32)s->m_enqueueCount);
+         value->set(16, (INT32)s->m_postCount);
+         value->set(17, (INT32)s->m_reqCount);
+         value->set(18, (INT32)s->m_subscribeCount);
+         value->set(19, (INT32)s->m_txnCount);
+         value->set(20, s->m_envFile);
+         value->set(21, s->m_cmdLine);
+      }
+   }
+   else
+   {
+      rc = SYSINFO_RC_ERROR;
+   }
+   MutexUnlock(s_lock);
+   return rc;
+}
+
+/**
+ * Handler for Tuxedo.ServerInstance.* parameters
+ */
+LONG H_ServerInstanceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR buffer[32];
    if (!AgentGetParameterArg(param, 1, buffer, 32))
@@ -341,9 +543,9 @@ LONG H_ServerInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
       s_lastQuery = time(NULL);
    }
 
-   if (s_servers != NULL)
+   if (s_serverInstances != NULL)
    {
-      TuxedoServer *s = s_servers->get(id);
+      TuxedoServer *s = s_serverInstances->get(id);
       if (s != NULL)
       {
          switch(*arg)
@@ -383,6 +585,84 @@ LONG H_ServerInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
                break;
             case 'W':
                ret_int(value, (INT32)s->m_totalWorkloads);
+               break;
+            default:
+               rc = SYSINFO_RC_UNSUPPORTED;
+               break;
+         }
+      }
+      else
+      {
+         rc = SYSINFO_RC_UNSUPPORTED;
+      }
+   }
+   else
+   {
+      rc = SYSINFO_RC_ERROR;
+   }
+   MutexUnlock(s_lock);
+   return rc;
+}
+
+/**
+ * Handler for Tuxedo.Server.* parameters
+ */
+LONG H_ServerInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR buffer[32];
+   if (!AgentGetParameterArg(param, 1, buffer, 32))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   TCHAR *eptr;
+   long id = _tcstol(buffer, &eptr, 10);
+   if ((id < 0) || (*eptr != 0))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   LONG rc = SYSINFO_RC_SUCCESS;
+
+   MutexLock(s_lock);
+   if (time(NULL) - s_lastQuery > 5)
+   {
+      QueryServers();
+      s_lastQuery = time(NULL);
+   }
+
+   if (s_servers != NULL)
+   {
+      TuxedoServer *s = s_servers->get(id);
+      if (s != NULL)
+      {
+         switch(*arg)
+         {
+            case 'A':
+               ret_int(value, (INT32)s->m_activeRequests);
+               break;
+            case 'C':
+               ret_mbstring(value, s->m_cmdLine);
+               break;
+            case 'g':
+               ret_mbstring(value, s->m_group);
+               break;
+            case 'i':
+               ret_int(value, (INT32)s->m_min);
+               break;
+            case 'M':
+               ret_mbstring(value, s->m_lmid);
+               break;
+            case 'N':
+               ret_mbstring(value, s->m_name);
+               break;
+            case 'R':
+               ret_int(value, (INT32)s->m_totalRequests);
+               break;
+            case 'r':
+               ret_int(value, (INT32)s->m_running);
+               break;
+            case 'W':
+               ret_int(value, (INT32)s->m_totalWorkloads);
+               break;
+            case 'x':
+               ret_int(value, (INT32)s->m_max);
                break;
             default:
                rc = SYSINFO_RC_UNSUPPORTED;
