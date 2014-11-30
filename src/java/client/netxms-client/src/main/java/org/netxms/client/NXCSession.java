@@ -261,6 +261,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private HousekeeperThread housekeeperThread = null;
    private AtomicLong requestId = new AtomicLong(1);
    private boolean isConnected = false;
+   private boolean isDisconnected = false;
    private boolean serverConsoleConnected = false;
    private EncryptionContext encryptionContext = null;
 
@@ -1672,8 +1673,14 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 	 * @see org.netxms.api.client.Session#connect()
 	 */
    @Override
-   public void connect() throws IOException, UnknownHostException, NetXMSClientException
+   public void connect() throws IOException, UnknownHostException, NetXMSClientException, IllegalStateException
    {
+      if (isConnected)
+         throw new IllegalStateException("Session already connected");
+
+      if (isDisconnected)
+         throw new IllegalStateException("Session already disconnected and cannot be reused");
+      
       encryptionContext = null;
       Logger.info("NXCSession.connect", "Connecting to " + connAddress + ":" + connPort);
       try
@@ -1887,6 +1894,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       }
 
       isConnected = false;
+      isDisconnected = true;
    }
 
    /**

@@ -109,7 +109,7 @@ public interface Session
 	 * Connect to the server.
 	 * 
 	 */
-	public abstract void connect() throws IOException, UnknownHostException, NetXMSClientException;
+	public abstract void connect() throws IOException, UnknownHostException, NetXMSClientException, IllegalStateException;
 
 	/**
 	 * Disconnect from server.

@@ -65,4 +65,29 @@ public class SessionTest extends TestCase
       Thread.sleep(2000);
       session.disconnect();
    }
+   
+   public void testIllegalStates() throws Exception
+   {
+      NXCSession session = connect();
+      try
+      {
+         session.connect();
+         assertTrue(false);
+      }
+      catch(IllegalStateException e)
+      {
+         System.out.println("IllegalStateException thrown (" + e.getMessage() + ")");
+      }
+      
+      session.disconnect();
+      try
+      {
+         session.connect();
+         assertTrue(false);
+      }
+      catch(IllegalStateException e)
+      {
+         System.out.println("IllegalStateException thrown (" + e.getMessage() + ")");
+      }
+   }
 }
