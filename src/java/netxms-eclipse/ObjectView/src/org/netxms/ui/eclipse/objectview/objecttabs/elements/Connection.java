@@ -142,7 +142,7 @@ public class Connection extends OverviewPageElement
 		else
 		{
 			interfaceLabel.setText(Messages.get().Connection_NA);
-			protocolLabel.setText("");
+			protocolLabel.setText(""); //$NON-NLS-1$
 		}
 	}
 

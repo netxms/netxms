@@ -6,13 +6,16 @@ package org.netxms.ui.android.main.dashboards.elements;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
+
 import org.achartengine.ChartFactory;
 import org.achartengine.model.CategorySeries;
 import org.achartengine.renderer.DefaultRenderer;
 import org.achartengine.renderer.SimpleSeriesRenderer;
 import org.netxms.client.Table;
+import org.netxms.ui.android.helpers.Colors;
 import org.netxms.ui.android.main.dashboards.configs.TablePieChartConfig;
 import org.netxms.ui.android.service.ClientConnectorService;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -22,11 +25,11 @@ import android.util.Log;
 public class TablePieChartElement extends AbstractDashboardElement
 {
 	private static final String TAG = "nxclient/TablePieChartElement";
-	
+
 	private TablePieChartConfig config;
-	private CategorySeries dataset;
-	private Map<String, Integer> instanceMap = new HashMap<String, Integer>(MAX_CHART_ITEMS);
-	
+	private final CategorySeries dataset;
+	private final Map<String, Integer> instanceMap = new HashMap<String, Integer>(MAX_CHART_ITEMS);
+
 	/**
 	 * @param context
 	 * @param xmlConfig
@@ -38,12 +41,12 @@ public class TablePieChartElement extends AbstractDashboardElement
 		{
 			config = TablePieChartConfig.createFromXml(xmlConfig);
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			Log.e(TAG, "Error parsing element config", e);
 			config = new TablePieChartConfig();
 		}
-		
+
 		dataset = buildDataset();
 	}
 
@@ -66,7 +69,7 @@ public class TablePieChartElement extends AbstractDashboardElement
 
 		return series;
 	}
-	
+
 	/**
 	 * @return
 	 */
@@ -83,20 +86,20 @@ public class TablePieChartElement extends AbstractDashboardElement
 		renderer.setChartTitle(config.getTitle());
 
 		renderer.setApplyBackgroundColor(true);
-		renderer.setBackgroundColor(BACKGROUND_COLOR);
-		renderer.setAxesColor(LABEL_COLOR);
-		renderer.setLabelsColor(LABEL_COLOR);
-		
-		for(int i = 0; i < count; i++)
+		renderer.setBackgroundColor(Colors.BACKGROUND_COLOR);
+		renderer.setAxesColor(Colors.LABEL_COLOR);
+		renderer.setLabelsColor(Colors.LABEL_COLOR);
+
+		for (int i = 0; i < count && i < Colors.DEFAULT_ITEM_COLORS.length; i++)
 		{
 			SimpleSeriesRenderer r = new SimpleSeriesRenderer();
-			r.setColor(DEFAULT_ITEM_COLORS[i] | 0xFF000000);
+			r.setColor(Colors.DEFAULT_ITEM_COLORS[i] | 0xFF000000);
 			renderer.addSeriesRenderer(r);
 		}
-		
+
 		return renderer;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.android.main.dashboards.elements.AbstractDashboardElement#refresh()
 	 */
@@ -106,21 +109,22 @@ public class TablePieChartElement extends AbstractDashboardElement
 		try
 		{
 			final Table data = service.getSession().getTableLastValues(config.getNodeId(), config.getDciId());
-			
-			post(new Runnable() {
+
+			post(new Runnable()
+			{
 				@Override
 				public void run()
 				{
 					String instanceColumn = (config.getInstanceColumn() != null) ? config.getInstanceColumn() : "";  // FIXME
 					if (instanceColumn == null)
 						return;
-					
+
 					int icIndex = data.getColumnIndex(instanceColumn);
 					int dcIndex = data.getColumnIndex(config.getDataColumn());
 					if ((icIndex == -1) || (dcIndex == -1))
 						return;	// at least one column is missing
-					
-					for(int i = 0; i < data.getRowCount(); i++)
+
+					for (int i = 0; i < data.getRowCount(); i++)
 					{
 						String instance = data.getCell(i, icIndex).getValue();
 						if (instance == null)
@@ -131,11 +135,11 @@ public class TablePieChartElement extends AbstractDashboardElement
 						{
 							value = Double.parseDouble(data.getCell(i, dcIndex).getValue());
 						}
-						catch(NumberFormatException e)
+						catch (NumberFormatException e)
 						{
 							value = 0.0;
 						}
-						
+
 						Integer index = instanceMap.get(instance);
 						if (config.isIgnoreZeroValues() && (value == 0) && (index == null))
 							continue;
@@ -153,14 +157,14 @@ public class TablePieChartElement extends AbstractDashboardElement
 								dataset.add(instance, value);
 							}
 						}
-					}					
-					
+					}
+
 					removeAllViews();
 					addView(ChartFactory.getPieChartView(getContext(), dataset, buildRenderer(dataset.getItemCount())));
 				}
 			});
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			Log.e("nxclient/BarChartElement", "Exception while reading data from server", e);
 		}

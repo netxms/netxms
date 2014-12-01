@@ -8,6 +8,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
+import org.netxms.ui.android.helpers.Colors;
 import org.netxms.ui.android.helpers.CustomLabel;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
 import org.netxms.ui.android.main.dashboards.configs.LineChartConfig;
@@ -58,7 +59,9 @@ public class LineChartElement extends AbstractDashboardElement
 		graphView.getGraphViewStyle().setTextSize(Integer.parseInt(sp.getString("global.graph.textsize", "10")));
 		graphView.getGraphViewStyle().setLegendWidth(240);
 		graphView.setCustomLabelFormatter(new CustomLabel(Integer.parseInt(sp.getString("global.multipliers", "1"))));
-		graphView.setShowLegend(config.isShowLegend());
+		// TODO: 2014May25 Find a best way to handle this setting
+		//graphView.setShowLegend(config.isShowLegend());
+		graphView.setShowLegend(sp.getBoolean("global.graph.legend", true));
 		graphView.setScalable(false);
 		graphView.setScrollable(false);
 		graphView.setLegendAlign(LegendAlign.TOP);
@@ -102,7 +105,7 @@ public class LineChartElement extends AbstractDashboardElement
 				@Override
 				public void run()
 				{
-					for (int i = 0; i < dciData.length; i++)
+					for (int i = 0; i < dciData.length && i < Colors.DEFAULT_ITEM_COLORS.length; i++)
 					{
 						DciDataRow[] dciDataRow = dciData[i].getValues();
 						GraphViewData[] gvData = new GraphViewData[dciDataRow.length];
@@ -110,10 +113,7 @@ public class LineChartElement extends AbstractDashboardElement
 							// dciData are reversed!
 							gvData[k] = new GraphViewData(dciDataRow[j].getTimestamp().getTime(), dciDataRow[j].getValueAsDouble());
 						int color = items[i].getColorAsInt();
-						if (color == -1)
-							color = DEFAULT_ITEM_COLORS[i];
-						else
-							color = swapRGB(color);
+						color = color == -1 ? Colors.DEFAULT_ITEM_COLORS[i] : swapRGB(color);
 						GraphViewSeries series = new GraphViewSeries(items[i].getName(), new GraphViewSeriesStyle(color | 0xFF000000, 3), gvData);
 						graphView.addSeries(series);
 					}

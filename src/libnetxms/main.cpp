@@ -43,11 +43,9 @@ QWORD LIBNETXMS_EXPORTABLE __bswap_64(QWORD qwVal)
 
 #endif
 
-
-//
-// Swap bytes in double
-//
-
+/**
+ * Swap bytes in double
+ */
 double LIBNETXMS_EXPORTABLE __bswap_double(double dVal)
 {
    double dResult;
@@ -61,11 +59,9 @@ double LIBNETXMS_EXPORTABLE __bswap_double(double dVal)
    return dResult;
 }
 
-
-//
-// Swap bytes in wide string (UCS-2)
-//
-
+/**
+ * Swap bytes in wide string (UCS-2)
+ */
 void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr)
 {
    UCS2CHAR *pch;
@@ -74,14 +70,12 @@ void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr)
       *pch = htons(*pch);
 }
 
-
-//
-// strupr() implementation for non-windows platforms
-//
-
 #if !defined(_WIN32) && !defined(_NETWARE)
 
-void LIBNETXMS_EXPORTABLE strupr(char *in)
+/**
+ * strupr() implementation for non-windows platforms
+ */
+void LIBNETXMS_EXPORTABLE __strupr(char *in)
 {
 	char *p = in;
 
@@ -99,7 +93,10 @@ void LIBNETXMS_EXPORTABLE strupr(char *in)
 
 #if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
 
-void LIBNETXMS_EXPORTABLE wcsupr(WCHAR *in)
+/**
+ * wcsupr() implementation for non-windows platforms
+ */
+void LIBNETXMS_EXPORTABLE __wcsupr(WCHAR *in)
 {
 	WCHAR *p = in;
 

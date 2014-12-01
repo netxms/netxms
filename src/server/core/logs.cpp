@@ -53,6 +53,7 @@ static NXCORE_LOG s_logs[] =
 			{ _T("timestamp"), _T("Timestamp"), LC_TIMESTAMP },
 			{ _T("subsystem"), _T("Subsystem"), LC_TEXT },
 			{ _T("user_id"), _T("User"), LC_USER_ID },
+         { _T("session_id"), _T("Session"), LC_INTEGER },
 			{ _T("workstation"), _T("Workstation"), LC_TEXT },
 			{ _T("message"), _T("Message"), LC_TEXT },
 			{ NULL, NULL, 0 }
@@ -78,7 +79,7 @@ static NXCORE_LOG s_logs[] =
 			{ NULL, NULL, 0 }
 		}
 	},
-	{ _T("syslog"), _T("syslog"), _T("msg_id"), _T("source_object_id"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
+	{ _T("syslog"), _T("syslog"), _T("msg_id"), _T("source_object_id"), SYSTEM_ACCESS_VIEW_SYSLOG,
 		{
 			{ _T("msg_timestamp"), _T("Time"), LC_TIMESTAMP },
 			{ _T("source_object_id"), _T("Source"), LC_OBJECT_ID },
@@ -99,7 +100,7 @@ static NXCORE_LOG s_logs[] =
 struct LOG_HANDLE_REGISTRATION
 {
 	LogHandle *handle;
-	UINT32 sessionId;
+	int sessionId;
 };
 int s_regListSize = 0;
 LOG_HANDLE_REGISTRATION *s_regList = NULL;
@@ -133,7 +134,7 @@ static int RegisterLogHandle(LogHandle *handle, ClientSession *session)
 	}
 
 	s_regList[i].handle = handle;
-	s_regList[i].sessionId = session->getIndex();
+	s_regList[i].sessionId = session->getId();
 
 	MutexUnlock(s_regListMutex);
 	return i;
@@ -200,7 +201,7 @@ UINT32 CloseLog(ClientSession *session, int logHandle)
 	MutexLock(s_regListMutex);
 
 	if ((logHandle >= 0) && (logHandle < s_regListSize) &&
-	    (s_regList[logHandle].sessionId == session->getIndex()) &&
+	    (s_regList[logHandle].sessionId == session->getId()) &&
 		 (s_regList[logHandle].handle != NULL))
 	{
 		s_regList[logHandle].handle->lock();
@@ -225,7 +226,7 @@ LogHandle *AcquireLogHandleObject(ClientSession *session, int logHandle)
 	MutexLock(s_regListMutex);
 
 	if ((logHandle >= 0) && (logHandle < s_regListSize) &&
-	    (s_regList[logHandle].sessionId == session->getIndex()) &&
+	    (s_regList[logHandle].sessionId == session->getId()) &&
 		 (s_regList[logHandle].handle != NULL))
 	{
 		object = s_regList[logHandle].handle;

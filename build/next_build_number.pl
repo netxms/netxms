@@ -34,7 +34,7 @@ open my $outcmd, '>', "../src/java/build/set_build_number.cmd" or die "cannot op
 print $outcmd "set build_number=$build\n";
 close $outcmd;
 
-open my $outjava, '>', "../src/java/netxms-base/src/main/java/org/netxms/base/BuildNumber.java" or die "cannot open BuildNumber.java";
+open my $outjava, '>', "../src/java/client/netxms-base/src/main/java/org/netxms/base/BuildNumber.java" or die "cannot open BuildNumber.java";
 print $outjava "package org.netxms.base;\n";
 print $outjava "public final class BuildNumber {\n";
 print $outjava "   public static final String TEXT = \"$build\";\n";

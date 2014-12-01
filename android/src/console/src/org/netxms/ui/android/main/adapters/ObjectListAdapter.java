@@ -8,11 +8,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.R;
-
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
@@ -174,19 +172,19 @@ public class ObjectListAdapter extends BaseAdapter
 		}
 
 		// set fields in view
-		int objectStatus;
+		ObjectStatus objectStatus;
 		int objectIconId = R.drawable.object_unknown;
 		AbstractObject object = objectList.get(position);
 		if (object == null)
 		{
 			objectName.setText(r.getString(R.string.node_unknown));
 			objectStatusText.setText(r.getString(R.string.status_unknown));
-			objectStatus = Severity.UNKNOWN;
+			objectStatus = ObjectStatus.UNKNOWN;
 		}
 		else
 		{
 			objectName.setText(object.getObjectName());
-			objectStatusText.setText(statusTextId[object.getStatus()]);
+			objectStatusText.setText(statusTextId[object.getStatus().getValue()]);
 			objectStatus = object.getStatus();
 			switch (object.getObjectClass())
 			{
@@ -216,7 +214,7 @@ public class ObjectListAdapter extends BaseAdapter
 
 		Drawable[] layers = new Drawable[2];
 		layers[0] = parent.getResources().getDrawable(objectIconId);
-		layers[1] = parent.getResources().getDrawable(ObjectListAdapter.statusImageId[objectStatus]);
+		layers[1] = parent.getResources().getDrawable(ObjectListAdapter.statusImageId[objectStatus.getValue()]);
 		LayerDrawable drawable = new LayerDrawable(layers);
 		drawable.setLayerInset(1, layers[0].getIntrinsicWidth() - layers[1].getIntrinsicWidth(),
 				layers[0].getIntrinsicHeight() - layers[1].getIntrinsicHeight(), 0, 0);

@@ -28,7 +28,7 @@
  * Usage: Net.RemoteShareStatus(share,domain,login,password)
  *    or: Net.RemoteShareStatusText(share,domain,login,password)
  */
-LONG H_RemoteShareStatus(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_RemoteShareStatus(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	TCHAR share[MAX_PATH], domain[64], login[64], password[256];
 #ifdef UNICODE
@@ -92,7 +92,7 @@ LONG H_RemoteShareStatus(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Get local ARP cache
  */
-LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    MIB_IPNETTABLE *arpCache;
    DWORD i, j, dwError, dwSize;
@@ -128,89 +128,125 @@ LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 }
 
 /**
- * Send IP interface list to server
+ * Get adapter index from name
  */
-LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+static DWORD AdapterNameToIndex(const TCHAR *name)
 {
-   DWORD dwSize;
-   IP_ADAPTER_INFO *pBuffer, *pInfo;
-   LONG iResult = SYSINFO_RC_SUCCESS;
-   TCHAR szAdapterName[MAX_OBJECT_NAME], szBuffer[256], ipAddr[32];
-   TCHAR szMacAddr[MAX_ADAPTER_ADDRESS_LENGTH * 2 + 1];
-   IP_ADDR_STRING *pAddr;
-
-   if (GetAdaptersInfo(NULL, &dwSize) != ERROR_BUFFER_OVERFLOW)
+   DWORD ifIndex = 0;
+   ULONG size = 0;
+   if (GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_DNS_SERVER, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW)
       return SYSINFO_RC_ERROR;
 
-   pBuffer = (IP_ADAPTER_INFO *)malloc(dwSize);
-   if (GetAdaptersInfo(pBuffer, &dwSize) == ERROR_SUCCESS)
+   IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)malloc(size);
+   if (GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_DNS_SERVER, NULL, buffer, &size) == ERROR_SUCCESS)
    {
-      for(pInfo = pBuffer; pInfo != NULL; pInfo = pInfo->Next)
+#ifdef UNICODE
+      char mbname[256];
+      WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, name, -1, mbname, 256, NULL, NULL);
+#else
+      WCHAR wname[256];
+      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, name, -1, wname, 256);
+#endif
+      for(IP_ADAPTER_ADDRESSES *iface = buffer; iface != NULL; iface = iface->Next)
       {
-         // Get network connection name from adapter name, if possible
-         if (imp_HrLanConnectionNameFromGuidOrPath != NULL)
+#ifdef UNICODE
+         if (!_wcsicmp(iface->FriendlyName, name) || !stricmp(iface->AdapterName, mbname))
+#else
+         if (!_wcsicmp(iface->FriendlyName, wname) || !stricmp(iface->AdapterName, name))
+#endif
          {
-            WCHAR wGUID[256], wName[256];
-
-            // Resolve GUID to network connection name
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, wGUID, 256);
-            dwSize = 256;
-            if (imp_HrLanConnectionNameFromGuidOrPath(NULL, wGUID, wName, &dwSize) == 0)
-            {
-#ifdef UNICODE
-					nx_strncpy(szAdapterName, wName, MAX_OBJECT_NAME);
-#else
-               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
-                                   wName, dwSize, szAdapterName, MAX_OBJECT_NAME, NULL, NULL);
-#endif
-            }
-            else
-            {
-#ifdef UNICODE
-					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, szAdapterName, MAX_OBJECT_NAME);
-					szAdapterName[MAX_OBJECT_NAME - 1] = 0;
-#else
-               nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
-#endif
-            }
+            ifIndex = iface->IfIndex;
+            break;
          }
-         else
+      }
+   }
+
+   free(buffer);
+   return ifIndex;
+}
+
+/**
+ * Get adapter name from index
+ */
+static const bool AdapterIndexToName(DWORD index, TCHAR *name)
+{
+   bool result = false;
+
+   ULONG size = 0;
+   if (GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_DNS_SERVER, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW)
+      return false;
+
+   IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)malloc(size);
+   if (GetAdaptersAddresses(AF_INET, GAA_FLAG_SKIP_DNS_SERVER, NULL, buffer, &size) == ERROR_SUCCESS)
+   {
+      for(IP_ADAPTER_ADDRESSES *iface = buffer; iface != NULL; iface = iface->Next)
+      {
+         if (iface->IfIndex == index)
          {
-            // We don't have a GUID resolving function, use GUID as name
+            _tcscpy(name, iface->FriendlyName);
+            result = true;
+            break;
+         }
+      }
+   }
+
+   free(buffer);
+   return result;
+}
+
+/**
+ * Net.InterfaceList list handler
+ */
+LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   LONG result = SYSINFO_RC_SUCCESS;
+
+   ULONG size = 0;
+   if (GetAdaptersInfo(NULL, &size) != ERROR_BUFFER_OVERFLOW)
+      return SYSINFO_RC_ERROR;
+
+   IP_ADAPTER_INFO *buffer = (IP_ADAPTER_INFO *)malloc(size);
+   if (GetAdaptersInfo(buffer, &size) == ERROR_SUCCESS)
+   {
+      for(IP_ADAPTER_INFO *iface = buffer; iface != NULL; iface = iface->Next)
+      {
+         TCHAR macAddr[32], adapterName[MAX_ADAPTER_NAME_LENGTH + 4], adapterInfo[MAX_ADAPTER_NAME_LENGTH + 64];
+
+         BinToStr(iface->Address, iface->AddressLength, macAddr);
+         if (!AdapterIndexToName(iface->Index, adapterName))
+         {
 #ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, szAdapterName, MAX_OBJECT_NAME);
-				szAdapterName[MAX_OBJECT_NAME - 1] = 0;
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, iface->AdapterName, -1, adapterName, MAX_ADAPTER_NAME_LENGTH + 4);
 #else
-            nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
+            nx_strncpy(adapterName, iface->AdapterName, MAX_ADAPTER_NAME_LENGTH + 4);
 #endif
          }
-
-         BinToStr(pInfo->Address, pInfo->AddressLength, szMacAddr);
 
          // Compose result string for each ip address
-         for(pAddr = &pInfo->IpAddressList; pAddr != NULL; pAddr = pAddr->Next)
+         for(IP_ADDR_STRING *pAddr = &iface->IpAddressList; pAddr != NULL; pAddr = pAddr->Next)
          {
-            _sntprintf(szBuffer, 256, _T("%d %s/%d %d %s %s"), pInfo->Index, 
+            TCHAR ipAddr[16];
+            _sntprintf(adapterInfo, MAX_ADAPTER_NAME_LENGTH + 64, _T("%d %s/%d %d %s %s"), iface->Index, 
                        IpToStr(ntohl(inet_addr(pAddr->IpAddress.String)), ipAddr), 
                        BitsInMask(ntohl(inet_addr(pAddr->IpMask.String))),
-                       pInfo->Type, szMacAddr, szAdapterName);
-            value->add(szBuffer);
+                       iface->Type, macAddr, adapterName);
+            value->add(adapterInfo);
          }
       }
    }
    else
    {
-      iResult = SYSINFO_RC_ERROR;
+      result = SYSINFO_RC_ERROR;
    }
 
-   free(pBuffer);
-   return iResult;
+   free(buffer);
+   return result;
 }
 
 /**
  * Get IP statistics
  */
-LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    MIB_IPSTATS ips;
    LONG iResult = SYSINFO_RC_SUCCESS;
@@ -236,76 +272,9 @@ LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 }
 
 /**
- * Get adapter index from name
- */
-static DWORD AdapterNameToIndex(TCHAR *pszName)
-{
-   DWORD dwSize, dwIndex = 0;
-   IP_ADAPTER_INFO *pBuffer, *pInfo;
-   TCHAR szAdapterName[MAX_OBJECT_NAME];
-
-   if (GetAdaptersInfo(NULL, &dwSize) != ERROR_BUFFER_OVERFLOW)
-      return 0;
-
-   pBuffer = (IP_ADAPTER_INFO *)malloc(dwSize);
-   if (GetAdaptersInfo(pBuffer, &dwSize) == ERROR_SUCCESS)
-   {
-      for(pInfo = pBuffer; pInfo != NULL; pInfo = pInfo->Next)
-      {
-         // Get network connection name from adapter name, if possible
-         if (imp_HrLanConnectionNameFromGuidOrPath != NULL)
-         {
-            WCHAR wGUID[256], wName[256];
-
-            // Resolve GUID to network connection name
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, wGUID, 256);
-            dwSize = 256;
-            if (imp_HrLanConnectionNameFromGuidOrPath(NULL, wGUID, wName, &dwSize) == 0)
-            {
-#ifdef UNICODE
-					nx_strncpy(szAdapterName, wName, MAX_OBJECT_NAME);
-#else
-               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, 
-                                   wName, dwSize, szAdapterName, MAX_OBJECT_NAME, NULL, NULL);
-#endif
-            }
-            else
-            {
-#ifdef UNICODE
-					MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, szAdapterName, MAX_OBJECT_NAME);
-					szAdapterName[MAX_OBJECT_NAME - 1] = 0;
-#else
-               nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
-#endif
-            }
-         }
-         else
-         {
-            // We don't have a GUID resolving function, use GUID as name
-#ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pInfo->AdapterName, -1, szAdapterName, MAX_OBJECT_NAME);
-				szAdapterName[MAX_OBJECT_NAME - 1] = 0;
-#else
-            nx_strncpy(szAdapterName, pInfo->AdapterName, MAX_OBJECT_NAME);
-#endif
-         }
-
-         if (!_tcsicmp(szAdapterName, pszName))
-         {
-            dwIndex = pInfo->Index;
-            break;
-         }
-      }
-   }
-
-   free(pBuffer);
-   return dwIndex;
-}
-
-/**
  * Get interface statistics
  */
-LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    LONG iResult = SYSINFO_RC_SUCCESS;
    TCHAR *eptr, szBuffer[256];
@@ -439,7 +408,7 @@ LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Get IP routing table
  */
-LONG H_IPRoutingTable(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value)
+LONG H_IPRoutingTable(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
    MIB_IPFORWARDTABLE *pRoutingTable;
    DWORD i, dwError, dwSize;
@@ -474,5 +443,14 @@ LONG H_IPRoutingTable(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value)
    }
 
    free(pRoutingTable);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Support for 64 bit interface counters
+ */
+LONG H_NetInterface64bitSupport(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   ret_int(value, (imp_GetIfEntry2 != NULL) ? 1 : 0);
    return SYSINFO_RC_SUCCESS;
 }

@@ -1,6 +1,6 @@
-/* 
+/*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,33 +22,27 @@
 
 #include "nxcore.h"
 
-
-//
-// Static members
-//
-
+/**
+ * Static members
+ */
 int FileUploadJob::m_activeJobs = 0;
 int FileUploadJob::m_maxActiveJobs = 10;
 MUTEX FileUploadJob::m_sharedDataMutex = INVALID_MUTEX_HANDLE;
 
-
-//
-// Static initializer
-//
-
+/**
+ * Static initializer
+ */
 void FileUploadJob::init()
 {
 	m_sharedDataMutex = MutexCreate();
 	m_maxActiveJobs = ConfigReadInt(_T("MaxActiveUploadJobs"), 10);
 }
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, UINT32 userId, bool createOnHold)
-              : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node->Id(), userId, createOnHold)
+              : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node->getId(), userId, createOnHold)
 {
 	m_node = node;
 	node->incRefCount();
@@ -64,11 +58,9 @@ FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *re
 	m_info = _tcsdup(buffer);
 }
 
-
-//
-// Destructor
-//
-
+/**
+ *  Destructor
+ */
 FileUploadJob::~FileUploadJob()
 {
 	m_node->decRefCount();
@@ -77,15 +69,13 @@ FileUploadJob::~FileUploadJob()
 	safe_free(m_info);
 }
 
-
-//
-// Run job
-//
-
+/**
+ * Run job
+ */
 bool FileUploadJob::run()
 {
 	bool success = false;
-	
+
 	while(true)
 	{
 		MutexLock(m_sharedDataMutex);
@@ -117,7 +107,7 @@ bool FileUploadJob::run()
 	{
 		setFailureMessage(_T("Agent connection not available"));
 	}
-	
+
 	MutexLock(m_sharedDataMutex);
 	m_activeJobs--;
 	MutexUnlock(m_sharedDataMutex);
@@ -125,11 +115,9 @@ bool FileUploadJob::run()
 	return success;
 }
 
-
-//
-// Upload progress callback
-//
-
+/**
+ * Upload progress callback
+ */
 void FileUploadJob::uploadCallback(INT64 size, void *arg)
 {
 	if (((FileUploadJob *)arg)->m_fileSize > 0)
@@ -138,11 +126,9 @@ void FileUploadJob::uploadCallback(INT64 size, void *arg)
 		((FileUploadJob *)arg)->markProgress(100);
 }
 
-
-//
-// Get additional info for logging
-//
-
+/**
+ *  Get additional info for logging
+ */
 const TCHAR *FileUploadJob::getAdditionalInfo()
 {
 	return m_info;

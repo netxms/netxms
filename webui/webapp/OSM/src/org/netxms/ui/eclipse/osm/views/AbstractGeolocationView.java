@@ -93,7 +93,7 @@ public abstract class AbstractGeolocationView extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		// Map control
-		map = new GeoMapViewer(parent, SWT.BORDER);
+		map = new GeoMapViewer(parent, SWT.BORDER, false, null);
 		map.setViewPart(this);
 		
 		createActions();

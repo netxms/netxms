@@ -104,7 +104,9 @@ public class Messages extends NLS
    public String Alarms_ShowReminder;
    public String EditCommentDialog_Comment;
    public String EditCommentDialog_EditComment;
-   public String ObjectAlarmBrowser_TitlePrefix;
+   public String ObjectAlarmBrowser_SelectedObjects;
+   public String ObjectAlarmBrowser_Title;
+   public String ObjectAlarmBrowser_TitleMultipleObjects;
    public String OpenAlarmBrowser_Error;
    public String OpenAlarmBrowser_ErrorOpeningView;
    public String ShowObjectAlarms_Error;
@@ -113,6 +115,22 @@ public class Messages extends NLS
    public String TerminateAlarm_ErrorMessage;
    public String TerminateAlarm_JobTitle;
    public String TerminateAlarm_TaskName;
+   public String AlarmDetails_RelatedEvents_AccessDenied;
+   public String AlarmList_CountLimitWarning;
+   public String AlarmList_CreateTicket;
+   public String AlarmList_HelpdeskId;
+   public String AlarmList_InternalError;
+   public String AlarmList_JobError_CreateTicket;
+   public String AlarmList_JobError_ShowTicket;
+   public String AlarmList_JobError_UnlinkTicket;
+   public String AlarmList_JobTitle_CreateTicket;
+   public String AlarmList_JobTitle_ShowTicket;
+   public String AlarmList_JobTitle_UnlinkTicket;
+   public String AlarmList_ShowTicketInBrowser;
+   public String AlarmList_UnlinkTicket;
+   public String AlarmNotifier_Error;
+   public String AlarmNotifier_SoundPlayError;
+   public String AlarmListLabelProvider_Closed;
 
    static
    {

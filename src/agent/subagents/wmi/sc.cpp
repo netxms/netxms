@@ -25,7 +25,7 @@
 /**
  * Handler for System.*Product.DisplayName parameters
  */
-LONG H_SecurityCenterDisplayName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_SecurityCenterDisplayName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG rc = SYSINFO_RC_ERROR;
 
@@ -74,7 +74,7 @@ LONG H_SecurityCenterDisplayName(const TCHAR *cmd, const TCHAR *arg, TCHAR *valu
 /**
  * Handler for System.*Product.Running and System.*Product.UpToDate parameters
  */
-LONG H_SecurityCenterProductState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_SecurityCenterProductState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG rc = SYSINFO_RC_ERROR;
 

@@ -54,13 +54,13 @@ NetworkMapElement::NetworkMapElement(UINT32 id, Config *config, UINT32 flags)
 /**
  * Generic element NXCP constructor
  */
-NetworkMapElement::NetworkMapElement(CSCPMessage *msg, UINT32 baseId)
+NetworkMapElement::NetworkMapElement(NXCPMessage *msg, UINT32 baseId)
 {
-	m_id = msg->GetVariableLong(baseId);
-	m_type = (LONG)msg->GetVariableShort(baseId + 1);
-	m_posX = (LONG)msg->GetVariableLong(baseId + 2);
-	m_posY = (LONG)msg->GetVariableLong(baseId + 3);
-	m_flags = (LONG)msg->GetVariableLong(baseId + 4);
+	m_id = msg->getFieldAsUInt32(baseId);
+	m_type = (LONG)msg->getFieldAsUInt16(baseId + 1);
+	m_posX = (LONG)msg->getFieldAsUInt32(baseId + 2);
+	m_posY = (LONG)msg->getFieldAsUInt32(baseId + 3);
+	m_flags = (LONG)msg->getFieldAsUInt32(baseId + 4);
 }
 
 /**
@@ -84,13 +84,13 @@ void NetworkMapElement::updateConfig(Config *config)
 /**
  * Fill NXCP message with element's data
  */
-void NetworkMapElement::fillMessage(CSCPMessage *msg, UINT32 baseId)
+void NetworkMapElement::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
-	msg->SetVariable(baseId, m_id);
-	msg->SetVariable(baseId + 1, (WORD)m_type);
-	msg->SetVariable(baseId + 2, (UINT32)m_posX);
-	msg->SetVariable(baseId + 3, (UINT32)m_posY);
-	msg->SetVariable(baseId + 4, m_flags);
+	msg->setField(baseId, m_id);
+	msg->setField(baseId + 1, (WORD)m_type);
+	msg->setField(baseId + 2, (UINT32)m_posX);
+	msg->setField(baseId + 3, (UINT32)m_posY);
+	msg->setField(baseId + 4, m_flags);
 }
 
 
@@ -132,9 +132,9 @@ NetworkMapObject::NetworkMapObject(UINT32 id, Config *config, UINT32 flags) : Ne
  * Object element NXCP constructor
  */
 
-NetworkMapObject::NetworkMapObject(CSCPMessage *msg, UINT32 baseId) : NetworkMapElement(msg, baseId)
+NetworkMapObject::NetworkMapObject(NXCPMessage *msg, UINT32 baseId) : NetworkMapElement(msg, baseId)
 {
-	m_objectId = msg->GetVariableLong(baseId + 10);
+	m_objectId = msg->getFieldAsUInt32(baseId + 10);
 }
 
 
@@ -162,10 +162,10 @@ void NetworkMapObject::updateConfig(Config *config)
  * Fill NXCP message with element's data
  */
 
-void NetworkMapObject::fillMessage(CSCPMessage *msg, UINT32 baseId)
+void NetworkMapObject::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
 	NetworkMapElement::fillMessage(msg, baseId);
-	msg->SetVariable(baseId + 10, m_objectId);
+	msg->setField(baseId + 10, m_objectId);
 }
 
 /**************************
@@ -201,13 +201,13 @@ NetworkMapDecoration::NetworkMapDecoration(UINT32 id, Config *config, UINT32 fla
 /**
  * Decoration element NXCP constructor
  */
-NetworkMapDecoration::NetworkMapDecoration(CSCPMessage *msg, UINT32 baseId) : NetworkMapElement(msg, baseId)
+NetworkMapDecoration::NetworkMapDecoration(NXCPMessage *msg, UINT32 baseId) : NetworkMapElement(msg, baseId)
 {
-	m_decorationType = (LONG)msg->GetVariableLong(baseId + 10);
-	m_color = msg->GetVariableLong(baseId + 11);
-	m_title = msg->GetVariableStr(baseId + 12);
-	m_width = (LONG)msg->GetVariableLong(baseId + 13);
-	m_height = (LONG)msg->GetVariableLong(baseId + 14);
+	m_decorationType = (LONG)msg->getFieldAsUInt32(baseId + 10);
+	m_color = msg->getFieldAsUInt32(baseId + 11);
+	m_title = msg->getFieldAsString(baseId + 12);
+	m_width = (LONG)msg->getFieldAsUInt32(baseId + 13);
+	m_height = (LONG)msg->getFieldAsUInt32(baseId + 14);
 }
 
 /**
@@ -237,14 +237,14 @@ void NetworkMapDecoration::updateConfig(Config *config)
  * Fill NXCP message with element's data
  */
 
-void NetworkMapDecoration::fillMessage(CSCPMessage *msg, UINT32 baseId)
+void NetworkMapDecoration::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
 	NetworkMapElement::fillMessage(msg, baseId);
-	msg->SetVariable(baseId + 10, (UINT32)m_decorationType);
-	msg->SetVariable(baseId + 11, m_color);
-	msg->SetVariable(baseId + 12, CHECK_NULL_EX(m_title));
-	msg->SetVariable(baseId + 13, (UINT32)m_width);
-	msg->SetVariable(baseId + 14, (UINT32)m_height);
+	msg->setField(baseId + 10, (UINT32)m_decorationType);
+	msg->setField(baseId + 11, m_color);
+	msg->setField(baseId + 12, CHECK_NULL_EX(m_title));
+	msg->setField(baseId + 13, (UINT32)m_width);
+	msg->setField(baseId + 14, (UINT32)m_height);
 }
 
 /*****************************
@@ -276,9 +276,9 @@ NetworkMapDCIContainer::NetworkMapDCIContainer(UINT32 id, Config *config, UINT32
  * DCI container NXCP constructor
  */
 
-NetworkMapDCIContainer::NetworkMapDCIContainer(CSCPMessage *msg, UINT32 baseId) : NetworkMapElement(msg, baseId)
+NetworkMapDCIContainer::NetworkMapDCIContainer(NXCPMessage *msg, UINT32 baseId) : NetworkMapElement(msg, baseId)
 {
-   m_xmlDCIList = msg->GetVariableStr(baseId + 10);
+   m_xmlDCIList = msg->getFieldAsString(baseId + 10);
 }
 
 
@@ -307,10 +307,10 @@ void NetworkMapDCIContainer::updateConfig(Config *config)
  * Fill NXCP message with container's data
  */
 
-void NetworkMapDCIContainer::fillMessage(CSCPMessage *msg, UINT32 baseId)
+void NetworkMapDCIContainer::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
 	NetworkMapElement::fillMessage(msg, baseId);
-	msg->SetVariable(baseId + 10, m_xmlDCIList);
+	msg->setField(baseId + 10, m_xmlDCIList);
 }
 
 /**************************
@@ -342,9 +342,9 @@ NetworkMapDCIImage::NetworkMapDCIImage(UINT32 id, Config *config, UINT32 flags) 
  * DCI image NXCP constructor
  */
 
-NetworkMapDCIImage::NetworkMapDCIImage(CSCPMessage *msg, UINT32 baseId) : NetworkMapElement(msg, baseId)
+NetworkMapDCIImage::NetworkMapDCIImage(NXCPMessage *msg, UINT32 baseId) : NetworkMapElement(msg, baseId)
 {
-   m_config = msg->GetVariableStr(baseId + 10);
+   m_config = msg->getFieldAsString(baseId + 10);
 }
 
 
@@ -373,8 +373,8 @@ void NetworkMapDCIImage::updateConfig(Config *config)
  * Fill NXCP message with container's data
  */
 
-void NetworkMapDCIImage::fillMessage(CSCPMessage *msg, UINT32 baseId)
+void NetworkMapDCIImage::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
 	NetworkMapElement::fillMessage(msg, baseId);
-	msg->SetVariable(baseId + 10, m_config);
+	msg->setField(baseId + 10, m_config);
 }

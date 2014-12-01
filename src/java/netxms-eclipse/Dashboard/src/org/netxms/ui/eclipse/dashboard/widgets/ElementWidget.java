@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,14 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
+import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**
@@ -142,5 +144,25 @@ class ElementWidget extends DashboardComposite implements ControlListener
 			editPane.setSize(getSize());
 			editPane.moveAbove(null);
 		}
+	}
+	
+	/**
+	 * Set delegate selection provider
+	 * 
+	 * @param delegate
+	 */
+	protected void setSelectionProviderDelegate(ISelectionProvider delegate)
+	{
+	   dbc.getSelectionProvider().setSelectionProviderDelegate(delegate);
+	}
+	
+	/**
+	 * Get intermediate selection provider
+	 * 
+	 * @return
+	 */
+	protected IntermediateSelectionProvider getSelectionProvider()
+	{
+	   return dbc.getSelectionProvider();
 	}
 }

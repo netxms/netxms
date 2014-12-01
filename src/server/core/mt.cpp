@@ -26,26 +26,26 @@
 /**
  * Create mapping table object from NXCP message
  */
-MappingTable *MappingTable::createFromMessage(CSCPMessage *msg)
+MappingTable *MappingTable::createFromMessage(NXCPMessage *msg)
 {
-	MappingTable *mt = new MappingTable((LONG)msg->GetVariableLong(VID_MAPPING_TABLE_ID),
-	                                    msg->GetVariableStr(VID_NAME), 
-													msg->GetVariableLong(VID_FLAGS), 
-													msg->GetVariableStr(VID_DESCRIPTION));
+	MappingTable *mt = new MappingTable((LONG)msg->getFieldAsUInt32(VID_MAPPING_TABLE_ID),
+	                                    msg->getFieldAsString(VID_NAME), 
+													msg->getFieldAsUInt32(VID_FLAGS), 
+													msg->getFieldAsString(VID_DESCRIPTION));
 
-	int count = (int)msg->GetVariableLong(VID_NUM_ELEMENTS);
+	int count = (int)msg->getFieldAsUInt32(VID_NUM_ELEMENTS);
 	UINT32 varId = VID_ELEMENT_LIST_BASE;
 	for(int i = 0; i < count; i++)
 	{
 		TCHAR key[64];
-		msg->GetVariableStr(varId++, key, 64);
+		msg->getFieldAsString(varId++, key, 64);
 		if (mt->m_flags & MTF_NUMERIC_KEYS)
 		{
 			long n = _tcstol(key, NULL, 0);
 			_sntprintf(key, 64, _T("%ld"), n);
 		}
-		TCHAR *value = msg->GetVariableStr(varId++);
-		TCHAR *description = msg->GetVariableStr(varId++);
+		TCHAR *value = msg->getFieldAsString(varId++);
+		TCHAR *description = msg->getFieldAsString(varId++);
 		mt->m_data->set(key, new MappingTableElement(value, description));
 		varId += 7;
 	}
@@ -135,25 +135,54 @@ MappingTable::~MappingTable()
 }
 
 /**
+ * Data for FillMessageCallback
+ */
+struct FillMessageCallbackData
+{
+   NXCPMessage *msg;
+   UINT32 id;
+};
+
+/**
+ * Callback for setting mapping table elements in NXCP message
+ */
+static bool FillMessageCallback(const TCHAR *key, const void *value, void *data)
+{
+   UINT32 id = ((FillMessageCallbackData *)data)->id;
+	((FillMessageCallbackData *)data)->msg->setField(id, key);
+	((FillMessageCallbackData *)data)->msg->setField(id + 1, ((MappingTableElement *)value)->getValue());
+	((FillMessageCallbackData *)data)->msg->setField(id + 2, ((MappingTableElement *)value)->getDescription());
+	((FillMessageCallbackData *)data)->id += 10;
+   return true;
+}
+
+/**
  * Fill NXCP message with mapping table's data
  */
-void MappingTable::fillMessage(CSCPMessage *msg)
+void MappingTable::fillMessage(NXCPMessage *msg)
 {
-	msg->SetVariable(VID_MAPPING_TABLE_ID, (UINT32)m_id);
-	msg->SetVariable(VID_NAME, CHECK_NULL_EX(m_name));
-	msg->SetVariable(VID_FLAGS, m_flags);
-	msg->SetVariable(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
+	msg->setField(VID_MAPPING_TABLE_ID, (UINT32)m_id);
+	msg->setField(VID_NAME, CHECK_NULL_EX(m_name));
+	msg->setField(VID_FLAGS, m_flags);
+	msg->setField(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
 	
-	msg->SetVariable(VID_NUM_ELEMENTS, m_data->getSize());
-	UINT32 varId = VID_ELEMENT_LIST_BASE;
-	for(UINT32 i = 0; i < m_data->getSize(); i++)
-	{
-		msg->SetVariable(varId++, m_data->getKeyByIndex(i));
-		MappingTableElement *e = m_data->getValueByIndex(i);
-		msg->SetVariable(varId++, e->getValue());
-		msg->SetVariable(varId++, e->getDescription());
-		varId += 7;
-	}
+	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_data->size());
+   FillMessageCallbackData data;
+   data.msg = msg;
+	data.id = VID_ELEMENT_LIST_BASE;
+   m_data->forEach(FillMessageCallback, &data);
+}
+
+/**
+ * Callback for saving elements into database
+ */
+static bool SaveElementCallback(const TCHAR *key, const void *value, void *data)
+{
+   DB_STATEMENT hStmt = (DB_STATEMENT)data;
+	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
+	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, ((MappingTableElement *)value)->getValue(), DB_BIND_STATIC);
+	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, ((MappingTableElement *)value)->getDescription(), DB_BIND_STATIC);
+   return DBExecute(hStmt) ? true : false;
 }
 
 /**
@@ -203,16 +232,9 @@ bool MappingTable::saveToDatabase()
 	if (hStmt == NULL)
 		goto failure2;
 
-	for(UINT32 i = 0; i < m_data->getSize(); i++)
-	{
-		MappingTableElement *e = m_data->getValueByIndex(i);
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_data->getKeyByIndex(i), DB_BIND_STATIC);
-		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, e->getValue(), DB_BIND_STATIC);
-		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, e->getDescription(), DB_BIND_STATIC);
-		if (!DBExecute(hStmt))
-			goto failure;
-	}
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   if (!m_data->forEach(SaveElementCallback, hStmt))
+      goto failure;
 	DBFreeStatement(hStmt);
 
 	DBCommit(hdb);
@@ -333,7 +355,7 @@ static void NotifyClients(ClientSession *session, void *arg)
  * @param msg NXCP message with table's data
  * @return RCC
  */
-UINT32 UpdateMappingTable(CSCPMessage *msg, LONG *newId)
+UINT32 UpdateMappingTable(NXCPMessage *msg, LONG *newId)
 {
 	UINT32 rcc;
 	MappingTable *mt = MappingTable::createFromMessage(msg);
@@ -440,7 +462,7 @@ UINT32 DeleteMappingTable(LONG id)
  * @param msg NXCP message to fill
  * @return RCC
  */
-UINT32 GetMappingTable(LONG id, CSCPMessage *msg)
+UINT32 GetMappingTable(LONG id, NXCPMessage *msg)
 {
 	UINT32 rcc = RCC_INVALID_MAPPING_TABLE_ID;
 	RWLockReadLock(s_mappingTablesLock, INFINITE);
@@ -463,18 +485,18 @@ UINT32 GetMappingTable(LONG id, CSCPMessage *msg)
  * @param msg NXCP mesage to fill
  * @return RCC
  */
-UINT32 ListMappingTables(CSCPMessage *msg)
+UINT32 ListMappingTables(NXCPMessage *msg)
 {
 	UINT32 varId = VID_ELEMENT_LIST_BASE;
 	RWLockReadLock(s_mappingTablesLock, INFINITE);
-	msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)s_mappingTables.size());
+	msg->setField(VID_NUM_ELEMENTS, (UINT32)s_mappingTables.size());
 	for(int i = 0; i < s_mappingTables.size(); i++)
 	{
 		MappingTable *mt = s_mappingTables.get(i);
-		msg->SetVariable(varId++, (UINT32)mt->getId());
-		msg->SetVariable(varId++, mt->getName());
-		msg->SetVariable(varId++, mt->getDescription());
-		msg->SetVariable(varId++, mt->getFlags());
+		msg->setField(varId++, (UINT32)mt->getId());
+		msg->setField(varId++, mt->getName());
+		msg->setField(varId++, mt->getDescription());
+		msg->setField(varId++, mt->getFlags());
 		varId += 6;
 	}
 	RWLockUnlock(s_mappingTablesLock);

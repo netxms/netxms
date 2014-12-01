@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -32,7 +32,7 @@
 /**
  * Get symbolic name for message code
  */
-TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
+TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
 {
    static const TCHAR *pszMsgNames[] =
    {
@@ -328,13 +328,26 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
       _T("CMD_GET_EFFECTIVE_RIGHTS"),
       _T("CMD_GET_DCI_VALUES"),
       _T("CMD_GET_HELPDESK_URL"),
-      _T("CMD_UNLINK_HELPDESK_ISSUE")
+      _T("CMD_UNLINK_HELPDESK_ISSUE"),
+      _T("CMD_GET_FOLDER_CONTENT"),
+      _T("CMD_FILEMGR_DELETE_FILE"),
+      _T("CMD_FILEMGR_RENAME_FILE"),
+      _T("CMD_FILEMGR_MOVE_FILE"),
+      _T("CMD_FILEMGR_UPLOAD"),
+      _T("CMD_GET_SWITCH_FDB"),
+      _T("CMD_COMMAND_OUTPUT"),
+      _T("CMD_GET_LOC_HISTORY"),
+      _T("CMD_TAKE_SCREENSHOT"),
+      _T("CMD_EXECUTE_SCRIPT"),
+      _T("CMD_EXECUTE_SCRIPT_UPDATE"),
+      _T("CMD_FILEMGR_CREATE_FOLDER"),
+      _T("CMD_QUERY_ADHOC_SUMMARY_TABLE")
    };
 
-   if ((wCode >= CMD_LOGIN) && (wCode <= CMD_UNLINK_HELPDESK_ISSUE))
-      _tcscpy(pszBuffer, pszMsgNames[wCode - CMD_LOGIN]);
+   if ((code >= CMD_LOGIN) && (code <= CMD_QUERY_ADHOC_SUMMARY_TABLE))
+      _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    else
-      _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), wCode);
+      _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), code);
    return pszBuffer;
 }
 
@@ -350,8 +363,8 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer)
  *   2 Message decryption failed
  *   3 Receive timeout
  */
-int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuffer,
-                                           CSCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
+int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuffer,
+                                           NXCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
                                            NXCPEncryptionContext **ppCtx,
                                            BYTE **decryptionBuffer, UINT32 dwTimeout,
 														 UINT32 maxMsgSize)
@@ -363,94 +376,94 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuf
    // Initialize buffer if requested
    if (msgBuffer == NULL)
    {
-      nxcpBuffer->dwBufSize = 0;
-      nxcpBuffer->dwBufPos = 0;
+      nxcpBuffer->bufferSize = 0;
+      nxcpBuffer->bufferPos = 0;
       return 0;
    }
 
    // Check if we have something in buffer
-   if (nxcpBuffer->dwBufSize > 0)
+   if (nxcpBuffer->bufferSize > 0)
    {
       // Handle the case when entire message header have not been read into the buffer
-      if (nxcpBuffer->dwBufSize < CSCP_HEADER_SIZE)
+      if (nxcpBuffer->bufferSize < NXCP_HEADER_SIZE)
       {
          // Most likely we are at the buffer end, so move content
          // to the beginning
-         memmove(nxcpBuffer->szBuffer, &nxcpBuffer->szBuffer[nxcpBuffer->dwBufPos], nxcpBuffer->dwBufSize);
-         nxcpBuffer->dwBufPos = 0;
+         memmove(nxcpBuffer->buffer, &nxcpBuffer->buffer[nxcpBuffer->bufferPos], nxcpBuffer->bufferSize);
+         nxcpBuffer->bufferPos = 0;
 
          // Receive new portion of data from the network
          // and append it to existing data in buffer
-			iErr = RecvEx(hSocket, &nxcpBuffer->szBuffer[nxcpBuffer->dwBufSize],
-                       CSCP_TEMP_BUF_SIZE - nxcpBuffer->dwBufSize, 0, dwTimeout);
+			iErr = RecvEx(hSocket, &nxcpBuffer->buffer[nxcpBuffer->bufferSize],
+                       CSCP_TEMP_BUF_SIZE - nxcpBuffer->bufferSize, 0, dwTimeout);
          if (iErr <= 0)
             return (iErr == -2) ? 3 : iErr;
-         nxcpBuffer->dwBufSize += (UINT32)iErr;
+         nxcpBuffer->bufferSize += (UINT32)iErr;
       }
 
       // Get message size from message header and copy available
       // message bytes from buffer
-      dwMsgSize = ntohl(((CSCP_MESSAGE *)(&nxcpBuffer->szBuffer[nxcpBuffer->dwBufPos]))->dwSize);
+      dwMsgSize = ntohl(((NXCP_MESSAGE *)(&nxcpBuffer->buffer[nxcpBuffer->bufferPos]))->size);
       if (dwMsgSize > *bufferSize)
       {
 			if ((*bufferSize >= maxMsgSize) || (dwMsgSize > maxMsgSize))
 			{
 				bSkipMsg = TRUE;  // Message is too large, will skip it
-				memcpy(*msgBuffer, &nxcpBuffer->szBuffer[nxcpBuffer->dwBufPos], CSCP_HEADER_SIZE);
+				memcpy(*msgBuffer, &nxcpBuffer->buffer[nxcpBuffer->bufferPos], NXCP_HEADER_SIZE);
 			}
 			else
 			{
 				// Increase buffer
 				*bufferSize = dwMsgSize;
-				*msgBuffer = (CSCP_MESSAGE *)realloc(*msgBuffer, *bufferSize);
+				*msgBuffer = (NXCP_MESSAGE *)realloc(*msgBuffer, *bufferSize);
 				if (decryptionBuffer != NULL)
 					*decryptionBuffer = (BYTE *)realloc(*decryptionBuffer, *bufferSize);
 			}
       }
-      dwBytesRead = min(dwMsgSize, nxcpBuffer->dwBufSize);
+      dwBytesRead = min(dwMsgSize, nxcpBuffer->bufferSize);
       if (!bSkipMsg)
-         memcpy(*msgBuffer, &nxcpBuffer->szBuffer[nxcpBuffer->dwBufPos], dwBytesRead);
-      nxcpBuffer->dwBufSize -= dwBytesRead;
-      nxcpBuffer->dwBufPos = (nxcpBuffer->dwBufSize > 0) ? (nxcpBuffer->dwBufPos + dwBytesRead) : 0;
+         memcpy(*msgBuffer, &nxcpBuffer->buffer[nxcpBuffer->bufferPos], dwBytesRead);
+      nxcpBuffer->bufferSize -= dwBytesRead;
+      nxcpBuffer->bufferPos = (nxcpBuffer->bufferSize > 0) ? (nxcpBuffer->bufferPos + dwBytesRead) : 0;
       if (dwBytesRead == dwMsgSize)
          goto decrypt_message;
    }
 
    // Receive rest of message from the network
 	// Buffer is empty now
-	nxcpBuffer->dwBufSize = 0;
-	nxcpBuffer->dwBufPos = 0;
+	nxcpBuffer->bufferSize = 0;
+	nxcpBuffer->bufferPos = 0;
    do
    {
-		iErr = RecvEx(hSocket, &nxcpBuffer->szBuffer[nxcpBuffer->dwBufSize],
-		              CSCP_TEMP_BUF_SIZE - nxcpBuffer->dwBufSize, 0, dwTimeout);
+		iErr = RecvEx(hSocket, &nxcpBuffer->buffer[nxcpBuffer->bufferSize],
+		              CSCP_TEMP_BUF_SIZE - nxcpBuffer->bufferSize, 0, dwTimeout);
       if (iErr <= 0)
          return (iErr == -2) ? 3 : iErr;
 
 		if (dwBytesRead == 0) // New message?
       {
-			if ((iErr + nxcpBuffer->dwBufSize) < CSCP_HEADER_SIZE)
+			if ((iErr + nxcpBuffer->bufferSize) < NXCP_HEADER_SIZE)
 			{
 				// Header not received completely
-				nxcpBuffer->dwBufSize += iErr;
+				nxcpBuffer->bufferSize += iErr;
 				continue;
 			}
-			iErr += nxcpBuffer->dwBufSize;
-			nxcpBuffer->dwBufSize = 0;
+			iErr += nxcpBuffer->bufferSize;
+			nxcpBuffer->bufferSize = 0;
 
-         dwMsgSize = ntohl(((CSCP_MESSAGE *)(nxcpBuffer->szBuffer))->dwSize);
+         dwMsgSize = ntohl(((NXCP_MESSAGE *)(nxcpBuffer->buffer))->size);
          if (dwMsgSize > *bufferSize)
          {
 				if ((*bufferSize >= maxMsgSize) || (dwMsgSize > maxMsgSize))
 				{
 					bSkipMsg = TRUE;  // Message is too large, will skip it
-	            memcpy(*msgBuffer, nxcpBuffer->szBuffer, CSCP_HEADER_SIZE);
+	            memcpy(*msgBuffer, nxcpBuffer->buffer, NXCP_HEADER_SIZE);
 				}
 				else
 				{
 					// Increase buffer
 					*bufferSize = dwMsgSize;
-					*msgBuffer = (CSCP_MESSAGE *)realloc(*msgBuffer, *bufferSize);
+					*msgBuffer = (NXCP_MESSAGE *)realloc(*msgBuffer, *bufferSize);
 					if (decryptionBuffer != NULL)
 						*decryptionBuffer = (BYTE *)realloc(*decryptionBuffer, *bufferSize);
 				}
@@ -458,27 +471,27 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuf
       }
       dwBytesToCopy = min((UINT32)iErr, dwMsgSize - dwBytesRead);
       if (!bSkipMsg)
-         memcpy(((char *)(*msgBuffer)) + dwBytesRead, nxcpBuffer->szBuffer, dwBytesToCopy);
+         memcpy(((char *)(*msgBuffer)) + dwBytesRead, nxcpBuffer->buffer, dwBytesToCopy);
       dwBytesRead += dwBytesToCopy;
    }
-	while((dwBytesRead < dwMsgSize) || (dwBytesRead < CSCP_HEADER_SIZE));
+	while((dwBytesRead < dwMsgSize) || (dwBytesRead < NXCP_HEADER_SIZE));
 
    // Check if we have something left in buffer
    if (dwBytesToCopy < (UINT32)iErr)
    {
-      nxcpBuffer->dwBufPos = dwBytesToCopy;
-      nxcpBuffer->dwBufSize = (UINT32)iErr - dwBytesToCopy;
+      nxcpBuffer->bufferPos = dwBytesToCopy;
+      nxcpBuffer->bufferSize = (UINT32)iErr - dwBytesToCopy;
    }
 
    // Check for encrypted message
 decrypt_message:
-   if ((!bSkipMsg) && (ntohs((*msgBuffer)->wCode) == CMD_ENCRYPTED_MESSAGE))
+   if ((!bSkipMsg) && (ntohs((*msgBuffer)->code) == CMD_ENCRYPTED_MESSAGE))
    {
       if ((*ppCtx != NULL) && (*ppCtx != PROXY_ENCRYPTION_CTX))
       {
-         if (CSCPDecryptMessage(*ppCtx, (CSCP_ENCRYPTED_MESSAGE *)(*msgBuffer), *decryptionBuffer))
+         if ((*ppCtx)->decryptMessage((NXCP_ENCRYPTED_MESSAGE *)(*msgBuffer), *decryptionBuffer))
          {
-            dwMsgSize = ntohl((*msgBuffer)->dwSize);
+            dwMsgSize = ntohl((*msgBuffer)->size);
          }
          else
          {
@@ -495,12 +508,12 @@ decrypt_message:
    return bSkipMsg ? 1 : (int)dwMsgSize;
 }
 
-int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, CSCP_MESSAGE *msgBuffer,
-                                         CSCP_BUFFER *nxcpBuffer, UINT32 bufferSize,
+int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, NXCP_MESSAGE *msgBuffer,
+                                         NXCP_BUFFER *nxcpBuffer, UINT32 bufferSize,
                                          NXCPEncryptionContext **ppCtx,
                                          BYTE *decryptionBuffer, UINT32 dwTimeout)
 {
-	CSCP_MESSAGE *mb = msgBuffer;
+	NXCP_MESSAGE *mb = msgBuffer;
 	UINT32 bs = bufferSize;
 	BYTE *db = decryptionBuffer;
 	return RecvNXCPMessageEx(hSocket, (msgBuffer != NULL) ? &mb : NULL, nxcpBuffer, &bs, ppCtx,
@@ -510,29 +523,29 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, CSCP_MESSAGE *msgBuffer
 /**
  * Create NXCP message with raw data (MF_BINARY flag)
  * If pBuffer is NULL, new buffer is allocated with malloc()
- * Buffer should be of dwDataSize + CSCP_HEADER_SIZE + 8 bytes.
+ * Buffer should be of dwDataSize + NXCP_HEADER_SIZE + 8 bytes.
  */
-CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, UINT32 dwId, WORD wFlags,
+NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD code, UINT32 id, WORD flags,
                                                         UINT32 dwDataSize, void *pData,
-                                                        CSCP_MESSAGE *pBuffer)
+                                                        NXCP_MESSAGE *pBuffer)
 {
-   CSCP_MESSAGE *pMsg;
+   NXCP_MESSAGE *pMsg;
    UINT32 dwPadding;
 
    if (pBuffer == NULL)
-      pMsg = (CSCP_MESSAGE *)malloc(dwDataSize + CSCP_HEADER_SIZE + 8);
+      pMsg = (NXCP_MESSAGE *)malloc(dwDataSize + NXCP_HEADER_SIZE + 8);
    else
       pMsg = pBuffer;
 
    // Message should be aligned to 8 bytes boundary
-   dwPadding = (8 - ((dwDataSize + CSCP_HEADER_SIZE) % 8)) & 7;
+   dwPadding = (8 - ((dwDataSize + NXCP_HEADER_SIZE) % 8)) & 7;
 
-   pMsg->wCode = htons(wCode);
-   pMsg->wFlags = htons(MF_BINARY | wFlags);
-   pMsg->dwId = htonl(dwId);
-   pMsg->dwSize = htonl(dwDataSize + CSCP_HEADER_SIZE + dwPadding);
-   pMsg->dwNumVars = htonl(dwDataSize);   // dwNumVars contains actual data size for binary message
-   memcpy(pMsg->df, pData, dwDataSize);
+   pMsg->code = htons(code);
+   pMsg->flags = htons(MF_BINARY | flags);
+   pMsg->id = htonl(id);
+   pMsg->size = htonl(dwDataSize + NXCP_HEADER_SIZE + dwPadding);
+   pMsg->numFields = htonl(dwDataSize);   // numFields contains actual data size for binary message
+   memcpy(pMsg->fields, pData, dwDataSize);
 
    return pMsg;
 }
@@ -540,7 +553,7 @@ CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, UINT32 dwId,
 /**
  * Send file over CSCP
  */
-BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TCHAR *pszFile,
+BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHAR *pszFile,
                                            NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
 														 MUTEX mutex)
@@ -549,8 +562,8 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
 	INT64 bytesTransferred = 0;
    UINT32 dwPadding;
    BOOL bResult = FALSE;
-   CSCP_MESSAGE *pMsg;
-   CSCP_ENCRYPTED_MESSAGE *pEnMsg;
+   NXCP_MESSAGE *pMsg;
+   NXCP_ENCRYPTED_MESSAGE *pEnMsg;
 
    hFile = _topen(pszFile, O_RDONLY | O_BINARY);
    if (hFile != -1)
@@ -565,37 +578,37 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
 		if (lseek(hFile, offset, (offset < 0) ? SEEK_END : SEEK_SET) != -1)
 		{
 			// Allocate message and prepare it's header
-			pMsg = (CSCP_MESSAGE *)malloc(FILE_BUFFER_SIZE + CSCP_HEADER_SIZE + 8);
-			pMsg->dwId = htonl(dwId);
-			pMsg->wCode = htons(CMD_FILE_DATA);
-			pMsg->wFlags = htons(MF_BINARY);
+			pMsg = (NXCP_MESSAGE *)malloc(FILE_BUFFER_SIZE + NXCP_HEADER_SIZE + 8);
+			pMsg->id = htonl(id);
+			pMsg->code = htons(CMD_FILE_DATA);
+			pMsg->flags = htons(MF_BINARY);
 
 			while(1)
 			{
-				iBytes = read(hFile, pMsg->df, min(FILE_BUFFER_SIZE, bytesToRead));
+				iBytes = read(hFile, pMsg->fields, min(FILE_BUFFER_SIZE, bytesToRead));
 				if (iBytes < 0)
 					break;
 
 				// Message should be aligned to 8 bytes boundary
-				dwPadding = (8 - (((UINT32)iBytes + CSCP_HEADER_SIZE) % 8)) & 7;
-				pMsg->dwSize = htonl((UINT32)iBytes + CSCP_HEADER_SIZE + dwPadding);
-				pMsg->dwNumVars = htonl((UINT32)iBytes);   // dwNumVars contains actual data size for binary message
+				dwPadding = (8 - (((UINT32)iBytes + NXCP_HEADER_SIZE) % 8)) & 7;
+				pMsg->size = htonl((UINT32)iBytes + NXCP_HEADER_SIZE + dwPadding);
+				pMsg->numFields = htonl((UINT32)iBytes);   // numFields contains actual data size for binary message
             bytesToRead -= iBytes;
 				if (bytesToRead <= 0)
-					pMsg->wFlags |= htons(MF_END_OF_FILE);
+					pMsg->flags |= htons(MF_END_OF_FILE);
 
 				if (pCtx != NULL)
 				{
-					pEnMsg = CSCPEncryptMessage(pCtx, pMsg);
+               pEnMsg = pCtx->encryptMessage(pMsg);
 					if (pEnMsg != NULL)
 					{
-						SendEx(hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, mutex);
+						SendEx(hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, mutex);
 						free(pEnMsg);
 					}
 				}
 				else
 				{
-					if (SendEx(hSocket, (char *)pMsg, (UINT32)iBytes + CSCP_HEADER_SIZE + dwPadding, 0, mutex) <= 0)
+					if (SendEx(hSocket, (char *)pMsg, (UINT32)iBytes + NXCP_HEADER_SIZE + dwPadding, 0, mutex) <= 0)
 						break;	// Send error
 				}
 				if (progressCallback != NULL)
@@ -620,25 +633,25 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
    // If file upload failed, send CMD_ABORT_FILE_TRANSFER
    if (!bResult)
    {
-      CSCP_MESSAGE msg;
+      NXCP_MESSAGE msg;
 
-      msg.dwId = htonl(dwId);
-      msg.wCode = htons(CMD_ABORT_FILE_TRANSFER);
-      msg.wFlags = htons(MF_BINARY);
-      msg.dwNumVars = 0;
-      msg.dwSize = htonl(CSCP_HEADER_SIZE);
+      msg.id = htonl(id);
+      msg.code = htons(CMD_ABORT_FILE_TRANSFER);
+      msg.flags = htons(MF_BINARY);
+      msg.numFields = 0;
+      msg.size = htonl(NXCP_HEADER_SIZE);
       if (pCtx != NULL)
       {
-         pEnMsg = CSCPEncryptMessage(pCtx, &msg);
+         pEnMsg = pCtx->encryptMessage(&msg);
          if (pEnMsg != NULL)
          {
-            SendEx(hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, mutex);
+            SendEx(hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, mutex);
             free(pEnMsg);
          }
       }
       else
       {
-         SendEx(hSocket, (char *)&msg, CSCP_HEADER_SIZE, 0, mutex);
+         SendEx(hSocket, (char *)&msg, NXCP_HEADER_SIZE, 0, mutex);
       }
    }
 
@@ -650,30 +663,30 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
  */
 BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex)
 {
-   CSCP_MESSAGE msg;
+   NXCP_MESSAGE msg;
    NXCPEncryptionContext *pDummyCtx = NULL;
-   CSCP_BUFFER *pBuffer;
+   NXCP_BUFFER *pBuffer;
    BOOL bRet = FALSE;
    int nSize;
 
-   msg.dwId = 0;
-   msg.dwNumVars = 0;
-   msg.dwSize = htonl(CSCP_HEADER_SIZE);
-   msg.wCode = htons(CMD_GET_NXCP_CAPS);
-   msg.wFlags = htons(MF_CONTROL);
-   if (SendEx(hSocket, &msg, CSCP_HEADER_SIZE, 0, mutex) == CSCP_HEADER_SIZE)
+   msg.id = 0;
+   msg.numFields = 0;
+   msg.size = htonl(NXCP_HEADER_SIZE);
+   msg.code = htons(CMD_GET_NXCP_CAPS);
+   msg.flags = htons(MF_CONTROL);
+   if (SendEx(hSocket, &msg, NXCP_HEADER_SIZE, 0, mutex) == NXCP_HEADER_SIZE)
    {
-      pBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+      pBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
       RecvNXCPMessage(0, NULL, pBuffer, 0, NULL, NULL, 0);
-      nSize = RecvNXCPMessage(hSocket, &msg, pBuffer, CSCP_HEADER_SIZE, &pDummyCtx, NULL, 30000);
-      if ((nSize == CSCP_HEADER_SIZE) &&
-          (ntohs(msg.wCode) == CMD_NXCP_CAPS) &&
-          (ntohs(msg.wFlags) & MF_CONTROL))
+      nSize = RecvNXCPMessage(hSocket, &msg, pBuffer, NXCP_HEADER_SIZE, &pDummyCtx, NULL, 30000);
+      if ((nSize == NXCP_HEADER_SIZE) &&
+          (ntohs(msg.code) == CMD_NXCP_CAPS) &&
+          (ntohs(msg.flags) & MF_CONTROL))
       {
          bRet = TRUE;
-         *pnVersion = ntohl(msg.dwNumVars) >> 24;
+         *pnVersion = ntohl(msg.numFields) >> 24;
       }
-      else if ((nSize == 1) || (nSize == 3) || (nSize >= CSCP_HEADER_SIZE))
+      else if ((nSize == 1) || (nSize == 3) || (nSize >= NXCP_HEADER_SIZE))
       {
          // We don't receive any answer or receive invalid answer -
          // assume that peer doesn't understand CMD_GET_NXCP_CAPS message

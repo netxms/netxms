@@ -35,15 +35,15 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
 {
    SOCKET sock = CAST_FROM_POINTER(pArg, SOCKET);
    int iError, nExitCode;
-   CSCP_MESSAGE *pRawMsg, *pRawMsgOut;
-   CSCP_BUFFER *pRecvBuffer;
-   CSCPMessage *pRequest, response;
+   NXCP_MESSAGE *pRawMsg, *pRawMsgOut;
+   NXCP_BUFFER *pRecvBuffer;
+   NXCPMessage *pRequest, response;
    TCHAR szCmd[256];
    struct __console_ctx ctx;
 	static NXCPEncryptionContext *pDummyCtx = NULL;
 
-   pRawMsg = (CSCP_MESSAGE *)malloc(MAX_MSG_SIZE);
-   pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+   pRawMsg = (NXCP_MESSAGE *)malloc(MAX_MSG_SIZE);
+   pRecvBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
    RecvNXCPMessage(0, NULL, pRecvBuffer, 0, NULL, NULL, 0);
    ctx.hSocket = sock;
 	ctx.socketMutex = MutexCreate();
@@ -60,11 +60,11 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
       if (iError == 1)
          continue;   // Too big message
 
-      pRequest = new CSCPMessage(pRawMsg);
-      pRequest->GetVariableStr(VID_COMMAND, szCmd, 256);
+      pRequest = new NXCPMessage(pRawMsg);
+      pRequest->getFieldAsString(VID_COMMAND, szCmd, 256);
 
-      response.SetCode(CMD_ADM_MESSAGE);
-      response.SetId(pRequest->GetId());
+      response.setCode(CMD_ADM_MESSAGE);
+      response.setId(pRequest->getId());
       nExitCode = ProcessConsoleCommand(szCmd, &ctx);
       switch(nExitCode)
       {
@@ -78,9 +78,9 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *pArg)
             break;
       }
 
-      response.SetCode(CMD_REQUEST_COMPLETED);
+      response.setCode(CMD_REQUEST_COMPLETED);
       pRawMsgOut = response.createMessage();
-		SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0, ctx.socketMutex);
+		SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->size), 0, ctx.socketMutex);
       
       free(pRawMsgOut);
       delete pRequest;

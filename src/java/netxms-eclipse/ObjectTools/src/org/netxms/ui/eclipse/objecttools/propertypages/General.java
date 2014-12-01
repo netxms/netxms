@@ -18,20 +18,33 @@
  */
 package org.netxms.ui.eclipse.objecttools.propertypages;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -50,11 +63,16 @@ public class General extends PropertyPage
 	private LabeledText textRegexp;
 	private Button checkOutput;
 	private Button checkConfirmation;
-	private Button disable;
-	private Button follow;
-	private LabeledText textConfirmation;
+   private LabeledText textConfirmation;
+	private Button checkDisable;
+	private Button checkFollow;
+	private Button checkCommand;
+	private LabeledText textCommandName;
+   private LabeledText textCommandShortName;
 	private Button radioIndexOID;
 	private Button radioIndexValue;
+	private Label iconLabel;
+	private Image icon;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createControl(org.eclipse.swt.widgets.Composite)
@@ -80,6 +98,7 @@ public class General extends PropertyPage
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
+		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
 		textName = new LabeledText(dialogArea, SWT.NONE);
@@ -90,11 +109,15 @@ public class General extends PropertyPage
 		textName.setLayoutData(gd);
 		textName.setText(objectTool.getName());
 		
+		createIcon();
+		createIconSelector(dialogArea);
+		
 		textDescription = new LabeledText(dialogArea, SWT.NONE);
 		textDescription.setLabel(Messages.get().General_Description);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
 		textDescription.setLayoutData(gd);
 		textDescription.setText(objectTool.getDescription());
 		
@@ -102,6 +125,7 @@ public class General extends PropertyPage
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalSpan = 2;
 		textData.setLayoutData(gd);
 		textData.setText(objectTool.getData());
 		
@@ -133,6 +157,7 @@ public class General extends PropertyPage
             gd = new GridData();
             gd.horizontalAlignment = SWT.FILL;
             gd.grabExcessHorizontalSpace = true;
+            gd.horizontalSpan = 2;
             fileOptionsGoup.setLayoutData(gd);
 
 				GridLayout fileGroupLayout = new GridLayout();
@@ -156,11 +181,11 @@ public class General extends PropertyPage
 				   maxFileSize.setSelection(0);
 				}
 							
-				follow = new Button(fileOptionsGoup, SWT.CHECK);
-				follow.setText(Messages.get().General_FollowFileChanges);
+				checkFollow = new Button(fileOptionsGoup, SWT.CHECK);
+				checkFollow.setText(Messages.get().General_FollowFileChanges);
 				if(parameters.length > 2) //$NON-NLS-1$
 				{
-				   follow.setSelection( parameters[2].equals("true") ? true : false);  //$NON-NLS-1$
+				   checkFollow.setSelection( parameters[2].equals("true") ? true : false);  //$NON-NLS-1$
 				}	
 				break;
 			case ObjectTool.TYPE_TABLE_SNMP:
@@ -171,6 +196,7 @@ public class General extends PropertyPage
 				gd = new GridData();
 				gd.horizontalAlignment = SWT.FILL;
 				gd.grabExcessHorizontalSpace = true;
+				gd.horizontalSpan = 2;
 				snmpOptGroup.setLayoutData(gd);
 				layout = new GridLayout();
 				snmpOptGroup.setLayout(layout);
@@ -197,6 +223,7 @@ public class General extends PropertyPage
 				gd = new GridData();
 				gd.horizontalAlignment = SWT.FILL;
 				gd.grabExcessHorizontalSpace = true;
+				gd.horizontalSpan = 2;
 				textParameter.setLayoutData(gd);
 				textParameter.setText((parts.length > 1) ? parts[1] : ""); //$NON-NLS-1$
 
@@ -205,6 +232,7 @@ public class General extends PropertyPage
 				gd = new GridData();
 				gd.horizontalAlignment = SWT.FILL;
 				gd.grabExcessHorizontalSpace = true;
+            gd.horizontalSpan = 2;
 				textRegexp.setLayoutData(gd);
 				textRegexp.setText((parts.length > 2) ? parts[2] : ""); //$NON-NLS-1$
 				break;
@@ -215,6 +243,7 @@ public class General extends PropertyPage
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
 		confirmationGroup.setLayoutData(gd);
 		layout = new GridLayout();
 		confirmationGroup.setLayout(layout);
@@ -247,10 +276,65 @@ public class General extends PropertyPage
 		textConfirmation.setText(objectTool.getConfirmationText());
 		textConfirmation.setEnabled(checkConfirmation.getSelection());
 		
-		//Disable option
-		disable = new Button(dialogArea, SWT.CHECK);
-		disable.setText(Messages.get().General_DisableObjectToll);
-		disable.setSelection((objectTool.getFlags() & ObjectTool.DISABLED) > 0);
+      Group commandGroup = new Group(dialogArea, SWT.NONE);
+      commandGroup.setText(Messages.get().General_ShowInCommands);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      commandGroup.setLayoutData(gd);
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.makeColumnsEqualWidth = true;
+      commandGroup.setLayout(layout);
+      
+      checkCommand = new Button(commandGroup, SWT.CHECK);
+      checkCommand.setText(Messages.get().General_ShowInCommandsTooltip);
+      checkCommand.setSelection((objectTool.getFlags() & ObjectTool.SHOW_IN_COMMANDS) != 0);
+      checkCommand.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            textCommandName.setEnabled(checkCommand.getSelection());
+            textCommandShortName.setEnabled(checkCommand.getSelection());
+            if (checkCommand.getSelection())
+               textCommandName.setFocus();
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      checkCommand.setLayoutData(gd);
+      
+      textCommandName = new LabeledText(commandGroup, SWT.NONE);
+      textCommandName.setLabel(Messages.get().General_CommandName);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      textCommandName.setLayoutData(gd);
+      textCommandName.setText(objectTool.getCommandName());
+      textCommandName.setEnabled(checkCommand.getSelection());
+		
+      textCommandShortName = new LabeledText(commandGroup, SWT.NONE);
+      textCommandShortName.setLabel(Messages.get().General_CommandShortName);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      textCommandShortName.setLayoutData(gd);
+      textCommandShortName.setText(objectTool.getCommandShortName());
+      textCommandShortName.setEnabled(checkCommand.getSelection());
+      
+		// Disable option
+		checkDisable = new Button(dialogArea, SWT.CHECK);
+		checkDisable.setText(Messages.get().General_DisableObjectToll);
+		checkDisable.setSelection((objectTool.getFlags() & ObjectTool.DISABLED) > 0);
 		
 		return dialogArea;
 	}
@@ -272,6 +356,117 @@ public class General extends PropertyPage
 		checkOutput.setText(Messages.get().General_GeneratesOutput);
 		checkOutput.setSelection((objectTool.getFlags() & ObjectTool.GENERATES_OUTPUT) != 0);
 	}
+	
+	/**
+	 * Create icon
+	 */
+	private void createIcon()
+	{
+	   if (icon != null)
+	   {
+	      icon.dispose();
+	      icon = null;
+	   }
+	   
+      byte[] imageBytes = objectTool.getImageData();
+      if ((imageBytes == null) || (imageBytes.length == 0))
+         return;
+      
+      ByteArrayInputStream input = new ByteArrayInputStream(imageBytes);
+      try
+      {
+         ImageDescriptor d = ImageDescriptor.createFromImageData(new ImageData(input));
+         icon = d.createImage();
+      }
+      catch(Exception e)
+      {
+         Activator.logError("Exception in General.createIcon()", e); //$NON-NLS-1$
+      }
+	}
+	
+	/**
+	 * @param parent
+	 */
+	private void createIconSelector(Composite parent)
+	{
+	   Group group = new Group(parent, SWT.NONE);
+	   group.setText(Messages.get().General_Icon);
+	   group.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
+	   
+	   GridLayout layout = new GridLayout();
+	   layout.numColumns = 4;
+	   group.setLayout(layout);
+	   
+	   iconLabel = new Label(group, SWT.NONE);
+      iconLabel.setImage((icon != null) ? icon : SharedIcons.IMG_EMPTY);
+      iconLabel.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, true));
+      
+      Label dummy = new Label(group, SWT.NONE);
+      GridData gd = new GridData();
+      gd.widthHint = 8;
+      dummy.setLayoutData(gd);
+	   
+      Button link = new Button(group, SWT.PUSH);
+      link.setImage(SharedIcons.IMG_FIND);
+      link.setToolTipText(Messages.get().General_Select);
+      link.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            selectIcon();
+         }
+      });
+
+      link = new Button(group, SWT.PUSH);
+      link.setImage(SharedIcons.IMG_CLEAR);
+      link.setToolTipText(Messages.get().General_Clear);
+      link.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            iconLabel.setImage(SharedIcons.IMG_EMPTY);
+            if (icon != null)
+            {
+               icon.dispose();
+               icon = null;
+            }
+         }
+      });
+	}
+	
+	/**
+	 * 
+	 */
+	private void selectIcon()
+	{
+	   FileDialog dlg = new FileDialog(getShell(), SWT.OPEN);
+	   dlg.setFilterExtensions(new String[] { "*.gif;*.jpg;*.png", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+      dlg.setFilterNames(new String[] { Messages.get().General_ImageFiles, Messages.get().General_AllFiles });
+      String fileName = dlg.open();
+      if (fileName == null)
+         return;
+      
+      try
+      {
+         Image image = new Image(getShell().getDisplay(), new FileInputStream(new File(fileName)));
+         if ((image.getImageData().width <= 16) && (image.getImageData().height <= 16))
+         {
+            if (icon != null)
+               icon.dispose();
+            icon = image;
+            iconLabel.setImage(icon);
+         }
+         else
+         {
+            image.dispose();
+            MessageDialogHelper.openError(getShell(), Messages.get().General_Error, Messages.get().General_ImageTooLarge);
+         }
+      }
+      catch(Exception e)
+      {
+         MessageDialogHelper.openError(getShell(), Messages.get().General_Error, String.format(Messages.get().General_CannotLoadImage, e.getLocalizedMessage()));
+      }
+	}
 
 	/**
 	 * Apply changes
@@ -290,7 +485,7 @@ public class General extends PropertyPage
 		{
 		   if(objectTool.getType() == ObjectTool.TYPE_FILE_DOWNLOAD)
    		{
-		      objectTool.setData(textData.getText() + "\u007F" + maxFileSize.getSelection() + "\u007F" + follow.getSelection()); //$NON-NLS-1$ //$NON-NLS-2$
+		      objectTool.setData(textData.getText() + "\u007F" + maxFileSize.getSelection() + "\u007F" + checkFollow.getSelection()); //$NON-NLS-1$ //$NON-NLS-2$
    		}
 		   else
 		   {
@@ -308,7 +503,18 @@ public class General extends PropertyPage
 		}
 		objectTool.setConfirmationText(textConfirmation.getText());
 		
-      if (disable.getSelection())
+      if (checkCommand.getSelection())
+      {
+         objectTool.setFlags(objectTool.getFlags() | ObjectTool.SHOW_IN_COMMANDS);
+      }
+      else
+      {
+         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.SHOW_IN_COMMANDS);
+      }
+      objectTool.setCommandName(textCommandName.getText());
+      objectTool.setCommandShortName(textCommandShortName.getText());
+      
+      if (checkDisable.getSelection())
       {
          objectTool.setFlags(objectTool.getFlags() | ObjectTool.DISABLED);
       }
@@ -341,6 +547,19 @@ public class General extends PropertyPage
 			{
 				objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.GENERATES_OUTPUT);
 			}
+		}
+		
+		if (icon != null)
+		{
+		   ImageLoader loader = new ImageLoader();
+		   loader.data = new ImageData[] { icon.getImageData() };
+		   ByteArrayOutputStream stream = new ByteArrayOutputStream(1024);
+		   loader.save(stream, SWT.IMAGE_PNG);
+		   objectTool.setImageData(stream.toByteArray());
+		}
+		else
+		{
+		   objectTool.setImageData(null);
 		}
 	}
 	

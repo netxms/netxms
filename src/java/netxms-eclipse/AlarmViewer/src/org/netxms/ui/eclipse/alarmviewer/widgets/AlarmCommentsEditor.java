@@ -48,9 +48,9 @@ public class AlarmCommentsEditor extends Composite
 	/**
 	 * @param parent
 	 * @param style
-	 * @param note
+	 * @param comment
 	 */
-	public AlarmCommentsEditor(Composite parent, FormToolkit toolkit, ImageCache imageCache, AlarmComment note, HyperlinkAdapter editAction, HyperlinkAdapter deleteAction)
+	public AlarmCommentsEditor(Composite parent, FormToolkit toolkit, ImageCache imageCache, AlarmComment comment, HyperlinkAdapter editAction, HyperlinkAdapter deleteAction)
 	{
 		super(parent, SWT.BORDER);
 		
@@ -59,7 +59,7 @@ public class AlarmCommentsEditor extends Composite
 		setLayout(layout);
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		final AbstractUserObject userObject = session.findUserDBObjectById(note.getUserId());
+		final AbstractUserObject userObject = session.findUserDBObjectById(comment.getUserId());
 		
 		final CLabel user = new CLabel(this, SWT.NONE);
 		toolkit.adapt(user);
@@ -70,7 +70,7 @@ public class AlarmCommentsEditor extends Composite
 		gd.grabExcessHorizontalSpace = false;
 		user.setLayoutData(gd);
 		
-		final Label time = toolkit.createLabel(this, RegionalSettings.getDateTimeFormat().format(note.getLastChangeTime()));
+		final Label time = toolkit.createLabel(this, RegionalSettings.getDateTimeFormat().format(comment.getLastChangeTime()));
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -93,7 +93,7 @@ public class AlarmCommentsEditor extends Composite
       linkDelete.setLayoutData(gd);
 		
 		text = new Text(this, SWT.MULTI | SWT.READ_ONLY);
-		text.setText(note.getText());
+		text.setText(comment.getText());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;

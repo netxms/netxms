@@ -26,7 +26,7 @@
 /**
  * Handler for System.InstalledProducts table
  */
-LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value)
+LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *)
 {
 	value->addColumn(_T("NAME"));
 	value->addColumn(_T("VERSION"));

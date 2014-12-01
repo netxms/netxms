@@ -31,7 +31,6 @@ extern "C" {
 
 void LIBNETXMS_EXPORTABLE uuid_clear(uuid_t uu);
 int LIBNETXMS_EXPORTABLE uuid_compare(uuid_t uu1, uuid_t uu2);
-void LIBNETXMS_EXPORTABLE uuid_copy(uuid_t uu1, uuid_t uu2);
 void LIBNETXMS_EXPORTABLE uuid_generate(uuid_t out);
 int LIBNETXMS_EXPORTABLE uuid_is_null(uuid_t uu);
 int LIBNETXMS_EXPORTABLE uuid_parse(const TCHAR *in, uuid_t uu);

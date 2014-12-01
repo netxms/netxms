@@ -18,40 +18,16 @@
  */
 package org.netxms.ui.eclipse.objectmanager.actions;
 
-import org.eclipse.swt.widgets.Display;
-import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.objectmanager.Messages;
-
 /**
- * Set selected object(s) to managed state
+ * Set selected object(s) to unmanaged state
  */
-public class Unmanage extends MultipleObjectAction
+public class Unmanage extends SetObjectManagementState
 {
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#runObjectAction(org.netxms.client.NXCSession, org.netxms.client.objects.AbstractObject)
-	 */
-	@Override
-	protected void runObjectAction(NXCSession session, AbstractObject object) throws Exception
-	{
-		session.setObjectManaged(object.getObjectId(), false);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#formatJobDescription(org.netxms.client.objects.AbstractObject)
-	 */
-	@Override
-	protected String formatJobDescription(AbstractObject object)
-	{
-		return String.format(Messages.get().Unmanage_JobDescription, object.getObjectName(), object.getObjectId());
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#formatErrorMessage(org.netxms.client.objects.AbstractObject, org.eclipse.swt.widgets.Display)
-	 */
-	@Override
-	protected String formatErrorMessage(AbstractObject object, Display display)
-	{
-		return String.format(Messages.get().Unmanage_JobError, object.getObjectName(), object.getObjectId());
-	}
+   /**
+    * Constructor
+    */
+   public Unmanage()
+   {
+      super(false);
+   }
 }

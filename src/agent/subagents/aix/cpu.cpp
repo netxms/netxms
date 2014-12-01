@@ -84,7 +84,7 @@ static void CpuUsageCollector()
 		}
 		else if (cpuCount <= 0)
 		{
-			AgentWriteDebugLog(6, "AIX: call to perfstat_cpu failed (%s)", strerror(errno));
+			AgentWriteDebugLog(6, _T("AIX: call to perfstat_cpu failed (%s)"), _tcserror(errno));
 			cpuCount = 0;
 		}
 		
@@ -147,7 +147,7 @@ static void CpuUsageCollector()
 	}
 	else
 	{
-		AgentWriteDebugLog(6, "AIX: call to perfstat_cpu_total failed (%s)", strerror(errno));
+		AgentWriteDebugLog(6, _T("AIX: call to perfstat_cpu_total failed (%s)"), _tcserror(errno));
 	}
 
    perfstat_partition_total_t lparstats;
@@ -179,7 +179,7 @@ static void CpuUsageCollector()
    }
    else
    {
-		AgentWriteDebugLog(6, "AIX: call to perfstat_partition_total failed (%s)", strerror(errno));
+		AgentWriteDebugLog(6, _T("AIX: call to perfstat_partition_total failed (%s)"), _tcserror(errno));
    }
 
 	// go to the next slot
@@ -192,13 +192,13 @@ static void CpuUsageCollector()
  */
 static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *arg)
 {
-	AgentWriteDebugLog(1, "CPU usage collector thread started");
+	AgentWriteDebugLog(1, _T("CPU usage collector thread started"));
 	while(m_stopCollectorThread == false)
 	{
 		CpuUsageCollector();
 		ThreadSleepMs(1000); // sleep 1 second
 	}
-	AgentWriteDebugLog(1, "CPU usage collector thread stopped");
+	AgentWriteDebugLog(1, _T("CPU usage collector thread stopped"));
 	return THREAD_OK;
 }
 
@@ -316,7 +316,7 @@ void ShutdownCpuUsageCollector()
 /**
  * Get usage value for given CPU, metric, and interval
  */
-static void GetUsage(int source, int cpu, int count, char *value)
+static void GetUsage(int source, int cpu, int count, TCHAR *value)
 {
    double *table;
    switch (source)
@@ -359,9 +359,13 @@ static void GetUsage(int source, int cpu, int count, char *value)
    table += cpu * CPU_USAGE_SLOTS;
 
    double usage = 0;
-   double *p = table + m_currentSlot - 1;
 
 	MutexLock(m_cpuUsageMutex);
+
+   // m_currentSlot points to next slot to be filled
+   // it is never zero because collector thread always increment it
+   // before releasing mutex
+   double *p = table + m_currentSlot - 1;
 	for (int i = 0; i < count; i++)
 	{
 		usage += *p;
@@ -381,7 +385,7 @@ static void GetUsage(int source, int cpu, int count, char *value)
 /**
  * Handler for System.CPU.Usage.* parameters
  */
-LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int count;
 
@@ -405,16 +409,16 @@ LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue)
 /**
  * Handler for System.CPU.Usage.*(*) parameters (CPU-specific versions)
  */
-LONG H_CpuUsageEx(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int count, cpu;
-	char buffer[256], *eptr;
+	TCHAR buffer[256], *eptr;
 	struct CpuUsageParam *p = (struct CpuUsageParam *)pValue;
 
 	if (!AgentGetParameterArg(pszParam, 1, buffer, 256))
 		return SYSINFO_RC_UNSUPPORTED;
 		
-	cpu = strtol(buffer, &eptr, 0);
+	cpu = _tcstol(buffer, &eptr, 0);
 	if ((*eptr != 0) || (cpu < 0) || (cpu >= m_maxCPU))
 		return SYSINFO_RC_UNSUPPORTED;
 
@@ -438,7 +442,7 @@ LONG H_CpuUsageEx(const char *pszParam, const char *pArg, char *pValue)
 /**
  * Handler for System.CPU.Count parameter
  */
-LONG H_CpuCount(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    perfstat_cpu_total_t cpuTotals;
    if (perfstat_cpu_total(NULL, &cpuTotals, sizeof(perfstat_cpu_total_t), 1) != 1)

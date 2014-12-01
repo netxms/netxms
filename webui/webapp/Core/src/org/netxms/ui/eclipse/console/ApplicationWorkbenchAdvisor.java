@@ -49,7 +49,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 {
-   private static final String PERSPECTIVE_ID = "org.netxms.ui.eclipse.console.DefaultPerspective"; //$NON-NLS-1$
+   private static final String PERSPECTIVE_ID = "org.netxms.ui.eclipse.console.ManagementPerspective"; //$NON-NLS-1$
    
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.application.WorkbenchAdvisor#createWorkbenchWindowAdvisor(org.eclipse.ui.application.IWorkbenchWindowConfigurer)
@@ -214,17 +214,23 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
             @Override
             public void notificationHandler(final SessionNotification n)
             {
-               if ((n.getCode() == SessionNotification.CONNECTION_BROKEN) || (n.getCode() == SessionNotification.SERVER_SHUTDOWN))
+				if ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ||
+				    (n.getCode() == SessionNotification.SERVER_SHUTDOWN) ||
+				    (n.getCode() == SessionNotification.SESSION_KILLED))
                {
                   display.asyncExec(new Runnable() {
                      @Override
                      public void run()
                      {
+                    	String productName = BrandingManager.getInstance().getProductName();
                         MessageDialog.openError(
                               PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
                               Messages.get().ApplicationWorkbenchAdvisor_CommunicationError,
-                              ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? Messages.get().ApplicationWorkbenchAdvisor_ConnectionLostMessage
-                                    : Messages.get().ApplicationWorkbenchAdvisor_ServerShutdownMessage)
+                              ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? 
+                            		  String.format(Messages.get().ApplicationWorkbenchAdvisor_ConnectionLostMessage, productName)
+                                      : ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ?
+                                        "Communication session was terminated by system administrator"
+                                    	: String.format(Messages.get().ApplicationWorkbenchAdvisor_ServerShutdownMessage, productName)))
                                     + Messages.get().ApplicationWorkbenchAdvisor_OKToCloseMessage);
                         PlatformUI.getWorkbench().getActiveWorkbenchWindow().close();
                      }

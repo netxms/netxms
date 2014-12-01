@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -105,6 +105,32 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 }
 
 /**
+ * Delete node's custom attribute
+ * First argument is a node object, second is an attribute name
+ */
+static int F_DeleteCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	NXSL_Object *object;
+
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
+	    _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	NetObj *netxmsObject = (NetObj *)object->getData();
+	netxmsObject->deleteCustomAttribute(argv[1]->getValueAsCString());
+   *ppResult = new NXSL_Value;
+	return 0;
+}
+
+/**
  * Get interface name by index
  * Parameters: node object and interface index
  */
@@ -124,7 +150,7 @@ static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 	Interface *ifc = node->findInterface(argv[1]->getValueAsUInt32(), INADDR_ANY);
 	if (ifc != NULL)
 	{
-		*ppResult = new NXSL_Value(ifc->Name());
+		*ppResult = new NXSL_Value(ifc->getName());
 	}
 	else
 	{
@@ -192,7 +218,7 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 	if (argv[1]->isInteger())
 	{
 		NetObj *o = FindObjectById(argv[1]->getValueAsUInt32());
-		if ((o != NULL) && (o->Type() == OBJECT_NODE))
+		if ((o != NULL) && (o->getObjectClass() == OBJECT_NODE))
 			node = (Node *)o;
 	}
 	else
@@ -202,9 +228,9 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
 	if (node != NULL)
 	{
-		if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
+		if (g_flags & AF_CHECK_TRUSTED_NODES)
 		{
-			if ((currNode != NULL) && (node->isTrustedNode(currNode->Id())))
+			if ((currNode != NULL) && (node->isTrustedNode(currNode->getId())))
 			{
 				*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node));
 			}
@@ -213,8 +239,8 @@ static int F_FindNodeObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 				// No access, return null
 				*ppResult = new NXSL_Value;
 				DbgPrintf(4, _T("NXSL::FindNodeObject(%s [%d], '%s'): access denied for node %s [%d]"),
-				          (currNode != NULL) ? currNode->Name() : _T("null"), (currNode != NULL) ? currNode->Id() : 0,
-							 argv[1]->getValueAsCString(), node->Name(), node->Id());
+				          (currNode != NULL) ? currNode->getName() : _T("null"), (currNode != NULL) ? currNode->getId() : 0,
+							 argv[1]->getValueAsCString(), node->getName(), node->getId());
 			}
 		}
 		else
@@ -261,7 +287,7 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 
 	if (object != NULL)
 	{
-		if (g_dwFlags & AF_CHECK_TRUSTED_NODES)
+		if (g_flags & AF_CHECK_TRUSTED_NODES)
 		{
 			Node *currNode = NULL;
 			if ((argc == 2) && !argv[1]->isNull())
@@ -272,9 +298,9 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 
 				currNode = (Node *)o->getData();
 			}
-			if ((currNode != NULL) && (object->isTrustedNode(currNode->Id())))
+			if ((currNode != NULL) && (object->isTrustedNode(currNode->getId())))
 			{
-				*ppResult = new NXSL_Value(new NXSL_Object((object->Type() == OBJECT_NODE) ? (NXSL_Class *)&g_nxslNodeClass : (NXSL_Class *)&g_nxslNetObjClass, object));
+				*ppResult = new NXSL_Value(new NXSL_Object((object->getObjectClass() == OBJECT_NODE) ? (NXSL_Class *)&g_nxslNodeClass : (NXSL_Class *)&g_nxslNetObjClass, object));
 			}
 			else
 			{
@@ -282,13 +308,13 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 				*ppResult = new NXSL_Value;
 				DbgPrintf(4, _T("NXSL::FindObject('%s', %s [%d]): access denied for node %s [%d]"),
 				          argv[0]->getValueAsCString(),
-				          (currNode != NULL) ? currNode->Name() : _T("null"), (currNode != NULL) ? currNode->Id() : 0,
-							 object->Name(), object->Id());
+				          (currNode != NULL) ? currNode->getName() : _T("null"), (currNode != NULL) ? currNode->getId() : 0,
+							 object->getName(), object->getId());
 			}
 		}
 		else
 		{
-			*ppResult = new NXSL_Value(new NXSL_Object((object->Type() == OBJECT_NODE) ? (NXSL_Class *)&g_nxslNodeClass : (NXSL_Class *)&g_nxslNetObjClass, object));
+			*ppResult = new NXSL_Value(new NXSL_Object((object->getObjectClass() == OBJECT_NODE) ? (NXSL_Class *)&g_nxslNodeClass : (NXSL_Class *)&g_nxslNetObjClass, object));
 		}
 	}
 	else
@@ -316,6 +342,25 @@ static int F_GetNodeParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 
 	Node *node = (Node *)object->getData();
 	*ppResult = new NXSL_Value(node->getParentsForNXSL());
+	return 0;
+}
+
+/**
+ * Get node object's templates
+ * First argument: node object
+ * Returns array of accessible template objects
+ */
+static int F_GetNodeTemplates(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	Node *node = (Node *)object->getData();
+	*ppResult = new NXSL_Value(node->getTemplatesForNXSL());
 	return 0;
 }
 
@@ -446,7 +491,7 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 	// Validate first argument
 	if (!argv[0]->isObject())
 		return NXSL_ERR_NOT_OBJECT;
-	
+
 	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
@@ -486,7 +531,7 @@ static int F_PostEvent(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 		for(int i = 3; (i < argc) && (eargc < 32); i++)
 			plist[eargc++] = argv[i]->getValueAsCString();
 		format[eargc] = 0;
-		success = PostEventWithTag(eventCode, node->Id(), userTag, format,
+		success = PostEventWithTag(eventCode, node->getId(), userTag, format,
 		                           plist[0], plist[1], plist[2], plist[3],
 		                           plist[4], plist[5], plist[6], plist[7],
 		                           plist[8], plist[9], plist[10], plist[11],
@@ -526,7 +571,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *parent = (NetObj*)obj->getData();
-	if (parent->Type() != OBJECT_CONTAINER && parent->Type() != OBJECT_SERVICEROOT)
+	if (parent->getObjectClass() != OBJECT_CONTAINER && parent->getObjectClass() != OBJECT_SERVICEROOT)
 		return NXSL_ERR_BAD_CLASS;
 
 	if (!argv[1]->isString() || !argv[2]->isString())
@@ -571,7 +616,7 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *parent = (NetObj*)obj->getData();
-	if (parent->Type() != OBJECT_CONTAINER && parent->Type() != OBJECT_SERVICEROOT)
+	if (parent->getObjectClass() != OBJECT_CONTAINER && parent->getObjectClass() != OBJECT_SERVICEROOT)
 		return NXSL_ERR_BAD_CLASS;
 
 	if (!argv[1]->isString())
@@ -637,19 +682,19 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netobj = (NetObj*)obj->getData();
-	if (netobj->Type() != OBJECT_CONTAINER)
+	if (netobj->getObjectClass() != OBJECT_CONTAINER)
 		return NXSL_ERR_BAD_CLASS;
 
 	NXSL_Object *obj2 = argv[1]->getValueAsObject();
-	if (_tcscmp(obj2->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+	if (_tcscmp(obj2->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		_tcscmp(obj2->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *child = (NetObj*)obj2->getData();
-	if (child->Type() != OBJECT_CONTAINER && child->Type() != OBJECT_SUBNET && child->Type() != OBJECT_NODE)
+	if (child->getObjectClass() != OBJECT_CONTAINER && child->getObjectClass() != OBJECT_SUBNET && child->getObjectClass() != OBJECT_NODE)
 		return NXSL_ERR_BAD_CLASS;
 
-	if (child->isChild(netobj->Id())) // prevent loops
+	if (child->isChild(netobj->getId())) // prevent loops
 		return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
 	netobj->AddChild(child);
@@ -681,16 +726,16 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netobj = (NetObj*)obj->getData();
-	if (netobj->Type() != OBJECT_CONTAINER)
+	if (netobj->getObjectClass() != OBJECT_CONTAINER)
 		return NXSL_ERR_BAD_CLASS;
 
 	NXSL_Object *obj2 = argv[1]->getValueAsObject();
-	if (_tcscmp(obj2->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+	if (_tcscmp(obj2->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		_tcscmp(obj2->getClass()->getName(), g_nxslNodeClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *child = (NetObj*)obj2->getData();
-	if (child->Type() != OBJECT_CONTAINER && child->Type() != OBJECT_SUBNET && child->Type() != OBJECT_NODE)
+	if (child->getObjectClass() != OBJECT_CONTAINER && child->getObjectClass() != OBJECT_SUBNET && child->getObjectClass() != OBJECT_NODE)
 		return NXSL_ERR_BAD_CLASS;
 
 	netobj->DeleteChild(child);
@@ -720,7 +765,7 @@ static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		return NXSL_ERR_NOT_STRING;
 
 	NXSL_Object *object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
@@ -746,7 +791,7 @@ static int F_ManageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 		return NXSL_ERR_NOT_OBJECT;
 
 	NXSL_Object *object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
@@ -772,7 +817,7 @@ static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 		return NXSL_ERR_NOT_OBJECT;
 
 	NXSL_Object *object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) && 
+	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
@@ -895,7 +940,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 	pdu->bindVariable(new SNMP_Variable(varName, nameLen));
 
 	SNMP_PDU *rspPDU;
-   result = trans->doRequest(pdu, &rspPDU, g_dwSNMPTimeout, 3 /* num retries */);
+   result = trans->doRequest(pdu, &rspPDU, g_snmpTimeout, 3 /* num retries */);
    if (result == SNMP_ERR_SUCCESS)
    {
       if ((rspPDU->getNumVariables() > 0) && (rspPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
@@ -914,6 +959,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 	{
 		*ppResult = new NXSL_Value;
 	}
+   delete pdu;
 	return 0;
 }
 
@@ -943,7 +989,7 @@ static int F_SNMPGetValue(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 
 	SNMP_Transport *trans = (SNMP_Transport*)obj->getData();
 
-	if (SnmpGet(SNMP_VERSION_2C, trans, argv[1]->getValueAsString(&len), NULL, 0, buffer, sizeof(buffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+	if (SnmpGetEx(trans, argv[1]->getValueAsString(&len), NULL, 0, buffer, sizeof(buffer), SG_STRING_RESULT, NULL) == SNMP_ERR_SUCCESS)
 	{
 		*ppResult = new NXSL_Value(buffer);
 	}
@@ -1001,7 +1047,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 			UINT32 dataType = SNMPResolveDataType(argv[3]->getValueAsString(&len));
 			if (dataType == ASN_NULL)
 			{
-				DbgPrintf(6, _T("SNMPSet: failed to resolve data type '%s', assume string"), 
+				DbgPrintf(6, _T("SNMPSet: failed to resolve data type '%s', assume string"),
 					argv[3]->getValueAsString(&len));
 				dataType = ASN_OCTET_STRING;
 			}
@@ -1017,7 +1063,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 
 	// Send request and process response
 	UINT32 snmpResult;
-	if ((snmpResult = trans->doRequest(request, &response, g_dwSNMPTimeout, 3)) == SNMP_ERR_SUCCESS)
+	if ((snmpResult = trans->doRequest(request, &response, g_snmpTimeout, 3)) == SNMP_ERR_SUCCESS)
 	{
 		if (response->getErrorCode() != 0)
 		{
@@ -1087,7 +1133,7 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
    {
       rqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, requestId++, trans->getSnmpVersion());
       rqPDU->bindVariable(new SNMP_Variable(name, nameLen));
-      result = trans->doRequest(rqPDU, &rspPDU, g_dwSNMPTimeout, 3);
+      result = trans->doRequest(rqPDU, &rspPDU, g_snmpTimeout, 3);
 
       // Analyze response
       if (result == SNMP_ERR_SUCCESS)
@@ -1249,6 +1295,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ _T("AgentReadParameter"), F_AgentReadParameter, 2 },
 	{ _T("AgentReadTable"), F_AgentReadTable, 2 },
 	{ _T("CreateSNMPTransport"), F_CreateSNMPTransport, 1 },
+	{ _T("DeleteCustomAttribute"), F_DeleteCustomAttribute, 2 },
    { _T("GetConfigurationVariable"), F_GetConfigurationVariable, -1 },
    { _T("GetCustomAttribute"), F_GetCustomAttribute, 2 },
    { _T("GetEventParameter"), F_GetEventParameter, 2 },
@@ -1256,6 +1303,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { _T("GetInterfaceObject"), F_GetInterfaceObject, 2 },
    { _T("GetNodeInterfaces"), F_GetNodeInterfaces, 1 },
    { _T("GetNodeParents"), F_GetNodeParents, 1 },
+   { _T("GetNodeTemplates"), F_GetNodeTemplates, 1 },
    { _T("GetObjectChildren"), F_GetObjectChildren, 1 },
    { _T("GetObjectParents"), F_GetObjectParents, 1 },
 	{ _T("FindNodeObject"), F_FindNodeObject, 2 },
@@ -1285,6 +1333,8 @@ static NXSL_ExtFunction m_nxslServerFunctionsForContainers[] =
 	{ _T("UnbindObject"), F_UnbindObject, 2 }
 };
 
+/*** NXSL_ServerEnv class implementation ***/
+
 /**
  * Constructor for server default script environment
  */
@@ -1295,7 +1345,7 @@ NXSL_ServerEnv::NXSL_ServerEnv() : NXSL_Environment()
 	registerFunctionSet(sizeof(m_nxslServerFunctions) / sizeof(NXSL_ExtFunction), m_nxslServerFunctions);
 	RegisterDCIFunctions(this);
 	registerFunctionSet(g_nxslNumSituationFunctions, g_nxslSituationFunctions);
-	if (g_dwFlags & AF_ENABLE_NXSL_CONTAINER_FUNCS)
+	if (g_flags & AF_ENABLE_NXSL_CONTAINER_FUNCS)
 		registerFunctionSet(sizeof(m_nxslServerFunctionsForContainers) / sizeof(NXSL_ExtFunction), m_nxslServerFunctionsForContainers);
 }
 
@@ -1324,4 +1374,58 @@ void NXSL_ServerEnv::print(NXSL_Value *value)
 		const TCHAR *text = value->getValueAsCString();
 		ConsolePrintf(m_console, _T("%s"), CHECK_NULL(text));
 	}
+}
+
+/**
+ * Constructor for environment intended for passing script's output to client
+ */
+NXSL_ClientSessionEnv::NXSL_ClientSessionEnv(ClientSession *session, NXCPMessage *response) : NXSL_ServerEnv()
+{
+   m_session = session;
+   m_response = response;
+}
+
+/**
+ * Send script output to user
+ */
+void NXSL_ClientSessionEnv::print(NXSL_Value *value)
+{
+	if (m_session != NULL && m_response != NULL)
+	{
+		const TCHAR *text = value->getValueAsCString();
+		m_response->setField(VID_MESSAGE, text);
+		m_session->sendMessage(m_response);
+	}
+}
+
+/**
+ * Trace output
+ */
+void NXSL_ClientSessionEnv::trace(int level, const TCHAR *text)
+{
+	if (m_session != NULL && m_response != NULL)
+	{
+      size_t len = _tcslen(text);
+      TCHAR *t = (TCHAR *)malloc((len + 2) * sizeof(TCHAR));
+      memcpy(t, text, len * sizeof(TCHAR));
+      t[len] = _T('\n');
+      t[len + 1] = 0;
+		m_response->setField(VID_MESSAGE, t);
+		m_session->sendMessage(m_response);
+      free(t);
+	}
+   NXSL_ServerEnv::trace(level, text);
+}
+
+/**
+ * Call hook script
+ */
+NXSL_VM *FindHookScript(const TCHAR *hookName)
+{
+	TCHAR scriptName[MAX_PATH] = _T("Hook::");
+	nx_strncpy(&scriptName[6], hookName, MAX_PATH - 6);
+	NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
+	if (vm == NULL)
+		DbgPrintf(7, _T("FindHookScript: hook script \"%s\" not found"), scriptName);
+   return vm;
 }

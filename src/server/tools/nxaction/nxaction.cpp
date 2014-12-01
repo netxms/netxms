@@ -1,7 +1,7 @@
 /* 
 ** nxaction - command line tool used to execute preconfigured actions 
 **            on NetXMS agent
-** Copyright (C) 2004-2010 Victor Kirhenshtein
+** Copyright (C) 2004-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,15 +31,23 @@
 #include <netdb.h>
 #endif
 
+/**
+ * Output callback
+ */
+static void OutputCallback(ActionCallbackEvent e, const TCHAR *data, void *arg)
+{
+   if (e == ACE_DATA)
+      _tprintf(_T("%s"), data);
+}
 
-//
-// Startup
-//
-
+/**
+ * Startup
+ */
 int main(int argc, char *argv[])
 {
    char *eptr;
    BOOL bStart = TRUE, bVerbose = TRUE;
+   bool showOutput = false;
    int i, ch, iExitCode = 3;
    int iAuthMethod = AUTH_NONE;
 #ifdef _WITH_ENCRYPTION
@@ -57,7 +65,7 @@ int main(int argc, char *argv[])
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:e:hK:p:qs:vw:W:")) != -1)
+	while((ch = getopt(argc, argv, "a:e:hK:op:qs:vw:W:")) != -1)
    {
       switch(ch)
       {
@@ -79,6 +87,7 @@ int main(int argc, char *argv[])
                      _T("   -K <file>    : Specify server's key file\n")
                      _T("                  (default is ") DEFAULT_DATA_DIR DFILE_KEYS _T(").\n")
 #endif
+                     _T("   -o           : Show action's output.\n")
                      _T("   -p <port>    : Specify agent's port number. Default is %d.\n")
                      _T("   -q           : Quiet mode.\n")
                      _T("   -s <secret>  : Specify shared secret for authentication.\n")
@@ -102,6 +111,9 @@ int main(int argc, char *argv[])
                _tprintf(_T("Invalid authentication method \"%hs\"\n"), optarg);
                bStart = FALSE;
             }
+            break;
+         case 'o':
+            showOutput = true;
             break;
          case 'p':   // Port number
             i = strtol(optarg, &eptr, 0);
@@ -260,11 +272,11 @@ int main(int argc, char *argv[])
 					int count = min(argc - optind - 2, 256);
 					for(i = 0, k = optind + 2; i < count; i++, k++)
 						args[i] = WideStringFromMBString(argv[k]);
-               dwError = conn.execAction(action, count, args);
+               dwError = conn.execAction(action, count, args, showOutput, OutputCallback);
 					for(i = 0; i < count; i++)
 						free(args[i]);
 #else
-               dwError = conn.execAction(argv[optind + 1], argc - optind - 2, &argv[optind + 2]);
+               dwError = conn.execAction(argv[optind + 1], argc - optind - 2, &argv[optind + 2], showOutput, OutputCallback);
 #endif
                if (bVerbose)
                {

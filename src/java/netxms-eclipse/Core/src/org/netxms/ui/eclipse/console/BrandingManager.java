@@ -32,7 +32,7 @@ import org.netxms.ui.eclipse.console.api.BrandingProvider;
 
 /**
  * Branding manager. There should be only one instance of branding manager,
- * created early during console startup.
+ * created early during application startup.
  */
 public class BrandingManager
 {
@@ -94,6 +94,38 @@ public class BrandingManager
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	/**
+	 * Get product name.
+	 * 
+	 * @return product name or default product name if no branding provider defines one.
+	 */
+	public String getProductName()
+	{
+		for(BrandingProvider p : providers.values())
+		{
+			String name = p.getProductName();
+			if (name != null)
+				return name;
+		}
+		return Messages.get().BrandingManager_ProductName;
+	}
+	
+   /**
+    * Get product name for management console.
+    * 
+    * @return product name or default product name if no branding provider defines one.
+    */
+   public String getConsoleProductName()
+   {
+      for(BrandingProvider p : providers.values())
+      {
+         String name = p.getConsoleProductName();
+         if (name != null)
+            return name;
+      }
+		return Messages.get().ApplicationActionBarAdvisor_AboutProductName;
 	}
 	
 	/**

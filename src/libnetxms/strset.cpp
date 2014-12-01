@@ -127,6 +127,23 @@ bool StringSet::contains(const TCHAR *str)
 }
 
 /**
+ * Check if two given sets are equal
+ */
+bool StringSet::equals(StringSet *s)
+{
+   if (s->size() != size())
+      return false;
+
+   StringSetEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (!s->contains(entry->str))
+         return false;
+   }
+   return true;
+}
+
+/**
  * Get set size
  */
 int StringSet::size()
@@ -186,15 +203,15 @@ void StringSet::addAllPreallocated(TCHAR **strings, int count)
  * @param baseId base ID for data fields
  * @param countId ID of field where number of strings should be placed
  */
-void StringSet::fillMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId)
+void StringSet::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId)
 {
    UINT32 varId = baseId;
    StringSetEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      msg->SetVariable(varId++, entry->str);
+      msg->setField(varId++, entry->str);
    }
-   msg->SetVariable(countId, varId - baseId);
+   msg->setField(countId, varId - baseId);
 }
 
 /**
@@ -206,16 +223,16 @@ void StringSet::fillMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId)
  * @param clearBeforeAdd if set to true, existing content will be deleted
  * @param toUppercase if set to true, all strings will be converted to upper case before adding
  */
-void StringSet::addAllFromMessage(CSCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase)
+void StringSet::addAllFromMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase)
 {
    if (clearBeforeAdd)
       clear();
 
-   int count = (int)msg->GetVariableLong(countId);
+   int count = (int)msg->getFieldAsUInt32(countId);
    UINT32 varId = baseId;
    for(int i = 0; i < count; i++)
    {
-      TCHAR *str = msg->GetVariableStr(varId++);
+      TCHAR *str = msg->getFieldAsString(varId++);
       if (str != NULL)
       {
          if (toUppercase)

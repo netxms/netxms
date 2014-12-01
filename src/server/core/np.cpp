@@ -43,7 +43,7 @@ public:
  */
 NXSL_DiscoveryClass::NXSL_DiscoveryClass() : NXSL_Class()
 {
-   _tcscpy(m_szName, _T("NewNode"));
+   _tcscpy(m_name, _T("NewNode"));
 }
 
 NXSL_Value *NXSL_DiscoveryClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
@@ -217,7 +217,7 @@ Node *PollNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 dwCreationFlags,
 		pNode->configurationPoll(NULL, 0, -1, dwNetMask);
 
    pNode->unhide();
-   PostEvent(EVENT_NODE_ADDED, pNode->Id(), "d", (int)(discoveredNode ? 1 : 0));
+   PostEvent(EVENT_NODE_ADDED, pNode->getId(), "d", (int)(discoveredNode ? 1 : 0));
 
    return pNode;
 }
@@ -346,7 +346,7 @@ static bool HostIsReachable(UINT32 ipAddr, UINT32 zoneId, bool fullCheck, SNMP_T
       if (proxyNode != NULL)
       {
          pAgentConn->setProxy(htonl(proxyNode->IpAddr()), proxyNode->getAgentPort(),
-                              proxyNode->getAuthMethod(), proxyNode->getSharedSecret());
+                              proxyNode->getAgentAuthMethod(), proxyNode->getSharedSecret());
       }
 	}
    UINT32 rcc;
@@ -445,6 +445,34 @@ static BOOL AcceptNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 zoneId, BYTE
    {
 		DbgPrintf(4, _T("AcceptNewNode(%s): broadcast MAC address"), szIpAddr);
       return FALSE;  // Broadcast MAC
+   }
+
+   NXSL_VM *hook = FindHookScript(_T("AcceptNewNode"));
+   if (hook != NULL)
+   {
+      bool stop = false;
+      hook->setGlobalVariable(_T("$ipAddr"), new NXSL_Value(szIpAddr));
+      IpToStr(dwNetMask, szBuffer);
+      hook->setGlobalVariable(_T("$ipNetMask"), new NXSL_Value(szBuffer));
+      MACToStr(macAddr, szBuffer);
+      hook->setGlobalVariable(_T("$macAddr"), new NXSL_Value(szBuffer));
+      hook->setGlobalVariable(_T("$zoneId"), new NXSL_Value(zoneId));
+      if (hook->run())
+      {
+         NXSL_Value *result = hook->getResult();
+         if (result->isZero())
+         {
+            stop = true;
+      		DbgPrintf(4, _T("AcceptNewNode(%s): rejected by hook script"), szIpAddr);
+         }
+      }
+      else
+      {
+		   DbgPrintf(4, _T("AcceptNewNode(%s): hook script execution error: %s"), szIpAddr, hook->getErrorText());
+      }
+      delete hook;
+      if (stop)
+         return FALSE;  // blocked by hook
    }
 
 	Interface *iface = GetOldNodeWithNewIP(dwIpAddr, dwNetMask, zoneId, macAddr);

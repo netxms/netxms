@@ -1,0 +1,10 @@
+<tr>
+    <td>
+        Change related NetXMS alarm status to:
+        <select name="selectedAction">
+            <option value="acknowledged">Acknowledged</option>
+            <option value="resolved">Resolved</option>
+            <option value="terminated">Terminated</option>
+        </select>
+    </td>
+</tr>

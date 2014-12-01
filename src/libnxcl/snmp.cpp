@@ -32,17 +32,17 @@ UINT32 LIBNXCL_EXPORTABLE NXCSnmpWalk(NXC_SESSION hSession, UINT32 dwNode,
                                      TCHAR *pszRootOID, void *pUserData,
                                      void (* pfCallback)(TCHAR *, UINT32, TCHAR *, void *))
 {
-   CSCPMessage msg, *pData;
+   NXCPMessage msg, *pData;
    UINT32 i, dwNumVars, dwRetCode, dwRqId, dwId, dwType;
    TCHAR szVarName[4096], szValue[4096];
    BOOL bStop = FALSE;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_START_SNMP_WALK);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_SNMP_OID, pszRootOID);
-   msg.SetVariable(VID_OBJECT_ID, dwNode);
+   msg.setCode(CMD_START_SNMP_WALK);
+   msg.setId(dwRqId);
+   msg.setField(VID_SNMP_OID, pszRootOID);
+   msg.setField(VID_OBJECT_ID, dwNode);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -53,12 +53,12 @@ UINT32 LIBNXCL_EXPORTABLE NXCSnmpWalk(NXC_SESSION hSession, UINT32 dwNode,
          pData = ((NXCL_Session *)hSession)->WaitForMessage(CMD_SNMP_WALK_DATA, dwRqId);
          if (pData != NULL)
          {
-            dwNumVars = pData->GetVariableLong(VID_NUM_VARIABLES);
+            dwNumVars = pData->getFieldAsUInt32(VID_NUM_VARIABLES);
             for(i = 0, dwId = VID_SNMP_WALKER_DATA_BASE; i < dwNumVars; i++)
             {
-               pData->GetVariableStr(dwId++, szVarName, 4096);
-               dwType = pData->GetVariableLong(dwId++);
-               pData->GetVariableStr(dwId++, szValue, 4096);
+               pData->getFieldAsString(dwId++, szVarName, 4096);
+               dwType = pData->getFieldAsUInt32(dwId++);
+               pData->getFieldAsString(dwId++, szValue, 4096);
                pfCallback(szVarName, dwType, szValue, pUserData);
             }
             bStop = pData->isEndOfSequence();
@@ -91,29 +91,29 @@ UINT32 LIBNXCL_EXPORTABLE NXCSnmpSet(NXC_SESSION hSession, UINT32 dwNode,
 UINT32 LIBNXCL_EXPORTABLE NXCGetSnmpCommunityList(NXC_SESSION hSession, UINT32 *pdwNumStrings,
 																 TCHAR ***pppszStringList)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 i, count, dwRetCode, dwRqId, id;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_COMMUNITY_LIST);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GET_COMMUNITY_LIST);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-		dwRetCode = pResponse->GetVariableLong(VID_RCC);
+		dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
 		if (dwRetCode == RCC_SUCCESS)
 		{
-			count = pResponse->GetVariableLong(VID_NUM_STRINGS);
+			count = pResponse->getFieldAsUInt32(VID_NUM_STRINGS);
 			*pdwNumStrings = count;
 			if (count > 0)
 			{
 				*pppszStringList = (TCHAR **)malloc(sizeof(TCHAR *) * count);
 				for(i = 0, id = VID_STRING_LIST_BASE; i < count; i++)
 				{
-					(*pppszStringList)[i] = pResponse->GetVariableStr(id++);
+					(*pppszStringList)[i] = pResponse->getFieldAsString(id++);
 				}
 			}
 			else
@@ -138,18 +138,18 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetSnmpCommunityList(NXC_SESSION hSession, UINT32 *
 UINT32 LIBNXCL_EXPORTABLE NXCUpdateSnmpCommunityList(NXC_SESSION hSession, UINT32 dwNumStrings,
 											    					 TCHAR **ppszStringList)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 i, id, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_UPDATE_COMMUNITY_LIST);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_UPDATE_COMMUNITY_LIST);
+   msg.setId(dwRqId);
 
-	msg.SetVariable(VID_NUM_STRINGS, dwNumStrings);
+	msg.setField(VID_NUM_STRINGS, dwNumStrings);
 	for(i = 0, id = VID_STRING_LIST_BASE; i < dwNumStrings; i++)
 	{
-		msg.SetVariable(id++, ppszStringList[i]);
+		msg.setField(id++, ppszStringList[i]);
 	}
 
    ((NXCL_Session *)hSession)->SendMsg(&msg);
@@ -164,22 +164,22 @@ UINT32 LIBNXCL_EXPORTABLE NXCUpdateSnmpCommunityList(NXC_SESSION hSession, UINT3
 
 UINT32 LIBNXCL_EXPORTABLE NXCGetSnmpUsmCredentials(NXC_SESSION hSession, UINT32 *listSize, NXC_SNMP_USM_CRED **list)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 i, count, dwRetCode, dwRqId, id;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_USM_CREDENTIALS);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GET_USM_CREDENTIALS);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-		dwRetCode = pResponse->GetVariableLong(VID_RCC);
+		dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
 		if (dwRetCode == RCC_SUCCESS)
 		{
-			count = pResponse->GetVariableLong(VID_NUM_RECORDS);
+			count = pResponse->getFieldAsUInt32(VID_NUM_RECORDS);
 			*listSize = count;
 			if (count > 0)
 			{
@@ -187,11 +187,11 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetSnmpUsmCredentials(NXC_SESSION hSession, UINT32 
 				NXC_SNMP_USM_CRED *curr = *list;
 				for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 5, curr++)
 				{
-					pResponse->GetVariableStr(id++, curr->name, MAX_DB_STRING);
-					curr->authMethod = (int)pResponse->GetVariableShort(id++);
-					curr->privMethod = (int)pResponse->GetVariableShort(id++);
-					pResponse->GetVariableStr(id++, curr->authPassword, MAX_DB_STRING);
-					pResponse->GetVariableStr(id++, curr->privPassword, MAX_DB_STRING);
+					pResponse->getFieldAsString(id++, curr->name, MAX_DB_STRING);
+					curr->authMethod = (int)pResponse->getFieldAsUInt16(id++);
+					curr->privMethod = (int)pResponse->getFieldAsUInt16(id++);
+					pResponse->getFieldAsString(id++, curr->authPassword, MAX_DB_STRING);
+					pResponse->getFieldAsString(id++, curr->privPassword, MAX_DB_STRING);
 				}
 			}
 			else
@@ -215,22 +215,22 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetSnmpUsmCredentials(NXC_SESSION hSession, UINT32 
 
 UINT32 LIBNXCL_EXPORTABLE NXCUpdateSnmpUsmCredentials(NXC_SESSION hSession, UINT32 count, NXC_SNMP_USM_CRED *list)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 i, id, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_UPDATE_USM_CREDENTIALS);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_UPDATE_USM_CREDENTIALS);
+   msg.setId(dwRqId);
 
-	msg.SetVariable(VID_NUM_RECORDS, count);
+	msg.setField(VID_NUM_RECORDS, count);
 	for(i = 0, id = VID_USM_CRED_LIST_BASE; i < count; i++, id += 5)
 	{
-		msg.SetVariable(id++, list[i].name);
-		msg.SetVariable(id++, (WORD)list[i].authMethod);
-		msg.SetVariable(id++, (WORD)list[i].privMethod);
-		msg.SetVariable(id++, list[i].authPassword);
-		msg.SetVariable(id++, list[i].privPassword);
+		msg.setField(id++, list[i].name);
+		msg.setField(id++, (WORD)list[i].authMethod);
+		msg.setField(id++, (WORD)list[i].privMethod);
+		msg.setField(id++, list[i].authPassword);
+		msg.setField(id++, list[i].privPassword);
 	}
 
    ((NXCL_Session *)hSession)->SendMsg(&msg);

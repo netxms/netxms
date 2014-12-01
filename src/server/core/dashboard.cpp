@@ -66,9 +66,9 @@ void Dashboard::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create object from database
  */
-BOOL Dashboard::CreateFromDB(UINT32 dwId)
+BOOL Dashboard::loadFromDatabase(UINT32 dwId)
 {
-	if (!Container::CreateFromDB(dwId))
+	if (!Container::loadFromDatabase(dwId))
 		return FALSE;
 
 	m_iStatus = STATUS_NORMAL;
@@ -108,69 +108,71 @@ BOOL Dashboard::CreateFromDB(UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL Dashboard::SaveToDB(DB_HANDLE hdb)
+BOOL Dashboard::saveToDatabase(DB_HANDLE hdb)
 {
-	TCHAR query[256];
-
-	LockData();
+	lockProperties();
 
 	// Check for object's existence in database
-	bool isNewObject = true;
-   _sntprintf(query, 256, _T("SELECT id FROM dashboards WHERE id=%d"), (int)m_dwId);
-   DB_RESULT hResult = DBSelect(hdb, query);
-   if (hResult != NULL)
+   DB_STATEMENT hStmt;
+	if (IsDatabaseRecordExist(hdb, _T("dashboards"), _T("id"), m_id))
    {
-      if (DBGetNumRows(hResult) > 0)
-         isNewObject = false;
-      DBFreeResult(hResult);
+      hStmt = DBPrepare(hdb, _T("UPDATE dashboards SET num_columns=?,options=? WHERE id=?"));
    }
-
-	if (isNewObject)
-      _sntprintf(query, 256,
-                 _T("INSERT INTO dashboards (id,num_columns,options) VALUES (%d,%d,%d)"),
-					  (int)m_dwId, m_numColumns, (int)m_options);
    else
-      _sntprintf(query, 256,
-                 _T("UPDATE dashboards SET num_columns=%d,options=%d WHERE id=%d"),
-					  m_numColumns, (int)m_options, (int)m_dwId);
-   if (!DBQuery(hdb, query))
+   {
+      hStmt = DBPrepare(hdb, _T("INSERT INTO dashboards (num_columns,options,id) VALUES (?,?,?)"));
+   }
+   if (hStmt == NULL)
+      goto fail;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_numColumns);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_options);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
+   if (!DBExecute(hStmt))
 		goto fail;
+   DBFreeStatement(hStmt);
 
    // Save elements
-   _sntprintf(query, 256, _T("DELETE FROM dashboard_elements WHERE dashboard_id=%d"), (int)m_dwId);
-   if (!DBQuery(hdb, query))
+   hStmt = DBPrepare(hdb, _T("DELETE FROM dashboard_elements WHERE dashboard_id=?"));
+   if (hStmt == NULL)
 		goto fail;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+   if (!DBExecute(hStmt))
+		goto fail;
+   DBFreeStatement(hStmt);
+
+   hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_elements (dashboard_id,element_id,element_type,element_data,layout_data) VALUES (?,?,?,?,?)"));
+   if (hStmt == NULL)
+		goto fail;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
    for(int i = 0; i < m_elements->size(); i++)
    {
 		DashboardElement *element = m_elements->get(i);
-		String data = DBPrepareString(hdb, element->m_data);
-		String layout = DBPrepareString(hdb, element->m_layout);
-		int len = data.getSize() + layout.getSize() + 256;
-		TCHAR *eq = (TCHAR *)malloc(len * sizeof(TCHAR));
-      _sntprintf(eq, len, _T("INSERT INTO dashboard_elements (dashboard_id,element_id,element_type,element_data,layout_data) VALUES (%d,%d,%d,%s,%s)"),
-		           (int)m_dwId, i, element->m_type, (const TCHAR *)data, (const TCHAR *)layout);
-      if (!DBQuery(hdb, eq))
-		{
-			free(eq);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)i);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)element->m_type);
+      DBBind(hStmt, 4, DB_SQLTYPE_TEXT, element->m_data, DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_TEXT, element->m_layout, DB_BIND_STATIC);
+      if (!DBExecute(hStmt))
 			goto fail;
-		}
-		free(eq);
    }
 
-	UnlockData();
-	return Container::SaveToDB(hdb);
+   DBFreeStatement(hStmt);
+	unlockProperties();
+	return Container::saveToDatabase(hdb);
 
 fail:
-	UnlockData();
+   if (hStmt != NULL)
+      DBFreeStatement(hStmt);
+	unlockProperties();
 	return FALSE;
 }
 
 /**
  * Delete object from database
  */
-bool Dashboard::deleteFromDB(DB_HANDLE hdb)
+bool Dashboard::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = Container::deleteFromDB(hdb);
+   bool success = Container::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM dashboards WHERE id=?"));
    if (success)
@@ -181,20 +183,20 @@ bool Dashboard::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Dashboard::CreateMessage(CSCPMessage *msg)
+void Dashboard::fillMessage(NXCPMessage *msg)
 {
-	Container::CreateMessage(msg);
-	msg->SetVariable(VID_NUM_COLUMNS, (WORD)m_numColumns);
-	msg->SetVariable(VID_FLAGS, m_options);
-	msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
+	Container::fillMessage(msg);
+	msg->setField(VID_NUM_COLUMNS, (WORD)m_numColumns);
+	msg->setField(VID_FLAGS, m_options);
+	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
 
 	UINT32 varId = VID_ELEMENT_LIST_BASE;
 	for(int i = 0; i < m_elements->size(); i++)
 	{
 		DashboardElement *element = m_elements->get(i);
-		msg->SetVariable(varId++, (WORD)element->m_type);
-		msg->SetVariable(varId++, CHECK_NULL_EX(element->m_data));
-		msg->SetVariable(varId++, CHECK_NULL_EX(element->m_layout));
+		msg->setField(varId++, (WORD)element->m_type);
+		msg->setField(varId++, CHECK_NULL_EX(element->m_data));
+		msg->setField(varId++, CHECK_NULL_EX(element->m_layout));
 		varId += 7;
 	}
 }
@@ -202,35 +204,35 @@ void Dashboard::CreateMessage(CSCPMessage *msg)
 /**
  * Modify object from NXCP message
  */
-UINT32 Dashboard::ModifyFromMessage(CSCPMessage *request, BOOL alreadyLocked)
+UINT32 Dashboard::modifyFromMessage(NXCPMessage *request, BOOL alreadyLocked)
 {
 	if (!alreadyLocked)
-		LockData();
+		lockProperties();
 
 	if (request->isFieldExist(VID_NUM_COLUMNS))
-		m_numColumns = (int)request->GetVariableShort(VID_NUM_COLUMNS);
+		m_numColumns = (int)request->getFieldAsUInt16(VID_NUM_COLUMNS);
 
 	if (request->isFieldExist(VID_FLAGS))
-		m_options = (int)request->GetVariableLong(VID_FLAGS);
+		m_options = (int)request->getFieldAsUInt32(VID_FLAGS);
 
 	if (request->isFieldExist(VID_NUM_ELEMENTS))
 	{
 		m_elements->clear();
 
-		int count = (int)request->GetVariableLong(VID_NUM_ELEMENTS);
+		int count = (int)request->getFieldAsUInt32(VID_NUM_ELEMENTS);
 		UINT32 varId = VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < count; i++)
 		{
 			DashboardElement *e = new DashboardElement;
-			e->m_type = (int)request->GetVariableShort(varId++);
-			e->m_data = request->GetVariableStr(varId++);
-			e->m_layout = request->GetVariableStr(varId++);
+			e->m_type = (int)request->getFieldAsUInt16(varId++);
+			e->m_data = request->getFieldAsString(varId++);
+			e->m_layout = request->getFieldAsString(varId++);
 			varId += 7;
 			m_elements->add(e);
 		}
 	}
 
-	return Container::ModifyFromMessage(request, TRUE);
+	return Container::modifyFromMessage(request, TRUE);
 }
 
 /**

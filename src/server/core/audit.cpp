@@ -25,7 +25,7 @@
 /**
  * Static data
  */
-static UINT32 m_dwRecordId = 1;
+static VolatileCounter m_recordId = 1;
 static UINT32 m_auditServerAddr = 0;
 static WORD m_auditServerPort;
 static int m_auditFacility;
@@ -87,7 +87,7 @@ void InitAuditLog()
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         m_dwRecordId = DBGetFieldULong(hResult, 0, 0) + 1;
+         m_recordId = DBGetFieldULong(hResult, 0, 0) + 1;
       DBFreeResult(hResult);
    }
 
@@ -129,7 +129,7 @@ static void SendNewRecord(ClientSession *pSession, void *pArg)
 	{
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_AUDIT_RECORD;
-      pUpdate->pData = new CSCPMessage((CSCPMessage *)pArg);
+      pUpdate->pData = new NXCPMessage((NXCPMessage *)pArg);
       pSession->queueUpdate(pUpdate);
 	}
 }
@@ -138,29 +138,30 @@ static void SendNewRecord(ClientSession *pSession, void *pArg)
  * Write audit record
  */
 void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32 userId,
-                                     const TCHAR *workstation, UINT32 objectId,
+                                     const TCHAR *workstation, int sessionId, UINT32 objectId,
                                      const TCHAR *format, ...)
 {
 	String text, query;
 	va_list args;
-	CSCPMessage msg;
+	NXCPMessage msg;
 
 	va_start(args, format);
 	text.addFormattedStringV(format, args);
 	va_end(args);
 
-	query.addFormattedString(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,object_id,message) VALUES(%d,") TIME_T_FMT _T(",%s,%d,%d,%s,%d,%s)"),
-		       m_dwRecordId++, time(NULL), (const TCHAR *)DBPrepareString(g_hCoreDB, subsys), isSuccess ? 1 : 0, 
-		       userId, (const TCHAR *)DBPrepareString(g_hCoreDB, workstation), objectId, (const TCHAR *)DBPrepareString(g_hCoreDB, text));
+	query.addFormattedString(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message) VALUES(%d,") TIME_T_FMT _T(",%s,%d,%d,%s,%d,%d,%s)"),
+      InterlockedIncrement(&m_recordId), time(NULL), (const TCHAR *)DBPrepareString(g_hCoreDB, subsys), isSuccess ? 1 : 0, 
+		userId, (const TCHAR *)DBPrepareString(g_hCoreDB, workstation), sessionId, objectId, (const TCHAR *)DBPrepareString(g_hCoreDB, text));
 	QueueSQLRequest(query);
 
-	msg.SetCode(CMD_AUDIT_RECORD);
-	msg.SetVariable(VID_SUBSYSTEM, subsys);
-	msg.SetVariable(VID_SUCCESS_AUDIT, (WORD)isSuccess);
-	msg.SetVariable(VID_USER_ID, userId);
-	msg.SetVariable(VID_WORKSTATION, workstation);
-	msg.SetVariable(VID_OBJECT_ID, objectId);
-	msg.SetVariable(VID_MESSAGE, (const TCHAR *)text);
+	msg.setCode(CMD_AUDIT_RECORD);
+	msg.setField(VID_SUBSYSTEM, subsys);
+	msg.setField(VID_SUCCESS_AUDIT, (WORD)isSuccess);
+	msg.setField(VID_USER_ID, userId);
+	msg.setField(VID_WORKSTATION, workstation);
+   msg.setField(VID_SESSION_ID, sessionId);
+	msg.setField(VID_OBJECT_ID, objectId);
+	msg.setField(VID_MESSAGE, (const TCHAR *)text);
 	EnumerateClientSessions(SendNewRecord, &msg);
 
 	if (m_auditServerAddr != 0)

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,13 +40,27 @@ struct QUEUED_SYSLOG_MESSAGE
 };
 
 /**
+ * Queues
+ */
+Queue g_syslogProcessingQueue(1000, 100);
+Queue g_syslogWriteQueue(1000, 100);
+
+/**
+ * Node matching policy
+ */
+enum NodeMatchingPolicy
+{
+   SOURCE_IP_THEN_HOSTNAME = 0,
+   HOSTNAME_THEN_SOURCE_IP = 1
+};
+
+/**
  * Static data
  */
 static UINT64 s_msgId = 1;
-static Queue s_syslogProcessingQueue(1000, 100);
-static Queue s_syslogWriteQueue(1000, 100);
 static LogParser *s_parser = NULL;
 static MUTEX s_parserLock = INVALID_MUTEX_HANDLE;
+static NodeMatchingPolicy s_nodeMatchingPolicy = SOURCE_IP_THEN_HOSTNAME;
 
 /**
  * Parse timestamp field
@@ -219,52 +233,69 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_SYSLOG_RECORD *pRec)
 }
 
 /**
+ * Find node by host name
+ */
+static Node *FindNodeByHostname(const char *hostName)
+{
+   if (hostName[0] == 0)
+      return NULL;
+
+   Node *node = NULL;
+   UINT32 ipAddr = ntohl(ResolveHostNameA(hostName));
+	if ((ipAddr != INADDR_NONE) && (ipAddr != INADDR_ANY))
+   {
+      node = FindNodeByIP(0, ipAddr);
+   }
+
+   if (node == NULL)
+	{
+#ifdef UNICODE
+		WCHAR wname[MAX_OBJECT_NAME];
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hostName, -1, wname, MAX_OBJECT_NAME);
+		wname[MAX_OBJECT_NAME - 1] = 0;
+		node = (Node *)FindObjectByName(wname, OBJECT_NODE);
+#else
+		node = (Node *)FindObjectByName(hostName, OBJECT_NODE);
+#endif
+   }
+   return node;
+}
+
+/**
  * Bind syslog message to NetXMS node object
  * dwSourceIP is an IP address from which we receive message
  */
-static void BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
+static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
 {
-   Node *pNode = NULL;
-   UINT32 dwIpAddr;
+   Node *node = NULL;
 
-   // Determine IP address of a source
-   if (pRec->szHostName[0] == 0)
+   if (s_nodeMatchingPolicy == SOURCE_IP_THEN_HOSTNAME)
    {
-      // Hostname was not defined in the message
-      dwIpAddr = dwSourceIP;
+      node = FindNodeByIP(0, dwSourceIP);
+      if (node == NULL)
+      {
+         node = FindNodeByHostname(pRec->szHostName);
+      }
    }
    else
    {
-      dwIpAddr = ntohl(ResolveHostNameA(pRec->szHostName));
-		if ((dwIpAddr == INADDR_NONE) || (dwIpAddr == INADDR_ANY))
-		{
-#ifdef UNICODE
-			WCHAR wname[MAX_OBJECT_NAME];
-			MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pRec->szHostName, -1, wname, MAX_OBJECT_NAME);
-			wname[MAX_OBJECT_NAME - 1] = 0;
-			pNode = (Node *)FindObjectByName(wname, OBJECT_NODE);
-#else
-			pNode = (Node *)FindObjectByName(pRec->szHostName, OBJECT_NODE);
-#endif
-			if (pNode == NULL)
-				dwIpAddr = dwSourceIP;
-		}
+      node = FindNodeByHostname(pRec->szHostName);
+      if (node == NULL)
+      {
+         node = FindNodeByIP(0, dwSourceIP);
+      }
    }
 
-   // Match source IP to NetXMS object
-   if ((dwIpAddr != INADDR_NONE) && (pNode == NULL))
-      pNode = FindNodeByIP(0, dwIpAddr);
-
-	if (pNode != NULL)
+	if (node != NULL)
    {
-      pRec->dwSourceObject = pNode->Id();
+      pRec->dwSourceObject = node->getId();
       if (pRec->szHostName[0] == 0)
 		{
 #ifdef UNICODE
-			WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pNode->Name(), -1, pRec->szHostName, MAX_SYSLOG_HOSTNAME_LEN, NULL, NULL);
+			WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, node->getName(), -1, pRec->szHostName, MAX_SYSLOG_HOSTNAME_LEN, NULL, NULL);
 			pRec->szHostName[MAX_SYSLOG_HOSTNAME_LEN - 1] = 0;
 #else
-         nx_strncpy(pRec->szHostName, pNode->Name(), MAX_SYSLOG_HOSTNAME_LEN);
+         nx_strncpy(pRec->szHostName, node->getName(), MAX_SYSLOG_HOSTNAME_LEN);
 #endif
 		}
    }
@@ -273,6 +304,8 @@ static void BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
       if (pRec->szHostName[0] == 0)
          IpToStrA(dwSourceIP, pRec->szHostName);
    }
+
+   return node;
 }
 
 /**
@@ -292,7 +325,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
    DbgPrintf(1, _T("Syslog writer thread started"));
    while(true)
    {
-      NX_SYSLOG_RECORD *r = (NX_SYSLOG_RECORD *)s_syslogWriteQueue.GetOrBlock();
+      NX_SYSLOG_RECORD *r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.GetOrBlock();
       if (r == INVALID_POINTER_VALUE)
          break;
 
@@ -333,7 +366,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
          count++;
          if (count == 1000)
             break;
-         r = (NX_SYSLOG_RECORD *)s_syslogWriteQueue.Get();
+         r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.Get();
          if ((r == NULL) || (r == INVALID_POINTER_VALUE))
             break;
       }
@@ -358,9 +391,9 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
    if (ParseSyslogMessage(psMsg, nMsgLen, &record))
    {
       record.qwMsgId = s_msgId++;
-      BindMsgToNode(&record, dwSourceIP);
+      Node *node = BindMsgToNode(&record, dwSourceIP);
 
-      s_syslogWriteQueue.Put(nx_memdup(&record, sizeof(NX_SYSLOG_RECORD)));
+      g_syslogWriteQueue.Put(nx_memdup(&record, sizeof(NX_SYSLOG_RECORD)));
 
       // Send message to all connected clients
       EnumerateClientSessions(BroadcastSyslogMessage, &record);
@@ -370,7 +403,8 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
 		          IpToStr(dwSourceIP, ipAddr), record.dwSourceObject, record.szTag, record.szMessage);
 
 		MutexLock(s_parserLock);
-		if ((record.dwSourceObject != 0) && (s_parser != NULL))
+		if ((record.dwSourceObject != 0) && (s_parser != NULL) &&
+          ((node->Status() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES)))
 		{
 #ifdef UNICODE
 			WCHAR wtag[MAX_SYSLOG_TAG_LEN];
@@ -399,7 +433,7 @@ static THREAD_RESULT THREAD_CALL SyslogProcessingThread(void *pArg)
 
    while(1)
    {
-      pMsg = (QUEUED_SYSLOG_MESSAGE *)s_syslogProcessingQueue.GetOrBlock();
+      pMsg = (QUEUED_SYSLOG_MESSAGE *)g_syslogProcessingQueue.GetOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)
          break;
 
@@ -421,7 +455,7 @@ static void QueueSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
    pMsg->dwSourceIP = dwSourceIP;
    pMsg->nBytes = nMsgLen;
    pMsg->psMsg = (char *)nx_memdup(psMsg, nMsgLen + 1);
-   s_syslogProcessingQueue.Put(pMsg);
+   g_syslogProcessingQueue.Put(pMsg);
 }
 
 /**
@@ -524,6 +558,8 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    fd_set rdfs;
    struct timeval tv;
 
+   s_nodeMatchingPolicy = (NodeMatchingPolicy)ConfigReadInt(_T("SyslogNodeMatchingPolicy"), SOURCE_IP_THEN_HOSTNAME);
+
    // Determine first available message id
    hResult = DBSelect(g_hCoreDB, _T("SELECT max(msg_id) FROM syslog"));
    if (hResult != NULL)
@@ -564,6 +600,9 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
       return THREAD_OK;
    }
 	nxlog_write(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), nPort);
+
+   SetLogParserTraceCallback(DbgPrintf2);
+   InitLogParserLibrary();
 
 	// Create message parser
 	s_parserLock = MutexCreate();
@@ -606,14 +645,15 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    }
 
    // Stop processing thread
-   s_syslogProcessingQueue.Put(INVALID_POINTER_VALUE);
+   g_syslogProcessingQueue.Put(INVALID_POINTER_VALUE);
    ThreadJoin(hProcessingThread);
 
    // Stop writer thread - it must be done after processing thread already finished
-   s_syslogWriteQueue.Put(INVALID_POINTER_VALUE);
+   g_syslogWriteQueue.Put(INVALID_POINTER_VALUE);
    ThreadJoin(hWriterThread);
 
 	delete s_parser;
+   CleanupLogParserLibrary();
 
    DbgPrintf(1, _T("Syslog Daemon stopped"));
    return THREAD_OK;
@@ -622,19 +662,19 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
 /**
  * Create NXCP message from NX_SYSLOG_RECORD structure
  */
-void CreateMessageFromSyslogMsg(CSCPMessage *pMsg, NX_SYSLOG_RECORD *pRec)
+void CreateMessageFromSyslogMsg(NXCPMessage *pMsg, NX_SYSLOG_RECORD *pRec)
 {
    UINT32 dwId = VID_SYSLOG_MSG_BASE;
 
-   pMsg->SetVariable(VID_NUM_RECORDS, (UINT32)1);
-   pMsg->SetVariable(dwId++, pRec->qwMsgId);
-   pMsg->SetVariable(dwId++, (UINT32)pRec->tmTimeStamp);
-   pMsg->SetVariable(dwId++, (WORD)pRec->nFacility);
-   pMsg->SetVariable(dwId++, (WORD)pRec->nSeverity);
-   pMsg->SetVariable(dwId++, pRec->dwSourceObject);
-   pMsg->SetVariableFromMBString(dwId++, pRec->szHostName);
-   pMsg->SetVariableFromMBString(dwId++, pRec->szTag);
-	pMsg->SetVariableFromMBString(dwId++, pRec->szMessage);
+   pMsg->setField(VID_NUM_RECORDS, (UINT32)1);
+   pMsg->setField(dwId++, pRec->qwMsgId);
+   pMsg->setField(dwId++, (UINT32)pRec->tmTimeStamp);
+   pMsg->setField(dwId++, (WORD)pRec->nFacility);
+   pMsg->setField(dwId++, (WORD)pRec->nSeverity);
+   pMsg->setField(dwId++, pRec->dwSourceObject);
+   pMsg->setFieldFromMBString(dwId++, pRec->szHostName);
+   pMsg->setFieldFromMBString(dwId++, pRec->szTag);
+	pMsg->setFieldFromMBString(dwId++, pRec->szMessage);
 }
 
 /**

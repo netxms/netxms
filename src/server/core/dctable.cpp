@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -94,7 +94,7 @@ INT32 DCTable::columnIdFromName(const TCHAR *name)
 						DBFreeStatement(hStmt2);
 					}
 				}
-				
+
 				DBFreeResult(hResult);
 
 				// Add to cache
@@ -160,14 +160,14 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
  *    item_id,template_id,template_item_id,name,
  *    description,flags,source,snmp_port,polling_interval,retention_time,
  *    status,system_tag,resource_id,proxy_node,perftab_settings,
- *    transformation_script
+ *    transformation_script,comments
  */
 DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
-   m_dwId = DBGetFieldULong(hResult, iRow, 0);
+   m_id = DBGetFieldULong(hResult, iRow, 0);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 1);
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 2);
-	DBGetField(hResult, iRow, 3, m_szName, MAX_ITEM_NAME);
+	DBGetField(hResult, iRow, 3, m_name, MAX_ITEM_NAME);
    DBGetField(hResult, iRow, 4, m_szDescription, MAX_DB_STRING);
    m_flags = (WORD)DBGetFieldLong(hResult, iRow, 5);
    m_source = (BYTE)DBGetFieldLong(hResult, iRow, 6);
@@ -180,6 +180,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	m_dwProxyNode = DBGetFieldULong(hResult, iRow, 13);
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 14, NULL, 0);
    TCHAR *pszTmp = DBGetField(hResult, iRow, 15, NULL, 0);
+   m_comments = DBGetField(hResult, iRow, 16, NULL, 0);
    setTransformationScript(pszTmp);
    free(pszTmp);
 
@@ -190,7 +191,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT column_name,flags,snmp_oid,display_name FROM dc_table_columns WHERE table_id=? ORDER BY sequence_number"));
 	if (hStmt != NULL)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DB_RESULT hColumnList = DBSelectPrepared(hStmt);
 		if (hColumnList != NULL)
 		{
@@ -271,7 +272,7 @@ void DCTable::deleteExpiredData()
 
    lock();
    _sntprintf(query, 256, _T("DELETE FROM tdata_%d WHERE (item_id=%d) AND (tdata_timestamp<%ld)"),
-              (int)m_pNode->Id(), (int)m_dwId, (long)(now - (time_t)m_iRetentionTime * 86400));
+              (int)m_pNode->getId(), (int)m_id, (long)(now - (time_t)m_iRetentionTime * 86400));
    unlock();
 
    QueueSQLRequest(query);
@@ -287,7 +288,7 @@ bool DCTable::deleteAllData()
 
    lock();
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   _sntprintf(szQuery, 256, _T("DELETE FROM tdata_%d WHERE item_id=%d"), m_pNode->Id(), (int)m_dwId);
+   _sntprintf(szQuery, 256, _T("DELETE FROM tdata_%d WHERE item_id=%d"), m_pNode->getId(), (int)m_id);
 	success = DBQuery(hdb, szQuery) ? true : false;
    DBConnectionPoolReleaseConnection(hdb);
    unlock();
@@ -300,8 +301,9 @@ bool DCTable::deleteAllData()
  *
  * @return true on success
  */
-bool DCTable::processNewValue(time_t nTimeStamp, void *value)
+bool DCTable::processNewValue(time_t nTimeStamp, void *value, bool *updateStatus)
 {
+   *updateStatus = false;
    lock();
 
    // Normally m_pNode shouldn't be NULL for polled items, but who knows...
@@ -314,7 +316,7 @@ bool DCTable::processNewValue(time_t nTimeStamp, void *value)
    // Transform input value
    // Cluster can have only aggregated data, and transformation
    // should not be used on aggregation
-   if ((m_pNode->Type() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
+   if ((m_pNode->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
       if (!transform((Table *)value))
       {
@@ -331,8 +333,8 @@ bool DCTable::processNewValue(time_t nTimeStamp, void *value)
    m_lastValue->setSource(m_source);
 
 	// Copy required fields into local variables
-	UINT32 tableId = m_dwId;
-	UINT32 nodeId = m_pNode->Id();
+	UINT32 tableId = m_id;
+	UINT32 nodeId = m_pNode->getId();
    bool save = (m_flags & DCF_NO_STORAGE) == 0;
 
    unlock();
@@ -429,6 +431,10 @@ bool DCTable::processNewValue(time_t nTimeStamp, void *value)
 	   DBConnectionPoolReleaseConnection(hdb);
    }
    checkThresholds((Table *)value);
+
+   if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
+      PerfDataStorageRequest(this, nTimeStamp, (Table *)value);
+
    return true;
 }
 
@@ -442,21 +448,29 @@ bool DCTable::transform(Table *value)
 
    NXSL_Value *nxslValue = new NXSL_Value(new NXSL_Object(&g_nxslStaticTableClass, value));
    m_transformationScript->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pNode)));
-   if (m_pNode->Type() == OBJECT_NODE)
+   if (m_pNode->getObjectClass() == OBJECT_NODE)
    {
       m_transformationScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
    }
    m_transformationScript->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, this)));
-   m_transformationScript->setGlobalVariable(_T("$isCluster"), new NXSL_Value((m_pNode->Type() == OBJECT_CLUSTER) ? 1 : 0));
+   m_transformationScript->setGlobalVariable(_T("$isCluster"), new NXSL_Value((m_pNode->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
 
    bool success = true;
    if (!m_transformationScript->run(1, &nxslValue))
    {
-      TCHAR szBuffer[1024];
+      if (m_transformationScript->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
+      {
+         DbgPrintf(6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"),
+            m_szDescription, m_id, (m_pNode != NULL) ? m_pNode->getName() : _T("(null)"), (m_pNode != NULL) ? m_pNode->getId() : 0);
+      }
+      else
+      {
+         TCHAR szBuffer[1024];
 
-		_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::TransformationScript"),
-                 (m_pNode != NULL) ? m_pNode->Name() : _T("(null)"), m_dwId);
-      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, m_transformationScript->getErrorText(), m_dwId);
+		   _sntprintf(szBuffer, 1024, _T("DCI::%s::%d::TransformationScript"),
+                    (m_pNode != NULL) ? m_pNode->getName() : _T("(null)"), m_id);
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, m_transformationScript->getErrorText(), m_id);
+      }
       success = false;
    }
    return success;
@@ -481,12 +495,12 @@ void DCTable::checkThresholds(Table *value)
          switch(result)
          {
             case ACTIVATED:
-               PostEventWithNames(t->getActivationEvent(), m_pNode->Id(), "ssids", paramNames, m_szName, m_szDescription, m_dwId, row, instance);
+               PostEventWithNames(t->getActivationEvent(), m_pNode->getId(), "ssids", paramNames, m_name, m_szDescription, m_id, row, instance);
                if (!(m_flags & DCF_ALL_THRESHOLDS))
                   i = m_thresholds->size();  // Stop processing (for current row)
                break;
             case DEACTIVATED:
-               PostEventWithNames(t->getDeactivationEvent(), m_pNode->Id(), "ssids", paramNames, m_szName, m_szDescription, m_dwId, row, instance);
+               PostEventWithNames(t->getDeactivationEvent(), m_pNode->getId(), "ssids", paramNames, m_name, m_szDescription, m_id, row, instance);
                break;
             case ALREADY_ACTIVE:
 				   i = m_thresholds->size();  // Threshold condition still true, stop processing
@@ -513,29 +527,29 @@ void DCTable::processNewError()
 BOOL DCTable::saveToDB(DB_HANDLE hdb)
 {
 	DB_STATEMENT hStmt;
-	if (IsDatabaseRecordExist(hdb, _T("dc_tables"), _T("item_id"), m_dwId))
+	if (IsDatabaseRecordExist(hdb, _T("dc_tables"), _T("item_id"), m_id))
 	{
 		hStmt = DBPrepare(hdb, _T("UPDATE dc_tables SET node_id=?,template_id=?,template_item_id=?,name=?,")
 		                       _T("description=?,flags=?,source=?,snmp_port=?,polling_interval=?,")
                              _T("retention_time=?,status=?,system_tag=?,resource_id=?,proxy_node=?,")
-									  _T("perftab_settings=?,transformation_script=? WHERE item_id=?"));
+									  _T("perftab_settings=?,transformation_script=?,comments=? WHERE item_id=?"));
 	}
 	else
 	{
 		hStmt = DBPrepare(hdb, _T("INSERT INTO dc_tables (node_id,template_id,template_item_id,name,")
 		                       _T("description,flags,source,snmp_port,polling_interval,")
 		                       _T("retention_time,status,system_tag,resource_id,proxy_node,perftab_settings,")
-									  _T("transformation_script,item_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+									  _T("transformation_script,comments,item_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
 
    lock();
 
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (m_pNode == NULL) ? (UINT32)0 : m_pNode->Id());
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (m_pNode == NULL) ? (UINT32)0 : m_pNode->getId());
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwTemplateId);
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
-	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_szName, DB_BIND_STATIC);
+	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
 	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_szDescription, DB_BIND_STATIC);
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (UINT32)m_flags);
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (INT32)m_source);
@@ -548,7 +562,8 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_dwProxyNode);
 	DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
    DBBind(hStmt, 16, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
-	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_dwId);
+   DBBind(hStmt, 17, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
+	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -559,7 +574,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 		hStmt = DBPrepare(hdb, _T("DELETE FROM dc_table_columns WHERE table_id=?"));
 		if (hStmt != NULL)
 		{
-			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 			result = DBExecute(hStmt);
 			DBFreeStatement(hStmt);
 		}
@@ -573,7 +588,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 			hStmt = DBPrepare(hdb, _T("INSERT INTO dc_table_columns (table_id,sequence_number,column_name,snmp_oid,flags,display_name) VALUES (?,?,?,?,?,?)"));
 			if (hStmt != NULL)
 			{
-				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 				for(int i = 0; i < m_columns->size(); i++)
 				{
 					DCTableColumn *column = m_columns->get(i);
@@ -612,7 +627,7 @@ bool DCTable::loadThresholds()
    if (hStmt == NULL)
       return false;
 
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult != NULL)
    {
@@ -647,29 +662,30 @@ bool DCTable::saveThresholds(DB_HANDLE hdb)
    hStmt = DBPrepare(hdb, _T("DELETE FROM dct_thresholds WHERE table_id=?"));
    if (hStmt == NULL)
       return false;
-   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
    DBExecute(hStmt);
    DBFreeStatement(hStmt);
 
    for(int i = 0; i < m_thresholds->size(); i++)
-      m_thresholds->get(i)->saveToDatabase(hdb, m_dwId, i);
+      m_thresholds->get(i)->saveToDatabase(hdb, m_id, i);
    return true;
 }
 
 /**
  * Delete table object and collected data from database
  */
-void DCTable::deleteFromDB()
+void DCTable::deleteFromDatabase()
 {
    TCHAR szQuery[256];
 
-	DCObject::deleteFromDB();
+	DCObject::deleteFromDatabase();
 
-   deleteAllData();
-
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dc_tables WHERE item_id=%d"), (int)m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM tdata_%d WHERE item_id=%d"), m_pNode->getId(), (int)m_id);
    QueueSQLRequest(szQuery);
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dc_table_columns WHERE table_id=%d"), (int)m_dwId);
+
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dc_tables WHERE item_id=%d"), (int)m_id);
+   QueueSQLRequest(szQuery);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dc_table_columns WHERE table_id=%d"), (int)m_id);
    QueueSQLRequest(szQuery);
 
    for(int i = 0; i < m_thresholds->size(); i++)
@@ -678,35 +694,35 @@ void DCTable::deleteFromDB()
       QueueSQLRequest(szQuery);
    }
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dct_thresholds WHERE table_id=%d"), (int)m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dct_thresholds WHERE table_id=%d"), (int)m_id);
    QueueSQLRequest(szQuery);
 }
 
 /**
  * Create NXCP message with item data
  */
-void DCTable::createMessage(CSCPMessage *pMsg)
+void DCTable::createMessage(NXCPMessage *pMsg)
 {
 	DCObject::createMessage(pMsg);
 
    lock();
-	pMsg->SetVariable(VID_NUM_COLUMNS, (UINT32)m_columns->size());
+	pMsg->setField(VID_NUM_COLUMNS, (UINT32)m_columns->size());
 	UINT32 varId = VID_DCI_COLUMN_BASE;
 	for(int i = 0; i < m_columns->size(); i++)
 	{
 		DCTableColumn *column = m_columns->get(i);
-		pMsg->SetVariable(varId++, column->getName());
-		pMsg->SetVariable(varId++, column->getFlags());
+		pMsg->setField(varId++, column->getName());
+		pMsg->setField(varId++, column->getFlags());
 		SNMP_ObjectId *oid = column->getSnmpOid();
 		if (oid != NULL)
-			pMsg->setFieldInt32Array(varId++, (UINT32)oid->getLength(), oid->getValue());
+			pMsg->setFieldFromInt32Array(varId++, (UINT32)oid->getLength(), oid->getValue());
 		else
 			varId++;
-		pMsg->SetVariable(varId++, column->getDisplayName());
+		pMsg->setField(varId++, column->getDisplayName());
 		varId += 6;
 	}
 
-	pMsg->SetVariable(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
+	pMsg->setField(VID_NUM_THRESHOLDS, (UINT32)m_thresholds->size());
    varId = VID_DCI_THRESHOLD_BASE;
    for(int i = 0; i < m_thresholds->size(); i++)
    {
@@ -719,14 +735,14 @@ void DCTable::createMessage(CSCPMessage *pMsg)
 /**
  * Update data collection object from NXCP message
  */
-void DCTable::updateFromMessage(CSCPMessage *pMsg)
+void DCTable::updateFromMessage(NXCPMessage *pMsg)
 {
 	DCObject::updateFromMessage(pMsg);
 
    lock();
 
 	m_columns->clear();
-	int count = (int)pMsg->GetVariableLong(VID_NUM_COLUMNS);
+	int count = (int)pMsg->getFieldAsUInt32(VID_NUM_COLUMNS);
 	UINT32 varId = VID_DCI_COLUMN_BASE;
 	for(int i = 0; i < count; i++)
 	{
@@ -734,7 +750,7 @@ void DCTable::updateFromMessage(CSCPMessage *pMsg)
 		varId += 10;
 	}
 
-	count = (int)pMsg->GetVariableLong(VID_NUM_THRESHOLDS);
+	count = (int)pMsg->getFieldAsUInt32(VID_NUM_THRESHOLDS);
    ObjectArray<DCTableThreshold> *newThresholds = new ObjectArray<DCTableThreshold>(count, 8, true);
 	varId = VID_DCI_THRESHOLD_BASE;
 	for(int i = 0; i < count; i++)
@@ -760,7 +776,7 @@ void DCTable::updateFromMessage(CSCPMessage *pMsg)
 /**
  * Get last collected value
  */
-void DCTable::fillLastValueMessage(CSCPMessage *msg)
+void DCTable::fillLastValueMessage(NXCPMessage *msg)
 {
    lock();
 	if (m_lastValue != NULL)
@@ -773,21 +789,21 @@ void DCTable::fillLastValueMessage(CSCPMessage *msg)
 /**
  * Get summary of last collected value (to show along simple DCI values)
  */
-void DCTable::fillLastValueSummaryMessage(CSCPMessage *pMsg, UINT32 dwId)
+void DCTable::fillLastValueSummaryMessage(NXCPMessage *pMsg, UINT32 dwId)
 {
 	lock();
-   pMsg->SetVariable(dwId++, m_dwId);
-   pMsg->SetVariable(dwId++, m_szName);
-   pMsg->SetVariable(dwId++, m_szDescription);
-   pMsg->SetVariable(dwId++, (WORD)m_source);
-   pMsg->SetVariable(dwId++, (WORD)DCI_DT_NULL);  // compatibility: data type
-   pMsg->SetVariable(dwId++, _T(""));             // compatibility: value
-   pMsg->SetVariable(dwId++, (UINT32)m_tLastPoll);
-   pMsg->SetVariable(dwId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
-	pMsg->SetVariable(dwId++, (WORD)getType());
-	pMsg->SetVariable(dwId++, m_dwErrorCount);
-	pMsg->SetVariable(dwId++, m_dwTemplateItemId);
-   pMsg->SetVariable(dwId++, (WORD)0);            // compatibility: number of thresholds
+   pMsg->setField(dwId++, m_id);
+   pMsg->setField(dwId++, m_name);
+   pMsg->setField(dwId++, m_szDescription);
+   pMsg->setField(dwId++, (WORD)m_source);
+   pMsg->setField(dwId++, (WORD)DCI_DT_NULL);  // compatibility: data type
+   pMsg->setField(dwId++, _T(""));             // compatibility: value
+   pMsg->setField(dwId++, (UINT32)m_tLastPoll);
+   pMsg->setField(dwId++, (WORD)(matchClusterResource() ? m_status : ITEM_STATUS_DISABLED)); // show resource-bound DCIs as inactive if cluster resource is not on this node
+	pMsg->setField(dwId++, (WORD)getType());
+	pMsg->setField(dwId++, m_dwErrorCount);
+	pMsg->setField(dwId++, m_dwTemplateItemId);
+   pMsg->setField(dwId++, (WORD)0);            // compatibility: number of thresholds
 
 	unlock();
 }
@@ -799,7 +815,7 @@ int DCTable::getColumnDataType(const TCHAR *name)
 {
    int dt = DCI_DT_STRING;
    bool found = false;
-   
+
    lock();
 
    // look in column definition first
@@ -959,7 +975,7 @@ void DCTable::updateFromTemplate(DCObject *src)
 
 	if (src->getType() != DCO_TYPE_TABLE)
 	{
-		DbgPrintf(2, _T("INTERNAL ERROR: DCTable::updateFromTemplate(%d, %d): source type is %d"), (int)m_dwId, (int)src->getId(), src->getType());
+		DbgPrintf(2, _T("INTERNAL ERROR: DCTable::updateFromTemplate(%d, %d): source type is %d"), (int)m_id, (int)src->getId(), src->getType());
 		return;
 	}
 
@@ -985,7 +1001,7 @@ void DCTable::createNXMPRecord(String &str)
 	UINT32 i;
 
    lock();
-   
+
    str.addFormattedString(_T("\t\t\t\t<dctable id=\"%d\">\n")
                           _T("\t\t\t\t\t<name>%s</name>\n")
                           _T("\t\t\t\t\t<description>%s</description>\n")
@@ -993,16 +1009,13 @@ void DCTable::createNXMPRecord(String &str)
                           _T("\t\t\t\t\t<interval>%d</interval>\n")
                           _T("\t\t\t\t\t<retention>%d</retention>\n")
                           _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
-                          _T("\t\t\t\t\t<advancedSchedule>%d</advancedSchedule>\n")
-                          _T("\t\t\t\t\t<rawValueInOctetString>%d</rawValueInOctetString>\n")
+                          _T("\t\t\t\t\t<flags>%d</flags>\n")
                           _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n"),
-								  (int)m_dwId, (const TCHAR *)EscapeStringForXML2(m_szName),
+								  (int)m_id, (const TCHAR *)EscapeStringForXML2(m_name),
                           (const TCHAR *)EscapeStringForXML2(m_szDescription),
                           (int)m_source, m_iPollingInterval, m_iRetentionTime,
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
-								  (m_flags & DCF_ADVANCED_SCHEDULE) ? 1 : 0,
-								  (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? 1 : 0, 
-								  (int)m_snmpPort);
+								  (int)m_flags, (int)m_snmpPort);
 
 	if (m_transformationScriptSource != NULL)
 	{

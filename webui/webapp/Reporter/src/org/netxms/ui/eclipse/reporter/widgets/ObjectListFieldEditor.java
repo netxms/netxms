@@ -28,6 +28,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -37,6 +38,7 @@ import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.reporter.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -61,30 +63,32 @@ public class ObjectListFieldEditor extends FieldEditor
 	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected Control createContent(Composite parent)
 	{
 		Composite content = toolkit.createComposite(parent, SWT.NONE);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.TOP;
-		content.setLayoutData(gd);
 		
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 1;
+		layout.numColumns = 2;
 		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		content.setLayout(layout);
 		
-		viewer = new TableViewer(content, SWT.FULL_SELECTION | SWT.MULTI);
+		viewer = new TableViewer(content, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new WorkbenchLabelProvider());
 		viewer.setInput(new Object[0]);
+		GridData gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.grabExcessVerticalSpace = true;
+		gd.verticalSpan = 2;
+		viewer.getControl().setLayoutData(gd);
 		
 		ImageHyperlink link = toolkit.createImageHyperlink(content, SWT.NONE);
 		link.setImage(SharedIcons.IMG_ADD_OBJECT);
-		link.setText("Add...");
+		link.setText(Messages.get().ObjectListFieldEditor_Add);
 		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -92,10 +96,13 @@ public class ObjectListFieldEditor extends FieldEditor
 				addObjects();
 			}
 		});
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      link.setLayoutData(gd);
 		
 		link = toolkit.createImageHyperlink(content, SWT.NONE);
 		link.setImage(SharedIcons.IMG_DELETE_OBJECT);
-		link.setText("Delete");
+		link.setText(Messages.get().ObjectListFieldEditor_Delete);
 		link.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e)
@@ -103,6 +110,11 @@ public class ObjectListFieldEditor extends FieldEditor
 				deleteObjects();
 			}
 		});
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      link.setLayoutData(gd);
+		
+		return content;
 	}
 	
 	/**
@@ -139,7 +151,7 @@ public class ObjectListFieldEditor extends FieldEditor
 	public String getValue()
 	{
 		if (objects.size() == 0)
-			return "";
+			return ""; //$NON-NLS-1$
 		
 		StringBuilder sb = new StringBuilder();
 		for(AbstractObject o : objects.values())

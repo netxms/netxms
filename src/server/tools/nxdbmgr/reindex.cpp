@@ -32,7 +32,7 @@ static void RecreateIndex(const TCHAR *pszIndex, const TCHAR *pszTable, const TC
 	TCHAR szQuery[1024];
 
 	_tprintf(_T("Reindexing table %s by (%s)...\n"), pszTable, pszColumns);
-	switch(g_iSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
 			_sntprintf(szQuery, 1024, _T("DROP INDEX %s ON %s"), pszIndex, pszTable);
@@ -179,7 +179,7 @@ static void DropAllIndexesFromTable_MSSQL(const TCHAR *table)
 
 static void DropAllIndexesFromTable(const TCHAR *table)
 {
-	switch(g_iSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MYSQL:
 			DropAllIndexesFromTable_MYSQL(table);

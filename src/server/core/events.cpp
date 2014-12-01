@@ -27,8 +27,6 @@
  */
 Queue *g_pEventQueue = NULL;
 EventPolicy *g_pEventPolicy = NULL;
-const TCHAR *g_szStatusText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"), _T("CRITICAL"), _T("UNKNOWN"), _T("UNMANAGED"), _T("DISABLED"), _T("TESTING") };
-const TCHAR *g_szStatusTextSmall[] = { _T("Normal"), _T("Warning"), _T("Minor"), _T("Major"), _T("Critical"), _T("Unknown"), _T("Unmanaged"), _T("Disabled"), _T("Testing") };
 
 /**
  * Static data
@@ -43,7 +41,7 @@ static RWLOCK m_rwlockTemplateAccess;
 Event::Event()
 {
    m_qwId = 0;
-	m_szName[0] = 0;
+	m_name[0] = 0;
    m_qwRootId = 0;
    m_dwCode = 0;
    m_dwSeverity = 0;
@@ -58,11 +56,36 @@ Event::Event()
 }
 
 /**
+ * Copy constructor for event
+ */
+Event::Event(Event *src)
+{
+   m_qwId = src->m_qwId;
+   _tcscpy(m_name, src->m_name);
+   m_qwRootId = src->m_qwRootId;
+   m_dwCode = src->m_dwCode;
+   m_dwSeverity = src->m_dwSeverity;
+   m_dwSource = src->m_dwSource;
+   m_dwFlags = src->m_dwFlags;
+   m_pszMessageText = _tcsdup_ex(src->m_pszMessageText);
+   m_pszMessageTemplate = _tcsdup_ex(src->m_pszMessageTemplate);
+   m_tTimeStamp = src->m_tTimeStamp;
+	m_pszUserTag = _tcsdup_ex(src->m_pszUserTag);
+	m_pszCustomMessage = _tcsdup_ex(src->m_pszCustomMessage);
+	m_parameters.setOwner(true);
+   for(int i = 0; i < src->m_parameters.size(); i++)
+   {
+      m_parameters.add(_tcsdup_ex((TCHAR *)src->m_parameters.get(i)));
+   }
+   m_parameterNames.addAll(&src->m_parameterNames);
+}
+
+/**
  * Construct event from template
  */
 Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, const char *szFormat, const TCHAR **names, va_list args)
 {
-	_tcscpy(m_szName, pTemplate->szName);
+	_tcscpy(m_name, pTemplate->szName);
    m_tTimeStamp = time(NULL);
    m_qwId = CreateUniqueEventId();
    m_qwRootId = 0;
@@ -88,21 +111,30 @@ Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, c
          switch(szFormat[i])
          {
             case 's':
-					m_parameters.add(_tcsdup(va_arg(args, TCHAR *)));
+               {
+                  const TCHAR *s = va_arg(args, const TCHAR *);
+					   m_parameters.add(_tcsdup_ex(s));
+               }
                break;
             case 'm':	// multibyte string
+               {
+                  const char *s = va_arg(args, const char *);
 #ifdef UNICODE
-					m_parameters.add(WideStringFromMBString(va_arg(args, char *)));
+                  m_parameters.add((s != NULL) ? WideStringFromMBString(s) : _tcsdup(_T("")));
 #else
-					m_parameters.add(strdup(va_arg(args, char *)));
+					   m_parameters.add(strdup(CHECK_NULL_EX(s)));
 #endif
+               }
                break;
             case 'u':	// UNICODE string
+               {
+                  const WCHAR *s = va_arg(args, const WCHAR *);
 #ifdef UNICODE
-					m_parameters.add(wcsdup(va_arg(args, WCHAR *)));
+		   			m_parameters.add(wcsdup(CHECK_NULL_EX(s)));
 #else
-					m_parameters.add(MBStringFromWideString(va_arg(args, WCHAR *)));
+                  m_parameters.add((s != NULL) ? MBStringFromWideString(s) : strdup(""));
 #endif
+               }
                break;
             case 'd':
                buffer = (TCHAR *)malloc(16 * sizeof(TCHAR));
@@ -112,6 +144,11 @@ Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, c
             case 'D':
                buffer = (TCHAR *)malloc(32 * sizeof(TCHAR));
                _sntprintf(buffer, 32, INT64_FMT, va_arg(args, INT64));
+					m_parameters.add(buffer);
+               break;
+            case 't':
+               buffer = (TCHAR *)malloc(32 * sizeof(TCHAR));
+               _sntprintf(buffer, 32, INT64_FMT, (INT64)va_arg(args, time_t));
 					m_parameters.add(buffer);
                break;
             case 'x':
@@ -223,10 +260,10 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                   pText[dwPos++] = '%';
                   break;
                case 'n':   // Name of event source
-                  dwSize += (UINT32)_tcslen(pObject->Name());
+                  dwSize += (UINT32)_tcslen(pObject->getName());
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  _tcscpy(&pText[dwPos], pObject->Name());
-                  dwPos += (UINT32)_tcslen(pObject->Name());
+                  _tcscpy(&pText[dwPos], pObject->getName());
+                  dwPos += (UINT32)_tcslen(pObject->getName());
                   break;
                case 'a':   // IP address of event source
                   dwSize += 16;
@@ -283,10 +320,10 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                case 'N':   // Event name
 						if (event != NULL)
 						{
-							dwSize += (UINT32)_tcslen(event->m_szName);
+							dwSize += (UINT32)_tcslen(event->m_name);
 							pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-							_tcscpy(&pText[dwPos], event->m_szName);
-							dwPos += (UINT32)_tcslen(event->m_szName);
+							_tcscpy(&pText[dwPos], event->m_name);
+							dwPos += (UINT32)_tcslen(event->m_name);
 						}
                   break;
                case 's':   // Severity code
@@ -301,10 +338,11 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                case 'S':   // Severity text
 						if (event != NULL)
 						{
-							dwSize += (UINT32)_tcslen(g_szStatusTextSmall[event->m_dwSeverity]);
+                     const TCHAR *statusText = GetStatusAsText(event->m_dwSeverity, false);
+							dwSize += (UINT32)_tcslen(statusText);
 							pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-							_tcscpy(&pText[dwPos], g_szStatusTextSmall[event->m_dwSeverity]);
-							dwPos += (UINT32)_tcslen(g_szStatusTextSmall[event->m_dwSeverity]);
+							_tcscpy(&pText[dwPos], statusText);
+							dwPos += (UINT32)_tcslen(statusText);
 						}
                   break;
                case 'v':   // NetXMS server version
@@ -420,7 +458,7 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 							NXSL_VM *vm = g_pScriptLibrary->createVM(scriptName, new NXSL_ServerEnv);
 							if (vm != NULL)
 							{
-								if (pObject->Type() == OBJECT_NODE)
+								if (pObject->getObjectClass() == OBJECT_NODE)
 									vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, pObject)));
 								vm->setGlobalVariable(_T("$event"), (event != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslEventClass, event)) : new NXSL_Value);
 								if (alarmMsg != NULL)
@@ -497,7 +535,7 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 							{
 								scriptName[i] = 0;
 								StrStrip(scriptName);
-								int index = event->m_parameterNames.getIndexIgnoreCase(scriptName);
+								int index = event->m_parameterNames.indexOfIgnoreCase(scriptName);
 								if (index != -1)
 								{
 									const TCHAR *temp = (TCHAR *)event->m_parameters.get(index);
@@ -560,7 +598,7 @@ void Event::addParameter(const TCHAR *name, const TCHAR *value)
  */
 void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
 {
-	int index = m_parameterNames.getIndexIgnoreCase(name);
+	int index = m_parameterNames.indexOfIgnoreCase(name);
 	if (index != -1)
 	{
 		m_parameters.replace(index, _tcsdup(value));
@@ -574,24 +612,54 @@ void Event::setNamedParameter(const TCHAR *name, const TCHAR *value)
 }
 
 /**
+ * Set value (and optionally name) of parameter at given index.
+ *
+ * @param index 0-based parameter index
+ * @param name parameter name (can be NULL)
+ * @param value new value
+ */
+void Event::setParameter(int index, const TCHAR *name, const TCHAR *value)
+{
+   if (index < 0)
+      return;
+
+   int addup = index - m_parameters.size();
+   for(int i = 0; i < addup; i++)
+   {
+		m_parameters.add(_tcsdup(_T("")));
+		m_parameterNames.add(_T(""));
+   }
+   if (index < m_parameters.size())
+   {
+		m_parameters.replace(index, _tcsdup(value));
+		m_parameterNames.replace(index, CHECK_NULL_EX(name));
+   }
+   else
+   {
+		m_parameters.add(_tcsdup(value));
+		m_parameterNames.add(CHECK_NULL_EX(name));
+   }
+}
+
+/**
  * Fill message with event data
  */
-void Event::prepareMessage(CSCPMessage *pMsg)
+void Event::prepareMessage(NXCPMessage *pMsg)
 {
 	UINT32 dwId = VID_EVENTLOG_MSG_BASE;
 
-	pMsg->SetVariable(VID_NUM_RECORDS, (UINT32)1);
-	pMsg->SetVariable(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
-	pMsg->SetVariable(dwId++, m_qwId);
-	pMsg->SetVariable(dwId++, m_dwCode);
-	pMsg->SetVariable(dwId++, (UINT32)m_tTimeStamp);
-	pMsg->SetVariable(dwId++, m_dwSource);
-	pMsg->SetVariable(dwId++, (WORD)m_dwSeverity);
-	pMsg->SetVariable(dwId++, CHECK_NULL(m_pszMessageText));
-	pMsg->SetVariable(dwId++, CHECK_NULL(m_pszUserTag));
-	pMsg->SetVariable(dwId++, (UINT32)m_parameters.size());
+	pMsg->setField(VID_NUM_RECORDS, (UINT32)1);
+	pMsg->setField(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
+	pMsg->setField(dwId++, m_qwId);
+	pMsg->setField(dwId++, m_dwCode);
+	pMsg->setField(dwId++, (UINT32)m_tTimeStamp);
+	pMsg->setField(dwId++, m_dwSource);
+	pMsg->setField(dwId++, (WORD)m_dwSeverity);
+	pMsg->setField(dwId++, CHECK_NULL(m_pszMessageText));
+	pMsg->setField(dwId++, CHECK_NULL(m_pszUserTag));
+	pMsg->setField(dwId++, (UINT32)m_parameters.size());
 	for(int i = 0; i < m_parameters.size(); i++)
-		pMsg->SetVariable(dwId++, (TCHAR *)m_parameters.get(i));
+		pMsg->setField(dwId++, (TCHAR *)m_parameters.get(i));
 }
 
 /**
@@ -829,8 +897,9 @@ static BOOL RealPostEvent(Queue *queue, UINT32 eventCode, UINT32 sourceId,
  *        a - IP address
  *        h - MAC (hardware) address
  *        i - Object ID
+ *        t - timestamp (time_t) as raw value (seconds since epoch)
  */
-BOOL PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
+BOOL NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {
    va_list args;
    BOOL bResult;
@@ -859,7 +928,7 @@ BOOL PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
  */
-BOOL PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...)
+BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...)
 {
    va_list args;
    BOOL bResult;
@@ -868,6 +937,66 @@ BOOL PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, c
    bResult = RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, names, args);
    va_end(args);
    return bResult;
+}
+
+/**
+ * Post event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param format Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IP address
+ *        h - MAC (hardware) address
+ *        i - Object ID
+ * @param names names for parameters (NULL if parameters are unnamed)
+ */
+BOOL NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, ...)
+{
+   va_list args;
+   BOOL bResult;
+
+   va_start(args, names);
+   bResult = RealPostEvent(g_pEventQueue, eventCode, sourceId, userTag, format, names, args);
+   va_end(args);
+   return bResult;
+}
+
+/**
+ * Post event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param parameters event parameters list
+ */
+BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters)
+{
+   /*
+   int count = parameters->size();
+   if (count > 1023)
+      count = 1023;
+
+   char format[1024];
+   memset(format, 's', count);
+   format[count] = 0;
+
+   const TCHAR *names[1024];
+   const TCHAR *args[1024];
+   for(int i = 0; i < count; i++)
+   {
+      names[i] = parameters->getKeyByIndex(i);
+      args[i] = parameters->getValueByIndex(i);
+   }
+
+   return RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, names, args);
+   */
+   return FALSE;
 }
 
 /**
@@ -890,7 +1019,7 @@ BOOL PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, c
  * @param names names for parameters (NULL if parameters are unnamed)
  * @param args event parameters
  */
-BOOL PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...)
+BOOL NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...)
 {
    va_list args;
    BOOL bResult;
@@ -919,7 +1048,7 @@ BOOL PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, c
  *        h - MAC (hardware) address
  *        i - Object ID
  */
-BOOL PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...)
+BOOL NXCORE_EXPORTABLE PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {
    va_list args;
    BOOL bResult;
@@ -933,7 +1062,7 @@ BOOL PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *fo
 /**
  * Resend events from specific queue to system event queue
  */
-void ResendEvents(Queue *queue)
+void NXCORE_EXPORTABLE ResendEvents(Queue *queue)
 {
    while(1)
    {
@@ -1048,8 +1177,26 @@ EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *name)
  * Translate event name to code
  * If event with given name does not exist, returns supplied default value
  */
-UINT32 EventCodeFromName(const TCHAR *name, UINT32 defaultValue)
+UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue)
 {
 	EVENT_TEMPLATE *p = FindEventTemplateByName(name);
 	return (p != NULL) ? p->dwCode : defaultValue;
+}
+
+/**
+ * Get status as text
+ */
+const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps)
+{
+   static const TCHAR *statusText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"), _T("CRITICAL"), _T("UNKNOWN"), _T("UNMANAGED"), _T("DISABLED"), _T("TESTING") };
+   static const TCHAR *statusTextSmall[] = { _T("Normal"), _T("Warning"), _T("Minor"), _T("Major"), _T("Critical"), _T("Unknown"), _T("Unmanaged"), _T("Disabled"), _T("Testing") };
+
+   if (allCaps)
+   {
+      return ((status >= STATUS_NORMAL) && (status <= STATUS_TESTING)) ? statusText[status] : _T("INTERNAL ERROR");
+   }
+   else
+   {
+      return ((status >= STATUS_NORMAL) && (status <= STATUS_TESTING)) ? statusTextSmall[status] : _T("INTERNAL ERROR");
+   }
 }

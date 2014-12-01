@@ -1016,8 +1016,7 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
       // Encode varbinds into PDU
 		if ((m_version != SNMP_VERSION_3) || ((securityContext != NULL) && (securityContext->getAuthoritativeEngine().getIdLen() != 0)))
 		{
-			dwBytes = BER_Encode(ASN_SEQUENCE, pVarBinds, dwVarBindsSize, 
-										pbCurrPos, dwBufferSize - dwPDUSize);
+			dwBytes = BER_Encode(ASN_SEQUENCE, pVarBinds, dwVarBindsSize, pbCurrPos, dwBufferSize - dwPDUSize);
 		}
 		else
 		{
@@ -1365,7 +1364,7 @@ void SNMP_PDU::bindVariable(SNMP_Variable *pVar)
 /**
  * Set context engine ID
  */
-void SNMP_PDU::setContextEngineId(BYTE *id, size_t len)
+void SNMP_PDU::setContextEngineId(const BYTE *id, size_t len)
 {
 	m_contextEngineIdLen = min(len, SNMP_MAX_ENGINEID_LEN);
 	memcpy(m_contextEngineId, id, m_contextEngineIdLen);

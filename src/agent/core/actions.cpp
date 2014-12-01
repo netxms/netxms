@@ -1,6 +1,6 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,9 +32,9 @@ static UINT32 m_dwNumActions = 0;
 
 /**
  * Add action
- */ 
-BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg, 
-               LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *),
+ */
+BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
+               LONG (*fpHandler)(const TCHAR *, StringList *, const TCHAR *, AbstractCommSession *),
                const TCHAR *pszSubAgent, const TCHAR *pszDescription)
 {
    UINT32 i;
@@ -95,7 +95,7 @@ BOOL AddAction(const TCHAR *pszName, int iType, const TCHAR *pArg,
 /**
  * Add action from config record
  * Accepts string of format <action_name>:<command_line>
- */ 
+ */
 BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec) //to be TCHAR
 {
    TCHAR *pCmdLine;
@@ -112,41 +112,148 @@ BOOL AddActionFromConfig(TCHAR *pszLine, BOOL bShellExec) //to be TCHAR
 
 /**
  * Execute action
- */ 
-UINT32 ExecAction(const TCHAR *pszAction, StringList *pArgs)
+ */
+UINT32 ExecAction(const TCHAR *action, StringList *args, AbstractCommSession *session)
 {
-   UINT32 i, dwErrorCode = ERR_UNKNOWN_PARAMETER;
+   UINT32 rcc = ERR_UNKNOWN_PARAMETER;
 
-   for(i = 0; i < m_dwNumActions; i++)
-      if (!_tcsicmp(m_pActionList[i].szName, pszAction))
+   for(UINT32 i = 0; i < m_dwNumActions; i++)
+      if (!_tcsicmp(m_pActionList[i].szName, action))
       {
-         DebugPrintf(INVALID_INDEX, 4, _T("Executing action %s of type %d"), pszAction, m_pActionList[i].iType);
+         DebugPrintf(INVALID_INDEX, 4, _T("Executing action %s of type %d"), action, m_pActionList[i].iType);
          switch(m_pActionList[i].iType)
          {
             case AGENT_ACTION_EXEC:
-               dwErrorCode = ExecuteCommand(m_pActionList[i].handler.pszCmdLine, pArgs, NULL);
+               rcc = ExecuteCommand(m_pActionList[i].handler.pszCmdLine, args, NULL);
                break;
             case AGENT_ACTION_SHELLEXEC:
-               dwErrorCode = ExecuteShellCommand(m_pActionList[i].handler.pszCmdLine, pArgs);
+               rcc = ExecuteShellCommand(m_pActionList[i].handler.pszCmdLine, args);
                break;
             case AGENT_ACTION_SUBAGENT:
-               dwErrorCode = m_pActionList[i].handler.sa.fpHandler(pszAction, pArgs, m_pActionList[i].handler.sa.pArg);
+               rcc = m_pActionList[i].handler.sa.fpHandler(action, args, m_pActionList[i].handler.sa.pArg, session);
                break;
             default:
-               dwErrorCode = ERR_NOT_IMPLEMENTED;
+               rcc = ERR_NOT_IMPLEMENTED;
                break;
          }
          break;
       }
-   return dwErrorCode;
+   return rcc;
 }
 
+/**
+ * Action executor data
+ */
+class ActionExecutorData
+{
+public:
+   TCHAR *m_cmdLine;
+   StringList *m_args;
+   CommSession *m_session;
+   UINT32 m_requestId;
 
-//
-// Enumerate available actions
-// 
+   ActionExecutorData(const TCHAR *cmd, StringList *args, CommSession *session, UINT32 requestId)
+   {
+      m_cmdLine = _tcsdup(cmd);
+      m_args = args;
+      m_session = session;
+      m_requestId = requestId;
+   }
 
-LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+   ~ActionExecutorData()
+   {
+      free(m_cmdLine);
+      delete m_args;
+   }
+};
+
+/**
+ * Action executor (for actions with output)
+ */
+static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
+{
+   ActionExecutorData *data = (ActionExecutorData *)arg;
+
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(data->m_requestId);
+   msg.setField(VID_RCC, ERR_SUCCESS);
+   data->m_session->sendMessage(&msg);
+
+   msg.setCode(CMD_COMMAND_OUTPUT);
+   msg.deleteAllFields();
+
+   FILE *pipe = _tpopen(data->m_cmdLine, _T("r"));
+   if (pipe != NULL)
+   {
+      while (true)
+      {
+         TCHAR line[4096];
+
+         TCHAR *ret = safe_fgetts(line, 4096, pipe);
+         if (ret == NULL)
+            break;
+
+         msg.setField(VID_MESSAGE, line);
+         data->m_session->sendMessage(&msg);
+         msg.deleteAllFields();
+      }
+      pclose(pipe);
+   }
+   else
+   {
+      DebugPrintf(data->m_session->getIndex(), 4, _T("ActionExecutionThread: popen() failed"));
+
+      TCHAR buffer[1024];
+      _sntprintf(buffer, 1024, _T("Failed to execute command %s"), data->m_cmdLine);
+      msg.setField(VID_MESSAGE, buffer);
+   }
+
+   msg.setEndOfSequence();
+   data->m_session->sendMessage(&msg);
+
+   delete data;
+   return THREAD_OK;
+}
+
+/**
+ * Execute action and send output to server
+ */
+UINT32 ExecActionWithOutput(CommSession *session, UINT32 requestId, const TCHAR *action, StringList *args)
+{
+   UINT32 rcc = ERR_UNKNOWN_PARAMETER;
+
+   for(UINT32 i = 0; i < m_dwNumActions; i++)
+   {
+      if (!_tcsicmp(m_pActionList[i].szName, action))
+      {
+         DebugPrintf(INVALID_INDEX, 4, _T("Executing action %s of type %d with output"), action, m_pActionList[i].iType);
+         switch(m_pActionList[i].iType)
+         {
+            case AGENT_ACTION_EXEC:
+            case AGENT_ACTION_SHELLEXEC:
+               ThreadCreate(ActionExecutionThread, 0, new ActionExecutorData(m_pActionList[i].handler.pszCmdLine, args, session, requestId));
+               rcc = ERR_SUCCESS;
+               break;
+            case AGENT_ACTION_SUBAGENT:
+               rcc = ERR_INTERNAL_ERROR;
+               break;
+            default:
+               rcc = ERR_NOT_IMPLEMENTED;
+               break;
+         }
+         break;
+      }
+   }
+   if (rcc != ERR_SUCCESS)
+      delete args;
+   return rcc;
+}
+
+/**
+ * List of available actions
+ */
+LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    UINT32 i;
    TCHAR szBuffer[1024];
@@ -154,7 +261,7 @@ LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
    for(i = 0; i < m_dwNumActions; i++)
    {
       _sntprintf(szBuffer, 1024, _T("%s %d \"%s\""), m_pActionList[i].szName, m_pActionList[i].iType,
-                 m_pActionList[i].iType == AGENT_ACTION_EXEC ? 
+                 m_pActionList[i].iType == AGENT_ACTION_EXEC ?
                      m_pActionList[i].handler.pszCmdLine :
                      m_pActionList[i].handler.sa.szSubagentName);
 		value->add(szBuffer);

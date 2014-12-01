@@ -29,35 +29,39 @@
  */
 static MP_OBJECT *CreateObject(const char *pszName, DWORD dwId)
 {
-   MP_OBJECT *pObject;
-   MP_SUBID *pSubId;
-
-   pObject = CREATE(MP_OBJECT);
+   MP_OBJECT *pObject = new MP_OBJECT;
    pObject->pszName = strdup(pszName);
    pObject->iType = MIBC_OBJECT;
-   pObject->pOID = da_create();
-   pSubId = CREATE(MP_SUBID);
+
+   MP_SUBID *pSubId = new MP_SUBID;
    pSubId->bResolved = TRUE;
    pSubId->dwValue = dwId;
    pSubId->pszName = strdup(pszName);
-   da_add(pObject->pOID, pSubId);
+   pObject->pOID->add(pSubId);
+   
    return pObject;
 }
 
 /**
  * Create builtin object
  */
-static MP_OBJECT *CreateBuiltinObject(const char *pszName)
+static MP_OBJECT *GetBuiltinObject(const char *pszName)
 {
    MP_OBJECT *pObject = NULL;
 
    if (!strcmp(pszName, "iso"))
    {
-      pObject = CreateObject("iso", 1);
+      static MP_OBJECT *iso = NULL;
+      if (iso == NULL)
+         iso = CreateObject("iso", 1);
+      pObject = iso;
    }
    else if (!strcmp(pszName, "ccitt"))
    {
-      pObject = CreateObject("ccitt", 0);
+      static MP_OBJECT *ccitt = NULL;
+      if (ccitt == NULL)
+         ccitt = CreateObject("ccitt", 0);
+      pObject = ccitt;
    }
    return pObject;
 }
@@ -65,14 +69,11 @@ static MP_OBJECT *CreateBuiltinObject(const char *pszName)
 /**
  * Find module by name
  */
-static MP_MODULE *FindModuleByName(DynArray *pModuleList, const char *pszName)
+static MP_MODULE *FindModuleByName(ObjectArray<MP_MODULE> *pModuleList, const char *pszName)
 {
-   int i, iNumModules;
-
-   iNumModules = da_size(pModuleList);
-   for(i = 0; i < iNumModules; i++)
-      if (!strcmp(((MP_MODULE *)da_get(pModuleList, i))->pszName, pszName))
-         return (MP_MODULE *)da_get(pModuleList, i);
+   for(int i = 0; i < pModuleList->size(); i++)
+      if (!strcmp(pModuleList->get(i)->pszName, pszName))
+         return pModuleList->get(i);
    return NULL;
 }
 
@@ -81,13 +82,11 @@ static MP_MODULE *FindModuleByName(DynArray *pModuleList, const char *pszName)
  */
 static MP_OBJECT *FindObjectByName(MP_MODULE *pModule, const char *pszName, int *pnIndex)
 {
-   int i, iNumObjects;
-	MP_OBJECT *pObject;
+   int i;
 
-   iNumObjects = da_size(pModule->pObjectList);
-   for(i = (pnIndex != NULL) ? *pnIndex : 0; i < iNumObjects; i++)
+   for(i = (pnIndex != NULL) ? *pnIndex : 0; i < pModule->pObjectList->size(); i++)
    {
-		pObject = (MP_OBJECT *)da_get(pModule->pObjectList, i);
+		MP_OBJECT *pObject = pModule->pObjectList->get(i);
       if (!strcmp(pObject->pszName, pszName))
 		{
 			if (pnIndex != NULL)
@@ -105,19 +104,14 @@ static MP_OBJECT *FindObjectByName(MP_MODULE *pModule, const char *pszName, int 
  */
 static MP_OBJECT *FindImportedObjectByName(MP_MODULE *pModule, const char *pszName, MP_MODULE **ppImportModule)
 {
-   int i, j, iNumImports, iNumSymbols;
-   MP_IMPORT_MODULE *pImport;
-
-   iNumImports = da_size(pModule->pImportList);
-   for(i = 0; i < iNumImports; i++)
+   for(int i = 0; i < pModule->pImportList->size(); i++)
    {
-      pImport = (MP_IMPORT_MODULE *)da_get(pModule->pImportList, i);
-      iNumSymbols = da_size(pImport->pSymbols);
-      for(j = 0; j < iNumSymbols; j++)
-         if (!strcmp((char *)da_get(pImport->pSymbols, j), pszName))
+      MP_IMPORT_MODULE *pImport = pModule->pImportList->get(i);
+      for(int j = 0; j < pImport->pSymbols->size(); j++)
+         if (!strcmp((char *)pImport->pSymbols->get(j), pszName))
          {
             *ppImportModule = pImport->pModule;
-            return (MP_OBJECT *)da_get(pImport->pObjects, j);
+            return pImport->pObjects->get(j);
          }
    }
    return NULL;
@@ -126,18 +120,13 @@ static MP_OBJECT *FindImportedObjectByName(MP_MODULE *pModule, const char *pszNa
 /**
  * Find next module in chain, if symbol is imported and then re-exported
  */
-static MP_MODULE *FindNextImportModule(DynArray *pModuleList, MP_MODULE *pModule, const char *pszSymbol)
+static MP_MODULE *FindNextImportModule(ObjectArray<MP_MODULE> *pModuleList, MP_MODULE *pModule, const char *pszSymbol)
 {
-   int i, j, iNumImports, iNumSymbols;
-   MP_IMPORT_MODULE *pImport;
-
-   iNumImports = da_size(pModule->pImportList);
-   for(i = 0; i < iNumImports; i++)
+   for(int i = 0; i < pModule->pImportList->size(); i++)
    {
-      pImport = (MP_IMPORT_MODULE *)da_get(pModule->pImportList, i);
-      iNumSymbols = da_size(pImport->pSymbols);
-      for(j = 0; j < iNumSymbols; j++)
-         if (!strcmp((char *)da_get(pImport->pSymbols, j), pszSymbol))
+      MP_IMPORT_MODULE *pImport = pModule->pImportList->get(i);
+      for(int j = 0; j < pImport->pSymbols->size(); j++)
+         if (!strcmp((char *)pImport->pSymbols->get(j), pszSymbol))
             return FindModuleByName(pModuleList, pImport->pszName);
    }
    return NULL;
@@ -146,33 +135,25 @@ static MP_MODULE *FindNextImportModule(DynArray *pModuleList, MP_MODULE *pModule
 /**
  * Resolve imports
  */
-static void ResolveImports(DynArray *pModuleList, MP_MODULE *pModule)
+static void ResolveImports(ObjectArray<MP_MODULE> *pModuleList, MP_MODULE *pModule)
 {
-   int i, j, iNumImports, iNumSymbols;
-   MP_MODULE *pImportModule;
-   MP_IMPORT_MODULE *pImport;
-   MP_OBJECT *pObject;
-   char *pszSymbol;
-
-   iNumImports = da_size(pModule->pImportList);
-   for(i = 0; i < iNumImports; i++)
+   for(int i = 0; i < pModule->pImportList->size(); i++)
    {
-      pImport = (MP_IMPORT_MODULE *)da_get(pModule->pImportList, i);
-      pImportModule = FindModuleByName(pModuleList, pImport->pszName);
+      MP_IMPORT_MODULE *pImport = pModule->pImportList->get(i);
+      MP_MODULE *pImportModule = FindModuleByName(pModuleList, pImport->pszName);
       if (pImportModule != NULL)
       {
          pImport->pModule = pImportModule;
-         iNumSymbols = da_size(pImport->pSymbols);
-         pImport->pObjects = da_create();
-         for(j = 0; j < iNumSymbols; j++)
+         for(int j = 0; j < pImport->pSymbols->size(); j++)
          {
-            pszSymbol = (char *)da_get(pImport->pSymbols, j);
+            const char *pszSymbol = (const char *)pImport->pSymbols->get(j);
+            MP_OBJECT *pObject;
             do
             {
                pObject = FindObjectByName(pImportModule, pszSymbol, NULL);
                if (pObject != NULL)
                {
-                  da_add(pImport->pObjects, pObject);
+                  pImport->pObjects->add(pObject);
                }
                else
                {
@@ -180,7 +161,7 @@ static void ResolveImports(DynArray *pModuleList, MP_MODULE *pModule)
                   if (pImportModule == NULL)
                   {
                      Error(ERR_UNRESOLVED_IMPORT, pModule->pszName, pszSymbol);
-                     da_add(pImport->pObjects, NULL);
+                     pImport->pObjects->add(NULL);
                      break;
                   }
                }
@@ -203,12 +184,11 @@ static void BuildFullOID(MP_MODULE *pModule, MP_OBJECT *pObject)
    int iLen;
    MP_SUBID *pSubId;
    MP_OBJECT *pParent;
-   DynArray *pOID;
 
-   iLen = da_size(pObject->pOID);
+   iLen = pObject->pOID->size();
    while(iLen > 0)
    {
-      pSubId = (MP_SUBID *)da_get(pObject->pOID, iLen - 1);
+      pSubId = pObject->pOID->get(iLen - 1);
       if (!pSubId->bResolved)
       {
          pParent = FindObjectByName(pModule, pSubId->pszName, NULL);
@@ -227,18 +207,21 @@ static void BuildFullOID(MP_MODULE *pModule, MP_OBJECT *pObject)
             }
             else
             {
-               pParent = CreateBuiltinObject(pSubId->pszName);
+               pParent = GetBuiltinObject(pSubId->pszName);
             }
          }
          if (pParent != NULL)
          {
-            pOID = da_create();
-            pOID->nSize = pParent->pOID->nSize + pObject->pOID->nSize - iLen;
-            pOID->ppData = (void **)malloc(sizeof(void *) * pOID->nSize);
-            memcpy(pOID->ppData, pParent->pOID->ppData, sizeof(void *) * pParent->pOID->nSize);
-            memcpy(&pOID->ppData[pParent->pOID->nSize], &pObject->pOID->ppData[iLen],
-                   sizeof(void *) * (pObject->pOID->nSize - iLen));
-            da_destroy(pObject->pOID);
+            ObjectArray<MP_SUBID> *pOID = new ObjectArray<MP_SUBID>(pParent->pOID->size() + pObject->pOID->size() - iLen, 16, true);
+            for(int i = 0; i < pParent->pOID->size(); i++)
+            {
+               pOID->add(new MP_SUBID(pParent->pOID->get(i)));
+            }
+            for(int j = iLen; j < pObject->pOID->size(); j++)
+            {
+               pOID->add(new MP_SUBID(pObject->pOID->get(j)));
+            }
+            delete pObject->pOID;
             pObject->pOID = pOID;
             break;
          }
@@ -289,7 +272,7 @@ static void ResolveSyntax(MP_MODULE *pModule, MP_OBJECT *pObject)
    {
       pObject->iSyntax = pType->iSyntax;
 		if (pType->iType == MIBC_TEXTUAL_CONVENTION)
-			pObject->pszTextualConvention = pType->pszDescription;
+         pObject->pszTextualConvention = (pType->pszDescription != NULL) ? strdup(pType->pszDescription) : NULL;
    }
    else
    {
@@ -300,15 +283,11 @@ static void ResolveSyntax(MP_MODULE *pModule, MP_OBJECT *pObject)
 /**
  * Resolve object identifiers
  */
-static void ResolveObjects(DynArray *pModuleList, MP_MODULE *pModule)
+static void ResolveObjects(ObjectArray<MP_MODULE> *pModuleList, MP_MODULE *pModule)
 {
-   int i, iNumObjects;
-   MP_OBJECT *pObject;
-
-   iNumObjects = da_size(pModule->pObjectList);
-   for(i = 0; i < iNumObjects; i++)
+   for(int i = 0; i < pModule->pObjectList->size(); i++)
    {
-      pObject = (MP_OBJECT *)da_get(pModule->pObjectList, i);
+      MP_OBJECT *pObject = pModule->pObjectList->get(i);
       if (pObject->iType == MIBC_OBJECT)
       {
          BuildFullOID(pModule, pObject);
@@ -322,22 +301,17 @@ static void ResolveObjects(DynArray *pModuleList, MP_MODULE *pModule)
  */
 static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
 {
-   int i, j, iLen, iNumObjects;
-   MP_OBJECT *pObject;
-   MP_SUBID *pSubId;
-   SNMP_MIBObject *pCurrObj, *pNewObj;
-
-   iNumObjects = da_size(pModule->pObjectList);
-   for(i = 0; i < iNumObjects; i++)
+   for(int i = 0; i < pModule->pObjectList->size(); i++)
    {
-      pObject = (MP_OBJECT *)da_get(pModule->pObjectList, i);
+      MP_OBJECT *pObject = pModule->pObjectList->get(i);
       if (pObject->iType == MIBC_OBJECT)
       {
-         iLen = da_size(pObject->pOID);
-         for(j = 0, pCurrObj = pRoot; j < iLen; j++)
+         int iLen = pObject->pOID->size();
+         SNMP_MIBObject *pCurrObj = pRoot;
+         for(int j = 0; j < iLen; j++)
          {
-            pSubId = (MP_SUBID *)da_get(pObject->pOID, j);
-            pNewObj = pCurrObj->findChildByID(pSubId->dwValue);
+            MP_SUBID *pSubId = pObject->pOID->get(j);
+            SNMP_MIBObject *pNewObj = pCurrObj->findChildByID(pSubId->dwValue);
             if (pNewObj == NULL)
             {
                if (j == iLen - 1)
@@ -412,55 +386,56 @@ static void BuildMIBTree(SNMP_MIBObject *pRoot, MP_MODULE *pModule)
  */
 int ParseMIBFiles(int nNumFiles, char **ppszFileList, SNMP_MIBObject **ppRoot)
 {
-   int i, iNumModules, nRet;
-   DynArray *pModuleList;
-   MP_MODULE *pModule;
+   int i, nRet;
    SNMP_MIBObject *pRoot;
 
    _tprintf(_T("Parsing source files:\n"));
-   pModuleList = da_create();
+   ObjectArray<MP_MODULE> *pModuleList = new ObjectArray<MP_MODULE>(16, 16, true);
    for(i = 0; i < nNumFiles; i++)
    {
       _tprintf(_T("   %hs\n"), ppszFileList[i]);
-      pModule = ParseMIB(ppszFileList[i]);
+      MP_MODULE *pModule = ParseMIB(ppszFileList[i]);
       if (pModule == NULL)
       {
          nRet = SNMP_MPE_PARSE_ERROR;
          goto parse_error;
       }
-      da_add(pModuleList, pModule);
+      pModuleList->add(pModule);
    }
 
-   iNumModules = da_size(pModuleList);
    _tprintf(_T("Resolving imports:\n"));
-   for(i = 0; i < iNumModules; i++)
+   for(i = 0; i < pModuleList->size(); i++)
    {
-      pModule = (MP_MODULE *)da_get(pModuleList, i);
+      MP_MODULE *pModule = pModuleList->get(i);
       _tprintf(_T("   %hs\n"), pModule->pszName);
       ResolveImports(pModuleList, pModule);
    }
 
    _tprintf(_T("Resolving object identifiers:\n"));
-   for(i = 0; i < iNumModules; i++)
+   for(i = 0; i < pModuleList->size(); i++)
    {
-      pModule = (MP_MODULE *)da_get(pModuleList, i);
+      MP_MODULE *pModule = pModuleList->get(i);
       _tprintf(_T("   %hs\n"), pModule->pszName);
       ResolveObjects(pModuleList, pModule);
    }
 
    _tprintf(_T("Creating MIB tree:\n"));
+   pModuleList->setOwner(false);
    pRoot = new SNMP_MIBObject;
-   for(i = 0; i < iNumModules; i++)
+   for(i = 0; i < pModuleList->size(); i++)
    {
-      pModule = (MP_MODULE *)da_get(pModuleList, i);
+      MP_MODULE *pModule = pModuleList->get(i);
       _tprintf(_T("   %hs\n"), pModule->pszName);
       BuildMIBTree(pRoot, pModule);
+      delete pModule;
    }
 
    *ppRoot = pRoot;
+   delete pModuleList;
    return SNMP_MPE_SUCCESS;
 
 parse_error:
    *ppRoot = NULL;
+   delete pModuleList;
    return nRet;
 }

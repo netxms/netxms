@@ -35,7 +35,7 @@ public class MapOptions extends PropertyPage
 	private NetworkMap object;
 	private Button checkShowStatusIcon;
 	private Button checkShowStatusFrame;
-	private Button checkShowStatusBkgnd;
+   private Button checkShowStatusBkgnd;
 	private Combo routingAlgorithm;
 	private Button radioColorDefault;
 	private Button radioColorCustom;

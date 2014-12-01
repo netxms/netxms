@@ -29,7 +29,7 @@
 DECLARE_DRIVER_HEADER("PGSQL")
 
 extern "C" void EXPORT DrvDisconnect(DBDRV_CONNECTION pConn);
-static BOOL UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText);
+static bool UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText);
 
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
@@ -158,9 +158,9 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
-	return TRUE;
+	return true;
 }
 
 /**
@@ -501,7 +501,7 @@ extern "C" void EXPORT DrvFreeStatement(PG_STATEMENT *hStmt)
 /**
  * Perform non-SELECT query - internal implementation
  */
-static BOOL UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText)
+static bool UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText)
 {
    int retryCount = 60;
 
@@ -512,7 +512,7 @@ retry:
 	{
 		if (errorText != NULL)
 			wcsncpy(errorText, L"Internal error (pResult is NULL in UnsafeDrvQuery)", DBDRV_MAX_ERROR_TEXT);
-		return FALSE;
+		return false;
 	}
 
 	if (PQresultStatus(pResult) != PGRES_COMMAND_OK)
@@ -543,13 +543,13 @@ retry:
 	      }
       }
 		PQclear(pResult);
-		return FALSE;
+		return false;
 	}
 
 	PQclear(pResult);
 	if (errorText != NULL)
 		*errorText = 0;
-   return TRUE;
+   return true;
 }
 
 /**
@@ -807,7 +807,7 @@ extern "C" void EXPORT DrvFreeResult(DBDRV_RESULT pResult)
  */
 extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-	BOOL bSuccess = FALSE;
+	bool bSuccess = false;
    char *pszReq, *pszQueryUTF8;
    static char szDeclareCursor[] = "DECLARE cur1 CURSOR FOR ";
 
@@ -827,7 +827,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQ
 		   if (UnsafeDrvQuery(pConn, pszReq, errorText))
 		   {
             ((PG_CONN *)pConn)->pFetchBuffer = PQdescribePortal(pConn->pHandle, "cur1");
-			   bSuccess = TRUE;
+			   bSuccess = true;
 		   }
 		   free(pszReq);
 	   }
@@ -854,13 +854,13 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(PG_CONN *pConn, WCHAR *pwszQ
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" BOOL EXPORT DrvFetch(DBDRV_ASYNC_RESULT pConn)
+extern "C" bool EXPORT DrvFetch(DBDRV_ASYNC_RESULT pConn)
 {
-   BOOL bResult = TRUE;
+   bool bResult = true;
    
    if (pConn == NULL)
    {
-      bResult = FALSE;
+      bResult = false;
    }
    else
    {
@@ -874,12 +874,12 @@ extern "C" BOOL EXPORT DrvFetch(DBDRV_ASYNC_RESULT pConn)
 		   {
             PQclear(((PG_CONN *)pConn)->pFetchBuffer);
             ((PG_CONN *)pConn)->pFetchBuffer = NULL;
-			   bResult = FALSE;
+			   bResult = false;
 		   }
       }
       else
       {
-         bResult = FALSE;
+         bResult = false;
       }
    }
    return bResult;
@@ -1019,7 +1019,7 @@ extern "C" DWORD EXPORT DrvBegin(PG_CONN *pConn)
 
 extern "C" DWORD EXPORT DrvCommit(PG_CONN *pConn)
 {
-   BOOL bRet;
+   bool bRet;
 
 	if (pConn == NULL)
       return DBERR_INVALID_HANDLE;
@@ -1030,14 +1030,12 @@ extern "C" DWORD EXPORT DrvCommit(PG_CONN *pConn)
    return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
-
-//
-// Rollback transaction
-//
-
+/**
+ * Rollback transaction
+ */
 extern "C" DWORD EXPORT DrvRollback(PG_CONN *pConn)
 {
-   BOOL bRet;
+   bool bRet;
 
 	if (pConn == NULL)
       return DBERR_INVALID_HANDLE;
@@ -1048,18 +1046,37 @@ extern "C" DWORD EXPORT DrvRollback(PG_CONN *pConn)
    return bRet ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
-
-//
-// DLL Entry point
-//
+/**
+ * Check if table exist
+ */
+extern "C" int EXPORT DrvIsTableExist(PG_CONN *pConn, const WCHAR *name)
+{
+   WCHAR query[256];
+   swprintf(query, 256, L"SELECT count(*) FROM information_schema.tables WHERE table_catalog=current_catalog AND table_schema=current_schema AND lower(table_name)=lower('%ls')", name);
+   DWORD error;
+   WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   int rc = DBIsTableExist_Failure;
+   DBDRV_RESULT hResult = DrvSelect(pConn, query, &error, errorText);
+   if (hResult != NULL)
+   {
+      WCHAR buffer[64] = L"";
+      DrvGetField(hResult, 0, 0, buffer, 64);
+      rc = (wcstol(buffer, NULL, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      DrvFreeResult(hResult);
+   }
+   return rc;
+}
 
 #ifdef _WIN32
 
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+/**
+ * DLL Entry point
+ */
+bool WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
       DisableThreadLibraryCalls(hInstance);
-   return TRUE;
+   return true;
 }
 
 #endif

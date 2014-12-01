@@ -43,7 +43,7 @@ SNMP_Engine::SNMP_Engine(BYTE *id, size_t idLen, int engineBoots, int engineTime
 	m_engineTime = engineTime;
 }
 
-SNMP_Engine::SNMP_Engine(SNMP_Engine *src)
+SNMP_Engine::SNMP_Engine(const SNMP_Engine *src)
 {
 	m_idLen = src->m_idLen;
 	memcpy(m_id, src->m_id, m_idLen);

@@ -150,7 +150,7 @@ static BOOL IfIndexToName(int ifIndex, char *ifName)
 /**
  * Interface list
  */
-LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
    int nRet = SYSINFO_RC_ERROR;
    struct lifnum ln;
@@ -233,7 +233,7 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 /**
  * Get interface description
  */
-LONG H_NetIfDescription(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_NetIfDescription(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    char *eptr, szIfName[IF_NAMESIZE];
    int nIndex, nFd;
@@ -267,7 +267,7 @@ LONG H_NetIfDescription(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Get interface administrative status
  */
-LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    char *eptr, szIfName[IF_NAMESIZE];
    int nIndex, nFd;
@@ -319,7 +319,7 @@ LONG H_NetIfAdminStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Get interface statistics
  */
-LONG H_NetInterfaceStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_NetInterfaceStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    kstat_ctl_t *kc;
    kstat_t *kp;
@@ -408,7 +408,7 @@ LONG H_NetInterfaceStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
 /**
  * Get Link status
  */
-LONG H_NetInterfaceLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_NetInterfaceLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    char *eptr, szIfName[IF_NAMESIZE];
    int nIndex, nFd;
@@ -416,7 +416,7 @@ LONG H_NetInterfaceLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
    LONG nRet = SYSINFO_RC_ERROR;
 
    // try to get status using kstat()
-   nRet = H_NetInterfaceStats(pszParam, (const TCHAR *)"link_up", pValue);
+   nRet = H_NetInterfaceStats(pszParam, (const TCHAR *)"link_up", pValue, NULL);
    if (nRet == SYSINFO_RC_SUCCESS)
    {
       return SYSINFO_RC_SUCCESS;

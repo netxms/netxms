@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
@@ -46,7 +46,7 @@
 /**
  * Externals
  */
-void UnregisterMobileDeviceSession(UINT32 dwIndex);
+void UnregisterMobileDeviceSession(int id);
 
 /**
  * Client communication read thread starter
@@ -58,7 +58,7 @@ THREAD_RESULT THREAD_CALL MobileDeviceSession::readThreadStarter(void *pArg)
    // When MobileDeviceSession::readThread exits, all other session
    // threads are already stopped, so we can safely destroy
    // session object
-   UnregisterMobileDeviceSession(((MobileDeviceSession *)pArg)->getIndex());
+   UnregisterMobileDeviceSession(((MobileDeviceSession *)pArg)->getId());
    delete (MobileDeviceSession *)pArg;
    return THREAD_OK;
 }
@@ -89,9 +89,9 @@ MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, struct sockaddr *addr)
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
    m_hSocket = hSocket;
-   m_dwIndex = INVALID_INDEX;
-   m_iState = SESSION_STATE_INIT;
-   m_pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+   m_id = -1;
+   m_state = SESSION_STATE_INIT;
+   m_pMsgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
    m_pCtx = NULL;
    m_hWriteThread = INVALID_THREAD_HANDLE;
    m_hProcessingThread = INVALID_THREAD_HANDLE;
@@ -154,7 +154,7 @@ void MobileDeviceSession::debugPrintf(int level, const TCHAR *format, ...)
       va_start(args, format);
       _vsntprintf(buffer, 4096, format, args);
       va_end(args);
-		DbgPrintf(level, _T("[MDSN-%d] %s"), m_dwIndex, buffer);
+		DbgPrintf(level, _T("[MDSN-%d] %s"), m_id, buffer);
    }
 }
 
@@ -163,113 +163,62 @@ void MobileDeviceSession::debugPrintf(int level, const TCHAR *format, ...)
  */
 void MobileDeviceSession::readThread()
 {
-	UINT32 msgBufferSize = 1024;
-   CSCP_MESSAGE *pRawMsg;
-   CSCPMessage *pMsg;
-   BYTE *pDecryptionBuffer = NULL;
-   TCHAR szBuffer[256];
-   int iErr;
-
-   // Initialize raw message receiving function
-   RecvNXCPMessage(0, NULL, m_pMsgBuffer, 0, NULL, NULL, 0);
-
-   pRawMsg = (CSCP_MESSAGE *)malloc(msgBufferSize);
-#ifdef _WITH_ENCRYPTION
-   pDecryptionBuffer = (BYTE *)malloc(msgBufferSize);
-#endif
+   SocketMessageReceiver receiver(m_hSocket, 4096, MAX_MSG_SIZE);
    while(1)
    {
-		// Shrink buffer after receiving large message
-		if (msgBufferSize > 131072)
-		{
-			msgBufferSize = 131072;
-		   pRawMsg = (CSCP_MESSAGE *)realloc(pRawMsg, msgBufferSize);
-			if (pDecryptionBuffer != NULL)
-			   pDecryptionBuffer = (BYTE *)realloc(pDecryptionBuffer, msgBufferSize);
-		}
-
-      if ((iErr = RecvNXCPMessageEx(m_hSocket, &pRawMsg, m_pMsgBuffer, &msgBufferSize, 
-		                              &m_pCtx, (pDecryptionBuffer != NULL) ? &pDecryptionBuffer : NULL,
-												900000, MAX_MSG_SIZE)) <= 0)  // timeout 15 minutes
-		{
-         debugPrintf(5, _T("RecvNXCPMessageEx failed (%d)"), iErr);
-         break;
-      }
-
-      // Receive timeout
-      if (iErr == 3)
-      {
-         debugPrintf(5, _T("RecvNXCPMessageEx: receive timeout"));
-         break;
-      }
-
-      // Check if message is too large
-      if (iErr == 1)
-      {
-         debugPrintf(4, _T("Received message %s is too large (%d bytes)"),
-                     NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
-                     ntohl(pRawMsg->dwSize));
-         continue;
-      }
+      MessageReceiverResult result;
+      NXCPMessage *msg = receiver.readMessage(900000, &result);
 
       // Check for decryption error
-      if (iErr == 2)
+      if (result == MSGRECV_DECRYPTION_FAILURE)
       {
          debugPrintf(4, _T("Unable to decrypt received message"));
          continue;
       }
 
-      // Check that actual received packet size is equal to encoded in packet
-      if ((int)ntohl(pRawMsg->dwSize) != iErr)
+      // Receive error
+      if (msg == NULL)
       {
-         debugPrintf(4, _T("Actual message size doesn't match wSize value (%d,%d)"), iErr, ntohl(pRawMsg->dwSize));
-         continue;   // Bad packet, wait for next
+         debugPrintf(5, _T("readThread: message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
+         break;
       }
 
       if (g_debugLevel >= 8)
       {
-         String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
+         String msgDump = NXCPMessage::dump(receiver.getRawMessageBuffer(), NXCP_VERSION);
          debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
       }
 
-      WORD wFlags = ntohs(pRawMsg->wFlags);
-      if (!(wFlags & MF_BINARY))
+      TCHAR szBuffer[256];
+      if ((msg->getCode() == CMD_SESSION_KEY) && (msg->getId() == m_dwEncryptionRqId))
       {
-         // Create message object from raw message
-         pMsg = new CSCPMessage(pRawMsg);
-         if ((pMsg->GetCode() == CMD_SESSION_KEY) && (pMsg->GetId() == m_dwEncryptionRqId))
-         {
-		      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
-            m_dwEncryptionResult = SetupEncryptionContext(pMsg, &m_pCtx, NULL, g_pServerKey, NXCP_VERSION);
-            ConditionSet(m_condEncryptionSetup);
-            m_dwEncryptionRqId = 0;
-            delete pMsg;
-         }
-         else if (pMsg->GetCode() == CMD_KEEPALIVE)
-			{
-		      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer));
-				respondToKeepalive(pMsg->GetId());
-				delete pMsg;
-			}
-			else
-         {
-            m_pMessageQueue->Put(pMsg);
-         }
+	      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
+         m_dwEncryptionResult = SetupEncryptionContext(msg, &m_pCtx, NULL, g_pServerKey, NXCP_VERSION);
+         ConditionSet(m_condEncryptionSetup);
+         m_dwEncryptionRqId = 0;
+         delete msg;
+      }
+      else if (msg->getCode() == CMD_KEEPALIVE)
+		{
+	      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
+			respondToKeepalive(msg->getId());
+			delete msg;
+		}
+		else
+      {
+         m_pMessageQueue->Put(msg);
       }
    }
-   if (iErr < 0)
-      nxlog_write(MSG_MD_SESSION_CLOSED, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
-   free(pRawMsg);
-#ifdef _WITH_ENCRYPTION
-   free(pDecryptionBuffer);
-#endif
 
    // Notify other threads to exit
-	while((pRawMsg = (CSCP_MESSAGE *)m_pSendQueue->Get()) != NULL)
-		free(pRawMsg);
+   NXCP_MESSAGE *rawMsg;
+	while((rawMsg = (NXCP_MESSAGE *)m_pSendQueue->Get()) != NULL)
+		free(rawMsg);
    m_pSendQueue->Put(INVALID_POINTER_VALUE);
-	while((pMsg = (CSCPMessage *)m_pMessageQueue->Get()) != NULL)
-		delete pMsg;
+
+   NXCPMessage *msg;
+	while((msg = (NXCPMessage *)m_pMessageQueue->Get()) != NULL)
+		delete msg;
    m_pMessageQueue->Put(INVALID_POINTER_VALUE);
 
    // Wait for other threads to finish
@@ -286,7 +235,7 @@ void MobileDeviceSession::readThread()
       } while(m_dwRefCount > 0);
    }
 
-	WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szHostName, 0, _T("Mobile device logged out (client: %s)"), m_szClientInfo);
+	WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szHostName, m_id, 0, _T("Mobile device logged out (client: %s)"), m_szClientInfo);
    debugPrintf(3, _T("Session closed"));
 }
 
@@ -295,26 +244,26 @@ void MobileDeviceSession::readThread()
  */
 void MobileDeviceSession::writeThread()
 {
-   CSCP_MESSAGE *pRawMsg;
-   CSCP_ENCRYPTED_MESSAGE *pEnMsg;
+   NXCP_MESSAGE *pRawMsg;
+   NXCP_ENCRYPTED_MESSAGE *pEnMsg;
    TCHAR szBuffer[128];
    BOOL bResult;
 
    while(1)
    {
-      pRawMsg = (CSCP_MESSAGE *)m_pSendQueue->GetOrBlock();
+      pRawMsg = (NXCP_MESSAGE *)m_pSendQueue->GetOrBlock();
       if (pRawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-		if (ntohs(pRawMsg->wCode) != CMD_ADM_MESSAGE)
-			debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer));
+		if (ntohs(pRawMsg->code) != CMD_ADM_MESSAGE)
+			debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(pRawMsg->code), szBuffer));
 
       if (m_pCtx != NULL)
       {
-         pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
+         pEnMsg = m_pCtx->encryptMessage(pRawMsg);
          if (pEnMsg != NULL)
          {
-            bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));
+            bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
             free(pEnMsg);
          }
          else
@@ -324,7 +273,7 @@ void MobileDeviceSession::writeThread()
       }
       else
       {
-         bResult = (SendEx(m_hSocket, (const char *)pRawMsg, ntohl(pRawMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->dwSize));
+         bResult = (SendEx(m_hSocket, (const char *)pRawMsg, ntohl(pRawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->size));
       }
       free(pRawMsg);
 
@@ -342,48 +291,48 @@ void MobileDeviceSession::writeThread()
  */
 void MobileDeviceSession::processingThread()
 {
-   CSCPMessage *pMsg;
+   NXCPMessage *msg;
    TCHAR szBuffer[128];
    UINT32 i;
 	int status;
 
    while(1)
    {
-      pMsg = (CSCPMessage *)m_pMessageQueue->GetOrBlock();
-      if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
+      msg = (NXCPMessage *)m_pMessageQueue->GetOrBlock();
+      if (msg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-      m_wCurrentCmd = pMsg->GetCode();
+      m_wCurrentCmd = msg->getCode();
       debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(m_wCurrentCmd, szBuffer));
-      if (!m_isAuthenticated && 
+      if (!m_isAuthenticated &&
           (m_wCurrentCmd != CMD_LOGIN) &&
 			 (m_wCurrentCmd != CMD_GET_SERVER_INFO) &&
           (m_wCurrentCmd != CMD_REQUEST_ENCRYPTION))
       {
-         delete pMsg;
+         delete msg;
          continue;
       }
 
-      m_iState = SESSION_STATE_PROCESSING;
+      m_state = SESSION_STATE_PROCESSING;
       switch(m_wCurrentCmd)
       {
          case CMD_GET_SERVER_INFO:
-            sendServerInfo(pMsg->GetId());
+            sendServerInfo(msg->getId());
             break;
          case CMD_LOGIN:
-            login(pMsg);
+            login(msg);
             break;
          case CMD_REQUEST_ENCRYPTION:
-            setupEncryption(pMsg);
+            setupEncryption(msg);
             break;
 			case CMD_REPORT_DEVICE_INFO:
-				updateDeviceInfo(pMsg);
+				updateDeviceInfo(msg);
 				break;
 			case CMD_REPORT_DEVICE_STATUS:
-				updateDeviceStatus(pMsg);
+				updateDeviceStatus(msg);
 				break;
          case CMD_PUSH_DCI_DATA:
-            pushData(pMsg);
+            pushData(msg);
             break;
          default:
             // Pass message to loaded modules
@@ -391,12 +340,12 @@ void MobileDeviceSession::processingThread()
 				{
 					if (g_pModuleList[i].pfMobileDeviceCommandHandler != NULL)
 					{
-						status = g_pModuleList[i].pfMobileDeviceCommandHandler(m_wCurrentCmd, pMsg, this);
+						status = g_pModuleList[i].pfMobileDeviceCommandHandler(m_wCurrentCmd, msg, this);
 						if (status != NXMOD_COMMAND_IGNORED)
 						{
 							if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
 							{
-								pMsg = NULL;	// Prevent deletion
+								msg = NULL;	// Prevent deletion
 								m_dwRefCount++;
 							}
 							break;   // Message was processed by the module
@@ -405,17 +354,17 @@ void MobileDeviceSession::processingThread()
 				}
             if (i == g_dwNumModules)
             {
-               CSCPMessage response;
+               NXCPMessage response;
 
-               response.SetId(pMsg->GetId());
-               response.SetCode(CMD_REQUEST_COMPLETED);
-               response.SetVariable(VID_RCC, RCC_NOT_IMPLEMENTED);
+               response.setId(msg->getId());
+               response.setCode(CMD_REQUEST_COMPLETED);
+               response.setField(VID_RCC, RCC_NOT_IMPLEMENTED);
                sendMessage(&response);
             }
             break;
       }
-      delete pMsg;
-      m_iState = m_isAuthenticated ? SESSION_STATE_IDLE : SESSION_STATE_INIT;
+      delete msg;
+      m_state = m_isAuthenticated ? SESSION_STATE_IDLE : SESSION_STATE_INIT;
    }
 }
 
@@ -424,35 +373,35 @@ void MobileDeviceSession::processingThread()
  */
 void MobileDeviceSession::respondToKeepalive(UINT32 dwRqId)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
 
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_RCC, RCC_SUCCESS);
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(dwRqId);
+   msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
 
 /**
  * Send message to client
  */
-void MobileDeviceSession::sendMessage(CSCPMessage *msg)
+void MobileDeviceSession::sendMessage(NXCPMessage *msg)
 {
    TCHAR szBuffer[128];
    BOOL bResult;
 
-	debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->GetCode(), szBuffer));
-	CSCP_MESSAGE *pRawMsg = msg->createMessage();
+	debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
+	NXCP_MESSAGE *pRawMsg = msg->createMessage();
    if (g_debugLevel >= 8)
    {
-      String msgDump = CSCPMessage::dump(pRawMsg, NXCP_VERSION);
+      String msgDump = NXCPMessage::dump(pRawMsg, NXCP_VERSION);
       debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
    }
    if (m_pCtx != NULL)
    {
-      CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(m_pCtx, pRawMsg);
+      NXCP_ENCRYPTED_MESSAGE *pEnMsg = m_pCtx->encryptMessage(pRawMsg);
       if (pEnMsg != NULL)
       {
-         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));
+         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
          free(pEnMsg);
       }
       else
@@ -462,7 +411,7 @@ void MobileDeviceSession::sendMessage(CSCPMessage *msg)
    }
    else
    {
-      bResult = (SendEx(m_hSocket, (const char *)pRawMsg, ntohl(pRawMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->dwSize));
+      bResult = (SendEx(m_hSocket, (const char *)pRawMsg, ntohl(pRawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->size));
    }
    free(pRawMsg);
 
@@ -478,11 +427,11 @@ void MobileDeviceSession::sendMessage(CSCPMessage *msg)
  */
 void MobileDeviceSession::sendServerInfo(UINT32 dwRqId)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
 
    // Prepare response message
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(dwRqId);
 
 	// Generate challenge for certificate authentication
 #ifdef _WITH_ENCRYPTION
@@ -492,11 +441,11 @@ void MobileDeviceSession::sendServerInfo(UINT32 dwRqId)
 #endif
 
    // Fill message with server info
-   msg.SetVariable(VID_RCC, RCC_SUCCESS);
-   msg.SetVariable(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
-   msg.SetVariable(VID_SERVER_ID, (BYTE *)&g_qwServerId, sizeof(QWORD));
-   msg.SetVariable(VID_PROTOCOL_VERSION, (UINT32)MOBILE_DEVICE_PROTOCOL_VERSION);
-	msg.SetVariable(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
+   msg.setField(VID_RCC, RCC_SUCCESS);
+   msg.setField(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
+   msg.setField(VID_SERVER_ID, (BYTE *)&g_qwServerId, sizeof(QWORD));
+   msg.setField(VID_PROTOCOL_VERSION, (UINT32)MOBILE_DEVICE_PROTOCOL_VERSION);
+	msg.setField(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
 
    // Send response
    sendMessage(&msg);
@@ -505,9 +454,9 @@ void MobileDeviceSession::sendServerInfo(UINT32 dwRqId)
 /**
  * Authenticate client
  */
-void MobileDeviceSession::login(CSCPMessage *pRequest)
+void MobileDeviceSession::login(NXCPMessage *pRequest)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    TCHAR szLogin[MAX_USER_NAME], szPassword[1024];
 	int nAuthType;
    bool changePasswd = false, intruderLockout = false;
@@ -517,33 +466,33 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
 #endif
 
    // Prepare response message
-   msg.SetCode(CMD_LOGIN_RESP);
-   msg.SetId(pRequest->GetId());
+   msg.setCode(CMD_LOGIN_RESP);
+   msg.setId(pRequest->getId());
 
    // Get client info string
    if (pRequest->isFieldExist(VID_CLIENT_INFO))
    {
       TCHAR szClientInfo[32], szOSInfo[32], szLibVersion[16];
-      
-      pRequest->GetVariableStr(VID_CLIENT_INFO, szClientInfo, 32);
-      pRequest->GetVariableStr(VID_OS_INFO, szOSInfo, 32);
-      pRequest->GetVariableStr(VID_LIBNXCL_VERSION, szLibVersion, 16);
+
+      pRequest->getFieldAsString(VID_CLIENT_INFO, szClientInfo, 32);
+      pRequest->getFieldAsString(VID_OS_INFO, szOSInfo, 32);
+      pRequest->getFieldAsString(VID_LIBNXCL_VERSION, szLibVersion, 16);
       _sntprintf(m_szClientInfo, 96, _T("%s (%s; libnxcl %s)"),
                  szClientInfo, szOSInfo, szLibVersion);
    }
 
    if (!m_isAuthenticated)
    {
-      pRequest->GetVariableStr(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
-		nAuthType = (int)pRequest->GetVariableShort(VID_AUTH_TYPE);
-		UINT32 userRights;
+      pRequest->getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
+		nAuthType = (int)pRequest->getFieldAsUInt16(VID_AUTH_TYPE);
+		UINT64 userRights;
 		switch(nAuthType)
 		{
 			case NETXMS_AUTH_TYPE_PASSWORD:
 #ifdef UNICODE
-				pRequest->GetVariableStr(VID_PASSWORD, szPassword, 256);
+				pRequest->getFieldAsString(VID_PASSWORD, szPassword, 256);
 #else
-				pRequest->GetVariableStrUTF8(VID_PASSWORD, szPassword, 1024);
+				pRequest->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
 #endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
 													 &userRights, &changePasswd, &intruderLockout, false);
@@ -556,7 +505,7 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
 					BYTE signature[256];
 					UINT32 dwSigLen;
 
-					dwSigLen = pRequest->GetVariableBinary(VID_SIGNATURE, signature, 256);
+					dwSigLen = pRequest->getFieldAsBinary(VID_SIGNATURE, signature, 256);
 					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,
 														 m_challenge, &m_dwUserId, &userRights,
 														 &changePasswd, &intruderLockout, false);
@@ -580,56 +529,56 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
 			if (userRights & SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN)
 			{
 				TCHAR deviceId[MAX_OBJECT_NAME] = _T("");
-				pRequest->GetVariableStr(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
+				pRequest->getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
 				MobileDevice *md = FindMobileDeviceByDeviceID(deviceId);
 				if (md != NULL)
 				{
-					m_deviceObjectId = md->Id();
+					m_deviceObjectId = md->getId();
 					m_isAuthenticated = true;
 					_sntprintf(m_szUserName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_szHostName);
-					msg.SetVariable(VID_RCC, RCC_SUCCESS);
-					msg.SetVariable(VID_USER_SYS_RIGHTS, userRights);
-					msg.SetVariable(VID_USER_ID, m_dwUserId);
-					msg.SetVariable(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
-					msg.SetVariable(VID_DBCONN_STATUS, (WORD)((g_dwFlags & AF_DB_CONNECTION_LOST) ? 0 : 1));
-					msg.SetVariable(VID_ZONING_ENABLED, (WORD)((g_dwFlags & AF_ENABLE_ZONING) ? 1 : 0));
+					msg.setField(VID_RCC, RCC_SUCCESS);
+					msg.setField(VID_USER_SYS_RIGHTS, userRights);
+					msg.setField(VID_USER_ID, m_dwUserId);
+					msg.setField(VID_CHANGE_PASSWD_FLAG, (WORD)changePasswd);
+					msg.setField(VID_DBCONN_STATUS, (WORD)((g_flags & AF_DB_CONNECTION_LOST) ? 0 : 1));
+					msg.setField(VID_ZONING_ENABLED, (WORD)((g_flags & AF_ENABLE_ZONING) ? 1 : 0));
 					debugPrintf(3, _T("User %s authenticated as mobile device"), m_szUserName);
-					WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szHostName, 0,
+					WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_szHostName, m_id, 0,
 									  _T("Mobile device logged in as user \"%s\" (client info: %s)"), szLogin, m_szClientInfo);
 				}
 				else
 				{
 					debugPrintf(3, _T("Mobile device object with device ID \"%s\" not found"), deviceId);
-					msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-					WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, 0,
+					msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+					WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, m_id, 0,
 									  _T("Mobile device login as user \"%s\" failed - mobile device object not found (client info: %s)"),
 									  szLogin, m_szClientInfo);
 				}
 			}
 			else
 			{
-				msg.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
-				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, 0,
+				msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, m_id, 0,
 								  _T("Mobile device login as user \"%s\" failed - user does not have mobile device login rights (client info: %s)"),
 								  szLogin, m_szClientInfo);
 			}
       }
       else
       {
-         msg.SetVariable(VID_RCC, dwResult);
-			WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, 0,
+         msg.setField(VID_RCC, dwResult);
+			WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, m_id, 0,
 			              _T("Mobile device login as user \"%s\" failed with error code %d (client info: %s)"),
 							  szLogin, dwResult, m_szClientInfo);
 			if (intruderLockout)
 			{
-				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, 0,
+				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_szHostName, m_id, 0,
 								  _T("User account \"%s\" temporary disabled due to excess count of failed authentication attempts"), szLogin);
 			}
       }
    }
    else
    {
-      msg.SetVariable(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+      msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
    }
 
    // Send response
@@ -639,33 +588,33 @@ void MobileDeviceSession::login(CSCPMessage *pRequest)
 /**
  * Setup encryption with client
  */
-void MobileDeviceSession::setupEncryption(CSCPMessage *request)
+void MobileDeviceSession::setupEncryption(NXCPMessage *request)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
 
 #ifdef _WITH_ENCRYPTION
-	m_dwEncryptionRqId = request->GetId();
+	m_dwEncryptionRqId = request->getId();
    m_dwEncryptionResult = RCC_TIMEOUT;
    if (m_condEncryptionSetup == INVALID_CONDITION_HANDLE)
       m_condEncryptionSetup = ConditionCreate(FALSE);
 
    // Send request for session key
-	PrepareKeyRequestMsg(&msg, g_pServerKey, request->GetVariableShort(VID_USE_X509_KEY_FORMAT) != 0);
-	msg.SetId(request->GetId());
+	PrepareKeyRequestMsg(&msg, g_pServerKey, request->getFieldAsUInt16(VID_USE_X509_KEY_FORMAT) != 0);
+	msg.setId(request->getId());
    sendMessage(&msg);
-   msg.deleteAllVariables();
+   msg.deleteAllFields();
 
    // Wait for encryption setup
    ConditionWait(m_condEncryptionSetup, 30000);
 
    // Send response
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-	msg.SetId(request->GetId());
-   msg.SetVariable(VID_RCC, m_dwEncryptionResult);
+   msg.setCode(CMD_REQUEST_COMPLETED);
+	msg.setId(request->getId());
+   msg.setField(VID_RCC, m_dwEncryptionResult);
 #else    /* _WITH_ENCRYPTION not defined */
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(request->GetId());
-   msg.SetVariable(VID_RCC, RCC_NO_ENCRYPTION_SUPPORT);
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+   msg.setField(VID_RCC, RCC_NO_ENCRYPTION_SUPPORT);
 #endif
 
    sendMessage(&msg);
@@ -674,23 +623,23 @@ void MobileDeviceSession::setupEncryption(CSCPMessage *request)
 /**
  * Update device system information
  */
-void MobileDeviceSession::updateDeviceInfo(CSCPMessage *request)
+void MobileDeviceSession::updateDeviceInfo(NXCPMessage *request)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
 
    // Prepare response message
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-	msg.SetId(request->GetId());
+   msg.setCode(CMD_REQUEST_COMPLETED);
+	msg.setId(request->getId());
 
 	MobileDevice *device = (MobileDevice *)FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE);
 	if (device != NULL)
 	{
 		device->updateSystemInfo(request);
-		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		msg.setField(VID_RCC, RCC_SUCCESS);
 	}
 	else
 	{
-		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
    sendMessage(&msg);
@@ -699,23 +648,23 @@ void MobileDeviceSession::updateDeviceInfo(CSCPMessage *request)
 /**
  * Update device status
  */
-void MobileDeviceSession::updateDeviceStatus(CSCPMessage *request)
+void MobileDeviceSession::updateDeviceStatus(NXCPMessage *request)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
 
    // Prepare response message
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-	msg.SetId(request->GetId());
+   msg.setCode(CMD_REQUEST_COMPLETED);
+	msg.setId(request->getId());
 
 	MobileDevice *device = (MobileDevice *)FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE);
 	if (device != NULL)
 	{
 		device->updateStatus(request);
-		msg.SetVariable(VID_RCC, RCC_SUCCESS);
+		msg.setField(VID_RCC, RCC_SUCCESS);
 	}
 	else
 	{
-		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
    sendMessage(&msg);
@@ -724,17 +673,17 @@ void MobileDeviceSession::updateDeviceStatus(CSCPMessage *request)
 /**
  * Push DCI data
  */
-void MobileDeviceSession::pushData(CSCPMessage *request)
+void MobileDeviceSession::pushData(NXCPMessage *request)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
 
-   msg.SetCode(CMD_REQUEST_COMPLETED);
-   msg.SetId(request->GetId());
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
 
 	MobileDevice *device = (MobileDevice *)FindObjectById(m_deviceObjectId, OBJECT_MOBILEDEVICE);
 	if (device != NULL)
 	{
-      int count = (int)request->GetVariableLong(VID_NUM_ITEMS);
+      int count = (int)request->getFieldAsUInt32(VID_NUM_ITEMS);
       if (count > 0)
       {
          DCItem **dciList = (DCItem **)malloc(sizeof(DCItem *) * count);
@@ -749,7 +698,7 @@ void MobileDeviceSession::pushData(CSCPMessage *request)
             ok = false;
 
             // find DCI by ID or name (if ID==0)
-            UINT32 dciId = request->GetVariableLong(varId++);
+            UINT32 dciId = request->getFieldAsUInt32(varId++);
 		      DCObject *pItem;
             if (dciId != 0)
             {
@@ -758,7 +707,7 @@ void MobileDeviceSession::pushData(CSCPMessage *request)
             else
             {
                TCHAR name[MAX_PARAM_NAME];
-               request->GetVariableStr(varId++, name, MAX_PARAM_NAME);
+               request->getFieldAsString(varId++, name, MAX_PARAM_NAME);
                pItem = device->getDCObjectByName(name);
             }
 
@@ -767,17 +716,17 @@ void MobileDeviceSession::pushData(CSCPMessage *request)
                if (pItem->getDataSource() == DS_PUSH_AGENT)
                {
                   dciList[i] = (DCItem *)pItem;
-                  valueList[i] = request->GetVariableStr(varId++);
+                  valueList[i] = request->getFieldAsString(varId++);
                   ok = true;
                }
                else
                {
-                  msg.SetVariable(VID_RCC, RCC_NOT_PUSH_DCI);
+                  msg.setField(VID_RCC, RCC_NOT_PUSH_DCI);
                }
             }
             else
             {
-               msg.SetVariable(VID_RCC, RCC_INVALID_DCI_ID);
+               msg.setField(VID_RCC, RCC_INVALID_DCI_ID);
             }
          }
 
@@ -786,14 +735,14 @@ void MobileDeviceSession::pushData(CSCPMessage *request)
          {
             time_t t = 0;
             int ft = request->getFieldType(VID_TIMESTAMP);
-            if (ft == CSCP_DT_INTEGER)
+            if (ft == NXCP_DT_INT32)
             {
-               t = (time_t)request->GetVariableLong(VID_TIMESTAMP);
+               t = (time_t)request->getFieldAsUInt32(VID_TIMESTAMP);
             }
-            else if (ft == CSCP_DT_STRING)
+            else if (ft == NXCP_DT_STRING)
             {
                char ts[256];
-               request->GetVariableStrA(VID_TIMESTAMP, ts, 256);
+               request->getFieldAsMBString(VID_TIMESTAMP, ts, 256);
 
                struct tm timeBuff;
                if (strptime(ts, "%Y/%m/%d %H:%M:%S", &timeBuff) != NULL)
@@ -814,11 +763,11 @@ void MobileDeviceSession::pushData(CSCPMessage *request)
 			      device->processNewDCValue(dciList[i], t, valueList[i]);
 			      dciList[i]->setLastPollTime(t);
             }
-            msg.SetVariable(VID_RCC, RCC_SUCCESS);
+            msg.setField(VID_RCC, RCC_SUCCESS);
          }
          else
          {
-            msg.SetVariable(VID_FAILED_DCI_INDEX, i - 1);
+            msg.setField(VID_FAILED_DCI_INDEX, i - 1);
          }
 
          // Cleanup
@@ -829,12 +778,12 @@ void MobileDeviceSession::pushData(CSCPMessage *request)
       }
       else
       {
-         msg.SetVariable(VID_RCC, RCC_INVALID_ARGUMENT);
+         msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
       }
    }
 	else
 	{
-		msg.SetVariable(VID_RCC, RCC_INVALID_OBJECT_ID);
+		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
    sendMessage(&msg);

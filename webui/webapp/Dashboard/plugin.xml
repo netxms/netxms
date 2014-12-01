@@ -295,6 +295,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.DciSummaryTable"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.DciSummaryTable#0"
+            name="%page.name.DciSummaryTable">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.DciSummaryTableConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.adapters">

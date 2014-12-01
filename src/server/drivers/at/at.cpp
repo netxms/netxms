@@ -104,7 +104,7 @@ InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMa
       bool isGS950 = attributes->getBoolean(_T(".alliedTelesis.isGS950"), false);
 
       // Find physical ports
-      for(int i = 0; i < ifList->getSize(); i++)
+      for(int i = 0; i < ifList->size(); i++)
       {
          NX_INTERFACE_INFO *iface = ifList->get(i);
          if (isGS950)
@@ -135,7 +135,7 @@ InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMa
             request->bindVariable(new SNMP_Variable(oid));
 
             SNMP_PDU *response;
-            UINT32 rcc = snmp->doRequest(request, &response, g_dwSNMPTimeout, 3);
+            UINT32 rcc = snmp->doRequest(request, &response, g_snmpTimeout, 3);
 	         delete request;
             if (rcc == SNMP_ERR_SUCCESS)
             {
@@ -217,7 +217,7 @@ static void ParsePortList(TCHAR *ports, VlanInfo *vlan, UINT32 slot)
 VlanList *AlliedTelesisDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    VlanList *list = NetworkDeviceDriver::getVlans(snmp, attributes, driverData);
-   if ((list != NULL) && (list->getSize() > 0))
+   if ((list != NULL) && (list->size() > 0))
       return list;   // retrieved from standard MIBs
 
    if (list == NULL)
@@ -226,7 +226,7 @@ VlanList *AlliedTelesisDriver::getVlans(SNMP_Transport *snmp, StringMap *attribu
    if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.207.8.33.8.1.1.2"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
 		goto failure;
 
-   for(int i = 0; i < list->getSize(); i++)
+   for(int i = 0; i < list->size(); i++)
    {
       VlanInfo *vlan = list->get(i);
 
@@ -239,7 +239,7 @@ VlanList *AlliedTelesisDriver::getVlans(SNMP_Transport *snmp, StringMap *attribu
       request->bindVariable(new SNMP_Variable(oid));
       
       SNMP_PDU *response;
-      if (snmp->doRequest(request, &response, g_dwSNMPTimeout, 3) == SNMP_ERR_SUCCESS)
+      if (snmp->doRequest(request, &response, g_snmpTimeout, 3) == SNMP_ERR_SUCCESS)
       {
          if ((response->getNumVariables() == 2) && 
              (response->getVariable(0)->getType() != ASN_NO_SUCH_OBJECT) &&

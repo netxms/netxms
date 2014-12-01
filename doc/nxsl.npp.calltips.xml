@@ -1,0 +1,960 @@
+<?xml version="1.0" encoding="Windows-1252" ?>
+<NotepadPlus>
+	<AutoComplete language="NXSL">
+		<Environment ignoreCase="no" startFunc="(" stopFunc=")" paramSeparator="," terminal=";" />
+		
+		<KeyWord name="abs" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Returns the absolute value of number.
+			
+			Returns
+			  Absolute value of number.">
+				<Param name="number" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="AddrInRange" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Checks if given IP address is within given range (including both bounding addresses).
+			  All IP addresses should be specified as strings.
+			
+			Returns
+			  TRUE if address is within given range, FALSE otherwise.">
+				<Param name="address, start, end" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="AddrInSubnet" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Checks if given IP address is within given subnet (including subnet and broadcast addresses).
+			
+			Returns
+			  TRUE if address is within given subnet, FALSE otherwise.">
+				<Param name="address, subnet, mask" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="AgentReadParameter" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Read parameter's value directly from agent on given node.
+			
+			Returns
+			  Value of given parameter on success and NULL on failure.">
+				<Param name="node, name" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="AgentReadTable" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  
+			
+			Returns
+			  ">
+				<Param name="" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="BindObject" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Bind all NetXMS objects that can be bound from console (nodes, subnets, clusters, and another containers) to container objects.
+			
+			Returns
+			  Nothing.">
+				<Param name="parent, child" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="ceil" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Round up value.
+			
+			Returns
+			  The smallest integral value that is not less than x.">
+				<Param name="x" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="chr" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Return a character from it's UNICODE value.
+			
+			Returns
+			  A character.">
+				<Param name="integer" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="classof" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Returns the class name for given object.
+			
+			Returns
+			  Object's class name. If parameter passed to this function is not an object, runtime error will be generated.">
+				<Param name="object" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="CreateContainer" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Create container object.
+			
+			Returns
+			  Reference to newly created object.">
+				<Param name="parent, name" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="CreateDCI" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Create new DCI.
+			
+			Returns
+			  DCI object on success or NULL on failure.">
+				<Param name="node, source, name, description, dataType, pollingInterval, retentionTime" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="CreateSNMPTransport" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Create new SNMP transport object for specific node. The node must support SNMP.
+			
+			Returns
+			  Object of class SNMP_Transport or NULL on failure.">
+				<Param name="node" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="DeleteCustomAttribute" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Delete node's custom attribute.
+			
+			Returns
+			  Nothing.">
+				<Param name="node, attributeName" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="DeleteObject" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Delete object.
+			
+			Returns
+			  Nothing.">
+				<Param name="object" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="d2x" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Returns the hexidecimal value of a decimal.
+			
+			Returns
+			  Hexadecimal value of number.">
+				<Param name="number [,padding]" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="exit" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Exit from script.
+			
+			Returns
+			  Nothing.">
+				<Param name="" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="exp" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Returns e (the base of natural logarithms) raised to a power.
+			
+			Returns
+			  e^power expressed as a real number.">
+				<Param name="power" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="FindDCIByDescription" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Find DCI by description (search is case-insensetive).
+			
+			Returns
+			  DCI ID on success or 0 if DCI with matching description was not found.">
+				<Param name="node, description" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="FindDCIByName" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Find DCI by name (search is case-insensetive).
+			
+			Returns
+			  DCI ID on success or 0 if DCI with matching name was not found.">
+				<Param name="node, description" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="FindNodeObject" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Find node object by node id or node name.
+			
+			Returns
+			  Node object with given id or name on success or NULL on failure (either because node with given name/id does not exist, or access to it was denied).">
+				<Param name="node, id" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="FindObject" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Find NetXMS object by object id or name.
+			
+			Returns
+			  Node object with given id or name on success or NULL on failure (either because object with given name/id does not exist, or access to it was denied).">
+				<Param name="id, node" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="FindSituation" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Find situation instance either by situation object name and instance name or by situation object ID and instance name (name search is case-insensetive).
+			
+			Returns
+			  Situation object with given ID or name on success or NULL on failure.">
+				<Param name="id, instance" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="floor" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Round down value.
+			
+			Returns
+			  The largest integral value not greater than x.">
+				<Param name="x" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="format" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Formats a numeric value.
+			
+			Returns
+			  Formatted numeric value.">
+				<Param name="number, width, precision" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetAvgDCIValue" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get the average value of the DCI for the given period. The DCI value must be of numeric type.
+			
+			Returns
+			  Average value or NULL on failure.">
+				<Param name="node, dciId, from, to" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetConfigurationVariable" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get value of server's configuration variable.
+			
+			Returns
+			  Value of requested variable or specified default value if given variable is not set.">
+				<Param name="variableName, [defaultValue]" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetCustomAttribute" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get value of node's custom attribute.
+			  If attribute name conforms to NXSL identifier naming conventions, it can be accessed directly as node object attribute.
+			  For example &quot;GetCustomAttribute($node, &quot;my_attribute&quot;)&quot; can be changed to &quot;$node-&gt;my_attribute&quot;.
+			
+			Returns
+			  String value of requested custom attribute or NULL if attribute is missing.">
+				<Param name="node, attributeName" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetDCIObject" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get DCI object with given ID.
+			
+			Returns
+			  DCI object with given id on success or NULL on failure (if object with given id does not exist, or access to it was denied).">
+				<Param name="node, id" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetDCIRawValue" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get last raw value (before transformation) of DCI with given ID on given node.
+			
+			Returns
+			  Last raw value (before transformation) for given DCI or NULL if DCI with given ID does not exist or has no collected values.">
+				<Param name="node, id" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetDCIValue" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get last value of DCI with given ID on given node.
+			
+			Returns
+			  Last value for given DCI or NULL if DCI with given ID does not exist or has no collected values.">
+				<Param name="node, id" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetDCIValueByDescription" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get last value of DCI with given description on given node.
+			
+			Returns
+			  Last value for given DCI or NULL if DCI with given description does not exist or has no collected values.">
+				<Param name="node, description" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetDCIValueByName" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get last value of DCI with given name on given node.
+			
+			Returns
+			  Last value for given DCI or NULL if DCI with given name does not exist or has no collected values.">
+				<Param name="node, name" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetEventParameter" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get value of event's named parameter.
+			
+			Returns
+			  String value of requested parameter or NULL if no such parameter exist.">
+				<Param name="event, parameterName" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetInterfaceName" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get interface name by index.
+			
+			Returns
+			  Name of the requested interface or null if not found.">
+				<Param name="obj, index" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetInterfaceObject" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get interface object by index.
+			
+			Returns
+			  An interface object, or null if not found.">
+				<Param name="obj, index" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetMaxDCIValue" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get the maximum value of the DCI for the given period. The DCI value must be of numeric type.
+			
+			Returns
+			  Maximum value or NULL on failure.">
+				<Param name="node, dciId, from, to" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetMinDCIValue" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get the minimum value of the DCI for the given period. The DCI value must be of numeric type.
+			
+			Returns
+			  Minimum value or NULL on failure.">
+				<Param name="node, dciId, from, to" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetNodeInterfaces" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get all interfaces for given node.
+			
+			Returns
+			  Array of objects of class Interface, with first object placed at index 0. End of list indicated by array element with NULL value.">
+				<Param name="node" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetNodeParents" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get accessible parent objects for given node.
+			
+			Returns
+			  Array of objects of class NetObj (generic NetXMS object), with first object placed at index 0.
+			  End of list indicated by array element with NULL value.
+			  This function will never return template or policy objects applied to node.
+			  Return value also affected by trusted nodes settings (see &quot;Security Issues&quot; on wiki for more information).">
+				<Param name="node" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetObjectChildren" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get accessible child objects for given object.
+			
+			Returns
+			  Array of objects of class Node, Interface, or NetObj, with first object placed at index 0.
+			  End of list indicated by array element with NULL value.
+			  Return value also affected by trusted nodes settings (see &quot;Security Issues&quot; on wiki for more information).">
+				<Param name="object" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetObjectParents" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get accessible parent objects for given object.
+			
+			Returns
+			  Array of objects of class NetObj (generic NetXMS object), with first object placed at index 0.
+			  End of list indicated by array element with NULL value.
+			  This function will never return template or policy objects applied to node.
+			  Return value also affected by trusted nodes settings (see &quot;Security Issues&quot; on wiki for more information).">
+				<Param name="object" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetSumDCIValue" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get the sum value of the DCI for the given period. The DCI value must be of numeric type.
+			
+			Returns
+			  Sum value or NULL on failure.">
+				<Param name="node, dciId, from, to" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="GetSituationAttribute" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  
+			
+			Returns
+			  ">
+				<Param name="" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="gmtime" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Converts time in UNIX format (number of seconds since epoch) to calendar date and time broken down into its components, expressed as UTC (or GMT timezone).
+			  Function uses either time given in time argument or current time if time is omitted.
+			
+			Returns
+			  Object of class TIME.">
+				<Param name="time" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="index" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Returns the position of the first occurrence of substring in string at or after position if specifed.
+			  All index values are 1-based (i.e. the first character has index 1, not 0).
+			
+			Returns
+			  Integer value of the position substring was found at, will return 0 if not found.">
+				<Param name="string, substring [,position]" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="inList" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Check if given value is an element of given list.
+			
+			Returns
+			  TRUE if given value is an element of given list, FALSE otherwise.">
+				<Param name="string, separator, value" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="left" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Returns the string of length characters of string, optionally padded with pad character instead of a space.
+			
+			Returns
+			  String of the left length characters.">
+				<Param name="string, length [,pad]" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="length" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Returns the length of string.
+			
+			Returns
+			  Integer length of the string passed to the function.">
+				<Param name="string" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="localtime" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Converts time in UNIX format (number of seconds since epoch) to calendar date and time broken down into its components. Function uses either time given in time argument or current time if time is omitted.
+			
+			Returns
+			  Object of class TIME.">
+				<Param name="time" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="log" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Calculates natural logarithm of given value.
+			
+			Returns
+			  Natural logarithm of x.">
+				<Param name="x" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="log10" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Calculates logarithm of given value to base 10.
+			
+			Returns
+			  Logarithm of x to base 10.">
+				<Param name="x" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="lower" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Converts string to lowercase.
+			
+			Returns
+			  Source string converted to lowercase.">
+				<Param name="string" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="ltrim" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Removes blanks (space and tab characters) from the left side of specified string.
+			
+			Returns
+			  Source string with blanks at the left side removed.">
+				<Param name="string" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="ManageObject" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Set object into managed state. Has no effect if object is already in managed state.
+			
+			Returns
+			  Nothing.">
+				<Param name="object" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="map" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Returns the value which corresponds to a specified key from specified Mapping Table.
+			
+			Returns
+			  Value corresponding for a keyName from tableName.">
+				<Param name="tableName, keyName" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="max" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Returns maximal value from a list of values.
+			
+			Returns
+			  Maximal value of numbers.">
+				<Param name="number1 [,number2] [,number n]" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="min" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Returns minimal value from a list of values.
+			
+			Returns
+			  Minimal value of numbers.">
+				<Param name="number1 [,number2] [,number n]" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="ord" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Convert a character into it's ASCII/Unicode value.
+			  Only processes one character.
+			
+			Returns
+			  An ASCII/Unicode value.">
+				<Param name="character" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="PostEvent" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Post event on behalf of given node.
+			  &quot;...&quot; - 0 or more event-specific parameters.
+			
+			Returns
+			  TRUE if event was posted successfully or FALSE if not.">
+				<Param name="node, event, tag, ..." />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="pow" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Calculates x raised to the power of y.
+			
+			Returns
+			  x raised to the power of y.">
+				<Param name="x, y" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="random" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Generate pseudo random number in given range. Uses c/c++ rand() function.
+			
+			Returns
+			  Random value in range minValue..maxValue.">
+				<Param name="minValue, maxValue" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="RenameObject" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Rename object.
+			
+			Returns
+			  Nothing.">
+				<Param name="object, name" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="right" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Returns the string of length characters of string, optionally padded with pad character instead of blank (space) starting from the right. Padding occurs on the left portion of the string.
+			
+			Returns
+			  String of the right length characters.">
+				<Param name="string, length [,pad]" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="rindex" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Returns the position of the last occurrence of substring in string up to or before position if specifed.
+			
+			Returns
+			  Integer value of the position substring was found at, will return 0 if not found.">
+				<Param name="string, substring [,position]" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="round" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Round floating point value to the nearest integral value or floating point value with given precision.
+			  [precision] - optional number of decimal places to be left. If omited or set to 0, x will be rounded to integral value.
+			
+			Returns
+			  The integral value that is closest to x if precision is omited or set to 0, or floating point value rounded to have given number of decimal places.">
+				<Param name="x [, precision]" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="rtrim" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Removes blanks (space and tab characters) from the right side of specified string.
+			
+			Returns
+			  Source string with blanks at the right side removed.">
+				<Param name="string" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="sleep" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Suspend script execution for given number of milliseconds.
+			
+			Returns
+			  Nothing.">
+				<Param name="milliseconds" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="SecondsToUptime" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Format system uptime in seconds as string in format &quot;n days, hh:mm&quot;.
+			
+			Returns
+			  System uptime in format &quot;n days, hh:mm&quot;.">
+				<Param name="seconds" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="SetCustomAttribute" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Set value of node's custom attribute. If attribute was not defined, it will be created.
+			
+			Returns
+			  Previous value of requested custom attribute or NULL if attribute was not defined before.">
+				<Param name="node, attributeName, value" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="SetEventParameter" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Set value of event's named parameter.
+			
+			Returns
+			  Nothing.">
+				<Param name="event, parameterName, value" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="SetInterfaceExpectedState" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Set expected state for given interface.
+			
+			Returns
+			  Nothing.">
+				<Param name="interface, state" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="SNMPGet" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get the object value from specific node with SNMP GET request.
+			  The node and all SNMP communication details defined by SNMP transport.
+			
+			Returns
+			  Object of class SNMP_VarBind or NULL on failure.">
+				<Param name="transport,oid" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="SNMPGetValue" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get the object value from specific node with SNMP GET request.
+			  The node and all SNMP communication details defined by SNMP transport.
+			  This function is similar to SNMPGet but returns string instead of an SNMP_VarBind object.
+			
+			Returns
+			  String with the value requested or NULL on failure.">
+				<Param name="transport,oid" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="SNMPSet" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Assign a specific value to the given SNMP object for the node.
+			  The node and all SNMP communication details defined by SNMP transport.
+			
+			Returns
+			  TRUE on success, FALSE in case of failure.">
+				<Param name="transport,oid,value,[data type]" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="SNMPWalk" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Get an array of the object values from specific node with SNMP WALK request.
+			  The node and all SNMP communication details defined by SNMP transport.
+			
+			Returns
+			  Array of SNMP_VarBind objects or NULL on failure.">
+				<Param name="transport,oid" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="strftime" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  
+			
+			Returns
+			  ">
+				<Param name="" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="substr" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Extracts the substring from string that begins at the nth character and is of length len.
+			
+			Returns
+			  Extracted substring.">
+				<Param name="string, n[, len]" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="time" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Gets the system time.
+			
+			Returns
+			  System time as number of seconds elapsed since midnight (00:00:00), January 1, 1970, coordinated universal time, according to the system clock (also known as UNIX time).">
+				<Param name="" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="trace" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Writes message to netxms main log at given debug level.
+			
+			Returns
+			  Nothing.">
+				<Param name="debugLevel, message" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="trim" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Removes blanks (space and tab characters) from both sides of specified string.
+			
+			Returns
+			  Source string with blanks at both sides removed.">
+				<Param name="string" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="typeof" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Returns the data type for given value.
+			
+			Returns
+			  data type for given value. Type is returned as lowercase string. The following type names can be returned:
+			    NULL
+			    object
+			    string
+			    real
+			    int32
+			    int64
+			    uint32
+			    uint64">
+				<Param name="value" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="UnbindObject" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Remove (unbind) object from a container.
+			
+			Returns
+			  Nothing.">
+				<Param name="parent, child" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="UnmanageObject" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Set object into unmanaged state. Has no effect if object is already in unmanaged state.
+			
+			Returns
+			  Nothing.">
+				<Param name="object" />
+			</Overload>
+		</KeyWord>
+		
+		<KeyWord name="upper" func="yes">
+			<Overload retVal="" descr="
+			Description
+			  Converts string to uppercase.
+			
+			Returns
+			  Source string converted to uppercase.">
+				<Param name="string" />
+			</Overload>
+		</KeyWord>
+		
+	</AutoComplete>
+</NotepadPlus>

@@ -431,7 +431,7 @@ public:
 NXSL_TimeClass::NXSL_TimeClass()
                :NXSL_Class()
 {
-   _tcscpy(m_szName, _T("TIME"));
+   _tcscpy(m_name, _T("TIME"));
 }
 
 NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
@@ -790,11 +790,9 @@ int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	return 0;
 }
 
-
-//
-// Exit from script
-//
-
+/**
+ * Exit from script
+ */
 int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (argc > 1)
@@ -804,11 +802,9 @@ int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
    return NXSL_STOP_SCRIPT_EXECUTION;
 }
 
-
-//
-// Trim whitespace characters from the string
-//
-
+/**
+ * Trim whitespace characters from the string
+ */
 int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	if (!argv[0]->isString())

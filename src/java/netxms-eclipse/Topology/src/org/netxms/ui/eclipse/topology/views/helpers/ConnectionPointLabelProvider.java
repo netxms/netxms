@@ -29,7 +29,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ConnectionPointType;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.ConnectionPoint;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -75,8 +74,7 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 		String name = cachedObjectNames.get(id);
 		if (name == null)
 		{
-			AbstractObject object = session.findObjectById(id);
-			name = (object != null) ? object.getObjectName() : Messages.get().ConnectionPointLabelProvider_Unknown;
+			name = session.getObjectName(id);
 			cachedObjectNames.put(id, name);
 		}
 		return name;
@@ -117,9 +115,9 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
                case INDIRECT:
                   return Messages.get().ConnectionPointLabelProvider_Indirect;
                case WIRELESS:
-                  return "wireless";
+                  return Messages.get().ConnectionPointLabelProvider_Wireless;
                default:
-                  return "unknown";
+                  return Messages.get().ConnectionPointLabelProvider_Unknown;
 			   }
 		}
 		return null;

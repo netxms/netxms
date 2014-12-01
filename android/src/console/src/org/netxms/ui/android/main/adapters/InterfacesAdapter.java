@@ -5,10 +5,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.android.R;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -84,6 +85,7 @@ public class InterfacesAdapter extends BaseExpandableListAdapter
 		return childPosition;
 	}
 
+	@SuppressLint("InflateParams")
 	private ViewGroup getViewGroupChild(View convertView, ViewGroup parent)
 	{
 		// The parent will be our ListView from the ListActivity 
@@ -105,16 +107,18 @@ public class InterfacesAdapter extends BaseExpandableListAdapter
 		InterfaceDetailsAdapter idAdapter = new InterfaceDetailsAdapter(parent.getContext());
 		idAdapter.setValues((Interface)getChild(groupPosition, childPosition));
 		label.setAdapter(idAdapter);
-
-		//////// TODO: FIX ASAP, REMOVE HARDCODED VALUES!!!
-		final int rowHeightDp = 24;
-		final int rowCount = 13;
-		// convert the dp values to pixels 
-		final float ROW_HEIGHT = context.getResources().getDisplayMetrics().density * rowHeightDp;
-		// set the height of the current grid 
-		label.getLayoutParams().height = Math.round(rowCount * ROW_HEIGHT);
-		//////// TODO: FIX ASAP, REMOVE HARDCODED VALUES!!!
-
+		TextView tv = (TextView)parent.findViewById(R.id.interface_text);
+		int totalHeight = tv != null ? tv.getMeasuredHeight() : 0;
+		for (int i = 0; i < idAdapter.getCount(); i++)
+		{
+			View listItem = idAdapter.getView(i, null, label);
+			listItem.measure(0, 0);
+			totalHeight += listItem.getMeasuredHeight();
+		}
+		ViewGroup.LayoutParams params = label.getLayoutParams();
+		params.height = totalHeight + (label.getDividerHeight() * (idAdapter.getCount() - 1));
+		label.setLayoutParams(params);
+		label.requestLayout();
 		return item;
 	}
 
@@ -144,6 +148,7 @@ public class InterfacesAdapter extends BaseExpandableListAdapter
 		return groupPosition;
 	}
 
+	@SuppressLint("InflateParams")
 	@Override
 	public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent)
 	{
@@ -156,6 +161,7 @@ public class InterfacesAdapter extends BaseExpandableListAdapter
 		TextView tv = (TextView)convertView.findViewById(R.id.interface_text);
 		tv.setText(" " + i.getObjectName());
 		tv.setCompoundDrawablesWithIntrinsicBounds(parent.getResources().getDrawable(getInterfaceStatusIcon(i.getStatus())), null, null, null);
+
 		return convertView;
 	}
 
@@ -171,26 +177,28 @@ public class InterfacesAdapter extends BaseExpandableListAdapter
 		return true;
 	}
 
-	private int getInterfaceStatusIcon(int status)
+	private int getInterfaceStatusIcon(ObjectStatus status)
 	{
 		switch (status)
 		{
-			case Severity.NORMAL:
+			case NORMAL:
 				return R.drawable.status_normal;
-			case Severity.WARNING:
+			case WARNING:
 				return R.drawable.status_warning;
-			case Severity.MINOR:
+			case MINOR:
 				return R.drawable.status_minor;
-			case Severity.MAJOR:
+			case MAJOR:
 				return R.drawable.status_major;
-			case Severity.CRITICAL:
+			case CRITICAL:
 				return R.drawable.status_critical;
-			case Severity.UNKNOWN:
+			case UNKNOWN:
 				return R.drawable.status_unknown;
-			case Severity.UNMANAGED:
+			case UNMANAGED:
 				return R.drawable.status_unmanaged;
-			case Severity.DISABLED:
+			case DISABLED:
 				return R.drawable.status_disabled;
+			case TESTING:
+				return R.drawable.status_unknown;	// TODO: 2014Oct10 Implement corresponding settings section
 		}
 		return R.drawable.status_unknown;
 	}

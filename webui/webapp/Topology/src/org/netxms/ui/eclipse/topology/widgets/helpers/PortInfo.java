@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.eclipse.topology.widgets.helpers;
 
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.Interface;
 
 /**
@@ -13,7 +14,7 @@ public class PortInfo
 	private long interfaceObjectId;
 	private int slot;
 	private int port;
-	private int status;
+	private ObjectStatus status;
 	private int adminState;
 	private int operState;
 	private boolean highlighted;
@@ -36,7 +37,7 @@ public class PortInfo
 	/**
 	 * @return the status
 	 */
-	public int getStatus()
+	public ObjectStatus getStatus()
 	{
 		return status;
 	}
@@ -44,7 +45,7 @@ public class PortInfo
 	/**
 	 * @param status the status to set
 	 */
-	public void setStatus(int status)
+	public void setStatus(ObjectStatus status)
 	{
 		this.status = status;
 	}

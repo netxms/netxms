@@ -37,7 +37,7 @@ static RWLOCK s_objectTxnLock = RWLockCreate();
  */
 void NXCORE_EXPORTABLE ObjectTransactionStart()
 {
-   if (g_dwFlags & AF_ENABLE_OBJECT_TRANSACTIONS)
+   if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
       RWLockReadLock(s_objectTxnLock, INFINITE);
 }
 
@@ -46,7 +46,7 @@ void NXCORE_EXPORTABLE ObjectTransactionStart()
  */
 void NXCORE_EXPORTABLE ObjectTransactionEnd()
 {
-   if (g_dwFlags & AF_ENABLE_OBJECT_TRANSACTIONS)
+   if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
       RWLockUnlock(s_objectTxnLock);
 }
 
@@ -55,7 +55,7 @@ void NXCORE_EXPORTABLE ObjectTransactionEnd()
  */
 void SaveObjects(DB_HANDLE hdb)
 {
-   if (g_dwFlags & AF_ENABLE_OBJECT_TRANSACTIONS)
+   if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
       RWLockWriteLock(s_objectTxnLock, INFINITE);
 
 	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(false);
@@ -67,28 +67,28 @@ void SaveObjects(DB_HANDLE hdb)
          if (object->getRefCount() == 0)
          {
    		   DBBegin(hdb);
-            if (object->deleteFromDB(hdb))
+            if (object->deleteFromDatabase(hdb))
             {
-               DbgPrintf(4, _T("Object %d \"%s\" deleted from database"), object->Id(), object->Name());
+               DbgPrintf(4, _T("Object %d \"%s\" deleted from database"), object->getId(), object->getName());
                DBCommit(hdb);
                NetObjDelete(object);
             }
             else
             {
                DBRollback(hdb);
-               DbgPrintf(4, _T("Call to deleteFromDB() failed for object %s [%d], transaction rollback"), object->Name(), object->Id());
+               DbgPrintf(4, _T("Call to deleteFromDatabase() failed for object %s [%d], transaction rollback"), object->getName(), object->getId());
             }
          }
          else
          {
             DbgPrintf(3, _T("* Syncer * Unable to delete object with id %d because it is being referenced %d time(s)"),
-                      object->Id(), object->getRefCount());
+                      object->getId(), object->getRefCount());
          }
       }
 		else if (object->isModified())
 		{
 		   DBBegin(hdb);
-			if (object->SaveToDB(hdb))
+			if (object->saveToDatabase(hdb))
 			{
 				DBCommit(hdb);
 			}
@@ -99,7 +99,7 @@ void SaveObjects(DB_HANDLE hdb)
 		}
    }
 
-   if (g_dwFlags & AF_ENABLE_OBJECT_TRANSACTIONS)
+   if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
       RWLockUnlock(s_objectTxnLock);
 	delete objects;
 }
@@ -114,7 +114,7 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
    DB_HANDLE hdb;
 
    // Establish separate connection to database if needed
-   if (g_dwFlags & AF_ENABLE_MULTIPLE_DB_CONN)
+   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
    {
 		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
       hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
@@ -140,7 +140,7 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
       if (SleepAndCheckForShutdown(iSyncInterval))
          break;   // Shutdown time has arrived
       WatchdogNotify(dwWatchdogId);
-      if (!(g_dwFlags & AF_DB_CONNECTION_LOST))    // Don't try to save if DB connection is lost
+      if (!(g_flags & AF_DB_CONNECTION_LOST))    // Don't try to save if DB connection is lost
       {
          SaveObjects(hdb);
          SaveUsers(hdb);

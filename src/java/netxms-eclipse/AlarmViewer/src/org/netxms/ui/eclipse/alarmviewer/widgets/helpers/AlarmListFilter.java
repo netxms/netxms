@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.widgets.helpers;
 
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerFilter;
+import java.util.ArrayList;
+import java.util.List;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
@@ -28,62 +28,81 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Filter for alarm list
  */
-public class AlarmListFilter extends ViewerFilter
+public class AlarmListFilter
 {
-	private long rootObject = 0;
-	private int stateFilter = -1;
-	private int severityFilter = 0xFF;
-	
-	/**
+   private List<Long> rootObjects = new ArrayList<Long>();
+   private int stateFilter = -1;
+   private int severityFilter = 0xFF;
+   private NXCSession session;
+
+   /**
 	 * 
 	 */
-	public AlarmListFilter()
-	{
-		rootObject = 0;
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ViewerFilter#select(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
-	 */
-	@Override
-	public boolean select(Viewer viewer, Object parentElement, Object element)
-	{
-		if ((stateFilter != -1) && (((Alarm)element).getState() != stateFilter))
-			return false;
-		
-		if (((1 << ((Alarm)element).getCurrentSeverity()) & severityFilter) == 0)
-			return false;
-				
-		if ((rootObject == 0) || (rootObject == ((Alarm)element).getSourceObjectId()))
-			return true;	// No filtering by object ID or root object is a source
-		
-		AbstractObject object = ((NXCSession)ConsoleSharedData.getSession()).findObjectById(((Alarm)element).getSourceObjectId());
-		if (object != null)
-			return object.isChildOf(rootObject);
-		return false;
-	}
+   public AlarmListFilter()
+   {
+      session = (NXCSession)ConsoleSharedData.getSession();
+   }
 
-	/**
-	 * @param rootObject the rootObject to set
-	 */
-	public final void setRootObject(long rootObject)
-	{
-		this.rootObject = rootObject;
-	}
+   /**
+    * @return true if alarm should be displayed
+    */
+   public boolean select(Alarm alarm)
+   {
+      if ((stateFilter != -1) && (alarm.getState() != stateFilter))
+         return false;
 
-	/**
-	 * @param stateFilter the stateFilter to set
-	 */
-	public void setStateFilter(int stateFilter)
-	{
-		this.stateFilter = stateFilter;
-	}
+      if (((1 << alarm.getCurrentSeverity().getValue()) & severityFilter) == 0)
+         return false;
 
-	/**
-	 * @param severityFilter the severityFilter to set
-	 */
-	public void setSeverityFilter(int severityFilter)
-	{
-		this.severityFilter = severityFilter;
-	}
+      if ((rootObjects.size() == 0) || (rootObjects.contains(((Alarm)alarm).getSourceObjectId())))
+         return true; // No filtering by object ID or root object is a source
+
+      AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
+      if (object != null)
+      {
+         // convert List of Longs to array of longs
+         long[] rootObjectsArray = new long[rootObjects.size()];
+         int i = 0;
+         for(long objectId : rootObjects)
+         {
+            rootObjectsArray[i++] = objectId;
+         }
+         return object.isChildOf(rootObjectsArray);
+      }
+      return false;
+   }
+
+   /**
+    * @param rootObject the rootObject to set
+    */
+   public final void setRootObject(long rootObject)
+   {
+      this.rootObjects.clear();
+      this.rootObjects.add(rootObject);
+   }
+
+   /**
+    * @param selectedObjects
+    */
+   public void setRootObjects(List<Long> selectedObjects)
+   {
+      this.rootObjects.clear();
+      this.rootObjects.addAll(selectedObjects);
+   }
+
+   /**
+    * @param stateFilter the stateFilter to set
+    */
+   public void setStateFilter(int stateFilter)
+   {
+      this.stateFilter = stateFilter;
+   }
+
+   /**
+    * @param severityFilter the severityFilter to set
+    */
+   public void setSeverityFilter(int severityFilter)
+   {
+      this.severityFilter = severityFilter;
+   }
 }

@@ -83,13 +83,16 @@
 	<string name="pref_global_notification_alarm_enabled">Alarm in status bar is enabled</string>
 	<string name="pref_global_notification_alarm_disabled">Alarm in status bar is disabled</string>
 	<string name="pref_interface">Interface</string>
-	<string name="pref_interface_summary">Customize interface parameters (multipliers, &#8230;)</string>
+	<string name="pref_interface_summary">Customize interface parameters (multipliers, text size, legend, &#8230;)</string>
 	<string name="pref_multipliers">Multipliers</string>
 	<string name="pref_multipliers_summary">Define which multiplier to use in presenting data (last values, graphs, &#8230;)</string>
 	<string name="pref_multiplier_title">Choose multiplier</string>
 	<string name="pref_graph_text_size">Graph text size</string>
 	<string name="pref_graph_text_size_summary">Set the text size to be used for axis labels</string>
-
+	<string name="pref_show_legend">Show legend in graphs</string>
+	<string name="pref_show_legend_enabled">Graphs will be with legend</string>
+	<string name="pref_show_legend_disabled">Graphs will be without legend</string>
+	
 	<string name="notification_title">NetXMS</string>
 	<string name="notify_started">NetXMS service started</string>
 	<string name="notify_disconnected">Disconnected from server</string>
@@ -150,6 +153,7 @@
 	<string name="overview_system_description">System Description</string>
 	<string name="overview_netxms_agent_version">NetXMS Agent Version</string>
 	<string name="overview_platform_name">Platform Name</string>
+	<string name="overview_boot_time">Boot Time</string>
 	<string name="overview_snmp_sysname">SNMP sysName</string>
 	<string name="overview_snmp_oid">SNMP OID</string>
 	<string name="overview_bridge_base_address">Bridge Base Address</string>
@@ -167,6 +171,7 @@
 	<string name="overview_provider">Source: %1$s</string>
 	<string name="overview_accuracy">Accuracy: %1$s meters</string>
 	<string name="overview_timestamp">Timestamp: %1$s</string>
+	<string name="overview_comments">Comments</string>
 
 	<string name="provider_manual">Manual</string>
 	<string name="provider_network">Network</string>
@@ -224,12 +229,19 @@
 	<string name="table_value_placeholder">&lt;&lt; TABLE &gt;&gt;</string>
 	<string name="table_last_values">Table last values</string>
 
+	<string name="if_manage">Manage</string>
+	<string name="if_unmanage">Unmanage</string>
+	<string name="if_expected_state">Change expected state</string>
+	<string name="if_expected_state_up">UP</string>
+	<string name="if_expected_state_down">DOWN</string>
+	<string name="if_expected_state_ignore">IGNORE</string>
+						
 	<string name="connection_point_title">MAC address search</string>
 	<string name="connection_point_hint_type_macaddress">Type or scan MAC address&#8230;</string>
 	<string name="connection_point_invalid">MAC Address &quot;%1$s&quot; is invalid</string>
 	<string name="connection_point_notfound">Connection point not found</string>
 	<string name="connection_point_macaddress_notfound">Connection point for MAC address %1$s not found</string>
-	<string name="connection_point_nodeid_notfound">Connection point for node %1$s not found</string>
+	<string name="connection_point_info_notfound">Connection point information cannot be found</string>
 	<string name="connection_point_info">Node%1$s with MAC address %2$s is connected to network switch %3$s on port %4$s</string>
 	<string name="connection_point_delete_one">Delete item</string>
 	<string name="connection_point_delete_all">Delete all items</string>
@@ -243,4 +255,5 @@
 	<string name="menu_poll_configuration">Configuration</string>
 	<string name="menu_poll_topology">Topology</string>
 	<string name="menu_poll_interfaces">Interface names</string>
+	<string name="navigate_to">Navigate to</string>
 </resources>

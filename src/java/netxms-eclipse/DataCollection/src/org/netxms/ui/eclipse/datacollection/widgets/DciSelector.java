@@ -44,7 +44,8 @@ public class DciSelector extends AbstractSelector
 	private int dcObjectType = -1;
    private int dciObjectType = -1;
 	private String dciName = null;
-	private boolean fixedNode = false; 
+	private boolean fixedNode = false;
+	private boolean allowNoValueObjects = false;
 
 	/**
 	 * @param parent
@@ -68,6 +69,7 @@ public class DciSelector extends AbstractSelector
 		dlg.setEnableEmptySelection(true);
 		dlg.setDcObjectType(dcObjectType);
 		dlg.setSingleSelection(true);
+		dlg.setAllowNoValueObjects(allowNoValueObjects);
 		if (dlg.open() == Window.OK)
 		{
 		   List<DciValue> dci = dlg.getSelection();
@@ -250,5 +252,21 @@ public class DciSelector extends AbstractSelector
    public void setDciObjectType(int dciObjectType)
    {
       this.dciObjectType = dciObjectType;
+   }
+
+   /**
+    * @param allowNoValueObjects the allowNoValueObjects to set
+    */
+   public void setAllowNoValueObjects(boolean allowNoValueObjects)
+   {
+      this.allowNoValueObjects = allowNoValueObjects;
+   }
+
+   /**
+    * @return the allowNoValueObjects
+    */
+   public boolean isAllowNoValueObjects()
+   {
+      return allowNoValueObjects;
    }
 }

@@ -39,12 +39,12 @@ enum
 };
 
 
-LONG H_NetIfInfo(const char *, const char *, char *);
-LONG H_NetIpForwarding(const char *, const char *, char *);
+LONG H_NetIfInfo(const char *, const char *, char *, AbstractCommSession *);
+LONG H_NetIpForwarding(const char *, const char *, char *, AbstractCommSession *);
 
-LONG H_NetArpCache(const char *, const char *, StringList *);
-LONG H_NetRoutingTable(const char *, const char *, StringList *);
-LONG H_NetIfList(const char *, const char *, StringList *);
+LONG H_NetArpCache(const char *, const char *, StringList *, AbstractCommSession *);
+LONG H_NetRoutingTable(const char *, const char *, StringList *, AbstractCommSession *);
+LONG H_NetIfList(const char *, const char *, StringList *, AbstractCommSession *);
 
 #endif // __NET_H__
 

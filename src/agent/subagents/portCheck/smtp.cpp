@@ -4,7 +4,10 @@
 #include "main.h"
 #include "net.h"
 
-LONG H_CheckSMTP(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+/**
+ * Check SMTP service - parameter handler
+ */
+LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 	char szHost[256];
@@ -12,9 +15,9 @@ LONG H_CheckSMTP(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	TCHAR szTimeout[64];
 	bool bIsOk = false;
 
-	AgentGetParameterArgA(pszParam, 1, szHost, sizeof(szHost));
-	AgentGetParameterArgA(pszParam, 2, szTo, sizeof(szTo));
-   AgentGetParameterArg(pszParam, 3, szTimeout, sizeof(szTimeout));
+	AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
+	AgentGetParameterArgA(param, 2, szTo, sizeof(szTo));
+   AgentGetParameterArg(param, 3, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0 || szTo[0] == 0)
 	{
@@ -22,10 +25,22 @@ LONG H_CheckSMTP(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	}
 
 	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
-	ret_int(pValue, CheckSMTP(szHost, 0, 25, szTo, dwTimeout));
+   INT64 start = GetCurrentTimeMs();
+	int result = CheckSMTP(szHost, 0, 25, szTo, dwTimeout);
+   if (*arg == 'R')
+   {
+	   ret_int64(value, GetCurrentTimeMs() - start);
+   }
+   else
+   {
+	   ret_int(value, result);
+   }
 	return nRet;
 }
 
+/**
+ * Check SMTP service
+ */
 int CheckSMTP(char *szAddr, UINT32 dwAddr, short nPort, char *szTo, UINT32 dwTimeout)
 {
 	int nRet = 0;

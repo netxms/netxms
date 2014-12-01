@@ -58,10 +58,10 @@
 #define DEFAULT_LOG_FILE      _T("C:\\NetXMS.log")
 #define DEFAULT_DATA_DIR      _T("C:\\NetXMS\\var")
 #define DEFAULT_LIBDIR        _T("C:\\NetXMS\\lib")
-#define DEFAULT_JAVA_LIBDIR   _T("C:\\NetXMS\\lib\\java")
 #define DEFAULT_DUMP_DIR      _T("C:\\")
 
 #define LDIR_NDD              _T("\\ndd")
+#define LDIR_PDSDRV           _T("\\pdsdrv")
 
 #define DDIR_MIBS             _T("\\mibs")
 #define DDIR_PACKAGES         _T("\\packages")
@@ -94,10 +94,10 @@
 #define DEFAULT_LOG_FILE      DATADIR _T("/log/netxmsd.log")
 #define DEFAULT_DATA_DIR      DATADIR
 #define DEFAULT_LIBDIR        PKGLIBDIR
-#define DEFAULT_JAVA_LIBDIR   PKGLIBDIR _T("/java")
 #define DEFAULT_DUMP_DIR      _T("/")
 
 #define LDIR_NDD              _T("/ndd")
+#define LDIR_PDSDRV           _T("/pdsdrv")
 
 #define DDIR_MIBS             _T("/mibs")
 #define DDIR_PACKAGES         _T("/packages")
@@ -114,34 +114,37 @@
 /**
  * Application flags
  */
-#define AF_DAEMON                              0x00000001
-#define AF_USE_SYSLOG                          0x00000002
-#define AF_ENABLE_NETWORK_DISCOVERY            0x00000004
-#define AF_ACTIVE_NETWORK_DISCOVERY            0x00000008
-#define AF_LOG_SQL_ERRORS                      0x00000010
-#define AF_DELETE_EMPTY_SUBNETS                0x00000020
-#define AF_ENABLE_SNMP_TRAPD                   0x00000040
-#define AF_ENABLE_ZONING                       0x00000080
-#define AF_SYNC_NODE_NAMES_WITH_DNS            0x00000100
-#define AF_CHECK_TRUSTED_NODES                 0x00000200
-#define AF_ENABLE_NXSL_CONTAINER_FUNCS         0x00000400
-#define AF_USE_FQDN_FOR_NODE_NAMES             0x00000800
-#define AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE 0x00001000
-#define AF_DEBUG_CONSOLE_DISABLED              0x00002000
-#define AF_ENABLE_OBJECT_TRANSACTIONS          0x00004000
-#define AF_WRITE_FULL_DUMP                     0x00080000
-#define AF_RESOLVE_NODE_NAMES                  0x00100000
-#define AF_CATCH_EXCEPTIONS                    0x00200000
-#define AF_HELPDESK_LINK_ACTIVE                0x00400000
-#define AF_DB_CONNECTION_POOL_READY            0x00800000
-#define AF_DB_LOCKED                           0x01000000
-#define AF_ENABLE_MULTIPLE_DB_CONN             0x02000000
-#define AF_DB_CONNECTION_LOST                  0x04000000
-#define AF_NO_NETWORK_CONNECTIVITY             0x08000000
-#define AF_EVENT_STORM_DETECTED                0x10000000
-#define AF_SNMP_TRAP_DISCOVERY                 0x20000000
-#define AF_SERVER_INITIALIZED                  0x40000000
-#define AF_SHUTDOWN                            0x80000000
+#define AF_DAEMON                              _ULL(0x0000000000000001)
+#define AF_USE_SYSLOG                          _ULL(0x0000000000000002)
+#define AF_ENABLE_NETWORK_DISCOVERY            _ULL(0x0000000000000004)
+#define AF_ACTIVE_NETWORK_DISCOVERY            _ULL(0x0000000000000008)
+#define AF_LOG_SQL_ERRORS                      _ULL(0x0000000000000010)
+#define AF_DELETE_EMPTY_SUBNETS                _ULL(0x0000000000000020)
+#define AF_ENABLE_SNMP_TRAPD                   _ULL(0x0000000000000040)
+#define AF_ENABLE_ZONING                       _ULL(0x0000000000000080)
+#define AF_SYNC_NODE_NAMES_WITH_DNS            _ULL(0x0000000000000100)
+#define AF_CHECK_TRUSTED_NODES                 _ULL(0x0000000000000200)
+#define AF_ENABLE_NXSL_CONTAINER_FUNCS         _ULL(0x0000000000000400)
+#define AF_USE_FQDN_FOR_NODE_NAMES             _ULL(0x0000000000000800)
+#define AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE _ULL(0x0000000000001000)
+#define AF_DEBUG_CONSOLE_DISABLED              _ULL(0x0000000000002000)
+#define AF_ENABLE_OBJECT_TRANSACTIONS          _ULL(0x0000000000004000)
+#define AF_WRITE_FULL_DUMP                     _ULL(0x0000000000080000)
+#define AF_RESOLVE_NODE_NAMES                  _ULL(0x0000000000100000)
+#define AF_CATCH_EXCEPTIONS                    _ULL(0x0000000000200000)
+#define AF_HELPDESK_LINK_ACTIVE                _ULL(0x0000000000400000)
+#define AF_DB_CONNECTION_POOL_READY            _ULL(0x0000000000800000)
+#define AF_DB_LOCKED                           _ULL(0x0000000001000000)
+#define AF_ENABLE_MULTIPLE_DB_CONN             _ULL(0x0000000002000000)
+#define AF_DB_CONNECTION_LOST                  _ULL(0x0000000004000000)
+#define AF_NO_NETWORK_CONNECTIVITY             _ULL(0x0000000008000000)
+#define AF_EVENT_STORM_DETECTED                _ULL(0x0000000010000000)
+#define AF_SNMP_TRAP_DISCOVERY                 _ULL(0x0000000020000000)
+#define AF_TRAPS_FROM_UNMANAGED_NODES          _ULL(0x0000000040000000)
+#define AF_RESOLVE_IP_FOR_EACH_STATUS_POLL     _ULL(0x0000000080000000)
+#define AF_PERFDATA_STORAGE_DRIVER_LOADED      _ULL(0x0000000080000000)
+#define AF_SERVER_INITIALIZED                  _ULL(0x4000000000000000)
+#define AF_SHUTDOWN                            _ULL(0x8000000000000000)
 
 /**
  * Encryption usage policies
@@ -159,6 +162,16 @@
 #define SG_RAW_RESULT     0x0004
 #define SG_HSTRING_RESULT 0x0008
 #define SG_PSTRING_RESULT 0x0010
+
+/**
+ * Agent action output callback events
+ */
+enum ActionCallbackEvent
+{
+   ACE_CONNECTED = 0,
+   ACE_DATA = 1,
+   ACE_DISCONNECTED = 2
+};
 
 /**
  * Win32 service and syslog constants
@@ -232,7 +245,7 @@ public:
 	void add(NX_INTERFACE_INFO *iface);
 	void remove(int index);
 
-	int getSize() { return m_size; }
+	int size() { return m_size; }
 	NX_INTERFACE_INFO *get(int index) { return ((index >= 0) && (index < m_size)) ? &m_interfaces[index] : NULL; }
 	NX_INTERFACE_INFO *findByIfIndex(UINT32 ifIndex);
 
@@ -297,7 +310,7 @@ public:
 	void add(VlanInfo *vlan);
 	void addMemberPort(int vlanId, UINT32 portId);
 
-	int getSize() { return m_size; }
+	int size() { return m_size; }
 	VlanInfo *get(int index) { return ((index >= 0) && (index < m_size)) ? m_vlans[index] : NULL; }
 	VlanInfo *findById(int id);
 	VlanInfo *findByName(const TCHAR *name);
@@ -305,7 +318,7 @@ public:
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }
 
-	void fillMessage(CSCPMessage *msg);
+	void fillMessage(NXCPMessage *msg);
 };
 
 /**
@@ -341,10 +354,10 @@ private:
 	TCHAR **m_serverList;
 
 public:
-	AgentPolicyInfo(CSCPMessage *msg);
+	AgentPolicyInfo(NXCPMessage *msg);
 	~AgentPolicyInfo();
 
-	int getSize() { return m_size; }
+	int size() { return m_size; }
 	bool getGuid(int index, uuid_t guid);
 	int getType(int index) { return ((index >= 0) && (index < m_size)) ? m_typeList[index] : -1; }
 	const TCHAR *getServer(int index) { return ((index >= 0) && (index < m_size)) ? m_serverList[index] : NULL; }
@@ -361,11 +374,11 @@ private:
    int m_dataType;
 
 public:
-   AgentParameterDefinition(CSCPMessage *msg, UINT32 baseId);
+   AgentParameterDefinition(NXCPMessage *msg, UINT32 baseId);
    AgentParameterDefinition(AgentParameterDefinition *src);
    ~AgentParameterDefinition();
 
-   UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
+   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
 
    const TCHAR *getName() { return m_name; }
    const TCHAR *getDescription() { return m_description; }
@@ -399,11 +412,11 @@ private:
    ObjectArray<AgentTableColumnDefinition> *m_columns;
 
 public:
-   AgentTableDefinition(CSCPMessage *msg, UINT32 baseId);
+   AgentTableDefinition(NXCPMessage *msg, UINT32 baseId);
    AgentTableDefinition(AgentTableDefinition *src);
    ~AgentTableDefinition();
 
-   UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
+   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
 
    const TCHAR *getName() { return m_name; }
    const TCHAR *getDescription() { return m_description; }
@@ -448,7 +461,7 @@ private:
 	void (*m_downloadProgressCallback)(size_t, void *);
 	void *m_downloadProgressCallbackArg;
 	bool m_deleteFileOnDownloadFailure;
-	void (*m_sendToClientMessageCallback)(CSCP_MESSAGE*, void *);
+	void (*m_sendToClientMessageCallback)(NXCP_MESSAGE*, void *);
 	bool m_fileUploadInProgress;
 
    void receiverThread();
@@ -456,20 +469,19 @@ private:
 
 protected:
    void destroyResultData();
-   BOOL sendMessage(CSCPMessage *pMsg);
-   CSCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut) { return m_pMsgWaitQueue->waitForMessage(wCode, dwId, dwTimeOut); }
    UINT32 waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut);
    UINT32 setupEncryption(RSA *pServerKey);
    UINT32 authenticate(BOOL bProxyData);
    UINT32 setupProxyConnection();
    UINT32 getIpAddr() { return ntohl(m_dwAddr); }
-	UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(CSCP_MESSAGE*, void *), void *cbArg);
+	UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(NXCP_MESSAGE*, void *), void *cbArg);
 
    virtual void printMsg(const TCHAR *format, ...);
-   virtual void onTrap(CSCPMessage *pMsg);
-	virtual void onDataPush(CSCPMessage *msg);
-	virtual void onFileMonitoringData(CSCPMessage *msg);
-	virtual bool processCustomMessage(CSCPMessage *pMsg);
+   virtual void onTrap(NXCPMessage *pMsg);
+	virtual void onDataPush(NXCPMessage *msg);
+	virtual void onFileMonitoringData(NXCPMessage *msg);
+	virtual void onSnmpTrap(NXCPMessage *pMsg);
+	virtual bool processCustomMessage(NXCPMessage *pMsg);
 	virtual void onFileDownload(BOOL success);
 
    void lock() { MutexLock(m_mutexDataLock); }
@@ -477,6 +489,8 @@ protected:
 	NXCPEncryptionContext *acquireEncryptionContext();
 
 public:
+   BOOL sendMessage(NXCPMessage *pMsg);
+   NXCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut) { return m_pMsgWaitQueue->waitForMessage(wCode, dwId, dwTimeOut); }
    AgentConnection(UINT32 ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
    virtual ~AgentConnection();
 
@@ -494,21 +508,22 @@ public:
    UINT32 getList(const TCHAR *pszParam);
    UINT32 getTable(const TCHAR *pszParam, Table **table);
    UINT32 nop();
-   UINT32 execAction(const TCHAR *pszAction, int argc, TCHAR **argv);
+   UINT32 execAction(const TCHAR *pszAction, int argc, TCHAR **argv, bool withOutput = false, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = NULL, void *cbData = NULL);
    UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL);
    UINT32 startUpgrade(const TCHAR *pszPkgName);
    UINT32 checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType, WORD wPort = 0,
-                             WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL);
+                              WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
    UINT32 getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);
    UINT32 getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize);
    UINT32 updateConfigFile(const TCHAR *pszConfig);
    UINT32 enableTraps();
 	UINT32 getPolicyInventory(AgentPolicyInfo **info);
 	UINT32 uninstallPolicy(uuid_t guid);
+   UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
 
 	UINT32 generateRequestId() { return m_dwRequestId++; }
-	CSCPMessage *customRequest(CSCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false, void (*downloadProgressCallback)(size_t, void *) = NULL,
-	                           void (*fileResendCallback)(CSCP_MESSAGE*, void *) = NULL, void *cbArg = NULL);
+	NXCPMessage *customRequest(NXCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false, void (*downloadProgressCallback)(size_t, void *) = NULL,
+	                           void (*fileResendCallback)(NXCP_MESSAGE*, void *) = NULL, void *cbArg = NULL);
 
    UINT32 getNumDataLines() { return m_dwNumDataLines; }
    const TCHAR *getDataLine(UINT32 dwIndex) { return dwIndex < m_dwNumDataLines ? m_ppDataLines[dwIndex] : _T("(error)"); }
@@ -524,6 +539,7 @@ public:
    void setPort(WORD wPort) { m_wPort = wPort; }
    void setAuthData(int method, const TCHAR *secret);
    void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
+   BOOL sendRawMessage(NXCP_MESSAGE *pMsg);
 };
 
 /**
@@ -533,9 +549,10 @@ class LIBNXSRV_EXPORTABLE SNMP_ProxyTransport : public SNMP_Transport
 {
 protected:
 	AgentConnection *m_pAgentConnection;
-	CSCPMessage *m_pResponse;
+	NXCPMessage *m_pResponse;
 	UINT32 m_dwIpAddr;
 	WORD m_wPort;
+	bool m_waitForResponse;
 
 public:
 	SNMP_ProxyTransport(AgentConnection *pConn, UINT32 dwIpAddr, WORD wPort);
@@ -546,6 +563,8 @@ public:
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pdu);
    virtual UINT32 getPeerIpAddress();
+
+   void setWaitForResponse(bool wait) { m_waitForResponse = wait; }
 };
 
 /**
@@ -585,8 +604,8 @@ protected:
    void unlock() { MutexUnlock(m_mutexDataLock); }
 
    virtual void printMessage(const TCHAR *format, ...);
-   virtual void onBinaryMessage(CSCP_MESSAGE *rawMsg);
-   virtual bool onMessage(CSCPMessage *msg);
+   virtual void onBinaryMessage(NXCP_MESSAGE *rawMsg);
+   virtual bool onMessage(NXCPMessage *msg);
 
 public:
    ISC();
@@ -597,8 +616,8 @@ public:
 	void disconnect();
    bool connected() { return m_flags & ISCF_IS_CONNECTED; };
 
-   BOOL sendMessage(CSCPMessage *msg);
-   CSCPMessage *waitForMessage(WORD code, UINT32 id, UINT32 timeOut) { return m_msgWaitQueue->waitForMessage(code, id, timeOut); }
+   BOOL sendMessage(NXCPMessage *msg);
+   NXCPMessage *waitForMessage(WORD code, UINT32 id, UINT32 timeOut) { return m_msgWaitQueue->waitForMessage(code, id, timeOut); }
    UINT32 waitForRCC(UINT32 rqId, UINT32 timeOut);
    UINT32 generateMessageId() { return (UINT32)InterlockedIncrement(&m_requestId); }
 
@@ -647,8 +666,8 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport
 /**
  * Variables
  */
-extern UINT32 LIBNXSRV_EXPORTABLE g_dwFlags;
-extern UINT32 LIBNXSRV_EXPORTABLE g_dwSNMPTimeout;
+extern UINT64 LIBNXSRV_EXPORTABLE g_flags;
+extern UINT32 LIBNXSRV_EXPORTABLE g_snmpTimeout;
 extern UINT32 LIBNXSRV_EXPORTABLE g_debugLevel;
 
 /**
@@ -656,17 +675,17 @@ extern UINT32 LIBNXSRV_EXPORTABLE g_debugLevel;
  */
 inline bool IsStandalone()
 {
-	return !(g_dwFlags & AF_DAEMON) ? true : false;
+	return !(g_flags & AF_DAEMON) ? true : false;
 }
 
 inline bool IsZoningEnabled()
 {
-	return (g_dwFlags & AF_ENABLE_ZONING) ? true : false;
+	return (g_flags & AF_ENABLE_ZONING) ? true : false;
 }
 
 inline bool IsShutdownInProgress()
 {
-	return (g_dwFlags & AF_SHUTDOWN) ? true : false;
+	return (g_flags & AF_SHUTDOWN) ? true : false;
 }
 
 

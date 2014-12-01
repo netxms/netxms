@@ -24,42 +24,70 @@
 #include "libnxcl.h"
 
 /**
+ * Create alarm comment from NXCP message
+ */
+AlarmComment::AlarmComment(NXCPMessage *msg, UINT32 baseId)
+{
+   m_id = msg->getFieldAsUInt32(baseId);
+   m_alarmId = msg->getFieldAsUInt32(baseId + 1);
+   m_timestamp = (time_t)msg->getFieldAsUInt32(baseId + 2);
+   m_userId = msg->getFieldAsUInt32(baseId + 3);
+   m_text = msg->getFieldAsString(baseId + 4);
+   if (m_text == NULL)
+      m_text = _tcsdup(_T(""));
+   m_userName = msg->getFieldAsString(baseId + 5);
+   if (m_userName == NULL)
+   {
+      m_userName = (TCHAR *)malloc(32 * sizeof(TCHAR));
+      _sntprintf(m_userName, 32, _T("[%u]"), m_userId);
+   }
+}
+
+/**
+ * Destructor for alarm comment
+ */
+AlarmComment::~AlarmComment()
+{
+   free(m_text);
+}
+
+/**
  * Fill alarm record from message
  */
-static void AlarmFromMsg(CSCPMessage *pMsg, NXC_ALARM *pAlarm)
+static void AlarmFromMsg(NXCPMessage *pMsg, NXC_ALARM *pAlarm)
 {
-   pAlarm->dwAckByUser = pMsg->GetVariableLong(VID_ACK_BY_USER);
-   pAlarm->dwResolvedByUser = pMsg->GetVariableLong(VID_RESOLVED_BY_USER);
-   pAlarm->dwTermByUser = pMsg->GetVariableLong(VID_TERMINATED_BY_USER);
-   pAlarm->qwSourceEventId = pMsg->GetVariableInt64(VID_EVENT_ID);
-   pAlarm->dwSourceEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
-   pAlarm->dwSourceObject = pMsg->GetVariableLong(VID_OBJECT_ID);
-   pAlarm->dwCreationTime = pMsg->GetVariableLong(VID_CREATION_TIME);
-   pAlarm->dwLastChangeTime = pMsg->GetVariableLong(VID_LAST_CHANGE_TIME);
-   pMsg->GetVariableStr(VID_ALARM_KEY, pAlarm->szKey, MAX_DB_STRING);
-	pMsg->GetVariableStr(VID_ALARM_MESSAGE, pAlarm->szMessage, MAX_EVENT_MSG_LENGTH);
-   pAlarm->nState = (BYTE)pMsg->GetVariableShort(VID_STATE);
-   pAlarm->nCurrentSeverity = (BYTE)pMsg->GetVariableShort(VID_CURRENT_SEVERITY);
-   pAlarm->nOriginalSeverity = (BYTE)pMsg->GetVariableShort(VID_ORIGINAL_SEVERITY);
-   pAlarm->dwRepeatCount = pMsg->GetVariableLong(VID_REPEAT_COUNT);
-   pAlarm->nHelpDeskState = (BYTE)pMsg->GetVariableShort(VID_HELPDESK_STATE);
-   pMsg->GetVariableStr(VID_HELPDESK_REF, pAlarm->szHelpDeskRef, MAX_HELPDESK_REF_LEN);
-	pAlarm->dwTimeout = pMsg->GetVariableLong(VID_ALARM_TIMEOUT);
-	pAlarm->dwTimeoutEvent = pMsg->GetVariableLong(VID_ALARM_TIMEOUT_EVENT);
-	pAlarm->noteCount = pMsg->GetVariableLong(VID_NUM_COMMENTS);
+   pAlarm->dwAckByUser = pMsg->getFieldAsUInt32(VID_ACK_BY_USER);
+   pAlarm->dwResolvedByUser = pMsg->getFieldAsUInt32(VID_RESOLVED_BY_USER);
+   pAlarm->dwTermByUser = pMsg->getFieldAsUInt32(VID_TERMINATED_BY_USER);
+   pAlarm->qwSourceEventId = pMsg->getFieldAsUInt64(VID_EVENT_ID);
+   pAlarm->dwSourceEventCode = pMsg->getFieldAsUInt32(VID_EVENT_CODE);
+   pAlarm->dwSourceObject = pMsg->getFieldAsUInt32(VID_OBJECT_ID);
+   pAlarm->dwCreationTime = pMsg->getFieldAsUInt32(VID_CREATION_TIME);
+   pAlarm->dwLastChangeTime = pMsg->getFieldAsUInt32(VID_LAST_CHANGE_TIME);
+   pMsg->getFieldAsString(VID_ALARM_KEY, pAlarm->szKey, MAX_DB_STRING);
+	pMsg->getFieldAsString(VID_ALARM_MESSAGE, pAlarm->szMessage, MAX_EVENT_MSG_LENGTH);
+   pAlarm->nState = (BYTE)pMsg->getFieldAsUInt16(VID_STATE);
+   pAlarm->nCurrentSeverity = (BYTE)pMsg->getFieldAsUInt16(VID_CURRENT_SEVERITY);
+   pAlarm->nOriginalSeverity = (BYTE)pMsg->getFieldAsUInt16(VID_ORIGINAL_SEVERITY);
+   pAlarm->dwRepeatCount = pMsg->getFieldAsUInt32(VID_REPEAT_COUNT);
+   pAlarm->nHelpDeskState = (BYTE)pMsg->getFieldAsUInt16(VID_HELPDESK_STATE);
+   pMsg->getFieldAsString(VID_HELPDESK_REF, pAlarm->szHelpDeskRef, MAX_HELPDESK_REF_LEN);
+	pAlarm->dwTimeout = pMsg->getFieldAsUInt32(VID_ALARM_TIMEOUT);
+	pAlarm->dwTimeoutEvent = pMsg->getFieldAsUInt32(VID_ALARM_TIMEOUT_EVENT);
+	pAlarm->noteCount = pMsg->getFieldAsUInt32(VID_NUM_COMMENTS);
    pAlarm->pUserData = NULL;
 }
 
 /**
  * Process CMD_ALARM_UPDATE message
  */
-void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
+void ProcessAlarmUpdate(NXCL_Session *pSession, NXCPMessage *pMsg)
 {
    NXC_ALARM alarm;
    UINT32 dwCode;
 
-   dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
-   alarm.dwAlarmId = pMsg->GetVariableLong(VID_ALARM_ID);
+   dwCode = pMsg->getFieldAsUInt32(VID_NOTIFICATION_CODE);
+   alarm.dwAlarmId = pMsg->getFieldAsUInt32(VID_ALARM_ID);
    AlarmFromMsg(pMsg, &alarm);
    pSession->callEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &alarm);
 }
@@ -69,14 +97,14 @@ void ProcessAlarmUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
  */
 UINT32 LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, UINT32 *pdwNumAlarms, NXC_ALARM **ppAlarmList)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRqId, dwRetCode = RCC_SUCCESS, dwNumAlarms = 0, dwAlarmId = 0;
    NXC_ALARM *pList = NULL;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_ALL_ALARMS);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GET_ALL_ALARMS);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    do
@@ -84,7 +112,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCLoadAllAlarms(NXC_SESSION hSession, UINT32 *pdwNumA
       pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_ALARM_DATA, dwRqId);
       if (pResponse != NULL)
       {
-         dwAlarmId = pResponse->GetVariableLong(VID_ALARM_ID);
+         dwAlarmId = pResponse->getFieldAsUInt32(VID_ALARM_ID);
          if (dwAlarmId != 0)  // 0 is end of list indicator
          {
             pList = (NXC_ALARM *)realloc(pList, sizeof(NXC_ALARM) * (dwNumAlarms + 1));
@@ -136,16 +164,16 @@ UINT32 LIBNXCL_EXPORTABLE NXCAcknowledgeAlarm(NXC_SESSION hSession, UINT32 alarm
  */
 UINT32 LIBNXCL_EXPORTABLE NXCAcknowledgeAlarmEx(NXC_SESSION hSession, UINT32 alarmId, bool sticky, UINT32 timeout)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_ACK_ALARM);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_ALARM_ID, alarmId);
-   msg.SetVariable(VID_STICKY_FLAG, (UINT16)(sticky ? 1 : 0));
-   msg.SetVariable(VID_TIMESTAMP, timeout);
+   msg.setCode(CMD_ACK_ALARM);
+   msg.setId(dwRqId);
+   msg.setField(VID_ALARM_ID, alarmId);
+   msg.setField(VID_STICKY_FLAG, (UINT16)(sticky ? 1 : 0));
+   msg.setField(VID_TIMESTAMP, timeout);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -156,14 +184,14 @@ UINT32 LIBNXCL_EXPORTABLE NXCAcknowledgeAlarmEx(NXC_SESSION hSession, UINT32 ala
  */
 UINT32 LIBNXCL_EXPORTABLE NXCTerminateAlarm(NXC_SESSION hSession, UINT32 dwAlarmId)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_TERMINATE_ALARM);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_ALARM_ID, dwAlarmId);
+   msg.setCode(CMD_TERMINATE_ALARM);
+   msg.setId(dwRqId);
+   msg.setField(VID_ALARM_ID, dwAlarmId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -174,14 +202,14 @@ UINT32 LIBNXCL_EXPORTABLE NXCTerminateAlarm(NXC_SESSION hSession, UINT32 dwAlarm
  */
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteAlarm(NXC_SESSION hSession, UINT32 dwAlarmId)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_DELETE_ALARM);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_ALARM_ID, dwAlarmId);
+   msg.setCode(CMD_DELETE_ALARM);
+   msg.setId(dwRqId);
+   msg.setField(VID_ALARM_ID, dwAlarmId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -192,24 +220,24 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteAlarm(NXC_SESSION hSession, UINT32 dwAlarmId)
  */
 UINT32 LIBNXCL_EXPORTABLE NXCOpenHelpdeskIssue(NXC_SESSION hSession, UINT32 dwAlarmId, TCHAR *pszHelpdeskRef)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId, rcc;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_OPEN_HELPDESK_ISSUE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_ALARM_ID, dwAlarmId);
+   msg.setCode(CMD_OPEN_HELPDESK_ISSUE);
+   msg.setId(dwRqId);
+   msg.setField(VID_ALARM_ID, dwAlarmId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
-   CSCPMessage *pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   NXCPMessage *pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      rcc = pResponse->GetVariableLong(VID_RCC);
+      rcc = pResponse->getFieldAsUInt32(VID_RCC);
       if (rcc == RCC_SUCCESS)
       {
          pszHelpdeskRef[0] = 0;
-         pResponse->GetVariableStr(VID_HELPDESK_REF, pszHelpdeskRef, MAX_HELPDESK_REF_LEN);
+         pResponse->getFieldAsString(VID_HELPDESK_REF, pszHelpdeskRef, MAX_HELPDESK_REF_LEN);
       }
       delete pResponse;
    }
@@ -220,27 +248,95 @@ UINT32 LIBNXCL_EXPORTABLE NXCOpenHelpdeskIssue(NXC_SESSION hSession, UINT32 dwAl
    return rcc;
 }
 
-//
-// Format text from alarm data
-// Valid format specifiers are following:
-//		%a Primary IP address of source object
-//		%A Primary host name of source object
-//    %c Repeat count
-//    %e Event code
-//    %E Event name
-//    %h Helpdesk state as number
-//    %H Helpdesk state as text
-//    %i Source object identifier
-//    %I Alarm identifier
-//    %m Message text
-//    %n Source object name
-//    %s Severity as number
-//    %S Severity as text
-//    %x Alarm state as number
-//    %X Alarm state as text
-//    %% Percent sign
-//
+/**
+ * Update alarm comment
+ */
+UINT32 LIBNXCL_EXPORTABLE NXCUpdateAlarmComment(NXC_SESSION hSession, UINT32 alarmId, UINT32 commentId, const TCHAR *text)
+{
+   NXCPMessage msg;
+   UINT32 dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
+   msg.setCode(CMD_UPDATE_ALARM_COMMENT);
+   msg.setId(dwRqId);
+   msg.setField(VID_ALARM_ID, alarmId);
+   msg.setField(VID_COMMENT_ID, commentId);
+   msg.setField(VID_COMMENTS, text);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+}
+
+/**
+ * Update alarm comment
+ */
+UINT32 LIBNXCL_EXPORTABLE NXCAddAlarmComment(NXC_SESSION hSession, UINT32 alarmId, const TCHAR *text)
+{
+   return NXCUpdateAlarmComment(hSession, alarmId, 0, text);
+}
+
+/**
+ * Get alarm comments
+ *
+ * Comments array must be deleted by the caller.
+ */
+UINT32 LIBNXCL_EXPORTABLE NXCGetAlarmComments(NXC_SESSION hSession, UINT32 alarmId, ObjectArray<AlarmComment> **comments)
+{
+   NXCPMessage msg;
+   UINT32 dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
+
+   *comments = NULL;
+
+   msg.setCode(CMD_GET_ALARM_COMMENTS);
+   msg.setId(dwRqId);
+   msg.setField(VID_ALARM_ID, alarmId);
+   ((NXCL_Session *)hSession)->SendMsg(&msg);
+
+   UINT32 rcc;
+   NXCPMessage *response = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
+   if (response != NULL)
+   {
+      rcc = response->getFieldAsUInt32(VID_RCC);
+      if (rcc == RCC_SUCCESS)
+      {
+         int count = response->getFieldAsInt32(VID_NUM_ELEMENTS);
+         ObjectArray<AlarmComment> *list = new ObjectArray<AlarmComment>(count, 16, true);
+         UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+         for(int i = 0; i < count; i++)
+         {
+            list->add(new AlarmComment(response, fieldId));
+            fieldId += 10;
+         }
+         *comments = list;
+      }
+      delete response;
+   }
+   else
+   {
+      rcc = RCC_TIMEOUT;
+   }
+   return rcc;
+}
+
+/**
+ * Format text from alarm data
+ * Valid format specifiers are following:
+ *		%a Primary IP address of source object
+ *		%A Primary host name of source object
+ *    %c Repeat count
+ *    %e Event code
+ *    %E Event name
+ *    %h Helpdesk state as number
+ *    %H Helpdesk state as text
+ *    %i Source object identifier
+ *    %I Alarm identifier
+ *    %m Message text
+ *    %n Source object name
+ *    %s Severity as number
+ *    %S Severity as text
+ *    %x Alarm state as number
+ *    %X Alarm state as text
+ *    %% Percent sign
+ */
 TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *alarm, TCHAR *format)
 {
 	static const TCHAR *alarmState[] = { _T("OUTSTANDING"), _T("ACKNOWLEDGED"), _T("TERMINATED") };

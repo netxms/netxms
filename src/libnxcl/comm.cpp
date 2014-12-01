@@ -28,27 +28,25 @@
 #define close	_close
 #endif
 
-
-//
-// Network receiver thread
-//
-
+/**
+ * Network receiver thread
+ */
 THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
 {
-   CSCPMessage *pMsg;
-   CSCP_MESSAGE *pRawMsg;
-   CSCP_BUFFER *pMsgBuffer;
+   NXCPMessage *pMsg;
+   NXCP_MESSAGE *pRawMsg;
+   NXCP_BUFFER *pMsgBuffer;
    BYTE *pDecryptionBuffer = NULL;
    int i, iErr;
    BOOL bMsgNotNeeded;
    TCHAR szBuffer[256];
 
    // Initialize raw message receiving function
-   pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+   pMsgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
    RecvNXCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL, 0);
 
    // Allocate space for raw message
-   pRawMsg = (CSCP_MESSAGE *)malloc(pSession->m_dwReceiverBufferSize);
+   pRawMsg = (NXCP_MESSAGE *)malloc(pSession->m_dwReceiverBufferSize);
 #ifdef _WITH_ENCRYPTION
    pDecryptionBuffer = (BYTE *)malloc(pSession->m_dwReceiverBufferSize);
 #endif
@@ -66,8 +64,8 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
       if (iErr == 1)
       {
          DebugPrintf(_T("Received too large message %s (%d bytes)"), 
-                     NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
-                     ntohl(pRawMsg->dwSize));
+                     NXCPMessageCodeName(ntohs(pRawMsg->code), szBuffer),
+                     ntohl(pRawMsg->size));
          continue;
       }
 
@@ -79,9 +77,9 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
       }
 
       // Check that actual received packet size is equal to encoded in packet
-      if ((int)ntohl(pRawMsg->dwSize) != iErr)
+      if ((int)ntohl(pRawMsg->size) != iErr)
       {
-         DebugPrintf(_T("RecvMsg: Bad packet length [dwSize=%d ActualSize=%d]"), ntohl(pRawMsg->dwSize), iErr);
+         DebugPrintf(_T("RecvMsg: Bad packet length [size=%d ActualSize=%d]"), ntohl(pRawMsg->size), iErr);
          continue;   // Bad packet, wait for next
       }
 
@@ -89,24 +87,24 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
       if (IsBinaryMsg(pRawMsg))
       {
          // Convert numeric fields to host byte order
-         pRawMsg->wCode = ntohs(pRawMsg->wCode);
-         pRawMsg->wFlags = ntohs(pRawMsg->wFlags);
-         pRawMsg->dwSize = ntohl(pRawMsg->dwSize);
-         pRawMsg->dwId = ntohl(pRawMsg->dwId);
-         pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
+         pRawMsg->code = ntohs(pRawMsg->code);
+         pRawMsg->flags = ntohs(pRawMsg->flags);
+         pRawMsg->size = ntohl(pRawMsg->size);
+         pRawMsg->id = ntohl(pRawMsg->id);
+         pRawMsg->numFields = ntohl(pRawMsg->numFields);
 
-         DebugPrintf(_T("RecvRawMsg(\"%s\", id:%d)"), NXCPMessageCodeName(pRawMsg->wCode, szBuffer), pRawMsg->dwId);
+         DebugPrintf(_T("RecvRawMsg(\"%s\", id:%d)"), NXCPMessageCodeName(pRawMsg->code, szBuffer), pRawMsg->id);
 
          // Process message
-         switch(pRawMsg->wCode)
+         switch(pRawMsg->code)
          {
             case CMD_FILE_DATA:
                MutexLock(pSession->m_mutexFileRq);
-               if ((pSession->m_hCurrFile != -1) && (pSession->m_dwFileRqId == pRawMsg->dwId))
+               if ((pSession->m_hCurrFile != -1) && (pSession->m_dwFileRqId == pRawMsg->id))
                {
-                  if (write(pSession->m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
+                  if (write(pSession->m_hCurrFile, pRawMsg->fields, pRawMsg->numFields) == (int)pRawMsg->numFields)
                   {
-                     if (pRawMsg->wFlags & MF_END_OF_FILE)
+                     if (pRawMsg->flags & MF_END_OF_FILE)
                      {
                         close(pSession->m_hCurrFile);
                         pSession->m_dwFileRqCompletion = RCC_SUCCESS;
@@ -125,7 +123,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
                break;
             case CMD_ABORT_FILE_TRANSFER:
                MutexLock(pSession->m_mutexFileRq);
-               if ((pSession->m_hCurrFile != -1) && (pSession->m_dwFileRqId == pRawMsg->dwId))
+               if ((pSession->m_hCurrFile != -1) && (pSession->m_dwFileRqId == pRawMsg->id))
                {
                   // I/O error
                   close(pSession->m_hCurrFile);
@@ -135,26 +133,26 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
                MutexUnlock(pSession->m_mutexFileRq);
                break;
             default:    // Put unknown raw messages into the wait queue
-               pSession->m_msgWaitQueue.put((CSCP_MESSAGE *)nx_memdup(pRawMsg, pRawMsg->dwSize));
+               pSession->m_msgWaitQueue.put((NXCP_MESSAGE *)nx_memdup(pRawMsg, pRawMsg->size));
                break;
          }
       }
       else
       {
-         pMsg = new CSCPMessage(pRawMsg);
+         pMsg = new NXCPMessage(pRawMsg);
          bMsgNotNeeded = TRUE;
-         DebugPrintf(_T("RecvMsg(\"%s\", id:%d)"), NXCPMessageCodeName(pMsg->GetCode(), szBuffer), pMsg->GetId());
+         DebugPrintf(_T("RecvMsg(\"%s\", id:%d)"), NXCPMessageCodeName(pMsg->getCode(), szBuffer), pMsg->getId());
 
          // Process message
-         switch(pMsg->GetCode())
+         switch(pMsg->getCode())
          {
             case CMD_KEEPALIVE:     // Keepalive message
-               pSession->SetTimeStamp(pMsg->GetVariableLong(VID_TIMESTAMP));
+               pSession->SetTimeStamp(pMsg->getFieldAsUInt32(VID_TIMESTAMP));
                break;
             case CMD_REQUEST_SESSION_KEY:
                if (pSession->m_pCtx == NULL)
                {
-                  CSCPMessage *pResponse;
+                  NXCPMessage *pResponse;
 
                   SetupEncryptionContext(pMsg, &pSession->m_pCtx, &pResponse, NULL, NXCP_VERSION);
                   pSession->SendMsg(pResponse);
@@ -201,7 +199,7 @@ THREAD_RESULT THREAD_CALL NetReceiver(NXCL_Session *pSession)
                ProcessEventDBUpdate(pSession, pMsg);
                break;
             case CMD_NOTIFY:
-               pSession->OnNotify(pMsg);
+               pSession->onNotify(pMsg);
                break;
 				case CMD_SITUATION_CHANGE:
 					ProcessSituationChange(pSession, pMsg);
@@ -249,7 +247,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCConnect(UINT32 dwFlags, const TCHAR *pszServer, con
                                     TCHAR **ppszUpgradeURL)
 {
    struct sockaddr_in servAddr;
-   CSCPMessage msg, *pResp;
+   NXCPMessage msg, *pResp;
    UINT32 dwRetCode = RCC_COMM_FAILURE;
    SOCKET hSocket;
    THREAD hThread;
@@ -301,47 +299,47 @@ UINT32 LIBNXCL_EXPORTABLE NXCConnect(UINT32 dwFlags, const TCHAR *pszServer, con
                pSession->SetRecvThread(hThread);
 
             // Query server information
-            msg.SetId(pSession->CreateRqId());
-            msg.SetCode(CMD_GET_SERVER_INFO);
+            msg.setId(pSession->CreateRqId());
+            msg.setCode(CMD_GET_SERVER_INFO);
             if (pSession->SendMsg(&msg))
             {
                // Receive response message
-               pResp = pSession->WaitForMessage(CMD_REQUEST_COMPLETED, msg.GetId());
+               pResp = pSession->WaitForMessage(CMD_REQUEST_COMPLETED, msg.getId());
                if (pResp != NULL)
                {
-                  dwRetCode = pResp->GetVariableLong(VID_RCC);
+                  dwRetCode = pResp->getFieldAsUInt32(VID_RCC);
                   if (dwRetCode == RCC_SUCCESS)
                   {
-                     pResp->GetVariableBinary(VID_SERVER_ID, pSession->m_bsServerId, 8);
+                     pResp->getFieldAsBinary(VID_SERVER_ID, pSession->m_bsServerId, 8);
                      if (dwFlags & NXCF_EXACT_VERSION_MATCH)
                      {
                         TCHAR szServerVersion[64];
 
-                        pResp->GetVariableStr(VID_SERVER_VERSION, szServerVersion, 64);
+                        pResp->getFieldAsString(VID_SERVER_VERSION, szServerVersion, 64);
                         if (_tcsncmp(szServerVersion, NETXMS_VERSION_STRING, 64))
                            dwRetCode = RCC_VERSION_MISMATCH;
                      }
 							if (!(dwFlags & NXCF_IGNORE_PROTOCOL_VERSION))
 							{
-								if (pResp->GetVariableLong(VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION)
+								if (pResp->getFieldAsUInt32(VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION)
 									dwRetCode = RCC_BAD_PROTOCOL;
 							}
 							if (ppszUpgradeURL != NULL)
-								*ppszUpgradeURL = pResp->GetVariableStr(VID_CONSOLE_UPGRADE_URL);
-							pResp->GetVariableBinary(VID_CHALLENGE, challenge, CLIENT_CHALLENGE_SIZE);
-							pResp->GetVariableStr(VID_TIMEZONE, pSession->getServerTimeZone(), MAX_TZ_LEN);
+								*ppszUpgradeURL = pResp->getFieldAsString(VID_CONSOLE_UPGRADE_URL);
+							pResp->getFieldAsBinary(VID_CHALLENGE, challenge, CLIENT_CHALLENGE_SIZE);
+							pResp->getFieldAsString(VID_TIMEZONE, pSession->getServerTimeZone(), MAX_TZ_LEN);
                   }
                   delete pResp;
 
                   // Request encryption if needed
                   if ((dwRetCode == RCC_SUCCESS) && (dwFlags & NXCF_ENCRYPT))
                   {
-                     msg.deleteAllVariables();
-                     msg.SetId(pSession->CreateRqId());
-                     msg.SetCode(CMD_REQUEST_ENCRYPTION);
+                     msg.deleteAllFields();
+                     msg.setId(pSession->CreateRqId());
+                     msg.setCode(CMD_REQUEST_ENCRYPTION);
                      if (pSession->SendMsg(&msg))
                      {
-                        dwRetCode = pSession->WaitForRCC(msg.GetId());
+                        dwRetCode = pSession->WaitForRCC(msg.getId());
                      }
                      else
                      {
@@ -352,10 +350,10 @@ UINT32 LIBNXCL_EXPORTABLE NXCConnect(UINT32 dwFlags, const TCHAR *pszServer, con
                   if (dwRetCode == RCC_SUCCESS)
                   {
                      // Prepare login message
-                     msg.deleteAllVariables();
-                     msg.SetId(pSession->CreateRqId());
-                     msg.SetCode(CMD_LOGIN);
-                     msg.SetVariable(VID_LOGIN_NAME, pszLogin);
+                     msg.deleteAllFields();
+                     msg.setId(pSession->CreateRqId());
+                     msg.setCode(CMD_LOGIN);
+                     msg.setField(VID_LOGIN_NAME, pszLogin);
 							if (dwFlags & NXCF_USE_CERTIFICATE)
 							{
 								BYTE signature[256];
@@ -367,28 +365,28 @@ UINT32 LIBNXCL_EXPORTABLE NXCConnect(UINT32 dwFlags, const TCHAR *pszServer, con
 									dwRetCode = RCC_LOCAL_CRYPTO_ERROR;
 									goto crypto_error;
 								}
-								msg.SetVariable(VID_SIGNATURE, signature, dwSigLen);
-								msg.SetVariable(VID_CERTIFICATE, (BYTE *)pszPassword, dwCertLen);
-								msg.SetVariable(VID_AUTH_TYPE, (WORD)NETXMS_AUTH_TYPE_CERTIFICATE);
+								msg.setField(VID_SIGNATURE, signature, dwSigLen);
+								msg.setField(VID_CERTIFICATE, (BYTE *)pszPassword, dwCertLen);
+								msg.setField(VID_AUTH_TYPE, (WORD)NETXMS_AUTH_TYPE_CERTIFICATE);
 							}
 							else
 							{
-								msg.SetVariable(VID_PASSWORD, pszPassword);
-								msg.SetVariable(VID_AUTH_TYPE, (WORD)NETXMS_AUTH_TYPE_PASSWORD);
+								msg.setField(VID_PASSWORD, pszPassword);
+								msg.setField(VID_AUTH_TYPE, (WORD)NETXMS_AUTH_TYPE_PASSWORD);
 							}
-                     msg.SetVariable(VID_CLIENT_INFO, pszClientInfo);
-                     msg.SetVariable(VID_LIBNXCL_VERSION, NETXMS_VERSION_STRING);
+                     msg.setField(VID_CLIENT_INFO, pszClientInfo);
+                     msg.setField(VID_LIBNXCL_VERSION, NETXMS_VERSION_STRING);
                      GetOSVersionString(szBuffer, 64);
-                     msg.SetVariable(VID_OS_INFO, szBuffer);
+                     msg.setField(VID_OS_INFO, szBuffer);
                      if (pSession->SendMsg(&msg))
                      {
                         // Receive response message
-                        pResp = pSession->WaitForMessage(CMD_LOGIN_RESP, msg.GetId());
+                        pResp = pSession->WaitForMessage(CMD_LOGIN_RESP, msg.getId());
                         if (pResp != NULL)
                         {
-                           dwRetCode = pResp->GetVariableLong(VID_RCC);
+                           dwRetCode = pResp->getFieldAsUInt32(VID_RCC);
                            if (dwRetCode == RCC_SUCCESS)
-                              pSession->ParseLoginMessage(pResp);
+                              pSession->parseLoginMessage(pResp);
                            delete pResp;
                         }
                         else

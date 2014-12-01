@@ -49,7 +49,7 @@ const char *g_nxslCommandMnemonic[] =
 	"ESET", "ASET", "NAME", "FOREACH", "NEXT",
 	"GLOBAL", "GARRAY", "JZP", "JNZP", "ADDARR",
 	"AGETS", "CALL", "CASE", "EINC", "EDEC",
-   "EINCP", "EDECP", "ABORT"
+   "EINCP", "EDECP", "ABORT", "CATCH"
 };
 
 /**
@@ -138,9 +138,9 @@ bool NXSL_Program::addFunction(const char *pszName, UINT32 dwAddr, char *pszErro
 #endif
    for(int i = 0; i < m_functions->size(); i++)
 #ifdef UNICODE
-      if (!wcscmp(m_functions->get(i)->m_szName, pwszName))
+      if (!wcscmp(m_functions->get(i)->m_name, pwszName))
 #else
-      if (!strcmp(m_functions->get(i)->m_szName, pszName))
+      if (!strcmp(m_functions->get(i)->m_name, pszName))
 #endif
       {
          sprintf(pszError, "Duplicate function name: \"%s\"", pszName);
@@ -151,10 +151,10 @@ bool NXSL_Program::addFunction(const char *pszName, UINT32 dwAddr, char *pszErro
       }
    NXSL_Function *f = new NXSL_Function;
 #ifdef UNICODE
-   nx_strncpy(f->m_szName, pwszName, MAX_FUNCTION_NAME);
+   nx_strncpy(f->m_name, pwszName, MAX_FUNCTION_NAME);
 	free(pwszName);
 #else
-   nx_strncpy(f->m_szName, pszName, MAX_FUNCTION_NAME);
+   nx_strncpy(f->m_name, pszName, MAX_FUNCTION_NAME);
 #endif
    f->m_dwAddr = (dwAddr == INVALID_ADDRESS) ? m_instructionSet->size() : dwAddr;
    m_functions->add(f);
@@ -187,7 +187,7 @@ void NXSL_Program::resolveFunctions()
          for(int j = 0; j < m_functions->size(); j++)
          {
             NXSL_Function *f = m_functions->get(j);
-            if (!_tcscmp(f->m_szName, instr->m_operand.m_pszString))
+            if (!_tcscmp(f->m_name, instr->m_operand.m_pszString))
             {
                free(instr->m_operand.m_pszString);
                instr->m_operand.m_dwAddr = f->m_dwAddr;
@@ -207,7 +207,7 @@ void NXSL_Program::dump(FILE *pFile)
    for(int i = 0; i < m_instructionSet->size(); i++)
    {
       NXSL_Instruction *instr = m_instructionSet->get(i);
-      fprintf(pFile, "%04X  %-6s  ", i, g_nxslCommandMnemonic[instr->m_nOpCode]);
+      _ftprintf(pFile, _T("%04X  %-6hs  "), i, g_nxslCommandMnemonic[instr->m_nOpCode]);
       switch(instr->m_nOpCode)
       {
          case OPCODE_CALL_EXTERNAL:
@@ -223,6 +223,7 @@ void NXSL_Program::dump(FILE *pFile)
             _ftprintf(pFile, _T("@%s, %d\n"), instr->m_operand.m_pszString,
                       instr->m_nStackItems);
             break;
+         case OPCODE_CATCH:
          case OPCODE_JMP:
          case OPCODE_JZ:
          case OPCODE_JNZ:

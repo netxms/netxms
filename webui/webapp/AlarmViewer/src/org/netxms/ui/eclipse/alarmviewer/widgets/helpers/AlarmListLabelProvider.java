@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.alarmviewer.widgets.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Alarm;
@@ -44,6 +45,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 	private Image[] stateImages = new Image[5];
 	private Image commentsImage;
 	private boolean blinkState = true;
+	private WorkbenchLabelProvider wbLabelProvider;
 	
 	/**
 	 * Default constructor 
@@ -59,6 +61,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 		stateImages[4] = Activator.getImageDescriptor("icons/acknowledged_sticky.png").createImage(); //$NON-NLS-1$
 		
 		commentsImage = Activator.getImageDescriptor("icons/comments.png").createImage(); //$NON-NLS-1$
+		wbLabelProvider = new WorkbenchLabelProvider();
 	}
 
 	/* (non-Javadoc)
@@ -77,6 +80,9 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
 				if ((((Alarm)element).getState() == Alarm.STATE_ACKNOWLEDGED) && ((Alarm)element).isSticky())
 					return stateImages[4];
 				return stateImages[((Alarm)element).getState()];
+			case AlarmList.COLUMN_SOURCE:
+			   AbstractObject object = session.findObjectById(((Alarm)element).getSourceObjectId());
+			   return (object != null) ? wbLabelProvider.getImage(object) : null;
 			case AlarmList.COLUMN_COMMENTS:
 				return (((Alarm)element).getCommentsCount() > 0) ? commentsImage : null;
 		}
@@ -122,7 +128,7 @@ public class AlarmListLabelProvider extends LabelProvider implements ITableLabel
                case Alarm.HELPDESK_STATE_OPEN:
                   return ((Alarm)element).getHelpdeskReference();
                case Alarm.HELPDESK_STATE_CLOSED:
-                  return ((Alarm)element).getHelpdeskReference() + " (closed)";
+                  return ((Alarm)element).getHelpdeskReference() + Messages.get().AlarmListLabelProvider_Closed;
             }
             return null;
 		}

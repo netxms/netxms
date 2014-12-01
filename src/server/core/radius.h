@@ -267,7 +267,7 @@ typedef struct auth_req {
 	struct auth_req		*next;		/* Next active request */
 } AUTH_REQ;
 
-enum
+enum PW_OPERATORS
 {
   PW_OPERATOR_EQUAL = 0,	/* = */
   PW_OPERATOR_NOT_EQUAL,	/* != */
@@ -277,7 +277,7 @@ enum
   PW_OPERATOR_GREATER_EQUAL,	/* >= */
   PW_OPERATOR_SET,		/* := */
   PW_OPERATOR_ADD,		/* += */
-  PW_OPERATOR_SUB,		/* -= */
+  PW_OPERATOR_SUB 		/* -= */
 };
 
 #endif   /* _RADIUS_H_ */

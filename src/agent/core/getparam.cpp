@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -25,32 +25,33 @@
 /**
  * Parameter handlers
  */
-LONG H_ActiveConnections(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue);
-LONG H_AgentTraps(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
-LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
-LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value);
-LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
-LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value);
-LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
+LONG H_ActiveConnections(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_AgentTraps(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_SubAgentTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_ActionList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_ExternalParameter(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 #ifdef _WIN32
-LONG H_DiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_HostName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_CPUCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value);
-LONG H_PhysicalDiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue);
-LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value);
-LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value);
+LONG H_DiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_HostName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_CPUCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_PhysicalDiskInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 #endif
 
 /**
@@ -73,7 +74,7 @@ static UINT32 m_dwUnsupportedRequests = 0;
 /**
  * Handler for parameters which always returns string constant
  */
-static LONG H_StringConstant(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+static LONG H_StringConstant(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    ret_string(value, arg);
    return SYSINFO_RC_SUCCESS;
@@ -82,7 +83,7 @@ static LONG H_StringConstant(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for parameters which returns UINT32 value from specific variable
  */
-static LONG H_UIntPtr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+static LONG H_UIntPtr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    ret_uint(value, *((UINT32 *)arg));
    return SYSINFO_RC_SUCCESS;
@@ -90,8 +91,8 @@ static LONG H_UIntPtr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 
 /**
  * Handler for Agent.SupportedCiphers
- */ 
-static LONG H_SupportedCiphers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+ */
+static LONG H_SupportedCiphers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    UINT32 dwCiphers;
 
@@ -123,7 +124,7 @@ static LONG H_SupportedCiphers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pV
 /**
  * Handler for parameters list
  */
-static LONG H_ParamList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+static LONG H_ParamList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    int i;
 
@@ -138,7 +139,7 @@ static LONG H_ParamList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 /**
  * Handler for push parameters list
  */
-static LONG H_PushParamList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+static LONG H_PushParamList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    int i;
 
@@ -150,7 +151,7 @@ static LONG H_PushParamList(const TCHAR *cmd, const TCHAR *arg, StringList *valu
 /**
  * Handler for enums list
  */
-static LONG H_EnumList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+static LONG H_EnumList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    int i;
 
@@ -163,7 +164,7 @@ static LONG H_EnumList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 /**
  * Handler for table list
  */
-static LONG H_TableList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+static LONG H_TableList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    int i;
 
@@ -263,6 +264,7 @@ static NETXMS_SUBAGENT_LIST m_stdLists[] =
  */
 static NETXMS_SUBAGENT_TABLE m_stdTables[] =
 {
+   { _T("Agent.SessionAgents"), H_SessionAgents, NULL, _T("SESSION_ID"), DCTDESC_AGENT_SUBAGENTS },
    { _T("Agent.SubAgents"), H_SubAgentTable, NULL, _T("NAME"), DCTDESC_AGENT_SUBAGENTS },
 #ifdef _WIN32
    { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("VOLUME"), DCTDESC_FILESYSTEM_VOLUMES }
@@ -329,17 +331,17 @@ void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description)
    {
       // Add new parameter
       m_pPushParamList = (NETXMS_SUBAGENT_PUSHPARAM *)realloc(m_pPushParamList, sizeof(NETXMS_SUBAGENT_PUSHPARAM) * (m_iNumPushParams + 1));
-      nx_strncpy(m_pPushParamList[m_iNumPushParams].name, name, MAX_PARAM_NAME - 1); 
+      nx_strncpy(m_pPushParamList[m_iNumPushParams].name, name, MAX_PARAM_NAME - 1);
       m_pPushParamList[m_iNumPushParams].dataType = dataType;
-      nx_strncpy(m_pPushParamList[m_iNumPushParams].description, description, MAX_DB_STRING); 
+      nx_strncpy(m_pPushParamList[m_iNumPushParams].description, description, MAX_DB_STRING);
       m_iNumPushParams++;
    }
 }
 
 /**
  * Add parameter to list
- */ 
-void AddParameter(const TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *), const TCHAR *pArg,
+ */
+void AddParameter(const TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *), const TCHAR *pArg,
                   int iDataType, const TCHAR *pszDescription)
 {
    int i;
@@ -381,8 +383,8 @@ void AddParameter(const TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const 
 
 /**
  * Add list
- */ 
-void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *), const TCHAR *arg)
+ */
+void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg)
 {
    int i;
 
@@ -409,8 +411,8 @@ void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, S
 
 /**
  * Add table
- */ 
-void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *), const TCHAR *arg,
+ */
+void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *), const TCHAR *arg,
 				  const TCHAR *instanceColumns, const TCHAR *description)
 {
    int i;
@@ -442,7 +444,7 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
 
 /**
  * Add external parameter
- */  
+ */
 BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList) //to be TCHAR
 {
    TCHAR *pszCmdLine, *pszArg;
@@ -475,7 +477,7 @@ BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList) //to
 /**
  * Get parameter's value
  */
-UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
+UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue, AbstractCommSession *session)
 {
    int i, rc;
    UINT32 dwErrorCode;
@@ -485,7 +487,7 @@ UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
 	{
       if (MatchString(m_pParamList[i].name, pszParam, FALSE))
       {
-         rc = m_pParamList[i].handler(pszParam, m_pParamList[i].arg, pszValue);
+         rc = m_pParamList[i].handler(pszParam, m_pParamList[i].arg, pszValue, session);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
@@ -562,7 +564,7 @@ UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue)
 /**
  * Get list's value
  */
-UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue)
+UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue, AbstractCommSession *session)
 {
    int i, rc;
    UINT32 dwErrorCode;
@@ -572,7 +574,7 @@ UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue)
 	{
       if (MatchString(m_pEnumList[i].name, pszParam, FALSE))
       {
-         rc = m_pEnumList[i].handler(pszParam, m_pEnumList[i].arg, pValue);
+         rc = m_pEnumList[i].handler(pszParam, m_pEnumList[i].arg, pValue, session);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
@@ -622,7 +624,7 @@ UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue)
 /**
  * Get table's value
  */
-UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue)
+UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue, AbstractCommSession *session)
 {
    int i, rc;
    UINT32 dwErrorCode;
@@ -632,7 +634,7 @@ UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue)
 	{
       if (MatchString(m_pTableList[i].name, pszParam, FALSE))
       {
-         rc = m_pTableList[i].handler(pszParam, m_pTableList[i].arg, pValue);
+         rc = m_pTableList[i].handler(pszParam, m_pTableList[i].arg, pValue, session);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
@@ -682,7 +684,7 @@ UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue)
 /**
  * Put complete list of supported parameters into NXCP message
  */
-void GetParameterList(CSCPMessage *pMsg)
+void GetParameterList(NXCPMessage *pMsg)
 {
    int i;
    UINT32 dwId, count;
@@ -692,40 +694,40 @@ void GetParameterList(CSCPMessage *pMsg)
    {
 		if (m_pParamList[i].dataType != DCI_DT_DEPRECATED)
 		{
-			pMsg->SetVariable(dwId++, m_pParamList[i].name);
-			pMsg->SetVariable(dwId++, m_pParamList[i].description);
-			pMsg->SetVariable(dwId++, (WORD)m_pParamList[i].dataType);
+			pMsg->setField(dwId++, m_pParamList[i].name);
+			pMsg->setField(dwId++, m_pParamList[i].description);
+			pMsg->setField(dwId++, (WORD)m_pParamList[i].dataType);
 			count++;
 		}
    }
 	ListParametersFromExtProviders(pMsg, &dwId, &count);
 	ListParametersFromExtSubagents(pMsg, &dwId, &count);
-   pMsg->SetVariable(VID_NUM_PARAMETERS, count);
+   pMsg->setField(VID_NUM_PARAMETERS, count);
 
 	// Push parameters
-   pMsg->SetVariable(VID_NUM_PUSH_PARAMETERS, (UINT32)m_iNumPushParams);
+   pMsg->setField(VID_NUM_PUSH_PARAMETERS, (UINT32)m_iNumPushParams);
    for(i = 0, dwId = VID_PUSHPARAM_LIST_BASE; i < m_iNumPushParams; i++)
    {
-      pMsg->SetVariable(dwId++, m_pPushParamList[i].name);
-      pMsg->SetVariable(dwId++, m_pPushParamList[i].description);
-      pMsg->SetVariable(dwId++, (WORD)m_pPushParamList[i].dataType);
+      pMsg->setField(dwId++, m_pPushParamList[i].name);
+      pMsg->setField(dwId++, m_pPushParamList[i].description);
+      pMsg->setField(dwId++, (WORD)m_pPushParamList[i].dataType);
    }
 
 	// Lists
-   pMsg->SetVariable(VID_NUM_ENUMS, (UINT32)m_iNumEnums);
+   pMsg->setField(VID_NUM_ENUMS, (UINT32)m_iNumEnums);
    for(i = 0, dwId = VID_ENUM_LIST_BASE; i < m_iNumEnums; i++)
    {
-      pMsg->SetVariable(dwId++, m_pEnumList[i].name);
+      pMsg->setField(dwId++, m_pEnumList[i].name);
    }
 	ListListsFromExtSubagents(pMsg, &dwId, &count);
 
 	// Tables
-   pMsg->SetVariable(VID_NUM_TABLES, (UINT32)m_iNumTables);
+   pMsg->setField(VID_NUM_TABLES, (UINT32)m_iNumTables);
    for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
    {
-      pMsg->SetVariable(dwId++, m_pTableList[i].name);
-		pMsg->SetVariable(dwId++, m_pTableList[i].instanceColumns);
-		pMsg->SetVariable(dwId++, m_pTableList[i].description);
+      pMsg->setField(dwId++, m_pTableList[i].name);
+		pMsg->setField(dwId++, m_pTableList[i].instanceColumns);
+		pMsg->setField(dwId++, m_pTableList[i].description);
    }
 	ListTablesFromExtSubagents(pMsg, &dwId, &count);
 }
@@ -733,17 +735,17 @@ void GetParameterList(CSCPMessage *pMsg)
 /**
  * Put list of supported tables into NXCP message
  */
-void GetTableList(CSCPMessage *pMsg)
+void GetTableList(NXCPMessage *pMsg)
 {
    int i;
    UINT32 dwId, count;
 
-   pMsg->SetVariable(VID_NUM_TABLES, (UINT32)m_iNumTables);
+   pMsg->setField(VID_NUM_TABLES, (UINT32)m_iNumTables);
    for(i = 0, dwId = VID_TABLE_LIST_BASE; i < m_iNumTables; i++)
    {
-      pMsg->SetVariable(dwId++, m_pTableList[i].name);
-		pMsg->SetVariable(dwId++, m_pTableList[i].instanceColumns);
-		pMsg->SetVariable(dwId++, m_pTableList[i].description);
+      pMsg->setField(dwId++, m_pTableList[i].name);
+		pMsg->setField(dwId++, m_pTableList[i].instanceColumns);
+		pMsg->setField(dwId++, m_pTableList[i].description);
    }
 	ListTablesFromExtSubagents(pMsg, &dwId, &count);
 }
@@ -751,15 +753,15 @@ void GetTableList(CSCPMessage *pMsg)
 /**
  * Put list of supported lists (enums) into NXCP message
  */
-void GetEnumList(CSCPMessage *pMsg)
+void GetEnumList(NXCPMessage *pMsg)
 {
    int i;
    UINT32 dwId, count;
 
-   pMsg->SetVariable(VID_NUM_ENUMS, (UINT32)m_iNumEnums);
+   pMsg->setField(VID_NUM_ENUMS, (UINT32)m_iNumEnums);
    for(i = 0, dwId = VID_ENUM_LIST_BASE; i < m_iNumEnums; i++)
    {
-      pMsg->SetVariable(dwId++, m_pEnumList[i].name);
+      pMsg->setField(dwId++, m_pEnumList[i].name);
    }
 	ListListsFromExtSubagents(pMsg, &dwId, &count);
 }

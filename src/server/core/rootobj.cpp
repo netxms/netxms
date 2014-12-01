@@ -27,8 +27,8 @@
  */
 ServiceRoot::ServiceRoot() : UniversalRoot()
 {
-   m_dwId = BUILTIN_OID_SERVICEROOT;
-   _tcscpy(m_szName, _T("Infrastructure Services"));
+   m_id = BUILTIN_OID_SERVICEROOT;
+   _tcscpy(m_name, _T("Infrastructure Services"));
 }
 
 /**
@@ -51,8 +51,8 @@ bool ServiceRoot::showThresholdSummary()
  */
 TemplateRoot::TemplateRoot() : UniversalRoot()
 {
-   m_dwId = BUILTIN_OID_TEMPLATEROOT;
-   _tcscpy(m_szName, _T("Templates"));
+   m_id = BUILTIN_OID_TEMPLATEROOT;
+   _tcscpy(m_name, _T("Templates"));
 	m_iStatus = STATUS_NORMAL;
 }
 
@@ -76,8 +76,8 @@ void TemplateRoot::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 PolicyRoot::PolicyRoot() : UniversalRoot()
 {
-   m_dwId = BUILTIN_OID_POLICYROOT;
-   _tcscpy(m_szName, _T("Policies"));
+   m_id = BUILTIN_OID_POLICYROOT;
+   _tcscpy(m_name, _T("Policies"));
 	m_iStatus = STATUS_NORMAL;
 }
 
@@ -101,8 +101,8 @@ void PolicyRoot::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 NetworkMapRoot::NetworkMapRoot() : UniversalRoot()
 {
-   m_dwId = BUILTIN_OID_NETWORKMAPROOT;
-   _tcscpy(m_szName, _T("Network Maps"));
+   m_id = BUILTIN_OID_NETWORKMAPROOT;
+   _tcscpy(m_name, _T("Network Maps"));
 	m_iStatus = STATUS_NORMAL;
 }
 
@@ -126,8 +126,8 @@ void NetworkMapRoot::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 DashboardRoot::DashboardRoot() : UniversalRoot()
 {
-   m_dwId = BUILTIN_OID_DASHBOARDROOT;
-   _tcscpy(m_szName, _T("Dashboards"));
+   m_id = BUILTIN_OID_DASHBOARDROOT;
+   _tcscpy(m_name, _T("Dashboards"));
 	m_iStatus = STATUS_NORMAL;
 }
 

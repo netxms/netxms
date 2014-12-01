@@ -82,7 +82,7 @@ public class SummaryTablesCache
 		}
 		catch(Exception e)
 		{
-		   Activator.logError("Exception in SummaryTablesCache.reload()", e);
+		   Activator.logError("Exception in SummaryTablesCache.reload()", e); //$NON-NLS-1$
 		}
 	}
 	

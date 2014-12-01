@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,12 +25,15 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
@@ -64,6 +67,7 @@ import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.dialogs.EditCommentDialog;
+import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeComparator;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeContentProvider;
 import org.netxms.ui.eclipse.alarmviewer.views.helpers.EventTreeLabelProvider;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmCommentsEditor;
@@ -74,6 +78,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ImageCache;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
@@ -388,11 +393,22 @@ public class AlarmDetails extends ViewPart
       section.setClient(content);
       
 		final String[] names = { Messages.get().AlarmDetails_Column_Severity, Messages.get().AlarmDetails_Column_Source, Messages.get().AlarmDetails_Column_Name, Messages.get().AlarmDetails_Column_Message, Messages.get().AlarmDetails_Column_Timestamp };
-		final int[] widths = { 130, 160, 160, 400, 120 };
-		eventViewer = new SortableTreeViewer(content, names, widths, 0, SWT.UP, SWT.BORDER | SWT.FULL_SELECTION);
+		final int[] widths = { 130, 160, 160, 400, 150 };
+		eventViewer = new SortableTreeViewer(content, names, widths, EV_COLUMN_TIMESTAMP, SWT.DOWN, SWT.BORDER | SWT.FULL_SELECTION);
 		eventViewer.setContentProvider(new EventTreeContentProvider());
 		eventViewer.setLabelProvider(new EventTreeLabelProvider());
+		eventViewer.setComparator(new EventTreeComparator());
 		eventViewer.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		
+		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+		WidgetHelper.restoreTreeViewerSettings(eventViewer, settings, "AlarmDetails.Events"); //$NON-NLS-1$
+		eventViewer.getControl().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveTreeViewerSettings(eventViewer, settings, "AlarmDetails.Events"); //$NON-NLS-1$
+         }
+      });
 	}
 
 	/**
@@ -495,7 +511,7 @@ public class AlarmDetails extends ViewPart
                      labelAccessDenied = new CLabel(eventViewer.getControl().getParent(), SWT.NONE);
                      toolkit.adapt(labelAccessDenied);
                      labelAccessDenied.setImage(StatusDisplayInfo.getStatusImage(Severity.CRITICAL));
-                     labelAccessDenied.setText("Cannot get list of related events - access denied");
+                     labelAccessDenied.setText(Messages.get().AlarmDetails_RelatedEvents_AccessDenied);
                      labelAccessDenied.moveAbove(null);
                      labelAccessDenied.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
                   }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,6 +76,7 @@ public class AddDashboardElementDlg extends Dialog
 		elementTypeSelector.add(Messages.get().AddDashboardElementDlg_Separator);
 		elementTypeSelector.add(Messages.get().AddDashboardElementDlg_TableValue);
 		elementTypeSelector.add(Messages.get().AddDashboardElementDlg_StatusMap);
+      elementTypeSelector.add(Messages.get().AddDashboardElementDlg_DciSummaryTable);
 		elementTypeSelector.select(1);
 		
 		return dialogArea;

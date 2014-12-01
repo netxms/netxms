@@ -29,8 +29,8 @@
 
 BusinessServiceRoot::BusinessServiceRoot() : ServiceContainer()
 {
-	m_dwId = BUILTIN_OID_BUSINESSSERVICEROOT;
-	_tcscpy(m_szName, _T("Business Services"));
+	m_id = BUILTIN_OID_BUSINESSSERVICEROOT;
+	_tcscpy(m_name, _T("Business Services"));
 	uuid_generate(m_guid);
 	m_iStatus = STATUS_NORMAL;
 }
@@ -49,22 +49,22 @@ BusinessServiceRoot::~BusinessServiceRoot()
 // Save object to database
 //
 
-BOOL BusinessServiceRoot::SaveToDB(DB_HANDLE hdb)
+BOOL BusinessServiceRoot::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024];
    UINT32 i;
 
-   LockData();
+   lockProperties();
 
    saveCommonProperties(hdb);
 
    // Update members list
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_id);
    DBQuery(hdb, szQuery);
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_dwId, m_pChildList[i]->Id());
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_pChildList[i]->getId());
       DBQuery(hdb, szQuery);
    }
    UnlockChildList();
@@ -73,7 +73,7 @@ BOOL BusinessServiceRoot::SaveToDB(DB_HANDLE hdb)
    saveACLToDB(hdb);
 
    // Unlock object and clear modification flag
-   UnlockData();
+   unlockProperties();
    m_isModified = false;
    return TRUE;
 }
@@ -102,7 +102,7 @@ void BusinessServiceRoot::LinkChildObjects()
    DB_RESULT hResult;
 
    // Load child list and link objects
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%d"), m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%d"), m_id);
    hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult != NULL)
    {
@@ -115,7 +115,7 @@ void BusinessServiceRoot::LinkChildObjects()
             LinkObject(pObject);
          else
             nxlog_write(MSG_ROOT_INVALID_CHILD_ID, EVENTLOG_WARNING_TYPE, "ds", 
-                        dwObjectId, g_szClassName[Type()]);
+                        dwObjectId, g_szClassName[getObjectClass()]);
       }
       DBFreeResult(hResult);
    }

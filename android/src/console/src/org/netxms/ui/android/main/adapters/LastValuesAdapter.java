@@ -133,6 +133,7 @@ public class LastValuesAdapter extends BaseAdapter
 	 * @see android.widget.Adapter#getView(int, android.view.View,
 	 * android.view.ViewGroup)
 	 */
+	@SuppressLint("RtlHardcoded")
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent)
 	{
@@ -230,6 +231,7 @@ public class LastValuesAdapter extends BaseAdapter
 
 		return view;
 	}
+
 	/**
 	 * Get formatted value (using multiplier as necessary)
 	 * 
@@ -296,7 +298,7 @@ public class LastValuesAdapter extends BaseAdapter
 	 */
 	private int getThresholdIcon(Threshold t)
 	{
-		int s = t != null ? t.getCurrentSeverity() : 0;
+		int s = t != null ? t.getCurrentSeverity().getValue() : 0;
 		return severityImageId[s < severityImageId.length ? s : 0];
 	}
 

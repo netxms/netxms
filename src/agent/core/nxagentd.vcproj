@@ -393,10 +393,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\logmonitoring.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\master.cpp"
 				>
 			</File>
@@ -417,6 +413,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sa.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\sd.cpp"
 				>
 			</File>
@@ -430,6 +430,10 @@
 			</File>
 			<File
 				RelativePath=".\snmpproxy.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\snmptrapproxy.cpp"
 				>
 			</File>
 			<File

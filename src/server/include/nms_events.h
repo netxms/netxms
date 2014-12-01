@@ -49,7 +49,7 @@ struct EVENT_TEMPLATE
 /**
  * Event
  */
-class Event
+class NXCORE_EXPORTABLE Event
 {
 private:
    UINT64 m_qwId;
@@ -58,7 +58,7 @@ private:
    UINT32 m_dwSeverity;
    UINT32 m_dwFlags;
    UINT32 m_dwSource;
-	TCHAR m_szName[MAX_EVENT_NAME];
+	TCHAR m_name[MAX_EVENT_NAME];
    TCHAR *m_pszMessageText;
    TCHAR *m_pszMessageTemplate;
    time_t m_tTimeStamp;
@@ -69,6 +69,7 @@ private:
 
 public:
    Event();
+   Event(Event *src);
    Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, va_list args);
    ~Event();
 
@@ -77,7 +78,7 @@ public:
    UINT32 getSeverity() { return m_dwSeverity; }
    UINT32 getFlags() { return m_dwFlags; }
    UINT32 getSourceId() { return m_dwSource; }
-	const TCHAR *getName() { return m_szName; }
+	const TCHAR *getName() { return m_name; }
    const TCHAR *getMessage() { return m_pszMessageText; }
    const TCHAR *getUserTag() { return m_pszUserTag; }
    time_t getTimeStamp() { return m_tTimeStamp; }
@@ -85,7 +86,7 @@ public:
    UINT64 getRootId() { return m_qwRootId; }
    void setRootId(UINT64 qwId) { m_qwRootId = qwId; }
 
-   void prepareMessage(CSCPMessage *pMsg);
+   void prepareMessage(NXCPMessage *pMsg);
 
    void expandMessageText();
    TCHAR *expandText(const TCHAR *textTemplate, const TCHAR *alarmMsg = NULL, const TCHAR *alarmKey = NULL);
@@ -96,12 +97,13 @@ public:
    UINT32 getParameterAsULong(int index) { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoul(v, NULL, 0) : 0; }
    UINT64 getParameterAsUInt64(int index) { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoull(v, NULL, 0) : 0; }
 
-	const TCHAR *getNamedParameter(const TCHAR *name) { return getParameter(m_parameterNames.getIndexIgnoreCase(name)); }
-   UINT32 getNamedParameterAsULong(const TCHAR *name) { return getParameterAsULong(m_parameterNames.getIndexIgnoreCase(name)); }
-   UINT64 getNamedParameterAsUInt64(const TCHAR *name) { return getParameterAsUInt64(m_parameterNames.getIndexIgnoreCase(name)); }
+	const TCHAR *getNamedParameter(const TCHAR *name) { return getParameter(m_parameterNames.indexOfIgnoreCase(name)); }
+   UINT32 getNamedParameterAsULong(const TCHAR *name) { return getParameterAsULong(m_parameterNames.indexOfIgnoreCase(name)); }
+   UINT64 getNamedParameterAsUInt64(const TCHAR *name) { return getParameterAsUInt64(m_parameterNames.indexOfIgnoreCase(name)); }
 
 	void addParameter(const TCHAR *name, const TCHAR *value);
 	void setNamedParameter(const TCHAR *name, const TCHAR *value);
+	void setParameter(int index, const TCHAR *name, const TCHAR *value);
 
    const TCHAR *getCustomMessage() { return CHECK_NULL_EX(m_pszCustomMessage); }
    void setCustomMessage(const TCHAR *message) { safe_free(m_pszCustomMessage); m_pszCustomMessage = (message != NULL) ? _tcsdup(message) : NULL; }
@@ -113,7 +115,7 @@ public:
 class EPRule
 {
 private:
-   UINT32 m_dwId;
+   UINT32 m_id;
    uuid_t m_guid;
    UINT32 m_dwFlags;
    UINT32 m_dwNumSources;
@@ -144,19 +146,19 @@ private:
    void generateAlarm(Event *pEvent);
 
 public:
-   EPRule(UINT32 dwId);
-   EPRule(DB_RESULT hResult, int iRow);
-   EPRule(CSCPMessage *pMsg);
+   EPRule(UINT32 id);
+   EPRule(DB_RESULT hResult, int row);
+   EPRule(NXCPMessage *msg);
    EPRule(ConfigEntry *config);
    ~EPRule();
 
-   UINT32 getId() { return m_dwId; }
+   UINT32 getId() { return m_id; }
    BYTE *getGuid() { return m_guid; }
-   void setId(UINT32 dwNewId) { m_dwId = dwNewId; }
+   void setId(UINT32 dwNewId) { m_id = dwNewId; }
    bool loadFromDB();
 	void saveToDB(DB_HANDLE hdb);
    bool processEvent(Event *pEvent);
-   void createMessage(CSCPMessage *pMsg);
+   void createMessage(NXCPMessage *pMsg);
    void createNXMPRecord(String &str);
 
    bool isActionInUse(UINT32 dwActionId);
@@ -198,27 +200,31 @@ public:
  */
 BOOL InitEventSubsystem();
 void ShutdownEventSubsystem();
-BOOL PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
-BOOL PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...);
-BOOL PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...);
-BOOL PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...);
-void ResendEvents(Queue *queue);
 void ReloadEvents();
 void DeleteEventTemplateFromList(UINT32 eventCode);
 void CorrelateEvent(Event *pEvent);
 void CreateNXMPEventRecord(String &str, UINT32 eventCode);
+
 BOOL EventNameFromCode(UINT32 eventCode, TCHAR *pszBuffer);
-UINT32 EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);
+UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);
 EVENT_TEMPLATE *FindEventTemplateByCode(UINT32 eventCode);
 EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName);
+
+BOOL NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
+BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...);
+BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters);
+BOOL NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, ...);
+BOOL NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...);
+BOOL NXCORE_EXPORTABLE PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...);
+void NXCORE_EXPORTABLE ResendEvents(Queue *queue);
+
+const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);
 
 /**
  * Global variables
  */
 extern Queue *g_pEventQueue;
 extern EventPolicy *g_pEventPolicy;
-extern const TCHAR *g_szStatusText[];
-extern const TCHAR *g_szStatusTextSmall[];
 extern INT64 g_totalEventsProcessed;
 
 #endif   /* _nms_events_h_ */

@@ -4,13 +4,16 @@
     android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
 	android:layout_centerVertical="true" >
+
     <TextView
 	    android:id="@+id/tvGroup"
 		android:textIsSelectable="false"
 		android:layout_width="match_parent"
-	    android:layout_height="36dip"
+	    android:layout_height="36dp"
 	    android:paddingLeft="36dip"
+	    android:paddingStart="36dip"
 	    android:paddingRight="5dip"
+	    android:paddingEnd="5dip"
 	    android:gravity="center_vertical"
 	    android:textSize="17sp"
 		android:textColor="@color/text_color"

@@ -1,6 +1,6 @@
 AppName=NetXMS Agent
-AppVerName=NetXMS Agent 1.2.14
-AppVersion=1.2.14
+AppVerName=NetXMS Agent 2.0-M1
+AppVersion=2.0-M1
 AppPublisher=NetXMS Team
 AppPublisherURL=http://www.netxms.org
 AppSupportURL=http://www.netxms.org
@@ -12,4 +12,3 @@ Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
 LicenseFile=..\..\..\copying
-

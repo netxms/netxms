@@ -68,7 +68,7 @@ struct nlist nl[] = {
 
 kvm_t *kvmd = NULL;
 
-LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nVer = CAST_FROM_POINTER(pArg, int);
 	int nRet = SYSINFO_RC_ERROR;
@@ -99,7 +99,7 @@ LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return nRet;
 }
 
-LONG H_NetIfAdmStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_NetIfAdmStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
@@ -155,7 +155,7 @@ LONG H_NetIfAdmStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return nRet;
 }
 
-LONG H_NetIfLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_NetIfLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];
@@ -215,7 +215,7 @@ LONG H_NetIfLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	return nRet;
 }
 
-LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *hFile;
@@ -288,7 +288,7 @@ LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 	return nRet;
 }
 
-LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
 #define sa2sin(x) ((struct sockaddr_in *)x)
 #define ROUNDUP(a) \
@@ -413,7 +413,7 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
 	return nRet;
 }
 
-LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct ifaddrs *pIfAddr, *pNext;
@@ -568,7 +568,7 @@ LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 	return nRet;
 }
 
-LONG H_NetIfInfoFromKVM(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_NetIfInfoFromKVM(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szArg[512];

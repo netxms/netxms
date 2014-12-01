@@ -191,10 +191,10 @@ DECLARE_SUBAGENT_ENTRY_POINT(DARWIN)
 
 extern "C" BOOL __NxSubAgentGetIfList(StringList *value)
 {
-   return H_NetIfList(_T("Net.InterfaceList"), NULL, value) == SYSINFO_RC_SUCCESS;
+   return H_NetIfList(_T("Net.InterfaceList"), NULL, value, NULL) == SYSINFO_RC_SUCCESS;
 }
 
 extern "C" BOOL __NxSubAgentGetArpCache(StringList *value)
 {
-   return H_NetArpCache(_T("Net.ArpCache"), NULL, value) == SYSINFO_RC_SUCCESS;
+   return H_NetArpCache(_T("Net.ArpCache"), NULL, value, NULL) == SYSINFO_RC_SUCCESS;
 }

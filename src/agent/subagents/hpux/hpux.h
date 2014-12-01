@@ -105,8 +105,8 @@ typedef struct t_ProcEnt
 void StartIOStatCollector();
 void ShutdownIOStatCollector();
 
-LONG H_IOStats(const char *cmd, const char *arg, char *value);
-LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value);
+LONG H_IOStats(const char *cmd, const char *arg, char *value, AbstractCommSession *session);
+LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value, AbstractCommSession *session);
 
 
 //

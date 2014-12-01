@@ -1,6 +1,6 @@
 /* 
 ** MS SQL Database Driver
-** Copyright (C) 2004-2012 Victor Kirhenshtein
+** Copyright (C) 2004-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -170,17 +170,17 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
    // Allocate environment
 	SQLHENV sqlEnv;
    long rc = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &sqlEnv);
 	if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
-		return FALSE;
+		return false;
 
 	rc = SQLSetEnvAttr(sqlEnv, SQL_ATTR_ODBC_VERSION, (void *)SQL_OV_ODBC3, 0);
 	if ((rc != SQL_SUCCESS) && (rc != SQL_SUCCESS_WITH_INFO))
-		return FALSE;
+		return false;
 
 	// Find correct driver
 	// Default is "SQL Native Client", but switch to "SQL Server Native Client 10.0" if found
@@ -189,7 +189,8 @@ extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 	rc = SQLDrivers(sqlEnv, SQL_FETCH_FIRST, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
 	while((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
 	{
-		if (!_tcscmp(name, _T("SQL Server Native Client 10.0")))
+		if (!_tcscmp(name, _T("SQL Server Native Client 10.0")) ||
+          !_tcscmp(name, _T("SQL Server Native Client 11.0")))
 		{
 			_tcscpy(s_driver, name);
 			break;
@@ -198,7 +199,7 @@ extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
 	}
 
    SQLFreeHandle(SQL_HANDLE_ENV, sqlEnv);
-   return TRUE;
+   return true;
 }
 
 /**
@@ -689,7 +690,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MSSQL_CONN *pConn, WCHAR *pw
          SQLNumResultCols(pConn->sqlStatement, &wNumCols);
          pResult->iNumCols = wNumCols;
          pResult->pConn = pConn;
-         pResult->bNoMoreRows = FALSE;
+         pResult->noMoreRows = false;
 			pResult->data = (WCHAR **)malloc(sizeof(WCHAR *) * pResult->iNumCols);
          memset(pResult->data, 0, sizeof(WCHAR *) * pResult->iNumCols);
          pResult->dataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE);
@@ -736,9 +737,9 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MSSQL_CONN *pConn, WCHAR *pw
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" BOOL EXPORT DrvFetch(MSSQL_ASYNC_QUERY_RESULT *pResult)
+extern "C" bool EXPORT DrvFetch(MSSQL_ASYNC_QUERY_RESULT *pResult)
 {
-   BOOL bResult = FALSE;
+   bool bResult = false;
 
    if (pResult != NULL)
    {
@@ -767,7 +768,7 @@ extern "C" BOOL EXPORT DrvFetch(MSSQL_ASYNC_QUERY_RESULT *pResult)
       }
       else
       {
-         pResult->bNoMoreRows = TRUE;
+         pResult->noMoreRows = true;
       }
    }
    return bResult;
@@ -798,7 +799,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(MSSQL_ASYNC_QUERY_RESULT *pResult, int
       return NULL;
 
    // Check if there are valid fetched row
-   if (pResult->bNoMoreRows)
+   if (pResult->noMoreRows)
       return NULL;
 
    if ((iColumn >= 0) && (iColumn < pResult->iNumCols))
@@ -897,11 +898,9 @@ extern "C" DWORD EXPORT DrvCommit(MSSQL_CONN *pConn)
    return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
-
-//
-// Rollback transaction
-//
-
+/**
+ * Rollback transaction
+ */
 extern "C" DWORD EXPORT DrvRollback(MSSQL_CONN *pConn)
 {
    SQLRETURN nRet;
@@ -916,14 +915,33 @@ extern "C" DWORD EXPORT DrvRollback(MSSQL_CONN *pConn)
    return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
+/**
+ * Check if table exist
+ */
+extern "C" int EXPORT DrvIsTableExist(MSSQL_CONN *pConn, const WCHAR *name)
+{
+   WCHAR query[256];
+   swprintf(query, 256, L"SELECT count(*) FROM sysobjects WHERE xtype='U' AND upper(name)=upper('%ls')", name);
+   DWORD error;
+   WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   int rc = DBIsTableExist_Failure;
+   MSSQL_QUERY_RESULT *hResult = (MSSQL_QUERY_RESULT *)DrvSelect(pConn, query, &error, errorText);
+   if (hResult != NULL)
+   {
+      WCHAR buffer[64] = L"";
+      DrvGetField(hResult, 0, 0, buffer, 64);
+      rc = (wcstol(buffer, NULL, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      DrvFreeResult(hResult);
+   }
+   return rc;
+}
 
-//
-// DLL Entry point
-//
-
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+/**
+ * DLL Entry point
+ */
+bool WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
       DisableThreadLibraryCalls(hInstance);
-   return TRUE;
+   return true;
 }

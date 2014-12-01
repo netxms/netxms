@@ -41,6 +41,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
@@ -53,6 +54,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private NXCSession session;
 	private Dashboard dashboard;
 	private boolean readOnly = true;
+	private IntermediateSelectionProvider selectionProvider;
 	private DashboardControl dbc;
 	private Composite parentComposite;
 	private DashboardModifyListener dbcModifyListener;
@@ -89,7 +91,10 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-	   ConsoleJob job = new ConsoleJob("Get effective rights", this, Activator.PLUGIN_ID, null) {
+	   selectionProvider = new IntermediateSelectionProvider();
+	   getSite().setSelectionProvider(selectionProvider);
+	   
+	   ConsoleJob job = new ConsoleJob(Messages.get().DashboardView_GetEffectiveRights, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -99,7 +104,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get effective rights for dashboard object";
+            return Messages.get().DashboardView_GetEffectiveRightsError;
          }
       };
       job.start();
@@ -114,7 +119,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
       }
 	   
 		parentComposite = parent;
-		dbc = new DashboardControl(parent, SWT.NONE, dashboard, this, false);
+		dbc = new DashboardControl(parent, SWT.NONE, dashboard, this, selectionProvider, false);
 		if (!readOnly)
 		{
    		dbcModifyListener = new DashboardModifyListener() {
@@ -379,7 +384,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 
 			if (dashboard != null)
 			{
-				dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, false);
+				dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, this, selectionProvider, false);
 				parentComposite.layout(true, true);
 				setPartName(Messages.get().DashboardView_PartNamePrefix + dashboard.getObjectName());
 				if (!readOnly)
@@ -394,7 +399,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		}
 		else
 		{
-			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, dbc.getElements(), this, dbc.isModified());
+			dbc = new DashboardControl(parentComposite, SWT.NONE, dashboard, dbc.getElements(), this, selectionProvider, dbc.isModified());
 			parentComposite.layout(true, true);
 			if (!readOnly)
 			{

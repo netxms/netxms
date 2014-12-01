@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,6 +63,10 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.ImageTransfer;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -105,6 +109,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ObjectFigureType;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
@@ -159,10 +164,13 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionFiguresIcons;
 	protected Action actionFiguresSmallLabels;
 	protected Action actionFiguresLargeLabels;
+	protected Action actionFiguresStatusIcons;
 	protected Action actionShowGrid;
 	protected Action actionAlignToGrid;
 	protected Action actionSnapToGrid;
 	protected Action actionShowObjectDetails;
+	protected Action actionCopyImage;
+   protected Action actionHideLinkLabels;
 
 	private String viewId;
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
@@ -185,7 +193,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       dciValueProvider = LinkDciValueProvider.getInstance();
 
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-      disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND");
+      disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND"); //$NON-NLS-1$
 
 		session = (NXCSession)ConsoleSharedData.getSession();
 		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
@@ -723,6 +731,21 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 		actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.LARGE_LABEL);
+		
+		actionFiguresStatusIcons = new Action(Messages.get().AbstractNetworkMapView_StatusIcons, Action.AS_RADIO_BUTTON) {
+         @Override
+         public void run()
+         {
+            labelProvider.setObjectFigureType(ObjectFigureType.STATUS);
+            updateObjectPositions();
+            saveLayout();
+            viewer.refresh(true);
+            actionShowStatusBackground.setEnabled(false);
+            actionShowStatusFrame.setEnabled(false);
+            actionShowStatusIcon.setEnabled(false);
+         }
+      };
+      actionFiguresStatusIcons.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.STATUS);
 
 		actionShowGrid = new Action(Messages.get().AbstractNetworkMapView_ShowGrid, Action.AS_CHECK_BOX) {
 			@Override
@@ -760,6 +783,27 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				showObjectDetails();
 			}
 		};
+		
+		actionCopyImage = new Action(Messages.get().AbstractNetworkMapView_CopyToClipboard, SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            Image image = viewer.takeSnapshot();
+            ImageTransfer imageTransfer = ImageTransfer.getInstance();
+            final Clipboard clipboard = new Clipboard(viewer.getControl().getDisplay());
+            clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+         }
+		};
+		
+		actionHideLinkLabels = new Action(Messages.get().AbstractNetworkMapView_HideLinkLabels, Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {         
+            labelProvider.setLabelHideStatus(actionHideLinkLabels.isChecked());
+            viewer.refresh(true);
+         }
+      };
+      actionHideLinkLabels.setImageDescriptor(Activator.getImageDescriptor("icons/hide_link.png")); //$NON-NLS-1$
 	}
 
 	/**
@@ -823,6 +867,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		figureType.add(actionFiguresIcons);
 		figureType.add(actionFiguresSmallLabels);
 		figureType.add(actionFiguresLargeLabels);
+		figureType.add(actionFiguresStatusIcons);
 
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
@@ -836,6 +881,10 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionAlignToGrid);
 		manager.add(actionSnapToGrid);
 		manager.add(actionShowGrid);
+      manager.add(new Separator()); 
+      manager.add(actionHideLinkLabels);    
+      manager.add(new Separator());      
+      manager.add(actionCopyImage);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -853,11 +902,15 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionAlignToGrid);
 		manager.add(actionSnapToGrid);
 		manager.add(actionShowGrid);
+      manager.add(new Separator()); 
+      manager.add(actionHideLinkLabels);  
 		manager.add(new Separator());
 		if (allowManualLayout)
 		{
 			manager.add(actionSaveLayout);
 		}
+      manager.add(actionCopyImage);
+      manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -867,7 +920,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	private void createPopupMenu()
 	{
 		// Create menu manager.
-		MenuManager menuMgr = new MenuManager();
+		MenuManager menuMgr = new FilteringMenuManager(Activator.PLUGIN_ID);
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(new IMenuListener() {
 			public void menuAboutToShow(IMenuManager manager)
@@ -964,6 +1017,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		figureType.add(actionFiguresIcons);
 		figureType.add(actionFiguresSmallLabels);
 		figureType.add(actionFiguresLargeLabels);
+      figureType.add(actionFiguresStatusIcons);
 
 		manager.add(actionShowStatusBackground);
 		manager.add(actionShowStatusIcon);
@@ -977,6 +1031,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionAlignToGrid);
 		manager.add(actionSnapToGrid);
 		manager.add(actionShowGrid);
+      manager.add(new Separator()); 
+      manager.add(actionHideLinkLabels);  
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());

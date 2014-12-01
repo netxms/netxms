@@ -1,10 +1,10 @@
 0 - 499		System events
 500 - 510	Well-known SNMP traps
 4000 - 4999	Predefined threshold violation events
-5000 - 5999     ATM monitoring
+5000 - 5999     ATM monitoring (generic events)
+5500 - 5999     XFS subagent
 80000 - 80999   VEDAS
 88000 - 88999   FIS/IST
-89000 - 89899   XFS subagent
 89900 - 89999   AVS (ATM Video Surveillance) subsystem
 90000 - 90999	Agilis monitoring subagent
 91000 - 91099   Cortex monitoring subagent

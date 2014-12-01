@@ -1,6 +1,6 @@
 /* 
 ** ODBC Database Driver
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ DECLARE_DRIVER_HEADER("ODBC")
 /**
  * Flag for enable/disable UNICODE
  */
-static BOOL m_useUnicode = TRUE;
+static bool m_useUnicode = true;
 
 /**
  * Convert ODBC state to NetXMS database error code and get error text
@@ -177,10 +177,10 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
-   m_useUnicode = ExtractNamedOptionValueAsBoolA(cmdLine, "unicode", TRUE);
-   return TRUE;
+   m_useUnicode = ExtractNamedOptionValueAsBoolA(cmdLine, "unicode", true);
+   return true;
 }
 
 /**
@@ -819,7 +819,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_
          SQLNumResultCols(pConn->sqlStatement, &wNumCols);
          pResult->iNumCols = wNumCols;
          pResult->pConn = pConn;
-         pResult->bNoMoreRows = FALSE;
+         pResult->noMoreRows = false;
 
 			// Get column names
 			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
@@ -864,9 +864,9 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" BOOL EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
+extern "C" bool EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 {
-   BOOL bResult = FALSE;
+   bool bResult = false;
 
    if (pResult != NULL)
    {
@@ -875,7 +875,7 @@ extern "C" BOOL EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
       iResult = SQLFetch(pResult->pConn->sqlStatement);
       bResult = ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO));
       if (!bResult)
-         pResult->bNoMoreRows = TRUE;
+         pResult->noMoreRows = true;
    }
    return bResult;
 }
@@ -918,7 +918,7 @@ extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pRe
       return NULL;
 
    // Check if there are valid fetched row
-   if (pResult->bNoMoreRows)
+   if (pResult->noMoreRows)
       return NULL;
 
    if ((iColumn >= 0) && (iColumn < pResult->iNumCols))
@@ -1044,16 +1044,57 @@ extern "C" DWORD EXPORT DrvRollback(ODBCDRV_CONN *pConn)
    return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
+/**
+ * Check if table exist
+ */
+extern "C" int EXPORT DrvIsTableExist(ODBCDRV_CONN *pConn, const NETXMS_WCHAR *name)
+{
+   int rc = DBIsTableExist_Failure;
+
+   MutexLock(pConn->mutexQuery);
+
+   SQLRETURN iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
+	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
+   {
+      if (m_useUnicode)
+      {
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+	      iResult = SQLTablesW(pConn->sqlStatement, NULL, 0, NULL, 0, (SQLWCHAR *)name, SQL_NTS, NULL, 0);
+#else
+			SQLWCHAR *temp = UCS2StringFromUCS4String(name);
+	      iResult = SQLTablesW(pConn->sqlStatement, NULL, 0, NULL, 0, (SQLWCHAR *)temp, SQL_NTS, NULL, 0);
+		   free(temp);
+#endif
+		}
+		else
+		{
+			char *temp = MBStringFromWideString(name);
+	      iResult = SQLTablesA(pConn->sqlStatement, NULL, 0, NULL, 0, (SQLCHAR *)temp, SQL_NTS, NULL, 0);
+		   free(temp);
+		}
+	   if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
+      {
+			ODBCDRV_QUERY_RESULT *pResult = ProcessSelectResults(pConn->sqlStatement);
+         rc = (DrvGetNumRows(pResult) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+         DrvFreeResult(pResult);
+      }
+      SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
+   }
+
+   MutexUnlock(pConn->mutexQuery);
+   return rc;
+}
+
 #ifdef _WIN32
 
 /**
  * DLL Entry point
  */
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+bool WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
       DisableThreadLibraryCalls(hInstance);
-   return TRUE;
+   return true;
 }
 
 #endif

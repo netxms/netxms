@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -70,9 +70,9 @@ MobileDevice::~MobileDevice()
 /**
  * Create object from database data
  */
-BOOL MobileDevice::CreateFromDB(UINT32 dwId)
+BOOL MobileDevice::loadFromDatabase(UINT32 dwId)
 {
-   m_dwId = dwId;
+   m_id = dwId;
 
    if (!loadCommonProperties())
    {
@@ -81,7 +81,7 @@ BOOL MobileDevice::CreateFromDB(UINT32 dwId)
    }
 
 	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level FROM mobile_devices WHERE id=%d"), (int)m_dwId);
+	_sntprintf(query, 256, _T("SELECT device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level FROM mobile_devices WHERE id=%d"), (int)m_id);
 	DB_RESULT hResult = DBSelect(g_hCoreDB, query);
 	if (hResult == NULL)
 		return FALSE;
@@ -109,16 +109,16 @@ BOOL MobileDevice::CreateFromDB(UINT32 dwId)
 /**
  * Save object to database
  */
-BOOL MobileDevice::SaveToDB(DB_HANDLE hdb)
+BOOL MobileDevice::saveToDatabase(DB_HANDLE hdb)
 {
    // Lock object's access
-   LockData();
+   lockProperties();
 
    saveCommonProperties(hdb);
 
    BOOL bResult;
 	DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("mobile_devices"), _T("id"), m_dwId))
+   if (IsDatabaseRecordExist(hdb, _T("mobile_devices"), _T("id"), m_id))
 		hStmt = DBPrepare(hdb, _T("UPDATE mobile_devices SET device_id=?,vendor=?,model=?,serial_number=?,os_name=?,os_version=?,user_id=?,battery_level=? WHERE id=?"));
 	else
 		hStmt = DBPrepare(hdb, _T("INSERT INTO mobile_devices (device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level,id) VALUES (?,?,?,?,?,?,?,?,?)"));
@@ -132,7 +132,7 @@ BOOL MobileDevice::SaveToDB(DB_HANDLE hdb)
 		DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_osVersion), DB_BIND_STATIC);
 		DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_userId), DB_BIND_STATIC);
 		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_batteryLevel);
-		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
 
 		bResult = DBExecute(hStmt);
 
@@ -158,7 +158,7 @@ BOOL MobileDevice::SaveToDB(DB_HANDLE hdb)
    // Clear modifications flag and unlock object
 	if (bResult)
 		m_isModified = false;
-   UnlockData();
+   unlockProperties();
 
    return bResult;
 }
@@ -166,9 +166,9 @@ BOOL MobileDevice::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete object from database
  */
-bool MobileDevice::deleteFromDB(DB_HANDLE hdb)
+bool MobileDevice::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = DataCollectionTarget::deleteFromDB(hdb);
+   bool success = DataCollectionTarget::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM mobile_devices WHERE id=?"));
    return success;
@@ -177,98 +177,101 @@ bool MobileDevice::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void MobileDevice::CreateMessage(CSCPMessage *msg)
+void MobileDevice::fillMessage(NXCPMessage *msg)
 {
-   DataCollectionTarget::CreateMessage(msg);
-	msg->SetVariable(VID_DEVICE_ID, CHECK_NULL_EX(m_deviceId));
-	msg->SetVariable(VID_VENDOR, CHECK_NULL_EX(m_vendor));
-	msg->SetVariable(VID_MODEL, CHECK_NULL_EX(m_model));
-	msg->SetVariable(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
-	msg->SetVariable(VID_OS_NAME, CHECK_NULL_EX(m_osName));
-	msg->SetVariable(VID_OS_VERSION, CHECK_NULL_EX(m_osVersion));
-	msg->SetVariable(VID_USER_ID, CHECK_NULL_EX(m_userId));
-	msg->SetVariable(VID_BATTERY_LEVEL, (UINT32)m_batteryLevel);
-	msg->SetVariable(VID_LAST_CHANGE_TIME, (QWORD)m_lastReportTime);
+   DataCollectionTarget::fillMessage(msg);
+	msg->setField(VID_DEVICE_ID, CHECK_NULL_EX(m_deviceId));
+	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
+	msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
+	msg->setField(VID_SERIAL_NUMBER, CHECK_NULL_EX(m_serialNumber));
+	msg->setField(VID_OS_NAME, CHECK_NULL_EX(m_osName));
+	msg->setField(VID_OS_VERSION, CHECK_NULL_EX(m_osVersion));
+	msg->setField(VID_USER_ID, CHECK_NULL_EX(m_userId));
+	msg->setField(VID_BATTERY_LEVEL, (UINT32)m_batteryLevel);
+	msg->setField(VID_LAST_CHANGE_TIME, (QWORD)m_lastReportTime);
 }
 
 /**
  * Modify object from message
  */
-UINT32 MobileDevice::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 MobileDevice::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
-   return DataCollectionTarget::ModifyFromMessage(pRequest, TRUE);
+   return DataCollectionTarget::modifyFromMessage(pRequest, TRUE);
 }
 
 /**
  * Update system information from NXCP message
  */
-void MobileDevice::updateSystemInfo(CSCPMessage *msg)
+void MobileDevice::updateSystemInfo(NXCPMessage *msg)
 {
-	LockData();
+	lockProperties();
 
 	m_lastReportTime = time(NULL);
 
 	safe_free(m_vendor);
-	m_vendor = msg->GetVariableStr(VID_VENDOR);
+	m_vendor = msg->getFieldAsString(VID_VENDOR);
 
 	safe_free(m_model);
-	m_model = msg->GetVariableStr(VID_MODEL);
+	m_model = msg->getFieldAsString(VID_MODEL);
 
 	safe_free(m_serialNumber);
-	m_serialNumber = msg->GetVariableStr(VID_SERIAL_NUMBER);
+	m_serialNumber = msg->getFieldAsString(VID_SERIAL_NUMBER);
 
 	safe_free(m_osName);
-	m_osName = msg->GetVariableStr(VID_OS_NAME);
+	m_osName = msg->getFieldAsString(VID_OS_NAME);
 
 	safe_free(m_osVersion);
-	m_osVersion = msg->GetVariableStr(VID_OS_VERSION);
+	m_osVersion = msg->getFieldAsString(VID_OS_VERSION);
 
 	safe_free(m_userId);
-	m_userId = msg->GetVariableStr(VID_USER_NAME);
+	m_userId = msg->getFieldAsString(VID_USER_NAME);
 
-	Modify();
-	UnlockData();
+	setModified();
+	unlockProperties();
 }
 
 /**
  * Update status from NXCP message
  */
-void MobileDevice::updateStatus(CSCPMessage *msg)
+void MobileDevice::updateStatus(NXCPMessage *msg)
 {
-	LockData();
+	lockProperties();
 
 	m_lastReportTime = time(NULL);
 
    int type = msg->getFieldType(VID_BATTERY_LEVEL);
-   if (type == CSCP_DT_INTEGER)
-		m_batteryLevel = (int)msg->GetVariableLong(VID_BATTERY_LEVEL);
-   else if (type == CSCP_DT_INT16)
-		m_batteryLevel = (int)msg->GetVariableShort(VID_BATTERY_LEVEL);
+   if (type == NXCP_DT_INT32)
+		m_batteryLevel = msg->getFieldAsInt32(VID_BATTERY_LEVEL);
+   else if (type == NXCP_DT_INT16)
+		m_batteryLevel = (int)msg->getFieldAsInt16(VID_BATTERY_LEVEL);
 	else
 		m_batteryLevel = -1;
 
 	if (msg->isFieldExist(VID_GEOLOCATION_TYPE))
+	{
 		m_geoLocation = GeoLocation(*msg);
+		addLocationToHistory();
+   }
 
 	if (msg->isFieldExist(VID_IP_ADDRESS))
-		m_dwIpAddr = msg->GetVariableLong(VID_IP_ADDRESS);
+		m_dwIpAddr = msg->getFieldAsUInt32(VID_IP_ADDRESS);
 
 	TCHAR temp[32];
 	DbgPrintf(5, _T("Mobile device %s [%d] updated from agent (battery=%d addr=%s loc=[%s %s])"),
-	          m_szName, (int)m_dwId, m_batteryLevel, IpToStr(m_dwIpAddr, temp),
+	          m_name, (int)m_id, m_batteryLevel, IpToStr(m_dwIpAddr, temp),
 				 m_geoLocation.getLatitudeAsString(), m_geoLocation.getLongitudeAsString());
 
-	Modify();
-	UnlockData();
+	setModified();
+	unlockProperties();
 }
 
 /**
  * Get value for server's internal parameter
  */
-UINT32 MobileDevice::getInternalItem(const TCHAR *param, UINT32 bufSize, TCHAR *buffer)
+UINT32 MobileDevice::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 {
 	UINT32 rc = DataCollectionTarget::getInternalItem(param, bufSize, buffer);
 	if (rc == DCE_SUCCESS)
@@ -317,4 +320,21 @@ UINT32 MobileDevice::getInternalItem(const TCHAR *param, UINT32 bufSize, TCHAR *
    }
 
    return rc;
+}
+
+/**
+ * Calculate compound status
+ */
+void MobileDevice::calculateCompoundStatus(BOOL bForcedRecalc)
+{
+   NetObj::calculateCompoundStatus(bForcedRecalc);
+
+   // Assume normal status by default for mobile device
+   if (m_iStatus == STATUS_UNKNOWN)
+   {
+      lockProperties();
+      m_iStatus = STATUS_NORMAL;
+      setModified();
+      unlockProperties();
+   }
 }

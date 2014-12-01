@@ -2,14 +2,15 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Service Level Management Plug-in for NXMC
 Bundle-SymbolicName: org.netxms.ui.eclipse.slm;singleton:=true
-Bundle-Version: 1.2.10
+Bundle-Version: 2.0.0
 Bundle-Activator: org.netxms.ui.eclipse.slm.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.eclipse.core.runtime,
- org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.1",
- org.netxms.ui.eclipse.nxsl;bundle-version="1.1.8",
- org.netxms.ui.eclipse.charts;bundle-version="1.2.0",
- org.eclipse.rap.ui;bundle-version="1.5.0",
- org.netxms.webui.core;bundle-version="1.2.2"
+Require-Bundle: org.eclipse.rap.ui;bundle-version="2.3.1",
+ org.eclipse.core.runtime;bundle-version="3.10.0",
+ org.netxms.ui.eclipse.clientlibrary;bundle-version="2.0.0",
+ org.netxms.webui.core;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.objectbrowser;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.nxsl;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.charts;bundle-version="2.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

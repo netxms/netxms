@@ -55,7 +55,8 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 	private long nodeId;
 	private AgentConfigEditor editor;
 	private boolean modified = false;
-	private boolean saveAndApply;
+   private boolean dirty = false;
+	private boolean saveAndApply = false;
 	private String saveData;
 
 	private RefreshAction actionRefresh;
@@ -89,9 +90,10 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 			@Override
 			public void modifyText(ModifyEvent e)
 			{
-				if (!modified)
+				if (!dirty)
 				{
 					modified = true;
+					dirty = true;
 					firePropertyChange(PROP_DIRTY);
 					actionSave.setEnabled(true);
 				}
@@ -100,6 +102,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		
 		createActions();
 		contributeToActionBars();
+      actionSave.setEnabled(false);
 	}
 
 	/* (non-Javadoc)
@@ -139,6 +142,10 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 			@Override
 			public void run()
 			{
+            saveAndApply = false;
+			   doSave(null);
+            actionSave.setEnabled(false);
+            dirty=false;
 			}
 		};
 		actionSave.setText(Messages.get().AgentConfigEditorView_Save);
@@ -189,6 +196,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 	{
 		try
 		{
+	      saveData = editor.getText();
 			session.updateAgentConfig(nodeId, saveData, saveAndApply);
 		}
 		catch(Exception e)
@@ -211,7 +219,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 	@Override
 	public boolean isDirty()
 	{
-		return modified;
+		return dirty || modified;
 	}
 
 	/* (non-Javadoc)
@@ -241,7 +249,6 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 		SaveConfigDialog dlg = new SaveConfigDialog(getSite().getShell());
 		int rc = dlg.open();
 		saveAndApply = (rc == SaveConfigDialog.SAVE_AND_APPLY_ID);
-		saveData = editor.getText();
 		return (rc == IDialogConstants.CANCEL_ID) ? CANCEL : ((rc == SaveConfigDialog.DISCARD_ID) ? NO : YES);
 	}
 }

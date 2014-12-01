@@ -18,7 +18,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="NetXMS Server"
 NAME=netxmsd
 DAEMON=~BINDIR~/$NAME
-DAEMON_ARGS="-d -D 5"
+DAEMON_ARGS="-d"
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 

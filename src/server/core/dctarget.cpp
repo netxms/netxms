@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -46,27 +46,27 @@ DataCollectionTarget::~DataCollectionTarget()
 /**
  * Delete object from database
  */
-bool DataCollectionTarget::deleteFromDB(DB_HANDLE hdb)
+bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = Template::deleteFromDB(hdb);
+   bool success = Template::deleteFromDatabase(hdb);
    if (success)
    {
       TCHAR query[256];
-      _sntprintf(query, 256, _T("DROP TABLE idata_%d"), (int)m_dwId);
+      _sntprintf(query, 256, _T("DROP TABLE idata_%d"), (int)m_id);
       success = DBQuery(hdb, query) ? true : false;
       if (success)
       {
-         _sntprintf(query, 256, _T("DROP TABLE tdata_rows_%d"), (int)m_dwId);
+         _sntprintf(query, 256, _T("DROP TABLE tdata_rows_%d"), (int)m_id);
          success = DBQuery(hdb, query) ? true : false;
       }
       if (success)
       {
-         _sntprintf(query, 256, _T("DROP TABLE tdata_records_%d"), (int)m_dwId);
+         _sntprintf(query, 256, _T("DROP TABLE tdata_records_%d"), (int)m_id);
          success = DBQuery(hdb, query) ? true : false;
       }
       if (success)
       {
-         _sntprintf(query, 256, _T("DROP TABLE tdata_%d"), (int)m_dwId);
+         _sntprintf(query, 256, _T("DROP TABLE tdata_%d"), (int)m_id);
          success = DBQuery(hdb, query) ? true : false;
       }
    }
@@ -76,20 +76,20 @@ bool DataCollectionTarget::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void DataCollectionTarget::CreateMessage(CSCPMessage *msg)
+void DataCollectionTarget::fillMessage(NXCPMessage *msg)
 {
-   Template::CreateMessage(msg);
+   Template::fillMessage(msg);
 }
 
 /**
  * Modify object from message
  */
-UINT32 DataCollectionTarget::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 DataCollectionTarget::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
-   return Template::ModifyFromMessage(pRequest, TRUE);
+   return Template::modifyFromMessage(pRequest, TRUE);
 }
 
 /**
@@ -122,7 +122,7 @@ void DataCollectionTarget::cleanDCIData()
 /**
  * Get last collected values of given table
  */
-UINT32 DataCollectionTarget::getTableLastValues(UINT32 dciId, CSCPMessage *msg)
+UINT32 DataCollectionTarget::getTableLastValues(UINT32 dciId, NXCPMessage *msg)
 {
 	UINT32 rcc = RCC_INVALID_DCI_ID;
 
@@ -145,7 +145,7 @@ UINT32 DataCollectionTarget::getTableLastValues(UINT32 dciId, CSCPMessage *msg)
 
 /**
  * Apply DCI from template
- * pItem passed to this method should be a template's DCI
+ * dcObject passed to this method should be a template's DCI
  */
 bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject)
 {
@@ -153,7 +153,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
 
    lockDciAccess(true);	// write lock
 
-   DbgPrintf(5, _T("Applying DCO \"%s\" to target \"%s\""), dcObject->getName(), m_szName);
+   DbgPrintf(5, _T("Applying DCO \"%s\" to target \"%s\""), dcObject->getName(), m_name);
 
    // Check if that template item exists
 	int i;
@@ -189,10 +189,10 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
    {
       // Update existing item unless it is disabled
       DCObject *curr = m_dcObjects->get(i);
-		if (curr->getStatus() != ITEM_STATUS_DISABLED || (g_dwFlags & AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE))
+		if (curr->getStatus() != ITEM_STATUS_DISABLED || (g_flags & AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE))
 		{
 			curr->updateFromTemplate(dcObject);
-			DbgPrintf(9, _T("DCO \"%s\" NOT disabled or ApplyDCIFromTemplateToDisabledDCI set, updated (%d)"), 
+			DbgPrintf(9, _T("DCO \"%s\" NOT disabled or ApplyDCIFromTemplateToDisabledDCI set, updated (%d)"),
 				dcObject->getName(), curr->getStatus());
          if ((curr->getType() == DCO_TYPE_ITEM) && (((DCItem *)curr)->getInstanceDiscoveryMethod() != IDM_NONE))
          {
@@ -201,7 +201,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
 		}
 		else
 		{
-			DbgPrintf(9, _T("DCO \"%s\" is disabled and ApplyDCIFromTemplateToDisabledDCI not set, no update (%d)"), 
+			DbgPrintf(9, _T("DCO \"%s\" is disabled and ApplyDCIFromTemplateToDisabledDCI not set, no update (%d)"),
 				dcObject->getName(), curr->getStatus());
 		}
    }
@@ -210,9 +210,9 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
 
 	if (bResult)
 	{
-		LockData();
+		lockProperties();
 		m_isModified = true;
-		UnlockData();
+		unlockProperties();
 	}
    return bResult;
 }
@@ -251,7 +251,7 @@ void DataCollectionTarget::cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32
 }
 
 /**
- * Unbind data collection target from template, i.e either remove DCI 
+ * Unbind data collection target from template, i.e either remove DCI
  * association with template or remove these DCIs at all
  */
 void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI)
@@ -295,7 +295,7 @@ void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveD
 /**
  * Get list of DCIs to be shown on performance tab
  */
-UINT32 DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
+UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg)
 {
 	lockDciAccess(false);
 
@@ -303,20 +303,20 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-      if ((object->getPerfTabSettings() != NULL) && 
-          object->hasValue() && 
+      if ((object->getPerfTabSettings() != NULL) &&
+          object->hasValue() &&
           (object->getStatus() == ITEM_STATUS_ACTIVE) &&
           object->matchClusterResource())
 		{
-			pMsg->SetVariable(dwId++, object->getId());
-			pMsg->SetVariable(dwId++, object->getDescription());
-			pMsg->SetVariable(dwId++, (WORD)object->getStatus());
-			pMsg->SetVariable(dwId++, object->getPerfTabSettings());
-			pMsg->SetVariable(dwId++, (WORD)object->getType());
-			pMsg->SetVariable(dwId++, object->getTemplateItemId());
+			pMsg->setField(dwId++, object->getId());
+			pMsg->setField(dwId++, object->getDescription());
+			pMsg->setField(dwId++, (WORD)object->getStatus());
+			pMsg->setField(dwId++, object->getPerfTabSettings());
+			pMsg->setField(dwId++, (WORD)object->getType());
+			pMsg->setField(dwId++, object->getTemplateItemId());
 			if (object->getType() == DCO_TYPE_ITEM)
 			{
-				pMsg->SetVariable(dwId++, ((DCItem *)object)->getInstance());
+				pMsg->setField(dwId++, ((DCItem *)object)->getInstance());
 				dwId += 3;
 			}
 			else
@@ -326,7 +326,7 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
 			dwCount++;
 		}
 	}
-   pMsg->SetVariable(VID_NUM_ITEMS, dwCount);
+   pMsg->setField(VID_NUM_ITEMS, dwCount);
 
 	unlockDciAccess();
    return RCC_SUCCESS;
@@ -335,11 +335,11 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(CSCPMessage *pMsg)
 /**
  * Get threshold violation summary into NXCP message
  */
-UINT32 DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, UINT32 baseId)
+UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId)
 {
 	UINT32 varId = baseId;
 
-	msg->SetVariable(varId++, m_dwId);
+	msg->setField(varId++, m_id);
 	UINT32 countId = varId++;
 	UINT32 count = 0;
 
@@ -347,7 +347,7 @@ UINT32 DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, UINT32 baseId
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-		if (object->hasValue() && (object->getType() == DCO_TYPE_ITEM))
+		if (object->hasValue() && (object->getType() == DCO_TYPE_ITEM) && object->getStatus() == ITEM_STATUS_ACTIVE)
 		{
 			if (((DCItem *)object)->hasActiveThreshold())
 			{
@@ -358,7 +358,7 @@ UINT32 DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, UINT32 baseId
 		}
 	}
 	unlockDciAccess();
-	msg->SetVariable(countId, count);
+	msg->setField(countId, count);
    return varId;
 }
 
@@ -367,9 +367,14 @@ UINT32 DataCollectionTarget::getThresholdSummary(CSCPMessage *msg, UINT32 baseId
  */
 bool DataCollectionTarget::processNewDCValue(DCObject *dco, time_t currTime, void *value)
 {
+   bool updateStatus;
 	lockDciAccess(false);
-	bool result = dco->processNewValue(currTime, value);
+	bool result = dco->processNewValue(currTime, value, &updateStatus);
 	unlockDciAccess();
+	if (updateStatus)
+	{
+      calculateCompoundStatus(FALSE);
+   }
    return result;
 }
 
@@ -400,76 +405,82 @@ void DataCollectionTarget::queueItemsForPolling(Queue *pPollerQueue)
          object->setBusyFlag(TRUE);
          incRefCount();   // Increment reference count for each queued DCI
          pPollerQueue->Put(object);
-			DbgPrintf(8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_szName, object->getId(), object->getName());
+			DbgPrintf(8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_name, object->getId(), object->getName());
       }
    }
    unlockDciAccess();
 }
 
 /**
+ * Get object from parameter
+ */
+NetObj *DataCollectionTarget::objectFromParameter(const TCHAR *param)
+{
+   TCHAR *eptr, arg[256];
+   AgentGetParameterArg(param, 1, arg, 256);
+   UINT32 objectId = _tcstoul(arg, &eptr, 0);
+   if (*eptr != 0)
+   {
+      // Argument is object's name
+      objectId = 0;
+   }
+
+   // Find child object with requested ID or name
+   NetObj *object = NULL;
+   LockChildList(FALSE);
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   {
+      if (((objectId == 0) && (!_tcsicmp(m_pChildList[i]->getName(), arg))) ||
+          (objectId == m_pChildList[i]->getId()))
+      {
+         object = m_pChildList[i];
+         break;
+      }
+   }
+   UnlockChildList();
+   return object;
+}
+
+/**
  * Get value for server's internal parameter
  */
-UINT32 DataCollectionTarget::getInternalItem(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer)
+UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 {
    UINT32 dwError = DCE_SUCCESS;
 
-   if (!_tcsicmp(szParam, _T("Status")))
+   if (!_tcsicmp(param, _T("Status")))
    {
-      _sntprintf(szBuffer, dwBufSize, _T("%d"), m_iStatus);
+      _sntprintf(buffer, bufSize, _T("%d"), m_iStatus);
    }
-   else if (!_tcsicmp(szParam, _T("Dummy")))
+   else if (!_tcsicmp(param, _T("Dummy")) || MatchString(_T("Dummy(*)"), param, FALSE))
    {
-      _tcscpy(szBuffer, _T("0"));
+      _tcscpy(buffer, _T("0"));
    }
-   else if (MatchString(_T("ChildStatus(*)"), szParam, FALSE))
+   else if (MatchString(_T("ChildStatus(*)"), param, FALSE))
    {
-      TCHAR *pEnd, szArg[256];
-      UINT32 i, dwId;
-      NetObj *pObject = NULL;
-
-      AgentGetParameterArg(szParam, 1, szArg, 256);
-      dwId = _tcstoul(szArg, &pEnd, 0);
-      if (*pEnd != 0)
+      NetObj *object = objectFromParameter(param);
+      if (object != NULL)
       {
-         // Argument is object's name
-         dwId = 0;
-      }
-
-      // Find child object with requested ID or name
-      LockChildList(FALSE);
-      for(i = 0; i < m_dwChildCount; i++)
-      {
-         if (((dwId == 0) && (!_tcsicmp(m_pChildList[i]->Name(), szArg))) ||
-             (dwId == m_pChildList[i]->Id()))
-         {
-            pObject = m_pChildList[i];
-            break;
-         }
-      }
-      UnlockChildList();
-
-      if (pObject != NULL)
-      {
-         _sntprintf(szBuffer, dwBufSize, _T("%d"), pObject->Status());
+         _sntprintf(buffer, bufSize, _T("%d"), object->Status());
       }
       else
       {
          dwError = DCE_NOT_SUPPORTED;
       }
    }
-   else if (MatchString(_T("ConditionStatus(*)"), szParam, FALSE))
+   else if (MatchString(_T("ConditionStatus(*)"), param, FALSE))
    {
       TCHAR *pEnd, szArg[256];
       UINT32 dwId;
       NetObj *pObject = NULL;
 
-      AgentGetParameterArg(szParam, 1, szArg, 256);
+      AgentGetParameterArg(param, 1, szArg, 256);
       dwId = _tcstoul(szArg, &pEnd, 0);
       if (*pEnd == 0)
 		{
 			pObject = FindObjectById(dwId);
 			if (pObject != NULL)
-				if (pObject->Type() != OBJECT_CONDITION)
+				if (pObject->getObjectClass() != OBJECT_CONDITION)
 					pObject = NULL;
 		}
 		else
@@ -480,14 +491,51 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *szParam, UINT32 dwBufS
 
       if (pObject != NULL)
       {
-			if (pObject->isTrustedNode(m_dwId))
+			if (pObject->isTrustedNode(m_id))
 			{
-				_sntprintf(szBuffer, dwBufSize, _T("%d"), pObject->Status());
+				_sntprintf(buffer, bufSize, _T("%d"), pObject->Status());
 			}
 			else
 			{
 	         dwError = DCE_NOT_SUPPORTED;
 			}
+      }
+      else
+      {
+         dwError = DCE_NOT_SUPPORTED;
+      }
+   }
+   else if (MatchString(_T("PingTime(*)"), param, FALSE))
+   {
+      NetObj *object = objectFromParameter(param);
+      if ((object != NULL) && (object->getObjectClass() == OBJECT_INTERFACE))
+      {
+         _sntprintf(buffer, bufSize, _T("%d"), ((Interface *)object)->getPingTime());
+      }
+      else
+      {
+         dwError = DCE_NOT_SUPPORTED;
+      }
+   }
+   else if (!_tcsicmp(_T("PingTime"), param))
+   {
+      NetObj *pObject = NULL;
+
+      // Find child object with requested ID or name
+      LockChildList(FALSE);
+      for(int i = 0; i < (int)m_dwChildCount; i++)
+      {
+         if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && (m_pChildList[i]->IpAddr() == m_dwIpAddr))
+         {
+            pObject = m_pChildList[i];
+            break;
+         }
+      }
+      UnlockChildList();
+
+      if (pObject != NULL)
+      {
+         _sntprintf(buffer, bufSize, _T("%d"), ((Interface *)pObject)->getPingTime());
       }
       else
       {
@@ -503,10 +551,204 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *szParam, UINT32 dwBufS
 }
 
 /**
+ * Parse value list
+ */
+static bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args)
+{
+   TCHAR *p = *start;
+
+   *p = 0;
+   p++;
+
+   TCHAR *s = p;
+   int state = 1; // normal text
+
+   for(; state > 0; p++)
+   {
+      switch(*p)
+      {
+         case '"':
+            if (state == 1)
+            {
+               state = 2;
+               s = p + 1;
+            }
+            else
+            {
+               state = 3;
+               *p = 0;
+               args.add(new NXSL_Value(s));
+            }
+            break;
+         case ',':
+            if (state == 1)
+            {
+               *p = 0;
+               Trim(s);
+               args.add(new NXSL_Value(s));
+               s = p + 1;
+            }
+            else if (state == 3)
+            {
+               state = 1;
+               s = p + 1;
+            }
+            break;
+         case 0:
+            if (state == 1)
+            {
+               Trim(s);
+               args.add(new NXSL_Value(s));
+               state = 0;
+            }
+            else
+            {
+               state = -1; // error
+            }
+            break;
+         case ' ':
+            break;
+         case ')':
+            if (state == 1)
+            {
+               *p = 0;
+               Trim(s);
+               args.add(new NXSL_Value(s));
+               state = 0;
+            }
+            else if (state == 3)
+            {
+               state = 0;
+            }
+            break;
+         case '\\':
+            if (state == 2)
+            {
+               memmove(p, p + 1, _tcslen(p) * sizeof(TCHAR));
+               switch(*p)
+               {
+                  case 'r':
+                     *p = '\r';
+                     break;
+                  case 'n':
+                     *p = '\n';
+                     break;
+                  case 't':
+                     *p = '\t';
+                     break;
+                  default:
+                     break;
+               }
+            }
+            else if (state == 3)
+            {
+               state = -1;
+            }
+            break;
+         case '%':
+            if ((state == 1) && (*(p + 1) == '('))
+            {
+               p++;
+               ObjectArray<NXSL_Value> elements(16, 16, false);
+               if (ParseValueList(&p, elements))
+               {
+                  NXSL_Array *array = new NXSL_Array();
+                  for(int i = 0; i < elements.size(); i++)
+                  {
+                     array->set(i, elements.get(i));
+                  }
+                  args.add(new NXSL_Value(array));
+                  state = 3;
+               }
+               else
+               {
+                  state = -1;
+                  elements.clear();
+               }
+            }
+            else if (state == 3)
+            {
+               state = -1;
+            }
+            break;
+         default:
+            if (state == 3)
+               state = -1;
+            break;
+      }
+   }
+
+   *start = p - 1;
+   return (state != -1);
+}
+
+/**
+ * Get parameter value from NXSL script
+ */
+UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
+{
+   TCHAR name[256];
+   nx_strncpy(name, param, 256);
+   Trim(name);
+
+   ObjectArray<NXSL_Value> args(16, 16, false);
+
+   // Can be in form parameter(arg1, arg2, ... argN)
+   TCHAR *p = _tcschr(name, _T('('));
+   if (p != NULL)
+   {
+      if (name[_tcslen(name) - 1] != _T(')'))
+         return DCE_NOT_SUPPORTED;
+      name[_tcslen(name) - 1] = 0;
+
+      if (!ParseValueList(&p, args))
+      {
+         // argument parsing error
+         args.clear();
+         return DCE_NOT_SUPPORTED;
+      }
+   }
+
+   UINT32 rc = DCE_NOT_SUPPORTED;
+   NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv);
+   if (vm != NULL)
+   {
+      vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, this)));
+      if (getObjectClass() == OBJECT_NODE)
+      {
+         vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
+      }
+      vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
+      if (vm->run(&args))
+      {
+         NXSL_Value *value = vm->getResult();
+         const TCHAR *dciValue = value->getValueAsCString();
+         nx_strncpy(buffer, CHECK_NULL_EX(dciValue), bufSize);
+         rc = DCE_SUCCESS;
+      }
+      else
+      {
+			DbgPrintf(4, _T("DataCollectionTarget(%s)->getScriptItem(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
+			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
+         rc = DCE_COMM_ERROR;
+      }
+      delete vm;
+   }
+   else
+   {
+      args.setOwner(true);
+   }
+   DbgPrintf(7, _T("DataCollectionTarget(%s)->getScriptItem(%s): rc=%d"), m_name, param, rc);
+   return rc;
+}
+
+/**
  * Get last (current) DCI values for summary table.
  */
-void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, Table *tableData)
+void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData)
 {
+   int offset = tableDefinition->isMultiInstance() ? 2 : 1;
+   int baseRow = tableData->getNumRows();
    bool rowAdded = false;
    lockDciAccess(false);
    for(int i = 0; i < tableDefinition->getNumColumns(); i++)
@@ -515,22 +757,60 @@ void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, T
       for(int j = 0; j < m_dcObjects->size(); j++)
 	   {
 		   DCObject *object = m_dcObjects->get(j);
-         if ((object->getType() == DCO_TYPE_ITEM) && object->hasValue() && 
-             ((tc->m_flags & COLUMN_DEFINITION_REGEXP_MATCH) ? 
+         if ((object->getType() == DCO_TYPE_ITEM) && object->hasValue() &&
+             (object->getStatus() == ITEM_STATUS_ACTIVE) &&
+             ((tc->m_flags & COLUMN_DEFINITION_REGEXP_MATCH) ?
                RegexpMatch(object->getName(), tc->m_dciName, FALSE) :
                !_tcsicmp(object->getName(), tc->m_dciName)
              ))
          {
-            if (!rowAdded)
+            int row;
+            if (tableDefinition->isMultiInstance())
             {
-               tableData->addRow();
-               tableData->set(0, m_szName);
-               tableData->setObjectId(tableData->getNumRows() - 1, m_dwId);
-               rowAdded = true;
+               // Find instance
+               const TCHAR *instance = ((DCItem *)object)->getInstance();
+               for(row = baseRow; row < tableData->getNumRows(); row++)
+               {
+                  const TCHAR *v = tableData->getAsString(row, 1);
+                  if (!_tcscmp(CHECK_NULL_EX(v), instance))
+                     break;
+               }
+               if (row == tableData->getNumRows())
+               {
+                  tableData->addRow();
+                  tableData->set(0, m_name);
+                  tableData->set(1, instance);
+                  tableData->setObjectId(tableData->getNumRows() - 1, m_id);
+               }
             }
-            tableData->set(i + 1, ((DCItem *)object)->getLastValue());
-            tableData->setStatus(i + 1, ((DCItem *)object)->getThresholdSeverity());
-            tableData->getColumnDefinitions()->get(i + 1)->setDataType(((DCItem *)object)->getDataType());
+            else
+            {
+               if (!rowAdded)
+               {
+                  tableData->addRow();
+                  tableData->set(0, m_name);
+                  tableData->setObjectId(tableData->getNumRows() - 1, m_id);
+                  rowAdded = true;
+               }
+               row = tableData->getNumRows() - 1;
+            }
+            tableData->setStatusAt(row, i + offset, ((DCItem *)object)->getThresholdSeverity());
+            tableData->getColumnDefinitions()->get(i + offset)->setDataType(((DCItem *)object)->getDataType());
+            if (tableDefinition->getAggregationFunction() == F_LAST)
+            {
+               tableData->setAt(row, i + offset, ((DCItem *)object)->getLastValue());
+            }
+            else
+            {
+               tableData->setAt(row, i + offset, 
+                  ((DCItem *)object)->getAggregateValue(
+                     tableDefinition->getAggregationFunction(), 
+                     tableDefinition->getPeriodStart(), 
+                     tableDefinition->getPeriodEnd()));
+            }
+
+            if (!tableDefinition->isMultiInstance())
+               break;
          }
       }
    }
@@ -543,4 +823,39 @@ void DataCollectionTarget::getLastValuesSummary(SummaryTable *tableDefinition, T
 bool DataCollectionTarget::isEventSource()
 {
    return true;
+}
+
+/**
+ * Returns most critical status of DCI used for
+ * status calculation
+ */
+int DataCollectionTarget::getMostCriticalDCIStatus()
+{
+   int status = -1;
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+	{
+		DCObject *curr = m_dcObjects->get(i);
+      if (curr->isStatusDCO() && (curr->getType() == DCO_TYPE_ITEM) &&
+          curr->hasValue() && (curr->getStatus() == ITEM_STATUS_ACTIVE))
+      {
+         if (getObjectClass() == OBJECT_CLUSTER && !curr->isAggregateOnCluster())
+            continue; // Calculated only on those that are agregated on cluster
+
+         ItemValue *value = ((DCItem *)curr)->getInternalLastValue();
+         if (value != NULL && (INT32)*value >= STATUS_NORMAL && (INT32)*value <= STATUS_CRITICAL)
+            status = max(status, (INT32)*value);
+         delete value;
+      }
+	}
+   unlockDciAccess();
+   return (status == -1) ? STATUS_UNKNOWN : status;
+}
+
+/**
+ * Calculate compound status
+ */
+void DataCollectionTarget::calculateCompoundStatus(BOOL bForcedRecalc)
+{
+   NetObj::calculateCompoundStatus(bForcedRecalc);
 }

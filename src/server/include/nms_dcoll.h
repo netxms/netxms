@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -138,7 +138,7 @@ public:
 	int getSampleCount() { return m_sampleCount; }
    const TCHAR *getStringValue() { return m_value.getString(); }
    BOOL isReached() { return m_isReached; }
-	
+
 	int getRepeatInterval() { return m_repeatInterval; }
 	time_t getLastEventTimestamp() { return m_lastEventTimestamp; }
 	int getCurrentSeverity() { return m_currentSeverity; }
@@ -148,8 +148,8 @@ public:
    ThresholdCheckResult check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, NetObj *target, DCItem *dci);
    ThresholdCheckResult checkError(UINT32 dwErrorCount);
 
-   void createMessage(CSCPMessage *msg, UINT32 baseId);
-   void updateFromMessage(CSCPMessage *msg, UINT32 baseId);
+   void createMessage(NXCPMessage *msg, UINT32 baseId);
+   void updateFromMessage(NXCPMessage *msg, UINT32 baseId);
 
    void createId();
    UINT32 getRequiredCacheSize() { return ((m_function == F_LAST) || (m_function == F_ERROR)) ? 0 : m_sampleCount; }
@@ -186,8 +186,8 @@ class Template;
 class NXCORE_EXPORTABLE DCObject
 {
 protected:
-   UINT32 m_dwId;
-   TCHAR m_szName[MAX_ITEM_NAME];
+   UINT32 m_id;
+   TCHAR m_name[MAX_ITEM_NAME];
    TCHAR m_szDescription[MAX_DB_STRING];
 	TCHAR m_systemTag[MAX_DB_STRING];
    time_t m_tLastPoll;           // Last poll time
@@ -197,7 +197,7 @@ protected:
    BYTE m_status;                // Item status: active, disabled or not supported
    BYTE m_busy;                  // 1 when item is queued for polling, 0 if not
 	BYTE m_scheduledForDeletion;  // 1 when item is scheduled for deletion, 0 if not
-	WORD m_flags;
+	UINT16 m_flags;
    UINT32 m_dwTemplateId;         // Related template's id
    UINT32 m_dwTemplateItemId;     // Related template item's id
    Template *m_pNode;             // Pointer to node or template object this item related to
@@ -212,6 +212,7 @@ protected:
 	TCHAR *m_pszPerfTabSettings;
    TCHAR *m_transformationScriptSource;   // Transformation script (source code)
    NXSL_VM *m_transformationScript;  // Compiled transformation script
+	TCHAR *m_comments;
 
    void lock() { MutexLock(m_hMutex); }
    void unlock() { MutexUnlock(m_hMutex); }
@@ -238,18 +239,18 @@ public:
    virtual void updateFromTemplate(DCObject *dcObject);
 
    virtual BOOL saveToDB(DB_HANDLE hdb);
-   virtual void deleteFromDB();
+   virtual void deleteFromDatabase();
    virtual bool loadThresholdsFromDB();
 
-   virtual bool processNewValue(time_t nTimeStamp, void *value);
+   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus);
    virtual void processNewError();
 
 	virtual bool hasValue();
 
-	UINT32 getId() { return m_dwId; }
+	UINT32 getId() { return m_id; }
    int getDataSource() { return m_source; }
    int getStatus() { return m_status; }
-   const TCHAR *getName() { return m_szName; }
+   const TCHAR *getName() { return m_name; }
    const TCHAR *getDescription() { return m_szDescription; }
 	const TCHAR *getSystemTag() { return m_systemTag; }
 	const TCHAR *getPerfTabSettings() { return m_pszPerfTabSettings; }
@@ -263,7 +264,9 @@ public:
 	WORD getSnmpPort() { return m_snmpPort; }
    bool isShowOnObjectTooltip() { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
    bool isAggregateOnCluster() { return (m_flags & DCF_AGGREGATE_ON_CLUSTER) ? true : false; }
+	bool isStatusDCO() {return (m_flags & DCF_CALCULATE_NODE_STATUSS) ? true : false; }
    int getAggregationFunction() { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
+   Template *getNode() { return m_pNode; }
 
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
@@ -271,11 +274,11 @@ public:
    void setLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
    void setStatus(int status, bool generateEvent);
    void setBusyFlag(BOOL busy) { m_busy = (BYTE)busy; }
-   void setTemplateId(UINT32 dwTemplateId, UINT32 dwItemId) 
+   void setTemplateId(UINT32 dwTemplateId, UINT32 dwItemId)
          { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
 
-   virtual void createMessage(CSCPMessage *pMsg);
-   virtual void updateFromMessage(CSCPMessage *pMsg);
+   virtual void createMessage(NXCPMessage *pMsg);
+   virtual void updateFromMessage(NXCPMessage *pMsg);
 
    virtual void changeBinding(UINT32 dwNewId, Template *pNode, BOOL doMacroExpansion);
 
@@ -285,7 +288,7 @@ public:
    virtual void getEventList(UINT32 **ppdwList, UINT32 *pdwSize);
    virtual void createNXMPRecord(String &str);
 
-	void setName(const TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_ITEM_NAME); }
+	void setName(const TCHAR *pszName) { nx_strncpy(m_name, pszName, MAX_ITEM_NAME); }
 	void setDescription(const TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
 	void setOrigin(int origin) { m_source = origin; }
 	void setRetentionTime(int nTime) { m_iRetentionTime = nTime; }
@@ -332,7 +335,7 @@ public:
    DCItem();
    DCItem(const DCItem *pItem);
    DCItem(DB_RESULT hResult, int iRow, Template *pNode);
-   DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType, 
+   DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
           int iPollingInterval, int iRetentionTime, Template *pNode,
           const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
 	DCItem(ConfigEntry *config, Template *owner);
@@ -343,7 +346,7 @@ public:
    virtual void updateFromTemplate(DCObject *dcObject);
 
    virtual BOOL saveToDB(DB_HANDLE hdb);
-   virtual void deleteFromDB();
+   virtual void deleteFromDatabase();
    virtual bool loadThresholdsFromDB();
 
    void updateCacheSize(UINT32 dwCondId = 0);
@@ -359,26 +362,27 @@ public:
 	const TCHAR *getInstance() { return m_instance; }
 	int getSampleCount() { return m_sampleCount; }
 
-	void filterInstanceList(StringList *instances);
+	void filterInstanceList(StringMap *instances);
 	void expandInstance();
 
-   virtual bool processNewValue(time_t nTimeStamp, void *value);
+   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus);
    virtual void processNewError();
 
 	virtual bool hasValue();
 
-   void fillLastValueMessage(CSCPMessage *pMsg, UINT32 dwId);
+   void fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId);
    NXSL_Value *getValueForNXSL(int nFunction, int nPolls);
    NXSL_Value *getRawValueForNXSL();
    const TCHAR *getLastValue();
    ItemValue *getInternalLastValue();
+   TCHAR *getAggregateValue(AggregationFunction func, time_t periodStart, time_t periodEnd);
 
-   virtual void createMessage(CSCPMessage *pMsg);
+   virtual void createMessage(NXCPMessage *pMsg);
 #if defined(__SUNPRO_CC) || defined(__HP_aCC)
    using DCObject::updateFromMessage;
 #endif
-   void updateFromMessage(CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
-   void fillMessageWithThresholds(CSCPMessage *msg);
+   void updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
+   void fillMessageWithThresholds(NXCPMessage *msg);
 
    virtual void changeBinding(UINT32 dwNewId, Template *pNode, BOOL doMacroExpansion);
 
@@ -398,10 +402,10 @@ public:
 	void addThreshold(Threshold *pThreshold);
 	void deleteAllThresholds();
 	void setInstanceDiscoveryMethod(WORD method) { m_instanceDiscoveryMethod = method; }
-	void setInstanceDiscoveryData(const TCHAR *data) { safe_free(m_instanceDiscoveryData); m_instanceDiscoveryData = (data != NULL) ? _tcsdup(data) : NULL; }
+	void setInstanceDiscoveryData(const TCHAR *data) { safe_free(m_instanceDiscoveryData); m_instanceDiscoveryData = _tcsdup_ex(data); }
    void setInstanceFilter(const TCHAR *pszScript);
 
-	static bool testTransformation(Node *node, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
+   static bool testTransformation(DataCollectionTarget *object, const TCHAR *script, const TCHAR *value, TCHAR *buffer, size_t bufSize);
 };
 
 /**
@@ -417,7 +421,7 @@ private:
 
 public:
 	DCTableColumn(const DCTableColumn *src);
-	DCTableColumn(CSCPMessage *msg, UINT32 baseId);
+	DCTableColumn(NXCPMessage *msg, UINT32 baseId);
 	DCTableColumn(DB_RESULT hResult, int row);
    DCTableColumn(ConfigEntry *e);
 	~DCTableColumn();
@@ -474,14 +478,14 @@ private:
 
 public:
    DCTableConditionGroup();
-   DCTableConditionGroup(CSCPMessage *msg, UINT32 *baseId);
+   DCTableConditionGroup(NXCPMessage *msg, UINT32 *baseId);
    DCTableConditionGroup(DCTableConditionGroup *src);
    DCTableConditionGroup(ConfigEntry *e);
    ~DCTableConditionGroup();
 
    bool check(Table *value, int row);
 
-   UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
+   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
 
    ObjectArray<DCTableCondition> *getConditions() { return m_conditions; }
 };
@@ -503,7 +507,7 @@ private:
 public:
    DCTableThreshold();
    DCTableThreshold(DB_RESULT hResult, int row);
-   DCTableThreshold(CSCPMessage *msg, UINT32 *baseId);
+   DCTableThreshold(NXCPMessage *msg, UINT32 *baseId);
    DCTableThreshold(DCTableThreshold *src);
    DCTableThreshold(ConfigEntry *e);
    ~DCTableThreshold();
@@ -513,7 +517,7 @@ public:
    ThresholdCheckResult check(Table *value, int row, const TCHAR *instance);
 
    bool saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq);
-   UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
+   UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
    void createNXMPRecord(String &str, int id);
 
    UINT32 getId() { return m_id; }
@@ -538,7 +542,7 @@ protected:
 
    bool transform(Table *value);
    void checkThresholds(Table *value);
-   
+
    bool loadThresholds();
    bool saveThresholds(DB_HANDLE hdb);
 
@@ -556,21 +560,21 @@ public:
    virtual void updateFromTemplate(DCObject *dcObject);
 
    virtual BOOL saveToDB(DB_HANDLE hdb);
-   virtual void deleteFromDB();
+   virtual void deleteFromDatabase();
 
-   virtual bool processNewValue(time_t nTimeStamp, void *value);
+   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus);
    virtual void processNewError();
 
-   virtual void createMessage(CSCPMessage *pMsg);
-   virtual void updateFromMessage(CSCPMessage *pMsg);
+   virtual void createMessage(NXCPMessage *pMsg);
+   virtual void updateFromMessage(NXCPMessage *pMsg);
 
 	virtual void deleteExpiredData();
 	virtual bool deleteAllData();
 
    virtual void createNXMPRecord(String &str);
 
-	void fillLastValueMessage(CSCPMessage *msg);
-   void fillLastValueSummaryMessage(CSCPMessage *pMsg, UINT32 dwId);
+	void fillLastValueMessage(NXCPMessage *msg);
+   void fillLastValueSummaryMessage(NXCPMessage *pMsg, UINT32 dwId);
 
    int getColumnDataType(const TCHAR *name);
    ObjectArray<DCTableColumn> *getColumns() { return m_columns; }
@@ -588,7 +592,7 @@ public:
  */
 BOOL InitDataCollector();
 void DeleteAllItemsForNode(UINT32 dwNodeId);
-void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags);
+void WriteFullParamListToMessage(NXCPMessage *pMsg, WORD flags);
 int GetDCObjectType(UINT32 nodeId, UINT32 dciId);
 
 void CalculateItemValueDiff(ItemValue &result, int nDataType, ItemValue &value1, ItemValue &value2);
@@ -604,9 +608,12 @@ void CalculateItemValueMax(ItemValue &result, int nDataType, int nNumValues, Ite
 extern double g_dAvgPollerQueueSize;
 extern double g_dAvgDBWriterQueueSize;
 extern double g_dAvgIDataWriterQueueSize;
+extern double g_dAvgRawDataWriterQueueSize;
 extern double g_dAvgDBAndIDataWriterQueueSize;
 extern double g_dAvgStatusPollerQueueSize;
 extern double g_dAvgConfigPollerQueueSize;
+extern double g_dAvgSyslogProcessingQueueSize;
+extern double g_dAvgSyslogWriterQueueSize;
 extern UINT32 g_dwAvgDCIQueuingTime;
 
 

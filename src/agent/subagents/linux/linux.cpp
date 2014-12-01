@@ -57,7 +57,7 @@ THREAD_RESULT THREAD_CALL RebootThread(void *arg)
 /**
  * Handler for hard shutdown/restart actions
  */
-static LONG H_HardShutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData)
+static LONG H_HardShutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData, AbstractCommSession *session)
 {
 #if HAVE_REBOOT
 	if (*pData == _T('R'))
@@ -86,7 +86,7 @@ static LONG H_HardShutdown(const TCHAR *pszAction, StringList *pArgList, const T
 /**
  * Handler for soft shutdown/restart actions
  */
-static LONG H_SoftShutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData)
+static LONG H_SoftShutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData, AbstractCommSession *session)
 {
 	char cmd[128];
 	snprintf(cmd, 128, "shutdown %s now", (*pData == _T('R')) ? "-r" : "-h");
@@ -117,11 +117,11 @@ static void SubAgentShutdown()
 /**
  * Externals
  */
-LONG H_DRBDDeviceList(const TCHAR *pszParam, const TCHAR *pszArg, StringList *pValue);
-LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
-LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue);
-LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value);
-LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValue);
+LONG H_DRBDDeviceList(const TCHAR *pszParam, const TCHAR *pszArg, StringList *pValue, AbstractCommSession *session);
+LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValue, AbstractCommSession *session);
 
 /**
  * Parameters provided by subagent
@@ -530,7 +530,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(LINUX)
  */
 extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
-	return H_NetIfList(_T("Net.InterfaceList"), NULL, pValue) == SYSINFO_RC_SUCCESS;
+	return H_NetIfList(_T("Net.InterfaceList"), NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -538,5 +538,5 @@ extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
  */
 extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
 {
-	return H_NetArpCache(_T("Net.ArpCache"), NULL, pValue) == SYSINFO_RC_SUCCESS;
+	return H_NetArpCache(_T("Net.ArpCache"), NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
 }

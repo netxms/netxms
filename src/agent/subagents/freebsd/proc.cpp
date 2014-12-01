@@ -120,7 +120,7 @@ static BOOL MatchProcess(kvm_t *kd, struct kinfo_proc *p, BOOL extMatch, const c
 // Handler for Process.Count, Process.CountEx and System.ProcessCount parameters
 //
 
-LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char name[128] = "", cmdLine[128] = "";
@@ -190,7 +190,7 @@ LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 // Handler for Process.* parameters
 //
 
-LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char name[128] = "", cmdLine[128] = "", buffer[64] = "";
@@ -281,7 +281,7 @@ LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 // Handler for System.ProcessList enum
 //
 
-LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	int nCount = -1;

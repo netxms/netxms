@@ -220,6 +220,7 @@ int main(int argc, char *argv[])
 #else
          dwRet = SNMPSaveMIBTree(m_szOutFile, pRoot, dwFlags);
 #endif
+         delete pRoot;
          if (dwRet != SNMP_ERR_SUCCESS)
             _tprintf(_T("ERROR: Cannot save output file %hs (%s)\n"), m_szOutFile, SNMPGetErrorText(dwRet));
       }

@@ -1,0 +1,8 @@
+Adding new server configuration parameter
+=========================================
+
+1. Add INSERT query to setup.in
+
+2. Add database upgrade procedure with CreateConfigParam call
+
+3. Update documentation (wiki and/or sphynx)

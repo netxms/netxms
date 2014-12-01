@@ -95,12 +95,12 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
          break;
 
 		DbgPrintf(5, _T("ApplyTemplateThread: template=%d(%s) updateType=%d target=%d removeDci=%d"),
-		          pInfo->pTemplate->Id(), pInfo->pTemplate->Name(), pInfo->iUpdateType, pInfo->targetId, pInfo->bRemoveDCI);
+		          pInfo->pTemplate->getId(), pInfo->pTemplate->getName(), pInfo->iUpdateType, pInfo->targetId, pInfo->bRemoveDCI);
       bSuccess = FALSE;
       dcTarget = FindObjectById(pInfo->targetId);
       if (dcTarget != NULL)
       {
-         if ((dcTarget->Type() == OBJECT_NODE) || (dcTarget->Type() == OBJECT_CLUSTER) || (dcTarget->Type() == OBJECT_MOBILEDEVICE))
+         if ((dcTarget->getObjectClass() == OBJECT_NODE) || (dcTarget->getObjectClass() == OBJECT_CLUSTER) || (dcTarget->getObjectClass() == OBJECT_MOBILEDEVICE))
          {
             switch(pInfo->iUpdateType)
             {
@@ -120,7 +120,7 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
                case REMOVE_TEMPLATE:
                   if (((DataCollectionTarget *)dcTarget)->lockDCIList(0x7FFFFFFF, _T("SYSTEM"), NULL))
                   {
-                     ((DataCollectionTarget *)dcTarget)->unbindFromTemplate(pInfo->pTemplate->Id(), pInfo->bRemoveDCI);
+                     ((DataCollectionTarget *)dcTarget)->unbindFromTemplate(pInfo->pTemplate->getId(), pInfo->bRemoveDCI);
                      ((DataCollectionTarget *)dcTarget)->unlockDCIList(0x7FFFFFFF);
                      bSuccess = TRUE;
                   }
@@ -187,6 +187,7 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 static void UpdateMapCallback(NetObj *object, void *data)
 {
 	((NetworkMap *)object)->updateContent();
+   ((NetworkMap *)object)->calculateCompoundStatus();
 }
 
 /**
@@ -272,13 +273,16 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 		pObject->generateGuid();
 
       // Create tables for storing data collection values
-      if ((pObject->Type() == OBJECT_NODE) || (pObject->Type() == OBJECT_MOBILEDEVICE) || (pObject->Type() == OBJECT_CLUSTER))
+      if ((pObject->getObjectClass() == OBJECT_NODE) || 
+          (pObject->getObjectClass() == OBJECT_MOBILEDEVICE) || 
+          (pObject->getObjectClass() == OBJECT_CLUSTER) || 
+          (pObject->getObjectClass() == OBJECT_ACCESSPOINT))
       {
          TCHAR szQuery[256], szQueryTemplate[256];
          UINT32 i;
 
          MetaDataReadStr(_T("IDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->Id());
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->getId());
          DBQuery(g_hCoreDB, szQuery);
 
          for(i = 0; i < 10; i++)
@@ -287,7 +291,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
             if (szQueryTemplate[0] != 0)
             {
-               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->Id(), pObject->Id());
+               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->getId(), pObject->getId());
                DBQuery(g_hCoreDB, szQuery);
             }
          }
@@ -298,7 +302,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
             if (szQueryTemplate[0] != 0)
             {
-               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->Id(), pObject->Id());
+               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->getId(), pObject->getId());
                DBQuery(g_hCoreDB, szQuery);
             }
          }
@@ -309,16 +313,16 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             MetaDataReadStr(szQuery, szQueryTemplate, 255, _T(""));
             if (szQueryTemplate[0] != 0)
             {
-               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->Id(), pObject->Id());
+               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->getId(), pObject->getId());
                DBQuery(g_hCoreDB, szQuery);
             }
          }
 		}
    }
-	g_idxObjectById.put(pObject->Id(), pObject);
+	g_idxObjectById.put(pObject->getId(), pObject);
    if (!pObject->isDeleted())
    {
-      switch(pObject->Type())
+      switch(pObject->getObjectClass())
       {
          case OBJECT_GENERIC:
          case OBJECT_NETWORK:
@@ -343,7 +347,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 			case OBJECT_RACK:
             break;
          case OBJECT_NODE:
-				g_idxNodeById.put(pObject->Id(), pObject);
+				g_idxNodeById.put(pObject->getId(), pObject);
             if (!(((Node *)pObject)->getFlags() & NF_REMOTE_AGENT))
             {
 			      if (IsZoningEnabled())
@@ -356,7 +360,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 				      else
 				      {
 					      DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"),
-					                (int)((Node *)pObject)->getZoneId(), pObject->Name(), (int)pObject->Id());
+					                (int)((Node *)pObject)->getZoneId(), pObject->getName(), (int)pObject->getId());
 				      }
                }
                else
@@ -367,13 +371,13 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             }
             break;
 			case OBJECT_CLUSTER:
-            g_idxClusterById.put(pObject->Id(), pObject);
+            g_idxClusterById.put(pObject->getId(), pObject);
             break;
 			case OBJECT_MOBILEDEVICE:
-				g_idxMobileDeviceById.put(pObject->Id(), pObject);
+				g_idxMobileDeviceById.put(pObject->getId(), pObject);
             break;
 			case OBJECT_ACCESSPOINT:
-				g_idxAccessPointById.put(pObject->Id(), pObject);
+				g_idxAccessPointById.put(pObject->getId(), pObject);
             MacDbAddAccessPoint((AccessPoint *)pObject);
             break;
          case OBJECT_SUBNET:
@@ -389,7 +393,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 						else
 						{
 							DbgPrintf(2, _T("Cannot find zone object with GUID=%d for subnet object %s [%d]"),
-							          (int)((Subnet *)pObject)->getZoneId(), pObject->Name(), (int)pObject->Id());
+							          (int)((Subnet *)pObject)->getZoneId(), pObject->getName(), (int)pObject->getId());
 						}
 					}
 					else
@@ -397,7 +401,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 						g_idxSubnetByAddr.put(pObject->IpAddr(), pObject);
 					}
                if (bNewObject)
-                  PostEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isaa", pObject->Id(), pObject->Name(), pObject->IpAddr(), ((Subnet *)pObject)->getIpNetMask());
+                  PostEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isaa", pObject->getId(), pObject->getName(), pObject->IpAddr(), ((Subnet *)pObject)->getIpNetMask());
             }
             break;
          case OBJECT_INTERFACE:
@@ -413,14 +417,14 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 						else
 						{
 							DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"),
-							          (int)((Interface *)pObject)->getZoneId(), pObject->Name(), (int)pObject->Id());
+							          (int)((Interface *)pObject)->getZoneId(), pObject->getName(), (int)pObject->getId());
 						}
 					}
 					else
 					{
 						if (g_idxInterfaceByAddr.put(pObject->IpAddr(), pObject))
 							DbgPrintf(1, _T("WARNING: duplicate interface IP address %08X (interface object %s [%d])"),
-										 pObject->IpAddr(), pObject->Name(), (int)pObject->Id());
+										 pObject->IpAddr(), pObject->getName(), (int)pObject->getId());
 					}
             }
             MacDbAddInterface((Interface *)pObject);
@@ -429,13 +433,13 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 				g_idxZoneByGUID.put(((Zone *)pObject)->getZoneId(), pObject);
             break;
          case OBJECT_CONDITION:
-				g_idxConditionById.put(pObject->Id(), pObject);
+				g_idxConditionById.put(pObject->getId(), pObject);
             break;
 			case OBJECT_SLMCHECK:
-				g_idxServiceCheckById.put(pObject->Id(), pObject);
+				g_idxServiceCheckById.put(pObject->getId(), pObject);
             break;
 			case OBJECT_NETWORKMAP:
-				g_idxNetMapById.put(pObject->Id(), pObject);
+				g_idxNetMapById.put(pObject->getId(), pObject);
             break;
          default:
 				{
@@ -449,7 +453,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 						}
 					}
 					if (!processed)
-						nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
+						nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->getObjectClass());
 				}
             break;
       }
@@ -460,6 +464,10 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 	{
       CALL_ALL_MODULES(pfPostObjectCreate, (pObject));
 	}
+   else
+   {
+      CALL_ALL_MODULES(pfPostObjectLoad, (pObject));
+   }
 }
 
 /**
@@ -470,7 +478,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
  */
 void NetObjDeleteFromIndexes(NetObj *pObject)
 {
-   switch(pObject->Type())
+   switch(pObject->getObjectClass())
    {
       case OBJECT_GENERIC:
       case OBJECT_NETWORK:
@@ -495,7 +503,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_RACK:
 			break;
       case OBJECT_NODE:
-			g_idxNodeById.remove(pObject->Id());
+			g_idxNodeById.remove(pObject->getId());
          if (!(((Node *)pObject)->getFlags() & NF_REMOTE_AGENT))
          {
 			   if (IsZoningEnabled())
@@ -508,7 +516,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 				   else
 				   {
 					   DbgPrintf(2, _T("Cannot find zone object with GUID=%d for node object %s [%d]"),
-					             (int)((Node *)pObject)->getZoneId(), pObject->Name(), (int)pObject->Id());
+					             (int)((Node *)pObject)->getZoneId(), pObject->getName(), (int)pObject->getId());
 				   }
             }
             else
@@ -519,13 +527,13 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          }
          break;
 		case OBJECT_CLUSTER:
-			g_idxClusterById.remove(pObject->Id());
+			g_idxClusterById.remove(pObject->getId());
          break;
       case OBJECT_MOBILEDEVICE:
-			g_idxMobileDeviceById.remove(pObject->Id());
+			g_idxMobileDeviceById.remove(pObject->getId());
          break;
 		case OBJECT_ACCESSPOINT:
-			g_idxAccessPointById.remove(pObject->Id());
+			g_idxAccessPointById.remove(pObject->getId());
          MacDbRemove(((AccessPoint *)pObject)->getMacAddr());
          break;
       case OBJECT_SUBNET:
@@ -541,7 +549,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 					else
 					{
 						DbgPrintf(2, _T("Cannot find zone object with GUID=%d for subnet object %s [%d]"),
-						          (int)((Subnet *)pObject)->getZoneId(), pObject->Name(), (int)pObject->Id());
+						          (int)((Subnet *)pObject)->getZoneId(), pObject->getName(), (int)pObject->getId());
 					}
 				}
 				else
@@ -563,13 +571,13 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 					else
 					{
 						DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"),
-						          (int)((Interface *)pObject)->getZoneId(), pObject->Name(), (int)pObject->Id());
+						          (int)((Interface *)pObject)->getZoneId(), pObject->getName(), (int)pObject->getId());
 					}
 				}
 				else
 				{
 					NetObj *o = g_idxInterfaceByAddr.get(pObject->IpAddr());
-					if ((o != NULL) && (o->Id() == pObject->Id()))
+					if ((o != NULL) && (o->getId() == pObject->getId()))
 					{
 						g_idxInterfaceByAddr.remove(pObject->IpAddr());
 					}
@@ -581,13 +589,13 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 			g_idxZoneByGUID.remove(((Zone *)pObject)->getZoneId());
          break;
       case OBJECT_CONDITION:
-			g_idxConditionById.remove(pObject->Id());
+			g_idxConditionById.remove(pObject->getId());
          break;
       case OBJECT_SLMCHECK:
-			g_idxServiceCheckById.remove(pObject->Id());
+			g_idxServiceCheckById.remove(pObject->getId());
          break;
 		case OBJECT_NETWORKMAP:
-			g_idxNetMapById.remove(pObject->Id());
+			g_idxNetMapById.remove(pObject->getId());
          break;
       default:
 			{
@@ -601,7 +609,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 					}
 				}
 				if (!processed)
-					nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->Type());
+					nxlog_write(MSG_BAD_NETOBJ_TYPE, EVENTLOG_ERROR_TYPE, "d", pObject->getObjectClass());
 			}
          break;
    }
@@ -616,7 +624,7 @@ AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr)
 		return NULL;
 
 	NetObj *object = MacDbFind(macAddr);
-   return ((object != NULL) && (object->Type() == OBJECT_ACCESSPOINT)) ? (AccessPoint *)object : NULL;
+   return ((object != NULL) && (object->getObjectClass() == OBJECT_ACCESSPOINT)) ? (AccessPoint *)object : NULL;
 }
 
 /**
@@ -624,7 +632,7 @@ AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr)
  */
 static bool DeviceIdComparator(NetObj *object, void *deviceId)
 {
-	return ((object->Type() == OBJECT_MOBILEDEVICE) && !object->isDeleted() &&
+	return ((object->getObjectClass() == OBJECT_MOBILEDEVICE) && !object->isDeleted() &&
 		     !_tcscmp((const TCHAR *)deviceId, ((MobileDevice *)object)->getDeviceId()));
 }
 
@@ -722,7 +730,7 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
 		return NULL;
 
 	NetObj *object = MacDbFind(macAddr);
-   return ((object != NULL) && (object->Type() == OBJECT_INTERFACE)) ? (Interface *)object : NULL;
+   return ((object != NULL) && (object->getObjectClass() == OBJECT_INTERFACE)) ? (Interface *)object : NULL;
 }
 
 /**
@@ -730,7 +738,7 @@ Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr)
  */
 static bool DescriptionComparator(NetObj *object, void *description)
 {
-	return ((object->Type() == OBJECT_INTERFACE) && !object->isDeleted() &&
+	return ((object->getObjectClass() == OBJECT_INTERFACE) && !object->isDeleted() &&
 	        !_tcscmp((const TCHAR *)description, ((Interface *)object)->getDescription()));
 }
 
@@ -861,7 +869,7 @@ NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass)
 	NetObj *object = g_idxObjectById.get(dwId);
 	if ((object == NULL) || (objClass == -1))
 		return object;
-	return (objClass == object->Type()) ? object : NULL;
+	return (objClass == object->getObjectClass()) ? object : NULL;
 }
 
 /**
@@ -870,7 +878,7 @@ NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass)
 const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName)
 {
 	NetObj *object = g_idxObjectById.get(id);
-   return (object != NULL) ? object->Name() : defaultName;
+   return (object != NULL) ? object->getName() : defaultName;
 }
 
 /**
@@ -888,8 +896,8 @@ struct __find_object_data
 static bool ObjectNameComparator(NetObj *object, void *data)
 {
 	struct __find_object_data *fd = (struct __find_object_data *)data;
-	return ((fd->objClass == -1) || (fd->objClass == object->Type())) &&
-	       !object->isDeleted() && !_tcsicmp(object->Name(), fd->name);
+	return ((fd->objClass == -1) || (fd->objClass == object->getObjectClass())) &&
+	       !object->isDeleted() && !_tcsicmp(object->getName(), fd->name);
 }
 
 /**
@@ -920,7 +928,7 @@ static bool ObjectGuidComparator(NetObj *object, void *data)
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass)
 {
 	NetObj *object = g_idxObjectById.find(ObjectGuidComparator, guid);
-	return (object != NULL) ? (((objClass == -1) || (objClass == object->Type())) ? object : NULL) : NULL;
+	return (object != NULL) ? (((objClass == -1) || (objClass == object->getObjectClass())) ? object : NULL) : NULL;
 }
 
 /**
@@ -928,7 +936,7 @@ NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass)
  */
 static bool TemplateNameComparator(NetObj *object, void *name)
 {
-	return (object->Type() == OBJECT_TEMPLATE) && !object->isDeleted() && !_tcsicmp(object->Name(), (const TCHAR *)name);
+	return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && !_tcsicmp(object->getName(), (const TCHAR *)name);
 }
 
 /**
@@ -946,7 +954,7 @@ Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName)
 
 static bool ClusterResourceIPComparator(NetObj *object, void *ipAddr)
 {
-	return (object->Type() == OBJECT_CLUSTER) && !object->isDeleted() && ((Cluster *)object)->isVirtualAddr(CAST_FROM_POINTER(ipAddr, UINT32));
+	return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() && ((Cluster *)object)->isVirtualAddr(CAST_FROM_POINTER(ipAddr, UINT32));
 }
 
 Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(UINT32 ipAddr)
@@ -969,7 +977,7 @@ struct __cluster_ip_data
 static bool ClusterIPComparator(NetObj *object, void *data)
 {
 	struct __cluster_ip_data *d = (struct __cluster_ip_data *)data;
-	return (object->Type() == OBJECT_CLUSTER) && !object->isDeleted() &&
+	return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() &&
 	       (((Cluster *)object)->getZoneId() == d->zoneId) &&
 			 (((Cluster *)object)->isVirtualAddr(d->ipAddr) ||
 			  ((Cluster *)object)->isSyncAddr(d->ipAddr));
@@ -1009,7 +1017,7 @@ static bool LocalMgmtNodeComparator(NetObj *object, void *data)
 UINT32 FindLocalMgmtNode()
 {
 	NetObj *object = g_idxNodeById.find(LocalMgmtNodeComparator, NULL);
-	return (object != NULL) ? object->Id() : 0;
+	return (object != NULL) ? object->getId() : 0;
 }
 
 /**
@@ -1025,14 +1033,14 @@ static void RecalcStatusCallback(NetObj *object, void *data)
  */
 static void LinkChildObjectsCallback(NetObj *object, void *data)
 {
-	if ((object->Type() == OBJECT_CONTAINER) ||
-		 (object->Type() == OBJECT_RACK) ||
-		 (object->Type() == OBJECT_TEMPLATEGROUP) ||
-		 (object->Type() == OBJECT_POLICYGROUP) ||
-		 (object->Type() == OBJECT_NETWORKMAPGROUP) ||
-		 (object->Type() == OBJECT_DASHBOARD) ||
-		 (object->Type() == OBJECT_BUSINESSSERVICE) ||
-		 (object->Type() == OBJECT_NODELINK))
+	if ((object->getObjectClass() == OBJECT_CONTAINER) ||
+		 (object->getObjectClass() == OBJECT_RACK) ||
+		 (object->getObjectClass() == OBJECT_TEMPLATEGROUP) ||
+		 (object->getObjectClass() == OBJECT_POLICYGROUP) ||
+		 (object->getObjectClass() == OBJECT_NETWORKMAPGROUP) ||
+		 (object->getObjectClass() == OBJECT_DASHBOARD) ||
+		 (object->getObjectClass() == OBJECT_BUSINESSSERVICE) ||
+		 (object->getObjectClass() == OBJECT_NODELINK))
 	{
 		((Container *)object)->linkChildObjects();
 	}
@@ -1081,7 +1089,7 @@ BOOL LoadObjects()
 	g_pBusinessServiceRoot->LoadFromDB();
 
    // Load zones
-   if (g_dwFlags & AF_ENABLE_ZONING)
+   if (g_flags & AF_ENABLE_ZONING)
    {
       Zone *pZone;
 
@@ -1089,7 +1097,8 @@ BOOL LoadObjects()
 
       // Load (or create) default zone
       pZone = new Zone;
-      pZone->CreateFromDB(BUILTIN_OID_ZONE0);
+      pZone->generateGuid();
+      pZone->loadFromDatabase(BUILTIN_OID_ZONE0);
       NetObjInsert(pZone, FALSE);
       g_pEntireNet->AddZone(pZone);
 
@@ -1101,7 +1110,7 @@ BOOL LoadObjects()
          {
             dwId = DBGetFieldULong(hResult, i, 0);
             pZone = new Zone;
-            if (pZone->CreateFromDB(dwId))
+            if (pZone->loadFromDatabase(dwId))
             {
                if (!pZone->isDeleted())
                   g_pEntireNet->AddZone(pZone);
@@ -1131,7 +1140,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pCondition = new Condition;
-         if (pCondition->CreateFromDB(dwId))
+         if (pCondition->loadFromDatabase(dwId))
          {
             NetObjInsert(pCondition, FALSE);  // Insert into indexes
          }
@@ -1156,11 +1165,11 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pSubnet = new Subnet;
-         if (pSubnet->CreateFromDB(dwId))
+         if (pSubnet->loadFromDatabase(dwId))
          {
             if (!pSubnet->isDeleted())
             {
-               if (g_dwFlags & AF_ENABLE_ZONING)
+               if (g_flags & AF_ENABLE_ZONING)
                {
                   Zone *pZone;
 
@@ -1196,7 +1205,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          md = new MobileDevice;
-         if (md->CreateFromDB(dwId))
+         if (md->loadFromDatabase(dwId))
          {
             NetObjInsert(md, FALSE);  // Insert into indexes
          }
@@ -1221,7 +1230,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pNode = new Node;
-         if (pNode->CreateFromDB(dwId))
+         if (pNode->loadFromDatabase(dwId))
          {
             NetObjInsert(pNode, FALSE);  // Insert into indexes
          }
@@ -1246,7 +1255,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          ap = new AccessPoint;
-         if (ap->CreateFromDB(dwId))
+         if (ap->loadFromDatabase(dwId))
          {
             NetObjInsert(ap, FALSE);  // Insert into indexes
          }
@@ -1271,7 +1280,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pInterface = new Interface;
-         if (pInterface->CreateFromDB(dwId))
+         if (pInterface->loadFromDatabase(dwId))
          {
             NetObjInsert(pInterface, FALSE);  // Insert into indexes
          }
@@ -1296,7 +1305,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pService = new NetworkService;
-         if (pService->CreateFromDB(dwId))
+         if (pService->loadFromDatabase(dwId))
          {
             NetObjInsert(pService, FALSE);  // Insert into indexes
          }
@@ -1321,7 +1330,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pConnector = new VPNConnector;
-         if (pConnector->CreateFromDB(dwId))
+         if (pConnector->loadFromDatabase(dwId))
          {
             NetObjInsert(pConnector, FALSE);  // Insert into indexes
          }
@@ -1346,7 +1355,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pCluster = new Cluster;
-         if (pCluster->CreateFromDB(dwId))
+         if (pCluster->loadFromDatabase(dwId))
          {
             NetObjInsert(pCluster, FALSE);  // Insert into indexes
          }
@@ -1373,7 +1382,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pTemplate = new Template;
-         if (pTemplate->CreateFromDB(dwId))
+         if (pTemplate->loadFromDatabase(dwId))
          {
             NetObjInsert(pTemplate, FALSE);  // Insert into indexes
 				pTemplate->calculateCompoundStatus();	// Force status change to NORMAL
@@ -1408,7 +1417,7 @@ BOOL LoadObjects()
 					policy = new AgentPolicy(type);
 					break;
 			}
-         if (policy->CreateFromDB(dwId))
+         if (policy->loadFromDatabase(dwId))
          {
             NetObjInsert(policy, FALSE);  // Insert into indexes
 				policy->calculateCompoundStatus();	// Force status change to NORMAL
@@ -1432,7 +1441,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          NetworkMap *map = new NetworkMap;
-         if (map->CreateFromDB(dwId))
+         if (map->loadFromDatabase(dwId))
          {
             NetObjInsert(map, FALSE);  // Insert into indexes
          }
@@ -1458,7 +1467,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pContainer = new Container;
-         if (pContainer->CreateFromDB(dwId))
+         if (pContainer->loadFromDatabase(dwId))
          {
             NetObjInsert(pContainer, FALSE);  // Insert into indexes
          }
@@ -1483,7 +1492,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          rack = new Rack;
-         if (rack->CreateFromDB(dwId))
+         if (rack->loadFromDatabase(dwId))
          {
             NetObjInsert(rack, FALSE);  // Insert into indexes
          }
@@ -1509,7 +1518,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pGroup = new TemplateGroup;
-         if (pGroup->CreateFromDB(dwId))
+         if (pGroup->loadFromDatabase(dwId))
          {
             NetObjInsert(pGroup, FALSE);  // Insert into indexes
          }
@@ -1535,7 +1544,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pGroup = new PolicyGroup;
-         if (pGroup->CreateFromDB(dwId))
+         if (pGroup->loadFromDatabase(dwId))
          {
             NetObjInsert(pGroup, FALSE);  // Insert into indexes
          }
@@ -1561,7 +1570,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pGroup = new NetworkMapGroup;
-         if (pGroup->CreateFromDB(dwId))
+         if (pGroup->loadFromDatabase(dwId))
          {
             NetObjInsert(pGroup, FALSE);  // Insert into indexes
          }
@@ -1586,7 +1595,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pd = new Dashboard;
-         if (pd->CreateFromDB(dwId))
+         if (pd->loadFromDatabase(dwId))
          {
             NetObjInsert(pd, FALSE);  // Insert into indexes
          }
@@ -1610,7 +1619,7 @@ BOOL LoadObjects()
 	   {
 		   dwId = DBGetFieldULong(hResult, i, 0);
 		   BusinessService *service = new BusinessService;
-		   if (service->CreateFromDB(dwId))
+		   if (service->loadFromDatabase(dwId))
 		   {
 			   NetObjInsert(service, FALSE);  // Insert into indexes
 		   }
@@ -1634,7 +1643,7 @@ BOOL LoadObjects()
 	   {
 		   dwId = DBGetFieldULong(hResult, i, 0);
 		   NodeLink *nl = new NodeLink;
-		   if (nl->CreateFromDB(dwId))
+		   if (nl->loadFromDatabase(dwId))
 		   {
 			   NetObjInsert(nl, FALSE);  // Insert into indexes
 		   }
@@ -1657,7 +1666,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          SlmCheck *check = new SlmCheck;
-         if (check->CreateFromDB(dwId))
+         if (check->loadFromDatabase(dwId))
          {
             NetObjInsert(check, FALSE);  // Insert into indexes
          }
@@ -1700,7 +1709,7 @@ BOOL LoadObjects()
    g_pBusinessServiceRoot->calculateCompoundStatus();
 
    // Recalculate status for zone objects
-   if (g_dwFlags & AF_ENABLE_ZONING)
+   if (g_flags & AF_ENABLE_ZONING)
    {
 		g_idxZoneByGUID.forEach(RecalcStatusCallback, NULL);
    }
@@ -1747,9 +1756,9 @@ static void DumpObjectCallback(NetObj *object, void *data)
 
 	ConsolePrintf(pCtx, _T("Object ID %d \"%s\"\n")
                        _T("   Class: %s  Primary IP: %s  Status: %s  IsModified: %d  IsDeleted: %d\n"),
-					  object->Id(), object->Name(), (object->Type() < OBJECT_CUSTOM) ? g_szClassName[object->Type()] : _T("Custom"),
+					  object->getId(), object->getName(), (object->getObjectClass() < OBJECT_CUSTOM) ? g_szClassName[object->getObjectClass()] : _T("Custom"),
                  IpToStr(object->IpAddr(), dd->buffer),
-                 g_szStatusTextSmall[object->Status()],
+                 GetStatusAsText(object->Status(), true),
                  object->isModified(), object->isDeleted());
    ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"), 
                  object->dbgGetParentList(dd->buffer), object->dbgGetChildList(&dd->buffer[4096]));
@@ -1757,7 +1766,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
 	struct tm *ltm = localtime(&t);
 	_tcsftime(dd->buffer, 256, _T("%d.%b.%Y %H:%M:%S"), ltm);
    ConsolePrintf(pCtx, _T("   Last change: %s\n"), dd->buffer);
-   switch(object->Type())
+   switch(object->getObjectClass())
    {
       case OBJECT_NODE:
          ConsolePrintf(pCtx, _T("   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n"),
@@ -1804,7 +1813,7 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
    switch(iParentClass)
    {
 		case OBJECT_NETWORK:
-			if ((iChildClass == OBJECT_ZONE) && (g_dwFlags & AF_ENABLE_ZONING))
+			if ((iChildClass == OBJECT_ZONE) && (g_flags & AF_ENABLE_ZONING))
 				return true;
 			break;
       case OBJECT_SERVICEROOT:
@@ -1903,10 +1912,10 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
  */
 void NetObjDelete(NetObj *pObject)
 {
-	DbgPrintf(4, _T("Final delete step for object %s [%d]"), pObject->Name(), pObject->Id());
+	DbgPrintf(4, _T("Final delete step for object %s [%d]"), pObject->getName(), pObject->getId());
 
    // Delete object from index by ID and object itself
-	g_idxObjectById.remove(pObject->Id());
+	g_idxObjectById.remove(pObject->getId());
    delete pObject;
 }
 
@@ -1925,7 +1934,7 @@ void UpdateInterfaceIndex(UINT32 dwOldIpAddr, UINT32 dwNewIpAddr, Interface *ifa
 		else
 		{
 			DbgPrintf(1, _T("UpdateInterfaceIndex: Cannot find zone object for interface %s [%d] (zone id %d)"),
-			          iface->Name(), (int)iface->Id(), (int)iface->getZoneId());
+			          iface->getName(), (int)iface->getId(), (int)iface->getZoneId());
 		}
 	}
 	else
@@ -1996,7 +2005,7 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds)
  */
 bool IsAgentPolicyObject(NetObj *object)
 {
-	return (object->Type() == OBJECT_AGENTPOLICY) || (object->Type() == OBJECT_AGENTPOLICY_CONFIG);
+	return (object->getObjectClass() == OBJECT_AGENTPOLICY) || (object->getObjectClass() == OBJECT_AGENTPOLICY_CONFIG);
 }
 
 /**

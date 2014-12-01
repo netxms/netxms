@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -425,7 +425,7 @@ public class PackageManager extends ViewPart
 					public void statusUpdate(long nodeId, int status, String message)
 					{
 						if (monitor != null)
-							monitor.statusUpdate(nodeId, status, message);
+							monitor.viewStatusUpdate(nodeId, status, message);
 					}
 					
 					@Override
@@ -441,6 +441,7 @@ public class PackageManager extends ViewPart
 									try
 									{
 										monitor = (PackageDeploymentMonitor)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(PackageDeploymentMonitor.ID, toString(), IWorkbenchPage.VIEW_ACTIVATE);
+										monitor.setPackageId(pkg.getId());
 									}
 									catch(PartInitException e)
 									{

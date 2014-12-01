@@ -40,6 +40,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_ARRAY
 %token T_BREAK
 %token T_CASE
+%token T_CATCH
 %token T_CONST
 %token T_CONTINUE
 %token T_DEFAULT
@@ -58,6 +59,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_SUB
 %token T_SWITCH
 %token T_TRUE
+%token T_TRY
 %token T_TYPE_INT32
 %token T_TYPE_INT64
 %token T_TYPE_REAL
@@ -101,7 +103,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %type <valInt32> ParameterList
 %type <pInstruction> SimpleStatementKeyword
 
-%destructor { free ($$); } <valStr>
+%destructor { safe_free($$); } <valStr>
 %destructor { delete $$; } <pConstant>
 %destructor { delete $$; } <pInstruction>
 
@@ -182,10 +184,10 @@ ConstDefinition:
 	if (!pScript->addConstant($1, $3))
 	{
 		pCompiler->error("Constant already defined");
-		delete $3;
+		delete_and_null($3);
 		YYERROR;
 	}
-	free($1);
+	safe_free_and_null($1);
 }
 ;
 
@@ -193,6 +195,7 @@ UseStatement:
 	T_USE AnyIdentifier ';'
 {
 	pScript->addRequiredModule($2);
+	$2 = NULL;
 }
 ;
 
@@ -213,7 +216,7 @@ Function:
 			pCompiler->error(szErrorText);
 			YYERROR;
 		}
-		free($2);
+		safe_free_and_null($2);
 		pCompiler->setIdentifierOperation(OPCODE_BIND);
 	}
 	ParameterDeclaration Block
@@ -252,6 +255,23 @@ StatementList:
 StatementOrBlock:
 	Statement
 |	Block
+|	TryCatchBlock
+;
+
+TryCatchBlock:
+	T_TRY 
+	{
+		pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CATCH, INVALID_ADDRESS));
+	} 
+	Block T_CATCH 
+	{
+		pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
+		pScript->resolveLastJump(OPCODE_CATCH);
+	} 
+	Block
+	{
+		pScript->resolveLastJump(OPCODE_JMP);
+	}
 ;
 
 Statement:
@@ -718,7 +738,7 @@ ForEachStatement:
 	T_FOREACH '(' T_IDENTIFIER 
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value($3)));
-	free($3);
+	safe_free_and_null($3);
 }
 	':' Expression ')'
 {
@@ -874,7 +894,7 @@ Constant:
 	T_STRING
 {
 	$$ = new NXSL_Value($1);
-	free($1);
+	safe_free_and_null($1);
 }
 |	T_INT32
 {

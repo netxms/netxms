@@ -647,6 +647,7 @@ public class AgentConnectorService extends Service implements LocationListener
 		}
 		return null;
 	}
+
 	/**
 	 * Get list of enabled location provider based on selected strategy
 	 * 

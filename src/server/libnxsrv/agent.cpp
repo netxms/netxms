@@ -169,20 +169,20 @@ void AgentConnection::printMsg(const TCHAR *format, ...)
 void AgentConnection::receiverThread()
 {
 	UINT32 msgBufferSize = 1024;
-   CSCPMessage *pMsg;
-   CSCP_MESSAGE *pRawMsg;
-   CSCP_BUFFER *pMsgBuffer;
+   NXCPMessage *pMsg;
+   NXCP_MESSAGE *pRawMsg;
+   NXCP_BUFFER *pMsgBuffer;
    BYTE *pDecryptionBuffer = NULL;
    int error;
    TCHAR szBuffer[128], szIpAddr[16];
 	SOCKET nSocket;
 
    // Initialize raw message receiving function
-   pMsgBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+   pMsgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
    RecvNXCPMessage(0, NULL, pMsgBuffer, 0, NULL, NULL, 0);
 
    // Allocate space for raw message
-   pRawMsg = (CSCP_MESSAGE *)malloc(msgBufferSize);
+   pRawMsg = (NXCP_MESSAGE *)malloc(msgBufferSize);
 #ifdef _WITH_ENCRYPTION
    pDecryptionBuffer = (BYTE *)malloc(msgBufferSize);
 #endif
@@ -194,7 +194,7 @@ void AgentConnection::receiverThread()
 		if (msgBufferSize > 131072)
 		{
 			msgBufferSize = 131072;
-		   pRawMsg = (CSCP_MESSAGE *)realloc(pRawMsg, msgBufferSize);
+		   pRawMsg = (NXCP_MESSAGE *)realloc(pRawMsg, msgBufferSize);
 			if (pDecryptionBuffer != NULL)
 			   pDecryptionBuffer = (BYTE *)realloc(pDecryptionBuffer, msgBufferSize);
 		}
@@ -216,8 +216,8 @@ void AgentConnection::receiverThread()
       if (error == 1)
       {
          printMsg(_T("Received too large message %s (%d bytes)"),
-                  NXCPMessageCodeName(ntohs(pRawMsg->wCode), szBuffer),
-                  ntohl(pRawMsg->dwSize));
+                  NXCPMessageCodeName(ntohs(pRawMsg->code), szBuffer),
+                  ntohl(pRawMsg->size));
          continue;
       }
 
@@ -238,30 +238,30 @@ void AgentConnection::receiverThread()
       }
 
       // Check that actual received packet size is equal to encoded in packet
-      if ((int)ntohl(pRawMsg->dwSize) != error)
+      if ((int)ntohl(pRawMsg->size) != error)
       {
-         printMsg(_T("RecvMsg: Bad packet length [dwSize=%d ActualSize=%d]"), ntohl(pRawMsg->dwSize), error);
+         printMsg(_T("RecvMsg: Bad packet length [size=%d ActualSize=%d]"), ntohl(pRawMsg->size), error);
          continue;   // Bad packet, wait for next
       }
 
-		if (ntohs(pRawMsg->wFlags) & MF_BINARY)
+		if (ntohs(pRawMsg->flags) & MF_BINARY)
 		{
          // Convert message header to host format
-         pRawMsg->dwId = ntohl(pRawMsg->dwId);
-         pRawMsg->wCode = ntohs(pRawMsg->wCode);
-         pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
+         pRawMsg->id = ntohl(pRawMsg->id);
+         pRawMsg->code = ntohs(pRawMsg->code);
+         pRawMsg->numFields = ntohl(pRawMsg->numFields);
          DbgPrintf(6, _T("Received raw message %s from agent at %s"),
-			          NXCPMessageCodeName(pRawMsg->wCode, szBuffer), IpToStr(getIpAddr(), szIpAddr));
+			          NXCPMessageCodeName(pRawMsg->code, szBuffer), IpToStr(getIpAddr(), szIpAddr));
 
-			if ((pRawMsg->wCode == CMD_FILE_DATA) && (pRawMsg->dwId == m_dwDownloadRequestId))
+			if ((pRawMsg->code == CMD_FILE_DATA) && (pRawMsg->id == m_dwDownloadRequestId))
 			{
             if (m_sendToClientMessageCallback != NULL)
             {
-               pRawMsg->wCode = ntohs(pRawMsg->wCode);
-               pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
+               pRawMsg->code = ntohs(pRawMsg->code);
+               pRawMsg->numFields = ntohl(pRawMsg->numFields);
                m_sendToClientMessageCallback(pRawMsg, m_downloadProgressCallbackArg);
 
-               if (ntohs(pRawMsg->wFlags) & MF_END_OF_FILE)
+               if (ntohs(pRawMsg->flags) & MF_END_OF_FILE)
                {
                   onFileDownload(TRUE);
                }
@@ -269,7 +269,7 @@ void AgentConnection::receiverThread()
                {
                   if (m_downloadProgressCallback != NULL)
                   {
-                     m_downloadProgressCallback(pRawMsg->dwSize - (CSCP_HEADER_SIZE + 8), m_downloadProgressCallbackArg);
+                     m_downloadProgressCallback(pRawMsg->size - (NXCP_HEADER_SIZE + 8), m_downloadProgressCallbackArg);
                   }
                }
             }
@@ -277,9 +277,9 @@ void AgentConnection::receiverThread()
             {
                if (m_hCurrFile != -1)
                {
-                  if (write(m_hCurrFile, pRawMsg->df, pRawMsg->dwNumVars) == (int)pRawMsg->dwNumVars)
+                  if (write(m_hCurrFile, pRawMsg->fields, pRawMsg->numFields) == (int)pRawMsg->numFields)
                   {
-                     if (ntohs(pRawMsg->wFlags) & MF_END_OF_FILE)
+                     if (ntohs(pRawMsg->flags) & MF_END_OF_FILE)
                      {
                         close(m_hCurrFile);
                         m_hCurrFile = -1;
@@ -305,12 +305,32 @@ void AgentConnection::receiverThread()
                }
             }
 			}
+
+			if((pRawMsg->code == CMD_ABORT_FILE_TRANSFER) && (pRawMsg->id == m_dwDownloadRequestId))
+			{
+            if (m_sendToClientMessageCallback != NULL)
+            {
+               pRawMsg->code = ntohs(pRawMsg->code);
+               pRawMsg->numFields = ntohl(pRawMsg->numFields);
+               m_sendToClientMessageCallback(pRawMsg, m_downloadProgressCallbackArg);
+
+               onFileDownload(FALSE);
+            }
+            else
+            {
+               //error on agent side
+               close(m_hCurrFile);
+               m_hCurrFile = -1;
+
+               onFileDownload(FALSE);
+            }
+			}
 		}
 		else
 		{
 			// Create message object from raw message
-			pMsg = new CSCPMessage(pRawMsg, m_nProtocolVersion);
-			switch(pMsg->GetCode())
+			pMsg = new NXCPMessage(pRawMsg, m_nProtocolVersion);
+			switch(pMsg->getCode())
 			{
 				case CMD_TRAP:
 					onTrap(pMsg);
@@ -326,6 +346,9 @@ void AgentConnection::receiverThread()
             case CMD_FILE_MONITORING:
                onFileMonitoringData(pMsg);
 					delete pMsg;
+               break;
+            case CMD_SNMP_TRAP:
+               onSnmpTrap(pMsg);
                break;
 				default:
 					if (processCustomMessage(pMsg))
@@ -681,29 +704,28 @@ InterfaceList *AgentConnection::getInterfaceList()
 }
 
 
-//
-// Get parameter value
-//
-
+/**
+ * Get parameter value
+ */
 UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TCHAR *pszBuffer)
 {
-   CSCPMessage msg(m_nProtocolVersion), *pResponse;
+   NXCPMessage msg(m_nProtocolVersion), *pResponse;
    UINT32 dwRqId, dwRetCode;
 
    if (m_bIsConnected)
    {
       dwRqId = m_dwRequestId++;
-      msg.SetCode(CMD_GET_PARAMETER);
-      msg.SetId(dwRqId);
-      msg.SetVariable(VID_PARAMETER, pszParam);
+      msg.setCode(CMD_GET_PARAMETER);
+      msg.setId(dwRqId);
+      msg.setField(VID_PARAMETER, pszParam);
       if (sendMessage(&msg))
       {
          pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
          if (pResponse != NULL)
          {
-            dwRetCode = pResponse->GetVariableLong(VID_RCC);
+            dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
             if (dwRetCode == ERR_SUCCESS)
-               pResponse->GetVariableStr(VID_VALUE, pszBuffer, dwBufSize);
+               pResponse->getFieldAsString(VID_VALUE, pszBuffer, dwBufSize);
             delete pResponse;
          }
          else
@@ -725,10 +747,9 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
 }
 
 
-//
-// Get ARP cache
-//
-
+/**
+ * Get ARP cache
+ */
 ARP_CACHE *AgentConnection::getArpCache()
 {
    ARP_CACHE *pArpCache = NULL;
@@ -785,18 +806,18 @@ ARP_CACHE *AgentConnection::getArpCache()
 }
 
 
-//
-// Send dummy command to agent (can be used for keepalive)
-//
+/**
+ * Send dummy command to agent (can be used for keepalive)
+ */
 
 UINT32 AgentConnection::nop()
 {
-   CSCPMessage msg(m_nProtocolVersion);
+   NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId;
 
    dwRqId = m_dwRequestId++;
-   msg.SetCode(CMD_KEEPALIVE);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_KEEPALIVE);
+   msg.setId(dwRqId);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, m_dwCommandTimeout);
    else
@@ -804,19 +825,18 @@ UINT32 AgentConnection::nop()
 }
 
 
-//
-// Wait for request completion code
-//
-
+/**
+ * Wait for request completion code
+ */
 UINT32 AgentConnection::waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
 {
-   CSCPMessage *pMsg;
+   NXCPMessage *pMsg;
    UINT32 dwRetCode;
 
    pMsg = m_pMsgWaitQueue->waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, dwTimeOut);
    if (pMsg != NULL)
    {
-      dwRetCode = pMsg->GetVariableLong(VID_RCC);
+      dwRetCode = pMsg->getFieldAsUInt32(VID_RCC);
       delete pMsg;
    }
    else
@@ -829,18 +849,18 @@ UINT32 AgentConnection::waitForRCC(UINT32 dwRqId, UINT32 dwTimeOut)
 /**
  * Send message to agent
  */
-BOOL AgentConnection::sendMessage(CSCPMessage *pMsg)
+BOOL AgentConnection::sendMessage(NXCPMessage *pMsg)
 {
    BOOL bResult;
 
-   CSCP_MESSAGE *pRawMsg = pMsg->createMessage();
+   NXCP_MESSAGE *pRawMsg = pMsg->createMessage();
 	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
    if (pCtx != NULL)
    {
-      CSCP_ENCRYPTED_MESSAGE *pEnMsg = CSCPEncryptMessage(pCtx, pRawMsg);
+      NXCP_ENCRYPTED_MESSAGE *pEnMsg = pCtx->encryptMessage(pRawMsg);
       if (pEnMsg != NULL)
       {
-         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->dwSize));
+         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
          free(pEnMsg);
       }
       else
@@ -851,9 +871,39 @@ BOOL AgentConnection::sendMessage(CSCPMessage *pMsg)
    }
    else
    {
-      bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->dwSize), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->dwSize));
+      bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->size));
    }
    free(pRawMsg);
+   return bResult;
+}
+
+/**
+ * Send raw message to agent
+ */
+BOOL AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
+{
+   BOOL bResult;
+
+   NXCP_MESSAGE *pRawMsg = pMsg;
+	NXCPEncryptionContext *pCtx = acquireEncryptionContext();
+   if (pCtx != NULL)
+   {
+      NXCP_ENCRYPTED_MESSAGE *pEnMsg = pCtx->encryptMessage(pRawMsg);
+      if (pEnMsg != NULL)
+      {
+         bResult = (SendEx(m_hSocket, (char *)pEnMsg, ntohl(pEnMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pEnMsg->size));
+         free(pEnMsg);
+      }
+      else
+      {
+         bResult = FALSE;
+      }
+		pCtx->decRefCount();
+   }
+   else
+   {
+      bResult = (SendEx(m_hSocket, (char *)pRawMsg, ntohl(pRawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(pRawMsg->size));
+   }
    return bResult;
 }
 
@@ -861,7 +911,7 @@ BOOL AgentConnection::sendMessage(CSCPMessage *pMsg)
  * Trap handler. Should be overriden in derived classes to implement
  * actual trap processing. Default implementation do nothing.
  */
-void AgentConnection::onTrap(CSCPMessage *pMsg)
+void AgentConnection::onTrap(NXCPMessage *pMsg)
 {
 }
 
@@ -869,7 +919,7 @@ void AgentConnection::onTrap(CSCPMessage *pMsg)
  * Data push handler. Should be overriden in derived classes to implement
  * actual data push processing. Default implementation do nothing.
  */
-void AgentConnection::onDataPush(CSCPMessage *pMsg)
+void AgentConnection::onDataPush(NXCPMessage *pMsg)
 {
 }
 
@@ -877,7 +927,15 @@ void AgentConnection::onDataPush(CSCPMessage *pMsg)
  * Monitoring data handler. Should be overriden in derived classes to implement
  * actual monitoring data processing. Default implementation do nothing.
  */
-void AgentConnection::onFileMonitoringData(CSCPMessage *pMsg)
+void AgentConnection::onFileMonitoringData(NXCPMessage *pMsg)
+{
+}
+
+/**
+ * SNMP trap handler. Should be overriden in derived classes to implement
+ * actual SNMP trap processing. Default implementation do nothing.
+ */
+void AgentConnection::onSnmpTrap(NXCPMessage *pMsg)
 {
 }
 
@@ -885,7 +943,7 @@ void AgentConnection::onFileMonitoringData(CSCPMessage *pMsg)
  * Custom message handler
  * If returns true, message considered as processed and will not be placed in wait queue
  */
-bool AgentConnection::processCustomMessage(CSCPMessage *pMsg)
+bool AgentConnection::processCustomMessage(NXCPMessage *pMsg)
 {
 	return false;
 }
@@ -895,28 +953,28 @@ bool AgentConnection::processCustomMessage(CSCPMessage *pMsg)
  */
 UINT32 AgentConnection::getList(const TCHAR *pszParam)
 {
-   CSCPMessage msg(m_nProtocolVersion), *pResponse;
+   NXCPMessage msg(m_nProtocolVersion), *pResponse;
    UINT32 i, dwRqId, dwRetCode;
 
    if (m_bIsConnected)
    {
       destroyResultData();
       dwRqId = m_dwRequestId++;
-      msg.SetCode(CMD_GET_LIST);
-      msg.SetId(dwRqId);
-      msg.SetVariable(VID_PARAMETER, pszParam);
+      msg.setCode(CMD_GET_LIST);
+      msg.setId(dwRqId);
+      msg.setField(VID_PARAMETER, pszParam);
       if (sendMessage(&msg))
       {
          pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
          if (pResponse != NULL)
          {
-            dwRetCode = pResponse->GetVariableLong(VID_RCC);
+            dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
             if (dwRetCode == ERR_SUCCESS)
             {
-               m_dwNumDataLines = pResponse->GetVariableLong(VID_NUM_STRINGS);
+               m_dwNumDataLines = pResponse->getFieldAsUInt32(VID_NUM_STRINGS);
                m_ppDataLines = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumDataLines);
                for(i = 0; i < m_dwNumDataLines; i++)
-                  m_ppDataLines[i] = pResponse->GetVariableStr(VID_ENUM_VALUE_BASE + i);
+                  m_ppDataLines[i] = pResponse->getFieldAsString(VID_ENUM_VALUE_BASE + i);
             }
             delete pResponse;
          }
@@ -943,22 +1001,22 @@ UINT32 AgentConnection::getList(const TCHAR *pszParam)
  */
 UINT32 AgentConnection::getTable(const TCHAR *pszParam, Table **table)
 {
-   CSCPMessage msg(m_nProtocolVersion), *pResponse;
+   NXCPMessage msg(m_nProtocolVersion), *pResponse;
    UINT32 dwRqId, dwRetCode;
 
 	*table = NULL;
    if (m_bIsConnected)
    {
       dwRqId = m_dwRequestId++;
-      msg.SetCode(CMD_GET_TABLE);
-      msg.SetId(dwRqId);
-      msg.SetVariable(VID_PARAMETER, pszParam);
+      msg.setCode(CMD_GET_TABLE);
+      msg.setId(dwRqId);
+      msg.setField(VID_PARAMETER, pszParam);
       if (sendMessage(&msg))
       {
          pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
          if (pResponse != NULL)
          {
-            dwRetCode = pResponse->GetVariableLong(VID_RCC);
+            dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
             if (dwRetCode == ERR_SUCCESS)
             {
 					*table = new Table(pResponse);
@@ -988,7 +1046,7 @@ UINT32 AgentConnection::getTable(const TCHAR *pszParam, Table **table)
  */
 UINT32 AgentConnection::authenticate(BOOL bProxyData)
 {
-   CSCPMessage msg(m_nProtocolVersion);
+   NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId;
    BYTE hash[32];
    int iAuthMethod = bProxyData ? m_iProxyAuth : m_iAuthMethod;
@@ -1001,26 +1059,26 @@ UINT32 AgentConnection::authenticate(BOOL bProxyData)
       return ERR_SUCCESS;  // No authentication required
 
    dwRqId = m_dwRequestId++;
-   msg.SetCode(CMD_AUTHENTICATE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_AUTH_METHOD, (WORD)iAuthMethod);
+   msg.setCode(CMD_AUTHENTICATE);
+   msg.setId(dwRqId);
+   msg.setField(VID_AUTH_METHOD, (WORD)iAuthMethod);
    switch(iAuthMethod)
    {
       case AUTH_PLAINTEXT:
 #ifdef UNICODE
          MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszSecret, -1, szBuffer, MAX_SECRET_LENGTH);
-         msg.SetVariable(VID_SHARED_SECRET, szBuffer);
+         msg.setField(VID_SHARED_SECRET, szBuffer);
 #else
-         msg.SetVariable(VID_SHARED_SECRET, pszSecret);
+         msg.setField(VID_SHARED_SECRET, pszSecret);
 #endif
          break;
       case AUTH_MD5_HASH:
          CalculateMD5Hash((BYTE *)pszSecret, (int)strlen(pszSecret), hash);
-         msg.SetVariable(VID_SHARED_SECRET, hash, MD5_DIGEST_SIZE);
+         msg.setField(VID_SHARED_SECRET, hash, MD5_DIGEST_SIZE);
          break;
       case AUTH_SHA1_HASH:
          CalculateSHA1Hash((BYTE *)pszSecret, (int)strlen(pszSecret), hash);
-         msg.SetVariable(VID_SHARED_SECRET, hash, SHA1_DIGEST_SIZE);
+         msg.setField(VID_SHARED_SECRET, hash, SHA1_DIGEST_SIZE);
          break;
       default:
          break;
@@ -1031,14 +1089,13 @@ UINT32 AgentConnection::authenticate(BOOL bProxyData)
       return ERR_CONNECTION_BROKEN;
 }
 
-
-//
-// Execute action on agent
-//
-
-UINT32 AgentConnection::execAction(const TCHAR *pszAction, int argc, TCHAR **argv)
+/**
+ * Execute action on agent
+ */
+UINT32 AgentConnection::execAction(const TCHAR *pszAction, int argc, TCHAR **argv,
+                                   bool withOutput, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *), void *cbData)
 {
-   CSCPMessage msg(m_nProtocolVersion);
+   NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId;
    int i;
 
@@ -1046,43 +1103,88 @@ UINT32 AgentConnection::execAction(const TCHAR *pszAction, int argc, TCHAR **arg
       return ERR_NOT_CONNECTED;
 
    dwRqId = m_dwRequestId++;
-   msg.SetCode(CMD_ACTION);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_ACTION_NAME, pszAction);
-   msg.SetVariable(VID_NUM_ARGS, (UINT32)argc);
+   msg.setCode(CMD_ACTION);
+   msg.setId(dwRqId);
+   msg.setField(VID_ACTION_NAME, pszAction);
+   msg.setField(VID_RECEIVE_OUTPUT, (UINT16)(withOutput ? 1 : 0));
+   msg.setField(VID_NUM_ARGS, (UINT32)argc);
    for(i = 0; i < argc; i++)
-      msg.SetVariable(VID_ACTION_ARG_BASE + i, argv[i]);
+      msg.setField(VID_ACTION_ARG_BASE + i, argv[i]);
 
    if (sendMessage(&msg))
-      return waitForRCC(dwRqId, m_dwCommandTimeout);
+   {
+      if (withOutput)
+      {
+         UINT32 rcc = waitForRCC(dwRqId, m_dwCommandTimeout);
+         if (rcc == ERR_SUCCESS)
+         {
+            outputCallback(ACE_CONNECTED, NULL, cbData);    // Indicate successful start
+            bool eos = false;
+            while(!eos)
+            {
+               NXCPMessage *response = waitForMessage(CMD_COMMAND_OUTPUT, dwRqId, m_dwCommandTimeout);
+               if (response != NULL)
+               {
+                  eos = response->isEndOfSequence();
+                  if (response->isFieldExist(VID_MESSAGE))
+                  {
+                     TCHAR line[4096];
+                     response->getFieldAsString(VID_MESSAGE, line, 4096);
+                     outputCallback(ACE_DATA, line, cbData);
+                  }
+                  delete response;
+               }
+               else
+               {
+                  return ERR_REQUEST_TIMEOUT;
+               }
+            }
+            outputCallback(ACE_DISCONNECTED, NULL, cbData);
+            return ERR_SUCCESS;
+         }
+         else
+         {
+            return rcc;
+         }
+      }
+      else
+      {
+         return waitForRCC(dwRqId, m_dwCommandTimeout);
+      }
+   }
    else
+   {
       return ERR_CONNECTION_BROKEN;
+   }
 }
 
-
-//
-// Upload file to agent
-//
-
+/**
+ * Upload file to agent
+ */
 UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, void (* progressCallback)(INT64, void *), void *cbArg)
 {
    UINT32 dwRqId, dwResult;
-   CSCPMessage msg(m_nProtocolVersion);
-   int i;
+   NXCPMessage msg(m_nProtocolVersion);
 
    if (!m_bIsConnected)
       return ERR_NOT_CONNECTED;
 
    dwRqId = m_dwRequestId++;
+   msg.setId(dwRqId);
 
-   msg.SetCode(CMD_TRANSFER_FILE);
-   msg.SetId(dwRqId);
-   for(i = (int)_tcslen(localFile) - 1;
-       (i >= 0) && (localFile[i] != '\\') && (localFile[i] != '/'); i--);
-   msg.SetVariable(VID_FILE_NAME, &localFile[i + 1]);
-   if (destinationFile != NULL)
+   // Use core agent if destination file name is not set and file manager subagent otherwise
+   if ((destinationFile == NULL) || (*destinationFile == 0))
    {
-		msg.SetVariable(VID_DESTINATION_FILE_NAME, destinationFile);
+      msg.setCode(CMD_TRANSFER_FILE);
+      int i;
+      for(i = (int)_tcslen(localFile) - 1;
+          (i >= 0) && (localFile[i] != '\\') && (localFile[i] != '/'); i--);
+      msg.setField(VID_FILE_NAME, &localFile[i + 1]);
+   }
+   else
+   {
+      msg.setCode(CMD_FILEMGR_UPLOAD);
+		msg.setField(VID_FILE_NAME, destinationFile);
    }
 
    if (sendMessage(&msg))
@@ -1108,15 +1210,13 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    return dwResult;
 }
 
-
-//
-// Send upgrade command
-//
-
+/**
+ * Send upgrade command
+ */
 UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
 {
    UINT32 dwRqId, dwResult;
-   CSCPMessage msg(m_nProtocolVersion);
+   NXCPMessage msg(m_nProtocolVersion);
    int i;
 
    if (!m_bIsConnected)
@@ -1124,11 +1224,11 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
 
    dwRqId = m_dwRequestId++;
 
-   msg.SetCode(CMD_UPGRADE_AGENT);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_UPGRADE_AGENT);
+   msg.setId(dwRqId);
    for(i = (int)_tcslen(pszPkgName) - 1;
        (i >= 0) && (pszPkgName[i] != '\\') && (pszPkgName[i] != '/'); i--);
-   msg.SetVariable(VID_FILE_NAME, &pszPkgName[i + 1]);
+   msg.setField(VID_FILE_NAME, &pszPkgName[i + 1]);
 
    if (sendMessage(&msg))
    {
@@ -1146,11 +1246,11 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
  * Check status of network service via agent
  */
 UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType,
-                                           WORD wPort, WORD wProto,
-                                           const TCHAR *pszRequest, const TCHAR *pszResponse)
+                                            WORD wPort, WORD wProto, const TCHAR *pszRequest, 
+                                            const TCHAR *pszResponse, UINT32 *responseTime)
 {
    UINT32 dwRqId, dwResult;
-   CSCPMessage msg(m_nProtocolVersion), *pResponse;
+   NXCPMessage msg(m_nProtocolVersion), *pResponse;
    static WORD m_wDefaultPort[] = { 7, 22, 110, 25, 21, 80, 443, 23 };
 
    if (!m_bIsConnected)
@@ -1158,17 +1258,17 @@ UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, 
 
    dwRqId = m_dwRequestId++;
 
-   msg.SetCode(CMD_CHECK_NETWORK_SERVICE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_IP_ADDRESS, dwIpAddr);
-   msg.SetVariable(VID_SERVICE_TYPE, (WORD)iServiceType);
-   msg.SetVariable(VID_IP_PORT,
+   msg.setCode(CMD_CHECK_NETWORK_SERVICE);
+   msg.setId(dwRqId);
+   msg.setField(VID_IP_ADDRESS, dwIpAddr);
+   msg.setField(VID_SERVICE_TYPE, (WORD)iServiceType);
+   msg.setField(VID_IP_PORT,
       (wPort != 0) ? wPort :
          m_wDefaultPort[((iServiceType >= NETSRV_CUSTOM) &&
                          (iServiceType <= NETSRV_TELNET)) ? iServiceType : 0]);
-   msg.SetVariable(VID_IP_PROTO, (wProto != 0) ? wProto : (WORD)IPPROTO_TCP);
-   msg.SetVariable(VID_SERVICE_REQUEST, pszRequest);
-   msg.SetVariable(VID_SERVICE_RESPONSE, pszResponse);
+   msg.setField(VID_IP_PROTO, (wProto != 0) ? wProto : (WORD)IPPROTO_TCP);
+   msg.setField(VID_SERVICE_REQUEST, pszRequest);
+   msg.setField(VID_SERVICE_RESPONSE, pszResponse);
 
    if (sendMessage(&msg))
    {
@@ -1176,10 +1276,14 @@ UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, 
       pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, 90000);
       if (pResponse != NULL)
       {
-         dwResult = pResponse->GetVariableLong(VID_RCC);
+         dwResult = pResponse->getFieldAsUInt32(VID_RCC);
          if (dwResult == ERR_SUCCESS)
          {
-            *pdwStatus = pResponse->GetVariableLong(VID_SERVICE_STATUS);
+            *pdwStatus = pResponse->getFieldAsUInt32(VID_SERVICE_STATUS);
+            if (responseTime != NULL)
+            {
+               *responseTime = pResponse->getFieldAsUInt32(VID_RESPONSE_TIME);
+            }
          }
          delete pResponse;
       }
@@ -1202,7 +1306,7 @@ UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, 
 UINT32 AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList)
 {
    UINT32 dwRqId, dwResult;
-   CSCPMessage msg(m_nProtocolVersion), *pResponse;
+   NXCPMessage msg(m_nProtocolVersion), *pResponse;
 
    *paramList = NULL;
 	*tableList = NULL;
@@ -1212,34 +1316,34 @@ UINT32 AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinit
 
    dwRqId = m_dwRequestId++;
 
-   msg.SetCode(CMD_GET_PARAMETER_LIST);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GET_PARAMETER_LIST);
+   msg.setId(dwRqId);
 
    if (sendMessage(&msg))
    {
       pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
       if (pResponse != NULL)
       {
-         dwResult = pResponse->GetVariableLong(VID_RCC);
+         dwResult = pResponse->getFieldAsUInt32(VID_RCC);
 			DbgPrintf(6, _T("AgentConnection::getSupportedParameters(): RCC=%d"), dwResult);
          if (dwResult == ERR_SUCCESS)
          {
-            UINT32 count = pResponse->GetVariableLong(VID_NUM_PARAMETERS);
+            UINT32 count = pResponse->getFieldAsUInt32(VID_NUM_PARAMETERS);
             ObjectArray<AgentParameterDefinition> *plist = new ObjectArray<AgentParameterDefinition>(count, 16, true);
-            for(UINT32 i = 0, dwId = VID_PARAM_LIST_BASE; i < count; i++)
+            for(UINT32 i = 0, id = VID_PARAM_LIST_BASE; i < count; i++)
             {
-               plist->add(new AgentParameterDefinition(pResponse, dwId));
-               dwId += 3;
+               plist->add(new AgentParameterDefinition(pResponse, id));
+               id += 3;
             }
 				*paramList = plist;
 				DbgPrintf(6, _T("AgentConnection::getSupportedParameters(): %d parameters received from agent"), count);
 
-            count = pResponse->GetVariableLong(VID_NUM_TABLES);
+            count = pResponse->getFieldAsUInt32(VID_NUM_TABLES);
             ObjectArray<AgentTableDefinition> *tlist = new ObjectArray<AgentTableDefinition>(count, 16, true);
-            for(UINT32 i = 0, dwId = VID_TABLE_LIST_BASE; i < count; i++)
+            for(UINT32 i = 0, id = VID_TABLE_LIST_BASE; i < count; i++)
             {
-               tlist->add(new AgentTableDefinition(pResponse, dwId));
-               dwId += 3;
+               tlist->add(new AgentTableDefinition(pResponse, id));
+               id += 3;
             }
 				*tableList = tlist;
 				DbgPrintf(6, _T("AgentConnection::getSupportedParameters(): %d tables received from agent"), count);
@@ -1265,13 +1369,13 @@ UINT32 AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinit
 UINT32 AgentConnection::setupEncryption(RSA *pServerKey)
 {
 #ifdef _WITH_ENCRYPTION
-   CSCPMessage msg(m_nProtocolVersion), *pResp;
+   NXCPMessage msg(m_nProtocolVersion), *pResp;
    UINT32 dwRqId, dwError, dwResult;
 
    dwRqId = m_dwRequestId++;
 
    PrepareKeyRequestMsg(&msg, pServerKey, false);
-   msg.SetId(dwRqId);
+   msg.setId(dwRqId);
    if (sendMessage(&msg))
    {
       pResp = waitForMessage(CMD_SESSION_KEY, dwRqId, m_dwCommandTimeout);
@@ -1314,15 +1418,13 @@ UINT32 AgentConnection::setupEncryption(RSA *pServerKey)
 #endif
 }
 
-
-//
-// Get configuration file from agent
-//
-
+/**
+ * Get configuration file from agent
+ */
 UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
 {
    UINT32 i, dwRqId, dwResult;
-   CSCPMessage msg(m_nProtocolVersion), *pResponse;
+   NXCPMessage msg(m_nProtocolVersion), *pResponse;
 #ifdef UNICODE
    BYTE *pBuffer;
 #endif
@@ -1335,26 +1437,26 @@ UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
 
    dwRqId = m_dwRequestId++;
 
-   msg.SetCode(CMD_GET_AGENT_CONFIG);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GET_AGENT_CONFIG);
+   msg.setId(dwRqId);
 
    if (sendMessage(&msg))
    {
       pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
       if (pResponse != NULL)
       {
-         dwResult = pResponse->GetVariableLong(VID_RCC);
+         dwResult = pResponse->getFieldAsUInt32(VID_RCC);
          if (dwResult == ERR_SUCCESS)
          {
-            *pdwSize = pResponse->GetVariableBinary(VID_CONFIG_FILE, NULL, 0);
+            *pdwSize = pResponse->getFieldAsBinary(VID_CONFIG_FILE, NULL, 0);
             *ppszConfig = (TCHAR *)malloc((*pdwSize + 1) * sizeof(TCHAR));
 #ifdef UNICODE
             pBuffer = (BYTE *)malloc(*pdwSize + 1);
-            pResponse->GetVariableBinary(VID_CONFIG_FILE, pBuffer, *pdwSize);
+            pResponse->getFieldAsBinary(VID_CONFIG_FILE, pBuffer, *pdwSize);
             MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pBuffer, *pdwSize, *ppszConfig, *pdwSize);
             free(pBuffer);
 #else
-            pResponse->GetVariableBinary(VID_CONFIG_FILE, (BYTE *)(*ppszConfig), *pdwSize);
+            pResponse->getFieldAsBinary(VID_CONFIG_FILE, (BYTE *)(*ppszConfig), *pdwSize);
 #endif
             (*ppszConfig)[*pdwSize] = 0;
 
@@ -1381,15 +1483,13 @@ UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
    return dwResult;
 }
 
-
-//
-// Get configuration file from agent
-//
-
+/**
+ * Update configuration file on agent
+ */
 UINT32 AgentConnection::updateConfigFile(const TCHAR *pszConfig)
 {
    UINT32 dwRqId, dwResult;
-   CSCPMessage msg(m_nProtocolVersion);
+   NXCPMessage msg(m_nProtocolVersion);
 #ifdef UNICODE
    int nChars;
    BYTE *pBuffer;
@@ -1400,17 +1500,17 @@ UINT32 AgentConnection::updateConfigFile(const TCHAR *pszConfig)
 
    dwRqId = m_dwRequestId++;
 
-   msg.SetCode(CMD_UPDATE_AGENT_CONFIG);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_UPDATE_AGENT_CONFIG);
+   msg.setId(dwRqId);
 #ifdef UNICODE
    nChars = (int)_tcslen(pszConfig);
    pBuffer = (BYTE *)malloc(nChars + 1);
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
                        pszConfig, nChars, (char *)pBuffer, nChars + 1, NULL, NULL);
-   msg.SetVariable(VID_CONFIG_FILE, pBuffer, nChars);
+   msg.setField(VID_CONFIG_FILE, pBuffer, nChars);
    free(pBuffer);
 #else
-   msg.SetVariable(VID_CONFIG_FILE, (BYTE *)pszConfig, (UINT32)strlen(pszConfig));
+   msg.setField(VID_CONFIG_FILE, (BYTE *)pszConfig, (UINT32)strlen(pszConfig));
 #endif
 
    if (sendMessage(&msg))
@@ -1425,11 +1525,9 @@ UINT32 AgentConnection::updateConfigFile(const TCHAR *pszConfig)
    return dwResult;
 }
 
-
-//
-// Get routing table from agent
-//
-
+/**
+ * Get routing table from agent
+ */
 ROUTING_TABLE *AgentConnection::getRoutingTable()
 {
    ROUTING_TABLE *pRT = NULL;
@@ -1500,11 +1598,9 @@ ROUTING_TABLE *AgentConnection::getRoutingTable()
    return pRT;
 }
 
-
-//
-// Set proxy information
-//
-
+/**
+ * Set proxy information
+ */
 void AgentConnection::setProxy(UINT32 dwAddr, WORD wPort, int iAuthMethod, const TCHAR *pszSecret)
 {
    m_dwProxyAddr = dwAddr;
@@ -1526,21 +1622,19 @@ void AgentConnection::setProxy(UINT32 dwAddr, WORD wPort, int iAuthMethod, const
    m_bUseProxy = TRUE;
 }
 
-
-//
-// Setup proxy connection
-//
-
+/**
+ * Setup proxy connection
+ */
 UINT32 AgentConnection::setupProxyConnection()
 {
-   CSCPMessage msg(m_nProtocolVersion);
+   NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId;
 
    dwRqId = m_dwRequestId++;
-   msg.SetCode(CMD_SETUP_PROXY_CONNECTION);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_IP_ADDRESS, (UINT32)ntohl(m_dwAddr));
-   msg.SetVariable(VID_AGENT_PORT, m_wPort);
+   msg.setCode(CMD_SETUP_PROXY_CONNECTION);
+   msg.setId(dwRqId);
+   msg.setField(VID_IP_ADDRESS, (UINT32)ntohl(m_dwAddr));
+   msg.setField(VID_AGENT_PORT, m_wPort);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, 60000);   // Wait 60 seconds for remote connect
    else
@@ -1552,12 +1646,12 @@ UINT32 AgentConnection::setupProxyConnection()
  */
 UINT32 AgentConnection::enableTraps()
 {
-   CSCPMessage msg(m_nProtocolVersion);
+   NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId;
 
    dwRqId = m_dwRequestId++;
-   msg.SetCode(CMD_ENABLE_AGENT_TRAPS);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_ENABLE_AGENT_TRAPS);
+   msg.setId(dwRqId);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, m_dwCommandTimeout);
    else
@@ -1565,26 +1659,71 @@ UINT32 AgentConnection::enableTraps()
 }
 
 /**
- * Send custom request to agent
+ * Take screenshot from remote system
  */
-CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *recvFile, bool append, void (*downloadProgressCallback)(size_t, void *),
-														  void (*fileResendCallback)(CSCP_MESSAGE*, void *), void *cbArg)
+UINT32 AgentConnection::takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size)
 {
-   UINT32 dwRqId, rcc;
-	CSCPMessage *msg = NULL;
+   NXCPMessage msg(m_nProtocolVersion);
+   UINT32 dwRqId;
 
    dwRqId = m_dwRequestId++;
-   pRequest->SetId(dwRqId);
+   msg.setCode(CMD_TAKE_SCREENSHOT);
+   msg.setId(dwRqId);
+   msg.setField(VID_NAME, sessionName);
+   if (sendMessage(&msg))
+   {
+      NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      if (response != NULL)
+      {
+         UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+         if (rcc == ERR_SUCCESS)
+         {
+            BYTE *p = response->getBinaryFieldPtr(VID_FILE_DATA, size);
+            if (p != NULL)
+            {
+               *data = (BYTE *)malloc(*size);
+               memcpy(*data, p, *size);
+            }
+            else
+            {
+               *data = NULL;
+            }
+         }
+         delete response;
+         return rcc;
+      }
+      else
+      {
+         return ERR_REQUEST_TIMEOUT;
+      }
+   }
+   else
+   {
+      return ERR_CONNECTION_BROKEN;
+   }
+}
+
+/**
+ * Send custom request to agent
+ */
+NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *recvFile, bool append, void (*downloadProgressCallback)(size_t, void *),
+														  void (*fileResendCallback)(NXCP_MESSAGE*, void *), void *cbArg)
+{
+   UINT32 dwRqId, rcc;
+	NXCPMessage *msg = NULL;
+
+   dwRqId = m_dwRequestId++;
+   pRequest->setId(dwRqId);
 	if (recvFile != NULL)
 	{
 		rcc = prepareFileDownload(recvFile, dwRqId, append, downloadProgressCallback, fileResendCallback,cbArg);
 		if (rcc != ERR_SUCCESS)
 		{
 			// Create fake response message
-			msg = new CSCPMessage;
-			msg->SetCode(CMD_REQUEST_COMPLETED);
-			msg->SetId(dwRqId);
-			msg->SetVariable(VID_RCC, rcc);
+			msg = new NXCPMessage;
+			msg->setCode(CMD_REQUEST_COMPLETED);
+			msg->setId(dwRqId);
+			msg->setField(VID_RCC, rcc);
 		}
 	}
 
@@ -1595,20 +1734,20 @@ CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *
 			msg = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
 			if ((msg != NULL) && (recvFile != NULL))
 			{
-				if (msg->GetVariableLong(VID_RCC) == ERR_SUCCESS)
+				if (msg->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
 				{
 					if (ConditionWait(m_condFileDownload, 1800000))	 // 30 min timeout
 					{
 						if (!m_fileDownloadSucceeded)
 						{
-							msg->SetVariable(VID_RCC, ERR_IO_FAILURE);
+							msg->setField(VID_RCC, ERR_IO_FAILURE);
 							if (m_deleteFileOnDownloadFailure)
 								_tremove(recvFile);
 						}
 					}
 					else
 					{
-						msg->SetVariable(VID_RCC, ERR_REQUEST_TIMEOUT);
+						msg->setField(VID_RCC, ERR_REQUEST_TIMEOUT);
 					}
 				}
 				else
@@ -1632,7 +1771,7 @@ CSCPMessage *AgentConnection::customRequest(CSCPMessage *pRequest, const TCHAR *
  * Prepare for file download
  */
 UINT32 AgentConnection::prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *),
-                                             void (*fileResendCallback)(CSCP_MESSAGE *, void *), void *cbArg)
+                                             void (*fileResendCallback)(NXCP_MESSAGE *, void *), void *cbArg)
 {
    if (fileResendCallback == NULL)
    {
@@ -1691,19 +1830,19 @@ void AgentConnection::onFileDownload(BOOL success)
  */
 UINT32 AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
 {
-   CSCPMessage msg(m_nProtocolVersion);
+   NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId, rcc;
 
 	*info = NULL;
    dwRqId = m_dwRequestId++;
-   msg.SetCode(CMD_GET_POLICY_INVENTORY);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GET_POLICY_INVENTORY);
+   msg.setId(dwRqId);
    if (sendMessage(&msg))
 	{
-		CSCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+		NXCPMessage *response = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
 		if (response != NULL)
 		{
-			rcc = response->GetVariableLong(VID_RCC);
+			rcc = response->getFieldAsUInt32(VID_RCC);
 			if (rcc == ERR_SUCCESS)
 				*info = new AgentPolicyInfo(response);
 			delete response;
@@ -1726,12 +1865,12 @@ UINT32 AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
 UINT32 AgentConnection::uninstallPolicy(uuid_t guid)
 {
 	UINT32 rqId, rcc;
-	CSCPMessage msg(m_nProtocolVersion);
+	NXCPMessage msg(m_nProtocolVersion);
 
    rqId = generateRequestId();
-   msg.SetId(rqId);
-	msg.SetCode(CMD_UNINSTALL_AGENT_POLICY);
-	msg.SetVariable(VID_GUID, guid, UUID_LENGTH);
+   msg.setId(rqId);
+	msg.setCode(CMD_UNINSTALL_AGENT_POLICY);
+	msg.setField(VID_GUID, guid, UUID_LENGTH);
 	if (sendMessage(&msg))
 	{
 		rcc = waitForRCC(rqId, m_dwCommandTimeout);
@@ -1759,11 +1898,11 @@ NXCPEncryptionContext *AgentConnection::acquireEncryptionContext()
 /**
  * Create new agent parameter definition from NXCP message
  */
-AgentParameterDefinition::AgentParameterDefinition(CSCPMessage *msg, UINT32 baseId)
+AgentParameterDefinition::AgentParameterDefinition(NXCPMessage *msg, UINT32 baseId)
 {
-   m_name = msg->GetVariableStr(baseId);
-   m_description = msg->GetVariableStr(baseId + 1);
-   m_dataType = (int)msg->GetVariableShort(baseId + 2);
+   m_name = msg->getFieldAsString(baseId);
+   m_description = msg->getFieldAsString(baseId + 1);
+   m_dataType = (int)msg->getFieldAsUInt16(baseId + 2);
 }
 
 /**
@@ -1788,23 +1927,23 @@ AgentParameterDefinition::~AgentParameterDefinition()
 /**
  * Fill NXCP message
  */
-UINT32 AgentParameterDefinition::fillMessage(CSCPMessage *msg, UINT32 baseId)
+UINT32 AgentParameterDefinition::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
-   msg->SetVariable(baseId, m_name);
-   msg->SetVariable(baseId + 1, m_description);
-   msg->SetVariable(baseId + 2, (WORD)m_dataType);
+   msg->setField(baseId, m_name);
+   msg->setField(baseId + 1, m_description);
+   msg->setField(baseId + 2, (WORD)m_dataType);
    return 3;
 }
 
 /**
  * Create new agent table definition from NXCP message
  */
-AgentTableDefinition::AgentTableDefinition(CSCPMessage *msg, UINT32 baseId)
+AgentTableDefinition::AgentTableDefinition(NXCPMessage *msg, UINT32 baseId)
 {
-   m_name = msg->GetVariableStr(baseId);
-   m_description = msg->GetVariableStr(baseId + 2);
+   m_name = msg->getFieldAsString(baseId);
+   m_description = msg->getFieldAsString(baseId + 2);
 
-   TCHAR *instanceColumns = msg->GetVariableStr(baseId + 1);
+   TCHAR *instanceColumns = msg->getFieldAsString(baseId + 1);
    if (instanceColumns != NULL)
    {
       m_instanceColumns = new StringList(instanceColumns, _T("|"));
@@ -1846,22 +1985,22 @@ AgentTableDefinition::~AgentTableDefinition()
 /**
  * Fill NXCP message
  */
-UINT32 AgentTableDefinition::fillMessage(CSCPMessage *msg, UINT32 baseId)
+UINT32 AgentTableDefinition::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
-   msg->SetVariable(baseId + 1, m_name);
-   msg->SetVariable(baseId + 2, m_description);
+   msg->setField(baseId + 1, m_name);
+   msg->setField(baseId + 2, m_description);
 
    TCHAR *instanceColumns = m_instanceColumns->join(_T("|"));
-   msg->SetVariable(baseId + 3, instanceColumns);
+   msg->setField(baseId + 3, instanceColumns);
    free(instanceColumns);
 
    UINT32 varId = baseId + 4;
    for(int i = 0; i < m_columns->size(); i++)
    {
-      msg->SetVariable(varId++, m_columns->get(i)->m_name);
-      msg->SetVariable(varId++, (WORD)m_columns->get(i)->m_dataType);
+      msg->setField(varId++, m_columns->get(i)->m_name);
+      msg->setField(varId++, (WORD)m_columns->get(i)->m_dataType);
    }
 
-   msg->SetVariable(baseId, varId - baseId);
+   msg->setField(baseId, varId - baseId);
    return varId - baseId;
 }

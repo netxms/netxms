@@ -72,11 +72,11 @@ typedef struct
 
 static BOOL DB2Init(Config* config);
 static void DB2Shutdown();
-static BOOL DB2CommandHandler(UINT32 dwCommand, CSCPMessage* pRequest, CSCPMessage* pResponse, void* session);
+static BOOL DB2CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, void *session);
 
-static THREAD_RESULT THREAD_CALL RunMonitorThread(void* info);
+static THREAD_RESULT THREAD_CALL RunMonitorThread(void *info);
 static BOOL PerformQueries(const PTHREAD_INFO);
-static LONG GetParameter(const TCHAR* parameter, const TCHAR* arg, TCHAR* value);
-static const PDB2_INFO GetConfigs(Config* config, ConfigEntry* configEntry, const TCHAR* entryName);
+static LONG GetParameter(const TCHAR *parameter, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+static const PDB2_INFO GetConfigs(Config *config, ConfigEntry *configEntry, const TCHAR *entryName);
 
 #endif /* DB2_SUBAGENT_H_ */

@@ -104,7 +104,7 @@ struct NXSL_ExtMethod
 class LIBNXSL_EXPORTABLE NXSL_Class
 {
 protected:
-   TCHAR m_szName[MAX_CLASS_NAME];
+   TCHAR m_name[MAX_CLASS_NAME];
    StringObjectMap<NXSL_ExtMethod> *m_methods;
 
 public:
@@ -118,7 +118,7 @@ public:
 
 	virtual void onObjectDelete(NXSL_Object *object);
 
-   const TCHAR *getName() { return m_szName; }
+   const TCHAR *getName() { return m_name; }
 };
 
 /**
@@ -334,11 +334,11 @@ public:
 class NXSL_Function
 {
 public:
-   TCHAR m_szName[MAX_FUNCTION_NAME];
+   TCHAR m_name[MAX_FUNCTION_NAME];
    UINT32 m_dwAddr;
 
-   NXSL_Function() { m_szName[0] = 0; m_dwAddr = INVALID_ADDRESS; }
-   NXSL_Function(NXSL_Function *src) { nx_strncpy(m_szName, src->m_szName, MAX_FUNCTION_NAME); m_dwAddr = src->m_dwAddr; }
+   NXSL_Function() { m_name[0] = 0; m_dwAddr = INVALID_ADDRESS; }
+   NXSL_Function(NXSL_Function *src) { nx_strncpy(m_name, src->m_name, MAX_FUNCTION_NAME); m_dwAddr = src->m_dwAddr; }
 };
 
 /**
@@ -346,7 +346,7 @@ public:
  */
 struct NXSL_ExtFunction
 {
-   TCHAR m_szName[MAX_FUNCTION_NAME];
+   TCHAR m_name[MAX_FUNCTION_NAME];
    int (* m_pfHandler)(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
    int m_iNumArgs;   // Number of arguments or -1 for variable number
 };
@@ -526,7 +526,17 @@ public:
    NXSL_Program *findScript(const TCHAR *name);
    NXSL_VM *createVM(const TCHAR *name, NXSL_Environment *env);
 
-   void fillMessage(CSCPMessage *pMsg);
+   void fillMessage(NXCPMessage *pMsg);
+};
+
+/**
+ * Catch point information
+ */
+struct NXSL_CatchPoint
+{
+   UINT32 addr;
+   UINT32 subLevel;
+   int dataStackSize;
 };
 
 /**
@@ -534,6 +544,9 @@ public:
  */
 class LIBNXSL_EXPORTABLE NXSL_VM
 {
+private:
+   static bool createConstantsCallback(const TCHAR *key, const void *value, void *data);
+
 protected:
    NXSL_Environment *m_env;
 	void *m_userData;
@@ -542,22 +555,25 @@ protected:
    UINT32 m_cp;
 
    UINT32 m_dwSubLevel;
-   NXSL_Stack *m_pDataStack;
-   NXSL_Stack *m_pCodeStack;
+   NXSL_Stack *m_dataStack;
+   NXSL_Stack *m_codeStack;
+   NXSL_Stack *m_catchStack;
    int m_nBindPos;
 
-   NXSL_VariableSystem *m_pConstants;
-   NXSL_VariableSystem *m_pGlobals;
-   NXSL_VariableSystem *m_pLocals;
+   NXSL_VariableSystem *m_constants;
+   NXSL_VariableSystem *m_globals;
+   NXSL_VariableSystem *m_locals;
 
    ObjectArray<NXSL_Function> *m_functions;
    ObjectArray<NXSL_Module> *m_modules;
 
    NXSL_Value *m_pRetValue;
-   int m_nErrorCode;
-   TCHAR *m_pszErrorText;
+   int m_errorCode;
+   int m_errorLine;
+   TCHAR *m_errorText;
 
    void execute();
+   bool unwind();
    void callFunction(int nArgCount);
    void doUnaryOperation(int nOpCode);
    void doBinaryOperation(int nOpCode);
@@ -578,18 +594,24 @@ public:
    void loadModule(NXSL_Program *module, const TCHAR *name);
 
 	void setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
-	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_pGlobals->find(pszName); }
+	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_globals->find(pszName); }
 
    bool load(NXSL_Program *program);
-   bool run(UINT32 argc = 0, NXSL_Value **argv = NULL, NXSL_VariableSystem *pUserLocals = NULL,
+   bool run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem *pUserLocals = NULL,
             NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL,
             const TCHAR *entryPoint = NULL);
+   bool run(int argc, NXSL_Value **argv, NXSL_VariableSystem *pUserLocals = NULL,
+            NXSL_VariableSystem **ppGlobals = NULL, NXSL_VariableSystem *pConstants = NULL,
+            const TCHAR *entryPoint = NULL);
+   bool run() { ObjectArray<NXSL_Value> args(1, 1, false); return run(&args); }
 
    UINT32 getCodeSize() { return m_instructionSet->size(); }
 
 	void trace(int level, const TCHAR *text);
    void dump(FILE *pFile);
-   const TCHAR *getErrorText() { return CHECK_NULL_EX(m_pszErrorText); }
+   int getErrorCode() { return m_errorCode; }
+   int getErrorLine() { return m_errorLine; }
+   const TCHAR *getErrorText() { return CHECK_NULL_EX(m_errorText); }
    NXSL_Value *getResult() { return m_pRetValue; }
 
 	void *getUserData() { return m_userData; }

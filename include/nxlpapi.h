@@ -181,10 +181,22 @@ private:
 	int m_traceLevel;
 	void (*m_traceCallback)(const TCHAR *, va_list);
 	TCHAR m_status[MAX_PARSER_STATUS_LEN];
+#ifdef _WIN32
+   TCHAR *m_marker;
+#endif
 	
 	const TCHAR *checkContext(LogParserRule *rule);
 	void trace(int level, const TCHAR *format, ...);
 	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, UINT32 objectId);
+
+#ifdef _WIN32
+   void parseEvent(EVENTLOGRECORD *rec);
+
+	bool monitorEventLogV6(CONDITION stopCondition);
+	bool monitorEventLogV4(CONDITION stopCondition);
+
+   time_t readLastProcessedRecordTimestamp();
+#endif
 
 public:
 	LogParser();
@@ -233,7 +245,26 @@ public:
 	void setTraceLevel(int level) { m_traceLevel = level; }
 	void setTraceCallback(void (*cb)(const TCHAR *, va_list)) { m_traceCallback = cb; }
 
-	bool monitorFile(CONDITION stopCondition, void (*logger)(int, const TCHAR *, ...), bool readFromCurrPos = true);
+	bool monitorFile(CONDITION stopCondition, bool readFromCurrPos = true);
+#ifdef _WIN32
+	bool monitorEventLog(CONDITION stopCondition, const TCHAR *markerPrefix);
+   void saveLastProcessedRecordTimestamp(time_t timestamp);
+#endif
 };
+
+/**
+ * Init log parser library
+ */
+void LIBNXLP_EXPORTABLE InitLogParserLibrary();
+
+/**
+ * Cleanup event log parsig library
+ */
+void LIBNXLP_EXPORTABLE CleanupLogParserLibrary();
+
+/**
+ * Set trace callback for log parser library
+ */
+void LIBNXLP_EXPORTABLE SetLogParserTraceCallback(void (* traceCallback)(int, const TCHAR *, va_list));
 
 #endif

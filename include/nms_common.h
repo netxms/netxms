@@ -51,6 +51,7 @@
 
 #ifndef UNDER_CE
 #define _WITH_ENCRYPTION   1
+#define WITH_LDAP          1
 #if !defined(WINDOWS_ONLY) && !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE
 #endif
@@ -84,7 +85,7 @@
 /**
  * Wrappers for 64-bit integer constants
  */
-#if defined(__GNUC__) || defined(__HP_aCC) || defined(__IBMC__) || defined(__IBMCPP__) || defined(__SUNPRO_C)
+#if defined(__GNUC__) || defined(__HP_aCC) || defined(__IBMC__) || defined(__IBMCPP__) || defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #define _LL(x) (x ## LL)
 #define _ULL(x) (x ## ULL)
 #elif defined(_MSC_VER)
@@ -134,7 +135,7 @@
 /**
  * Compatibility defines for C sources
  */
-#ifndef __cplusplus
+#if !defined(__cplusplus) && !defined(CORTEX)
 typedef int bool;
 #endif
 
@@ -154,7 +155,7 @@ typedef int bool;
 /********** WINDOWS ********************/
 
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT		0x0502
+#define _WIN32_WINNT		0x0501
 #endif
 
 #define WITH_IPV6               1
@@ -182,6 +183,8 @@ typedef int bool;
 #define va_copy(x,y)            (x = y)
 #endif
 #define HAVE_DECL_VA_COPY       1
+
+#define HAVE_LIBCURL            1
 
 #include <winsock2.h>
 #include <windows.h>
@@ -226,7 +229,7 @@ typedef int bool;
 
 typedef UINT64 QWORD;   // for compatibility
 typedef int socklen_t;
-typedef DWORD pid_t;
+typedef long pid_t;
 typedef LONG ssize_t;
 
 typedef signed __int8 int8_t;
@@ -1183,6 +1186,17 @@ typedef struct tagICMPHDR
 #define STRING(x)   L#x
 #else
 #define STRING(x)   #x
+#endif
+
+/**
+ * Pipe handle
+ */
+#ifdef _WIN32
+#define HPIPE HANDLE
+#define INVALID_PIPE_HANDLE INVALID_HANDLE_VALUE
+#else
+#define HPIPE int
+#define INVALID_PIPE_HANDLE (-1)
 #endif
 
 /**

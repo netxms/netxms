@@ -26,6 +26,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -35,6 +36,7 @@ import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.reporter.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -42,7 +44,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class ObjectFieldEditor extends FieldEditor
 {
-	private static final String EMPTY_SELECTION_TEXT = "<none>";
+	private static final String EMPTY_SELECTION_TEXT = Messages.get().ObjectFieldEditor_Any;
 	
 	private CLabel text;
 	private long objectId = 0;
@@ -70,25 +72,20 @@ public class ObjectFieldEditor extends FieldEditor
 	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected Control createContent(Composite parent)
 	{
 		Composite content = toolkit.createComposite(parent, SWT.BORDER);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.TOP;
-		content.setLayoutData(gd);
 		
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
-		layout.horizontalSpacing = WidgetHelper.INNER_SPACING;
+		layout.numColumns = 3;
+		layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		content.setLayout(layout);
 		
 		text = new CLabel(content, SWT.NONE);
 		toolkit.adapt(text);
-		gd = new GridData();
+		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.TOP;
@@ -97,16 +94,29 @@ public class ObjectFieldEditor extends FieldEditor
 		
 		final ImageHyperlink selectionLink = toolkit.createImageHyperlink(content, SWT.NONE);
 		selectionLink.setImage(SharedIcons.IMG_FIND);
+		selectionLink.setToolTipText(Messages.get().ObjectFieldEditor_SelectObject);
 		selectionLink.addHyperlinkListener(new HyperlinkAdapter() {
-			/* (non-Javadoc)
-			 * @see org.eclipse.ui.forms.events.HyperlinkAdapter#linkActivated(org.eclipse.ui.forms.events.HyperlinkEvent)
-			 */
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
 				selectObject();
 			}
 		});
+		
+		final ImageHyperlink clearLink = toolkit.createImageHyperlink(content, SWT.NONE);
+		clearLink.setImage(SharedIcons.IMG_CLEAR);
+		clearLink.setToolTipText(Messages.get().ObjectFieldEditor_ClearSelection);
+		clearLink.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            objectId = 0;
+            text.setText(EMPTY_SELECTION_TEXT);
+            text.setImage(null);
+         }
+      });
+		
+		return content;
 	}
 	
 	/**

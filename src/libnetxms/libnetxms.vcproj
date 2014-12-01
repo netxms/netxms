@@ -398,6 +398,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\inetaddr.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\log.cpp"
 				>
 			</File>
@@ -414,6 +418,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\msgrecv.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\msgwq.cpp"
 				>
 			</File>
@@ -423,6 +431,10 @@
 			</File>
 			<File
 				RelativePath=".\nxcp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\pa.cpp"
 				>
 			</File>
 			<File
@@ -613,6 +625,10 @@
 			</File>
 			<File
 				RelativePath=".\StackWalker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\strmap-internal.h"
 				>
 			</File>
 			<File

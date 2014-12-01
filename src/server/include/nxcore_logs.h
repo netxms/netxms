@@ -115,7 +115,7 @@ private:
 	} m_value;
 
 public:
-	ColumnFilter(CSCPMessage *msg, const TCHAR *column, UINT32 baseId);
+	ColumnFilter(NXCPMessage *msg, const TCHAR *column, UINT32 baseId);
 	~ColumnFilter();
 
 	int getVariableCount() { return m_varCount; }
@@ -135,7 +135,7 @@ private:
 	OrderingColumn *m_orderingColumns;
 
 public:
-	LogFilter(CSCPMessage *msg);
+	LogFilter(NXCPMessage *msg);
 	~LogFilter();
 
 	String buildOrderClause();
@@ -185,7 +185,7 @@ public:
 
 	bool query(LogFilter *filter, INT64 *rowCount, const UINT32 userId);
 	Table *getData(INT64 startRow, INT64 numRows, bool refresh, const UINT32 userId);
-	void getColumnInfo(CSCPMessage &msg);
+	void getColumnInfo(NXCPMessage &msg);
 };
 
 

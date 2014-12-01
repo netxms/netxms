@@ -67,6 +67,14 @@
             name="%view.name.FileViewer"
             restorable="false">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objecttools.views.AgentActionResults"
+            icon="icons/console.png"
+            id="org.netxms.ui.eclipse.objecttools.views.AgentActionResults"
+            name="Agent Action"
+            restorable="false">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -176,8 +184,8 @@
    <extension
          point="org.eclipse.ui.contexts">
       <context
-            id="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
-            name="LocalCommandResults"
+            id="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
+            name="Abstract Command Results"
             parentId="org.eclipse.ui.contexts.window">
       </context>
       <context
@@ -190,7 +198,7 @@
          point="org.eclipse.ui.bindings">
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.copy"
-            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+C">
       </key>
@@ -202,7 +210,7 @@
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.select_all"
-            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+A">
       </key>
@@ -214,13 +222,13 @@
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.terminate_process"
-            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="CTRL+BREAK">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.scroll_lock"
-            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="PAUSE">
       </key>
@@ -232,15 +240,15 @@
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.clear_output"
-            contextId="org.netxms.ui.eclipse.objecttools.context.LocalCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="CTRL+L">
+            sequence="M1+L">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.clear_output"
             contextId="org.netxms.ui.eclipse.objecttools.context.FileViewer"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="CTRL+L">
+            sequence="M1+L">
       </key>
    </extension>
    <extension
@@ -248,6 +256,13 @@
       <loginlistener
             class="org.netxms.ui.eclipse.objecttools.LoginListener">
       </loginlistener>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.objecttools.toolhandlers">
+      <handler
+            class="org.netxms.ui.eclipse.objecttools.WakeupToolHandler"
+            id="wakeup">
+      </handler>
    </extension>
 
 </plugin>

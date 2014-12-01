@@ -24,8 +24,8 @@
          point="org.eclipse.ui.perspectives">
       <perspective
             name="%perspective.default"
-            class="org.netxms.ui.eclipse.console.perspectives.DefaultPerspective"
-            id="org.netxms.ui.eclipse.console.DefaultPerspective">
+            class="org.netxms.ui.eclipse.console.perspectives.ManagementPerspective"
+            id="org.netxms.ui.eclipse.console.ManagementPerspective">
       </perspective>
    </extension>
    
@@ -62,7 +62,7 @@
          </property>
          <property
                name="aboutText"
-               value="NetXMS Management Console&#x0A;&#x0A;Version 1.2.14&#x0A;Copyright (c) 2003-2014 Raden Solutions">
+               value="NetXMS Management Console&#x0A;&#x0A;Version 2.0-M1&#x0A;Copyright (c) 2003-2014 Raden Solutions">
          </property>
          <property
                name="startupForegroundColor"
@@ -241,6 +241,12 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+M3+A">
+      </key>
+      <key
+            commandId="org.eclipse.ui.file.closePart"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+W">
       </key>
       <scheme
             description="%scheme.description"

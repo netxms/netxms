@@ -28,7 +28,7 @@
  */
 NXSL_Class::NXSL_Class()
 {
-   _tcscpy(m_szName, _T("generic"));
+   _tcscpy(m_name, _T("generic"));
    m_methods = new StringObjectMap<NXSL_ExtMethod>(true);
    m_methods->setIgnoreCase(false);
 }

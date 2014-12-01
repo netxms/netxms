@@ -39,6 +39,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.topology.Activator;
+import org.netxms.ui.eclipse.topology.Messages;
 
 /**
  * Subnet address map
@@ -112,7 +113,7 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
          return;
 	   }
 	   
-	   new ConsoleJob("Get subnet address map", viewPart, Activator.PLUGIN_ID, null) {
+	   new ConsoleJob(Messages.get().SubnetAddressMap_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -148,7 +149,7 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get address map for subnet";
+            return Messages.get().SubnetAddressMap_JobError;
          }
       }.start();
 	}
@@ -237,8 +238,8 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 	private void drawAddress(byte[] address, long nodeId, int x, int y, GC gc)
 	{
 		final String label = (subnet.getMaskBits() < 24) ? 
-		      ("." + ((int)address[address.length - 2] & 0xFF) + "." + ((int)address[address.length - 1] & 0xFF)) :
-		         ("." + ((int)address[address.length - 1] & 0xFF));
+		      ("." + ((int)address[address.length - 2] & 0xFF) + "." + ((int)address[address.length - 1] & 0xFF)) : //$NON-NLS-1$ //$NON-NLS-2$
+		         ("." + ((int)address[address.length - 1] & 0xFF)); //$NON-NLS-1$
 		Rectangle rect = new Rectangle(x, y, ELEMENT_WIDTH, ELEMENT_HEIGHT);
 		
 		if (nodeId == 0)
@@ -299,17 +300,17 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
       }
       else if (index == 0)
       {
-         setToolTipText("Subnet address");
+         setToolTipText(Messages.get().SubnetAddressMap_SubnetAddress);
       }
       else if (index == addressMap.length - 1)
       {
-         setToolTipText("Broadcast address");
+         setToolTipText(Messages.get().SubnetAddressMap_BroadcastAddress);
       }
       else
       {
          if (addressMap[index] == 0)
          {
-            setToolTipText("Free");
+            setToolTipText(Messages.get().SubnetAddressMap_Free);
          }
          else
          {
@@ -320,7 +321,7 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
             }
             else
             {
-               setToolTipText("[" + addressMap[index] + "]");
+               setToolTipText("[" + addressMap[index] + "]"); //$NON-NLS-1$ //$NON-NLS-2$
             }
          }
       }

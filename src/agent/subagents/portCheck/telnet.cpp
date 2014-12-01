@@ -4,7 +4,10 @@
 #include "main.h"
 #include "net.h"
 
-LONG H_CheckTelnet(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+/**
+ * Check telnet service - parameter handler
+ */
+LONG H_CheckTelnet(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 
@@ -13,9 +16,9 @@ LONG H_CheckTelnet(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	TCHAR szTimeout[64];
 	unsigned short nPort;
 
-	AgentGetParameterArgA(pszParam, 1, szHost, sizeof(szHost));
-	AgentGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
-   AgentGetParameterArg(pszParam, 3, szTimeout, sizeof(szTimeout));
+	AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
+	AgentGetParameterArg(param, 2, szPort, sizeof(szPort));
+   AgentGetParameterArg(param, 3, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0)
 	{
@@ -29,10 +32,22 @@ LONG H_CheckTelnet(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	}
 
 	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
-	ret_int(pValue, CheckTelnet(szHost, 0, nPort, NULL, NULL, dwTimeout));
+   INT64 start = GetCurrentTimeMs();
+	int result = CheckTelnet(szHost, 0, nPort, NULL, NULL, dwTimeout);
+   if (*arg == 'R')
+   {
+	   ret_int64(value, GetCurrentTimeMs() - start);
+   }
+   else
+   {
+	   ret_int(value, result);
+   }
 	return nRet;
 }
 
+/**
+ * Check telnet service
+ */
 int CheckTelnet(char *szAddr, UINT32 dwAddr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
 {
 	int nRet = 0;

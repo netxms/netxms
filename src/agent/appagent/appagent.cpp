@@ -22,6 +22,10 @@
 
 #include "appagent-internal.h"
 
+#if defined(_AIX) || defined(__sun)
+#include <signal.h>
+#endif
+
 /**
  * Application agent config
  */
@@ -353,6 +357,17 @@ cleanup:
 
 #endif
 
+#if defined(_AIX) || defined(__sun)
+
+/**
+ * Dummy signal handler
+ */
+static void DummySignalHandler(int s)
+{
+}
+
+#endif
+
 /**
  * Initialize application agent
  */
@@ -364,6 +379,11 @@ bool APPAGENT_EXPORTABLE AppAgentInit(APPAGENT_INIT *initData)
 	memcpy(&s_config, initData, sizeof(APPAGENT_INIT));
 	if ((s_config.name == NULL) || (s_config.name[0] == 0))
 		return false;
+
+#if defined(_AIX) || defined(__sun)
+   signal(SIGUSR2, DummySignalHandler);
+#endif
+
 	s_initialized = true;
 	return true;
 }
@@ -391,6 +411,9 @@ void APPAGENT_EXPORTABLE AppAgentStop()
 			CloseHandle(s_pipe);
 #else
 			shutdown(s_pipe, SHUT_RDWR);
+#if defined(_AIX) || defined(__sun)
+         pthread_kill(s_connectorThread, SIGUSR2);
+#endif
 #endif
 			s_pipe = INVALID_PIPE_HANDLE;
 		}

@@ -69,17 +69,17 @@ bool WinPerfObject::readDataFromAgent(AgentConnection *conn)
  *
  * @return next available variable ID
  */
-UINT32 WinPerfObject::fillMessage(CSCPMessage *msg, UINT32 baseId)
+UINT32 WinPerfObject::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
-	msg->SetVariable(baseId, m_name);
-	msg->SetVariable(baseId + 1, (UINT32)m_counters->getSize());
-	msg->SetVariable(baseId + 2, (UINT32)m_instances->getSize());
+	msg->setField(baseId, m_name);
+	msg->setField(baseId + 1, (UINT32)m_counters->size());
+	msg->setField(baseId + 2, (UINT32)m_instances->size());
 
 	UINT32 varId = baseId + 3;
-	for(int i = 0; i < m_counters->getSize(); i++)
-		msg->SetVariable(varId++, m_counters->getValue(i));
-	for(int i = 0; i < m_instances->getSize(); i++)
-		msg->SetVariable(varId++, m_instances->getValue(i));
+	for(int i = 0; i < m_counters->size(); i++)
+		msg->setField(varId++, m_counters->get(i));
+	for(int i = 0; i < m_instances->size(); i++)
+		msg->setField(varId++, m_instances->get(i));
 	return varId;
 }
 
@@ -99,7 +99,7 @@ ObjectArray<WinPerfObject> *WinPerfObject::getWinPerfObjectsFromNode(Node *node,
 		{
 			if (!objects->get(i)->readDataFromAgent(conn))
 			{
-				DbgPrintf(5, _T("WinPerfObject::getWinPerfObjectsFromNode(%s [%d]): cannot read data for object %s"), node->Name(), node->Id(), objects->get(i)->getName());
+				DbgPrintf(5, _T("WinPerfObject::getWinPerfObjectsFromNode(%s [%d]): cannot read data for object %s"), node->getName(), node->getId(), objects->get(i)->getName());
 				objects->remove(i);
 				i--;
 			}
@@ -109,7 +109,7 @@ ObjectArray<WinPerfObject> *WinPerfObject::getWinPerfObjectsFromNode(Node *node,
 	}
 	else
 	{
-		DbgPrintf(5, _T("WinPerfObject::getWinPerfObjectsFromNode(%s [%d]): cannot read PDH.Objects list"), node->Name(), node->Id());
+		DbgPrintf(5, _T("WinPerfObject::getWinPerfObjectsFromNode(%s [%d]): cannot read PDH.Objects list"), node->getName(), node->getId());
 		objects = NULL;
 	}
 	return objects;

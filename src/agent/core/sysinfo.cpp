@@ -30,7 +30,7 @@
 /**
  * Handler for System.CurrentTime parameter
  */
-LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    ret_int64(value, (INT64)time(NULL));
    return SYSINFO_RC_SUCCESS;
@@ -39,7 +39,7 @@ LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for Agent.Uptime parameter
  */
-LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    ret_uint(value, (UINT32)(time(NULL) - g_tmAgentStartTime));
    return SYSINFO_RC_SUCCESS;
@@ -176,7 +176,7 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive,
  *    age       : age filter; if < 0, only files created after now - abs(value) will match;
  *                if > 0, only files created before now - value will match
  */
-LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR szPath[MAX_PATH], szRealPath[MAX_PATH], szPattern[MAX_PATH], szRealPattern[MAX_PATH], szRecursive[10], szBuffer[128];
    bool bRecursive = false;
@@ -208,8 +208,8 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
       _tcscpy(szPattern, _T("*"));
 
 	// Expand strftime macros in the path and in the pattern
-	if ((ExpandFileName(szPath, szRealPath, MAX_PATH, false) == NULL) ||
-	    (ExpandFileName(szPattern, szRealPattern, MAX_PATH, false) == NULL))
+	if ((ExpandFileName(szPath, szRealPath, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL) ||
+	    (ExpandFileName(szPattern, szRealPattern, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL))
 		return SYSINFO_RC_UNSUPPORTED;
 
    DebugPrintf(INVALID_INDEX, 6, _T("H_DirInfo: path=\"%s\" pattern=\"%s\" recursive=%s"), szRealPath, szRealPattern, bRecursive ? _T("true") : _T("false"));
@@ -234,7 +234,7 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Calculate MD5 hash for file
  */
-LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH];
 	TCHAR szHashText[MD5_DIGEST_SIZE * 2 + 1];
@@ -245,7 +245,7 @@ LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
       return SYSINFO_RC_UNSUPPORTED;
 
 	// Expand strftime macros in the path
-	if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, false) == NULL)
+	if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
 		return SYSINFO_RC_UNSUPPORTED;
 
    if (!CalculateFileMD5Hash(szRealFileName, hash))
@@ -264,7 +264,7 @@ LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 // Calculate SHA1 hash for file
 //
 
-LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH];
 	TCHAR szHashText[SHA1_DIGEST_SIZE * 2 + 1];
@@ -275,7 +275,7 @@ LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
       return SYSINFO_RC_UNSUPPORTED;
 
 	// Expand strftime macros in the path
-	if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, false) == NULL)
+	if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
 		return SYSINFO_RC_UNSUPPORTED;
 
    if (!CalculateFileSHA1Hash(szRealFileName, hash))
@@ -292,7 +292,7 @@ LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Calculate CRC32 for file
  */
-LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH];
    UINT32 dwCRC32;
@@ -301,7 +301,7 @@ LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
       return SYSINFO_RC_UNSUPPORTED;
 
 	// Expand strftime macros in the path
-	if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, false) == NULL)
+	if (ExpandFileName(szFileName, szRealFileName, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
 		return SYSINFO_RC_UNSUPPORTED;
 
    if (!CalculateFileCRC32(szRealFileName, &dwCRC32))
@@ -314,7 +314,7 @@ LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for System.PlatformName
  */
-LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    LONG nResult = SYSINFO_RC_SUCCESS;
 
@@ -397,7 +397,7 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for File.Time.* parameters
  */
-LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	TCHAR szFilePath[MAX_PATH], szRealFilePath[MAX_PATH];
 	LONG nRet = SYSINFO_RC_SUCCESS;
@@ -407,7 +407,7 @@ LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 		return SYSINFO_RC_UNSUPPORTED;
 
 	// Expand strftime macros in the path
-	if (ExpandFileName(szFilePath, szRealFilePath, MAX_PATH, false) == NULL)
+	if (ExpandFileName(szFilePath, szRealFilePath, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL)
 		return SYSINFO_RC_UNSUPPORTED;
 
 	if (CALL_STAT(szRealFilePath, &fileInfo) == -1)

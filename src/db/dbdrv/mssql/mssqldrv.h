@@ -66,11 +66,9 @@ typedef struct
 	MSSQL_CONN *connection;
 } MSSQL_STATEMENT;
 
-
-//
-// Result buffer structure
-//
-
+/**
+ * Result buffer structure
+ */
 typedef struct
 {
    long iNumRows;
@@ -79,16 +77,14 @@ typedef struct
 	char **columnNames;
 } MSSQL_QUERY_RESULT;
 
-
-//
-// Async result buffer structure
-//
-
+/**
+ * Async result buffer structure
+ */
 typedef struct
 {
    long iNumCols;
    MSSQL_CONN *pConn;
-   BOOL bNoMoreRows;
+   bool noMoreRows;
 	char **columnNames;
    WCHAR **data;
    BYTE *dataBuffer;

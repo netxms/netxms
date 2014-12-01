@@ -114,7 +114,7 @@ thread_finish:
 // Handler for poller information
 //
 
-static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    TCHAR szName[MAX_DB_STRING];
    DWORD i;

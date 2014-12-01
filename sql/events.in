@@ -162,7 +162,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
-		EVENT_NODE_WARNING, 'SYS_NODE_WARNING', 
+		EVENT_NODE_WARNING, 'SYS_NODE_WARNING',
 		EVENT_SEVERITY_WARNING, 1,
 		'Node status changed to WARNING',
 		'Generated when node status changed to "Warning".' CONCAT CRLF CONCAT
@@ -180,7 +180,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
-		EVENT_NODE_MAJOR, 'SYS_NODE_MAJOR', 
+		EVENT_NODE_MAJOR, 'SYS_NODE_MAJOR',
 		EVENT_SEVERITY_MAJOR, 1,
 		'Node status changed to MAJOR',
 		'Generated when node status changed to "Major Problem".' CONCAT CRLF CONCAT
@@ -189,7 +189,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
-		EVENT_NODE_CRITICAL, 'SYS_NODE_CRITICAL', 
+		EVENT_NODE_CRITICAL, 'SYS_NODE_CRITICAL',
 		EVENT_SEVERITY_CRITICAL, 1,
 		'Node status changed to CRITICAL',
 		'Generated when node status changed to critical.' CONCAT CRLF CONCAT
@@ -226,7 +226,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
-		EVENT_SNMP_FAIL, 'SYS_SNMP_UNREACHABLE', 
+		EVENT_SNMP_FAIL, 'SYS_SNMP_UNREACHABLE',
 		EVENT_SEVERITY_WARNING, 1,
 		'SNMP agent is not responding',
 		'Generated when node''s SNMP agent is not responding.' CONCAT CRLF CONCAT
@@ -292,7 +292,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
-		EVENT_THREAD_HANGS, 'SYS_THREAD_HANG', 
+		EVENT_THREAD_HANGS, 'SYS_THREAD_HANG',
 		EVENT_SEVERITY_CRITICAL, 1,
 		'Thread "%1" is not responding',
 		'Generated when one of the system threads hangs or stops unexpectedly.' CONCAT CRLF CONCAT
@@ -310,7 +310,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
-		EVENT_SMTP_FAILURE, 'SYS_SMTP_FAILURE', 
+		EVENT_SMTP_FAILURE, 'SYS_SMTP_FAILURE',
 		EVENT_SEVERITY_WARNING, 1,
 		'Unable to send e-mail to <%3>: %2',
 		'Generated when server is unable to send e-mail.' CONCAT CRLF CONCAT
@@ -322,7 +322,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
-		EVENT_MAC_ADDR_CHANGED, 'SYS_MAC_ADDR_CHANGED', 
+		EVENT_MAC_ADDR_CHANGED, 'SYS_MAC_ADDR_CHANGED',
 		EVENT_SEVERITY_WARNING, 1,
 		'MAC address for interface %3 changed from %4 to %5',
 		'Generated when server detects change of interface''s MAC address.' CONCAT CRLF CONCAT
@@ -335,7 +335,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
-		EVENT_INCORRECT_NETMASK, 'SYS_INCORRECT_NETMASK', 
+		EVENT_INCORRECT_NETMASK, 'SYS_INCORRECT_NETMASK',
 		EVENT_SEVERITY_MINOR, 1,
 		'Invalid network mask %4 on interface "%3", should be %5',
 		'Generated when server detects invalid network mask on an interface.' CONCAT CRLF CONCAT
@@ -353,7 +353,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'Node down',
 		'Generated when node is not responding to management server.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
-		'   No event-specific parameters'
+		'   1) Previous state (1 if node was marked as UNREACHABLE, 0 if it was marked as DOWN)'
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
@@ -399,7 +399,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	);
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
-		EVENT_SMS_FAILURE, 'SYS_SMS_FAILURE', 
+		EVENT_SMS_FAILURE, 'SYS_SMS_FAILURE',
 		EVENT_SEVERITY_WARNING, 1,
 		'Unable to send SMS to phone %1',
 		'Generated when server is unable to send SMS.' CONCAT CRLF CONCAT
@@ -866,6 +866,21 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'    6) Access point model' CONCAT CRLF CONCAT
 		'    7) Access point serial number'
 	);
+
+   INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+      (
+         EVENT_IF_MASK_CHANGED, 'SYS_IF_MASK_CHANGED',
+         EVENT_SEVERITY_NORMAL, 1,
+         'Interface "%2" changed mask from %6 to %4 (IP Addr: %3/%4, IfIndex: %5)',
+         'Generated when when network mask on interface is corrected.' CONCAT CRLF CONCAT
+         'Parameters:' CONCAT CRLF CONCAT
+         '   1) Interface object ID' CONCAT CRLF CONCAT
+         '   2) Interface name' CONCAT CRLF CONCAT
+         '   3) Interface IP address' CONCAT CRLF CONCAT
+         '   4) Interface netmask' CONCAT CRLF CONCAT
+         '   5) Interface index' CONCAT CRLF CONCAT
+         '   6) Interface old mask'
+      );
 
 /*
 ** SNMP traps

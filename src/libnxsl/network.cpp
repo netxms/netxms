@@ -42,7 +42,7 @@ NXSL_METHOD_DEFINITION(read)
  */
 NXSL_ConnectorClass::NXSL_ConnectorClass() : NXSL_Class()
 {
-   _tcscpy(m_szName, _T("Connector"));
+   _tcscpy(m_name, _T("Connector"));
 
    NXSL_REGISTER_METHOD(read, 0);
 }

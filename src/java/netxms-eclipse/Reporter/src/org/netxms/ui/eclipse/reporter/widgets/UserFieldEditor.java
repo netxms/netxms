@@ -1,3 +1,21 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.reporter.widgets;
 
 import org.eclipse.jface.window.Window;
@@ -8,6 +26,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -17,13 +36,16 @@ import org.netxms.api.client.reporting.ReportParameter;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.api.client.users.User;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.reporter.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
 
+/**
+ * User selection field editor
+ */
 public class UserFieldEditor extends FieldEditor
 {
-
-	private static final String EMPTY_SELECTION_TEXT = "<none>";
+	private static final String EMPTY_SELECTION_TEXT = Messages.get().UserFieldEditor_None;
 	private WorkbenchLabelProvider labelProvider;
 	private CLabel text;
 	private boolean returnName;
@@ -43,15 +65,13 @@ public class UserFieldEditor extends FieldEditor
 		});
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.reporter.widgets.FieldEditor#createContent(org.eclipse.swt.widgets.Composite)
+	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected Control createContent(Composite parent)
 	{
 		Composite content = toolkit.createComposite(parent, SWT.BORDER);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.TOP;
-		content.setLayoutData(gd);
 
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
@@ -62,7 +82,7 @@ public class UserFieldEditor extends FieldEditor
 
 		text = new CLabel(content, SWT.NONE);
 		toolkit.adapt(text);
-		gd = new GridData();
+		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.TOP;
@@ -78,6 +98,8 @@ public class UserFieldEditor extends FieldEditor
 				selectUser();
 			}
 		});
+		
+		return content;
 	}
 
 	/**

@@ -37,7 +37,7 @@ static time_t s_lastTrapTime = 0;
  */
 THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
 {
-   CSCP_MESSAGE *pMsg;
+   NXCP_MESSAGE *pMsg;
    UINT32 i;
    bool trapSent;
 
@@ -45,7 +45,7 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
 	s_trapId = (QWORD)time(NULL) << 32;
    while(1)
    {
-      pMsg = (CSCP_MESSAGE *)s_trapQueue->GetOrBlock();
+      pMsg = (NXCP_MESSAGE *)s_trapQueue->GetOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)
          break;
 
@@ -99,7 +99,7 @@ void ShutdownTrapSender()
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **ppArgList)
 {
    int i;
-   CSCPMessage msg;
+   NXCPMessage msg;
 
 	DebugPrintf(INVALID_INDEX, 5, _T("SendTrap(): event_code=%d, event_name=%s, num_args=%d, arg[0]=\"%s\" arg[1]=\"%s\" arg[2]=\"%s\""),
 	            dwEventCode, CHECK_NULL(eventName), iNumArgs, 
@@ -107,15 +107,15 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **
 					(iNumArgs > 1) ? ppArgList[1] : _T("(null)"),
 					(iNumArgs > 2) ? ppArgList[2] : _T("(null)"));
 
-   msg.SetCode(CMD_TRAP);
-   msg.SetId(0);
-	msg.SetVariable(VID_TRAP_ID, s_trapId++);
-   msg.SetVariable(VID_EVENT_CODE, dwEventCode);
+   msg.setCode(CMD_TRAP);
+   msg.setId(0);
+	msg.setField(VID_TRAP_ID, s_trapId++);
+   msg.setField(VID_EVENT_CODE, dwEventCode);
 	if (eventName != NULL)
-		msg.SetVariable(VID_EVENT_NAME, eventName);
-   msg.SetVariable(VID_NUM_ARGS, (WORD)iNumArgs);
+		msg.setField(VID_EVENT_NAME, eventName);
+   msg.setField(VID_NUM_ARGS, (WORD)iNumArgs);
    for(i = 0; i < iNumArgs; i++)
-      msg.SetVariable(VID_EVENT_ARG_BASE + i, ppArgList[i]);
+      msg.setField(VID_EVENT_ARG_BASE + i, ppArgList[i]);
    if (s_trapQueue != NULL)
 	{
 		s_genTrapCount++;
@@ -209,9 +209,9 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat,
 /**
  * Forward trap from external subagent to server
  */
-void ForwardTrap(CSCPMessage *msg)
+void ForwardTrap(NXCPMessage *msg)
 {
-	msg->SetVariable(VID_TRAP_ID, s_trapId++);
+	msg->setField(VID_TRAP_ID, s_trapId++);
    if (s_trapQueue != NULL)
 	{
 		s_genTrapCount++;
@@ -223,7 +223,7 @@ void ForwardTrap(CSCPMessage *msg)
 /**
  * Handler for trap statistic DCIs
  */
-LONG H_AgentTraps(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_AgentTraps(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	switch(arg[0])
 	{

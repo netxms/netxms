@@ -42,7 +42,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
-import org.netxms.client.NodePollListener;
+import org.netxms.client.TextOutputListener;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
@@ -276,9 +276,9 @@ public class NodePollerView extends ViewPart
 		
 		addPollerMessage("\u007Fl**** Poll request sent to server ****\r\n"); //$NON-NLS-1$
 		
-		final NodePollListener listener = new NodePollListener() {
+		final TextOutputListener listener = new TextOutputListener() {
 			@Override
-			public void onPollerMessage(final String message)
+			public void messageReceived(final String message)
 			{
 				new UIJob(textArea.getDisplay(), "Update poller window") { //$NON-NLS-1$
 					@Override

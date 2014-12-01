@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
@@ -40,15 +41,15 @@ public final class StatusDisplayInfo
    
    static
    {
-      statusColor[Severity.NORMAL] = SharedColors.STATUS_NORMAL;
-      statusColor[Severity.WARNING] = SharedColors.STATUS_WARNING;
-      statusColor[Severity.MINOR] = SharedColors.STATUS_MINOR;
-      statusColor[Severity.MAJOR] = SharedColors.STATUS_MAJOR;
-      statusColor[Severity.CRITICAL] = SharedColors.STATUS_CRITICAL;
-      statusColor[Severity.UNKNOWN] = SharedColors.STATUS_UNKNOWN;
-      statusColor[Severity.UNMANAGED] = SharedColors.STATUS_UNMANAGED;
-      statusColor[Severity.DISABLED] = SharedColors.STATUS_DISABLED;
-      statusColor[Severity.TESTING] = SharedColors.STATUS_TESTING;
+		statusColor[ObjectStatus.NORMAL.getValue()] = SharedColors.STATUS_NORMAL;
+		statusColor[ObjectStatus.WARNING.getValue()] = SharedColors.STATUS_WARNING;
+		statusColor[ObjectStatus.MINOR.getValue()] = SharedColors.STATUS_MINOR;
+		statusColor[ObjectStatus.MAJOR.getValue()] = SharedColors.STATUS_MAJOR;
+		statusColor[ObjectStatus.CRITICAL.getValue()] = SharedColors.STATUS_CRITICAL;
+		statusColor[ObjectStatus.UNKNOWN.getValue()] = SharedColors.STATUS_UNKNOWN;
+		statusColor[ObjectStatus.UNMANAGED.getValue()] = SharedColors.STATUS_UNMANAGED;
+		statusColor[ObjectStatus.DISABLED.getValue()] = SharedColors.STATUS_DISABLED;
+		statusColor[ObjectStatus.TESTING.getValue()] = SharedColors.STATUS_TESTING;
    }
       
    /**
@@ -74,25 +75,25 @@ public final class StatusDisplayInfo
 	 */
 	private StatusDisplayInfo(Display display)
 	{
-		statusText[Severity.NORMAL] = Messages.get(display).StatusDisplayInfo_Normal;
-		statusText[Severity.WARNING] = Messages.get(display).StatusDisplayInfo_Warning;
-		statusText[Severity.MINOR] = Messages.get(display).StatusDisplayInfo_Minor;
-		statusText[Severity.MAJOR] = Messages.get(display).StatusDisplayInfo_Major;
-		statusText[Severity.CRITICAL] = Messages.get(display).StatusDisplayInfo_Critical;
-		statusText[Severity.UNKNOWN] = Messages.get(display).StatusDisplayInfo_Unknown;
-		statusText[Severity.UNMANAGED] = Messages.get(display).StatusDisplayInfo_Unmanaged;
-		statusText[Severity.DISABLED] = Messages.get(display).StatusDisplayInfo_Disabled;
-		statusText[Severity.TESTING] = Messages.get(display).StatusDisplayInfo_Testing;
+		statusText[ObjectStatus.NORMAL.getValue()] = Messages.get(display).StatusDisplayInfo_Normal;
+		statusText[ObjectStatus.WARNING.getValue()] = Messages.get(display).StatusDisplayInfo_Warning;
+		statusText[ObjectStatus.MINOR.getValue()] = Messages.get(display).StatusDisplayInfo_Minor;
+		statusText[ObjectStatus.MAJOR.getValue()] = Messages.get(display).StatusDisplayInfo_Major;
+		statusText[ObjectStatus.CRITICAL.getValue()] = Messages.get(display).StatusDisplayInfo_Critical;
+		statusText[ObjectStatus.UNKNOWN.getValue()] = Messages.get(display).StatusDisplayInfo_Unknown;
+		statusText[ObjectStatus.UNMANAGED.getValue()] = Messages.get(display).StatusDisplayInfo_Unmanaged;
+		statusText[ObjectStatus.DISABLED.getValue()] = Messages.get(display).StatusDisplayInfo_Disabled;
+		statusText[ObjectStatus.TESTING.getValue()] = Messages.get(display).StatusDisplayInfo_Testing;
 
-		statusImageDesc[Severity.NORMAL] = Activator.getImageDescriptor("icons/status/normal.png"); //$NON-NLS-1$
-		statusImageDesc[Severity.WARNING] = Activator.getImageDescriptor("icons/status/warning.png"); //$NON-NLS-1$
-		statusImageDesc[Severity.MINOR] = Activator.getImageDescriptor("icons/status/minor.png"); //$NON-NLS-1$
-		statusImageDesc[Severity.MAJOR] = Activator.getImageDescriptor("icons/status/major.png"); //$NON-NLS-1$
-		statusImageDesc[Severity.CRITICAL] = Activator.getImageDescriptor("icons/status/critical.png"); //$NON-NLS-1$
-		statusImageDesc[Severity.UNKNOWN] = Activator.getImageDescriptor("icons/status/unknown.png"); //$NON-NLS-1$
-		statusImageDesc[Severity.UNMANAGED] = Activator.getImageDescriptor("icons/status/unmanaged.png"); //$NON-NLS-1$
-		statusImageDesc[Severity.DISABLED] = Activator.getImageDescriptor("icons/status/disabled.png"); //$NON-NLS-1$
-		statusImageDesc[Severity.TESTING] = Activator.getImageDescriptor("icons/status/testing.png"); //$NON-NLS-1$
+		statusImageDesc[ObjectStatus.NORMAL.getValue()] = Activator.getImageDescriptor("icons/status/normal.png"); //$NON-NLS-1$
+		statusImageDesc[ObjectStatus.WARNING.getValue()] = Activator.getImageDescriptor("icons/status/warning.png"); //$NON-NLS-1$
+		statusImageDesc[ObjectStatus.MINOR.getValue()] = Activator.getImageDescriptor("icons/status/minor.png"); //$NON-NLS-1$
+		statusImageDesc[ObjectStatus.MAJOR.getValue()] = Activator.getImageDescriptor("icons/status/major.png"); //$NON-NLS-1$
+		statusImageDesc[ObjectStatus.CRITICAL.getValue()] = Activator.getImageDescriptor("icons/status/critical.png"); //$NON-NLS-1$
+		statusImageDesc[ObjectStatus.UNKNOWN.getValue()] = Activator.getImageDescriptor("icons/status/unknown.png"); //$NON-NLS-1$
+		statusImageDesc[ObjectStatus.UNMANAGED.getValue()] = Activator.getImageDescriptor("icons/status/unmanaged.png"); //$NON-NLS-1$
+		statusImageDesc[ObjectStatus.DISABLED.getValue()] = Activator.getImageDescriptor("icons/status/disabled.png"); //$NON-NLS-1$
+		statusImageDesc[ObjectStatus.TESTING.getValue()] = Activator.getImageDescriptor("icons/status/testing.png"); //$NON-NLS-1$
 		
 		for(int i = 0; i < statusImageDesc.length; i++)
 			statusImage[i] = statusImageDesc[i].createImage(display);
@@ -107,76 +108,138 @@ public final class StatusDisplayInfo
       });
 	}
 	
-	/**
-	 * Get text for given status/severity code.
-	 * 
-	 * @param severity Status or severity code
-	 * @return Text for given code
-	 */
-	public static String getStatusText(int severity)
-	{
-		try
-		{
-			return getInstance().statusText[severity];
-		}
-		catch(ArrayIndexOutOfBoundsException e)
-		{
-			return "<unknown>"; //$NON-NLS-1$
-		}
-	}
-	
-	/**
-	 * Get image descriptor for given status/severity code.
-	 * 
-	 * @param severity Status or severity code
-	 * @return Image descriptor for given code
-	 */
-	public static ImageDescriptor getStatusImageDescriptor(int severity)
-	{
-		try
-		{
-			return getInstance().statusImageDesc[severity];
-		}
-		catch(ArrayIndexOutOfBoundsException e)
-		{
-			return null;
-		}
-	}
-	
-	/**
-	 * Get image for given status/severity code. Image is owned by library
-	 * and should not be disposed by caller.
-	 * 
-	 * @param severity Status or severity code
-	 * @return Image descriptor for given code
-	 */
-	public static Image getStatusImage(int severity)
-	{
-		try
-		{
-			return getInstance().statusImage[severity];
-		}
-		catch(ArrayIndexOutOfBoundsException e)
-		{
-			return null;
-		}
-	}
-	
-	/**
-	 * Get color for given status/severity code.
-	 * 
-	 * @param severity Status or severity code
-	 * @return Color for given code
-	 */
-	public static Color getStatusColor(int severity)
-	{
-		try
-		{
-			return SharedColors.getColor(statusColor[severity], Display.getCurrent());
-		}
-		catch(ArrayIndexOutOfBoundsException e)
-		{
-			return null;
-		}
-	}
+   /**
+    * Get text for given status/severity code.
+    * 
+    * @param status Status code
+    * @return Text for given code
+    */
+   public static String getStatusText(ObjectStatus status)
+   {
+      return getInstance().statusText[status.getValue()];
+   }
+   
+   /**
+    * Get text for given status/severity code.
+    * 
+    * @param severity Severity code
+    * @return Text for given code
+    */
+   public static String getStatusText(Severity severity)
+   {
+      return getInstance().statusText[severity.getValue()];
+   }
+   
+   /**
+    * Get text for given status/severity code.
+    * 
+    * @param code Status or severity code
+    * @return Text for given code
+    */
+   public static String getStatusText(int code)
+   {
+      return getStatusText(ObjectStatus.getByValue(code));
+   }
+   
+   /**
+    * Get image descriptor for given status/severity code.
+    * 
+    * @param status Status code
+    * @return Image descriptor for given code
+    */
+   public static ImageDescriptor getStatusImageDescriptor(ObjectStatus status)
+   {
+      return getInstance().statusImageDesc[status.getValue()];
+   }
+   
+   /**
+    * Get image descriptor for given status/severity code.
+    * 
+    * @param severity Severity code
+    * @return Image descriptor for given code
+    */
+   public static ImageDescriptor getStatusImageDescriptor(Severity severity)
+   {
+      return getInstance().statusImageDesc[severity.getValue()];
+   }
+   
+   /**
+    * Get image descriptor for given status/severity code.
+    * 
+    * @param code Status or severity code
+    * @return Image descriptor for given code
+    */
+   public static ImageDescriptor getStatusImageDescriptor(int code)
+   {
+      return getStatusImageDescriptor(ObjectStatus.getByValue(code));
+   }
+   
+   /**
+    * Get image for given status/severity code. Image is owned by library
+    * and should not be disposed by caller.
+    * 
+    * @param status Status code
+    * @return Image descriptor for given code
+    */
+   public static Image getStatusImage(ObjectStatus status)
+   {
+      return getInstance().statusImage[status.getValue()];
+   }
+   
+   /**
+    * Get image for given status/severity code. Image is owned by library
+    * and should not be disposed by caller.
+    * 
+    * @param code Status or severity code
+    * @return Image descriptor for given code
+    */
+   public static Image getStatusImage(int code)
+   {
+      return getStatusImage(ObjectStatus.getByValue(code));
+   }
+   
+   /**
+    * Get image for given status/severity code. Image is owned by library
+    * and should not be disposed by caller.
+    * 
+    * @param severity Severity code
+    * @return Image descriptor for given code
+    */
+   public static Image getStatusImage(Severity severity)
+   {
+      return getInstance().statusImage[severity.getValue()];
+   }
+   
+   /**
+    * Get color for given status/severity code.
+    * 
+    * @param status Status code
+    * @return Color for given code
+    */
+   public static Color getStatusColor(ObjectStatus status)
+   {
+      return SharedColors.getColor(statusColor[status.getValue()], Display.getCurrent());
+   }
+   
+   /**
+    * Get color for given status/severity code.
+    * 
+    * @param severity Severity code
+    * @return Color for given code
+    */
+   public static Color getStatusColor(Severity severity)
+   {
+      return SharedColors.getColor(statusColor[severity.getValue()], Display.getCurrent());
+   }
+   
+   /**
+    * Get color for given status/severity code.
+    * 
+    * @param code Status or severity code
+    * @return Color for given code
+    */
+   public static Color getStatusColor(int code)
+   {
+      return getStatusColor(ObjectStatus.getByValue(code));
+   }
 }

@@ -25,16 +25,17 @@
 #include <sys/systeminfo.h>
 #include <sys/swap.h>
 #include <sys/param.h>
+#include <sys/types.h>
 
 /**
  * Handler for System.Uname parameter
  */
-LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    char szSysStr[7][64];
    int i;
    LONG nRet = SYSINFO_RC_SUCCESS;
-   static int nSysCode[7] = 
+   static int nSysCode[7] =
    {
       SI_SYSNAME,
       SI_HOSTNAME,
@@ -65,47 +66,16 @@ LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.Uptime parameter
  */
-LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-   kstat_ctl_t *kc;
-   kstat_t *kp;
-   kstat_named_t *kn;
-   DWORD hz, secs;
-   LONG nRet = SYSINFO_RC_ERROR;
-
-   hz = sysconf(_SC_CLK_TCK);
-
-   // Open kstat
-   kstat_lock();
-   kc = kstat_open();
-   if (kc != NULL)
-   {
-      // read uptime counter
-      kp = kstat_lookup(kc, (char *)"unix", 0, (char *)"system_misc");
-      if (kp != NULL)
-      {
-         if(kstat_read(kc, kp, 0) != -1)
-         {
-            kn = (kstat_named_t *)kstat_data_lookup(kp, (char *)"clk_intr");
-            if (kn != NULL)
-            {
-               secs = kn->value.ul / hz;
-               ret_uint(pValue, secs);
-               nRet = SYSINFO_RC_SUCCESS;
-            }
-         }
-      }
-      kstat_close(kc);
-   }
-   kstat_unlock();
-
-   return nRet;
+   ret_uint(pValue, gethrtime()/1000000000);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
  * Handler for System.Hostname parameter
  */
-LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 #ifdef UNICODE
    char buffer[MAX_RESULT_LENGTH];
@@ -122,7 +92,7 @@ LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.CPU.LoadAvg
  */
-LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    kstat_ctl_t *kc;
    kstat_t *kp;
@@ -157,7 +127,7 @@ LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.KStat(*)
  */
-LONG H_KStat(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_KStat(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    char *eptr, szModule[128], szName[128], szInstance[16], szStat[128];
    LONG nInstance;
@@ -186,7 +156,7 @@ LONG H_KStat(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.CPU.Count
  */
-LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    return ReadKStatValue("unix", 0, "system_misc", "ncpus", pValue, NULL);
 }
@@ -292,7 +262,7 @@ static bool ReadVMInfo(kstat_ctl_t *kc, struct vminfo *info)
          memcpy(info, kp->ks_data, sizeof(struct vminfo));
          success = true;
       }
-      else 
+      else
       {
          AgentWriteDebugLog(6, _T("SunOS: kstat_read failed in ReadVMInfo"));
       }
@@ -390,7 +360,7 @@ static UINT64 GetSwapCounter(UINT64 *cnt)
 /**
  * Handler for System.Memory.* parameters
  */
-LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    LONG nRet = SYSINFO_RC_SUCCESS;
    kstat_named_t kn;

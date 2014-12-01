@@ -29,6 +29,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <nxcpapi.h>
 #include <nxlog.h>
 #include <psapi.h>
 #include <wtsapi32.h>
@@ -96,7 +97,6 @@ struct WINDOW_LIST
 /**
  * Optional imports
  */
-extern DWORD (__stdcall *imp_HrLanConnectionNameFromGuidOrPath)(LPWSTR, LPWSTR, LPWSTR, LPDWORD);
 extern DWORD (__stdcall *imp_GetIfEntry2)(PMIB_IF_ROW2);
 
 #endif   /* _winnt_subagent_h_ */

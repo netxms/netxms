@@ -52,7 +52,8 @@ public class DashboardElementsLabelProvider extends LabelProvider implements ITa
 		Messages.get().DashboardElementsLabelProvider_TypeTableTubeChart, 
 		Messages.get().DashboardElementsLabelProvider_TypeSeparator, 
 		Messages.get().DashboardElementsLabelProvider_TableValue, 
-		Messages.get().DashboardElementsLabelProvider_StatusMap
+		Messages.get().DashboardElementsLabelProvider_StatusMap,
+		Messages.get().DashboardElementsLabelProvider_DciSummaryTable
 	};
 	private static final String[] H_ALIGH = { 
 		Messages.get().DashboardElementsLabelProvider_Fill, 

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -26,16 +26,16 @@
 /**
  * Constants
  */
-#define NXCP_VERSION                   2
+#define NXCP_VERSION                   3
 
 #define SERVER_LISTEN_PORT_FOR_CLIENTS 4701
 #define SERVER_LISTEN_PORT_FOR_MOBILES 4747
 #define MAX_DCI_STRING_VALUE           256
 #define CLIENT_CHALLENGE_SIZE				256
-#define CSCP_HEADER_SIZE               16
-#define CSCP_ENCRYPTION_HEADER_SIZE    16
-#define CSCP_EH_UNENCRYPTED_BYTES      8
-#define CSCP_EH_ENCRYPTED_BYTES        (CSCP_ENCRYPTION_HEADER_SIZE - CSCP_EH_UNENCRYPTED_BYTES)
+#define NXCP_HEADER_SIZE               16
+#define NXCP_ENCRYPTION_HEADER_SIZE    16
+#define NXCP_EH_UNENCRYPTED_BYTES      8
+#define NXCP_EH_ENCRYPTED_BYTES        (NXCP_ENCRYPTION_HEADER_SIZE - NXCP_EH_UNENCRYPTED_BYTES)
 #ifdef __64BIT__
 #define PROXY_ENCRYPTION_CTX           ((NXCPEncryptionContext *)_ULL(0xFFFFFFFFFFFFFFFF))
 #else
@@ -68,52 +68,79 @@
 #define CSCP_SUPPORT_AES_128      0x10
 #define CSCP_SUPPORT_BLOWFISH_128 0x20
 
-/**
- * Data field structure
- */
 #ifdef __HP_aCC
 #pragma pack 1
 #else
 #pragma pack(1)
 #endif
 
+/**
+ * Message field flags
+ */
+#define NXCP_MFF_SIGNED   0x01
+
+/**
+ * Address family ID for NXCP
+ */
+#define NXCP_AF_INET    0
+#define NXCP_AF_INET6   1
+
+/**
+ * NXCP data field structure
+ */
 typedef struct
 {
-   UINT32 dwVarId;      // Variable identifier
-   BYTE  bType;         // Data type
-   BYTE  bPadding;      // Padding
-   WORD wInt16;
+   UINT32 fieldId;  // Field identifier
+   BYTE type;       // Data type
+   BYTE flags;      // flags (may by type-dependent)
+   WORD int16;
    union
    {
-      UINT32 dwInteger;
-      UINT64 qwInt64;
-      double dFloat;
+      INT32 int32;
+      INT64 int64;
+      UINT32 uint32;
+      UINT64 uint64;
+      double real;
       struct
       {
-         UINT32 dwLen;
-         WORD szValue[1];
+         UINT32 length;
+         WORD value[1]; // actual size depends on length value
       } string;
+      struct
+      {
+         union
+         {
+            UINT32 v4;
+            BYTE v6[16];
+         } addr;
+         BYTE family;
+         BYTE maskBits;
+         BYTE padding[6];
+      } inetaddr;
    } data;
-} CSCP_DF;
+} NXCP_MESSAGE_FIELD;
 
-#define df_int16  wInt16
-#define df_int32  data.dwInteger
-#define df_int64  data.qwInt64
-#define df_real   data.dFloat
-#define df_string data.string
+#define df_int16    int16
+#define df_int32    data.int32
+#define df_uint32   data.uint32
+#define df_int64    data.int64
+#define df_uint64   data.uint64
+#define df_real     data.real
+#define df_string   data.string
+#define df_inetaddr data.inetaddr
 
 /**
  * Message structure
  */
 typedef struct
 {
-   UINT16 wCode;       // Message (command) code
-   UINT16 wFlags;      // Message flags
-   UINT32 dwSize;     // Message size (including header) in bytes
-   UINT32 dwId;       // Unique message identifier
-   UINT32 dwNumVars;  // Number of variables in message
-   CSCP_DF df[1];    // Data fields
-} CSCP_MESSAGE;
+   UINT16 code;      // Message (command) code
+   UINT16 flags;     // Message flags
+   UINT32 size;      // Message size (including header) in bytes
+   UINT32 id;        // Unique message identifier
+   UINT32 numFields; // Number of fields in message
+   NXCP_MESSAGE_FIELD fields[1];    // Data fields - actual length depends on value in numFields
+} NXCP_MESSAGE;
 
 /**
  * Encrypted payload header
@@ -122,19 +149,19 @@ typedef struct
 {
    UINT32 dwChecksum;
    UINT32 dwReserved; // Align to 8-byte boundary
-} CSCP_ENCRYPTED_PAYLOAD_HEADER;
+} NXCP_ENCRYPTED_PAYLOAD_HEADER;
 
 /**
  * Encrypted message structure
  */
 typedef struct
 {
-   WORD wCode;       // Should be CMD_ENCRYPTED_MESSAGE
-   BYTE nPadding;    // Number of bytes added to the end of message
-   BYTE nReserved;
-   UINT32 dwSize;    // Size of encrypted message (including encryption header and padding)
+   WORD code;       // Should be CMD_ENCRYPTED_MESSAGE
+   BYTE padding;    // Number of bytes added to the end of message
+   BYTE reserved;
+   UINT32 size;    // Size of encrypted message (including encryption header and padding)
    BYTE data[1];     // Encrypted payload
-} CSCP_ENCRYPTED_MESSAGE;
+} NXCP_ENCRYPTED_MESSAGE;
 
 /**
  * DCI data header structure
@@ -178,12 +205,13 @@ typedef struct
 /**
  * Data types
  */
-#define CSCP_DT_INTEGER    0
-#define CSCP_DT_STRING     1
-#define CSCP_DT_INT64      2
-#define CSCP_DT_INT16      3
-#define CSCP_DT_BINARY     4
-#define CSCP_DT_FLOAT      5
+#define NXCP_DT_INT32      0
+#define NXCP_DT_STRING     1
+#define NXCP_DT_INT64      2
+#define NXCP_DT_INT16      3
+#define NXCP_DT_BINARY     4
+#define NXCP_DT_FLOAT      5
+#define NXCP_DT_INETADDR   6
 
 /**
  * Message flags
@@ -487,6 +515,19 @@ typedef struct
 #define CMD_GET_DCI_VALUES             0x0123
 #define CMD_GET_HELPDESK_URL           0x0124
 #define CMD_UNLINK_HELPDESK_ISSUE      0x0125
+#define CMD_GET_FOLDER_CONTENT         0x0126
+#define CMD_FILEMGR_DELETE_FILE        0x0127
+#define CMD_FILEMGR_RENAME_FILE        0x0128
+#define CMD_FILEMGR_MOVE_FILE          0x0129
+#define CMD_FILEMGR_UPLOAD             0x012A
+#define CMD_GET_SWITCH_FDB             0x012B
+#define CMD_COMMAND_OUTPUT             0x012C
+#define CMD_GET_LOC_HISTORY            0x012D
+#define CMD_TAKE_SCREENSHOT            0x012E
+#define CMD_EXECUTE_SCRIPT             0x012F
+#define CMD_EXECUTE_SCRIPT_UPDATE      0x0130
+#define CMD_FILEMGR_CREATE_FOLDER      0x0131
+#define CMD_QUERY_ADHOC_SUMMARY_TABLE  0x0132
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -975,6 +1016,24 @@ typedef struct
 #define VID_URL                     ((UINT32)471)
 #define VID_PEER_PROTOCOL           ((UINT32)472)
 #define VID_VIEW_REFRESH_INTERVAL   ((UINT32)473)
+#define VID_COMMAND_NAME            ((UINT32)474)
+#define VID_COMMAND_SHORT_NAME      ((UINT32)475)
+#define VID_MODULE_DATA_COUNT       ((UINT32)476)
+#define VID_NEW_FILE_NAME           ((UINT32)477)
+#define VID_ALARM_LIST_DISP_LIMIT   ((UINT32)478)
+#define VID_LANGUAGE                ((UINT32)479)
+#define VID_ROOT                    ((UINT32)480)
+#define VID_INCLUDE_NOVALUE_OBJECTS ((UINT32)481)
+#define VID_RECEIVE_OUTPUT          ((UINT32)482)
+#define VID_SESSION_STATE           ((UINT32)483)
+#define VID_PAGE_SIZE               ((UINT32)484)
+#define VID_EXECUTION_END_FLAG      ((UINT32)485)
+#define VID_COUNTRY                 ((UINT32)486)
+#define VID_CITY                    ((UINT32)487)
+#define VID_STREET_ADDRESS          ((UINT32)488)
+#define VID_POSTCODE                ((UINT32)489)
+#define VID_FUNCTION                ((UINT32)490)
+#define VID_RESPONSE_TIME           ((UINT32)491)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1022,8 +1081,9 @@ typedef struct
 #define VID_CHILD_ID_BASE           ((UINT32)0x80000000)
 #define VID_CHILD_ID_LAST           ((UINT32)0xFFFFFFFE)
 
-// Base value for custom attributes
+// Base value for custom attributes and module data
 #define VID_CUSTOM_ATTRIBUTES_BASE  ((UINT32)0x70000000)
+#define VID_MODULE_DATA_BASE        ((UINT32)0x71000000)
 
 // Base value for cluster resource list
 #define VID_RESOURCE_LIST_BASE      ((UINT32)0x20000000)
@@ -1145,15 +1205,15 @@ typedef struct
 
 #define VID_DCI_VALUES_BASE         ((UINT32)0x10000000)
 
-//
-// Inline functions
-//
+#define VID_FILE_LIST_BASE          ((UINT32)0x10000000)
+
+#define VID_LOC_LIST_BASE           ((UINT32)0x10000000)
 
 #ifdef __cplusplus
 
-inline BOOL IsBinaryMsg(CSCP_MESSAGE *pMsg)
+inline BOOL IsBinaryMsg(NXCP_MESSAGE *msg)
 {
-   return ntohs(pMsg->wFlags) & MF_BINARY;
+   return ntohs(msg->flags) & MF_BINARY;
 }
 
 #endif

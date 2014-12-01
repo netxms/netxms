@@ -25,7 +25,7 @@
 #include <sys/param.h>
 #include <sys/mount.h>
 
-LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
+LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szArg[512] = {0};
@@ -58,13 +58,13 @@ LONG H_DiskInfo(char *pszParam, char *pArg, char *pValue)
 				ret_uint64(pValue, availableBlocks * blockSize);
 				break;
 			case DISK_USED_PERC:
-				ret_double(pValue, (usedBlocks * 100) / totalBlocks);
+				ret_double(pValue, (usedBlocks * 100.0) / totalBlocks);
 				break;
 			case DISK_AVAIL_PERC:
-				ret_double(pValue, (availableBlocks * 100) / totalBlocks);
+				ret_double(pValue, (availableBlocks * 100.0) / totalBlocks);
 				break;
 			case DISK_FREE_PERC:
-				ret_double(pValue, (freeBlocks * 100) / totalBlocks);
+				ret_double(pValue, (freeBlocks * 100.0) / totalBlocks);
 				break;
 			default:
 				nRet = SYSINFO_RC_ERROR;

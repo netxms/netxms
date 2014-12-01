@@ -51,11 +51,10 @@ public class ObjectFigureIcon extends ObjectFigure
 		super(element, labelProvider);
 		
 		setLayoutManager(new BorderLayout());
-		
-		label = new Label(object.getObjectName());
-		label.setFont(labelProvider.getLabelFont());
-		label.setLabelAlignment(PositionConstants.CENTER);
-		add(label, BorderLayout.BOTTOM);
+   	label = new Label(object.getObjectName());
+   	label.setFont(labelProvider.getLabelFont());
+   	label.setLabelAlignment(PositionConstants.CENTER);
+   	add(label, BorderLayout.BOTTOM);
 		
 		setOpaque(false);
 
@@ -68,7 +67,8 @@ public class ObjectFigureIcon extends ObjectFigure
 	 */
 	private void updateSize(MapLabelProvider labelProvider)
 	{
-		final Image image = labelProvider.getImage(element);
+      Image image = labelProvider.getImage(element);
+      
 		if (image != null)
 		{
 			imageWidth = image.getImageData().width;

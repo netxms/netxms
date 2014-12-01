@@ -197,7 +197,7 @@ bool BER_DecodeContent(UINT32 type, BYTE *data, size_t length, BYTE *buffer)
 /**
  * Encode content
  */
-static size_t EncodeContent(UINT32 type, BYTE *data, size_t dataLength, BYTE *pResult)
+static size_t EncodeContent(UINT32 type, const BYTE *data, size_t dataLength, BYTE *pResult)
 {
    size_t nBytes = 0;
    UINT32 dwTemp;
@@ -320,7 +320,7 @@ static size_t EncodeContent(UINT32 type, BYTE *data, size_t dataLength, BYTE *pR
  * Return value is size of encoded identifier and content in buffer
  * or 0 if there are not enough place in buffer or type is unknown
  */
-size_t BER_Encode(UINT32 type, BYTE *data, size_t dataLength, BYTE *buffer, size_t bufferSize)
+size_t BER_Encode(UINT32 type, const BYTE *data, size_t dataLength, BYTE *buffer, size_t bufferSize)
 {
    size_t bytes = 0;
    BYTE *pbCurrPos = buffer, *pEncodedData;

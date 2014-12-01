@@ -27,9 +27,9 @@
  *
  * @return RCC ready to be sent to client
  */
-UINT32 ModifySummaryTable(CSCPMessage *msg, LONG *newId)
+UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId)
 {
-   LONG id = msg->GetVariableLong(VID_SUMMARY_TABLE_ID);
+   LONG id = msg->getFieldAsUInt32(VID_SUMMARY_TABLE_ID);
    if (id == 0)
    {
       id = CreateUniqueId(IDG_DCI_SUMMARY_TABLE);
@@ -51,11 +51,11 @@ UINT32 ModifySummaryTable(CSCPMessage *msg, LONG *newId)
    UINT32 rcc;
    if (hStmt != NULL)
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, msg->GetVariableStr(VID_MENU_PATH), DB_BIND_DYNAMIC);
-      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, msg->GetVariableStr(VID_TITLE), DB_BIND_DYNAMIC);
-      DBBind(hStmt, 3, DB_SQLTYPE_TEXT, msg->GetVariableStr(VID_FILTER), DB_BIND_DYNAMIC);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, msg->GetVariableLong(VID_FLAGS));
-      DBBind(hStmt, 5, DB_SQLTYPE_TEXT, msg->GetVariableStr(VID_COLUMNS), DB_BIND_DYNAMIC);
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, msg->getFieldAsString(VID_MENU_PATH), DB_BIND_DYNAMIC);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, msg->getFieldAsString(VID_TITLE), DB_BIND_DYNAMIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_TEXT, msg->getFieldAsString(VID_FILTER), DB_BIND_DYNAMIC);
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, msg->getFieldAsUInt32(VID_FLAGS));
+      DBBind(hStmt, 5, DB_SQLTYPE_TEXT, msg->getFieldAsString(VID_COLUMNS), DB_BIND_DYNAMIC);
       DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, id);
 
       rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
@@ -93,6 +93,16 @@ UINT32 DeleteSummaryTable(LONG tableId)
    }
    DBConnectionPoolReleaseConnection(hdb);
    return rcc;
+}
+
+/**
+ * Create column definition from NXCP message
+ */
+SummaryTableColumn::SummaryTableColumn(NXCPMessage *msg, UINT32 baseId)
+{
+   msg->getFieldAsString(baseId, m_name, MAX_DB_STRING);
+   msg->getFieldAsString(baseId + 1, m_dciName, MAX_PARAM_NAME);
+   m_flags = msg->getFieldAsUInt32(baseId + 2);
 }
 
 /**
@@ -136,12 +146,39 @@ SummaryTable::~SummaryTable()
 }
 
 /**
- * Create object from DB data
+ * Create ad-hoc summary table definition from NXCP message
+ */
+SummaryTable::SummaryTable(NXCPMessage *msg)
+{
+   m_title[0] = 0;
+   m_flags = msg->getFieldAsUInt32(VID_FLAGS);
+   m_filter = NULL;
+   m_aggregationFunction = (AggregationFunction)msg->getFieldAsInt16(VID_FUNCTION);
+   m_periodStart = msg->getFieldAsTime(VID_TIME_FROM);
+   m_periodEnd = msg->getFieldAsTime(VID_TIME_TO);
+
+   int count = msg->getFieldAsInt32(VID_NUM_COLUMNS);
+   m_columns = new ObjectArray<SummaryTableColumn>(count, 16, true);
+   
+   UINT32 id = VID_COLUMN_INFO_BASE;
+   for(int i = 0; i < count; i++)
+   {
+      m_columns->add(new SummaryTableColumn(msg, id));
+      id += 10;
+   }
+}
+
+/**
+ * Create summary table definition from DB data
  */
 SummaryTable::SummaryTable(DB_RESULT hResult)
 {
    DBGetField(hResult, 0, 0, m_title, MAX_DB_STRING);
    m_flags = DBGetFieldULong(hResult, 0, 1);
+
+   m_aggregationFunction = DCI_AGG_LAST;
+   m_periodStart = 0;
+   m_periodEnd = 0;
 
    // Filter script
    TCHAR *filterSource = DBGetField(hResult, 0, 2, NULL, 0);
@@ -240,7 +277,7 @@ bool SummaryTable::filter(DataCollectionTarget *object)
 
    bool result = true;
    m_filter->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
-   if (object->Type() == OBJECT_NODE)
+   if (object->getObjectClass() == OBJECT_NODE)
       m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
    if (m_filter->run())
    {
@@ -266,6 +303,8 @@ Table *SummaryTable::createEmptyResultTable()
    result->setTitle(m_title);
    result->setExtendedFormat(true);
    result->addColumn(_T("Node"), DCI_DT_STRING);
+   if (m_flags & SUMMARY_TABLE_MULTI_INSTANCE)
+      result->addColumn(_T("Instance"), DCI_DT_STRING);
    for(int i = 0; i < m_columns->size(); i++)
    {
       result->addColumn(m_columns->get(i)->m_name, DCI_DT_STRING);
@@ -276,7 +315,7 @@ Table *SummaryTable::createEmptyResultTable()
 /**
  * Query summary table
  */
-Table *QuerySummaryTable(LONG tableId, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc)
+Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc)
 {
    NetObj *object = FindObjectById(baseObjectId);
    if (object == NULL)
@@ -289,15 +328,15 @@ Table *QuerySummaryTable(LONG tableId, UINT32 baseObjectId, UINT32 userId, UINT3
       *rcc = RCC_ACCESS_DENIED;
       return NULL;
    }
-   if ((object->Type() != OBJECT_CONTAINER) && (object->Type() != OBJECT_CLUSTER) &&
-       (object->Type() != OBJECT_SERVICEROOT) && (object->Type() != OBJECT_SUBNET) &&
-       (object->Type() != OBJECT_ZONE) && (object->Type() != OBJECT_NETWORK))
+   if ((object->getObjectClass() != OBJECT_CONTAINER) && (object->getObjectClass() != OBJECT_CLUSTER) &&
+       (object->getObjectClass() != OBJECT_SERVICEROOT) && (object->getObjectClass() != OBJECT_SUBNET) &&
+       (object->getObjectClass() != OBJECT_ZONE) && (object->getObjectClass() != OBJECT_NETWORK))
    {
       *rcc = RCC_INCOMPATIBLE_OPERATION;
       return NULL;
    }
 
-   SummaryTable *tableDefinition = SummaryTable::loadFromDB(tableId, rcc);
+   SummaryTable *tableDefinition = (adHocDefinition != NULL) ? adHocDefinition : SummaryTable::loadFromDB(tableId, rcc);
    if (tableDefinition == NULL)
       return NULL;
 
@@ -307,7 +346,7 @@ Table *QuerySummaryTable(LONG tableId, UINT32 baseObjectId, UINT32 userId, UINT3
    for(int i = 0; i < childObjects->size(); i++)
    {
       NetObj *obj = childObjects->get(i);
-      if (((obj->Type() != OBJECT_NODE) && (obj->Type() != OBJECT_MOBILEDEVICE)) || 
+      if (((obj->getObjectClass() != OBJECT_NODE) && (obj->getObjectClass() != OBJECT_MOBILEDEVICE)) || 
           !obj->checkAccessRights(userId, OBJECT_ACCESS_READ))
       {
          obj->decRefCount();
@@ -316,7 +355,7 @@ Table *QuerySummaryTable(LONG tableId, UINT32 baseObjectId, UINT32 userId, UINT3
 
       if (tableDefinition->filter((DataCollectionTarget *)obj))
       {
-         ((DataCollectionTarget *)obj)->getLastValuesSummary(tableDefinition, tableData);
+         ((DataCollectionTarget *)obj)->getDciValuesSummary(tableDefinition, tableData);
       }
       obj->decRefCount();
    }

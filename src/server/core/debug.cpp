@@ -93,15 +93,15 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
    }
    else
    {
-      pCtx->pMsg->SetVariable(VID_MESSAGE, szBuffer);
+      pCtx->pMsg->setField(VID_MESSAGE, szBuffer);
 		if (pCtx->session != NULL)
 		{
 			pCtx->session->postMessage(pCtx->pMsg);
 		}
 		else
 		{
-			CSCP_MESSAGE *pRawMsg = pCtx->pMsg->createMessage();
-			SendEx(pCtx->hSocket, pRawMsg, ntohl(pRawMsg->dwSize), 0, pCtx->socketMutex);
+			NXCP_MESSAGE *pRawMsg = pCtx->pMsg->createMessage();
+			SendEx(pCtx->hSocket, pRawMsg, ntohl(pRawMsg->size), 0, pCtx->socketMutex);
 			free(pRawMsg);
 		}
    }
@@ -122,7 +122,7 @@ void ShowServerStats(CONSOLE_CTX pCtx)
    ConsolePrintf(pCtx, _T("Total number of objects:     %d\n")
                        _T("Number of monitored nodes:   %d\n")
                        _T("Number of collectable DCIs:  %d\n\n"),
-	              g_idxObjectById.getSize(), g_idxNodeById.getSize(), dciCount);
+	              g_idxObjectById.size(), g_idxNodeById.size(), dciCount);
 }
 
 /**
@@ -151,7 +151,7 @@ void DumpProcess(CONSOLE_CTX pCtx)
 	memset(&si, 0, sizeof(STARTUPINFO));
 	si.cb = sizeof(STARTUPINFO);
 	if (CreateProcessA(NULL, cmdLine, NULL, NULL, FALSE,
-	                   (g_dwFlags & AF_DAEMON) ? CREATE_NO_WINDOW : 0, NULL, NULL, &si, &pi))
+	                   (g_flags & AF_DAEMON) ? CREATE_NO_WINDOW : 0, NULL, NULL, &si, &pi))
 	{
 		WaitForSingleObject(pi.hProcess, INFINITE);
 		CloseHandle(pi.hThread);

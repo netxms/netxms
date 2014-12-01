@@ -28,7 +28,7 @@
  */
 NodeLink::NodeLink() : ServiceContainer()
 {
-	_tcscpy(m_szName, _T("Default"));
+	_tcscpy(m_name, _T("Default"));
 	m_nodeId = 0;
 }
 
@@ -37,7 +37,7 @@ NodeLink::NodeLink() : ServiceContainer()
  */
 NodeLink::NodeLink(const TCHAR *name, UINT32 nodeId) : ServiceContainer(name)
 {
-	nx_strncpy(m_szName, name, MAX_OBJECT_NAME);
+	nx_strncpy(m_name, name, MAX_OBJECT_NAME);
 	m_nodeId = nodeId;
 }
 
@@ -51,12 +51,12 @@ NodeLink::~NodeLink()
 /**
  * Create object from database data
  */
-BOOL NodeLink::CreateFromDB(UINT32 id)
+BOOL NodeLink::loadFromDatabase(UINT32 id)
 {
 	const int script_length = 1024;
-	m_dwId = id;
+	m_id = id;
 
-	if (!ServiceContainer::CreateFromDB(id))
+	if (!ServiceContainer::loadFromDatabase(id))
 		return FALSE;
 
 	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT node_id FROM node_links WHERE nodelink_id=?"));
@@ -65,7 +65,7 @@ BOOL NodeLink::CreateFromDB(UINT32 id)
 		DbgPrintf(4, _T("Cannot prepare select from node_links"));
 		return FALSE;
 	}
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
 	if (hResult == NULL)
@@ -78,7 +78,7 @@ BOOL NodeLink::CreateFromDB(UINT32 id)
 	{
 		DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
-		DbgPrintf(4, _T("Cannot load nodelink object %ld - record missing"), (long)m_dwId);
+		DbgPrintf(4, _T("Cannot load nodelink object %ld - record missing"), (long)m_id);
 		return FALSE;
 	}
 
@@ -87,7 +87,7 @@ BOOL NodeLink::CreateFromDB(UINT32 id)
 	{
 		DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
-		DbgPrintf(4, _T("Cannot load nodelink object %ld - node id is missing"), (long)m_dwId);
+		DbgPrintf(4, _T("Cannot load nodelink object %ld - node id is missing"), (long)m_id);
 		return FALSE;
 	}
 
@@ -100,7 +100,7 @@ BOOL NodeLink::CreateFromDB(UINT32 id)
 /**
  * Save nodelink to database
  */
-BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
+BOOL NodeLink::saveToDatabase(DB_HANDLE hdb)
 {
 	BOOL bNewObject = TRUE;
 
@@ -111,9 +111,9 @@ BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 		return FALSE;
 	}
 
-	LockData();
+	lockProperties();
 
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
 	if (hResult != NULL)
 	{
@@ -126,12 +126,12 @@ BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 											  _T("UPDATE node_links SET node_id=? WHERE nodelink_id=?"));
 	if (hStmt == NULL)	
 	{
-		UnlockData();
+		unlockProperties();
 		return FALSE;
 	}
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_nodeId);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
-	UnlockData();
+	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+	unlockProperties();
 	if (!DBExecute(hStmt))
 	{
 		DBFreeStatement(hStmt);
@@ -141,18 +141,18 @@ BOOL NodeLink::SaveToDB(DB_HANDLE hdb)
 
 	saveACLToDB(hdb);
 
-	LockData();
+	lockProperties();
 	m_isModified = false;
-	UnlockData();
-	return ServiceContainer::SaveToDB(hdb);
+	unlockProperties();
+	return ServiceContainer::saveToDatabase(hdb);
 }
 
 /**
  * Delete object from database
  */
-bool NodeLink::deleteFromDB(DB_HANDLE hdb)
+bool NodeLink::deleteFromDatabase(DB_HANDLE hdb)
 {
-	bool success = ServiceContainer::deleteFromDB(hdb);
+	bool success = ServiceContainer::deleteFromDatabase(hdb);
 	if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM node_links WHERE nodelink_id=?"));
 	return success;
@@ -161,26 +161,26 @@ bool NodeLink::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void NodeLink::CreateMessage(CSCPMessage *pMsg)
+void NodeLink::fillMessage(NXCPMessage *pMsg)
 {
-	ServiceContainer::CreateMessage(pMsg);
-	pMsg->SetVariable(VID_NODE_ID, m_nodeId);
+	ServiceContainer::fillMessage(pMsg);
+	pMsg->setField(VID_NODE_ID, m_nodeId);
 }
 
 /**
  * Modify object from message
  */
-UINT32 NodeLink::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 NodeLink::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
 	if (!bAlreadyLocked)
-		LockData();
+		lockProperties();
 
 	if (pRequest->isFieldExist(VID_NODE_ID))
 	{
-		m_nodeId = pRequest->GetVariableLong(VID_NODE_ID);
+		m_nodeId = pRequest->getFieldAsUInt32(VID_NODE_ID);
 	}
 
-	return ServiceContainer::ModifyFromMessage(pRequest, TRUE);
+	return ServiceContainer::modifyFromMessage(pRequest, TRUE);
 }
 
 /**
@@ -188,19 +188,19 @@ UINT32 NodeLink::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
  */
 void NodeLink::execute()
 {
-	DbgPrintf(6, _T("NodeLink::execute() started for %s [%ld]"), m_szName, (long)m_dwId);
+	DbgPrintf(6, _T("NodeLink::execute() started for %s [%ld]"), m_name, (long)m_id);
 
    LockChildList(FALSE);
 	for (int i = 0; i < int(m_dwChildCount); i++)
 	{
-		if (m_pChildList[i]->Type() == OBJECT_SLMCHECK)
+		if (m_pChildList[i]->getObjectClass() == OBJECT_SLMCHECK)
 			((SlmCheck *)m_pChildList[i])->execute();
 	}
    UnlockChildList();
 
 	calculateCompoundStatus();
 
-	DbgPrintf(6, _T("NodeLink::execute() finished for %s [%ld]"), m_szName, (long)m_dwId);
+	DbgPrintf(6, _T("NodeLink::execute() finished for %s [%ld]"), m_name, (long)m_id);
 }
 
 /**
@@ -213,8 +213,8 @@ void NodeLink::applyTemplate(SlmCheck *tmpl)
 	LockChildList(FALSE);
 	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
-		if ((m_pChildList[i]->Type() == OBJECT_SLMCHECK) &&
-		    (((SlmCheck *)m_pChildList[i])->getTemplateId() == tmpl->Id()))
+		if ((m_pChildList[i]->getObjectClass() == OBJECT_SLMCHECK) &&
+		    (((SlmCheck *)m_pChildList[i])->getTemplateId() == tmpl->getId()))
 		{
 			check = (SlmCheck *)m_pChildList[i];
 			break;
@@ -246,7 +246,7 @@ void NodeLink::applyTemplates()
 	LockParentList(FALSE);
 	for(UINT32 i = 0; i < m_dwParentCount; i++)
 	{
-		if (m_pParentList[i]->Type() != OBJECT_BUSINESSSERVICE)
+		if (m_pParentList[i]->getObjectClass() != OBJECT_BUSINESSSERVICE)
 			continue;
 
 		BusinessService *parent = (BusinessService *)m_pParentList[i];
@@ -282,7 +282,7 @@ void NodeLink::onObjectDelete(UINT32 dwObjectId)
 		// OnObjectDelete being called as callback from another
 		// object's OnObjectDelete, so we cannot call this->deleteObject()
 		// directly without potential deadlock
-		DbgPrintf(4, _T("Scheduling deletion of nodelink object %s [%u] due to linked node deletion"), m_szName, m_dwId);
+		DbgPrintf(4, _T("Scheduling deletion of nodelink object %s [%u] due to linked node deletion"), m_name, m_id);
 		ThreadCreate(DeleteThread, 0, this);
 	}
    ServiceContainer::onObjectDelete(dwObjectId);

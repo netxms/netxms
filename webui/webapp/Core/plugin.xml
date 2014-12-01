@@ -22,8 +22,8 @@
          point="org.eclipse.ui.perspectives">
       <perspective
             name="%perspective.default"
-            class="org.netxms.ui.eclipse.console.perspectives.DefaultPerspective"
-            id="org.netxms.ui.eclipse.console.DefaultPerspective">
+            class="org.netxms.ui.eclipse.console.perspectives.ManagementPerspective"
+            id="org.netxms.ui.eclipse.console.ManagementPerspective">
       </perspective>
    </extension>
    
@@ -172,6 +172,12 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+M3+A">
+      </key>
+      <key
+            commandId="org.eclipse.ui.file.closePart"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+W">
       </key>
       <scheme
             description="%scheme.description"

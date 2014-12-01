@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
@@ -39,28 +40,42 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.action.ToolBarContributionItem;
 import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchCommandConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.XMLMemento;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
+import org.eclipse.ui.internal.Perspective;
+import org.eclipse.ui.internal.WorkbenchPage;
+import org.eclipse.ui.internal.actions.CommandAction;
+import org.eclipse.ui.internal.dialogs.SelectPerspectiveDialog;
+import org.eclipse.ui.internal.registry.PerspectiveDescriptor;
+import org.eclipse.ui.internal.registry.PerspectiveRegistry;
+import org.eclipse.ui.internal.tweaklets.Tweaklets;
+import org.eclipse.ui.internal.tweaklets.WorkbenchImplementation;
 import org.netxms.base.BuildNumber;
 import org.netxms.base.NXCommon;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
+import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Action bar advisor for management console
  */
+@SuppressWarnings("restriction")
 public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 {
 	private IWorkbenchAction actionExit;
@@ -72,8 +87,11 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	private IWorkbenchAction actionResetPerspective;
 	private IWorkbenchAction actionClosePerspective;
 	private IWorkbenchAction actionCloseAllPerspectives;
+	private Action actionExportPerspective;
+   private Action actionImportPerspective;
 	private IWorkbenchAction actionMinimize;
 	private IWorkbenchAction actionMaximize;
+   private Action actionClose;
 	private IWorkbenchAction actionPrevView;
 	private IWorkbenchAction actionNextView;
 	private IWorkbenchAction actionQuickAccess;
@@ -153,6 +171,9 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		actionMaximize = ActionFactory.MAXIMIZE.create(window);
 		register(actionMaximize);
 		
+		actionClose = new CommandAction(window, IWorkbenchCommandConstants.WINDOW_CLOSE_PART);
+      register(actionClose);
+		
 		actionPrevView = ActionFactory.PREVIOUS_PART.create(window);
 		register(actionPrevView);
 		
@@ -209,6 +230,22 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		getActionBarConfigurer().registerGlobalAction(actionFullScreen);
 		ConsoleSharedData.setProperty("FullScreenAction", actionFullScreen); //$NON-NLS-1$
 		
+		actionExportPerspective = new Action("&Export perspective...") {
+         @Override
+         public void run()
+         {
+            exportPerspective(window);
+         }
+      };
+		
+      actionImportPerspective = new Action("&Import perspective...") {
+         @Override
+         public void run()
+         {
+            importPerspective(window);
+         }
+      };
+      
 		actionLangChinese = new Action("C&hinese", Activator.getImageDescriptor("icons/lang/zh.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
@@ -313,6 +350,9 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		windowMenu.add(actionResetPerspective);
 		windowMenu.add(actionClosePerspective);
 		windowMenu.add(actionCloseAllPerspectives);
+      windowMenu.add(new Separator());
+		windowMenu.add(actionExportPerspective);
+      windowMenu.add(actionImportPerspective);
 		windowMenu.add(new Separator());
 		
 		final MenuManager navMenu = new MenuManager(Messages.get().ApplicationActionBarAdvisor_Navigation, IWorkbenchActionConstants.M_NAVIGATE);
@@ -322,6 +362,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		navMenu.add(new Separator());
 		navMenu.add(actionMaximize);
 		navMenu.add(actionMinimize);
+      navMenu.add(actionClose);
 		navMenu.add(new Separator());
 		navMenu.add(actionNextView);
 		navMenu.add(actionPrevView);
@@ -454,5 +495,133 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		}
 		System.getProperties().setProperty("eclipse.exitdata", "-nl " + locale); //$NON-NLS-1$ //$NON-NLS-2$
 		PlatformUI.getWorkbench().restart();
+	}
+	
+	/**
+	 * Export perspective 
+	 * @param window 
+	 */
+	private void exportPerspective(IWorkbenchWindow window)
+	{
+	   try
+	   {
+         SelectPerspectiveDialog dlg = new SelectPerspectiveDialog(window.getShell(), window.getWorkbench().getPerspectiveRegistry());
+         if (dlg.open() == Window.OK)
+         {
+            WorkbenchPage page = (WorkbenchPage)window.getActivePage();
+            Perspective p = page.findPerspective(dlg.getSelection());
+            final XMLMemento memento = XMLMemento.createWriteRoot("perspective");
+            p.saveState(memento);
+            
+            FileDialog fd = new FileDialog(window.getShell());
+            fd.setFilterExtensions(new String[] { "*.xml", "*.*" });
+            fd.setFilterNames(new String[] { "XML Files", "All Files" });
+            fd.setOverwrite(true);
+            fd.setText("Export perspective");
+            final String fileName = fd.open();
+            if (fileName != null)
+            {
+               new ConsoleJob("Export perspective", null, Activator.PLUGIN_ID, null) {
+                  @Override
+                  protected void runInternal(IProgressMonitor monitor) throws Exception
+                  {
+                     FileWriter writer = null;
+                     try
+                     {
+                        writer = new FileWriter(fileName);
+                        memento.save(writer);
+                     }
+                     finally
+                     {
+                        if (writer != null)
+                           writer.close();
+                     }
+                  }
+                  
+                  @Override
+                  protected String getErrorMessage()
+                  {
+                     return "Perspective export failed";
+                  }
+               }.start();
+            }
+         }
+	   }
+	   catch(Exception e)
+	   {
+	      Activator.logError("Exception in exportPerspective", e);
+	      MessageDialogHelper.openError(window.getShell(), "Error", "Perspective export failed");
+	   }
+	}
+	
+	/**
+	 * Import perspective
+	 * @param window
+	 */
+	private void importPerspective(final IWorkbenchWindow window)
+	{
+      FileDialog fd = new FileDialog(window.getShell());
+      fd.setFilterExtensions(new String[] { "*.xml", "*.*" });
+      fd.setFilterNames(new String[] { "XML Files", "All Files" });
+      fd.setText("Import perspective");
+      final String fileName = fd.open();
+      if (fileName == null)
+         return;
+      
+      if (!MessageDialogHelper.openConfirm(window.getShell(), "Confirm Restart", "Perspective import will require management console restart. Continue?"))
+         return;
+      
+      new ConsoleJob("Import perspective", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            FileReader reader = null;
+            try
+            {
+               reader = new FileReader(fileName);
+               final XMLMemento memento = XMLMemento.createReadRoot(reader);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     try
+                     {
+                        Perspective p = ((WorkbenchImplementation)Tweaklets.get(WorkbenchImplementation.KEY)).createPerspective(null, (WorkbenchPage)window.getActivePage());
+                        p.restoreState(memento);
+                        
+                        PerspectiveRegistry reg = (PerspectiveRegistry)window.getWorkbench().getPerspectiveRegistry();
+                        PerspectiveDescriptor pd = reg.createPerspective(p.getDesc().getLabel(), (PerspectiveDescriptor)p.getDesc());
+                        
+                        WorkbenchPage page = (WorkbenchPage)window.getActivePage();
+                        page.savePerspectiveAs(pd);
+                        p = page.findPerspective(pd);
+                        p.restoreState(memento);
+                        p.restoreState();
+                        window.getWorkbench().showPerspective(pd.getId(), window);
+                        page.savePerspective();
+
+                        PlatformUI.getWorkbench().restart();
+                     }
+                     catch(Exception e)
+                     {
+                        Activator.logError("Exception in importPerspective", e);
+                        MessageDialogHelper.openError(window.getShell(), "Error", "Perspective import failed");
+                     }
+                  }
+               });
+            }
+            finally
+            {
+               if (reader != null)
+                  reader.close();
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Perspective import failed";
+         }
+      }.start();
 	}
 }

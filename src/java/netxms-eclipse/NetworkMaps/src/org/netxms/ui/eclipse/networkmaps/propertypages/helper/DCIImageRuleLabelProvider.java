@@ -49,7 +49,7 @@ public class DCIImageRuleLabelProvider extends LabelProvider implements ITableLa
 		switch(columnIndex)
 		{
 			case DCIImageRuleList.COLUMN_OPERATION:
-			   StringBuffer text = new StringBuffer("");
+			   StringBuffer text = new StringBuffer(""); //$NON-NLS-1$
 				text.append(OPERATIONS[((DCIImageRule)element).getComparisonType()]);
 				text.append(' ');
 				text.append(((DCIImageRule)element).getCompareValue());

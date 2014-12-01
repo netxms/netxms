@@ -153,6 +153,7 @@ public class Messages extends NLS
 	public String DciLabelProvider_SourceCPSNMP;
 	public String DciLabelProvider_SourceInternal;
 	public String DciLabelProvider_SourcePush;
+   public String DciLabelProvider_SourceScript;
 	public String DciLabelProvider_SourceSNMP;
 	public String DciLabelProvider_SourceILO;
 	public String DciLabelProvider_SourceWinPerf;
@@ -247,6 +248,7 @@ public class Messages extends NLS
 	public String General_ProxyNode;
 	public String General_RetentionTime;
 	public String General_SampleCountForAvg;
+   public String General_Script;
 	public String General_Select;
 	public String General_SMCLP;
 	public String General_SNMP_DT_float;
@@ -331,6 +333,7 @@ public class Messages extends NLS
 	public String OpenEditor_ErrorText;
 	public String OpenSummaryTablesManager_CannotOpenView;
 	public String OpenSummaryTablesManager_Error;
+   public String OtherOptions_UseForStatusCalculation;
 	public String RemoveTemplate_JobError;
 	public String RemoveTemplate_JobTitle;
 	public String SelectAgentParamDlg_CurrentValue;
@@ -353,7 +356,6 @@ public class Messages extends NLS
 	public String SelectInternalParamDlg_DCI_AvgDCIQueueTime;
 	public String SelectInternalParamDlg_DCI_AvgDCQueue;
 	public String SelectInternalParamDlg_DCI_AvgStatusPollerQueue;
-	public String SelectInternalParamDlg_DCI_TotalEventsProcessed;
 	public String SelectInternalParamDlg_DCI_BatteryLevel;
 	public String SelectInternalParamDlg_DCI_ChildObjectStatus;
 	public String SelectInternalParamDlg_DCI_ConditionStatus;
@@ -366,14 +368,23 @@ public class Messages extends NLS
 	public String SelectInternalParamDlg_DCI_OSVersion;
 	public String SelectInternalParamDlg_DCI_SerialNumber;
 	public String SelectInternalParamDlg_DCI_Status;
+	public String SelectInternalParamDlg_DCI_TotalEventsProcessed;
 	public String SelectInternalParamDlg_DCI_UserID;
 	public String SelectInternalParamDlg_DCI_Vendor;
+   public String SelectInternalParamDlg_PingTime_Instance;
+   public String SelectInternalParamDlg_PingTime_PrimaryIP;
+   public String SelectInternalParamDlg_SyslogProcessingQueue;
+   public String SelectInternalParamDlg_SyslogWriterQueue;
    public String SelectInternalParamDlg_TotalAPs;
    public String SelectInternalParamDlg_UnadoptedAPs;
 	public String SelectNodeDciDialog_Title;
 	public String SelectNodeDciDialog_Warning;
 	public String SelectNodeDciDialog_WarningText;
-	public String ShowLastValues_Error;
+	public String SelectSummaryTableDialog_EmptySelectionWarning;
+   public String SelectSummaryTableDialog_Label;
+   public String SelectSummaryTableDialog_Title;
+   public String SelectSummaryTableDialog_Warning;
+   public String ShowLastValues_Error;
 	public String ShowLastValues_ErrorText;
 	public String SummaryTable_JobError;
 	public String SummaryTable_JobName;
@@ -410,6 +421,7 @@ public class Messages extends NLS
 	public String SummaryTablesDynamicMenu_Error;
 	public String SummaryTablesDynamicMenu_MenuName;
 	public String SummaryTablesDynamicMenu_QueryTableJob;
+   public String SummaryTableSelector_None;
 	public String TableColumnLabelProvider_AVG;
 	public String TableColumnLabelProvider_float;
 	public String TableColumnLabelProvider_in32;

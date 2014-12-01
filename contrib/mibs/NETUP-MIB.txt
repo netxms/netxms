@@ -1,0 +1,286 @@
+-- **************************************************************************
+-- **
+-- *    NETUP-MIB
+-- *
+-- *  NetUp Management information
+-- *
+-- **************************************************************************
+
+NETUP-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+  MODULE-IDENTITY,
+  OBJECT-IDENTITY,
+  OBJECT-TYPE,
+  Integer32,
+  enterprises
+    FROM SNMPv2-SMI;
+
+netup MODULE-IDENTITY
+  LAST-UPDATED "201111081500Z"
+  ORGANIZATION "NetUP Inc."
+  CONTACT-INFO
+     "NetUp Inc.
+      Postal: 119311 PO BOX 87,
+              Moscow,
+              Russian Federation
+      Phone:  +7 495 510 1025 (ext 0) - general questions
+              +7 495 510 1025 (ext 1) - technical support
+      Fax:    +7 499 783 0080"
+  DESCRIPTION "The Structure of Management Information for NetUp enterprise."
+  
+  REVISION      "9404262000Z"
+    DESCRIPTION "Initial version of this MIB module."
+  
+  ::= { enterprises 39054 }     -- Assigned by IANA
+
+netupHost OBJECT-IDENTITY
+  STATUS current
+  DESCRIPTION
+    "root for NetUP server host information"
+  ::= { netup 1 }
+
+netupCpuTable OBJECT-TYPE
+  SYNTAX SEQUENCE OF NetupCpuEntry
+  MAX-ACCESS not-accessible
+  STATUS current
+  DESCRIPTION
+    "Table of CPUs (cores)"
+  ::= { netupHost 1 }
+
+netupCpuEntry OBJECT-TYPE
+  SYNTAX NetupCpuEntry
+  MAX-ACCESS not-accessible
+  STATUS current
+  DESCRIPTION
+    "An entry of CPU table (netupCpuTable)"
+  INDEX { netupCpuIndex }
+  ::= { netupCpuTable 1 }
+
+NetupCpuEntry ::= SEQUENCE {
+  netupCpuIndex Integer32,
+  netupCpuLoad  Integer32,
+  netupCpuTemp  Integer32
+}
+
+netupCpuIndex OBJECT-TYPE
+  SYNTAX Integer32 (0..65535)
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "CPU number"
+  ::= { netupCpuEntry 1 }
+
+netupCpuLoad OBJECT-TYPE
+  SYNTAX Integer32 (0..100)
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "CPU load average"
+  ::= { netupCpuEntry 2 }
+
+netupCpuTemp OBJECT-TYPE
+  SYNTAX Integer32 (-100..200)
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "CPU temperature"
+  ::= { netupCpuEntry 3 }
+
+netupMemory OBJECT-IDENTITY
+  STATUS current
+  DESCRIPTION
+    "Memory information"
+  ::= { netupHost 2 }
+
+netupMemPhisTotal OBJECT-TYPE
+  SYNTAX Integer32
+  UNITS "kB"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "The total amount of phisical memory"
+  ::= { netupMemory 1 }
+
+netupMemPhisFree OBJECT-TYPE
+  SYNTAX Integer32
+  UNITS "kB"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "The amount of phisical memory currently unused"
+  ::= { netupMemory 2 }
+
+netupMemPhisBuffers OBJECT-TYPE
+  SYNTAX Integer32
+  UNITS "kB"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "The amount of phisical memory currently allocated for use
+    as memory buffers"
+  ::= { netupMemory 3 }
+
+netupMemPhisCached OBJECT-TYPE
+  SYNTAX Integer32
+  UNITS "kB"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "The amount of phisical memory currently allocated for use
+    as cached memory"
+  ::= { netupMemory 4 }
+
+netupMemSwapTotal OBJECT-TYPE
+  SYNTAX Integer32
+  UNITS "kB"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "The total amount of swap memory"
+  ::= { netupMemory 5 }
+
+netupMemSwapFree OBJECT-TYPE
+  SYNTAX Integer32
+  UNITS "kB"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "The amount of swap memory currently unused"
+  ::= { netupMemory 6 }
+
+netupStorageTable OBJECT-TYPE
+  SYNTAX SEQUENCE OF NetupStorageEntry
+  MAX-ACCESS not-accessible
+  STATUS current
+  DESCRIPTION
+    "Storages information"
+  ::= { netupHost 3 }
+
+netupStorageEntry OBJECT-TYPE
+  SYNTAX NetupStorageEntry
+  MAX-ACCESS not-accessible
+  STATUS current
+  DESCRIPTION
+    "Storages table entry"
+  INDEX { netupStorageIndex }
+  ::= { netupStorageTable 1 }
+
+NetupStorageEntry ::= SEQUENCE {
+  netupStorageIndex        Integer32,
+  netupStorageDevice       OCTET STRING,
+  netupStorageMountPoint   OCTET STRING,
+  netupStorageFilesystem   OCTET STRING,
+  netupStorageBlockSize    Integer32,
+  netupStorageFragmentSize Integer32,
+  netupStorageSize         Integer32,
+  netupStorageFree         Integer32
+}
+
+netupStorageIndex OBJECT-TYPE
+  SYNTAX Integer32 (1..2147483647)
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "Unique storage record number"
+  ::= { netupStorageEntry 1 }
+
+netupStorageDevice OBJECT-TYPE
+  SYNTAX OCTET STRING
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "Storage device file or 'none'"
+  ::= { netupStorageEntry 2 }
+
+netupStorageMountPoint OBJECT-TYPE
+  SYNTAX OCTET STRING
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "Mount point"
+  ::= { netupStorageEntry 3 }
+
+netupStorageFilesystem OBJECT-TYPE
+  SYNTAX OCTET STRING
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "Filesystem"
+  ::= { netupStorageEntry 4 }
+
+netupStorageBlockSize OBJECT-TYPE
+  SYNTAX Integer32 (1..2147483647)
+  UNITS "Bytes"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "Filesysstem block size in bites"
+  ::= { netupStorageEntry 5 }
+
+netupStorageFragmentSize OBJECT-TYPE
+  SYNTAX Integer32 (1..2147483647)
+  UNITS "Bytes"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "Filesystem fragment size in bytes"
+  ::= { netupStorageEntry 6 }
+
+netupStorageSize OBJECT-TYPE
+  SYNTAX Integer32 (0..2147483647)
+  UNITS "fragments"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "Storage size in fragment size units"
+  ::= { netupStorageEntry 7 }
+
+netupStorageFree OBJECT-TYPE
+  SYNTAX Integer32 (0..2147483647)
+  UNITS "blocks"
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "Amount of free storage block size units"
+  ::= { netupStorageEntry 8 }
+
+-- **********************************************************
+
+netupIptv OBJECT-IDENTITY
+  STATUS current
+  DESCRIPTION
+    "root for NetUP IPTV services information"
+  ::= { netup 2 }
+
+netupConnectedClients OBJECT-IDENTITY
+  STATUS current
+  DESCRIPTION
+    "Information about clients connected to the IPTV cluster"
+  ::= { netupIptv 1 }
+
+netupStbClients OBJECT-TYPE
+  SYNTAX Integer32 (0..2147483647)
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "Amount of connected client's STB"
+  ::= { netupConnectedClients 1 }
+
+netupPcClients OBJECT-TYPE
+  SYNTAX Integer32 (0..2147483647)
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "Amount of connected PC-client software"
+  ::= { netupConnectedClients 2 }
+
+netupTotalClients OBJECT-TYPE
+  SYNTAX Integer32 (0..2147483647)
+  MAX-ACCESS read-only
+  STATUS current
+  DESCRIPTION
+    "Total amount of connected client's STB and PC-client software"
+  ::= { netupConnectedClients 3 }
+
+END

@@ -23,36 +23,31 @@
 
 #include "nxevent.h"
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static BOOL m_bDebug = FALSE;
 static TCHAR m_szServer[MAX_DB_STRING] = _T("127.0.0.1");
 static TCHAR m_szLogin[MAX_DB_STRING] = _T("guest");
 static TCHAR m_szPassword[MAX_DB_STRING] = _T("");
 static TCHAR m_szUserTag[MAX_USERTAG_LENGTH] = _T("");
 static DWORD m_dwEventCode = 0;
+static TCHAR m_eventName[MAX_EVENT_NAME] = _T("");
 static DWORD m_dwObjectId = 0;
 static DWORD m_dwTimeOut = 3;
 
-
-//
-// Callback function for debug printing
-//
-
+/**
+ * Callback function for debug printing
+ */
 static void DebugCallback(TCHAR *pMsg)
 {
    _tprintf(_T("*debug* %s\n"), pMsg);
 }
 
-
-//
-// Send event to server
-//
-
-static void SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
+/**
+ * Send event to server
+ */
+static DWORD SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
 {
    DWORD dwResult;
    NXC_SESSION hSession;
@@ -80,39 +75,47 @@ static void SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
 			WCHAR **argList = (WCHAR **)malloc(sizeof(WCHAR *) * iNumArgs);
 			for(int i = 0; i < iNumArgs; i++)
 				argList[i] = WideStringFromMBString(pArgList[i]);
-         dwResult = NXCSendEvent(hSession, m_dwEventCode, m_dwObjectId, iNumArgs, argList, m_szUserTag);
+         dwResult = NXCSendEvent(hSession, m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag);
 			for(int i = 0; i < iNumArgs; i++)
 				free(argList[i]);
 			free(argList);
 #else
-         dwResult = NXCSendEvent(hSession, m_dwEventCode, m_dwObjectId, iNumArgs, pArgList, m_szUserTag);
+         dwResult = NXCSendEvent(hSession, m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, pArgList, m_szUserTag);
 #endif
          if (dwResult != RCC_SUCCESS)
             _tprintf(_T("Unable to send event: %s\n"), NXCGetErrorText(dwResult));
          NXCDisconnect(hSession);
       }
    }
+   return dwResult;
 }
 
+#ifdef _WIN32
+#define CMDLINE_OPTIONS "deho:P:T:u:vw:"
+#else
+#define CMDLINE_OPTIONS "c:deho:P:T:u:vw:"
+#endif
 
-//
-// Entry point
-//
-
+/**
+ * Entry point
+ */
 int main(int argc, char *argv[])
 {
-   int ch;
+   int ch, rcc = RCC_INVALID_ARGUMENT;
    BOOL bStart = TRUE, bEncrypt = FALSE;
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "deho:P:T:u:vw:")) != -1)
+   while((ch = getopt(argc, argv, CMDLINE_OPTIONS)) != -1)
    {
       switch(ch)
       {
          case 'h':   // Display help and exit
-            printf("Usage: nxevent [<options>] <server> <event_id> [<param_1> [... <param_N>]]\n"
+            printf("Usage: nxevent [<options>] <server> <event> [<param_1> [... <param_N>]]\n"
                    "Valid options are:\n"
+#ifndef _WIN32
+                   "   -c            : Codepage (default is " ICONV_DEFAULT_CODEPAGE ")\n"
+#endif
                    "   -d            : Turn on debug mode.\n"
                    "   -e            : Encrypt session.\n"
                    "   -h            : Display help and exit.\n"
@@ -122,9 +125,15 @@ int main(int argc, char *argv[])
                    "   -u <user>     : Login to server as <user>. Default is \"guest\".\n"
                    "   -v            : Display version and exit.\n"
                    "   -w <seconds>  : Specify command timeout (default is 3 seconds).\n"
+                   "Event could be specified either by code or by name\n"
                    "\n");
             bStart = FALSE;
             break;
+#ifndef _WIN32
+         case 'c':
+            SetDefaultCodepage(optarg);
+            break;
+#endif
          case 'd':
             m_bDebug = TRUE;
             break;
@@ -193,7 +202,7 @@ int main(int argc, char *argv[])
          if (WSAStartup(2, &wsaData) != 0)
          {
             _tprintf(_T("Unable to initialize Windows sockets\n"));
-            return 4;
+            return RCC_COMM_FAILURE;
          }
 #endif
 #ifdef UNICODE
@@ -202,10 +211,24 @@ int main(int argc, char *argv[])
 #else
          nx_strncpy(m_szServer, argv[optind], 256);
 #endif
-         m_dwEventCode = strtoul(argv[optind + 1], NULL, 0);
-         SendEvent(argc - optind - 2, &argv[optind + 2], bEncrypt);
+
+         char *eptr;
+         m_dwEventCode = strtoul(argv[optind + 1], &eptr, 0);
+         if (*eptr != 0)
+         {
+            // assume that event is specified by name
+            m_dwEventCode = 0;
+#ifdef UNICODE
+            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind + 1], -1, m_eventName, MAX_EVENT_NAME);
+            m_eventName[MAX_EVENT_NAME - 1] = 0;
+#else
+            nx_strncpy(m_eventName, argv[optind + 1], MAX_EVENT_NAME);
+#endif
+         }
+
+         rcc = (int)SendEvent(argc - optind - 2, &argv[optind + 2], bEncrypt);
       }
    }
 
-   return 0;
+   return rcc;
 }

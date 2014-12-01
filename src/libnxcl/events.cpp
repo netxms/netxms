@@ -26,28 +26,28 @@
 /**
  * Process event log records coming from server
  */
-void ProcessEventLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
+void ProcessEventLogRecords(NXCL_Session *pSession, NXCPMessage *pMsg)
 {
    UINT32 i, dwNumRecords, dwId;
    NXC_EVENT event;
    int nOrder;
 
-   dwNumRecords = pMsg->GetVariableLong(VID_NUM_RECORDS);
-   nOrder = (int)pMsg->GetVariableShort(VID_RECORDS_ORDER);
+   dwNumRecords = pMsg->getFieldAsUInt32(VID_NUM_RECORDS);
+   nOrder = (int)pMsg->getFieldAsUInt16(VID_RECORDS_ORDER);
    DebugPrintf(_T("ProcessEventLogRecords(): %d records in message, in %s order"),
                dwNumRecords, (nOrder == RECORD_ORDER_NORMAL) ? _T("normal") : _T("reversed"));
    for(i = 0, dwId = VID_EVENTLOG_MSG_BASE; i < dwNumRecords; i++)
    {
-      event.qwEventId = pMsg->GetVariableInt64(dwId++);
-      event.dwEventCode = pMsg->GetVariableLong(dwId++);
-      event.dwTimeStamp = pMsg->GetVariableLong(dwId++);
-      event.dwSourceId = pMsg->GetVariableLong(dwId++);
-      event.dwSeverity = pMsg->GetVariableShort(dwId++);
-      pMsg->GetVariableStr(dwId++, event.szMessage, MAX_EVENT_MSG_LENGTH);
-      pMsg->GetVariableStr(dwId++, event.szUserTag, MAX_USERTAG_LENGTH);
+      event.qwEventId = pMsg->getFieldAsUInt64(dwId++);
+      event.dwEventCode = pMsg->getFieldAsUInt32(dwId++);
+      event.dwTimeStamp = pMsg->getFieldAsUInt32(dwId++);
+      event.dwSourceId = pMsg->getFieldAsUInt32(dwId++);
+      event.dwSeverity = pMsg->getFieldAsUInt16(dwId++);
+      pMsg->getFieldAsString(dwId++, event.szMessage, MAX_EVENT_MSG_LENGTH);
+      pMsg->getFieldAsString(dwId++, event.szUserTag, MAX_USERTAG_LENGTH);
 		
 		// Skip parameters
-		UINT32 count = pMsg->GetVariableLong(dwId++);
+		UINT32 count = pMsg->getFieldAsUInt32(dwId++);
 		dwId += count;
 
       // Call client's callback to handle new record
@@ -65,15 +65,15 @@ void ProcessEventLogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
  */
 UINT32 LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession, UINT32 dwMaxRecords)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
    ((NXCL_Session *)hSession)->PrepareForSync(SYNC_EVENTS);
 
-   msg.SetCode(CMD_GET_EVENTS);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_MAX_RECORDS, dwMaxRecords);
+   msg.setCode(CMD_GET_EVENTS);
+   msg.setId(dwRqId);
+   msg.setField(VID_MAX_RECORDS, dwMaxRecords);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -85,29 +85,28 @@ UINT32 LIBNXCL_EXPORTABLE NXCSyncEvents(NXC_SESSION hSession, UINT32 dwMaxRecord
    return dwRetCode;
 }
 
-
-//
-// Send event to server
-//
-
-UINT32 LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, UINT32 dwEventCode, 
-                                      UINT32 dwObjectId, int iNumArgs, TCHAR **pArgList,
-												  TCHAR *pszUserTag)
+/**
+ * Send event to server. Event can be identified either by code or by name.
+ * In latter case event code must be set to zero.
+ */
+UINT32 LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, UINT32 dwEventCode, const TCHAR *eventName,
+                                      UINT32 dwObjectId, int iNumArgs, TCHAR **pArgList, TCHAR *pszUserTag)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
    int i;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_TRAP);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_EVENT_CODE, dwEventCode);
-   msg.SetVariable(VID_OBJECT_ID, dwObjectId);
-	msg.SetVariable(VID_USER_TAG, CHECK_NULL_EX(pszUserTag));
-   msg.SetVariable(VID_NUM_ARGS, (WORD)iNumArgs);
+   msg.setCode(CMD_TRAP);
+   msg.setId(dwRqId);
+   msg.setField(VID_EVENT_CODE, dwEventCode);
+   msg.setField(VID_EVENT_NAME, eventName);
+   msg.setField(VID_OBJECT_ID, dwObjectId);
+	msg.setField(VID_USER_TAG, CHECK_NULL_EX(pszUserTag));
+   msg.setField(VID_NUM_ARGS, (WORD)iNumArgs);
    for(i = 0; i < iNumArgs; i++)
-      msg.SetVariable(VID_EVENT_ARG_BASE + i, pArgList[i]);
+      msg.setField(VID_EVENT_ARG_BASE + i, pArgList[i]);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -118,26 +117,26 @@ UINT32 LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, UINT32 dwEventCode,
 // Process syslog records coming from server
 //
 
-void ProcessSyslogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
+void ProcessSyslogRecords(NXCL_Session *pSession, NXCPMessage *pMsg)
 {
    UINT32 i, dwNumRecords, dwId;
    NXC_SYSLOG_RECORD rec;
    int nOrder;
 
-   dwNumRecords = pMsg->GetVariableLong(VID_NUM_RECORDS);
-   nOrder = (int)pMsg->GetVariableShort(VID_RECORDS_ORDER);
+   dwNumRecords = pMsg->getFieldAsUInt32(VID_NUM_RECORDS);
+   nOrder = (int)pMsg->getFieldAsUInt16(VID_RECORDS_ORDER);
    DebugPrintf(_T("ProcessSyslogRecords(): %d records in message, in %s order"),
                dwNumRecords, (nOrder == RECORD_ORDER_NORMAL) ? _T("normal") : _T("reversed"));
    for(i = 0, dwId = VID_SYSLOG_MSG_BASE; i < dwNumRecords; i++)
    {
-      rec.qwMsgId = pMsg->GetVariableInt64(dwId++);
-      rec.dwTimeStamp = pMsg->GetVariableLong(dwId++);
-      rec.wFacility = pMsg->GetVariableShort(dwId++);
-      rec.wSeverity = pMsg->GetVariableShort(dwId++);
-      rec.dwSourceObject = pMsg->GetVariableLong(dwId++);
-      pMsg->GetVariableStr(dwId++, rec.szHost, MAX_SYSLOG_HOSTNAME_LEN);
-      pMsg->GetVariableStr(dwId++, rec.szTag, MAX_SYSLOG_TAG_LEN);
-      rec.pszText = pMsg->GetVariableStr(dwId++);
+      rec.qwMsgId = pMsg->getFieldAsUInt64(dwId++);
+      rec.dwTimeStamp = pMsg->getFieldAsUInt32(dwId++);
+      rec.wFacility = pMsg->getFieldAsUInt16(dwId++);
+      rec.wSeverity = pMsg->getFieldAsUInt16(dwId++);
+      rec.dwSourceObject = pMsg->getFieldAsUInt32(dwId++);
+      pMsg->getFieldAsString(dwId++, rec.szHost, MAX_SYSLOG_HOSTNAME_LEN);
+      pMsg->getFieldAsString(dwId++, rec.szTag, MAX_SYSLOG_TAG_LEN);
+      rec.pszText = pMsg->getFieldAsString(dwId++);
 
       // Call client's callback to handle new record
       pSession->callEventHandler(NXC_EVENT_NEW_SYSLOG_RECORD, nOrder, &rec);
@@ -155,15 +154,15 @@ void ProcessSyslogRecords(NXCL_Session *pSession, CSCPMessage *pMsg)
  */
 UINT32 LIBNXCL_EXPORTABLE NXCSyncSyslog(NXC_SESSION hSession, UINT32 dwMaxRecords)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
    ((NXCL_Session *)hSession)->PrepareForSync(SYNC_SYSLOG);
 
-   msg.SetCode(CMD_GET_SYSLOG);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_MAX_RECORDS, dwMaxRecords);
+   msg.setCode(CMD_GET_SYSLOG);
+   msg.setId(dwRqId);
+   msg.setField(VID_MAX_RECORDS, dwMaxRecords);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);

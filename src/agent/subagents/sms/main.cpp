@@ -35,7 +35,7 @@ static TCHAR m_szDevice[MAX_PATH];
 /**
  * Handler for SMS.SerialConfig and SMS.DeviceModel
  */
-static LONG H_StringConst(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_StringConst(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	ret_string(pValue, pArg);
 	return SYSINFO_RC_SUCCESS;
@@ -44,19 +44,19 @@ static LONG H_StringConst(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValu
 /**
  * Handler for SMS.Send action
  */
-static LONG H_SendSMS(const TCHAR *pszAction, StringList *pArgs, const TCHAR *pData)
+static LONG H_SendSMS(const TCHAR *pszAction, StringList *pArgs, const TCHAR *pData, AbstractCommSession *session)
 {
-	if (pArgs->getSize() < 2)
+	if (pArgs->size() < 2)
 		return ERR_BAD_ARGUMENTS;
 
 #ifdef UNICODE
-	char *rcpt = MBStringFromWideString(pArgs->getValue(0));
-	char *text = MBStringFromWideString(pArgs->getValue(1));
+	char *rcpt = MBStringFromWideString(pArgs->get(0));
+	char *text = MBStringFromWideString(pArgs->get(1));
 	LONG rc = SendSMS(rcpt, text) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 	free(rcpt);
 	free(text);
 #else
-	LONG rc = SendSMS(pArgs->getValue(0), pArgs->getValue(1)) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
+	LONG rc = SendSMS(pArgs->get(0), pArgs->get(1)) ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 #endif
 	return rc;
 }

@@ -32,6 +32,7 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Layer;
 import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
+import org.eclipse.draw2d.SWTGraphics;
 import org.eclipse.draw2d.ScalableFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.gef4.zest.core.viewers.GraphViewer;
@@ -728,6 +729,24 @@ public class ExtendedGraphViewer extends GraphViewer
 				// between nodes
 			}
 		};
+	}
+	
+	/**
+	 * Take snapshot of network map
+	 * 
+	 * @return
+	 */
+	public Image takeSnapshot()
+	{
+	   IFigure rootLayer = graph.getRootLayer();
+	   Dimension d = rootLayer.getSize();
+      Image image = new Image(graph.getDisplay(), d.width, d.height);
+	   GC gc = new GC(image);
+	   Graphics g = new SWTGraphics(gc);
+	   rootLayer.paint(g);
+	   g.dispose();
+      gc.dispose();
+      return image;
 	}
 
 	/**

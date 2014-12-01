@@ -50,7 +50,7 @@ typedef struct
    char chMagic[6];
    BYTE bHeaderSize;    // Header size in bytes
    BYTE bVersion;
-   WORD wFlags;
+   WORD flags;
    BYTE bReserved[2];
    UINT32 dwTimeStamp;   // Server's timestamp
 } SNMP_MIB_HEADER;
@@ -121,6 +121,6 @@ public:
  */
 bool BER_DecodeIdentifier(BYTE *rawData, size_t rawSize, UINT32 *type, size_t *length, BYTE **data, size_t *idLength);
 bool BER_DecodeContent(UINT32 type, BYTE *data, size_t length, BYTE *buffer);
-size_t BER_Encode(UINT32 type, BYTE *data, size_t dataLength, BYTE *buffer, size_t bufferSize);
+size_t BER_Encode(UINT32 type, const BYTE *data, size_t dataLength, BYTE *buffer, size_t bufferSize);
 
 #endif   /* _libnxsnmp_h_ */

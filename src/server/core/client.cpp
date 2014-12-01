@@ -23,11 +23,6 @@
 #include "nxcore.h"
 
 /**
- * Constants
- */
-#define MAX_CLIENT_SESSIONS   128
-
-/**
  * Static data
  */
 static ClientSession *m_pSessionList[MAX_CLIENT_SESSIONS];
@@ -45,7 +40,7 @@ static BOOL RegisterClientSession(ClientSession *pSession)
       if (m_pSessionList[i] == NULL)
       {
          m_pSessionList[i] = pSession;
-         pSession->setIndex(i);
+         pSession->setId(i);
          RWLockUnlock(m_rwlockSessionListAccess);
          return TRUE;
       }
@@ -58,10 +53,10 @@ static BOOL RegisterClientSession(ClientSession *pSession)
 /**
  * Unregister session
  */
-void UnregisterClientSession(UINT32 dwIndex)
+void UnregisterClientSession(int id)
 {
    RWLockWriteLock(m_rwlockSessionListAccess, INFINITE);
-   m_pSessionList[dwIndex] = NULL;
+   m_pSessionList[id] = NULL;
    RWLockUnlock(m_rwlockSessionListAccess);
 }
 
@@ -71,21 +66,21 @@ void UnregisterClientSession(UINT32 dwIndex)
 static THREAD_RESULT THREAD_CALL ClientKeepAliveThread(void *)
 {
    int i, iSleepTime;
-   CSCPMessage msg;
+   NXCPMessage msg;
 
    // Read configuration
    iSleepTime = ConfigReadInt(_T("KeepAliveInterval"), 60);
 
    // Prepare keepalive message
-   msg.SetCode(CMD_KEEPALIVE);
-   msg.SetId(0);
+   msg.setCode(CMD_KEEPALIVE);
+   msg.setId(0);
 
    while(1)
    {
       if (SleepAndCheckForShutdown(iSleepTime))
          break;
 
-      msg.SetVariable(VID_TIMESTAMP, (UINT32)time(NULL));
+      msg.setField(VID_TIMESTAMP, (UINT32)time(NULL));
       RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
       for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
          if (m_pSessionList[i] != NULL)
@@ -199,11 +194,11 @@ THREAD_RESULT THREAD_CALL ClientListener(void *arg)
    return THREAD_OK;
 }
 
+#ifdef WITH_IPV6
+
 /**
  * Listener thread - IPv6
  */
-#ifdef WITH_IPV6
-
 THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
 {
    SOCKET sock, sockClient;
@@ -219,7 +214,7 @@ THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
    // Create socket
    if ((sock = socket(AF_INET6, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
-      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("ClientListener"));
+      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("ClientListenerIPv6"));
       return THREAD_OK;
    }
 
@@ -235,7 +230,7 @@ THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
    // Bind socket
    if (bind(sock, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in6)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, _T("ClientListener"), WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", wListenPort, _T("ClientListenerIPv6"), WSAGetLastError());
       closesocket(sock);
       /* TODO: we should initiate shutdown procedure here */
       return THREAD_OK;
@@ -328,14 +323,32 @@ void DumpClientSessions(CONSOLE_CTX pCtx)
 }
 
 /**
+ * Kill client session
+ */
+bool NXCORE_EXPORTABLE KillClientSession(int id)
+{
+   bool success = false;
+   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
+   {
+      if ((m_pSessionList[i] != NULL) && (m_pSessionList[i]->getId() == id))
+      {
+         m_pSessionList[i]->kill();
+         success = true;
+         break;
+      }
+   }
+   RWLockUnlock(m_rwlockSessionListAccess);
+   return success;
+}
+
+/**
  * Enumerate active sessions
  */
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg)
 {
-   int i;
-
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
-   for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
       if (m_pSessionList[i] != NULL)
       {

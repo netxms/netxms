@@ -177,7 +177,7 @@ static int ProcRead(PROC_ENT **pEnt, char *pszProcName, char *pszCmdLine, int lw
 /**
  * Process list
  */
-LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
    LONG nRet = SYSINFO_RC_SUCCESS;
    PROC_ENT *pList;
@@ -205,7 +205,7 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 /**
  * Handler for Process.Count(*) and Process.CountEx(*) parameters
  */
-LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    int nRet = SYSINFO_RC_ERROR;
    char procName[256] = "", cmdLine[256] = "";
@@ -241,7 +241,7 @@ LONG H_ProcessCount(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for System.ProcessCount parameter
  */
-LONG H_SysProcCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_SysProcCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    return ReadKStatValue("unix", 0, "system_misc", "nproc", pValue, NULL);
 }
@@ -414,7 +414,7 @@ static BOOL GetProcessAttribute(pid_t nPid, int nAttr, int nType, int nCount, QW
 /**
  * Handler for Process.XXX parameters
  */
-LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_ProcessInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    int nRet = SYSINFO_RC_ERROR;
    char szBuffer[256] = "", procName[256] = "", cmdLine[256] = "";

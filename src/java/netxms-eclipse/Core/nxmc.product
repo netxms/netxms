@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="%product.name" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="1.2.14" useFeatures="false" includeLaunchers="true">
+<product name="%product.name" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="2.0-M1" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
       <image path="/Core/icons/launcher/128x128.png"/>
       <text>
          NetXMS Management Console
 
-Version 1.2.14
+Version 2.0-M1
 Copyright (c) 2003-2014 Raden Solutions
       </text>
    </aboutInfo>
@@ -35,7 +35,6 @@ Copyright (c) 2003-2014 Raden Solutions
          <bmp/>
       </win>
    </launcher>
-
 
    <vm>
    </vm>
@@ -138,6 +137,7 @@ Copyright (c) 2003-2014 Raden Solutions
       <plugin id="org.eclipse.core.resources.nl_zh_TW" fragment="true"/>
       <plugin id="org.eclipse.core.resources.win32.x86" fragment="true"/>
       <plugin id="org.eclipse.core.runtime"/>
+      <plugin id="org.eclipse.core.runtime.compatibility.registry" fragment="true"/>
       <plugin id="org.eclipse.core.runtime.nl_cs" fragment="true"/>
       <plugin id="org.eclipse.core.runtime.nl_de" fragment="true"/>
       <plugin id="org.eclipse.core.runtime.nl_es" fragment="true"/>
@@ -324,6 +324,7 @@ Copyright (c) 2003-2014 Raden Solutions
       <plugin id="org.netxms.ui.eclipse.agentmanager"/>
       <plugin id="org.netxms.ui.eclipse.alarmviewer"/>
       <plugin id="org.netxms.ui.eclipse.charts"/>
+      <plugin id="org.netxms.ui.eclipse.clientlibrary"/>
       <plugin id="org.netxms.ui.eclipse.console"/>
       <plugin id="org.netxms.ui.eclipse.dashboard"/>
       <plugin id="org.netxms.ui.eclipse.datacollection"/>

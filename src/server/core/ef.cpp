@@ -22,12 +22,10 @@
 
 #include "nxcore.h"
 
-
-//
-// Setup event forwarding session
-//
-
-BOOL EF_SetupSession(ISCSession *, CSCPMessage *request)
+/**
+ * Setup event forwarding session
+ */
+BOOL EF_SetupSession(ISCSession *, NXCPMessage *request)
 {
 	return TRUE;
 }
@@ -42,7 +40,7 @@ void EF_CloseSession(ISCSession *)
 /**
  * Process event forwarding session message
  */
-BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *response)
+BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *response)
 {
 	int i, numArgs;
 	UINT32 code, id;
@@ -51,19 +49,19 @@ BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *r
 	NetObj *object;
 	BOOL tagExist;
 
-	if (request->GetCode() == CMD_FORWARD_EVENT)
+	if (request->getCode() == CMD_FORWARD_EVENT)
 	{
 		DbgPrintf(4, _T("Event forwarding request from %s"), IpToStr(session->GetPeerAddress(), userTag));
 		
-		id = request->GetVariableLong(VID_OBJECT_ID);
+		id = request->getFieldAsUInt32(VID_OBJECT_ID);
 		if (id != 0)
 			object = FindObjectById(id);  // Object is specified explicitely
 		else
-			object = FindNodeByIP(0, request->GetVariableLong(VID_IP_ADDRESS));	// Object is specified by IP address
+			object = FindNodeByIP(0, request->getFieldAsUInt32(VID_IP_ADDRESS));	// Object is specified by IP address
 		
 		if (object != NULL)
 		{
-			name = request->GetVariableStr(VID_EVENT_NAME);
+			name = request->getFieldAsString(VID_EVENT_NAME);
 			if (name != NULL)
 			{
 				EVENT_TEMPLATE *pt;
@@ -84,20 +82,20 @@ BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *r
 			}
 			else
 			{
-				code = request->GetVariableLong(VID_EVENT_CODE);
+				code = request->getFieldAsUInt32(VID_EVENT_CODE);
 				DbgPrintf(5, _T("Event specified by code (%d)"), code);
 			}
-			numArgs = request->GetVariableShort(VID_NUM_ARGS);
+			numArgs = request->getFieldAsUInt16(VID_NUM_ARGS);
 			if (numArgs > 32)
 				numArgs = 32;
 			for(i = 0; i < numArgs; i++)
-				argList[i] = request->GetVariableStr(VID_EVENT_ARG_BASE + i);
+				argList[i] = request->getFieldAsString(VID_EVENT_ARG_BASE + i);
 			tagExist = request->isFieldExist(VID_USER_TAG);
 			if (tagExist)
-				request->GetVariableStr(VID_USER_TAG, userTag, MAX_USERTAG_LENGTH);
+				request->getFieldAsString(VID_USER_TAG, userTag, MAX_USERTAG_LENGTH);
 
 			format[numArgs] = 0;
-			if (PostEventWithTag(code, object->Id(), tagExist ? userTag : NULL,
+			if (PostEventWithTag(code, object->getId(), tagExist ? userTag : NULL,
 			                     (numArgs > 0) ? format : NULL,
 			                     argList[0], argList[1], argList[2], argList[3],
 										argList[4], argList[5], argList[6], argList[7],
@@ -108,11 +106,11 @@ BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *r
 										argList[24], argList[25], argList[26], argList[27],
 										argList[28], argList[29], argList[30], argList[31]))
 			{
-				response->SetVariable(VID_RCC, ISC_ERR_SUCCESS);
+				response->setField(VID_RCC, ISC_ERR_SUCCESS);
 			}
 			else
 			{
-				response->SetVariable(VID_RCC, ISC_ERR_POST_EVENT_FAILED);
+				response->setField(VID_RCC, ISC_ERR_POST_EVENT_FAILED);
 			}
       
 			// Cleanup
@@ -121,12 +119,12 @@ BOOL EF_ProcessMessage(ISCSession *session, CSCPMessage *request, CSCPMessage *r
 		}
 		else
 		{
-			response->SetVariable(VID_RCC, ISC_ERR_OBJECT_NOT_FOUND);
+			response->setField(VID_RCC, ISC_ERR_OBJECT_NOT_FOUND);
 		}
 	}
 	else
 	{
-		response->SetVariable(VID_RCC, ISC_ERR_NOT_IMPLEMENTED);
+		response->setField(VID_RCC, ISC_ERR_NOT_IMPLEMENTED);
 	}
 	return FALSE;	// Don't close session
 }

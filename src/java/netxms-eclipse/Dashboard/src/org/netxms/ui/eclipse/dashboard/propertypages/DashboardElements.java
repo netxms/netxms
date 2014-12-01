@@ -432,6 +432,9 @@ public class DashboardElements extends PropertyPage
 				case DashboardElement.TABLE_VALUE:
 					config = DashboardControl.DEFAULT_TABLE_VALUE_CONFIG;
 					break;
+            case DashboardElement.DCI_SUMMARY_TABLE:
+               config = DashboardControl.DEFAULT_SUMMARY_TABLE_CONFIG;
+               break;
 				default:
 					config = "<element>\n</element>"; //$NON-NLS-1$
 					break;

@@ -38,14 +38,14 @@ static UINT32 PortMapCallback(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 	pRqPDU->bindVariable(new SNMP_Variable(oid));
 
 	SNMP_PDU *pRespPDU;
-   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
 	delete pRqPDU;
 
 	if (rcc == SNMP_ERR_SUCCESS)
    {
 		UINT32 ifIndex = pRespPDU->getVariable(0)->getValueAsUInt();
 		InterfaceList *ifList = (InterfaceList *)arg;
-		for(int i = 0; i < ifList->getSize(); i++)
+		for(int i = 0; i < ifList->size(); i++)
 			if (ifList->get(i)->dwIndex == ifIndex)
 			{
 				ifList->get(i)->dwBridgePortNumber = var->getValueAsUInt();

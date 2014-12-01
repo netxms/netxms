@@ -6,7 +6,9 @@ package org.netxms.agent.android.main.activities;
 import org.netxms.agent.android.R;
 import org.netxms.agent.android.service.AgentConnectorService;
 
+import android.annotation.TargetApi;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -63,5 +65,12 @@ public class Preferences extends PreferenceActivity
 				if (((PreferenceScreen)preference).getDialog() != null)
 					((PreferenceScreen)preference).getDialog().getWindow().getDecorView().setBackgroundDrawable(this.getWindow().getDecorView().getBackground().getConstantState().newDrawable());
 		return false;
+	}
+
+	@TargetApi(Build.VERSION_CODES.KITKAT)
+	@Override
+	protected boolean isValidFragment(String fragmentName)
+	{
+		return true;
 	}
 }

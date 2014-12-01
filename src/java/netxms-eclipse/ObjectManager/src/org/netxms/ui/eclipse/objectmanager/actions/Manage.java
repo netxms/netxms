@@ -18,40 +18,16 @@
  */
 package org.netxms.ui.eclipse.objectmanager.actions;
 
-import org.eclipse.swt.widgets.Display;
-import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.objectmanager.Messages;
-
 /**
  * Set selected object(s) to managed state
  */
-public class Manage extends MultipleObjectAction
+public class Manage extends SetObjectManagementState
 {
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#runObjectAction(org.netxms.client.NXCSession, org.netxms.client.objects.AbstractObject)
-	 */
-	@Override
-	protected void runObjectAction(final NXCSession session, final AbstractObject object) throws Exception
-	{
-		session.setObjectManaged(object.getObjectId(), true);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#formatJobDescription(org.netxms.client.objects.AbstractObject)
-	 */
-	@Override
-	protected String formatJobDescription(AbstractObject object)
-	{
-		return String.format(Messages.get().Manage_JobDescription, object.getObjectName(), object.getObjectId());
-	}
-
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.objectmanager.actions.MultipleObjectAction#formatErrorMessage(org.netxms.client.objects.AbstractObject, org.eclipse.swt.widgets.Display)
-	 */
-	@Override
-	protected String formatErrorMessage(AbstractObject object, Display display)
-	{
-		return String.format(Messages.get().Manage_JobError, object.getObjectName(), object.getObjectId());
-	}
+   /**
+    * Constructor
+    */
+   public Manage()
+   {
+      super(true);
+   }
 }

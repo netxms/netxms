@@ -1,0 +1,309 @@
+-- =====================================================================
+-- Copyright (C) 2006 by HUAWEI-3COM TECHNOLOGIES.  All rights reserved.
+--
+-- Description: IPv6 address MIB
+-- Reference: HUAWEI-3COM enterprise MIB
+-- Version: V1.0
+-- History:
+--   V1.0 2006-03-15 Created by Zhang Jun and Yu Hongqiang
+--     Initial version
+-- =====================================================================
+H3C-IPV6-ADDRESS-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        h3cCommon
+            FROM HUAWEI-3COM-OID-MIB
+        Integer32, OBJECT-TYPE, MODULE-IDENTITY
+            FROM SNMPv2-SMI
+        RowStatus
+            FROM SNMPv2-TC
+        InetAddress, InetAddressType
+            FROM INET-ADDRESS-MIB;
+
+    h3cIpv6AddrMIB MODULE-IDENTITY
+        LAST-UPDATED "200603150000Z"
+        ORGANIZATION
+            "Huawei 3Com Technologies Co., Ltd."
+        CONTACT-INFO
+            "Platform Team Huawei 3Com Technologies Co., Ltd.
+            HaiDian District Beijing P.R. China
+            http://www.huawei-3com.com
+            Zip:100085"
+        DESCRIPTION
+            "The MIB module for managing IPv6 address"
+        REVISION "200603150000Z"
+        DESCRIPTION
+            "The initial revision of this MIB module."
+        ::= { h3cCommon 71 }
+
+
+--
+-- Node definitions
+--
+    h3cIpv6AddressObjects OBJECT IDENTIFIER ::= { h3cIpv6AddrMIB 1 }
+
+    h3cIpv6AddressConfig OBJECT IDENTIFIER ::= { h3cIpv6AddressObjects 1 }
+
+    h3cIpv6AddrSetTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF H3cIpv6AddrSetEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The table of address information is relevant to this
+            entity's IPv6 addresses for setting. The address information
+            that can be read and set in this table is a subset of the
+            address information that can be read in h3cIpv6AddrReadTable
+            and ipv6AddrTable in IPV6-MIB. This table is used to configure IPv6
+            addresses of an interface identified by h3cIpv6AddrSetIfIndex.
+            When users create or delete an entry in this table, the agent also
+            increases or reduces a corresponding entry in the
+            h3cIpv6AddrReadTable and ipv6AddrTable in IPV6-MIB.
+            When an interface which has been assigned IPv6 address is deleted,
+            the agent also deletes the entry corresponding to
+            the interface in this table and h3cIpv6AddrReadTable.
+            All IPv6 addresses in this table will also show in ipv6AddrTable in
+            IPV6-MIB."
+        REFERENCE
+            "RFC 2456"
+        ::= { h3cIpv6AddressConfig 1 }
+
+    h3cIpv6AddrSetEntry OBJECT-TYPE
+        SYNTAX      H3cIpv6AddrSetEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "Define the IPv6 address information."
+        INDEX
+        {
+            h3cIpv6AddrSetIfIndex,
+            h3cIpv6AddrSetAddrType,
+            h3cIpv6AddrSetAddr
+        }
+        ::= { h3cIpv6AddrSetTable 1 }
+
+    H3cIpv6AddrSetEntry ::=
+    SEQUENCE
+    {
+        h3cIpv6AddrSetIfIndex       Integer32,
+        h3cIpv6AddrSetAddrType      InetAddressType,
+        h3cIpv6AddrSetAddr          InetAddress,
+        h3cIpv6AddrSetPfxLength     Integer32,
+        h3cIpv6AddrSetSourceType    INTEGER,
+        h3cIpv6AddrSetRowStatus     RowStatus
+    }
+
+    h3cIpv6AddrSetIfIndex OBJECT-TYPE
+        SYNTAX      Integer32(1..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The index value which uniquely identifies the interface to
+            which this entry is applicable. The interface identified by
+            a particular value of this index is the same interface as
+            identified by the same value of RFC 1573's ifIndex."
+        ::= { h3cIpv6AddrSetEntry 1 }
+
+    h3cIpv6AddrSetAddrType OBJECT-TYPE
+        SYNTAX      InetAddressType
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The IP address type to which this entry's address
+            information pertains. The value must be ipv6."
+        ::= { h3cIpv6AddrSetEntry 2 }
+
+    h3cIpv6AddrSetAddr OBJECT-TYPE
+        SYNTAX      InetAddress
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The IPv6 address to which this entry's address
+            information pertains."
+        ::= { h3cIpv6AddrSetEntry 3 }
+
+    h3cIpv6AddrSetPfxLength OBJECT-TYPE
+        SYNTAX      Integer32(1..128)
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "The length of the prefix (in bits) associated with
+            the IPv6 address of this entry."
+        ::= { h3cIpv6AddrSetEntry 4 }
+
+    h3cIpv6AddrSetSourceType OBJECT-TYPE
+        SYNTAX      INTEGER
+                    {
+                        assignedIp(1),
+                        assignedEUI64Ip(2),
+                        assignedLinklocalIp(3)
+                    }
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "Indicate the type of source of IPv6 address.
+            The value can be one of following:
+            'assignedIp':
+                Assigned global/site-local IPv6 address;
+            'assignedEUI64Ip':
+                Assigned global/site-local IPv6 address
+                by using EUI-64 interface identifier;
+            'assignedLinklocalIp':
+                Assigned link-local IPv6 address.
+            The value of h3cIpv6AddrSetSourceType is relevant to
+                h3cIpv6AddrReadSourceType and h3cIpv6AddrReadCatalog .
+            For example, if the value of h3cIpv6AddrSetSourceType is set to
+                'assignedIp', then the value of h3cIpv6AddrReadSourceType is
+                'assignedIp' and the value of h3cIpv6AddrReadCatalog is
+                'global' or 'sitelocal'.
+            The relation listed in the following table.
+            ----------------------------------------------------------------
+             h3cIpv6Addr-        | h3cIpv6Addr-      | h3cIpv6Addr-
+             SetSourceType       | ReadSourceType    | ReadCatalog
+            ----------------------------------------------------------------
+             assignedIp          | assignedIp        | global or sitelocal
+            ----------------------------------------------------------------
+             assignedEUI64Ip     | assignedIp        | global or sitelocal
+            ----------------------------------------------------------------
+             assignedLinklocalIp | assignedIp        | linklocal
+            ----------------------------------------------------------------
+            "
+        ::= { h3cIpv6AddrSetEntry 5 }
+
+    h3cIpv6AddrSetRowStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "This object is used to create a new row or delete an
+            existing row in this table, only supports active(1),
+            createAndGo(4) and destroy(6)."
+        ::= { h3cIpv6AddrSetEntry 6 }
+
+    h3cIpv6AddrReadTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF H3cIpv6AddrReadEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The table of address information is relevant to this
+            entity's IPv6 addresses for reading.
+            This is the extension of the ipv6AddrTable in IPV6-MIB.
+            All IPv6 addresses in this table will also show in ipv6AddrTable
+            in IPV6-MIB."
+        REFERENCE
+            "RFC 2456"
+        ::= { h3cIpv6AddressConfig 2 }
+
+    h3cIpv6AddrReadEntry OBJECT-TYPE
+        SYNTAX      H3cIpv6AddrReadEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "Define the IPv6 address information."
+        INDEX
+        {
+            h3cIpv6AddrReadIfIndex,
+            h3cIpv6AddrReadAddrType,
+            h3cIpv6AddrReadAddr
+        }
+        ::= { h3cIpv6AddrReadTable 1 }
+
+    H3cIpv6AddrReadEntry ::=
+        SEQUENCE
+        {
+            h3cIpv6AddrReadIfIndex       Integer32,
+            h3cIpv6AddrReadAddrType      InetAddressType,
+            h3cIpv6AddrReadAddr          InetAddress,
+            h3cIpv6AddrReadPfxLength     Integer32,
+            h3cIpv6AddrReadSourceType    INTEGER,
+            h3cIpv6AddrReadCatalog       INTEGER
+        }
+
+    h3cIpv6AddrReadIfIndex OBJECT-TYPE
+        SYNTAX      Integer32(1..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The index value which uniquely identifies the interface to
+            which this entry is applicable. The interface identified by
+            a particular value of this index is the same interface as
+            identified by the same value of RFC 1573's ifIndex."
+        ::= { h3cIpv6AddrReadEntry 1 }
+
+    h3cIpv6AddrReadAddrType OBJECT-TYPE
+        SYNTAX      InetAddressType
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The IP address type to which this entry's address information
+            pertains. The value must be ipv6."
+        ::= { h3cIpv6AddrReadEntry 2 }
+
+    h3cIpv6AddrReadAddr OBJECT-TYPE
+        SYNTAX      InetAddress
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The IPv6 address to which this entry's address information
+            pertains."
+        ::= { h3cIpv6AddrReadEntry 3 }
+
+    h3cIpv6AddrReadPfxLength OBJECT-TYPE
+        SYNTAX      Integer32(1..128)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "The length of the prefix (in bits) associated with
+            the IPv6 address of this entry."
+        ::= { h3cIpv6AddrReadEntry 4 }
+
+    h3cIpv6AddrReadSourceType OBJECT-TYPE
+        SYNTAX      INTEGER
+                    {
+                        assignedIp(1),
+                        assignedEUI64Ip(2),
+                        assignedAutoIp(3),
+                        autoIp(4),
+                        dhcpv6(5),
+                        negotiate(6),
+                        cluster(7)
+                    }
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Indicate the type of source of IPv6 address.
+            The value can be one of following:
+                'assignedIp': Assigned IPv6 address;
+                'assignedEUI64Ip': Assigned IPv6 address by using EUI-64
+                                   interface identifier;
+                'assignedAutoIp':  Auto generated IPv6 address by user setting;
+                'autoIp':          Auto generated IPv6 address as a result
+                                   of non-linklocal anycast/unicast address
+                                   configuration;
+                'dhcpv6':          Assigned IPv6 address through DHCPv6
+                                   protocol;
+                'negotiate':       Assigned IPv6 address through negotiation;
+                'cluster':         Assigned IPv6 address through cluster
+                                   module."
+        ::= { h3cIpv6AddrReadEntry 5 }
+
+    h3cIpv6AddrReadCatalog OBJECT-TYPE
+        SYNTAX      INTEGER
+                    {
+                        nodelocal(1),
+                        linklocal(2),
+                        sitelocal(3),
+                        orglocal(4),
+                        global(5)
+                    }
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "Indicate the category of the IPv6 address.
+            The value can be one of following:
+            'nodelocal': node-local scope;
+            'linklocal': link-local scope;
+            'sitelocal': site-local scope;
+            'orglocal': organization-local scope;
+            'global': global scope. "
+        ::= { h3cIpv6AddrReadEntry 6 }
+END

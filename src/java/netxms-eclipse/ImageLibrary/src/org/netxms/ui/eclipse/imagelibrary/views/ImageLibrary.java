@@ -87,7 +87,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	{
 	   final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
 	   
-	   currentIconSize = ps.getInt("IMAGE_LIBRARY.ZOOM");
+	   currentIconSize = ps.getInt("IMAGE_LIBRARY.ZOOM"); //$NON-NLS-1$
 	   if(currentIconSize == 0)
 	      currentIconSize = MIN_GRID_ICON_SIZE;
 	   
@@ -136,7 +136,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-			   ps.setValue("IMAGE_LIBRARY.ZOOM", currentIconSize);
+			   ps.setValue("IMAGE_LIBRARY.ZOOM", currentIconSize); //$NON-NLS-1$
 				ImageProvider.getInstance().removeUpdateListener(ImageLibrary.this);
 			}
 		});
@@ -159,7 +159,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 			@Override
 			public void run()
 			{
-				final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary);
+				final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary, false);
 				final GalleryItem[] selection = gallery.getSelection();
 				if (selection.length > 0)
 				{
@@ -182,7 +182,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 				final GalleryItem[] selection = gallery.getSelection();
 				if (selection.length == 1)
 				{
-					final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary);
+					final ImagePropertiesDialog dialog = new ImagePropertiesDialog(getSite().getShell(), knownCategories, imageLibrary, true);
 					LibraryImage image = (LibraryImage)selection[0].getData();
 					dialog.setName(image.getName());
 					dialog.setDefaultCategory(image.getCategory());
@@ -253,7 +253,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
    /**
     * Verify if image can be created from given file
     */
-	protected void verifyImageFile(String fileName) throws Exception
+	protected void verifyImageFile(final String fileName) throws Exception
 	{
 		new Image(getSite().getShell().getDisplay(), fileName).dispose();
 	}

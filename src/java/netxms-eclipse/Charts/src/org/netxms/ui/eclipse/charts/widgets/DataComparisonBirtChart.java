@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,7 +48,11 @@ import org.eclipse.birt.chart.model.type.BarSeries;
 import org.eclipse.birt.chart.model.type.PieSeries;
 import org.eclipse.birt.chart.model.type.impl.BarSeriesImpl;
 import org.eclipse.birt.chart.model.type.impl.PieSeriesImpl;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
@@ -336,12 +340,12 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	@Override
 	public int addParameter(GraphItem dci, double value)
 	{
-		parameters.add(new DataComparisonElement(dci, value));
+		parameters.add(new DataComparisonElement(dci, value, null));
 		return parameters.size() - 1;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataComparisionChart#updateParameter(int, double)
+	 * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#updateParameter(int, double, boolean)
 	 */
 	@Override
 	public void updateParameter(int index, double value, boolean updateChart)
@@ -358,6 +362,15 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 			refresh();
 	}
 
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#updateParameter(int, org.netxms.client.datacollection.DciDataRow, int, boolean)
+    */
+   @Override
+   public void updateParameter(int index, DciDataRow value, int dataType, boolean updateChart)
+   {
+      updateParameter(index, value.getValueAsDouble(), updateChart);
+   }
+   
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataComparisionChart#updateParameterThresholds(int, org.netxms.client.datacollection.Threshold[])
 	 */
@@ -519,5 +532,20 @@ public class DataComparisonBirtChart extends GenericBirtChart implements DataCom
 	{
 		// TODO Auto-generated method stub
 		
+	}
+	
+	/**
+     * Take snapshot of network map
+     * 
+     * @return
+     */
+	public Image takeSnapshot()
+	{
+		Rectangle rect = getClientArea();
+		Image image = new Image(getDisplay(), rect.width, rect.height);
+		GC gc = new GC(image);
+		this.print(gc);
+		gc.dispose();
+		return image;
 	}
 }

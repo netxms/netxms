@@ -2,23 +2,24 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Network Maps Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.networkmaps;singleton:=true
-Bundle-Version: 1.2.14
+Bundle-Version: 2.0.0
 Bundle-Activator: org.netxms.ui.eclipse.networkmaps.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",
- org.netxms.ui.eclipse.objectbrowser;bundle-version="1.2.14",
- org.netxms.ui.eclipse.imagelibrary;bundle-version="1.2.13",
- org.netxms.ui.eclipse.osm;bundle-version="1.2.10",
- org.eclipse.rap.ui;bundle-version="2.2.0",
- org.netxms.webui.core;bundle-version="1.2.14",
+Require-Bundle: org.eclipse.rap.ui;bundle-version="2.3.1",
+ org.eclipse.core.runtime;bundle-version="3.8.0",
+ org.netxms.ui.eclipse.clientlibrary;bundle-version="2.0.0",
+ org.netxms.webui.core;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.objectbrowser;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.imagelibrary;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.osm;bundle-version="2.0.0",
  org.netxms.gef4.zest.layouts;bundle-version="2.0.2",
  org.netxms.gef4.zest.core;bundle-version="2.0.2",
  org.netxms.gef4.zest.jface;bundle-version="2.0.2",
  org.netxms.rap.draw2d;bundle-version="1.5.1",
- org.netxms.ui.eclipse.charts;bundle-version="1.2.11",
- org.netxms.ui.eclipse.nxsl;bundle-version="1.2.11",
- org.netxms.ui.eclipse.objectview;bundle-version="1.2.14",
- org.netxms.ui.eclipse.datacollection;bundle-version="1.2.13"
+ org.netxms.ui.eclipse.charts;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.nxsl;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.objectview;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.datacollection;bundle-version="2.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.networkmaps.algorithms,

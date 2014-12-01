@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -64,7 +64,7 @@ public:
 	GeoLocation(int type, double lat, double lon, int accuracy = 0, time_t timestamp = 0);
 	GeoLocation(int type, const TCHAR *lat, const TCHAR *lon, int accuracy = 0, time_t timestamp = 0);
 	GeoLocation(const GeoLocation &src);
-	GeoLocation(CSCPMessage &msg);
+	GeoLocation(NXCPMessage &msg);
 	~GeoLocation();
 
 	GeoLocation& operator =(const GeoLocation &src);
@@ -77,8 +77,9 @@ public:
 	bool isValid() { return m_isValid; }
 	int getAccuracy() { return m_accuracy; }
 	time_t getTimestamp() { return m_timestamp; }
+   bool sameLocation(double lat, double lon, int oldAccurasy);
 
-	void fillMessage(CSCPMessage &msg);
+	void fillMessage(NXCPMessage &msg);
 };
 
 

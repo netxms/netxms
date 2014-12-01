@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementLayout;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
@@ -64,6 +65,7 @@ public class DashboardControl extends Composite
 	public static final String DEFAULT_GEO_MAP_CONFIG = "<element>\n\t<latitude>0</latitude>\n\t<longitude>0</longitude>\n\t<zoom>8</zoom>\t<title></title>\n</element>";  //$NON-NLS-1$
 	public static final String DEFAULT_WEB_PAGE_CONFIG = "<element>\n\t<url>http://</url>\n\t<title></title>\n</element>";  //$NON-NLS-1$
 	public static final String DEFAULT_TABLE_VALUE_CONFIG = "<element>\n\t<objectId>0</objectId>\n\t<dciId>0</dciId>\n\t<title></title>\n</element>";  //$NON-NLS-1$
+   public static final String DEFAULT_SUMMARY_TABLE_CONFIG = "<element>\n\t<baseObjectId>0</baseObjectId>\n\t<tableId>0</tableId>\n</element>"; //$NON-NLS-1$
 			
 	private Dashboard dashboard;
 	private List<DashboardElement> elements;
@@ -73,18 +75,20 @@ public class DashboardControl extends Composite
 	private boolean modified = false;
 	private DashboardModifyListener modifyListener = null;
 	private IViewPart viewPart;
+	private IntermediateSelectionProvider selectionProvider;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public DashboardControl(Composite parent, int style, Dashboard dashboard, IViewPart viewPart, boolean embedded)
+	public DashboardControl(Composite parent, int style, Dashboard dashboard, IViewPart viewPart, IntermediateSelectionProvider selectionProvider, boolean embedded)
 	{
 		super(parent, style);
 		this.dashboard = dashboard;
 		this.embedded = embedded;
 		this.elements = new ArrayList<DashboardElement>(dashboard.getElements());
 		this.viewPart = viewPart;
+		this.selectionProvider = selectionProvider;
 		createContent();
 	}
 
@@ -92,7 +96,7 @@ public class DashboardControl extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public DashboardControl(Composite parent, int style, Dashboard dashboard, List<DashboardElement> elements, IViewPart viewPart, boolean modified)
+	public DashboardControl(Composite parent, int style, Dashboard dashboard, List<DashboardElement> elements, IViewPart viewPart, IntermediateSelectionProvider selectionProvider, boolean modified)
 	{
 		super(parent, style);
 		this.dashboard = dashboard;
@@ -100,6 +104,7 @@ public class DashboardControl extends Composite
 		this.modified = modified;
 		this.elements = new ArrayList<DashboardElement>(elements);
 		this.viewPart = viewPart;
+		this.selectionProvider = selectionProvider;
 		createContent();
 	}
 
@@ -194,6 +199,9 @@ public class DashboardControl extends Composite
 			case DashboardElement.DASHBOARD:
 				w = new EmbeddedDashboardElement(this, e, viewPart);
 				break;
+         case DashboardElement.DCI_SUMMARY_TABLE:
+            w = new DciSummaryTableElement(this, e, viewPart);
+            break;
 			case DashboardElement.DIAL_CHART:
 				w = new GaugeElement(this, e, viewPart);
 				break;
@@ -596,4 +604,12 @@ public class DashboardControl extends Composite
 	{
 		return elements;
 	}
+
+   /**
+    * @return the selectionProvider
+    */
+   public IntermediateSelectionProvider getSelectionProvider()
+   {
+      return selectionProvider;
+   }
 }

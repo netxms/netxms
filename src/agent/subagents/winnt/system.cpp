@@ -1,6 +1,6 @@
 /* 
 ** Windows 2000+ NetXMS subagent
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 /**
  * Handler for System.ServiceState parameter
  */
-LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    SC_HANDLE hManager, hService;
    TCHAR szServiceName[MAX_PATH];
@@ -75,7 +75,7 @@ LONG H_ServiceState(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for System.Services list
  */
-LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value)
+LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
    SC_HANDLE hManager = OpenSCManager(NULL, NULL, GENERIC_READ);
    if (hManager == NULL)
@@ -105,7 +105,7 @@ LONG H_ServiceList(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value)
 /**
  * Handler for System.Services table
  */
-LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value)
+LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, AbstractCommSession *session)
 {
    SC_HANDLE hManager = OpenSCManager(NULL, NULL, GENERIC_READ);
    if (hManager == NULL)
@@ -211,7 +211,7 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value)
 /**
  * Handler for System.ThreadCount
  */
-LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    PERFORMANCE_INFORMATION pi;
    pi.cb = sizeof(PERFORMANCE_INFORMATION);
@@ -224,7 +224,7 @@ LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for System.ConnectedUsers parameter
  */
-LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    LONG nRet;
    WTS_SESSION_INFO *pSessionList;
@@ -250,7 +250,7 @@ LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.ActiveUserSessions enum
  */
-LONG H_ActiveUserSessions(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value)
+LONG H_ActiveUserSessions(const TCHAR *pszCmd, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
    LONG nRet;
    WTS_SESSION_INFO *pSessionList;
@@ -298,9 +298,95 @@ LONG H_ActiveUserSessions(const TCHAR *pszCmd, const TCHAR *pArg, StringList *va
 }
 
 /**
+ * Callback for window stations enumeration
+ */
+static BOOL CALLBACK WindowStationsEnumCallback(LPTSTR lpszWindowStation, LPARAM lParam)
+{
+   ((StringList *)lParam)->add(lpszWindowStation);
+   return TRUE;
+}
+
+/**
+ * Handler for System.WindowStations list
+ */
+LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   return EnumWindowStations(WindowStationsEnumCallback, (LONG_PTR)value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+}
+
+/**
+ * Callback for desktop enumeration
+ */
+static BOOL CALLBACK DesktopsEnumCallback(LPTSTR lpszDesktop, LPARAM lParam)
+{
+   ((StringList *)lParam)->add(lpszDesktop);
+   return TRUE;
+}
+
+/**
+ * Handler for System.Desktops list
+ */
+LONG H_Desktops(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   TCHAR wsName[256];
+   AgentGetParameterArg(cmd, 1, wsName, 256);
+   HWINSTA ws = OpenWindowStation(wsName, FALSE, WINSTA_ENUMDESKTOPS);
+   if (ws == NULL)
+      return SYSINFO_RC_ERROR;
+
+   LONG rc = EnumDesktops(ws, DesktopsEnumCallback, (LONG_PTR)value) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+   CloseWindowStation(ws);
+   return rc;
+}
+
+/**
+ * Handler for Agent.Desktop parameter
+ */
+LONG H_AgentDesktop(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   HWINSTA ws = GetProcessWindowStation();
+   if (ws == NULL)
+      return SYSINFO_RC_ERROR;
+
+   HDESK desk = GetThreadDesktop(GetCurrentThreadId());
+   if (desk == NULL)
+      return SYSINFO_RC_ERROR;
+
+   TCHAR wsName[64], deskName[64];
+   DWORD size;
+   if (GetUserObjectInformation(ws, UOI_NAME, wsName, 64 * sizeof(TCHAR), &size) &&
+       GetUserObjectInformation(desk, UOI_NAME, deskName, 64 * sizeof(TCHAR), &size))
+   {
+      DWORD sid;
+      if (ProcessIdToSessionId(GetCurrentProcessId(), &sid))
+      {
+         TCHAR *sessionName;
+         if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, sid, WTSWinStationName, &sessionName, &size))
+         {
+            _sntprintf(value, MAX_RESULT_LENGTH, _T("/%s/%s/%s"), sessionName, wsName, deskName);
+            WTSFreeMemory(sessionName);
+         }
+         else
+         {
+            _sntprintf(value, MAX_RESULT_LENGTH, _T("/%u/%s/%s"), sid, wsName, deskName);
+         }
+      }
+      else
+      {
+         _sntprintf(value, MAX_RESULT_LENGTH, _T("/?/%s/%s"), wsName, deskName);
+      }
+      return SYSINFO_RC_SUCCESS;
+   }
+   else
+   {
+      return SYSINFO_RC_ERROR;
+   }
+}
+
+/**
  * Handler for System.AppAddressSpace
  */
-LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	SYSTEM_INFO si;
 
@@ -308,4 +394,56 @@ LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 	DWORD_PTR size = (DWORD_PTR)si.lpMaximumApplicationAddress - (DWORD_PTR)si.lpMinimumApplicationAddress;
 	ret_uint(pValue, (DWORD)(size / 1024 / 1024));
 	return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.Update.*Time parameters
+ */
+LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR buffer[MAX_PATH];
+   _sntprintf(buffer, MAX_PATH, _T("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate\\Auto Update\\Results\\%s"), arg);
+
+   HKEY hKey;
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, buffer, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+      return SYSINFO_RC_ERROR;
+
+   LONG rc;
+   DWORD size = MAX_PATH * sizeof(TCHAR);
+   if (RegQueryValueEx(hKey, _T("LastSuccessTime"), NULL, NULL, (BYTE *)buffer, &size) == ERROR_SUCCESS)
+   {
+      // Date stored as YYYY-mm-dd HH:MM:SS in UTC
+      if (_tcslen(buffer) == 19)
+      {
+         struct tm t;
+         memset(&t, 0, sizeof(struct tm));
+         t.tm_isdst = 0;
+
+         buffer[4] = 0;
+         t.tm_year = _tcstol(buffer, NULL, 10) - 1900;
+
+         buffer[7] = 0;
+         t.tm_mon = _tcstol(&buffer[5], NULL, 10) - 1;
+
+         buffer[10] = 0;
+         t.tm_mday = _tcstol(&buffer[8], NULL, 10);
+
+         buffer[13] = 0;
+         t.tm_hour = _tcstol(&buffer[11], NULL, 10);
+
+         buffer[16] = 0;
+         t.tm_min = _tcstol(&buffer[14], NULL, 10);
+
+         t.tm_sec = _tcstol(&buffer[17], NULL, 10);
+
+         ret_int64(value, timegm(&t));
+         rc = SYSINFO_RC_SUCCESS;
+      }      
+   }
+   else
+   {
+      rc = SYSINFO_RC_ERROR;
+   }
+   RegCloseKey(hKey);
+	return rc;
 }

@@ -206,39 +206,39 @@ enum
  * Functions
  */
 
-LONG H_DiskInfo(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value);
-LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value);
+LONG H_DiskInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 
-LONG H_IoStats(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_IoStatsTotal(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_DiskQueue(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_DiskQueueTotal(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_IoStats(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_IoStatsTotal(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_DiskQueue(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_DiskQueueTotal(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
-LONG H_NetIfInfoFromIOCTL(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_NetIfInfoFromProc(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *);
-LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *);
-LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *);
+LONG H_NetIfInfoFromIOCTL(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetIfInfoFromProc(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 
-LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *);
-LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value);
-LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_CpuCount(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_CpuLoad(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_CpuUsage(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_CpuUsageEx(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_ProcessCount(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_ProcessDetails(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_ThreadCount(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_MemoryInfo(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_SourcePkgSupport(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_ConnectedUsers(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_ActiveUserSessions(const TCHAR *, const TCHAR *, StringList *);
+LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
+LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuLoad(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuUsage(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuUsageEx(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_ProcessCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_ProcessDetails(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_ThreadCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_MemoryInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_SourcePkgSupport(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_ConnectedUsers(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_ActiveUserSessions(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 
 void StartCpuUsageCollector();
 void ShutdownCpuUsageCollector();

@@ -26,7 +26,7 @@
 // Handler for System.IPSCTL(*)
 //
 
-static LONG H_IPSCTL(char *pszParam, char *pArg, char *pValue)
+static LONG H_IPSCTL(char *pszParam, char *pArg, char *pValue, AbstractCommSession *session)
 {
 	char szName[256];
 

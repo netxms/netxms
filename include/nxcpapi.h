@@ -32,14 +32,14 @@
 #endif
 
 /**
- * Temporary buffer structure for RecvCSCPMessage() function
+ * Temporary buffer structure for RecvNXCPMessage() function
  */
 typedef struct
 {
-   UINT32 dwBufSize;
-   UINT32 dwBufPos;
-   char szBuffer[CSCP_TEMP_BUF_SIZE];
-} CSCP_BUFFER;
+   UINT32 bufferSize;
+   UINT32 bufferPos;
+   char buffer[CSCP_TEMP_BUF_SIZE];
+} NXCP_BUFFER;
 
 
 #ifdef __cplusplus
@@ -49,85 +49,92 @@ struct MessageField;
 /**
  * Parsed NXCP message
  */
-class LIBNETXMS_EXPORTABLE CSCPMessage
+class LIBNETXMS_EXPORTABLE NXCPMessage
 {
 private:
-   WORD m_code;
-   WORD m_flags;
+   UINT16 m_code;
+   UINT16 m_flags;
    UINT32 m_id;
-   MessageField *m_fields;   // Message fields
-   int m_version;    // Protocol version
+   MessageField *m_fields; // Message fields
+   int m_version;          // Protocol version
+   BYTE *m_data;           // binary data
+   size_t m_dataSize;      // binary data size
 
-   void *set(UINT32 fieldId, BYTE type, const void *value, UINT32 size = 0);
-   void *get(UINT32 fieldId, BYTE type);
-   CSCP_DF *find(UINT32 fieldId);
+   void *set(UINT32 fieldId, BYTE type, const void *value, bool isSigned = false, size_t size = 0);
+   void *get(UINT32 fieldId, BYTE requiredType, BYTE *fieldType = NULL);
+   NXCP_MESSAGE_FIELD *find(UINT32 fieldId);
 
 public:
-   CSCPMessage(int nVersion = NXCP_VERSION);
-   CSCPMessage(CSCPMessage *pMsg);
-   CSCPMessage(CSCP_MESSAGE *pMsg, int nVersion = NXCP_VERSION);
-   CSCPMessage(const char *xml);
-   ~CSCPMessage();
+   NXCPMessage(int version = NXCP_VERSION);
+   NXCPMessage(NXCPMessage *msg);
+   NXCPMessage(NXCP_MESSAGE *rawMag, int version = NXCP_VERSION);
+   ~NXCPMessage();
 
-   CSCP_MESSAGE *createMessage();
-	char *createXML();
-	void processXMLToken(void *state, const char **attrs);
-	void processXMLData(void *state);
+   NXCP_MESSAGE *createMessage();
 
-   WORD GetCode() { return m_code; }
-   void SetCode(WORD code) { m_code = code; }
+   UINT16 getCode() { return m_code; }
+   void setCode(UINT16 code) { m_code = code; }
 
-   UINT32 GetId() { return m_id; }
-   void SetId(UINT32 id) { m_id = id; }
+   UINT32 getId() { return m_id; }
+   void setId(UINT32 id) { m_id = id; }
 
+   bool isEndOfFile() { return (m_flags & MF_END_OF_FILE) ? true : false; }
    bool isEndOfSequence() { return (m_flags & MF_END_OF_SEQUENCE) ? true : false; }
    bool isReverseOrder() { return (m_flags & MF_REVERSE_ORDER) ? true : false; }
+   bool isBinary() { return (m_flags & MF_BINARY) ? true : false; }
+
+   BYTE *getBinaryData() { return m_data; }
+   size_t getBinaryDataSize() { return m_dataSize; }
 
    bool isFieldExist(UINT32 fieldId) { return find(fieldId) != NULL; }
    int getFieldType(UINT32 fieldId);
 
-   void SetVariable(UINT32 dwVarId, INT16 wValue) { set(dwVarId, CSCP_DT_INT16, &wValue); }
-   void SetVariable(UINT32 dwVarId, UINT16 wValue) { set(dwVarId, CSCP_DT_INT16, &wValue); }
-   void SetVariable(UINT32 dwVarId, INT32 dwValue) { set(dwVarId, CSCP_DT_INTEGER, &dwValue); }
-   void SetVariable(UINT32 dwVarId, UINT32 dwValue) { set(dwVarId, CSCP_DT_INTEGER, &dwValue); }
-   void SetVariable(UINT32 dwVarId, INT64 qwValue) { set(dwVarId, CSCP_DT_INT64, &qwValue); }
-   void SetVariable(UINT32 dwVarId, UINT64 qwValue) { set(dwVarId, CSCP_DT_INT64, &qwValue); }
-   void SetVariable(UINT32 dwVarId, double dValue) { set(dwVarId, CSCP_DT_FLOAT, &dValue); }
-   void SetVariable(UINT32 dwVarId, const TCHAR *value) { if (value != NULL) set(dwVarId, CSCP_DT_STRING, value); }
-   void SetVariable(UINT32 dwVarId, const TCHAR *value, UINT32 maxLen) { if (value != NULL) set(dwVarId, CSCP_DT_STRING, value, maxLen); }
-   void SetVariable(UINT32 dwVarId, BYTE *pValue, UINT32 dwSize) { set(dwVarId, CSCP_DT_BINARY, pValue, dwSize); }
+   void setField(UINT32 fieldId, INT16 value) { set(fieldId, NXCP_DT_INT16, &value, true); }
+   void setField(UINT32 fieldId, UINT16 value) { set(fieldId, NXCP_DT_INT16, &value, false); }
+   void setField(UINT32 fieldId, INT32 value) { set(fieldId, NXCP_DT_INT32, &value, true); }
+   void setField(UINT32 fieldId, UINT32 value) { set(fieldId, NXCP_DT_INT32, &value, false); }
+   void setField(UINT32 fieldId, INT64 value) { set(fieldId, NXCP_DT_INT64, &value, true); }
+   void setField(UINT32 fieldId, UINT64 value) { set(fieldId, NXCP_DT_INT64, &value, false); }
+   void setField(UINT32 fieldId, double value) { set(fieldId, NXCP_DT_FLOAT, &value); }
+   void setField(UINT32 fieldId, const TCHAR *value) { if (value != NULL) set(fieldId, NXCP_DT_STRING, value); }
+   void setField(UINT32 fieldId, const TCHAR *value, size_t maxLen) { if (value != NULL) set(fieldId, NXCP_DT_STRING, value, false, maxLen); }
+   void setField(UINT32 fieldId, BYTE *value, size_t size) { set(fieldId, NXCP_DT_BINARY, value, false, size); }
+   void setField(UINT32 fieldId, const InetAddress &value) { set(fieldId, NXCP_DT_INETADDR, (void *)&value); }
 #ifdef UNICODE
-   void SetVariableFromMBString(UINT32 dwVarId, const char *pszValue);
+   void setFieldFromMBString(UINT32 fieldId, const char *value);
 #else
-   void SetVariableFromMBString(UINT32 dwVarId, const char *pszValue) { set(dwVarId, CSCP_DT_STRING, pszValue); }
+   void setFieldFromMBString(UINT32 fieldId, const char *value) { set(fieldId, NXCP_DT_STRING, value); }
 #endif
-   void setFieldInt32Array(UINT32 dwVarId, UINT32 dwNumElements, const UINT32 *pdwData);
-   void setFieldInt32Array(UINT32 dwVarId, IntegerArray<UINT32> *data);
-   BOOL SetVariableFromFile(UINT32 dwVarId, const TCHAR *pszFileName);
+   void setFieldFromTime(UINT32 fieldId, time_t value) { UINT64 t = (UINT64)value; set(fieldId, NXCP_DT_INT64, &t); }
+   void setFieldFromInt32Array(UINT32 fieldId, UINT32 dwNumElements, const UINT32 *pdwData);
+   void setFieldFromInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data);
+   bool setFieldFromFile(UINT32 fieldId, const TCHAR *pszFileName);
 
    INT16 getFieldAsInt16(UINT32 fieldId);
+   UINT16 getFieldAsUInt16(UINT32 fieldId);
    INT32 getFieldAsInt32(UINT32 fieldId);
+   UINT32 getFieldAsUInt32(UINT32 fieldId);
    INT64 getFieldAsInt64(UINT32 fieldId);
+   UINT64 getFieldAsUInt64(UINT32 fieldId);
    double getFieldAsDouble(UINT32 fieldId);
    bool getFieldAsBoolean(UINT32 fieldId);
+   time_t getFieldAsTime(UINT32 fieldId);
    UINT32 getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer);
    UINT32 getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data);
+   BYTE *getBinaryFieldPtr(UINT32 fieldId, size_t *size);
+   TCHAR *getFieldAsString(UINT32 fieldId, TCHAR *buffer = NULL, size_t bufferSize = 0);
+	char *getFieldAsMBString(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0);
+	char *getFieldAsUtf8String(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0);
+   UINT32 getFieldAsBinary(UINT32 fieldId, BYTE *buffer, size_t bufferSize);
+   InetAddress getFieldAsInetAddress(UINT32 fieldId);
 
-   UINT32 GetVariableLong(UINT32 dwVarId);
-   UINT64 GetVariableInt64(UINT32 dwVarId);
-   UINT16 GetVariableShort(UINT32 dwVarId);
-   TCHAR *GetVariableStr(UINT32 dwVarId, TCHAR *szBuffer = NULL, UINT32 dwBufSize = 0);
-	char *GetVariableStrA(UINT32 dwVarId, char *pszBuffer = NULL, UINT32 dwBufSize = 0);
-	char *GetVariableStrUTF8(UINT32 dwVarId, char *pszBuffer = NULL, UINT32 dwBufSize = 0);
-   UINT32 GetVariableBinary(UINT32 dwVarId, BYTE *pBuffer, UINT32 dwBufSize);
-
-   void deleteAllVariables();
+   void deleteAllFields();
 
    void disableEncryption() { m_flags |= MF_DONT_ENCRYPT; }
    void setEndOfSequence() { m_flags |= MF_END_OF_SEQUENCE; }
    void setReverseOrderFlag() { m_flags |= MF_REVERSE_ORDER; }
 
-   static String dump(CSCP_MESSAGE *msg, int version);
+   static String dump(NXCP_MESSAGE *msg, int version);
 };
 
 /**
@@ -135,12 +142,17 @@ public:
  */
 typedef struct
 {
-   WORD wCode;       // Message code
-   WORD wIsBinary;   // 1 for binary (raw) messages
-   UINT32 dwId;       // Message ID
-   UINT32 dwTTL;      // Message time-to-live in milliseconds
-   void *pMsg;       // Pointer to message, either to CSCPMessage object or raw message
+   void *msg;         // Pointer to message, either to NXCPMessage object or raw message
+   UINT32 id;         // Message ID
+   UINT32 ttl;        // Message time-to-live in milliseconds
+   UINT16 code;       // Message code
+   UINT16 isBinary;   // 1 for binary (raw) messages
 } WAIT_QUEUE_ELEMENT;
+
+/**
+ * Max number of waiting threads in message queue
+ */
+#define MAX_MSGQUEUE_WAITERS     32
 
 /**
  * Message waiting queue class
@@ -148,18 +160,41 @@ typedef struct
 class LIBNETXMS_EXPORTABLE MsgWaitQueue
 {
 private:
-   MUTEX m_mutexDataAccess;
-   CONDITION m_condStop;
-   CONDITION m_condNewMsg;
-   UINT32 m_dwMsgHoldTime;
-   UINT32 m_dwNumElements;
-   WAIT_QUEUE_ELEMENT *m_pElements;
+#ifdef _WIN32
+   CRITICAL_SECTION m_mutex;
+   HANDLE m_wakeupEvents[MAX_MSGQUEUE_WAITERS];
+   BYTE m_waiters[MAX_MSGQUEUE_WAITERS];
+#else
+   pthread_mutex_t m_mutex;
+   pthread_cond_t m_wakeupCondition;
+#endif
+   CONDITION m_stopCondition;
+   UINT32 m_holdTime;
+   int m_size;
+   int m_allocated;
+   WAIT_QUEUE_ELEMENT *m_elements;
    THREAD m_hHkThread;
 
-   void lock() { MutexLock(m_mutexDataAccess); }
-   void unlock() { MutexUnlock(m_mutexDataAccess); }
    void housekeeperThread();
-   void *waitForMessageInternal(UINT16 wIsBinary, UINT16 wCode, UINT32 dwId, UINT32 dwTimeOut);
+   void *waitForMessageInternal(UINT16 isBinary, UINT16 code, UINT32 id, UINT32 timeout);
+
+   void lock()
+   {
+#ifdef _WIN32
+      EnterCriticalSection(&m_mutex);
+#else
+      pthread_mutex_lock(&m_mutex);
+#endif
+   }
+
+   void unlock()
+   {
+#ifdef _WIN32
+      LeaveCriticalSection(&m_mutex);
+#else
+      pthread_mutex_unlock(&m_mutex);
+#endif
+   }
 
    static THREAD_RESULT THREAD_CALL mwqThreadStarter(void *);
 
@@ -167,19 +202,19 @@ public:
    MsgWaitQueue();
    ~MsgWaitQueue();
 
-   void put(CSCPMessage *pMsg);
-   void put(CSCP_MESSAGE *pMsg);
-   CSCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut)
+   void put(NXCPMessage *pMsg);
+   void put(NXCP_MESSAGE *pMsg);
+   NXCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut)
    {
-      return (CSCPMessage *)waitForMessageInternal(0, wCode, dwId, dwTimeOut);
+      return (NXCPMessage *)waitForMessageInternal(0, wCode, dwId, dwTimeOut);
    }
-   CSCP_MESSAGE *waitForRawMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut)
+   NXCP_MESSAGE *waitForRawMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut)
    {
-      return (CSCP_MESSAGE *)waitForMessageInternal(1, wCode, dwId, dwTimeOut);
+      return (NXCP_MESSAGE *)waitForMessageInternal(1, wCode, dwId, dwTimeOut);
    }
 
    void clear();
-   void setHoldTime(UINT32 dwHoldTime) { m_dwMsgHoldTime = dwHoldTime; }
+   void setHoldTime(UINT32 holdTime) { m_holdTime = holdTime; }
 };
 
 /**
@@ -202,13 +237,13 @@ private:
    bool initCipher(int cipher);
 
 public:
-	static NXCPEncryptionContext *create(CSCPMessage *msg, RSA *privateKey);
+	static NXCPEncryptionContext *create(NXCPMessage *msg, RSA *privateKey);
 	static NXCPEncryptionContext *create(UINT32 ciphers);
 
 	virtual ~NXCPEncryptionContext();
 
-   CSCP_ENCRYPTED_MESSAGE *encryptMessage(CSCP_MESSAGE *msg);
-   bool decryptMessage(CSCP_ENCRYPTED_MESSAGE *msg, BYTE *decryptionBuffer);
+   NXCP_ENCRYPTED_MESSAGE *encryptMessage(NXCP_MESSAGE *msg);
+   bool decryptMessage(NXCP_ENCRYPTED_MESSAGE *msg, BYTE *decryptionBuffer);
 
 	int getCipher() { return m_cipher; }
 	BYTE *getSessionKey() { return m_sessionKey; }
@@ -216,9 +251,88 @@ public:
 	BYTE *getIV() { return m_iv; }
 };
 
+/**
+ * Message receiver result codes
+ */
+enum MessageReceiverResult
+{
+   MSGRECV_SUCCESS = 0,
+   MSGRECV_CLOSED = 1,
+   MSGRECV_TIMEOUT = 2,
+   MSGRECV_COMM_FAILURE = 3,
+   MSGRECV_DECRYPTION_FAILURE = 4
+};
+
+/**
+ * Message receiver - abstract base class
+ */
+class LIBNETXMS_EXPORTABLE AbstractMessageReceiver
+{
+private:
+   BYTE *m_buffer;
+   BYTE *m_decryptionBuffer;
+   NXCPEncryptionContext *m_encryptionContext;
+   size_t m_initialSize;
+   size_t m_size;
+   size_t m_maxSize;
+   size_t m_dataSize;
+   size_t m_bytesToSkip;
+
+   NXCPMessage *getMessageFromBuffer();
+
+protected:
+   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout) = 0;
+
+public:
+   AbstractMessageReceiver(size_t initialSize, size_t maxSize);
+   virtual ~AbstractMessageReceiver();
+
+   void setEncryptionContext(NXCPEncryptionContext *ctx) { m_encryptionContext = ctx; }
+
+   NXCPMessage *readMessage(UINT32 timeout, MessageReceiverResult *result);
+   NXCP_MESSAGE *getRawMessageBuffer() { return (NXCP_MESSAGE *)m_buffer; }
+
+   static const TCHAR *resultToText(MessageReceiverResult result);
+};
+
+/**
+ * Message receiver - socket implementation
+ */
+class LIBNETXMS_EXPORTABLE SocketMessageReceiver : public AbstractMessageReceiver
+{
+private:
+   SOCKET m_socket;
+
+protected:
+   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout);
+
+public:
+   SocketMessageReceiver(SOCKET socket, size_t initialSize, size_t maxSize);
+   virtual ~SocketMessageReceiver();
+};
+
+/**
+ * Message receiver - UNIX socket/named pipe implementation
+ */
+class LIBNETXMS_EXPORTABLE PipeMessageReceiver : public AbstractMessageReceiver
+{
+private:
+   HPIPE m_pipe;
+#ifdef _WIN32
+	HANDLE m_readEvent;
+#endif
+
+protected:
+   virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout);
+
+public:
+   PipeMessageReceiver(HPIPE pipe, size_t initialSize, size_t maxSize);
+   virtual ~PipeMessageReceiver();
+};
+
 #else    /* __cplusplus */
 
-typedef void CSCPMessage;
+typedef void NXCPMessage;
 typedef void NXCPEncryptionContext;
 
 #endif
@@ -230,19 +344,19 @@ typedef void NXCPEncryptionContext;
 
 #ifdef __cplusplus
 
-int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, CSCP_MESSAGE *pMsg,
-                                         CSCP_BUFFER *pBuffer, UINT32 dwMaxMsgSize,
+int LIBNETXMS_EXPORTABLE RecvNXCPMessage(SOCKET hSocket, NXCP_MESSAGE *pMsg,
+                                         NXCP_BUFFER *pBuffer, UINT32 dwMaxMsgSize,
                                          NXCPEncryptionContext **ppCtx,
                                          BYTE *pDecryptionBuffer, UINT32 dwTimeout);
-int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, CSCP_MESSAGE **msgBuffer,
-                                           CSCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
+int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuffer,
+                                           NXCP_BUFFER *nxcpBuffer, UINT32 *bufferSize,
                                            NXCPEncryptionContext **ppCtx,
                                            BYTE **decryptionBuffer, UINT32 dwTimeout,
 														 UINT32 maxMsgSize);
-CSCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, UINT32 dwId, WORD wFlags,
+NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD wCode, UINT32 dwId, WORD flags,
                                                         UINT32 dwDataSize, void *pData,
-                                                        CSCP_MESSAGE *pBuffer);
-TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *pszBuffer);
+                                                        NXCP_MESSAGE *pBuffer);
+TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *buffer);
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TCHAR *pszFile,
                                            NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
@@ -251,20 +365,20 @@ BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVers
 
 BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCallback)(int, const TCHAR *, va_list args));
 UINT32 LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers();
-CSCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *CSCPEncryptMessage(NXCPEncryptionContext *pCtx, CSCP_MESSAGE *pMsg);
-BOOL LIBNETXMS_EXPORTABLE CSCPDecryptMessage(NXCPEncryptionContext *pCtx,
-                                             CSCP_ENCRYPTED_MESSAGE *pMsg,
+NXCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *NXCPEncryptMessage(NXCPEncryptionContext *pCtx, NXCP_MESSAGE *pMsg);
+BOOL LIBNETXMS_EXPORTABLE NXCPDecryptMessage(NXCPEncryptionContext *pCtx,
+                                             NXCP_ENCRYPTED_MESSAGE *pMsg,
                                              BYTE *pDecryptionBuffer);
-UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(CSCPMessage *pMsg,
+UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *pMsg,
                                                   NXCPEncryptionContext **ppCtx,
-                                                  CSCPMessage **ppResponse,
+                                                  NXCPMessage **ppResponse,
                                                   RSA *pPrivateKey, int nNXCPVersion);
-void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(CSCPMessage *pMsg, RSA *pServerKey, bool useX509Format);
+void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(NXCPMessage *pMsg, RSA *pServerKey, bool useX509Format);
 RSA LIBNETXMS_EXPORTABLE *LoadRSAKeys(const TCHAR *pszKeyFile);
 
 #ifdef _WIN32
 BOOL LIBNETXMS_EXPORTABLE SignMessageWithCAPI(BYTE *pMsg, UINT32 dwMsgLen, const CERT_CONTEXT *pCert,
-												          BYTE *pBuffer, UINT32 dwBufSize, UINT32 *pdwSigLen);
+												          BYTE *pBuffer, size_t bufferSize, UINT32 *pdwSigLen);
 #endif
 
 #endif

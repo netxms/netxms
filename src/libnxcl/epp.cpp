@@ -101,27 +101,27 @@ void LIBNXCL_EXPORTABLE NXCDestroyEventPolicy(NXC_EPP *pEventPolicy)
 
 UINT32 LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppEventPolicy)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 i, j, dwRqId, dwRetCode, count, id;
 	TCHAR *attr, *value;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Prepare message
-   msg.SetCode(CMD_OPEN_EPP);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_OPEN_EPP);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    // Wait for reply
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
          // Prepare event policy structure
          *ppEventPolicy = (NXC_EPP *)malloc(sizeof(NXC_EPP));
-         (*ppEventPolicy)->dwNumRules = pResponse->GetVariableLong(VID_NUM_RULES);
+         (*ppEventPolicy)->dwNumRules = pResponse->getFieldAsUInt32(VID_NUM_RULES);
          (*ppEventPolicy)->pRuleList = 
             (NXC_EPP_RULE *)malloc(sizeof(NXC_EPP_RULE) * (*ppEventPolicy)->dwNumRules);
          memset((*ppEventPolicy)->pRuleList, 0, sizeof(NXC_EPP_RULE) * (*ppEventPolicy)->dwNumRules);
@@ -133,13 +133,13 @@ UINT32 LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppE
             pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_EPP_RECORD, dwRqId);
             if (pResponse != NULL)
             {
-               (*ppEventPolicy)->pRuleList[i].dwFlags = pResponse->GetVariableLong(VID_FLAGS);
-               (*ppEventPolicy)->pRuleList[i].dwId = pResponse->GetVariableLong(VID_RULE_ID);
-               (*ppEventPolicy)->pRuleList[i].pszComment = pResponse->GetVariableStr(VID_COMMENTS);
-               (*ppEventPolicy)->pRuleList[i].pszScript = pResponse->GetVariableStr(VID_SCRIPT);
+               (*ppEventPolicy)->pRuleList[i].dwFlags = pResponse->getFieldAsUInt32(VID_FLAGS);
+               (*ppEventPolicy)->pRuleList[i].dwId = pResponse->getFieldAsUInt32(VID_RULE_ID);
+               (*ppEventPolicy)->pRuleList[i].pszComment = pResponse->getFieldAsString(VID_COMMENTS);
+               (*ppEventPolicy)->pRuleList[i].pszScript = pResponse->getFieldAsString(VID_SCRIPT);
 
                (*ppEventPolicy)->pRuleList[i].dwNumActions = 
-                  pResponse->GetVariableLong(VID_NUM_ACTIONS);
+                  pResponse->getFieldAsUInt32(VID_NUM_ACTIONS);
                (*ppEventPolicy)->pRuleList[i].pdwActionList = 
                   (UINT32 *)malloc(sizeof(UINT32) * (*ppEventPolicy)->pRuleList[i].dwNumActions);
                pResponse->getFieldAsInt32Array(VID_RULE_ACTIONS, 
@@ -147,7 +147,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppE
                                                 (*ppEventPolicy)->pRuleList[i].pdwActionList);
 
                (*ppEventPolicy)->pRuleList[i].dwNumEvents = 
-                  pResponse->GetVariableLong(VID_NUM_EVENTS);
+                  pResponse->getFieldAsUInt32(VID_NUM_EVENTS);
                (*ppEventPolicy)->pRuleList[i].pdwEventList = 
                   (UINT32 *)malloc(sizeof(UINT32) * (*ppEventPolicy)->pRuleList[i].dwNumEvents);
                pResponse->getFieldAsInt32Array(VID_RULE_EVENTS, 
@@ -155,33 +155,33 @@ UINT32 LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppE
                                                 (*ppEventPolicy)->pRuleList[i].pdwEventList);
 
                (*ppEventPolicy)->pRuleList[i].dwNumSources = 
-                  pResponse->GetVariableLong(VID_NUM_SOURCES);
+                  pResponse->getFieldAsUInt32(VID_NUM_SOURCES);
                (*ppEventPolicy)->pRuleList[i].pdwSourceList = 
                   (UINT32 *)malloc(sizeof(UINT32) * (*ppEventPolicy)->pRuleList[i].dwNumSources);
                pResponse->getFieldAsInt32Array(VID_RULE_SOURCES, 
                                                 (*ppEventPolicy)->pRuleList[i].dwNumSources,
                                                 (*ppEventPolicy)->pRuleList[i].pdwSourceList);
 
-               pResponse->GetVariableStr(VID_ALARM_KEY, 
+               pResponse->getFieldAsString(VID_ALARM_KEY, 
                                          (*ppEventPolicy)->pRuleList[i].szAlarmKey,
                                          MAX_DB_STRING);
-               pResponse->GetVariableStr(VID_ALARM_MESSAGE, 
+               pResponse->getFieldAsString(VID_ALARM_MESSAGE, 
                                          (*ppEventPolicy)->pRuleList[i].szAlarmMessage,
                                          MAX_DB_STRING);
-               (*ppEventPolicy)->pRuleList[i].wAlarmSeverity = pResponse->GetVariableShort(VID_ALARM_SEVERITY);
-					(*ppEventPolicy)->pRuleList[i].dwAlarmTimeout = pResponse->GetVariableLong(VID_ALARM_TIMEOUT);
-					(*ppEventPolicy)->pRuleList[i].dwAlarmTimeoutEvent = pResponse->GetVariableLong(VID_ALARM_TIMEOUT_EVENT);
+               (*ppEventPolicy)->pRuleList[i].wAlarmSeverity = pResponse->getFieldAsUInt16(VID_ALARM_SEVERITY);
+					(*ppEventPolicy)->pRuleList[i].dwAlarmTimeout = pResponse->getFieldAsUInt32(VID_ALARM_TIMEOUT);
+					(*ppEventPolicy)->pRuleList[i].dwAlarmTimeoutEvent = pResponse->getFieldAsUInt32(VID_ALARM_TIMEOUT_EVENT);
 
-					(*ppEventPolicy)->pRuleList[i].dwSituationId = pResponse->GetVariableLong(VID_SITUATION_ID);
-               pResponse->GetVariableStr(VID_SITUATION_INSTANCE,
+					(*ppEventPolicy)->pRuleList[i].dwSituationId = pResponse->getFieldAsUInt32(VID_SITUATION_ID);
+               pResponse->getFieldAsString(VID_SITUATION_INSTANCE,
                                          (*ppEventPolicy)->pRuleList[i].szSituationInstance,
                                          MAX_DB_STRING);
 					(*ppEventPolicy)->pRuleList[i].pSituationAttrList = new StringMap;
-					count = pResponse->GetVariableLong(VID_SITUATION_NUM_ATTRS);
+					count = pResponse->getFieldAsUInt32(VID_SITUATION_NUM_ATTRS);
 					for(j = 0, id = VID_SITUATION_ATTR_LIST_BASE; j < count; j++)
 					{
-						attr = pResponse->GetVariableStr(id++);
-						value = pResponse->GetVariableStr(id++);
+						attr = pResponse->getFieldAsString(id++);
+						value = pResponse->getFieldAsString(id++);
 						(*ppEventPolicy)->pRuleList[i].pSituationAttrList->setPreallocated(attr, value);
 					}
                delete pResponse;
@@ -205,7 +205,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppE
             {
                TCHAR szBuffer[MAX_LOCKINFO_LEN];
 
-               pResponse->GetVariableStr(VID_LOCKED_BY, szBuffer, MAX_LOCKINFO_LEN);
+               pResponse->getFieldAsString(VID_LOCKED_BY, szBuffer, MAX_LOCKINFO_LEN);
                ((NXCL_Session *)hSession)->setLastLock(szBuffer);
             }
             else
@@ -223,32 +223,28 @@ UINT32 LIBNXCL_EXPORTABLE NXCOpenEventPolicy(NXC_SESSION hSession, NXC_EPP **ppE
    return dwRetCode;
 }
 
-
-//
-// Close event policy (without saving)
-//
-
+/**
+ * Close event policy (without saving)
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCCloseEventPolicy(NXC_SESSION hSession)
 {
    return ((NXCL_Session *)hSession)->SimpleCommand(CMD_CLOSE_EPP);
 }
 
-
-//
-// Save (and install) new event policy
-//
-
+/**
+ * Save (and install) new event policy
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEventPolicy)
 {
-   CSCPMessage msg;
-   UINT32 i, j, id, count, dwRqId, dwRetCode;
+   NXCPMessage msg;
+   UINT32 i, dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Prepare message
-   msg.SetCode(CMD_SAVE_EPP);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_NUM_RULES, pEventPolicy->dwNumRules);
+   msg.setCode(CMD_SAVE_EPP);
+   msg.setId(dwRqId);
+   msg.setField(VID_NUM_RULES, pEventPolicy->dwNumRules);
 
    // Send message and wait for response
    ((NXCL_Session *)hSession)->SendMsg(&msg);
@@ -256,41 +252,42 @@ UINT32 LIBNXCL_EXPORTABLE NXCSaveEventPolicy(NXC_SESSION hSession, NXC_EPP *pEve
    if (dwRetCode == RCC_SUCCESS)
    {
       // Send all event policy records, one per message
-      msg.SetCode(CMD_EPP_RECORD);
+      msg.setCode(CMD_EPP_RECORD);
       for(i = 0; i < pEventPolicy->dwNumRules; i++)
       {
-         msg.deleteAllVariables();
+         msg.deleteAllFields();
 
-         msg.SetVariable(VID_FLAGS, pEventPolicy->pRuleList[i].dwFlags);
-         msg.SetVariable(VID_RULE_ID, pEventPolicy->pRuleList[i].dwId);
-         msg.SetVariable(VID_COMMENTS, (TCHAR *)CHECK_NULL_EX(pEventPolicy->pRuleList[i].pszComment));
-         msg.SetVariable(VID_SCRIPT, (TCHAR *)CHECK_NULL_EX(pEventPolicy->pRuleList[i].pszScript));
-         msg.SetVariable(VID_NUM_ACTIONS, pEventPolicy->pRuleList[i].dwNumActions);
-         msg.setFieldInt32Array(VID_RULE_ACTIONS,
+         msg.setField(VID_FLAGS, pEventPolicy->pRuleList[i].dwFlags);
+         msg.setField(VID_RULE_ID, pEventPolicy->pRuleList[i].dwId);
+         msg.setField(VID_COMMENTS, (TCHAR *)CHECK_NULL_EX(pEventPolicy->pRuleList[i].pszComment));
+         msg.setField(VID_SCRIPT, (TCHAR *)CHECK_NULL_EX(pEventPolicy->pRuleList[i].pszScript));
+         msg.setField(VID_NUM_ACTIONS, pEventPolicy->pRuleList[i].dwNumActions);
+         msg.setFieldFromInt32Array(VID_RULE_ACTIONS,
                                      pEventPolicy->pRuleList[i].dwNumActions,
                                      pEventPolicy->pRuleList[i].pdwActionList);
-         msg.SetVariable(VID_NUM_EVENTS, pEventPolicy->pRuleList[i].dwNumEvents);
-         msg.setFieldInt32Array(VID_RULE_EVENTS,
+         msg.setField(VID_NUM_EVENTS, pEventPolicy->pRuleList[i].dwNumEvents);
+         msg.setFieldFromInt32Array(VID_RULE_EVENTS,
                                      pEventPolicy->pRuleList[i].dwNumEvents,
                                      pEventPolicy->pRuleList[i].pdwEventList);
-         msg.SetVariable(VID_NUM_SOURCES, pEventPolicy->pRuleList[i].dwNumSources);
-         msg.setFieldInt32Array(VID_RULE_SOURCES,
+         msg.setField(VID_NUM_SOURCES, pEventPolicy->pRuleList[i].dwNumSources);
+         msg.setFieldFromInt32Array(VID_RULE_SOURCES,
                                      pEventPolicy->pRuleList[i].dwNumSources,
                                      pEventPolicy->pRuleList[i].pdwSourceList);
-         msg.SetVariable(VID_ALARM_KEY, pEventPolicy->pRuleList[i].szAlarmKey);
-         msg.SetVariable(VID_ALARM_MESSAGE, pEventPolicy->pRuleList[i].szAlarmMessage);
-         msg.SetVariable(VID_ALARM_SEVERITY, pEventPolicy->pRuleList[i].wAlarmSeverity);
-			msg.SetVariable(VID_ALARM_TIMEOUT, pEventPolicy->pRuleList[i].dwAlarmTimeout);
-			msg.SetVariable(VID_ALARM_TIMEOUT_EVENT, pEventPolicy->pRuleList[i].dwAlarmTimeoutEvent);
-			msg.SetVariable(VID_SITUATION_ID, pEventPolicy->pRuleList[i].dwSituationId);
-			msg.SetVariable(VID_SITUATION_INSTANCE, pEventPolicy->pRuleList[i].szSituationInstance);
-			count = (pEventPolicy->pRuleList[i].pSituationAttrList != NULL) ? pEventPolicy->pRuleList[i].pSituationAttrList->getSize() : 0;
-			msg.SetVariable(VID_SITUATION_NUM_ATTRS, count);
-			for(j = 0, id = VID_SITUATION_ATTR_LIST_BASE; j < count; j++)
-			{
-				msg.SetVariable(id++, pEventPolicy->pRuleList[i].pSituationAttrList->getKeyByIndex(j));
-				msg.SetVariable(id++, pEventPolicy->pRuleList[i].pSituationAttrList->getValueByIndex(j));
-			}
+         msg.setField(VID_ALARM_KEY, pEventPolicy->pRuleList[i].szAlarmKey);
+         msg.setField(VID_ALARM_MESSAGE, pEventPolicy->pRuleList[i].szAlarmMessage);
+         msg.setField(VID_ALARM_SEVERITY, pEventPolicy->pRuleList[i].wAlarmSeverity);
+			msg.setField(VID_ALARM_TIMEOUT, pEventPolicy->pRuleList[i].dwAlarmTimeout);
+			msg.setField(VID_ALARM_TIMEOUT_EVENT, pEventPolicy->pRuleList[i].dwAlarmTimeoutEvent);
+			msg.setField(VID_SITUATION_ID, pEventPolicy->pRuleList[i].dwSituationId);
+			msg.setField(VID_SITUATION_INSTANCE, pEventPolicy->pRuleList[i].szSituationInstance);
+         if (pEventPolicy->pRuleList[i].pSituationAttrList != NULL)
+         {
+            pEventPolicy->pRuleList[i].pSituationAttrList->fillMessage(&msg, VID_SITUATION_NUM_ATTRS, VID_SITUATION_ATTR_LIST_BASE);
+         }
+         else
+         {
+   			msg.setField(VID_SITUATION_NUM_ATTRS, (UINT32)0);
+         }
 
          ((NXCL_Session *)hSession)->SendMsg(&msg);
       }

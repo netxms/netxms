@@ -30,7 +30,7 @@
 /**
  * Hander for System.CPU.Count parameter
  */
-LONG H_CPUCount(const char *pszParam, const char *pArg, char *pValue)
+LONG H_CPUCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	struct vario v;
 	LONG nRet;
@@ -50,14 +50,18 @@ LONG H_CPUCount(const char *pszParam, const char *pArg, char *pValue)
 /**
  * Handler for System.Uname parameter
  */
-LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
+LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet;
 	struct utsname un;
 
 	if (uname(&un) == 0)
 	{
-		sprintf(pValue, "%s %s %s %s %s", un.sysname, un.nodename, un.release, un.version, un.machine);
+#ifdef UNICODE
+		swprintf(pValue, MAX_RESULT_LENGTH, L"%hs %hs %hs %hs %hs", un.sysname, un.nodename, un.release, un.version, un.machine);
+#else
+		snprintf(pValue, MAX_RESULT_LENGTH, "%s %s %s %s %s", un.sysname, un.nodename, un.release, un.version, un.machine);
+#endif
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 	else
@@ -70,7 +74,7 @@ LONG H_Uname(const char *pszParam, const char *pArg, char *pValue)
 /**
  * Handler for System.Uptime parameter
  */
-LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
+LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	int fd;
@@ -95,19 +99,17 @@ LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-
-//
-// Handler for System.Hostname parameter
-//
-
-LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue)
+/**
+ * Handler for System.Hostname parameter
+ */
+LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet;
 	struct utsname un;
 
 	if (uname(&un) == 0)
 	{
-		ret_string(pValue, un.nodename);
+		ret_mbstring(pValue, un.nodename);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 	else
@@ -117,12 +119,10 @@ LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-
-//
-// Handler for System.Memory.Physical.xxx parameters
-//
-
-LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
+/**
+ * Handler for System.Memory.Physical.xxx parameters
+ */
+LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	struct vminfo vmi;
 	LONG nRet;
@@ -156,12 +156,10 @@ LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-
-//
-// Handler for virtual and swap memory parameters
-//
-
-LONG H_VirtualMemoryInfo(const char *pszParam, const char *pArg, char *pValue)
+/**
+ * Handler for virtual and swap memory parameters
+ */
+LONG H_VirtualMemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	perfstat_memory_total_t memStats;
 	LONG nRet;
@@ -216,11 +214,9 @@ LONG H_VirtualMemoryInfo(const char *pszParam, const char *pArg, char *pValue)
 	return nRet;
 }
 
-
-//
-// Read from /dev/kmem
-//
-
+/**
+ * Read from /dev/kmem
+ */
 static BOOL kread(int kmem, off_t offset, void *buffer, size_t buflen)
 {
 	if (lseek(kmem, offset, SEEK_SET) != -1)
@@ -233,7 +229,7 @@ static BOOL kread(int kmem, off_t offset, void *buffer, size_t buflen)
 /**
  * Handler for System.LoadAvg parameters
  */
-LONG H_LoadAvg(const char *param, const char *arg, char *value)
+LONG H_LoadAvg(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG rc;
 	perfstat_cpu_total_t info;

@@ -63,9 +63,9 @@ void ServiceContainer::initServiceContainer()
 /**
  * Create object from database data
  */
-BOOL ServiceContainer::CreateFromDB(UINT32 id)
+BOOL ServiceContainer::loadFromDatabase(UINT32 id)
 {
-	if (!Container::CreateFromDB(id))
+	if (!Container::loadFromDatabase(id))
 		return FALSE;
 
 	initUptimeStats();
@@ -75,39 +75,39 @@ BOOL ServiceContainer::CreateFromDB(UINT32 id)
 /**
  * Save object to database
  */
-BOOL ServiceContainer::SaveToDB(DB_HANDLE hdb)
+BOOL ServiceContainer::saveToDatabase(DB_HANDLE hdb)
 {
-	return Container::SaveToDB(hdb);
+	return Container::saveToDatabase(hdb);
 }
 
 /**
  * Delete object from database
  */
-bool ServiceContainer::deleteFromDB(DB_HANDLE hdb)
+bool ServiceContainer::deleteFromDatabase(DB_HANDLE hdb)
 {
-	return Container::deleteFromDB(hdb);
+	return Container::deleteFromDatabase(hdb);
 }
 
 /**
  * Create NXCP message with object's data
  */
-void ServiceContainer::CreateMessage(CSCPMessage *pMsg)
+void ServiceContainer::fillMessage(NXCPMessage *pMsg)
 {
-   Container::CreateMessage(pMsg);
-   pMsg->SetVariable(VID_UPTIME_DAY, m_uptimeDay);
-   pMsg->SetVariable(VID_UPTIME_WEEK, m_uptimeWeek);
-   pMsg->SetVariable(VID_UPTIME_MONTH, m_uptimeMonth);
+   Container::fillMessage(pMsg);
+   pMsg->setField(VID_UPTIME_DAY, m_uptimeDay);
+   pMsg->setField(VID_UPTIME_WEEK, m_uptimeWeek);
+   pMsg->setField(VID_UPTIME_MONTH, m_uptimeMonth);
 }
 
 /**
  * Modify object from message
  */
-UINT32 ServiceContainer::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 ServiceContainer::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
-   return Container::ModifyFromMessage(pRequest, TRUE);
+   return Container::modifyFromMessage(pRequest, TRUE);
 }
 
 /**
@@ -118,7 +118,7 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 	int i, iCount, iMostCriticalStatus;
 	int iOldStatus = m_iStatus;
 
-	DbgPrintf(7, _T("ServiceContainer::calculateCompoundStatus() for %s [%d]"), m_szName, m_dwId);
+	DbgPrintf(7, _T("ServiceContainer::calculateCompoundStatus() for %s [%d]"), m_name, m_id);
 
 	// Calculate own status by selecting the most critical status of the kids
 	LockChildList(FALSE);
@@ -143,10 +143,10 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 		for(i = 0; i < int(m_dwParentCount); i++)
 			m_pParentList[i]->calculateCompoundStatus();
 		UnlockParentList();
-		Modify();   /* LOCK? */
+		setModified();   /* LOCK? */
 	}
 
-	DbgPrintf(6, _T("ServiceContainer::calculateCompoundStatus(%s [%d]): old_status=%d new_status=%d"), m_szName, m_dwId, iOldStatus, m_iStatus);
+	DbgPrintf(6, _T("ServiceContainer::calculateCompoundStatus(%s [%d]): old_status=%d new_status=%d"), m_name, m_id, iOldStatus, m_iStatus);
 
 	if (iOldStatus != STATUS_UNKNOWN && iOldStatus != m_iStatus)
 		addHistoryRecord();
@@ -184,7 +184,7 @@ BOOL ServiceContainer::addHistoryRecord()
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ServiceContainer::logRecordId);
-		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
 		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, UINT32(time(NULL)));
 		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, UINT32(m_iStatus));
 		if (!DBExecute(hStmt))
@@ -208,13 +208,13 @@ BOOL ServiceContainer::addHistoryRecord()
  */
 void ServiceContainer::initUptimeStats()
 {
-	LockData();
+	lockProperties();
 	m_prevUptimeUpdateStatus = m_iStatus;
 	m_uptimeDay = getUptimeFromDBFor(DAY, &m_downtimeDay);
 	m_uptimeWeek = getUptimeFromDBFor(WEEK, &m_downtimeWeek);
 	m_uptimeMonth = getUptimeFromDBFor(MONTH, &m_downtimeMonth);
-	UnlockData();
-	DbgPrintf(6, _T("ServiceContainer::initUptimeStats() %s [%d] %lf %lf %lf"), m_szName, m_dwId, m_uptimeDay, m_uptimeWeek, m_uptimeMonth);
+	unlockProperties();
+	DbgPrintf(6, _T("ServiceContainer::initUptimeStats() %s [%d] %lf %lf %lf"), m_name, m_id, m_uptimeDay, m_uptimeWeek, m_uptimeMonth);
 }
 
 /**
@@ -230,7 +230,7 @@ double ServiceContainer::getUptimeFromDBFor(Period period, INT32 *downtime)
 	                                          _T("WHERE service_id=? AND change_timestamp>?"));
 	if (hStmt != NULL)
 	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (UINT32)beginTime);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult == NULL)
@@ -281,7 +281,7 @@ void ServiceContainer::updateUptimeStats(time_t currentTime, BOOL updateChilds)
 	if (currentTime == 0)
 		currentTime = time(NULL);
 
-	LockData();
+	lockProperties();
 
 	double prevUptimeDay = m_uptimeDay;
 	double prevUptimeWeek = m_uptimeWeek;
@@ -318,14 +318,14 @@ void ServiceContainer::updateUptimeStats(time_t currentTime, BOOL updateChilds)
 
 	if ((prevUptimeDay != m_uptimeDay) || (prevUptimeWeek != m_uptimeWeek) || (prevUptimeMonth != m_uptimeMonth))
 	{
-		Modify();
+		setModified();
 	}
-	UnlockData();
+	unlockProperties();
 
 	m_prevUptimeUpdateStatus = m_iStatus;
 	m_prevUptimeUpdateTime = currentTime;
 
-	DbgPrintf(7, _T("++++ ServiceContainer::updateUptimeStats() [%d] %lf %lf %lf"), int(m_dwId), m_uptimeDay, m_uptimeWeek, m_uptimeMonth);
+	DbgPrintf(7, _T("++++ ServiceContainer::updateUptimeStats() [%d] %lf %lf %lf"), int(m_id), m_uptimeDay, m_uptimeWeek, m_uptimeMonth);
 
 	if (updateChilds)
 	{
@@ -333,7 +333,7 @@ void ServiceContainer::updateUptimeStats(time_t currentTime, BOOL updateChilds)
 		for (int i = 0; i < int(m_dwChildCount); i++)
 		{
 			NetObj *child = m_pChildList[i];
-			if (child->Type() == OBJECT_BUSINESSSERVICE || child->Type() == OBJECT_NODELINK)
+			if (child->getObjectClass() == OBJECT_BUSINESSSERVICE || child->getObjectClass() == OBJECT_NODELINK)
 				((ServiceContainer*)child)->updateUptimeStats(currentTime, TRUE);
 		}
 		UnlockChildList();

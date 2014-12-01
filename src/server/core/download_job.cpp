@@ -26,7 +26,7 @@
  * Constructor for download job
  */
 FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 maxFileSize, bool follow, ClientSession *session, UINT32 requestId)
-                : ServerJob(_T("DOWNLOAD_FILE"), _T("Download file"), node->Id(), session->getUserId(), false)
+                : ServerJob(_T("DOWNLOAD_FILE"), _T("Download file"), node->getId(), session->getUserId(), false)
 {
 	m_session = session;
 	session->incRefCount();
@@ -39,10 +39,10 @@ FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 max
 	m_remoteFile = _tcsdup(remoteFile);
 
 	TCHAR buffer[1024];
-	buildServerFileName(node->Id(), m_remoteFile, buffer, 1024);
+	buildServerFileName(node->getId(), m_remoteFile, buffer, 1024);
 	m_localFile = _tcsdup(buffer);
 
-	_sntprintf(buffer, 1024, _T("Download file %s@%s"), m_remoteFile, node->Name());
+	_sntprintf(buffer, 1024, _T("Download file %s@%s"), m_remoteFile, node->getName());
 	setDescription(buffer);
 
 	_sntprintf(buffer, 1024, _T("Local file: %s; Remote file: %s"), m_localFile, m_remoteFile);
@@ -54,7 +54,7 @@ FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 max
 	m_follow = follow;
 	m_currentSize = 0;
 
-   DbgPrintf(5, _T("FileDownloadJob: job created for file %s at node %s, follow = %s"), m_remoteFile, m_node->Name(), m_follow ? _T("true") : _T("false"));
+   DbgPrintf(5, _T("FileDownloadJob: job created for file %s at node %s, follow = %s"), m_remoteFile, m_node->getName(), m_follow ? _T("true") : _T("false"));
 }
 
 /**
@@ -80,9 +80,9 @@ FileDownloadJob::~FileDownloadJob()
 /**
  * Send message callback
  */
-void FileDownloadJob::fileResendCallback(CSCP_MESSAGE *msg, void *arg)
+void FileDownloadJob::fileResendCallback(NXCP_MESSAGE *msg, void *arg)
 {
-   msg->dwId = htonl(((FileDownloadJob *)arg)->m_requestId);
+   msg->id = htonl(((FileDownloadJob *)arg)->m_requestId);
 	((FileDownloadJob *)arg)->m_session->sendRawMessage(msg);
 }
 
@@ -109,7 +109,7 @@ bool FileDownloadJob::run()
 
    MONITORED_FILE * newFile = new MONITORED_FILE();
    _tcscpy(newFile->fileName, m_localFile);
-   newFile->nodeID = m_node->Id();
+   newFile->nodeID = m_node->getId();
    newFile->session = m_session;
 
    if (g_monitoringList.checkDuplicate(newFile))
@@ -121,47 +121,47 @@ bool FileDownloadJob::run()
 	conn = m_node->createAgentConnection();
 	if (conn != NULL)
 	{
-		CSCPMessage msg, *response;
+		NXCPMessage msg, *response;
 
 		m_socket = conn->getSocket();
 		conn->setDeleteFileOnDownloadFailure(false);
 
-		DbgPrintf(5, _T("FileDownloadJob: Sending file stat request for file %s@%s"), m_remoteFile, m_node->Name());
-		msg.SetCode(CMD_GET_FILE_DETAILS);
-		msg.SetId(conn->generateRequestId());
-		msg.SetVariable(VID_FILE_NAME, m_remoteFile);
+		DbgPrintf(5, _T("FileDownloadJob: Sending file stat request for file %s@%s"), m_remoteFile, m_node->getName());
+		msg.setCode(CMD_GET_FILE_DETAILS);
+		msg.setId(conn->generateRequestId());
+		msg.setField(VID_FILE_NAME, m_remoteFile);
 		response = conn->customRequest(&msg);
 		if (response != NULL)
 		{
-         m_fileSize = (INT64)response->GetVariableInt64(VID_FILE_SIZE);
-			rcc = response->GetVariableLong(VID_RCC);
-			DbgPrintf(5, _T("FileDownloadJob: Stat request for file %s@%s RCC=%d"), m_remoteFile, m_node->Name(), rcc);
+         m_fileSize = (INT64)response->getFieldAsUInt64(VID_FILE_SIZE);
+			rcc = response->getFieldAsUInt32(VID_RCC);
+			DbgPrintf(5, _T("FileDownloadJob: Stat request for file %s@%s RCC=%d"), m_remoteFile, m_node->getName(), rcc);
 			if (rcc == ERR_SUCCESS)
 			{
 				delete response;
 
-				DbgPrintf(5, _T("FileDownloadJob: Sending download request for file %s@%s"), m_remoteFile, m_node->Name());
-				msg.SetCode(CMD_GET_AGENT_FILE);
-				msg.SetId(conn->generateRequestId());
-				msg.SetVariable(VID_FILE_NAME, m_remoteFile);
+				DbgPrintf(5, _T("FileDownloadJob: Sending download request for file %s@%s"), m_remoteFile, m_node->getName());
+				msg.setCode(CMD_GET_AGENT_FILE);
+				msg.setId(conn->generateRequestId());
+				msg.setField(VID_FILE_NAME, m_remoteFile);
 
             //default - get parameters
             if (m_maxFileSize > 0)
             {
-               msg.SetVariable(VID_FILE_OFFSET, (UINT32)(-((int)m_maxFileSize)));
+               msg.setField(VID_FILE_OFFSET, (UINT32)(-((int)m_maxFileSize)));
             }
             else
             {
-               msg.SetVariable(VID_FILE_OFFSET, 0);
+               msg.setField(VID_FILE_OFFSET, 0);
             }
-            msg.SetVariable(VID_FILE_FOLLOW, (INT16)(m_follow ? 1 : 0));
-            msg.SetVariable(VID_NAME, m_localFile);
+            msg.setField(VID_FILE_FOLLOW, (INT16)(m_follow ? 1 : 0));
+            msg.setField(VID_NAME, m_localFile);
 
 				response = conn->customRequest(&msg, m_localFile, false, progressCallback, fileResendCallback, this);
 				if (response != NULL)
 				{
-					rcc = response->GetVariableLong(VID_RCC);
-					DbgPrintf(5, _T("FileDownloadJob: Download request for file %s@%s RCC=%d"), m_remoteFile, m_node->Name(), rcc);
+					rcc = response->getFieldAsUInt32(VID_RCC);
+					DbgPrintf(5, _T("FileDownloadJob: Download request for file %s@%s RCC=%d"), m_remoteFile, m_node->getName(), rcc);
 					if (rcc == ERR_SUCCESS)
 					{
 						success = true;
@@ -205,16 +205,20 @@ bool FileDownloadJob::run()
 		setFailureMessage(_T("Agent connection not available"));
 	}
 
-	CSCPMessage response;
-	response.SetCode(CMD_REQUEST_COMPLETED);
-	response.SetId(m_requestId);
+	NXCPMessage response;
+	response.setCode(CMD_REQUEST_COMPLETED);
+	response.setId(m_requestId);
 	if (success)
 	{
-	   response.SetVariable(VID_RCC, RCC_SUCCESS);
+	   response.setField(VID_RCC, RCC_SUCCESS);
 		m_session->sendMessage(&response);
 		if(m_follow)
 		{
          g_monitoringList.addMonitoringFile(newFile);
+		}
+		else
+		{
+         delete newFile;
 		}
 	}
 	else
@@ -222,17 +226,17 @@ bool FileDownloadJob::run()
       switch(rcc)
       {
          case ERR_ACCESS_DENIED:
-            response.SetVariable(VID_RCC, RCC_ACCESS_DENIED);
+            response.setField(VID_RCC, RCC_ACCESS_DENIED);
             break;
          case ERR_IO_FAILURE:
-            response.SetVariable(VID_RCC, RCC_IO_ERROR);
+            response.setField(VID_RCC, RCC_IO_ERROR);
             break;
 			case ERR_FILE_OPEN_ERROR:
 			case ERR_FILE_STAT_FAILED:
-            response.SetVariable(VID_RCC, RCC_FILE_IO_ERROR);
+            response.setField(VID_RCC, RCC_FILE_IO_ERROR);
             break;
          default:
-            response.SetVariable(VID_RCC, RCC_COMM_FAILURE);
+            response.setField(VID_RCC, RCC_COMM_FAILURE);
             break;
       }
 		m_session->sendMessage(&response);

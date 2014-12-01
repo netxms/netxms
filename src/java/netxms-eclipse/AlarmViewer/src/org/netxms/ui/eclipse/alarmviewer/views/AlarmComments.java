@@ -286,8 +286,8 @@ public class AlarmComments extends ViewPart
 						for(AlarmCommentsEditor e : editors.values())
 							e.dispose();
 						
-						for(AlarmComment n : comments)
-							editors.put(n.getId(), createEditor(n));
+						for(AlarmComment c : comments)
+							editors.put(c.getId(), createEditor(c));
 						
 						updateLayout();
 					}

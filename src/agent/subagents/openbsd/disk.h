@@ -34,7 +34,7 @@ enum
 	DISK_TOTAL,
 };
 
-LONG H_DiskInfo(const char *, const char *, char *);
+LONG H_DiskInfo(const char *, const char *, char *, AbstractCommSession *);
 
 #endif // __DISK_H__
 

@@ -23,6 +23,8 @@
 #ifndef _nxmodule_h_
 #define _nxmodule_h_
 
+#include <nxdbapi.h>
+
 /**
  * Forward declaration of server classes
  */
@@ -41,6 +43,20 @@ struct NXCORE_LOG;
 #define NXMOD_COMMAND_ACCEPTED_ASYNC   1
 
 /**
+ * Module-specific object data
+ */
+class NXCORE_EXPORTABLE ModuleData
+{
+public:
+   ModuleData();
+   virtual ~ModuleData();
+
+   virtual void fillMessage(NXCPMessage *msg, UINT32 baseId);
+   virtual bool saveToDatabase(DB_HANDLE hdb, UINT32 objectId);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb, UINT32 objectId);
+};
+
+/**
  * Module registration structure
  */
 typedef struct
@@ -51,24 +67,25 @@ typedef struct
 	void (* pfShutdown)();
 	void (* pfLoadObjects)();
 	void (* pfLinkObjects)();
-   int (* pfClientCommandHandler)(UINT32 dwCommand, CSCPMessage *pMsg, ClientSession *pSession);
-   int (* pfMobileDeviceCommandHandler)(UINT32 dwCommand, CSCPMessage *pMsg, MobileDeviceSession *pSession);
+   int (* pfClientCommandHandler)(UINT32 dwCommand, NXCPMessage *pMsg, ClientSession *pSession);
+   int (* pfMobileDeviceCommandHandler)(UINT32 dwCommand, NXCPMessage *pMsg, MobileDeviceSession *pSession);
    BOOL (* pfTrapHandler)(SNMP_PDU *pdu, Node *pNode);
    BOOL (* pfEventHandler)(Event *event);
    void (* pfAlarmChangeHook)(UINT32 changeCode, NXC_ALARM *alarm);
 	void (* pfStatusPollHook)(Node *node, ClientSession *session, UINT32 rqId, int pollerId);
-	void (* pfConfPollHook)(Node *node, ClientSession *session, UINT32 rqId, int pollerId);
+	bool (* pfConfPollHook)(Node *node, ClientSession *session, UINT32 rqId, int pollerId);
 	void (* pfTopologyPollHook)(Node *node, ClientSession *session, UINT32 rqId, int pollerId);
 	int (* pfCalculateObjectStatus)(NetObj *object);
 	BOOL (* pfNetObjInsert)(NetObj *object);
 	BOOL (* pfNetObjDelete)(NetObj *object);
 	void (* pfPostObjectCreate)(NetObj *object);
+	void (* pfPostObjectLoad)(NetObj *object);
 	void (* pfPreObjectDelete)(NetObj *object);
-	NetObj *(* pfCreateObject)(int objectClass, const TCHAR *name, NetObj *parent, CSCPMessage *msg);
+	NetObj *(* pfCreateObject)(int objectClass, const TCHAR *name, NetObj *parent, NXCPMessage *msg);
 	BOOL (* pfIsValidParentClass)(int childClass, int parentClass);
 	BOOL (* pfAcceptNewNode)(UINT32 ipAddr, UINT32 ipNetMask, UINT32 zoneId, BYTE *macAddr);
-	UINT32 (* pfValidateObjectCreation)(int objectClass, const TCHAR *name, UINT32 ipAddr, UINT32 zoneId, CSCPMessage *request);
-   UINT32 (* pfAdditionalLoginCheck)(UINT32 userId, CSCPMessage *request);
+	UINT32 (* pfValidateObjectCreation)(int objectClass, const TCHAR *name, UINT32 ipAddr, UINT32 zoneId, NXCPMessage *request);
+   UINT32 (* pfAdditionalLoginCheck)(UINT32 userId, NXCPMessage *request);
    void (* pfClientSessionClose)(ClientSession *session);
    NXCORE_LOG *logs;
    HMODULE hModule;
@@ -77,14 +94,14 @@ typedef struct
 /**
  * Enumerate all modules where given entry point available
  */
-#define ENUMERATE_MODULES(e) if (!(g_dwFlags & AF_SHUTDOWN)) \
+#define ENUMERATE_MODULES(e) if (!(g_flags & AF_SHUTDOWN)) \
    for(UINT32 __i = 0; __i < g_dwNumModules; __i++) \
       if (g_pModuleList[__i]. e != NULL)
 
 /**
  * Call module entry point for all loaded modules
  */
-#define CALL_ALL_MODULES(e, p) if (!(g_dwFlags & AF_SHUTDOWN)) { \
+#define CALL_ALL_MODULES(e, p) if (!(g_flags & AF_SHUTDOWN)) { \
    for(UINT32 __i = 0; __i < g_dwNumModules; __i++) { \
       if (g_pModuleList[__i]. e != NULL) { g_pModuleList[__i]. e p; } \
    } \

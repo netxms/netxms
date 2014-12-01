@@ -47,14 +47,14 @@ enum
 #define INFOTYPE_SUM             3
 
 
-LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *);
-LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_ProcessCount(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_ProcessInfo(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_MemoryInfo(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_SourcePkgSupport(const TCHAR *, const TCHAR *, TCHAR *);
+LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_ProcessCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_ProcessInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_MemoryInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_SourcePkgSupport(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
 #endif // __SYSTEM_H__

@@ -27,7 +27,8 @@
  * Externals
  */
 extern char g_szCodePage[];
-extern TCHAR *g_pszModLoadList;
+extern TCHAR *g_moduleLoadList;
+extern TCHAR *g_pdsLoadList;
 
 /**
  * database connection parameters
@@ -47,8 +48,8 @@ static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("CodePage"), CT_MB_STRING, 0, 0, 256, 0, g_szCodePage, NULL },
-   { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags, NULL },
-   { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDailyLogFileSuffix, NULL },
+   { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_flags, NULL },
+   { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, g_szDailyLogFileSuffix, NULL },
    { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDir, NULL },
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver, NULL },
    { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, NULL },
@@ -56,21 +57,20 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin, NULL },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName, NULL },
    { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword, NULL },
-   { _T("DBSchema"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbSchema, NULL },
+   { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbSchema, NULL },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer, NULL },
    { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel, &g_debugLevel },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, NULL },
-   { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_dwFlags, NULL },
-   { _T("JavaLibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szJavaLibDir, NULL },
-   { _T("JavaPath"), CT_STRING, 0, 0, MAX_PATH, 0, g_szJavaPath, NULL },
+   { _T("FullCrashDumps"), CT_BOOLEAN, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, NULL },
    { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLibDir, NULL },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, NULL },
-   { _T("LogFailedSQLQueries"), CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_dwFlags, NULL },
+   { _T("LogFailedSQLQueries"), CT_BOOLEAN, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_flags, NULL },
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, NULL },
    { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &g_dwLogHistorySize, NULL },
    { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &g_dwLogRotationMode, NULL },
    { _T("MaxLogSize"), CT_LONG, 0, 0, 0, 0, &g_dwMaxLogSize, NULL },
-   { _T("Module"), CT_STRING_LIST, '\n', 0, 0, 0, &g_pszModLoadList, NULL },
+   { _T("Module"), CT_STRING_LIST, '\n', 0, 0, 0, &g_moduleLoadList, NULL },
+   { _T("PerfDataStorageDriver"), CT_STRING_LIST, '\n', 0, 0, 0, &g_pdsLoadList, NULL },
    { _T("ProcessAffinityMask"), CT_LONG, 0, 0, 0, 0, &g_processAffinityMask, NULL },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
 };
@@ -136,11 +136,11 @@ stop_search:
       if ((!_tcsicmp(g_szLogFile, _T("{EventLog}"))) ||
           (!_tcsicmp(g_szLogFile, _T("{syslog}"))))
       {
-         g_dwFlags |= AF_USE_SYSLOG;
+         g_flags |= AF_USE_SYSLOG;
       }
       else
       {
-         g_dwFlags &= ~AF_USE_SYSLOG;
+         g_flags &= ~AF_USE_SYSLOG;
       }
       bSuccess = true;
    }
@@ -184,6 +184,24 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int 
 		DBFreeStatement(hStmt);
 	}
    return bSuccess;
+}
+
+/**
+ * Read integer value from metadata table
+ */
+INT32 NXCORE_EXPORTABLE MetaDataReadInt(const TCHAR *var, UINT32 defaultValue)
+{
+   TCHAR buffer[256];
+   if (MetaDataReadStr(var, buffer, 256, _T("")))
+   {
+      TCHAR *eptr;
+      INT32 value = _tcstol(buffer, &eptr, 0);
+      return (*eptr == 0) ? value : defaultValue;
+   }
+   else
+   {
+      return defaultValue;
+   }
 }
 
 /**
@@ -238,7 +256,7 @@ bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
       return true;
    }
 
-   DB_HANDLE hdb = (g_dwFlags & AF_DB_CONNECTION_POOL_READY) ? DBConnectionPoolAcquireConnection() : g_hCoreDB;
+   DB_HANDLE hdb = (g_flags & AF_DB_CONNECTION_POOL_READY) ? DBConnectionPoolAcquireConnection() : g_hCoreDB;
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
 	if (hStmt != NULL)
 	{
@@ -256,7 +274,7 @@ bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
 		}
 		DBFreeStatement(hStmt);
 	}
-   if (g_dwFlags & AF_DB_CONNECTION_POOL_READY)
+   if (g_flags & AF_DB_CONNECTION_POOL_READY)
       DBConnectionPoolReleaseConnection(hdb);
 
    if (bSuccess)
@@ -305,7 +323,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *szVar, char *szBuffer, int
    if (_tcslen(szVar) > 127)
       return false;
 
-   DB_HANDLE hdb = (g_dwFlags & AF_DB_CONNECTION_POOL_READY) ? DBConnectionPoolAcquireConnection() : g_hCoreDB;
+   DB_HANDLE hdb = (g_flags & AF_DB_CONNECTION_POOL_READY) ? DBConnectionPoolAcquireConnection() : g_hCoreDB;
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
 	if (hStmt != NULL)
 	{
@@ -322,7 +340,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *szVar, char *szBuffer, int
 		}
 		DBFreeStatement(hStmt);
 	}
-   if (g_dwFlags & AF_DB_CONNECTION_POOL_READY)
+   if (g_flags & AF_DB_CONNECTION_POOL_READY)
       DBConnectionPoolReleaseConnection(hdb);
 
    return bSuccess;

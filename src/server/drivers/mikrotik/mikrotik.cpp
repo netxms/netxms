@@ -82,7 +82,7 @@ InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 	if (ifList == NULL)
 		return NULL;
 
-   for(int i = 0; i < ifList->getSize(); i++)
+   for(int i = 0; i < ifList->size(); i++)
    {
       NX_INTERFACE_INFO *iface = ifList->get(i);
       if (iface->dwType == IFTYPE_ETHERNET_CSMACD)
@@ -152,7 +152,7 @@ static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Tr
    request->bindVariable(new SNMP_Variable(oid, 11));
 
    SNMP_PDU *response;
-   UINT32 rcc = snmp->doRequest(request, &response, g_dwSNMPTimeout, 3);
+   UINT32 rcc = snmp->doRequest(request, &response, g_snmpTimeout, 3);
 	delete request;
    if (rcc == SNMP_ERR_SUCCESS)
    {

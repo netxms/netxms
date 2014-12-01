@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.alarmviewer.widgets;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,8 +51,6 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IViewPart;
@@ -86,12 +86,13 @@ import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.RefreshTimer;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Alarm list widget
  */
-public class AlarmList extends Composite
+public class AlarmList extends CompositeWithMessageBar
 {
 	public static final String JOB_FAMILY = "AlarmViewJob"; //$NON-NLS-1$
 	
@@ -116,6 +117,7 @@ public class AlarmList extends Composite
 	private Point toolTipLocation;
 	private Alarm toolTipObject;
 	private Map<Long, Alarm> alarmList = new HashMap<Long, Alarm>();
+   private List<Alarm> filteredAlarmList = new ArrayList<Alarm>();
 	private Action actionCopy;
 	private Action actionCopyMessage;
 	private Action actionComments;
@@ -141,7 +143,7 @@ public class AlarmList extends Composite
 	 * @param style widget style
 	 * @param configPrefix prefix for saving/loading widget configuration
 	 */
-	public AlarmList(IViewPart viewPart, Composite parent, int style, final String configPrefix)
+   public AlarmList(IViewPart viewPart, Composite parent, int style, final String configPrefix)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -155,20 +157,19 @@ public class AlarmList extends Composite
 		      Messages.get().AlarmList_ColumnMessage, 
 		      Messages.get().AlarmList_ColumnCount, 
 		      Messages.get().AlarmList_Comments, 
-            "Helpdesk ID", 
+            Messages.get().AlarmList_HelpdeskId, 
 		      Messages.get().AlarmList_AckBy, 
 		      Messages.get().AlarmList_ColumnCreated, 
 		      Messages.get().AlarmList_ColumnLastChange
 		   };
 		final int[] widths = { 100, 100, 150, 300, 70, 70, 120, 100, 100, 100 };
-		alarmViewer = new SortableTableViewer(this, names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
+		alarmViewer = new SortableTableViewer(getContent(), names, widths, 0, SWT.DOWN, SortableTableViewer.DEFAULT_STYLE);
 		WidgetHelper.restoreTableViewerSettings(alarmViewer, Activator.getDefault().getDialogSettings(), configPrefix);
 	
 		alarmViewer.setLabelProvider(new AlarmListLabelProvider());
 		alarmViewer.setContentProvider(new ArrayContentProvider());
 		alarmViewer.setComparator(new AlarmComparator());
 		alarmFilter = new AlarmListFilter();
-		alarmViewer.addFilter(alarmFilter);
 		alarmViewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -224,13 +225,6 @@ public class AlarmList extends Composite
 		createActions();
 		createPopupMenu();
 
-		addListener(SWT.Resize, new Listener() {
-			public void handleEvent(Event e)
-			{
-				alarmViewer.getControl().setBounds(AlarmList.this.getClientArea());
-			}
-		});
-		
 		refresh();
 		
 		refreshTimer = new RefreshTimer(session.getMinViewRefreshInterval(), alarmViewer.getControl(), new Runnable() {
@@ -256,6 +250,7 @@ public class AlarmList extends Composite
 						synchronized(alarmList)
 						{
 							alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
+                     filterAndLimit();
 						}
 						refreshTimer.execute();
 						break;
@@ -264,6 +259,7 @@ public class AlarmList extends Composite
 						synchronized(alarmList)
 						{
 							alarmList.remove(((Alarm)n.getObject()).getId());
+                     filterAndLimit();
 						}
                   refreshTimer.execute();
 						break;
@@ -325,7 +321,7 @@ public class AlarmList extends Composite
 		});
 	}
 	
-	/**
+   /**
 	 * Get selection provider of alarm list
 	 * 
 	 * @return
@@ -441,7 +437,7 @@ public class AlarmList extends Composite
 		};
 		actionTerminate.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.Terminate"); //$NON-NLS-1$
 		
-      actionCreateIssue = new Action("Create &ticket in helpdesk system", Activator.getImageDescriptor("icons/helpdesk_ticket.png")) {
+      actionCreateIssue = new Action(Messages.get().AlarmList_CreateTicket, Activator.getImageDescriptor("icons/helpdesk_ticket.png")) { //$NON-NLS-1$
          @Override
          public void run()
          {
@@ -449,7 +445,7 @@ public class AlarmList extends Composite
          }
       };
       
-      actionShowIssue = new Action("Show helpdesk ticket in &web browser", SharedIcons.BROWSER) {
+      actionShowIssue = new Action(Messages.get().AlarmList_ShowTicketInBrowser, SharedIcons.BROWSER) {
          @Override
          public void run()
          {
@@ -457,7 +453,7 @@ public class AlarmList extends Composite
          }
       };
       
-      actionUnlinkIssue = new Action("Unlink from helpdesk ticket") {
+      actionUnlinkIssue = new Action(Messages.get().AlarmList_UnlinkTicket) {
          @Override
          public void run()
          {
@@ -516,8 +512,9 @@ public class AlarmList extends Composite
          return;
 	   }
 	   timeAcknowledge = new ArrayList<Action>(menuSize);
-	   for (int i = 0; i<menuSize ; i++){
-	      final int time = settings.getInt("AlarmList.ackMenuEntry"+Integer.toString(i)); //$NON-NLS-1$
+      for(int i = 0; i < menuSize; i++)
+      {
+         final int time = settings.getInt("AlarmList.ackMenuEntry" + Integer.toString(i)); //$NON-NLS-1$
 	      if (time == 0)
 	         continue;
 	      String title = AlarmAcknowledgeTimeFunctions.timeToString(time);
@@ -528,7 +525,7 @@ public class AlarmList extends Composite
 	            acknowledgeAlarms(true, time);
 	         }
 	      };
-	      action.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledge"+Integer.toString(i)+"ID"); //$NON-NLS-1$ //$NON-NLS-2$
+         action.setId("org.netxms.ui.eclipse.alarmviewer.popupActions.TimeAcknowledge" + Integer.toString(i) + "ID"); //$NON-NLS-1$ //$NON-NLS-2$
 	      timeAcknowledge.add(action);
 	   }
    }
@@ -543,7 +540,7 @@ public class AlarmList extends Composite
          @Override
          public void run()
          {
-            int time = 1*60*60; //hour to minutes, seconds
+            int time = 1 * 60 * 60; // hour to minutes, seconds
             acknowledgeAlarms(true, time);
          }
       };
@@ -554,7 +551,7 @@ public class AlarmList extends Composite
          @Override
          public void run()
          {
-            int time = 4*60*60; //hour to minutes, seconds
+            int time = 4 * 60 * 60; // hour to minutes, seconds
             acknowledgeAlarms(true, time); 
          }
       };
@@ -565,7 +562,7 @@ public class AlarmList extends Composite
          @Override
          public void run()
          {
-            int time = 24*60*60; //day to hours, minutes, seconds
+            int time = 24 * 60 * 60; // day to hours, minutes, seconds
             acknowledgeAlarms(true, time);
          }
       };
@@ -576,7 +573,7 @@ public class AlarmList extends Composite
          @Override
          public void run()
          {
-            int time = 2*24*60*60; //day to hours, minutes, seconds
+            int time = 2 * 24 * 60 * 60; // day to hours, minutes, seconds
             acknowledgeAlarms(true, time);
          }
       };
@@ -610,6 +607,7 @@ public class AlarmList extends Composite
 	
 	/**
 	 * Fill context menu
+    * 
 	 * @param mgr Menu manager
 	 */
 	protected void fillContextMenu(IMenuManager manager)
@@ -628,7 +626,7 @@ public class AlarmList extends Composite
 		   if (session.isTimedAlarmAckEnabled())
 		   {
       		initializeTimeAcknowledge();
-            timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge");   //$NON-NLS-2$ //$NON-NLS-1$
+            timeAcknowledgeMenu = new MenuManager(Messages.get().AlarmList_StickyAckMenutTitle, "timeAcknowledge"); //$NON-NLS-1$
             for(Action act : timeAcknowledge)
             {
                timeAcknowledgeMenu.add(act);
@@ -721,9 +719,77 @@ public class AlarmList extends Composite
 		alarmFilter.setRootObject(objectId);
 		synchronized(alarmList)
 		{
-			alarmViewer.refresh();
+	      filterAndLimit();
 		}
 	}
+
+   /**
+    * Change root objects for alarm list. List is refreshed after change.
+    * 
+    * @param List of objectId
+    */
+   public void setRootObjects(List<Long> selectedObjects) 
+   {
+      alarmFilter.setRootObjects(selectedObjects);
+      synchronized(alarmList)
+      {
+         filterAndLimit();
+      }
+   }
+
+   /**
+    * Filter all alarms (e.g. by chosen object), sort them by last change and reduce the size to maximum as it is set in
+    * configuration parameter <code>AlarmListDisplayLimit</code>.
+    */
+   private void filterAndLimit()
+   {
+      // filter
+      filteredAlarmList.clear();
+      for(Alarm alarm : alarmList.values())
+      {
+         if (alarmFilter.select(alarm))
+         {
+            filteredAlarmList.add(alarm);
+         }
+      }
+      
+      // limit number of alarms to display
+      if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() > session.getAlarmListDisplayLimit()))
+      {
+         // sort by last change - newest first
+         Collections.sort(filteredAlarmList, new Comparator<Alarm>() {
+            @Override
+            public int compare(Alarm alarm1, Alarm alarm2)
+            {
+               return -(alarm1.getLastChangeTime().compareTo(alarm2.getLastChangeTime()));
+            }
+         });
+         
+         filteredAlarmList = filteredAlarmList.subList(0, session.getAlarmListDisplayLimit());
+      }
+
+      alarmViewer.getControl().getDisplay().asyncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            if (!alarmViewer.getControl().isDisposed())
+            {
+               synchronized(alarmList)
+               {
+                  alarmViewer.setInput(filteredAlarmList);
+               }
+               if ((session.getAlarmListDisplayLimit() > 0) && (filteredAlarmList.size() >= session.getAlarmListDisplayLimit()))
+               {
+                  showMessage(INFORMATION, String.format(Messages.get().AlarmList_CountLimitWarning, filteredAlarmList.size()));
+               }
+               else
+               {
+                  hideMessage();
+               }
+            }
+         }
+      });
+   }
 
 	/**
 	 * Refresh alarm list
@@ -734,22 +800,13 @@ public class AlarmList extends Composite
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final HashMap<Long, Alarm> list = session.getAlarms();
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						if (!alarmViewer.getControl().isDisposed())
-						{
-							synchronized(alarmList)
-							{
-								alarmList.clear();
-								alarmList.putAll(list);
-								alarmViewer.setInput(alarmList.values());
-							}
-						}
-					}
-				});
+			   HashMap<Long, Alarm> alarms = session.getAlarms();
+      		synchronized(alarmList)
+      		{
+      		   alarmList.clear();
+      		   alarmList.putAll(alarms);
+               filterAndLimit();
+      		}
 			}
 
 			@Override
@@ -777,7 +834,8 @@ public class AlarmList extends Composite
 		}
 		catch(PartInitException e)
 		{
-			MessageDialogHelper.openError(getShell(), Messages.get().AlarmList_Error, Messages.get().AlarmList_ErrorText + e.getLocalizedMessage());
+         MessageDialogHelper.openError(getShell(), Messages.get().AlarmList_Error,
+               Messages.get().AlarmList_ErrorText + e.getLocalizedMessage());
 		}
 	}
 	
@@ -911,7 +969,7 @@ public class AlarmList extends Composite
          return;
       
       final long id = ((Alarm)selection.getFirstElement()).getId();
-      new ConsoleJob("Create helpdesk ticket", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+      new ConsoleJob(Messages.get().AlarmList_JobTitle_CreateTicket, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -921,7 +979,7 @@ public class AlarmList extends Composite
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot create helpdesk ticket from alarm";
+            return Messages.get().AlarmList_JobError_CreateTicket;
          }
       }.start();
    }
@@ -936,7 +994,7 @@ public class AlarmList extends Composite
          return;
       
       final long id = ((Alarm)selection.getFirstElement()).getId();
-      new ConsoleJob("Show helpdesk ticket", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+      new ConsoleJob(Messages.get().AlarmList_JobTitle_ShowTicket, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -952,8 +1010,8 @@ public class AlarmList extends Composite
                   }
                   catch(Exception e)
                   {
-                     Activator.logError("Exception in AlarmList.showIssue (url=\"" + url + "\")", e);
-                     MessageDialogHelper.openError(getShell(), "Error", "Internal error: unable to open web browser");
+                     Activator.logError("Exception in AlarmList.showIssue (url=\"" + url + "\")", e); //$NON-NLS-1$ //$NON-NLS-2$
+                     MessageDialogHelper.openError(getShell(), Messages.get().AlarmList_Error, Messages.get().AlarmList_InternalError);
                   }
                }
             });
@@ -962,7 +1020,7 @@ public class AlarmList extends Composite
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot get URL for helpdesk ticket";
+            return Messages.get().AlarmList_JobError_ShowTicket;
          }
       }.start();
    }
@@ -977,7 +1035,7 @@ public class AlarmList extends Composite
          return;
       
       final long id = ((Alarm)selection.getFirstElement()).getId();
-      new ConsoleJob("Unlink alarm from helpdesk ticket", viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
+      new ConsoleJob(Messages.get().AlarmList_JobTitle_UnlinkTicket, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -987,7 +1045,7 @@ public class AlarmList extends Composite
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot unlink alarm from helpdesk ticket";
+            return Messages.get().AlarmList_JobError_UnlinkTicket;
          }
       }.start();
    }
@@ -1011,7 +1069,8 @@ public class AlarmList extends Composite
 			}
 			catch(PartInitException e)
 			{
-				MessageDialogHelper.openError(getShell(), Messages.get().AlarmList_Error, Messages.get().AlarmList_OpenDetailsError + e.getLocalizedMessage());
+            MessageDialogHelper.openError(getShell(), Messages.get().AlarmList_Error,
+                  Messages.get().AlarmList_OpenDetailsError + e.getLocalizedMessage());
 			}
 		}
 	}

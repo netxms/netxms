@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Server Library
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
@@ -32,6 +32,7 @@ SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *pConn, UINT32 dwIpAddr
 	m_dwIpAddr = dwIpAddr;
 	m_wPort = wPort;
 	m_pResponse = NULL;
+	m_waitForResponse = true;
 }
 
 /**
@@ -50,23 +51,26 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 {
    BYTE *pBuffer;
    int nRet = -1;
-	CSCPMessage msg(m_pAgentConnection->getProtocolVersion());
+	NXCPMessage msg(m_pAgentConnection->getProtocolVersion());
 
    size_t size = pdu->encode(&pBuffer, m_securityContext);
    if (size != 0)
    {
-		msg.SetCode(CMD_SNMP_REQUEST);
-		msg.SetVariable(VID_IP_ADDRESS, m_dwIpAddr);
-		msg.SetVariable(VID_PORT, m_wPort);
-		msg.SetVariable(VID_PDU_SIZE, (UINT32)size);
-		msg.SetVariable(VID_PDU, pBuffer, (UINT32)size);
+		msg.setCode(CMD_SNMP_REQUEST);
+		msg.setField(VID_IP_ADDRESS, m_dwIpAddr);
+		msg.setField(VID_PORT, m_wPort);
+		msg.setField(VID_PDU_SIZE, (UINT32)size);
+		msg.setField(VID_PDU, pBuffer, (UINT32)size);
       free(pBuffer);
 
-		m_pResponse = m_pAgentConnection->customRequest(&msg);
-		if (m_pResponse != NULL)
-		{
-			nRet = 1;
-		}
+      if(m_waitForResponse)
+      {
+         m_pResponse = m_pAgentConnection->customRequest(&msg);
+         if (m_pResponse != NULL)
+         {
+            nRet = 1;
+         }
+      }
    }
 
    return nRet;
@@ -75,7 +79,7 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 /**
  * Receive PDU
  */
-int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout, 
+int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
                                      struct sockaddr *pSender, socklen_t *piAddrSize,
                                      SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
 {
@@ -86,11 +90,11 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
 	if (m_pResponse == NULL)
 		return -1;
 
-	if (m_pResponse->GetVariableLong(VID_RCC) == ERR_SUCCESS)
+	if (m_pResponse->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
 	{
-		dwSize = m_pResponse->GetVariableLong(VID_PDU_SIZE);
+		dwSize = m_pResponse->getFieldAsUInt32(VID_PDU_SIZE);
 		pBuffer = (BYTE *)malloc(dwSize);
-		m_pResponse->GetVariableBinary(VID_PDU, pBuffer, dwSize);
+		m_pResponse->getFieldAsBinary(VID_PDU, pBuffer, dwSize);
 
 		if (contextFinder != NULL)
 			setSecurityContext(contextFinder(pSender, *piAddrSize));

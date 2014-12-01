@@ -50,6 +50,7 @@ import org.netxms.ui.eclipse.datacollection.api.DataCollectionObjectEditor;
 import org.netxms.ui.eclipse.datacollection.dialogs.IParameterSelectionDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectAgentParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectInternalParamDlg;
+import org.netxms.ui.eclipse.datacollection.dialogs.SelectParameterScriptDialog;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectSnmpParamDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.WinPerfCounterSelectionDialog;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -188,6 +189,7 @@ public class General extends PropertyPage
       origin.add(Messages.get().General_SourcePush);
       origin.add(Messages.get().General_WinPerf);
       origin.add(Messages.get().General_SMCLP);
+      origin.add(Messages.get().General_Script);
       origin.select(dci.getOrigin());
       origin.addSelectionListener(new SelectionListener() {
 			@Override
@@ -464,6 +466,9 @@ public class General extends PropertyPage
 			case DataCollectionItem.WINPERF:
 				dlg = new WinPerfCounterSelectionDialog(getShell(), dci.getNodeId());
 				break;
+         case DataCollectionItem.SCRIPT:
+            dlg = new SelectParameterScriptDialog(getShell());
+            break;
 			default:
 				dlg = null;
 				break;

@@ -29,6 +29,8 @@
 #define _WIN32_WINNT 0x0502
 #endif
 
+#define _CRT_NONSTDC_NO_WARNINGS
+
 #include <winsock2.h>
 #include <windows.h>
 #define EXPORT __declspec(dllexport)
@@ -90,7 +92,7 @@ typedef struct
    MYSQL_CONN *connection;
    MYSQL_RES *pHandle;
    MYSQL_ROW pCurrRow;
-   BOOL bNoMoreRows;
+   bool noMoreRows;
    int iNumCols;
    unsigned long *pulColLengths;
 } MYSQL_ASYNC_RESULT;

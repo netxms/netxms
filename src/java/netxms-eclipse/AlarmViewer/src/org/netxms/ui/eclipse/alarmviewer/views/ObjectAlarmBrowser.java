@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,38 +18,40 @@
  */
 package org.netxms.ui.eclipse.alarmviewer.views;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FormAttachment;
-import org.eclipse.swt.layout.FormData;
-import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 
 /**
- * Alarm browser view - alarms for specific object
+ * Alarm browser view - alarms for specific objects. List of object IDs is passed as a '&' separated secondaryId
  */
 public class ObjectAlarmBrowser extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.alarmviewer.views.ObjectAlarmBrowser"; //$NON-NLS-1$
 	
+   private CompositeWithMessageBar content;
 	private AlarmList alarmView;
 	private Action actionRefresh;
 	private Action actionExportToCsv;
-	private long objectId = 0;
+   private List<Long> objects = new ArrayList<Long>(1);
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -58,11 +60,17 @@ public class ObjectAlarmBrowser extends ViewPart
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		
-		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		objectId = Long.parseLong(site.getSecondaryId());
-		AbstractObject object = session.findObjectById(objectId);
-		setPartName(Messages.get().ObjectAlarmBrowser_TitlePrefix + ((object != null) ? object.getObjectName() : ("[" + Long.toString(objectId) + "]")));  //$NON-NLS-1$//$NON-NLS-2$
+		for(String id : site.getSecondaryId().split("&"))  //$NON-NLS-1$
+		{
+		   try
+		   {
+		      objects.add(Long.parseLong(id));
+		   }
+		   catch(NumberFormatException e)
+		   {
+		      Activator.logError("Invalid number in AlarmViewer secondary ID", e); //$NON-NLS-1$
+		   }
+		}
 	}
 
 	/* (non-Javadoc)
@@ -71,17 +79,23 @@ public class ObjectAlarmBrowser extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-      FormLayout formLayout = new FormLayout();
-		parent.setLayout(formLayout);
+		parent.setLayout(new FillLayout());		
+		content = new CompositeWithMessageBar(parent, SWT.NONE);
 		
-		alarmView = new AlarmList(this, parent, SWT.NONE, "ObjectAlarmBrowser"); //$NON-NLS-1$
-		FormData fd = new FormData();
-		fd.left = new FormAttachment(0, 0);
-		fd.top = new FormAttachment(0, 0);
-		fd.right = new FormAttachment(100, 0);
-		fd.bottom = new FormAttachment(100, 0);
-		alarmView.setLayoutData(fd);
-		alarmView.setRootObject(objectId);
+      alarmView = new AlarmList(this, content.getContent(), SWT.NONE, "ObjectAlarmBrowser"); //$NON-NLS-1$
+		alarmView.setRootObjects(objects);
+
+		if (objects.size() == 1) 
+		{
+	      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			setPartName(String.format(Messages.get().ObjectAlarmBrowser_Title, session.getObjectName(objects.get(0))));
+			//content.hideMessage();
+		} 
+		else
+		{
+			setPartName(Messages.get().ObjectAlarmBrowser_TitleMultipleObjects);
+			showObjectList();
+		}
 		
 		createActions();
 		contributeToActionBars();
@@ -90,6 +104,22 @@ public class ObjectAlarmBrowser extends ViewPart
 	}
 
 	/**
+    * Show list of selected objects
+    */
+   private void showObjectList()
+   {
+      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      StringBuilder sb = new StringBuilder();
+      for(Long id : objects)
+      {
+         if (sb.length() > 0)
+            sb.append(", "); //$NON-NLS-1$
+         sb.append(session.getObjectName(id));
+      }
+      content.showMessage(CompositeWithMessageBar.INFORMATION, String.format(Messages.get().ObjectAlarmBrowser_SelectedObjects, sb.toString()));
+   }
+
+   /**
 	 * Create actions
 	 */
 	private void createActions()
@@ -99,6 +129,7 @@ public class ObjectAlarmBrowser extends ViewPart
 			public void run()
 			{
 				alarmView.refresh();
+            showObjectList();
 			}
 		};
 		
@@ -118,8 +149,7 @@ public class ObjectAlarmBrowser extends ViewPart
 	/**
 	 * Fill local pull-down menu
 	 * 
-	 * @param manager
-	 *           Menu manager for pull-down menu
+    * @param manager Menu manager for pull-down menu
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
@@ -131,8 +161,7 @@ public class ObjectAlarmBrowser extends ViewPart
 	/**
 	 * Fill local tool bar
 	 * 
-	 * @param manager
-	 *           Menu manager for local toolbar
+    * @param manager Menu manager for local toolbar
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{

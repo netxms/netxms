@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: nms_locks.h
+** File: nms_locks.h
 **
 **/
 
@@ -26,32 +26,30 @@
 
 #define UNLOCKED           ((UINT32)0xFFFFFFFF)
 
+/**
+ * Component identifiers used for locking
+ */
+#define CID_EPP 0
+#define CID_USER_DB 1
+#define CID_PACKAGE_DB 2
+#define CID_CUSTOM_1 3
+#define CID_CUSTOM_2 4
+#define CID_CUSTOM_3 5
+#define CID_CUSTOM_4 6
+#define CID_CUSTOM_5 7
+#define CID_CUSTOM_6 8
+#define CID_CUSTOM_7 9
+#define CID_CUSTOM_8 10
 
-//
-// Component identifiers used for locking
-//
-
-#define CID_EPP               0
-#define CID_USER_DB           1
-//deprecated: #define CID_EVENT_DB          2
-//deprecated: #define CID_ACTION_DB         3
-//deprecated: #define CID_TRAP_CFG          4
-#define CID_PACKAGE_DB        5
-//deprecated: #define CID_OBJECT_TOOLS      6
-
-
-//
-// Functions
-//
-
+/*** Functions ***/
 #ifndef _NETXMS_DB_SCHEMA_
 
 BOOL InitLocks(UINT32 *pdwIpAddr, TCHAR *pszInfo);
-BOOL LockComponent(UINT32 dwId, UINT32 dwLockBy, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo);
+BOOL LockComponent(UINT32 dwId, int sessionId, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo);
 void UnlockComponent(UINT32 dwId);
-void RemoveAllSessionLocks(UINT32 dwSessionId);
-BOOL LockLPP(UINT32 dwPolicyId, UINT32 dwSessionId);
-void UnlockLPP(UINT32 dwPolicyId, UINT32 dwSessionId);
+void RemoveAllSessionLocks(int sessionId);
+BOOL LockLPP(UINT32 dwPolicyId, int sessionId);
+void UnlockLPP(UINT32 dwPolicyId, int sessionId);
 void NXCORE_EXPORTABLE UnlockDB();
 
 #endif

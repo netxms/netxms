@@ -31,12 +31,14 @@ static void ProcessStorageDiscoveryRequest(HPIPE hPipe)
 	TCHAR buffer[256];
 
 	AgentWriteDebugLog(5, _T("ProcessStorageDiscoveryRequest: connection established"));
+   PipeMessageReceiver receiver(hPipe, 8192, 1048576);  // 8K initial, 1M max
 	while(true)
 	{
-		CSCPMessage *msg = ReadMessageFromPipe(hPipe, NULL);
+      MessageReceiverResult result;
+		NXCPMessage *msg = receiver.readMessage(INFINITE, &result);
 		if (msg == NULL)
 			break;
-		AgentWriteDebugLog(6, _T("ProcessStorageDiscoveryRequest: received message %s"), NXCPMessageCodeName(msg->GetCode(), buffer));
+		AgentWriteDebugLog(6, _T("ProcessStorageDiscoveryRequest: received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
 		delete msg;
 	}
 	AgentWriteDebugLog(5, _T("ProcessStorageDiscoveryRequest: connection closed"));

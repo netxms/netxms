@@ -36,7 +36,7 @@ public class LinkEditor
 	private String connectorName1;
 	private String connectorName2;
 	private int color;
-	private long statusObject;
+	private List<Long> statusObject;
 	private int routingAlgorithm;
 	private boolean modified = false;
 	private List<SingleDciConfig> dciList;
@@ -158,7 +158,7 @@ public class LinkEditor
 	/**
 	 * @return the statusObject
 	 */
-	public long getStatusObject()
+	public List<Long> getStatusObject()
 	{
 		return statusObject;
 	}
@@ -166,9 +166,25 @@ public class LinkEditor
 	/**
 	 * @param statusObject the statusObject to set
 	 */
-	public void setStatusObject(long statusObject)
+	public void setStatusObject(List<Long> statusObject)
 	{
 		this.statusObject = statusObject;
+	}
+	
+	/**
+    * @param id the id of status object to be added
+    */
+	public void addStatusObject(Long id)
+	{
+	   statusObject.add(id);
+	}
+	
+	/**
+    * @param index the index of status the object to be removed
+    */
+	public void removeStatusObjectByIndex(int index)
+	{
+	   statusObject.remove(index);
 	}
 
 	/**

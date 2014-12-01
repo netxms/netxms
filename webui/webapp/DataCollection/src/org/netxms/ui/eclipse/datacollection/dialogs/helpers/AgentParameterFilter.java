@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ public class AgentParameterFilter extends ViewerFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-		return (filter == null) || filter.isEmpty() || ((AgentParameter)element).getName().toLowerCase().startsWith(filter);
+		return (filter == null) || filter.isEmpty() || ((AgentParameter)element).getName().toLowerCase().contains(filter);
 	}
 
 	/**

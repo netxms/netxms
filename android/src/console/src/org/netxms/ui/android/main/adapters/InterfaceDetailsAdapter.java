@@ -6,6 +6,7 @@ package org.netxms.ui.android.main.adapters;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.android.R;
 
@@ -192,7 +193,7 @@ public class InterfaceDetailsAdapter extends BaseAdapter
 		return r.getColor(R.color.text_color);
 	}
 
-	private int getNodeStatusColor(int status)
+	private int getNodeStatusColor(ObjectStatus status)
 	{
 		final int[] statuses =
 		{
@@ -207,7 +208,7 @@ public class InterfaceDetailsAdapter extends BaseAdapter
 				R.color.status_testing
 		};
 
-		return r.getColor(status >= 0 && status < statuses.length ? statuses[status] : R.color.status_unknown);
+		return r.getColor(status.getValue() >= 0 && status.getValue() < statuses.length ? statuses[status.getValue()] : R.color.status_unknown);
 	}
 
 	private String getExpStateText(int state)
@@ -224,7 +225,7 @@ public class InterfaceDetailsAdapter extends BaseAdapter
 		return r.getString(R.string.status_unknown);
 	}
 
-	private String getNodeStatusText(int status)
+	private String getNodeStatusText(ObjectStatus status)
 	{
 		final int[] statuses =
 		{
@@ -239,6 +240,6 @@ public class InterfaceDetailsAdapter extends BaseAdapter
 				R.string.status_testing
 		};
 
-		return r.getString(status >= 0 && status < statuses.length ? statuses[status] : R.string.status_unknown);
+		return r.getString(status.getValue() >= 0 && status.getValue() < statuses.length ? statuses[status.getValue()] : R.string.status_unknown);
 	}
 }

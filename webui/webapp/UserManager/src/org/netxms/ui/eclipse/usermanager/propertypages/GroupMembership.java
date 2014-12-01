@@ -46,8 +46,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
 import org.netxms.ui.eclipse.usermanager.Messages;
-import org.netxms.ui.eclipse.usermanager.UserComparator;
 import org.netxms.ui.eclipse.usermanager.dialogs.SelectUserDialog;
+import org.netxms.ui.eclipse.usermanager.views.helpers.UserComparator;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -76,7 +76,7 @@ public class GroupMembership extends PropertyPage
 		layout.marginHeight = 0;
 		dialogArea.setLayout(layout);
 
-      final String[] columnNames = { "Group name" };
+      final String[] columnNames = { Messages.get().GroupMembership_ColName };
       final int[] columnWidths = { 300 };
       groupList = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP,
                                          SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);

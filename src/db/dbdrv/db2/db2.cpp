@@ -98,11 +98,9 @@ static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, NETXMS_
 	return dwError;
 }
 
-
-//
-// Clear any pending result sets on given statement
-//
-
+/**
+ * Clear any pending result sets on given statement
+ */
 static void ClearPendingResults(SQLHSTMT statement)
 {
 	while(1)
@@ -115,11 +113,9 @@ static void ClearPendingResults(SQLHSTMT statement)
 	}
 }
 
-
-//
-// Prepare string for using in SQL query - enclose in quotes and escape as needed
-//
-
+/**
+ * Prepare string for using in SQL query - enclose in quotes and escape as needed
+ */
 extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 {
 	int len = (int)wcslen(str) + 3;   // + two quotes and \0 at the end
@@ -186,31 +182,25 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 	return out;
 }
 
-
-//
-// Initialize driver
-//
-
-extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
+/**
+ * Initialize driver
+ */
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
-	return TRUE;
+	return true;
 }
 
-
-//
-// Unload handler
-//
-
+/**
+ * Unload handler
+ */
 extern "C" void EXPORT DrvUnload()
 {
 }
 
-
-//
-// Connect to database
-// pszHost should be set to DB2 source name, and pszDatabase is ignored
-//
-
+/**
+ * Connect to database
+ * pszHost should be set to DB2 source name, and pszDatabase is ignored
+ */
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
                                               char *pszPassword, char *pszDatabase, const char *schema, NETXMS_WCHAR *errorText)
 {
@@ -305,11 +295,9 @@ connect_failure_0:
 	return NULL;
 }
 
-
-//
-// Disconnect from database
-//
-
+/**
+ * Disconnect from database
+ */
 extern "C" void EXPORT DrvDisconnect(DB2DRV_CONN *pConn)
 {
 	MutexLock(pConn->mutexQuery);
@@ -321,10 +309,9 @@ extern "C" void EXPORT DrvDisconnect(DB2DRV_CONN *pConn)
 	free(pConn);
 }
 
-//
-// Prepare statement
-//
-
+/**
+ * Prepare statement
+ */
 extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
 	long iResult;
@@ -812,7 +799,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(DB2DRV_CONN *pConn, NETXMS_W
 			SQLNumResultCols(pConn->sqlStatement, &wNumCols);
 			pResult->iNumCols = wNumCols;
 			pResult->pConn = pConn;
-			pResult->bNoMoreRows = FALSE;
+			pResult->noMoreRows = false;
 
 			// Get column names
 			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
@@ -857,14 +844,12 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(DB2DRV_CONN *pConn, NETXMS_W
 	return pResult;
 }
 
-
-//
-// Fetch next result line from asynchronous SELECT results
-//
-
-extern "C" BOOL EXPORT DrvFetch(DB2DRV_ASYNC_QUERY_RESULT *pResult)
+/**
+ * Fetch next result line from asynchronous SELECT results
+ */
+extern "C" bool EXPORT DrvFetch(DB2DRV_ASYNC_QUERY_RESULT *pResult)
 {
-	BOOL bResult = FALSE;
+	bool bResult = false;
 
 	if (pResult != NULL)
 	{
@@ -874,17 +859,15 @@ extern "C" BOOL EXPORT DrvFetch(DB2DRV_ASYNC_QUERY_RESULT *pResult)
 		bResult = ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO));
 		if (!bResult)
 		{
-			pResult->bNoMoreRows = TRUE;
+			pResult->noMoreRows = true;
 		}
 	}
 	return bResult;
 }
 
-
-//
-// Get field length from async query result
-//
-
+/**
+ * Get field length from async query result
+ */
 extern "C" LONG EXPORT DrvGetFieldLengthAsync(DB2DRV_ASYNC_QUERY_RESULT *pResult, int iColumn)
 {
 	LONG nLen = -1;
@@ -923,7 +906,7 @@ extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(DB2DRV_ASYNC_QUERY_RESULT *pRes
 	}
 
 	// Check if there are valid fetched row
-	if (pResult->bNoMoreRows)
+	if (pResult->noMoreRows)
 	{
 		return NULL;
 	}
@@ -953,31 +936,25 @@ extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(DB2DRV_ASYNC_QUERY_RESULT *pRes
 	return pBuffer;
 }
 
-
-//
-// Get column count in async query result
-//
-
+/**
+ * Get column count in async query result
+ */
 extern "C" int EXPORT DrvGetColumnCountAsync(DB2DRV_ASYNC_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->iNumCols : 0;
 }
 
-
-//
-// Get column name in async query result
-//
-
+/**
+ * Get column name in async query result
+ */
 extern "C" const char EXPORT *DrvGetColumnNameAsync(DB2DRV_ASYNC_QUERY_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->iNumCols)) ? pResult->columnNames[column] : NULL;
 }
 
-
-//
-// Destroy result of async query
-//
-
+/**
+ * Destroy result of async query
+ */
 extern "C" void EXPORT DrvFreeAsyncResult(DB2DRV_ASYNC_QUERY_RESULT *pResult)
 {
 	if (pResult != NULL)
@@ -988,11 +965,9 @@ extern "C" void EXPORT DrvFreeAsyncResult(DB2DRV_ASYNC_QUERY_RESULT *pResult)
 	}
 }
 
-
-//
-// Begin transaction
-//
-
+/**
+ * Begin transaction
+ */
 extern "C" DWORD EXPORT DrvBegin(DB2DRV_CONN *pConn)
 {
 	SQLRETURN nRet;
@@ -1017,11 +992,9 @@ extern "C" DWORD EXPORT DrvBegin(DB2DRV_CONN *pConn)
 	return dwResult;
 }
 
-
-//
-// Commit transaction
-//
-
+/**
+ * Commit transaction
+ */
 extern "C" DWORD EXPORT DrvCommit(DB2DRV_CONN *pConn)
 {
 	SQLRETURN nRet;
@@ -1038,11 +1011,9 @@ extern "C" DWORD EXPORT DrvCommit(DB2DRV_CONN *pConn)
 	return ((nRet == SQL_SUCCESS) || (nRet == SQL_SUCCESS_WITH_INFO)) ? DBERR_SUCCESS : DBERR_OTHER_ERROR;
 }
 
-
-//
-// Rollback transaction
-//
-
+/**
+ * Rollback transaction
+ */
 extern "C" DWORD EXPORT DrvRollback(DB2DRV_CONN *pConn)
 {
 	SQLRETURN nRet;
@@ -1060,12 +1031,32 @@ extern "C" DWORD EXPORT DrvRollback(DB2DRV_CONN *pConn)
 }
 
 
-//
-// DLL Entry point
-//
+/**
+ * Check if table exist
+ */
+extern "C" int EXPORT DrvIsTableExist(DB2DRV_CONN *pConn, const NETXMS_WCHAR *name)
+{
+   WCHAR query[256];
+   swprintf(query, 256, L"SELECT count(*) FROM sysibm.systables WHERE type='T' AND upper(name)=upper('%ls')", name);
+   DWORD error;
+   WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   int rc = DBIsTableExist_Failure;
+   DB2DRV_QUERY_RESULT *hResult = (DB2DRV_QUERY_RESULT *)DrvSelect(pConn, query, &error, errorText);
+   if (hResult != NULL)
+   {
+      WCHAR buffer[64] = L"";
+      DrvGetField(hResult, 0, 0, buffer, 64);
+      rc = (wcstol(buffer, NULL, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      DrvFreeResult(hResult);
+   }
+   return rc;
+}
 
 #ifdef _WIN32
 
+/**
+ * DLL Entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)

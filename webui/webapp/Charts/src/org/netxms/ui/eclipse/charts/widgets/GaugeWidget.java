@@ -35,6 +35,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.charts.Activator;
@@ -187,7 +188,7 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
 	@Override
 	public int addParameter(GraphItem dci, double value)
 	{
-		parameters.add(new DataComparisonElement(dci, value));
+      parameters.add(new DataComparisonElement(dci, value, null));
 		return parameters.size() - 1;
 	}
 
@@ -209,8 +210,35 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
 			refresh();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#updateParameterThresholds(int, org.netxms.client.datacollection.Threshold[])
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#updateParameter(int, org.netxms.client.datacollection.DciDataRow,
+    * int, boolean)
+    */
+   @Override
+   public void updateParameter(int index, DciDataRow value, int dataType, boolean updateChart)
+   {
+      try
+      {
+         DataComparisonElement p = parameters.get(index);
+         p.setValue(value.getValueAsDouble());
+         p.setRawValue(value.getValueAsString());
+         p.getObject().setDataType(dataType);
+      }
+      catch(IndexOutOfBoundsException e)
+      {
+      }
+
+      if (updateChart)
+         refresh();
+   }
+
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#updateParameterThresholds(int,
+    * org.netxms.client.datacollection.Threshold[])
 	 */
 	@Override
 	public void updateParameterThresholds(int index, Threshold[] thresholds)

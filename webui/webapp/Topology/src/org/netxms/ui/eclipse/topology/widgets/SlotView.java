@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.Port;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -170,26 +170,26 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		}
 		else if (portStatusVisible)
 		{
-			int status = Severity.UNKNOWN;
+			ObjectStatus status = ObjectStatus.UNKNOWN;
 			switch(p.getAdminState())
 			{
 				case Interface.ADMIN_STATE_DOWN:
-					status = Severity.DISABLED;
+					status = ObjectStatus.DISABLED;
 					break;
 				case Interface.ADMIN_STATE_TESTING:
-					status = Severity.TESTING;
+					status = ObjectStatus.TESTING;
 					break;
 				case Interface.ADMIN_STATE_UP:
 					switch(p.getOperState())
 					{
 						case Interface.OPER_STATE_DOWN:
-							status = Severity.CRITICAL;
+							status = ObjectStatus.CRITICAL;
 							break;
 						case Interface.OPER_STATE_TESTING:
-							status = Severity.TESTING;
+							status = ObjectStatus.TESTING;
 							break;
 						case Interface.OPER_STATE_UP:
-							status = Severity.NORMAL;
+							status = ObjectStatus.NORMAL;
 							break;
 					}
 					break;
@@ -213,12 +213,6 @@ public class SlotView extends Canvas implements PaintListener, MouseListener
 		
 		Point ext = gc.textExtent(label);
 		gc.drawText(label, x + (PORT_WIDTH - ext.x) / 2, y + (PORT_HEIGHT - ext.y) / 2);
-
-		if (p.getStatus() != Severity.NORMAL)
-		{
-			// draw status icon
-			gc.drawImage(StatusDisplayInfo.getStatusImage(p.getStatus()), rect.x + rect.width - 18, rect.y + rect.height - 18);
-		}
 	}
 
 	/* (non-Javadoc)

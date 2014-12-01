@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,14 +21,7 @@ package org.netxms.ui.eclipse.alarmviewer.objecttabs;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.Container;
-import org.netxms.client.objects.EntireNetwork;
-import org.netxms.client.objects.MobileDevice;
-import org.netxms.client.objects.ServiceRoot;
-import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmList;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 
@@ -45,7 +38,7 @@ public class AlarmTab extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		alarmList = new AlarmList(getViewPart(), parent, SWT.NONE, getConfigPrefix());
+      alarmList = new AlarmList(getViewPart(), parent, SWT.NONE, getConfigPrefix());
 	}
 	
 	/**
@@ -92,10 +85,7 @@ public class AlarmTab extends ObjectTab
 	@Override
 	public boolean showForObject(AbstractObject object)
 	{
-		return (object instanceof AbstractNode) || (object instanceof Subnet) ||
-		       (object instanceof EntireNetwork) || (object instanceof Container) ||
-		       (object instanceof Cluster) || (object instanceof ServiceRoot) ||
-		       (object instanceof MobileDevice);
+      return object.isAlarmsVisible();
 	}
 
 	/* (non-Javadoc)

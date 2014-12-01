@@ -1,0 +1,22 @@
+<config>
+  <workspace>/opt/nxreporting/workspace</workspace>
+    <netxmsdConfig>/opt/netxms/etc/netxmsd.conf</netxmsdConfig>
+    <datasources>
+        <datasource>
+            <id>secondary</id>
+            <type>postgresql</type>
+            <url>jdbc:postgresql://127.0.0.1/netxms</url>
+            <username>netxms</username>
+            <password>netxms</password>
+        </datasource>
+    </datasources>
+    <smtp>
+        <server>127.0.0.1</server>
+        <from>noreply@netxms.org</from>
+    </smtp>
+    <netxms>
+        <server>127.0.0.1</server>
+        <login>admin</login>
+        <password></password>
+    </netxms>
+</config>

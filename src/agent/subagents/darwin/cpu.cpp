@@ -51,12 +51,12 @@ static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg);
 
 
 
-LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
   return SYSINFO_RC_ERROR;
 }
 
-LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
   return SYSINFO_RC_ERROR;
 }

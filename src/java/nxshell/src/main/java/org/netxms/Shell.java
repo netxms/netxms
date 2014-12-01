@@ -11,6 +11,7 @@ import org.python.util.InteractiveConsole;
 import org.python.util.JLineConsole;
 import java.io.Console;
 import java.io.IOException;
+import java.io.File;
 import java.util.Properties;
 
 public class Shell
@@ -194,8 +195,9 @@ public class Shell
    private void initJython(String[] args)
    {
       final Properties postProperties = new Properties();
-      final String tempDirectory = System.getProperty("java.io.tmpdir") + "nxshell";
-      postProperties.setProperty("python.cachedir", tempDirectory);
+      final File tempDirectory = new File(System.getProperty("java.io.tmpdir"));
+      final File cacheDir = new File(tempDirectory, "nxshell");
+      postProperties.setProperty("python.cachedir", cacheDir.getPath());
       postProperties.setProperty("python.cachedir.skip", "false");
       PySystemState.initialize(PySystemState.getBaseProperties(), postProperties, args);
    }

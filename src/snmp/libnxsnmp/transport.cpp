@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** SNMP support library
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
@@ -73,6 +73,8 @@ void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
 {
 	delete m_securityContext;
 	m_securityContext = ctx;
+   delete m_authoritativeEngine;
+   m_authoritativeEngine = (m_securityContext->getAuthoritativeEngine().getIdLen() > 0) ? new SNMP_Engine(&m_securityContext->getAuthoritativeEngine()) : NULL;
 }
 
 /**
@@ -132,8 +134,9 @@ retry:
 						}
 
 						// Cache context engine ID
-						if ((m_contextEngine == NULL) && ((*response)->getContextEngineIdLength() != 0))
+                  if (((m_contextEngine == NULL) || (m_contextEngine->getIdLen() == 0)) && ((*response)->getContextEngineIdLength() != 0))
 						{
+                     delete m_contextEngine;
 							m_contextEngine = new SNMP_Engine((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
 						}
 
@@ -267,7 +270,7 @@ UINT32 SNMP_UDPTransport::createUDPTransport(const TCHAR *pszHostName, UINT32 dw
    }
 
    // Create and connect socket
-   if ((m_peerAddr.sin_addr.s_addr != INADDR_ANY) && 
+   if ((m_peerAddr.sin_addr.s_addr != INADDR_ANY) &&
        (m_peerAddr.sin_addr.s_addr != INADDR_NONE))
    {
       m_hSocket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -410,7 +413,7 @@ size_t SNMP_UDPTransport::preParsePDU()
    size_t dwLength, dwIdLength;
    BYTE *pbCurrPos;
 
-   if (!BER_DecodeIdentifier(&m_pBuffer[m_dwBufferPos], m_dwBytesInBuffer, 
+   if (!BER_DecodeIdentifier(&m_pBuffer[m_dwBufferPos], m_dwBytesInBuffer,
                              &dwType, &dwLength, &pbCurrPos, &dwIdLength))
       return 0;
    if (dwType != ASN_SEQUENCE)
@@ -422,7 +425,7 @@ size_t SNMP_UDPTransport::preParsePDU()
 /**
  * Read PDU from socket
  */
-int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout, 
+int SNMP_UDPTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
                                    struct sockaddr *pSender, socklen_t *piAddrSize,
                                    SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t))
 {

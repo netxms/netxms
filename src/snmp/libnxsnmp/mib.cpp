@@ -281,7 +281,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SNMPSaveMIBTree(const TCHAR *pszFile, SNMP_MIBObject
       memcpy(header.chMagic, MIB_FILE_MAGIC, 6);
       header.bVersion = MIB_FILE_VERSION;
       header.bHeaderSize = sizeof(SNMP_MIB_HEADER);
-      header.wFlags = htons((WORD)dwFlags);
+      header.flags = htons((WORD)dwFlags);
       header.dwTimeStamp = htonl((UINT32)time(NULL));
       memset(header.bReserved, 0, sizeof(header.bReserved));
       fwrite(&header, sizeof(SNMP_MIB_HEADER), 1, pFile);
@@ -428,9 +428,9 @@ UINT32 LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject
       {
          if (!memcmp(header.chMagic, MIB_FILE_MAGIC, 6))
          {
-            header.wFlags = ntohs(header.wFlags);
+            header.flags = ntohs(header.flags);
             fseek(pFile, header.bHeaderSize, SEEK_SET);
-            pZFile = new ZFile(pFile, header.wFlags & SMT_COMPRESS_DATA, FALSE);
+            pZFile = new ZFile(pFile, header.flags & SMT_COMPRESS_DATA, FALSE);
             if (pZFile->fgetc() == MIB_TAG_OBJECT)
             {
                *ppRoot = new SNMP_MIBObject;

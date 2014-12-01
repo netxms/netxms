@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -319,7 +319,7 @@ private:
 public:
    SNMP_MIBObject();
    SNMP_MIBObject(UINT32 dwOID, const TCHAR *pszName);
-   SNMP_MIBObject(UINT32 dwOID, const TCHAR *pszName, int iType, 
+   SNMP_MIBObject(UINT32 dwOID, const TCHAR *pszName, int iType,
                   int iStatus, int iAccess, const TCHAR *pszDescription,
 						const TCHAR *pszTextualConvention);
    ~SNMP_MIBObject();
@@ -432,13 +432,13 @@ private:
 public:
 	SNMP_Engine();
 	SNMP_Engine(BYTE *id, size_t idLen, int engineBoots = 0, int engineTime = 0);
-	SNMP_Engine(SNMP_Engine *src);
+	SNMP_Engine(const SNMP_Engine *src);
 	~SNMP_Engine();
 
-	BYTE *getId() { return m_id; }
-	size_t getIdLen() { return m_idLen; }
-	int getBoots() { return m_engineBoots; }
-	int getTime() { return m_engineTime; }
+	const BYTE *getId() const { return m_id; }
+	size_t getIdLen() const { return m_idLen; }
+	int getBoots() const { return m_engineBoots; }
+	int getTime() const { return m_engineTime; }
 
 	void setBoots(int boots) { m_engineBoots = boots; }
 	void setTime(int engineTime) { m_engineTime = engineTime; }
@@ -503,8 +503,8 @@ public:
 	void setContextNameA(const char *name) { setContextName(name); }
 #endif
 
-	void setAuthoritativeEngine(SNMP_Engine &engine);
-	SNMP_Engine& getAuthoritativeEngine() { return m_authoritativeEngine; }
+	void setAuthoritativeEngine(const SNMP_Engine &engine);
+	const SNMP_Engine& getAuthoritativeEngine() { return m_authoritativeEngine; }
 };
 
 /**
@@ -531,7 +531,7 @@ private:
 	char m_contextName[SNMP_MAX_CONTEXT_NAME];
 	BYTE m_salt[8];
 	bool m_reportable;
-	
+
 	// The following attributes only used by parser and
 	// valid only for received PDUs
 	BYTE m_flags;
@@ -589,7 +589,7 @@ public:
    UINT32 getRequestId() { return m_dwRqId; }
    void setRequestId(UINT32 dwId) { m_dwRqId = dwId; }
 
-	void setContextEngineId(BYTE *id, size_t len);
+	void setContextEngineId(const BYTE *id, size_t len);
 	void setContextEngineId(const char *id);
 	void setContextName(const char *name);
 	const char *getContextName() { return m_contextName; }
@@ -632,12 +632,13 @@ public:
       return 0;
    }
 
-   UINT32 doRequest(SNMP_PDU *request, SNMP_PDU **response, 
+   UINT32 doRequest(SNMP_PDU *request, SNMP_PDU **response,
                    UINT32 timeout = INFINITE, int numRetries = 1);
 
 	void setSecurityContext(SNMP_SecurityContext *ctx);
 	SNMP_SecurityContext *getSecurityContext() { return m_securityContext; }
 	const char *getCommunityString() { return (m_securityContext != NULL) ? m_securityContext->getCommunity() : ""; }
+   const SNMP_Engine *getAuthoritativeEngine() { return m_authoritativeEngine; }
 
 	void enableEngineIdAutoupdate(bool enabled) { m_enableEngineIdAutoupdate = enabled; }
 	bool isEngineIdAutoupdateEnabled() { return m_enableEngineIdAutoupdate; }
@@ -654,7 +655,7 @@ public:
  */
 class LIBNXSNMP_EXPORTABLE SNMP_UDPTransport : public SNMP_Transport
 {
-private:
+protected:
    SOCKET m_hSocket;
    struct sockaddr_in m_peerAddr;
 	bool m_connected;

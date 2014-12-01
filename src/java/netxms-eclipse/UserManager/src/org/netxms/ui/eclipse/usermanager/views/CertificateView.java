@@ -58,11 +58,11 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.usermanager.Activator;
-import org.netxms.ui.eclipse.usermanager.CertificateComparator;
-import org.netxms.ui.eclipse.usermanager.CertificateLabelProvider;
 import org.netxms.ui.eclipse.usermanager.Messages;
 import org.netxms.ui.eclipse.usermanager.dialogs.CreateNewCertificateDialog;
 import org.netxms.ui.eclipse.usermanager.dialogs.EditCertificateDialog;
+import org.netxms.ui.eclipse.usermanager.views.helpers.CertificateComparator;
+import org.netxms.ui.eclipse.usermanager.views.helpers.CertificateLabelProvider;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**

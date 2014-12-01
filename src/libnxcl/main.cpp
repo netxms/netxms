@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Client Library
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
@@ -136,7 +136,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCUnsubscribe(NXC_SESSION hSession, UINT32 dwChannels
 void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData)
 {
 	if (hSession != NULL)
-		((NXCL_Session *)hSession)->SetClientData(pData);
+		((NXCL_Session *)hSession)->setClientData(pData);
 }
 
 /**
@@ -144,7 +144,7 @@ void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData)
  */
 void LIBNXCL_EXPORTABLE *NXCGetClientData(NXC_SESSION hSession)
 {
-	return (hSession != NULL) ? ((NXCL_Session *)hSession)->GetClientData() : NULL;
+	return (hSession != NULL) ? ((NXCL_Session *)hSession)->getClientData() : NULL;
 }
 
 /**
@@ -152,7 +152,7 @@ void LIBNXCL_EXPORTABLE *NXCGetClientData(NXC_SESSION hSession)
  */
 BOOL LIBNXCL_EXPORTABLE NXCNeedPasswordChange(NXC_SESSION hSession)
 {
-   return ((NXCL_Session *)hSession)->NeedPasswordChange();
+   return ((NXCL_Session *)hSession)->needPasswordChange();
 }
 
 /**
@@ -160,7 +160,7 @@ BOOL LIBNXCL_EXPORTABLE NXCNeedPasswordChange(NXC_SESSION hSession)
  */
 BOOL LIBNXCL_EXPORTABLE NXCIsDBConnLost(NXC_SESSION hSession)
 {
-   return ((NXCL_Session *)hSession)->IsDBConnLost();
+   return ((NXCL_Session *)hSession)->isDBConnLost();
 }
 
 /**
@@ -188,17 +188,17 @@ void LIBNXCL_EXPORTABLE NXCGetLastLockOwner(NXC_SESSION hSession, TCHAR *pszBuff
  */
 UINT32 LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *message)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
 	CHECK_SESSION_HANDLE();
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_SEND_SMS);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_RCPT_ADDR, phone);
-   msg.SetVariable(VID_MESSAGE, message);
+   msg.setCode(CMD_SEND_SMS);
+   msg.setId(dwRqId);
+   msg.setField(VID_RCPT_ADDR, phone);
+   msg.setField(VID_MESSAGE, message);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -209,15 +209,15 @@ UINT32 LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *
  */
 UINT32 LIBNXCL_EXPORTABLE NXCCheckConnection(NXC_SESSION hSession)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
 	CHECK_SESSION_HANDLE();
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_KEEPALIVE);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_KEEPALIVE);
+   msg.setId(dwRqId);
    if (!((NXCL_Session *)hSession)->SendMsg(&msg))
 		return RCC_COMM_FAILURE;
 
@@ -246,7 +246,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCGenerateMessageId(NXC_SESSION hSession)
 /**
  * Send prepared NXCP message
  */
-BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, CSCPMessage *msg)
+BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, NXCPMessage *msg)
 {
 	CHECK_SESSION_HANDLE();
    return ((NXCL_Session *)hSession)->SendMsg(msg);
@@ -255,7 +255,7 @@ BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, CSCPMessage *msg)
 /**
  * Wait for message
  */
-CSCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, UINT32 dwRqId)
+NXCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, UINT32 dwRqId)
 {
 	return (hSession != NULL) ? ((NXCL_Session *)hSession)->WaitForMessage(wCode, dwRqId) : NULL;
 }
@@ -387,9 +387,16 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(UINT32 dwError)
       _T("No helpdesk link"),
       _T("Helpdesk link communication failure"),
       _T("Helpdesk link access denied"),
-      _T("Helpdesk link internal error")
+      _T("Helpdesk link internal error"),
+      _T("LDAP connection error"),
+      _T("Routing table unavailable"),
+      _T("Switch forwarding database unavailable"),
+      _T("Location history not available"),
+      _T("Object is in use and cannot be deleted"),
+      _T("Script compilation error"),
+      _T("Script execution error")
    };
-	return (dwError <= RCC_HDLINK_INTERNAL_ERROR) ? pszErrorText[dwError] : _T("No text message for this error");
+	return (dwError <= RCC_NXSL_EXECUTION_ERROR) ? pszErrorText[dwError] : _T("No text message for this error");
 }
 
 #if defined(_WIN32) && !defined(UNDER_CE)

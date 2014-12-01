@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -19,6 +19,88 @@
 ** File: nms_users.h
 **
 **/
+
+#if WITH_LDAP
+#define LDAP_DEPRECATED 1
+#ifdef _WIN32
+#include <winldap.h>
+#include <winber.h>
+#else
+#include <ldap.h>
+#endif
+#endif
+
+/**
+ * LDAP entry (object)
+ */
+class Entry
+{
+public:
+   UINT32 m_type;
+   TCHAR* m_loginName;
+   TCHAR* m_fullName;
+   TCHAR* m_description;
+   StringList *m_memberList;
+
+   Entry();
+   ~Entry();
+};
+
+/**
+ * LDAP connector
+ */
+class LDAPConnection
+{
+private:
+#if WITH_LDAP
+   LDAP *m_ldapConn;
+#ifdef _WIN32
+   TCHAR m_connList[MAX_DB_STRING];
+   TCHAR m_searchBase[MAX_DB_STRING];
+   TCHAR m_searchFilter[MAX_DB_STRING];
+   TCHAR m_userDN[MAX_DB_STRING];
+#else
+   char m_connList[MAX_DB_STRING];
+   char m_searchBase[MAX_DB_STRING];
+   char m_searchFilter[MAX_DB_STRING];
+   char m_userDN[MAX_DB_STRING];
+#endif
+   char m_userPassword[MAX_DB_STRING];
+   char m_ldapFullNameAttr[MAX_DB_STRING];
+   char m_ldapLoginNameAttr[MAX_DB_STRING];
+   char m_ldapDescriptionAttr[MAX_DB_STRING];
+   TCHAR m_userClass[MAX_DB_STRING];
+   TCHAR m_groupClass[MAX_DB_STRING];
+   int m_action;
+   int m_secure;
+   int m_pageSize;
+
+   void closeLDAPConnection();
+   void initLDAP();
+   UINT32 loginLDAP();
+   TCHAR *getErrorString(int code);
+   void getAllSyncParameters();
+   void compareGroupList(StringObjectMap<Entry>* groupEntryList);
+   void compareUserLists(StringObjectMap<Entry>* userEntryList);
+   TCHAR *getAttrValue(LDAPMessage *entry, const char *attr, UINT32 i = 0);
+#ifdef _WIN32
+   void prepareStringForInit(TCHAR *connectionLine);
+#else
+   void prepareStringForInit(char *connectionLine);
+#endif // _WIN32
+   int readInPages(StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList);
+   void fillLists(LDAPMessage *searchResult, StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList);
+#endif // WITH_LDAP
+
+public:
+#if WITH_LDAP
+   LDAPConnection();
+   ~LDAPConnection();
+#endif // WITH_LDAP
+
+   void syncUsers();
+   UINT32 ldapUserLogin(const TCHAR *name, const TCHAR *password);
+};
 
 #ifndef _nms_users_h_
 #define _nms_users_h_
@@ -55,9 +137,10 @@ protected:
    uuid_t m_guid;
 	TCHAR m_name[MAX_USER_NAME];
 	TCHAR m_description[MAX_USER_DESCR];
-	UINT32 m_systemRights;
+	UINT64 m_systemRights;
 	UINT32 m_flags;
 	StringMap m_attributes;		// Custom attributes
+   TCHAR *m_userDn;
 
 	bool loadCustomAttributes(DB_HANDLE hdb);
 	bool saveCustomAttributes(DB_HANDLE hdb);
@@ -71,25 +154,36 @@ public:
 	virtual bool saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void fillMessage(CSCPMessage *msg);
-	virtual void modifyFromMessage(CSCPMessage *msg);
+	virtual void fillMessage(NXCPMessage *msg);
+	virtual void modifyFromMessage(NXCPMessage *msg);
 
 	UINT32 getId() { return m_id; }
 	const TCHAR *getName() { return m_name; }
 	const TCHAR *getDescription() { return m_description; }
-	UINT32 getSystemRights() { return m_systemRights; }
+	UINT64 getSystemRights() { return m_systemRights; }
 	UINT32 getFlags() { return m_flags; }
 	TCHAR *getGuidAsText(TCHAR *buffer) { return uuid_to_string(m_guid, buffer); }
+   const TCHAR *getDn() { return m_userDn; }
 
 	bool isDeleted() { return (m_flags & UF_DELETED) ? true : false; }
 	bool isDisabled() { return (m_flags & UF_DISABLED) ? true : false; }
 	bool isModified() { return (m_flags & UF_MODIFIED) ? true : false; }
+	bool isLDAPUser() { return (m_flags & UF_LDAP_USER) ? true : false; }
+	bool hasSyncException() { return (m_flags & UF_SYNC_EXCEPTION) ? true : false; }
 
 	void setDeleted() { m_flags |= UF_DELETED; }
+	void enable();
+	void disable();
+	void setFlags(UINT32 flags) { m_flags = flags; }
+	void removeSyncException();
+	void setSyncException();
 
 	const TCHAR *getAttribute(const TCHAR *name) { return m_attributes.get(name); }
 	UINT32 getAttributeAsULong(const TCHAR *name);
 	void setAttribute(const TCHAR *name, const TCHAR *value) { m_attributes.set(name, value); m_flags |= UF_MODIFIED; }
+	void setName(const TCHAR *name);
+	void setDescription(const TCHAR *description);
+	void setDn(const TCHAR *dn);
 };
 
 /**
@@ -120,8 +214,8 @@ public:
 	virtual bool saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void fillMessage(CSCPMessage *msg);
-	virtual void modifyFromMessage(CSCPMessage *msg);
+	virtual void fillMessage(NXCPMessage *msg);
+	virtual void modifyFromMessage(NXCPMessage *msg);
 
 	const TCHAR *getFullName() { return m_fullName; }
 	int getGraceLogins() { return m_graceLogins; }
@@ -144,8 +238,8 @@ public:
 	void resetAuthFailures() { m_authFailures = 0; m_flags |= UF_MODIFIED; }
 	void updateLastLogin() { m_lastLogin = time(NULL); m_flags |= UF_MODIFIED; }
 	void updatePasswordChangeTime() { m_lastPasswordChange = time(NULL); m_flags |= UF_MODIFIED; }
+	void setFullName(const TCHAR *fullName);
 	void enable();
-	void disable();
 };
 
 /**
@@ -163,8 +257,8 @@ public:
 	Group(UINT32 id, const TCHAR *name);
 	virtual ~Group();
 
-	virtual void fillMessage(CSCPMessage *msg);
-	virtual void modifyFromMessage(CSCPMessage *msg);
+	virtual void fillMessage(NXCPMessage *msg);
+	virtual void modifyFromMessage(NXCPMessage *msg);
 
 	virtual bool saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -172,6 +266,7 @@ public:
 	void addUser(UINT32 userId);
 	void deleteUser(UINT32 userId);
 	bool isMember(UINT32 userId);
+	int getMembers(UINT32 **members);
 };
 
 /**
@@ -207,7 +302,7 @@ public:
 
    void enumerateElements(void (* pHandler)(UINT32, UINT32, void *), void *pArg);
 
-   void fillMessage(CSCPMessage *pMsg);
+   void fillMessage(NXCPMessage *pMsg);
 };
 
 /**
@@ -218,7 +313,7 @@ void SaveUsers(DB_HANDLE hdb);
 void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object);
 void SendUserDBUpdate(int code, UINT32 id);
 UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigLen, void *pCert,
-                        BYTE *pChallenge, UINT32 *pdwId, UINT32 *pdwSystemRights,
+                        BYTE *pChallenge, UINT32 *pdwId, UINT64 *pdwSystemRights,
 							   bool *pbChangePasswd, bool *pbIntruderLockout, bool ssoAuth);
 bool AuthenticateUserForXMPPCommands(const char *xmppId);
 bool AuthenticateUserForXMPPSubscription(const char *xmppId);
@@ -227,14 +322,23 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
 bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 dwUserId, UINT32 dwGroupId);
 UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id);
 UINT32 NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, UINT32 *pdwId);
-UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(CSCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg);
 UserDatabaseObject NXCORE_EXPORTABLE **OpenUserDatabase(int *count);
 void NXCORE_EXPORTABLE CloseUserDatabase();
 const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name);
 UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name);
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value);
 bool NXCORE_EXPORTABLE ResolveUserId(UINT32 id, TCHAR *buffer, int bufSize);
-void FillGroupMembershipInfo(CSCPMessage *msg, UINT32 userId);
+void NXCORE_EXPORTABLE UpdateLDAPUser(const TCHAR* dn, Entry *obj);
+void RemoveDeletedLDAPEntry(StringObjectMap<Entry>* userEntryList, UINT32 m_action, bool isUser);
+void NXCORE_EXPORTABLE UpdateLDAPGroup(const TCHAR* dn, Entry *obj);
+void SyncGroupMembers(Group* group, Entry *obj);
+UserDatabaseObject* GetUser(UINT32 userID);
+UserDatabaseObject* GetUser(const TCHAR* dn);
+THREAD_RESULT THREAD_CALL SyncLDAPUsers(void *arg);
+bool UserNameIsUnique(TCHAR* name, UINT32 id);
+bool GroupNameIsUnique(TCHAR* name, UINT32 id);
+void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId);
 void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups);
 void DumpUsers(CONSOLE_CTX pCtx);
 

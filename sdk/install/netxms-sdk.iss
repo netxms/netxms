@@ -3,8 +3,8 @@
 
 [Setup]
 AppName=NetXMS SDK
-AppVerName=NetXMS SDK 1.1.10
-AppVersion=1.1.10
+AppVerName=NetXMS SDK 1.2.16
+AppVersion=1.2.16
 AppPublisher=Raden Solutions
 AppPublisherURL=http://www.radensolutions.com
 AppSupportURL=http://www.radensolutions.com
@@ -16,13 +16,19 @@ LicenseFile=..\..\LGPL.txt
 Compression=lzma
 SolidCompression=yes
 LanguageDetectionMethod=none
-OutputBaseFilename=netxms-sdk-1.1.10
+OutputBaseFilename=netxms-sdk-1.2.16
 
 [Files]
 ; Header files
+Source: "..\..\include\appagent.h"; DestDir: "{app}\include"; Flags: ignoreversion;
+Source: "..\..\include\ata.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\base64.h"; DestDir: "{app}\include"; Flags: ignoreversion;
+Source: "..\..\include\build.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\dbdrv.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\geolocation.h"; DestDir: "{app}\include"; Flags: ignoreversion;
+Source: "..\..\include\ieee8021x.h"; DestDir: "{app}\include"; Flags: ignoreversion;
+Source: "..\..\include\jansson.h"; DestDir: "{app}\include"; Flags: ignoreversion;
+Source: "..\..\include\jansson_config.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\netxms-regex.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\netxms-version.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\netxms_getopt.h"; DestDir: "{app}\include"; Flags: ignoreversion;
@@ -43,14 +49,20 @@ Source: "..\..\include\nxlog.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\nxlpapi.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\nxmbapi.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\nxqueue.h"; DestDir: "{app}\include"; Flags: ignoreversion;
+Source: "..\..\include\nxsdapi.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\nxsl.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\nxsl_classes.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\nxsnmp.h"; DestDir: "{app}\include"; Flags: ignoreversion;
+Source: "..\..\include\nxstat.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\nxtools.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\rwlock.h"; DestDir: "{app}\include"; Flags: ignoreversion;
+Source: "..\..\include\strophe.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\unicode.h"; DestDir: "{app}\include"; Flags: ignoreversion;
+Source: "..\..\include\uthash.h"; DestDir: "{app}\include"; Flags: ignoreversion;
 Source: "..\..\include\uuid.h"; DestDir: "{app}\include"; Flags: ignoreversion;
+Source: "..\..\src\server\include\hdlink.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
 Source: "..\..\src\server\include\nddrv.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
+Source: "..\..\src\server\include\netxms_mt.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
 Source: "..\..\src\server\include\nms_actions.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
 Source: "..\..\src\server\include\nms_alarm.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
 Source: "..\..\src\server\include\nms_core.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
@@ -65,53 +77,59 @@ Source: "..\..\src\server\include\nms_users.h"; DestDir: "{app}\include\server";
 Source: "..\..\src\server\include\nxcore_jobs.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
 Source: "..\..\src\server\include\nxcore_logs.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
 Source: "..\..\src\server\include\nxcore_situations.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
+Source: "..\..\src\server\include\nxcore_smclp.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
+Source: "..\..\src\server\include\nxcore_winperf.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
 Source: "..\..\src\server\include\nxmodule.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
 Source: "..\..\src\server\include\nxsrvapi.h"; DestDir: "{app}\include\server"; Flags: ignoreversion;
 ; x86 libraries
+Source: "..\..\release\appagent.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
+Source: "..\..\release\jansson.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libexpat.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libnetxms.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
-Source: "..\..\release\libnetxmsw.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libnxcl.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
-Source: "..\..\release\libnxclw.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libnxdb.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
-Source: "..\..\release\libnxdbw.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libnxlp.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libnxmap.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
-Source: "..\..\release\libnxmapw.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libnxmb.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libnxsl.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libnxsnmp.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libnxsrv.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
+Source: "..\..\release\libstrophe.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\libtre.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\nxcore.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\nxsqlite.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 Source: "..\..\release\nxzlib.lib"; DestDir: "{app}\lib\x86"; Flags: ignoreversion;
 ; x64 libraries
+Source: "..\..\x64\release\appagent.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
+Source: "..\..\x64\release\jansson.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\libexpat.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\libnetxms.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
-Source: "..\..\x64\release\libnetxmsw.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\libnxcl.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
-Source: "..\..\x64\release\libnxclw.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\libnxdb.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
-Source: "..\..\x64\release\libnxdbw.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\libnxlp.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\libnxmap.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
-Source: "..\..\x64\release\libnxmapw.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\libnxmb.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\libnxsl.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\libnxsnmp.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\libnxsrv.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
+Source: "..\..\x64\release\libstrophe.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\libtre.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\nxcore.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\nxsqlite.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 Source: "..\..\x64\release\nxzlib.lib"; DestDir: "{app}\lib\x64"; Flags: ignoreversion;
 ; Java API
-Source: "..\..\src\java\netxms-base\target\netxms-base-1.1.10.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-Source: "..\..\src\java\netxms-base\target\netxms-base-1.1.10-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-Source: "..\..\src\java\netxms-client\target\netxms-client-1.1.10.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-Source: "..\..\src\java\netxms-client\target\netxms-client-1.1.10-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-Source: "..\..\src\java\netxms-client-api\target\netxms-client-api-1.1.10.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
-Source: "..\..\src\java\netxms-client-api\target\netxms-client-api-1.1.10-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\agent\subagents\java\java\target\netxms-agent-1.2.16.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\agent\subagents\java\java\target\netxms-agent-1.2.16-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\certificate-manager\target\certificate-manager-1.2.16.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\certificate-manager\target\certificate-manager-1.2.16-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\mobile-agent\target\netxms-mobile-agent-1.2.16.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\mobile-agent\target\netxms-mobile-agent-1.2.16-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\netxms-base\target\netxms-base-1.2.16.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\netxms-base\target\netxms-base-1.2.16-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\netxms-client\target\netxms-client-1.2.16.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\netxms-client\target\netxms-client-1.2.16-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\netxms-client-api\target\netxms-client-api-1.2.16.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
+Source: "..\..\src\java\netxms-client-api\target\netxms-client-api-1.2.16-javadoc.jar"; DestDir: "{app}\java"; Flags: ignoreversion;
 ; Documentation
 Source: "..\..\doc\internal\event_code_ranges.txt"; DestDir: "{app}\doc"; Flags: ignoreversion;
 Source: "..\..\doc\internal\nxcp_command_ranges.txt"; DestDir: "{app}\doc"; Flags: ignoreversion;

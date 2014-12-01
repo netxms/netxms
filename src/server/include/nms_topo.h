@@ -75,7 +75,7 @@ public:
 	int getHopCount() { return m_hopCount; }
 	HOP_INFO *getHopInfo(int index) { return ((index >= 0) && (index < m_hopCount)) ? &m_path[index] : NULL; }
 
-	void fillMessage(CSCPMessage *msg);
+	void fillMessage(NXCPMessage *msg);
 };
 
 /**
@@ -87,6 +87,8 @@ struct FDB_ENTRY
 	UINT32 ifIndex;                 // Interface index
 	BYTE macAddr[MAC_ADDR_LENGTH]; // MAC address
 	UINT32 nodeObject;              // ID of node object or 0 if not found
+   UINT16 vlanId;
+   UINT16 type;
 };
 
 /**
@@ -104,6 +106,7 @@ struct PORT_MAPPING_ENTRY
 class ForwardingDatabase : public RefCountObject
 {
 private:
+   UINT32 m_nodeId;
 	int m_fdbSize;
 	int m_fdbAllocated;
 	FDB_ENTRY *m_fdb;
@@ -111,11 +114,12 @@ private:
 	int m_pmAllocated;
 	PORT_MAPPING_ENTRY *m_portMap;
 	time_t m_timestamp;
+   UINT16 m_currentVlanId;
 
 	UINT32 ifIndexFromPort(UINT32 port);
 
 public:
-	ForwardingDatabase();
+	ForwardingDatabase(UINT32 nodeId);
 	virtual ~ForwardingDatabase();
 
 	void addEntry(FDB_ENTRY *entry);
@@ -127,11 +131,15 @@ public:
 	int getSize() { return m_fdbSize; }
 	FDB_ENTRY *getEntry(int index) { return ((index >= 0) && (index < m_fdbSize)) ? &m_fdb[index] : NULL; }
 
+   void setCurrentVlanId(UINT16 vlanId) { m_currentVlanId = vlanId; }
+   UINT16 getCurrentVlanId() { return m_currentVlanId; }
+
 	UINT32 findMacAddress(const BYTE *macAddr);
 	bool isSingleMacOnPort(UINT32 ifIndex, BYTE *macAddr = NULL);
 	int getMacCountOnPort(UINT32 ifIndex);
 
    void print(CONSOLE_CTX ctx, Node *owner);
+   void fillMessage(NXCPMessage *msg);
 };
 
 /**
@@ -153,11 +161,12 @@ enum LinkLayerProtocol
  */
 struct LL_NEIGHBOR_INFO
 {
-	UINT32 ifLocal;			// Local interface index
-	UINT32 ifRemote;		// Remote interface index
-	UINT32 objectId;		// ID of connected object
-	bool isPtToPt;			// true if this is point-to-point link
-	int protocol;			// Protocol used to obtain information
+	UINT32 ifLocal;             // Local interface index
+	UINT32 ifRemote;            // Remote interface index
+	UINT32 objectId;		       // ID of connected object
+	bool isPtToPt;			       // true if this is point-to-point link
+	LinkLayerProtocol protocol; // Protocol used to obtain information
+   bool isCached;              // true if this is cached information
 };
 
 /**
@@ -184,7 +193,7 @@ public:
 	void *getData(int index) { return ((index >= 0) && (index < 4)) ? m_data[index] : NULL; }
 	void setData(void *data) { setData(0, data); }
 	void *getData() { return getData(0); }
-	int getSize() { return m_count; }
+	int size() { return m_count; }
 };
 
 
@@ -246,7 +255,7 @@ public:
 	~VrrpInfo();
 
 	int getVersion() { return m_version; }
-	int getSize() { return m_routers->size(); }
+	int size() { return m_routers->size(); }
 	VrrpRouter *getRouter(int index) { return m_routers->get(index); }
 };
 
@@ -272,5 +281,7 @@ void BuildLldpId(int type, const BYTE *data, int length, TCHAR *id, int idLen);
 void BridgeMapPorts(int snmpVersion, SNMP_Transport *transport, InterfaceList *ifList);
 
 VrrpInfo *GetVRRPInfo(Node *node);
+
+const TCHAR *GetLinkLayerProtocolName(LinkLayerProtocol p); 
 
 #endif   /* _nms_topo_h_ */

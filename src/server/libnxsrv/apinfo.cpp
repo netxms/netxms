@@ -27,9 +27,9 @@
 // Constructor
 //
 
-AgentPolicyInfo::AgentPolicyInfo(CSCPMessage *msg)
+AgentPolicyInfo::AgentPolicyInfo(NXCPMessage *msg)
 {
-	m_size = msg->GetVariableLong(VID_NUM_ELEMENTS);
+	m_size = msg->getFieldAsUInt32(VID_NUM_ELEMENTS);
 	if (m_size > 0)
 	{
 		m_guidList = (BYTE *)malloc(UUID_LENGTH * m_size);
@@ -39,9 +39,9 @@ AgentPolicyInfo::AgentPolicyInfo(CSCPMessage *msg)
 		UINT32 varId = VID_ELEMENT_LIST_BASE;
 		for(int i = 0; i < m_size; i++, varId += 7)
 		{
-			msg->GetVariableBinary(varId++, &m_guidList[i * UUID_LENGTH], UUID_LENGTH);
-			m_typeList[i] = (int)msg->GetVariableShort(varId++);
-			m_serverList[i] = msg->GetVariableStr(varId++);
+			msg->getFieldAsBinary(varId++, &m_guidList[i * UUID_LENGTH], UUID_LENGTH);
+			m_typeList[i] = (int)msg->getFieldAsUInt16(varId++);
+			m_serverList[i] = msg->getFieldAsString(varId++);
 		}
 	}
 	else

@@ -25,10 +25,13 @@
 /**
  * List of loaded modules
  */
-TCHAR *g_pszModLoadList = NULL;
+TCHAR *g_moduleLoadList = NULL;
 UINT32 g_dwNumModules = 0;
 NXMODULE *g_pModuleList = NULL;
 
+/**
+ * Load module
+ */
 static bool LoadNetXMSModule(const TCHAR *name)
 {
 	bool success = false;
@@ -117,7 +120,7 @@ bool LoadNetXMSModules()
    TCHAR *curr, *next, *ptr;
    bool success = true;
 
-	for(curr = g_pszModLoadList; curr != NULL; curr = next)
+	for(curr = g_moduleLoadList; curr != NULL; curr = next)
    {
 		next = _tcschr(curr, _T('\n'));
 		if (next != NULL)
@@ -152,4 +155,41 @@ bool LoadNetXMSModules()
       }
    }
 	return success;
+}
+
+/**
+ * Module object data constructor
+ */
+ModuleData::ModuleData()
+{
+}
+
+/**
+ * Module object data destructor
+ */
+ModuleData::~ModuleData()
+{
+}
+
+/**
+ * Fill NXCP message with module data
+ */
+void ModuleData::fillMessage(NXCPMessage *msg, UINT32 baseId)
+{
+}
+
+/**
+ * Save module data to database.
+ */
+bool ModuleData::saveToDatabase(DB_HANDLE hdb, UINT32 objectId)
+{
+   return true;
+}
+
+/**
+ * Delete module data from database.
+ */
+bool ModuleData::deleteFromDatabase(DB_HANDLE hdb, UINT32 objectId)
+{
+   return true;
 }

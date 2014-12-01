@@ -78,13 +78,13 @@ SoftwarePackage::~SoftwarePackage()
 /**
  * Fill NXCP message with package data
  */
-void SoftwarePackage::fillMessage(CSCPMessage *msg, UINT32 baseId)
+void SoftwarePackage::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
 	UINT32 varId = baseId;
-	msg->SetVariable(varId++, CHECK_NULL_EX(m_name));
-	msg->SetVariable(varId++, CHECK_NULL_EX(m_version));
-	msg->SetVariable(varId++, CHECK_NULL_EX(m_vendor));
-	msg->SetVariable(varId++, (UINT32)m_date);
-	msg->SetVariable(varId++, CHECK_NULL_EX(m_url));
-	msg->SetVariable(varId++, CHECK_NULL_EX(m_description));
+	msg->setField(varId++, CHECK_NULL_EX(m_name));
+	msg->setField(varId++, CHECK_NULL_EX(m_version));
+	msg->setField(varId++, CHECK_NULL_EX(m_vendor));
+	msg->setField(varId++, (UINT32)m_date);
+	msg->setField(varId++, CHECK_NULL_EX(m_url));
+	msg->setField(varId++, CHECK_NULL_EX(m_description));
 }

@@ -49,6 +49,7 @@ import org.netxms.client.maps.configs.DCIImageConfiguration;
 import org.netxms.client.maps.configs.DCIImageRule;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.dialogs.EditDCIImageRuleDialog;
 import org.netxms.ui.eclipse.networkmaps.propertypages.helper.DCIImageRuleLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -110,7 +111,7 @@ public class DCIImageRuleList extends PropertyPage
       layout.numColumns = 2;
       RuleArea.setLayout(layout);
 
-      new Label(RuleArea, SWT.NONE).setText("Rules");
+      new Label(RuleArea, SWT.NONE).setText(Messages.get().DCIImageRuleList_Rules);
 
       RuleList = new TableViewer(RuleArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
       gd = new GridData();
@@ -138,7 +139,7 @@ public class DCIImageRuleList extends PropertyPage
       leftButtons.setLayout(buttonsLayout);
 
       upButton = new Button(leftButtons, SWT.PUSH);
-      upButton.setText("Up");
+      upButton.setText(Messages.get().DCIImageRuleList_Up);
       upButton.setEnabled(false);
       upButton.addSelectionListener(new SelectionListener() {
          @Override
@@ -155,7 +156,7 @@ public class DCIImageRuleList extends PropertyPage
       });
 
       downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText("Down");
+      downButton.setText(Messages.get().DCIImageRuleList_Down);
       downButton.setEnabled(false);
       downButton.addSelectionListener(new SelectionListener() {
          @Override
@@ -186,7 +187,7 @@ public class DCIImageRuleList extends PropertyPage
       buttons.setLayout(buttonsLayout);
 
       addButton = new Button(buttons, SWT.PUSH);
-      addButton.setText("Add");
+      addButton.setText(Messages.get().DCIImageRuleList_Add);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -205,7 +206,7 @@ public class DCIImageRuleList extends PropertyPage
       });
 
       modifyButton = new Button(buttons, SWT.PUSH);
-      modifyButton.setText("Edit");
+      modifyButton.setText(Messages.get().DCIImageRuleList_Edit);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       modifyButton.setLayoutData(rd);
@@ -225,7 +226,7 @@ public class DCIImageRuleList extends PropertyPage
       });
 
       deleteButton = new Button(buttons, SWT.PUSH);
-      deleteButton.setText("Delete");
+      deleteButton.setText(Messages.get().DCIImageRuleList_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);
@@ -369,11 +370,11 @@ public class DCIImageRuleList extends PropertyPage
       table.setHeaderVisible(true);
 
       TableColumn column = new TableColumn(table, SWT.LEFT);
-      column.setText("Expression");
+      column.setText(Messages.get().DCIImageRuleList_Expression);
       column.setWidth(200);
 
       column = new TableColumn(table, SWT.LEFT);
-      column.setText("Comment");
+      column.setText(Messages.get().DCIImageRuleList_Comment);
       column.setWidth(150);
 
       WidgetHelper.restoreColumnSettings(table, Activator.getDefault().getDialogSettings(), COLUMN_SETTINGS_PREFIX);

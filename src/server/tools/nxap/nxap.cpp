@@ -46,7 +46,7 @@ static int GetPolicyInventory(AgentConnection &conn)
 
 		_tprintf(_T("GUID                                 Type Server\n")
 		         _T("----------------------------------------------------------\n"));
-		for(int i = 0; i < ap->getSize(); i++)
+		for(int i = 0; i < ap->size(); i++)
 		{
 			ap->getGuid(i, guid);
 			_tprintf(_T("%-16s %-4d %s\n"), uuid_to_string(guid, buffer), ap->getType(i), ap->getServer(i));

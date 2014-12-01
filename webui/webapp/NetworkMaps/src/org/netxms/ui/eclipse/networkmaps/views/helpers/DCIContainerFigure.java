@@ -26,6 +26,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
@@ -58,7 +59,7 @@ public class DCIContainerFigure extends DecorationLayerAbstractFigure
       final Color textColor = labelProvider.getColors().create(ColorConverter.rgbFromInt(container.getTextColor()));
       borderColor = labelProvider.getColors().create(ColorConverter.rgbFromInt(container.getBorderColor()));
 	
-		label = new Label(text.isEmpty() ? "Empty DCI container" : text);
+		label = new Label(text.isEmpty() ? Messages.get().DCIContainerFigure_NoValue : text);
 		label.setFont(labelProvider.getTitleFont());
 		add(label);
 			
@@ -100,7 +101,7 @@ public class DCIContainerFigure extends DecorationLayerAbstractFigure
    {
       //Set new label text   
       String text = dciValueProvider.getDciDataAsString(container.getDciAsList());      
-      label.setText(text.isEmpty() ? "Empty DCI container" : text);
+      label.setText(text.isEmpty() ? Messages.get().DCIContainerFigure_NoValue : text);
       
       //Recalculate figure size
       Dimension d = label.getPreferredSize();

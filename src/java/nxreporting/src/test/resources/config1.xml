@@ -1,0 +1,4 @@
+<config>
+    <workspace>/path/to/workspace</workspace>
+    <netxmsdConfig>src/test/resources/netxmsd.conf</netxmsdConfig>
+</config>

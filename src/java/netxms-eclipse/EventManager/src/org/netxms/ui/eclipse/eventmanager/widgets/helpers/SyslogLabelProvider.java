@@ -43,7 +43,7 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 	private static final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);
 	private static final Color[] FOREGROUND_COLORS =
 		{ FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_LIGHT };
-	private static final int[] severityMap = 
+	private static final Severity[] severityMap = 
 		{ Severity.CRITICAL, Severity.CRITICAL, Severity.MAJOR, Severity.MINOR, Severity.WARNING, Severity.WARNING, Severity.NORMAL, Severity.NORMAL };  
 	private static final String[] severityText = 
 		{ Messages.get().SyslogLabelProvider_SevEmergency, Messages.get().SyslogLabelProvider_SevAlert, Messages.get().SyslogLabelProvider_SevCritical, Messages.get().SyslogLabelProvider_SevError, Messages.get().SyslogLabelProvider_SevWarning, Messages.get().SyslogLabelProvider_SevNotice, Messages.get().SyslogLabelProvider_SevInfo, Messages.get().SyslogLabelProvider_SevDebug };
@@ -63,7 +63,7 @@ public class SyslogLabelProvider extends LabelProvider implements ITableLabelPro
 	@Override
 	public Color getForeground(Object element)
 	{
-		return showColor ? FOREGROUND_COLORS[severityMap[((SyslogRecord)element).getSeverity()]] : null;
+		return showColor ? FOREGROUND_COLORS[severityMap[((SyslogRecord)element).getSeverity()].getValue()] : null;
 	}
 
 	/* (non-Javadoc)

@@ -120,6 +120,7 @@ public class PerfTab extends PropertyPage
       parentDci = new DciSelector(dialogArea, SWT.NONE, false);
       parentDci.setDciId(dci.getNodeId(), settings.getParentDciId());
       parentDci.setFixedNode(true);
+      parentDci.setAllowNoValueObjects(true);
       parentDci.setLabel(Messages.get().PerfTab_Attach);
       gd = new GridData();
       gd.horizontalSpan = layout.numColumns;

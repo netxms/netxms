@@ -1,13 +1,12 @@
 SUBAGENT = logwatch
 
 pkglib_LTLIBRARIES = logwatch.la
-logwatch_la_SOURCES = main.cpp
+logwatch_la_SOURCES = logwatch.cpp
 logwatch_la_CPPFLAGS=-I@top_srcdir@/include
 logwatch_la_LDFLAGS = -module -avoid-version
 logwatch_la_LIBADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/libnxlp/libnxlp.la
 
-EXTRA_DIST = logwatch.h logwatch.vcproj \
-             eventlog.cpp wevt.cpp
+EXTRA_DIST = logwatch.h logwatch.vcproj
 
 if !STATIC_BUILD
 install-exec-hook:

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
@@ -163,12 +163,12 @@ NetObj *ObjectIndex::get(QWORD key)
 /**
  * Get index size
  */
-int ObjectIndex::getSize()
+int ObjectIndex::size()
 {
 	RWLockReadLock(m_lock, INFINITE);
-	int size = m_size;
+	int s = m_size;
 	RWLockUnlock(m_lock);
-	return size;
+	return s;
 }
 
 /**
@@ -178,15 +178,18 @@ int ObjectIndex::getSize()
  *
  * @param updateRefCount if set to true, reference count for each object will be increased
  */
-ObjectArray<NetObj> *ObjectIndex::getObjects(bool updateRefCount)
+ObjectArray<NetObj> *ObjectIndex::getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *), void *userData)
 {
 	RWLockReadLock(m_lock, INFINITE);
 	ObjectArray<NetObj> *result = new ObjectArray<NetObj>(m_size);
 	for(int i = 0; i < m_size; i++)
    {
-      if (updateRefCount)
-         m_elements[i].object->incRefCount();
-		result->add(m_elements[i].object);
+      if ((filter == NULL) || filter(m_elements[i].object, userData))
+      {
+         if (updateRefCount)
+            m_elements[i].object->incRefCount();
+		   result->add(m_elements[i].object);
+      }
    }
 	RWLockUnlock(m_lock);
 	return result;

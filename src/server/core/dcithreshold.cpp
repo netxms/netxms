@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -29,7 +29,7 @@ Threshold::Threshold(DCItem *pRelatedItem)
 {
    m_id = 0;
    m_itemId = pRelatedItem->getId();
-   m_targetId = pRelatedItem->getTarget()->Id();
+   m_targetId = pRelatedItem->getTarget()->getId();
    m_eventCode = EVENT_THRESHOLD_REACHED;
    m_rearmEventCode = EVENT_THRESHOLD_REARMED;
    m_function = F_LAST;
@@ -106,7 +106,7 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 
    m_id = DBGetFieldULong(hResult, iRow, 0);
    m_itemId = pRelatedItem->getId();
-   m_targetId = pRelatedItem->getTarget()->Id();
+   m_targetId = pRelatedItem->getTarget()->getId();
    m_eventCode = DBGetFieldULong(hResult, iRow, 7);
    m_rearmEventCode = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 1, szBuffer, MAX_DB_STRING);
@@ -134,7 +134,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
 {
    createId();
    m_itemId = parentItem->getId();
-   m_targetId = parentItem->getTarget()->Id();
+   m_targetId = parentItem->getTarget()->getId();
    m_eventCode = EventCodeFromName(config->getSubEntryValue(_T("activationEvent"), 0, _T("SYS_THRESHOLD_REACHED")));
    m_rearmEventCode = EventCodeFromName(config->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_THRESHOLD_REARMED")));
    m_function = (BYTE)config->getSubEntryValueAsInt(_T("function"), 0, F_LAST);
@@ -167,7 +167,7 @@ Threshold::~Threshold()
  */
 void Threshold::createId()
 {
-   m_id = CreateUniqueId(IDG_THRESHOLD); 
+   m_id = CreateUniqueId(IDG_THRESHOLD);
 }
 
 /**
@@ -179,7 +179,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 	DB_STATEMENT hStmt;
 	if (!IsDatabaseRecordExist(hdb, _T("thresholds"), _T("threshold_id"), m_id))
 	{
-		hStmt = DBPrepare(hdb, 		              
+		hStmt = DBPrepare(hdb,
 			_T("INSERT INTO thresholds (item_id,fire_value,rearm_value,")
 			_T("check_function,check_operation,sample_count,script,event_code,")
 			_T("sequence_number,current_state,rearm_event_code,repeat_interval,")
@@ -188,7 +188,7 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
 	}
 	else
 	{
-		hStmt = DBPrepare(hdb, 		              
+		hStmt = DBPrepare(hdb,
 			_T("UPDATE thresholds SET item_id=?,fire_value=?,rearm_value=?,check_function=?,")
          _T("check_operation=?,sample_count=?,script=?,event_code=?,")
          _T("sequence_number=?,current_state=?,rearm_event_code=?,")
@@ -273,12 +273,12 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
       {
          NXSL_Value *nxslValue = new NXSL_Value(value.getString());
          m_script->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, target)));
-         if (target->Type() == OBJECT_NODE)
+         if (target->getObjectClass() == OBJECT_NODE)
          {
             m_script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, target)));
          }
          m_script->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci)));
-         m_script->setGlobalVariable(_T("$isCluster"), new NXSL_Value((target->Type() == OBJECT_CLUSTER) ? 1 : 0));
+         m_script->setGlobalVariable(_T("$isCluster"), new NXSL_Value((target->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
          if (m_script->run(1, &nxslValue))
          {
             nxslValue = m_script->getResult();
@@ -290,14 +290,14 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          else
          {
             TCHAR buffer[1024];
-            _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->Name(), dci->getId(), m_id);
+            _sntprintf(buffer, 1024, _T("DCI::%s::%d::%d::ThresholdScript"), target->getName(), dci->getId(), m_id);
             PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_script->getErrorText(), dci->getId());
          }
       }
       else
       {
          DbgPrintf(7, _T("Script not compiled for threshold %d of DCI %d of data collection target %s [%d]"),
-                   m_id, dci->getId(), target->Name(), target->Id());
+                   m_id, dci->getId(), target->getName(), target->getId());
       }
    }
    else
@@ -513,40 +513,40 @@ ThresholdCheckResult Threshold::checkError(UINT32 dwErrorCount)
 /**
  * Fill DCI_THRESHOLD with object's data ready to send over the network
  */
-void Threshold::createMessage(CSCPMessage *msg, UINT32 baseId)
+void Threshold::createMessage(NXCPMessage *msg, UINT32 baseId)
 {
 	UINT32 varId = baseId;
 
-	msg->SetVariable(varId++, m_id);
-	msg->SetVariable(varId++, m_eventCode);
-	msg->SetVariable(varId++, m_rearmEventCode);
-	msg->SetVariable(varId++, (WORD)m_function);
-	msg->SetVariable(varId++, (WORD)m_operation);
-	msg->SetVariable(varId++, (UINT32)m_sampleCount);
-	msg->SetVariable(varId++, CHECK_NULL_EX(m_scriptSource));
-	msg->SetVariable(varId++, (UINT32)m_repeatInterval);
-	msg->SetVariable(varId++, m_value.getString());
-	msg->SetVariable(varId++, (WORD)m_isReached);
-	msg->SetVariable(varId++, (WORD)m_currentSeverity);
-	msg->SetVariable(varId++, (UINT32)m_lastEventTimestamp);
+	msg->setField(varId++, m_id);
+	msg->setField(varId++, m_eventCode);
+	msg->setField(varId++, m_rearmEventCode);
+	msg->setField(varId++, (WORD)m_function);
+	msg->setField(varId++, (WORD)m_operation);
+	msg->setField(varId++, (UINT32)m_sampleCount);
+	msg->setField(varId++, CHECK_NULL_EX(m_scriptSource));
+	msg->setField(varId++, (UINT32)m_repeatInterval);
+	msg->setField(varId++, m_value.getString());
+	msg->setField(varId++, (WORD)m_isReached);
+	msg->setField(varId++, (WORD)m_currentSeverity);
+	msg->setField(varId++, (UINT32)m_lastEventTimestamp);
 }
 
 /**
  * Update threshold object from NXCP message
  */
-void Threshold::updateFromMessage(CSCPMessage *msg, UINT32 baseId)
+void Threshold::updateFromMessage(NXCPMessage *msg, UINT32 baseId)
 {
 	TCHAR buffer[MAX_DCI_STRING_VALUE];
 	UINT32 varId = baseId + 1;	// Skip ID field
 
-	m_eventCode = msg->GetVariableLong(varId++);
-	m_rearmEventCode = msg->GetVariableLong(varId++);
-   m_function = (BYTE)msg->GetVariableShort(varId++);
-   m_operation = (BYTE)msg->GetVariableShort(varId++);
-   m_sampleCount = (int)msg->GetVariableLong(varId++);
-   setScript(msg->GetVariableStr(varId++));
-	m_repeatInterval = (int)msg->GetVariableLong(varId++);
-	m_value = msg->GetVariableStr(varId++, buffer, MAX_DCI_STRING_VALUE);
+	m_eventCode = msg->getFieldAsUInt32(varId++);
+	m_rearmEventCode = msg->getFieldAsUInt32(varId++);
+   m_function = (BYTE)msg->getFieldAsUInt16(varId++);
+   m_operation = (BYTE)msg->getFieldAsUInt16(varId++);
+   m_sampleCount = (int)msg->getFieldAsUInt32(varId++);
+   setScript(msg->getFieldAsString(varId++));
+	m_repeatInterval = (int)msg->getFieldAsUInt32(varId++);
+	m_value = msg->getFieldAsString(varId++, buffer, MAX_DCI_STRING_VALUE);
 }
 
 /**
@@ -789,7 +789,7 @@ void Threshold::createNXMPRecord(String &str, int index)
 void Threshold::associate(DCItem *pItem)
 {
    m_itemId = pItem->getId();
-   m_targetId = pItem->getTarget()->Id();
+   m_targetId = pItem->getTarget()->getId();
    m_dataType = pItem->getDataType();
 }
 

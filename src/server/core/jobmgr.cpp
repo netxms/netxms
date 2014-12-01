@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
@@ -23,32 +23,29 @@
 #include "nxcore.h"
 
 
-//
-// Job operation codes
-//
-
+/**
+ * Job operation codes
+ */
 #define CANCEL_JOB		0
 #define HOLD_JOB			1
 #define UNHOLD_JOB		2
 
 
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static ObjectIndex s_jobNodes;
 
 
-//
-// Add job
-//
-
+/**
+ * Add job
+ */
 bool NXCORE_EXPORTABLE AddJob(ServerJob *job)
 {
 	bool success = false;
 
 	NetObj *object = FindObjectById(job->getRemoteNode());
-	if ((object != NULL) && (object->Type() == OBJECT_NODE))
+	if ((object != NULL) && (object->getObjectClass() == OBJECT_NODE))
 	{
 		ServerJobQueue *queue = ((Node *)object)->getJobQueue();
 		queue->add(job);
@@ -59,23 +56,21 @@ bool NXCORE_EXPORTABLE AddJob(ServerJob *job)
 }
 
 
-//
-// Unregister job from job manager
-//
-
+/**
+ * Unregister job from job manager
+ */
 void UnregisterJob(UINT32 jobId)
 {
 	s_jobNodes.remove(jobId);
 }
 
 
-//
-// Get job list
-//
-
+/**
+ * Get job list
+ */
 struct __job_callback_data
 {
-	CSCPMessage *msg;
+	NXCPMessage *msg;
 	UINT32 jobCount;
 	UINT32 baseId;
 };
@@ -87,7 +82,7 @@ static void JobListCallback(NetObj *object, void *data)
 	jcb->jobCount += queue->fillMessage(jcb->msg, &jcb->baseId);
 }
 
-void GetJobList(CSCPMessage *msg)
+void GetJobList(NXCPMessage *msg)
 {
 	struct __job_callback_data jcb;
 
@@ -95,18 +90,17 @@ void GetJobList(CSCPMessage *msg)
 	jcb.jobCount = 0;
 	jcb.baseId = VID_JOB_LIST_BASE;
 	g_idxNodeById.forEach(JobListCallback, &jcb);
-	msg->SetVariable(VID_JOB_COUNT, jcb.jobCount);
+	msg->setField(VID_JOB_COUNT, jcb.jobCount);
 }
 
 
-//
-// Implementatoin for job status changing operations: cancel, hold, unhold
-//
-
-static UINT32 ChangeJobStatus(UINT32 userId, CSCPMessage *msg, int operation)
+/**
+ * Implementatoin for job status changing operations: cancel, hold, unhold
+ */
+static UINT32 ChangeJobStatus(UINT32 userId, NXCPMessage *msg, int operation)
 {
 	UINT32 rcc = RCC_INVALID_JOB_ID;
-	UINT32 jobId = msg->GetVariableLong(VID_JOB_ID);
+	UINT32 jobId = msg->getFieldAsUInt32(VID_JOB_ID);
 	Node *node = (Node *)s_jobNodes.get(jobId);
 	if (node != NULL)
 	{
@@ -146,40 +140,36 @@ static UINT32 ChangeJobStatus(UINT32 userId, CSCPMessage *msg, int operation)
 }
 
 
-//
-// Cancel job
-//
-
-UINT32 NXCORE_EXPORTABLE CancelJob(UINT32 userId, CSCPMessage *msg)
+/**
+ * Cancel job
+ */
+UINT32 NXCORE_EXPORTABLE CancelJob(UINT32 userId, NXCPMessage *msg)
 {
 	return ChangeJobStatus(userId, msg, CANCEL_JOB);
 }
 
 
-//
-// Hold job
-//
-
-UINT32 NXCORE_EXPORTABLE HoldJob(UINT32 userId, CSCPMessage *msg)
+/**
+ * Hold job
+ */
+UINT32 NXCORE_EXPORTABLE HoldJob(UINT32 userId, NXCPMessage *msg)
 {
 	return ChangeJobStatus(userId, msg, HOLD_JOB);
 }
 
 
-//
-// Unhold job
-//
-
-UINT32 NXCORE_EXPORTABLE UnholdJob(UINT32 userId, CSCPMessage *msg)
+/**
+ * Unhold job
+ */
+UINT32 NXCORE_EXPORTABLE UnholdJob(UINT32 userId, NXCPMessage *msg)
 {
 	return ChangeJobStatus(userId, msg, UNHOLD_JOB);
 }
 
 
-//
-// Job manager worker thread
-//
-
+/**
+ * Job manager worker thread
+ */
 static void CleanupJobQueue(NetObj *object, void *data)
 {
 	ServerJobQueue *queue = ((Node *)object)->getJobQueue();

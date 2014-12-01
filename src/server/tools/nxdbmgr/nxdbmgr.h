@@ -39,10 +39,9 @@
 #define SQL_TYPE_TEXT4K    1
 #define SQL_TYPE_INT64     2
 
-//
-// Execute with error check
-//
-
+/**
+ * Execute with error check
+ */
 #define CHK_EXEC(x) do { if (!(x)) if (!g_bIgnoreErrors) return FALSE; } while (0)
 
 
@@ -73,6 +72,7 @@ BOOL ValidateDatabase();
 BOOL IsNodeExist(DWORD dwId);
 
 BOOL MetaDataReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
+int MetaDataReadInt(const TCHAR *pszVar, int iDefault);
 BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
 int ConfigReadInt(const TCHAR *pszVar, int iDefault);
 DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault);
@@ -94,9 +94,10 @@ extern BOOL g_bIgnoreErrors;
 extern BOOL g_bTrace;
 extern bool g_isGuiMode;
 extern bool g_checkData;
+extern bool g_checkDataTablesOnly;
 extern bool g_dataOnlyMigration;
 extern bool g_skipDataMigration;
-extern int g_iSyntax;
+extern int g_dbSyntax;
 extern const TCHAR *g_pszTableSuffix;
 extern const TCHAR *g_pszSqlType[6][3];
 

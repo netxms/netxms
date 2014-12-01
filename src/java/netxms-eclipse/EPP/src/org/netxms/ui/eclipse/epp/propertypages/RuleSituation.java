@@ -221,13 +221,13 @@ public class RuleSituation extends PropertyPage
 	/**
 	 * Edit selected attribute
 	 */
+	@SuppressWarnings("unchecked")
 	private void editAttribute()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.size() != 1)
 			return;
 		
-		@SuppressWarnings("unchecked")
 		Entry<String, String> attr = (Entry<String, String>)selection.getFirstElement();
 		AttributeEditDialog dlg = new AttributeEditDialog(getShell(), attr.getKey(), attr.getValue());
 		if (dlg.open() == Window.OK)

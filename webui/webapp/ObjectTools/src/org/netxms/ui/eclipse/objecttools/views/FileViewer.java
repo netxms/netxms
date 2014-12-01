@@ -248,7 +248,8 @@ public class FileViewer extends ViewPart
 		currentFile = file;
       fileID = id;
       offset = maxFileSize;
-		textViewer.setText(loadFile(currentFile));
+		setContent(loadFile(currentFile));
+
 		this.follow = follow;
 		if (follow)
 		{
@@ -275,7 +276,8 @@ public class FileViewer extends ViewPart
                         {
                            if (!textViewer.isDisposed())
                            {
-                              textViewer.append(s); 
+                              appendContent(s);                               
+
                            }
                         }
                      });
@@ -471,5 +473,59 @@ public class FileViewer extends ViewPart
 			}
 		}
 		return content.toString();
+	}
+	
+	/**
+	 * @param s
+	 */
+	private void setContent(String s)
+	{
+	   textViewer.setText(removeEscapeSequences(s));
+	}
+	
+	/**
+	 * @param s
+	 */
+	private void appendContent(String s)
+	{
+	   textViewer.append(removeEscapeSequences(s));
+	}
+	
+	/**
+	 * Remove escape sequences from input string
+	 * 
+	 * @param s
+	 * @return
+	 */
+	private static String removeEscapeSequences(String s)
+	{
+	   StringBuilder sb = new StringBuilder();
+	   for(int i = 0; i < s.length(); i++)
+	   {
+	      char ch = s.charAt(i);
+	      if (ch == 27)
+	      {
+	         i++;
+	         ch = s.charAt(i);
+	         if (ch == '[')
+	         {
+   	         for(; i < s.length(); i++)
+   	         {
+   	            ch = s.charAt(i);
+   	            if (((ch >= 'A') && (ch <= 'Z')) || ((ch >= 'a') && (ch <= 'z')))
+   	               break;
+   	         }
+	         }
+	         else if ((ch == '(') || (ch == ')'))
+	         {
+	            i++;
+	         }
+	      }
+	      else if ((ch >= 32) || (ch == '\r') || (ch == '\n') || (ch == '\t'))
+	      {
+	         sb.append(ch);
+	      }
+	   }
+	   return sb.toString();
 	}
 }

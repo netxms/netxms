@@ -37,7 +37,7 @@ static bool CheckNodeDown(Node *currNode, Event *pEvent, UINT32 nodeId, const TC
 	{
 		pEvent->setRootId(node->getLastEventId(LAST_EVENT_NODE_DOWN));
 		DbgPrintf(5, _T("C_SysNodeDown: %s %s [%d] for current node %s [%d] is down"),
-		          nodeType, node->Name(), node->Id(), currNode->Name(), currNode->Id());
+		          nodeType, node->getName(), node->getId(), currNode->getName(), currNode->getId());
 		return true;
 	}
 	return false;
@@ -53,7 +53,7 @@ static bool CheckAgentDown(Node *currNode, Event *pEvent, UINT32 nodeId, const T
 	{
 		pEvent->setRootId(node->getLastEventId(LAST_EVENT_AGENT_DOWN));
 		DbgPrintf(5, _T("C_SysNodeDown: agent on %s %s [%d] for current node %s [%d] is down"),
-		          nodeType, node->Name(), node->Id(), currNode->Name(), currNode->Id());
+		          nodeType, node->getName(), node->getId(), currNode->getName(), currNode->getId());
 		return true;
 	}
 	return false;
@@ -65,7 +65,7 @@ static bool CheckAgentDown(Node *currNode, Event *pEvent, UINT32 nodeId, const T
 static void C_SysNodeDown(Node *pNode, Event *pEvent)
 {
 	// Check for NetXMS server netwok connectivity
-	if (g_dwFlags & AF_NO_NETWORK_CONNECTIVITY)
+	if (g_flags & AF_NO_NETWORK_CONNECTIVITY)
 	{
 		pEvent->setRootId(m_networkLostEventId);
 		return;
@@ -110,21 +110,21 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 	NetworkPath *trace = TraceRoute(pMgmtNode, pNode);
 	if (trace == NULL)
 	{
-		DbgPrintf(5, _T("C_SysNodeDown: trace to node %s [%d] not available"), pNode->Name(), pNode->Id());
+		DbgPrintf(5, _T("C_SysNodeDown: trace to node %s [%d] not available"), pNode->getName(), pNode->getId());
 		return;
 	}
 
    for(int i = 0; i < trace->getHopCount(); i++)
    {
 		HOP_INFO *hop = trace->getHopInfo(i);
-      if ((hop->object == NULL) || (hop->object == pNode) || (hop->object->Type() != OBJECT_NODE))
+      if ((hop->object == NULL) || (hop->object == pNode) || (hop->object->getObjectClass() != OBJECT_NODE))
 			continue;
 
       if (((Node *)hop->object)->isDown())
       {
          pEvent->setRootId(((Node *)hop->object)->getLastEventId(LAST_EVENT_NODE_DOWN));
 			DbgPrintf(5, _T("C_SysNodeDown: upstream node %s [%d] for current node %s [%d] is down"),
-			          hop->object->Name(), hop->object->Id(), pNode->Name(), pNode->Id());
+			          hop->object->getName(), hop->object->getId(), pNode->getName(), pNode->getId());
 			break;
       }
 
@@ -144,7 +144,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
          if ((pInterface != NULL) && ((pInterface->Status() == STATUS_CRITICAL) || (pInterface->Status() == STATUS_DISABLED)))
          {
 				DbgPrintf(5, _T("C_SysNodeDown: upstream interface %s [%d] on node %s [%d] for current node %s [%d] is down"),
-				          pInterface->Name(), pInterface->Id(), hop->object->Name(), hop->object->Id(), pNode->Name(), pNode->Id());
+				          pInterface->getName(), pInterface->getId(), hop->object->getName(), hop->object->getId(), pNode->getName(), pNode->getId());
             pEvent->setRootId(pInterface->getLastDownEventId());
 				break;
          }
@@ -163,7 +163,7 @@ void CorrelateEvent(Event *pEvent)
 		return;
 
 	DbgPrintf(6, _T("CorrelateEvent: event %s id ") UINT64_FMT _T(" source %s [%d]"),
-	          pEvent->getName(), pEvent->getId(), node->Name(), node->Id());
+	          pEvent->getName(), pEvent->getId(), node->getName(), node->getId());
 
    switch(pEvent->getCode())
    {

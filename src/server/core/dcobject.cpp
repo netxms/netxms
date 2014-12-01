@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -27,7 +27,7 @@
  */
 DCObject::DCObject()
 {
-   m_dwId = 0;
+   m_id = 0;
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
    m_busy = 0;
@@ -36,7 +36,7 @@ DCObject::DCObject()
    m_iRetentionTime = 0;
    m_source = DS_INTERNAL;
    m_status = ITEM_STATUS_NOT_SUPPORTED;
-   m_szName[0] = 0;
+   m_name[0] = 0;
    m_szDescription[0] = 0;
 	m_systemTag[0] = 0;
    m_tLastPoll = 0;
@@ -53,6 +53,7 @@ DCObject::DCObject()
 	m_snmpPort = 0;	// use default
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
+   m_comments = NULL;
 }
 
 /**
@@ -62,7 +63,7 @@ DCObject::DCObject(const DCObject *pSrc)
 {
    UINT32 i;
 
-   m_dwId = pSrc->m_dwId;
+   m_id = pSrc->m_id;
    m_dwTemplateId = pSrc->m_dwTemplateId;
    m_dwTemplateItemId = pSrc->m_dwTemplateItemId;
    m_busy = 0;
@@ -72,7 +73,7 @@ DCObject::DCObject(const DCObject *pSrc)
    m_source = pSrc->m_source;
    m_status = pSrc->m_status;
    m_tLastPoll = 0;
-	_tcscpy(m_szName, pSrc->m_szName);
+	_tcscpy(m_name, pSrc->m_name);
 	_tcscpy(m_szDescription, pSrc->m_szDescription);
 	_tcscpy(m_systemTag, pSrc->m_systemTag);
    m_pNode = NULL;
@@ -84,6 +85,7 @@ DCObject::DCObject(const DCObject *pSrc)
 	m_dwProxyNode = pSrc->m_dwProxyNode;
 	m_pszPerfTabSettings = (pSrc->m_pszPerfTabSettings != NULL) ? _tcsdup(pSrc->m_pszPerfTabSettings) : NULL;
 	m_snmpPort = pSrc->m_snmpPort;
+	m_comments = (pSrc->m_comments != NULL) ? _tcsdup(pSrc->m_comments) : NULL;
 
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
@@ -108,18 +110,18 @@ DCObject::DCObject(const DCObject *pSrc)
 /**
  * Constructor for creating new DCObject from scratch
  */
-DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource, 
+DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
                int iPollingInterval, int iRetentionTime, Template *pNode,
                const TCHAR *pszDescription, const TCHAR *systemTag)
 {
-   m_dwId = dwId;
+   m_id = dwId;
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
-   nx_strncpy(m_szName, szName, MAX_ITEM_NAME);
+   nx_strncpy(m_name, szName, MAX_ITEM_NAME);
    if (pszDescription != NULL)
       nx_strncpy(m_szDescription, pszDescription, MAX_DB_STRING);
    else
-      _tcscpy(m_szDescription, m_szName);
+      _tcscpy(m_szDescription, m_name);
 	nx_strncpy(m_systemTag, CHECK_NULL_EX(systemTag), MAX_DB_STRING);
    m_source = iSource;
    m_iPollingInterval = iPollingInterval;
@@ -141,6 +143,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
 	m_snmpPort = 0;	// use default
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
+   m_comments = NULL;
 }
 
 /**
@@ -148,11 +151,11 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
  */
 DCObject::DCObject(ConfigEntry *config, Template *owner)
 {
-   m_dwId = CreateUniqueId(IDG_ITEM);
+   m_id = CreateUniqueId(IDG_ITEM);
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
-	nx_strncpy(m_szName, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
-   nx_strncpy(m_szDescription, config->getSubEntryValue(_T("description"), 0, m_szName), MAX_DB_STRING);
+	nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
+   nx_strncpy(m_szDescription, config->getSubEntryValue(_T("description"), 0, m_name), MAX_DB_STRING);
 	nx_strncpy(m_systemTag, config->getSubEntryValue(_T("systemTag"), 0, _T("")), MAX_DB_STRING);
 	m_source = (BYTE)config->getSubEntryValueAsInt(_T("origin"));
    m_iPollingInterval = config->getSubEntryValueAsInt(_T("interval"));
@@ -160,7 +163,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
    m_status = ITEM_STATUS_ACTIVE;
    m_busy = 0;
 	m_scheduledForDeletion = 0;
-	m_flags = 0;
+	m_flags = (UINT16)config->getSubEntryValueAsInt(_T("flags"));
    m_tLastPoll = 0;
    m_pNode = owner;
    m_hMutex = MutexCreateRecursive();
@@ -176,8 +179,10 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 
 	m_transformationScriptSource = NULL;
 	m_transformationScript = NULL;
+	m_comments = NULL;
 	setTransformationScript(config->getSubEntryValue(_T("transformation")));
-   
+
+   // for compatibility with old format
 	if (config->getSubEntryValueAsInt(_T("advancedSchedule")))
 		m_flags |= DCF_ADVANCED_SCHEDULE;
 
@@ -214,6 +219,7 @@ DCObject::~DCObject()
       safe_free(m_ppScheduleList);
    }
 	safe_free(m_pszPerfTabSettings);
+	safe_free(m_comments);
    MutexDestroy(m_hMutex);
 }
 
@@ -228,7 +234,7 @@ BOOL DCObject::loadCustomSchedules()
 
 	TCHAR query[256];
 
-   _sntprintf(query, 256, _T("SELECT schedule FROM dci_schedules WHERE item_id=%d"), m_dwId);
+   _sntprintf(query, 256, _T("SELECT schedule FROM dci_schedules WHERE item_id=%d"), m_id);
    DB_RESULT hResult = DBSelect(g_hCoreDB, query);
    if (hResult != NULL)
    {
@@ -259,14 +265,14 @@ bool DCObject::matchClusterResource()
 {
 	Cluster *pCluster;
 
-   if ((m_dwResourceId == 0) || (m_pNode->Type() != OBJECT_NODE))
+   if ((m_dwResourceId == 0) || (m_pNode->getObjectClass() != OBJECT_NODE))
 		return true;
 
 	pCluster = ((Node *)m_pNode)->getMyCluster();
 	if (pCluster == NULL)
 		return false;	// Has association, but cluster object cannot be found
 
-	return pCluster->isResourceOnNode(m_dwResourceId, m_pNode->Id());
+	return pCluster->isResourceOnNode(m_dwResourceId, m_pNode->getId());
 }
 
 /**
@@ -297,7 +303,7 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		{
 			if (m_pNode != NULL)
 			{
-				temp.addFormattedString(_T("%d"), m_pNode->Id());
+				temp.addFormattedString(_T("%d"), m_pNode->getId());
 			}
 			else
 			{
@@ -308,7 +314,7 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		{
 			if (m_pNode != NULL)
 			{
-				temp += m_pNode->Name();
+				temp += m_pNode->getName();
 			}
 			else
 			{
@@ -341,23 +347,23 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 					NXSL_Value *result = vm->getResult();
 					if (result != NULL)
 						temp += CHECK_NULL_EX(result->getValueAsCString());
-		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s executed successfully"), m_dwId, src, &macro[7]);
+		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s executed successfully"), m_id, src, &macro[7]);
 				}
 				else
 				{
 		         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Script %s execution error: %s"),
-					          m_dwId, src, &macro[7], vm->getErrorText());
-					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", &macro[7], vm->getErrorText(), m_dwId);
+					          m_id, src, &macro[7], vm->getErrorText());
+					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", &macro[7], vm->getErrorText(), m_id);
 				}
             delete vm;
 			}
 			else
 			{
-	         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Cannot find script %s"), m_dwId, src, &macro[7]);
+	         DbgPrintf(4, _T("DCItem::expandMacros(%d,\"%s\"): Cannot find script %s"), m_id, src, &macro[7]);
 			}
 		}
 		temp += rest;
-		
+
 		free(head);
 		free(rest);
 		free(macro);
@@ -398,11 +404,11 @@ void DCObject::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExp
    lock();
    m_pNode = pNewNode;
 	if (dwNewId != 0)
-		m_dwId = dwNewId;
+		m_id = dwNewId;
 
 	if (doMacroExpansion)
 	{
-		expandMacros(m_szName, m_szName, MAX_ITEM_NAME);
+		expandMacros(m_name, m_name, MAX_ITEM_NAME);
 		expandMacros(m_szDescription, m_szDescription, MAX_DB_STRING);
 	}
 
@@ -414,13 +420,11 @@ void DCObject::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExp
  */
 void DCObject::setStatus(int status, bool generateEvent)
 {
-	if (generateEvent && (m_pNode != NULL) && (m_status != (BYTE)status) && IsEventSource(m_pNode->Type()))
+	if (generateEvent && (m_pNode != NULL) && (m_status != (BYTE)status) && IsEventSource(m_pNode->getObjectClass()))
 	{
 		static UINT32 eventCode[3] = { EVENT_DCI_ACTIVE, EVENT_DCI_DISABLED, EVENT_DCI_UNSUPPORTED };
-		static const TCHAR *originName[7] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push"), _T("WinPerf"), _T("iLO") };
-
-		PostEvent(eventCode[status], m_pNode->Id(), "dssds", m_dwId, m_szName, m_szDescription,
-		          m_source, originName[m_source]);
+		static const TCHAR *originName[8] = { _T("Internal"), _T("NetXMS Agent"), _T("SNMP"), _T("CheckPoint SNMP"), _T("Push"), _T("WinPerf"), _T("iLO"), _T("Script") };
+		PostEvent(eventCode[status], m_pNode->getId(), "dssds", m_id, m_name, m_szDescription, m_source, originName[m_source]);
 	}
 	m_status = (BYTE)status;
 }
@@ -707,14 +711,14 @@ bool DCObject::isCacheLoaded()
  */
 bool DCObject::prepareForDeletion()
 {
-	DbgPrintf(9, _T("DCObject::prepareForDeletion for DCO %d"), m_dwId);
+	DbgPrintf(9, _T("DCObject::prepareForDeletion for DCO %d"), m_id);
 
 	lock();
    m_status = ITEM_STATUS_DISABLED;   // Prevent future polls
 	m_scheduledForDeletion = 1;
 	bool canDelete = (m_busy ? false : true);
    unlock();
-	DbgPrintf(9, _T("DCObject::prepareForDeletion: completed for DCO %d, canDelete=%d"), m_dwId, (int)canDelete);
+	DbgPrintf(9, _T("DCObject::prepareForDeletion: completed for DCO %d, canDelete=%d"), m_id, (int)canDelete);
 
 	return canDelete;
 }
@@ -722,53 +726,57 @@ bool DCObject::prepareForDeletion()
 /**
  * Create NXCP message with object data
  */
-void DCObject::createMessage(CSCPMessage *pMsg)
+void DCObject::createMessage(NXCPMessage *pMsg)
 {
 	lock();
-   pMsg->SetVariable(VID_DCI_ID, m_dwId);
-	pMsg->SetVariable(VID_DCOBJECT_TYPE, (WORD)getType());
-   pMsg->SetVariable(VID_TEMPLATE_ID, m_dwTemplateId);
-   pMsg->SetVariable(VID_NAME, m_szName);
-   pMsg->SetVariable(VID_DESCRIPTION, m_szDescription);
-   pMsg->SetVariable(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(m_transformationScriptSource));
-   pMsg->SetVariable(VID_FLAGS, m_flags);
-   pMsg->SetVariable(VID_SYSTEM_TAG, m_systemTag);
-   pMsg->SetVariable(VID_POLLING_INTERVAL, (UINT32)m_iPollingInterval);
-   pMsg->SetVariable(VID_RETENTION_TIME, (UINT32)m_iRetentionTime);
-   pMsg->SetVariable(VID_DCI_SOURCE_TYPE, (WORD)m_source);
-   pMsg->SetVariable(VID_DCI_STATUS, (WORD)m_status);
-	pMsg->SetVariable(VID_RESOURCE_ID, m_dwResourceId);
-	pMsg->SetVariable(VID_AGENT_PROXY, m_dwProxyNode);
-	pMsg->SetVariable(VID_SNMP_PORT, m_snmpPort);
+   pMsg->setField(VID_DCI_ID, m_id);
+	pMsg->setField(VID_DCOBJECT_TYPE, (WORD)getType());
+   pMsg->setField(VID_TEMPLATE_ID, m_dwTemplateId);
+   pMsg->setField(VID_NAME, m_name);
+   pMsg->setField(VID_DESCRIPTION, m_szDescription);
+   pMsg->setField(VID_TRANSFORMATION_SCRIPT, CHECK_NULL_EX(m_transformationScriptSource));
+   pMsg->setField(VID_FLAGS, m_flags);
+   pMsg->setField(VID_SYSTEM_TAG, m_systemTag);
+   pMsg->setField(VID_POLLING_INTERVAL, (UINT32)m_iPollingInterval);
+   pMsg->setField(VID_RETENTION_TIME, (UINT32)m_iRetentionTime);
+   pMsg->setField(VID_DCI_SOURCE_TYPE, (WORD)m_source);
+   pMsg->setField(VID_DCI_STATUS, (WORD)m_status);
+	pMsg->setField(VID_RESOURCE_ID, m_dwResourceId);
+	pMsg->setField(VID_AGENT_PROXY, m_dwProxyNode);
+	pMsg->setField(VID_SNMP_PORT, m_snmpPort);
+	if (m_comments != NULL)
+		pMsg->setField(VID_COMMENTS, m_comments);
 	if (m_pszPerfTabSettings != NULL)
-		pMsg->SetVariable(VID_PERFTAB_SETTINGS, m_pszPerfTabSettings);
-   pMsg->SetVariable(VID_NUM_SCHEDULES, m_dwNumSchedules);
+		pMsg->setField(VID_PERFTAB_SETTINGS, m_pszPerfTabSettings);
+   pMsg->setField(VID_NUM_SCHEDULES, m_dwNumSchedules);
    for(UINT32 i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
-      pMsg->SetVariable(dwId, m_ppScheduleList[i]);
+      pMsg->setField(dwId, m_ppScheduleList[i]);
    unlock();
 }
 
 /**
  * Update data collection object from NXCP message
  */
-void DCObject::updateFromMessage(CSCPMessage *pMsg)
+void DCObject::updateFromMessage(NXCPMessage *pMsg)
 {
    lock();
 
-   pMsg->GetVariableStr(VID_NAME, m_szName, MAX_ITEM_NAME);
-   pMsg->GetVariableStr(VID_DESCRIPTION, m_szDescription, MAX_DB_STRING);
-   pMsg->GetVariableStr(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
-	m_flags = pMsg->GetVariableShort(VID_FLAGS);
-   m_source = (BYTE)pMsg->GetVariableShort(VID_DCI_SOURCE_TYPE);
-   m_iPollingInterval = pMsg->GetVariableLong(VID_POLLING_INTERVAL);
-   m_iRetentionTime = pMsg->GetVariableLong(VID_RETENTION_TIME);
-   setStatus(pMsg->GetVariableShort(VID_DCI_STATUS), true);
-	m_dwResourceId = pMsg->GetVariableLong(VID_RESOURCE_ID);
-	m_dwProxyNode = pMsg->GetVariableLong(VID_AGENT_PROXY);
+   pMsg->getFieldAsString(VID_NAME, m_name, MAX_ITEM_NAME);
+   pMsg->getFieldAsString(VID_DESCRIPTION, m_szDescription, MAX_DB_STRING);
+   pMsg->getFieldAsString(VID_SYSTEM_TAG, m_systemTag, MAX_DB_STRING);
+	m_flags = pMsg->getFieldAsUInt16(VID_FLAGS);
+   m_source = (BYTE)pMsg->getFieldAsUInt16(VID_DCI_SOURCE_TYPE);
+   m_iPollingInterval = pMsg->getFieldAsUInt32(VID_POLLING_INTERVAL);
+   m_iRetentionTime = pMsg->getFieldAsUInt32(VID_RETENTION_TIME);
+   setStatus(pMsg->getFieldAsUInt16(VID_DCI_STATUS), true);
+	m_dwResourceId = pMsg->getFieldAsUInt32(VID_RESOURCE_ID);
+	m_dwProxyNode = pMsg->getFieldAsUInt32(VID_AGENT_PROXY);
 	safe_free(m_pszPerfTabSettings);
-	m_pszPerfTabSettings = pMsg->GetVariableStr(VID_PERFTAB_SETTINGS);
-	m_snmpPort = pMsg->GetVariableShort(VID_SNMP_PORT);
-   TCHAR *pszStr = pMsg->GetVariableStr(VID_TRANSFORMATION_SCRIPT);
+	m_pszPerfTabSettings = pMsg->getFieldAsString(VID_PERFTAB_SETTINGS);
+	m_snmpPort = pMsg->getFieldAsUInt16(VID_SNMP_PORT);
+   TCHAR *pszStr = pMsg->getFieldAsString(VID_TRANSFORMATION_SCRIPT);
+   safe_free_and_null(m_comments);
+   m_comments = pMsg->getFieldAsString(VID_COMMENTS);
    setTransformationScript(pszStr);
    safe_free(pszStr);
 
@@ -777,13 +785,13 @@ void DCObject::updateFromMessage(CSCPMessage *pMsg)
       free(m_ppScheduleList[i]);
    safe_free_and_null(m_ppScheduleList);
 
-   m_dwNumSchedules = pMsg->GetVariableLong(VID_NUM_SCHEDULES);
+   m_dwNumSchedules = pMsg->getFieldAsUInt32(VID_NUM_SCHEDULES);
    if (m_dwNumSchedules > 0)
    {
       m_ppScheduleList = (TCHAR **)malloc(sizeof(TCHAR *) * m_dwNumSchedules);
       for(UINT32 i = 0, dwId = VID_DCI_SCHEDULE_BASE; i < m_dwNumSchedules; i++, dwId++)
       {
-         TCHAR *pszStr = pMsg->GetVariableStr(dwId);
+         TCHAR *pszStr = pMsg->getFieldAsString(dwId);
          if (pszStr != NULL)
          {
             m_ppScheduleList[i] = pszStr;
@@ -808,14 +816,14 @@ BOOL DCObject::saveToDB(DB_HANDLE hdb)
 	lock();
 
    // Save schedules
-   _sntprintf(query, 1024, _T("DELETE FROM dci_schedules WHERE item_id=%d"), (int)m_dwId);
+   _sntprintf(query, 1024, _T("DELETE FROM dci_schedules WHERE item_id=%d"), (int)m_id);
    BOOL success = DBQuery(hdb, query);
 	if (success)
    {
       for(UINT32 i = 0; i < m_dwNumSchedules; i++)
       {
          _sntprintf(query, 1024, _T("INSERT INTO dci_schedules (item_id,schedule_id,schedule) VALUES (%d,%d,%s)"),
-                    m_dwId, i + 1, (const TCHAR *)DBPrepareString(hdb, m_ppScheduleList[i]));
+                    m_id, i + 1, (const TCHAR *)DBPrepareString(hdb, m_ppScheduleList[i]));
          success = DBQuery(hdb, query);
 			if (!success)
 				break;
@@ -830,10 +838,10 @@ BOOL DCObject::saveToDB(DB_HANDLE hdb)
 /**
  * Delete object and collected data from database
  */
-void DCObject::deleteFromDB()
+void DCObject::deleteFromDatabase()
 {
 	TCHAR query[256];
-   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM dci_schedules WHERE item_id=%d"), (int)m_dwId);
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM dci_schedules WHERE item_id=%d"), (int)m_id);
    QueueSQLRequest(query);
 }
 
@@ -868,7 +876,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 {
 	lock();
 
-   expandMacros(src->m_szName, m_szName, MAX_ITEM_NAME);
+   expandMacros(src->m_name, m_name, MAX_ITEM_NAME);
    expandMacros(src->m_szDescription, m_szDescription, MAX_DB_STRING);
 	expandMacros(src->m_systemTag, m_systemTag, MAX_DB_STRING);
 
@@ -909,8 +917,9 @@ void DCObject::updateFromTemplate(DCObject *src)
  *
  * @return true on success
  */
-bool DCObject::processNewValue(time_t nTimeStamp, void *value)
+bool DCObject::processNewValue(time_t nTimeStamp, void *value, bool *updateStatus)
 {
+   *updateStatus = false;
    return false;
 }
 

@@ -31,6 +31,7 @@ import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
 import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -64,7 +65,7 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
       dialogArea.setLayout(layout);
       
       dci = new DciSelector(dialogArea, SWT.NONE, false);
-      dci.setLabel("Data source");
+      dci.setLabel(Messages.get().GeneralDCIImagePropertyPage_DataSource);
       if(dciConf != null)
       {
          dci.setDciId(dciConf.getNodeId(), dciConf.getDciId());
@@ -76,7 +77,7 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
       dci.setLayoutData(gd);      
       
       instanceColumn = new LabeledText(dialogArea, SWT.NONE);
-      instanceColumn.setLabel("Column");
+      instanceColumn.setLabel(Messages.get().GeneralDCIImagePropertyPage_Column);
       if(dciConf !=  null)
          instanceColumn.setText(dciConf.getColumn());
       gd = new GridData();
@@ -85,7 +86,7 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
       instanceColumn.setLayoutData(gd);
 
       dataColumn = new LabeledText(dialogArea, SWT.NONE);
-      dataColumn.setLabel("Instance");
+      dataColumn.setLabel(Messages.get().GeneralDCIImagePropertyPage_Instance);
       if(dciConf !=  null)
          dataColumn.setText(dciConf.getInstance());
       gd = new GridData();
@@ -94,7 +95,7 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
       dataColumn.setLayoutData(gd);
       
       image = new ImageSelector(dialogArea, SWT.NONE);
-      image.setLabel("Default image");
+      image.setLabel(Messages.get().GeneralDCIImagePropertyPage_DefaultImage);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -119,7 +120,7 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
    {
       if(dci.getDciId() == 0)
       {
-         MessageDialogHelper.openError(getShell(), "Required field is empty", "DCI ID should be selected");
+         MessageDialogHelper.openError(getShell(), Messages.get().GeneralDCIImagePropertyPage_Error, Messages.get().GeneralDCIImagePropertyPage_DciNotSelected);
          return false;
       }
       
@@ -127,7 +128,7 @@ public class GeneralDCIImagePropertyPage extends PropertyPage
       
       if(selectedImage ==null || selectedImage == NXCommon.EMPTY_GUID)
       {
-         MessageDialogHelper.openError(getShell(), "Required field is empty", "Default image should be selected");
+         MessageDialogHelper.openError(getShell(), Messages.get().GeneralDCIImagePropertyPage_Error, Messages.get().GeneralDCIImagePropertyPage_DefImageNotSelected);
          return false;
       }
       

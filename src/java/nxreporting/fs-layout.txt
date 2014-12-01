@@ -1,0 +1,19 @@
+$NETXMS_HOME - NetXMS root installation directory
+
+File system layout on UNIX system:
+
+/etc/init.d/nxreportd - system init script for reporting server
+$NETXMS_HOME/bin/nxreportd - startup script/tool
+$NETXMS_HOME/etc/nxreporting.xml - config file
+$NETXMS_HOME/lib/netxms/reporting - main jar file
+$NETXMS_HOME/lib/netxms/reporting/lib - lib directory for reporting
+$NETXMS_HOME/var/netxms/reporting - workspace
+
+
+File system layout on Windows:
+
+$NETXMS_HOME/bin/nxreportd - startup script/tool
+$NETXMS_HOME/etc/nxreporting.xml - config file
+$NETXMS_HOME/lib/reporting - main jar file
+$NETXMS_HOME/lib/reporting/lib - lib directory for reporting
+$NETXMS_HOME/var/reporting - workspace

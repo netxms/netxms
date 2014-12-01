@@ -36,11 +36,11 @@ DCTableColumn::DCTableColumn(const DCTableColumn *src)
 /**
  * Create column object from NXCP message
  */
-DCTableColumn::DCTableColumn(CSCPMessage *msg, UINT32 baseId)
+DCTableColumn::DCTableColumn(NXCPMessage *msg, UINT32 baseId)
 {
-	msg->GetVariableStr(baseId, m_name, MAX_COLUMN_NAME);
-	m_flags = msg->GetVariableShort(baseId + 1);
-   m_displayName = msg->GetVariableStr(baseId + 3);
+	msg->getFieldAsString(baseId, m_name, MAX_COLUMN_NAME);
+	m_flags = msg->getFieldAsUInt16(baseId + 1);
+   m_displayName = msg->getFieldAsString(baseId + 3);
 
    if (msg->isFieldExist(baseId + 2))
 	{

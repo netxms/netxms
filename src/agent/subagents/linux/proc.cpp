@@ -161,10 +161,22 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 				hFile = fopen(szFileName, "r");
 				if (hFile != NULL)
 				{
-					char processCmdLine[1024];
-					memset(processCmdLine, 0, sizeof(processCmdLine));
-
-					int len = fread(processCmdLine, 1, sizeof(processCmdLine) - 1, hFile);
+               size_t len = 0, pos = 0;
+					char *processCmdLine = (char *)malloc(1024);
+               while(true)
+               {
+					   int bytes = fread(&processCmdLine[pos], 1, 1024, hFile);
+                  if (bytes < 0)
+                     bytes = 0;
+                  len += bytes;
+                  if (bytes < 1024)
+                  {
+                     processCmdLine[len] = 0;
+                     break;
+                  }
+                  pos += bytes;
+                  processCmdLine = (char *)realloc(processCmdLine, pos + 1024);
+               }
 					if (len > 0)
 					{
 						// got a valid record in format: argv[0]\x00argv[1]\x00...
@@ -185,6 +197,7 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 						bCmdFound = RegexpMatchA("", szCmdLine, TRUE);
 					}
 					fclose(hFile);
+               free(processCmdLine);
 				} // hFile != NULL
 				else
 				{
@@ -236,7 +249,7 @@ int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine)
 /**
  * Handler for System.ProcessCount, Process.Count() and Process.CountEx() parameters
  */
-LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szArg[128] = "", szCmdLine[128] = "";
@@ -265,7 +278,7 @@ LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for System.ThreadCount parameter
  */
-LONG H_ThreadCount(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_ThreadCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int i, sum, count, ret = SYSINFO_RC_ERROR;
 	PROC_ENT *procList;
@@ -298,7 +311,7 @@ LONG H_ThreadCount(const TCHAR *param, const TCHAR *arg, TCHAR *value)
  *         sum - sum of values for all processes named <process>
  *    <cmdline>  - command line
  */
-LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int i, count, type;
 	INT64 currVal, finalVal;
@@ -389,7 +402,7 @@ LONG H_ProcessDetails(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for System.ProcessList list
  */
-LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
    int nRet = SYSINFO_RC_ERROR;
 
@@ -413,7 +426,7 @@ LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
 /**
  * Handler for System.Processes table
  */
-LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
+LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    value->addColumn(_T("PID"), DCI_DT_UINT, _T("PID"), true);
    value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));

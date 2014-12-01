@@ -113,7 +113,7 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
          int nSingleThreshold, *pnThresholds, iOldStatus = m_iStatus;
          int nRating[5], iChildStatus, nThresholds[4];
 
-         LockData();
+         lockProperties();
          if (m_iStatusCalcAlg == SA_CALCULATE_DEFAULT)
          {
             iStatusAlg = GetDefaultStatusCalculation(&nSingleThreshold, &pnThresholds);
@@ -199,7 +199,7 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
                m_iStatus = STATUS_NORMAL;
                break;
          }
-         UnlockData();
+         unlockProperties();
 
          // Cause parent object(s) to recalculate it's status
          if ((iOldStatus != m_iStatus) || bForcedRecalc)
@@ -208,9 +208,9 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
             for(UINT32 i = 0; i < m_dwParentCount; i++)
                m_pParentList[i]->calculateCompoundStatus();
             UnlockParentList();
-            LockData();
-            Modify();
-            UnlockData();
+            lockProperties();
+            setModified();
+            unlockProperties();
          }
       }
    }
@@ -223,9 +223,9 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
          for(UINT32 i = 0; i < m_dwParentCount; i++)
             m_pParentList[i]->calculateCompoundStatus();
          UnlockParentList();
-         LockData();
-         Modify();
-         UnlockData();
+         lockProperties();
+         setModified();
+         unlockProperties();
       }
    }
 }
@@ -233,17 +233,17 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Save to database
  */
-BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
+BOOL NetworkMap::saveToDatabase(DB_HANDLE hdb)
 {
 	TCHAR query[1024], temp[64];
 
-	LockData();
+	lockProperties();
 
 	if (!saveCommonProperties(hdb))
 		goto fail;
 
 	DB_STATEMENT hStmt;
-	if (IsDatabaseRecordExist(hdb, _T("network_maps"), _T("id"), m_dwId))
+	if (IsDatabaseRecordExist(hdb, _T("network_maps"), _T("id"), m_id))
 	{
 		hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,seed=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,flags=?,link_color=?,link_routing=?,bg_color=?,filter=? WHERE id=?"));
 	}
@@ -267,7 +267,7 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_defaultLinkRouting);
 	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (LONG)m_backgroundColor);
 	DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_filterSource, DB_BIND_STATIC);
-	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_dwId);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_id);
 
 	if (!DBExecute(hStmt))
 	{
@@ -280,7 +280,7 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 		goto fail;
 
    // Save elements
-   _sntprintf(query, 256, _T("DELETE FROM network_map_elements WHERE map_id=%d"), m_dwId);
+   _sntprintf(query, 256, _T("DELETE FROM network_map_elements WHERE map_id=%d"), m_id);
    if (!DBQuery(hdb, query))
 		goto fail;
 	for(int i = 0; i < m_elements->size(); i++)
@@ -294,52 +294,48 @@ BOOL NetworkMap::SaveToDB(DB_HANDLE hdb)
 		int len = data.getSize() + 256;
 		TCHAR *eq = (TCHAR *)malloc(len * sizeof(TCHAR));
       _sntprintf(eq, len, _T("INSERT INTO network_map_elements (map_id,element_id,element_type,element_data,flags) VALUES (%d,%d,%d,%s,%d)"),
-		           m_dwId, e->getId(), e->getType(), (const TCHAR *)data, e->getFlags());
+		           m_id, e->getId(), e->getType(), (const TCHAR *)data, e->getFlags());
       DBQuery(hdb, eq);
 		free(eq);
    }
 
 	// Save links
-   _sntprintf(query, 256, _T("DELETE FROM network_map_links WHERE map_id=%d"), m_dwId);
+   _sntprintf(query, 256, _T("DELETE FROM network_map_links WHERE map_id=%d"), m_id);
    if (!DBQuery(hdb, query))
 		goto fail;
-	hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,color,status_object,routing,bend_points,element_data,flags) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+	hStmt = DBPrepare(hdb, _T("INSERT INTO network_map_links (map_id,element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags) VALUES (?,?,?,?,?,?,?,?,?)"));
 	if (hStmt == NULL)
 		goto fail;
 	for(int i = 0; i < m_links->size(); i++)
    {
 		NetworkMapLink *l = m_links->get(i);
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_dwId);
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, l->getElement1());
 		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, l->getElement2());
 		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)l->getType());
 		DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, l->getName(), DB_BIND_STATIC);
 		DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, l->getConnector1Name(), DB_BIND_STATIC);
 		DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, l->getConnector2Name(), DB_BIND_STATIC);
-		DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, l->getColor());
-		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, l->getStatusObject());
-		DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (LONG)l->getRouting());
-		DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, l->getBendPoints(query), DB_BIND_STATIC);
-		DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, l->getConfig(), DB_BIND_STATIC);
-		DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, l->getFlags());
+		DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, l->getConfig(), DB_BIND_STATIC);
+		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, l->getFlags());
 		DBExecute(hStmt);
    }
 	DBFreeStatement(hStmt);
 
-	UnlockData();
+	unlockProperties();
 	return TRUE;
 
 fail:
-	UnlockData();
+	unlockProperties();
 	return FALSE;
 }
 
 /**
  * Delete from database
  */
-bool NetworkMap::deleteFromDB(DB_HANDLE hdb)
+bool NetworkMap::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDB(hdb);
+   bool success = NetObj::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM network_maps WHERE id=?"));
    if (success)
@@ -352,9 +348,9 @@ bool NetworkMap::deleteFromDB(DB_HANDLE hdb)
 /**
  * Load from database
  */
-BOOL NetworkMap::CreateFromDB(UINT32 dwId)
+BOOL NetworkMap::loadFromDatabase(UINT32 dwId)
 {
-	m_dwId = dwId;
+	m_id = dwId;
 
 	if (!loadCommonProperties())
    {
@@ -393,7 +389,7 @@ BOOL NetworkMap::CreateFromDB(UINT32 dwId)
       DBFreeResult(hResult);
 
 	   // Load elements
-      _sntprintf(query, 256, _T("SELECT element_id,element_type,element_data,flags FROM network_map_elements WHERE map_id=%d"), m_dwId);
+      _sntprintf(query, 256, _T("SELECT element_id,element_type,element_data,flags FROM network_map_elements WHERE map_id=%d"), m_id);
       hResult = DBSelect(g_hCoreDB, query);
       if (hResult != NULL)
       {
@@ -447,25 +443,21 @@ BOOL NetworkMap::CreateFromDB(UINT32 dwId)
       }
 
 		// Load links
-      _sntprintf(query, 256, _T("SELECT element1,element2,link_type,link_name,connector_name1,connector_name2,color,status_object,routing,bend_points,element_data,flags FROM network_map_links WHERE map_id=%d"), m_dwId);
+      _sntprintf(query, 256, _T("SELECT element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags FROM network_map_links WHERE map_id=%d"), m_id);
       hResult = DBSelect(g_hCoreDB, query);
       if (hResult != NULL)
       {
          int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
 			{
-				TCHAR buffer[1024];
+				TCHAR buffer[4096];
 
 				NetworkMapLink *l = new NetworkMapLink(DBGetFieldLong(hResult, i, 0), DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2));
 				l->setName(DBGetField(hResult, i, 3, buffer, 256));
 				l->setConnector1Name(DBGetField(hResult, i, 4, buffer, 256));
 				l->setConnector2Name(DBGetField(hResult, i, 5, buffer, 256));
-				l->setColor(DBGetFieldULong(hResult, i, 6));
-				l->setStatusObject(DBGetFieldULong(hResult, i, 7));
-				l->setRouting(DBGetFieldULong(hResult, i, 8));
-				l->parseBendPoints(DBGetField(hResult, i, 9, buffer, 1024));
-				l->setConfig(DBGetField(hResult, i, 10, buffer, 1024));
-				l->setFlags(DBGetFieldULong(hResult, i, 11));
+				l->setConfig(DBGetField(hResult, i, 6, buffer, 4096));
+				l->setFlags(DBGetFieldULong(hResult, i, 7));
 				m_links->add(l);
 			}
          DBFreeResult(hResult);
@@ -480,25 +472,25 @@ BOOL NetworkMap::CreateFromDB(UINT32 dwId)
 /**
  * Fill NXCP message with object's data
  */
-void NetworkMap::CreateMessage(CSCPMessage *msg)
+void NetworkMap::fillMessage(NXCPMessage *msg)
 {
-	NetObj::CreateMessage(msg);
+	NetObj::fillMessage(msg);
 
-	msg->SetVariable(VID_MAP_TYPE, (WORD)m_mapType);
-	msg->SetVariable(VID_LAYOUT, (WORD)m_layout);
-	msg->SetVariable(VID_FLAGS, m_flags);
-	msg->SetVariable(VID_SEED_OBJECT, m_seedObject);
-	msg->SetVariable(VID_DISCOVERY_RADIUS, (UINT32)m_discoveryRadius);
-	msg->SetVariable(VID_BACKGROUND, m_background, UUID_LENGTH);
-	msg->SetVariable(VID_BACKGROUND_LATITUDE, m_backgroundLatitude);
-	msg->SetVariable(VID_BACKGROUND_LONGITUDE, m_backgroundLongitude);
-	msg->SetVariable(VID_BACKGROUND_ZOOM, (WORD)m_backgroundZoom);
-	msg->SetVariable(VID_LINK_COLOR, (UINT32)m_defaultLinkColor);
-	msg->SetVariable(VID_LINK_ROUTING, (WORD)m_defaultLinkRouting);
-	msg->SetVariable(VID_BACKGROUND_COLOR, (UINT32)m_backgroundColor);
-   msg->SetVariable(VID_FILTER, CHECK_NULL_EX(m_filterSource));
+	msg->setField(VID_MAP_TYPE, (WORD)m_mapType);
+	msg->setField(VID_LAYOUT, (WORD)m_layout);
+	msg->setField(VID_FLAGS, m_flags);
+	msg->setField(VID_SEED_OBJECT, m_seedObject);
+	msg->setField(VID_DISCOVERY_RADIUS, (UINT32)m_discoveryRadius);
+	msg->setField(VID_BACKGROUND, m_background, UUID_LENGTH);
+	msg->setField(VID_BACKGROUND_LATITUDE, m_backgroundLatitude);
+	msg->setField(VID_BACKGROUND_LONGITUDE, m_backgroundLongitude);
+	msg->setField(VID_BACKGROUND_ZOOM, (WORD)m_backgroundZoom);
+	msg->setField(VID_LINK_COLOR, (UINT32)m_defaultLinkColor);
+	msg->setField(VID_LINK_ROUTING, (WORD)m_defaultLinkRouting);
+	msg->setField(VID_BACKGROUND_COLOR, (UINT32)m_backgroundColor);
+   msg->setField(VID_FILTER, CHECK_NULL_EX(m_filterSource));
 
-	msg->SetVariable(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
+	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
 	UINT32 varId = VID_ELEMENT_LIST_BASE;
 	for(int i = 0; i < m_elements->size(); i++)
 	{
@@ -506,7 +498,7 @@ void NetworkMap::CreateMessage(CSCPMessage *msg)
 		varId += 100;
 	}
 
-	msg->SetVariable(VID_NUM_LINKS, (UINT32)m_links->size());
+	msg->setField(VID_NUM_LINKS, (UINT32)m_links->size());
 	varId = VID_LINK_LIST_BASE;
 	for(int i = 0; i < m_links->size(); i++)
 	{
@@ -518,49 +510,49 @@ void NetworkMap::CreateMessage(CSCPMessage *msg)
 /**
  * Update network map object from NXCP message
  */
-UINT32 NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
+UINT32 NetworkMap::modifyFromMessage(NXCPMessage *request, BOOL bAlreadyLocked)
 {
 	if (!bAlreadyLocked)
-		LockData();
+		lockProperties();
 
 	if (request->isFieldExist(VID_MAP_TYPE))
-		m_mapType = (int)request->GetVariableShort(VID_MAP_TYPE);
+		m_mapType = (int)request->getFieldAsUInt16(VID_MAP_TYPE);
 
 	if (request->isFieldExist(VID_LAYOUT))
-		m_layout = (int)request->GetVariableShort(VID_LAYOUT);
+		m_layout = (int)request->getFieldAsUInt16(VID_LAYOUT);
 
 	if (request->isFieldExist(VID_FLAGS))
-		m_flags = request->GetVariableLong(VID_FLAGS);
+		m_flags = request->getFieldAsUInt32(VID_FLAGS);
 
 	if (request->isFieldExist(VID_SEED_OBJECT))
-		m_seedObject = request->GetVariableLong(VID_SEED_OBJECT);
+		m_seedObject = request->getFieldAsUInt32(VID_SEED_OBJECT);
 
 	if (request->isFieldExist(VID_DISCOVERY_RADIUS))
-		m_discoveryRadius = (int)request->GetVariableLong(VID_DISCOVERY_RADIUS);
+		m_discoveryRadius = (int)request->getFieldAsUInt32(VID_DISCOVERY_RADIUS);
 
 	if (request->isFieldExist(VID_LINK_COLOR))
-		m_defaultLinkColor = (int)request->GetVariableLong(VID_LINK_COLOR);
+		m_defaultLinkColor = (int)request->getFieldAsUInt32(VID_LINK_COLOR);
 
 	if (request->isFieldExist(VID_LINK_ROUTING))
-		m_defaultLinkRouting = (int)request->GetVariableShort(VID_LINK_ROUTING);
+		m_defaultLinkRouting = (int)request->getFieldAsUInt16(VID_LINK_ROUTING);
 
 	if (request->isFieldExist(VID_BACKGROUND_COLOR))
-		m_backgroundColor = (int)request->GetVariableLong(VID_BACKGROUND_COLOR);
+		m_backgroundColor = (int)request->getFieldAsUInt32(VID_BACKGROUND_COLOR);
 
    if (request->isFieldExist(VID_FILTER))
-		m_backgroundColor = (int)request->GetVariableLong(VID_FILTER);
+		m_backgroundColor = (int)request->getFieldAsUInt32(VID_FILTER);
 
 	if (request->isFieldExist(VID_BACKGROUND))
 	{
-		request->GetVariableBinary(VID_BACKGROUND, m_background, UUID_LENGTH);
+		request->getFieldAsBinary(VID_BACKGROUND, m_background, UUID_LENGTH);
 		m_backgroundLatitude = request->getFieldAsDouble(VID_BACKGROUND_LATITUDE);
 		m_backgroundLongitude = request->getFieldAsDouble(VID_BACKGROUND_LONGITUDE);
-		m_backgroundZoom = (int)request->GetVariableShort(VID_BACKGROUND_ZOOM);
+		m_backgroundZoom = (int)request->getFieldAsUInt16(VID_BACKGROUND_ZOOM);
 	}
 
    if (request->isFieldExist(VID_FILTER))
    {
-      TCHAR *filter = request->GetVariableStr(VID_FILTER);
+      TCHAR *filter = request->getFieldAsString(VID_FILTER);
       if (filter != NULL)
          StrStrip(filter);
       setFilter(filter);
@@ -571,14 +563,14 @@ UINT32 NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 	{
 		m_elements->clear();
 
-		int numElements = (int)request->GetVariableLong(VID_NUM_ELEMENTS);
+		int numElements = (int)request->getFieldAsUInt32(VID_NUM_ELEMENTS);
 		if (numElements > 0)
 		{
 			UINT32 varId = VID_ELEMENT_LIST_BASE;
 			for(int i = 0; i < numElements; i++)
 			{
 				NetworkMapElement *e;
-				int type = (int)request->GetVariableShort(varId + 1);
+				int type = (int)request->getFieldAsUInt16(varId + 1);
 				switch(type)
 				{
 					case MAP_ELEMENT_OBJECT:
@@ -606,7 +598,7 @@ UINT32 NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 		}
 
 		m_links->clear();
-		int numLinks = request->GetVariableLong(VID_NUM_LINKS);
+		int numLinks = request->getFieldAsUInt32(VID_NUM_LINKS);
 		if (numLinks > 0)
 		{
 			UINT32 varId = VID_LINK_LIST_BASE;
@@ -618,7 +610,7 @@ UINT32 NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
 		}
 	}
 
-	return NetObj::ModifyFromMessage(request, TRUE);
+	return NetObj::modifyFromMessage(request, TRUE);
 }
 
 /**
@@ -626,7 +618,7 @@ UINT32 NetworkMap::ModifyFromMessage(CSCPMessage *request, BOOL bAlreadyLocked)
  */
 void NetworkMap::updateContent()
 {
-	DbgPrintf(6, _T("NetworkMap::updateContent(%s [%d]): map type %d, seed %d"), m_szName, m_dwId, m_mapType, m_seedObject);
+	DbgPrintf(6, _T("NetworkMap::updateContent(%s [%d]): map type %d, seed %d"), m_name, m_id, m_mapType, m_seedObject);
 	Node *seed;
 	switch(m_mapType)
 	{
@@ -643,12 +635,12 @@ void NetworkMap::updateContent()
 				}
 				else
 				{
-					DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): call to buildL2Topology on object %d failed"), m_szName, m_dwId, m_seedObject);
+					DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): call to buildL2Topology on object %d failed"), m_name, m_id, m_seedObject);
 				}
 			}
 			else
 			{
-				DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): seed object %d cannot be found"), m_szName, m_dwId, m_seedObject);
+				DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): seed object %d cannot be found"), m_name, m_id, m_seedObject);
 			}
 			break;
 		case MAP_TYPE_IP_TOPOLOGY:
@@ -664,12 +656,12 @@ void NetworkMap::updateContent()
 				}
 				else
 				{
-					DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): call to BuildIPTopology on object %d failed"), m_szName, m_dwId, m_seedObject);
+					DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): call to BuildIPTopology on object %d failed"), m_name, m_id, m_seedObject);
 				}
 			}
 			else
 			{
-				DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): seed object %d cannot be found"), m_szName, m_dwId, m_seedObject);
+				DbgPrintf(3, _T("NetworkMap::updateContent(%s [%d]): seed object %d cannot be found"), m_name, m_id, m_seedObject);
 			}
 			break;
 		default:
@@ -684,7 +676,7 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 {
 	bool modified = false;
 
-	DbgPrintf(5, _T("NetworkMap(%s): updateObjects called"), m_szName);
+	DbgPrintf(5, _T("NetworkMap(%s): updateObjects called"), m_name);
 
    // Filter out unallowed objects
    if ((m_filter != NULL) && (objects->getNumObjects() > 0))
@@ -695,13 +687,13 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
          NetObj *object = FindObjectById(idList->get(i));
          if ((object == NULL) || !isAllowedOnMap(object))
          {
-            idList->remove(object->Id());
+            idList->remove(object->getId());
             i--;
          }
       }
    }
 
-	LockData();
+	lockProperties();
 
 	// remove non-existing links
 	for(int i = 0; i < m_links->size(); i++)
@@ -711,7 +703,7 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 		UINT32 onjID2 = objectIdFromElementId(link->getElement2());
 		if (!objects->isLinkExist(objID1, onjID2) && link->checkFlagSet(AUTO_GENERATED))
 		{
-			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d removed"), m_szName, link->getElement1(), link->getElement2());
+			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d removed"), m_name, link->getElement1(), link->getElement2());
 			m_links->remove(i);
 			i--;
 			modified = true;
@@ -727,7 +719,7 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 
 		if (!objects->isObjectExist(((NetworkMapObject *)e)->getObjectId()) && (e->getFlags() & AUTO_GENERATED) )
 		{
-			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: object element %d removed"), m_szName, e->getId());
+			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: object element %d removed"), m_name, e->getId());
 			m_elements->remove(i);
 			i--;
 			modified = true;
@@ -754,7 +746,7 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 			NetworkMapElement *e = new NetworkMapObject(m_nextElementId++, objects->getObjects()->get(i), 1);
 			m_elements->add(e);
 			modified = true;
-			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: new object %d added"), m_szName, objects->getObjects()->get(i));
+			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: new object %d added"), m_name, objects->getObjects()->get(i));
 		}
 	}
 
@@ -784,15 +776,15 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 			l->setFlags(1);
 			m_links->add(l);
 			modified = true;
-			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d added"), m_szName, l->getElement1(), l->getElement2());
+			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d added"), m_name, l->getElement1(), l->getElement2());
 		}
 	}
 
 	if (modified)
-		Modify();
+		setModified();
 
-	UnlockData();
-	DbgPrintf(5, _T("NetworkMap(%s): updateObjects completed"), m_szName);
+	unlockProperties();
+	DbgPrintf(5, _T("NetworkMap(%s): updateObjects completed"), m_name);
 }
 
 /**
@@ -843,7 +835,7 @@ UINT32 NetworkMap::elementIdFromObjectId(UINT32 oid)
  */
 void NetworkMap::setFilter(const TCHAR *filter)
 {
-	LockData();
+	lockProperties();
 	safe_free(m_filterSource);
 	delete m_filter;
 	if ((filter != NULL) && (*filter != 0))
@@ -853,15 +845,15 @@ void NetworkMap::setFilter(const TCHAR *filter)
 		m_filterSource = _tcsdup(filter);
 		m_filter = NXSLCompileAndCreateVM(m_filterSource, error, 256, new NXSL_ServerEnv);
 		if (m_filter == NULL)
-			nxlog_write(MSG_NETMAP_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, error);
+			nxlog_write(MSG_NETMAP_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
 	}
 	else
 	{
 		m_filterSource = NULL;
 		m_filter = NULL;
 	}
-	Modify();
-	UnlockData();
+	setModified();
+	unlockProperties();
 }
 
 /**
@@ -871,11 +863,11 @@ bool NetworkMap::isAllowedOnMap(NetObj *object)
 {
 	bool result = true;
 
-	LockData();
+	lockProperties();
 	if (m_filter != NULL)
 	{
       m_filter->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
-      if (object->Type() == OBJECT_NODE)
+      if (object->getObjectClass() == OBJECT_NODE)
       {
 		   m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
       }
@@ -888,12 +880,12 @@ bool NetworkMap::isAllowedOnMap(NetObj *object)
 		{
 			TCHAR buffer[1024];
 
-			_sntprintf(buffer, 1024, _T("NetworkMap::%s::%d"), m_szName, m_dwId);
-			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_filter->getErrorText(), m_dwId);
-			nxlog_write(MSG_NETMAP_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_dwId, m_szName, m_filter->getErrorText());
+			_sntprintf(buffer, 1024, _T("NetworkMap::%s::%d"), m_name, m_id);
+			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_filter->getErrorText(), m_id);
+			nxlog_write(MSG_NETMAP_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, m_filter->getErrorText());
 		}
 	}
-	UnlockData();
+	unlockProperties();
 	return result;
 }
 
@@ -902,7 +894,7 @@ bool NetworkMap::isAllowedOnMap(NetObj *object)
 */
 void NetworkMap::onObjectDelete(UINT32 dwObjectId)
 {
-   LockData();
+   lockProperties();
 
    UINT32 elementId = elementIdFromObjectId(dwObjectId);
    int i = 0;
@@ -935,9 +927,9 @@ void NetworkMap::onObjectDelete(UINT32 dwObjectId)
       }
    }
 
-   Modify();
+   setModified();
 
-   UnlockData();
+   unlockProperties();
 
    NetObj::onObjectDelete(dwObjectId);
 }

@@ -48,17 +48,17 @@ LogHandle::~LogHandle()
 /**
  * Get column information
  */
-void LogHandle::getColumnInfo(CSCPMessage &msg)
+void LogHandle::getColumnInfo(NXCPMessage &msg)
 {
 	UINT32 count = 0;
 	UINT32 varId = VID_COLUMN_INFO_BASE;
 	for(int i = 0; m_log->columns[i].name != NULL; i++, count++, varId += 7)
 	{
-		msg.SetVariable(varId++, m_log->columns[i].name);
-		msg.SetVariable(varId++, (WORD)m_log->columns[i].type);
-		msg.SetVariable(varId++, m_log->columns[i].description);
+		msg.setField(varId++, m_log->columns[i].name);
+		msg.setField(varId++, (WORD)m_log->columns[i].type);
+		msg.setField(varId++, m_log->columns[i].description);
 	}
-	msg.SetVariable(VID_NUM_COLUMNS, count);
+	msg.setField(VID_NUM_COLUMNS, count);
 }
 
 /**
@@ -141,11 +141,11 @@ String LogHandle::buildObjectAccessConstraint(const UINT32 userId)
       {
 		   if (object->checkAccessRights(userId, OBJECT_ACCESS_READ))
 		   {
-            allowed->add(object->Id());
+            allowed->add(object->getId());
 		   }
          else
          {
-            restricted->add(object->Id());
+            restricted->add(object->getId());
          }
       }
       object->decRefCount();
@@ -212,7 +212,7 @@ bool LogHandle::queryInternal(INT64 *rowCount, const UINT32 userId)
 {
 	QWORD qwTimeStart = GetCurrentTimeMs();
 	String query;
-	switch(g_nDBSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
 			query.addFormattedString(_T("SELECT TOP %u %s FROM %s "), m_rowCountLimit, (const TCHAR *)m_queryColumns, m_log->table);
@@ -259,7 +259,7 @@ bool LogHandle::queryInternal(INT64 *rowCount, const UINT32 userId)
 	query += m_filter->buildOrderClause();
 
 	// Limit record count
-	switch(g_nDBSyntax)
+	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MYSQL:
 		case DB_SYNTAX_PGSQL:

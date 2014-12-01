@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -113,7 +113,7 @@ UINT32 GetLocalIpAddr()
    if (pIfList != NULL)
    {
       // Find first interface with IP address
-      for(i = 0; i < pIfList->getSize(); i++)
+      for(i = 0; i < pIfList->size(); i++)
 			if ((pIfList->get(i)->dwIpAddr != 0) && ((pIfList->get(i)->dwIpAddr & 0xFF000000) != 0x7F000000))
          {
             dwAddr = pIfList->get(i)->dwIpAddr;
@@ -244,12 +244,10 @@ BOOL ExecCommand(TCHAR *pszCommand)
    return bSuccess;
 }
 
-
-//
-// Send Wake-on-LAN packet (magic packet) to given IP address
-// with given MAC address inside
-//
-
+/**
+ * Send Wake-on-LAN packet (magic packet) to given IP address
+ * with given MAC address inside
+ */
 BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
 {
    BYTE *pCurr, bPacketData[96];
@@ -257,7 +255,7 @@ BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
    struct sockaddr_in addr;
    BOOL bResult = TRUE;
    int i;
-   
+
    // Create data area
    for(i = 0, pCurr = bPacketData; i < 16; i++, pCurr += 6)
       memcpy(pCurr, pbMacAddr, 6);
@@ -285,10 +283,10 @@ BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
 /**
  * Decode SQL string and set as NXCP variable's value
  */
-void DecodeSQLStringAndSetVariable(CSCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr)
+void DecodeSQLStringAndSetVariable(NXCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr)
 {
    DecodeSQLString(pszStr);
-   pMsg->SetVariable(dwVarId, pszStr);
+   pMsg->setField(dwVarId, pszStr);
 }
 
 /**
@@ -313,7 +311,7 @@ bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, 
 
 	TCHAR query[256];
 	_sntprintf(query, 256, _T("SELECT %s FROM %s WHERE %s=?"), idColumn, table, idColumn);
-	
+
 	DB_STATEMENT hStmt = DBPrepare(hdb, query);
 	if (hStmt != NULL)
 	{
@@ -327,4 +325,18 @@ bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, 
 		DBFreeStatement(hStmt);
 	}
 	return exist;
+}
+
+/**
+ * Prepare and execute SQL query with single binding - object ID.
+ */
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, const TCHAR *query)
+{
+   DB_STATEMENT hStmt = DBPrepare(hdb, query);
+   if (hStmt == NULL)
+      return false;
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectId);
+   bool success = DBExecute(hStmt) ? true : false;
+   DBFreeStatement(hStmt);
+   return success;
 }

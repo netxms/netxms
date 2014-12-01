@@ -23,9 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import org.eclipse.gef4.zest.core.viewers.IGraphEntityRelationshipContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.gef4.zest.core.viewers.IGraphEntityRelationshipContentProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.NetworkMapLink;
@@ -90,7 +90,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 				{
 					try
 					{
-						DciValue[] values = session.getLastValues(e.getKey(), true);
+						DciValue[] values = session.getLastValues(e.getKey(), true, false);
 						cachedDciValues.put(e.getKey(), values);
 					}
 					catch(Exception e2)
@@ -186,10 +186,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 	@Override
 	public Object[] getRelationships(Object source, Object dest)
 	{
-		NetworkMapLink link = page.findLink((NetworkMapElement)source, (NetworkMapElement)dest);
-		if (link != null)
-			return new Object[] { link };		
-		return null;
+	   return page.findLinks((NetworkMapElement)source, (NetworkMapElement)dest).toArray();
 	}
 
 	/* (non-Javadoc)

@@ -62,12 +62,12 @@ private:
 public:
 	~MappingTable();
 
-	static MappingTable *createFromMessage(CSCPMessage *msg);
+	static MappingTable *createFromMessage(NXCPMessage *msg);
 	static MappingTable *createFromDatabase(LONG id);
 
 	bool saveToDatabase();
 	bool deleteFromDatabase();
-	void fillMessage(CSCPMessage *msg);
+	void fillMessage(NXCPMessage *msg);
 
 	void createUniqueId() { m_id = CreateUniqueId(IDG_MAPPING_TABLE); }
 
@@ -82,9 +82,9 @@ public:
  * Mapping tables API
  */
 void InitMappingTables();
-UINT32 UpdateMappingTable(CSCPMessage *msg, LONG *newId);
+UINT32 UpdateMappingTable(NXCPMessage *msg, LONG *newId);
 UINT32 DeleteMappingTable(LONG id);
-UINT32 GetMappingTable(LONG id, CSCPMessage *msg);
-UINT32 ListMappingTables(CSCPMessage *msg);
+UINT32 GetMappingTable(LONG id, NXCPMessage *msg);
+UINT32 ListMappingTables(NXCPMessage *msg);
 
 #endif

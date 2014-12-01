@@ -28,14 +28,14 @@
 // Fill action record from message
 //
 
-static void ActionFromMsg(CSCPMessage *pMsg, NXC_ACTION *pAction)
+static void ActionFromMsg(NXCPMessage *pMsg, NXC_ACTION *pAction)
 {
-   pAction->bIsDisabled = pMsg->GetVariableShort(VID_IS_DISABLED);
-   pAction->iType = pMsg->GetVariableShort(VID_ACTION_TYPE);
-   pAction->pszData = pMsg->GetVariableStr(VID_ACTION_DATA);
-   pMsg->GetVariableStr(VID_EMAIL_SUBJECT, pAction->szEmailSubject, MAX_EMAIL_SUBJECT_LEN);
-   pMsg->GetVariableStr(VID_ACTION_NAME, pAction->szName, MAX_OBJECT_NAME);
-   pMsg->GetVariableStr(VID_RCPT_ADDR, pAction->szRcptAddr, MAX_RCPT_ADDR_LEN);
+   pAction->bIsDisabled = pMsg->getFieldAsUInt16(VID_IS_DISABLED);
+   pAction->iType = pMsg->getFieldAsUInt16(VID_ACTION_TYPE);
+   pAction->pszData = pMsg->getFieldAsString(VID_ACTION_DATA);
+   pMsg->getFieldAsString(VID_EMAIL_SUBJECT, pAction->szEmailSubject, MAX_EMAIL_SUBJECT_LEN);
+   pMsg->getFieldAsString(VID_ACTION_NAME, pAction->szName, MAX_OBJECT_NAME);
+   pMsg->getFieldAsString(VID_RCPT_ADDR, pAction->szRcptAddr, MAX_RCPT_ADDR_LEN);
 }
 
 
@@ -43,33 +43,31 @@ static void ActionFromMsg(CSCPMessage *pMsg, NXC_ACTION *pAction)
 // Process CMD_ACTION_DB_UPDATE message
 //
 
-void ProcessActionUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
+void ProcessActionUpdate(NXCL_Session *pSession, NXCPMessage *pMsg)
 {
    NXC_ACTION action;
    UINT32 dwCode;
 
-   dwCode = pMsg->GetVariableLong(VID_NOTIFICATION_CODE);
-   action.dwId = pMsg->GetVariableLong(VID_ACTION_ID);
+   dwCode = pMsg->getFieldAsUInt32(VID_NOTIFICATION_CODE);
+   action.dwId = pMsg->getFieldAsUInt32(VID_ACTION_ID);
    if (dwCode != NX_NOTIFY_ACTION_DELETED)
       ActionFromMsg(pMsg, &action);
    pSession->callEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &action);
 }
 
-
-//
-// Load all actions from server
-//
-
+/**
+ * Load all actions from server
+ */
 UINT32 LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, UINT32 *pdwNumActions, NXC_ACTION **ppActionList)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRqId, dwRetCode = RCC_SUCCESS, dwNumActions = 0, dwActionId = 0;
    NXC_ACTION *pList = NULL;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_LOAD_ACTIONS);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_LOAD_ACTIONS);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    dwRetCode = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -80,7 +78,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, UINT32 *pdwNumAct
          pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_ACTION_DATA, dwRqId);
          if (pResponse != NULL)
          {
-            dwActionId = pResponse->GetVariableLong(VID_ACTION_ID);
+            dwActionId = pResponse->getFieldAsUInt32(VID_ACTION_ID);
             if (dwActionId != 0)  // 0 is end of list indicator
             {
                pList = (NXC_ACTION *)realloc(pList, sizeof(NXC_ACTION) * (dwNumActions + 1));
@@ -122,22 +120,22 @@ UINT32 LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, UINT32 *pdwNumAct
 
 UINT32 LIBNXCL_EXPORTABLE NXCCreateAction(NXC_SESSION hSession, TCHAR *pszName, UINT32 *pdwNewId)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_CREATE_ACTION);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_ACTION_NAME, pszName);
+   msg.setCode(CMD_CREATE_ACTION);
+   msg.setId(dwRqId);
+   msg.setField(VID_ACTION_NAME, pszName);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
-         *pdwNewId = pResponse->GetVariableLong(VID_ACTION_ID);
+         *pdwNewId = pResponse->getFieldAsUInt32(VID_ACTION_ID);
       delete pResponse;
    }
    else
@@ -154,14 +152,14 @@ UINT32 LIBNXCL_EXPORTABLE NXCCreateAction(NXC_SESSION hSession, TCHAR *pszName, 
 
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteAction(NXC_SESSION hSession, UINT32 dwActionId)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_DELETE_ACTION);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_ACTION_ID, dwActionId);
+   msg.setCode(CMD_DELETE_ACTION);
+   msg.setId(dwRqId);
+   msg.setField(VID_ACTION_ID, dwActionId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -174,21 +172,21 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteAction(NXC_SESSION hSession, UINT32 dwActionI
 
 UINT32 LIBNXCL_EXPORTABLE NXCModifyAction(NXC_SESSION hSession, NXC_ACTION *pAction)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Fill in request
-   msg.SetCode(CMD_MODIFY_ACTION);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_IS_DISABLED, (WORD)pAction->bIsDisabled);
-   msg.SetVariable(VID_ACTION_ID, pAction->dwId);
-   msg.SetVariable(VID_ACTION_TYPE, (WORD)pAction->iType);
-   msg.SetVariable(VID_ACTION_DATA, pAction->pszData);
-   msg.SetVariable(VID_EMAIL_SUBJECT, pAction->szEmailSubject);
-   msg.SetVariable(VID_ACTION_NAME, pAction->szName);
-   msg.SetVariable(VID_RCPT_ADDR, pAction->szRcptAddr);
+   msg.setCode(CMD_MODIFY_ACTION);
+   msg.setId(dwRqId);
+   msg.setField(VID_IS_DISABLED, (WORD)pAction->bIsDisabled);
+   msg.setField(VID_ACTION_ID, pAction->dwId);
+   msg.setField(VID_ACTION_TYPE, (WORD)pAction->iType);
+   msg.setField(VID_ACTION_DATA, pAction->pszData);
+   msg.setField(VID_EMAIL_SUBJECT, pAction->szEmailSubject);
+   msg.setField(VID_ACTION_NAME, pAction->szName);
+   msg.setField(VID_RCPT_ADDR, pAction->szRcptAddr);
 
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 

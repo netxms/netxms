@@ -100,4 +100,14 @@
            parentId="org.eclipse.ui.contexts.window">
      </context>
   </extension>
+  <extension
+        point="org.eclipse.core.expressions.propertyTesters">
+     <propertyTester
+           class="org.netxms.ui.eclipse.objectbrowser.ObjectPropertyTester"
+           id="org.netxms.ui.eclipse.objectbrowser.ObjectPropertyTester"
+           namespace="org.netxms.ui.eclipse.objectbrowser"
+           properties="isAlarmsVisible"
+           type="org.netxms.client.objects.AbstractObject">
+     </propertyTester>
+  </extension>
 </plugin>

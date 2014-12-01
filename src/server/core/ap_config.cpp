@@ -59,9 +59,9 @@ AgentPolicyConfig::~AgentPolicyConfig()
 // Save to database
 //
 
-BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
+BOOL AgentPolicyConfig::saveToDatabase(DB_HANDLE hdb)
 {
-	LockData();
+	lockProperties();
 
 	BOOL success = savePolicyCommonProperties(hdb);
 	if (success)
@@ -70,7 +70,7 @@ BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
 		int len = (int)data.getSize() + 256;
 		TCHAR *query = (TCHAR *)malloc(len * sizeof(TCHAR));
 
-		_sntprintf(query, len, _T("SELECT policy_id FROM ap_config_files WHERE policy_id=%d"), m_dwId);
+		_sntprintf(query, len, _T("SELECT policy_id FROM ap_config_files WHERE policy_id=%d"), m_id);
 		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult != NULL)
 		{
@@ -79,10 +79,10 @@ BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
 
 			if (isNew)
 				_sntprintf(query, len, _T("INSERT INTO ap_config_files (policy_id,file_content) VALUES (%d,%s)"),
-				           m_dwId, (const TCHAR *)data);
+				           m_id, (const TCHAR *)data);
 			else
 				_sntprintf(query, len, _T("UPDATE ap_config_files SET file_content=%s WHERE policy_id=%d"),
-				           (const TCHAR *)data, m_dwId);
+				           (const TCHAR *)data, m_id);
 			success = DBQuery(hdb, query);
 		}
 		free(query);
@@ -91,7 +91,7 @@ BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
 	// Clear modifications flag and unlock object
 	if (success)
 		m_isModified = false;
-   UnlockData();
+   unlockProperties();
 
    return success;
 }
@@ -99,9 +99,9 @@ BOOL AgentPolicyConfig::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete from database
  */
-bool AgentPolicyConfig::deleteFromDB(DB_HANDLE hdb)
+bool AgentPolicyConfig::deleteFromDatabase(DB_HANDLE hdb)
 {
-	bool success = AgentPolicy::deleteFromDB(hdb);
+	bool success = AgentPolicy::deleteFromDatabase(hdb);
    if (success)
    {
       success = executeQueryOnObject(hdb, _T("DELETE FROM ap_config_files WHERE policy_id=?"));
@@ -112,11 +112,11 @@ bool AgentPolicyConfig::deleteFromDB(DB_HANDLE hdb)
 /**
  * Load from database
  */
-BOOL AgentPolicyConfig::CreateFromDB(UINT32 dwId)
+BOOL AgentPolicyConfig::loadFromDatabase(UINT32 dwId)
 {
 	BOOL success = FALSE;
 
-	if (AgentPolicy::CreateFromDB(dwId))
+	if (AgentPolicy::loadFromDatabase(dwId))
 	{
 		TCHAR query[256];
 
@@ -140,29 +140,27 @@ BOOL AgentPolicyConfig::CreateFromDB(UINT32 dwId)
 // Create NXCP message with policy data
 //
 
-void AgentPolicyConfig::CreateMessage(CSCPMessage *msg)
+void AgentPolicyConfig::fillMessage(NXCPMessage *msg)
 {
-	AgentPolicy::CreateMessage(msg);
-	msg->SetVariable(VID_CONFIG_FILE_DATA, CHECK_NULL_EX(m_fileContent));
+	AgentPolicy::fillMessage(msg);
+	msg->setField(VID_CONFIG_FILE_DATA, CHECK_NULL_EX(m_fileContent));
 }
 
-
-//
-// Modify policy from message
-//
-
-UINT32 AgentPolicyConfig::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked)
+/**
+ * Modify policy from message
+ */
+UINT32 AgentPolicyConfig::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
    if (!bAlreadyLocked)
-      LockData();
+      lockProperties();
 
 	if (pRequest->isFieldExist(VID_CONFIG_FILE_DATA))
 	{
 		safe_free(m_fileContent);
-		m_fileContent = pRequest->GetVariableStr(VID_CONFIG_FILE_DATA);
+		m_fileContent = pRequest->getFieldAsString(VID_CONFIG_FILE_DATA);
 	}
 
-	return AgentPolicy::ModifyFromMessage(pRequest, TRUE);
+	return AgentPolicy::modifyFromMessage(pRequest, TRUE);
 }
 
 
@@ -170,7 +168,7 @@ UINT32 AgentPolicyConfig::ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlready
 // Create deployment message
 //
 
-bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
+bool AgentPolicyConfig::createDeploymentMessage(NXCPMessage *msg)
 {
 	if (!AgentPolicy::createDeploymentMessage(msg))
 		return false;
@@ -180,10 +178,10 @@ bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
 
 #ifdef UNICODE
 	char *fd = MBStringFromWideString(m_fileContent);
-	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)fd, (UINT32)strlen(fd));
+	msg->setField(VID_CONFIG_FILE_DATA, (BYTE *)fd, (UINT32)strlen(fd));
 	free(fd);
 #else
-	msg->SetVariable(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, (UINT32)strlen(m_fileContent));
+	msg->setField(VID_CONFIG_FILE_DATA, (BYTE *)m_fileContent, (UINT32)strlen(m_fileContent));
 #endif
 	return true;
 }
@@ -193,7 +191,7 @@ bool AgentPolicyConfig::createDeploymentMessage(CSCPMessage *msg)
 // Create uninstall message
 //
 
-bool AgentPolicyConfig::createUninstallMessage(CSCPMessage *msg)
+bool AgentPolicyConfig::createUninstallMessage(NXCPMessage *msg)
 {
 	return AgentPolicy::createUninstallMessage(msg);
 }

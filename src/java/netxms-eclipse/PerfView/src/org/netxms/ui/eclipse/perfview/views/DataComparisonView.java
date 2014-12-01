@@ -31,6 +31,9 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.ImageTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -53,6 +56,7 @@ import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
@@ -107,6 +111,7 @@ public class DataComparisonView extends ViewPart
 	private Action actionLegendRight;
 	private Action actionLegendTop;
 	private Action actionLegendBottom;
+	private Action actionCopyImage;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -508,6 +513,17 @@ public class DataComparisonView extends ViewPart
 		actionVertical.setChecked(!transposed);
 		actionVertical.setEnabled(chart.hasAxes());
 		actionVertical.setImageDescriptor(Activator.getImageDescriptor("icons/bar_vertical.png")); //$NON-NLS-1$
+
+		actionCopyImage = new Action(Messages.get().DataComparisonView_CopyToClipboard, SharedIcons.COPY) {
+			@Override
+			public void run()
+			{
+				Image image = chart.takeSnapshot();
+				ImageTransfer imageTransfer = ImageTransfer.getInstance();
+				final Clipboard clipboard = new Clipboard(getSite().getShell().getDisplay());
+				clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
+			}
+		};
 	}
 	
 	/**
@@ -594,6 +610,8 @@ public class DataComparisonView extends ViewPart
 		manager.add(actionHorizontal);
 		//manager.add(new Separator());
 		//manager.add(actionShowIn3D);
+		manager.add(new Separator());
+		manager.add(actionCopyImage);		
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -40,7 +40,7 @@ Subnet::Subnet(UINT32 dwAddr, UINT32 dwNetMask, UINT32 dwZone, bool bSyntheticMa
 
    m_dwIpAddr = dwAddr;
    m_dwIpNetMask = dwNetMask;
-   _sntprintf(m_szName, MAX_OBJECT_NAME, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwNetMask));
+   _sntprintf(m_name, MAX_OBJECT_NAME, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwNetMask));
    m_zoneId = dwZone;
 	m_bSyntheticMask = bSyntheticMask;
 }
@@ -55,12 +55,12 @@ Subnet::~Subnet()
 /**
  * Create object from database data
  */
-BOOL Subnet::CreateFromDB(UINT32 dwId)
+BOOL Subnet::loadFromDatabase(UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
 
-   m_dwId = dwId;
+   m_id = dwId;
 
    if (!loadCommonProperties())
       return FALSE;
@@ -92,7 +92,7 @@ BOOL Subnet::CreateFromDB(UINT32 dwId)
 /**
  * Save subnet object to database
  */
-BOOL Subnet::SaveToDB(DB_HANDLE hdb)
+BOOL Subnet::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024], szIpAddr[16], szNetMask[16];
    DB_RESULT hResult;
@@ -100,12 +100,12 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
    BOOL bNewObject = TRUE;
 
    // Lock object's access
-   LockData();
+   lockProperties();
 
    saveCommonProperties(hdb);
 
    // Check for object's existence in database
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM subnets WHERE id=%d"), m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM subnets WHERE id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -116,24 +116,24 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
 
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
 		           _T("INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid,synthetic_mask) VALUES (%d,'%s','%s',%d,%d)"),
-                 m_dwId, IpToStr(m_dwIpAddr, szIpAddr),
+                 m_id, IpToStr(m_dwIpAddr, szIpAddr),
 					  IpToStr(m_dwIpNetMask, szNetMask), m_zoneId, m_bSyntheticMask ? 1 : 0);
    else
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
 		           _T("UPDATE subnets SET ip_addr='%s',ip_netmask='%s',zone_guid=%d,synthetic_mask=%d WHERE id=%d"),
                  IpToStr(m_dwIpAddr, szIpAddr),
-					  IpToStr(m_dwIpNetMask, szNetMask), m_zoneId, m_bSyntheticMask ? 1 : 0, m_dwId);
+					  IpToStr(m_dwIpNetMask, szNetMask), m_zoneId, m_bSyntheticMask ? 1 : 0, m_id);
    DBQuery(hdb, szQuery);
 
    // Update node to subnet mapping
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM nsmap WHERE subnet_id=%d"), m_dwId);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM nsmap WHERE subnet_id=%d"), m_id);
    DBQuery(hdb, szQuery);
    LockChildList(FALSE);
    for(i = 0; i < m_dwChildCount; i++)
    {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), m_dwId, m_pChildList[i]->Id());
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), m_id, m_pChildList[i]->getId());
       DBQuery(hdb, szQuery);
    }
    UnlockChildList();
@@ -143,7 +143,7 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
 
    // Clear modifications flag and unlock object
    m_isModified = false;
-   UnlockData();
+   unlockProperties();
 
    return TRUE;
 }
@@ -151,9 +151,9 @@ BOOL Subnet::SaveToDB(DB_HANDLE hdb)
 /**
  * Delete subnet object from database
  */
-bool Subnet::deleteFromDB(DB_HANDLE hdb)
+bool Subnet::deleteFromDatabase(DB_HANDLE hdb)
 {
-   bool success = NetObj::deleteFromDB(hdb);
+   bool success = NetObj::deleteFromDatabase(hdb);
    if (success)
       success = executeQueryOnObject(hdb, _T("DELETE FROM subnets WHERE id=?"));
    if (success)
@@ -164,12 +164,12 @@ bool Subnet::deleteFromDB(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void Subnet::CreateMessage(CSCPMessage *pMsg)
+void Subnet::fillMessage(NXCPMessage *pMsg)
 {
-   NetObj::CreateMessage(pMsg);
-   pMsg->SetVariable(VID_IP_NETMASK, m_dwIpNetMask);
-   pMsg->SetVariable(VID_ZONE_ID, m_zoneId);
-	pMsg->SetVariable(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));
+   NetObj::fillMessage(pMsg);
+   pMsg->setField(VID_IP_NETMASK, m_dwIpNetMask);
+   pMsg->setField(VID_ZONE_ID, m_zoneId);
+	pMsg->setField(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));
 }
 
 /**
@@ -179,22 +179,33 @@ void Subnet::setCorrectMask(UINT32 dwAddr, UINT32 dwMask)
 {
 	TCHAR szName[MAX_OBJECT_NAME], szBuffer[32];
 
-	LockData();
-	
+	lockProperties();
+
 	// Check if name is default
 	_sntprintf(szName, MAX_OBJECT_NAME, _T("%s/%d"), IpToStr(m_dwIpAddr, szBuffer), BitsInMask(m_dwIpNetMask));
-	if (!_tcsicmp(szName, m_szName))
+	if (!_tcsicmp(szName, m_name))
 	{
 		// Change name
-		_sntprintf(m_szName, MAX_OBJECT_NAME, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwMask));
+		_sntprintf(m_name, MAX_OBJECT_NAME, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwMask));
 	}
-	
+
+	bool shouldReaddNode = m_dwIpAddr != dwAddr;
+
+   if(shouldReaddNode)
+   {
+      g_idxSubnetByAddr.remove(m_dwIpAddr);
+   }
+
 	m_dwIpAddr = dwAddr;
 	m_dwIpNetMask = dwMask;
 	m_bSyntheticMask = false;
 
-	Modify();
-	UnlockData();
+	if(shouldReaddNode)
+   {
+      g_idxSubnetByAddr.put(m_dwIpAddr, this);
+   }
+	setModified();
+	unlockProperties();
 }
 
 /**
@@ -213,11 +224,11 @@ bool Subnet::findMacAddress(UINT32 ipAddr, BYTE *macAddr)
 
    for(UINT32 i = 0; (i < m_dwChildCount) && !success; i++)
    {
-      if (m_pChildList[i]->Type() != OBJECT_NODE)
+      if (m_pChildList[i]->getObjectClass() != OBJECT_NODE)
 			continue;
 
 		Node *node = (Node *)m_pChildList[i];
-		DbgPrintf(6, _T("Subnet[%s]::findMacAddress: reading ARP cache for node %s [%u]"), m_szName, node->Name(), node->Id());
+		DbgPrintf(6, _T("Subnet[%s]::findMacAddress: reading ARP cache for node %s [%u]"), m_name, node->getName(), node->getId());
 		ARP_CACHE *arpCache = node->getArpCache();
 		if (arpCache == NULL)
 			continue;
@@ -249,7 +260,7 @@ void Subnet::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32
 	LockChildList(FALSE);
 	for(UINT32 i = 0; i < m_dwChildCount; i++)
 	{
-		if ((m_pChildList[i]->Id() == seedNode) || (m_pChildList[i]->Type() != OBJECT_NODE))
+		if ((m_pChildList[i]->getId() == seedNode) || (m_pChildList[i]->getObjectClass() != OBJECT_NODE))
 			continue;
 		if (!includeEndNodes && !((Node *)m_pChildList[i])->isRouter())
 			continue;
@@ -261,7 +272,7 @@ void Subnet::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32
 	for(int j = 0; j < nodes.size(); j++)
 	{
 		Node *n = nodes.get(j);
-		n->buildIPTopologyInternal(topology, nDepth - 1, m_dwId, false, includeEndNodes);
+		n->buildIPTopologyInternal(topology, nDepth - 1, m_id, false, includeEndNodes);
 		n->decRefCount();
 	}
 }
@@ -290,7 +301,7 @@ UINT32 *Subnet::buildAddressMap(int *length)
    for(int i = 1; i < *length - 1; i++, addr++)
    {
       Node *node = FindNodeByIP(m_zoneId, addr);
-      map[i] = (node != NULL) ? node->Id() : 0;
+      map[i] = (node != NULL) ? node->getId() : 0;
    }
 
    return map;
@@ -301,6 +312,6 @@ UINT32 *Subnet::buildAddressMap(int *length)
  */
 void Subnet::prepareForDeletion()
 {
-   PostEvent(EVENT_SUBNET_DELETED, g_dwMgmtNode, "isaa", m_dwId, m_szName, m_dwIpAddr, m_dwIpNetMask);
+   PostEvent(EVENT_SUBNET_DELETED, g_dwMgmtNode, "isaa", m_id, m_name, m_dwIpAddr, m_dwIpNetMask);
    NetObj::prepareForDeletion();
 }

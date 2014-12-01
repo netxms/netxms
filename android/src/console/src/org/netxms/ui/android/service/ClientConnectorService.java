@@ -15,6 +15,7 @@ import org.netxms.api.client.SessionNotification;
 import org.netxms.base.Logger;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
@@ -273,7 +274,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void alarmNotification(Alarm alarm, String text)
 	{
-		int severity = alarm.getCurrentSeverity();
+		Severity severity = alarm.getCurrentSeverity();
 		if (notifyAlarm)
 		{
 			Intent notifyIntent = new Intent(getApplicationContext(), AlarmBrowserFragment.class);
@@ -893,20 +894,26 @@ public class ClientConnectorService extends Service implements SessionListener
 	 * 
 	 * @param severity
 	 */
-	private String GetAlarmSound(int severity)
+	private String GetAlarmSound(Severity severity)
 	{
 		switch (severity)
 		{
-			case 0: // Normal
+			case NORMAL: // Normal
 				return sp.getString("alarm.sound.normal", "");
-			case 1: // Warning
+			case WARNING: // Warning
 				return sp.getString("alarm.sound.warning", "");
-			case 2: // Minor
+			case MINOR: // Minor
 				return sp.getString("alarm.sound.minor", "");
-			case 3: // Major
+			case MAJOR: // Major
 				return sp.getString("alarm.sound.major", "");
-			case 4: // Critical
+			case CRITICAL: // Critical
 				return sp.getString("alarm.sound.critical", "");
+			case UNKNOWN: // Unknown
+				return sp.getString("alarm.sound.unknown", "");	// TODO: 2014Oct10 Implement corresponding settings section
+			case TERMINATE: // Terminate
+				return sp.getString("alarm.sound.terminate", "");	// TODO: 2014Oct10 Implement corresponding settings section
+			case RESOLVE: // Resolve
+				return sp.getString("alarm.sound.resolve", "");	// TODO: 2014Oct10 Implement corresponding settings section
 		}
 		return "";
 	}
@@ -916,20 +923,24 @@ public class ClientConnectorService extends Service implements SessionListener
 	 * 
 	 * @param severity
 	 */
-	private int getAlarmIcon(int severity)
+	private int getAlarmIcon(Severity severity)
 	{
 		switch (severity)
 		{
-			case 0: // Normal
+			case NORMAL: // Normal
 				return R.drawable.status_normal;
-			case 1: // Warning
+			case WARNING: // Warning
 				return R.drawable.status_warning;
-			case 2: // Minor
+			case MINOR: // Minor
 				return R.drawable.status_minor;
-			case 3: // Major
+			case MAJOR: // Major
 				return R.drawable.status_major;
-			case 4: // Critical
+			case CRITICAL: // Critical
 				return R.drawable.status_critical;
+			case UNKNOWN: // Unknown
+			case TERMINATE: // Terminate
+			case RESOLVE: // Resolve
+				return android.R.drawable.stat_notify_sdcard;	// TODO: 2014Oct10 Implement corresponding icon
 		}
 		return android.R.drawable.stat_notify_sdcard;
 	}

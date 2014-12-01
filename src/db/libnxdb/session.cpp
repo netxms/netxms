@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -92,6 +92,8 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
          hConn->m_server = (server == NULL) ? NULL : _tcsdup(server);
          hConn->m_schema = (schema == NULL) ? NULL : _tcsdup(schema);
 #endif
+         if (driver->m_fpDrvSetPrefetchLimit != NULL)
+            driver->m_fpDrvSetPrefetchLimit(hDrvConn, driver->m_defaultPrefetchLimit);
 		   __DBDbgPrintf(4, _T("New DB connection opened: handle=%p"), hConn);
       }
       else
@@ -163,7 +165,11 @@ static void DBReconnect(DB_HANDLE hConn)
 		hConn->m_connection = hConn->m_driver->m_fpDrvConnect(hConn->m_server, hConn->m_login,
                                                             hConn->m_password, hConn->m_dbName, hConn->m_schema, errorText);
       if (hConn->m_connection != NULL)
+      {
+         if (hConn->m_driver->m_fpDrvSetPrefetchLimit != NULL)
+            hConn->m_driver->m_fpDrvSetPrefetchLimit(hConn->m_connection, hConn->m_driver->m_defaultPrefetchLimit);
          break;
+      }
       if (nCount == 0)
       {
 			MutexLock(hConn->m_driver->m_mutexReconnect);
@@ -185,12 +191,29 @@ static void DBReconnect(DB_HANDLE hConn)
 }
 
 /**
+ * Set default prefetch limit
+ */
+void LIBNXDB_EXPORTABLE DBSetDefaultPrefetchLimit(DB_DRIVER driver, int limit)
+{
+   driver->m_defaultPrefetchLimit = limit;
+}
+
+/**
+ * Set prefetch limit
+ */
+bool LIBNXDB_EXPORTABLE DBSetPrefetchLimit(DB_HANDLE hConn, int limit)
+{
+   if (hConn->m_driver->m_fpDrvSetPrefetchLimit == NULL)
+      return false;  // Not supported by driver
+   return hConn->m_driver->m_fpDrvSetPrefetchLimit(hConn->m_connection, limit);
+}
+
+/**
  * Perform a non-SELECT SQL query
  */
-BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
+bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
 {
    DWORD dwResult;
-   INT64 ms;
 #ifdef UNICODE
 #define pwszQuery szQuery
 #define wcErrorText errorText
@@ -200,8 +223,7 @@ BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
 #endif
 
    MutexLock(hConn->m_mutexTransLock);
-   if (hConn->m_driver->m_dumpSql)
-      ms = GetCurrentTimeMs();
+   INT64 ms = GetCurrentTimeMs();
 
    dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, wcErrorText);
    if ((dwResult == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
@@ -210,10 +232,14 @@ BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
       dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, wcErrorText);
    }
 
+   ms = GetCurrentTimeMs() - ms;
    if (hConn->m_driver->m_dumpSql)
    {
-      ms = GetCurrentTimeMs() - ms;
       __DBDbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), szQuery, ms);
+   }
+   if ((dwResult == DBERR_SUCCESS) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
+   {
+      __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
    }
    
    MutexUnlock(hConn->m_mutexTransLock);
@@ -240,7 +266,7 @@ BOOL LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
 #undef wcErrorText
 }
 
-BOOL LIBNXDB_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *query)
+bool LIBNXDB_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *query)
 {
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 
@@ -255,7 +281,6 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
    DBDRV_RESULT hResult;
 	DB_RESULT result = NULL;
    DWORD dwError = DBERR_OTHER_ERROR;
-   INT64 ms;
 #ifdef UNICODE
 #define pwszQuery szQuery
 #define wcErrorText errorText
@@ -265,8 +290,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
 #endif
    
    MutexLock(hConn->m_mutexTransLock);
-   if (hConn->m_driver->m_dumpSql)
-      ms = GetCurrentTimeMs();
+   INT64 ms = GetCurrentTimeMs();
    hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
@@ -274,10 +298,14 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
       hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    }
 
+   ms = GetCurrentTimeMs() - ms;
    if (hConn->m_driver->m_dumpSql)
    {
-      ms = GetCurrentTimeMs() - ms;
-      __DBDbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
+      __DBDbgPrintf(9, _T("%s sync query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (int)ms);
+   }
+   if ((hResult != NULL) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
+   {
+      __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
    }
    MutexUnlock(hConn->m_mutexTransLock);
 
@@ -329,7 +357,7 @@ int LIBNXDB_EXPORTABLE DBGetColumnCount(DB_RESULT hResult)
 /**
  * Get column name
  */
-BOOL LIBNXDB_EXPORTABLE DBGetColumnName(DB_RESULT hResult, int column, TCHAR *buffer, int bufSize)
+bool LIBNXDB_EXPORTABLE DBGetColumnName(DB_RESULT hResult, int column, TCHAR *buffer, int bufSize)
 {
 	const char *name;
 
@@ -357,7 +385,7 @@ int LIBNXDB_EXPORTABLE DBGetColumnCountAsync(DB_ASYNC_RESULT hResult)
 /**
  * Get column name for async request
  */
-BOOL LIBNXDB_EXPORTABLE DBGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column, TCHAR *buffer, int bufSize)
+bool LIBNXDB_EXPORTABLE DBGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column, TCHAR *buffer, int bufSize)
 {
 	const char *name;
 
@@ -383,6 +411,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_RESULT hResult, int iRow, int iColumn, T
 #ifdef UNICODE
    if (pszBuffer != NULL)
    {
+      *pszBuffer = 0;
       return hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pszBuffer, nBufLen);
    }
    else
@@ -416,6 +445,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn
    {
       if (pszBuffer != NULL)
       {
+         *pszBuffer = 0;
          return hResult->m_driver->m_fpDrvGetFieldUTF8(hResult->m_data, iRow, iColumn, pszBuffer, nBufLen);
       }
       else
@@ -463,6 +493,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, c
 
    if (pszBuffer != NULL)
    {
+      *pszBuffer = 0;
       pwszBuffer = (WCHAR *)malloc(nBufLen * sizeof(WCHAR));
       pwszData = hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, pwszBuffer, nBufLen);
       if (pwszData != NULL)
@@ -601,11 +632,11 @@ UINT32 LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iCol
 /**
  * Get field's value as integer array from byte array encoded in hex
  */
-BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn,
+bool LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iColumn,
                                             int *pnArray, int nSize, int nDefault)
 {
    char pbBytes[128];
-   BOOL bResult;
+   bool bResult;
    int i, nLen;
    TCHAR *pszVal, szBuffer[256];
 
@@ -618,21 +649,21 @@ BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iCo
          pnArray[i] = pbBytes[i];
       for(; i < nSize; i++)
          pnArray[i] = nDefault;
-      bResult = TRUE;
+      bResult = true;
    }
    else
    {
       for(i = 0; i < nSize; i++)
          pnArray[i] = nDefault;
-      bResult = FALSE;
+      bResult = false;
    }
    return bResult;
 }
 
-BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iColumn,
+bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iColumn,
                                              BYTE *data, int nSize, int nDefault)
 {
-   BOOL bResult;
+   bool bResult;
    TCHAR *pszVal, szBuffer[256];
 
    pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
@@ -641,12 +672,12 @@ BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iC
       int bytes = (int)StrToBin(pszVal, data, nSize);
 		if (bytes < nSize)
 			memset(&data[bytes], 0, nSize - bytes);
-      bResult = TRUE;
+      bResult = true;
    }
    else
    {
 		memset(data, nDefault, nSize);
-      bResult = FALSE;
+      bResult = false;
    }
    return bResult;
 }
@@ -654,28 +685,28 @@ BOOL LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iC
 /**
  * Get field's value as GUID
  */
-BOOL LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn, uuid_t guid)
+bool LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn, uuid_t guid)
 {
    TCHAR *pszVal, szBuffer[256];
-   BOOL bResult;
+   bool bResult;
 
    pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
    if (pszVal != NULL)
    {
       if (uuid_parse(pszVal, guid) == 0)
       {
-         bResult = TRUE;
+         bResult = true;
       }
       else
       {
          uuid_clear(guid);
-         bResult = FALSE;
+         bResult = false;
       }
    }
    else
    {
       uuid_clear(guid);
-      bResult = FALSE;
+      bResult = false;
    }
    return bResult;
 }
@@ -710,7 +741,6 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
    DBDRV_ASYNC_RESULT hResult;
 	DB_ASYNC_RESULT result = NULL;
    DWORD dwError = DBERR_OTHER_ERROR;
-   INT64 ms;
 #ifdef UNICODE
 #define pwszQuery szQuery
 #define wcErrorText errorText
@@ -720,8 +750,7 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
 #endif
    
    MutexLock(hConn->m_mutexTransLock);
-	if (hConn->m_driver->m_dumpSql)
-      ms = GetCurrentTimeMs();
+   INT64 ms = GetCurrentTimeMs();
    hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
@@ -729,10 +758,14 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
       hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    }
 
+   ms = GetCurrentTimeMs() - ms;
    if (hConn->m_driver->m_dumpSql)
    {
-      ms = GetCurrentTimeMs() - ms;
-      __DBDbgPrintf(9, _T("%s async query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (DWORD)ms);
+      __DBDbgPrintf(9, _T("%s async query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (int)ms);
+   }
+   if ((hResult != NULL) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
+   {
+      __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
    }
    if (hResult == NULL)
    {
@@ -776,7 +809,7 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *q
 /**
  * Fetch next row from asynchronous SELECT result
  */
-BOOL LIBNXDB_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult)
+bool LIBNXDB_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult)
 {
 	return hResult->m_driver->m_fpDrvFetch(hResult->m_data);
 }
@@ -1063,6 +1096,25 @@ const TCHAR LIBNXDB_EXPORTABLE *DBGetStatementSource(DB_STATEMENT hStmt)
 }
 
 /**
+ * Open batch
+ */
+bool LIBNXDB_EXPORTABLE DBOpenBatch(DB_STATEMENT hStmt)
+{
+   if (!IS_VALID_STATEMENT_HANDLE(hStmt) || (hStmt->m_driver->m_fpDrvOpenBatch == NULL))
+      return false;
+   return hStmt->m_driver->m_fpDrvOpenBatch(hStmt->m_statement);
+}
+
+/**
+ * Start next batch row batch
+ */
+void LIBNXDB_EXPORTABLE DBNextBatchRow(DB_STATEMENT hStmt)
+{
+   if (IS_VALID_STATEMENT_HANDLE(hStmt) && (hStmt->m_driver->m_fpDrvNextBatchRow != NULL))
+      hStmt->m_driver->m_fpDrvNextBatchRow(hStmt->m_statement);
+}
+
+/**
  * Bind parameter (generic)
  */
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
@@ -1213,12 +1265,12 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, double 
 /**
  * Execute prepared statement (non-SELECT)
  */
-BOOL LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
+bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 {
    if (!IS_VALID_STATEMENT_HANDLE(hStmt))
    {
       _tcscpy(errorText, _T("Invalid statement handle"));
-      return FALSE;
+      return false;
    }
 
 #ifdef UNICODE
@@ -1226,18 +1278,20 @@ BOOL LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 #else
 	WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
 #endif
-	UINT64 ms;
 
 	DB_HANDLE hConn = hStmt->m_connection;
 	MutexLock(hConn->m_mutexTransLock);
-   if (hConn->m_driver->m_dumpSql)
-      ms = GetCurrentTimeMs();
+   UINT64 ms = GetCurrentTimeMs();
 
 	DWORD dwResult = hConn->m_driver->m_fpDrvExecute(hConn->m_connection, hStmt->m_statement, wcErrorText);
+   ms = GetCurrentTimeMs() - ms;
    if (hConn->m_driver->m_dumpSql)
    {
-      ms = GetCurrentTimeMs() - ms;
-      __DBDbgPrintf(9, _T("%s prepared sync query: \"%s\" [%d ms]"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), hStmt->m_query, ms);
+      __DBDbgPrintf(9, _T("%s prepared sync query: \"%s\" [%d ms]"), (dwResult == DBERR_SUCCESS) ? _T("Successful") : _T("Failed"), hStmt->m_query, (int)ms);
+   }
+   if ((dwResult == DBERR_SUCCESS) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
+   {
+      __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), hStmt->m_query, (int)ms);
    }
 
    // Do reconnect if needed, but don't retry statement execution
@@ -1277,7 +1331,7 @@ BOOL LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 /**
  * Execute prepared statement (non-SELECT)
  */
-BOOL LIBNXDB_EXPORTABLE DBExecute(DB_STATEMENT hStmt)
+bool LIBNXDB_EXPORTABLE DBExecute(DB_STATEMENT hStmt)
 {
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 	return DBExecuteEx(hStmt, errorText);
@@ -1304,17 +1358,19 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 	DB_HANDLE hConn = hStmt->m_connection;
    MutexLock(hConn->m_mutexTransLock);
 
-   INT64 ms;
-   if (hConn->m_driver->m_dumpSql)
-      ms = GetCurrentTimeMs();
+   INT64 ms = GetCurrentTimeMs();
    DWORD dwError = DBERR_OTHER_ERROR;
 	DBDRV_RESULT hResult = hConn->m_driver->m_fpDrvSelectPrepared(hConn->m_connection, hStmt->m_statement, &dwError, wcErrorText);
 
+   ms = GetCurrentTimeMs() - ms;
    if (hConn->m_driver->m_dumpSql)
    {
-      ms = GetCurrentTimeMs() - ms;
       __DBDbgPrintf(9, _T("%s prepared sync query: \"%s\" [%d ms]"), 
-		              (hResult != NULL) ? _T("Successful") : _T("Failed"), hStmt->m_query, (DWORD)ms);
+		              (hResult != NULL) ? _T("Successful") : _T("Failed"), hStmt->m_query, (int)ms);
+   }
+   if ((hResult != NULL) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
+   {
+      __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), hStmt->m_query, (int)ms);
    }
 
    // Do reconnect if needed, but don't retry statement execution
@@ -1371,10 +1427,10 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPrepared(DB_STATEMENT hStmt)
 /**
  * Begin transaction
  */
-BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
+bool LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
 {
    DWORD dwResult;
-   BOOL bRet = FALSE;
+   bool bRet = false;
 
    MutexLock(hConn->m_mutexTransLock);
    if (hConn->m_transactionLevel == 0)
@@ -1388,7 +1444,7 @@ BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
       if (dwResult == DBERR_SUCCESS)
       {
          hConn->m_transactionLevel++;
-         bRet = TRUE;
+         bRet = true;
 			__DBDbgPrintf(9, _T("BEGIN TRANSACTION successful (level %d)"), hConn->m_transactionLevel);
       }
       else
@@ -1400,7 +1456,7 @@ BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
    else
    {
       hConn->m_transactionLevel++;
-      bRet = TRUE;
+      bRet = true;
 		__DBDbgPrintf(9, _T("BEGIN TRANSACTION successful (level %d)"), hConn->m_transactionLevel);
    }
    return bRet;
@@ -1409,9 +1465,9 @@ BOOL LIBNXDB_EXPORTABLE DBBegin(DB_HANDLE hConn)
 /**
  * Commit transaction
  */
-BOOL LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
+bool LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
 {
-   BOOL bRet = FALSE;
+   bool bRet = false;
 
    MutexLock(hConn->m_mutexTransLock);
    if (hConn->m_transactionLevel > 0)
@@ -1420,7 +1476,7 @@ BOOL LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
       if (hConn->m_transactionLevel == 0)
          bRet = (hConn->m_driver->m_fpDrvCommit(hConn->m_connection) == DBERR_SUCCESS);
       else
-         bRet = TRUE;
+         bRet = true;
 		__DBDbgPrintf(9, _T("COMMIT TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
       MutexUnlock(hConn->m_mutexTransLock);
    }
@@ -1431,9 +1487,9 @@ BOOL LIBNXDB_EXPORTABLE DBCommit(DB_HANDLE hConn)
 /**
  * Rollback transaction
  */
-BOOL LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
+bool LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
 {
-   BOOL bRet = FALSE;
+   bool bRet = false;
 
    MutexLock(hConn->m_mutexTransLock);
    if (hConn->m_transactionLevel > 0)
@@ -1442,7 +1498,7 @@ BOOL LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
       if (hConn->m_transactionLevel == 0)
          bRet = (hConn->m_driver->m_fpDrvRollback(hConn->m_connection) == DBERR_SUCCESS);
       else
-         bRet = TRUE;
+         bRet = true;
 		__DBDbgPrintf(9, _T("ROLLBACK TRANSACTION %s (level %d)"), bRet ? _T("successful") : _T("failed"), hConn->m_transactionLevel);
       MutexUnlock(hConn->m_mutexTransLock);
    }
@@ -1492,6 +1548,20 @@ String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, int 
 }
 
 #endif
+
+/**
+ * Check if given table exist
+ */
+int LIBNXDB_EXPORTABLE DBIsTableExist(DB_HANDLE conn, const TCHAR *table)
+{
+#ifdef UNICODE
+   return conn->m_driver->m_fpDrvIsTableExist(conn->m_connection, table);
+#else
+   WCHAR wname[256];
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, table, -1, wname, 256);
+   return conn->m_driver->m_fpDrvIsTableExist(conn->m_connection, wname);
+#endif
+}
 
 /**
  * Characters to be escaped before writing to SQL
@@ -1620,7 +1690,7 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
 {
 	DB_RESULT hResult;
 	TCHAR syntaxId[256];
-	BOOL read = FALSE;
+	bool read = false;
 	int syntax;
 
    // Get database syntax
@@ -1630,7 +1700,7 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
       if (DBGetNumRows(hResult) > 0)
       {
          DBGetField(hResult, 0, 0, syntaxId, sizeof(syntaxId) / sizeof(TCHAR));
-			read = TRUE;
+			read = true;
       }
       else
       {
@@ -1649,7 +1719,7 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
 			if (DBGetNumRows(hResult) > 0)
 			{
 				DBGetField(hResult, 0, 0, syntaxId, sizeof(syntaxId) / sizeof(TCHAR));
-				read = TRUE;
+				read = true;
 			}
 			else
 			{

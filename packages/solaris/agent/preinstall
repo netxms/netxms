@@ -8,5 +8,7 @@ fi
 svcs nxagentd >/dev/null 2>&1
 if [ $? = 0 ]; then
 	svcadm disable nxagentd
-	svccfg delete nxagentd
+	if [ x"$UPDATE" != "xyes" ]; then
+		svccfg delete nxagentd
+	fi
 fi

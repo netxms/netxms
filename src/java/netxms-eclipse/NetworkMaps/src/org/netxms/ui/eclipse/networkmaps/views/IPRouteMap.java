@@ -121,7 +121,7 @@ public class IPRouteMap extends AbstractNetworkMapView
 	private void getRoute(Display display) throws Exception
 	{
 		final NetworkPath path = session.getNetworkPath(rootObject.getObjectId(), targetObject.getObjectId());
-		final NetworkMapPage page = new NetworkMapPage(ID + "@" + rootObject.getObjectName() + "@" + targetObject.getObjectName());
+		final NetworkMapPage page = new NetworkMapPage(ID + "@" + rootObject.getObjectName() + "@" + targetObject.getObjectName()); //$NON-NLS-1$ //$NON-NLS-2$
 		long prevElementId = 0;
 		HopInfo prevHop = null;
 		for(final HopInfo h : path.getPath())

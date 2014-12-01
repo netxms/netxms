@@ -10,6 +10,7 @@
 	    android:layout_height="fill_parent" 
 		android:textColor="@color/text_color"
 		android:background="@color/item_body" 
-		android:cacheColorHint="@color/item_body" >
+		android:cacheColorHint="@color/item_body"
+		android:groupIndicator="@drawable/group_indicator" >
   	</ExpandableListView>
 </LinearLayout>

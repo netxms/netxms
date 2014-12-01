@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -26,7 +26,7 @@
  * Constructor
  */
 PolicyDeploymentJob::PolicyDeploymentJob(Node *node, AgentPolicy *policy, UINT32 userId)
-                    : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), node->Id(), userId, false)
+                    : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), node->getId(), userId, false)
 {
 	m_node = node;
 	m_policy = policy;
@@ -34,7 +34,7 @@ PolicyDeploymentJob::PolicyDeploymentJob(Node *node, AgentPolicy *policy, UINT32
 	policy->incRefCount();
 
 	TCHAR buffer[1024];
-	_sntprintf(buffer, 1024, _T("Deploy policy %s"), policy->Name());
+	_sntprintf(buffer, 1024, _T("Deploy policy %s"), policy->getName());
 	setDescription(buffer);
 }
 
@@ -52,26 +52,38 @@ PolicyDeploymentJob::~PolicyDeploymentJob()
  */
 bool PolicyDeploymentJob::run()
 {
-	bool success = false;
+   bool success = false;
 
-	AgentConnectionEx *conn = m_node->createAgentConnection();
-	if (conn != NULL)
-	{
-		UINT32 rcc = conn->deployPolicy(m_policy);
-		if (rcc == ERR_SUCCESS)
-		{
-			m_policy->linkNode(m_node);
-			success = true;
-		}
-		else
-		{
-			setFailureMessage(AgentErrorCodeToText(rcc));
-		}
-	}
-	else
-	{
-		setFailureMessage(_T("Agent connection not available"));
-	}
+   TCHAR jobName[1024];
+   _sntprintf(jobName, 1024, _T("Deploy policy %s"), m_policy->getName());
+
+   do
+   {
+      setDescription(jobName);
+      AgentConnectionEx *conn = m_node->createAgentConnection();
+      if (conn != NULL)
+      {
+         UINT32 rcc = conn->deployPolicy(m_policy);
+         if (rcc == ERR_SUCCESS)
+         {
+            m_policy->linkNode(m_node);
+            success = true;
+            break;
+         }
+         else
+         {
+            setFailureMessage(AgentErrorCodeToText(rcc));
+         }
+      }
+      else
+      {
+         setFailureMessage(_T("Agent connection not available"));
+      }
+      
+      setDescription(_T("Policy deploy failed. Wainting 10 minutes to restart job."));
+      success = SleepAndCheckForShutdown(600);
+   } while(!success);
+
 	return success;
 }
 
@@ -79,7 +91,7 @@ bool PolicyDeploymentJob::run()
  * Constructor
  */
 PolicyUninstallJob::PolicyUninstallJob(Node *node, AgentPolicy *policy, UINT32 userId)
-                   : ServerJob(_T("UNINSTALL_AGENT_POLICY"), _T("Uninstall agent policy"), node->Id(), userId, false)
+                   : ServerJob(_T("UNINSTALL_AGENT_POLICY"), _T("Uninstall agent policy"), node->getId(), userId, false)
 {
 	m_node = node;
 	m_policy = policy;
@@ -87,7 +99,7 @@ PolicyUninstallJob::PolicyUninstallJob(Node *node, AgentPolicy *policy, UINT32 u
 	policy->incRefCount();
 
 	TCHAR buffer[1024];
-	_sntprintf(buffer, 1024, _T("Uninstall policy %s"), policy->Name());
+	_sntprintf(buffer, 1024, _T("Uninstall policy %s"), policy->getName());
 	setDescription(buffer);
 }
 

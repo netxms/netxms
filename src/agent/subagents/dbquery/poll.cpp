@@ -34,10 +34,10 @@ Query::Query()
    m_status = QUERY_STATUS_UNKNOWN;
    _tcscpy(m_statusText, _T("UNKNOWN"));
    m_result = NULL;
-   m_pollingThread = INVALID_THREAD_HANDLE;
+   m_pollerThread = INVALID_THREAD_HANDLE;
    m_mutex = MutexCreate();
    m_pollRequired = false;
-   m_description = _tcsdup(_T(""));
+   m_description = NULL;
 }
 
 /**
@@ -254,7 +254,7 @@ Query *AcquireQueryObject(const TCHAR *name)
 /**
  * Polling thread
  */
-static THREAD_RESULT THREAD_CALL PollingThread(void *arg)
+static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
 {
    Query *query = (Query *)arg;
    AgentWriteDebugLog(3, _T("DBQuery: Polling thread for query %s started"), query->getName());
@@ -275,14 +275,22 @@ static THREAD_RESULT THREAD_CALL PollingThread(void *arg)
 }
 
 /**
+ * Start poller thread for query
+ */
+void Query::startPollerThread()
+{
+   m_pollerThread = ThreadCreateEx(PollerThread, 0, this);
+}
+
+/**
  * Start polling threads
  */
 void StartPollingThreads()
 {
    for(int i = 0; i < s_queries.size(); i++)
    {
-      if(s_queries.get(i)->isPollRequired())
-         ThreadCreate(PollingThread, 0, s_queries.get(i));
+      if (s_queries.get(i)->isPollRequired())
+         s_queries.get(i)->startPollerThread();
    }
 }
 
@@ -293,11 +301,10 @@ void StopPollingThreads()
 {
    for(int i = 0; i < s_queries.size(); i++)
    {
-
-      if(s_queries.get(i)->isPollRequired())
-         s_queries.get(i)->joinPollingThread();
+      s_queries.get(i)->joinPollerThread();
       delete s_queries.get(i);
    }
+   AgentWriteDebugLog(3, _T("DBQuery: All polling threads stopped"));
 }
 
 /**
@@ -339,7 +346,7 @@ bool AddConfigurableQueryFromConfig(const TCHAR *config, Query **createdQuery)
 /**
  * Get poll results - single value
  */
-LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR name[MAX_QUERY_NAME_LEN];
    AgentGetParameterArg(param, 1, name, MAX_QUERY_NAME_LEN);
@@ -370,7 +377,7 @@ LONG H_PollResult(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 /**
  * Get poll results - table
  */
-LONG H_PollResultTable(const TCHAR *param, const TCHAR *arg, Table *value)
+LONG H_PollResultTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    TCHAR name[MAX_QUERY_NAME_LEN];
    AgentGetParameterArg(param, 1, name, MAX_QUERY_NAME_LEN);

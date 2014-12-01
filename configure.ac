@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [1.2.14], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0-M1], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -20,6 +20,17 @@ check_substr()
 {
 	for w in $1; do
 		if test "x$w" = "x$2"; then
+			return 0;
+		fi
+	done
+	return 1
+}
+
+find_existing_dir()
+{
+	for d in "$@"; do
+		if test -d "$d"; then
+			__dir="$d"
 			return 0;
 		fi
 	done
@@ -59,14 +70,11 @@ SERVER_TOOLS=""
 SERVER_INCLUDE=""
 SMSDRV_DIRS=""
 HDLINK_DIRS=""
+PDSDRV_DIRS=""
 TOP_LEVEL_MODULES=""
 CONTRIB_MODULES=""
 CLIENT_COMPONENTS=""
 BUILD_UNICODE="no"
-ORACLE_LIBS=""
-PGSQL_LIBS=""
-MYSQL_LIBS=""
-ODBC_LIBS=""
 FORCE_INTERNAL_EXPAT="no"
 USE_INTERNAL_LIBTRE="no"
 FORCE_INTERNAL_LIBTRE="no"
@@ -82,6 +90,8 @@ SQLFLAGS=""
 RUNTIME_PREFIX=""
 HPUX_HPPA="no"
 XMPP_SUPPORT="yes"
+LDAP_SUPPORT="yes"
+DISABLE_READLINE="no"
 
 
 #--------------------------------------------------------------------
@@ -135,6 +145,10 @@ AC_ARG_WITH(static-agent,
 [AS_HELP_STRING(--with-static-agent,build statically linked agent)],
 [
 	COMPONENTS="$COMPONENTS sqlite static-agent"
+	FORCE_INTERNAL_EXPAT="yes"
+	FORCE_INTERNAL_LIBTRE="yes"
+	FORCE_INTERNAL_JANSSON="yes"
+	FORCE_INTERNAL_ZLIB="yes"
 ])
 
 AC_ARG_WITH(ipso-agent,
@@ -211,7 +225,7 @@ AC_ARG_WITH(all-static,
 ])
 
 AC_ARG_WITH(static-subagents,
-[AS_HELP_STRING(--with-static-subagents=list,define list of static subagents (separated by spaces))],
+[AS_HELP_STRING(--with-static-subagents-list,define list of static subagents (separated by spaces))],
 [
 	PROPOSED_STATIC_SUBAGENTS="$withval"
 ])
@@ -227,6 +241,15 @@ AC_ARG_WITH(jdk,
 	COMPONENTS="$COMPONENTS java"
 fi ])
 
+AC_ARG_WITH(tuxedo,
+[AS_HELP_STRING(--with-tuxedo,build Tuxedo-dependent components)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		TUXEDO_BASE="$withval"
+	fi
+	COMPONENTS="$COMPONENTS tuxedo"
+fi ])
+
 AC_ARG_WITH(sqlite,
 [AS_HELP_STRING(--with-sqlite,build SQLite database driver)],
 [ if test "x$withval" != "xno" ; then
@@ -238,9 +261,9 @@ AC_ARG_WITH(odbc,
 [AS_HELP_STRING(--with-odbc,build ODBC database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-		LDFLAGS="$LDFLAGS -L${withval}/lib"
-		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		ODBC_LD_RUN_PATH="${withval}/lib"   
+		ODBC_LDFLAGS="-L${withval}/lib"
+		ODBC_CPPFLAGS="-I${withval}/include"
 	fi
 	COMPONENTS="$COMPONENTS odbc"
 	DBDRIVER_SELECTED="yes"
@@ -249,19 +272,26 @@ fi ])
 AC_ARG_WITH(oracle,
 [AS_HELP_STRING(--with-oracle,build Oracle database driver)],
 [ if test "x$withval" != "xno" ; then
+	ORABASE="$ORACLE_HOME"
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		if test -x "$withval/lib" ; then
-			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-			LDFLAGS="$LDFLAGS -L${withval}/lib"
+		ORABASE="$withval"
+	fi
+	if test "x$ORABASE" != "x"; then
+		if test -x "$ORABASE/lib" ; then
+			ORACLE_LD_RUN_PATH="${ORABASE}/lib"   
+			ORACLE_LDFLAGS="-L${ORABASE}/lib"
 		else
-			LD_RUN_PATH="${withval}${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-			LDFLAGS="$LDFLAGS -L${withval}"
+			ORACLE_LD_RUN_PATH="${ORABASE}"   
+			ORACLE_LDFLAGS="-L${ORABASE}"
 		fi
-		if test -x "$withval/include" ; then
-			CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		if test -x "$ORABASE/include" ; then
+			ORACLE_CPPFLAGS="-I${ORABASE}/include"
 		fi
-		if test -x "$withval/sdk/include" ; then
-			CPPFLAGS="$CPPFLAGS -I${withval}/sdk/include"
+		if test -x "$ORABASE/sdk/include" ; then
+			ORACLE_CPPFLAGS="-I${ORABASE}/sdk/include"
+		fi
+		if test -x "$ORABASE/rdbms/public" ; then
+			ORACLE_CPPFLAGS="-I${ORABASE}/rdbms/public"
 		fi
 	fi
 	COMPONENTS="$COMPONENTS oracle"
@@ -272,13 +302,21 @@ AC_ARG_WITH(mysql,
 [AS_HELP_STRING(--with-mysql,build MySQL database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
-		LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}/lib/mysql -L${withval}/mysql/lib"
-		CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}/include/mysql -I${withval}/mysql/include"
+		if find_existing_dir "${withval}/lib" "${withval}/lib/mysql" "${withval}/mysql/lib"; then
+			MYSQL_LD_RUN_PATH="$__dir$"    
+			MYSQL_LDFLAGS="-L$__dir"
+		fi
+		if find_existing_dir "${withval}/include" "${withval}/include/mysql" "${withval}/mysql/include"; then
+			MYSQL_CPPFLAGS="-I$__dir"
+		fi
 	else
-		LD_RUN_PATH="/usr/local/mysql/lib:/usr/local/mysql/lib/mysql:/usr/lib64/mysql:/usr/lib/mysql:/usr/mysql/lib:/usr/mysql/lib/mysql:/usr/local/lib/mysql:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
-		LDFLAGS="$LDFLAGS -L/usr/local/mysql/lib -L/usr/lib64/mysql -L/usr/lib/mysql -L/usr/mysql/lib -L/usr/local/lib/mysql -L/usr/local/mysql/lib/mysql -L/usr/mysql/lib/mysql"
-		CPPFLAGS="$CPPFLAGS -I/usr/local/mysql/include -I/usr/include/mysql -I/usr/mysql/include -I/usr/local/include/mysql -I/usr/local/mysql/include/mysql -I/usr/mysql/include/mysql"
+		if find_existing_dir "/usr/local/mysql/lib" "/usr/local/mysql/lib/mysql" "/usr/lib64/mysql" "/usr/lib/mysql" "/usr/mysql/lib" "/usr/mysql/lib/mysql" "/usr/local/lib/mysql"; then
+			MYSQL_LD_RUN_PATH="$__dir$"    
+			MYSQL_LDFLAGS="-L$__dir"
+		fi
+		if find_existing_dir "/usr/local/mysql/include" "/usr/include/mysql" "/usr/mysql/include" "/usr/local/include/mysql" "/usr/local/mysql/include/mysql" "/usr/mysql/include/mysql"; then
+			MYSQL_CPPFLAGS="-I$__dir"
+		fi
 	fi
 	COMPONENTS="$COMPONENTS mysql"
 	DBDRIVER_SELECTED="yes"
@@ -288,13 +326,21 @@ AC_ARG_WITH(pgsql,
 [AS_HELP_STRING(--with-pgsql,build PostgreSQL database driver)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"    
-		LDFLAGS="$LDFLAGS -L${withval}/lib -L${withval}/lib/pgsql -L${withval}/lib/postgresql -L${withval}/pgsql/lib -L${withval}/postgresql/lib"
-		CPPFLAGS="$CPPFLAGS -I${withval}/include -I${withval}/include/pgsql -I${withval}/include/postgresql -I${withval}/pgsql/include -I${withval}/postgresql/include"
+		if find_existing_dir "${withval}/lib" "${withval}/lib/pgsql" "${withval}/lib/postgresql" "${withval}/pgsql/lib" "${withval}/postgresql/lib"; then
+			PGSQL_LD_RUN_PATH="$__dir$"    
+			PGSQL_LDFLAGS="-L$__dir"
+		fi
+		if find_existing_dir "${withval}/include" "${withval}/include/pgsql" "${withval}/include/postgresql" "${withval}/pgsql/include" "${withval}/postgresql/include"; then
+			PGSQL_CPPFLAGS="-I$__dir"
+		fi
 	else
-		LD_RUN_PATH="/usr/local/pgsql/lib:/usr/local/pgsql/lib/pgsql:/usr/lib64/pgsql:/usr/lib/pgsql:/usr/pgsql/lib:/usr/pgsql/lib/pgsql:/usr/local/lib/pgsql:/usr/local/postgresql/lib:/usr/local/postgresql/lib/postgresql:/usr/lib/postgresql:/usr/postgresql/lib:/usr/postgresql/lib/postgresql:/usr/local/lib/postgresql:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
-		LDFLAGS="$LDFLAGS -L/usr/local/pgsql/lib -L/usr/lib64/pgsql -L/usr/lib/pgsql -L/usr/pgsql/lib -L/usr/local/lib/pgsql -L/usr/local/pgsql/lib/pgsql -L/usr/pgsql/lib/pgsql -L/usr/local/postgresql/lib -L/usr/lib/postgresql -L/usr/postgresql/lib -L/usr/local/lib/postgresql -L/usr/local/postgresql/lib/postgresql -L/usr/postgresql/lib/postgresql"
-		CPPFLAGS="$CPPFLAGS -I/usr/local/pgsql/include -I/usr/include/pgsql -I/usr/pgsql/include -I/usr/local/include/pgsql -I/usr/local/pgsql/include/pgsql -I/usr/pgsql/include/pgsql -I/usr/local/postgresql/include -I/usr/include/postgresql -I/usr/postgresql/include -I/usr/local/include/postgresql -I/usr/local/postgresql/include/postgresql -I/usr/postgresql/include/postgresql"
+		if find_existing_dir "/usr/local/pgsql/lib" "/usr/local/pgsql/lib/pgsql" "/usr/lib64/pgsql" "/usr/lib/pgsql" "/usr/pgsql/lib" "/usr/pgsql/lib/pgsql" "/usr/local/lib/pgsql" "/usr/local/postgresql/lib" "/usr/local/postgresql/lib/postgresql" "/usr/lib/postgresql" "/usr/postgresql/lib" "/usr/postgresql/lib/postgresql" "/usr/local/lib/postgresql"; then
+			PGSQL_LD_RUN_PATH="$__dir$"    
+			PGSQL_LDFLAGS="-L$__dir"
+		fi
+		if find_existing_dir "/usr/local/pgsql/include" "/usr/include/pgsql" "/usr/pgsql/include" "/usr/local/include/pgsql" "/usr/local/pgsql/include/pgsql" "/usr/pgsql/include/pgsql" "/usr/local/postgresql/include" "/usr/include/postgresql" "/usr/postgresql/include" "/usr/local/include/postgresql" "/usr/local/postgresql/include/postgresql" "/usr/postgresql/include/postgresql"; then
+			PGSQL_CPPFLAGS="-I$__dir"
+		fi
 	fi
 	COMPONENTS="$COMPONENTS pgsql"
 	DBDRIVER_SELECTED="yes"
@@ -371,6 +417,17 @@ AC_ARG_ENABLE(iconv,
 	DISABLE_ICONV="yes"
 ])
 
+AC_ARG_ENABLE(iconv-cache,
+[AS_HELP_STRING([--enable-iconv-cache=@<:@yes/no/auto@:>@],
+[cache iconv descriptors [default=auto]])],,
+[enable_iconv_cache=auto])
+
+AC_ARG_ENABLE(readline,
+[AS_HELP_STRING(--disable-readline,do not use libreadline)],
+[
+	DISABLE_READLINE="yes"
+])
+
 AC_ARG_ENABLE(encryption,
 [AS_HELP_STRING(--disable-encryption,disable encryption support)],
 [
@@ -388,6 +445,12 @@ AC_ARG_ENABLE(xmpp,
 [AS_HELP_STRING(--disable-xmpp,disable XMPP support)],
 [
 	XMPP_SUPPORT="no"
+])
+
+AC_ARG_ENABLE(ldap,
+[AS_HELP_STRING(--disable-ldap,disable LDAP support)],
+[
+	LDAP_SUPPORT="no"
 ])
 
 AC_ARG_ENABLE(unicode,
@@ -419,15 +482,16 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy tools"
-	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2"
-	SMSDRV_DIRS="websms"
+	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy nxlptest tools"
+	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2 tuxedo"
+	SMSDRV_DIRS="kannel websms"
    HDLINK_DIRS="jira"
+   PDSDRV_DIRS="rrdtool"
 	NXCONFIG="nxconfig"
-	TOP_LEVEL_MODULES="include sql images"
+	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
 	CONTRIB_MODULES="mibs backgrounds"
-	CLIENT_COMPONENTS="nxalarm nxevent nxlexer nxpush nxsms scilexer windows"
+	CLIENT_COMPONENTS="nxalarm nxevent nxpush nxsms"
 	SERVER_TOOLS="nxconfig"
 )
 
@@ -435,6 +499,12 @@ AC_ARG_WITH(rpi-agent,
 [AS_HELP_STRING(--with-rpi-agent,build Raspberry Pi agent)],
 [
 	COMPONENTS="$COMPONENTS raspberrypi"
+])
+
+AC_ARG_WITH(tests,
+[AS_HELP_STRING(--with-tests,build tests)],
+[
+	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES tests"
 ])
 
 
@@ -469,12 +539,12 @@ if test $? = 0; then
 	DISABLE_ICONV="yes"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
 	if test "x$PROPOSED_STATIC_SUBAGENTS" = "xdefault"; then
-		STATIC_SUBAGENT_LIST="ecs logwatch ping portcheck ups"
+		STATIC_SUBAGENT_LIST="ecs filemgr logwatch ping portcheck ups"
 	else
 		STATIC_SUBAGENT_LIST="$PROPOSED_STATIC_SUBAGENTS"
 	fi
 
-	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
+	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/filemgr/filemgr.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
 
 	check_substr "$STATIC_SUBAGENT_LIST" "odbcquery"
 	if test $? = 0; then
@@ -683,6 +753,11 @@ if test $? = 0; then
 	SUBAGENT_DIRS="$SUBAGENT_DIRS java"
 fi
 
+check_substr "$COMPONENTS" "tuxedo"
+if test $? = 0; then
+	SUBAGENT_DIRS="$SUBAGENT_DIRS tuxedo"
+fi
+
 check_substr "$COMPONENTS" "sdk"
 if test $? = 0; then
 	MODULES="$MODULES libnxmap libnxcl libnxsl libnxlp db nxscript"
@@ -783,6 +858,7 @@ esac
 #  * Turn on 64bit mode on HP-UX/Itanium
 #  * Turn on 64bit mode on AIX
 #  * Turn on 64bit mode on Solaris
+#  * Disable inconsistent C/C++ linkage warnings for Solaris Studio
 #--------------------------------------------------------------------
 
 if test "x$ac_compiler_gnu" = "xyes" ; then
@@ -995,6 +1071,7 @@ fi
 if test "x$CXX" = "xCC" ; then
 	SQLFLAGS="-Qn"
 	CPPFLAGS="$CPPFLAGS -mt"
+	CXXFLAGS="$CXXFLAGS -erroff=badargtype2w,wbadinit"
 
 	if test "x$FORCE_32BIT_BUILD" = "xyes"; then
 		AC_MSG_CHECKING(whether C compiler accepts -m32)
@@ -1212,7 +1289,7 @@ fi
 if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
 	AC_CHECK_LIB(crypto, RSA_new,
 		[
-			AC_DEFINE(WITH_OPENSSL,,[with openssl])
+			AC_DEFINE(WITH_OPENSSL, 1, Define to 1 if you have OpenSSL library and headers)
 			AC_CHECK_LIB(crypto, EVP_aes_256_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
 			AC_CHECK_LIB(crypto, EVP_bf_cbc,
@@ -1274,11 +1351,15 @@ AC_CHECK_LIB(kstat, kstat_open)
 
 if test "x$BUILD_SERVER" = "xyes" ; then
    AC_CHECK_LIB(termcap, tgetstr, [SERVER_LIBS="$SERVER_LIBS -ltermcap"], [AC_CHECK_LIB(ncurses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lncurses"], AC_CHECK_LIB(curses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lcurses"]))])
-   AC_CHECK_LIB(readline, readline, [SERVER_LIBS="$SERVER_LIBS -lreadline"], [AC_CHECK_LIB(edit, readline, [SERVER_LIBS="$SERVER_LIBS -ledit"])])
+   if test "x$DISABLE_READLINE" = "xno"; then
+      AC_CHECK_LIB(readline, readline, [SERVER_LIBS="$SERVER_LIBS -lreadline"], [AC_CHECK_LIB(edit, readline, [SERVER_LIBS="$SERVER_LIBS -ledit"])])
+   fi
+   AC_CHECK_LIB(rt, timer_create, [SERVER_LIBS="$SERVER_LIBS -lrt"])
    SAVED_LDFLAGS="$LDFLAGS"
    LDFLAGS="$LDFLAGS $SERVER_LIBS"
 
-   AC_CHECK_FUNCS([readline])
+   AC_CHECK_FUNCS([readline timer_create])
+   AC_CHECK_TYPES([timer_t])
 
    # Check if passing rl_insert to rl_bind_key needs cast
    if test "$ac_cv_func_readline" = "yes"; then
@@ -1398,10 +1479,39 @@ if test "x$HAVE_LIBCURL" = "xyes"; then
 #endif
 ])
 fi
+
 if test "x$HAVE_LIBCURL" = "xyes"; then
   SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
-  SMSDRV_DIRS="$SMSDRV_DIRS websms"
+  SMSDRV_DIRS="$SMSDRV_DIRS kannel websms"
   HDLINK_DIRS="$HDLINK_DIRS jira"
+  AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
+fi
+
+if test "x$LDAP_SUPPORT" = "xyes"; then
+	AC_CHECK_HEADER(ldap.h,HAVE_LDAP=yes,HAVE_LDAP=no)
+	if test "x$HAVE_LDAP" = "xyes"; then
+		AC_CHECK_LIB(ldap, ldap_init, [ HAVE_LDAP=yes ], [ HAVE_LDAP=no ])
+	fi
+	if test "x$HAVE_LDAP" = "xyes"; then
+		SERVER_LIBS="-lldap $SERVER_LIBS"   
+		AC_DEFINE(WITH_LDAP, 1, Define to 1 if you have LDAP libraries and headers)
+		AC_CHECK_LIB(ldap, ldap_initialize, [ 
+				AC_DEFINE(HAVE_LDAP_INITIALIZE, 1, Define to 1 if you have ldap_initialize function)
+			])
+		AC_CHECK_LIB(ldap, ldapssl_init, [ 
+				AC_DEFINE(HAVE_LDAPSSL_INIT, 1, Define to 1 if you have ldapssl_init function)
+			])
+		AC_CHECK_LIB(ldap, ldap_control_create, [ 
+				AC_DEFINE(HAVE_LDAP_CONTROL_CREATE, 1, Define to 1 if you have ldap_control_create function)
+			])
+        AC_CHECK_LIB(ldap, ldap_parse_page_control, [ 
+                AC_DEFINE(HAVE_LDAP_PARSE_PAGE_CONTROL, 1, Define to 1 if you have ldap_parse_page_control function)
+            ])
+        AC_CHECK_LIB(ldap, ldap_create_page_control, [ 
+                AC_DEFINE(HAVE_LDAP_CREATE_PAGE_CONTROL, 1, Define to 1 if you have ldap_create_page_control function)
+            ])
+	fi
+	LDAP_SUPPORT="$HAVE_LDAP"
 fi
 
 #--------------------------------------------------------------------
@@ -1781,10 +1891,11 @@ AC_CHECK_SIZEOF(wchar_t,,[
 #include <wchar.h>
 #endif
 ])
-AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper wcserror wcserror_r])
-AC_CHECK_FUNCS([wfopen wfopen64 fputws putws wopen wstat waccess wgetenv wrename wunlink])
-AC_CHECK_FUNCS([wremove wchdir wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod])
-AC_CHECK_FUNCS([vwscanf vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
+AC_CHECK_FUNCS([wcslen wcsdup wcsncpy wcstoll wcstoull towupper towlower])
+AC_CHECK_FUNCS([wcslwr wcserror wcserror_r wfopen wfopen64 fputws putws])
+AC_CHECK_FUNCS([wopen wstat waccess wgetenv wrename wunlink wremove wchdir])
+AC_CHECK_FUNCS([wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod vwscanf])
+AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
 
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,
@@ -2067,6 +2178,49 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(no) ]
 )
 
+AC_MSG_CHECKING(whether iconv supports state reset)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([
+#include <stdio.h>
+#if HAVE_ICONV_H
+#include <iconv.h>
+#endif
+     ], [
+     iconv_t cd = iconv_open("UTF-8","$valid_ucs2_code");
+     if (cd == (iconv_t)(-1)) return 1;
+     return iconv(cd, NULL, NULL, NULL, NULL) != 0;
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ICONV_STATE_RESET, 1, Define to 1 if iconv supports state reset)
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
+AC_MSG_CHECKING(whether iconv descriptor cache is needed)
+case $enable_iconv_cache in
+    auto)
+        case $PLATFORM in
+            SunOS|HP-UX|AIX)
+                enable_iconv_cache=yes
+                ;;
+            *)
+                enable_iconv_cache=no
+                ;;
+        esac
+        ;;
+    yes|no)
+        ;;
+    *)
+        AC_MSG_ERROR([Value given to --enable-iconv-cache must be one of yes, no or auto])
+        ;;
+esac
+if test "x$enable_iconv_cache" = "xyes"; then
+    AC_DEFINE(WITH_ICONV_CACHE, 1, Define to 1 to enable iconv descriptor cache)
+fi
+AC_MSG_RESULT($enable_iconv_cache)
+
 # taken from ZSH's configure
 # Check if iconv uses const in prototype declaration
 if test "x$ac_found_iconv" = "xyes"; then
@@ -2088,6 +2242,9 @@ if test "x$ac_found_iconv" = "xyes"; then
   AC_DEFINE_UNQUOTED([ICONV_CONST], $ac_cv_iconv_const,
     [Define as const if the declaration of iconv() needs const.])
 fi
+
+AC_MSG_CHECKING(if iconv descriptor cache is needed)
+
 
 if test "x$ac_cv_type_wchar_t" = "xyes"; then
 	if test $ac_cv_sizeof_wchar_t -eq 2; then
@@ -2114,28 +2271,29 @@ fi
 
 check_substr "$COMPONENTS" "mysql"
 if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LD_RUN_PATH="$LD_RUN_PATH"
+
+	CPPFLAGS="$CPPFLAGS $MYSQL_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $MYSQL_LDFLAGS"
+	if test "x$MYSQL_LD_RUN_PATH" != "x"; then
+		LD_RUN_PATH="${MYSQL_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+	fi
+
+	AC_CHECK_HEADER(mysql.h,,AC_MSG_ERROR([Cannot find mysql.h - check your PostgreSQL client installation]))
+
 	AC_CHECK_LIB(mysqlclient, mysql_init, [MYSQL_LIBS="-lmysqlclient"],
 		[AC_MSG_ERROR(libmysqlclient is requred for MySQL support)])
 
 	OLD_LIBS="$LIBS"
 	LIBS="$LIBS $MYSQL_LIBS"
 
-	AC_MSG_CHECKING(whether mysql clients can run)
-	AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <stdio.h>
-#include <mysql.h>    
-int main(void)
-{
-	MYSQL *a = mysql_init(NULL);
-	return 0;
-}
-		]])],[],[
-			AC_MSG_RESULT(no)
-			AC_MSG_ERROR(Your MySQL client libraries aren't properly installed)
-	],[])
-	AC_MSG_RESULT(yes)
-
 	AC_CHECK_FUNCS(mysql_real_escape_string)
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LD_RUN_PATH="$OLD_LD_RUN_PATH"
 	LIBS="$OLD_LIBS"
 fi
 
@@ -2146,27 +2304,38 @@ fi
 
 check_substr "$COMPONENTS" "pgsql"
 if test $? = 0; then
-	AC_CHECK_LIB(m, floor)
-	AC_CHECK_LIB(pq, PQconnectdb, [PGSQL_LIBS="-lpq"],
-		[AC_MSG_ERROR(libpq is required for PostgreSQL support)])        
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LD_RUN_PATH="$LD_RUN_PATH"
 
-	AC_MSG_CHECKING(whether postgresql clients can run)
-	OLD_LIBS="$LIBS"
-	LIBS="$LIBS $PGSQL_LIBS"
-	AC_RUN_IFELSE([AC_LANG_SOURCE([[
-			#include <stdio.h>
-			#include <libpq-fe.h>
-			int main(void)
-			{
-				PGconn *a = PQconnectdb("");
-				return 0;
-			}
-		]])],[AC_MSG_RESULT(yes)],[
-			AC_MSG_RESULT(no)
-			AC_MSG_ERROR(Your PostgreSQL client libraries aren't properly installed)
-		],[])    
-	LIBS="$OLD_LIBS"
-	AC_CHECK_LIB(pq, PQfformat, [ AC_DEFINE(HAVE_PQFFORMAT, 1, PQfformat not exist in 7.3) ])
+	CPPFLAGS="$CPPFLAGS $PGSQL_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $PGSQL_LDFLAGS"
+	if test "x$PGSQL_LD_RUN_PATH" != "x"; then
+		LD_RUN_PATH="${PGSQL_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+	fi
+
+	AC_CHECK_HEADER(libpq-fe.h,,AC_MSG_ERROR([Cannot find libpq-fe.h - check your PostgreSQL client installation]))
+
+	AC_CHECK_LIB(m, floor)
+	AC_CHECK_LIB(pq, PQconnectdb, [PGSQL_LIBS="-lpq"], [
+		if test "x$PLATFORM" = "xSunOS"; then
+			PGSQL_LDFLAGS="$PGSQL_LDFLAGS/sparcv9"
+			LDFLAGS="$OLD_LDFLAGS $PGSQL_LDFLAGS"
+			if test "x$PGSQL_LD_RUN_PATH" != "x"; then
+				PGSQL_LD_RUN_PATH="$PGSQL_LD_RUN_PATH/sparcv9"
+				LD_RUN_PATH="${PGSQL_LD_RUN_PATH}${OLD_LD_RUN_PATH:+:}${OLD_LD_RUN_PATH}"
+			fi
+			unset ac_cv_lib_pq_PQconnectdb
+			AC_CHECK_LIB(pq, PQconnectdb, [PGSQL_LIBS="-lpq"], [
+				AC_MSG_ERROR(libpq is required for PostgreSQL support)])        
+		else
+			AC_MSG_ERROR(libpq is required for PostgreSQL support)
+		fi
+	])
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LD_RUN_PATH="$OLD_LD_RUN_PATH"
 fi
 
 
@@ -2176,12 +2345,26 @@ fi
 
 check_substr "$COMPONENTS" "odbc"
 if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LD_RUN_PATH="$LD_RUN_PATH"
+
+	CPPFLAGS="$CPPFLAGS $ODBC_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $ODBC_LDFLAGS"
+	if test "x$ODBC_LD_RUN_PATH" != "x"; then
+		LD_RUN_PATH="${ODBC_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+	fi
+
 	AC_CHECK_LIB(odbc, SQLAllocHandle, [ODBC_LIBS="-lodbc"],
 		[AC_MSG_ERROR(libodbc is required for ODBC support)])
 	if test "x$BUILD_STATIC_AGENT" = "xyes"; then
 		SUBAGENT_LIBS="$SUBAGENT_LIBS $ODBC_LIBS"
 		AC_CHECK_LIB(ltdl, lt_dlopen, [SUBAGENT_LIBS="$SUBAGENT_LIBS -lltdl"], [])
 	fi
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LD_RUN_PATH="$OLD_LD_RUN_PATH"
 fi
 
 
@@ -2191,6 +2374,16 @@ fi
 
 check_substr "$COMPONENTS" "oracle"
 if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LD_RUN_PATH="$LD_RUN_PATH"
+
+	CPPFLAGS="$CPPFLAGS $ORACLE_CPPFLAGS"
+	LDFLAGS="$LDFLAGS $ORACLE_LDFLAGS"
+	if test "x$ORACLE_LD_RUN_PATH" != "x"; then
+		LD_RUN_PATH="${ORACLE_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
+	fi
+
 	AC_CHECK_HEADER(oci.h,,AC_MSG_ERROR([*** Cannot find oci.h - check your Oracle client installation ***]))
 	AC_CHECK_LIB(nnz11, nzstrcpy, [NNZ_LIB=-lnnz11],
 		[
@@ -2202,6 +2395,10 @@ if test $? = 0; then
 	if test "x$BUILD_STATIC_AGENT" = "xyes"; then
 		SUBAGENT_LIBS="$SUBAGENT_LIBS $ORACLE_LIBS"
 	fi
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LD_RUN_PATH="$OLD_LD_RUN_PATH"
 fi
 
 #--------------------------------------------------------------------
@@ -2240,8 +2437,40 @@ fi
 check_substr "$COMPONENTS" "java"
 if test $? = 0; then
 	AC_CHECK_HEADER(jni.h,,AC_MSG_ERROR([*** Cannot find jni.h - check your JDK installation ***]))
-#	AC_CHECK_LIB(jvm, SQLAllocHandle, [JAVA_LIBS="-ljvm"],
-#		[AC_MSG_ERROR(libjvm is required for Java support)])
+	AC_CHECK_LIB(jvm, SQLAllocHandle, [JAVA_LIBS="-ljvm"],
+		[AC_MSG_ERROR(libjvm is required for Java support)])
+fi
+
+
+#--------------------------------------------------------------------
+# Tuxedo
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "tuxedo"
+if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LIBS="$LIBS"
+
+	if test "x$TUXEDO_BASE" != "x"; then
+		TUXEDO_CPPFLAGS="-I$TUXEDO_BASE/include"
+		TUXEDO_LDFLAGS="-L$TUXEDO_BASE/lib"
+		CPPFLAGS="$CPPFLAGS $TUXEDO_CPPFLAGS"
+		LDFLAGS="$LDFLAGS $TUXEDO_LDFLAGS"
+	fi
+	
+	AC_CHECK_HEADER(atmi.h,,AC_MSG_ERROR([*** Cannot find atmi.h - check your Tuxedo installation ***]))
+
+	# https://community.oracle.com/thread/2346582
+	if test "x$PLATFORM" = "xLinux"; then
+		TUXEDO_LDFLAGS="$TUXEDO_LDFLAGS -Xlinker --no-as-needed"
+		LDFLAGS="$LDFLAGS -Xlinker --no-as-needed"
+	fi
+	AC_CHECK_LIB(tux, tpinit, [], [AC_MSG_ERROR(libtux is required for Tuxedo support)])
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
 fi
 
 
@@ -2279,6 +2508,10 @@ else
 fi
 AC_DEFINE_UNQUOTED([SHLIB_SUFFIX], _T("$SHLIB_SUFFIX"), [Define to platform's shared library suffix])
 
+if test "x$ENABLE_DEBUG" = "xno"; then
+	CPPFLAGS="$CPPFLAGS -DNDEBUG"
+fi
+
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_JANSSON], [test "x$HAVE_JANSSON" = "xno"])
@@ -2302,6 +2535,7 @@ AC_SUBST(SERVER_LIBS)
 AC_SUBST(SERVER_TOOLS)
 AC_SUBST(SMSDRV_DIRS)
 AC_SUBST(HDLINK_DIRS)
+AC_SUBST(PDSDRV_DIRS)
 AC_SUBST(TOP_LEVEL_MODULES)
 AC_SUBST(CONTRIB_MODULES)
 AC_SUBST(CLIENT_COMPONENTS)
@@ -2309,15 +2543,29 @@ AC_SUBST(STATIC_SUBAGENT_LIST)
 AC_SUBST(SUBAGENT_LIBS)
 AC_SUBST(BUILD_SERVER)
 AC_SUBST(BUILD_SDK)
+AC_SUBST(MYSQL_CPPFLAGS)
+AC_SUBST(MYSQL_LDFLAGS)
 AC_SUBST(MYSQL_LIBS)
+AC_SUBST(PGSQL_CPPFLAGS)
+AC_SUBST(PGSQL_LDFLAGS)
 AC_SUBST(PGSQL_LIBS)
+AC_SUBST(ORACLE_CPPFLAGS)
+AC_SUBST(ORACLE_LDFLAGS)
 AC_SUBST(ORACLE_LIBS)
+AC_SUBST(ODBC_CPPFLAGS)
+AC_SUBST(ODBC_LDFLAGS)
 AC_SUBST(ODBC_LIBS)
+AC_SUBST(DB2_CPPFLAGS)
+AC_SUBST(DB2_LDFLAGS)
 AC_SUBST(DB2_LIBS)
+AC_SUBST(INFORMIX_CPPFLAGS)
+AC_SUBST(INFORMIX_LDFLAGS)
 AC_SUBST(INFORMIX_LIBS)
 AC_SUBST(OBJECT_MODE)
 AC_SUBST(SQLFLAGS)
 AC_SUBST(SHLIB_SUFFIX)
+AC_SUBST(TUXEDO_CPPFLAGS)
+AC_SUBST(TUXEDO_LDFLAGS)
 
 #--------------------------------------------------------------------
 # Shared libs versions
@@ -2389,8 +2637,9 @@ AC_CONFIG_FILES([
 	src/agent/subagents/darwin/Makefile
 	src/agent/subagents/db2/Makefile
 	src/agent/subagents/dbquery/Makefile
-   src/agent/subagents/devemu/Makefile
+	src/agent/subagents/devemu/Makefile
 	src/agent/subagents/ecs/Makefile
+	src/agent/subagents/filemgr/Makefile
 	src/agent/subagents/freebsd/Makefile
 	src/agent/subagents/hpux/Makefile
 	src/agent/subagents/informix/Makefile
@@ -2416,6 +2665,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/rpi/Makefile
 	src/agent/subagents/sms/Makefile
 	src/agent/subagents/sunos/Makefile
+	src/agent/subagents/tuxedo/Makefile
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
@@ -2427,21 +2677,8 @@ AC_CONFIG_FILES([
 	src/client/install/Makefile
 	src/client/nxalarm/Makefile
 	src/client/nxevent/Makefile
-	src/client/nxlexer/Makefile
 	src/client/nxpush/Makefile
 	src/client/nxsms/Makefile
-	src/client/scilexer/Makefile
-	src/client/windows/Makefile
-	src/client/windows/nxav/Makefile
-	src/client/windows/nxav/res/Makefile
-	src/client/windows/nxcon/Makefile
-	src/client/windows/nxcon/icons/Makefile
-	src/client/windows/nxcon/res/Makefile
-	src/client/windows/nxnotify/Makefile
-	src/client/windows/nxnotify/res/Makefile
-	src/client/windows/nxuilib/Makefile
-	src/client/windows/nxuilib/res/Makefile
-	src/client/windows/nxuilib/sounds/Makefile
 	src/db/Makefile
 	src/db/dbdrv/Makefile
 	src/db/dbdrv/db2/Makefile
@@ -2467,6 +2704,7 @@ AC_CONFIG_FILES([
 	src/libtre/Makefile
 	src/libtre/win32/Makefile
 	src/nxcproxy/Makefile
+	src/nxlptest/Makefile
 	src/nxscript/Makefile
 	src/server/Makefile
 	src/server/core/Makefile
@@ -2481,6 +2719,8 @@ AC_CONFIG_FILES([
 	src/server/drivers/dell-pwc/Makefile
 	src/server/drivers/dlink/Makefile
 	src/server/drivers/ers8000/Makefile
+	src/server/drivers/h3c/Makefile
+	src/server/drivers/hpsw/Makefile
 	src/server/drivers/lib/Makefile
 	src/server/drivers/lib/avaya-ers/Makefile
 	src/server/drivers/lib/cisco/Makefile
@@ -2496,9 +2736,12 @@ AC_CONFIG_FILES([
 	src/server/include/Makefile
 	src/server/libnxsrv/Makefile
 	src/server/netxmsd/Makefile
+	src/server/pdsdrv/Makefile
+	src/server/pdsdrv/rrdtool/Makefile
 	src/server/smsdrv/Makefile
 	src/server/smsdrv/dummy/Makefile
 	src/server/smsdrv/generic/Makefile
+	src/server/smsdrv/kannel/Makefile
 	src/server/smsdrv/nxagent/Makefile
 	src/server/smsdrv/portech/Makefile
 	src/server/smsdrv/websms/Makefile
@@ -2523,6 +2766,10 @@ AC_CONFIG_FILES([
 	src/tools/nxencpasswd/Makefile
 	src/zlib/Makefile
 	sql/Makefile
+	tests/Makefile
+	tests/include/Makefile
+	tests/test-libnetxms/Makefile
+	tests/test-libnxdb/Makefile
 	tools/Makefile
 ])
 
@@ -2563,6 +2810,11 @@ echo
 if test "x${BUILD_SERVER}" = "xyes"; then
 	echo "Build Server            : YES"
 	echo "Server libs             : ${SERVER_LIBS}"
+	if test "x${LDAP_SUPPORT}" = "xyes"; then
+		echo "LDAP support            : YES"
+	else
+		echo "LDAP support            : NO"
+	fi
 	if test "x${XMPP_SUPPORT}" = "xyes"; then
 		echo "XMPP support            : YES"
 	else
@@ -2639,23 +2891,71 @@ echo "CFLAGS                  : ${CFLAGS}"
 echo "LDFLAGS                 : ${LDFLAGS}"
 echo "LIBS                    : ${LIBS}"
 
+if test "x${MYSQL_CPPFLAGS}" != "x"; then
+	echo "MySQL CPPFLAGS          : ${MYSQL_CPPFLAGS}"
+fi
+if test "x${MYSQL_LDFLAGS}" != "x"; then
+	echo "MySQL LDFLAGS           : ${MYSQL_LDFLAGS}"
+fi
 if test "x${MYSQL_LIBS}" != "x"; then
-	echo "MySQL libs              : ${MYSQL_LIBS}"
+	echo "MySQL LIBS              : ${MYSQL_LIBS}"
+fi
+
+if test "x${PGSQL_CPPFLAGS}" != "x"; then
+	echo "PostgreSQL CPPFLAGS     : ${PGSQL_CPPFLAGS}"
+fi
+if test "x${PGSQL_LDFLAGS}" != "x"; then
+	echo "PostgreSQL LDFLAGS      : ${PGSQL_LDFLAGS}"
 fi
 if test "x${PGSQL_LIBS}" != "x"; then
-	echo "PostgreSQL libs         : ${PGSQL_LIBS}"
+	echo "PostgreSQL LIBS         : ${PGSQL_LIBS}"
+fi
+
+if test "x${ORACLE_CPPFLAGS}" != "x"; then
+	echo "Oracle CPPFLAGS         : ${ORACLE_CPPFLAGS}"
+fi
+if test "x${ORACLE_LDFLAGS}" != "x"; then
+	echo "Oracle LDFLAGS          : ${ORACLE_LDFLAGS}"
 fi
 if test "x${ORACLE_LIBS}" != "x"; then
-	echo "Oracle libs             : ${ORACLE_LIBS}"
+	echo "Oracle LIBS             : ${ORACLE_LIBS}"
+fi
+
+if test "x${ODBC_CPPFLAGS}" != "x"; then
+	echo "ODBC CPPFLAGS           : ${ODBC_CPPFLAGS}"
+fi
+if test "x${ODBC_LDFLAGS}" != "x"; then
+	echo "ODBC LDFLAGS            : ${ODBC_LDFLAGS}"
 fi
 if test "x${ODBC_LIBS}" != "x"; then
-	echo "ODBC libs               : ${ODBC_LIBS}"
+	echo "ODBC LIBS               : ${ODBC_LIBS}"
+fi
+
+if test "x${DB2_CPPFLAGS}" != "x"; then
+	echo "DB2 CPPFLAGS            : ${DB2_CPPFLAGS}"
+fi
+if test "x${DB2_LDFLAGS}" != "x"; then
+	echo "DB2 LDFLAGS             : ${DB2_LDFLAGS}"
 fi
 if test "x${DB2_LIBS}" != "x"; then
-	echo "DB2 libs                : ${DB2_LIBS}"
+	echo "DB2 LIBS                : ${DB2_LIBS}"
+fi
+
+if test "x${INFORMIX_CPPFLAGS}" != "x"; then
+	echo "Informix CPPFLAGS       : ${INFORMIX_CPPFLAGS}"
+fi
+if test "x${INFORMIX_LDFLAGS}" != "x"; then
+	echo "Informix LDFLAGS        : ${INFORMIX_LDFLAGS}"
 fi
 if test "x${INFORMIX_LIBS}" != "x"; then
-	echo "Informix libs           : ${INFORMIX_LIBS}"
+	echo "Informix LIBS           : ${INFORMIX_LIBS}"
+fi
+
+if test "x${TUXEDO_CPPFLAGS}" != "x"; then
+	echo "Tuxedo CPPFLAGS         : ${TUXEDO_CPPFLAGS}"
+fi
+if test "x${TUXEDO_LDFLAGS}" != "x"; then
+	echo "Tuxedo LDFLAGS          : ${TUXEDO_LDFLAGS}"
 fi
 
 FLAGS_CPP="src/tools/nxdevcfg/flags.cpp"

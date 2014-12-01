@@ -144,7 +144,7 @@ NXSL_ExtFunction *NXSL_Environment::findFunction(const TCHAR *pszName)
    UINT32 i;
 
    for(i = 0; i < m_dwNumFunctions; i++)
-      if (!_tcscmp(m_pFunctionList[i].m_szName, pszName))
+      if (!_tcscmp(m_pFunctionList[i].m_name, pszName))
          return &m_pFunctionList[i];
    return NULL;
 }

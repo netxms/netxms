@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.netxms.base.GeoLocation;
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
@@ -72,6 +72,7 @@ public class OverviewAdapter extends BaseAdapter
 						addPair(r.getString(R.string.overview_netxms_agent_version), ((Node)obj).getAgentVersion());
 					addPair(r.getString(R.string.overview_system_description), ((Node)obj).getSystemDescription(), false);
 					addPair(r.getString(R.string.overview_platform_name), ((Node)obj).getPlatformName(), false);
+					addPair(r.getString(R.string.overview_boot_time), ((Node)obj).getBootTime().toString(), false);
 					addPair(r.getString(R.string.overview_snmp_sysname), ((Node)obj).getSnmpSysName(), false);
 					addPair(r.getString(R.string.overview_snmp_oid), ((Node)obj).getSnmpOID(), false);
 					if ((((Node)obj).getFlags() & Node.NF_IS_BRIDGE) != 0)
@@ -91,6 +92,7 @@ public class OverviewAdapter extends BaseAdapter
 					break;
 			}
 			addPair(r.getString(R.string.overview_location), obj.getGeolocation());
+			addPair(r.getString(R.string.overview_comments), obj.getComments());
 		}
 	}
 
@@ -251,27 +253,27 @@ public class OverviewAdapter extends BaseAdapter
 	 * @param status NetXMS type of status
 	 * @return Human readable status 
 	 */
-	private String getNodeStatus(int status)
+	private String getNodeStatus(ObjectStatus status)
 	{
 		switch (status)
 		{
-			case Severity.NORMAL:
+			case NORMAL:
 				return r.getString(R.string.status_normal);
-			case Severity.WARNING:
+			case WARNING:
 				return r.getString(R.string.status_warning);
-			case Severity.MINOR:
+			case MINOR:
 				return r.getString(R.string.status_minor);
-			case Severity.MAJOR:
+			case MAJOR:
 				return r.getString(R.string.status_major);
-			case Severity.CRITICAL:
+			case CRITICAL:
 				return r.getString(R.string.status_critical);
-			case Severity.UNKNOWN:
+			case UNKNOWN:
 				return r.getString(R.string.status_unknown);
-			case Severity.UNMANAGED:
+			case UNMANAGED:
 				return r.getString(R.string.status_unmanaged);
-			case Severity.DISABLED:
+			case DISABLED:
 				return r.getString(R.string.status_disabled);
-			case Severity.TESTING:
+			case TESTING:
 				return r.getString(R.string.status_testing);
 		}
 		return r.getString(R.string.status_unknown);

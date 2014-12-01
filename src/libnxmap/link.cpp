@@ -24,10 +24,9 @@
 #include "libnxmap.h"
 
 
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 NetworkMapLink::NetworkMapLink(UINT32 e1, UINT32 e2, int type)
 {
 	m_element1 = e1;
@@ -36,39 +35,30 @@ NetworkMapLink::NetworkMapLink(UINT32 e1, UINT32 e2, int type)
 	m_name = NULL;
 	m_connectorName1 = NULL;
 	m_connectorName2 = NULL;
-	m_color = 0xFFFFFFFF;
-	m_statusObject = 0;
-	m_routing = ROUTING_DEFAULT;
 	m_config = _tcsdup(_T("\0"));
 	m_flags = 0;
 }
 
 
-//
-// Constuctor: create link object from NXCP message
-//
-
-NetworkMapLink::NetworkMapLink(CSCPMessage *msg, UINT32 baseId)
+/**
+ * Constuctor: create link object from NXCP message
+ */
+NetworkMapLink::NetworkMapLink(NXCPMessage *msg, UINT32 baseId)
 {
-	m_type = msg->GetVariableShort(baseId);
-	m_name = msg->GetVariableStr(baseId + 1);
-	m_connectorName1 = msg->GetVariableStr(baseId + 2);
-	m_connectorName2 = msg->GetVariableStr(baseId + 3);
-	m_element1 = msg->GetVariableLong(baseId + 4);
-	m_element2 = msg->GetVariableLong(baseId + 5);
-	m_color = msg->GetVariableLong(baseId + 6);
-	m_statusObject = msg->GetVariableLong(baseId + 7);
-	m_routing = msg->GetVariableShort(baseId + 8);
-	msg->getFieldAsInt32Array(baseId + 9, MAX_BEND_POINTS * 2, m_bendPoints);
-   m_config = msg->GetVariableStr(baseId + 10);
-	m_flags = msg->GetVariableLong(baseId + 11);
+	m_type = msg->getFieldAsUInt16(baseId);
+	m_name = msg->getFieldAsString(baseId + 1);
+	m_connectorName1 = msg->getFieldAsString(baseId + 2);
+	m_connectorName2 = msg->getFieldAsString(baseId + 3);
+	m_element1 = msg->getFieldAsUInt32(baseId + 4);
+	m_element2 = msg->getFieldAsUInt32(baseId + 5);
+	m_config = msg->getFieldAsString(baseId + 6);
+	m_flags = msg->getFieldAsUInt32(baseId + 7);
 }
 
 
-//
-// Map link destructor
-//
-
+/**
+ * Map link destructor
+ */
 NetworkMapLink::~NetworkMapLink()
 {
 	safe_free(m_name);
@@ -78,10 +68,9 @@ NetworkMapLink::~NetworkMapLink()
 }
 
 
-//
-// Set name
-//
-
+/**
+ * Set name
+ */
 void NetworkMapLink::setName(const TCHAR *name)
 {
 	safe_free(m_name);
@@ -89,16 +78,18 @@ void NetworkMapLink::setName(const TCHAR *name)
 }
 
 
-//
-// Set connector 1 name
-//
-
+/**
+ * Set connector 1 name
+ */
 void NetworkMapLink::setConnector1Name(const TCHAR *name)
 {
 	safe_free(m_connectorName1);
 	m_connectorName1 = (name != NULL) ? _tcsdup(name) : NULL;
 }
 
+/**
+ * Set config(color, bendPoints, dciList, objectStatusList, routing)
+ */
 void NetworkMapLink::setConfig(const TCHAR *name)
 {
 	safe_free(m_config);
@@ -117,60 +108,16 @@ void NetworkMapLink::setConnector2Name(const TCHAR *name)
 /**
  * Fill NXCP message
  */
-void NetworkMapLink::fillMessage(CSCPMessage *msg, UINT32 baseId)
+void NetworkMapLink::fillMessage(NXCPMessage *msg, UINT32 baseId)
 {
-	msg->SetVariable(baseId, (WORD)m_type);
-	msg->SetVariable(baseId + 1, getName());
-	msg->SetVariable(baseId + 2, getConnector1Name());
-	msg->SetVariable(baseId + 3, getConnector2Name());
-	msg->SetVariable(baseId + 4, m_element1);
-	msg->SetVariable(baseId + 5, m_element2);
-	msg->SetVariable(baseId + 6, m_color);
-	msg->SetVariable(baseId + 7, m_statusObject);
-	msg->SetVariable(baseId + 8, (WORD)m_routing);
-	msg->setFieldInt32Array(baseId + 9, MAX_BEND_POINTS *2, m_bendPoints);
-   msg->SetVariable(baseId + 10, m_config);
-   msg->SetVariable(baseId + 11, m_flags);
+	msg->setField(baseId, (WORD)m_type);
+	msg->setField(baseId + 1, getName());
+	msg->setField(baseId + 2, getConnector1Name());
+	msg->setField(baseId + 3, getConnector2Name());
+	msg->setField(baseId + 4, m_element1);
+	msg->setField(baseId + 5, m_element2);
+	msg->setField(baseId + 6, m_config);
+   msg->setField(baseId + 7, m_flags);
 }
 
-/**
- * Get bend points formatted as text
- */
-TCHAR *NetworkMapLink::getBendPoints(TCHAR *buffer)
-{
-	int outPos = 0;
-	for(int i = 0, pos = 0; i < MAX_BEND_POINTS; i++, pos += 2)
-	{
-		if (m_bendPoints[pos] == 0x7FFFFFFF)
-			break;
-		outPos += _sntprintf(&buffer[outPos], 1024 - outPos, _T("%d,%d,"), m_bendPoints[pos], m_bendPoints[pos + 1]);
-	}
-	if (outPos > 0)
-		outPos--;
-	buffer[outPos] = 0;
-	return buffer;
-}
 
-/**
- * Parse bend points list
- */
-void NetworkMapLink::parseBendPoints(const TCHAR *data)
-{
-	for(int i = 0; i < MAX_BEND_POINTS * 2; i++)
-		m_bendPoints[i] = 0x7FFFFFFF;
-
-	if (data != NULL)
-	{
-		const TCHAR *ptr = data;
-		int c, pos = 0;
-
-		while(pos < MAX_BEND_POINTS * 2)
-		{
-			if (_stscanf(ptr, _T("%d%n"), &m_bendPoints[pos++], &c) < 1)
-				break;
-			ptr += c;
-			if (*ptr == _T(','))
-				ptr++;
-		}
-	}
-}

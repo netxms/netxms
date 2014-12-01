@@ -4,6 +4,7 @@
 package org.netxms.ui.android.main.dashboards.elements;
 
 import java.util.concurrent.ScheduledExecutorService;
+
 import org.achartengine.GraphicalView;
 import org.achartengine.chart.BarChart;
 import org.achartengine.chart.BarChart.Type;
@@ -12,9 +13,11 @@ import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.SimpleSeriesRenderer;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.netxms.client.datacollection.DciData;
+import org.netxms.ui.android.helpers.Colors;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
 import org.netxms.ui.android.main.dashboards.configs.BarChartConfig;
 import org.netxms.ui.android.service.ClientConnectorService;
+
 import android.content.Context;
 import android.graphics.Paint.Align;
 import android.util.Log;
@@ -25,11 +28,11 @@ import android.util.Log;
 public class BarChartElement extends AbstractDashboardElement
 {
 	private static final String TAG = "nxclient/BarChartElement";
-	
+
 	private BarChartConfig config;
-	private BarChart chart;
-	private GraphicalView chartView;
-	
+	private final BarChart chart;
+	private final GraphicalView chartView;
+
 	/**
 	 * @param context
 	 * @param xmlConfig
@@ -41,12 +44,12 @@ public class BarChartElement extends AbstractDashboardElement
 		{
 			config = BarChartConfig.createFromXml(xmlConfig);
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			Log.e(TAG, "Error parsing element config", e);
 			config = new BarChartConfig();
 		}
-		
+
 		chart = new BarChart(buildDataset(), buildRenderer(), Type.STACKED);
 		chartView = new GraphicalView(context, chart);
 		addView(chartView);
@@ -70,19 +73,19 @@ public class BarChartElement extends AbstractDashboardElement
 		XYMultipleSeriesDataset dataset = new XYMultipleSeriesDataset();
 
 		ChartDciConfig[] items = config.getDciList();
-		for(int i = 0; i < items.length; i++)
+		for (int i = 0; i < items.length; i++)
 		{
 			XYSeries series = new XYSeries(items[i].getName());
-			for(int j = 0; j < items.length; j++)
+			for (int j = 0; j < items.length; j++)
 			{
 				series.add(j + 1, 0);
 			}
 			dataset.addSeries(series);
 		}
-		
+
 		return dataset;
 	}
-	
+
 	/**
 	 * @return
 	 */
@@ -101,23 +104,23 @@ public class BarChartElement extends AbstractDashboardElement
 		renderer.setPanEnabled(false, false);
 		renderer.setZoomEnabled(false, false);
 		renderer.setAntialiasing(true);
-		
+
 		renderer.setApplyBackgroundColor(true);
-		renderer.setMarginsColor(BACKGROUND_COLOR);
-		renderer.setBackgroundColor(BACKGROUND_COLOR);
-		renderer.setAxesColor(LABEL_COLOR);
-		renderer.setGridColor(GRID_COLOR);
-		renderer.setLabelsColor(LABEL_COLOR);
-		renderer.setXLabelsColor(LABEL_COLOR);
-		renderer.setYLabelsColor(0, LABEL_COLOR);
-		
+		renderer.setMarginsColor(Colors.BACKGROUND_COLOR);
+		renderer.setBackgroundColor(Colors.BACKGROUND_COLOR);
+		renderer.setAxesColor(Colors.LABEL_COLOR);
+		renderer.setGridColor(Colors.GRID_COLOR);
+		renderer.setLabelsColor(Colors.LABEL_COLOR);
+		renderer.setXLabelsColor(Colors.LABEL_COLOR);
+		renderer.setYLabelsColor(0, Colors.LABEL_COLOR);
+
 		ChartDciConfig[] items = config.getDciList();
-		for(int i = 0; i < items.length; i++)
+		for (int i = 0; i < items.length && i < Colors.DEFAULT_ITEM_COLORS.length; i++)
 		{
 			SimpleSeriesRenderer r = new SimpleSeriesRenderer();
 			int color = items[i].getColorAsInt();
 			if (color == -1)
-				color = DEFAULT_ITEM_COLORS[i];
+				color = Colors.DEFAULT_ITEM_COLORS[i];
 			else
 				color = swapRGB(color);
 			r.setColor(color | 0xFF000000);
@@ -127,12 +130,12 @@ public class BarChartElement extends AbstractDashboardElement
 
 		renderer.setXAxisMin(0.5);
 		renderer.setXAxisMax(items.length + 0.5);
-		renderer.setXLabelsColor(BACKGROUND_COLOR);
+		renderer.setXLabelsColor(Colors.BACKGROUND_COLOR);
 		renderer.setYLabelsAlign(Align.RIGHT);
-		
+
 		return renderer;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.android.main.dashboards.elements.AbstractDashboardElement#refresh()
 	 */
@@ -142,7 +145,7 @@ public class BarChartElement extends AbstractDashboardElement
 		final ChartDciConfig[] items = config.getDciList();
 		if (items.length == 0)
 			return;
-		
+
 		try
 		{
 			final DciData[] dciData = new DciData[items.length];
@@ -151,17 +154,18 @@ public class BarChartElement extends AbstractDashboardElement
 				dciData[i] = new DciData(0, 0);
 				dciData[i] = service.getSession().getCollectedData(items[i].nodeId, items[i].dciId, null, null, 1);
 			}
-			
-			post(new Runnable() {
+
+			post(new Runnable()
+			{
 				@Override
 				public void run()
 				{
 					XYMultipleSeriesDataset dataset = chart.getDataset();
-					for(int i = 0; i < dciData.length; i++)
+					for (int i = 0; i < dciData.length; i++)
 					{
 						dataset.removeSeries(i);
 						XYSeries series = new XYSeries(items[i].getName());
-						for(int j = 0; j < items.length; j++)
+						for (int j = 0; j < items.length; j++)
 						{
 							series.add(j + 1, (i == j) ? dciData[i].getLastValue().getValueAsDouble() : 0);
 						}
@@ -171,7 +175,7 @@ public class BarChartElement extends AbstractDashboardElement
 				}
 			});
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			Log.e(TAG, "Exception while reading data from server", e);
 		}

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,6 +37,15 @@ MUTEX g_hSessionListAccess;
  * Static data
  */
 static MUTEX m_mutexWatchdogActive = INVALID_MUTEX_HANDLE;
+static VolatileCounter s_messageId = (INT32)time(NULL);
+
+/**
+ * Generate new message ID
+ */
+UINT32 GenerateMessageId()
+{
+   return (UINT32)InterlockedIncrement(&s_messageId);
+}
 
 /**
  * Initialize session list
@@ -53,18 +62,19 @@ void InitSessionList()
 /**
  * Validates server's address
  */
-static BOOL IsValidServerAddr(UINT32 dwAddr, BOOL *pbMasterServer, BOOL *pbControlServer)
+static bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer)
 {
-   for(UINT32 i = 0; i < g_dwServerCount; i++)
+   for(int i = 0; i < g_serverList.size(); i++)
 	{
-      if ((dwAddr & g_pServerList[i].dwNetMask) == g_pServerList[i].dwIpAddr)
+      ServerInfo *s = g_serverList.get(i);
+      if (s->match(addr))
       {
-         *pbMasterServer = g_pServerList[i].bMasterServer;
-         *pbControlServer = g_pServerList[i].bControlServer;
-         return TRUE;
+         *pbMasterServer = s->isMaster();
+         *pbControlServer = s->isControl();
+         return true;
       }
 	}
-   return FALSE;
+   return false;
 }
 
 /**
@@ -104,79 +114,191 @@ void UnregisterSession(UINT32 dwIndex)
  */ 
 THREAD_RESULT THREAD_CALL ListenerThread(void *)
 {
-   SOCKET hSocket, hClientSocket;
-   struct sockaddr_in servAddr;
-   int iNumErrors = 0, nRet;
-   socklen_t iSize;
-   CommSession *pSession;
-   TCHAR szBuffer[256];
-   BOOL bMasterServer, bControlServer;
-   struct timeval tv;
-   fd_set rdfs;
-
-   // Create socket
-   if ((hSocket = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
+   // Create socket(s)
+   SOCKET hSocket = (g_dwFlags & AF_DISABLE_IPV4) ? INVALID_SOCKET : socket(AF_INET, SOCK_STREAM, 0);
+#ifdef WITH_IPV6
+   SOCKET hSocket6 = (g_dwFlags & AF_DISABLE_IPV6) ? INVALID_SOCKET : socket(AF_INET6, SOCK_STREAM, 0);
+#endif
+   if (((hSocket == INVALID_SOCKET) && !(g_dwFlags & AF_DISABLE_IPV4))
+#ifdef WITH_IPV6
+       && ((hSocket6 == INVALID_SOCKET) && !(g_dwFlags & AF_DISABLE_IPV6))
+#endif
+      )
    {
       nxlog_write(MSG_SOCKET_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       exit(1);
    }
 
-	SetSocketExclusiveAddrUse(hSocket);
-	SetSocketReuseFlag(hSocket);
+   if (!(g_dwFlags & AF_DISABLE_IPV4))
+   {
+	   SetSocketExclusiveAddrUse(hSocket);
+	   SetSocketReuseFlag(hSocket);
 #ifndef _WIN32
-   fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
+      fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
+#endif
+   }
+
+#ifdef WITH_IPV6
+   if (!(g_dwFlags & AF_DISABLE_IPV6))
+   {
+	   SetSocketExclusiveAddrUse(hSocket6);
+	   SetSocketReuseFlag(hSocket6);
+#ifndef _WIN32
+      fcntl(hSocket6, F_SETFD, fcntl(hSocket6, F_GETFD) | FD_CLOEXEC);
+#endif
+   }
 #endif
 
    // Fill in local address structure
+   struct sockaddr_in servAddr;
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
-	if (!_tcscmp(g_szListenAddress, _T("*")))
+
+#ifdef WITH_IPV6
+   struct sockaddr_in6 servAddr6;
+   memset(&servAddr6, 0, sizeof(struct sockaddr_in6));
+   servAddr6.sin6_family = AF_INET6;
+#endif
+
+   if (!_tcscmp(g_szListenAddress, _T("*")))
 	{
 		servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+#ifdef WITH_IPV6
+		memset(servAddr6.sin6_addr.s6_addr, 0, 16);
+#endif
 	}
 	else
 	{
-		servAddr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
-		if (servAddr.sin_addr.s_addr == htonl(INADDR_NONE))
-			servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+      InetAddress bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET);
+      if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET))
+      {
+		   servAddr.sin_addr.s_addr = bindAddress.getAddressV4();
+      }
+      else
+      {
+   		servAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+      }
+#ifdef WITH_IPV6
+      bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET6);
+      if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET6))
+      {
+		   memcpy(servAddr6.sin6_addr.s6_addr, bindAddress.getAddressV6(), 16);
+      }
+      else
+      {
+   		memset(servAddr6.sin6_addr.s6_addr, 0, 15);
+         servAddr6.sin6_addr.s6_addr[15] = 1;
+      }
+#endif
 	}
    servAddr.sin_port = htons(g_wListenPort);
+#ifdef WITH_IPV6
+   servAddr6.sin6_port = htons(g_wListenPort);
+#endif
 
    // Bind socket
-	DebugPrintf(INVALID_INDEX, 1, _T("Trying to bind on %s:%d"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer), ntohs(servAddr.sin_port));
-   if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
+   TCHAR buffer[64];
+   int bindFailures = 0;
+   if (!(g_dwFlags & AF_DISABLE_IPV4))
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+	   DebugPrintf(INVALID_INDEX, 1, _T("Trying to bind on %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
+      if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
+      {
+         nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+         bindFailures++;
+      }
+   }
+   else
+   {
+      bindFailures++;
+   }
+
+#ifdef WITH_IPV6
+   if (!(g_dwFlags & AF_DISABLE_IPV6))
+   {
+      DebugPrintf(INVALID_INDEX, 1, _T("Trying to bind on [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
+      if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
+      {
+         nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
+         bindFailures++;
+      }
+   }
+   else
+   {
+      bindFailures++;
+   }
+#else
+   bindFailures++;
+#endif
+
+   // Abort if cannot bind to socket
+   if (bindFailures == 2)
+   {
       exit(1);
    }
 
    // Set up queue
-   listen(hSocket, SOMAXCONN);
-	nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_wListenPort);
+   if (!(g_dwFlags & AF_DISABLE_IPV4))
+   {
+      listen(hSocket, SOMAXCONN);
+	   nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_wListenPort);
+   }
+#ifdef WITH_IPV6
+   if (!(g_dwFlags & AF_DISABLE_IPV6))
+   {
+      listen(hSocket6, SOMAXCONN);
+	   nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr6.sin6_addr.s6_addr, g_wListenPort);
+   }
+#endif
 
    // Wait for connection requests
+   int errorCount = 0;
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
+      struct timeval tv;
       tv.tv_sec = 1;
       tv.tv_usec = 0;
+
+      fd_set rdfs;
       FD_ZERO(&rdfs);
-      FD_SET(hSocket, &rdfs);
-      nRet = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
+      if (hSocket != INVALID_SOCKET)
+         FD_SET(hSocket, &rdfs);
+#ifdef WITH_IPV6
+      if (hSocket6 != INVALID_SOCKET)
+         FD_SET(hSocket6, &rdfs);
+#endif
+
+#if defined(WITH_IPV6) && !defined(_WIN32)
+      SOCKET nfds = 0;
+      if (hSocket != INVALID_SOCKET)
+         nfds = hSocket;
+      if ((hSocket6 != INVALID_SOCKET) && (hSocket6 > nfds))
+         nfds = hSocket6;
+      int nRet = select(SELECT_NFDS(nfds + 1), &rdfs, NULL, NULL, &tv);
+#else
+      int nRet = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
+#endif
       if ((nRet > 0) && (!(g_dwFlags & AF_SHUTDOWN)))
       {
-         iSize = sizeof(struct sockaddr_in);
-         if ((hClientSocket = accept(hSocket, (struct sockaddr *)&servAddr, &iSize)) == -1)
+         char clientAddr[128];
+         socklen_t size = 128;
+#ifdef WITH_IPV6
+         SOCKET hClientSocket = accept(FD_ISSET(hSocket, &rdfs) ? hSocket : hSocket6, (struct sockaddr *)clientAddr, &size);
+#else
+         SOCKET hClientSocket = accept(hSocket, (struct sockaddr *)clientAddr, &size);
+#endif
+         if (hClientSocket == INVALID_SOCKET)
          {
             int error = WSAGetLastError();
 
             if (error != WSAEINTR)
                nxlog_write(MSG_ACCEPT_ERROR, EVENTLOG_ERROR_TYPE, "e", error);
-            iNumErrors++;
+            errorCount++;
             g_dwAcceptErrors++;
-            if (iNumErrors > 1000)
+            if (errorCount > 1000)
             {
                nxlog_write(MSG_TOO_MANY_ERRORS, EVENTLOG_WARNING_TYPE, NULL);
-               iNumErrors = 0;
+               errorCount = 0;
             }
             ThreadSleepMs(500);
             continue;
@@ -187,25 +309,26 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
          fcntl(hClientSocket, F_SETFD, fcntl(hClientSocket, F_GETFD) | FD_CLOEXEC);
 #endif
 
-         iNumErrors = 0;     // Reset consecutive errors counter
-         DebugPrintf(INVALID_INDEX, 5, _T("Incoming connection from %s"), IpToStr(ntohl(servAddr.sin_addr.s_addr), szBuffer));
+         errorCount = 0;     // Reset consecutive errors counter
+         InetAddress addr = InetAddress::createFromSockaddr((struct sockaddr *)clientAddr);
+         DebugPrintf(INVALID_INDEX, 5, _T("Incoming connection from %s"), addr.toString(buffer));
 
-         if (IsValidServerAddr(servAddr.sin_addr.s_addr, &bMasterServer, &bControlServer))
+         bool masterServer, controlServer;
+         if (IsValidServerAddress(addr, &masterServer, &controlServer))
          {
             g_dwAcceptedConnections++;
-            DebugPrintf(INVALID_INDEX, 5, _T("Connection from %s accepted"), szBuffer);
+            DebugPrintf(INVALID_INDEX, 5, _T("Connection from %s accepted"), buffer);
 
             // Create new session structure and threads
-            pSession = new CommSession(hClientSocket, ntohl(servAddr.sin_addr.s_addr), 
-                                       bMasterServer, bControlServer);
+            CommSession *session = new CommSession(hClientSocket, addr, masterServer, controlServer);
 			
-            if (!RegisterSession(pSession))
+            if (!RegisterSession(session))
             {
-               delete pSession;
+               delete session;
             }
             else
             {
-               pSession->run();
+               session->run();
             }
          }
          else     // Unauthorized connection
@@ -213,7 +336,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
             g_dwRejectedConnections++;
             shutdown(hClientSocket, SHUT_RDWR);
             closesocket(hClientSocket);
-            DebugPrintf(INVALID_INDEX, 5, _T("Connection from %s rejected"), szBuffer);
+            DebugPrintf(INVALID_INDEX, 5, _T("Connection from %s rejected"), buffer);
          }
       }
       else if (nRet == -1)
@@ -263,7 +386,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
          {
             if (g_pSessionList[i]->getTimeStamp() < (now - (time_t)g_dwIdleTimeout))
 				{
-					DebugPrintf(i, 5, _T("Session disconnected by watchdog (last activity timestamp is ") TIME_T_FMT _T(")"), g_pSessionList[i]->getTimeStamp());
+					DebugPrintf(i, 5, _T("Session disconnected by watchdog (last activity timestamp is ") UINT64_FMT _T(")"), (UINT64)g_pSessionList[i]->getTimeStamp());
                g_pSessionList[i]->disconnect();
 				}
          }
@@ -288,7 +411,7 @@ THREAD_RESULT THREAD_CALL SessionWatchdog(void *)
 /**
  * Handler for Agent.ActiveConnections parameter
  */
-LONG H_ActiveConnections(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+LONG H_ActiveConnections(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    int nCounter;
    UINT32 i;

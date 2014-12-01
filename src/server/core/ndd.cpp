@@ -20,6 +20,7 @@
 **
 **/
 
+#define _WIN32_WINNT 0x0502
 #include "nxcore.h"
 
 #define MAX_DEVICE_DRIVERS		1024
@@ -159,7 +160,7 @@ NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport)
 			selection[selected].driver = s_drivers[i];
 			selected++;
 			DbgPrintf(6, _T("FindDriverForNode(%s): found potential device driver %s with priority %d"),
-			          node->Name(), s_drivers[i]->getName(), pri);
+			          node->getName(), s_drivers[i]->getName(), pri);
 		}
 	}
 

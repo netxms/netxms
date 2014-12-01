@@ -253,7 +253,7 @@ static BOOL MatchProcess(DWORD pid, HANDLE hProcess, HMODULE hModule, BOOL bExtM
 	int i;
 	BOOL bRet;
 
-   GetModuleBaseName(hProcess, hModule, szBaseName, sizeof(szBaseName));
+   GetModuleBaseName(hProcess, hModule, szBaseName, MAX_PATH);
 	if (bExtMatch)	// Extended version
 	{
 		TCHAR commandLine[MAX_PATH];
@@ -278,9 +278,9 @@ static BOOL MatchProcess(DWORD pid, HANDLE hProcess, HMODULE hModule, BOOL bExtM
 			StringList *pWndList;
 
 			pWndList = GetProcessWindows(pid);
-			for(i = 0, bWindowMatch = FALSE; i < pWndList->getSize(); i++)
+			for(i = 0, bWindowMatch = FALSE; i < pWndList->size(); i++)
 			{
-				if (RegexpMatch(pWndList->getValue(i), pszWindowName, FALSE))
+				if (RegexpMatch(pWndList->get(i), pszWindowName, FALSE))
 				{
 					bWindowMatch = TRUE;
 					break;
@@ -316,7 +316,7 @@ static BOOL MatchProcess(DWORD pid, HANDLE hProcess, HMODULE hModule, BOOL bExtM
 //    <window>   - window title
 //
 
-LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR buffer[256], procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
    int attr, type, i, procCount, counter;
@@ -390,7 +390,7 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for System.ProcessCount
  */
-LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    DWORD dwSize, *pdwProcList;
    PERFORMANCE_INFORMATION pi;
@@ -416,13 +416,9 @@ LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for Process.Count(*) and Process.CountEx(*)
  */
-LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   DWORD dwSize = 0, *pdwProcList;
-   int i, counter, procCount;
    TCHAR procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
-   HANDLE hProcess;
-   HMODULE modList[MAX_MODULES];
 
    AgentGetParameterArg(cmd, 1, procName, MAX_PATH - 1);
 	if (*arg == 'E')
@@ -435,35 +431,38 @@ LONG H_ProcCountSpecific(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 			return SYSINFO_RC_UNSUPPORTED;
 	}
 
-   pdwProcList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
-   EnumProcesses(pdwProcList, sizeof(DWORD) * MAX_PROCESSES, &dwSize);
-   procCount = dwSize / sizeof(DWORD);
-   for(i = 0, counter = 0; i < procCount; i++)
+   DWORD *procList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
+   DWORD size = 0;
+   EnumProcesses(procList, sizeof(DWORD) * MAX_PROCESSES, &size);
+   int procCount = (int)(size / sizeof(DWORD));
+   int count = 0;
+   for(int i = 0; i < procCount; i++)
    {
-      hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pdwProcList[i]);
+      HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, procList[i]);
       if (hProcess != NULL)
       {
-         if (EnumProcessModules(hProcess, modList, sizeof(HMODULE) * MAX_MODULES, &dwSize))
+         HMODULE modList[MAX_MODULES];
+         if (EnumProcessModules(hProcess, modList, sizeof(HMODULE) * MAX_MODULES, &size))
          {
-            if (dwSize >= sizeof(HMODULE))     // At least one module exist
+            if (size >= sizeof(HMODULE))     // At least one module exist
             {
-					if (MatchProcess(pdwProcList[i], hProcess, modList[0], *arg == 'E',
+					if (MatchProcess(procList[i], hProcess, modList[0], *arg == 'E',
 					                 procName, cmdLine, windowTitle))
-						counter++;
+						count++;
 				}
          }
          CloseHandle(hProcess);
       }
    }
-   ret_int(value, counter);
-   free(pdwProcList);
+   ret_int(value, count);
+   free(procList);
    return SYSINFO_RC_SUCCESS;
 }
 
 /**
  * Handler for System.ProcessList list
  */
-LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
    DWORD i, dwSize, dwNumProc, *pdwProcList;
    LONG iResult = SYSINFO_RC_SUCCESS;
@@ -536,7 +535,7 @@ LONG H_ProcessList(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 /**
  * Handler for System.Processes table
  */
-LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value)
+LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *)
 {
    DWORD i, dwSize, dwNumProc, *pdwProcList;
    LONG iResult = SYSINFO_RC_SUCCESS;

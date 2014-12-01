@@ -218,12 +218,12 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 #endif
 				break;
 			case 'C':	// Check config
-				g_dwFlags &= ~AF_DAEMON;
+				g_flags &= ~AF_DAEMON;
 				_tprintf(_T("Checking configuration file (%s):\n\n"), g_szConfigFile);
 				LoadConfig();
 				return FALSE;
 			case 'd':
-				g_dwFlags |= AF_DAEMON;
+				g_flags |= AF_DAEMON;
 				break;
 			case 'D':	// Debug level
 				g_debugLevel = strtoul(optarg, &eptr, 0);
@@ -234,7 +234,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 				}
 				break;
 			case 'q': // disable interactive console
-				g_dwFlags |= AF_DEBUG_CONSOLE_DISABLED;
+				g_flags |= AF_DEBUG_CONSOLE_DISABLED;
 				break;
 			case 'e':
 				g_bCheckDB = TRUE;
@@ -385,37 +385,10 @@ int main(int argc, char* argv[])
 
 	// Set exception handler
 #ifdef _WIN32
-	if (g_dwFlags & AF_CATCH_EXCEPTIONS)
+	if (g_flags & AF_CATCH_EXCEPTIONS)
 		SetExceptionHandler(SEHServiceExceptionHandler, SEHServiceExceptionDataWriter,
-		                    g_szDumpDir, _T("netxmsd"), MSG_EXCEPTION, g_dwFlags & AF_WRITE_FULL_DUMP, IsStandalone());
+                          g_szDumpDir, _T("netxmsd"), MSG_EXCEPTION, (g_flags & AF_WRITE_FULL_DUMP) ? true : false, IsStandalone());
 	__try {
-#endif
-
-	// Fix path to Java VM
-#ifdef _WIN32
-	if (!_tcscmp(g_szJavaPath, _T("java")))
-	{
-		TCHAR path[MAX_PATH];
-
-		if (GetModuleFileName(NULL, path, MAX_PATH) != 0)
-		{
-			TCHAR *p = _tcsrchr(path, _T('\\'));
-			if (p != NULL)
-			{
-				p--;
-				p = _tcsrchr(p, _T('\\'));
-				if (p != NULL)
-				{
-					p++;
-					_tcscpy(p, _T("jre\\bin\\java.exe"));
-					if (_taccess(path, 4))
-					{
-						_tcscpy(g_szJavaPath, path);
-					}
-				}
-			}
-		}
-	}
 #endif
 
    // Check database before start if requested
@@ -451,7 +424,7 @@ int main(int argc, char* argv[])
          _tprintf(_T("NetXMS Core initialization failed\n"));
 
          // Remove database lock
-         if (g_dwFlags & AF_DB_LOCKED)
+         if (g_flags & AF_DB_LOCKED)
          {
             UnlockDB();
             ShutdownDB();
@@ -482,7 +455,7 @@ int main(int argc, char* argv[])
    if (!Initialize())
    {
       // Remove database lock
-      if (g_dwFlags & AF_DB_LOCKED)
+      if (g_flags & AF_DB_LOCKED)
       {
          UnlockDB();
          ShutdownDB();

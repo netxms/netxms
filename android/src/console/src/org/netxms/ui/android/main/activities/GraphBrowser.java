@@ -8,6 +8,7 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.android.R;
+import org.netxms.ui.android.helpers.Colors;
 import org.netxms.ui.android.main.activities.helpers.ChartConfig;
 import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
 import org.netxms.ui.android.main.adapters.GraphAdapter;
@@ -127,11 +128,12 @@ public class GraphBrowser extends AbstractClientActivity
 
 			// Set values
 			ChartDciConfig[] items = config.getDciList();
-			for (int i = 0; i < items.length; i++)
+			for (int i = 0; i < items.length && i < Colors.DEFAULT_ITEM_COLORS.length; i++)
 			{
 				nodeIdList.add((int)items[i].nodeId);
 				dciIdList.add((int)items[i].dciId);
-				colorList.add(swapRGB(items[i].getColorAsInt()));
+				int color = items[i].getColorAsInt();
+				colorList.add(color == -1 ? Colors.DEFAULT_ITEM_COLORS[i] : swapRGB(color));
 				lineWidthList.add(items[i].lineWidth);
 				nameList.add(items[i].name);
 			}

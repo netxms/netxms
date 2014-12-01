@@ -94,11 +94,9 @@ char LIBNETXMS_EXPORTABLE *IpToStrA(UINT32 dwAddr, char *szBuffer)
 
 #endif
 
-
-//
-// Universal IPv4/IPv6 to string converter
-//
-
+/**
+ * Universal IPv4/IPv6 to string converter
+ */
 TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer)
 {
 	switch(addr->sa_family)
@@ -116,7 +114,7 @@ TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer)
 /**
  * Convert IPv6 address from binary form to string
  */
-TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(BYTE *addr, TCHAR *buffer)
+TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer)
 {
    static TCHAR internalBuffer[64];
    TCHAR *bufPtr = (buffer == NULL) ? internalBuffer : buffer;
@@ -191,9 +189,7 @@ void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size)
  */
 char LIBNETXMS_EXPORTABLE *nx_strdup(const char *src)
 {
-	char *newStr = (char *)malloc(strlen(src) + 1);
-	strcpy(newStr, src);
-	return newStr;
+	return (char *)nx_memdup(src, strlen(src) + 1);
 }
 
 /**
@@ -201,9 +197,7 @@ char LIBNETXMS_EXPORTABLE *nx_strdup(const char *src)
  */
 WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
 {
-	WCHAR *newStr = (WCHAR *)malloc((wcslen(src) + 1) * sizeof(WCHAR));
-	wcscpy(newStr, src);
-	return newStr;
+	return (WCHAR *)nx_memdup(src, (wcslen(src) + 1) * sizeof(WCHAR));
 }
 
 #endif
@@ -214,6 +208,16 @@ WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
  * Copy string
  */
 WCHAR LIBNETXMS_EXPORTABLE *wcsdup(const WCHAR *src)
+{
+	return (WCHAR *)nx_memdup(src, (wcslen(src) + 1) * sizeof(WCHAR));
+}
+
+#elif defined(_AIX)
+
+/**
+ * Copy string
+ */
+WCHAR LIBNETXMS_EXPORTABLE *nx_wcsdup(const WCHAR *src)
 {
 	return (WCHAR *)nx_memdup(src, (wcslen(src) + 1) * sizeof(WCHAR));
 }
@@ -511,13 +515,12 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
             len = (int)min(_tcslen(result), bufSize - outpos - 1);
             memcpy(&buffer[outpos], result, len * sizeof(TCHAR));
          }
-         else {
+         else 
+         {
             len = 0;
          }
 
-
          outpos += len;
-
          i = j;
       }
       else
@@ -572,7 +575,7 @@ const WCHAR LIBNETXMS_EXPORTABLE *ExtractWordW(const WCHAR *line, WCHAR *buffer)
    // Copy word to buffer
    for(bptr = buffer; (*ptr != L' ') && (*ptr != L'\t') && (*ptr != 0); ptr++, bptr++)
       *bptr = *ptr;
-   *bptr=0;
+   *bptr = 0;
    return ptr;
 }
 
@@ -590,7 +593,7 @@ const char LIBNETXMS_EXPORTABLE *ExtractWordA(const char *line, char *buffer)
    // Copy word to buffer
    for(bptr = buffer; (*ptr != ' ') && (*ptr != '\t') && (*ptr != 0); ptr++, bptr++)
       *bptr = *ptr;
-   *bptr=0;
+   *bptr = 0;
    return ptr;
 }
 
@@ -738,9 +741,9 @@ char LIBNETXMS_EXPORTABLE *BinToStrA(const BYTE *pData, size_t size, char *pStr)
  * Convert string of hexadecimal digits to byte array (wide character version)
  * Returns number of bytes written to destination
  */
-UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, UINT32 size)
+size_t LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, size_t size)
 {
-   UINT32 i;
+   size_t i;
    const WCHAR *pCurr;
 
    memset(pData, 0, size);
@@ -761,9 +764,9 @@ UINT32 LIBNETXMS_EXPORTABLE StrToBinW(const WCHAR *pStr, BYTE *pData, UINT32 siz
  * Convert string of hexadecimal digits to byte array (multibyte character version)
  * Returns number of bytes written to destination
  */
-UINT32 LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *pData, UINT32 size)
+size_t LIBNETXMS_EXPORTABLE StrToBinA(const char *pStr, BYTE *pData, size_t size)
 {
-   UINT32 i;
+   size_t i;
    const char *pCurr;
 
    memset(pData, 0, size);
@@ -1343,46 +1346,45 @@ int LIBNETXMS_EXPORTABLE NumCharsA(const char *pszStr, char ch)
    return nCount;
 }
 
-
-//
-// Match string against regexp
-//
-
-BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *pszStr, const WCHAR *pszExpr, BOOL bMatchCase)
+/**
+ * Match string against regexp (UNICODE version)
+ */
+BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool matchCase)
 {
    regex_t preg;
-   BOOL bResult = FALSE;
+   bool result = false;
 
-	if (tre_regwcomp(&preg, pszExpr, bMatchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
+	if (tre_regwcomp(&preg, expr, matchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
 	{
-		if (tre_regwexec(&preg, pszStr, 0, NULL, 0) == 0) // MATCH
-			bResult = TRUE;
+		if (tre_regwexec(&preg, str, 0, NULL, 0) == 0) // MATCH
+			result = true;
 		regfree(&preg);
 	}
 
-   return bResult;
+   return result;
 }
 
-BOOL LIBNETXMS_EXPORTABLE RegexpMatchA(const char *pszStr, const char *pszExpr, BOOL bMatchCase)
+/**
+ * Match string against regexp (multibyte version)
+ */
+BOOL LIBNETXMS_EXPORTABLE RegexpMatchA(const char *str, const char *expr, bool matchCase)
 {
    regex_t preg;
-   BOOL bResult = FALSE;
+   bool result = false;
 
-	if (tre_regcomp(&preg, pszExpr, bMatchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
+	if (tre_regcomp(&preg, expr, matchCase ? REG_EXTENDED | REG_NOSUB : REG_EXTENDED | REG_NOSUB | REG_ICASE) == 0)
 	{
-		if (tre_regexec(&preg, pszStr, 0, NULL, 0) == 0) // MATCH
-			bResult = TRUE;
+		if (tre_regexec(&preg, str, 0, NULL, 0) == 0) // MATCH
+			result = true;
 		regfree(&preg);
 	}
 
-   return bResult;
+   return result;
 }
 
-
-//
-// Translate given code to text
-//
-
+/**
+ * Translate given code to text
+ */
 const TCHAR LIBNETXMS_EXPORTABLE *CodeToText(int iCode, CODE_TO_TEXT *pTranslator, const TCHAR *pszDefaultText)
 {
    int i;
@@ -2151,3 +2153,24 @@ TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f)
 	return fgets(buffer, len, f);
 #endif
 }
+
+#if !HAVE_WCSLWR && !defined(_WIN32)
+
+/**
+ * Convert UNICODE string to lowercase
+ */
+WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str)
+{
+   for(WCHAR *p = str; *p != 0; p++)
+   {
+#if HAVE_TOWLOWER
+      *p = towlower(*p);
+#else
+      if ((*p >= 'a') && (*p <= 'z'))
+         *p = *p - ('a' - 'A');
+#endif
+   }
+   return str;
+}
+
+#endif

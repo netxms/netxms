@@ -40,7 +40,7 @@ static UINT32 PortLocalInfoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_
 	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
 
 	SNMP_PDU *pRespPDU = NULL;
-   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
 	delete pRqPDU;
 	if (rcc == SNMP_ERR_SUCCESS)
    {
@@ -166,7 +166,7 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
 
 	SNMP_PDU *pRespPDU = NULL;
-   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
 	delete pRqPDU;
 	if (rcc == SNMP_ERR_SUCCESS)
    {
@@ -191,10 +191,11 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 
 			LL_NEIGHBOR_INFO info;
 
-			info.objectId = remoteNode->Id();
+			info.objectId = remoteNode->getId();
 			info.ifRemote = (ifRemote != NULL) ? ifRemote->getIfIndex() : 0;
 			info.isPtToPt = true;
 			info.protocol = LL_PROTO_LLDP;
+         info.isCached = false;
 
 			// Index to lldpRemTable is lldpRemTimeMark, lldpRemLocalPortNum, lldpRemIndex
 			UINT32 localPort = oid->getValue()[oid->getLength() - 2];
@@ -237,11 +238,11 @@ void AddLLDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 	if (!(node->getFlags() & NF_IS_LLDP))
 		return;
 
-	DbgPrintf(5, _T("LLDP: collecting topology information for node %s [%d]"), node->Name(), node->Id());
+	DbgPrintf(5, _T("LLDP: collecting topology information for node %s [%d]"), node->getName(), node->getId());
 	nbs->setData(0, node);
 	nbs->setData(1, NULL);	// local port info cache
 	node->callSnmpEnumerate(_T(".1.0.8802.1.1.2.1.4.1.1.5"), LLDPTopoHandler, nbs);
-	DbgPrintf(5, _T("LLDP: finished collecting topology information for node %s [%d]"), node->Name(), node->Id());
+	DbgPrintf(5, _T("LLDP: finished collecting topology information for node %s [%d]"), node->getName(), node->getId());
 }
 
 /**

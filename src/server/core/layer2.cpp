@@ -27,16 +27,16 @@
  */
 void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth, bool includeEndNodes)
 {
-	if (topology.isObjectExist(root->Id()))
+	if (topology.isObjectExist(root->getId()))
 		return;  // loop in object connections
 
-	topology.addObject(root->Id());
+	topology.addObject(root->getId());
 
 	LinkLayerNeighbors *nbs = root->getLinkLayerNeighbors();
 	if (nbs == NULL)
 		return;
 
-	for(int i = 0; i < nbs->getSize(); i++)
+	for(int i = 0; i < nbs->size(); i++)
 	{
 		LL_NEIGHBOR_INFO *info = nbs->getConnection(i);
 		if (info != NULL)
@@ -48,10 +48,10 @@ void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth, bool inclu
 				Interface *ifLocal = root->findInterface(info->ifLocal, INADDR_ANY);
 				Interface *ifRemote = node->findInterface(info->ifRemote, INADDR_ANY);
 				DbgPrintf(5, _T("BuildL2Topology: root=%s [%d], node=%s [%d], ifLocal=%d %p, ifRemote=%d %p"),
-				          root->Name(), root->Id(), node->Name(), node->Id(), info->ifLocal, ifLocal, info->ifRemote, ifRemote);
-				topology.linkObjectsEx(root->Id(), node->Id(),
-					(ifLocal != NULL) ? ifLocal->Name() : _T("N/A"),
-					(ifRemote != NULL) ? ifRemote->Name() : _T("N/A"),
+				          root->getName(), root->getId(), node->getName(), node->getId(), info->ifLocal, ifLocal, info->ifRemote, ifRemote);
+				topology.linkObjectsEx(root->getId(), node->getId(),
+					(ifLocal != NULL) ? ifLocal->getName() : _T("N/A"),
+					(ifRemote != NULL) ? ifRemote->getName() : _T("N/A"),
 					info->ifLocal, info->ifRemote);
 			}
 		}
@@ -84,7 +84,7 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
 		if (fdb != NULL)
 		{
 			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%d]"),
-			          macAddrText, node->Name(), (int)node->Id());
+			          macAddrText, node->getName(), (int)node->getId());
 			UINT32 ifIndex = fdb->findMacAddress(macAddr);
 			if (ifIndex != 0)
 			{
@@ -95,14 +95,14 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
 					if (iface != NULL)
 					{
 						DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%d] on node %s [%d]"), macAddrText,
-									 iface->Name(), (int)iface->Id(), iface->getParentNode()->Name(), (int)iface->getParentNode()->Id());
+									 iface->getName(), (int)iface->getId(), iface->getParentNode()->getName(), (int)iface->getParentNode()->getId());
                   cp = iface;
                   *type = CP_TYPE_DIRECT;
 					}
 					else
 					{
 						DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): cannot find interface object for node %s [%d] ifIndex %d"),
-									 macAddrText, node->Name(), node->Id(), ifIndex);
+									 macAddrText, node->getName(), node->getId(), ifIndex);
 					}
 				}
 				else if (count < bestMatchCount)
@@ -111,7 +111,7 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
 					bestMatchNode = node;
 					bestMatchIfIndex = ifIndex;
 					DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found potential interface [ifIndex=%d] on node %s [%d], count %d"), 
-					          macAddrText, ifIndex, node->Name(), (int)node->Id(), count);
+					          macAddrText, ifIndex, node->getName(), (int)node->getId(), count);
 				}
 			}
 			fdb->decRefCount();
@@ -120,12 +120,12 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
       if (node->isWirelessController())
       {
 			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): node %s [%d] is a wireless controller, checking associated stations"),
-			          macAddrText, node->Name(), (int)node->Id());
+			          macAddrText, node->getName(), (int)node->getId());
          ObjectArray<WirelessStationInfo> *wsList = node->getWirelessStations();
          if (wsList != NULL)
          {
 			   DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): %d wireless stations registered on node %s [%d]"),
-                      macAddrText, wsList->size(), node->Name(), (int)node->Id());
+                      macAddrText, wsList->size(), node->getName(), (int)node->getId());
 
             for(int i = 0; i < wsList->size(); i++)
             {
@@ -136,7 +136,7 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
                   if (ap != NULL)
                   {
 						   DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] AP %s"), macAddrText,
-									    node->Name(), (int)node->Id(), ap->Name());
+									    node->getName(), (int)node->getId(), ap->getName());
                      cp = ap;
                      *type = CP_TYPE_WIRELESS;
                   }
@@ -146,14 +146,14 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
                      if (iface != NULL)
                      {
 						      DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] interface %s"),
-                           macAddrText, node->Name(), (int)node->Id(), iface->Name());
+                           macAddrText, node->getName(), (int)node->getId(), iface->getName());
                         cp = iface;
                         *type = CP_TYPE_WIRELESS;
                      }
                      else
                      {
 						      DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] but cannot determine AP or interface"), 
-                           macAddrText, node->Name(), (int)node->Id());
+                           macAddrText, node->getName(), (int)node->getId());
                      }
                   }
                   break;
@@ -165,7 +165,7 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
          else
          {
 			   DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): unable to get wireless stations from node %s [%d]"),
-			             macAddrText, node->Name(), (int)node->Id());
+			             macAddrText, node->getName(), (int)node->getId());
          }
       }
 

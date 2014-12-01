@@ -758,16 +758,6 @@ static void CheckIData()
 				}
 				DBFreeResult(hResult);
 			}
-			else
-			{
-/*				m_iNumErrors++;
-				_tprintf(_T("\rData collection table for node [%d] not found. Create? (Y/N) "), nodeId);
-				if (GetYesNo())
-				{
-					if (CreateIDataTable(nodeId))
-						m_iNumFixes++;
-				}*/
-			}
 		}
 		DBFreeResult(hResultNodes);
 	}
@@ -788,6 +778,98 @@ static void CheckIData()
 		}
 		DBFreeResult(hResult);
 	}
+
+	EndStage();
+}
+
+/**
+ * Drop given data table
+ */
+static BOOL DropDataTable(const TCHAR *table, DWORD id)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("DROP TABLE %s_%d"), table, id);
+   return SQLQuery(query);
+}
+
+/**
+ * Check if given data table exist
+ */
+static BOOL IsDataTableExist(const TCHAR *format, DWORD id)
+{
+   TCHAR table[256];
+   _sntprintf(table, 256, format, id);
+   int rc = DBIsTableExist(g_hCoreDB, table);
+   if (rc == DBIsTableExist_Failure)
+   {
+      _tprintf(_T("WARNING: call to DBIsTableExist(\"%s\") failed\n"), table);
+   }
+   return rc != DBIsTableExist_NotFound;
+}
+
+/**
+ * Check data tables for given o bject class
+ */
+static void CheckDataTablesForClass(const TCHAR *className, const TCHAR *classDescr)
+{
+   TCHAR query[1024];
+   _sntprintf(query, 256, _T("SELECT id FROM %s"), className);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         DWORD id = DBGetFieldULong(hResult, i, 0);
+
+         // IDATA
+         if (!IsDataTableExist(_T("idata_%d"), id))
+         {
+				m_iNumErrors++;
+				if (GetYesNo(_T("\rData collection table (IDATA) for %s [%d] not found. Create? (Y/N) "), classDescr, id))
+				{
+					if (CreateIDataTable(id))
+						m_iNumFixes++;
+				}
+         }
+
+         // TDATA
+         BOOL tdata = IsDataTableExist(_T("tdata_%d"), id);
+         BOOL tdataRecords = IsDataTableExist(_T("tdata_records_%d"), id);
+         BOOL tdataRows = IsDataTableExist(_T("tdata_rows_%d"), id);
+         if (!tdata || !tdataRecords || !tdataRows)
+         {
+				m_iNumErrors++;
+				if (GetYesNo(_T("\rData collection table (TDATA) for %s [%d] not found. Create? (Y/N) "), classDescr, id))
+				{
+               // Drop existing tables first
+               if (tdataRows)
+                  DropDataTable(_T("tdata_rows"), id);
+               if (tdataRecords)
+                  DropDataTable(_T("tdata_records"), id);
+               if (tdata)
+                  DropDataTable(_T("tdata"), id);
+
+					if (CreateTDataTables(id))
+						m_iNumFixes++;
+				}
+         }
+      }
+      DBFreeResult(hResult);
+   }
+}
+
+/**
+ * Check data tables
+ */
+static void CheckDataTables()
+{
+   StartStage(_T("Checking data tables..."));
+
+   CheckDataTablesForClass(_T("nodes"), _T("node"));
+   CheckDataTablesForClass(_T("clusters"), _T("cluster"));
+   CheckDataTablesForClass(_T("mobile_devices"), _T("mobile device"));
+   CheckDataTablesForClass(_T("access_points"), _T("access point"));
 
 	EndStage();
 }
@@ -881,11 +963,14 @@ void CheckDatabase()
    LONG iVersion = 0;
    BOOL bCompleted = FALSE;
 
-	_tprintf(_T("Checking database (%s collected data):\n"), g_checkData ? _T("including") : _T("excluding"));
+   if (g_checkDataTablesOnly)
+	   _tprintf(_T("Checking database (data tables only):\n"));
+   else
+	   _tprintf(_T("Checking database (%s collected data):\n"), g_checkData ? _T("including") : _T("excluding"));
 
    // Get database format version
    iVersion = DBGetSchemaVersion(g_hCoreDB);
-   if (iVersion < DB_FORMAT_VERSION)
+   if ((iVersion < DB_FORMAT_VERSION) && !g_checkDataTablesOnly)
    {
       _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\nUse \"upgrade\" command to upgrade your database first.\n"),
                iVersion, DB_FORMAT_VERSION);
@@ -944,17 +1029,25 @@ void CheckDatabase()
 			{
 				DBBegin(g_hCoreDB);
 
-				CheckZones();
-				CheckNodes();
-				CheckComponents(_T("interface"), _T("interfaces"));
-				CheckComponents(_T("network service"), _T("network_services"));
-				CheckClusters();
-				CheckTemplateNodeMapping();
-				CheckObjectProperties();
-				CheckEPP();
-            CheckMapLinks();
-				if (g_checkData)
-					CheckIData();
+            if (g_checkDataTablesOnly)
+            {
+               CheckDataTables();
+            }
+            else
+            {
+				   CheckZones();
+				   CheckNodes();
+				   CheckComponents(_T("interface"), _T("interfaces"));
+				   CheckComponents(_T("network service"), _T("network_services"));
+				   CheckClusters();
+				   CheckTemplateNodeMapping();
+				   CheckObjectProperties();
+				   CheckEPP();
+               CheckMapLinks();
+               CheckDataTables();
+				   if (g_checkData)
+					   CheckIData();
+            }
 
 				if (m_iNumErrors == 0)
 				{

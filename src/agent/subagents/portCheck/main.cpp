@@ -30,7 +30,7 @@ char g_szFailedDir[1024] = "";
 /**
  * Command handler
  */
-BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session)
+BOOL CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, AbstractCommSession *session)
 {
 	BOOL bHandled = TRUE;
 	WORD wType, wPort;
@@ -44,31 +44,33 @@ BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespo
 		return FALSE;
 	}
 
-	wType = pRequest->GetVariableShort(VID_SERVICE_TYPE);
-	wPort = pRequest->GetVariableShort(VID_IP_PORT);
-	dwAddress = pRequest->GetVariableLong(VID_IP_ADDRESS);
-	pRequest->GetVariableStrA(VID_SERVICE_REQUEST, szRequest, sizeof(szRequest));
-	pRequest->GetVariableStrA(VID_SERVICE_RESPONSE, szResponse, sizeof(szResponse));
+	wType = pRequest->getFieldAsUInt16(VID_SERVICE_TYPE);
+	wPort = pRequest->getFieldAsUInt16(VID_IP_PORT);
+	dwAddress = pRequest->getFieldAsUInt32(VID_IP_ADDRESS);
+	pRequest->getFieldAsMBString(VID_SERVICE_REQUEST, szRequest, sizeof(szRequest));
+	pRequest->getFieldAsMBString(VID_SERVICE_RESPONSE, szResponse, sizeof(szResponse));
+
+   INT64 start = GetCurrentTimeMs();
 
 	switch(wType)
 	{
 		case NETSRV_CUSTOM:
 			// unsupported for now
 			nRet = CheckCustom(NULL, dwAddress, wPort, 0);
-			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-			pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
+			pResponse->setField(VID_RCC, ERR_SUCCESS);
+			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			break;
 		case NETSRV_SSH:
 			nRet = CheckSSH(NULL, dwAddress, wPort, NULL, NULL, 0);
 
-			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-			pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
+			pResponse->setField(VID_RCC, ERR_SUCCESS);
+			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			break;
 		case NETSRV_TELNET:
 			nRet = CheckTelnet(NULL, dwAddress, wPort, NULL, NULL, 0);
 
-			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-			pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
+			pResponse->setField(VID_RCC, ERR_SUCCESS);
+			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			break;
 		case NETSRV_POP3:
 			{
@@ -86,8 +88,8 @@ BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespo
 
 				}
 
-				pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-				pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
+				pResponse->setField(VID_RCC, ERR_SUCCESS);
+				pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			}
 			break;
 		case NETSRV_SMTP:
@@ -96,12 +98,12 @@ BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespo
 			if (szRequest[0] != 0)
 			{
 				nRet = CheckSMTP(NULL, dwAddress, wPort, szRequest, 0);
-				pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-				pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
+				pResponse->setField(VID_RCC, ERR_SUCCESS);
+				pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			}
 
-			pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-			pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
+			pResponse->setField(VID_RCC, ERR_SUCCESS);
+			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			break;
 		case NETSRV_FTP:
 			bHandled = FALSE;
@@ -131,8 +133,8 @@ BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespo
                }
 				}
 
-				pResponse->SetVariable(VID_RCC, ERR_SUCCESS);
-				pResponse->SetVariable(VID_SERVICE_STATUS, (UINT32)nRet);
+				pResponse->setField(VID_RCC, ERR_SUCCESS);
+				pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			}
 			break;
 		default:
@@ -140,15 +142,22 @@ BOOL CommandHandler(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pRespo
 			break;
 	}
 
+   if (bHandled)
+   {
+      INT64 elapsed = GetCurrentTimeMs() - start;
+      pResponse->setField(VID_RESPONSE_TIME, (INT32)elapsed);
+   }
 	return bHandled;
 }
 
-//
-// Init callback
-//
-
+/**
+ * Default request timeout
+ */
 UINT32 m_dwDefaultTimeout = 3000;
 
+/**
+ * Configuration template
+ */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
 	{ _T("DomainName"), CT_MB_STRING, 0, 0, 128, 0, g_szDomainName },
@@ -157,6 +166,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
+/**
+ * Subagent initialization callback
+ */
 static BOOL SubagentInit(Config *config)
 {
 	config->parseTemplate(_T("portCheck"), m_cfgTemplate);
@@ -167,33 +179,34 @@ static BOOL SubagentInit(Config *config)
 	return TRUE;
 }
 
-
-//
-// Subagent information
-//
-
+/**
+ * Supported parameters
+ */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
-	{ _T("ServiceCheck.POP3(*)"),         H_CheckPOP3,       NULL,
-		DCI_DT_INT,		_T("Status of remote POP3 service") },
-	{ _T("ServiceCheck.SMTP(*)"),         H_CheckSMTP,       NULL,
-		DCI_DT_INT,		_T("Status of remote SMTP service") },
-	{ _T("ServiceCheck.SSH(*)"),          H_CheckSSH,        NULL,
-		DCI_DT_INT,		_T("Status of remote SSH service") },
-	{ _T("ServiceCheck.HTTP(*)"),         H_CheckHTTP,       NULL,
-		DCI_DT_INT,		_T("Status of remote HTTP service") },
-	{ _T("ServiceCheck.HTTPS(*)"),        H_CheckHTTP,       _T("S"),
-		DCI_DT_INT,		_T("Status of remote HTTPS service") },
-	{ _T("ServiceCheck.Custom(*)"),       H_CheckCustom,     NULL,
-		DCI_DT_INT,		_T("Status of remote TCP service") },
-	{ _T("ServiceCheck.Telnet(*)"),       H_CheckTelnet,     NULL,
-		DCI_DT_INT,		_T("Status of remote TELNET service") },
+	{ _T("ServiceCheck.Custom(*)"),        H_CheckCustom, _T("C"),	 DCI_DT_INT, _T("Status of remote TCP service") },
+	{ _T("ServiceCheck.HTTP(*)"),          H_CheckHTTP,   _T("C"),  DCI_DT_INT, _T("Status of remote HTTP service") },
+	{ _T("ServiceCheck.HTTPS(*)"),         H_CheckHTTP,   _T("CS"), DCI_DT_INT, _T("Status of remote HTTPS service") },
+	{ _T("ServiceCheck.POP3(*)"),          H_CheckPOP3,   _T("C"),  DCI_DT_INT, _T("Status of remote POP3 service") },
+	{ _T("ServiceCheck.SMTP(*)"),          H_CheckSMTP,   _T("C"),	 DCI_DT_INT, _T("Status of remote SMTP service") },
+	{ _T("ServiceCheck.SSH(*)"),           H_CheckSSH,    _T("C"),	 DCI_DT_INT, _T("Status of remote SSH service") },
+	{ _T("ServiceCheck.Telnet(*)"),        H_CheckTelnet, _T("C"),	 DCI_DT_INT, _T("Status of remote TELNET service") },
+	{ _T("ServiceResponseTime.Custom(*)"), H_CheckCustom, _T("R"),	 DCI_DT_INT, _T("Response time of remote TCP service") },
+	{ _T("ServiceResponseTime.HTTP(*)"),   H_CheckHTTP,   _T("R"),	 DCI_DT_INT, _T("Response time of remote HTTP service") },
+	{ _T("ServiceResponseTime.HTTPS(*)"),  H_CheckHTTP,   _T("RS"), DCI_DT_INT, _T("Response time of remote HTTPS service") },
+	{ _T("ServiceResponseTime.POP3(*)"),   H_CheckPOP3,   _T("R"),  DCI_DT_INT, _T("Response time of remote POP3 service") },
+	{ _T("ServiceResponseTime.SMTP(*)"),   H_CheckSMTP,   _T("R"),  DCI_DT_INT, _T("Response time of remote SMTP service") },
+	{ _T("ServiceResponseTime.SSH(*)"),    H_CheckSSH,    _T("R"),  DCI_DT_INT, _T("Response time of remote SSH service") },
+	{ _T("ServiceResponseTime.Telnet(*)"), H_CheckTelnet, _T("R"),  DCI_DT_INT, _T("Response time of remote TELNET service") }
 };
 
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
-	_T("portCheck"),
+	_T("PORTCHECK"),
 	NETXMS_VERSION_STRING,
 	SubagentInit, NULL, // init and shutdown routines
 	CommandHandler,
@@ -205,13 +218,25 @@ static NETXMS_SUBAGENT_INFO m_info =
 	0, NULL	// push parameters
 };
 
-
-//
-// Entry point for NetXMS agent
-//
-
+/**
+ * Entry point for NetXMS agent
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(PORTCHECK)
 {
 	*ppInfo = &m_info;
 	return TRUE;
 }
+
+#ifdef _WIN32
+
+/**
+ * DLL entry point
+ */
+BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+{
+	if (dwReason == DLL_PROCESS_ATTACH)
+		DisableThreadLibraryCalls(hInstance);
+	return TRUE;
+}
+
+#endif

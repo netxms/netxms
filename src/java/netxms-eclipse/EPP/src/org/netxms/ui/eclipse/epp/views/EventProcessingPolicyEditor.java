@@ -31,21 +31,30 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCListener;
@@ -63,6 +72,7 @@ import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 
 /**
  * Event processing policy editor
@@ -80,10 +90,13 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private EventProcessingPolicy policy;
 	private NXCListener sessionListener;
 	private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
+	private FilterText filterControl;
+	private String filterText = null;
 	private ScrolledComposite scroller;
 	private Composite dataArea;
 	private List<RuleEditor> ruleEditors = new ArrayList<RuleEditor>();
 	private boolean verticalLayout = false;
+	private boolean filterEnabled = true;
 	private boolean modified = false;
 	private Set<RuleEditor> selection = new HashSet<RuleEditor>();
 	private int lastSelectedRule = -1;
@@ -114,6 +127,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private Action actionDelete;
 	private Action actionEnableRule;
 	private Action actionDisableRule;
+	private Action actionShowFilter;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -122,6 +136,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	public void createPartControl(Composite parent)
 	{
 		session = (NXCSession)ConsoleSharedData.getSession();
+		
+		IDialogSettings settings = Activator.getDefault().getDialogSettings();
+		filterEnabled = settings.getBoolean("EventProcessingPolicyEditor.filterEnabled"); //$NON-NLS-1$
 
 		// Initiate loading of required plugins if they was not loaded yet
 		try
@@ -142,6 +159,25 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		imageCollapse = SharedIcons.COLLAPSE.createImage();
 		imageExpand = SharedIcons.EXPAND.createImage();
 		imageEdit = SharedIcons.EDIT.createImage();
+		
+		parent.setLayout(new FormLayout());
+		
+      // Create filter area
+      filterControl = new FilterText(parent, SWT.NONE);
+      filterControl.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+      filterControl.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+         }
+      });
 
 		scroller = new ScrolledComposite(parent, SWT.V_SCROLL);
 
@@ -164,6 +200,20 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 				scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
 			}
 		});
+		
+      // Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(filterControl);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      scroller.setLayoutData(fd);
+      
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterControl.setLayoutData(fd);
 
 		if (Platform.getOS().equals(Platform.OS_WIN32))
 		{
@@ -187,15 +237,37 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 
 		createActions();
 		contributeToActionBars();
+      filterControl.setCloseAction(actionShowFilter);
+      
+      openEventProcessingPolicy();      
+      activateContext();
 
-		openEventProcessingPolicy();
+      // Set initial focus to filter input line
+      if (filterEnabled)
+         filterControl.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
 	}
-
+   
+	/**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.epp.context.PolicyEditor"); //$NON-NLS-1$
+      }
+   }
+	
 	/**
 	 * Create actions
 	 */
 	private void createActions()
 	{
+      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+      
 		actionHorizontal = new Action(Messages.get().EventProcessingPolicyEditor_LayoutH, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
@@ -317,6 +389,19 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 				enableRules(false);
 			}
 		};
+
+      actionShowFilter = new Action(Messages.get().EventProcessingPolicyEditor_ShowFilter, Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            enableFilter(!filterEnabled);
+            actionShowFilter.setChecked(filterEnabled);
+         }
+      };
+      actionShowFilter.setChecked(filterEnabled);
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.epp.commands.show_rule_filter"); //$NON-NLS-1$
+      final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
+      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
 	}
 
 	/**
@@ -343,18 +428,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		manager.add(new Separator());
 		manager.add(actionHorizontal);
 		manager.add(actionVertical);
-		manager.add(new Separator());
-		manager.add(actionEnableRule);
-		manager.add(actionDisableRule);
-		manager.add(new Separator());
-		manager.add(actionInsertBefore);
-		manager.add(actionInsertAfter);
-		manager.add(new Separator());
-		manager.add(actionCut);
-		manager.add(actionCopy);
-		manager.add(actionPaste);
-		manager.add(new Separator());
-		manager.add(actionDelete);
+      manager.add(new Separator());
+      manager.add(actionShowFilter);
 	}
 
 	/**
@@ -409,6 +484,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 					public void run()
 					{
 						initPolicyEditor();
+						if (filterEnabled)
+						   filterControl.setFocus();
 					}
 				});
 			}
@@ -436,12 +513,19 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		int ruleNumber = 1;
 		for(EventProcessingPolicyRule rule : policy.getRules())
 		{
-			RuleEditor editor = new RuleEditor(dataArea, rule, ruleNumber++, this);
-			ruleEditors.add(editor);
-			GridData gd = new GridData();
-			gd.horizontalAlignment = SWT.FILL;
-			gd.grabExcessHorizontalSpace = true;
-			editor.setLayoutData(gd);
+		   if (isRuleVisible(rule))
+		   {
+   			RuleEditor editor = new RuleEditor(dataArea, rule, ruleNumber++, this);
+   			ruleEditors.add(editor);
+   			GridData gd = new GridData();
+   			gd.horizontalAlignment = SWT.FILL;
+   			gd.grabExcessHorizontalSpace = true;
+   			editor.setLayoutData(gd);
+		   }
+		   else
+		   {
+		      ruleNumber++;
+		   }
 		}
 		dataArea.layout();
 
@@ -455,7 +539,10 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private void updateLayout()
 	{
 		for(RuleEditor editor : ruleEditors)
-			editor.setVerticalLayout(verticalLayout, false);
+		{
+		   if (!editor.isDisposed())
+            editor.setVerticalLayout(verticalLayout, false);
+		}
 		updateEditorAreaLayout();
 	}
 
@@ -497,7 +584,10 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private void setAllRulesCollapsed(boolean collapsed)
 	{
 		for(RuleEditor editor : ruleEditors)
-			editor.setCollapsed(collapsed, false);
+		{
+		   if (!editor.isDisposed())
+		      editor.setCollapsed(collapsed, false);
+		}
 		updateEditorAreaLayout();
 	}
 
@@ -557,6 +647,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	@Override
 	public void dispose()
 	{
+	   IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      settings.put("EventProcessingPolicyEditor.filterEnabled", filterEnabled); //$NON-NLS-1$
+	   
 		if (sessionListener != null)
 			session.removeListener(sessionListener);
 
@@ -888,7 +981,17 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			ruleEditors.get(i).setRuleNumber(i + 1);
 
 		if (position < ruleEditors.size() - 1)
-			editor.moveAbove(ruleEditors.get(position + 1));
+		{
+		   RuleEditor anchor = null;
+	      for(int i = position + 1; i < ruleEditors.size(); i++)
+	         if (!ruleEditors.get(i).isDisposed())
+	         {
+	            anchor = ruleEditors.get(i);
+	            break;
+	         }
+	      if (anchor != null)
+	         editor.moveAbove(anchor);
+		}
 		updateEditorAreaLayout();
 
 		setModified(true);
@@ -940,7 +1043,19 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private void pasteRules()
 	{
 		int position = lastSelectedRule;
-		for(EventProcessingPolicyRule rule : clipboard)
+
+		RuleEditor anchor = null;
+      if (position < ruleEditors.size() - 1)
+      {
+         for(int i = position; i < ruleEditors.size(); i++)
+            if (!ruleEditors.get(i).isDisposed())
+            {
+               anchor = ruleEditors.get(i);
+               break;
+            }
+      }
+		
+      for(EventProcessingPolicyRule rule : clipboard)
 		{
 			policy.insertRule(rule, position);
 
@@ -951,8 +1066,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 			gd.grabExcessHorizontalSpace = true;
 			editor.setLayoutData(gd);
 
-			if (position < ruleEditors.size() - 1)
-				editor.moveAbove(ruleEditors.get(position + 1));
+			if (anchor != null)
+            editor.moveAbove(anchor);
 
 			position++;
 		}
@@ -1000,4 +1115,98 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	{
 		return imageSituation;
 	}
+
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   private void enableFilter(boolean enable)
+   {
+      filterEnabled = enable;
+      filterControl.setVisible(filterEnabled);
+      FormData fd = (FormData)scroller.getLayoutData();
+      fd.top = enable ? new FormAttachment(filterControl) : new FormAttachment(0, 0);
+      scroller.getParent().layout();
+      if (enable)
+      {
+         filterControl.setFocus();
+      }
+      else
+      {
+         filterControl.setText(""); //$NON-NLS-1$
+         onFilterModify();
+      }
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   private void onFilterModify()
+   {
+      filterText = filterControl.getText().trim().toLowerCase();
+      
+      // change editors visibility
+      RuleEditor prev = null;
+      for(int i = 0; i < ruleEditors.size(); i++)
+      {
+         RuleEditor e = ruleEditors.get(i);
+         boolean visible = isRuleVisible(e.getRule());
+         if (!e.isDisposed() && !visible)
+         {
+            e.dispose();
+            selection.remove(e);
+         }
+         else if (e.isDisposed() && visible)
+         {
+            e = new RuleEditor(dataArea, e.getRule(), e.getRuleNumber(), this);
+            GridData gd = new GridData();
+            gd.horizontalAlignment = SWT.FILL;
+            gd.grabExcessHorizontalSpace = true;
+            e.setLayoutData(gd);
+            if (prev != null)
+               e.moveBelow(prev);
+            else
+               e.moveAbove(null);
+            ruleEditors.set(i, e);
+         }
+         if (!e.isDisposed())
+            prev = e;
+      }
+      
+      updateEditorAreaLayout();
+   }
+   
+   /**
+    * Check if given rule should be visible
+    * 
+    * @param rule
+    * @return
+    */
+   private boolean isRuleVisible(EventProcessingPolicyRule rule)
+   {
+      if ((filterText == null) || filterText.isEmpty())
+         return true;
+      
+      if (rule.getComments().toLowerCase().contains(filterText))
+         return true;
+
+      // check event names
+      for(Long code : rule.getEvents())
+      {
+         EventTemplate evt = session.findEventTemplateByCode(code);
+         if ((evt != null) && evt.getName().toLowerCase().contains(filterText))
+            return true;
+      }
+      
+      // check object names
+      for(Long id : rule.getSources())
+      {
+         String name = session.getObjectName(id);
+         if ((name != null) && name.toLowerCase().contains(filterText))
+            return true;
+      }
+      
+      return false;
+   }
 }

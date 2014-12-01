@@ -51,13 +51,13 @@ UINT32 LIBNXCL_EXPORTABLE NXCUnlockPackageDB(NXC_SESSION hSession)
 UINT32 LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, UINT32 *pdwNumPackages, 
                                            NXC_PACKAGE_INFO **ppList)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwResult, dwRqId, dwPkgId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_PACKAGE_LIST);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GET_PACKAGE_LIST);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    *pdwNumPackages = 0;
@@ -72,24 +72,24 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, UINT32 *pdwNum
          pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_PACKAGE_INFO, dwRqId);
          if (pResponse != NULL)
          {
-            dwPkgId = pResponse->GetVariableLong(VID_PACKAGE_ID);
+            dwPkgId = pResponse->getFieldAsUInt32(VID_PACKAGE_ID);
             if (dwPkgId != 0)
             {
                *ppList = (NXC_PACKAGE_INFO *)realloc(*ppList, sizeof(NXC_PACKAGE_INFO) * (*pdwNumPackages + 1));
                (*ppList)[*pdwNumPackages].dwId = dwPkgId;
-               pResponse->GetVariableStr(VID_PACKAGE_NAME, 
+               pResponse->getFieldAsString(VID_PACKAGE_NAME, 
                                          (*ppList)[*pdwNumPackages].szName, 
                                          MAX_PACKAGE_NAME_LEN);
-               pResponse->GetVariableStr(VID_FILE_NAME, 
+               pResponse->getFieldAsString(VID_FILE_NAME, 
                                          (*ppList)[*pdwNumPackages].szFileName, 
                                          MAX_DB_STRING);
-               pResponse->GetVariableStr(VID_PLATFORM_NAME, 
+               pResponse->getFieldAsString(VID_PLATFORM_NAME, 
                                          (*ppList)[*pdwNumPackages].szPlatform, 
                                          MAX_PLATFORM_NAME_LEN);
-               pResponse->GetVariableStr(VID_PACKAGE_VERSION, 
+               pResponse->getFieldAsString(VID_PACKAGE_VERSION, 
                                          (*ppList)[*pdwNumPackages].szVersion, 
                                          MAX_AGENT_VERSION_LEN);
-               pResponse->GetVariableStr(VID_DESCRIPTION, 
+               pResponse->getFieldAsString(VID_DESCRIPTION, 
                                          (*ppList)[*pdwNumPackages].szDescription, 
                                          MAX_DB_STRING);
                (*pdwNumPackages)++;
@@ -117,14 +117,14 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetPackageList(NXC_SESSION hSession, UINT32 *pdwNum
 
 UINT32 LIBNXCL_EXPORTABLE NXCRemovePackage(NXC_SESSION hSession, UINT32 dwPkgId)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_REMOVE_PACKAGE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_PACKAGE_ID, dwPkgId);
+   msg.setCode(CMD_REMOVE_PACKAGE);
+   msg.setId(dwRqId);
+   msg.setField(VID_PACKAGE_ID, dwPkgId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -138,29 +138,29 @@ UINT32 LIBNXCL_EXPORTABLE NXCRemovePackage(NXC_SESSION hSession, UINT32 dwPkgId)
 UINT32 LIBNXCL_EXPORTABLE NXCInstallPackage(NXC_SESSION hSession, NXC_PACKAGE_INFO *pInfo,
                                            TCHAR *pszFullPkgPath)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRqId, dwResult;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_INSTALL_PACKAGE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_PACKAGE_NAME, pInfo->szName);
-   msg.SetVariable(VID_DESCRIPTION, pInfo->szDescription);
-   msg.SetVariable(VID_FILE_NAME, pInfo->szFileName);
-   msg.SetVariable(VID_PLATFORM_NAME, pInfo->szPlatform);
-   msg.SetVariable(VID_PACKAGE_VERSION, pInfo->szVersion);
+   msg.setCode(CMD_INSTALL_PACKAGE);
+   msg.setId(dwRqId);
+   msg.setField(VID_PACKAGE_NAME, pInfo->szName);
+   msg.setField(VID_DESCRIPTION, pInfo->szDescription);
+   msg.setField(VID_FILE_NAME, pInfo->szFileName);
+   msg.setField(VID_PLATFORM_NAME, pInfo->szPlatform);
+   msg.setField(VID_PACKAGE_VERSION, pInfo->szVersion);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwResult = pResponse->GetVariableLong(VID_RCC);
+      dwResult = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwResult == RCC_SUCCESS)
       {
          // Get id assigned to installed package and
          // update provided package information structure
-         pInfo->dwId = pResponse->GetVariableLong(VID_PACKAGE_ID);
+         pInfo->dwId = pResponse->getFieldAsUInt32(VID_PACKAGE_ID);
       }
       delete pResponse;
    }
@@ -257,18 +257,18 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, UINT32 dwPkgId,
                                           UINT32 dwNumObjects, UINT32 *pdwObjectList,
                                           UINT32 *pdwRqId)
 {
-   CSCPMessage msg, *pInfo;
+   NXCPMessage msg, *pInfo;
    UINT32 dwRqId, dwResult;
    NXC_DEPLOYMENT_STATUS status;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
    *pdwRqId = dwRqId;
 
-   msg.SetCode(CMD_DEPLOY_PACKAGE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_PACKAGE_ID, dwPkgId);
-   msg.SetVariable(VID_NUM_OBJECTS, dwNumObjects);
-   msg.setFieldInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
+   msg.setCode(CMD_DEPLOY_PACKAGE);
+   msg.setId(dwRqId);
+   msg.setField(VID_PACKAGE_ID, dwPkgId);
+   msg.setField(VID_NUM_OBJECTS, dwNumObjects);
+   msg.setFieldFromInt32Array(VID_OBJECT_LIST, dwNumObjects, pdwObjectList);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    dwResult = ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -280,15 +280,15 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeployPackage(NXC_SESSION hSession, UINT32 dwPkgId,
          pInfo = ((NXCL_Session *)hSession)->WaitForMessage(CMD_INSTALLER_INFO, dwRqId, 600000);
          if (pInfo != NULL)
          {
-            status.dwStatus = pInfo->GetVariableShort(VID_DEPLOYMENT_STATUS);
+            status.dwStatus = pInfo->getFieldAsUInt16(VID_DEPLOYMENT_STATUS);
             if (status.dwStatus == DEPLOYMENT_STATUS_FINISHED)
             {
                delete pInfo;
                break;   // Deployment job finished
             }
 
-            status.dwNodeId = pInfo->GetVariableLong(VID_OBJECT_ID);
-            status.pszErrorMessage = pInfo->GetVariableStr(VID_ERROR_MESSAGE);
+            status.dwNodeId = pInfo->getFieldAsUInt32(VID_OBJECT_ID);
+            status.pszErrorMessage = pInfo->getFieldAsString(VID_ERROR_MESSAGE);
             ((NXCL_Session *)hSession)->callEventHandler(NXC_EVENT_DEPLOYMENT_STATUS, dwRqId, &status);
             safe_free(status.pszErrorMessage);
 

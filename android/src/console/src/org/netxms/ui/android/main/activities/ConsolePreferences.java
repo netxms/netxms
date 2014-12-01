@@ -79,4 +79,11 @@ public class ConsolePreferences extends PreferenceActivity
 		startService(i);
 		super.onDestroy();
 	}
+
+	@TargetApi(Build.VERSION_CODES.KITKAT)
+	@Override
+	protected boolean isValidFragment(String fragmentName)
+	{
+		return true;
+	}
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.client.constants.Severity;
+import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.maps.elements.NetworkMapResource;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -177,14 +177,14 @@ public class ResourceFigure extends Figure
 	/**
 	 * @return
 	 */
-	private int getElementStatus()
+	private ObjectStatus getElementStatus()
 	{
 		switch(element.getType())
 		{
 			case NetworkMapResource.CLUSTER_RESOURCE:
-				return (((ClusterResource)element.getData()).getCurrentOwner() == 0) ? Severity.MAJOR : Severity.NORMAL;
+				return (((ClusterResource)element.getData()).getCurrentOwner() == 0) ? ObjectStatus.MAJOR : ObjectStatus.NORMAL;
 			default:
-				return Severity.NORMAL;
+				return ObjectStatus.NORMAL;
 		}
 	}
 }

@@ -40,7 +40,7 @@ NXSL_METHOD_DEFINITION(quote)
 NXSL_TestClass::NXSL_TestClass()
                :NXSL_Class()
 {
-   _tcscpy(m_szName, _T("TEST"));
+   _tcscpy(m_name, _T("TEST"));
    NXSL_REGISTER_METHOD(debug, 0);
    NXSL_REGISTER_METHOD(quote, 1);
 }

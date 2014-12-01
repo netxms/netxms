@@ -1,0 +1,31 @@
+<tr>
+    <td>
+        Change related NetXMS alarm status to:
+        <select name="selectedAction">
+            <option value="acknowledged"
+                #if ($selectedAction)
+                    #if ($selectedAction.equals("acknowledged"))
+                    selected
+                    #end
+                #end
+                    >Acknowledged
+            </option>
+            <option value="resolved"
+                #if (${selectedAction})
+                    #if ($selectedAction.equals("resolved"))
+                    selected
+                    #end
+                #end
+                    >Resolved
+            </option>
+            <option value="terminated"
+                #if (${selectedAction})
+                    #if ($selectedAction.equals("terminated"))
+                    selected
+                    #end
+                #end
+                    >Terminated
+            </option>
+        </select>
+    </td>
+</tr>

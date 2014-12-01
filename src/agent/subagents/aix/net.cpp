@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for AIX
-** Copyright (C) 2004-2012 Victor Kirhenshtein
+** Copyright (C) 2004-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -89,11 +89,11 @@ static bool GetInterfaceData()
 /**
  * Get interface data
  */
-LONG H_NetInterfaceInfo(const char *param, const char *arg, char *value)
+LONG H_NetInterfaceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	char ifName[IF_NAMESIZE], *eptr;
 
-	if (!AgentGetParameterArg(param, 1, ifName, IF_NAMESIZE))
+	if (!AgentGetParameterArgA(param, 1, ifName, IF_NAMESIZE))
 	{
 		return SYSINFO_RC_ERROR;
 	}
@@ -105,7 +105,7 @@ LONG H_NetInterfaceInfo(const char *param, const char *arg, char *value)
 		// Index passed as argument, convert to name
 		if (if_indextoname(ifIndex, ifName) == NULL)
 		{
-			AgentWriteDebugLog(7, "AIX: unable to resolve interface index %u", ifIndex);
+			AgentWriteDebugLog(7, _T("AIX: unable to resolve interface index %u"), ifIndex);
 			return SYSINFO_RC_ERROR;
 		}
 	}
@@ -132,7 +132,7 @@ LONG H_NetInterfaceInfo(const char *param, const char *arg, char *value)
 			switch(CAST_FROM_POINTER(arg, int))
 			{
 				case IF_INFO_DESCRIPTION:
-					ret_string(value, s_ifaceData[i].description);
+					ret_mbstring(value, s_ifaceData[i].description);
 					break;
 				case IF_INFO_MTU:
 					ret_int(value, s_ifaceData[i].mtu);
@@ -206,7 +206,7 @@ static void GetNDDInfo(char *pszDevice, BYTE *pMacAddr, DWORD *pdwType)
 /**
  * Handler for Net.InterfaceList enum
  */
-LONG H_NetInterfaceList(const char *pszParam, const char *pArg, StringList *value)
+LONG H_NetInterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
 	LONG nRet;
 	struct ifconf ifc;
@@ -274,10 +274,14 @@ retry_ifconf:
 		{
 			sprintf(szBuffer, "%d %s/%d %d %s %s",
 			        if_nametoindex(ifl[i].name),
-			        IpToStr(ntohl(ifl[i].ip), szIpAddr),
+			        IpToStrA(ntohl(ifl[i].ip), szIpAddr),
 			        BitsInMask(ifl[i].netmask), ifl[i].iftype,
-				BinToStr(ifl[i].mac, 6, szMacAddr), ifl[i].name);
+				BinToStrA(ifl[i].mac, 6, szMacAddr), ifl[i].name);
+#ifdef UNICODE
+			value->addPreallocated(WideStringFromMBString(szBuffer));
+#else
 			value->add(szBuffer);
+#endif
 		}
 		free(ifl);
 		nRet = SYSINFO_RC_SUCCESS;
@@ -295,12 +299,12 @@ retry_ifconf:
 /**
  * Handler for Net.Interface.AdminStatus parameter
  */
-LONG H_NetInterfaceStatus(const char *param, const char *arg, char *value)
+LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char ifName[IF_NAMESIZE], *eptr;
 
-	AgentGetParameterArg(param, 1, ifName, IF_NAMESIZE);
+	AgentGetParameterArgA(param, 1, ifName, IF_NAMESIZE);
 
 	// Check if we have interface name or index
 	unsigned int ifIndex = (unsigned int)strtoul(ifName, &eptr, 10);
@@ -309,7 +313,7 @@ LONG H_NetInterfaceStatus(const char *param, const char *arg, char *value)
 		// Index passed as argument, convert to name
 		if (if_indextoname(ifIndex, ifName) == NULL)
 		{
-			AgentWriteDebugLog(7, "AIX: unable to resolve interface index %u", ifIndex);
+			AgentWriteDebugLog(7, _T("AIX: unable to resolve interface index %u"), ifIndex);
 			return SYSINFO_RC_ERROR;
 		}
 	}
@@ -324,7 +328,7 @@ LONG H_NetInterfaceStatus(const char *param, const char *arg, char *value)
 			requestedFlag = IFF_RUNNING;
 			break;
 		default:
-			AgentWriteDebugLog(7, "AIX: internal error in H_NetIfterfaceStatus (invalid flag requested)");
+			AgentWriteDebugLog(7, _T("AIX: internal error in H_NetIfterfaceStatus (invalid flag requested)"));
 			return SYSINFO_RC_ERROR;
 	}
 
@@ -335,7 +339,7 @@ LONG H_NetInterfaceStatus(const char *param, const char *arg, char *value)
 		int flags;
 
 		memset(&ifr, 0, sizeof(ifr));
-		nx_strncpy(ifr.ifr_name, ifName, sizeof(ifr.ifr_name));
+		nx_strncpy_mb(ifr.ifr_name, ifName, sizeof(ifr.ifr_name));
 		if (ioctl(nSocket, SIOCGIFFLAGS, (caddr_t)&ifr) >= 0)
 		{
 			if ((ifr.ifr_flags & requestedFlag) == requestedFlag)

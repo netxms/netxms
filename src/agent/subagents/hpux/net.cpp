@@ -225,7 +225,7 @@ static int GetInterfaceList(NETIF **iflist)
 /**
  * Handler for Net.InterfaceList enum
  */
-LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	int i, j, ifCount;
 	NETIF *ifList;
@@ -264,7 +264,7 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue)
 /**
  * Handler for Net.ArpCache enum
  */
-LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	int i, mib;
 	struct nmparms np;
@@ -303,7 +303,7 @@ LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue)
 /**
  * Handler for Net.IP.Forwarding parameter
  */
-LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
+LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	int ipVer = CAST_FROM_POINTER(pArg, int);
 	int nRet = SYSINFO_RC_ERROR;
@@ -330,7 +330,7 @@ LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue)
 }
 
 
-LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValue)
+LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 
@@ -344,7 +344,7 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValu
 // Handler for Net.Interface.* parameters
 //
 
-LONG H_NetIfInfo(const char *pszParam, const char *pArg, char *pValue)
+LONG H_NetIfInfo(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	char *eptr, buffer[256];
 	nmapi_iftable ift[1024];

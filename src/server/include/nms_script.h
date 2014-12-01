@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
 **
@@ -23,11 +23,9 @@
 #ifndef _nms_script_h_
 #define _nms_script_h_
 
-
-//
-// "NetXMS object" class
-//
-
+/**
+ * NXSL "NetObj" class
+ */
 class NXSL_NetObjClass : public NXSL_Class
 {
 public:
@@ -36,11 +34,9 @@ public:
    virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
 };
 
-
-//
-// "NetXMS node" class
-//
-
+/**
+ * NXSL "Node" class
+ */
 class NXSL_NodeClass : public NXSL_Class
 {
 public:
@@ -49,15 +45,24 @@ public:
    virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
 };
 
-
-//
-// "NetXMS interface" class
-//
-
+/**
+ * NXSL "Interface" class
+ */
 class NXSL_InterfaceClass : public NXSL_Class
 {
 public:
    NXSL_InterfaceClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+};
+
+/**
+ * NXSL "Zone" class
+ */
+class NXSL_ZoneClass : public NXSL_Class
+{
+public:
+   NXSL_ZoneClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
 };
@@ -125,27 +130,42 @@ public:
 	void setConsole(CONSOLE_CTX console) { m_console = console; }
 };
 
+/**
+ * Script environment with output redirected to client session
+ */
+class NXSL_ClientSessionEnv : public NXSL_ServerEnv
+{
+protected:
+	ClientSession *m_session;
+	NXCPMessage *m_response;
 
-//
-// Functions
-//
+public:
+	NXSL_ClientSessionEnv(ClientSession *session, NXCPMessage *response);
 
+	virtual void print(NXSL_Value *value);
+	virtual void trace(int level, const TCHAR *text);
+};
+
+/**
+ * Functions
+ */
 void LoadScripts();
 void ReloadScript(UINT32 dwScriptId);
 BOOL IsValidScriptId(UINT32 dwId);
+NXSL_VM *FindHookScript(const TCHAR *hookName);
 
-
-//
-// Global variables
-//
-
+/**
+ * Global variables
+ */
 extern NXSL_Library *g_pScriptLibrary;
+
+extern NXSL_DciClass g_nxslDciClass;
+extern NXSL_EventClass g_nxslEventClass;
+extern NXSL_InterfaceClass g_nxslInterfaceClass;
 extern NXSL_NetObjClass g_nxslNetObjClass;
 extern NXSL_NodeClass g_nxslNodeClass;
-extern NXSL_InterfaceClass g_nxslInterfaceClass;
-extern NXSL_EventClass g_nxslEventClass;
-extern NXSL_DciClass g_nxslDciClass;
-extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
+extern NXSL_SNMPVarBindClass g_nxslSnmpVarBindClass;
+extern NXSL_ZoneClass g_nxslZoneClass;
 
 #endif

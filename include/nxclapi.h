@@ -269,6 +269,7 @@ typedef void * NXC_SESSION;
 #define IF_EXCLUDE_FROM_TOPOLOGY 0x00000004
 #define IF_LOOPBACK              0x00000008
 #define IF_CREATED_MANUALLY      0x00000010
+#define IF_PEER_REFLECTION       0x00000020  /* topology information obtained by reflection */
 #define IF_EXPECTED_STATE_MASK   0x30000000	/* 2-bit field holding expected interface state */
 #define IF_USER_FLAGS_MASK       (IF_EXCLUDE_FROM_TOPOLOGY)    /* flags that can be changed by user */
 
@@ -418,6 +419,7 @@ enum
 #define NX_NOTIFY_ALARM_STATUS_FLOW_CHANGED  24
 #define NX_NOTIFY_FILE_LIST_CHANGED          25
 #define NX_NOTIFY_FILE_MONITORING_FAILED     26
+#define NX_NOTIFY_SESSION_KILLED             27
 
 /**
  * Request completion codes
@@ -534,6 +536,13 @@ enum
 #define RCC_HDLINK_COMM_FAILURE      ((UINT32)109)
 #define RCC_HDLINK_ACCESS_DENIED     ((UINT32)110)
 #define RCC_HDLINK_INTERNAL_ERROR    ((UINT32)111)
+#define RCC_NO_LDAP_CONNECTION       ((UINT32)112)
+#define RCC_NO_ROUTING_TABLE         ((UINT32)113)
+#define RCC_NO_FDB                   ((UINT32)114)
+#define RCC_NO_LOCATION_HISTORY      ((UINT32)115)
+#define RCC_OBJECT_IN_USE            ((UINT32)116)
+#define RCC_NXSL_COMPILATION_ERROR   ((UINT32)117)
+#define RCC_NXSL_EXECUTION_ERROR     ((UINT32)118)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
@@ -594,37 +603,38 @@ enum
 
 #ifndef LIBNXCL_CUSTOM_USER_RIGHTS
 
-#define SYSTEM_ACCESS_MANAGE_USERS        0x00000001
-#define SYSTEM_ACCESS_SERVER_CONFIG       0x00000002
-#define SYSTEM_ACCESS_CONFIGURE_TRAPS     0x00000004
-#define SYSTEM_ACCESS_MANAGE_SESSIONS     0x00000008
-#define SYSTEM_ACCESS_VIEW_EVENT_DB       0x00000010
-#define SYSTEM_ACCESS_EDIT_EVENT_DB       0x00000020
-#define SYSTEM_ACCESS_EPP                 0x00000040
-#define SYSTEM_ACCESS_MANAGE_ACTIONS      0x00000080
-#define SYSTEM_ACCESS_DELETE_ALARMS       0x00000100
-#define SYSTEM_ACCESS_MANAGE_PACKAGES     0x00000200
-#define SYSTEM_ACCESS_VIEW_EVENT_LOG      0x00000400
-#define SYSTEM_ACCESS_MANAGE_TOOLS        0x00000800
-#define SYSTEM_ACCESS_MANAGE_SCRIPTS      0x00001000
-#define SYSTEM_ACCESS_VIEW_TRAP_LOG       0x00002000
-#define SYSTEM_ACCESS_VIEW_AUDIT_LOG      0x00004000
-#define SYSTEM_ACCESS_MANAGE_AGENT_CFG    0x00008000
-#define SYSTEM_ACCESS_MANAGE_SITUATIONS   0x00010000
-#define SYSTEM_ACCESS_SEND_SMS            0x00020000
-#define SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN 0x00040000
-#define SYSTEM_ACCESS_REGISTER_AGENTS     0x00080000
-#define SYSTEM_ACCESS_READ_FILES          0x00100000
-#define SYSTEM_ACCESS_SERVER_CONSOLE      0x00200000
-#define SYSTEM_ACCESS_MANAGE_FILES        0x00400000
-#define SYSTEM_ACCESS_MANAGE_MAPPING_TBLS 0x00800000
-#define SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS 0x01000000
-#define SYSTEM_ACCESS_REPORTING_SERVER    0x02000000
-#define SYSTEM_ACCESS_XMPP_COMMANDS       0x04000000
-#define SYSTEM_ACCESS_MANAGE_IMAGE_LIB    0x08000000
-#define SYSTEM_ACCESS_UNLINK_ISSUES       0x10000000
+#define SYSTEM_ACCESS_MANAGE_USERS        _ULL(0x00000001)
+#define SYSTEM_ACCESS_SERVER_CONFIG       _ULL(0x00000002)
+#define SYSTEM_ACCESS_CONFIGURE_TRAPS     _ULL(0x00000004)
+#define SYSTEM_ACCESS_MANAGE_SESSIONS     _ULL(0x00000008)
+#define SYSTEM_ACCESS_VIEW_EVENT_DB       _ULL(0x00000010)
+#define SYSTEM_ACCESS_EDIT_EVENT_DB       _ULL(0x00000020)
+#define SYSTEM_ACCESS_EPP                 _ULL(0x00000040)
+#define SYSTEM_ACCESS_MANAGE_ACTIONS      _ULL(0x00000080)
+#define SYSTEM_ACCESS_DELETE_ALARMS       _ULL(0x00000100)
+#define SYSTEM_ACCESS_MANAGE_PACKAGES     _ULL(0x00000200)
+#define SYSTEM_ACCESS_VIEW_EVENT_LOG      _ULL(0x00000400)
+#define SYSTEM_ACCESS_MANAGE_TOOLS        _ULL(0x00000800)
+#define SYSTEM_ACCESS_MANAGE_SCRIPTS      _ULL(0x00001000)
+#define SYSTEM_ACCESS_VIEW_TRAP_LOG       _ULL(0x00002000)
+#define SYSTEM_ACCESS_VIEW_AUDIT_LOG      _ULL(0x00004000)
+#define SYSTEM_ACCESS_MANAGE_AGENT_CFG    _ULL(0x00008000)
+#define SYSTEM_ACCESS_MANAGE_SITUATIONS   _ULL(0x00010000)
+#define SYSTEM_ACCESS_SEND_SMS            _ULL(0x00020000)
+#define SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN _ULL(0x00040000)
+#define SYSTEM_ACCESS_REGISTER_AGENTS     _ULL(0x00080000)
+#define SYSTEM_ACCESS_READ_FILES          _ULL(0x00100000)
+#define SYSTEM_ACCESS_SERVER_CONSOLE      _ULL(0x00200000)
+#define SYSTEM_ACCESS_MANAGE_FILES        _ULL(0x00400000)
+#define SYSTEM_ACCESS_MANAGE_MAPPING_TBLS _ULL(0x00800000)
+#define SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS _ULL(0x01000000)
+#define SYSTEM_ACCESS_REPORTING_SERVER    _ULL(0x02000000)
+#define SYSTEM_ACCESS_XMPP_COMMANDS       _ULL(0x04000000)
+#define SYSTEM_ACCESS_MANAGE_IMAGE_LIB    _ULL(0x08000000)
+#define SYSTEM_ACCESS_UNLINK_ISSUES       _ULL(0x10000000)
+#define SYSTEM_ACCESS_VIEW_SYSLOG         _ULL(0x20000000)
 
-#define SYSTEM_ACCESS_FULL                0x1FFFFFFF
+#define SYSTEM_ACCESS_FULL                _ULL(0x3FFFFFFF)
 
 #endif	/* LIBNXCL_CUSTOM_USER_RIGHTS */
 
@@ -643,6 +653,9 @@ enum
 #define OBJECT_ACCESS_TERM_ALARMS   0x00000200
 #define OBJECT_ACCESS_PUSH_DATA     0x00000400
 #define OBJECT_ACCESS_CREATE_ISSUE  0x00000800
+#define OBJECT_ACCESS_DOWNLOAD      0x00001000
+#define OBJECT_ACCESS_UPLOAD        0x00002000
+#define OBJECT_ACCESS_MANAGE_FILES  0x00004000
 
 /**
  * Object sync flags
@@ -660,6 +673,8 @@ enum
 #define UF_CANNOT_CHANGE_PASSWORD   0x0010
 #define UF_INTRUDER_LOCKOUT         0x0020
 #define UF_PASSWORD_NEVER_EXPIRES   0x0040
+#define UF_LDAP_USER                0x0080
+#define UF_SYNC_EXCEPTION           0x0100
 
 /**
  * Fields for NXCModifyUserEx
@@ -725,6 +740,7 @@ enum
 #define DCF_AGGREGATE_ON_CLUSTER    ((UINT16)0x0080)
 #define DCF_TRANSFORM_AGGREGATED    ((UINT16)0x0100)
 #define DCF_NO_STORAGE              ((UINT16)0x0200)
+#define DCF_CALCULATE_NODE_STATUSS  ((UINT16)0x0400)
 
 /**
  * Get cluster aggregation function from DCI flags
@@ -782,6 +798,7 @@ enum
 #define DS_PUSH_AGENT         4
 #define DS_WINPERF            5
 #define DS_SMCLP              6
+#define DS_SCRIPT             7
 
 /**
  * Item status
@@ -808,6 +825,18 @@ enum
 #define F_ERROR      4
 #define F_SUM        5
 #define F_SCRIPT     6
+
+/**
+ * DCI aggregation functions
+ */
+enum AggregationFunction
+{
+   DCI_AGG_LAST = 0,
+   DCI_AGG_MIN = 1,
+   DCI_AGG_MAX = 2,
+   DCI_AGG_AVG = 3,
+   DCI_AGG_SUM = 4
+};
 
 /**
  * Threshold operations
@@ -1443,8 +1472,8 @@ typedef struct
    TCHAR szName[MAX_USER_NAME];
    uuid_t guid;
    UINT32 dwId;
-   UINT32 dwSystemRights;
-   WORD wFlags;
+   UINT64 dwSystemRights;
+   WORD flags;
    WORD nAuthMethod;        // Only for users
    UINT32 dwNumMembers;     // Only for groups
    UINT32 *pdwMemberList;   // Only for groups
@@ -1488,7 +1517,7 @@ typedef struct
    BYTE iDataType;
    BYTE iStatus;
    BYTE iDeltaCalculation;
-	WORD wFlags;
+	WORD flags;
    UINT32 dwNumThresholds;
    NXC_DCI_THRESHOLD *pThresholdList;
    TCHAR *pszFormula;
@@ -1501,6 +1530,7 @@ typedef struct
 	TCHAR *pszPerfTabSettings;
 	WORD nSnmpPort;
 	WORD wSnmpRawType;
+	TCHAR *comments;
 } NXC_DCI;
 
 
@@ -1949,11 +1979,9 @@ typedef struct
 	TCHAR privPassword[MAX_DB_STRING];
 } NXC_SNMP_USM_CRED;
 
-
-//
-// Connection point information
-//
-
+/**
+ * Connection point information
+ */
 typedef struct
 {
 	UINT32 localNodeId;
@@ -1965,43 +1993,62 @@ typedef struct
 } NXC_CONNECTION_POINT;
 
 
-// All situation stuff will be available only in C++
 #ifdef __cplusplus
 
-//
-// Situation instance
-//
-
-typedef struct
+/**
+ * Situation instance
+ */
+struct NXC_SITUATION_INSTANCE
 {
 	TCHAR *m_name;
 	StringMap *m_attrList;
-} NXC_SITUATION_INSTANCE;
+};
 
-
-//
-// Situation
-//
-
-typedef struct
+/**
+ * Situation
+ */
+struct NXC_SITUATION
 {
 	UINT32 m_id;
 	TCHAR *m_name;
 	TCHAR *m_comments;
 	int m_instanceCount;
 	NXC_SITUATION_INSTANCE *m_instanceList;
-} NXC_SITUATION;
+};
 
-
-//
-// Situation list
-//
-
-typedef struct
+/**
+ * Situation list
+ */
+struct NXC_SITUATION_LIST
 {
 	int m_count;
 	NXC_SITUATION *m_situations;
-} NXC_SITUATION_LIST;
+};
+
+/**
+ * Alarm comments
+ */
+class LIBNXCL_EXPORTABLE AlarmComment
+{
+private:
+   UINT32 m_id;
+   UINT32 m_alarmId;
+   UINT32 m_userId;
+   TCHAR *m_userName;
+   time_t m_timestamp;
+   TCHAR *m_text;
+
+public:
+   AlarmComment(NXCPMessage *msg, UINT32 baseId);
+   ~AlarmComment();
+
+   UINT32 getId() { return m_id; }
+   UINT32 getAlarmId() { return m_alarmId; }
+   UINT32 getUserId() { return m_userId; }
+   const TCHAR *getUserName() { return m_userName; }
+   time_t getTimestamp() { return m_timestamp; }
+   const TCHAR *getText() { return m_text; }
+};
 
 #endif	/* __cplusplus */
 
@@ -2024,8 +2071,8 @@ void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc);
 
 /** Low-level messaging **/
 UINT32 LIBNXCL_EXPORTABLE NXCGenerateMessageId(NXC_SESSION hSession);
-BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, CSCPMessage *msg);
-CSCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, UINT32 dwRqId);
+BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, NXCPMessage *msg);
+NXCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, UINT32 dwRqId);
 UINT32 LIBNXCL_EXPORTABLE NXCWaitForRCC(NXC_SESSION hSession, UINT32 dwRqId);
 
 /** Session management **/
@@ -2125,8 +2172,8 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetEventName(NXC_SESSION hSession, UINT32 dwI
 BOOL LIBNXCL_EXPORTABLE NXCGetEventNameEx(NXC_SESSION hSession, UINT32 dwId, TCHAR *pszBuffer, UINT32 dwBufSize);
 int LIBNXCL_EXPORTABLE NXCGetEventSeverity(NXC_SESSION hSession, UINT32 dwId);
 BOOL LIBNXCL_EXPORTABLE NXCGetEventText(NXC_SESSION hSession, UINT32 dwId, TCHAR *pszBuffer, UINT32 dwBufSize);
-UINT32 LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, UINT32 dwEventCode, UINT32 dwObjectId,
-												  int iNumArgs, TCHAR **pArgList, TCHAR *pszUserTag);
+UINT32 LIBNXCL_EXPORTABLE NXCSendEvent(NXC_SESSION hSession, UINT32 dwEventCode, const TCHAR *eventName, UINT32 dwObjectId,
+												   int iNumArgs, TCHAR **pArgList, TCHAR *pszUserTag);
 
 /** Syslog **/
 UINT32 LIBNXCL_EXPORTABLE NXCSyncSyslog(NXC_SESSION hSession, UINT32 dwMaxRecords);
@@ -2159,7 +2206,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetSessionList(NXC_SESSION hSession, UINT32 *pdwNum
                                            NXC_CLIENT_SESSION_INFO **ppList);
 UINT32 LIBNXCL_EXPORTABLE NXCKillSession(NXC_SESSION hSession, UINT32 dwSessionId);
 UINT32 LIBNXCL_EXPORTABLE NXCGetCurrentUserId(NXC_SESSION hSession);
-UINT32 LIBNXCL_EXPORTABLE NXCGetCurrentSystemAccess(NXC_SESSION hSession);
+UINT64 LIBNXCL_EXPORTABLE NXCGetCurrentSystemAccess(NXC_SESSION hSession);
 
 /** Data collection **/
 UINT32 LIBNXCL_EXPORTABLE NXCOpenNodeDCIList(NXC_SESSION hSession, UINT32 dwNodeId, NXC_DCI_LIST **ppItemList);
@@ -2221,6 +2268,11 @@ UINT32 LIBNXCL_EXPORTABLE NXCTerminateAlarm(NXC_SESSION hSession, UINT32 dwAlarm
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteAlarm(NXC_SESSION hSession, UINT32 dwAlarmId);
 UINT32 LIBNXCL_EXPORTABLE NXCOpenHelpdeskIssue(NXC_SESSION hSession, UINT32 dwAlarmId, TCHAR *pszHelpdeskRef);
 TCHAR LIBNXCL_EXPORTABLE *NXCFormatAlarmText(NXC_SESSION session, NXC_ALARM *alarm, TCHAR *format);
+UINT32 LIBNXCL_EXPORTABLE NXCAddAlarmComment(NXC_SESSION hSession, UINT32 alarmId, const TCHAR *text);
+UINT32 LIBNXCL_EXPORTABLE NXCUpdateAlarmComment(NXC_SESSION hSession, UINT32 alarmId, UINT32 commentId, const TCHAR *text);
+#ifdef __cplusplus
+UINT32 LIBNXCL_EXPORTABLE NXCGetAlarmComments(NXC_SESSION hSession, UINT32 alarmId, ObjectArray<AlarmComment> **comments);
+#endif
 
 /** Actions **/
 UINT32 LIBNXCL_EXPORTABLE NXCLoadActions(NXC_SESSION hSession, UINT32 *pdwNumActions, NXC_ACTION **ppActionList);

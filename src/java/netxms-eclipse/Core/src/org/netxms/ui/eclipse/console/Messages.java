@@ -13,6 +13,7 @@ public class Messages extends NLS
 	public static String AbstractTraceView_CopyToClipboard;
 	public static String AbstractTraceView_Pause;
 	public static String AbstractTraceView_ShowFilter;
+	public static String BrandingManager_ProductName;
 	public static String ConsoleJob_ErrorDialogTitle;
 	public static String ExportToCsvAction_ExportToCsv;
 	public static String ExportToCsvAction_ExportAllToCsv;
@@ -66,6 +67,7 @@ public class Messages extends NLS
 	public static String LoginJob_sync_users;
 	public static String MacAddressValidator_ErrorMessage;
 	public static String ApplicationActionBarAdvisor_About;
+   public static String ApplicationActionBarAdvisor_AboutProductName;
 	public static String ApplicationActionBarAdvisor_AboutTitle;
 	public static String ApplicationActionBarAdvisor_AboutText;
 	public static String ApplicationActionBarAdvisor_ConfirmRestart;

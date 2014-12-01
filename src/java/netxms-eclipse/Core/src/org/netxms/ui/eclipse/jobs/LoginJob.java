@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.jobs;
 import java.lang.reflect.InvocationTargetException;
 import java.security.Signature;
 import java.security.cert.Certificate;
+import java.util.Locale;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
@@ -102,6 +103,7 @@ public class LoginJob implements IRunnableWithProgress
          }
 
          NXCSession session = createSession(hostName, port);
+         session.setClientLanguage(Locale.getDefault().getLanguage());
          
          session.setAuthType(authMethod);
          switch(authMethod)
@@ -153,8 +155,7 @@ public class LoginJob implements IRunnableWithProgress
          callLoginListeners(session);
          monitor.worked(1);
 
-         Runnable keepAliveTimer = new KeepAliveTimer();
-         final Thread thread = new Thread(null, keepAliveTimer, "KeepAliveTimer");
+         final Thread thread = new Thread(null, new KeepAliveTimer(), "KeepAliveTimer");
          thread.setDaemon(true);
          thread.start();
       }
@@ -177,7 +178,7 @@ public class LoginJob implements IRunnableWithProgress
     * @return
     */
    private NXCSession createSession(String hostName, int port)
-   {
+   {   
       // Read all registered extensions and create provider with minimal priority
       IConfigurationElement currentElement = null;
       int currentPriotity = 65536;

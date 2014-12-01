@@ -39,7 +39,7 @@ class Queue;
 class DataCollectionTarget;
 
 /**
- * Global variables used by inline functions
+ * Global variables used by inline methods
  */
 extern UINT32 g_dwDiscoveryPollingInterval;
 extern UINT32 g_dwStatusPollingInterval;
@@ -47,6 +47,11 @@ extern UINT32 g_dwConfigurationPollingInterval;
 extern UINT32 g_dwRoutingTableUpdateInterval;
 extern UINT32 g_dwTopologyPollingInterval;
 extern UINT32 g_dwConditionPollingInterval;
+
+/**
+ * Utility functions used by inline methods
+ */
+bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, const TCHAR *query);
 
 /**
  * Constants
@@ -169,8 +174,8 @@ public:
 	NetObj *get(QWORD key);
 	NetObj *find(bool (*comparator)(NetObj *, void *), void *data);
 
-	int getSize();
-	ObjectArray<NetObj> *getObjects(bool updateRefCount);
+	int size();
+	ObjectArray<NetObj> *getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *) = NULL, void *userData = NULL);
 
 	void forEach(void (*callback)(NetObj *, void *), void *data);
 };
@@ -203,7 +208,7 @@ public:
 	UINT32 getIndex() { return m_index; }
 	UINT32 getParentIndex() { return m_parentIndex; }
 
-	UINT32 fillMessage(CSCPMessage *msg, UINT32 baseId);
+	UINT32 fillMessage(NXCPMessage *msg, UINT32 baseId);
 
 	void print(CONSOLE_CTX console, int level);
 };
@@ -220,7 +225,7 @@ public:
 	ComponentTree(Component *root);
 	virtual ~ComponentTree();
 
-	void fillMessage(CSCPMessage *msg, UINT32 baseId);
+	void fillMessage(NXCPMessage *msg, UINT32 baseId);
 	void print(CONSOLE_CTX console) { if (m_root != NULL) m_root->print(console, 0); }
 
 	bool isEmpty() { return m_root == NULL; }
@@ -244,8 +249,13 @@ public:
 	SoftwarePackage(Table *table, int row);
 	~SoftwarePackage();
 
-	void fillMessage(CSCPMessage *msg, UINT32 baseId);
+	void fillMessage(NXCPMessage *msg, UINT32 baseId);
 };
+
+/**
+ * Summary table flags
+ */
+#define SUMMARY_TABLE_MULTI_INSTANCE      0x0001
 
 /**
  * Summary table column flags
@@ -262,6 +272,7 @@ public:
    TCHAR m_dciName[MAX_PARAM_NAME];
    UINT32 m_flags;
 
+   SummaryTableColumn(NXCPMessage *msg, UINT32 baseId);
    SummaryTableColumn(TCHAR *configStr);
 };
 
@@ -275,11 +286,16 @@ private:
    UINT32 m_flags;
    ObjectArray<SummaryTableColumn> *m_columns;
    NXSL_VM *m_filter;
+   AggregationFunction m_aggregationFunction;
+   time_t m_periodStart;
+   time_t m_periodEnd;
 
    SummaryTable(DB_RESULT hResult);
 
 public:
    static SummaryTable *loadFromDB(LONG id, UINT32 *rcc);
+
+   SummaryTable(NXCPMessage *msg);
    ~SummaryTable();
 
    bool filter(DataCollectionTarget *node);
@@ -287,6 +303,10 @@ public:
 
    int getNumColumns() { return m_columns->size(); }
    SummaryTableColumn *getColumn(int index) { return m_columns->get(index); }
+   AggregationFunction getAggregationFunction() { return m_aggregationFunction; }
+   time_t getPeriodStart() { return m_periodStart; }
+   time_t getPeriodEnd() { return m_periodEnd; }
+   bool isMultiInstance() { return (m_flags & SUMMARY_TABLE_MULTI_INSTANCE) ? true : false; }
 };
 
 /**
@@ -300,11 +320,11 @@ private:
 	void getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly);
 
 protected:
-   UINT32 m_dwId;
+   UINT32 m_id;
 	uuid_t m_guid;
    UINT32 m_dwTimeStamp;       // Last change time stamp
    UINT32 m_dwRefCount;        // Number of references. Object can be destroyed only when this counter is zero
-   TCHAR m_szName[MAX_OBJECT_NAME];
+   TCHAR m_name[MAX_OBJECT_NAME];
    TCHAR *m_pszComments;      // User comments
    int m_iStatus;
    int m_iStatusCalcAlg;      // Status calculation algorithm
@@ -319,12 +339,13 @@ protected:
    bool m_isHidden;
 	bool m_isSystem;
 	uuid_t m_image;
-   MUTEX m_mutexData;         // Object data access mutex
+   MUTEX m_mutexProperties;         // Object data access mutex
    MUTEX m_mutexRefCount;     // Reference counter access mutex
    RWLOCK m_rwlockParentList; // Lock for parent list
    RWLOCK m_rwlockChildList;  // Lock for child list
-   UINT32 m_dwIpAddr;          // Every object should have an IP address
+   UINT32 m_dwIpAddr;
 	GeoLocation m_geoLocation;
+   PostalAddress *m_postalAddress;
    ClientSession *m_pollRequestor;
 	UINT32 m_submapId;				// Map object which should be open on drill-down request
 
@@ -342,9 +363,10 @@ protected:
 	UINT32 *m_pdwTrustedNodes;
 
 	StringMap m_customAttributes;
+   StringObjectMap<ModuleData> *m_moduleData;
 
-   void LockData() { MutexLock(m_mutexData); }
-   void UnlockData() { MutexUnlock(m_mutexData); }
+   void lockProperties() { MutexLock(m_mutexProperties); }
+   void unlockProperties() { MutexUnlock(m_mutexProperties); }
    void lockACL() { MutexLock(m_mutexACL); }
    void unlockACL() { MutexUnlock(m_mutexACL); }
    void LockParentList(BOOL bWrite)
@@ -364,35 +386,39 @@ protected:
    }
    void UnlockChildList() { RWLockUnlock(m_rwlockChildList); }
 
-   void Modify();                  // Used to mark object as modified
+   void setModified();                  // Used to mark object as modified
 
-   BOOL loadACLFromDB();
-   BOOL saveACLToDB(DB_HANDLE hdb);
-   BOOL loadCommonProperties();
-   BOOL saveCommonProperties(DB_HANDLE hdb);
-	BOOL loadTrustedNodes();
-	BOOL saveTrustedNodes(DB_HANDLE hdb);
-   bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query);
+   bool loadACLFromDB();
+   bool saveACLToDB(DB_HANDLE hdb);
+   bool loadCommonProperties();
+   bool saveCommonProperties(DB_HANDLE hdb);
+	bool loadTrustedNodes();
+	bool saveTrustedNodes(DB_HANDLE hdb);
+   bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query) { return ExecuteQueryOnObject(hdb, m_id, query); }
 
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...);
 
    virtual void prepareForDeletion();
    virtual void onObjectDelete(UINT32 dwObjectId);
+   void addLocationToHistory();
+   bool isLocationTableExists();
+   bool createLocationHistoryTable(DB_HANDLE hdb);
 
 public:
    NetObj();
    virtual ~NetObj();
 
-   virtual int Type() { return OBJECT_GENERIC; }
+   virtual int getObjectClass() { return OBJECT_GENERIC; }
 
    UINT32 IpAddr() { return m_dwIpAddr; }
-   UINT32 Id() { return m_dwId; }
-   const TCHAR *Name() { return m_szName; }
+   UINT32 getId() { return m_id; }
+   const TCHAR *getName() { return m_name; }
    int Status() { return m_iStatus; }
    int getPropagatedStatus();
    UINT32 getTimeStamp() { return m_dwTimeStamp; }
 	void getGuid(uuid_t out) { memcpy(out, m_guid, UUID_LENGTH); }
 	const TCHAR *getComments() { return CHECK_NULL_EX(m_pszComments); }
+   PostalAddress *getPostalAddress() { return m_postalAddress; }
 
    bool isModified() { return m_isModified; }
    bool isDeleted() { return m_isDeleted; }
@@ -420,25 +446,26 @@ public:
    bool isHidden() { return m_isHidden; }
    void hide();
    void unhide();
+   void markAsModified() { lockProperties(); setModified(); unlockProperties(); }  // external API to mar object as modified
 
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   void setId(UINT32 dwId) { m_dwId = dwId; Modify(); }
+   void setId(UINT32 dwId) { m_id = dwId; setModified(); }
 	void generateGuid() { uuid_generate(m_guid); }
-   void setName(const TCHAR *pszName) { nx_strncpy(m_szName, pszName, MAX_OBJECT_NAME); Modify(); }
-   void resetStatus() { m_iStatus = STATUS_UNKNOWN; Modify(); }
-   void setComments(TCHAR *pszText);	/* pszText must be dynamically allocated */
+   void setName(const TCHAR *pszName) { nx_strncpy(m_name, pszName, MAX_OBJECT_NAME); setModified(); }
+   void resetStatus() { m_iStatus = STATUS_UNKNOWN; setModified(); }
+   void setComments(TCHAR *text);	/* text must be dynamically allocated */
 
    virtual void setMgmtStatus(BOOL bIsManaged);
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 	virtual void postModify();
 
-   void commentsToMessage(CSCPMessage *pMsg);
+   void commentsToMessage(NXCPMessage *pMsg);
 
    UINT32 getUserRights(UINT32 dwUserId);
    BOOL checkAccessRights(UINT32 dwUserId, UINT32 dwRequiredRights);
@@ -448,9 +475,12 @@ public:
    void addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList, UINT32 dwUserId);
 
    const TCHAR *getCustomAttribute(const TCHAR *name) { return m_customAttributes.get(name); }
-   void setCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.set(name, value); Modify(); }
-   void setCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); Modify(); }
-   void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); Modify(); }
+   void setCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.set(name, value); setModified(); }
+   void setCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); setModified(); }
+   void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); setModified(); }
+
+   ModuleData *getModuleData(const TCHAR *module);
+   void setModuleData(const TCHAR *module, ModuleData *data);
 
 	ObjectArray<NetObj> *getParentList(int typeFilter);
 	ObjectArray<NetObj> *getChildList(int typeFilter);
@@ -464,6 +494,9 @@ public:
 
 	virtual bool showThresholdSummary();
    virtual bool isEventSource();
+
+   void setStatusCalculation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
+   void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
 
    // Debug methods
    const TCHAR *dbgGetParentList(TCHAR *szBuffer);
@@ -511,7 +544,7 @@ class NXCORE_EXPORTABLE Template : public NetObj
 {
 protected:
 	ObjectArray<DCObject> *m_dcObjects;
-   UINT32 m_dwDCILockStatus;
+   int m_dciLockStatus;
    UINT32 m_dwVersion;
 	UINT32 m_flags;
    BOOL m_bDCIListModified;
@@ -529,20 +562,23 @@ protected:
    void lockDciAccess(bool writeLock) { if (writeLock) { RWLockWriteLock(m_dciAccessLock, INFINITE); } else { RWLockReadLock(m_dciAccessLock, INFINITE); } }
 	void unlockDciAccess() { RWLockUnlock(m_dciAccessLock); }
 
+   void deleteChildDCIs(UINT32 dcObjectId);
+   void destroyItem(DCObject *object, int index);
+
 public:
    Template();
    Template(const TCHAR *pszName);
 	Template(ConfigEntry *config);
    virtual ~Template();
 
-   virtual int Type() { return OBJECT_TEMPLATE; }
+   virtual int getObjectClass() { return OBJECT_TEMPLATE; }
 
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
@@ -551,7 +587,7 @@ public:
 
    int getItemCount() { return m_dcObjects->size(); }
    bool addDCObject(DCObject *object, bool alreadyLocked = false);
-   bool updateDCObject(UINT32 dwItemId, CSCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
+   bool updateDCObject(UINT32 dwItemId, NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
    bool deleteDCObject(UINT32 dcObjectId, bool needLock);
    bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus);
    int getItemType(UINT32 dwItemId);
@@ -561,11 +597,11 @@ public:
    DCObject *getDCObjectByName(const TCHAR *name);
    DCObject *getDCObjectByDescription(const TCHAR *description);
    NXSL_Value *getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description);
-   BOOL lockDCIList(UINT32 dwSessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
-   BOOL unlockDCIList(UINT32 dwSessionId);
+   BOOL lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
+   BOOL unlockDCIList(int sessionId);
    void setDCIModificationFlag() { m_bDCIListModified = TRUE; }
    void sendItemsToClient(ClientSession *pSession, UINT32 dwRqId);
-   BOOL isLockedBySession(UINT32 dwSessionId) { return m_dwDCILockStatus == dwSessionId; }
+   BOOL isLockedBySession(int sessionId) { return m_dciLockStatus == sessionId; }
    UINT32 *getDCIEventsList(UINT32 *pdwCount);
 
    BOOL applyToTarget(DataCollectionTarget *pNode);
@@ -581,7 +617,7 @@ public:
 	bool enumDCObjects(bool (* pfCallback)(DCObject *, UINT32, void *), void *pArg);
 	void associateItems();
 
-   UINT32 getLastValues(CSCPMessage *msg, bool objectTooltipOnly);
+   UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool includeNoValueObjects);
 };
 
 /**
@@ -601,16 +637,18 @@ protected:
 	UINT32 m_portNumber;				// Vendor/device specific port number
 	UINT32 m_peerNodeId;				// ID of peer node object, or 0 if unknown
 	UINT32 m_peerInterfaceId;		// ID of peer interface object, or 0 if unknown
-   int m_peerDiscoveryProtocol;  // Protocol used to discover peer node
+   LinkLayerProtocol m_peerDiscoveryProtocol;  // Protocol used to discover peer node
 	WORD m_adminState;				// interface administrative state
 	WORD m_operState;					// interface operational state
 	WORD m_dot1xPaeAuthState;		// 802.1x port auth state
 	WORD m_dot1xBackendAuthState;	// 802.1x backend auth state
-   QWORD m_lastDownEventId;
+   UINT64 m_lastDownEventId;
 	int m_pendingStatus;
 	int m_pollCount;
 	int m_requiredPollCount;
    UINT32 m_zoneId;
+   UINT32 m_pingTime;
+   time_t m_pingLastTimeStamp;
 
 	void paeStatusPoll(ClientSession *pSession, UINT32 dwRqId, SNMP_Transport *pTransport, Node *node);
 
@@ -623,10 +661,10 @@ public:
    Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32 ipAddr, UINT32 ipNetMask, UINT32 ifType, UINT32 zoneId);
    virtual ~Interface();
 
-   virtual int Type() { return OBJECT_INTERFACE; }
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+   virtual int getObjectClass() { return OBJECT_INTERFACE; }
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
    Node *getParentNode();
    UINT32 getParentNodeId();
@@ -640,7 +678,7 @@ public:
 	UINT32 getPortNumber() { return m_portNumber; }
 	UINT32 getPeerNodeId() { return m_peerNodeId; }
 	UINT32 getPeerInterfaceId() { return m_peerInterfaceId; }
-   int getPeerDiscoveryProtocol() { return m_peerDiscoveryProtocol; }
+   LinkLayerProtocol getPeerDiscoveryProtocol() { return m_peerDiscoveryProtocol; }
 	UINT32 getFlags() { return m_flags; }
 	int getAdminState() { return (int)m_adminState; }
 	int getOperState() { return (int)m_operState; }
@@ -648,6 +686,7 @@ public:
 	int getDot1xBackendAuthState() { return (int)m_dot1xBackendAuthState; }
 	const TCHAR *getDescription() { return m_description; }
    const BYTE *getMacAddr() { return m_bMacAddr; }
+   UINT32 getPingTime();
 	bool isSyntheticMask() { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
 	bool isPhysicalPort() { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
 	bool isLoopback() { return (m_flags & IF_LOOPBACK) ? true : false; }
@@ -655,52 +694,54 @@ public:
 	bool isExcludedFromTopology() { return (m_flags & (IF_EXCLUDE_FROM_TOPOLOGY | IF_LOOPBACK)) ? true : false; }
    bool isFake() { return (m_dwIfIndex == 1) &&
                           (m_dwIfType == IFTYPE_OTHER) &&
-                          (!_tcscmp(m_szName, _T("lan0")) || !_tcscmp(m_szName, _T("unknown"))) &&
+                          (!_tcscmp(m_name, _T("lan0")) || !_tcscmp(m_name, _T("unknown"))) &&
                           (!memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
 
-   QWORD getLastDownEventId() { return m_lastDownEventId; }
+   UINT64 getLastDownEventId() { return m_lastDownEventId; }
    void setLastDownEventId(QWORD id) { m_lastDownEventId = id; }
 
-   void setMacAddr(const BYTE *pbNewMac) { memcpy(m_bMacAddr, pbNewMac, MAC_ADDR_LENGTH); Modify(); }
+   void setMacAddr(const BYTE *pbNewMac);
    void setIpAddr(UINT32 dwNewAddr);
    void setIpNetMask(UINT32 dwNewMask);
-   void setBridgePortNumber(UINT32 bpn) { m_bridgePortNumber = bpn; Modify(); }
-   void setSlotNumber(UINT32 slot) { m_slotNumber = slot; Modify(); }
-   void setPortNumber(UINT32 port) { m_portNumber = port; Modify(); }
-	void setPhysicalPortFlag(bool isPhysical) { if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; Modify(); }
-	void setManualCreationFlag(bool isManual) { if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; Modify(); }
-	void setPeer(Node *node, Interface *iface, int protocol);
-   void clearPeer() { m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; Modify(); }
-   void setDescription(const TCHAR *descr) { LockData(); nx_strncpy(m_description, descr, MAX_DB_STRING); Modify(); UnlockData(); }
+   void setBridgePortNumber(UINT32 bpn) { m_bridgePortNumber = bpn; setModified(); }
+   void setSlotNumber(UINT32 slot) { m_slotNumber = slot; setModified(); }
+   void setPortNumber(UINT32 port) { m_portNumber = port; setModified(); }
+	void setPhysicalPortFlag(bool isPhysical) { if (isPhysical) m_flags |= IF_PHYSICAL_PORT; else m_flags &= ~IF_PHYSICAL_PORT; setModified(); }
+	void setManualCreationFlag(bool isManual) { if (isManual) m_flags |= IF_CREATED_MANUALLY; else m_flags &= ~IF_CREATED_MANUALLY; setModified(); }
+	void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection);
+   void clearPeer() { lockProperties(); m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; setModified(); unlockProperties(); }
+   void setDescription(const TCHAR *descr) { lockProperties(); nx_strncpy(m_description, descr, MAX_DB_STRING); setModified(); unlockProperties(); }
 
 	void updateZoneId();
 
-   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, bool clusterSync, SNMP_Transport *snmpTransport);
+   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, bool clusterSync, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy);
 
-	virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+	virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    UINT32 wakeUp();
 	void setExpectedState(int state);
+	void updatePingData();
 };
 
 /**
  * Network service class
  */
-class NetworkService : public NetObj
+class NXCORE_EXPORTABLE NetworkService : public NetObj
 {
 protected:
    int m_serviceType;   // SSH, POP3, etc.
    Node *m_hostNode;    // Pointer to node object which hosts this service
    UINT32 m_pollerNode; // ID of node object which is used for polling
                          // If 0, m_pHostNode->m_dwPollerNode will be used
-   WORD m_proto;        // Protocol (TCP, UDP, etc.)
-   WORD m_port;         // TCP or UDP port number
+   UINT16 m_proto;        // Protocol (TCP, UDP, etc.)
+   UINT16 m_port;         // TCP or UDP port number
    TCHAR *m_request;  // Service-specific request
    TCHAR *m_response; // Service-specific expected response
 	int m_pendingStatus;
 	int m_pollCount;
 	int m_requiredPollCount;
+   UINT32 m_responseTime;  // Response time from last poll
 
    virtual void onObjectDelete(UINT32 dwObjectId);
 
@@ -711,22 +752,24 @@ public:
                   Node *pHostNode = NULL, UINT32 dwPollerNode = 0);
    virtual ~NetworkService();
 
-   virtual int Type() { return OBJECT_NETWORKSERVICE; }
+   virtual int getObjectClass() { return OBJECT_NETWORKSERVICE; }
 
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
    void statusPoll(ClientSession *session, UINT32 rqId, Node *pollerNode, Queue *eventQueue);
 
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+
+   UINT32 getResponseTime() { return m_responseTime; }
 };
 
 /**
  * VPN connector class
  */
-class VPNConnector : public NetObj
+class NXCORE_EXPORTABLE VPNConnector : public NetObj
 {
 protected:
    UINT32 m_dwPeerGateway;        // Object ID of peer gateway
@@ -735,21 +778,21 @@ protected:
    UINT32 m_dwNumRemoteNets;
    IP_NETWORK *m_pRemoteNetList;
 
-   Node *GetParentNode();
+   Node *getParentNode();
 
 public:
    VPNConnector();
    VPNConnector(bool hidden);
    virtual ~VPNConnector();
 
-   virtual int Type() { return OBJECT_VPNCONNECTOR; }
+   virtual int getObjectClass() { return OBJECT_VPNCONNECTOR; }
 
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    BOOL isLocalAddr(UINT32 dwIpAddr);
    BOOL isRemoteAddr(UINT32 dwIpAddr);
@@ -765,22 +808,27 @@ class NXCORE_EXPORTABLE DataCollectionTarget : public Template
 protected:
 	virtual bool isDataCollectionDisabled();
 
+   NetObj *objectFromParameter(const TCHAR *param);
+
 public:
    DataCollectionTarget();
    DataCollectionTarget(const TCHAR *name);
    virtual ~DataCollectionTarget();
 
-   virtual bool deleteFromDB(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+	virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   virtual UINT32 getInternalItem(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   UINT32 getTableLastValues(UINT32 dciId, CSCPMessage *msg);
-	UINT32 getThresholdSummary(CSCPMessage *msg, UINT32 baseId);
-	UINT32 getPerfTabDCIList(CSCPMessage *pMsg);
-   void getLastValuesSummary(SummaryTable *tableDefinition, Table *tableData);
+   virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+   virtual UINT32 getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+
+   UINT32 getTableLastValues(UINT32 dciId, NXCPMessage *msg);
+	UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId);
+	UINT32 getPerfTabDCIList(NXCPMessage *pMsg);
+   void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData);
 
    void updateDciCache();
    void cleanDCIData();
@@ -792,6 +840,8 @@ public:
    virtual void unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI);
 
    virtual bool isEventSource();
+
+   int getMostCriticalDCIStatus();
 };
 
 /**
@@ -815,21 +865,23 @@ public:
    MobileDevice(const TCHAR *name, const TCHAR *deviceId);
    virtual ~MobileDevice();
 
-   virtual int Type() { return OBJECT_MOBILEDEVICE; }
+   virtual int getObjectClass() { return OBJECT_MOBILEDEVICE; }
 
-   virtual BOOL CreateFromDB(UINT32 dwId);
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+	virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-	void updateSystemInfo(CSCPMessage *msg);
-	void updateStatus(CSCPMessage *msg);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+
+	void updateSystemInfo(NXCPMessage *msg);
+	void updateStatus(NXCPMessage *msg);
 
 	const TCHAR *getDeviceId() { return CHECK_NULL_EX(m_deviceId); }
 
-	virtual UINT32 getInternalItem(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
+	virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 };
 
 /**
@@ -852,14 +904,14 @@ public:
    AccessPoint(const TCHAR *name, BYTE *macAddr);
    virtual ~AccessPoint();
 
-   virtual int Type() { return OBJECT_ACCESSPOINT; }
+   virtual int getObjectClass() { return OBJECT_ACCESSPOINT; }
 
-   virtual BOOL CreateFromDB(UINT32 dwId);
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+	virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller);
 
@@ -870,7 +922,7 @@ public:
    AccessPointState getState() { return m_state; }
    Node *getParentNode();
 
-   void setIpAddr(UINT32 ipAddr) { LockData(); m_dwIpAddr = ipAddr; Modify(); UnlockData(); }
+   void setIpAddr(UINT32 ipAddr) { lockProperties(); m_dwIpAddr = ipAddr; setModified(); unlockProperties(); }
 
 	void attachToNode(UINT32 nodeId);
 	void updateRadioInterfaces(ObjectArray<RadioInterfaceInfo> *ri);
@@ -898,15 +950,13 @@ public:
    Cluster(const TCHAR *pszName, UINT32 zoneId);
 	virtual ~Cluster();
 
-   virtual int Type() { return OBJECT_CLUSTER; }
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+   virtual int getObjectClass() { return OBJECT_CLUSTER; }
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI);
 
@@ -946,8 +996,8 @@ protected:
 	int m_iPollCount;
 	int m_iRequiredPollCount;
    UINT32 m_zoneId;
-   WORD m_wAgentPort;
-   WORD m_wAuthMethod;
+   UINT16 m_agentPort;
+   UINT16 m_agentAuthMethod;
    TCHAR m_szSharedSecret[MAX_SECRET_LENGTH];
    int m_iStatusPollType;
    int m_snmpVersion;
@@ -984,9 +1034,11 @@ protected:
    SMCLP_Connection *m_smclpConnection;
 	QWORD m_lastAgentTrapId;	     // ID of last received agent trap
    QWORD m_lastAgentPushRequestId; // ID of last received agent push request
-   UINT32 m_dwPollerNode;      // Node used for network service polling
-   UINT32 m_dwProxyNode;       // Node used as proxy for agent connection
-	UINT32 m_dwSNMPProxy;			// Node used as proxy for SNMP requests
+   UINT32 m_lastSNMPTrapId;
+   UINT32 m_pollerNode;      // Node used for network service polling
+   UINT32 m_agentProxy;      // Node used as proxy for agent connection
+	UINT32 m_snmpProxy;       // Node used as proxy for SNMP requests
+   UINT32 m_icmpProxy;       // Node used as proxy for ICMP ping
    QWORD m_qwLastEvents[MAX_LAST_EVENTS];
    ROUTING_TABLE *m_pRoutingTable;
 	ForwardingDatabase *m_fdb;
@@ -1039,8 +1091,8 @@ protected:
 
 	void applyUserTemplates();
 	void doInstanceDiscovery();
-	StringList *getInstanceList(DCItem *dci);
-	void updateInstances(DCItem *root, StringList *instances);
+	StringMap *getInstanceList(DCItem *dci);
+	void updateInstances(DCItem *root, StringMap *instances);
 
 	void updateContainerMembership();
 	BOOL updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask);
@@ -1054,14 +1106,14 @@ protected:
 
 public:
    Node();
-   Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 dwProxyNode, UINT32 dwSNMPProxy, UINT32 dwZone);
+   Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 dwZone);
    virtual ~Node();
 
-   virtual int Type() { return OBJECT_NODE; }
+   virtual int getObjectClass() { return OBJECT_NODE; }
 
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
 	TCHAR *expandText(const TCHAR *textTemplate);
 
@@ -1070,8 +1122,8 @@ public:
    UINT32 getZoneId() { return m_zoneId; }
    UINT32 getFlags() { return m_dwFlags; }
    UINT32 getRuntimeFlags() { return m_dwDynamicFlags; }
-   void setFlag(UINT32 flag) { LockData(); m_dwFlags |= flag; Modify(); UnlockData(); }
-   void clearFlag(UINT32 flag) { LockData(); m_dwFlags &= ~flag; Modify(); UnlockData(); }
+   void setFlag(UINT32 flag) { lockProperties(); m_dwFlags |= flag; setModified(); unlockProperties(); }
+   void clearFlag(UINT32 flag) { lockProperties(); m_dwFlags &= ~flag; setModified(); unlockProperties(); }
    void setLocalMgmtFlag() { m_dwFlags |= NF_IS_LOCAL_MGMT; }
    void clearLocalMgmtFlag() { m_dwFlags &= ~NF_IS_LOCAL_MGMT; }
 
@@ -1094,11 +1146,11 @@ public:
 	const TCHAR *getLLDPNodeId() { return m_lldpNodeId; }
    const BYTE *getBridgeId() { return m_baseBridgeAddress; }
 	const TCHAR *getDriverName() { return (m_driver != NULL) ? m_driver->getName() : _T("GENERIC"); }
-	WORD getAgentPort() { return m_wAgentPort; }
-	WORD getAuthMethod() { return m_wAuthMethod; }
+	WORD getAgentPort() { return m_agentPort; }
+	WORD getAgentAuthMethod() { return m_agentAuthMethod; }
 	const TCHAR *getSharedSecret() { return m_szSharedSecret; }
 
-   BOOL isDown() { return m_dwDynamicFlags & NDF_UNREACHABLE ? TRUE : FALSE; }
+   bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
 
    void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
@@ -1109,7 +1161,7 @@ public:
    void deleteInterface(Interface *pInterface);
 
 	void setPrimaryName(const TCHAR *name) { nx_strncpy(m_primaryName, name, MAX_DNS_NAME); }
-	void setAgentPort(WORD port) { m_wAgentPort = port; }
+	void setAgentPort(WORD port) { m_agentPort = port; }
 	void setSnmpPort(WORD port) { m_wSNMPPort = port; }
    void changeIPAddress(UINT32 dwIpAddr);
 	void changeZone(UINT32 newZone);
@@ -1165,12 +1217,14 @@ public:
 
    BOOL connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL);
 	bool checkAgentTrapId(QWORD id);
+	bool checkSNMPTrapId(UINT32 id);
    bool checkAgentPushRequestId(QWORD id);
 
    bool connectToSMCLP();
 
-	virtual UINT32 getInternalItem(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
-   UINT32 getItemFromSNMP(WORD port, const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer, int interpretRawValue);
+	virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+
+   UINT32 getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
 	UINT32 getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table);
    UINT32 getListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
    UINT32 getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
@@ -1183,30 +1237,31 @@ public:
    UINT32 getItemFromSMCLP(const TCHAR *param, UINT32 bufSize, TCHAR *buffer);
 
 	virtual NXSL_Array *getParentsForNXSL();
+	virtual NXSL_Array *getTemplatesForNXSL();
 	NXSL_Array *getInterfacesForNXSL();
 
    void openParamList(ObjectArray<AgentParameterDefinition> **paramList);
-   void closeParamList() { UnlockData(); }
+   void closeParamList() { unlockProperties(); }
 
    void openTableList(ObjectArray<AgentTableDefinition> **tableList);
-   void closeTableList() { UnlockData(); }
+   void closeTableList() { unlockProperties(); }
 
    AgentConnectionEx *createAgentConnection();
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext();
 
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-   void writeParamListToMessage(CSCPMessage *pMsg, WORD flags);
-	void writeWinPerfObjectsToMessage(CSCPMessage *msg);
-	void writePackageListToMessage(CSCPMessage *msg);
-	void writeWsListToMessage(CSCPMessage *msg);
+   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   void writeParamListToMessage(NXCPMessage *pMsg, WORD flags);
+	void writeWinPerfObjectsToMessage(NXCPMessage *msg);
+	void writePackageListToMessage(NXCPMessage *msg);
+	void writeWsListToMessage(NXCPMessage *msg);
 
    UINT32 wakeUp();
 
    void addService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
    UINT32 checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType, WORD wPort = 0,
-                             WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL);
+                              WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
 
    QWORD getLastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
    void setLastEventId(int nIndex, QWORD qwId) { if ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) m_qwLastEvents[nIndex] = qwId; }
@@ -1278,7 +1333,7 @@ inline bool Node::isReadyForDiscoveryPoll()
 {
 	if (m_isDeleted)
 		return false;
-   return (g_dwFlags & AF_ENABLE_NETWORK_DISCOVERY) &&
+   return (g_flags & AF_ENABLE_NETWORK_DISCOVERY) &&
           (m_iStatus != STATUS_UNMANAGED) &&
 			 (!(m_dwFlags & NF_DISABLE_DISCOVERY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
@@ -1313,37 +1368,37 @@ inline bool Node::isReadyForTopologyPoll()
 
 inline void Node::lockForStatusPoll()
 {
-   LockData();
+   lockProperties();
    m_dwDynamicFlags |= NDF_QUEUED_FOR_STATUS_POLL;
-   UnlockData();
+   unlockProperties();
 }
 
 inline void Node::lockForConfigurationPoll()
 {
-   LockData();
+   lockProperties();
    m_dwDynamicFlags |= NDF_QUEUED_FOR_CONFIG_POLL;
-   UnlockData();
+   unlockProperties();
 }
 
 inline void Node::lockForDiscoveryPoll()
 {
-   LockData();
+   lockProperties();
    m_dwDynamicFlags |= NDF_QUEUED_FOR_DISCOVERY_POLL;
-   UnlockData();
+   unlockProperties();
 }
 
 inline void Node::lockForTopologyPoll()
 {
-   LockData();
+   lockProperties();
    m_dwDynamicFlags |= NDF_QUEUED_FOR_TOPOLOGY_POLL;
-   UnlockData();
+   unlockProperties();
 }
 
 inline void Node::lockForRoutePoll()
 {
-   LockData();
+   lockProperties();
    m_dwDynamicFlags |= NDF_QUEUED_FOR_ROUTE_POLL;
-   UnlockData();
+   unlockProperties();
 }
 
 /**
@@ -1367,14 +1422,14 @@ public:
    Subnet(UINT32 dwAddr, UINT32 dwNetMask, UINT32 dwZone, bool bSyntheticMask);
    virtual ~Subnet();
 
-   virtual int Type() { return OBJECT_SUBNET; }
+   virtual int getObjectClass() { return OBJECT_SUBNET; }
 
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
    void AddNode(Node *pNode) { AddChild(pNode); pNode->AddParent(this); }
-   virtual void CreateMessage(CSCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg);
 
 	virtual bool showThresholdSummary();
 
@@ -1398,7 +1453,7 @@ public:
    UniversalRoot();
    virtual ~UniversalRoot();
 
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual void LoadFromDB();
 
    void LinkChildObjects();
@@ -1414,7 +1469,7 @@ public:
    ServiceRoot();
    virtual ~ServiceRoot();
 
-   virtual int Type() { return OBJECT_SERVICEROOT; }
+   virtual int getObjectClass() { return OBJECT_SERVICEROOT; }
 
 	virtual bool showThresholdSummary();
 };
@@ -1428,7 +1483,7 @@ public:
    TemplateRoot();
    virtual ~TemplateRoot();
 
-   virtual int Type() { return OBJECT_TEMPLATEROOT; }
+   virtual int getObjectClass() { return OBJECT_TEMPLATEROOT; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
@@ -1452,14 +1507,14 @@ public:
    Container(const TCHAR *pszName, UINT32 dwCategory);
    virtual ~Container();
 
-   virtual int Type(void) { return OBJECT_CONTAINER; }
+   virtual int getObjectClass() { return OBJECT_CONTAINER; }
 
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool showThresholdSummary();
 
@@ -1487,7 +1542,7 @@ public:
    TemplateGroup(const TCHAR *pszName) : Container(pszName, 0) { }
    virtual ~TemplateGroup() { }
 
-   virtual int Type() { return OBJECT_TEMPLATEGROUP; }
+   virtual int getObjectClass() { return OBJECT_TEMPLATEGROUP; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual bool showThresholdSummary();
@@ -1506,14 +1561,14 @@ public:
    Rack(const TCHAR *name, int height);
    virtual ~Rack();
 
-   virtual int Type() { return OBJECT_RACK; }
+   virtual int getObjectClass() { return OBJECT_RACK; }
 
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 };
 
 /**
@@ -1535,14 +1590,14 @@ public:
    Zone(UINT32 zoneId, const TCHAR *name);
    virtual ~Zone();
 
-   virtual int Type() { return OBJECT_ZONE; }
+   virtual int getObjectClass() { return OBJECT_ZONE; }
 
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool showThresholdSummary();
 
@@ -1578,8 +1633,8 @@ public:
    Network();
    virtual ~Network();
 
-   virtual int Type(void) { return OBJECT_NETWORK; }
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
+   virtual int getObjectClass() { return OBJECT_NETWORK; }
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
 
 	virtual bool showThresholdSummary();
 
@@ -1612,14 +1667,14 @@ public:
    Condition(bool hidden);
    virtual ~Condition();
 
-   virtual int Type() { return OBJECT_CONDITION; }
+   virtual int getObjectClass() { return OBJECT_CONDITION; }
 
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    void check();
 
@@ -1653,17 +1708,17 @@ public:
    AgentPolicy(const TCHAR *name, int type);
    virtual ~AgentPolicy();
 
-   virtual int Type() { return OBJECT_AGENTPOLICY; }
+   virtual int getObjectClass() { return OBJECT_AGENTPOLICY; }
 
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-	virtual bool createDeploymentMessage(CSCPMessage *msg);
-	virtual bool createUninstallMessage(CSCPMessage *msg);
+	virtual bool createDeploymentMessage(NXCPMessage *msg);
+	virtual bool createUninstallMessage(NXCPMessage *msg);
 
 	void linkNode(Node *node) { AddChild(node); node->AddParent(this); }
 	void unlinkNode(Node *node) { DeleteChild(node); node->DeleteParent(this); }
@@ -1682,17 +1737,17 @@ public:
    AgentPolicyConfig(const TCHAR *name);
    virtual ~AgentPolicyConfig();
 
-   virtual int Type() { return OBJECT_AGENTPOLICY_CONFIG; }
+   virtual int getObjectClass() { return OBJECT_AGENTPOLICY_CONFIG; }
 
-   virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-	virtual bool createDeploymentMessage(CSCPMessage *msg);
-	virtual bool createUninstallMessage(CSCPMessage *msg);
+	virtual bool createDeploymentMessage(NXCPMessage *msg);
+	virtual bool createUninstallMessage(NXCPMessage *msg);
 };
 
 /**
@@ -1705,7 +1760,7 @@ public:
    PolicyGroup(const TCHAR *pszName) : Container(pszName, 0) { }
    virtual ~PolicyGroup() { }
 
-   virtual int Type() { return OBJECT_POLICYGROUP; }
+   virtual int getObjectClass() { return OBJECT_POLICYGROUP; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual bool showThresholdSummary();
@@ -1720,7 +1775,7 @@ public:
    PolicyRoot();
    virtual ~PolicyRoot();
 
-   virtual int Type() { return OBJECT_POLICYROOT; }
+   virtual int getObjectClass() { return OBJECT_POLICYROOT; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
@@ -1733,7 +1788,7 @@ public:
    NetworkMapRoot();
    virtual ~NetworkMapRoot();
 
-   virtual int Type() { return OBJECT_NETWORKMAPROOT; }
+   virtual int getObjectClass() { return OBJECT_NETWORKMAPROOT; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
@@ -1747,7 +1802,7 @@ public:
    NetworkMapGroup(const TCHAR *pszName) : Container(pszName, 0) { }
    virtual ~NetworkMapGroup() { }
 
-   virtual int Type() { return OBJECT_NETWORKMAPGROUP; }
+   virtual int getObjectClass() { return OBJECT_NETWORKMAPGROUP; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual bool showThresholdSummary();
@@ -1786,15 +1841,15 @@ public:
 	NetworkMap(int type, UINT32 seed);
    virtual ~NetworkMap();
 
-   virtual int Type() { return OBJECT_NETWORKMAP; }
+   virtual int getObjectClass() { return OBJECT_NETWORKMAP; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-	virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+	virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void onObjectDelete(UINT32 dwObjectId);
 
@@ -1816,7 +1871,7 @@ public:
    DashboardRoot();
    virtual ~DashboardRoot();
 
-   virtual int Type() { return OBJECT_DASHBOARDROOT; }
+   virtual int getObjectClass() { return OBJECT_DASHBOARDROOT; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
@@ -1849,15 +1904,15 @@ public:
    Dashboard(const TCHAR *name);
    virtual ~Dashboard();
 
-   virtual int Type() { return OBJECT_DASHBOARD; }
+   virtual int getObjectClass() { return OBJECT_DASHBOARD; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-	virtual BOOL SaveToDB(DB_HANDLE hdb);
-   virtual bool deleteFromDB(DB_HANDLE hdb);
-   virtual BOOL CreateFromDB(UINT32 dwId);
+	virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void CreateMessage(CSCPMessage *pMsg);
-   virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool showThresholdSummary();
 };
@@ -1897,14 +1952,14 @@ public:
 
 	static void init();
 
-	virtual int Type() { return OBJECT_SLMCHECK; }
+	virtual int getObjectClass() { return OBJECT_SLMCHECK; }
 
-	virtual BOOL SaveToDB(DB_HANDLE hdb);
-	virtual bool deleteFromDB(DB_HANDLE hdb);
-	virtual BOOL CreateFromDB(UINT32 dwId);
+	virtual BOOL saveToDatabase(DB_HANDLE hdb);
+	virtual bool deleteFromDatabase(DB_HANDLE hdb);
+	virtual BOOL loadFromDatabase(UINT32 dwId);
 
-	virtual void CreateMessage(CSCPMessage *pMsg);
-	virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+	virtual void fillMessage(NXCPMessage *pMsg);
+	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 	virtual void postModify();
 
 	void execute();
@@ -1948,12 +2003,12 @@ public:
 	ServiceContainer();
 	ServiceContainer(const TCHAR *pszName);
 
-	virtual BOOL CreateFromDB(UINT32 dwId);
-	virtual BOOL SaveToDB(DB_HANDLE hdb);
-	virtual bool deleteFromDB(DB_HANDLE hdb);
+	virtual BOOL loadFromDatabase(UINT32 dwId);
+	virtual BOOL saveToDatabase(DB_HANDLE hdb);
+	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void CreateMessage(CSCPMessage *pMsg);
-	virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+	virtual void fillMessage(NXCPMessage *pMsg);
+	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 	virtual void setStatus(int newStatus);
@@ -1973,40 +2028,41 @@ public:
 	BusinessServiceRoot();
 	virtual ~BusinessServiceRoot();
 
-	virtual int Type() { return OBJECT_BUSINESSSERVICEROOT; }
+	virtual int getObjectClass() { return OBJECT_BUSINESSSERVICEROOT; }
 
-	virtual BOOL SaveToDB(DB_HANDLE hdb);
+	virtual BOOL saveToDatabase(DB_HANDLE hdb);
    void LoadFromDB();
 
    void LinkChildObjects();
    void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
 };
 
-
-//
-// Business service object
-//
-
+/**
+ * Business service object
+ */
 class NXCORE_EXPORTABLE BusinessService : public ServiceContainer
 {
 protected:
 	bool m_busy;
+   bool m_pollingDisabled;
 	time_t m_lastPollTime;
 	int m_lastPollStatus;
+
+   virtual void prepareForDeletion();
 
 public:
 	BusinessService();
 	BusinessService(const TCHAR *name);
 	virtual ~BusinessService();
 
-	virtual int Type() { return OBJECT_BUSINESSSERVICE; }
+	virtual int getObjectClass() { return OBJECT_BUSINESSSERVICE; }
 
-	virtual BOOL CreateFromDB(UINT32 dwId);
-	virtual BOOL SaveToDB(DB_HANDLE hdb);
-	virtual bool deleteFromDB(DB_HANDLE hdb);
+	virtual BOOL loadFromDatabase(UINT32 dwId);
+	virtual BOOL saveToDatabase(DB_HANDLE hdb);
+	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void CreateMessage(CSCPMessage *pMsg);
-	virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+	virtual void fillMessage(NXCPMessage *pMsg);
+	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	bool isReadyForPolling();
 	void lockForPolling();
@@ -2032,14 +2088,14 @@ public:
 	NodeLink(const TCHAR *name, UINT32 nodeId);
 	virtual ~NodeLink();
 
-	virtual int Type() { return OBJECT_NODELINK; }
+	virtual int getObjectClass() { return OBJECT_NODELINK; }
 
-	virtual BOOL SaveToDB(DB_HANDLE hdb);
-	virtual bool deleteFromDB(DB_HANDLE hdb);
-	virtual BOOL CreateFromDB(UINT32 dwId);
+	virtual BOOL saveToDatabase(DB_HANDLE hdb);
+	virtual bool deleteFromDatabase(DB_HANDLE hdb);
+	virtual BOOL loadFromDatabase(UINT32 dwId);
 
-	virtual void CreateMessage(CSCPMessage *pMsg);
-	virtual UINT32 ModifyFromMessage(CSCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+	virtual void fillMessage(NXCPMessage *pMsg);
+	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	void execute();
 	void applyTemplates();

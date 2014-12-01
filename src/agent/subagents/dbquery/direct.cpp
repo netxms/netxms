@@ -50,7 +50,7 @@ void DBResultToTable(DB_RESULT hResult, Table *table)
 /**
  * Direct query - single value
  */
-LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR dbid[MAX_DBID_LEN], query[256];
    AgentGetParameterArg(param, 1, dbid, MAX_DBID_LEN);
@@ -78,7 +78,7 @@ LONG H_DirectQuery(const TCHAR *param, const TCHAR *arg, TCHAR *value)
 /**
  * Direct query - single value
  */
-LONG H_DirectQueryConfigurable(const TCHAR *param, const TCHAR *arg, TCHAR *value)
+LONG H_DirectQueryConfigurable(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR bindParam[256];
    Query *queryObj = AcquireQueryObject(arg);
@@ -133,7 +133,7 @@ LONG H_DirectQueryConfigurable(const TCHAR *param, const TCHAR *arg, TCHAR *valu
 /**
  * Direct query - table
  */
-LONG H_DirectQueryTable(const TCHAR *param, const TCHAR *arg, Table *value)
+LONG H_DirectQueryTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    TCHAR dbid[MAX_DBID_LEN], query[256];
    AgentGetParameterArg(param, 1, dbid, MAX_DBID_LEN);
@@ -160,7 +160,7 @@ LONG H_DirectQueryTable(const TCHAR *param, const TCHAR *arg, Table *value)
 /**
  * Direct query - table
  */
-LONG H_DirectQueryConfigurableTable(const TCHAR *param, const TCHAR *arg, Table *value)
+LONG H_DirectQueryConfigurableTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    TCHAR bindParam[256];
    Query *queryObj = AcquireQueryObject(arg);

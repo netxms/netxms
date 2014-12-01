@@ -96,7 +96,7 @@
                id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowIPNeighbors"
                label="%action.label.IPNeighbors"
                icon="icons/quickmap.png"
-               menubarPath="topology">
+               menubarPath="TopologySubmenu/ip">
          </action>
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.ShowLayer2Topology"
@@ -104,7 +104,7 @@
                icon="icons/layer2.png"
                id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowLayer2Topology"
                label="%action.label.L2Topology"
-               menubarPath="topology">
+               menubarPath="TopologySubmenu/mac">
          </action>
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.ShowServiceDependency"
@@ -115,12 +115,22 @@
                menubarPath="additions">
          </action>
          <action
-               class="org.netxms.ui.eclipse.networkmaps.actions.ShowIPRoute"
-               enablesFor="+"
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowIPRouteTo"
+               enablesFor="1"
                icon="icons/route.gif"
                id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowIPRoute"
-               label="%action.label.IPRoute"
-               menubarPath="topology">
+               label="%action.label.IPRouteTo"
+               menubarPath="TopologySubmenu/ip"
+               tooltip="Show IP route from remote node to currently selected node">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.ShowIPRouteFrom"
+               enablesFor="1"
+               icon="icons/route.gif"
+               id="org.netxms.ui.eclipse.quickmaps.popupActions.ShowIPRoute"
+               label="%action.label.IPRouteFrom"
+               menubarPath="TopologySubmenu/ip"
+               tooltip="Show IP route from remote node to currently selected node">
          </action>
       </objectContribution>
       <objectContribution

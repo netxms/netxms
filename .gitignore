@@ -27,19 +27,15 @@ Makefile.in
 pom.xml.versionsBackup
 
 Debug
-Debug64
-Debug64_UNICODE
-Debug_UNICODE
 Release
-Release64
-Release64_UNICODE
-Release_UNICODE
 bin
 target
 
 .libs
 .deps
 .idea
+
+/runtime-nxmc.*
 
 /aclocal.m4
 /android/src/agent/bin
@@ -70,6 +66,7 @@ target
 /contrib/startup/ubuntu/nxagentd
 /doc/doxygen
 /eclipse
+/eclipse.cpp
 /libtool
 /m4
 /packages/linux/debian/6/netxms-agent
@@ -94,6 +91,7 @@ target
 /packages/solaris/pkginfo
 /private
 /release
+/sdk/install/Output
 /sql/dbinit_db2.sql
 /sql/dbinit_mssql.sql
 /sql/dbinit_mysql.sql
@@ -116,6 +114,7 @@ target
 /src/agent/subagents/portCheck/x64
 /src/agent/tools/nxappget/nxappget
 /src/agent/tools/nxapush/nxapush
+/src/client/install/Output
 /src/client/nxalarm/nxalarm
 /src/client/nxevent/nxevent
 /src/client/nxpush/nxpush
@@ -129,22 +128,23 @@ target
 /src/java/build/macosx.*
 /src/java/build/solaris.*
 /src/java/build/win32.*
-/src/java/certificate-manager/.classpath
-/src/java/certificate-manager/.project
-/src/java/certificate-manager/.settings
+/src/java/client/mobile-agent/.classpath
+/src/java/client/mobile-agent/.project
+/src/java/client/mobile-agent/.settings
+/src/java/client/netxms-base/.classpath
+/src/java/client/netxms-base/.project
+/src/java/client/netxms-base/.settings
+/src/java/client/netxms-client-api/.classpath
+/src/java/client/netxms-client-api/.project
+/src/java/client/netxms-client-api/.settings
+/src/java/client/netxms-client/.classpath
+/src/java/client/netxms-client/.project
+/src/java/client/netxms-client/.settings
 /src/java/nebula/org.netxms.nebula.widgets.gallery.tests/.settings
 /src/java/nebula/org.netxms.nebula.widgets.gallery.tests/bin
 /src/java/nebula/org.netxms.nebula.widgets.gallery/.settings
 /src/java/nebula/org.netxms.nebula.widgets.gallery/bin
-/src/java/netxms-base/.classpath
-/src/java/netxms-base/.project
-/src/java/netxms-base/.settings
-/src/java/netxms-client-api/.classpath
-/src/java/netxms-client-api/.project
-/src/java/netxms-client-api/.settings
-/src/java/netxms-client/.classpath
-/src/java/netxms-client/.project
-/src/java/netxms-client/.settings
+/src/java/nxreporting/src/main/resources/nxreporting.xml
 /src/java/nxshell/.classpath
 /src/java/nxshell/.project
 /src/java/nxshell/.settings
@@ -195,6 +195,7 @@ target
 /src/tools/nxencpasswd/nxencpasswd
 /stamp-h1
 /status
+/tests/test-libnetxms/test-libnetxms
 /webui/eclipse
 /x64
 
@@ -213,4 +214,3 @@ target
 *.jar
 *.war
 *.ear
-

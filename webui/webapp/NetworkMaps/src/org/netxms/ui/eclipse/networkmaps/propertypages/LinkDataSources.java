@@ -44,6 +44,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.dialogs.DataSourceEditDlg;
 import org.netxms.ui.eclipse.networkmaps.propertypages.helper.DciListLabelProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkEditor;
@@ -93,7 +94,7 @@ public class LinkDataSources extends PropertyPage
       layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
-      final String[] columnNames = { "Pos", "Node", "Parameter", "Name" };
+      final String[] columnNames = { Messages.get().LinkDataSources_ColPos, Messages.get().LinkDataSources_ColNode, Messages.get().LinkDataSources_ColParameter, Messages.get().LinkDataSources_ColName };
       final int[] columnWidths = { 40, 130, 200, 150 };
       viewer = new SortableTableViewer(dialogArea, columnNames, columnWidths, 0, SWT.UP, SWT.BORDER | SWT.MULTI
             | SWT.FULL_SELECTION);
@@ -124,7 +125,7 @@ public class LinkDataSources extends PropertyPage
       leftButtons.setLayoutData(gridData);
 
       upButton = new Button(leftButtons, SWT.PUSH);
-      upButton.setText("Up");
+      upButton.setText(Messages.get().LinkDataSources_Up);
       RowData rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       upButton.setLayoutData(rd);
@@ -144,7 +145,7 @@ public class LinkDataSources extends PropertyPage
       upButton.setEnabled(false);
 
       downButton = new Button(leftButtons, SWT.PUSH);
-      downButton.setText("Down");
+      downButton.setText(Messages.get().LinkDataSources_Down);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       downButton.setLayoutData(rd);
@@ -176,7 +177,7 @@ public class LinkDataSources extends PropertyPage
       rightButtons.setLayoutData(gridData);
 
       addButton = new Button(rightButtons, SWT.PUSH);
-      addButton.setText("Add");
+      addButton.setText(Messages.get().LinkDataSources_Add);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       addButton.setLayoutData(rd);
@@ -195,7 +196,7 @@ public class LinkDataSources extends PropertyPage
       });
 
       editButton = new Button(rightButtons, SWT.PUSH);
-      editButton.setText("Modify");
+      editButton.setText(Messages.get().LinkDataSources_Modify);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       editButton.setLayoutData(rd);
@@ -215,7 +216,7 @@ public class LinkDataSources extends PropertyPage
       editButton.setEnabled(false);
 
       deleteButton = new Button(rightButtons, SWT.PUSH);
-      deleteButton.setText("Delete");
+      deleteButton.setText(Messages.get().LinkDataSources_Delete);
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       deleteButton.setLayoutData(rd);

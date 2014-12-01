@@ -110,7 +110,7 @@ typedef struct
 {
    long iNumCols;
    INFORMIX_CONN *pConn;
-   BOOL bNoMoreRows;
+   bool noMoreRows;
 	char **columnNames;
 } INFORMIX_ASYNC_QUERY_RESULT;
 

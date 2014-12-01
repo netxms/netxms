@@ -26,8 +26,8 @@
 /**
  * Global variables
  */
-UINT32 LIBNXSRV_EXPORTABLE g_dwFlags = AF_USE_SYSLOG | AF_CATCH_EXCEPTIONS | AF_LOG_SQL_ERRORS;
-UINT32 LIBNXSRV_EXPORTABLE g_dwSNMPTimeout = 2000;
+UINT64 LIBNXSRV_EXPORTABLE g_flags = AF_USE_SYSLOG | AF_CATCH_EXCEPTIONS | AF_LOG_SQL_ERRORS;
+UINT32 LIBNXSRV_EXPORTABLE g_snmpTimeout = 2000;
 UINT32 LIBNXSRV_EXPORTABLE g_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
 
 /**
@@ -70,6 +70,7 @@ static struct
    { ERR_FILE_STAT_FAILED, _T("File stat filed") },
    { ERR_MEM_ALLOC_FAILED, _T("Memory allocation failed") },
    { ERR_FILE_DELETE_FAILED, _T("File delete failed") },
+   { ERR_NO_SESSION_AGENT, _T("Session agent not available") },
    { -1, NULL }
 };
 
@@ -147,13 +148,13 @@ void LIBNXSRV_EXPORTABLE DbgPrintf2(int level, const TCHAR *format, va_list args
 void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...)
 {
    va_list args;
-   TCHAR buffer[4096];
+   TCHAR buffer[8192];
 
    if (level > (int)g_debugLevel)
       return;     // Required application flag(s) not set
 
    va_start(args, format);
-   _vsntprintf(buffer, 4096, format, args);
+   _vsntprintf(buffer, 8192, format, args);
    va_end(args);
    nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", buffer);
 }

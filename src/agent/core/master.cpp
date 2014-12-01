@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -25,30 +25,30 @@
 /**
  * Handler for CMD_GET_PARAMETER command
  */
-static void H_GetParameter(CSCPMessage *pRequest, CSCPMessage *pMsg)
+static void H_GetParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
    TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
    UINT32 dwErrorCode;
 
-   pRequest->GetVariableStr(VID_PARAMETER, name, MAX_PARAM_NAME);
-   dwErrorCode = GetParameterValue(0, name, value);
-   pMsg->SetVariable(VID_RCC, dwErrorCode);
+   pRequest->getFieldAsString(VID_PARAMETER, name, MAX_PARAM_NAME);
+   dwErrorCode = GetParameterValue(0, name, value, NULL);
+   pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
-      pMsg->SetVariable(VID_VALUE, value);
+      pMsg->setField(VID_VALUE, value);
 }
 
 /**
  * Handler for CMD_GET_TABLE command
  */
-static void H_GetTable(CSCPMessage *pRequest, CSCPMessage *pMsg)
+static void H_GetTable(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
    TCHAR name[MAX_PARAM_NAME];
 	Table value;
    UINT32 dwErrorCode;
 
-   pRequest->GetVariableStr(VID_PARAMETER, name, MAX_PARAM_NAME);
-   dwErrorCode = GetTableValue(0, name, &value);
-   pMsg->SetVariable(VID_RCC, dwErrorCode);
+   pRequest->getFieldAsString(VID_PARAMETER, name, MAX_PARAM_NAME);
+   dwErrorCode = GetTableValue(0, name, &value, NULL);
+   pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
 		value.fillMessage(*pMsg, 0, -1);
 }
@@ -56,20 +56,20 @@ static void H_GetTable(CSCPMessage *pRequest, CSCPMessage *pMsg)
 /**
  * Handler for CMD_GET_LIST command
  */
-static void H_GetList(CSCPMessage *pRequest, CSCPMessage *pMsg)
+static void H_GetList(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
    TCHAR name[MAX_PARAM_NAME];
 	StringList value;
    UINT32 dwErrorCode;
 
-   pRequest->GetVariableStr(VID_PARAMETER, name, MAX_PARAM_NAME);
-   dwErrorCode = GetListValue(0, name, &value);
-   pMsg->SetVariable(VID_RCC, dwErrorCode);
+   pRequest->getFieldAsString(VID_PARAMETER, name, MAX_PARAM_NAME);
+   dwErrorCode = GetListValue(0, name, &value, NULL);
+   pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
-		pMsg->SetVariable(VID_NUM_STRINGS, (UINT32)value.getSize());
-		for(int i = 0; i < value.getSize(); i++)
-			pMsg->SetVariable(VID_ENUM_VALUE_BASE + i, value.getValue(i));
+		pMsg->setField(VID_NUM_STRINGS, (UINT32)value.size());
+		for(int i = 0; i < value.size(); i++)
+			pMsg->setField(VID_ENUM_VALUE_BASE + i, value.get(i));
    }
 }
 
@@ -122,19 +122,24 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 #endif
 			AgentWriteDebugLog(1, _T("Connected to master agent"));
 
+         PipeMessageReceiver receiver(s_pipe, 8192, 1048576);  // 8K initial, 1M max
 			while(!(g_dwFlags & AF_SHUTDOWN))
 			{
-				CSCPMessage *msg = ReadMessageFromPipe(s_pipe, NULL);
+            MessageReceiverResult result;
+				NXCPMessage *msg = receiver.readMessage(INFINITE, &result);
 				if ((msg == NULL) || (g_dwFlags & AF_SHUTDOWN))
+            {
+               AgentWriteDebugLog(6, _T("MasterAgentListener: receiver failure (%s)"), AbstractMessageReceiver::resultToText(result));
 					break;
+            }
 
             TCHAR buffer[256];
-				AgentWriteDebugLog(6, _T("Received message %s from master agent"), NXCPMessageCodeName(msg->GetCode(), buffer));
-				
-				CSCPMessage response;
-				response.SetCode(CMD_REQUEST_COMPLETED);
-				response.SetId(msg->GetId());
-				switch(msg->GetCode())
+				AgentWriteDebugLog(6, _T("Received message %s from master agent"), NXCPMessageCodeName(msg->getCode(), buffer));
+
+				NXCPMessage response;
+				response.setCode(CMD_REQUEST_COMPLETED);
+				response.setId(msg->getId());
+				switch(msg->getCode())
 				{
 					case CMD_GET_PARAMETER:
 						H_GetParameter(msg, &response);
@@ -146,15 +151,15 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 						H_GetList(msg, &response);
 						break;
 					case CMD_GET_PARAMETER_LIST:
-						response.SetVariable(VID_RCC, ERR_SUCCESS);
+						response.setField(VID_RCC, ERR_SUCCESS);
 						GetParameterList(&response);
 						break;
 					case CMD_GET_ENUM_LIST:
-						response.SetVariable(VID_RCC, ERR_SUCCESS);
+						response.setField(VID_RCC, ERR_SUCCESS);
 						GetEnumList(&response);
 						break;
 					case CMD_GET_TABLE_LIST:
-						response.SetVariable(VID_RCC, ERR_SUCCESS);
+						response.setField(VID_RCC, ERR_SUCCESS);
 						GetTableList(&response);
 						break;
                case CMD_SHUTDOWN:
@@ -163,13 +168,13 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
                   exit(0);
                   break;
 					default:
-						response.SetVariable(VID_RCC, ERR_UNKNOWN_COMMAND);
+						response.setField(VID_RCC, ERR_UNKNOWN_COMMAND);
 						break;
 				}
 				delete msg;
 
 				// Send response to pipe
-				CSCP_MESSAGE *rawMsg = response.createMessage();
+				NXCP_MESSAGE *rawMsg = response.createMessage();
             bool sendSuccess = SendMessageToPipe(s_pipe, rawMsg);
             free(rawMsg);
             if (!sendSuccess)
@@ -204,9 +209,9 @@ THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg)
 /**
  * Send message to master agent
  */
-bool SendMessageToMasterAgent(CSCPMessage *msg)
+bool SendMessageToMasterAgent(NXCPMessage *msg)
 {
-   CSCP_MESSAGE *rawMsg = msg->createMessage();
+   NXCP_MESSAGE *rawMsg = msg->createMessage();
    bool success = SendRawMessageToMasterAgent(rawMsg);
    free(rawMsg);
    return success;
@@ -215,7 +220,7 @@ bool SendMessageToMasterAgent(CSCPMessage *msg)
 /**
  * Send raw message to master agent
  */
-bool SendRawMessageToMasterAgent(CSCP_MESSAGE *msg)
+bool SendRawMessageToMasterAgent(NXCP_MESSAGE *msg)
 {
 	MutexLock(s_mutexPipeWrite);
    bool success = SendMessageToPipe(s_pipe, msg);

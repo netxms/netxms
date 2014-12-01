@@ -24,7 +24,7 @@
 /**
  * Detect support for source packages
  */
-static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
+static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
 {
 	ret_int(pValue, 1); // assume that we have sane build env
 	return SYSINFO_RC_SUCCESS;
@@ -33,7 +33,7 @@ static LONG H_SourcePkg(const char *pszParam, const char *pArg, char *pValue)
 /**
  * Handler for shutdown/restart actions
  */
-static LONG H_Shutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData)
+static LONG H_Shutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData, AbstractCommSession *session)
 {
    chdir("/");
    char cmd[128];
@@ -249,7 +249,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(HPUX)
  */
 extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
-	return H_NetIfList("Net.InterfaceList", NULL, pValue) == SYSINFO_RC_SUCCESS;
+	return H_NetIfList("Net.InterfaceList", NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -257,5 +257,5 @@ extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
  */
 extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
 {
-	return H_NetArpCache("Net.ArpCache", NULL, pValue) == SYSINFO_RC_SUCCESS;
+	return H_NetArpCache("Net.ArpCache", NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
 }

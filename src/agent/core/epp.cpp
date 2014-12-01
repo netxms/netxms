@@ -46,7 +46,7 @@ public:
 	int getPollInterval() { return m_pollInterval; }
 	void poll();
 	LONG getValue(const TCHAR *name, TCHAR *buffer);
-	void listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *count);
+	void listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *count);
 	void listParameters(StringList *list);
 };
 
@@ -81,14 +81,11 @@ LONG ParamProvider::getValue(const TCHAR *name, TCHAR *buffer)
 
 	lock();
 
-	for(UINT32 i = 0; i < m_parameters->getSize(); i++)
-	{
-		if (!_tcsicmp(m_parameters->getKeyByIndex(i), name))
-		{
-			nx_strncpy(buffer, m_parameters->getValueByIndex(i), MAX_RESULT_LENGTH);
-			rc = SYSINFO_RC_SUCCESS;
-			break;
-		}
+   const TCHAR *value = m_parameters->get(name);
+   if (value != NULL)
+   {
+		nx_strncpy(buffer, value, MAX_RESULT_LENGTH);
+		rc = SYSINFO_RC_SUCCESS;
 	}
 
 	unlock();
@@ -132,7 +129,7 @@ void ParamProvider::poll()
 			}
 		}
 		pclose(hPipe);
-		DebugPrintf(INVALID_INDEX, 8, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_command, (int)parameters->getSize());
+		DebugPrintf(INVALID_INDEX, 8, _T("ParamProvider::poll(): command \"%s\" execution completed, %d values read"), m_command, (int)parameters->size());
 	}
 	else
 	{
@@ -148,23 +145,52 @@ void ParamProvider::poll()
 }
 
 /**
+ * Parameter list callback data
+ */
+struct ParameterListCallbackData
+{
+   NXCPMessage *msg;
+   UINT32 id;
+   UINT32 count;
+};
+
+/**
+ * Parameter list callback
+ */
+static bool ParameterListCallback(const TCHAR *key, const void *value, void *data)
+{
+	((ParameterListCallbackData *)data)->msg->setField(((ParameterListCallbackData *)data)->id++, key);
+	((ParameterListCallbackData *)data)->msg->setField(((ParameterListCallbackData *)data)->id++, _T(""));
+	((ParameterListCallbackData *)data)->msg->setField(((ParameterListCallbackData *)data)->id++, (WORD)DCI_DT_STRING);
+	((ParameterListCallbackData *)data)->count++;
+   return true;
+}
+
+/**
  * List available parameters
  */
-void ParamProvider::listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
+void ParamProvider::listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
-	UINT32 id = *baseId;
+   ParameterListCallbackData data;
+   data.msg = msg;
+   data.id = *baseId;
+   data.count = 0;
 
 	lock();
-	for(UINT32 i = 0; i < m_parameters->getSize(); i++)
-	{
-		msg->SetVariable(id++, m_parameters->getKeyByIndex(i));
-		msg->SetVariable(id++, _T(""));
-		msg->SetVariable(id++, (WORD)DCI_DT_STRING);
-		(*count)++;
-	}
+   m_parameters->forEach(ParameterListCallback, &data);
 	unlock();
 
-	*baseId = id;
+	*baseId = data.id;
+   *count += data.count;
+}
+
+/**
+ * Parameter list callback
+ */
+static bool ParameterListCallback2(const TCHAR *key, const void *value, void *data)
+{
+   ((StringList *)data)->add(key);
+   return true;
 }
 
 /**
@@ -173,10 +199,7 @@ void ParamProvider::listParameters(CSCPMessage *msg, UINT32 *baseId, UINT32 *cou
 void ParamProvider::listParameters(StringList *list)
 {
 	lock();
-	for(UINT32 i = 0; i < m_parameters->getSize(); i++)
-	{
-		list->add(m_parameters->getKeyByIndex(i));
-	}
+   m_parameters->forEach(ParameterListCallback2, list);
 	unlock();
 }
 
@@ -267,7 +290,7 @@ LONG GetParameterValueFromExtProvider(const TCHAR *name, TCHAR *buffer)
 /**
  * Add parameters from external providers to NXCP message
  */
-void ListParametersFromExtProviders(CSCPMessage *msg, UINT32 *baseId, UINT32 *count)
+void ListParametersFromExtProviders(NXCPMessage *msg, UINT32 *baseId, UINT32 *count)
 {
 	for(int i = 0; i < s_providers.size(); i++)
 	{

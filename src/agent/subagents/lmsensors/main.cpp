@@ -132,7 +132,7 @@ static bool getSensorValue(char *chipName, char *featureName, double *result) {
 // Hanlder for immediate ping request
 //
 
-static LONG H_GetValue(const TCHAR *parameters, const TCHAR *arg, TCHAR *value) {
+static LONG H_GetValue(const TCHAR *parameters, const TCHAR *arg, TCHAR *value, AbstractCommSession *session) {
    int ret = SYSINFO_RC_ERROR;
 
    char chipName[256];

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ public class ServerActionDecorator implements ILightweightLabelDecorator
 	 */
 	public ServerActionDecorator()
 	{
-		disabledMark = Activator.getImageDescriptor("icons/disabled_overlay.png"); //$NON-NLS-1$
+		disabledMark = Activator.getImageDescriptor("icons/overlay_disabled.gif"); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)

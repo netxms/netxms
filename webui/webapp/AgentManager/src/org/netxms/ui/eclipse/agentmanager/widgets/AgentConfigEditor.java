@@ -41,12 +41,23 @@ public class AgentConfigEditor extends Composite
 	 */
 	public AgentConfigEditor(Composite parent, int style, int editorStyle)
 	{
+      this(parent, style, editorStyle, 20);
+   }
+   
+	/**
+	 * @param parent
+	 * @param style
+	 * @param editorStyle
+	 * @param rulerWidth
+	 */
+	public AgentConfigEditor(Composite parent, int style, int editorStyle, int rulerWidth)
+	{
 		super(parent, style);
 		
 		setLayout(new FillLayout());
 		editor = new Text(this, SWT.MULTI | editorStyle);
 		
-		final Font font = new Font(getDisplay(), "Courier New", WidgetHelper.fontPixelsToPoints(getDisplay(), 16), SWT.NORMAL);
+		final Font font = new Font(getDisplay(), "Courier New", WidgetHelper.fontPixelsToPoints(getDisplay(), 16), SWT.NORMAL); //$NON-NLS-1$
 		editor.setFont(font);
 		addDisposeListener(new DisposeListener() {
 			private static final long serialVersionUID = 1L;

@@ -26,7 +26,7 @@
 
 #include "disk.h"
 
-LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szArg[512] = {0};
@@ -59,13 +59,13 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 				ret_uint64(pValue, availableBlocks * blockSize);
 				break;
 			case DISK_USED_PERC:
-				ret_double(pValue, (usedBlocks * 100) / totalBlocks);
+				ret_double(pValue, (usedBlocks * 100.0) / totalBlocks);
 				break;
 			case DISK_AVAIL_PERC:
-				ret_double(pValue, (availableBlocks * 100) / totalBlocks);
+				ret_double(pValue, (availableBlocks * 100.0) / totalBlocks);
 				break;
 			case DISK_FREE_PERC:
-				ret_double(pValue, (freeBlocks * 100) / totalBlocks);
+				ret_double(pValue, (freeBlocks * 100.0) / totalBlocks);
 				break;
 			default:
 				nRet = SYSINFO_RC_ERROR;
@@ -77,7 +77,7 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 }
 
 
-LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCommSession *session)
 {
   LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -141,7 +141,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
    return rc;
 }
 
-LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
   LONG rc = SYSINFO_RC_SUCCESS;
 

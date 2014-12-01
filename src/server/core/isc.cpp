@@ -35,9 +35,9 @@
 /**
  * Service handlers
  */
-BOOL EF_SetupSession(ISCSession *, CSCPMessage *);
+BOOL EF_SetupSession(ISCSession *, NXCPMessage *);
 void EF_CloseSession(ISCSession *);
-BOOL EF_ProcessMessage(ISCSession *, CSCPMessage *, CSCPMessage *);
+BOOL EF_ProcessMessage(ISCSession *, NXCPMessage *, NXCPMessage *);
 
 /**
  * Well-known service list
@@ -57,19 +57,19 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 	ISCSession *session = (ISCSession *)arg;
    SOCKET sock = session->GetSocket();
    int i, err, serviceIndex, state = ISC_STATE_INIT;
-   CSCP_MESSAGE *pRawMsg, *pRawMsgOut;
-   CSCP_BUFFER *pRecvBuffer;
-   CSCPMessage *pRequest, response;
+   NXCP_MESSAGE *pRawMsg, *pRawMsgOut;
+   NXCP_BUFFER *pRecvBuffer;
+   NXCPMessage *pRequest, response;
    UINT32 serviceId;
 	void *serviceData = NULL;
 	TCHAR buffer[256], dbgPrefix[128];
-	WORD wFlags;
+	WORD flags;
 	static NXCPEncryptionContext *pDummyCtx = NULL;
 
 	_sntprintf(dbgPrefix, 128, _T("ISC<%s>:"), IpToStr(session->GetPeerAddress(), buffer));
 
-   pRawMsg = (CSCP_MESSAGE *)malloc(MAX_MSG_SIZE);
-   pRecvBuffer = (CSCP_BUFFER *)malloc(sizeof(CSCP_BUFFER));
+   pRawMsg = (NXCP_MESSAGE *)malloc(MAX_MSG_SIZE);
+   pRecvBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
    RecvNXCPMessage(0, NULL, pRecvBuffer, 0, NULL, NULL, 0);
 
    while(1)
@@ -87,44 +87,44 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
       if (err == 1)
          continue;   // Too big message
 
-      wFlags = ntohs(pRawMsg->wFlags);
-      if (wFlags & MF_CONTROL)
+      flags = ntohs(pRawMsg->flags);
+      if (flags & MF_CONTROL)
       {
          // Convert message header to host format
-         pRawMsg->dwId = ntohl(pRawMsg->dwId);
-         pRawMsg->wCode = ntohs(pRawMsg->wCode);
-         pRawMsg->dwNumVars = ntohl(pRawMsg->dwNumVars);
-         DbgPrintf(5, _T("%s received control message %s"), dbgPrefix, NXCPMessageCodeName(pRawMsg->wCode, buffer));
+         pRawMsg->id = ntohl(pRawMsg->id);
+         pRawMsg->code = ntohs(pRawMsg->code);
+         pRawMsg->numFields = ntohl(pRawMsg->numFields);
+         DbgPrintf(5, _T("%s received control message %s"), dbgPrefix, NXCPMessageCodeName(pRawMsg->code, buffer));
 
-         if (pRawMsg->wCode == CMD_GET_NXCP_CAPS)
+         if (pRawMsg->code == CMD_GET_NXCP_CAPS)
          {
-            pRawMsgOut = (CSCP_MESSAGE *)malloc(CSCP_HEADER_SIZE);
-            pRawMsgOut->dwId = htonl(pRawMsg->dwId);
-            pRawMsgOut->wCode = htons((WORD)CMD_NXCP_CAPS);
-            pRawMsgOut->wFlags = htons(MF_CONTROL);
-            pRawMsgOut->dwNumVars = htonl(NXCP_VERSION << 24);
-            pRawMsgOut->dwSize = htonl(CSCP_HEADER_SIZE);
-				if (SendEx(sock, pRawMsgOut, CSCP_HEADER_SIZE, 0, NULL) != CSCP_HEADER_SIZE)
+            pRawMsgOut = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE);
+            pRawMsgOut->id = htonl(pRawMsg->id);
+            pRawMsgOut->code = htons((WORD)CMD_NXCP_CAPS);
+            pRawMsgOut->flags = htons(MF_CONTROL);
+            pRawMsgOut->numFields = htonl(NXCP_VERSION << 24);
+            pRawMsgOut->size = htonl(NXCP_HEADER_SIZE);
+				if (SendEx(sock, pRawMsgOut, NXCP_HEADER_SIZE, 0, NULL) != NXCP_HEADER_SIZE)
 					DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));
 				free(pRawMsgOut);
          }
       }
 		else
 		{
-			pRequest = new CSCPMessage(pRawMsg);
-			DbgPrintf(5, _T("%s message %s received"), dbgPrefix, NXCPMessageCodeName(pRequest->GetCode(), buffer));
-			if (pRequest->GetCode() == CMD_KEEPALIVE)
+			pRequest = new NXCPMessage(pRawMsg);
+			DbgPrintf(5, _T("%s message %s received"), dbgPrefix, NXCPMessageCodeName(pRequest->getCode(), buffer));
+			if (pRequest->getCode() == CMD_KEEPALIVE)
 			{
-				response.SetVariable(VID_RCC, ISC_ERR_SUCCESS);
+				response.setField(VID_RCC, ISC_ERR_SUCCESS);
 			}
 			else
 			{
 				if (state == ISC_STATE_INIT)
 				{
-					if (pRequest->GetCode() == CMD_ISC_CONNECT_TO_SERVICE)
+					if (pRequest->getCode() == CMD_ISC_CONNECT_TO_SERVICE)
 					{
 						// Find requested service
-      				serviceId = pRequest->GetVariableLong(VID_SERVICE_ID);
+      				serviceId = pRequest->getFieldAsUInt32(VID_SERVICE_ID);
 						DbgPrintf(4, _T("%s attempt to connect to service %d"), dbgPrefix, serviceId);
 						for(i = 0; m_serviceList[i].id != 0; i++)
 							if (m_serviceList[i].id == serviceId)
@@ -136,30 +136,30 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 							{
 								if (m_serviceList[i].setupSession(session, pRequest))
 								{
-									response.SetVariable(VID_RCC, ISC_ERR_SUCCESS);
+									response.setField(VID_RCC, ISC_ERR_SUCCESS);
 									state = ISC_STATE_CONNECTED;
 									serviceIndex = i;
 									DbgPrintf(4, _T("%s connected to service %d"), dbgPrefix, serviceId);
 								}
 								else
 								{
-									response.SetVariable(VID_RCC, ISC_ERR_SESSION_SETUP_FAILED);
+									response.setField(VID_RCC, ISC_ERR_SESSION_SETUP_FAILED);
 								}
 							}
 							else
 							{
-								response.SetVariable(VID_RCC, ISC_ERR_SERVICE_DISABLED);
+								response.setField(VID_RCC, ISC_ERR_SERVICE_DISABLED);
 							}
 						}
 						else
 						{
-							response.SetVariable(VID_RCC, ISC_ERR_UNKNOWN_SERVICE);
+							response.setField(VID_RCC, ISC_ERR_UNKNOWN_SERVICE);
 						}
 					}
 					else
 					{
 						DbgPrintf(4, _T("%s out of state request"), dbgPrefix);
-						response.SetVariable(VID_RCC, ISC_ERR_REQUEST_OUT_OF_STATE);
+						response.setField(VID_RCC, ISC_ERR_REQUEST_OUT_OF_STATE);
 					}
 				}
 				else	// Established session
@@ -169,14 +169,14 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
 				}
 			}
 			
-			response.SetId(pRequest->GetId());
-			response.SetCode(CMD_REQUEST_COMPLETED);
+			response.setId(pRequest->getId());
+			response.setCode(CMD_REQUEST_COMPLETED);
 			pRawMsgOut = response.createMessage();
-			DbgPrintf(5, _T("%s sending message %s"), dbgPrefix, NXCPMessageCodeName(response.GetCode(), buffer));
-			if (SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->dwSize), 0, NULL) != (int)ntohl(pRawMsgOut->dwSize))
+			DbgPrintf(5, _T("%s sending message %s"), dbgPrefix, NXCPMessageCodeName(response.getCode(), buffer));
+			if (SendEx(sock, pRawMsgOut, ntohl(pRawMsgOut->size), 0, NULL) != (int)ntohl(pRawMsgOut->size))
 				DbgPrintf(5, _T("%s SendEx() failed in ProcessingThread(): %s"), dbgPrefix, strerror(WSAGetLastError()));
       
-			response.deleteAllVariables();
+			response.deleteAllFields();
 			free(pRawMsgOut);
 			delete pRequest;
 		}

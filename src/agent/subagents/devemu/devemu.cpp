@@ -56,7 +56,7 @@ static void SubagentShutdown();
 /**
  * Interface list
  */
-static LONG H_InterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value)
+static LONG H_InterfaceList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
    TCHAR buffer[256];
    _sntprintf(buffer, 256, _T("1 %s/%d 6 %s %s"), s_ipAddress,
@@ -93,7 +93,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 /**
  * Handler for constant values
  */
-static LONG H_Constant(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+static LONG H_Constant(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    ret_string(pValue, pArg);
    return SYSINFO_RC_SUCCESS;
@@ -102,7 +102,7 @@ static LONG H_Constant(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for configured values
  */
-static LONG H_Value(const TCHAR *pszParam, const TCHAR *arg, TCHAR *pValue)
+static LONG H_Value(const TCHAR *pszParam, const TCHAR *arg, TCHAR *pValue, AbstractCommSession *session)
 {
    MutexLock(s_valuesMutex);
    const TCHAR *value = s_values->get(arg);

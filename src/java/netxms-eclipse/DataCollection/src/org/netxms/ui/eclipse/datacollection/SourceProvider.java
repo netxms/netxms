@@ -30,7 +30,7 @@ import org.eclipse.ui.services.IServiceLocator;
  */
 public class SourceProvider extends AbstractSourceProvider
 {
-   private static final String SUMMARY_TABLES_EXIST = "org.netxms.ui.eclipse.datacollection.SummaryTablesExist";
+   private static final String SUMMARY_TABLES_EXIST = "org.netxms.ui.eclipse.datacollection.SummaryTablesExist"; //$NON-NLS-1$
    
    private static final String[] PROVIDED_SOURCE_NAMES = 
       { 

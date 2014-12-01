@@ -34,7 +34,7 @@ static void DeleteEmptySubnets()
 		if (object->isEmpty())
 		{
 		   DbgPrintf(5, _T("DeleteEmptySubnets: subnet %s [%d] has %d refs, children: %d, parents: %d"),
-            object->Name(), object->Id(), object->getRefCount(), object->getChildCount(), object->getParentCount());
+            object->getName(), object->getId(), object->getRefCount(), object->getChildCount(), object->getParentCount());
 			object->deleteObject();
 		}
       object->decRefCount();
@@ -178,7 +178,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		}
 
 		// Delete empty subnets if needed
-		if (g_dwFlags & AF_DELETE_EMPTY_SUBNETS)
+		if (g_flags & AF_DELETE_EMPTY_SUBNETS)
 			DeleteEmptySubnets();
 
 		// Remove expired DCI data

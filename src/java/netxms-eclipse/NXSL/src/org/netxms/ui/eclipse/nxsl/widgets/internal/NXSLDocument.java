@@ -19,16 +19,16 @@ import org.eclipse.jface.text.rules.Token;
  */
 public class NXSLDocument extends Document
 {
-	public static final String CONTENT_COMMENTS = "COMMENTS";
-	public static final String CONTENT_STRING = "STRING";
+	public static final String CONTENT_COMMENTS = "COMMENTS"; //$NON-NLS-1$
+	public static final String CONTENT_STRING = "STRING"; //$NON-NLS-1$
 	
 	public static final String[] NXSL_CONTENT_TYPES = { IDocument.DEFAULT_CONTENT_TYPE, CONTENT_COMMENTS, CONTENT_STRING };
 
 	// Document partitioning rules
 	private static final IPredicateRule[] NXSL_RULES = {
-		new PatternRule("/*", "*/", new Token(CONTENT_COMMENTS), (char)0, false, false, false),
-		new EndOfLineRule("//", new Token(CONTENT_COMMENTS)),
-		new SingleLineRule("\"", "\"", new Token(CONTENT_STRING), '\\', true, false),
+		new PatternRule("/*", "*/", new Token(CONTENT_COMMENTS), (char)0, false, false, false), //$NON-NLS-1$ //$NON-NLS-2$
+		new EndOfLineRule("//", new Token(CONTENT_COMMENTS)), //$NON-NLS-1$
+		new SingleLineRule("\"", "\"", new Token(CONTENT_STRING), '\\', true, false), //$NON-NLS-1$ //$NON-NLS-2$
 		new CodePatternRule(new Token(DEFAULT_CONTENT_TYPE))
 	};
 	

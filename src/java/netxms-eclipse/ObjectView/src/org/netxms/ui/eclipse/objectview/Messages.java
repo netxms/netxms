@@ -106,10 +106,12 @@ public class Messages extends NLS
    public static String GeneralInfo_OS;
    public static String GeneralInfo_OSVersion;
    public static String GeneralInfo_PlatformName;
+   public static String GeneralInfo_PostalAddress;
    public static String GeneralInfo_PrimaryHostName;
    public static String GeneralInfo_PrimaryIP;
    public static String GeneralInfo_Serial;
    public static String GeneralInfo_SlotPort;
+   public static String GeneralInfo_State;
    public static String GeneralInfo_Status;
    public static String GeneralInfo_SysDescr;
    public static String GeneralInfo_SysName;
@@ -150,6 +152,14 @@ public class Messages extends NLS
    public static String InterfacesTab_ColPort;
    public static String InterfacesTab_ColSlot;
    public static String InterfacesTab_ColStatus;
+   public static String InterfacesTab_PeerDiscoveryProtocol;
+   public static String NodesTab_ColAgentVersion;
+   public static String NodesTab_ColId;
+   public static String NodesTab_ColName;
+   public static String NodesTab_ColPlatform;
+   public static String NodesTab_ColPrimaryIP;
+   public static String NodesTab_ColStatus;
+   public static String NodesTab_ColSysDescr;
    public static String ObjectStatusMapView_ActionGroupNodes;
    public static String ObjectStatusMapView_PartName;
    public static String ShowObjectDetailsView_Error;

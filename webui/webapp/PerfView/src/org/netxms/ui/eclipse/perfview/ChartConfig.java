@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.perfview;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Date;
+import org.netxms.client.TimePeriod;
 import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
@@ -726,4 +727,18 @@ public class ChartConfig
    {
       this.maxYScaleValue = maxYScaleValue;
    }
+
+   public TimePeriod timePeriod()
+   {
+      return new TimePeriod(timeFrameType, timeRange, timeUnits, timeFrom, timeTo);
+   }
+   
+   public void setTimePeriod(TimePeriod tp)
+   {
+      timeFrameType = tp.getTimeFrameType();
+      timeRange = tp.getTimeRangeValue();
+      timeUnits = tp.getTimeUnitValue();
+      timeFrom = tp.getTimeFromValue();
+      timeTo = tp.getTimeToValue();
+   }  
 }

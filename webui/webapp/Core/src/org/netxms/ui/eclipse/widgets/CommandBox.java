@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 package org.netxms.ui.eclipse.widgets;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,10 +39,10 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 
 /**
  * Implements command box - vertical list of hyperlinks to given actions
- *
  */
 public class CommandBox extends Composite implements DisposeListener
 {
@@ -74,6 +76,14 @@ public class CommandBox extends Composite implements DisposeListener
 	 */
 	public void rebuild()
 	{
+	   Collections.sort(actions, new Comparator<Action>() {
+         @Override
+         public int compare(Action o1, Action o2)
+         {
+            return o1.getText().compareToIgnoreCase(o2.getText());
+         }
+      });
+	   
 		for(final Action a : actions)
 		{
 			CLabel label = new CLabel(this, SWT.LEFT);
@@ -114,7 +124,7 @@ public class CommandBox extends Composite implements DisposeListener
 	private Image getImage(Action action)
 	{
 		ImageDescriptor d = action.getImageDescriptor();
-		Image img = null;
+		Image img;
 		if (d != null)
 		{
 			img = imageCache.get(d);
@@ -126,6 +136,7 @@ public class CommandBox extends Composite implements DisposeListener
 		}
 		else
 		{
+		   img = SharedIcons.IMG_EMPTY;
 		}
 		return img;
 	}

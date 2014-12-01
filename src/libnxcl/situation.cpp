@@ -28,26 +28,26 @@
 // Create NXC_SITUATION from message
 //
 
-static void SituationFromMessage(CSCPMessage *msg, NXC_SITUATION *situation)
+static void SituationFromMessage(NXCPMessage *msg, NXC_SITUATION *situation)
 {
 	int i, j, attrCount;
 	TCHAR *attr, *value;
 	UINT32 id;
 
-	situation->m_id = msg->GetVariableLong(VID_SITUATION_ID);
-	situation->m_name = msg->GetVariableStr(VID_NAME);
-	situation->m_comments = msg->GetVariableStr(VID_COMMENTS);
-	situation->m_instanceCount = msg->GetVariableLong(VID_INSTANCE_COUNT);
+	situation->m_id = msg->getFieldAsUInt32(VID_SITUATION_ID);
+	situation->m_name = msg->getFieldAsString(VID_NAME);
+	situation->m_comments = msg->getFieldAsString(VID_COMMENTS);
+	situation->m_instanceCount = msg->getFieldAsUInt32(VID_INSTANCE_COUNT);
 	situation->m_instanceList = (NXC_SITUATION_INSTANCE *)malloc(sizeof(NXC_SITUATION_INSTANCE) * situation->m_instanceCount);
 	for(i = 0, id = VID_INSTANCE_LIST_BASE; i < situation->m_instanceCount; i++)
 	{
-		situation->m_instanceList[i].m_name = msg->GetVariableStr(id++);
-		attrCount = msg->GetVariableLong(id++);
+		situation->m_instanceList[i].m_name = msg->getFieldAsString(id++);
+		attrCount = msg->getFieldAsUInt32(id++);
 		situation->m_instanceList[i].m_attrList = new StringMap;
 		for(j = 0; j < attrCount; j++)
 		{
-			attr = msg->GetVariableStr(id++);
-			value = msg->GetVariableStr(id++);
+			attr = msg->getFieldAsString(id++);
+			value = msg->getFieldAsString(id++);
 			situation->m_instanceList[i].m_attrList->setPreallocated(attr, value);
 		}
 	}
@@ -58,12 +58,12 @@ static void SituationFromMessage(CSCPMessage *msg, NXC_SITUATION *situation)
 // Process CMD_SITUATION_CHANGE message
 //
 
-void ProcessSituationChange(NXCL_Session *pSession, CSCPMessage *pMsg)
+void ProcessSituationChange(NXCL_Session *pSession, NXCPMessage *pMsg)
 {
    NXC_SITUATION st;
    UINT32 dwCode;
 
-   dwCode = pMsg->GetVariableShort(VID_NOTIFICATION_CODE);
+   dwCode = pMsg->getFieldAsUInt16(VID_NOTIFICATION_CODE);
 	SituationFromMessage(pMsg, &st);
    pSession->callEventHandler(NXC_EVENT_SITUATION_UPDATE, dwCode, &st);
 }
@@ -75,24 +75,24 @@ void ProcessSituationChange(NXCL_Session *pSession, CSCPMessage *pMsg)
 
 UINT32 LIBNXCL_EXPORTABLE NXCCreateSituation(NXC_SESSION hSession, const TCHAR *name, const TCHAR *comments, UINT32 *pdwId)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRqId, rcc;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_CREATE_SITUATION);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_NAME, name);
-   msg.SetVariable(VID_COMMENTS, CHECK_NULL_EX(comments));
+   msg.setCode(CMD_CREATE_SITUATION);
+   msg.setId(dwRqId);
+   msg.setField(VID_NAME, name);
+   msg.setField(VID_COMMENTS, CHECK_NULL_EX(comments));
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-   	rcc = pResponse->GetVariableLong(VID_RCC);
+   	rcc = pResponse->getFieldAsUInt32(VID_RCC);
 		if (rcc == RCC_SUCCESS)
 		{
-			*pdwId = pResponse->GetVariableLong(VID_SITUATION_ID);
+			*pdwId = pResponse->getFieldAsUInt32(VID_SITUATION_ID);
 		}
       delete pResponse;
    }
@@ -111,18 +111,18 @@ UINT32 LIBNXCL_EXPORTABLE NXCCreateSituation(NXC_SESSION hSession, const TCHAR *
 UINT32 LIBNXCL_EXPORTABLE NXCModifySituation(NXC_SESSION hSession, UINT32 id,
                                             const TCHAR *name, const TCHAR *comments)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_UPDATE_SITUATION);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_SITUATION_ID, id);
+   msg.setCode(CMD_UPDATE_SITUATION);
+   msg.setId(dwRqId);
+   msg.setField(VID_SITUATION_ID, id);
    if (name != NULL)
-   	msg.SetVariable(VID_NAME, name);
+   	msg.setField(VID_NAME, name);
    if (comments != NULL)
-   	msg.SetVariable(VID_COMMENTS, comments);
+   	msg.setField(VID_COMMENTS, comments);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -135,14 +135,14 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifySituation(NXC_SESSION hSession, UINT32 id,
 
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteSituation(NXC_SESSION hSession, UINT32 id)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_DELETE_SITUATION);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_SITUATION_ID, id);
+   msg.setCode(CMD_DELETE_SITUATION);
+   msg.setId(dwRqId);
+   msg.setField(VID_SITUATION_ID, id);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -155,15 +155,15 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteSituation(NXC_SESSION hSession, UINT32 id)
 
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteSituationInstance(NXC_SESSION hSession, UINT32 id, const TCHAR *instance)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_DEL_SITUATION_INSTANCE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_SITUATION_ID, id);
-   msg.SetVariable(VID_SITUATION_INSTANCE, instance);
+   msg.setCode(CMD_DEL_SITUATION_INSTANCE);
+   msg.setId(dwRqId);
+   msg.setField(VID_SITUATION_ID, id);
+   msg.setField(VID_SITUATION_INSTANCE, instance);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -176,24 +176,24 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteSituationInstance(NXC_SESSION hSession, UINT3
 
 UINT32 LIBNXCL_EXPORTABLE NXCGetSituationList(NXC_SESSION hSession, NXC_SITUATION_LIST **list)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRqId, rcc;
 	int i;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_SITUATION_LIST);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GET_SITUATION_LIST);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-   	rcc = pResponse->GetVariableLong(VID_RCC);
+   	rcc = pResponse->getFieldAsUInt32(VID_RCC);
 		if (rcc == RCC_SUCCESS)
 		{
 			*list = (NXC_SITUATION_LIST *)malloc(sizeof(NXC_SITUATION_LIST));
-			(*list)->m_count = pResponse->GetVariableLong(VID_SITUATION_COUNT);
+			(*list)->m_count = pResponse->getFieldAsUInt32(VID_SITUATION_COUNT);
 			(*list)->m_situations = (NXC_SITUATION *)malloc(sizeof(NXC_SITUATION) * (*list)->m_count);
 			memset((*list)->m_situations, 0, sizeof(NXC_SITUATION) * (*list)->m_count);
 			delete pResponse;

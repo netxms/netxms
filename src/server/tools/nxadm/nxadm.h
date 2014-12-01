@@ -37,8 +37,8 @@
 
 BOOL Connect(void);
 void Disconnect(void);
-void SendMsg(CSCPMessage *pMsg);
-CSCPMessage *RecvMsg(void);
+void SendMsg(NXCPMessage *pMsg);
+NXCPMessage *RecvMsg(void);
 
 
 //

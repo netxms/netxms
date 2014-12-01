@@ -35,8 +35,10 @@ static void SaveResponse(char *host, UINT32 ip, char *buffer)
    }
 }
 
-
-LONG H_CheckHTTP(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+/**
+ * Check HTTP/HTTPS service - parameter handler
+ */
+LONG H_CheckHTTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_SUCCESS;
 
@@ -48,12 +50,12 @@ LONG H_CheckHTTP(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	TCHAR szTimeout[64];
 	unsigned short nPort;
 
-	AgentGetParameterArgA(pszParam, 1, szHost, sizeof(szHost));
-	AgentGetParameterArg(pszParam, 2, szPort, sizeof(szPort));
-	AgentGetParameterArgA(pszParam, 3, szURI, sizeof(szURI));
-	AgentGetParameterArgA(pszParam, 4, szHeader, sizeof(szHeader));
-	AgentGetParameterArgA(pszParam, 5, szMatch, sizeof(szMatch));
-   AgentGetParameterArg(pszParam, 6, szTimeout, sizeof(szTimeout));
+	AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
+	AgentGetParameterArg(param, 2, szPort, sizeof(szPort));
+	AgentGetParameterArgA(param, 3, szURI, sizeof(szURI));
+	AgentGetParameterArgA(param, 4, szHeader, sizeof(szHeader));
+	AgentGetParameterArgA(param, 5, szMatch, sizeof(szMatch));
+   AgentGetParameterArg(param, 6, szTimeout, sizeof(szTimeout));
 
 	if (szHost[0] == 0 || szPort[0] == 0 || szURI[0] == 0)
 	{
@@ -67,21 +69,23 @@ LONG H_CheckHTTP(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 	}
 
 	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
-   if (pArg == NULL)
+   INT64 start = GetCurrentTimeMs();
+   int result = (arg[1] == 'S') ? CheckHTTPS(szHost, 0, nPort, szURI, szHeader, szMatch, dwTimeout) : CheckHTTP(szHost, 0, nPort, szURI, szHeader, szMatch, dwTimeout);
+   if (*arg == 'R')
    {
-      // HTTP
-      ret_int(pValue, CheckHTTP(szHost, 0, nPort, szURI, szHeader, szMatch, dwTimeout));
+	   ret_int64(value, GetCurrentTimeMs() - start);
    }
    else
    {
-      // HTTPS
-      ret_int(pValue, CheckHTTPS(szHost, 0, nPort, szURI, szHeader, szMatch, dwTimeout));
+	   ret_int(value, result);
    }
 	return nRet;
 }
 
-int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI,
-		char *szHost, char *szMatch, UINT32 dwTimeout)
+/**
+ * Check HTTP service
+ */
+int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHost, char *szMatch, UINT32 dwTimeout)
 {
 	int nBytes, nRet = 0;
 	SOCKET nSd;
@@ -176,6 +180,9 @@ int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI,
 	return nRet;
 }
 
+/**
+ * Check HTTPS service
+ */
 int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHost, char *szMatch, UINT32 dwTimeout)
 {
 #ifdef _WITH_ENCRYPTION
@@ -245,6 +252,7 @@ int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHo
                         else
                         {
                            sendFailed = true;
+                           AgentWriteDebugLog(7, _T("PortCheck: BIO_write failed"));
                            break;
                         }
                      }
@@ -280,6 +288,7 @@ int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHo
                            {
                               continue;
                            }
+                           AgentWriteDebugLog(7, _T("PortCheck: BIO_read failed"));
                            break;
                         }
                         offset += i;
@@ -293,6 +302,7 @@ int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHo
                         else
                         {
                            SaveResponse(szAddr, dwAddr, buffer);
+                           AgentWriteDebugLog(7, _T("PortCheck: content do not match"));
                         }
                      }
 

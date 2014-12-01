@@ -48,47 +48,35 @@ static TCHAR m_helpText[] =
    _T("   -v         : Show version and exit\n")
    _T("\n");
 
-
-//
-// Trace callback
-//
-
+/**
+ * Trace callback
+ */
 static void TraceCallback(const TCHAR *format, va_list args)
 {
 	_vtprintf(format, args);
 	_puttc(_T('\n'), stdout);
 }
 
-
-//
-// Logger callback
-//
-
-static void LoggerCallback(int level, const TCHAR *format, ...)
+/**
+ * Logger callback
+ */
+static void LoggerCallback(int level, const TCHAR *format, va_list args)
 {
-	va_list args;
-
-	va_start(args, format);
 	TraceCallback(format, args);
-	va_end(args);
 }
 
-
-//
-// File parsing thread
-//
-
+/**
+ * File parsing thread
+ */
 static THREAD_RESULT THREAD_CALL ParserThread(void *arg)
 {
-	((LogParser *)arg)->monitorFile(m_stopCondition, LoggerCallback);
+	((LogParser *)arg)->monitorFile(m_stopCondition);
 	return THREAD_OK;
 }
 
-
-//
-// main()
-//
-
+/**
+ * main()
+ */
 int main(int argc, char *argv[])
 {
 	int rc = 0, ch, traceLevel = -1;
@@ -132,6 +120,9 @@ int main(int argc, char *argv[])
       _tprintf(_T("Required arguments missing\n"));
       return 1;
    }
+
+   InitLogParserLibrary();
+   SetLogParserTraceCallback(LoggerCallback);
 
 #ifdef UNICODE
 	WCHAR *wname = WideStringFromMBString(argv[optind]);
@@ -184,5 +175,6 @@ int main(int argc, char *argv[])
 		rc = 2;
 	}
 
+   CleanupLogParserLibrary();
 	return rc;
 }

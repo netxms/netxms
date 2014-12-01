@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,12 @@
  */
 package org.netxms.ui.eclipse.datacollection.views;
 
-import java.util.Arrays;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -40,15 +33,8 @@ import org.netxms.client.Table;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.datacollection.Activator;
-import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.views.helpers.TableContentProvider;
-import org.netxms.ui.eclipse.datacollection.views.helpers.TableItemComparator;
-import org.netxms.ui.eclipse.datacollection.views.helpers.TableLabelProvider;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.datacollection.widgets.SummaryTableWidget;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Display results of table tool execution
@@ -60,9 +46,8 @@ public class SummaryTable extends ViewPart
 	private NXCSession session;
 	private int tableId;
 	private long baseObjectId;
-	private SortableTableViewer viewer;
+	private SummaryTableWidget viewer;
 	private Action actionRefresh;
-	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
 	
 	/* (non-Javadoc)
@@ -90,13 +75,10 @@ public class SummaryTable extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		viewer = new SortableTableViewer(parent, SWT.FULL_SELECTION | SWT.MULTI);
-		viewer.setContentProvider(new TableContentProvider());
-		viewer.setLabelProvider(new TableLabelProvider());
+		viewer = new SummaryTableWidget(parent, SWT.NONE, this, tableId, baseObjectId);
 
 		createActions();
 		contributeToActionBars();
-		createPopupMenu();
 	}
 	
 	/**
@@ -108,12 +90,11 @@ public class SummaryTable extends ViewPart
 			@Override
 			public void run()
 			{
-				refreshTable();
+				viewer.refresh();
 			}
 		};
 
-		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
-		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
+		actionExportAllToCsv = new ExportToCsvAction(this, viewer.getViewer(), false);
 	}
 
 	/**
@@ -151,96 +132,13 @@ public class SummaryTable extends ViewPart
 		manager.add(actionRefresh);
 	}
 
-	/**
-	 * Create pop-up menu
-	 */
-	private void createPopupMenu()
-	{
-		// Create menu manager.
-		MenuManager menuMgr = new MenuManager();
-		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager mgr)
-			{
-				fillContextMenu(mgr);
-			}
-		});
-
-		// Create menu.
-		Menu menu = menuMgr.createContextMenu(viewer.getControl());
-		viewer.getControl().setMenu(menu);
-	}
-
-	/**
-	 * Fill context menu
-	 * @param mgr Menu manager
-	 */
-	protected void fillContextMenu(IMenuManager manager)
-	{
-		manager.add(actionExportToCsv);
-	}
-
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
 	@Override
 	public void setFocus()
 	{
-		viewer.getTable().setFocus();
-	}
-
-	/**
-	 * Refresh table
-	 */
-	public void refreshTable()
-	{
-		viewer.setInput(null);
-		new ConsoleJob(Messages.get().SummaryTable_JobName, this, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				final Table table = session.queryDciSummaryTable(tableId, baseObjectId);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						updateViewer(table);
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().SummaryTable_JobError;
-			}
-		}.start();
-	}
-	
-	/**
-	 * Update viewer with fresh table data
-	 * 
-	 * @param table table
-	 */
-	private void updateViewer(final Table table)
-	{
-		if (!viewer.isInitialized())
-		{
-			final String[] names = table.getColumnDisplayNames();
-			final int[] widths = new int[names.length];
-			Arrays.fill(widths, 100);
-			viewer.createColumns(names, widths, 0, SWT.UP);
-			WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "SummaryTable." + Integer.toString(tableId)); //$NON-NLS-1$
-			viewer.getTable().addDisposeListener(new DisposeListener() {
-				@Override
-				public void widgetDisposed(DisposeEvent e)
-				{
-					WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "SummaryTable." + Integer.toString(tableId)); //$NON-NLS-1$
-				}
-			});
-			viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
-		}
-		viewer.setInput(table);
+		viewer.getViewer().getTable().setFocus();
 	}
 	
 	/**
@@ -250,6 +148,6 @@ public class SummaryTable extends ViewPart
 	{
 		AbstractObject object = session.findObjectById(baseObjectId);
 		setPartName(table.getTitle() + " - " + ((object != null) ? object.getObjectName() : ("[" + baseObjectId + "]")));  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		updateViewer(table);
+		viewer.update(table);
 	}
 }

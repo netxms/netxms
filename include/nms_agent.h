@@ -92,6 +92,7 @@
 #define ERR_FILE_STAT_FAILED        ((UINT32)916)
 #define ERR_MEM_ALLOC_FAILED        ((UINT32)917)
 #define ERR_FILE_DELETE_FAILED      ((UINT32)918)
+#define ERR_NO_SESSION_AGENT        ((UINT32)919)
 
 /**
  * Parameter handler return codes
@@ -107,6 +108,15 @@
 #define WINPERF_REMOTE_COUNTER_CONFIG     ((UINT32)0x00000002)
 
 /**
+ * User session states (used by session agents)
+ */
+#define USER_SESSION_ACTIVE         0
+#define USER_SESSION_CONNECTED      1
+#define USER_SESSION_DISCONNECTED   2
+#define USER_SESSION_IDLE           3
+#define USER_SESSION_OTHER          4
+
+/**
  * Descriptions for common parameters
  */
 #define DCIDESC_FS_AVAIL                          _T("Available space on file system {instance}")
@@ -116,6 +126,7 @@
 #define DCIDESC_FS_TOTAL                          _T("Total space on file system {instance}")
 #define DCIDESC_FS_USED                           _T("Used space on file system {instance}")
 #define DCIDESC_FS_USEDPERC                       _T("Percentage of used space on file system {instance}")
+#define DCIDESC_NET_INTERFACE_64BITCOUNTERS       _T("Is 64bit interface counters supported")
 #define DCIDESC_NET_INTERFACE_ADMINSTATUS         _T("Administrative status of interface {instance}")
 #define DCIDESC_NET_INTERFACE_BYTESIN             _T("Number of input bytes on interface {instance}")
 #define DCIDESC_NET_INTERFACE_BYTESOUT            _T("Number of output bytes on interface {instance}")
@@ -338,10 +349,27 @@
 #define DCIDESC_DEPRECATED                        _T("<deprecated>")
 
 
+#define DCTDESC_AGENT_SESSION_AGENTS              _T("Registered session agents")
 #define DCTDESC_AGENT_SUBAGENTS                   _T("Loaded subagents")
 #define DCTDESC_FILESYSTEM_VOLUMES                _T("File system volumes")
 #define DCTDESC_SYSTEM_INSTALLED_PRODUCTS         _T("Installed products")
 #define DCTDESC_SYSTEM_PROCESSES                  _T("Processes")
+
+/**
+ * API for CommSession
+ */
+class AbstractCommSession
+{
+public:
+   virtual bool isMasterServer() = 0;
+   virtual bool isControlServer() = 0;
+   virtual const InetAddress& getServerAddress() = 0;
+
+   virtual void sendMessage(NXCPMessage *pMsg) = 0;
+   virtual void sendRawMessage(NXCP_MESSAGE *pMsg) = 0;
+	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) = 0;
+   virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
+};
 
 /**
  * Subagent's parameter information
@@ -349,7 +377,7 @@
 typedef struct
 {
    TCHAR name[MAX_PARAM_NAME];
-   LONG (* handler)(const TCHAR *, const TCHAR *, TCHAR *);
+   LONG (* handler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
    const TCHAR *arg;
    int dataType;		// Use DT_DEPRECATED to indicate deprecated parameter
    TCHAR description[MAX_DB_STRING];
@@ -371,7 +399,7 @@ typedef struct
 typedef struct
 {
    TCHAR name[MAX_PARAM_NAME];
-   LONG (* handler)(const TCHAR *, const TCHAR *, StringList *);
+   LONG (* handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
    const TCHAR *arg;
 } NETXMS_SUBAGENT_LIST;
 
@@ -381,7 +409,7 @@ typedef struct
 typedef struct
 {
    TCHAR name[MAX_PARAM_NAME];
-   LONG (* handler)(const TCHAR *, const TCHAR *, Table *);
+   LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *);
    const TCHAR *arg;
    TCHAR instanceColumns[MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS];
    TCHAR description[MAX_DB_STRING];
@@ -393,18 +421,18 @@ typedef struct
 typedef struct
 {
    TCHAR name[MAX_PARAM_NAME];
-   LONG (* handler)(const TCHAR *, StringList *, const TCHAR *);
+   LONG (* handler)(const TCHAR *, StringList *, const TCHAR *, AbstractCommSession *);
    const TCHAR *arg;
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_ACTION;
 
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20110301)
+
+class NXCPMessage;
+
 /**
  * Subagent initialization structure
  */
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20110301)
-
-class CSCPMessage;
-
 typedef struct
 {
    UINT32 magic;    // Magic number to check if subagent uses correct version of this structure
@@ -412,8 +440,7 @@ typedef struct
    TCHAR version[32];
 	BOOL (* init)(Config *);   // Called to initialize subagent. Can be NULL.
    void (* shutdown)();       // Called at subagent unload. Can be NULL.
-   BOOL (* commandHandler)(UINT32 dwCommand, CSCPMessage *pRequest,
-                           CSCPMessage *pResponse, void *session);
+   BOOL (* commandHandler)(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session);
    UINT32 numParameters;
    NETXMS_SUBAGENT_PARAM *parameters;
    UINT32 numLists;
@@ -499,11 +526,9 @@ inline void ret_uint64(TCHAR *rbuf, QWORD value)
 #endif   /* _WIN32 */
 }
 
-
 //
 // API for subagents
 //
-
 BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, int maxSize);
 BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, WCHAR *arg, int maxSize);
 #ifdef UNICODE
@@ -526,6 +551,7 @@ void LIBNETXMS_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ...
 void LIBNETXMS_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va_list args);
 void LIBNETXMS_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, const char *pszFormat, ...);
 void LIBNETXMS_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList);
+bool LIBNETXMS_EXPORTABLE EnumerateSessions(bool (* callback)(AbstractCommSession *, void *), void *data);
 BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LONG value);
@@ -533,5 +559,12 @@ BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, U
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, INT64 value);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, QWORD value);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, double value);
+
+void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
+                                          void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
+                                          void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
+														bool (* enumerateSessions)(bool (*)(AbstractCommSession *, void *), void *),
+                                          bool (* sendFile)(void *, UINT32, const TCHAR *, long),
+                                          bool (* pushData)(const TCHAR *, const TCHAR *, UINT32));
 
 #endif   /* _nms_agent_h_ */

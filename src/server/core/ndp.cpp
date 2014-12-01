@@ -39,7 +39,7 @@ static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, UINT32 snmpVer
 
 	WORD result = 0;
 	SNMP_PDU *pRespPDU = NULL;
-   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_dwSNMPTimeout, 3);
+   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
 	delete pRqPDU;
 	if ((rcc == SNMP_ERR_SUCCESS) && (pRespPDU->getNumVariables() > 0) && (pRespPDU->getVariable(0)->getType() == ASN_OCTET_STRING))
    {
@@ -72,21 +72,21 @@ static UINT32 NDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transp
 	var->getRawValue((BYTE *)&remoteIp, sizeof(UINT32));
 	remoteIp = ntohl(remoteIp);
 	TCHAR ipAddrText[32];
-	DbgPrintf(6, _T("NDP(%s [%d]): found peer at %d.%d IP address %s"), node->Name(), node->Id(), slot, port, IpToStr(remoteIp, ipAddrText));
+	DbgPrintf(6, _T("NDP(%s [%d]): found peer at %d.%d IP address %s"), node->getName(), node->getId(), slot, port, IpToStr(remoteIp, ipAddrText));
 	Node *remoteNode = FindNodeByIP(node->getZoneId(), remoteIp);
 	if (remoteNode == NULL)
 	{
-		DbgPrintf(6, _T("NDP(%s [%d]): node object for IP %s not found"), node->Name(), node->Id(), ipAddrText);
+		DbgPrintf(6, _T("NDP(%s [%d]): node object for IP %s not found"), node->getName(), node->getId(), ipAddrText);
 		return SNMP_ERR_SUCCESS;
 	}
 
 	Interface *ifLocal = node->findInterfaceBySlotAndPort(slot, port);
-	DbgPrintf(6, _T("NDP(%s [%d]): remote node is %s [%d], local interface object \"%s\""), node->Name(), node->Id(),
-	          remoteNode->Name(), remoteNode->Id(), (ifLocal != NULL) ? ifLocal->Name() : _T("(null)"));
+	DbgPrintf(6, _T("NDP(%s [%d]): remote node is %s [%d], local interface object \"%s\""), node->getName(), node->getId(),
+	          remoteNode->getName(), remoteNode->getId(), (ifLocal != NULL) ? ifLocal->getName() : _T("(null)"));
 	if (ifLocal != NULL)
 	{
 		WORD rport = ReadRemoteSlotAndPort(node, oid, snmpVersion, transport);
-		DbgPrintf(6, _T("NDP(%s [%d]): remote slot/port is %04X"), node->Name(), node->Id(), rport);
+		DbgPrintf(6, _T("NDP(%s [%d]): remote slot/port is %04X"), node->getName(), node->getId(), rport);
 		if (rport != 0)
 		{
 			Interface *ifRemote = remoteNode->findInterfaceBySlotAndPort(rport >> 8, rport & 0xFF);
@@ -94,11 +94,12 @@ static UINT32 NDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transp
 			{
 				LL_NEIGHBOR_INFO info;
 
-				info.objectId = remoteNode->Id();
+				info.objectId = remoteNode->getId();
 				info.ifRemote = ifRemote->getIfIndex();
 				info.ifLocal = ifLocal->getIfIndex();
 				info.isPtToPt = true;
 				info.protocol = LL_PROTO_NDP;
+            info.isCached = false;
 				((LinkLayerNeighbors *)arg)->addConnection(&info);
 			}
 		}
@@ -115,8 +116,8 @@ void AddNDPNeighbors(Node *node, LinkLayerNeighbors *nbs)
 	if (!(node->getFlags() & NF_IS_NDP))
 		return;
 
-	DbgPrintf(5, _T("NDP: collecting topology information for node %s [%d]"), node->Name(), node->Id());
+	DbgPrintf(5, _T("NDP: collecting topology information for node %s [%d]"), node->getName(), node->getId());
 	nbs->setData(node);
 	node->callSnmpEnumerate(_T(".1.3.6.1.4.1.45.1.6.13.2.1.1.3"), NDPTopoHandler, nbs);
-	DbgPrintf(5, _T("NDP: finished collecting topology information for node %s [%d]"), node->Name(), node->Id());
+	DbgPrintf(5, _T("NDP: finished collecting topology information for node %s [%d]"), node->getName(), node->getId());
 }

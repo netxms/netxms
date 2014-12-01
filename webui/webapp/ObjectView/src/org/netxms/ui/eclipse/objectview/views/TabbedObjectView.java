@@ -455,6 +455,7 @@ public class TabbedObjectView extends ViewPart
 	public void dispose()
 	{
 		CommandBridge.getInstance().unregisterCommand("TabbedObjectView/selectTab"); //$NON-NLS-1$
+      CommandBridge.getInstance().unregisterCommand("TabbedObjectView/changeObject"); //$NON-NLS-1$
 		ConsoleSharedData.getSession().removeListener(sessionListener);
 		if (sourceProvider != null)
 			sourceProvider.updateProperty(SourceProvider.ACTIVE_TAB, null);

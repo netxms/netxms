@@ -1,6 +1,6 @@
 /* 
 ** Oracle Database Driver
-** Copyright (C) 2007-2013 Victor Kirhenshtein
+** Copyright (C) 2007-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@
 #include "oracledrv.h"
 
 DECLARE_DRIVER_HEADER("ORACLE")
+
+extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCHAR *errorText);
 
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
@@ -99,9 +101,9 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" BOOL EXPORT DrvInit(const char *cmdLine)
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
-	return TRUE;
+	return true;
 }
 
 /**
@@ -213,13 +215,14 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 
 				// Authenticate
 				if (OCISessionBegin(pConn->handleService, pConn->handleError,
-				                    pConn->handleSession, OCI_CRED_RDBMS, OCI_DEFAULT) == OCI_SUCCESS)
+				                    pConn->handleSession, OCI_CRED_RDBMS, OCI_STMT_CACHE) == OCI_SUCCESS)
 				{
 					OCIAttrSet(pConn->handleService, OCI_HTYPE_SVCCTX, pConn->handleSession, 0,
 					           OCI_ATTR_SESSION, pConn->handleError);
 					pConn->mutexQueryLock = MutexCreate();
 					pConn->nTransLevel = 0;
 					pConn->szLastError[0] = 0;
+               pConn->prefetchLimit = 10;
 
 					if ((schema != NULL) && (schema[0] != 0))
 					{
@@ -228,6 +231,9 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 						OCIAttrSet(pConn->handleSession, OCI_HTYPE_SESSION, pwszStr,
 									  (ub4)ucs2_strlen(pwszStr) * sizeof(UCS2CHAR), OCI_ATTR_CURRENT_SCHEMA, pConn->handleError);
 					}
+
+               // Setup session
+               DrvQuery(pConn, L"ALTER SESSION SET NLS_LANGUAGE='AMERICAN' NLS_NUMERIC_CHARACTERS='.,'", NULL);
 				}
 				else
 				{
@@ -274,6 +280,15 @@ extern "C" void EXPORT DrvDisconnect(ORACLE_CONN *pConn)
      	MutexDestroy(pConn->mutexQueryLock);
       free(pConn);
 	}
+}
+
+/**
+ * Set prefetch limit
+ */
+extern "C" void EXPORT DrvSetPrefetchLimit(ORACLE_CONN *pConn, int limit)
+{
+	if (pConn != NULL)
+      pConn->prefetchLimit = limit;
 }
 
 /**
@@ -368,7 +383,10 @@ extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQu
 		stmt->connection = pConn;
 		stmt->handleStmt = handleStmt;
 		stmt->bindings = new Array(8, 8, false);
+      stmt->batchBindings = NULL;
 		stmt->buffers = new Array(8, 8, true);
+      stmt->batchMode = 0;
+      stmt->batchSize = 0;
 		OCIHandleAlloc(pConn->handleEnv, (void **)&stmt->handleError, OCI_HTYPE_ERROR, 0, NULL);
 		*pdwError = DBERR_SUCCESS;
 	}
@@ -390,13 +408,52 @@ extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQu
 }
 
 /**
- * Bind parameter to statement
+ * Open batch
  */
-extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
+extern "C" bool EXPORT DrvOpenBatch(ORACLE_STATEMENT *stmt)
 {
-	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double) };
-	static ub2 oracleType[] = { SQLT_STR, SQLT_INT, SQLT_UIN, SQLT_INT, SQLT_UIN, SQLT_FLT };
+   stmt->buffers->clear();
+   if (stmt->batchBindings != NULL)
+      stmt->batchBindings->clear();
+   else
+      stmt->batchBindings = new ObjectArray<OracleBatchBind>(16, 16, true);
+   stmt->batchMode = true;
+   stmt->batchSize = 0;
+   return true;
+}
 
+/**
+ * Start next batch row
+ */
+extern "C" void EXPORT DrvNextBatchRow(ORACLE_STATEMENT *stmt)
+{
+   if (!stmt->batchMode)
+      return;
+   
+   for(int i = 0; i < stmt->batchBindings->size(); i++)
+   {
+	   OracleBatchBind *bind = stmt->batchBindings->get(i);
+      if (bind != NULL)
+         bind->addRow();
+   }
+   stmt->batchSize++;
+}
+
+/**
+ * Buffer sizes for different C types
+ */
+static DWORD s_bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double) };
+
+/**
+ * Corresponding Oracle types for C types
+ */
+static ub2 s_oracleType[] = { SQLT_STR, SQLT_INT, SQLT_UIN, SQLT_INT, SQLT_UIN, SQLT_FLT };
+
+/**
+ * Bind parameter to statement - normal mode (non-batch)
+ */
+static void BindNormal(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
+{
 	OCIBind *handleBind = (OCIBind *)stmt->bindings->get(pos - 1);
 	void *sqlBuffer;
 	switch(cType)
@@ -404,14 +461,14 @@ extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int
 		case DB_CTYPE_STRING:
 #if UNICODE_UCS4
 			sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
-			stmt->buffers->set(pos - 1, sqlBuffer);
+		   stmt->buffers->set(pos - 1, sqlBuffer);
 			if (allocType == DB_BIND_DYNAMIC)
 				free(buffer);
 #else
-			if (allocType == DB_BIND_TRANSIENT)
+         if (allocType == DB_BIND_TRANSIENT)
 			{
 				sqlBuffer = wcsdup((WCHAR *)buffer);
-				stmt->buffers->set(pos - 1, sqlBuffer);
+   		   stmt->buffers->set(pos - 1, sqlBuffer);
 			}
 			else
 			{
@@ -420,10 +477,10 @@ extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int
 					stmt->buffers->set(pos - 1, sqlBuffer);
 			}
 #endif
-			OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
-							 ((sb4)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
-							 (sqlType == DB_SQLTYPE_TEXT) ? SQLT_LNG : SQLT_STR,
-							 NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+		   OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
+						    ((sb4)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
+						    (sqlType == DB_SQLTYPE_TEXT) ? SQLT_LNG : SQLT_STR,
+						    NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
 			break;
 		case DB_CTYPE_INT64:	// OCI prior to 11.2 cannot bind 64 bit integers
 #ifdef UNICODE_UCS2
@@ -436,10 +493,10 @@ extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int
 				sqlBuffer = UCS2StringFromMBString(temp);
 			}
 #endif
-			stmt->buffers->set(pos - 1, sqlBuffer);
-			OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
-							 ((sb4)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
-							 SQLT_STR, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+		   stmt->buffers->set(pos - 1, sqlBuffer);
+		   OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
+						    ((sb4)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
+						    SQLT_STR, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
 			if (allocType == DB_BIND_DYNAMIC)
 				free(buffer);
 			break;
@@ -454,35 +511,243 @@ extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int
 				sqlBuffer = UCS2StringFromMBString(temp);
 			}
 #endif
-			stmt->buffers->set(pos - 1, sqlBuffer);
-			OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
-							 ((sb4)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
-							 SQLT_STR, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+		   stmt->buffers->set(pos - 1, sqlBuffer);
+		   OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
+						    ((sb4)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
+						    SQLT_STR, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
 			if (allocType == DB_BIND_DYNAMIC)
 				free(buffer);
 			break;
 		default:
-			switch(allocType)
-			{
-				case DB_BIND_STATIC:
-					sqlBuffer = buffer;
-					break;
-				case DB_BIND_DYNAMIC:
-					sqlBuffer = buffer;
-					stmt->buffers->set(pos - 1, buffer);
-					break;
-				case DB_BIND_TRANSIENT:
-					sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
-					stmt->buffers->set(pos - 1, sqlBuffer);
-					break;
-				default:
-					return;	// Invalid call
-			}
-			OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer, bufferSize[cType],
-							 oracleType[cType], NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+		   switch(allocType)
+		   {
+			   case DB_BIND_STATIC:
+				   sqlBuffer = buffer;
+				   break;
+			   case DB_BIND_DYNAMIC:
+				   sqlBuffer = buffer;
+				   stmt->buffers->set(pos - 1, buffer);
+				   break;
+			   case DB_BIND_TRANSIENT:
+				   sqlBuffer = nx_memdup(buffer, s_bufferSize[cType]);
+				   stmt->buffers->set(pos - 1, sqlBuffer);
+				   break;
+			   default:
+				   return;	// Invalid call
+		   }
+		   OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer, s_bufferSize[cType],
+						    s_oracleType[cType], NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
 			break;
 	}
-	stmt->bindings->set(pos - 1, handleBind);
+
+   stmt->bindings->set(pos - 1, handleBind);
+}
+
+/**
+ * Batch bind - constructor
+ */
+OracleBatchBind::OracleBatchBind(int cType, int sqlType)
+{
+   m_cType = cType;
+   m_size = 0;
+   m_allocated = 256;
+   if ((cType == DB_CTYPE_STRING) || (cType == DB_CTYPE_INT64) || (cType == DB_CTYPE_UINT64))
+   {
+      m_elementSize = sizeof(UCS2CHAR);
+      m_string = true;
+      m_oraType = (sqlType == DB_SQLTYPE_TEXT) ? SQLT_LNG : SQLT_STR;
+      m_data = NULL;
+      m_strings = (UCS2CHAR **)calloc(m_allocated, sizeof(UCS2CHAR *));
+   }
+   else
+   {
+      m_elementSize = s_bufferSize[cType];
+      m_string = false;
+      m_oraType = s_oracleType[cType];
+      m_data = calloc(m_allocated, m_elementSize);
+      m_strings = NULL;
+   }
+}
+
+/**
+ * Batch bind - destructor
+ */
+OracleBatchBind::~OracleBatchBind()
+{
+   if (m_strings != NULL)
+   {
+      for(int i = 0; i < m_size; i++)
+         safe_free(m_strings[i]);
+      free(m_strings);
+   }
+   safe_free(m_data);
+}
+
+/**
+ * Batch bind - add row
+ */
+void OracleBatchBind::addRow()
+{
+   if (m_size == m_allocated)
+   {
+      m_allocated += 256;
+      if (m_string)
+      {
+         m_strings = (UCS2CHAR **)realloc(m_strings, m_allocated * sizeof(UCS2CHAR *));
+         memset(m_strings + m_size, 0, (m_allocated - m_size) * sizeof(UCS2CHAR *));
+      }
+      else
+      {
+         m_data = realloc(m_data, m_allocated * m_elementSize);
+         memset((char *)m_data + m_size * m_elementSize, 0, (m_allocated - m_size) * m_elementSize);
+      }
+   }
+   if (m_size > 0)
+   {
+      // clone last element
+      if (m_string)
+      {
+         UCS2CHAR *p = m_strings[m_size - 1];
+         m_strings[m_size] = (p != NULL) ? ucs2_strdup(p) : NULL;
+      }
+      else
+      {
+         memcpy((char *)m_data + m_size * m_elementSize, (char *)m_data + (m_size - 1) * m_elementSize, m_elementSize);
+      }
+   }
+   m_size++;
+}
+
+/**
+ * Batch bind - set value
+ */
+void OracleBatchBind::set(void *value)
+{
+   if (m_string)
+   {
+      safe_free(m_strings[m_size - 1]);
+      m_strings[m_size - 1] = (UCS2CHAR *)value;
+      if (value != NULL)
+      {
+         int l = (int)(ucs2_strlen((UCS2CHAR *)value) + 1) * sizeof(UCS2CHAR);
+         if (l > m_elementSize)
+            m_elementSize = l;
+      }
+   }
+   else
+   {
+      memcpy((char *)m_data + (m_size - 1) * m_elementSize, value, m_elementSize);
+   }
+}
+
+/**
+ * Get data for OCI bind
+ */
+void *OracleBatchBind::getData()
+{
+   if (!m_string)
+      return m_data;
+
+   safe_free(m_data);
+   m_data = calloc(m_size, m_elementSize);
+   char *p = (char *)m_data;
+   for(int i = 0; i < m_size; i++)
+   {
+      if (m_strings[i] == NULL)
+         continue;
+      memcpy(p, m_strings[i], ucs2_strlen(m_strings[i]) * sizeof(UCS2CHAR));
+      p += m_elementSize;
+   }
+   return m_data;
+}
+
+/**
+ * Bind parameter to statement - batch mode
+ */
+static void BindBatch(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
+{
+   if (stmt->batchSize == 0)
+      return;  // no batch rows added yet
+
+	OracleBatchBind *bind = stmt->batchBindings->get(pos - 1);
+   if (bind == NULL)
+   {
+      bind = new OracleBatchBind(cType, sqlType);
+      stmt->batchBindings->set(pos - 1, bind);
+      for(int i = 0; i < stmt->batchSize; i++)
+         bind->addRow();
+   }
+
+   if (bind->getCType() != cType)
+      return;
+
+	void *sqlBuffer;
+   switch(bind->getCType())
+	{
+		case DB_CTYPE_STRING:
+#if UNICODE_UCS4
+			sqlBuffer = UCS2StringFromUCS4String((WCHAR *)buffer);
+         if (allocType == DB_BIND_DYNAMIC)
+				free(buffer);
+#else
+         if (allocType == DB_BIND_DYNAMIC)
+         {
+				sqlBuffer = buffer;
+         }
+         else
+			{
+				sqlBuffer = wcsdup((WCHAR *)buffer);
+			}
+#endif
+         bind->set(sqlBuffer);
+			break;
+		case DB_CTYPE_INT64:	// OCI prior to 11.2 cannot bind 64 bit integers
+#ifdef UNICODE_UCS2
+			sqlBuffer = malloc(64 * sizeof(WCHAR));
+			swprintf((WCHAR *)sqlBuffer, 64, INT64_FMTW, *((INT64 *)buffer));
+#else
+			{
+				char temp[64];
+				snprintf(temp, 64, INT64_FMTA, *((INT64 *)buffer));
+				sqlBuffer = UCS2StringFromMBString(temp);
+			}
+#endif
+         bind->set(sqlBuffer);
+			if (allocType == DB_BIND_DYNAMIC)
+				free(buffer);
+			break;
+		case DB_CTYPE_UINT64:	// OCI prior to 11.2 cannot bind 64 bit integers
+#ifdef UNICODE_UCS2
+			sqlBuffer = malloc(64 * sizeof(WCHAR));
+			swprintf((WCHAR *)sqlBuffer, 64, UINT64_FMTW, *((QWORD *)buffer));
+#else
+			{
+				char temp[64];
+				snprintf(temp, 64, UINT64_FMTA, *((QWORD *)buffer));
+				sqlBuffer = UCS2StringFromMBString(temp);
+			}
+#endif
+         bind->set(sqlBuffer);
+			if (allocType == DB_BIND_DYNAMIC)
+				free(buffer);
+			break;
+		default:
+         bind->set(buffer);
+			if (allocType == DB_BIND_DYNAMIC)
+				free(buffer);
+			break;
+	}
+}
+
+/**
+ * Bind parameter to statement
+ */
+extern "C" void EXPORT DrvBind(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
+{
+   if (stmt->batchMode)
+      BindBatch(stmt, pos, sqlType, cType, buffer, allocType);
+   else
+      BindNormal(stmt, pos, sqlType, cType, buffer, allocType);
 }
 
 /**
@@ -492,8 +757,30 @@ extern "C" DWORD EXPORT DrvExecute(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt, W
 {
 	DWORD dwResult;
 
+   if (stmt->batchMode)
+   {
+      if (stmt->batchSize == 0)
+      {
+         stmt->batchMode = false;
+         stmt->batchBindings->clear();
+         return DBERR_SUCCESS;   // empty batch
+      }
+
+      for(int i = 0; i < stmt->batchBindings->size(); i++)
+      {
+         OracleBatchBind *b = stmt->batchBindings->get(i);
+         if (b == NULL)
+            continue;
+
+         OCIBind *handleBind = NULL;
+         OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, i + 1, b->getData(), 
+                      b->getElementSize(), b->getOraType(), NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+      }
+   }
+
 	MutexLock(pConn->mutexQueryLock);
-	if (OCIStmtExecute(pConn->handleService, stmt->handleStmt, pConn->handleError, 1, 0, NULL, NULL,
+   if (OCIStmtExecute(pConn->handleService, stmt->handleStmt, pConn->handleError, 
+                      stmt->batchMode ? stmt->batchSize : 1, 0, NULL, NULL,
 	                   (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
 	{
 		dwResult = DBERR_SUCCESS;
@@ -510,6 +797,13 @@ extern "C" DWORD EXPORT DrvExecute(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt, W
 		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 	}
 	MutexUnlock(pConn->mutexQueryLock);
+
+   if (stmt->batchMode)
+   {
+      stmt->batchMode = false;
+      stmt->batchBindings->clear();
+   }
+
 	return dwResult;
 }
 
@@ -526,6 +820,7 @@ extern "C" void EXPORT DrvFreeStatement(ORACLE_STATEMENT *stmt)
 	OCIHandleFree(stmt->handleError, OCI_HTYPE_ERROR);
 	MutexUnlock(stmt->connection->mutexQueryLock);
 	delete stmt->bindings;
+   delete stmt->batchBindings;
 	delete stmt->buffers;
 	free(stmt);
 }
@@ -533,7 +828,7 @@ extern "C" void EXPORT DrvFreeStatement(ORACLE_STATEMENT *stmt)
 /**
  * Perform non-SELECT query
  */
-extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
+extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCHAR *errorText)
 {
 	OCIStmt *handleStmt;
 	DWORD dwResult;
@@ -541,7 +836,7 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, WCHAR *pwszQuery, WCHAR *er
 #if UNICODE_UCS4
 	UCS2CHAR *ucs2Query = UCS2StringFromUCS4String(pwszQuery);
 #else
-	UCS2CHAR *ucs2Query = pwszQuery;
+	const UCS2CHAR *ucs2Query = pwszQuery;
 #endif
 
 	MutexLock(pConn->mutexQueryLock);
@@ -620,20 +915,33 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 				}
 
 				// Data size
-				OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &nWidth, NULL, OCI_ATTR_DATA_SIZE, pConn->handleError);
-				/* FIXME: find a way to determine real CLOB size */
-				if (nWidth == 4000)
-					nWidth = 32737;  // CLOB up to 32K
-				pBuffers[i].pData = (UCS2CHAR *)malloc((nWidth + 31) * sizeof(UCS2CHAR));
-				handleDefine = NULL;
-				if ((nStatus = OCIDefineByPos(handleStmt, &handleDefine, pConn->handleError, i + 1,
-				                              pBuffers[i].pData, (nWidth + 31) * sizeof(UCS2CHAR),
-				                              SQLT_CHR, &pBuffers[i].isNull, &pBuffers[i].nLength,
-				                              &pBuffers[i].nCode, OCI_DEFAULT)) != OCI_SUCCESS)
-				{
-					SetLastErrorText(pConn);
-					*pdwError = IsConnectionError(pConn);
-				}
+            ub2 type = 0;
+				OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &type, NULL, OCI_ATTR_DATA_TYPE, pConn->handleError);
+            if (type == OCI_TYPECODE_CLOB)
+            {
+               pBuffers[i].pData = NULL;
+               OCIDescriptorAlloc(pConn->handleEnv, (void **)&pBuffers[i].lobLocator, OCI_DTYPE_LOB, 0, NULL);
+				   handleDefine = NULL;
+				   nStatus = OCIDefineByPos(handleStmt, &handleDefine, pConn->handleError, i + 1,
+                                        &pBuffers[i].lobLocator, 0, SQLT_CLOB, &pBuffers[i].isNull, 
+                                        NULL, NULL, OCI_DEFAULT);
+            }
+            else
+            {
+               pBuffers[i].lobLocator = NULL;
+				   OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &nWidth, NULL, OCI_ATTR_DATA_SIZE, pConn->handleError);
+				   pBuffers[i].pData = (UCS2CHAR *)malloc((nWidth + 31) * sizeof(UCS2CHAR));
+				   handleDefine = NULL;
+				   nStatus = OCIDefineByPos(handleStmt, &handleDefine, pConn->handleError, i + 1,
+                                        pBuffers[i].pData, (nWidth + 31) * sizeof(UCS2CHAR),
+				                            SQLT_CHR, &pBuffers[i].isNull, &pBuffers[i].nLength,
+				                            &pBuffers[i].nCode, OCI_DEFAULT);
+            }
+            if (nStatus != OCI_SUCCESS)
+			   {
+				   SetLastErrorText(pConn);
+				   *pdwError = IsConnectionError(pConn);
+			   }
 				OCIDescriptorFree(handleParam, OCI_DTYPE_PARAM);
 			}
 			else
@@ -671,6 +979,24 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 					{
 						pResult->pData[nPos] = (WCHAR *)nx_memdup("\0\0\0", sizeof(WCHAR));
 					}
+               else if (pBuffers[i].lobLocator != NULL)
+               {
+                  ub4 length = 0;
+                  ub4 amount = length;
+                  OCILobGetLength(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &length);
+						pResult->pData[nPos] = (WCHAR *)malloc((length + 1) * sizeof(WCHAR));
+#if UNICODE_UCS4
+                  UCS2CHAR *ucs2buffer = (UCS2CHAR *)malloc(sizeof(UCS2CHAR) * length);
+                  OCILobRead(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &amount, 1, 
+                             ucs2buffer, length * sizeof(UCS2CHAR), NULL, NULL, OCI_UCS2ID, SQLCS_IMPLICIT);
+						ucs2_to_ucs4(ucs2buffer, length, pResult->pData[nPos], length + 1);
+                  free(ucs2buffer);
+#else
+                  OCILobRead(pConn->handleService, pConn->handleError, pBuffers[i].lobLocator, &amount, 1, 
+                             pResult->pData[nPos], (length + 1) * sizeof(WCHAR), NULL, NULL, OCI_UCS2ID, SQLCS_IMPLICIT);
+#endif
+						pResult->pData[nPos][length] = 0;
+               }
 					else
 					{
 						int length = pBuffers[i].nLength / sizeof(UCS2CHAR);
@@ -689,7 +1015,13 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 
 		// Cleanup
 		for(int i = 0; i < pResult->nCols; i++)
+      {
 			safe_free(pBuffers[i].pData);
+         if (pBuffers[i].lobLocator != NULL)
+         {
+            OCIDescriptorFree(pBuffers[i].lobLocator, OCI_DTYPE_LOB);
+         }
+      }
 		free(pBuffers);
 
 		// Destroy results in case of error
@@ -721,6 +1053,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, D
 	if (OCIStmtPrepare2(pConn->handleService, &handleStmt, pConn->handleError, (text *)ucs2Query,
 	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
 	{
+      OCIAttrSet(handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, 0, OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
 		if (OCIStmtExecute(pConn->handleService, handleStmt, pConn->handleError,
 		                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
 		{
@@ -759,6 +1092,7 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(ORACLE_CONN *pConn, ORACLE_STAT
 	ORACLE_RESULT *pResult = NULL;
 
 	MutexLock(pConn->mutexQueryLock);
+   OCIAttrSet(stmt->handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, 0, OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
 	if (OCIStmtExecute(pConn->handleService, stmt->handleStmt, pConn->handleError,
 	                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
 	{
@@ -820,31 +1154,25 @@ extern "C" WCHAR EXPORT *DrvGetField(ORACLE_RESULT *pResult, int nRow, int nColu
    return pValue;
 }
 
-
-//
-// Get number of rows in result
-//
-
+/**
+ * Get number of rows in result
+ */
 extern "C" int EXPORT DrvGetNumRows(ORACLE_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->nRows : 0;
 }
 
-
-//
-// Get column count in query result
-//
-
+/**
+ * Get column count in query result
+ */
 extern "C" int EXPORT DrvGetColumnCount(ORACLE_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->nCols : 0;
 }
 
-
-//
-// Get column name in query result
-//
-
+/**
+ * Get column name in query result
+ */
 extern "C" const char EXPORT *DrvGetColumnName(ORACLE_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->nCols)) ? pResult->columnNames[column] : NULL;
@@ -886,6 +1214,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *p
 	if (OCIStmtPrepare2(pConn->handleService, &pConn->handleStmt, pConn->handleError, (text *)ucs2Query,
 	                    (ub4)ucs2_strlen(ucs2Query) * sizeof(UCS2CHAR), NULL, 0, OCI_NTV_SYNTAX, OCI_DEFAULT) == OCI_SUCCESS)
 	{
+      OCIAttrSet(pConn->handleStmt, OCI_HTYPE_STMT, &pConn->prefetchLimit, 0, OCI_ATTR_PREFETCH_ROWS, pConn->handleError);
 		if (OCIStmtExecute(pConn->handleService, pConn->handleStmt, pConn->handleError,
 		                   0, 0, NULL, NULL, (pConn->nTransLevel == 0) ? OCI_COMMIT_ON_SUCCESS : OCI_DEFAULT) == OCI_SUCCESS)
 		{
@@ -914,24 +1243,40 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *p
 							pConn->columnNames[i] = strdup("");
 						}
 
-						// Data size
-						OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &nWidth, NULL, OCI_ATTR_DATA_SIZE, pConn->handleError);
-						pConn->pBuffers[i].pData = (UCS2CHAR *)malloc((nWidth + 31) * sizeof(UCS2CHAR));
-						handleDefine = NULL;
-						if (OCIDefineByPos(pConn->handleStmt, &handleDefine, pConn->handleError, i + 1,
-						                   pConn->pBuffers[i].pData, (nWidth + 31) * sizeof(UCS2CHAR),
-						                   SQLT_CHR, &pConn->pBuffers[i].isNull, &pConn->pBuffers[i].nLength,
-						                   &pConn->pBuffers[i].nCode, OCI_DEFAULT) == OCI_SUCCESS)
-						{
+				      // Data size
+                  sword nStatus;
+                  ub2 type = 0;
+				      OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &type, NULL, OCI_ATTR_DATA_TYPE, pConn->handleError);
+                  if (type == OCI_TYPECODE_CLOB)
+                  {
+                     pConn->pBuffers[i].pData = NULL;
+                     OCIDescriptorAlloc(pConn->handleEnv, (void **)&pConn->pBuffers[i].lobLocator, OCI_DTYPE_LOB, 0, NULL);
+				         handleDefine = NULL;
+				         nStatus = OCIDefineByPos(pConn->handleStmt, &handleDefine, pConn->handleError, i + 1,
+                                              &pConn->pBuffers[i].lobLocator, 0, SQLT_CLOB, &pConn->pBuffers[i].isNull, 
+                                              NULL, NULL, OCI_DEFAULT);
+                  }
+                  else
+                  {
+                     pConn->pBuffers[i].lobLocator = NULL;
+				         OCIAttrGet(handleParam, OCI_DTYPE_PARAM, &nWidth, NULL, OCI_ATTR_DATA_SIZE, pConn->handleError);
+				         pConn->pBuffers[i].pData = (UCS2CHAR *)malloc((nWidth + 31) * sizeof(UCS2CHAR));
+				         handleDefine = NULL;
+				         nStatus = OCIDefineByPos(pConn->handleStmt, &handleDefine, pConn->handleError, i + 1,
+                                              pConn->pBuffers[i].pData, (nWidth + 31) * sizeof(UCS2CHAR),
+				                                  SQLT_CHR, &pConn->pBuffers[i].isNull, &pConn->pBuffers[i].nLength,
+				                                  &pConn->pBuffers[i].nCode, OCI_DEFAULT);
+                  }
+                  if (nStatus == OCI_SUCCESS)
+                  {
 							*pdwError = DBERR_SUCCESS;
-						}
-						else
-						{
-							SetLastErrorText(pConn);
-							*pdwError = IsConnectionError(pConn);
-						}
-
-						OCIDescriptorFree(handleParam, OCI_DTYPE_PARAM);
+                  }
+                  else
+			         {
+				         SetLastErrorText(pConn);
+				         *pdwError = IsConnectionError(pConn);
+			         }
+				      OCIDescriptorFree(handleParam, OCI_DTYPE_PARAM);
 					}
 					else
 					{
@@ -974,36 +1319,32 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *p
 	return NULL;
 }
 
-
-//
-// Fetch next result line from asynchronous SELECT results
-//
-
-extern "C" BOOL EXPORT DrvFetch(ORACLE_CONN *pConn)
+/**
+ * Fetch next result line from asynchronous SELECT results
+ */
+extern "C" bool EXPORT DrvFetch(ORACLE_CONN *pConn)
 {
-	BOOL success;
+	bool success;
 
 	if (pConn == NULL)
-		return FALSE;
+		return false;
 
 	sword rc = OCIStmtFetch2(pConn->handleStmt, pConn->handleError, 1, OCI_FETCH_NEXT, 0, OCI_DEFAULT);
 	if ((rc == OCI_SUCCESS) || (rc == OCI_SUCCESS_WITH_INFO))
 	{
-		success = TRUE;
+		success = true;
 	}
 	else
 	{
 		SetLastErrorText(pConn);
-		success = FALSE;
+		success = false;
 	}
 	return success;
 }
 
-
-//
-// Get field length from current row in async query result
-//
-
+/**
+ * Get field length from current row in async query result
+ */
 extern "C" LONG EXPORT DrvGetFieldLengthAsync(ORACLE_CONN *pConn, int nColumn)
 {
 	if (pConn == NULL)
@@ -1015,16 +1356,20 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(ORACLE_CONN *pConn, int nColumn)
 	if (pConn->pBuffers[nColumn].isNull)
 		return 0;
 
+   if (pConn->pBuffers[nColumn].lobLocator != NULL)
+   {
+      ub4 length = 0;
+      OCILobGetLength(pConn->handleService, pConn->handleError, pConn->pBuffers[nColumn].lobLocator, &length);
+      return (LONG)length;
+   }
+
 	return (LONG)(pConn->pBuffers[nColumn].nLength / sizeof(UCS2CHAR));
 }
 
-
-//
-// Get field from current row in async query result
-//
-
-extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn,
-                                          WCHAR *pBuffer, int nBufSize)
+/**
+ * Get field from current row in async query result
+ */
+extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn, WCHAR *pBuffer, int nBufSize)
 {
 	int nLen;
 
@@ -1038,6 +1383,25 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn,
 	{
 		*pBuffer = 0;
 	}
+   else if (pConn->pBuffers[nColumn].lobLocator != NULL)
+   {
+      ub4 length = 0;
+      OCILobGetLength(pConn->handleService, pConn->handleError, pConn->pBuffers[nColumn].lobLocator, &length);
+
+		nLen = min(nBufSize - 1, ((int)(length / sizeof(UCS2CHAR))));
+      ub4 amount = nLen;
+#if UNICODE_UCS4
+      UCS2CHAR *ucs2buffer = (UCS2CHAR *)malloc(nLen * sizeof(UCS2CHAR));
+      OCILobRead(pConn->handleService, pConn->handleError, pConn->pBuffers[nColumn].lobLocator, &amount, 1, 
+                 ucs2buffer, nLen * sizeof(UCS2CHAR), NULL, NULL, OCI_UCS2ID, SQLCS_IMPLICIT);
+		ucs2_to_ucs4(ucs2buffer, nLen, pBuffer, nLen);
+      free(ucs2buffer);
+#else
+      OCILobRead(pConn->handleService, pConn->handleError, pConn->pBuffers[nColumn].lobLocator, &amount, 1, 
+                 pBuffer, nBufSize * sizeof(WCHAR), NULL, NULL, OCI_UCS2ID, SQLCS_IMPLICIT);
+#endif
+		pBuffer[nLen] = 0;
+   }
 	else
 	{
 		nLen = min(nBufSize - 1, ((int)(pConn->pBuffers[nColumn].nLength / sizeof(UCS2CHAR))));
@@ -1052,31 +1416,25 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn,
 	return pBuffer;
 }
 
-
-//
-// Get column count in async query result
-//
-
+/**
+ * Get column count in async query result
+ */
 extern "C" int EXPORT DrvGetColumnCountAsync(ORACLE_CONN *pConn)
 {
 	return (pConn != NULL) ? pConn->nCols : 0;
 }
 
-
-//
-// Get column name in async query result
-//
-
+/**
+ * Get column name in async query result
+ */
 extern "C" const char EXPORT *DrvGetColumnNameAsync(ORACLE_CONN *pConn, int column)
 {
 	return ((pConn != NULL) && (column >= 0) && (column < pConn->nCols)) ? pConn->columnNames[column] : NULL;
 }
 
-
-//
-// Destroy result of async query
-//
-
+/**
+ * Destroy result of async query
+ */
 extern "C" void EXPORT DrvFreeAsyncResult(ORACLE_CONN *pConn)
 {
 	int i;
@@ -1087,7 +1445,13 @@ extern "C" void EXPORT DrvFreeAsyncResult(ORACLE_CONN *pConn)
 	OCIStmtRelease(pConn->handleStmt, pConn->handleError, NULL, 0, OCI_DEFAULT);
 
 	for(i = 0; i < pConn->nCols; i++)
+   {
 		safe_free(pConn->pBuffers[i].pData);
+      if (pConn->pBuffers[i].lobLocator != NULL)
+      {
+         OCIDescriptorFree(pConn->pBuffers[i].lobLocator, OCI_DTYPE_LOB);
+      }
+   }
 	safe_free_and_null(pConn->pBuffers);
 
 	for(i = 0; i < pConn->nCols; i++)
@@ -1098,11 +1462,9 @@ extern "C" void EXPORT DrvFreeAsyncResult(ORACLE_CONN *pConn)
 	MutexUnlock(pConn->mutexQueryLock);
 }
 
-
-//
-// Begin transaction
-//
-
+/**
+ * Begin transaction
+ */
 extern "C" DWORD EXPORT DrvBegin(ORACLE_CONN *pConn)
 {
 	if (pConn == NULL)
@@ -1114,11 +1476,9 @@ extern "C" DWORD EXPORT DrvBegin(ORACLE_CONN *pConn)
 	return DBERR_SUCCESS;
 }
 
-
-//
-// Commit transaction
-//
-
+/**
+ * Commit transaction
+ */
 extern "C" DWORD EXPORT DrvCommit(ORACLE_CONN *pConn)
 {
 	DWORD dwResult;
@@ -1148,11 +1508,9 @@ extern "C" DWORD EXPORT DrvCommit(ORACLE_CONN *pConn)
 	return dwResult;
 }
 
-
-//
-// Rollback transaction
-//
-
+/**
+ * Rollback transaction
+ */
 extern "C" DWORD EXPORT DrvRollback(ORACLE_CONN *pConn)
 {
 	DWORD dwResult;
@@ -1182,18 +1540,37 @@ extern "C" DWORD EXPORT DrvRollback(ORACLE_CONN *pConn)
 	return dwResult;
 }
 
-
-//
-// DLL Entry point
-//
+/**
+ * Check if table exist
+ */
+extern "C" int EXPORT DrvIsTableExist(ORACLE_CONN *pConn, const WCHAR *name)
+{
+   WCHAR query[256];
+   swprintf(query, 256, L"SELECT count(*) FROM user_tables WHERE table_name=upper('%ls')", name);
+   DWORD error;
+   WCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   int rc = DBIsTableExist_Failure;
+   ORACLE_RESULT *hResult = (ORACLE_RESULT *)DrvSelect(pConn, query, &error, errorText);
+   if (hResult != NULL)
+   {
+      WCHAR buffer[64] = L"";
+      DrvGetField(hResult, 0, 0, buffer, 64);
+      rc = (wcstol(buffer, NULL, 10) > 0) ? DBIsTableExist_Found : DBIsTableExist_NotFound;
+      DrvFreeResult(hResult);
+   }
+   return rc;
+}
 
 #ifdef _WIN32
 
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
+/**
+ * DLL Entry point
+ */
+bool WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
 		DisableThreadLibraryCalls(hInstance);
-	return TRUE;
+	return true;
 }
 
 #endif

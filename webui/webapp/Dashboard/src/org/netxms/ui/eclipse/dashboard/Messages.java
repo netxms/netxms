@@ -35,6 +35,7 @@ public class Messages extends NLS
 	public String AddDashboardElementDlg_BarChartForTable;
 	public String AddDashboardElementDlg_CustomWidget;
 	public String AddDashboardElementDlg_Dashboard;
+   public String AddDashboardElementDlg_DciSummaryTable;
 	public String AddDashboardElementDlg_GaugeChart;
 	public String AddDashboardElementDlg_GeoMap;
 	public String AddDashboardElementDlg_Label;
@@ -99,6 +100,7 @@ public class Messages extends NLS
 	public String DashboardElements_Up;
 	public String DashboardElementsLabelProvider_Bottom;
 	public String DashboardElementsLabelProvider_Center;
+   public String DashboardElementsLabelProvider_DciSummaryTable;
 	public String DashboardElementsLabelProvider_Fill;
 	public String DashboardElementsLabelProvider_FillFill;
 	public String DashboardElementsLabelProvider_Left;
@@ -137,6 +139,8 @@ public class Messages extends NLS
 	public String DashboardView_AddTubeChart;
 	public String DashboardView_Confirmation;
 	public String DashboardView_EditMode;
+   public String DashboardView_GetEffectiveRights;
+   public String DashboardView_GetEffectiveRightsError;
 	public String DashboardView_InitError;
 	public String DashboardView_PartNamePrefix;
 	public String DashboardView_Refresh;
@@ -155,6 +159,9 @@ public class Messages extends NLS
 	public String DciListLabelProvider_JobError;
 	public String DciListLabelProvider_JobTitle;
 	public String DciListLabelProvider_Unresolved;
+   public String DciSummaryTable_BaseObject;
+   public String DciSummaryTable_RefreshInterval;
+   public String DciSummaryTable_SummaryTable;
 	public String DialChart_LeftRed;
 	public String DialChart_LeftYellow;
 	public String DialChart_LegendInside;

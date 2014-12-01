@@ -20,7 +20,7 @@
 
 #include <linux_subagent.h>
 
-LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    int nVer = CAST_FROM_POINTER(pArg, int);
    int nRet = SYSINFO_RC_ERROR;
@@ -70,7 +70,7 @@ LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for Net.ArpCache list
  */
-LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
    int nRet = SYSINFO_RC_ERROR;
    FILE *hFile;
@@ -142,7 +142,7 @@ LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
    return nRet;
 }
 
-LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue)
+LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
    int nRet = SYSINFO_RC_ERROR;
    FILE *hFile;
@@ -368,7 +368,7 @@ static void FreeInterfaceInfo(IFINFO* ifInfo)
    ifInfo = NULL;
 }
 
-LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue)
+LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, AbstractCommSession *session)
 {
    int netlinkSocket = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
    if (netlinkSocket == -1)
@@ -422,7 +422,7 @@ LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue)
    return SYSINFO_RC_SUCCESS;
 }
 
-LONG H_NetIfInfoFromIOCTL(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_NetIfInfoFromIOCTL(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    char *eptr, szBuffer[256];
    LONG nRet = SYSINFO_RC_SUCCESS;
@@ -514,7 +514,7 @@ static LONG ValueFromLine(char *pszLine, int nPos, TCHAR *pValue)
    return nRet;
 }
 
-LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue)
+LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    char *ptr, szBuffer[256], szName[IFNAMSIZ];
    LONG nIndex, nRet = SYSINFO_RC_SUCCESS;

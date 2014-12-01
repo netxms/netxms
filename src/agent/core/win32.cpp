@@ -26,7 +26,7 @@
 /**
  * Handler for System.Memory.XXX parameters
  */
-LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    MEMORYSTATUSEX mse;
 
@@ -76,7 +76,7 @@ LONG H_MemoryInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for System.Hostname parameter
  */ 
-LONG H_HostName(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+LONG H_HostName(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    DWORD dwSize;
    TCHAR szBuffer[MAX_COMPUTERNAME_LENGTH + 1];
@@ -90,7 +90,7 @@ LONG H_HostName(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
 /**
  * Handler for FileSystem.Stats table
  */
-LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table, AbstractCommSession *session)
 {
 	LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -177,7 +177,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *table)
 /**
  * Handler for FileSystem.MountPoints list
  */
-LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value)
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
 	LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -216,7 +216,7 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value)
 /**
  * Handler for disk space information parameters
  */
-LONG H_DiskInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+LONG H_DiskInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    TCHAR szPath[MAX_PATH];
    ULARGE_INTEGER availBytes, freeBytes, totalBytes;
@@ -264,7 +264,7 @@ LONG H_DiskInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
  * Handler for System.Uname parameter
  * by LWX
  */
-LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
+LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    DWORD dwSize;
    TCHAR *cpuType, computerName[MAX_COMPUTERNAME_LENGTH + 1], osVersion[256];
@@ -333,7 +333,7 @@ LONG H_SystemUname(const TCHAR *cmd, const TCHAR *arg, TCHAR *value)
 /**
  * Handler for System.CPU.Count parameter
  */
-LONG H_CPUCount(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue)
+LONG H_CPUCount(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    SYSTEM_INFO sysInfo;
 

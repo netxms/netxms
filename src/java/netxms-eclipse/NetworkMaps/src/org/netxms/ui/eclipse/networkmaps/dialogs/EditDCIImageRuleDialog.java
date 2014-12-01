@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Text;
 import org.netxms.base.NXCommon;
 import org.netxms.client.maps.configs.DCIImageRule;
 import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -78,31 +79,31 @@ public class EditDCIImageRuleDialog extends Dialog
    // Condition area
       conditionGroup = new Group(dialogArea, SWT.NONE);
       conditionGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-      conditionGroup.setText("Condition");
+      conditionGroup.setText(Messages.get().EditDCIImageRuleDialog_Condition);
       
       GridLayout condLayout = new GridLayout();
       condLayout.numColumns = 2;
       conditionGroup.setLayout(condLayout);
 		
-	   operation = WidgetHelper.createLabeledCombo(conditionGroup, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY, "Operation", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      operation.add("< : less then");
-      operation.add("<= : less then or equals to");
-      operation.add("== : equals to");
-      operation.add(">= : gather then on equals");
-      operation.add("> : gather then ");
-      operation.add("!= : not equals to");
-      operation.add("like");
-      operation.add("not like");
+	   operation = WidgetHelper.createLabeledCombo(conditionGroup, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().EditDCIImageRuleDialog_Operation, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      operation.add(Messages.get().EditDCIImageRuleDialog_OpLess);
+      operation.add(Messages.get().EditDCIImageRuleDialog_OpLessEq);
+      operation.add(Messages.get().EditDCIImageRuleDialog_OpEq);
+      operation.add(Messages.get().EditDCIImageRuleDialog_OpGtEq);
+      operation.add(Messages.get().EditDCIImageRuleDialog_OpGt);
+      operation.add(Messages.get().EditDCIImageRuleDialog_OpNe);
+      operation.add(Messages.get().EditDCIImageRuleDialog_OpLike);
+      operation.add(Messages.get().EditDCIImageRuleDialog_OpNotLike);
       operation.select((rule.getComparisonType() != -1) ? rule.getComparisonType() : 0);
       
-      value = WidgetHelper.createLabeledText(conditionGroup, SWT.BORDER, 120, "Value", 
+      value = WidgetHelper.createLabeledText(conditionGroup, SWT.BORDER, 120, Messages.get().EditDCIImageRuleDialog_Value, 
             rule.getCompareValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
       
-      comment = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 120, "Comment", 
+      comment = WidgetHelper.createLabeledText(dialogArea, SWT.BORDER, 120, Messages.get().EditDCIImageRuleDialog_Comment, 
             rule.getComment(), WidgetHelper.DEFAULT_LAYOUT_DATA);
       
       image = new ImageSelector(dialogArea, SWT.NONE);
-      image.setLabel("Image");
+      image.setLabel(Messages.get().EditDCIImageRuleDialog_Image);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -136,7 +137,7 @@ public class EditDCIImageRuleDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Edit DCI Image Rule");
+		newShell.setText(Messages.get().EditDCIImageRuleDialog_EditImageRule);
 	}
 
 	/* (non-Javadoc)
@@ -148,14 +149,14 @@ public class EditDCIImageRuleDialog extends Dialog
 	   selectedImage = image.getImageGuid();
 	   if(selectedImage == null || selectedImage == NXCommon.EMPTY_GUID)
       {
-         MessageDialogHelper.openError(getShell(), "Required field is empty", "Image should be selected");
+         MessageDialogHelper.openError(getShell(), Messages.get().EditDCIImageRuleDialog_Error, Messages.get().EditDCIImageRuleDialog_ImageShouldBeSelected);
          return;
       }
 	   
 	   String compareValue = value.getText();
 	   if(compareValue == null || compareValue.isEmpty())
       {
-         MessageDialogHelper.openError(getShell(), "Required field is empty", "Compare value should not be empty");
+         MessageDialogHelper.openError(getShell(), Messages.get().EditDCIImageRuleDialog_Error, Messages.get().EditDCIImageRuleDialog_ValueShouldNotBeEmpty);
          return;
       }
 	   

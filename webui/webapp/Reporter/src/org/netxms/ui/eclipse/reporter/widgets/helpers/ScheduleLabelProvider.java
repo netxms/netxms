@@ -26,6 +26,7 @@ import org.netxms.api.client.reporting.ReportingJob;
 import org.netxms.api.client.users.AbstractUserObject;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
+import org.netxms.ui.eclipse.reporter.Messages;
 import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -55,7 +56,7 @@ public class ScheduleLabelProvider extends LabelProvider implements ITableLabelP
       switch(columnIndex)
       {
          case ReportExecutionForm.SCHEDULE_START_TIME:
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm"); //$NON-NLS-1$
             String HHmm = timeFormat.format(job.getStartTime().getTime() / 1000);
 
             switch(job.getType())
@@ -81,29 +82,29 @@ public class ScheduleLabelProvider extends LabelProvider implements ITableLabelP
                   }
                   return HHmm + " - " + result1; //$NON-NLS-1$
                default:
-                  return "<error>";
+                  return Messages.get().ScheduleLabelProvider_Error;
             }
          case ReportExecutionForm.SCHEDULE_TYPE:
             switch(job.getType())
             {
                case ReportingJob.TYPE_ONCE:
-                  return "once";
+                  return Messages.get().ScheduleLabelProvider_Once;
                case ReportingJob.TYPE_DAILY:
-                  return "daily";
+                  return Messages.get().ScheduleLabelProvider_Daily;
                case ReportingJob.TYPE_MONTHLY:
-                  return "monthly";
+                  return Messages.get().ScheduleLabelProvider_Monthly;
                case ReportingJob.TYPE_WEEKLY:
-                  return "weekly";
+                  return Messages.get().ScheduleLabelProvider_Weekly;
                default:
-                  return "<error>";
+                  return Messages.get().ScheduleLabelProvider_Error;
             }
          case ReportExecutionForm.SCHEDULE_OWNER:
             AbstractUserObject user = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(job.getUserId());
-            return (user != null) ? user.getName() : ("[" + job.getUserId() + "]");
+            return (user != null) ? user.getName() : ("[" + job.getUserId() + "]"); //$NON-NLS-1$ //$NON-NLS-2$
          case ReportExecutionForm.SCHEDULE_COMMENTS:
             return job.getComments();
       }
 
-      return "<INTERNAL ERROR>";
+      return "<INTERNAL ERROR>"; //$NON-NLS-1$
    }
 }

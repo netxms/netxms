@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,12 +41,14 @@
 // Object tool flags
 //
 
-#define TF_REQUIRES_SNMP            ((DWORD)0x00000001)
-#define TF_REQUIRES_AGENT           ((DWORD)0x00000002)
-#define TF_REQUIRES_OID_MATCH       ((DWORD)0x00000004)
-#define TF_ASK_CONFIRMATION         ((DWORD)0x00000008)
-#define TF_DISABLED                 ((DWORD)0x00000020)
-#define TF_SNMP_INDEXED_BY_VALUE    ((DWORD)0x00010000)
+#define TF_REQUIRES_SNMP            ((UINT32)0x00000001)
+#define TF_REQUIRES_AGENT           ((UINT32)0x00000002)
+#define TF_REQUIRES_OID_MATCH       ((UINT32)0x00000004)
+#define TF_ASK_CONFIRMATION         ((UINT32)0x00000008)
+#define TF_GENERATES_OUTPUT         ((UINT32)0x00000010)
+#define TF_DISABLED                 ((UINT32)0x00000020)
+#define TF_SHOW_IN_COMMANDS         ((UINT32)0x00000040)
+#define TF_SNMP_INDEXED_BY_VALUE    ((UINT32)0x00010000)
 
 
 //

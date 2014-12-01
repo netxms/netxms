@@ -61,7 +61,7 @@ public class ServerFileSelector extends AbstractSelector
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getSelectionButtonToolTip()
+	 * @see org.netxms.ui.eclipse.widgets.AbstractSelector#getButtonToolTip()
 	 */
 	@Override
 	protected String getSelectionButtonToolTip()

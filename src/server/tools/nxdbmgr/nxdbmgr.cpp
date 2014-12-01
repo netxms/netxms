@@ -35,9 +35,10 @@ BOOL g_bIgnoreErrors = FALSE;
 BOOL g_bTrace = FALSE;
 bool g_isGuiMode = false;
 bool g_checkData = false;
+bool g_checkDataTablesOnly = false;
 bool g_dataOnlyMigration = false;
 bool g_skipDataMigration = false;
-int g_iSyntax;
+int g_dbSyntax;
 const TCHAR *g_pszTableSuffix = _T("");
 const TCHAR *g_pszSqlType[6][3] = 
 {
@@ -70,7 +71,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
    { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbPassword },
-   { _T("DBSchema"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbSchema },
+   { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
@@ -213,9 +214,9 @@ BOOL SQLQuery(const TCHAR *pszQuery)
 
 	String query(pszQuery);
 
-   query.replace(_T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
-   query.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
-   query.replace(_T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
+   query.replace(_T("$SQL:TEXT"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT]);
+   query.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT4K]);
+   query.replace(_T("$SQL:INT64"), g_pszSqlType[g_dbSyntax][SQL_TYPE_INT64]);
 
    if (g_bTrace)
       ShowQuery(query);
@@ -237,9 +238,9 @@ BOOL SQLBatch(const TCHAR *pszBatch)
    BOOL bRet = TRUE;
 	TCHAR table[128], column[128];
 
-   batch.replace(_T("$SQL:TEXT"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT]);
-   batch.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_iSyntax][SQL_TYPE_TEXT4K]);
-   batch.replace(_T("$SQL:INT64"), g_pszSqlType[g_iSyntax][SQL_TYPE_INT64]);
+   batch.replace(_T("$SQL:TEXT"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT]);
+   batch.replace(_T("$SQL:TXT4K"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT4K]);
+   batch.replace(_T("$SQL:INT64"), g_pszSqlType[g_dbSyntax][SQL_TYPE_INT64]);
 
    pszQuery = pszBuffer = batch.getBuffer();
    while(1)
@@ -293,7 +294,7 @@ BOOL SQLDropColumn(const TCHAR *table, const TCHAR *column)
 	DB_RESULT hResult;
 	BOOL success = FALSE;
 
-	if (g_iSyntax != DB_SYNTAX_SQLITE)
+	if (g_dbSyntax != DB_SYNTAX_SQLITE)
 	{
 		_sntprintf(query, 1024, _T("ALTER TABLE %s DROP COLUMN %s"), table, column);
 		success = SQLQuery(query);
@@ -387,6 +388,19 @@ BOOL MetaDataReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const 
 
    DBFreeResult(hResult);
    return bSuccess;
+}
+
+/**
+ * Read integer value from configuration table
+ */
+int MetaDataReadInt(const TCHAR *pszVar, int iDefault)
+{
+   TCHAR szBuffer[64];
+
+   if (MetaDataReadStr(pszVar, szBuffer, 64, _T("")))
+      return _tcstol(szBuffer, NULL, 0);
+   else
+      return iDefault;
 }
 
 /**
@@ -542,6 +556,7 @@ int main(int argc, char *argv[])
                      _T("Valid commands are:\n")
 						   _T("   batch <file>       : Run SQL batch file\n")
                      _T("   check              : Check database for errors\n")
+                     _T("   check-data-tables  : Check database for missing data tables\n")
                      _T("   export <file>      : Export database to file\n")
                      _T("   get <name>         : Get value of server configuration variable\n")
                      _T("   import <file>      : Import database from file\n")
@@ -638,6 +653,7 @@ int main(int argc, char *argv[])
    }
    if (strcmp(argv[optind], "batch") && 
        strcmp(argv[optind], "check") && 
+       strcmp(argv[optind], "check-data-tables") && 
        strcmp(argv[optind], "export") && 
        strcmp(argv[optind], "get") && 
        strcmp(argv[optind], "import") && 
@@ -738,8 +754,8 @@ stop_search:
    else
    {
       // Get database syntax
-		g_iSyntax = DBGetSyntax(g_hCoreDB);
-		if (g_iSyntax == DB_SYNTAX_UNKNOWN)
+		g_dbSyntax = DBGetSyntax(g_hCoreDB);
+		if (g_dbSyntax == DB_SYNTAX_UNKNOWN)
 		{
          _tprintf(_T("Unable to determine database syntax\n"));
          DBDisconnect(g_hCoreDB);
@@ -749,17 +765,34 @@ stop_search:
 
       // Do requested operation
       if (!strcmp(argv[optind], "batch"))
+      {
          ExecSQLBatch(argv[optind + 1]);
+      }
       else if (!strcmp(argv[optind], "check"))
+      {
          CheckDatabase();
+      }
+      else if (!strcmp(argv[optind], "check-data-tables"))
+      {
+         g_checkDataTablesOnly = true;
+         CheckDatabase();
+      }
       else if (!strcmp(argv[optind], "upgrade"))
+      {
          UpgradeDatabase();
+      }
       else if (!strcmp(argv[optind], "unlock"))
+      {
          UnlockDatabase();
+      }
       else if (!strcmp(argv[optind], "export"))
+      {
          ExportDatabase(argv[optind + 1]);
+      }
       else if (!strcmp(argv[optind], "import"))
+      {
          ImportDatabase(argv[optind + 1]);
+      }
       else if (!strcmp(argv[optind], "migrate"))
 		{
 #ifdef UNICODE

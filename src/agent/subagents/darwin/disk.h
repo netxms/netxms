@@ -32,8 +32,8 @@ enum
 	DISK_TOTAL,
 };
 
-LONG H_DiskInfo(const TCHAR *, const TCHAR *, TCHAR *);
-LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value);
-LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value);
+LONG H_DiskInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
+LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 
 #endif // __DISK_H__

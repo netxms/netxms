@@ -43,20 +43,24 @@ struct db_driver_t
 	bool m_logSqlErrors;
 	bool m_dumpSql;
 	int m_reconnect;
+   int m_defaultPrefetchLimit;
 	MUTEX m_mutexReconnect;
 	HMODULE m_handle;
 	void *m_userArg;
 	DBDRV_CONNECTION (* m_fpDrvConnect)(const char *, const char *, const char *, const char *, const char *, WCHAR *);
 	void (* m_fpDrvDisconnect)(DBDRV_CONNECTION);
+	bool (* m_fpDrvSetPrefetchLimit)(DBDRV_CONNECTION, int);
 	DBDRV_STATEMENT (* m_fpDrvPrepare)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
 	void (* m_fpDrvFreeStatement)(DBDRV_STATEMENT);
+	bool (* m_fpDrvOpenBatch)(DBDRV_STATEMENT);
+	void (* m_fpDrvNextBatchRow)(DBDRV_STATEMENT);
 	void (* m_fpDrvBind)(DBDRV_STATEMENT, int, int, int, void *, int);
 	DWORD (* m_fpDrvExecute)(DBDRV_CONNECTION, DBDRV_STATEMENT, WCHAR *);
 	DWORD (* m_fpDrvQuery)(DBDRV_CONNECTION, const WCHAR *, WCHAR *);
 	DBDRV_RESULT (* m_fpDrvSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
 	DBDRV_ASYNC_RESULT (* m_fpDrvAsyncSelect)(DBDRV_CONNECTION, const WCHAR *, DWORD *, WCHAR *);
 	DBDRV_RESULT (* m_fpDrvSelectPrepared)(DBDRV_CONNECTION, DBDRV_STATEMENT, DWORD *, WCHAR *);
-	BOOL (* m_fpDrvFetch)(DBDRV_ASYNC_RESULT);
+	bool (* m_fpDrvFetch)(DBDRV_ASYNC_RESULT);
 	LONG (* m_fpDrvGetFieldLength)(DBDRV_RESULT, int, int);
 	LONG (* m_fpDrvGetFieldLengthAsync)(DBDRV_RESULT, int);
 	WCHAR* (* m_fpDrvGetField)(DBDRV_RESULT, int, int, WCHAR *, int);
@@ -76,6 +80,7 @@ struct db_driver_t
 	const char* (* m_fpDrvGetColumnNameAsync)(DBDRV_ASYNC_RESULT, int);
 	WCHAR* (* m_fpDrvPrepareStringW)(const WCHAR *);
 	char* (* m_fpDrvPrepareStringA)(const char *);
+	int (* m_fpDrvIsTableExist)(DBDRV_CONNECTION, const WCHAR *);
 };
 
 /**
@@ -141,8 +146,9 @@ void __DBDbgPrintf(int level, const TCHAR *format, ...);
 // Global variables
 //
 
-extern DWORD g_logMsgCode;
-extern DWORD g_sqlErrorMsgCode;
+extern UINT32 g_logMsgCode;
+extern UINT32 g_sqlErrorMsgCode;
+extern UINT32 g_sqlQueryExecTimeThreshold;
 
 
 #endif   /* _libnxsrv_h_ */

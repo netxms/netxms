@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,23 +24,24 @@ import org.netxms.client.datacollection.Threshold;
 
 /**
  * Single element used in data comparison charts
- *
  */
 public class DataComparisonElement
 {
 	private GraphItem dci;
 	private Threshold[] thresholds;
 	private double value;
+	private String rawValue;
 	private Series series; 
 	
 	/**
 	 * @param name
 	 * @param value
 	 */
-	public DataComparisonElement(GraphItem dci, double value)
+	public DataComparisonElement(GraphItem dci, double value, String rawValue)
 	{
 		this.dci = dci;
 		this.value = value;
+		this.rawValue = rawValue;
 		series = null;
 		thresholds = new Threshold[0];
 	}
@@ -62,6 +63,22 @@ public class DataComparisonElement
 	}
 	
 	/**
+    * @return the rawValue
+    */
+   public String getRawValue()
+   {
+      return (rawValue != null) ? rawValue : Double.toString(value);
+   }
+
+   /**
+    * @param rawValue the rawValue to set
+    */
+   public void setRawValue(String rawValue)
+   {
+      this.rawValue = rawValue;
+   }
+
+   /**
 	 * @return the name
 	 */
 	public String getName()

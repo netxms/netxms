@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ public class SystemRights extends PropertyPage
 {
 	private UserManager userManager;
 	private AbstractUserObject object;
-	private Map<Integer, Button> buttons = new HashMap<Integer, Button>();
+	private Map<Long, Button> buttons = new HashMap<Long, Button>();
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -62,8 +62,7 @@ public class SystemRights extends PropertyPage
 		layout.marginHeight = 0;
 		dialogArea.setLayout(layout);
 		
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_DELETE_ALARMS, Messages.get().SystemRights_DeleteAlarms);
-      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, "Unlink helpdesk tickets");
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, Messages.get().SystemRights_UnlinkTicket);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, Messages.get().SystemRights_ConfigureActions);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, Messages.get().SystemRights_ConfigureEvents);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, Messages.get().SystemRights_ViewEventConfig);
@@ -78,6 +77,7 @@ public class SystemRights extends PropertyPage
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, Messages.get().SystemRights_ViewEventLog);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, Messages.get().SystemRights_ViewAuditLog);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, Messages.get().SystemRights_ViewTrapLog);
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, "View syslog");
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, Messages.get().SystemRights_ManageMappingTables);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, Messages.get().SystemRights_EditServerConfig);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_READ_FILES, Messages.get().SystemRights_ReadFiles);
@@ -90,6 +90,7 @@ public class SystemRights extends PropertyPage
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_REGISTER_AGENTS, Messages.get().SystemRights_RegisterAgents);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, Messages.get().SystemRights_LoginAsMobile);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, Messages.get().SystemRights_ManageImageLibrary);
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, Messages.get().SystemRights_ReportingServerAccess);
 		
 		return dialogArea;
 	}
@@ -101,7 +102,7 @@ public class SystemRights extends PropertyPage
 	 * @param access access right
 	 * @param name name
 	 */
-	private void addCheckbox(Composite parent, int access, String name)
+	private void addCheckbox(Composite parent, long access, String name)
 	{
 		Button b = new Button(parent, SWT.CHECK);
 		b.setText(name);
@@ -120,7 +121,7 @@ public class SystemRights extends PropertyPage
 			setValid(false);
 		
 		int systemRights = 0;
-		for(Entry<Integer, Button> e : buttons.entrySet())
+		for(Entry<Long, Button> e : buttons.entrySet())
 			if (e.getValue().getSelection())
 				systemRights |= e.getKey();
 		

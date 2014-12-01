@@ -28,14 +28,14 @@
 // Fill event template structure from NXCP message
 //
 
-static void EventTemplateFromMsg(CSCPMessage *pMsg, NXC_EVENT_TEMPLATE *pEventTemplate)
+static void EventTemplateFromMsg(NXCPMessage *pMsg, NXC_EVENT_TEMPLATE *pEventTemplate)
 {
-   pEventTemplate->dwCode = pMsg->GetVariableLong(VID_EVENT_CODE);
-   pEventTemplate->dwSeverity = pMsg->GetVariableLong(VID_SEVERITY);
-   pEventTemplate->dwFlags = pMsg->GetVariableLong(VID_FLAGS);
-   pMsg->GetVariableStr(VID_NAME, pEventTemplate->szName, MAX_EVENT_NAME);
-   pEventTemplate->pszMessage = pMsg->GetVariableStr(VID_MESSAGE, NULL, 0);
-   pEventTemplate->pszDescription = pMsg->GetVariableStr(VID_DESCRIPTION, NULL, 0);
+   pEventTemplate->dwCode = pMsg->getFieldAsUInt32(VID_EVENT_CODE);
+   pEventTemplate->dwSeverity = pMsg->getFieldAsUInt32(VID_SEVERITY);
+   pEventTemplate->dwFlags = pMsg->getFieldAsUInt32(VID_FLAGS);
+   pMsg->getFieldAsString(VID_NAME, pEventTemplate->szName, MAX_EVENT_NAME);
+   pEventTemplate->pszMessage = pMsg->getFieldAsString(VID_MESSAGE, NULL, 0);
+   pEventTemplate->pszDescription = pMsg->getFieldAsString(VID_DESCRIPTION, NULL, 0);
 }
 
 
@@ -43,13 +43,13 @@ static void EventTemplateFromMsg(CSCPMessage *pMsg, NXC_EVENT_TEMPLATE *pEventTe
 // Process CMD_EVENT_DB_UPDATE message
 //
 
-void ProcessEventDBUpdate(NXCL_Session *pSession, CSCPMessage *pMsg)
+void ProcessEventDBUpdate(NXCL_Session *pSession, NXCPMessage *pMsg)
 {
    NXC_EVENT_TEMPLATE et;
    UINT32 dwCode;
 
-   dwCode = pMsg->GetVariableShort(VID_NOTIFICATION_CODE);
-	et.dwCode = pMsg->GetVariableLong(VID_EVENT_CODE);
+   dwCode = pMsg->getFieldAsUInt16(VID_NOTIFICATION_CODE);
+	et.dwCode = pMsg->getFieldAsUInt32(VID_EVENT_CODE);
    if (dwCode != NX_NOTIFY_ETMPL_DELETED)
       EventTemplateFromMsg(pMsg, &et);
    pSession->callEventHandler(NXC_EVENT_NOTIFICATION, dwCode, &et);
@@ -90,19 +90,17 @@ void LIBNXCL_EXPORTABLE NXCDeleteEDBRecord(NXC_SESSION hSession, UINT32 dwEventC
    ((NXCL_Session *)hSession)->DeleteEDBRecord(dwEventCode);
 }
 
-
-//
-// Process record from network
-//
-
-void ProcessEventDBRecord(NXCL_Session *pSession, CSCPMessage *pMsg)
+/**
+ * Process record from network
+ */
+void ProcessEventDBRecord(NXCL_Session *pSession, NXCPMessage *pMsg)
 {
    NXC_EVENT_TEMPLATE *pEventTemplate;
    UINT32 dwEventCode;
 
-   if (pMsg->GetCode() == CMD_EVENT_DB_RECORD)
+   if (pMsg->getCode() == CMD_EVENT_DB_RECORD)
    {
-      dwEventCode = pMsg->GetVariableLong(VID_EVENT_CODE);
+      dwEventCode = pMsg->getFieldAsUInt32(VID_EVENT_CODE);
 		if (!pMsg->isEndOfSequence() && (dwEventCode != 0))
       {
          // Allocate new event template structure and fill it with values from message
@@ -134,20 +132,20 @@ UINT32 LIBNXCL_EXPORTABLE NXCLoadEventDB(NXC_SESSION hSession)
 
 UINT32 LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_SESSION hSession, NXC_EVENT_TEMPLATE *pArg)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Prepare message
-   msg.SetCode(CMD_SET_EVENT_INFO);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_EVENT_CODE, pArg->dwCode);
-   msg.SetVariable(VID_SEVERITY, pArg->dwSeverity);
-   msg.SetVariable(VID_FLAGS, pArg->dwFlags);
-   msg.SetVariable(VID_NAME, pArg->szName);
-   msg.SetVariable(VID_MESSAGE, pArg->pszMessage);
-   msg.SetVariable(VID_DESCRIPTION, pArg->pszDescription);
+   msg.setCode(CMD_SET_EVENT_INFO);
+   msg.setId(dwRqId);
+   msg.setField(VID_EVENT_CODE, pArg->dwCode);
+   msg.setField(VID_SEVERITY, pArg->dwSeverity);
+   msg.setField(VID_FLAGS, pArg->dwFlags);
+   msg.setField(VID_NAME, pArg->szName);
+   msg.setField(VID_MESSAGE, pArg->pszMessage);
+   msg.setField(VID_DESCRIPTION, pArg->pszDescription);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    
    // Wait for reply
@@ -161,15 +159,15 @@ UINT32 LIBNXCL_EXPORTABLE NXCModifyEventTemplate(NXC_SESSION hSession, NXC_EVENT
 
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(NXC_SESSION hSession, UINT32 dwEventCode)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Prepare message
-   msg.SetCode(CMD_DELETE_EVENT_TEMPLATE);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_EVENT_CODE, dwEventCode);
+   msg.setCode(CMD_DELETE_EVENT_TEMPLATE);
+   msg.setId(dwRqId);
+   msg.setField(VID_EVENT_CODE, dwEventCode);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    
    // Wait for reply
@@ -183,23 +181,23 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteEventTemplate(NXC_SESSION hSession, UINT32 dw
 
 UINT32 LIBNXCL_EXPORTABLE NXCGenerateEventCode(NXC_SESSION hSession, UINT32 *pdwEventCode)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRqId, dwRetCode;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
    // Prepare message
-   msg.SetCode(CMD_GENERATE_EVENT_CODE);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GENERATE_EVENT_CODE);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
    
    // Wait for reply
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
-         *pdwEventCode = pResponse->GetVariableLong(VID_EVENT_CODE);
+         *pdwEventCode = pResponse->getFieldAsUInt32(VID_EVENT_CODE);
    }
    else
    {

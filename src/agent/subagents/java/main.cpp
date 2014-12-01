@@ -78,7 +78,7 @@ static NETXMS_SUBAGENT_INFO g_subAgentInfo =
    NETXMS_VERSION_STRING,
    SubAgentInit,
    SubAgentShutdown,
-   NULL,                         // BOOL (*commandhandler)(UINT32 dwCommand, CSCPMessage *pRequest, CSCPMessage *pResponse, void *session)
+   NULL,                         // BOOL (*commandhandler)(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pResponse, void *session)
    0,                            // numParamaters
    NULL,                         // parameters
    0,                            // numLists
@@ -94,17 +94,17 @@ static NETXMS_SUBAGENT_INFO g_subAgentInfo =
 
 ;
 
-LONG actionHandler (const TCHAR *pszAction, StringList *pArgList, const TCHAR *id)
+LONG actionHandler(const TCHAR *pszAction, StringList *pArgList, const TCHAR *id, AbstractCommSession *session)
 {
    LONG result = SYSINFO_RC_SUCCESS;
    // route the call to SubAgent
    AgentWriteLog(NXLOG_DEBUG, _T("actionHandler(action=%s, id=%s)"), pszAction, id);
-   int len = pArgList->getSize();
+   int len = pArgList->size();
    TCHAR const** args = new TCHAR const* [len];
-   for (int i=0; i<len; i++)
+   for (int i=0; i < len; i++)
    {
                                  // TODO should I use a copy?
-      args[i] = pArgList->getValue(i);
+      args[i] = pArgList->get(i);
    }
    try
    {
@@ -119,7 +119,7 @@ LONG actionHandler (const TCHAR *pszAction, StringList *pArgList, const TCHAR *i
 }
 
 
-LONG parameterHandler (const TCHAR *pszParam, const TCHAR *id, TCHAR *pValue)
+LONG parameterHandler (const TCHAR *pszParam, const TCHAR *id, TCHAR *pValue, AbstractCommSession *session)
 {
    try
    {
@@ -136,7 +136,7 @@ LONG parameterHandler (const TCHAR *pszParam, const TCHAR *id, TCHAR *pValue)
 }
 
 
-LONG listParameterHandler (const TCHAR *cmd, const TCHAR *id, StringList *value)
+LONG listParameterHandler (const TCHAR *cmd, const TCHAR *id, StringList *value, AbstractCommSession *session)
 {
    try
    {
@@ -156,7 +156,7 @@ LONG listParameterHandler (const TCHAR *cmd, const TCHAR *id, StringList *value)
 }
 
 
-LONG tableParameterHandler (const TCHAR *cmd, const TCHAR *id, Table *table)
+LONG tableParameterHandler (const TCHAR *cmd, const TCHAR *id, Table *table, AbstractCommSession *session)
 {
    try
    {
@@ -337,9 +337,9 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
 
    static NX_CFG_TEMPLATE configTemplate[] =
    {
-      { _T("jvm"), CT_STRING, 0, 0, MAX_PATH, 0,  szJvm },
-      { _T("jvmOptions"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &szJvmOptions },
-      { _T("Classpath"), CT_STRING, 0, 0, MAX_LONG_STR, 0,  szClasspath },
+      { _T("Jvm"), CT_STRING, 0, 0, MAX_PATH, 0,  szJvm },
+      { _T("JvmOptions"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &szJvmOptions },
+      { _T("ClassPath"), CT_STRING, 0, 0, MAX_LONG_STR, 0,  szClasspath },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
    };
 

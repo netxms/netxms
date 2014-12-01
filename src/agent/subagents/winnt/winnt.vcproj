@@ -376,6 +376,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\include\nms_cscp.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\include\nms_threads.h"
 				>
 			</File>

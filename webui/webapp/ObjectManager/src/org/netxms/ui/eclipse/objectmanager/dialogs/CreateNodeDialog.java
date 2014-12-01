@@ -18,13 +18,8 @@
  */
 package org.netxms.ui.eclipse.objectmanager.dialogs;
 
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -34,15 +29,12 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objects.Zone;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
-import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -142,26 +134,6 @@ public class CreateNodeDialog extends Dialog
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		hostNameField.setLayoutData(gd);
-		
-		final Button resolve = new Button(ipAddrGroup, SWT.PUSH);
-		resolve.setText(Messages.get().CreateNodeDialog_Resolve);
-		gd = new GridData();
-		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT;
-		gd.verticalAlignment = SWT.BOTTOM;
-		resolve.setLayoutData(gd);
-		resolve.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetSelected(SelectionEvent e)
-			{
-				resolveName();
-			}
-			
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e)
-			{
-				widgetSelected(e);
-			}
-		});
 		
 		agentPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().CreateNodeDialog_AgentPort, 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		agentPortField.setSelection(4700);
@@ -270,34 +242,6 @@ public class CreateNodeDialog extends Dialog
 		}
 		
 		super.okPressed();
-	}
-	
-	/**
-	 * Resolve entered name to IP address
-	 */
-	private void resolveName()
-	{
-		final String name = objectNameField.getText();
-		new ConsoleJob(Messages.get().CreateNodeDialog_ResolveJobName, null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				final InetAddress addr = Inet4Address.getByName(name);
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-					@Override
-					public void run()
-					{
-						hostNameField.setText(addr.getHostAddress());
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return String.format(Messages.get().CreateNodeDialog_ResolveJobError, name);
-			}
-		}.start();
 	}
 
 	/**

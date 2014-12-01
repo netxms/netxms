@@ -1,0 +1,105 @@
+<html>
+<head>
+    <title>NetXMS Integration Configuration</title>
+    <meta name="admin.active.section" content="admin_system_menu/advanced_menu_section/advanced_section">
+    <meta name="admin.active.tab" content="netxms.config.link">
+</head>
+<body>
+<form action="${req.contextPath}/secure/admin/netxms.jspa" method="post" class="aui">
+    <div class="form-body">
+        <h2>$i18n.getText("nx.admin.title")</h2>
+
+        #if($success)
+            <div class="aui-message success"><span class="aui-icon icon-success"></span>
+
+                <p>$i18n.getText("nx.admin.savedsuccessfully")</p>
+            </div>
+        #end
+        #if($invalidInput)
+            <div class="aui-message error"><span class="aui-icon icon-error"></span>
+
+                <p class="title">$i18n.getText('common.words.error')</p>
+                #foreach ($error in $action.getErrorMessages())
+                    $textutils.htmlEncode(${error})
+                #end
+            </div>
+        #end
+
+        <p>
+            $i18n.getText("nx.admin.intro")
+        </p>
+
+        <div class="field-group">
+            <label for="nxEnabled">
+                $i18n.getText("nx.admin.enabled")
+            </label>
+            <input id="nxEnabled" class="checkbox" type="checkbox" name="enabled" #if ($enabled =="on") checked #end>
+        </div>
+        <div class="field-group">
+            <label for="nxForced">
+                $i18n.getText("nx.admin.forced")
+            </label>
+            <input id="nxForced" class="checkbox" type="checkbox" name="forced">
+        </div>
+        <div class="field-group">
+            <label for="nxProject">
+                $i18n.getText("nx.admin.project")
+                <span class="aui-icon icon-required"></span>
+                <span class="content"> $i18n.getText("admin.common.words.required")</span>
+            </label>
+            <input id="nxProject" class="text" type="text" name="projectKey" value="$textutils.htmlEncode($projectKey)">
+        </div>
+        <div class="field-group">
+            <label for="nxJiraUser">
+                $i18n.getText("nx.admin.jirauser")
+                <span class="aui-icon icon-required"></span>
+                <span class="content"> $i18n.getText("admin.common.words.required")</span>
+            </label>
+            <input id="nxJiraUser" class="text" type="text" name="jiraAccount" value="$textutils.htmlEncode($jiraAccount)">
+        </div>
+        <div class="field-group">
+            <label for="nxServer1">
+                $i18n.getText("nx.admin.servers")
+                <span class="aui-icon icon-required"></span>
+                <span class="content"> $i18n.getText("admin.common.words.required")</span>
+            </label>
+            <input id="nxServer1" class="text" type="text" name="server1" value="$textutils.htmlEncode($server1)">
+            <input id="nxServer2" class="text" type="text" name="server2" value="$textutils.htmlEncode($server2)">
+            <input id="nxServer3" class="text" type="text" name="server3" value="$textutils.htmlEncode($server3)">
+        </div>
+        <div class="field-group">
+            <label for="nxLogin">
+                $i18n.getText("common.words.login.caps")
+                <span class="aui-icon icon-required"></span>
+                <span class="content"> $i18n.getText("admin.common.words.required")</span>
+            </label>
+            <input id="nxLogin" class="text" type="text" name="login" value="$textutils.htmlEncode($login)">
+        </div>
+        <div class="field-group">
+            <label for="nxPassword">
+                $i18n.getText("common.words.password")
+            </label>
+            <input id="nxPassword" class="text" type="password" name="password"
+                   value="$textutils.htmlEncode($password)">
+        </div>
+
+        <input type="hidden" name="atl_token" value="$atl_token">
+
+        <div class="buttons-container">
+            <div class="buttons">
+                <input class="button submit" type="submit" value="Save"/>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+    AJS.$("#nxEnabled").click(function () {
+        if (!AJS.$(this).prop("checked")) {
+            AJS.$(this).after("<input type=\"hidden\" name=\"" + AJS.$(this).attr("name") + "\" value=off>")
+        } else {
+            AJS.$(this).next().remove();
+        }
+    });
+</script>
+</body>
+</html>

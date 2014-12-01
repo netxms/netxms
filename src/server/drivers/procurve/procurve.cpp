@@ -22,14 +22,15 @@
 
 #include "procurve.h"
 
-
-//
-// Static data
-//
-
+/**
+ * Driver name
+ */
 static TCHAR s_driverName[] = _T("PROCURVE");
-static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 
+/**
+ * Driver version
+ */
+static TCHAR s_driverVersion[] = NETXMS_VERSION_STRING;
 
 /**
  * Get driver name
@@ -105,7 +106,7 @@ InterfaceList *ProCurveDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 	UINT32 slotSize = attributes->getULong(_T(".procurve.slotSize"), 24);
 
 	// Find physical ports
-	for(int i = 0; i < ifList->getSize(); i++)
+	for(int i = 0; i < ifList->size(); i++)
 	{
 		NX_INTERFACE_INFO *iface = ifList->get(i);
 		if (iface->dwType == IFTYPE_ETHERNET_CSMACD)

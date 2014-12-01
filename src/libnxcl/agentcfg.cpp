@@ -31,13 +31,13 @@
 UINT32 LIBNXCL_EXPORTABLE NXCGetAgentConfigList(NXC_SESSION hSession, UINT32 *pdwNumRecs,
                                                NXC_AGENT_CONFIG_INFO **ppList)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 i, dwRetCode, dwRqId, dwId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_GET_AGENT_CFG_LIST);
-   msg.SetId(dwRqId);
+   msg.setCode(CMD_GET_AGENT_CFG_LIST);
+   msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    *pdwNumRecs = 0;
@@ -46,16 +46,16 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetAgentConfigList(NXC_SESSION hSession, UINT32 *pd
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
-         *pdwNumRecs = pResponse->GetVariableLong(VID_NUM_RECORDS);
+         *pdwNumRecs = pResponse->getFieldAsUInt32(VID_NUM_RECORDS);
          *ppList = (NXC_AGENT_CONFIG_INFO *)malloc(sizeof(NXC_AGENT_CONFIG_INFO) * (*pdwNumRecs));
          for(i = 0, dwId = VID_AGENT_CFG_LIST_BASE; i < *pdwNumRecs; i++, dwId += 7)
          {
-            (*ppList)[i].dwId = pResponse->GetVariableLong(dwId++);
-            pResponse->GetVariableStr(dwId++, (*ppList)[i].szName, MAX_DB_STRING);
-            (*ppList)[i].dwSequence = pResponse->GetVariableLong(dwId++);
+            (*ppList)[i].dwId = pResponse->getFieldAsUInt32(dwId++);
+            pResponse->getFieldAsString(dwId++, (*ppList)[i].szName, MAX_DB_STRING);
+            (*ppList)[i].dwSequence = pResponse->getFieldAsUInt32(dwId++);
          }
       }
       delete pResponse;
@@ -75,27 +75,27 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetAgentConfigList(NXC_SESSION hSession, UINT32 *pd
 UINT32 LIBNXCL_EXPORTABLE NXCOpenAgentConfig(NXC_SESSION hSession, UINT32 dwCfgId,
                                             NXC_AGENT_CONFIG *pConfig)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_OPEN_AGENT_CONFIG);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_CONFIG_ID, dwCfgId);
+   msg.setCode(CMD_OPEN_AGENT_CONFIG);
+   msg.setId(dwRqId);
+   msg.setField(VID_CONFIG_ID, dwCfgId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
          pConfig->dwId = dwCfgId;
-         pConfig->dwSequence = pResponse->GetVariableLong(VID_SEQUENCE_NUMBER);
-         pConfig->pszFilter = pResponse->GetVariableStr(VID_FILTER);
-         pConfig->pszText = pResponse->GetVariableStr(VID_CONFIG_FILE);
-         pResponse->GetVariableStr(VID_NAME, pConfig->szName, MAX_DB_STRING);
+         pConfig->dwSequence = pResponse->getFieldAsUInt32(VID_SEQUENCE_NUMBER);
+         pConfig->pszFilter = pResponse->getFieldAsString(VID_FILTER);
+         pConfig->pszText = pResponse->getFieldAsString(VID_CONFIG_FILE);
+         pResponse->getFieldAsString(VID_NAME, pConfig->szName, MAX_DB_STRING);
       }
       delete pResponse;
    }
@@ -113,30 +113,30 @@ UINT32 LIBNXCL_EXPORTABLE NXCOpenAgentConfig(NXC_SESSION hSession, UINT32 dwCfgI
 
 UINT32 LIBNXCL_EXPORTABLE NXCSaveAgentConfig(NXC_SESSION hSession, NXC_AGENT_CONFIG *pConfig)
 {
-   CSCPMessage msg, *pResponse;
+   NXCPMessage msg, *pResponse;
    UINT32 dwRetCode, dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_SAVE_AGENT_CONFIG);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_CONFIG_ID, pConfig->dwId);
-   msg.SetVariable(VID_SEQUENCE_NUMBER, pConfig->dwSequence);
-   msg.SetVariable(VID_NAME, pConfig->szName);
-   msg.SetVariable(VID_CONFIG_FILE, pConfig->pszText);
-   msg.SetVariable(VID_FILTER, pConfig->pszFilter);
+   msg.setCode(CMD_SAVE_AGENT_CONFIG);
+   msg.setId(dwRqId);
+   msg.setField(VID_CONFIG_ID, pConfig->dwId);
+   msg.setField(VID_SEQUENCE_NUMBER, pConfig->dwSequence);
+   msg.setField(VID_NAME, pConfig->szName);
+   msg.setField(VID_CONFIG_FILE, pConfig->pszText);
+   msg.setField(VID_FILTER, pConfig->pszFilter);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
    {
-      dwRetCode = pResponse->GetVariableLong(VID_RCC);
+      dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
       if (dwRetCode == RCC_SUCCESS)
       {
          if (pConfig->dwId == 0) // New ID was requested
          {
-            pConfig->dwId = pResponse->GetVariableLong(VID_CONFIG_ID);
-            pConfig->dwSequence = pResponse->GetVariableLong(VID_SEQUENCE_NUMBER);
+            pConfig->dwId = pResponse->getFieldAsUInt32(VID_CONFIG_ID);
+            pConfig->dwSequence = pResponse->getFieldAsUInt32(VID_SEQUENCE_NUMBER);
          }
       }
       delete pResponse;
@@ -155,14 +155,14 @@ UINT32 LIBNXCL_EXPORTABLE NXCSaveAgentConfig(NXC_SESSION hSession, NXC_AGENT_CON
 
 UINT32 LIBNXCL_EXPORTABLE NXCDeleteAgentConfig(NXC_SESSION hSession, UINT32 dwCfgId)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_DELETE_AGENT_CONFIG);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_CONFIG_ID, dwCfgId);
+   msg.setCode(CMD_DELETE_AGENT_CONFIG);
+   msg.setId(dwRqId);
+   msg.setField(VID_CONFIG_ID, dwCfgId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
@@ -175,15 +175,15 @@ UINT32 LIBNXCL_EXPORTABLE NXCDeleteAgentConfig(NXC_SESSION hSession, UINT32 dwCf
 
 UINT32 LIBNXCL_EXPORTABLE NXCSwapAgentConfigs(NXC_SESSION hSession, UINT32 dwCfgId1, UINT32 dwCfgId2)
 {
-   CSCPMessage msg;
+   NXCPMessage msg;
    UINT32 dwRqId;
 
    dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
 
-   msg.SetCode(CMD_SWAP_AGENT_CONFIGS);
-   msg.SetId(dwRqId);
-   msg.SetVariable(VID_CONFIG_ID, dwCfgId1);
-   msg.SetVariable(VID_CONFIG_ID_2, dwCfgId2);
+   msg.setCode(CMD_SWAP_AGENT_CONFIGS);
+   msg.setId(dwRqId);
+   msg.setField(VID_CONFIG_ID, dwCfgId1);
+   msg.setField(VID_CONFIG_ID_2, dwCfgId2);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
 
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);

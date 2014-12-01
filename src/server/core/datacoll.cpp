@@ -32,6 +32,8 @@
  */
 extern Queue g_statusPollQueue;
 extern Queue g_configPollQueue;
+extern Queue g_syslogProcessingQueue;
+extern Queue g_syslogWriteQueue;
 
 /**
  * Global data
@@ -39,9 +41,12 @@ extern Queue g_configPollQueue;
 double g_dAvgPollerQueueSize = 0;
 double g_dAvgDBWriterQueueSize = 0;
 double g_dAvgIDataWriterQueueSize = 0;
+double g_dAvgRawDataWriterQueueSize = 0;
 double g_dAvgDBAndIDataWriterQueueSize = 0;
 double g_dAvgStatusPollerQueueSize = 0;
 double g_dAvgConfigPollerQueueSize = 0;
+double g_dAvgSyslogProcessingQueueSize = 0;
+double g_dAvgSyslogWriterQueueSize = 0;
 UINT32 g_dwAvgDCIQueuingTime = 0;
 Queue *g_pItemQueue = NULL;
 
@@ -50,7 +55,7 @@ Queue *g_pItemQueue = NULL;
  */
 static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *pBuffer, UINT32 *error)
 {
-   if (dcTarget->Type() == OBJECT_CLUSTER)
+   if (dcTarget->getObjectClass() == OBJECT_CLUSTER)
    {
       if (pItem->isAggregateOnCluster())
       {
@@ -69,26 +74,26 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
             *error = dcTarget->getInternalItem(pItem->getName(), MAX_LINE_SIZE, pBuffer);
             break;
          case DS_SNMP_AGENT:
-			   if (dcTarget->Type() == OBJECT_NODE)
+			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 				   *error = ((Node *)dcTarget)->getItemFromSNMP(pItem->getSnmpPort(), pItem->getName(), MAX_LINE_SIZE, 
 					   pBuffer, pItem->isInterpretSnmpRawValue() ? (int)pItem->getSnmpRawValueType() : SNMP_RAWTYPE_NONE);
 			   else
 				   *error = DCE_NOT_SUPPORTED;
             break;
          case DS_CHECKPOINT_AGENT:
-			   if (dcTarget->Type() == OBJECT_NODE)
+			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 	            *error = ((Node *)dcTarget)->getItemFromCheckPointSNMP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
 			   else
 				   *error = DCE_NOT_SUPPORTED;
             break;
          case DS_NATIVE_AGENT:
-			   if (dcTarget->Type() == OBJECT_NODE)
+			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 	            *error = ((Node *)dcTarget)->getItemFromAgent(pItem->getName(), MAX_LINE_SIZE, pBuffer);
 			   else
 				   *error = DCE_NOT_SUPPORTED;
             break;
          case DS_WINPERF:
-			   if (dcTarget->Type() == OBJECT_NODE)
+			   if (dcTarget->getObjectClass() == OBJECT_NODE)
 			   {
 				   TCHAR name[MAX_PARAM_NAME];
 				   _sntprintf(name, MAX_PARAM_NAME, _T("PDH.CounterValue(\"%s\",%d)"), pItem->getName(), pItem->getSampleCount());
@@ -100,7 +105,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
 			   }
             break;
          case DS_SMCLP:
-            if (dcTarget->Type() == OBJECT_NODE)
+            if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
 	            *error = ((Node *)dcTarget)->getItemFromSMCLP(pItem->getName(), MAX_LINE_SIZE, pBuffer);
             }
@@ -108,6 +113,9 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
             {
                *error = DCE_NOT_SUPPORTED;
             }
+            break;
+         case DS_SCRIPT:
+            *error = dcTarget->getScriptItem(pItem->getName(), MAX_LINE_SIZE, pBuffer);
             break;
 		   default:
 			   *error = DCE_NOT_SUPPORTED;
@@ -123,7 +131,7 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
 static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32 *error)
 {
 	Table *result = NULL;
-   if (dcTarget->Type() == OBJECT_CLUSTER)
+   if (dcTarget->getObjectClass() == OBJECT_CLUSTER)
    {
       if (table->isAggregateOnCluster())
       {
@@ -139,7 +147,7 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
       switch(table->getDataSource())
       {
 		   case DS_NATIVE_AGENT:
-			   if (dcTarget->Type() == OBJECT_NODE)
+			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
 				   *error = ((Node *)dcTarget)->getTableFromAgent(table->getName(), &result);
                if ((*error == DCE_SUCCESS) && (result != NULL))
@@ -151,7 +159,7 @@ static void *GetTableData(DataCollectionTarget *dcTarget, DCTable *table, UINT32
             }
 			   break;
          case DS_SNMP_AGENT:
-			   if (dcTarget->Type() == OBJECT_NODE)
+			   if (dcTarget->getObjectClass() == OBJECT_NODE)
             {
                *error = ((Node *)dcTarget)->getTableFromSNMP(table->getSnmpPort(), table->getName(), table->getColumns(), &result);
                if ((*error == DCE_SUCCESS) && (result != NULL))
@@ -186,20 +194,20 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 		if (pItem->isScheduledForDeletion())
 		{
 	      DbgPrintf(7, _T("DataCollector(): about to destroy DC object %d \"%s\" owner=%d"),
-			          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->Id() : -1);
-			pItem->deleteFromDB();
+			          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1);
+			pItem->deleteFromDatabase();
 			delete pItem;
 			continue;
 		}
 
       DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d proxy=%d"),
-		          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->Id() : -1, pItem->getProxyNode());
+		          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1, pItem->getProxyNode());
 		if (pItem->getProxyNode() != 0)
 		{
 			NetObj *object = FindObjectById(pItem->getProxyNode(), OBJECT_NODE);
 			if (object != NULL)
 			{
-				if (object->isTrustedNode((target != NULL) ? target->Id() : 0))
+				if (object->isTrustedNode((target != NULL) ? target->getId() : 0))
 				{
 					target = (Node *)object;
 					target->incRefCount();
@@ -279,7 +287,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
       {
 			Template *n = pItem->getTarget();
          DbgPrintf(3, _T("*** DataCollector: Attempt to collect information for non-existing node (DCI=%d \"%s\" target=%d proxy=%d)"),
-			          pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->Id() : -1, pItem->getProxyNode());
+			          pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->getId() : -1, pItem->getProxyNode());
       }
 
 		// Update item's last poll time and clear busy flag so item can be polled again
@@ -298,7 +306,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 static void QueueItems(NetObj *object, void *data)
 {
 	DbgPrintf(8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%d]"),
-				 object->Name(), object->Id());
+				 object->getName(), object->getId());
 	((DataCollectionTarget *)object)->queueItemsForPolling(g_pItemQueue);
 }
 
@@ -308,7 +316,7 @@ static void QueueItems(NetObj *object, void *data)
  */
 static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 {
-   UINT32 dwSum, dwWatchdogId, dwCurrPos = 0;
+   UINT32 dwSum, dwWatchdogId, currPos = 0;
    UINT32 dwTimingHistory[60 / ITEM_POLLING_INTERVAL];
    INT64 qwStart;
 
@@ -328,10 +336,10 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 		g_idxMobileDeviceById.forEach(QueueItems, NULL);
 
       // Save last poll time
-      dwTimingHistory[dwCurrPos] = (UINT32)(GetCurrentTimeMs() - qwStart);
-      dwCurrPos++;
-      if (dwCurrPos == (60 / ITEM_POLLING_INTERVAL))
-         dwCurrPos = 0;
+      dwTimingHistory[currPos] = (UINT32)(GetCurrentTimeMs() - qwStart);
+      currPos++;
+      if (currPos == (60 / ITEM_POLLING_INTERVAL))
+         currPos = 0;
 
       // Calculate new average for last minute
 		dwSum = 0;
@@ -348,56 +356,72 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
  */
 static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
 {
-   UINT32 i, dwCurrPos = 0;
-   UINT32 dwPollerQS[12], dwDBWriterQS[12];
-   UINT32 dwIDataWriterQS[12], dwDBAndIDataWriterQS[12];
-   UINT32 dwStatusPollerQS[12], dwConfigPollerQS[12];
-   double dSum1, dSum2, dSum3, dSum4, dSum5, dSum6;
+   UINT32 i, currPos = 0;
+   UINT32 pollerQS[12], dbWriterQS[12];
+   UINT32 iDataWriterQS[12], rawDataWriterQS[12], dbAndIDataWriterQS[12];
+   UINT32 statusPollerQS[12], configPollerQS[12];
+   UINT32 syslogProcessingQS[12], syslogWriterQS[12];
+   double sum1, sum2, sum3, sum4, sum5, sum6, sum7, sum8, sum9;
 
-   memset(dwPollerQS, 0, sizeof(UINT32) * 12);
-   memset(dwDBWriterQS, 0, sizeof(UINT32) * 12);
-   memset(dwIDataWriterQS, 0, sizeof(UINT32) * 12);
-   memset(dwDBAndIDataWriterQS, 0, sizeof(UINT32) * 12);
-   memset(dwStatusPollerQS, 0, sizeof(UINT32) * 12);
-   memset(dwConfigPollerQS, 0, sizeof(UINT32) * 12);
+   memset(pollerQS, 0, sizeof(UINT32) * 12);
+   memset(dbWriterQS, 0, sizeof(UINT32) * 12);
+   memset(iDataWriterQS, 0, sizeof(UINT32) * 12);
+   memset(rawDataWriterQS, 0, sizeof(UINT32) * 12);
+   memset(dbAndIDataWriterQS, 0, sizeof(UINT32) * 12);
+   memset(statusPollerQS, 0, sizeof(UINT32) * 12);
+   memset(configPollerQS, 0, sizeof(UINT32) * 12);
+   memset(syslogProcessingQS, 0, sizeof(UINT32) * 12);
+   memset(syslogWriterQS, 0, sizeof(UINT32) * 12);
    g_dAvgPollerQueueSize = 0;
    g_dAvgDBWriterQueueSize = 0;
    g_dAvgIDataWriterQueueSize = 0;
+   g_dAvgRawDataWriterQueueSize = 0;
    g_dAvgDBAndIDataWriterQueueSize = 0;
    g_dAvgStatusPollerQueueSize = 0;
    g_dAvgConfigPollerQueueSize = 0;
+   g_dAvgSyslogProcessingQueueSize = 0;
+   g_dAvgSyslogWriterQueueSize = 0;
    while(!IsShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(5))
          break;      // Shutdown has arrived
 
       // Get current values
-      dwPollerQS[dwCurrPos] = g_pItemQueue->Size();
-      dwDBWriterQS[dwCurrPos] = g_pLazyRequestQueue->Size();
-      dwIDataWriterQS[dwCurrPos] = g_pIDataInsertQueue->Size();
-      dwDBAndIDataWriterQS[dwCurrPos] = g_pLazyRequestQueue->Size() + g_pIDataInsertQueue->Size();
-      dwStatusPollerQS[dwCurrPos] = g_statusPollQueue.Size();
-      dwConfigPollerQS[dwCurrPos] = g_configPollQueue.Size();
-      dwCurrPos++;
-      if (dwCurrPos == 12)
-         dwCurrPos = 0;
+      pollerQS[currPos] = g_pItemQueue->Size();
+      dbWriterQS[currPos] = g_dbWriterQueue->Size();
+      iDataWriterQS[currPos] = g_dciDataWriterQueue->Size();
+      rawDataWriterQS[currPos] = g_dciRawDataWriterQueue->Size();
+      dbAndIDataWriterQS[currPos] = g_dbWriterQueue->Size() + g_dciDataWriterQueue->Size() + g_dciRawDataWriterQueue->Size();
+      statusPollerQS[currPos] = g_statusPollQueue.Size();
+      configPollerQS[currPos] = g_configPollQueue.Size();
+      syslogProcessingQS[currPos] = g_syslogProcessingQueue.Size();
+      syslogWriterQS[currPos] = g_syslogWriteQueue.Size();
+      currPos++;
+      if (currPos == 12)
+         currPos = 0;
 
       // Calculate new averages
-      for(i = 0, dSum1 = 0, dSum2 = 0, dSum3 = 0, dSum4 = 0, dSum5 = 0, dSum6 = 0; i < 12; i++)
+      for(i = 0, sum1 = 0, sum2 = 0, sum3 = 0, sum4 = 0, sum5 = 0, sum6 = 0, sum7 = 0, sum8 = 0, sum9 = 0; i < 12; i++)
       {
-         dSum1 += dwPollerQS[i];
-         dSum2 += dwDBWriterQS[i];
-         dSum3 += dwIDataWriterQS[i];
-         dSum4 += dwDBAndIDataWriterQS[i];
-         dSum5 += dwStatusPollerQS[i];
-         dSum6 += dwConfigPollerQS[i];
+         sum1 += pollerQS[i];
+         sum2 += dbWriterQS[i];
+         sum3 += iDataWriterQS[i];
+         sum4 += rawDataWriterQS[i];
+         sum5 += dbAndIDataWriterQS[i];
+         sum6 += statusPollerQS[i];
+         sum7 += configPollerQS[i];
+         sum8 += syslogProcessingQS[i];
+         sum9 += syslogWriterQS[i];
       }
-      g_dAvgPollerQueueSize = dSum1 / 12;
-      g_dAvgDBWriterQueueSize = dSum2 / 12;
-      g_dAvgIDataWriterQueueSize = dSum3 / 12;
-      g_dAvgDBAndIDataWriterQueueSize = dSum4 / 12;
-      g_dAvgStatusPollerQueueSize = dSum5 / 12;
-      g_dAvgConfigPollerQueueSize = dSum6 / 12;
+      g_dAvgPollerQueueSize = sum1 / 12;
+      g_dAvgDBWriterQueueSize = sum2 / 12;
+      g_dAvgIDataWriterQueueSize = sum3 / 12;
+      g_dAvgRawDataWriterQueueSize = sum4 / 12;
+      g_dAvgDBAndIDataWriterQueueSize = sum5 / 12;
+      g_dAvgStatusPollerQueueSize = sum6 / 12;
+      g_dAvgConfigPollerQueueSize = sum7 / 12;
+      g_dAvgSyslogProcessingQueueSize = sum8 / 12;
+      g_dAvgSyslogWriterQueueSize = sum9 / 12;
    }
    return THREAD_OK;
 }
@@ -478,7 +502,7 @@ static void UpdateTableList(NetObj *object, void *data)
 	((Node *)object)->closeTableList();
 }
 
-void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags)
+void WriteFullParamListToMessage(NXCPMessage *pMsg, WORD flags)
 {
    // Gather full parameter list
 	if (flags & 0x01)
@@ -487,7 +511,7 @@ void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags)
 		g_idxNodeById.forEach(UpdateParamList, &fullList);
 
 		// Put list into the message
-		pMsg->SetVariable(VID_NUM_PARAMETERS, (UINT32)fullList.size());
+		pMsg->setField(VID_NUM_PARAMETERS, (UINT32)fullList.size());
       UINT32 varId = VID_PARAM_LIST_BASE;
 		for(int i = 0; i < fullList.size(); i++)
 		{
@@ -502,7 +526,7 @@ void WriteFullParamListToMessage(CSCPMessage *pMsg, WORD flags)
 		g_idxNodeById.forEach(UpdateTableList, &fullList);
 
 		// Put list into the message
-		pMsg->SetVariable(VID_NUM_TABLES, (UINT32)fullList.size());
+		pMsg->setField(VID_NUM_TABLES, (UINT32)fullList.size());
       UINT32 varId = VID_TABLE_LIST_BASE;
 		for(int i = 0; i < fullList.size(); i++)
 		{

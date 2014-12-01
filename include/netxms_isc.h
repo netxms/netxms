@@ -93,9 +93,9 @@ typedef struct
 	UINT32 id;								// Service ID
 	const TCHAR *name;					// Name
 	const TCHAR *enableParameter;		// Server parameter to be set to enable service
-	BOOL (*setupSession)(ISCSession *, CSCPMessage *);  // Session setup handler
+	BOOL (*setupSession)(ISCSession *, NXCPMessage *);  // Session setup handler
 	void (*closeSession)(ISCSession *);          // Session close handler
-	BOOL (*processMsg)(ISCSession *, CSCPMessage *, CSCPMessage *);
+	BOOL (*processMsg)(ISCSession *, NXCPMessage *, NXCPMessage *);
 } ISC_SERVICE;
 
 

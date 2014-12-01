@@ -20,6 +20,7 @@ f none /opt/netxms/lib/libnxlp.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnxsqlite.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnxtre.so.5.0.0 0755 root root
 f none /opt/netxms/lib/netxms/ecs.nsm 0755 root root
+f none /opt/netxms/lib/netxms/filemgr.nsm 0755 root root
 f none /opt/netxms/lib/netxms/logwatch.nsm 0755 root root
 f none /opt/netxms/lib/netxms/oracle.nsm 0755 root root
 f none /opt/netxms/lib/netxms/ping.nsm 0755 root root
@@ -39,6 +40,7 @@ s none /opt/netxms/lib/libappagent.so=libappagent.so.1.0.0
 s none /opt/netxms/lib/libnetxms.so.1=libnetxms.so.1.0.0
 s none /opt/netxms/lib/libnetxms.so=libnetxms.so.1.0.0
 s none /opt/netxms/lib/libnsm_ecs.so=/opt/netxms/lib/netxms/ecs.nsm
+s none /opt/netxms/lib/libnsm_filemgr.so=/opt/netxms/lib/netxms/filemgr.nsm
 s none /opt/netxms/lib/libnsm_logwatch.so=/opt/netxms/lib/netxms/logwatch.nsm
 s none /opt/netxms/lib/libnsm_oracle.so=/opt/netxms/lib/netxms/oracle.nsm
 s none /opt/netxms/lib/libnsm_ping.so=/opt/netxms/lib/netxms/ping.nsm

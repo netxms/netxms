@@ -1,7 +1,7 @@
 /* 
 ** nxapush - command line tool used to push DCI values to NetXMS server
 **           via local NetXMS agent
-** Copyright (C) 2006-2012 Raden Solutions
+** Copyright (C) 2006-2014 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (s_data->getSize() > 0)
+	if (s_data->size() > 0)
 	{
 		if (Startup())
 		{
@@ -338,29 +338,22 @@ static BOOL Send()
 {
 	BOOL success = FALSE;
 
-	CSCPMessage msg;
-	msg.SetCode(CMD_PUSH_DCI_DATA);
-   msg.SetVariable(VID_OBJECT_ID, optObjectId);
-   msg.SetVariable(VID_NUM_ITEMS, s_data->getSize());
-	for(DWORD i = 0, varId = VID_PUSH_DCI_DATA_BASE; i < s_data->getSize(); i++)
-	{
-		msg.SetVariable(varId++, s_data->getKeyByIndex(i));
-		msg.SetVariable(varId++, s_data->getValueByIndex(i));
-		if (optVerbose > 2)
-			_tprintf(_T("Record #%d: \"%s\" = \"%s\"\n"), (int)i + 1, s_data->getKeyByIndex(i), s_data->getValueByIndex(i));
-	}
+	NXCPMessage msg;
+	msg.setCode(CMD_PUSH_DCI_DATA);
+   msg.setField(VID_OBJECT_ID, optObjectId);
+   s_data->fillMessage(&msg, VID_NUM_ITEMS, VID_PUSH_DCI_DATA_BASE);
 
 	// Send response to pipe
-	CSCP_MESSAGE *rawMsg = msg.createMessage();
+	NXCP_MESSAGE *rawMsg = msg.createMessage();
 #ifdef _WIN32
 	DWORD bytes;
-	if (!WriteFile(s_hPipe, rawMsg, ntohl(rawMsg->dwSize), &bytes, NULL))
+	if (!WriteFile(s_hPipe, rawMsg, ntohl(rawMsg->size), &bytes, NULL))
 		goto cleanup;
-	if (bytes != ntohl(rawMsg->dwSize))
+	if (bytes != ntohl(rawMsg->size))
 		goto cleanup;
 #else
-	int bytes = SendEx(s_hPipe, rawMsg, ntohl(rawMsg->dwSize), 0, NULL); 
-	if (bytes != (int)ntohl(rawMsg->dwSize))
+	int bytes = SendEx(s_hPipe, rawMsg, ntohl(rawMsg->size), 0, NULL); 
+	if (bytes != (int)ntohl(rawMsg->size))
 		goto cleanup;
 #endif
 

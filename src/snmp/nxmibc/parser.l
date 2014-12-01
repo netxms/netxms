@@ -90,11 +90,9 @@ static void PushState(int nState)
 
 static void PopState(void);
 
-
-//
-// Coint newlines in a text block
-//
-
+/**
+ * Count newlines in a text block
+ */
 static void CountNewlines(char *pszStr, int len)
 {
    int i;
@@ -358,7 +356,9 @@ static void CountNewlines(char *pszStr, int len)
    mplval.pszString[mpleng - 3] = '\0';
    if (strlen(mplval.pszString) <= 8)
    {
-     mplval.number.value.nInt32 = strtoul(mplval.pszString, NULL, 16);
+     int n = strtoul(mplval.pszString, NULL, 16);
+     free(mplval.pszString);
+     mplval.number.value.nInt32 = n;
      mplval.number.nType = 0;
      return NUMBER_SYM;
    }

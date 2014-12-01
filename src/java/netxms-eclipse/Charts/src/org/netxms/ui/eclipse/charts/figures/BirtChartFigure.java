@@ -49,12 +49,14 @@ import org.eclipse.birt.chart.model.type.impl.BarSeriesImpl;
 import org.eclipse.birt.chart.model.type.impl.PieSeriesImpl;
 import org.eclipse.birt.core.framework.PlatformConfig;
 import org.eclipse.draw2d.Graphics;
+import org.eclipse.draw2d.SWTGraphics;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
+import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.client.datacollection.Threshold;
@@ -622,12 +624,12 @@ public class BirtChartFigure extends GenericChartFigure implements DataCompariso
 	@Override
 	public int addParameter(GraphItem dci, double value)
 	{
-		parameters.add(new DataComparisonElement(dci, value));
+		parameters.add(new DataComparisonElement(dci, value, null));
 		return parameters.size() - 1;
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.charts.api.DataComparisionChart#updateParameter(int, double)
+	 * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#updateParameter(int, double, boolean)
 	 */
 	@Override
 	public void updateParameter(int index, double value, boolean updateChart)
@@ -644,6 +646,15 @@ public class BirtChartFigure extends GenericChartFigure implements DataCompariso
 			refresh();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.charts.api.DataComparisonChart#updateParameter(int, org.netxms.client.datacollection.DciDataRow, int, boolean)
+	 */
+	@Override
+   public void updateParameter(int index, DciDataRow value, int dataType, boolean updateChart)
+   {
+      updateParameter(index, value.getValueAsDouble(), updateChart);
+   }
+	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.charts.api.DataComparisionChart#updateParameterThresholds(int, org.netxms.client.datacollection.Threshold[])
 	 */
@@ -831,5 +842,22 @@ public class BirtChartFigure extends GenericChartFigure implements DataCompariso
          yAxis.getScale().setMin(NumberDataElementImpl.create(from));
          yAxis.getScale().setMax(NumberDataElementImpl.create(to));
       }
+   }
+   
+   /**
+    * Take snapshot of network map
+    * 
+    * @return
+    */
+   public Image takeSnapshot()
+   {
+      Rectangle rect = getClientArea();
+      Image image = new Image(Display.getCurrent(), rect.width, rect.height);
+      GC gc = new GC(image);
+      Graphics g = new SWTGraphics(gc);
+	  paint(g);
+	  g.dispose();
+      gc.dispose();
+      return image;
    }
 }

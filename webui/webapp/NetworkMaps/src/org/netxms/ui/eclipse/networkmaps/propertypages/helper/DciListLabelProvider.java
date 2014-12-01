@@ -30,6 +30,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
+import org.netxms.ui.eclipse.networkmaps.Messages;
 import org.netxms.ui.eclipse.networkmaps.propertypages.LinkDataSources;
 import org.netxms.client.maps.configs.SingleDciConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -116,7 +117,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 				return (object != null) ? object.getObjectName() : ("[" + Long.toString(dci.getNodeId()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
 			case LinkDataSources.COLUMN_METRIC:
 				String name = dciNameCache.get(new NodeItemPair(dci.getNodeId(), dci.dciId));
-				return (name != null) ? name : "Unresolved name of DCI";
+				return (name != null) ? name : Messages.get().DciListLabelProvider_Unresolved;
 			case LinkDataSources.COLUMN_LABEL:
 				return dci.name;
 		}
@@ -130,7 +131,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 	 */
 	public void resolveDciNames(final Collection<SingleDciConfig> dciList)
 	{
-		new ConsoleJob("Resolve DCI names", null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().DciListLabelProvider_JobName, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -161,7 +162,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Error while resolving DCI names";
+				return Messages.get().DciListLabelProvider_JobError;
 			}
 		}.runInForeground();
 	}

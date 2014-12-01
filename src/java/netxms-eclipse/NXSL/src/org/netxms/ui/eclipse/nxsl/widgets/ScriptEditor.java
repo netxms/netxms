@@ -56,11 +56,23 @@ public class ScriptEditor extends Composite
 	private String[] variablesCache = new String[0];
 	private Image[] proposalIcons = new Image[4];
 
+   /**
+    * @param parent
+    * @param style
+    * @param editorStyle
+    */
+   public ScriptEditor(Composite parent, int style, int editorStyle)
+   {
+      this(parent, style, editorStyle, 20);
+   }
+   
 	/**
 	 * @param parent
 	 * @param style
+	 * @param editorStyle
+	 * @param rulerWidth
 	 */
-	public ScriptEditor(Composite parent, int style, int editorStyle)
+	public ScriptEditor(Composite parent, int style, int editorStyle, int rulerWidth)
 	{
 		super(parent, style);
 		
@@ -73,7 +85,7 @@ public class ScriptEditor extends Composite
 		proposalIcons[3] = Activator.getImageDescriptor("icons/constant.gif").createImage(); //$NON-NLS-1$
 		
 		setLayout(new FillLayout());
-		editor = new SourceViewer(this, new VerticalRuler(20), editorStyle);
+		editor = new SourceViewer(this, (rulerWidth > 0) ? new VerticalRuler(rulerWidth) : null, editorStyle);
 		editor.configure(new NXSLSourceViewerConfiguration(this));
 
 		final TextViewerUndoManager undoManager = new TextViewerUndoManager(50);

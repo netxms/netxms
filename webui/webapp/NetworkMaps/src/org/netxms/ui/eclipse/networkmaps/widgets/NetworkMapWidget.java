@@ -79,7 +79,7 @@ public class NetworkMapWidget extends Composite
 		super(parent, style);
 	
       final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-      disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND");
+      disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND"); //$NON-NLS-1$
 		
 		setLayout(new FillLayout());
 

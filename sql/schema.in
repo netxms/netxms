@@ -50,7 +50,7 @@ CREATE TABLE users
 	guid varchar(36) not null,
 	name varchar(63) not null,
 	password varchar(48) not null,
-	system_access integer not null,
+	system_access SQL_INT64 not null,
 	flags integer not null,
 	full_name varchar(127) null,
 	description varchar(255) null,
@@ -65,6 +65,7 @@ CREATE TABLE users
 	last_login integer not null,
 	password_history SQL_TEXT null,
    xmpp_id varchar(127) null,
+   ldap_dn SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -78,9 +79,10 @@ CREATE TABLE user_groups
 	id integer not null,
 	guid varchar(36) not null,
 	name varchar(63) not null,
-	system_access integer not null,
+	system_access SQL_INT64 not null,
 	flags integer not null,
-	description varchar(255) not null,
+	description varchar(255),
+	ldap_dn SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -152,6 +154,10 @@ CREATE TABLE object_properties
 	location_timestamp integer not null,
 	image varchar(36) not null,
 	submap_id integer not null,
+   country varchar(63) null,
+   city varchar(63) null,
+   street_address varchar(255) null,
+   postcode varchar(31) null,
 	PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 
@@ -254,6 +260,7 @@ CREATE TABLE nodes
 	zone_guid integer not null,
 	proxy_node integer not null,
 	snmp_proxy integer not null,
+	icmp_proxy integer not null,
 	required_polls integer not null,
 	uname varchar(255) null,
 	use_ifxtable integer not null,
@@ -580,6 +587,7 @@ CREATE TABLE items
 	instd_data varchar(255) null,
 	instd_filter SQL_TEXT null,
 	samples integer not null,
+	comments SQL_TEXT null,
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
@@ -607,6 +615,7 @@ CREATE TABLE dc_tables
 	proxy_node integer not null,   	// ID of proxy node (for SNMP and agent items)
 	perftab_settings SQL_TEXT null,			// Settings for displaying graph on performance tab
 	transformation_script SQL_TEXT null,
+	comments SQL_TEXT null,
 	PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
@@ -1004,6 +1013,9 @@ CREATE TABLE object_tools
 	flags integer not null,
 	matching_oid varchar(255) null,
 	confirmation_text varchar(255) null,
+   command_name varchar(255) null,
+   command_short_name varchar(31) null,
+   icon SQL_TEXT null,
 	PRIMARY KEY(tool_id)
 ) TABLE_TYPE;
 
@@ -1165,6 +1177,7 @@ CREATE TABLE audit_log
 	success integer not null,
 	user_id integer not null,	// 0x7FFFFFFF for system
 	workstation varchar(63) not null,
+   session_id integer not null,
 	object_id integer not null,
 	message SQL_TEXT null,
 	PRIMARY KEY(record_id)
@@ -1286,16 +1299,13 @@ CREATE TABLE network_map_links
 	element2 integer not null,
 	link_type integer not null,
 	link_name varchar(255) null,
-	connector_name1 varchar(63) null,
-	connector_name2 varchar(63) null,
-	color integer not null,
-	status_object integer not null,
-	routing integer not null,
-	bend_points SQL_TEXT4K null,
+	connector_name1 varchar(255) null,
+	connector_name2 varchar(255) null,
 	element_data SQL_TEXT null,
-	flags integer not null,
-	PRIMARY KEY(map_id,element1,element2)
+	flags integer not null
 ) TABLE_TYPE;
+
+CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id);
 
 /*
 ** Image Library
