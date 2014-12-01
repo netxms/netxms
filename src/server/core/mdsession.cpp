@@ -492,7 +492,7 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
 #ifdef UNICODE
 				pRequest->getFieldAsString(VID_PASSWORD, szPassword, 256);
 #else
-				pRequest->GetVariableStrUTF8(VID_PASSWORD, szPassword, 1024);
+				pRequest->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
 #endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
 													 &userRights, &changePasswd, &intruderLockout, false);
