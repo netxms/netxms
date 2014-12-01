@@ -1793,7 +1793,7 @@ void ClientSession::login(NXCPMessage *pRequest)
 #ifdef UNICODE
 				pRequest->getFieldAsString(VID_PASSWORD, szPassword, 256);
 #else
-				pRequest->GetVariableStrUTF8(VID_PASSWORD, szPassword, 1024);
+				pRequest->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
 #endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
 													 &m_dwSystemAccess, &changePasswd, &intruderLockout, false);
@@ -3045,9 +3045,9 @@ void ClientSession::setPassword(NXCPMessage *pRequest)
 		if (pRequest->isFieldExist(VID_OLD_PASSWORD))
 			pRequest->getFieldAsString(VID_OLD_PASSWORD, oldPassword, 256);
 #else
-      pRequest->GetVariableStrUTF8(VID_PASSWORD, newPassword, 1024);
+      pRequest->getFieldAsUtf8String(VID_PASSWORD, newPassword, 1024);
 		if (pRequest->isFieldExist(VID_OLD_PASSWORD))
-			pRequest->GetVariableStrUTF8(VID_OLD_PASSWORD, oldPassword, 1024);
+			pRequest->getFieldAsUtf8String(VID_OLD_PASSWORD, oldPassword, 1024);
 #endif
 		else
 			oldPassword[0] = 0;
