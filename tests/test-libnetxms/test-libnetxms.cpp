@@ -2,6 +2,8 @@
 #include <nms_util.h>
 #include <testtools.h>
 
+void TestMsgWaitQueue();
+
 static char mbText[] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 static WCHAR wcText[] = L"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 static char mbTextShort[] = "Lorem ipsum";
@@ -187,5 +189,6 @@ int main(int argc, char *argv[])
    TestStringConversion();
    TestStringMap();
    TestStringSet();
+   TestMsgWaitQueue();
    return 0;
 }
