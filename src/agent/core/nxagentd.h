@@ -414,8 +414,8 @@ class SNMP_TrapProxyTransport : public SNMP_UDPTransport
 {
 public:
    SNMP_TrapProxyTransport(SOCKET hSocket);
-   int readMessage(BYTE **rawData, UINT32 timeout = INFINITE,
-                  struct sockaddr *sender = NULL, socklen_t *addrSize = NULL);
+
+   int readRawMessage(BYTE **rawData, UINT32 timeout, struct sockaddr *sender, socklen_t *addrSize);
 };
 
 /**

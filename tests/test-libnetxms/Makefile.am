@@ -9,7 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 bin_PROGRAMS = test-libnetxms
-test_libnetxms_SOURCES = test-libnetxms.cpp
+test_libnetxms_SOURCES = nxcp.cpp test-libnetxms.cpp
 test_libnetxms_CPPFLAGS = -I@top_srcdir@/include -I../include
 test_libnetxms_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la
 

@@ -126,7 +126,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    {
       rawMessage = NULL;
       iBytes = 0;
-      iBytes = pTransport->readMessage(&rawMessage, 2000, (struct sockaddr *)&addr, &nAddrLen);
+      iBytes = pTransport->readRawMessage(&rawMessage, 2000, (struct sockaddr *)&addr, &nAddrLen);
       if ((iBytes > 0) && (rawMessage != NULL))
       {
          UdpMessage *message = new UdpMessage();
@@ -223,8 +223,7 @@ SNMP_TrapProxyTransport::SNMP_TrapProxyTransport(SOCKET hSocket) : SNMP_UDPTrans
 /**
  * Read PDU from socket but do not decode and parse it
  */
-int SNMP_TrapProxyTransport::readMessage(BYTE **rawData, UINT32 dwTimeout,
-                                   struct sockaddr *pSender, socklen_t *piAddrSize)
+int SNMP_TrapProxyTransport::readRawMessage(BYTE **rawData, UINT32 dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize)
 {
    int bytes;
    size_t pduLength;
