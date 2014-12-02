@@ -196,6 +196,8 @@ target
 /stamp-h1
 /status
 /tests/test-libnetxms/test-libnetxms
+/tests/test-libnxdb/test-libnxdb
+/tools/inst.tar.gz
 /webui/eclipse
 /x64
 
