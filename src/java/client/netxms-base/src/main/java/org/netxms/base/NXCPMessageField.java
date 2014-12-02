@@ -38,11 +38,11 @@ public class NXCPMessageField
 	public static final int TYPE_INT16 = 3;
 	public static final int TYPE_BINARY = 4;
 	public static final int TYPE_FLOAT = 5;
-   public static final int TYPE_INETADDR = 6;
+	public static final int TYPE_INETADDR = 6;
    
-   private static final int SIGNED = 0x01;
+	private static final int SIGNED = 0x01;
    
-   private static final byte[] PADDING = new byte[16];
+	private static final byte[] PADDING = new byte[16];
 
 	private long id;
 	private int type;
@@ -53,28 +53,19 @@ public class NXCPMessageField
 	private byte[] binaryValue;
 	private InetAddressEx inetAddressValue;
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
-	public String toString()
-	{
-		StringBuilder result = new StringBuilder();
-		String NEW_LINE = System.getProperty("line.separator");
-
-		result.append(this.getClass().getName() + " Object {" + NEW_LINE);
-		result.append(" variableId = " + Long.toString(id) + NEW_LINE);
-		result.append(" variableType = " + type + NEW_LINE);
-		result.append(" integerValue = " + integerValue + NEW_LINE);
-		result.append(" realValue = " + realValue + NEW_LINE);
-		result.append(" stringValue = " + stringValue + NEW_LINE);
-		result.append(" binaryValue = " + Arrays.toString(binaryValue) + NEW_LINE);
-      result.append(" inetAddressValue = " + inetAddressValue.toString() + NEW_LINE);
-		result.append("}");
-
-		return result.toString();
+	public String toString() {
+		return "NXCPMessageField{" +
+				"id=" + id +
+				", type=" + type +
+				", integerValue=" + integerValue +
+				", realValue=" + realValue +
+				", stringValue='" + stringValue + '\'' +
+				", binaryValue=" + Arrays.toString(binaryValue) +
+				", inetAddressValue=" + inetAddressValue +
+				'}';
 	}
-	
+
 	/**
 	 * Set string value and numeric values if possible
 	 * 
