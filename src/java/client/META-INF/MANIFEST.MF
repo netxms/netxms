@@ -4,7 +4,7 @@ Bundle-Name: Client Library API plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.clientlibrary;singleton:=true
 Bundle-Version: 2.0.0
 Bundle-Vendor: netxms.org
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: lib/simple-xml-2.6.4.jar,
  .
 Export-Package: org.netxms.api.client,

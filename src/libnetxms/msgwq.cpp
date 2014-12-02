@@ -26,7 +26,7 @@
 /** 
  * Interval between checking messages TTL in milliseconds
  */
-#define TTL_CHECK_INTERVAL    200
+#define TTL_CHECK_INTERVAL    500
 
 /**
  * Buffer allocation step
@@ -292,29 +292,32 @@ void MsgWaitQueue::housekeeperThread()
    while(!ConditionWait(m_stopCondition, TTL_CHECK_INTERVAL))
    {
       lock();
-      for(int i = 0; i < m_allocated; i++)
-		{
-         if (m_elements[i].msg == NULL)
-            continue;
+      if (m_size > 0)
+      {
+         for(int i = 0; i < m_allocated; i++)
+		   {
+            if (m_elements[i].msg == NULL)
+               continue;
 
-         if (m_elements[i].ttl <= TTL_CHECK_INTERVAL)
-         {
-            if (m_elements[i].isBinary)
+            if (m_elements[i].ttl <= TTL_CHECK_INTERVAL)
             {
-               safe_free(m_elements[i].msg);
+               if (m_elements[i].isBinary)
+               {
+                  safe_free(m_elements[i].msg);
+               }
+               else
+               {
+                  delete (NXCPMessage *)(m_elements[i].msg);
+               }
+               m_elements[i].msg = NULL;
+               m_size--;
             }
             else
             {
-               delete (NXCPMessage *)(m_elements[i].msg);
+               m_elements[i].ttl -= TTL_CHECK_INTERVAL;
             }
-            m_elements[i].msg = NULL;
-            m_size--;
-         }
-         else
-         {
-            m_elements[i].ttl -= TTL_CHECK_INTERVAL;
-         }
-		}
+		   }
+      }
       unlock();
    }
 }
