@@ -429,7 +429,10 @@ static BOOL H_UpgradeFromV341(int currVersion, int newVersion)
          }
       }
    }
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE object_tools DROP COLUMN matching_oid")));//delete old column
+   static TCHAR batch[] =
+      _T("ALTER TABLE object_tools DROP COLUMN matching_oid\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));//delete old column
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='342' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
