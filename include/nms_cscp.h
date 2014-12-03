@@ -741,7 +741,7 @@ typedef struct
 #define VID_TOOL_TYPE               ((UINT32)196)
 #define VID_TOOL_DATA               ((UINT32)197)
 #define VID_ACL                     ((UINT32)198)
-#define VID_TOOL_OID                ((UINT32)199)
+#define VID_TOOL_FILTER             ((UINT32)199)
 #define VID_SERVER_UPTIME           ((UINT32)200)
 #define VID_NUM_ALARMS              ((UINT32)201)
 #define VID_ALARMS_BY_SEVERITY      ((UINT32)202)

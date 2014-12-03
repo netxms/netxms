@@ -1744,7 +1744,7 @@ typedef struct
    WORD wType;
    TCHAR szName[MAX_DB_STRING];
    TCHAR szDescription[MAX_DB_STRING];
-   TCHAR *pszMatchingOID;
+   TCHAR *objectFilter;
    TCHAR *pszData;
    TCHAR *pszConfirmationText;
 } NXC_OBJECT_TOOL;
@@ -1773,7 +1773,7 @@ typedef struct
    UINT32 dwFlags;
    TCHAR szName[MAX_DB_STRING];
    TCHAR szDescription[MAX_DB_STRING];
-   TCHAR *pszMatchingOID;
+   TCHAR *objectFilter;
    TCHAR *pszData;
    TCHAR *pszConfirmationText;
    UINT32 *pdwACL;

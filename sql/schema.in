@@ -1011,7 +1011,7 @@ CREATE TABLE object_tools
 	tool_data SQL_TEXT null,
 	description varchar(255) null,
 	flags integer not null,
-	matching_oid varchar(255) null,
+	tool_filter SQL_TEXT null,
 	confirmation_text varchar(255) null,
    command_name varchar(255) null,
    command_short_name varchar(31) null,

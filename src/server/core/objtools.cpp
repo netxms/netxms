@@ -679,7 +679,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
    {
       statment = DBPrepare(hdb, _T("UPDATE object_tools SET tool_name=?,tool_type=?,")
                              _T("tool_data=?,description=?,flags=?,")
-                             _T("matching_oid=?,confirmation_text=?,command_name=?,")
+                             _T("tool_filter=?,confirmation_text=?,command_name=?,")
                              _T("command_short_name=?,icon=? ")
                              _T("WHERE tool_id=?"));
       if (statment == NULL)
@@ -688,7 +688,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
    else
    {
       statment = DBPrepare(hdb, _T("INSERT INTO object_tools (tool_name,tool_type,")
-                             _T("tool_data,description,flags,matching_oid,")
+                             _T("tool_data,description,flags,tool_filter,")
                              _T("confirmation_text,command_name,command_short_name,")
                              _T("icon,tool_id) VALUES ")
                              _T("(?,?,?,?,?,?,?,?,?,?,?)"));
@@ -701,7 +701,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
    DBBind(statment, 3, DB_SQLTYPE_TEXT, pMsg->getFieldAsString(VID_TOOL_DATA), DB_BIND_DYNAMIC);
    DBBind(statment, 4, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(VID_DESCRIPTION), DB_BIND_DYNAMIC);
    DBBind(statment, 5, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt32(VID_FLAGS));
-   DBBind(statment, 6, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(VID_TOOL_OID), DB_BIND_DYNAMIC);
+   DBBind(statment, 6, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(VID_TOOL_FILTER), DB_BIND_DYNAMIC);
    DBBind(statment, 7, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(VID_CONFIRMATION_TEXT), DB_BIND_DYNAMIC);
    DBBind(statment, 8, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(VID_COMMAND_NAME), DB_BIND_DYNAMIC);
    DBBind(statment, 9, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(VID_COMMAND_SHORT_NAME), DB_BIND_DYNAMIC);

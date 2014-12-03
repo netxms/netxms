@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Client Library
 ** Copyright (C) 2003-2011 Victor Kirhenshtein
@@ -60,7 +60,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetObjectTools(NXC_SESSION hSession, UINT32 *pdwNum
             (*ppToolList)[i].pszData = pResponse->getFieldAsString(dwId + 3);
             (*ppToolList)[i].dwFlags = pResponse->getFieldAsUInt32(dwId + 4);
             pResponse->getFieldAsString(dwId + 5, (*ppToolList)[i].szDescription, MAX_DB_STRING);
-            (*ppToolList)[i].pszMatchingOID = pResponse->getFieldAsString(dwId + 6);
+            (*ppToolList)[i].objectFilter = pResponse->getFieldAsString(dwId + 6);
             (*ppToolList)[i].pszConfirmationText = pResponse->getFieldAsString(dwId + 7);
          }
       }
@@ -87,7 +87,7 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolList(UINT32 dwNumTools, NXC_OBJECT_T
       for(i = 0; i < dwNumTools; i++)
       {
          safe_free(pList[i].pszData);
-         safe_free(pList[i].pszMatchingOID);
+         safe_free(pList[i].objectFilter);
          safe_free(pList[i].pszConfirmationText);
       }
       free(pList);
@@ -190,7 +190,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCGetObjectToolDetails(NXC_SESSION hSession, UINT32 d
          (*ppData)->pszConfirmationText = pResponse->getFieldAsString(VID_CONFIRMATION_TEXT);
          pResponse->getFieldAsString(VID_NAME, (*ppData)->szName, MAX_DB_STRING);
          pResponse->getFieldAsString(VID_DESCRIPTION, (*ppData)->szDescription, MAX_DB_STRING);
-         (*ppData)->pszMatchingOID = pResponse->getFieldAsString(VID_TOOL_OID);
+         (*ppData)->objectFilter = pResponse->getFieldAsString(VID_TOOL_FILTER);
          (*ppData)->dwACLSize = pResponse->getFieldAsUInt32(VID_ACL_SIZE);
          (*ppData)->pdwACL = (UINT32 *)malloc(sizeof(UINT32) * (*ppData)->dwACLSize);
          pResponse->getFieldAsInt32Array(VID_ACL, (*ppData)->dwACLSize, (*ppData)->pdwACL);
@@ -229,7 +229,7 @@ void LIBNXCL_EXPORTABLE NXCDestroyObjectToolDetails(NXC_OBJECT_TOOL_DETAILS *pDa
    if (pData != NULL)
    {
       safe_free(pData->pszData);
-      safe_free(pData->pszMatchingOID);
+      safe_free(pData->objectFilter);
       safe_free(pData->pColList);
       safe_free(pData->pdwACL);
       free(pData);
@@ -252,7 +252,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCGenerateObjectToolId(NXC_SESSION hSession, UINT32 *
    msg.setCode(CMD_GENERATE_OBJECT_TOOL_ID);
    msg.setId(dwRqId);
    ((NXCL_Session *)hSession)->SendMsg(&msg);
-   
+
    // Wait for reply
    pResponse = ((NXCL_Session *)hSession)->WaitForMessage(CMD_REQUEST_COMPLETED, dwRqId);
    if (pResponse != NULL)
@@ -292,7 +292,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCUpdateObjectTool(NXC_SESSION hSession,
    msg.setField(VID_TOOL_DATA, pData->pszData);
    msg.setField(VID_CONFIRMATION_TEXT, CHECK_NULL_EX(pData->pszConfirmationText));
    msg.setField(VID_ACL_SIZE, pData->dwACLSize);
-   msg.setField(VID_TOOL_OID, CHECK_NULL_EX(pData->pszMatchingOID));
+   msg.setField(VID_TOOL_FILTER, CHECK_NULL_EX(pData->objectFilter));
    msg.setFieldFromInt32Array(VID_ACL, pData->dwACLSize, pData->pdwACL);
    if ((pData->wType == TOOL_TYPE_TABLE_SNMP) ||
        (pData->wType == TOOL_TYPE_TABLE_AGENT))
@@ -319,7 +319,7 @@ UINT32 LIBNXCL_EXPORTABLE NXCUpdateObjectTool(NXC_SESSION hSession,
 //
 // Check if given object tool is appropriate for given node
 //
-
+/*
 BOOL LIBNXCL_EXPORTABLE NXCIsAppropriateTool(NXC_OBJECT_TOOL *pTool, NXC_OBJECT *pObject)
 {
    BOOL bResult;
@@ -352,7 +352,7 @@ BOOL LIBNXCL_EXPORTABLE NXCIsAppropriateTool(NXC_OBJECT_TOOL *pTool, NXC_OBJECT 
       bResult = FALSE;
    }
    return bResult;
-}
+} */
 
 
 //
@@ -374,6 +374,6 @@ UINT32 LIBNXCL_EXPORTABLE NXCExecuteServerCommand(NXC_SESSION hSession, UINT32 n
 
    // Send request
    ((NXCL_Session *)hSession)->SendMsg(&msg);
-   
+
    return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
 }

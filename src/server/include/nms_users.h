@@ -21,7 +21,9 @@
 **/
 
 #if WITH_LDAP
+#if !defined(__hpux)
 #define LDAP_DEPRECATED 1
+#endif
 #ifdef _WIN32
 #include <winldap.h>
 #include <winber.h>
