@@ -539,7 +539,7 @@ public class NXCPCodes
 	public static final long VID_TOOL_TYPE = 196;
 	public static final long VID_TOOL_DATA = 197;
 	public static final long VID_ACL = 198;
-	public static final long VID_TOOL_OID = 199;
+	public static final long VID_TOOL_FILTER = 199;
 	public static final long VID_SERVER_UPTIME = 200;
 	public static final long VID_NUM_ALARMS = 201;
 	public static final long VID_ALARMS_BY_SEVERITY = 202;

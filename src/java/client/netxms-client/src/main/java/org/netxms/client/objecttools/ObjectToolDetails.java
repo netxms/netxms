@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
@@ -52,7 +53,7 @@ public class ObjectToolDetails extends ObjectTool
 		data = "";
 		flags = 0;
 		description = "";
-		snmpOid = "";
+		filter = new ObjectToolFilter();
 		confirmationText = "";
 		accessList = new ArrayList<Long>(0);
 		columns = new ArrayList<ObjectToolTableColumn>(0);
@@ -78,11 +79,20 @@ public class ObjectToolDetails extends ObjectTool
 		data = msg.getFieldAsString(NXCPCodes.VID_TOOL_DATA);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
-		snmpOid = msg.getFieldAsString(NXCPCodes.VID_TOOL_OID);
+		String filterData = msg.getFieldAsString(NXCPCodes.VID_TOOL_FILTER);
 		confirmationText = msg.getFieldAsString(NXCPCodes.VID_CONFIRMATION_TEXT);
 		commandName = msg.getFieldAsString(NXCPCodes.VID_COMMAND_NAME);
       commandShortName = msg.getFieldAsString(NXCPCodes.VID_COMMAND_SHORT_NAME);
 		imageData = msg.getFieldAsBinary(NXCPCodes.VID_IMAGE_DATA);
+      try
+      {
+         filter = ObjectToolFilter.createFromXml(filterData);
+      }
+      catch(Exception e)
+      {
+         filter = new ObjectToolFilter();
+         Logger.debug("ObjectToolDetails.ObjectToolDetails", "Failed to convert object tool filter to string");
+      }
 		
 		Long[] acl = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ACL);
 		accessList = (acl != null) ? new ArrayList<Long>(Arrays.asList(acl)) : new ArrayList<Long>(0);
@@ -106,10 +116,20 @@ public class ObjectToolDetails extends ObjectTool
 	 */
 	public void fillMessage(NXCPMessage msg)
 	{
+	   String filterData;
+      try
+      {
+         filterData = filter.createXml();
+      }
+      catch(Exception e)
+      {
+         filterData = "";
+         Logger.debug("ObjectTool.ObjectTool", "Failed to convert object tool filter to XML");
+      }
 		msg.setFieldInt32(NXCPCodes.VID_TOOL_ID, (int)id);
 		msg.setField(NXCPCodes.VID_NAME, name);
 		msg.setField(NXCPCodes.VID_DESCRIPTION, description);
-		msg.setField(NXCPCodes.VID_TOOL_OID, snmpOid);
+		msg.setField(NXCPCodes.VID_TOOL_FILTER, filterData);
 		msg.setField(NXCPCodes.VID_CONFIRMATION_TEXT, confirmationText);
 		msg.setField(NXCPCodes.VID_TOOL_DATA, data);
 		msg.setFieldInt16(NXCPCodes.VID_TOOL_TYPE, type);
@@ -201,9 +221,28 @@ public class ObjectToolDetails extends ObjectTool
 	 */
 	public void setSnmpOid(String snmpOid)
 	{
-		this.snmpOid = snmpOid;
+	   filter.snmpOid = snmpOid;
 		modified = true;
 	}
+	
+
+	/**
+    * @param toolTemplate the comma separated list of template name regexps
+    */
+   public void setToolTemplate(String toolTemplate)
+   {
+      filter.toolTemplate = toolTemplate;
+      modified = true;
+   }
+
+   /**
+    * @param toolOS  the comma separated list of OS name regexps
+    */
+   public void setToolOS(String toolOS)
+   {
+      filter.toolOS = toolOS;
+      modified = true;
+   }
 
 	/**
 	 * @param data the data to set
