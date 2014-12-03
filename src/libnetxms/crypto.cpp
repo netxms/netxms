@@ -145,7 +145,7 @@ static void CryptoDbgPrintf(int level, const TCHAR *format, ...)
 /**
  * Initialize OpenSSL library
  */
-BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCallback)(int, const TCHAR *, va_list args))
+bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCallback)(int, const TCHAR *, va_list args))
 {
    s_debugCallback = debugCallback;
    s_noEncryptionFlag = htons(MF_DONT_ENCRYPT);
@@ -195,7 +195,7 @@ BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCal
 #else
    CryptoDbgPrintf(1, _T("Crypto library will not be initialized because libnetxms was built without encryption support"));
 #endif   /* _WITH_ENCRYPTION */
-   return TRUE;
+   return true;
 }
 
 /**
@@ -217,9 +217,9 @@ NXCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *NXCPEncryptMessage(NXCPEncryptionCo
 /**
  * Decrypt message
  */
-BOOL LIBNETXMS_EXPORTABLE NXCPDecryptMessage(NXCPEncryptionContext *pCtx, NXCP_ENCRYPTED_MESSAGE *msg, BYTE *pDecryptionBuffer)
+bool LIBNETXMS_EXPORTABLE NXCPDecryptMessage(NXCPEncryptionContext *pCtx, NXCP_ENCRYPTED_MESSAGE *msg, BYTE *pDecryptionBuffer)
 {
-   return (pCtx != NULL) ? pCtx->decryptMessage(msg, pDecryptionBuffer) : FALSE;
+   return (pCtx != NULL) ? pCtx->decryptMessage(msg, pDecryptionBuffer) : false;
 }
 
 /**

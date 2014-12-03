@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <netxms-regex.h>
+#include <nxtools.h>
 
 /**
  * Tool startup info

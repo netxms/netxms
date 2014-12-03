@@ -1,6 +1,6 @@
 /* 
 ** nxap - command line tool used to manage agent policies
-** Copyright (C) 2010 Victor Kirhenshtein
+** Copyright (C) 2010-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <nms_util.h>
-#include <nxclapi.h>
 #include <nxsrvapi.h>
 
 #ifndef _WIN32

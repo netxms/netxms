@@ -24,6 +24,8 @@
 #ifndef _nxclapi_h_
 #define _nxclapi_h_
 
+//#error DEPRECATED
+
 #ifdef LIBNXCL_CONSTANTS_ONLY
 
 #ifndef LIBNXCL_NO_DECLARATIONS

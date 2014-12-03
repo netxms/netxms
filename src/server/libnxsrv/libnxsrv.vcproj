@@ -431,6 +431,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\include\nxcpapi.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\include\nxsnmp.h"
 				>
 			</File>

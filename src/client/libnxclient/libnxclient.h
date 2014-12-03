@@ -1,7 +1,7 @@
-/* 
+/*
 ** NetXMS - Network Management System
-** Utility Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Client Library
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -17,26 +17,19 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: libnetxms.h
+** File: libnxclient.h
 **
 **/
 
-#ifndef _libnetxms_h_
-#define _libnetxms_h_
+#ifndef _libnxclient_h_
+#define _libnxclient_h_
 
 #include <nms_common.h>
 #include <nms_util.h>
+#include <nms_threads.h>
 #include <nxcpapi.h>
-#include <nxcldefs.h>
+#include <nxclient.h>
 
-#define MAX_CODEPAGE_LEN		64
+void DebugPrintf(const TCHAR *format, ...);
 
-
-//
-// Functions
-//
-
-void SEHInit(void);
-
-
-#endif   /* _libnetxms_h_ */
+#endif   /* _libnxclient_h_ */

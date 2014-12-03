@@ -26,7 +26,6 @@
 #include <nms_common.h>
 #include <nxsrvapi.h>
 #include <nxdbapi.h>
-#include <nms_util.h>
 
 #ifdef _WIN32
 #define EXPORT __declspec(dllexport)

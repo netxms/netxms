@@ -21,6 +21,7 @@
 **/
 
 #include "nxdbmgr.h"
+#include <nxevent.h>
 
 /**
  * Externals

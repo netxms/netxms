@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <netxms_mt.h>
+#include <nxtools.h>
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -395,7 +396,7 @@ void ClientSession::readThread()
       // Check for decryption error
       if (result == MSGRECV_DECRYPTION_FAILURE)
       {
-         debugPrintf(4, _T("Unable to decrypt received message"));
+         debugPrintf(4, _T("readThread: Unable to decrypt received message"));
          continue;
       }
 
@@ -10843,16 +10844,15 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
             if (response != NULL)
             {
                rcc = response->getFieldAsUInt32(VID_RCC);
-               if(rcc == RCC_SUCCESS)
+               if (rcc == ERR_SUCCESS)
                {
                   msg.setField(VID_RCC, rcc);
                   debugPrintf(6, _T("File monitoring cancelled successfully"));
                }
                else
                {
-                  msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
-
-                  debugPrintf(6, _T("Error on agent: %d"), rcc);
+                  msg.setField(VID_RCC, AgentErrorToRCC(rcc));
+                  debugPrintf(6, _T("Error on agent: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
                }
             }
             else
@@ -13214,7 +13214,7 @@ void ClientSession::getEffectiveRights(NXCPMessage *request)
 void ClientSession::fileManagerControl(NXCPMessage *request)
 {
    NXCPMessage msg, *response = NULL, *responseMessage;
-	UINT32 rcc;
+	UINT32 rcc = RCC_INTERNAL_ERROR;
    responseMessage = &msg;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -13241,7 +13241,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                if (response != NULL)
                {
                   rcc = response->getFieldAsUInt32(VID_RCC);
-                  if(rcc == RCC_SUCCESS)
+                  if (rcc == ERR_SUCCESS)
                   {
                      response->setId(msg.getId());
                      response->setCode(CMD_REQUEST_COMPLETED);
@@ -13286,8 +13286,9 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                   }
                   else
                   {
-                     msg.setField(VID_RCC, rcc); // TODO: add transofrmation script
-                     debugPrintf(6, _T("ClientSession::getAgentFolderContent: Error on agent: %d"), rcc);
+                     debugPrintf(6, _T("ClientSession::getAgentFolderContent: Error on agent: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
+                     rcc = AgentErrorToRCC(rcc);
+                     msg.setField(VID_RCC, rcc);
                   }
                }
                else
@@ -13317,7 +13318,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
 		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-	if(rcc == RCC_ACCESS_DENIED)
+	if (rcc == RCC_ACCESS_DENIED)
 	{
       switch(request->getCode())
       {
