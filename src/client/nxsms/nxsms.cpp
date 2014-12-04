@@ -26,9 +26,9 @@
 /**
  * Callback function for debug printing
  */
-static void DebugCallback(TCHAR *pMsg)
+static void DebugCallback(const TCHAR *pMsg)
 {
-   _tprintf(_T("*debug* %s\n"), pMsg);
+   _tprintf(_T("NXCL: %s\n"), pMsg);
 }
 
 #ifdef _WIN32
@@ -45,7 +45,6 @@ int main(int argc, char *argv[])
 	TCHAR login[MAX_DB_STRING] = _T("guest"), password[MAX_DB_STRING] = _T("");
 	BOOL isDebug = FALSE, isEncrypt = FALSE;
 	DWORD rcc, timeout = 3;
-   NXC_SESSION session;
 	int ch;
 
    // Parse command line
@@ -148,31 +147,31 @@ int main(int argc, char *argv[])
 #define _HOST argv[optind]
 #endif
 
-	rcc = NXCConnect(isEncrypt ? NXCF_ENCRYPT : 0, _HOST, login,
-		              password, 0, NULL, NULL, &session,
-                    _T("nxsms/") NETXMS_VERSION_STRING, NULL);
+   NXCSession *session = new NXCSession();
+	rcc = session->connect(_HOST, login, password, isEncrypt ? NXCF_ENCRYPT : 0, _T("nxsms/") NETXMS_VERSION_STRING);
 	if (rcc != RCC_SUCCESS)
 	{
 		_tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(rcc));
+      delete session;
 		return 2;
 	}
 
-	NXCSetCommandTimeout(session, timeout * 1000);
+	session->setCommandTimeout(timeout * 1000);
 
 #ifdef UNICODE
 	WCHAR *rcpt = WideStringFromMBString(argv[optind + 1]);
 	WCHAR *text = WideStringFromMBString(argv[optind + 2]);
-	rcc = NXCSendSMS(session, rcpt, text);
+	rcc = ((ServerController *)session->getController(CONTROLLER_SERVER))->sendSMS(rcpt, text);
 	free(rcpt);
 	free(text);
 #else
-	rcc = NXCSendSMS(session, argv[optind + 1], argv[optind + 2]);
+	rcc = ((ServerController *)session->getController(CONTROLLER_SERVER))->sendSMS(argv[optind + 1], argv[optind + 2]);
 #endif
 	if (rcc != RCC_SUCCESS)
 	{
 		_tprintf(_T("Unable to send SMS: %s\n"), NXCGetErrorText(rcc));
 	}
 
-   NXCDisconnect(session);
+   delete session;
 	return (rcc == RCC_SUCCESS) ? 0 : 5;
 }

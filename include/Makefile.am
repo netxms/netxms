@@ -33,6 +33,7 @@ include_HEADERS = \
 	nxclapi.h \
 	nxcldefs.h \
 	nxclient.h \
+	nxclobj.h \
 	nxconfig.h \
 	nxcpapi.h \
 	nxdbapi.h \

@@ -31,26 +31,26 @@ static TCHAR m_outFormat[MAX_DB_STRING] = _T("%I %S %H %m");
 /**
  * List alarms
  */
-static UINT32 ListAlarms(NXC_SESSION session)
+static UINT32 ListAlarms(NXCSession *session)
 {
-	UINT32 i, numAlarms, rcc;
-	NXC_ALARM *alarmList;
-	TCHAR *text;
-
-	rcc = NXCLoadEventDB(session);
+	UINT32 rcc = ((EventController *)session->getController(CONTROLLER_EVENTS))->syncEventTemplates();
 	if (rcc != RCC_SUCCESS)
 		_tprintf(_T("WARNING: cannot load event database (%s)\n"), NXCGetErrorText(rcc));
 
-	rcc = NXCLoadAllAlarms(session, &numAlarms, &alarmList);
+   AlarmController *ctrl = (AlarmController *)session->getController(CONTROLLER_ALARMS);
+
+   ObjectArray<NXC_ALARM> *alarms;
+   rcc = ctrl->getAll(&alarms);
 	if (rcc == RCC_SUCCESS)
 	{
-		for(i = 0; i < numAlarms; i++)
+      for(int i = 0; i < alarms->size(); i++)
 		{
-			text = NXCFormatAlarmText(session, &alarmList[i], m_outFormat);
+         TCHAR *text = ctrl->formatAlarmText(alarms->get(i), m_outFormat);
 			_tprintf(_T("%s\n"), text);
 			free(text);
 		}
-		_tprintf(_T("\n%d active alarms\n"), numAlarms);
+      _tprintf(_T("\n%d active alarms\n"), alarms->size());
+      delete alarms;
 	}
 	else
 	{
@@ -62,9 +62,9 @@ static UINT32 ListAlarms(NXC_SESSION session)
 /**
  * Callback function for debug printing
  */
-static void DebugCallback(TCHAR *pMsg)
+static void DebugCallback(const TCHAR *pMsg)
 {
-   _tprintf(_T("*debug* %s\n"), pMsg);
+   _tprintf(_T("NXCL: %s\n"), pMsg);
 }
 
 #ifdef _WIN32
@@ -84,7 +84,6 @@ int main(int argc, char *argv[])
 	bool isDebug = false, isEncrypt = false, isSticky = false;
 	UINT32 rcc, alarmId;
    int timeout = 3, ackTimeout = 0;
-   NXC_SESSION session;
 	int ch;
 
    // Parse command line
@@ -101,6 +100,7 @@ int main(int argc, char *argv[])
 						 "   get-comments <id>       : Get comments of alarm\n"
 						 "   list                    : List active alarms\n"
 						 "   open <id>               : Open helpdesk issue from alarm\n"
+						 "   resolve <id>            : Resolve alarm\n"
 						 "   terminate <id>          : Terminate alarm\n"
                    "Valid options are:\n"
 #ifndef _WIN32
@@ -242,16 +242,17 @@ int main(int argc, char *argv[])
 #else
 #define _HOST argv[optind]
 #endif
-	rcc = NXCConnect(isEncrypt ? NXCF_ENCRYPT : 0, _HOST, login,
-		              password, 0, NULL, NULL, &session,
-                    _T("nxalarm/") NETXMS_VERSION_STRING, NULL);
+
+   NXCSession *session = new NXCSession();
+   rcc = session->connect(_HOST, login, password, isEncrypt ? NXCF_ENCRYPT : 0, _T("nxalarm/") NETXMS_VERSION_STRING);
 	if (rcc != RCC_SUCCESS)
 	{
 		_tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(rcc));
+      delete session;
 		return 2;
 	}
 
-	NXCSetCommandTimeout(session, (UINT32)timeout * 1000);
+	session->setCommandTimeout((UINT32)timeout * 1000);
 
 	// Execute command
 	if (!stricmp(argv[optind + 1], "list"))
@@ -264,13 +265,14 @@ int main(int argc, char *argv[])
 		if ((*eptr != 0) || (alarmId == 0))
 		{
 			_tprintf(_T("Invalid alarm ID \"%hs\"\n"), argv[optind + 2]);
-			NXCDisconnect(session);
+         delete session;
 			return 1;
 		}
 
+      AlarmController *ctrl = (AlarmController *)session->getController(CONTROLLER_ALARMS);
 		if (!stricmp(argv[optind + 1], "ack"))
 		{
-		   rcc = NXCAcknowledgeAlarmEx(session, alarmId, isSticky, (UINT32)ackTimeout * 60);
+         rcc = ctrl->acknowledge(alarmId, isSticky, (UINT32)ackTimeout * 60);
 			if (rcc != RCC_SUCCESS)
 				_tprintf(_T("Cannot acknowledge alarm: %s\n"), NXCGetErrorText(rcc));
 		}
@@ -278,10 +280,10 @@ int main(int argc, char *argv[])
 		{
 #ifdef UNICODE
          WCHAR *wtext = WideStringFromMBString(argv[optind + 3]);
-			rcc = NXCAddAlarmComment(session, alarmId, wtext);
+         rcc = ctrl->addComment(alarmId, wtext);
          free(wtext);
 #else
-			rcc = NXCAddAlarmComment(session, alarmId, argv[optind + 3]);
+			rcc = ctrl->addComment(alarmId, argv[optind + 3]);
 #endif
 			if (rcc != RCC_SUCCESS)
 				_tprintf(_T("Cannot add alarm comment: %s\n"), NXCGetErrorText(rcc));
@@ -289,7 +291,7 @@ int main(int argc, char *argv[])
 		else if (!stricmp(argv[optind + 1], "get-comments"))
 		{
          ObjectArray<AlarmComment> *comments;
-         rcc = NXCGetAlarmComments(session, alarmId, &comments);
+         rcc = ctrl->getComments(alarmId, &comments);
          if (rcc == RCC_SUCCESS)
          {
             for(int i = 0; i < comments->size(); i++)
@@ -311,26 +313,32 @@ int main(int argc, char *argv[])
 		else if (!stricmp(argv[optind + 1], "open"))
 		{
          TCHAR hdref[MAX_HELPDESK_REF_LEN];
-			rcc = NXCOpenHelpdeskIssue(session, alarmId, hdref);
+			rcc = ctrl->openHelpdeskIssue(alarmId, hdref);
 			if (rcc == RCC_SUCCESS)
 				_tprintf(_T("Helpdesk issue open, reference ID is \"%s\"\n"), hdref);
          else
 				_tprintf(_T("Cannot open helpdesk issue: %s\n"), NXCGetErrorText(rcc));
 		}
+		else if (!stricmp(argv[optind + 1], "resolve"))
+		{
+         rcc = ctrl->resolve(alarmId);
+			if (rcc != RCC_SUCCESS)
+				_tprintf(_T("Cannot resolve alarm: %s\n"), NXCGetErrorText(rcc));
+		}
 		else if (!stricmp(argv[optind + 1], "terminate"))
 		{
-			rcc = NXCTerminateAlarm(session, alarmId);
+         rcc = ctrl->terminate(alarmId);
 			if (rcc != RCC_SUCCESS)
 				_tprintf(_T("Cannot terminate alarm: %s\n"), NXCGetErrorText(rcc));
 		}
 		else
 		{
 			_tprintf(_T("Invalid command \"%hs\"\n"), argv[optind + 1]);
-			NXCDisconnect(session);
+			delete session;
 			return 1;
 		}
 	}
 
-   NXCDisconnect(session);
+   delete session;
 	return (rcc == RCC_SUCCESS) ? 0 : 5;
 }

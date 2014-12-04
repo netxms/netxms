@@ -826,13 +826,13 @@ void NXCPMessage::setFieldFromMBString(UINT32 fieldId, const char *value)
 /**
  * set binary field to an array of UINT32s
  */
-void NXCPMessage::setFieldFromInt32Array(UINT32 fieldId, UINT32 dwNumElements, const UINT32 *pdwData)
+void NXCPMessage::setFieldFromInt32Array(UINT32 fieldId, size_t numElements, const UINT32 *elements)
 {
-   UINT32 *pdwBuffer = (UINT32 *)set(fieldId, NXCP_DT_BINARY, pdwData, false, dwNumElements * sizeof(UINT32));
+   UINT32 *pdwBuffer = (UINT32 *)set(fieldId, NXCP_DT_BINARY, elements, false, numElements * sizeof(UINT32));
    if (pdwBuffer != NULL)
    {
       pdwBuffer++;   // First UINT32 is a length field
-      for(UINT32 i = 0; i < dwNumElements; i++)  // Convert UINT32s to network byte order
+      for(size_t i = 0; i < numElements; i++)  // Convert UINT32s to network byte order
          pdwBuffer[i] = htonl(pdwBuffer[i]);
    }
 }

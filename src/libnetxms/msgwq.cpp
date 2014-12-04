@@ -42,6 +42,7 @@ MsgWaitQueue::MsgWaitQueue()
    m_size = 0;
    m_allocated = 0;
    m_elements = NULL;
+   m_sequence = 1;
    m_stopCondition = ConditionCreate(FALSE);
 #ifdef _WIN32
    InitializeCriticalSectionAndSpinCount(&m_mutex, 4000);
@@ -133,6 +134,7 @@ void MsgWaitQueue::put(NXCPMessage *pMsg)
    m_elements[pos].id = pMsg->getId();
    m_elements[pos].ttl = m_holdTime;
    m_elements[pos].msg = pMsg;
+   m_elements[pos].sequence = m_sequence++;
    m_size++;
 
 #ifdef _WIN32
@@ -171,6 +173,7 @@ void MsgWaitQueue::put(NXCP_MESSAGE *pMsg)
    m_elements[pos].id = pMsg->id;
    m_elements[pos].ttl = m_holdTime;
    m_elements[pos].msg = pMsg;
+   m_elements[pos].sequence = m_sequence++;
    m_size++;
 
 #ifdef _WIN32
@@ -199,6 +202,8 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
 
    do
    {
+      UINT64 minSeq = _ULL(0xFFFFFFFFFFFFFFFF);
+      int index = -1;
       for(int i = 0; i < m_allocated; i++)
 		{
          if ((m_elements[i].msg != NULL) && 
@@ -206,17 +211,26 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
              (m_elements[i].code == wCode) &&
              (m_elements[i].isBinary == isBinary))
          {
-            void *msg = m_elements[i].msg;
-            m_elements[i].msg = NULL;
-            m_size--;
-#ifdef _WIN32
-            if (slot != -1)
-               m_waiters[slot] = 0;    // release waiter slot
-#endif
-            unlock();
-            return msg;
+            if (m_elements[i].sequence < minSeq)
+            {
+               minSeq = m_elements[i].sequence;
+               index = i;
+            }
          }
 		}
+
+      if (index != -1)
+      {
+         void *msg = m_elements[index].msg;
+         m_elements[index].msg = NULL;
+         m_size--;
+#ifdef _WIN32
+         if (slot != -1)
+            m_waiters[slot] = 0;    // release waiter slot
+#endif
+         unlock();
+         return msg;
+      }
 
       INT64 startTime = GetCurrentTimeMs();
        
@@ -317,6 +331,14 @@ void MsgWaitQueue::housekeeperThread()
                m_elements[i].ttl -= TTL_CHECK_INTERVAL;
             }
 		   }
+
+         // compact queue if possible
+         if ((m_allocated > ALLOCATION_STEP) && (m_size == 0))
+         {
+            m_allocated = ALLOCATION_STEP;
+            free(m_elements);
+            m_elements = (WAIT_QUEUE_ELEMENT *)calloc(m_allocated, sizeof(WAIT_QUEUE_ELEMENT));
+         }
       }
       unlock();
    }

@@ -1,4 +1,4 @@
-SOURCES = dc.cpp main.cpp session.cpp
+SOURCES = alarms.cpp dc.cpp events.cpp main.cpp objects.cpp session.cpp server.cpp
 
 lib_LTLIBRARIES = libnxclient.la
 

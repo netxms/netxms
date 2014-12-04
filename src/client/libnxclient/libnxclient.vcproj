@@ -338,11 +338,27 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\alarms.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\dc.cpp"
 				>
 			</File>
 			<File
+				RelativePath=".\events.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\objects.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\server.cpp"
 				>
 			</File>
 			<File
@@ -393,6 +409,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\include\nxclient.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\nxclobj.h"
 				>
 			</File>
 			<File

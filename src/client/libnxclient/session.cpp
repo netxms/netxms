@@ -29,6 +29,13 @@
 #define MAX_MSG_SIZE    4194304
 
 /**
+ * Default controller destructor
+ */
+Controller::~Controller()
+{
+}
+
+/**
  * Constructor
  */
 NXCSession::NXCSession()
@@ -78,6 +85,8 @@ Controller *NXCSession::getController(const TCHAR *name)
          c = new EventController(this);
       else if (!_tcsicmp(name, CONTROLLER_OBJECTS))
          c = new ObjectController(this);
+      else if (!_tcsicmp(name, CONTROLLER_SERVER))
+         c = new ServerController(this);
 
       if (c != NULL)
          m_controllers->set(name, c);

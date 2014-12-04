@@ -39,7 +39,7 @@ static DWORD m_dwTimeOut = 3;
 /**
  * Callback function for debug printing
  */
-static void DebugCallback(TCHAR *pMsg)
+static void DebugCallback(const TCHAR *pMsg)
 {
    _tprintf(_T("*debug* %s\n"), pMsg);
 }
@@ -50,7 +50,6 @@ static void DebugCallback(TCHAR *pMsg)
 static DWORD SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
 {
    DWORD dwResult;
-   NXC_SESSION hSession;
 
    if (!NXCInitialize())
    {
@@ -61,31 +60,31 @@ static DWORD SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
       if (m_bDebug)
          NXCSetDebugCallback(DebugCallback);
 
-      dwResult = NXCConnect(bEncrypt ? NXCF_ENCRYPT : 0, m_szServer, m_szLogin,
-		                      m_szPassword, 0, NULL, NULL, &hSession,
-                            _T("nxevent/") NETXMS_VERSION_STRING, NULL);
+      NXCSession *session = new NXCSession();
+      dwResult = session->connect(m_szServer, m_szLogin, m_szPassword, bEncrypt ? NXCF_ENCRYPT : 0, _T("nxevent/") NETXMS_VERSION_STRING);
       if (dwResult != RCC_SUCCESS)
       {
          _tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(dwResult));
       }
       else
       {
-         NXCSetCommandTimeout(hSession, m_dwTimeOut * 1000);
+         session->setCommandTimeout(m_dwTimeOut * 1000);
+         EventController *ctrl = (EventController *)session->getController(CONTROLLER_EVENTS);
 #ifdef UNICODE
 			WCHAR **argList = (WCHAR **)malloc(sizeof(WCHAR *) * iNumArgs);
 			for(int i = 0; i < iNumArgs; i++)
 				argList[i] = WideStringFromMBString(pArgList[i]);
-         dwResult = NXCSendEvent(hSession, m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag);
+         dwResult = ctrl->sendEvent(m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, argList, m_szUserTag);
 			for(int i = 0; i < iNumArgs; i++)
 				free(argList[i]);
 			free(argList);
 #else
-         dwResult = NXCSendEvent(hSession, m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, pArgList, m_szUserTag);
+         dwResult = ctrl->sendEvent(m_dwEventCode, m_eventName, m_dwObjectId, iNumArgs, pArgList, m_szUserTag);
 #endif
          if (dwResult != RCC_SUCCESS)
             _tprintf(_T("Unable to send event: %s\n"), NXCGetErrorText(dwResult));
-         NXCDisconnect(hSession);
       }
+      delete session;
    }
    return dwResult;
 }

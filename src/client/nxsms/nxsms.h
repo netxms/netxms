@@ -25,7 +25,7 @@
 #define _nxsms_h_
 
 #include <nms_common.h>
-#include <nxclapi.h>
+#include <nxclient.h>
 
 #if HAVE_GETOPT_H
 #include <getopt.h>

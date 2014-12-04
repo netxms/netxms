@@ -5147,7 +5147,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       while(true)
       {
          final NXCPMessage response = waitForMessage(NXCPCodes.CMD_EVENT_DB_RECORD, msg.getMessageId());
-         if (response.isEndOfSequence()) break;
+         if (response.isEndOfSequence()) 
+            break;
          list.add(new EventTemplate(response));
       }
       return list;

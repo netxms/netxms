@@ -43,6 +43,8 @@
 #define LIBNXCLIENT_EXPORTABLE
 #endif
 
+#include "nxclobj.h"
+
 #define MAX_TZ_LEN         32
 
 /**
@@ -61,6 +63,7 @@
 #define CONTROLLER_DATA_COLLECTION  _T("DATACOLL")
 #define CONTROLLER_EVENTS           _T("EVENTS")
 #define CONTROLLER_OBJECTS          _T("OBJECTS")
+#define CONTROLLER_SERVER           _T("SERVER")
 
 /**
  * DCI push data
@@ -91,6 +94,32 @@ protected:
 
 public:
    Controller(NXCSession *session) { m_session = session; }
+   virtual ~Controller();
+};
+
+/**
+ * Alarm comment
+ */
+class LIBNXCLIENT_EXPORTABLE AlarmComment
+{
+private:
+   UINT32 m_id;
+   UINT32 m_alarmId;
+   UINT32 m_userId;
+   TCHAR *m_userName;
+   time_t m_timestamp;
+   TCHAR *m_text;
+
+public:
+   AlarmComment(NXCPMessage *msg, UINT32 baseId);
+   ~AlarmComment();
+
+   UINT32 getId() { return m_id; }
+   UINT32 getAlarmId() { return m_alarmId; }
+   UINT32 getUserId() { return m_userId; }
+   const TCHAR *getUserName() { return m_userName; }
+   time_t getTimestamp() { return m_timestamp; }
+   const TCHAR *getText() { return m_text; }
 };
 
 /**
@@ -98,13 +127,24 @@ public:
  */
 class LIBNXCLIENT_EXPORTABLE AlarmController : public Controller
 {
+private:
+   NXC_ALARM *createAlarmFromMessage(NXCPMessage *msg);
+
 public:
    AlarmController(NXCSession *session) : Controller(session) { }
 
-   UINT32 acknowledge(UINT32 alarmId, bool sticky = false);
+   UINT32 getAll(ObjectArray<NXC_ALARM> **alarms);
+
+   UINT32 acknowledge(UINT32 alarmId, bool sticky = false, UINT32 timeout = 0);
    UINT32 resolve(UINT32 alarmId);
    UINT32 terminate(UINT32 alarmId);
-   ObjectArray<NXC_ALARM> *get();
+   UINT32 openHelpdeskIssue(UINT32 alarmId, TCHAR *helpdeskRef);
+   
+   UINT32 getComments(UINT32 alarmId, ObjectArray<AlarmComment> **comments);
+   UINT32 addComment(UINT32 alarmId, const TCHAR *text);
+   UINT32 updateComment(UINT32 alarmId, UINT32 commentId, const TCHAR *text);
+
+   TCHAR *formatAlarmText(NXC_ALARM *alarm, const TCHAR *format);
 };
 
 /**
@@ -119,24 +159,84 @@ public:
 };
 
 /**
+ * Event template
+ */
+class LIBNXCLIENT_EXPORTABLE EventTemplate
+{
+private:
+   UINT32 m_code;
+   TCHAR m_name[MAX_EVENT_NAME];
+   int m_severity;
+   UINT32 m_flags;
+   TCHAR *m_messageTemplate;
+   TCHAR *m_description;
+
+public:
+   EventTemplate(NXCPMessage *msg);
+   ~EventTemplate();
+
+   UINT32 getCode() { return m_code; }
+   const TCHAR *getName() { return m_name; }
+   int getSeverity() { return m_severity; }
+   UINT32 getFlags() { return m_flags; }
+   const TCHAR *getMessageTemplate() { return CHECK_NULL_EX(m_messageTemplate); }
+   const TCHAR *getDescription() { return CHECK_NULL_EX(m_description); }
+};
+
+/**
  * Event controller
  */
 class LIBNXCLIENT_EXPORTABLE EventController : public Controller
 {
+private:
+   MUTEX m_eventTemplateLock;
+   ObjectArray<EventTemplate> *m_eventTemplates;
+
 public:
-   EventController(NXCSession *session) : Controller(session) { }
+   EventController(NXCSession *session);
+   virtual ~EventController();
+
+   UINT32 syncEventTemplates();
+   UINT32 getEventTemplates(ObjectArray<EventTemplate> *templates);
+   TCHAR *getEventName(UINT32 code, TCHAR *buffer, size_t bufferSize);
+
+   UINT32 sendEvent(UINT32 code, const TCHAR *name, UINT32 objectId, int argc, TCHAR **argv, const TCHAR *userTag);
 };
+
+struct ObjectCacheEntry;
 
 /**
  * Object controller
  */
 class LIBNXCLIENT_EXPORTABLE ObjectController : public Controller
 {
+private:
+   ObjectCacheEntry *m_cache;
+   MUTEX m_cacheLock;
+
 public:
-   ObjectController(NXCSession *session) : Controller(session) { }
+   ObjectController(NXCSession *session);
+   virtual ~ObjectController();
+
+   UINT32 sync();
+   UINT32 syncObjectSet(UINT32 *idList, size_t length, bool syncComments, UINT16 flags);
+   UINT32 syncSingleObject(UINT32 id);
+
+   AbstractObject *findObjectById(UINT32 id);
 
    UINT32 manage(UINT32 objectId);
    UINT32 unmanage(UINT32 objectId);
+};
+
+/**
+ * Server controller
+ */
+class LIBNXCLIENT_EXPORTABLE ServerController : public Controller
+{
+public:
+   ServerController(NXCSession *session) : Controller(session) { }
+
+   UINT32 sendSMS(const TCHAR *recipient, const TCHAR *text);
 };
 
 /**
