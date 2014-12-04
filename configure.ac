@@ -482,7 +482,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy nxlptest tools"
+	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap client nxscript nxcproxy nxlptest tools"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2 tuxedo"
 	SMSDRV_DIRS="kannel websms"
    HDLINK_DIRS="jira"
@@ -659,7 +659,7 @@ check_substr "$COMPONENTS" "client"
 if test $? = 0; then
 	BUILD_CLIENT="yes"
 	NEED_ZLIB="yes"
-	MODULES="$MODULES libnxmap libnxcl client"
+	MODULES="$MODULES client"
 	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxsms"
 fi
 
@@ -760,7 +760,7 @@ fi
 
 check_substr "$COMPONENTS" "sdk"
 if test $? = 0; then
-	MODULES="$MODULES libnxmap libnxcl libnxsl libnxlp db nxscript"
+	MODULES="$MODULES libnxmap client libnxsl libnxlp db nxscript"
 fi
 
 
@@ -2675,6 +2675,7 @@ AC_CONFIG_FILES([
 	src/agent/tools/nxapush/Makefile
 	src/client/Makefile
 	src/client/install/Makefile
+	src/client/libnxclient/Makefile
 	src/client/nxalarm/Makefile
 	src/client/nxevent/Makefile
 	src/client/nxpush/Makefile
@@ -2696,7 +2697,6 @@ AC_CONFIG_FILES([
 	src/libexpat/Makefile
 	src/libexpat/libexpat/Makefile
 	src/libnetxms/Makefile
-	src/libnxcl/Makefile
 	src/libnxlp/Makefile
 	src/libnxmap/Makefile
 	src/libnxsl/Makefile
