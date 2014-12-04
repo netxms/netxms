@@ -95,6 +95,8 @@ protected:
 public:
    Controller(NXCSession *session) { m_session = session; }
    virtual ~Controller();
+
+   virtual bool handleMessage(NXCPMessage *msg);
 };
 
 /**
@@ -214,9 +216,13 @@ private:
    ObjectCacheEntry *m_cache;
    MUTEX m_cacheLock;
 
+   void addObject(AbstractObject *object);
+
 public:
    ObjectController(NXCSession *session);
    virtual ~ObjectController();
+
+   virtual bool handleMessage(NXCPMessage *msg);
 
    UINT32 sync();
    UINT32 syncObjectSet(UINT32 *idList, size_t length, bool syncComments, UINT16 flags);
@@ -274,6 +280,7 @@ protected:
    StringObjectMap<Controller> *m_controllers;
 
    void onNotify(NXCPMessage *msg);
+   bool handleMessage(NXCPMessage *msg);
 
 public:
    NXCSession();

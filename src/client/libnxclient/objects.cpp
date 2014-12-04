@@ -59,6 +59,19 @@ ObjectController::~ObjectController()
 }
 
 /**
+ * Message handler
+ */
+bool ObjectController::handleMessage(NXCPMessage *msg)
+{
+   if ((msg->getCode() == CMD_OBJECT_UPDATE) || (msg->getCode() == CMD_OBJECT))
+   {
+      addObject(new AbstractObject(msg));
+      return true;
+   }
+   return false;
+}
+
+/**
  * Sync all objects
  */
 UINT32 ObjectController::sync()
@@ -77,7 +90,7 @@ UINT32 ObjectController::syncObjectSet(UINT32 *idList, size_t length, bool syncC
    msg.setId(m_session->createMessageId());
 	msg.setField(VID_SYNC_COMMENTS, (WORD)(syncComments ? 1 : 0));
 	msg.setField(VID_FLAGS, (WORD)(flags | OBJECT_SYNC_SEND_UPDATES));	// C library requres objects to go in update messages
-   msg.setField(VID_NUM_OBJECTS, length);
+   msg.setField(VID_NUM_OBJECTS, (UINT32)length);
 	msg.setFieldFromInt32Array(VID_OBJECT_LIST, length, idList);
 
    // Send request
@@ -100,6 +113,30 @@ UINT32 ObjectController::syncObjectSet(UINT32 *idList, size_t length, bool syncC
 UINT32 ObjectController::syncSingleObject(UINT32 id)
 {
 	return syncObjectSet(&id, 1, true, OBJECT_SYNC_DUAL_CONFIRM);
+}
+
+/**
+ * Add object to cache
+ */
+void ObjectController::addObject(AbstractObject *object)
+{
+   MutexLock(m_cacheLock);
+   ObjectCacheEntry *entry;
+   UINT32 id = object->getId();
+   HASH_FIND_INT(m_cache, &id, entry);
+   if (entry != NULL)
+   {
+      entry->object->decRefCount();
+      entry->object = object;
+   }
+   else
+   {
+      entry = (ObjectCacheEntry *)malloc(sizeof(ObjectCacheEntry));
+      entry->id = id;
+      entry->object = object;
+      HASH_ADD_INT(m_cache, id, entry);
+   }
+   MutexUnlock(m_cacheLock);
 }
 
 /**

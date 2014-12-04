@@ -36,6 +36,14 @@ Controller::~Controller()
 }
 
 /**
+ * Default controller message handler
+ */
+bool Controller::handleMessage(NXCPMessage *msg)
+{
+   return false;
+}
+
+/**
  * Constructor
  */
 NXCSession::NXCSession()
@@ -422,12 +430,34 @@ void NXCSession::receiverThread()
             onNotify(msg);
             break;
          default:
-            m_msgWaitQueue->put(msg);
-            msg = NULL;    // prevent destruction
+            if (!handleMessage(msg))
+            {
+               m_msgWaitQueue->put(msg);
+               msg = NULL;    // prevent destruction
+            }
             break;
       }
       delete msg;
    }
+}
+
+/**
+ * Message handler callback
+ */
+static bool HandleMessageCallback(const TCHAR *key, const void *value, void *data)
+{
+   return !((Controller *)value)->handleMessage((NXCPMessage *)data);
+}
+
+/**
+ * Handle incoming message on controller
+ */
+bool NXCSession::handleMessage(NXCPMessage *msg)
+{
+   MutexLock(m_dataLock);
+   bool consumed = !m_controllers->forEach(HandleMessageCallback, msg);
+   MutexUnlock(m_dataLock);
+   return consumed;
 }
 
 /**

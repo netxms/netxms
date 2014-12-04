@@ -2217,7 +2217,7 @@ void ClientSession::sendSelectedObjects(NXCPMessage *pRequest)
    msg.deleteAllFields();
 
    // Change "sync comments" flag
-   if (pRequest->getFieldAsUInt16(VID_SYNC_COMMENTS))
+   if (pRequest->getFieldAsBoolean(VID_SYNC_COMMENTS))
       m_dwFlags |= CSF_SYNC_OBJECT_COMMENTS;
    else
       m_dwFlags &= ~CSF_SYNC_OBJECT_COMMENTS;
