@@ -25,6 +25,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
@@ -56,6 +57,10 @@ public class General extends PropertyPage
 	private Button checkShowHostNames;
 	private Button checkAutoRefresh;
 	private Button checkLogScale;
+	private Button checkStacked;
+	private Button checkExtendedLegend;
+   private Button checkTranslucent;
+	private Combo legendPleace;
 	private Scale refreshIntervalScale;
 	private Spinner refreshIntervalSpinner;
 	private TimePeriodSelector timeSelector;
@@ -103,23 +108,130 @@ public class General extends PropertyPage
       checkShowGrid.setText(Messages.get().General_ShowGridLines);
       checkShowGrid.setSelection(config.isShowGrid());
 
-      checkShowLegend = new Button(optionsGroup, SWT.CHECK);
-      checkShowLegend.setText(Messages.get().General_ShowLegend);
-      checkShowLegend.setSelection(config.isShowLegend());
-
-      checkShowHostNames = new Button(optionsGroup, SWT.CHECK);
-      checkShowHostNames.setText(Messages.get().General_ShowHostNames);
-      checkShowHostNames.setSelection(config.isShowHostNames());
-
-      checkAutoRefresh = new Button(optionsGroup, SWT.CHECK);
-      checkAutoRefresh.setText(Messages.get().General_Autorefresh);
-      checkAutoRefresh.setSelection(config.isAutoRefresh());
-
       checkLogScale = new Button(optionsGroup, SWT.CHECK);
       checkLogScale.setText(Messages.get().General_LogScale);
       checkLogScale.setSelection(config.isLogScale());
       
-      Composite refreshIntervalGroup = new Composite(optionsGroup, SWT.NONE);
+      checkStacked = new Button(optionsGroup, SWT.CHECK);
+      checkStacked.setText("Stacked");
+      checkStacked.setSelection(config.isStacked());
+      
+      checkTranslucent= new Button(optionsGroup, SWT.CHECK);
+      checkTranslucent.setText("Translucent");
+      checkTranslucent.setSelection(config.isTranslucent());
+      
+      Composite legendGroup = new Composite(optionsGroup, SWT.NONE);
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.makeColumnsEqualWidth = true;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.marginTop = WidgetHelper.OUTER_SPACING;
+      legendGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      legendGroup.setLayoutData(gd);
+      
+      checkShowLegend = new Button(legendGroup, SWT.CHECK);
+      checkShowLegend.setText(Messages.get().General_ShowLegend);
+      checkShowLegend.setSelection(config.isShowLegend());
+      checkShowLegend.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            checkExtendedLegend.setEnabled(checkShowLegend.getSelection());
+            legendPleace.setEnabled(checkShowLegend.getSelection());
+            checkShowHostNames.setEnabled(checkShowLegend.getSelection());
+         }
+
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      checkShowLegend.setLayoutData(gd);
+      
+
+      checkShowHostNames = new Button(legendGroup, SWT.CHECK);
+      checkShowHostNames.setText(Messages.get().General_ShowHostNames);
+      checkShowHostNames.setSelection(config.isShowHostNames());
+      checkShowHostNames.setEnabled(config.isShowLegend());
+      
+      checkExtendedLegend = new Button(legendGroup, SWT.CHECK);
+      checkExtendedLegend.setText("Show extended legend");
+      checkExtendedLegend.setSelection(config.isExtendedLegend());         
+      checkExtendedLegend.setEnabled(config.isShowLegend());   
+      
+      Composite placeGroup = new Composite(optionsGroup, SWT.NONE);
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.marginTop = WidgetHelper.OUTER_SPACING;
+      placeGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      placeGroup.setLayoutData(gd);
+      
+      Label comboLabel = new Label(placeGroup, SWT.NONE);
+      comboLabel.setText("Place on ");
+
+      legendPleace = new Combo(placeGroup, SWT.READ_ONLY);
+      GridData gridData = new GridData();
+      gridData.horizontalAlignment = GridData.FILL;
+      gridData.grabExcessHorizontalSpace = true;
+      legendPleace.setLayoutData(gridData);
+      
+      legendPleace.add("left");
+      legendPleace.add("right");
+      legendPleace.add("top");
+      legendPleace.add("bottom");
+      legendPleace.select(31 - Integer.numberOfLeadingZeros(config.getLegendPosition()));      
+      legendPleace.setEnabled(config.isShowLegend()); 
+      
+      Composite refreshGroup = new Composite(optionsGroup, SWT.NONE);
+      layout = new GridLayout();
+      layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.marginTop = WidgetHelper.OUTER_SPACING;
+      refreshGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      refreshGroup.setLayoutData(gd);
+
+      checkAutoRefresh = new Button(refreshGroup, SWT.CHECK);
+      checkAutoRefresh.setText(Messages.get().General_Autorefresh);
+      checkAutoRefresh.setSelection(config.isAutoRefresh());
+      checkAutoRefresh.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            refreshIntervalSpinner.setEnabled(checkAutoRefresh.getSelection());
+            refreshIntervalScale.setEnabled(checkAutoRefresh.getSelection());
+         }
+
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+      
+      Composite refreshIntervalGroup = new Composite(refreshGroup, SWT.NONE);
       layout = new GridLayout();
       layout.numColumns = 2;
       layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
@@ -160,7 +272,8 @@ public class General extends PropertyPage
 			{
 				widgetSelected(e);
 			}
-      });
+      });   
+      refreshIntervalScale.setEnabled(config.isAutoRefresh()); 
       
       refreshIntervalSpinner = new Spinner(refreshIntervalGroup, SWT.BORDER);
       refreshIntervalSpinner.setMinimum(1);
@@ -179,6 +292,7 @@ public class General extends PropertyPage
 				widgetSelected(e);
 			}
 		});
+      refreshIntervalSpinner.setEnabled(config.isAutoRefresh()); 
       
       timeSelector = new TimePeriodSelector(dialogArea, SWT.NONE, config.timePeriod());
       gd = new GridData();
@@ -210,6 +324,9 @@ public class General extends PropertyPage
 		checkShowHostNames.setSelection(false);
 		checkAutoRefresh.setSelection(true);
 		checkLogScale.setSelection(false);
+		checkStacked.setSelection(false);
+		checkExtendedLegend.setSelection(false);		
+		legendPleace.select(3);
 		
 		yAxisRange.setSelection(true, 0, 100);
 		
@@ -234,7 +351,10 @@ public class General extends PropertyPage
 		config.setAutoRefresh(checkAutoRefresh.getSelection());
 		config.setLogScale(checkLogScale.getSelection());
 		config.setRefreshRate(refreshIntervalSpinner.getSelection());
-		
+      config.setStacked(checkStacked.getSelection());
+      config.setExtendedLegend(checkExtendedLegend.getSelection());
+      config.setLegendPosition((int)Math.pow(2,legendPleace.getSelectionIndex()));
+      config.setTranslucent(checkTranslucent.getSelection());
 		config.setTimeFrameType(timeSelector.getTimeFrameType());
 		config.setTimeUnits(timeSelector.getTimeUnitValue());
 		config.setTimeRange(timeSelector.getTimeRangeValue());
