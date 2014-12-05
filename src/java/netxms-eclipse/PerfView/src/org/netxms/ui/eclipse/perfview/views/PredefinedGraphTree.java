@@ -481,10 +481,13 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
                         viewer.setInput(list);
                         if (selection.size() == 1)
                         {
-                           GraphSettings element = (GraphSettings)selection.getFirstElement();
-                           for(int i = 0; i < list.size(); i++)
-                              if(element.getId() == list.get(i).getId())
-                                 viewer.setSelection(new StructuredSelection(list.get(i)), true);
+                           if(selection.getFirstElement() instanceof GraphSettings)
+                           {
+                              GraphSettings element = (GraphSettings)selection.getFirstElement();
+                              for(int i = 0; i < list.size(); i++)
+                                 if(element.getId() == list.get(i).getId())
+                                    viewer.setSelection(new StructuredSelection(list.get(i)), true);
+                           }
                         }                    
                      }
                   });
