@@ -422,6 +422,7 @@ enum
 #define NX_NOTIFY_FILE_LIST_CHANGED          25
 #define NX_NOTIFY_FILE_MONITORING_FAILED     26
 #define NX_NOTIFY_SESSION_KILLED             27
+#define NX_NOTIFY_GRAPHS_DELETED             28
 
 /**
  * Request completion codes

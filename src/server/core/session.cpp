@@ -9919,7 +9919,7 @@ void ClientSession::saveGraph(NXCPMessage *pRequest)
 				DBCommit(hdb);
 				msg.setField(VID_RCC, RCC_SUCCESS);
 				msg.setField(VID_GRAPH_ID, graphId);
-				notify(NX_NOTIFY_GRAPHS_CHANGED);
+				notify(NX_NOTIFY_GRAPHS_CHANGED, graphId);
 			}
 			else
 			{
@@ -9974,7 +9974,7 @@ void ClientSession::deleteGraph(NXCPMessage *pRequest)
 						_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graph_acl WHERE graph_id=%d"), dwGraphId);
 						DBQuery(hdb, szQuery);
 						msg.setField(VID_RCC, RCC_SUCCESS);
-						notify(NX_NOTIFY_GRAPHS_CHANGED);
+						notify(NX_NOTIFY_GRAPHS_DELETED, dwGraphId);
 					}
 					else
 					{
