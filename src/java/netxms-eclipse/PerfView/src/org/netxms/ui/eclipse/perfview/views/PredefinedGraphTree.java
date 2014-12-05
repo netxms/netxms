@@ -21,10 +21,12 @@ package org.netxms.ui.eclipse.perfview.views;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -33,9 +35,11 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -49,8 +53,14 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.api.client.SessionListener;
+import org.netxms.api.client.SessionNotification;
+import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ServerAction;
+import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.objects.DashboardRoot;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -67,7 +77,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  * Navigation view for predefined graphs
  */
 @SuppressWarnings("restriction")
-public class PredefinedGraphTree extends ViewPart
+public class PredefinedGraphTree extends ViewPart implements SessionListener
 {
 	public static final String ID = "org.netxms.ui.eclipse.perfview.views.PredefinedGraphTree"; //$NON-NLS-1$
 	
@@ -125,6 +135,7 @@ public class PredefinedGraphTree extends ViewPart
 		createPopupMenu();
 		
 		reloadGraphList();
+      session.addListener(this);
 	}
 
 	/* (non-Javadoc)
@@ -394,7 +405,6 @@ public class PredefinedGraphTree extends ViewPart
 		if (!MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().PredefinedGraphTree_DeletePromptTitle, Messages.get().PredefinedGraphTree_DeletePromptText))
 			return;
 		
-		final List<GraphSettings> list = new ArrayList<GraphSettings>((List<GraphSettings>)viewer.getInput());
 		for(final Object o : selection.toList())
 		{
 			if (!(o instanceof GraphSettings))
@@ -409,8 +419,8 @@ public class PredefinedGraphTree extends ViewPart
 						@Override
 						public void run()
 						{
-							list.remove(o);
-							viewer.setInput(list);
+							viewer.remove(o);
+                     viewer.refresh(o);
 						}
 					});
 				}
@@ -423,4 +433,70 @@ public class PredefinedGraphTree extends ViewPart
 			}.start();
 		}
 	}
+
+   @Override
+   public void notificationHandler(final SessionNotification n)
+   {
+      switch(n.getCode())
+      {
+         case NXCNotification.PREDEFINED_GRAPHS_DELETED:
+            new ConsoleJob("Remove graph from list", null, Activator.PLUGIN_ID, null) {
+               @Override
+               protected void runInternal(IProgressMonitor monitor) throws Exception
+               {
+                  runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        final List<GraphSettings> list = new ArrayList<GraphSettings>((List<GraphSettings>)viewer.getInput());                        
+                        for(int i = 0; i < list.size(); i++)
+                           if(list.get(i).getId() == n.getSubCode())
+                           {
+                              Object o = list.get(i);
+                              viewer.remove(o);
+                              viewer.refresh(o);
+                           }
+                     }
+                  });
+               }
+               
+               @Override
+               protected String getErrorMessage()
+               {
+                  return "Error while graph tree update(object removed)";
+               }
+            }.start();
+            break;
+         case NXCNotification.PREDEFINED_GRAPHS_CHANGED:
+            new ConsoleJob("Update Graph list", null, Activator.PLUGIN_ID, null) {
+               @Override
+               protected void runInternal(IProgressMonitor monitor) throws Exception
+               {
+                  final List<GraphSettings> list = session.getPredefinedGraphs();
+                  runInUIThread(new Runnable() {
+                     @Override
+                     public void run()
+                     {
+                        final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+                        viewer.setInput(list);
+                        if (selection.size() == 1)
+                        {
+                           GraphSettings element = (GraphSettings)selection.getFirstElement();
+                           for(int i = 0; i < list.size(); i++)
+                              if(element.getId() == list.get(i).getId())
+                                 viewer.setSelection(new StructuredSelection(list.get(i)), true);
+                        }                    
+                     }
+                  });
+               }
+               
+               @Override
+               protected String getErrorMessage()
+               {
+                  return "Error while graph tree update(object updated/added)";
+               }
+            }.start();
+            break;
+      }
+   }
 }
