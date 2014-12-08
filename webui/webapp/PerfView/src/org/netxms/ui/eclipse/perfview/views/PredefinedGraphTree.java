@@ -440,7 +440,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
       switch(n.getCode())
       {
          case NXCNotification.PREDEFINED_GRAPHS_DELETED:
-            new ConsoleJob("Remove graph from list", null, Activator.PLUGIN_ID, null) {
+            new ConsoleJob("Remove graph from list", null, Activator.PLUGIN_ID, null, viewer.getControl().getDisplay()) {
                @Override
                protected void runInternal(IProgressMonitor monitor) throws Exception
                {
@@ -468,29 +468,49 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
             }.start();
             break;
          case NXCNotification.PREDEFINED_GRAPHS_CHANGED:
-            new ConsoleJob("Update Graph list", null, Activator.PLUGIN_ID, null) {
+            new ConsoleJob("Update Graph list", null, Activator.PLUGIN_ID, null, viewer.getControl().getDisplay()) {
                @Override
                protected void runInternal(IProgressMonitor monitor) throws Exception
                {
-                  final List<GraphSettings> list = session.getPredefinedGraphs();
                   runInUIThread(new Runnable() {
                      @Override
                      public void run()
                      {
-                        System.out.println("Graph changed try to add it to list");
-                        final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+                        if(!(n.getObject() instanceof GraphSettings))
+                        {
+                           return;
+                        }                       
+                        
+                        final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();  
+                        
+                        final List<GraphSettings> list = (List<GraphSettings>)viewer.getInput();       
+                        boolean objectUpdated = false;
+                        for(int i = 0; i < list.size(); i++)
+                        {
+                           if(list.get(i).getId() == n.getSubCode())
+                           {
+                              list.set(i, (GraphSettings)n.getObject());
+                              objectUpdated = true;
+                              break;
+                           }
+                        }
+                        
+                        if(!objectUpdated)
+                        {
+                           list.add((GraphSettings)n.getObject());
+                        }
                         viewer.setInput(list);
-                        viewer.refresh(true);
+                        viewer.refresh();
+                        
                         if (selection.size() == 1)
                         {
                            if(selection.getFirstElement() instanceof GraphSettings)
                            {
                               GraphSettings element = (GraphSettings)selection.getFirstElement();
-                              for(int i = 0; i < list.size(); i++)
-                                 if(element.getId() == list.get(i).getId())
-                                    viewer.setSelection(new StructuredSelection(list.get(i)), true);
+                              if(element.getId() == n.getSubCode())
+                                    viewer.setSelection(new StructuredSelection((GraphSettings)n.getObject()), true);
                            }
-                        }                    
+                        }                  
                      }
                   });
                }

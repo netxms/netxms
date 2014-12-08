@@ -9888,8 +9888,6 @@ void ClientSession::saveGraph(NXCPMessage *pRequest)
 				_sntprintf(szQuery, 16384, _T("UPDATE graphs SET name='%s',config='%s' WHERE graph_id=%d"),
 				           pszEscName, pszEscData, graphId);
 			}
-			free(pszEscName);
-			free(pszEscData);
 
 			if (DBQuery(hdb, szQuery))
 			{
@@ -9919,12 +9917,40 @@ void ClientSession::saveGraph(NXCPMessage *pRequest)
 				DBCommit(hdb);
 				msg.setField(VID_RCC, RCC_SUCCESS);
 				msg.setField(VID_GRAPH_ID, graphId);
-				notify(NX_NOTIFY_GRAPHS_CHANGED, graphId);
+
+            //send notificaion
+				NXCPMessage update;
+				int dwId = VID_GRAPH_LIST_BASE;
+            update.setCode(CMD_GRAPH_UPDATE_OBJEC);
+            update.setField(dwId++, graphId);
+            update.setField(dwId++, m_dwUserId);
+            update.setField(dwId++, dwGraphName);
+            update.setField(dwId++, pszEscData);
+
+            int nACLSize;
+            GRAPH_ACL_ENTRY *pACL = LoadGraphACL(hdb, 0, &nACLSize);
+            UINT32 *pdwUsers, *pdwRights;
+            pdwUsers = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
+            pdwRights = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
+            // ACL for graph
+            for(int j = 0; j < nACLSize; j++)
+            {
+               pdwUsers[j] = pACL[j].dwUserId;
+               pdwRights[j] = pACL[j].dwAccess;
+            }
+            msg.setField(dwId++, nACLSize);
+            msg.setFieldFromInt32Array(dwId++, nACLSize, pdwUsers);
+            msg.setFieldFromInt32Array(dwId++, nACLSize, pdwRights);
+            msg.setField(VID_NUM_GRAPHS, 1);
+
+            NotifyClientGraphUpdate(&update, graphId);
 			}
 			else
 			{
 				DBRollback(hdb);
 			}
+			free(pszEscName);
+			free(pszEscData);
 		}
 		else
 		{
@@ -9974,7 +10000,7 @@ void ClientSession::deleteGraph(NXCPMessage *pRequest)
 						_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graph_acl WHERE graph_id=%d"), dwGraphId);
 						DBQuery(hdb, szQuery);
 						msg.setField(VID_RCC, RCC_SUCCESS);
-						notify(NX_NOTIFY_GRAPHS_DELETED, dwGraphId);
+						NotifyClientSessions(NX_NOTIFY_GRAPHS_DELETED, dwGraphId);
 					}
 					else
 					{
