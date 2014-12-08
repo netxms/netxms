@@ -44,6 +44,12 @@ public class GraphFolder
 		subfolders = new ArrayList<GraphFolder>();
 		graphs = new ArrayList<GraphSettings>();
 	}
+	
+	public void clear()
+	{
+	   subfolders.clear();
+	   graphs.clear();
+	}
 
 	/**
 	 * @return the name

@@ -61,7 +61,6 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphSettings;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;

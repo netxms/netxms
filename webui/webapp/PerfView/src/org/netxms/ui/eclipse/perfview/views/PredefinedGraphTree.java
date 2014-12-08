@@ -35,6 +35,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.IElementComparer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -99,8 +100,34 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 		parent.setLayout(new FillLayout());
 		
 		viewer = new TreeViewer(parent, SWT.NONE);
+		viewer.setUseHashlookup(true);
 		viewer.setContentProvider(new GraphTreeContentProvider());
 		viewer.setLabelProvider(new GraphTreeLabelProvider());
+		viewer.setComparer(new IElementComparer() {
+         @Override
+         public int hashCode(Object element)
+         {
+            if((element instanceof GraphSettings))
+            {
+               return (int)((GraphSettings)element).getId();
+            }
+            if((element instanceof GraphFolder))
+            {
+               return ((GraphFolder)element).getName().hashCode();
+            }
+            return element.hashCode();
+         }
+         
+         @Override
+         public boolean equals(Object a, Object b)
+         {
+            if ((a instanceof GraphSettings) && (b instanceof GraphSettings))
+               return ((GraphSettings)a).getId() == ((GraphSettings)b).getId();
+            if ((a instanceof GraphFolder) && (b instanceof GraphFolder))
+               return ((GraphFolder)a).getName().equals(((GraphFolder)b).getName());
+            return a.equals(b);
+         }
+      });		
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
@@ -415,14 +442,6 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					session.deletePredefinedGraph(((GraphSettings)o).getId());
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							viewer.remove(o);
-                     viewer.refresh(o);
-						}
-					});
 				}
 				
 				@Override
@@ -440,87 +459,65 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
       switch(n.getCode())
       {
          case NXCNotification.PREDEFINED_GRAPHS_DELETED:
-            new ConsoleJob("Remove graph from list", null, Activator.PLUGIN_ID, null, viewer.getControl().getDisplay()) {
+            
+            
+            viewer.getControl().getDisplay().asyncExec(new Runnable() {
                @Override
-               protected void runInternal(IProgressMonitor monitor) throws Exception
+               public void run()
                {
-                  runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
+                  List<GraphSettings> list = (List<GraphSettings>)viewer.getInput();    
+                  for(int i = 0; i < list.size(); i++)
+                     if(list.get(i).getId() == n.getSubCode())
                      {
-                        final List<GraphSettings> list = new ArrayList<GraphSettings>((List<GraphSettings>)viewer.getInput());                        
-                        for(int i = 0; i < list.size(); i++)
-                           if(list.get(i).getId() == n.getSubCode())
-                           {
-                              Object o = list.get(i);
-                              viewer.remove(o);
-                              viewer.refresh(o);
-                           }
-                     }
-                  });
-               }
-               
-               @Override
-               protected String getErrorMessage()
-               {
-                  return "Error while graph tree update(object removed)";
-               }
-            }.start();
-            break;
-         case NXCNotification.PREDEFINED_GRAPHS_CHANGED:
-            new ConsoleJob("Update Graph list", null, Activator.PLUGIN_ID, null, viewer.getControl().getDisplay()) {
-               @Override
-               protected void runInternal(IProgressMonitor monitor) throws Exception
-               {
-                  runInUIThread(new Runnable() {
-                     @Override
-                     public void run()
-                     {
-                        if(!(n.getObject() instanceof GraphSettings))
-                        {
-                           return;
-                        }                       
-                        
-                        final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();  
-                        
-                        final List<GraphSettings> list = (List<GraphSettings>)viewer.getInput();       
-                        boolean objectUpdated = false;
-                        for(int i = 0; i < list.size(); i++)
-                        {
-                           if(list.get(i).getId() == n.getSubCode())
-                           {
-                              list.set(i, (GraphSettings)n.getObject());
-                              objectUpdated = true;
-                              break;
-                           }
-                        }
-                        
-                        if(!objectUpdated)
-                        {
-                           list.add((GraphSettings)n.getObject());
-                        }
-                        viewer.setInput(list);
+                        Object o = list.get(i);
+                        list.remove(o);
                         viewer.refresh();
-                        
-                        if (selection.size() == 1)
-                        {
-                           if(selection.getFirstElement() instanceof GraphSettings)
-                           {
-                              GraphSettings element = (GraphSettings)selection.getFirstElement();
-                              if(element.getId() == n.getSubCode())
-                                    viewer.setSelection(new StructuredSelection((GraphSettings)n.getObject()), true);
-                           }
-                        }                  
+                        break;
                      }
-                  });
                }
-               
+            });
+            break;
+         case NXCNotification.PREDEFINED_GRAPHS_CHANGED:            
+            viewer.getControl().getDisplay().asyncExec(new Runnable() {
                @Override
-               protected String getErrorMessage()
+               public void run()
                {
-                  return "Error while graph tree update(object updated/added)";
+                  if(!(n.getObject() instanceof GraphSettings))
+                  {
+                     return;
+                  }                       
+                  
+                  final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();  
+                  
+                  final List<GraphSettings> list = (List<GraphSettings>)viewer.getInput();       
+                  boolean objectUpdated = false;
+                  for(int i = 0; i < list.size(); i++)
+                  {
+                     if(list.get(i).getId() == n.getSubCode())
+                     {
+                        list.set(i, (GraphSettings)n.getObject());
+                        objectUpdated = true;
+                        break;
+                     }
+                  }
+                  
+                  if(!objectUpdated)
+                  {
+                     list.add((GraphSettings)n.getObject());
+                  }
+                  viewer.refresh();
+                  
+                  if (selection.size() == 1)
+                  {
+                     if(selection.getFirstElement() instanceof GraphSettings)
+                     {
+                        GraphSettings element = (GraphSettings)selection.getFirstElement();
+                        if(element.getId() == n.getSubCode())
+                              viewer.setSelection(new StructuredSelection((GraphSettings)n.getObject()), true);
+                     }
+                  }
                }
-            }.start();
+            });
             break;
       }
    }
