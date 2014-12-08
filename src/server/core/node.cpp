@@ -5663,7 +5663,17 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 					   {
 						   DbgPrintf(4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
 									    pSubnet->getName(), pSubnet->getId(), m_name, m_id);
-						   pSubnet->setCorrectMask(pInterface->IpAddr() & pInterface->getIpNetMask(), pInterface->getIpNetMask());
+                     if(((pInterface->getIpNetMask() == 0xFFFFFFFF) || (pInterface->getIpNetMask() == 0xFFFFFFFE)) && getParentCount() != 1)
+                     {
+                        pSubnet->deleteObject();
+                        /*Delete subnet object if we try to checnge it's netmsk to 255.255.255.255 or 255.255.255.254 and
+                         subnet has more than one parent. hasIfaceForPrimaryIp paramteter should prevent us from going in
+                         loop(creating and deleting all the time subnet).*/
+                     }
+                     else
+                     {
+                        pSubnet->setCorrectMask(pInterface->IpAddr() & pInterface->getIpNetMask(), pInterface->getIpNetMask());
+                     }
 					   }
 
 					   // Check if node is linked to this subnet
