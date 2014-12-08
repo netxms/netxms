@@ -326,6 +326,7 @@ public class NXCPCodes
    public static final int CMD_EXECUTE_SCRIPT_UPDATE = 0x0130;
    public static final int CMD_FILEMGR_CREATE_FOLDER = 0x0131;
    public static final int CMD_QUERY_ADHOC_SUMMARY_TABLE = 0x0132;
+   public static final int CMD_GRAPH_UPDATE_OBJEC = 0x0133;
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
