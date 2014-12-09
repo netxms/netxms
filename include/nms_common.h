@@ -522,6 +522,9 @@ typedef int SOCKET;
 #include <builtins.h>
 #endif
 
+#include <sys/socket.h>
+#include <sys/un.h>
+
 typedef int BOOL;
 #if (SIZEOF_LONG == 4)
 #if (SIZEOF_INT == 4)
@@ -657,6 +660,10 @@ typedef int SOCKET;
 
 #if !(HAVE_SOCKLEN_T) && !defined(_USE_GNU_PTH)
 typedef unsigned int socklen_t;
+#endif
+
+#ifndef SUN_LEN
+#define SUN_LEN(su) (sizeof(*(su)) - sizeof((su)->sun_path) + strlen((su)->sun_path))
 #endif
 
 // Shared library suffix
