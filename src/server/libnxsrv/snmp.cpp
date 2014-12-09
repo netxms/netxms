@@ -154,8 +154,11 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                      case ASN_OBJECT_ID:
                         pVar->getValueAsString((TCHAR *)pValue, bufferSize / sizeof(TCHAR));
                         break;
+                     case ASN_NULL:
+                        dwResult = SNMP_ERR_NO_OBJECT;
+                        break;
                      default:
-                        nxlog_write(MSG_SNMP_UNKNOWN_TYPE, EVENTLOG_ERROR_TYPE, "x", pVar->getType());
+                        nxlog_write(MSG_SNMP_UNKNOWN_TYPE, NXLOG_WARNING, "x", pVar->getType());
                         dwResult = SNMP_ERR_BAD_TYPE;
                         break;
                   }
