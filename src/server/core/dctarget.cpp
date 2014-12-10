@@ -368,9 +368,7 @@ UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId
 bool DataCollectionTarget::processNewDCValue(DCObject *dco, time_t currTime, void *value)
 {
    bool updateStatus;
-	lockDciAccess(false);
 	bool result = dco->processNewValue(currTime, value, &updateStatus);
-	unlockDciAccess();
 	if (updateStatus)
 	{
       calculateCompoundStatus(FALSE);

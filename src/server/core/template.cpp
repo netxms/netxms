@@ -446,8 +446,8 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
 		DCObject *object = m_dcObjects->get(i);
       if (object->getId() == dcObjectId)
       {
-         //Check if it is instance DCI
-         if( (object->getType() == DCO_TYPE_ITEM) && (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE) )
+         // Check if it is instance DCI
+         if ((object->getType() == DCO_TYPE_ITEM) && (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE))
          {
             deleteChildDCIs(dcObjectId);
          }
