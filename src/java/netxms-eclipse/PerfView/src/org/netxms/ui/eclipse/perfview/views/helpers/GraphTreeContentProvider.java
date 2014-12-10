@@ -34,7 +34,8 @@ import org.netxms.ui.eclipse.perfview.Messages;
  */
 public class GraphTreeContentProvider implements ITreeContentProvider
 {
-	private GraphFolder rootFolder;
+   private List<GraphSettings> input = null;
+	private GraphFolder rootFolder = new GraphFolder(Messages.get().GraphTreeContentProvider_Root, null);;
 	private Map<GraphSettings, GraphFolder> parentFolders = new HashMap<GraphSettings, GraphFolder>();
 	
 	/* (non-Javadoc)
@@ -76,6 +77,7 @@ public class GraphTreeContentProvider implements ITreeContentProvider
 	@Override
 	public Object[] getElements(Object inputElement)
 	{
+	   updateModel();
 		return new Object[] { rootFolder };
 	}
 
@@ -94,42 +96,49 @@ public class GraphTreeContentProvider implements ITreeContentProvider
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput)
 	{
-		parentFolders.clear();
-		rootFolder = new GraphFolder(Messages.get().GraphTreeContentProvider_Root, null);
-		
-		List<GraphSettings> gs = (List<GraphSettings>)newInput;
-		if (gs != null)
-		{
-			Collections.sort(gs, new Comparator<GraphSettings>() {
-				@Override
-				public int compare(GraphSettings arg0, GraphSettings arg1)
-				{
-					return arg0.getName().replace("&", "").compareToIgnoreCase(arg1.getName().replace("&", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-				}
-			});
-		
-			Map<String, GraphFolder> folders = new HashMap<String, GraphFolder>();
-			for(int i = 0; i < gs.size(); i++)
-			{
-				String[] path = gs.get(i).getName().split("\\-\\>"); //$NON-NLS-1$
-			
-				GraphFolder root = rootFolder;
-				for(int j = 0; j < path.length - 1; j++)
-				{
-					String key = path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
-					GraphFolder curr = folders.get(key);
-					if (curr == null)
-					{
-						curr = new GraphFolder(path[j], root);
-						folders.put(key, curr);
-						root.addFolder(curr);
-					}
-					root = curr;
-				}
+	   input = (List<GraphSettings>)newInput;
+      if (input != null)
+      {
+         Collections.sort(input, new Comparator<GraphSettings>() {
+            @Override
+            public int compare(GraphSettings arg0, GraphSettings arg1)
+            {
+               return arg0.getName().replace("&", "").compareToIgnoreCase(arg1.getName().replace("&", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            }
+         });
+      }
+	   updateModel();
+	}
 	
-				root.addGraph(gs.get(i));
-				parentFolders.put(gs.get(i), root);
-			}
-		}
+	private void updateModel()
+	{
+      parentFolders.clear();
+      rootFolder.clear();
+      
+      if (input != null)
+      {
+         Map<String, GraphFolder> folders = new HashMap<String, GraphFolder>();
+         for(int i = 0; i < input.size(); i++)
+         {
+            String[] path = input.get(i).getName().split("\\-\\>"); //$NON-NLS-1$
+         
+            GraphFolder root = rootFolder;
+            for(int j = 0; j < path.length - 1; j++)
+            {
+               String key = path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
+               GraphFolder curr = folders.get(key);
+               if (curr == null)
+               {
+                  curr = new GraphFolder(path[j], root);
+                  folders.put(key, curr);
+                  root.addFolder(curr);
+               }
+               root = curr;
+            }
+   
+            root.addGraph(input.get(i));
+            parentFolders.put(input.get(i), root);
+         }
+      }
 	}
 }

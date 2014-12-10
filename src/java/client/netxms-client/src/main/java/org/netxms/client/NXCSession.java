@@ -519,6 +519,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
                   case NXCPCodes.CMD_IMAGE_LIBRARY_UPDATE:
                      processImageLibraryUpdate(msg);
                      break;
+                  case NXCPCodes.CMD_GRAPH_UPDATE_OBJEC:
+                     GraphSettings graph = new GraphSettings(msg, NXCPCodes.VID_GRAPH_LIST_BASE);
+                     sendNotification(new NXCNotification(NXCNotification.PREDEFINED_GRAPHS_CHANGED, graph.getId(), graph));
+                     break;
                   default:
                      // Check subscriptions
                      synchronized(messageSubscriptions)
@@ -5147,7 +5151,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       while(true)
       {
          final NXCPMessage response = waitForMessage(NXCPCodes.CMD_EVENT_DB_RECORD, msg.getMessageId());
-         if (response.isEndOfSequence()) break;
+         if (response.isEndOfSequence()) 
+            break;
          list.add(new EventTemplate(response));
       }
       return list;

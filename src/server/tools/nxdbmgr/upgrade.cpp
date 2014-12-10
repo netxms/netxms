@@ -21,6 +21,7 @@
 **/
 
 #include "nxdbmgr.h"
+#include <nxevent.h>
 
 /**
  * Externals
@@ -384,6 +385,56 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
       if (!g_bIgnoreErrors)
          return FALSE;
    }
+   return TRUE;
+}
+
+/**
+ * Upgrade from V341 to V342
+ */
+static BOOL H_UpgradeFromV341(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE object_tools ADD tool_filter $SQL:TEXT"))); //create ne column
+   DB_RESULT hResult = SQLSelect(_T("SELECT tool_id, matching_oid FROM object_tools"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         TCHAR *oid = DBGetField(hResult, i, 1, NULL, 0);
+         if (oid == NULL || !_tcscmp(oid, _T(" ")))
+         {
+            oid = _tcsdup(_T(""));
+         }
+         else
+         {
+            TCHAR *newConfig = (TCHAR *)malloc((_tcslen(oid) + 512) * sizeof(TCHAR));
+            _tcscpy(newConfig, _T("<objectToolFilter>"));
+            _tcscat(newConfig, _T("<snmpOid>"));
+            _tcscat(newConfig, oid);
+            _tcscat(newConfig, _T("</snmpOid>"));
+            _tcscat(newConfig, _T("</objectToolFilter>"));
+
+            DB_STATEMENT statment = DBPrepare(g_hCoreDB, _T("UPDATE object_tools SET tool_filter=? WHERE tool_id=?"));
+            if (statment != NULL)
+            {
+               DBBind(statment, 1, DB_SQLTYPE_TEXT, newConfig, DB_BIND_STATIC);
+               DBBind(statment, 2, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+               CHK_EXEC(DBExecute(statment));
+               DBFreeStatement(statment);
+            }
+            else
+            {
+               if (!g_bIgnoreErrors)
+                  return FALSE;
+            }
+         }
+      }
+   }
+   static TCHAR batch[] =
+      _T("ALTER TABLE object_tools DROP COLUMN matching_oid\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));//delete old column
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='342' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
 
@@ -1387,7 +1438,10 @@ static BOOL H_UpgradeFromV289(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV288(int currVersion, int newVersion)
 {
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE dct_thresholds DROP COLUMN current_state")));
+   static TCHAR batch[] =
+   	_T("ALTER TABLE dct_thresholds DROP COLUMN current_state\n")
+	_T("<END>");
+   CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='289' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -8194,6 +8248,7 @@ static struct
    { 338, 339, H_UpgradeFromV338 },
    { 339, 340, H_UpgradeFromV339 },
    { 340, 341, H_UpgradeFromV340 },
+   { 341, 342, H_UpgradeFromV341 },
    { 0, 0, NULL }
 };
 

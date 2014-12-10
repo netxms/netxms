@@ -67,6 +67,8 @@ public class NXCNotification extends SessionNotification
 	public static final int ALARM_STATUS_FLOW_CHANGED = 1024;
 	public static final int FILE_LIST_CHANGED = 1025;
 	public static final int FILE_MONITORING_FAILED = 1026;
+	public static final int SESSION_KILLED = 1027;
+   public static final int PREDEFINED_GRAPHS_DELETED = 1028;
 
 	public static final int OBJECT_SYNC_COMPLETED = 2001;
 

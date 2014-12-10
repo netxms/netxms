@@ -34,6 +34,9 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.ImageTransfer;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -350,6 +353,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 		   getSite().getShell().getDisplay().timerExec(config.getRefreshRate() * 1000, refreshTimer);
 	
 		}
+      refreshMenueSelection();
    }
 
    /*
@@ -506,6 +510,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             {
                dlg.open();
                configureGraphFromSettings();
+               refreshMenueSelection();
             }
          }
       };
@@ -696,6 +701,21 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             }
          };
       }
+   }
+
+   protected void refreshMenueSelection()
+   {
+      actionAutoRefresh.setChecked(config.isAutoRefresh());
+      actionLogScale.setChecked(config.isLogScale());
+      actionShowLegend.setChecked(config.isShowLegend());
+      actionExtendedLegend.setChecked(config.isExtendedLegend());
+      actionStacked.setChecked(config.isStacked());
+      actionTranslucent.setChecked(config.isTranslucent());
+
+      actionLegendLeft.setChecked(config.getLegendPosition() == GraphSettings.POSITION_LEFT);
+      actionLegendRight.setChecked(config.getLegendPosition() == GraphSettings.POSITION_RIGHT);
+      actionLegendTop.setChecked(config.getLegendPosition() == GraphSettings.POSITION_TOP);
+      actionLegendBottom.setChecked(config.getLegendPosition() == GraphSettings.POSITION_BOTTOM);
    }
 
    /**

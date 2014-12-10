@@ -482,7 +482,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap libnxcl client nxscript nxcproxy nxlptest tools"
+	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap client nxscript nxcproxy nxlptest tools"
 	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2 tuxedo"
 	SMSDRV_DIRS="kannel websms"
    HDLINK_DIRS="jira"
@@ -659,7 +659,7 @@ check_substr "$COMPONENTS" "client"
 if test $? = 0; then
 	BUILD_CLIENT="yes"
 	NEED_ZLIB="yes"
-	MODULES="$MODULES libnxmap libnxcl client"
+	MODULES="$MODULES client"
 	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxsms"
 fi
 
@@ -760,7 +760,7 @@ fi
 
 check_substr "$COMPONENTS" "sdk"
 if test $? = 0; then
-	MODULES="$MODULES libnxmap libnxcl libnxsl libnxlp db nxscript"
+	MODULES="$MODULES libnxmap client libnxsl libnxlp db nxscript"
 fi
 
 
@@ -1495,21 +1495,32 @@ if test "x$LDAP_SUPPORT" = "xyes"; then
 	if test "x$HAVE_LDAP" = "xyes"; then
 		SERVER_LIBS="-lldap $SERVER_LIBS"   
 		AC_DEFINE(WITH_LDAP, 1, Define to 1 if you have LDAP libraries and headers)
-		AC_CHECK_LIB(ldap, ldap_initialize, [ 
-				AC_DEFINE(HAVE_LDAP_INITIALIZE, 1, Define to 1 if you have ldap_initialize function)
+		AC_CHECK_HEADERS([ldap_ssl.h],,,
+			[
+#include <ldap.h>
 			])
-		AC_CHECK_LIB(ldap, ldapssl_init, [ 
-				AC_DEFINE(HAVE_LDAPSSL_INIT, 1, Define to 1 if you have ldapssl_init function)
+		AC_CHECK_TYPES([ber_int_t],,,
+			[
+#include <ldap.h>
+#if HAVE_LDAP_SSL_H
+#include <ldap_ssl.h>
+#endif
 			])
-		AC_CHECK_LIB(ldap, ldap_control_create, [ 
-				AC_DEFINE(HAVE_LDAP_CONTROL_CREATE, 1, Define to 1 if you have ldap_control_create function)
+
+		OLD_LIBS="$LIBS"
+		LIBS="$LIBS -lldap"
+		AC_CHECK_FUNCS([ldap_initialize ldapssl_init])
+		AC_CHECK_FUNCS([ldap_control_create ldap_create_control nsldapi_build_control])
+		AC_CHECK_FUNCS([ldap_create_page_control ldap_parse_page_control])
+		LIBS="$OLD_LIBS"
+
+		AC_CHECK_DECLS([nsldapi_build_control],,,
+			[
+#include <ldap.h>
+#if HAVE_LDAP_SSL_H
+#include <ldap_ssl.h>
+#endif
 			])
-        AC_CHECK_LIB(ldap, ldap_parse_page_control, [ 
-                AC_DEFINE(HAVE_LDAP_PARSE_PAGE_CONTROL, 1, Define to 1 if you have ldap_parse_page_control function)
-            ])
-        AC_CHECK_LIB(ldap, ldap_create_page_control, [ 
-                AC_DEFINE(HAVE_LDAP_CREATE_PAGE_CONTROL, 1, Define to 1 if you have ldap_create_page_control function)
-            ])
 	fi
 	LDAP_SUPPORT="$HAVE_LDAP"
 fi
@@ -2675,6 +2686,7 @@ AC_CONFIG_FILES([
 	src/agent/tools/nxapush/Makefile
 	src/client/Makefile
 	src/client/install/Makefile
+	src/client/libnxclient/Makefile
 	src/client/nxalarm/Makefile
 	src/client/nxevent/Makefile
 	src/client/nxpush/Makefile
@@ -2696,7 +2708,6 @@ AC_CONFIG_FILES([
 	src/libexpat/Makefile
 	src/libexpat/libexpat/Makefile
 	src/libnetxms/Makefile
-	src/libnxcl/Makefile
 	src/libnxlp/Makefile
 	src/libnxmap/Makefile
 	src/libnxsl/Makefile

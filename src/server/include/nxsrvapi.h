@@ -34,14 +34,12 @@
 #define LIBNXSRV_EXPORTABLE
 #endif
 
-#ifndef LIBNXCL_NO_DECLARATIONS
-#define LIBNXCL_NO_DECLARATIONS 1
-#endif
-#include <nxclapi.h>
 #include <nxcpapi.h>
+#include <nms_util.h>
 #include <nms_agent.h>
 #include <nxsnmp.h>
 #include <netxms_isc.h>
+#include <nxcldefs.h>
 
 #ifdef INCLUDE_LIBNXSRV_MESSAGES
 #include "../libnxsrv/messages.h"
@@ -632,7 +630,8 @@ public:
 void LIBNXSRV_EXPORTABLE DestroyArpCache(ARP_CACHE *pArpCache);
 void LIBNXSRV_EXPORTABLE DestroyRoutingTable(ROUTING_TABLE *pRT);
 void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT);
-const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError);
+const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(UINT32 err);
+UINT32 LIBNXSRV_EXPORTABLE AgentErrorToRCC(UINT32 err);
 
 void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...)
 #if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))

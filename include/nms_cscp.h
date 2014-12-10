@@ -528,6 +528,7 @@ typedef struct
 #define CMD_EXECUTE_SCRIPT_UPDATE      0x0130
 #define CMD_FILEMGR_CREATE_FOLDER      0x0131
 #define CMD_QUERY_ADHOC_SUMMARY_TABLE  0x0132
+#define CMD_GRAPH_UPDATE_OBJEC         0x0133
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -741,7 +742,7 @@ typedef struct
 #define VID_TOOL_TYPE               ((UINT32)196)
 #define VID_TOOL_DATA               ((UINT32)197)
 #define VID_ACL                     ((UINT32)198)
-#define VID_TOOL_OID                ((UINT32)199)
+#define VID_TOOL_FILTER             ((UINT32)199)
 #define VID_SERVER_UPTIME           ((UINT32)200)
 #define VID_NUM_ALARMS              ((UINT32)201)
 #define VID_ALARMS_BY_SEVERITY      ((UINT32)202)

@@ -30,12 +30,13 @@ include_HEADERS = \
 	nms_cscp.h \
 	nms_threads.h \
 	nms_util.h \
-	nxclapi.h \
+	nxcldefs.h \
+	nxclient.h \
+	nxclobj.h \
 	nxconfig.h \
 	nxcpapi.h \
 	nxdbapi.h \
 	nxevent.h \
-	nxlexer_styles.h \
 	nxlog.h \
 	nxlpapi.h \
 	nxmbapi.h \
@@ -43,7 +44,6 @@ include_HEADERS = \
 	nxsdapi.h \
 	nxsl_classes.h \
 	nxsl.h \
-	nxsm_ext.h \
 	nxsnmp.h \
 	nxstat.h \
 	nxtools.h \

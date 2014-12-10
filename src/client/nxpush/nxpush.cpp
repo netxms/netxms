@@ -21,7 +21,7 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <nms_util.h>
-#include <nxclapi.h>
+#include <nxclient.h>
 
 #if HAVE_GETOPT_H
 #include <getopt.h>
@@ -32,20 +32,20 @@
 // Global variables
 //
 
-NXC_SESSION hSession = NULL;
-NXC_DCI_PUSH_DATA *queue = NULL;
-int queueSize = 0;
+NXCSession *session = NULL;
+DataCollectionController *controller = NULL;
+ObjectArray<NXCPushData> queue(16, 16, true);
 
 
 //
 // Forward declarations
 //
 
-BOOL AddValuePair(char *name, char *value);
-BOOL AddValue(char *pair);
-BOOL Startup(void);
-BOOL Send(void);
-BOOL Teardown(void);
+static BOOL AddValuePair(char *name, char *value);
+static BOOL AddValue(char *pair);
+static BOOL Startup();
+static BOOL Send();
+static BOOL Teardown();
 
 
 //
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (queueSize > 0)
+	if (queue.size() > 0)
 	{
 		if (Startup())
 		{
@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
 /**
  * Values parser - clean string and split by '='
  */
-BOOL AddValue(char *pair)
+static BOOL AddValue(char *pair)
 {
 	BOOL ret = FALSE;
 	char *p = pair;
@@ -321,12 +321,10 @@ BOOL AddValue(char *pair)
 	return ret;
 }
 
-
-//
-// Split IDs, cleanup and add to the send queue
-//
-
-BOOL AddValuePair(char *name, char *value)
+/**
+ * Split IDs, cleanup and add to the send queue
+ */
+static BOOL AddValuePair(char *name, char *value)
 {
 	BOOL ret = TRUE;
 	UINT32 dciId = 0;
@@ -356,52 +354,49 @@ BOOL AddValuePair(char *name, char *value)
 				dciId, nodeName, dciName, value);
 		}
 
-		NXC_DCI_PUSH_DATA *p = (NXC_DCI_PUSH_DATA *)realloc(
-			queue, sizeof(NXC_DCI_PUSH_DATA) * (queueSize + 1));
+      NXCPushData *p = new NXCPushData();
 		if (p != NULL)
 		{
-			queue = p;
-			p[queueSize].dwId = dciId;
-			p[queueSize].dwNodeId = nodeId;
+			p->dciId = dciId;
+			p->nodeId = nodeId;
 			if (dciId > 0)
 			{
-				p[queueSize].pszName = NULL;
+				p->dciName = NULL;
 			}
 			else
 			{
 #ifdef UNICODE
-				p[queueSize].pszName = WideStringFromMBString(dciName);
+				p->dciName = WideStringFromMBString(dciName);
 #else
-				p[queueSize].pszName = strdup(dciName);
+				p->dciName = strdup(dciName);
 #endif
 			}
 
 			if (nodeId > 0)
 			{
-				p[queueSize].pszNodeName = NULL;
+				p->nodeName = NULL;
 			}
 			else
 			{
 #ifdef UNICODE
-				p[queueSize].pszNodeName = WideStringFromMBString(nodeName);
+				p->nodeName= WideStringFromMBString(nodeName);
 #else
-				p[queueSize].pszNodeName = strdup(nodeName);
+				p->nodeName = strdup(nodeName);
 #endif
 			}
 
 #ifdef UNICODE
-			p[queueSize].pszValue = WideStringFromMBString(value);
+			p->value = WideStringFromMBString(value);
 #else
-			p[queueSize].pszValue = strdup(value);
+			p->value = strdup(value);
 #endif
-
-			queueSize++;
+         queue.add(p);
 		}
 		else
 		{
 			if (optVerbose > 0)
 			{
-				_tprintf(_T("realloc failed!: %s\n"), _tcserror(errno));
+				_tprintf(_T("new failed!: %s\n"), _tcserror(errno));
 			}
 		}
 	}
@@ -409,18 +404,18 @@ BOOL AddValuePair(char *name, char *value)
 	return ret;
 }
 
-//
-// Callback function for debug messages from client library
-//
-static void DebugCallback(TCHAR *pMsg)
+/**
+ * Callback function for debug messages from client library
+ */
+static void DebugCallback(const TCHAR *pMsg)
 {
 	_tprintf(_T("NXCL: %s\n"), pMsg);
 }
 
-//
-// Initialize client library and connect to the server
-//
-BOOL Startup()
+/**
+ * Initialize client library and connect to the server
+ */
+static BOOL Startup()
 {
 	BOOL ret = FALSE;
 	UINT32 dwResult;
@@ -468,9 +463,9 @@ BOOL Startup()
 #define _PASSWD optPassword
 #endif
 
-		dwResult = NXCConnect(optEncrypt ? NXCF_ENCRYPT : 0, _HOST, _USER, _PASSWD,
-		                      0, NULL, NULL, &hSession,
-		                      _T("nxpush/") NETXMS_VERSION_STRING, NULL);
+      session = new NXCSession();
+      dwResult = session->connect(_HOST, _USER, _PASSWD, optEncrypt ? NXCF_ENCRYPT : 0, _T("nxpush/") NETXMS_VERSION_STRING);
+
 #ifdef UNICODE
 		free(wHost);
 		free(wUser);
@@ -485,7 +480,7 @@ BOOL Startup()
 		}
 		else
 		{
-			NXCSetCommandTimeout(hSession, 5 * 1000);
+         session->setCommandTimeout(5 * 1000);
 			ret = TRUE;
 		}
 	}
@@ -493,10 +488,10 @@ BOOL Startup()
 	return ret;
 }
 
-//
-// Send all DCIs
-//
-BOOL Send()
+/**
+ * Send all DCIs
+ */
+static BOOL Send()
 {
 	BOOL ret = TRUE;
 	UINT32 errIdx;
@@ -506,18 +501,18 @@ BOOL Send()
 
 	if (optBatchSize == 0)
 	{
-		optBatchSize = queueSize;
+		optBatchSize = queue.size();
 	}
 
-	batches = queueSize / optBatchSize;
-	if (queueSize % optBatchSize != 0)
+	batches = queue.size() / optBatchSize;
+	if (queue.size() % optBatchSize != 0)
 	{
 		batches++;
 	}
 
 	for (i = 0; i < batches; i++)
 	{
-		size = min(optBatchSize, queueSize - (optBatchSize * i));
+		size = min(optBatchSize, queue.size() - (optBatchSize * i));
 
 		if (optVerbose > 1)
 		{
@@ -528,18 +523,18 @@ BOOL Send()
 		{
 			for (int j = 0; j < size; j++)
 			{
-				NXC_DCI_PUSH_DATA *rec = &queue[(optBatchSize * i) + j];
+            NXCPushData *rec = queue.get(optBatchSize * i + j);
 				_tprintf(_T("Record #%d: \"%s\" for %d(%s):%d(%s)\n"),
 					(optBatchSize * i) + j + 1,
-					rec->pszValue,
-					rec->dwNodeId,
-					rec->pszNodeName != NULL ? rec->pszNodeName : _T("n/a"),
-					rec->dwId,
-					rec->pszName != NULL ? rec->pszName : _T("n/a"));
+					rec->value,
+					rec->nodeId,
+					rec->nodeName != NULL ? rec->nodeName : _T("n/a"),
+					rec->dciId,
+					rec->dciName != NULL ? rec->dciName : _T("n/a"));
 			}
 		}
 
-		UINT32 dwResult = NXCPushDCIData(hSession, size, &queue[optBatchSize * i], &errIdx);
+      UINT32 dwResult = ((DataCollectionController *)(session->getController(CONTROLLER_DATA_COLLECTION)))->pushData(&queue, &errIdx);
 		if (dwResult != RCC_SUCCESS)
 		{
 			if (optVerbose > 0)
@@ -565,27 +560,22 @@ BOOL Send()
 	return ret;
 }
 
-//
-// Disconnect and cleanup
-//
-BOOL Teardown()
+/**
+ * Disconnect and cleanup
+ */
+static BOOL Teardown()
 {
-	if (hSession != NULL)
+	if (session != NULL)
 	{
-		NXCDisconnect(hSession);
+      delete session;
 	}
 
-	if (queue != NULL)
+	for(int i = 0; i < queue.size(); i++)
 	{
-		for (int i = 0; i < queueSize; i++)
-		{
-			if (queue[i].pszName != NULL) free(queue[i].pszName);
-			if (queue[i].pszNodeName != NULL) free(queue[i].pszNodeName);
-			if (queue[i].pszValue != NULL) free(queue[i].pszValue);
-		}
-		free(queue);
-		queue = NULL;
-		queueSize = 0;
+      NXCPushData *d = queue.get(i);
+		safe_free(d->dciName);
+		safe_free(d->nodeName);
+		safe_free(d->value);
 	}
 
 	return TRUE;

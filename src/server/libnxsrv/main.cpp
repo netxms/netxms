@@ -77,14 +77,33 @@ static struct
 /**
  * Resolve agent's error code to text
  */
-const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(int iError)
+const TCHAR LIBNXSRV_EXPORTABLE *AgentErrorCodeToText(UINT32 err)
 {
    int i;
 
    for(i = 0; m_agentErrors[i].pszText != NULL; i++)
-      if (iError == m_agentErrors[i].iCode)
+      if (err == (UINT32)m_agentErrors[i].iCode)
          return m_agentErrors[i].pszText;
    return _T("Unknown error code");
+}
+
+/**
+ * Convert agent error code to client RCC
+ */
+UINT32 LIBNXSRV_EXPORTABLE AgentErrorToRCC(UINT32 err)
+{
+   switch(err)
+   {
+      case ERR_ACCESS_DENIED:
+         return RCC_ACCESS_DENIED;
+      case ERR_IO_FAILURE:
+         return RCC_IO_ERROR;
+      case ERR_ALREADY_AUTHENTICATED:
+      case ERR_AUTH_FAILED:
+      case ERR_AUTH_NOT_REQUIRED:
+         return RCC_COMM_FAILURE;
+   }
+   return RCC_AGENT_ERROR;
 }
 
 /**

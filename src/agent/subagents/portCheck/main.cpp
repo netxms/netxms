@@ -1,10 +1,9 @@
 /* $Id$ */
 
-#define LIBNXCL_NO_DECLARATIONS
-
 #include <nms_common.h>
 #include <nms_agent.h>
-#include <nxclapi.h>
+#include <nxcldefs.h>
+#include <nxcpapi.h>
 
 #ifdef _WITH_ENCRYPTION
 #include <openssl/ssl.h>

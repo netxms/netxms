@@ -8,5 +8,5 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = install @CLIENT_COMPONENTS@
+SUBDIRS = libnxclient @CLIENT_COMPONENTS@ install
 EXTRA_DIST = readme.txt

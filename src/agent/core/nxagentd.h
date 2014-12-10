@@ -27,16 +27,12 @@
 #include <nms_util.h>
 #include <nms_threads.h>
 #include <nms_agent.h>
-#include <nms_cscp.h>
-#include <stdio.h>
-#include <stdarg.h>
+#include <nxcpapi.h>
 #include <nxqueue.h>
 #include <nxlog.h>
+#include <nxcldefs.h>
 #include "messages.h"
 #include "nxsnmp.h"
-
-#define LIBNXCL_NO_DECLARATIONS
-#include <nxclapi.h>
 
 #ifdef _NETWARE
 #undef SEVERITY_CRITICAL
@@ -44,13 +40,6 @@
 
 #ifdef _WIN32
 #include <aclapi.h>
-#else
-#include <sys/socket.h>
-#include <sys/un.h>
-#endif
-
-#ifndef SUN_LEN
-#define SUN_LEN(su) (sizeof(*(su)) - sizeof((su)->sun_path) + strlen((su)->sun_path))
 #endif
 
 

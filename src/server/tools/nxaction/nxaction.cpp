@@ -24,7 +24,6 @@
 #include <nms_common.h>
 #include <nms_agent.h>
 #include <nms_util.h>
-#include <nxclapi.h>
 #include <nxsrvapi.h>
 
 #ifndef _WIN32

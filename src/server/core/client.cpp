@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -308,7 +308,7 @@ void DumpClientSessions(CONSOLE_CTX pCtx)
          {
             _sntprintf(webServer, 256, _T(" (%s)"), m_pSessionList[i]->getWebServerAddress());
          }
-         ConsolePrintf(pCtx, _T("%-3d %-24s %-8s %-7s %s%s [%s]\n"), i, 
+         ConsolePrintf(pCtx, _T("%-3d %-24s %-8s %-7s %s%s [%s]\n"), i,
                        (m_pSessionList[i]->getState() != SESSION_STATE_PROCESSING) ?
                          pszStateName[m_pSessionList[i]->getState()] :
                          NXCPMessageCodeName(m_pSessionList[i]->getCurrentCmd(), szBuffer),
@@ -369,6 +369,18 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
    for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if (m_pSessionList[i] != NULL)
          m_pSessionList[i]->onUserDBUpdate(code, id, object);
+   RWLockUnlock(m_rwlockSessionListAccess);
+}
+
+/**
+ * Send greph update to all active sessions
+ */
+void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graphId)
+{
+   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
+      if ((m_pSessionList[i] != NULL) && (GetGraphAccessCheckResult(graphId, m_pSessionList[i]->getUserId()) == RCC_SUCCESS))
+         m_pSessionList[i]->sendMessage(update);
    RWLockUnlock(m_rwlockSessionListAccess);
 }
 

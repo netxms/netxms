@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Client Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -21,19 +21,19 @@
 **
 **/
 
-#include "libnxcl.h"
+#include "libnxclient.h"
 
 /**
- * Global variables
+ * Debug callback
  */
-NXC_DEBUG_CALLBACK g_pDebugCallBack = NULL;
+static NXC_DEBUG_CALLBACK s_debugCallback = NULL;
 
 /**
  * Print debug messages
  */
 void DebugPrintf(const TCHAR *format, ...)
 {
-   if (g_pDebugCallBack == NULL)
+   if (s_debugCallback == NULL)
       return;
 
    va_list args;
@@ -42,7 +42,7 @@ void DebugPrintf(const TCHAR *format, ...)
    va_start(args, format);
    _vsntprintf(buffer, 4096, format, args);
    va_end(args);
-   g_pDebugCallBack(buffer);
+   s_debugCallback(buffer);
 }
 
 /**
@@ -50,18 +50,18 @@ void DebugPrintf(const TCHAR *format, ...)
  */
 static void CryptoLibDebugCallback(int level, const TCHAR *format, va_list args)
 {
-   if (g_pDebugCallBack == NULL)
+   if (s_debugCallback == NULL)
       return;
 
    TCHAR buffer[4096];
    _vsntprintf(buffer, 4096, format, args);
-   g_pDebugCallBack(buffer);
+   s_debugCallback(buffer);
 }
 
 /**
  * Initialization function
  */
-BOOL LIBNXCL_EXPORTABLE NXCInitialize()
+bool LIBNXCLIENT_EXPORTABLE NXCInitialize()
 {
    return InitCryptoLib(0xFFFF, CryptoLibDebugCallback);
 }
@@ -69,212 +69,32 @@ BOOL LIBNXCL_EXPORTABLE NXCInitialize()
 /**
  * Shutdown function
  */
-void LIBNXCL_EXPORTABLE NXCShutdown()
+void LIBNXCLIENT_EXPORTABLE NXCShutdown()
 {
 }
 
 /**
  * Get library version
  */
-UINT32 LIBNXCL_EXPORTABLE NXCGetVersion()
+UINT32 LIBNXCLIENT_EXPORTABLE NXCGetVersion()
 {
    return (NETXMS_VERSION_MAJOR << 24) | (NETXMS_VERSION_MINOR << 16) | NETXMS_VERSION_BUILD;
 }
 
 /**
- * Set event handler
- */
-void LIBNXCL_EXPORTABLE NXCSetEventHandler(NXC_SESSION hSession, NXC_EVENT_HANDLER pHandler)
-{
-   ((NXCL_Session *)hSession)->m_pEventHandler = pHandler;
-}
-
-/**
  * Set callback for debug messages
  */
-void LIBNXCL_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK pFunc)
+void LIBNXCLIENT_EXPORTABLE NXCSetDebugCallback(NXC_DEBUG_CALLBACK cb)
 {
-   g_pDebugCallBack = pFunc;
-}
-
-/**
- * Set command timeout
- */
-void LIBNXCL_EXPORTABLE NXCSetCommandTimeout(NXC_SESSION hSession, UINT32 dwTimeout)
-{
-   if ((dwTimeout >= 1000) && (dwTimeout <= 60000))
-      ((NXCL_Session *)hSession)->m_dwCommandTimeout = dwTimeout;
-}
-
-/**
- * Get server ID
- */
-void LIBNXCL_EXPORTABLE NXCGetServerID(NXC_SESSION hSession, BYTE *pbsId)
-{
-   memcpy(pbsId, ((NXCL_Session *)hSession)->m_bsServerId, 8);
-}
-
-/**
- * Subscribe to channel
- */
-UINT32 LIBNXCL_EXPORTABLE NXCSubscribe(NXC_SESSION hSession, UINT32 dwChannels)
-{
-   return ((NXCL_Session *)hSession)->SetSubscriptionStatus(dwChannels, 1);
-}
-
-/**
- * Unsubscribe from channel
- */
-UINT32 LIBNXCL_EXPORTABLE NXCUnsubscribe(NXC_SESSION hSession, UINT32 dwChannels)
-{
-   return ((NXCL_Session *)hSession)->SetSubscriptionStatus(dwChannels, 0);
-}
-
-/**
- * Set client data
- */
-void LIBNXCL_EXPORTABLE NXCSetClientData(NXC_SESSION hSession, void *pData)
-{
-	if (hSession != NULL)
-		((NXCL_Session *)hSession)->setClientData(pData);
-}
-
-/**
- * Get client data
- */
-void LIBNXCL_EXPORTABLE *NXCGetClientData(NXC_SESSION hSession)
-{
-	return (hSession != NULL) ? ((NXCL_Session *)hSession)->getClientData() : NULL;
-}
-
-/**
- * Check if password needs to be changed
- */
-BOOL LIBNXCL_EXPORTABLE NXCNeedPasswordChange(NXC_SESSION hSession)
-{
-   return ((NXCL_Session *)hSession)->needPasswordChange();
-}
-
-/**
- * Check if server has problems with backend database connection
- */
-BOOL LIBNXCL_EXPORTABLE NXCIsDBConnLost(NXC_SESSION hSession)
-{
-   return ((NXCL_Session *)hSession)->isDBConnLost();
-}
-
-/**
- * Check if password needs to be changed
- */
-void LIBNXCL_EXPORTABLE NXCStartWatchdog(NXC_SESSION hSession)
-{
-	((NXCL_Session *)hSession)->StartWatchdogThread();
-}
-
-/**
- * Get last lock information (owner of already locked component)
- */
-void LIBNXCL_EXPORTABLE NXCGetLastLockOwner(NXC_SESSION hSession, TCHAR *pszBuffer,
-                                            int nBufSize)
-{
-	if (hSession != NULL)
-		nx_strncpy(pszBuffer, ((NXCL_Session *)hSession)->getLastLock(), nBufSize);
-	else
-		nx_strncpy(pszBuffer, _T("INVALID SESSION HANDLE"), nBufSize);
-}
-
-/**
- * Send SMS via server
- */
-UINT32 LIBNXCL_EXPORTABLE NXCSendSMS(NXC_SESSION hSession, TCHAR *phone, TCHAR *message)
-{
-   NXCPMessage msg;
-   UINT32 dwRqId;
-
-	CHECK_SESSION_HANDLE();
-
-   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
-
-   msg.setCode(CMD_SEND_SMS);
-   msg.setId(dwRqId);
-   msg.setField(VID_RCPT_ADDR, phone);
-   msg.setField(VID_MESSAGE, message);
-   ((NXCL_Session *)hSession)->SendMsg(&msg);
-
-   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
-}
-
-/**
- * Check connection status by sending keepalive message
- */
-UINT32 LIBNXCL_EXPORTABLE NXCCheckConnection(NXC_SESSION hSession)
-{
-   NXCPMessage msg;
-   UINT32 dwRqId;
-
-	CHECK_SESSION_HANDLE();
-
-   dwRqId = ((NXCL_Session *)hSession)->CreateRqId();
-
-   msg.setCode(CMD_KEEPALIVE);
-   msg.setId(dwRqId);
-   if (!((NXCL_Session *)hSession)->SendMsg(&msg))
-		return RCC_COMM_FAILURE;
-
-   return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
-}
-
-/**
- * Get server's time zone
- */
-const TCHAR LIBNXCL_EXPORTABLE *NXCGetServerTimeZone(NXC_SESSION hSession)
-{
-	const TCHAR *ptr;
-
-	ptr = ((NXCL_Session *)hSession)->getServerTimeZone();
-	return (*ptr == 0) ? NULL : ptr;
-}
-
-/**
- * Generate Message ID
- */
-UINT32 LIBNXCL_EXPORTABLE NXCGenerateMessageId(NXC_SESSION hSession)
-{
-   return ((NXCL_Session *)hSession)->CreateRqId();
-}
-
-/**
- * Send prepared NXCP message
- */
-BOOL LIBNXCL_EXPORTABLE NXCSendMessage(NXC_SESSION hSession, NXCPMessage *msg)
-{
-	CHECK_SESSION_HANDLE();
-   return ((NXCL_Session *)hSession)->SendMsg(msg);
-}
-
-/**
- * Wait for message
- */
-NXCPMessage LIBNXCL_EXPORTABLE *NXCWaitForMessage(NXC_SESSION hSession, WORD wCode, UINT32 dwRqId)
-{
-	return (hSession != NULL) ? ((NXCL_Session *)hSession)->WaitForMessage(wCode, dwRqId) : NULL;
-}
-
-/**
- * Wait for CMD_REQUEST_COMPLETED message and return value of VID_RCC
- */
-UINT32 LIBNXCL_EXPORTABLE NXCWaitForRCC(NXC_SESSION hSession, UINT32 dwRqId)
-{
-	CHECK_SESSION_HANDLE();
-	return ((NXCL_Session *)hSession)->WaitForRCC(dwRqId);
+   s_debugCallback = cb;
 }
 
 /**
  * Get text for error
  */
-const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(UINT32 dwError)
+const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(UINT32 error)
 {
-   static const TCHAR *pszErrorText[] =
+   static const TCHAR *errorText[] =
    {
       _T("Request completed successfully"),
       _T("Component locked"),
@@ -396,7 +216,7 @@ const TCHAR LIBNXCL_EXPORTABLE *NXCGetErrorText(UINT32 dwError)
       _T("Script compilation error"),
       _T("Script execution error")
    };
-	return (dwError <= RCC_NXSL_EXECUTION_ERROR) ? pszErrorText[dwError] : _T("No text message for this error");
+	return (error <= RCC_NXSL_EXECUTION_ERROR) ? errorText[error] : _T("No text message for this error");
 }
 
 #if defined(_WIN32) && !defined(UNDER_CE)

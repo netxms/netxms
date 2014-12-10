@@ -42,7 +42,11 @@ public class Filter extends PropertyPage
 	private Button checkAgent;
 	private Button checkSNMP;
 	private Button checkMatchOID;
+	private Button checkMatchOS;
+	private Button checkMatchTemplate;
 	private Text textOID;
+	private Text textOS;
+	private Text textTemplate;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createControl(org.eclipse.swt.widgets.Composite)
@@ -106,6 +110,62 @@ public class Filter extends PropertyPage
 		textOID.setLayoutData(gd);
 		textOID.setEnabled(checkMatchOID.getSelection());
 		
+		checkMatchOS = new Button(dialogArea, SWT.CHECK);
+		checkMatchOS.setText("System OS name should match this template(coma separated regular expression list):");
+		checkMatchOS.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_OS_MATCH) != 0);
+		checkMatchOS.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e)
+			{
+				textOS.setEnabled(checkMatchOS.getSelection());
+				if (checkMatchOS.getSelection())
+					textOS.setFocus();
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e)
+			{
+				widgetSelected(e);
+			}
+		});
+		
+		textOS = new Text(dialogArea, SWT.BORDER);
+		textOS.setText(objectTool.getToolOS());
+		gd = new GridData();
+		gd.horizontalAlignment = SWT.FILL;
+		gd.grabExcessHorizontalSpace = true;
+		gd.horizontalIndent = 20;
+		textOS.setLayoutData(gd);
+		textOS.setEnabled(checkMatchOS.getSelection());
+		
+		checkMatchTemplate = new Button(dialogArea, SWT.CHECK);
+		checkMatchTemplate.setText("Parent template name should match this template(coma separated regular expression list):");
+		checkMatchTemplate.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_TEMPLATE_MATCH) != 0);
+		checkMatchTemplate.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            textTemplate.setEnabled(checkMatchTemplate.getSelection());
+            if (checkMatchTemplate.getSelection())
+               textTemplate.setFocus();
+         }
+
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+      
+		textTemplate = new Text(dialogArea, SWT.BORDER);
+		textTemplate.setText(objectTool.getToolTemplate());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalIndent = 20;
+      textTemplate.setLayoutData(gd);
+      textTemplate.setEnabled(checkMatchTemplate.getSelection());
+		
 		return dialogArea;
 	}
 
@@ -131,7 +191,21 @@ public class Filter extends PropertyPage
 		else
 			objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.REQUIRES_OID_MATCH);
 		
-		objectTool.setSnmpOid(textOID.getText());
+		objectTool.setSnmpOid(textOID.getText());		
+
+      if (checkMatchOS.getSelection())
+         objectTool.setFlags(objectTool.getFlags() | ObjectTool.REQUIRES_OS_MATCH);
+      else
+         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.REQUIRES_OS_MATCH);
+      
+      objectTool.setToolOS(textOS.getText());
+
+      if (checkMatchTemplate.getSelection())
+         objectTool.setFlags(objectTool.getFlags() | ObjectTool.REQUIRES_TEMPLATE_MATCH);
+      else
+         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.REQUIRES_TEMPLATE_MATCH);
+      
+      objectTool.setToolTemplate(textTemplate.getText());
 	}
 	
 	/* (non-Javadoc)

@@ -121,7 +121,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private Action actionSave;
    private Action[] presetActions;
    private Action actionCopyImage;
-
+   
    /*
     * (non-Javadoc)
     * 
@@ -349,6 +349,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       // Automatic refresh
       actionAutoRefresh.setChecked(config.isAutoRefresh());
       getSite().getShell().getDisplay().timerExec(config.isAutoRefresh() ? config.getRefreshRate() * 1000 : -1, refreshTimer);
+      refreshMenueSelection();
    }
 
    /*
@@ -505,6 +506,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             {
                dlg.open();
                configureGraphFromSettings();
+               refreshMenueSelection();
             }
          }
       };
@@ -703,6 +705,21 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
              clipboard.setContents(new Object[] { image.getImageData() }, new Transfer[] { imageTransfer });
           }
        };
+   }
+
+   protected void refreshMenueSelection()
+   {
+      actionAutoRefresh.setChecked(config.isAutoRefresh());
+      actionLogScale.setChecked(config.isLogScale());
+      actionShowLegend.setChecked(config.isShowLegend());
+      actionExtendedLegend.setChecked(config.isExtendedLegend());
+      actionStacked.setChecked(config.isStacked());
+      actionTranslucent.setChecked(config.isTranslucent());
+
+      actionLegendLeft.setChecked(config.getLegendPosition() == GraphSettings.POSITION_LEFT);
+      actionLegendRight.setChecked(config.getLegendPosition() == GraphSettings.POSITION_RIGHT);
+      actionLegendTop.setChecked(config.getLegendPosition() == GraphSettings.POSITION_TOP);
+      actionLegendBottom.setChecked(config.getLegendPosition() == GraphSettings.POSITION_BOTTOM);
    }
 
    /**

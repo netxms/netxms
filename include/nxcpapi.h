@@ -24,8 +24,8 @@
 #ifndef _nxcpapi_h_
 #define _nxcpapi_h_
 
-#include <nms_threads.h>
 #include <nms_util.h>
+#include <nms_threads.h>
 
 #ifdef _WIN32
 #include <wincrypt.h>
@@ -106,7 +106,7 @@ public:
    void setFieldFromMBString(UINT32 fieldId, const char *value) { set(fieldId, NXCP_DT_STRING, value); }
 #endif
    void setFieldFromTime(UINT32 fieldId, time_t value) { UINT64 t = (UINT64)value; set(fieldId, NXCP_DT_INT64, &t); }
-   void setFieldFromInt32Array(UINT32 fieldId, UINT32 dwNumElements, const UINT32 *pdwData);
+   void setFieldFromInt32Array(UINT32 fieldId, size_t numElements, const UINT32 *elements);
    void setFieldFromInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data);
    bool setFieldFromFile(UINT32 fieldId, const TCHAR *pszFileName);
 
@@ -143,6 +143,7 @@ public:
 typedef struct
 {
    void *msg;         // Pointer to message, either to NXCPMessage object or raw message
+   UINT64 sequence;   // Sequence number
    UINT32 id;         // Message ID
    UINT32 ttl;        // Message time-to-live in milliseconds
    UINT16 code;       // Message code
@@ -173,6 +174,7 @@ private:
    int m_size;
    int m_allocated;
    WAIT_QUEUE_ELEMENT *m_elements;
+   UINT64 m_sequence;
    THREAD m_hHkThread;
 
    void housekeeperThread();
@@ -363,10 +365,10 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
 														 MUTEX mutex);
 BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex);
 
-BOOL LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCallback)(int, const TCHAR *, va_list args));
+bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCallback)(int, const TCHAR *, va_list args));
 UINT32 LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers();
 NXCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *NXCPEncryptMessage(NXCPEncryptionContext *pCtx, NXCP_MESSAGE *pMsg);
-BOOL LIBNETXMS_EXPORTABLE NXCPDecryptMessage(NXCPEncryptionContext *pCtx,
+bool LIBNETXMS_EXPORTABLE NXCPDecryptMessage(NXCPEncryptionContext *pCtx,
                                              NXCP_ENCRYPTED_MESSAGE *pMsg,
                                              BYTE *pDecryptionBuffer);
 UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *pMsg,

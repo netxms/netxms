@@ -18,9 +18,13 @@
  */
 package org.netxms.client.objecttools;
 
+import java.util.Set;
+import java.util.regex.Pattern;
 import org.netxms.base.Glob;
+import org.netxms.base.Logger;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 
 /**
  * NetXMS object tool representation
@@ -37,14 +41,16 @@ public class ObjectTool
 	public static final int TYPE_SERVER_COMMAND = 6;
 	public static final int TYPE_FILE_DOWNLOAD  = 7;
 	
-	public static final int REQUIRES_SNMP         = 0x00000001;
-	public static final int REQUIRES_AGENT        = 0x00000002;
-	public static final int REQUIRES_OID_MATCH    = 0x00000004;
-	public static final int ASK_CONFIRMATION      = 0x00000008;
-	public static final int GENERATES_OUTPUT      = 0x00000010;
-	public static final int DISABLED              = 0x00000020;
-   public static final int SHOW_IN_COMMANDS      = 0x00000040;
-	public static final int SNMP_INDEXED_BY_VALUE = 0x00010000;
+	public static final int REQUIRES_SNMP             = 0x00000001;
+	public static final int REQUIRES_AGENT            = 0x00000002;
+	public static final int REQUIRES_OID_MATCH        = 0x00000004;
+	public static final int ASK_CONFIRMATION          = 0x00000008;
+	public static final int GENERATES_OUTPUT          = 0x00000010;
+	public static final int DISABLED                  = 0x00000020;
+	public static final int SHOW_IN_COMMANDS          = 0x00000040;
+	public static final int REQUIRES_OS_MATCH         = 0x00000080;
+   public static final int REQUIRES_TEMPLATE_MATCH   = 0x00000100;
+	public static final int SNMP_INDEXED_BY_VALUE     = 0x00010000;
 	
 	protected long id;
 	protected String name;
@@ -52,11 +58,11 @@ public class ObjectTool
 	protected int type;
 	protected int flags;
 	protected String description;
-	protected String snmpOid;
 	protected String data;
 	protected String confirmationText;
 	protected String commandName;
    protected String commandShortName;
+   protected ObjectToolFilter filter;
 	protected byte[] imageData;
 
 	/**
@@ -64,6 +70,7 @@ public class ObjectTool
 	 */
 	protected ObjectTool()
 	{
+	   filter = new ObjectToolFilter();
 	}
 	
 	/**
@@ -79,12 +86,21 @@ public class ObjectTool
 		type = msg.getFieldAsInt32(baseId + 2);
 		data = msg.getFieldAsString(baseId + 3);
 		flags = msg.getFieldAsInt32(baseId + 4);
+      String filterData = msg.getFieldAsString(baseId + 6);
 		description = msg.getFieldAsString(baseId + 5);
-		snmpOid = msg.getFieldAsString(baseId + 6);
 		confirmationText = msg.getFieldAsString(baseId + 7);
 		commandName = msg.getFieldAsString(baseId + 8);
       commandShortName = msg.getFieldAsString(baseId + 9);
 		imageData = msg.getFieldAsBinary(baseId + 10);
+		try
+      {
+         filter = ObjectToolFilter.createFromXml(filterData);
+      }
+      catch(Exception e)
+      {
+         filter = new ObjectToolFilter();
+         Logger.debug("ObjectTool.ObjectTool", "Failed to convert object tool filter to string");
+      }
 		
 		createDisplayName();
 	}
@@ -123,9 +139,43 @@ public class ObjectTool
 		
 		if ((flags & REQUIRES_OID_MATCH) != 0)
 		{
-			if (!Glob.matchIgnoreCase(snmpOid, node.getSnmpOID()))
+			if (!Glob.matchIgnoreCase(filter.snmpOid, node.getSnmpOID()))
 				return false;	// OID does not match
 		}
+		
+	   if ((flags & REQUIRES_OS_MATCH) != 0)
+      {
+	      boolean matchs = false;
+	      String[] substrings = filter.toolOS.split(",");
+	      for(int i = 0; i < substrings.length; i++)
+	      {
+	         if(Pattern.matches(substrings[i], node.getPlatformName()))
+	         {
+	            matchs = true;
+	         }
+	      }
+	      if(!matchs)
+	         return false;  //Not correct type of OS
+      }
+	    
+	   if ((flags & REQUIRES_TEMPLATE_MATCH) != 0)
+      {
+	      boolean matchs = false;
+         String[] substrings = filter.toolTemplate.split(",");
+         Set<AbstractObject> parents = node.getAllParents(AbstractObject.OBJECT_TEMPLATE);
+         for(AbstractObject parent : parents)
+         {
+            for(int i = 0; i < substrings.length; i++)
+            {
+               if(Pattern.matches(substrings[i], parent.getObjectName()))
+               {
+                  matchs = true;
+               }
+            }
+         }
+         if(!matchs)
+            return false;  //Does not belong to those templates
+      }
 		
 		return true;
 	}
@@ -175,7 +225,7 @@ public class ObjectTool
 	 */
 	public String getSnmpOid()
 	{
-		return snmpOid;
+		return filter.snmpOid;
 	}
 
 	/**
@@ -244,5 +294,21 @@ public class ObjectTool
    public byte[] getImageData()
    {
       return imageData;
+   }
+
+   /**
+    * @return the toolOS
+    */
+   public String getToolOS()
+   {
+      return filter.toolOS;
+   }
+
+   /**
+    * @return the toolTemplate
+    */
+   public String getToolTemplate()
+   {
+      return filter.toolTemplate;
    }
 }

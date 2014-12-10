@@ -23,7 +23,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
-#include <nxclapi.h>
+#include <nxcpapi.h>
 #include <nxstat.h>
 
 

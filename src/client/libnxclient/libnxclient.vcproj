@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="windows-1251"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="libnxcl"
-	ProjectGUID="{3CB9B8C6-E6BF-4002-A61A-7A21FEADB531}"
-	RootNamespace="libnxcl"
+	Name="libnxclient"
+	ProjectGUID="{B2C8E7C8-E047-46E8-ADDB-0BB819F72288}"
+	RootNamespace="libnxclient"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -43,14 +43,14 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNXCL_EXPORTS"
+				AdditionalIncludeDirectories="..\..\..\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNXCLIENT_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="false"
+				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -68,6 +68,83 @@
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\..\..\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNXCLIENT_EXPORTS"
+				RuntimeLibrary="2"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="ws2_32.lib"
+				LinkIncremental="1"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -121,8 +198,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNXCL_EXPORTS"
+				AdditionalIncludeDirectories="..\..\..\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBNXCLIENT_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -147,83 +224,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
-			CharacterSet="1"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNXCL_EXPORTS"
-				RuntimeLibrary="2"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="ws2_32.lib"
-				LinkIncremental="1"
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -276,8 +276,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNXCL_EXPORTS"
+				AdditionalIncludeDirectories="..\..\..\include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBNXCLIENT_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -338,35 +338,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\actions.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\agentcfg.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\alarms.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\cert.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\comm.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\datacoll.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\epp.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\eventdb.cpp"
+				RelativePath=".\dc.cpp"
 				>
 			</File>
 			<File
@@ -374,39 +350,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\graph.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\layer2.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\mib.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\mp.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\objects.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\objtools.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\package.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\script.cpp"
 				>
 			</File>
 			<File
@@ -417,22 +365,6 @@
 				RelativePath=".\session.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\situation.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\snmp.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\snmptrap.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\users.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -440,47 +372,59 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\libnxcl.h"
+				RelativePath=".\libnxclient.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\netxms-regex.h"
+				RelativePath="..\..\..\include\netxms-regex.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\netxms-version.h"
+				RelativePath="..\..\..\include\netxms-version.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\netxms_maps.h"
+				RelativePath="..\..\..\include\netxms_maps.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\nms_common.h"
+				RelativePath="..\..\..\include\nms_common.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\nms_cscp.h"
+				RelativePath="..\..\..\include\nms_cscp.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\nms_threads.h"
+				RelativePath="..\..\..\include\nms_threads.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\nms_util.h"
+				RelativePath="..\..\..\include\nms_util.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\nxclapi.h"
+				RelativePath="..\..\..\include\nxcldefs.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\nxcpapi.h"
+				RelativePath="..\..\..\include\nxclient.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\include\unicode.h"
+				RelativePath="..\..\..\include\nxclobj.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\nxcpapi.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\nxlog.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\include\unicode.h"
 				>
 			</File>
 		</Filter>

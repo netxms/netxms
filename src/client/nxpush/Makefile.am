@@ -11,6 +11,6 @@
 bin_PROGRAMS = nxpush
 nxpush_SOURCES = nxpush.cpp
 nxpush_CPPFLAGS=-I@top_srcdir@/include
-nxpush_LDADD = ../../libnetxms/libnetxms.la ../../libnxmap/libnxmap.la ../../libnxcl/libnxcl.la
+nxpush_LDADD = ../../libnetxms/libnetxms.la ../libnxclient/libnxclient.la
 
 EXTRA_DIST = nxpush.vcproj

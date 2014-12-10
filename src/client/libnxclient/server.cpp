@@ -1,7 +1,7 @@
-/* 
+/*
 ** NetXMS - Network Management System
-** Utility Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Client Library
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -17,26 +17,25 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: libnetxms.h
+** File: server.cpp
 **
 **/
 
-#ifndef _libnetxms_h_
-#define _libnetxms_h_
+#include "libnxclient.h"
 
-#include <nms_common.h>
-#include <nms_util.h>
-#include <nxcpapi.h>
-#include <nxcldefs.h>
+/**
+ * Send SMS from server
+ */
+UINT32 ServerController::sendSMS(const TCHAR *recipient, const TCHAR *text)
+{
+   NXCPMessage msg;
 
-#define MAX_CODEPAGE_LEN		64
+   msg.setCode(CMD_SEND_SMS);
+   msg.setId(m_session->createMessageId());
+   msg.setField(VID_RCPT_ADDR, recipient);
+   msg.setField(VID_MESSAGE, text);
 
-
-//
-// Functions
-//
-
-void SEHInit(void);
-
-
-#endif   /* _libnetxms_h_ */
+   if (!m_session->sendMessage(&msg))
+      return RCC_COMM_FAILURE;
+   return m_session->waitForRCC(msg.getId());
+}

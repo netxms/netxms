@@ -22,6 +22,7 @@
 
 #include "nxcore.h"
 #include <netxms_mt.h>
+#include <nxtools.h>
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -395,7 +396,7 @@ void ClientSession::readThread()
       // Check for decryption error
       if (result == MSGRECV_DECRYPTION_FAILURE)
       {
-         debugPrintf(4, _T("Unable to decrypt received message"));
+         debugPrintf(4, _T("readThread: Unable to decrypt received message"));
          continue;
       }
 
@@ -2216,7 +2217,7 @@ void ClientSession::sendSelectedObjects(NXCPMessage *pRequest)
    msg.deleteAllFields();
 
    // Change "sync comments" flag
-   if (pRequest->getFieldAsUInt16(VID_SYNC_COMMENTS))
+   if (pRequest->getFieldAsBoolean(VID_SYNC_COMMENTS))
       m_dwFlags |= CSF_SYNC_OBJECT_COMMENTS;
    else
       m_dwFlags &= ~CSF_SYNC_OBJECT_COMMENTS;
@@ -7372,7 +7373,7 @@ void ClientSession::sendObjectTools(UINT32 dwRqId)
       }
       DBFreeResult(hResult);
 
-      hResult = DBSelect(hdb, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,matching_oid,confirmation_text,command_name,command_short_name,icon FROM object_tools"));
+      hResult = DBSelect(hdb, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,tool_filter,confirmation_text,command_name,command_short_name,icon FROM object_tools"));
       if (hResult != NULL)
       {
          dwNumTools = DBGetNumRows(hResult);
@@ -7495,7 +7496,7 @@ void ClientSession::sendObjectToolDetails(NXCPMessage *pRequest)
    {
 
       dwToolId = pRequest->getFieldAsUInt32(VID_TOOL_ID);
-      DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,description,flags,matching_oid,confirmation_text,command_name,command_short_name,icon FROM object_tools WHERE tool_id=?"));
+      DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,description,flags,tool_filter,confirmation_text,command_name,command_short_name,icon FROM object_tools WHERE tool_id=?"));
       if (statment == NULL)
          goto failure;
       DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
@@ -7523,7 +7524,7 @@ void ClientSession::sendObjectToolDetails(NXCPMessage *pRequest)
             msg.setField(VID_FLAGS, DBGetFieldULong(hResult, 0, 4));
 
             DBGetField(hResult, 0, 5, szBuffer, MAX_DB_STRING);
-            msg.setField(VID_TOOL_OID, szBuffer);
+            msg.setField(VID_TOOL_FILTER, szBuffer);
 
             DBGetField(hResult, 0, 6, szBuffer, MAX_DB_STRING);
             msg.setField(VID_CONFIRMATION_TEXT, szBuffer);
@@ -9887,8 +9888,6 @@ void ClientSession::saveGraph(NXCPMessage *pRequest)
 				_sntprintf(szQuery, 16384, _T("UPDATE graphs SET name='%s',config='%s' WHERE graph_id=%d"),
 				           pszEscName, pszEscData, graphId);
 			}
-			free(pszEscName);
-			free(pszEscData);
 
 			if (DBQuery(hdb, szQuery))
 			{
@@ -9918,12 +9917,40 @@ void ClientSession::saveGraph(NXCPMessage *pRequest)
 				DBCommit(hdb);
 				msg.setField(VID_RCC, RCC_SUCCESS);
 				msg.setField(VID_GRAPH_ID, graphId);
-				notify(NX_NOTIFY_GRAPHS_CHANGED);
+
+            //send notificaion
+				NXCPMessage update;
+				int dwId = VID_GRAPH_LIST_BASE;
+            update.setCode(CMD_GRAPH_UPDATE_OBJEC);
+            update.setField(dwId++, graphId);
+            update.setField(dwId++, m_dwUserId);
+            update.setField(dwId++, dwGraphName);
+            update.setField(dwId++, pszEscData);
+
+            int nACLSize;
+            GRAPH_ACL_ENTRY *pACL = LoadGraphACL(hdb, 0, &nACLSize);
+            UINT32 *pdwUsers, *pdwRights;
+            pdwUsers = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
+            pdwRights = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
+            // ACL for graph
+            for(int j = 0; j < nACLSize; j++)
+            {
+               pdwUsers[j] = pACL[j].dwUserId;
+               pdwRights[j] = pACL[j].dwAccess;
+            }
+            msg.setField(dwId++, nACLSize);
+            msg.setFieldFromInt32Array(dwId++, nACLSize, pdwUsers);
+            msg.setFieldFromInt32Array(dwId++, nACLSize, pdwRights);
+            msg.setField(VID_NUM_GRAPHS, 1);
+
+            NotifyClientGraphUpdate(&update, graphId);
 			}
 			else
 			{
 				DBRollback(hdb);
 			}
+			free(pszEscName);
+			free(pszEscData);
 		}
 		else
 		{
@@ -9973,7 +10000,7 @@ void ClientSession::deleteGraph(NXCPMessage *pRequest)
 						_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graph_acl WHERE graph_id=%d"), dwGraphId);
 						DBQuery(hdb, szQuery);
 						msg.setField(VID_RCC, RCC_SUCCESS);
-						notify(NX_NOTIFY_GRAPHS_CHANGED);
+						NotifyClientSessions(NX_NOTIFY_GRAPHS_DELETED, dwGraphId);
 					}
 					else
 					{
@@ -10843,16 +10870,15 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
             if (response != NULL)
             {
                rcc = response->getFieldAsUInt32(VID_RCC);
-               if(rcc == RCC_SUCCESS)
+               if (rcc == ERR_SUCCESS)
                {
                   msg.setField(VID_RCC, rcc);
                   debugPrintf(6, _T("File monitoring cancelled successfully"));
                }
                else
                {
-                  msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
-
-                  debugPrintf(6, _T("Error on agent: %d"), rcc);
+                  msg.setField(VID_RCC, AgentErrorToRCC(rcc));
+                  debugPrintf(6, _T("Error on agent: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
                }
             }
             else
@@ -13214,7 +13240,7 @@ void ClientSession::getEffectiveRights(NXCPMessage *request)
 void ClientSession::fileManagerControl(NXCPMessage *request)
 {
    NXCPMessage msg, *response = NULL, *responseMessage;
-	UINT32 rcc;
+	UINT32 rcc = RCC_INTERNAL_ERROR;
    responseMessage = &msg;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -13241,7 +13267,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                if (response != NULL)
                {
                   rcc = response->getFieldAsUInt32(VID_RCC);
-                  if(rcc == RCC_SUCCESS)
+                  if (rcc == ERR_SUCCESS)
                   {
                      response->setId(msg.getId());
                      response->setCode(CMD_REQUEST_COMPLETED);
@@ -13286,8 +13312,9 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                   }
                   else
                   {
-                     msg.setField(VID_RCC, rcc); // TODO: add transofrmation script
-                     debugPrintf(6, _T("ClientSession::getAgentFolderContent: Error on agent: %d"), rcc);
+                     debugPrintf(6, _T("ClientSession::getAgentFolderContent: Error on agent: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
+                     rcc = AgentErrorToRCC(rcc);
+                     msg.setField(VID_RCC, rcc);
                   }
                }
                else
@@ -13317,7 +13344,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
 		msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
 	}
 
-	if(rcc == RCC_ACCESS_DENIED)
+	if (rcc == RCC_ACCESS_DENIED)
 	{
       switch(request->getCode())
       {

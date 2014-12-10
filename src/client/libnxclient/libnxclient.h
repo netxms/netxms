@@ -1,11 +1,11 @@
-/* 
+/*
 ** NetXMS - Network Management System
-** nxsms - send SMS via NetXMS server
-** Copyright (C) 2003, 2004, 2005, 206, 2007, 2008 Victor Kirhenshtein
+** Client Library
+** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
-** it under the terms of the GNU General Public License as published by
-** the Free Software Foundation; either version 2 of the License, or
+** it under the terms of the GNU Lesser General Public License as published by
+** the Free Software Foundation; either version 3 of the License, or
 ** (at your option) any later version.
 **
 ** This program is distributed in the hope that it will be useful,
@@ -13,22 +13,23 @@
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
 **
-** You should have received a copy of the GNU General Public License
+** You should have received a copy of the GNU Lesser General Public License
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: nxsms.h
+** File: libnxclient.h
 **
 **/
 
-#ifndef _nxsms_h_
-#define _nxsms_h_
+#ifndef _libnxclient_h_
+#define _libnxclient_h_
 
 #include <nms_common.h>
+#include <nms_util.h>
+#include <nms_threads.h>
+#include <nxcpapi.h>
 #include <nxclient.h>
 
-#if HAVE_GETOPT_H
-#include <getopt.h>
-#endif
+void DebugPrintf(const TCHAR *format, ...);
 
-#endif
+#endif   /* _libnxclient_h_ */
