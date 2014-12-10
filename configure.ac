@@ -1495,21 +1495,32 @@ if test "x$LDAP_SUPPORT" = "xyes"; then
 	if test "x$HAVE_LDAP" = "xyes"; then
 		SERVER_LIBS="-lldap $SERVER_LIBS"   
 		AC_DEFINE(WITH_LDAP, 1, Define to 1 if you have LDAP libraries and headers)
-		AC_CHECK_LIB(ldap, ldap_initialize, [ 
-				AC_DEFINE(HAVE_LDAP_INITIALIZE, 1, Define to 1 if you have ldap_initialize function)
+		AC_CHECK_HEADERS([ldap_ssl.h],,,
+			[
+#include <ldap.h>
 			])
-		AC_CHECK_LIB(ldap, ldapssl_init, [ 
-				AC_DEFINE(HAVE_LDAPSSL_INIT, 1, Define to 1 if you have ldapssl_init function)
+		AC_CHECK_TYPES([ber_int_t],,,
+			[
+#include <ldap.h>
+#if HAVE_LDAP_SSL_H
+#include <ldap_ssl.h>
+#endif
 			])
-		AC_CHECK_LIB(ldap, ldap_control_create, [ 
-				AC_DEFINE(HAVE_LDAP_CONTROL_CREATE, 1, Define to 1 if you have ldap_control_create function)
+
+		OLD_LIBS="$LIBS"
+		LIBS="$LIBS -lldap"
+		AC_CHECK_FUNCS([ldap_initialize ldapssl_init])
+		AC_CHECK_FUNCS([ldap_control_create ldap_create_control nsldapi_build_control])
+		AC_CHECK_FUNCS([ldap_create_page_control ldap_parse_page_control])
+		LIBS="$OLD_LIBS"
+
+		AC_CHECK_DECLS([nsldapi_build_control],,,
+			[
+#include <ldap.h>
+#if HAVE_LDAP_SSL_H
+#include <ldap_ssl.h>
+#endif
 			])
-        AC_CHECK_LIB(ldap, ldap_parse_page_control, [ 
-                AC_DEFINE(HAVE_LDAP_PARSE_PAGE_CONTROL, 1, Define to 1 if you have ldap_parse_page_control function)
-            ])
-        AC_CHECK_LIB(ldap, ldap_create_page_control, [ 
-                AC_DEFINE(HAVE_LDAP_CREATE_PAGE_CONTROL, 1, Define to 1 if you have ldap_create_page_control function)
-            ])
 	fi
 	LDAP_SUPPORT="$HAVE_LDAP"
 fi

@@ -66,6 +66,19 @@ Entry::~Entry()
 
 #if WITH_LDAP
 
+#if !defined(_WIN32) && !HAVE_LDAP_CONTROL_CREATE && !HAVE_LDAP_CREATE_CONTROL && HAVE_NSLDAPI_BUILD_CONTROL
+
+#if !HAVE_DECL_NSLDAPI_BUILD_CONTROL
+extern "C" int nsldapi_build_control(const char *oid, BerElement *ber, int freeber, char iscritical, LDAPControl **ctrlp);
+#endif
+
+static int ldap_create_control(const char *oid, BerElement *ber, int iscritical, LDAPControl **ctrlp)
+{
+	return nsldapi_build_control(oid, ber, 0, iscritical, ctrlp);
+}
+
+#endif
+
 #if !HAVE_LDAP_CREATE_PAGE_CONTROL && !defined(_WIN32)
 int ldap_create_page_control(LDAP *ldap, ber_int_t pagesize,
 			     struct berval *cookie, char isCritical,
@@ -84,13 +97,14 @@ int ldap_create_page_control(LDAP *ldap, ber_int_t pagesize,
 	if (ber_printf(ber, "{io}", pagesize,
 			(cookie && cookie->bv_val) ? cookie->bv_val : "",
 			(cookie && cookie->bv_val) ? cookie->bv_len : 0)
-				== LBER_ERROR) {
+				== -1)
+	{
 		ber_free(ber, 1);
 		return LDAP_ENCODING_ERROR;
 	}
 
 #if HAVE_LDAP_CONTROL_CREATE
-   rc = ldap_control_create(LDAP_PAGE_OID, 1, cookie, 0, output);
+   rc = ldap_control_create(LDAP_PAGE_OID, isCritical, cookie, 0, output);
 #else
 	rc = ldap_create_control(LDAP_PAGE_OID, ber, isCritical, output);
 #endif
@@ -103,11 +117,10 @@ int ldap_create_page_control(LDAP *ldap, ber_int_t pagesize,
 int ldap_parse_page_control(LDAP *ldap, LDAPControl **controls,
 			    ber_int_t *totalcount, struct berval **cookie)
 {
-	int i, rc;
 	BerElement *theBer;
 	LDAPControl *listCtrlp;
 
-	for (i = 0; controls[i] != NULL; i++) {
+	for(int i = 0; controls[i] != NULL; i++) {
 		if (strcmp(controls[i]->ldctl_oid, LDAP_PAGE_OID) == 0) {
 			listCtrlp = controls[i];
 
@@ -115,8 +128,8 @@ int ldap_parse_page_control(LDAP *ldap, LDAPControl **controls,
 			if (!theBer)
 				return LDAP_NO_MEMORY;
 
-			rc = ber_scanf(theBer, "{iO}", totalcount, cookie);
-			if (rc == LBER_ERROR) {
+			if (ber_scanf(theBer, "{iO}", totalcount, cookie) == LBER_ERROR)
+			{
 				ber_free(theBer, 1);
 				return LDAP_DECODING_ERROR;
 			}

@@ -21,16 +21,30 @@
 **/
 
 #if WITH_LDAP
+
 #if !defined(__hpux)
 #define LDAP_DEPRECATED 1
 #endif
+
 #ifdef _WIN32
+
 #include <winldap.h>
 #include <winber.h>
-#else
+
+#else /* _WIN32 */
+
 #include <ldap.h>
+#if HAVE_LDAP_SSL_H
+#include <ldap_ssl.h>
 #endif
+
+#if !HAVE_BER_INT_T
+typedef int ber_int_t;
 #endif
+
+#endif /* _WIN32 */
+
+#endif /* WITH_LDAP */
 
 /**
  * LDAP entry (object)
