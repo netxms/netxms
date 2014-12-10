@@ -301,7 +301,7 @@ bool DCTable::deleteAllData()
  *
  * @return true on success
  */
-bool DCTable::processNewValue(time_t nTimeStamp, void *value, bool *updateStatus)
+bool DCTable::processNewValue(time_t nTimeStamp,const void *value, bool *updateStatus)
 {
    *updateStatus = false;
    lock();

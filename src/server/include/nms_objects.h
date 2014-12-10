@@ -833,7 +833,7 @@ public:
    void updateDciCache();
    void cleanDCIData();
    void queueItemsForPolling(Queue *pPollerQueue);
-	bool processNewDCValue(DCObject *dco, time_t currTime, void *value);
+	bool processNewDCValue(DCObject *dco, time_t currTime, const void *value);
 
 	bool applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList);

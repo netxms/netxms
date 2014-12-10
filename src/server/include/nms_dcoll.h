@@ -242,7 +242,7 @@ public:
    virtual void deleteFromDatabase();
    virtual bool loadThresholdsFromDB();
 
-   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus);
+   virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
    virtual void processNewError();
 
 	virtual bool hasValue();
@@ -365,7 +365,7 @@ public:
 	void filterInstanceList(StringMap *instances);
 	void expandInstance();
 
-   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus);
+   virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
    virtual void processNewError();
 
 	virtual bool hasValue();
@@ -562,7 +562,7 @@ public:
    virtual BOOL saveToDB(DB_HANDLE hdb);
    virtual void deleteFromDatabase();
 
-   virtual bool processNewValue(time_t nTimeStamp, void *value, bool *updateStatus);
+   virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
    virtual void processNewError();
 
    virtual void createMessage(NXCPMessage *pMsg);
