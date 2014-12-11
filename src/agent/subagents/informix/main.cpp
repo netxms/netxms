@@ -35,11 +35,9 @@ DBParameterGroup g_paramGroup[] = {
 	0
 };
 
-
-//
-// Handler functions
-//
-
+/**
+ * Handler functions
+ */
 LONG H_DatabaseParameter(const TCHAR *parameter, const TCHAR *argument, TCHAR *value, AbstractCommSession *session)
 {
 	LONG ret = SYSINFO_RC_UNSUPPORTED;
@@ -69,9 +67,8 @@ LONG H_DatabaseParameter(const TCHAR *parameter, const TCHAR *argument, TCHAR *v
 					AgentWriteDebugLog(7, _T("%s: valuecount %d"), MYNAMESTR, g_paramGroup[k].valueCount[i]);
 					for (int j = 0; j < g_paramGroup[k].valueCount[i]; j++)
 					{
-						StringMap* map = (g_paramGroup[k].values[i])[j].attrs;
-						TCHAR* name = (g_paramGroup[k].values[i])[j].name;
-						Trim(name);
+						StringMap *map = (g_paramGroup[k].values[i])[j].attrs;
+						TCHAR *name = (g_paramGroup[k].values[i])[j].name;
 						if (!_tcsnicmp(name, entity, MAX_STR))	// found value which matches the parameters argument
 						{
 							TCHAR key[MAX_STR];

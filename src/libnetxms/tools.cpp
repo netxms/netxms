@@ -404,11 +404,9 @@ void LIBNETXMS_EXPORTABLE Trim(TCHAR *str)
    str[i + 1] = 0;
 }
 
-
-//
-// Remove trailing CR/LF or LF from string
-//
-
+/**
+ * Remove trailing CR/LF or LF from string (multibyte version)
+ */
 void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFA(char *str)
 {
 	if (*str == 0)
@@ -422,6 +420,9 @@ void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFA(char *str)
 	*(p + 1) = 0;
 }
 
+/**
+ * Remove trailing CR/LF or LF from string (UNICODE version)
+ */
 void LIBNETXMS_EXPORTABLE RemoveTrailingCRLFW(WCHAR *str)
 {
 	if (*str == 0)
