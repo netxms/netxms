@@ -40,6 +40,7 @@ static ObjectArray<PoolConnectionInfo> m_connections;
 static DB_HANDLE m_hFallback;
 static THREAD m_maintThread = INVALID_THREAD_HANDLE;
 static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
+static CONDITION m_condRelease = INVALID_CONDITION_HANDLE;
 
 /**
  * Create connections on pool initialization
@@ -171,6 +172,7 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
 	m_poolAccessMutex = MutexCreate();
    m_connections.setOwner(true);
    m_condShutdown = ConditionCreate(TRUE);
+   m_condRelease = ConditionCreate(FALSE);
 
 	DBConnectionPoolPopulate();
 
@@ -190,6 +192,7 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown()
    ThreadJoin(m_maintThread);
 
    ConditionDestroy(m_condShutdown);
+   ConditionDestroy(m_condRelease);
 	MutexDestroy(m_poolAccessMutex);
 
    for(int i = 0; i < m_connections.size(); i++)
@@ -205,10 +208,11 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown()
 
 /**
  * Acquire connection from pool. This function never fails - if it's impossible to acquire
- * pooled connection, fallback connection will be returned.
+ * pooled connection, calling thread will be suspended until there will be connection available.
  */
 DB_HANDLE LIBNXDB_EXPORTABLE __DBConnectionPoolAcquireConnection(const char *srcFile, int srcLine)
 {
+retry:
 	MutexLock(m_poolAccessMutex);
 
 	DB_HANDLE handle = NULL;
@@ -253,9 +257,13 @@ DB_HANDLE LIBNXDB_EXPORTABLE __DBConnectionPoolAcquireConnection(const char *src
 	if (handle == NULL)
 	{
 		handle = m_hFallback;
-   	__DBDbgPrintf(1, _T("Database Connection Pool exhausted, fallback connection used"));
+   	__DBDbgPrintf(1, _T("Database Connection Pool exhausted (call from %hs:%d)"), srcFile, srcLine);
+      ConditionWait(m_condRelease, 10000);
+      __DBDbgPrintf(5, _T("Database Connection Pool: retry acquire connection (call from %hs:%d)"), srcFile, srcLine);
+      goto retry;
 	}
 
+   __DBDbgPrintf(7, _T("Database Connection Pool: handle %p acquired (call from %hs:%d)"), handle, srcFile, srcLine);
 	return handle;
 }
 
@@ -283,6 +291,9 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE handle)
 	}
 
 	MutexUnlock(m_poolAccessMutex);
+
+   __DBDbgPrintf(7, _T("Database Connection Pool: handle %p released"), handle);
+   ConditionPulse(m_condRelease);
 }
 
 /**
