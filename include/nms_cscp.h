@@ -1035,6 +1035,7 @@ typedef struct
 #define VID_POSTCODE                ((UINT32)489)
 #define VID_FUNCTION                ((UINT32)490)
 #define VID_RESPONSE_TIME           ((UINT32)491)
+#define VID_QSIZE_DCI_CACHE_LOADER  ((UINT32)492)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

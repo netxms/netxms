@@ -254,11 +254,11 @@ void DataCollectionTarget::cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32
  * Unbind data collection target from template, i.e either remove DCI
  * association with template or remove these DCIs at all
  */
-void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI)
+void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI)
 {
    UINT32 i;
 
-   if (bRemoveDCI)
+   if (removeDCI)
    {
       lockDciAccess(true);  // write lock
 

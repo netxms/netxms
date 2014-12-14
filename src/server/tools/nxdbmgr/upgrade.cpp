@@ -389,11 +389,25 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Upgrade from V342 to V343
+ */
+static BOOL H_UpgradeFromV342(int currVersion, int newVersion)
+{
+   if (g_dbSyntax != DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp DESC)' WHERE var_name='IDataIndexCreationCommand_0'")));
+      ReindexIData();
+   }
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='343' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V341 to V342
  */
 static BOOL H_UpgradeFromV341(int currVersion, int newVersion)
 {
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE object_tools ADD tool_filter $SQL:TEXT"))); //create ne column
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE object_tools ADD tool_filter $SQL:TEXT")));
    DB_RESULT hResult = SQLSelect(_T("SELECT tool_id, matching_oid FROM object_tools"));
    if (hResult != NULL)
    {
@@ -8249,6 +8263,7 @@ static struct
    { 339, 340, H_UpgradeFromV339 },
    { 340, 341, H_UpgradeFromV340 },
    { 341, 342, H_UpgradeFromV341 },
+   { 342, 343, H_UpgradeFromV342 },
    { 0, 0, NULL }
 };
 

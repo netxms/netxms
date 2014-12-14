@@ -916,18 +916,16 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
  */
 void Template::queueUpdate()
 {
-   UINT32 i;
-   TEMPLATE_UPDATE_INFO *pInfo;
-
    lockProperties();
-   for(i = 0; i < m_dwChildCount; i++)
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
       if ((m_pChildList[i]->getObjectClass() == OBJECT_NODE) || (m_pChildList[i]->getObjectClass() == OBJECT_CLUSTER) || (m_pChildList[i]->getObjectClass() == OBJECT_MOBILEDEVICE))
       {
          incRefCount();
-         pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
-         pInfo->iUpdateType = APPLY_TEMPLATE;
+         TEMPLATE_UPDATE_INFO *pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
+         pInfo->updateType = APPLY_TEMPLATE;
          pInfo->pTemplate = this;
          pInfo->targetId = m_pChildList[i]->getId();
+         pInfo->removeDCI = false;
          g_pTemplateUpdateQueue->Put(pInfo);
       }
    unlockProperties();
@@ -936,17 +934,15 @@ void Template::queueUpdate()
 /**
  * Queue template remove from node
  */
-void Template::queueRemoveFromTarget(UINT32 targetId, BOOL bRemoveDCI)
+void Template::queueRemoveFromTarget(UINT32 targetId, bool removeDCI)
 {
-   TEMPLATE_UPDATE_INFO *pInfo;
-
    lockProperties();
    incRefCount();
-   pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
-   pInfo->iUpdateType = REMOVE_TEMPLATE;
+   TEMPLATE_UPDATE_INFO *pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
+   pInfo->updateType = REMOVE_TEMPLATE;
    pInfo->pTemplate = this;
    pInfo->targetId = targetId;
-   pInfo->bRemoveDCI = bRemoveDCI;
+   pInfo->removeDCI = removeDCI;
    g_pTemplateUpdateQueue->Put(pInfo);
    unlockProperties();
 }

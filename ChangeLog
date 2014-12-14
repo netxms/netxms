@@ -13,6 +13,7 @@
 - Added driver for HP A-series and V-series switches
 - MIB compiler correctly handles REFERENCE keyword in agent capabilities section
 - Oracle Tuxedo monitoring subagent
+- Improved server performance with PostgreSQL
 - Management console:
     - New dashboard element "DCI summary table"
     - Cluster objects shown on status maps

@@ -137,10 +137,10 @@ enum StatusPollType
  */
 struct TEMPLATE_UPDATE_INFO
 {
-   int iUpdateType;
+   int updateType;
    Template *pTemplate;
    UINT32 targetId;
-   BOOL bRemoveDCI;
+   bool removeDCI;
 };
 
 /**
@@ -610,7 +610,7 @@ public:
 	bool isAutoRemoveEnabled() { return ((m_flags & (TF_AUTO_APPLY | TF_AUTO_REMOVE)) == (TF_AUTO_APPLY | TF_AUTO_REMOVE)) ? true : false; }
 	void setAutoApplyFilter(const TCHAR *filter);
    void queueUpdate();
-   void queueRemoveFromTarget(UINT32 targetId, BOOL bRemoveDCI);
+   void queueRemoveFromTarget(UINT32 targetId, bool removeDCI);
 
    void createNXMPRecord(String &str);
 
@@ -837,7 +837,7 @@ public:
 
 	bool applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList);
-   virtual void unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI);
+   virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 
    virtual bool isEventSource();
 
@@ -958,7 +958,7 @@ public:
    virtual void fillMessage(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   virtual void unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI);
+   virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 
 	bool isSyncAddr(UINT32 dwAddr);
 	bool isVirtualAddr(UINT32 dwAddr);

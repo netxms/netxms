@@ -832,6 +832,8 @@ public class NXCPCodes
    public static final long VID_STREET_ADDRESS = 488;
    public static final long VID_POSTCODE = 489;
    public static final long VID_FUNCTION = 490;
+   public static final long VID_RESPONSE_TIME = 491;
+   public static final long VID_QSIZE_DCI_CACHE_LOADER = 492;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

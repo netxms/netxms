@@ -73,7 +73,8 @@ extern Queue g_routePollQueue;
 extern Queue g_discoveryPollQueue;
 extern Queue g_nodePollerQueue;
 extern Queue g_conditionPollerQueue;
-extern Queue *g_pItemQueue;
+extern Queue g_dataCollectionQueue;
+extern Queue g_dciCacheLoaderQueue;
 extern Queue g_syslogProcessingQueue;
 extern Queue g_syslogWriteQueue;
 
@@ -901,6 +902,9 @@ void NXCORE_EXPORTABLE Shutdown()
 	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
 	ConditionSet(m_condShutdown);
 
+   // Stop DCI cache loading thread
+   g_dciCacheLoaderQueue.SetShutdownMode();
+
 #if XMPP_SUPPORTED
    StopXMPPConnector();
 #endif
@@ -1394,7 +1398,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ShowQueueStats(pCtx, &g_conditionPollerQueue, _T("Condition poller"));
 			ShowQueueStats(pCtx, &g_configPollQueue, _T("Configuration poller"));
 			ShowQueueStats(pCtx, &g_topologyPollQueue, _T("Topology poller"));
-			ShowQueueStats(pCtx, g_pItemQueue, _T("Data collector"));
+			ShowQueueStats(pCtx, &g_dataCollectionQueue, _T("Data collector"));
+			ShowQueueStats(pCtx, &g_dciCacheLoaderQueue, _T("DCI cache loader"));
 			ShowQueueStats(pCtx, g_dbWriterQueue, _T("Database writer"));
 			ShowQueueStats(pCtx, g_dciDataWriterQueue, _T("Database writer (IData)"));
 			ShowQueueStats(pCtx, g_dciRawDataWriterQueue, _T("Database writer (raw DCI values)"));

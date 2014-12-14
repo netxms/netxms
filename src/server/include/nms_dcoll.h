@@ -311,7 +311,8 @@ protected:
    BYTE m_dataType;
 	int m_sampleCount;            // Number of samples required to calculate value
 	ObjectArray<Threshold> *m_thresholds;
-   UINT32 m_dwCacheSize;          // Number of items in cache
+   UINT32 m_cacheSize;          // Number of items in cache
+   UINT32 m_requiredCacheSize;
    ItemValue **m_ppValueCache;
    ItemValue m_prevRawValue;     // Previous raw value (used for delta calculation)
    time_t m_tPrevValueTimeStamp;
@@ -350,6 +351,7 @@ public:
    virtual bool loadThresholdsFromDB();
 
    void updateCacheSize(UINT32 dwCondId = 0);
+   void reloadCache();
 
    int getDataType() { return m_dataType; }
 	bool isInterpretSnmpRawValue() { return (m_flags & DCF_RAW_VALUE_OCTET_STRING) ? true : false; }

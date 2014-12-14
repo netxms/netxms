@@ -68,7 +68,8 @@ extern Queue g_routePollQueue;
 extern Queue g_discoveryPollQueue;
 extern Queue g_nodePollerQueue;
 extern Queue g_conditionPollerQueue;
-extern Queue *g_pItemQueue;
+extern Queue g_dataCollectionQueue;
+extern Queue g_dciCacheLoaderQueue;
 
 void UnregisterClientSession(int id);
 void ResetDiscoveryPoller();
@@ -7882,7 +7883,8 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
 	// Queues
 	msg.setField(VID_QSIZE_CONDITION_POLLER, g_conditionPollerQueue.Size());
 	msg.setField(VID_QSIZE_CONF_POLLER, g_configPollQueue.Size());
-	msg.setField(VID_QSIZE_DCI_POLLER, g_pItemQueue->Size());
+	msg.setField(VID_QSIZE_DCI_POLLER, g_dataCollectionQueue.Size());
+	msg.setField(VID_QSIZE_DCI_CACHE_LOADER, g_dciCacheLoaderQueue.Size());
 	msg.setField(VID_QSIZE_DBWRITER, g_dbWriterQueue->Size());
 	msg.setField(VID_QSIZE_EVENT, g_pEventQueue->Size());
 	msg.setField(VID_QSIZE_DISCOVERY, g_discoveryPollQueue.Size());

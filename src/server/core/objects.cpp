@@ -83,44 +83,42 @@ static CONDITION s_condUpdateMaps = INVALID_CONDITION_HANDLE;
  */
 static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
 {
-   TEMPLATE_UPDATE_INFO *pInfo;
-   NetObj *dcTarget;
-   BOOL bSuccess, bLock1, bLock2;
-
 	DbgPrintf(1, _T("Apply template thread started"));
    while(1)
    {
-      pInfo = (TEMPLATE_UPDATE_INFO *)g_pTemplateUpdateQueue->GetOrBlock();
+      TEMPLATE_UPDATE_INFO *pInfo = (TEMPLATE_UPDATE_INFO *)g_pTemplateUpdateQueue->GetOrBlock();
       if (pInfo == INVALID_POINTER_VALUE)
          break;
 
-		DbgPrintf(5, _T("ApplyTemplateThread: template=%d(%s) updateType=%d target=%d removeDci=%d"),
-		          pInfo->pTemplate->getId(), pInfo->pTemplate->getName(), pInfo->iUpdateType, pInfo->targetId, pInfo->bRemoveDCI);
-      bSuccess = FALSE;
-      dcTarget = FindObjectById(pInfo->targetId);
+		DbgPrintf(5, _T("ApplyTemplateThread: template=%d(%s) updateType=%d target=%d removeDci=%s"),
+         pInfo->pTemplate->getId(), pInfo->pTemplate->getName(), pInfo->updateType, pInfo->targetId, pInfo->removeDCI ? _T("true") : _T("false"));
+      BOOL bSuccess = FALSE;
+      NetObj *dcTarget = FindObjectById(pInfo->targetId);
       if (dcTarget != NULL)
       {
          if ((dcTarget->getObjectClass() == OBJECT_NODE) || (dcTarget->getObjectClass() == OBJECT_CLUSTER) || (dcTarget->getObjectClass() == OBJECT_MOBILEDEVICE))
          {
-            switch(pInfo->iUpdateType)
+            BOOL lock1, lock2;
+
+            switch(pInfo->updateType)
             {
                case APPLY_TEMPLATE:
-                  bLock1 = pInfo->pTemplate->lockDCIList(0x7FFFFFFF, _T("SYSTEM"), NULL);
-                  bLock2 = ((DataCollectionTarget *)dcTarget)->lockDCIList(0x7FFFFFFF, _T("SYSTEM"), NULL);
-                  if (bLock1 && bLock2)
+                  lock1 = pInfo->pTemplate->lockDCIList(0x7FFFFFFF, _T("SYSTEM"), NULL);
+                  lock2 = ((DataCollectionTarget *)dcTarget)->lockDCIList(0x7FFFFFFF, _T("SYSTEM"), NULL);
+                  if (lock1 && lock2)
                   {
                      pInfo->pTemplate->applyToTarget((DataCollectionTarget *)dcTarget);
                      bSuccess = TRUE;
                   }
-                  if (bLock1)
+                  if (lock1)
                      pInfo->pTemplate->unlockDCIList(0x7FFFFFFF);
-                  if (bLock2)
+                  if (lock2)
                      ((DataCollectionTarget *)dcTarget)->unlockDCIList(0x7FFFFFFF);
                   break;
                case REMOVE_TEMPLATE:
                   if (((DataCollectionTarget *)dcTarget)->lockDCIList(0x7FFFFFFF, _T("SYSTEM"), NULL))
                   {
-                     ((DataCollectionTarget *)dcTarget)->unbindFromTemplate(pInfo->pTemplate->getId(), pInfo->bRemoveDCI);
+                     ((DataCollectionTarget *)dcTarget)->unbindFromTemplate(pInfo->pTemplate->getId(), pInfo->removeDCI);
                      ((DataCollectionTarget *)dcTarget)->unlockDCIList(0x7FFFFFFF);
                      bSuccess = TRUE;
                   }
