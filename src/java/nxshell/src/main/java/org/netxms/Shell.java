@@ -8,7 +8,6 @@ import org.python.core.PyFile;
 import org.python.core.PySystemState;
 import org.python.core.imp;
 import org.python.util.InteractiveConsole;
-import org.python.util.JLineConsole;
 
 import java.io.Console;
 import java.io.File;
@@ -142,12 +141,13 @@ public class Shell {
      * @return
      */
     private InteractiveConsole createInterpreter(String args[]) {
+        PySystemState systemState = Py.getSystemState();
+
         final InteractiveConsole console;
-        if (isInteractive()) {
-            console = new JLineConsole();
-        } else {
-            console = new InteractiveConsole();
+        if (!isInteractive()) {
+            systemState.ps1 = systemState.ps2 = Py.EmptyString;
         }
+        console = new InteractiveConsole();
         Py.getSystemState().__setattr__("_jy_interpreter", Py.java2py(console));
         imp.load("site");
 
