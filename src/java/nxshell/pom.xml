@@ -5,7 +5,7 @@
     <parent>
       <groupId>org.netxms</groupId>
       <artifactId>netxms</artifactId>
-      <version>1.2.17</version>
+      <version>2.0-SNAPSHOT</version>
     </parent>
 
     <groupId>org.netxms</groupId>
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>org.python</groupId>
             <artifactId>jython-standalone</artifactId>
-            <version>2.7-b1</version>
+            <version>2.7-b3</version>
         </dependency>
         <dependency>
             <groupId>org.netxms</groupId>
