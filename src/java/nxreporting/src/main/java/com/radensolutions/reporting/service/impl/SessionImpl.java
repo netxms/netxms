@@ -42,7 +42,7 @@ public class SessionImpl implements Session {
         switch (message.getMessageCode()) {
             case NXCPCodes.CMD_ISC_CONNECT_TO_SERVICE: // ignore and reply "Ok"
             case NXCPCodes.CMD_KEEPALIVE:
-                reply.setVariableInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+                reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
                 break;
             case NXCPCodes.CMD_GET_NXCP_CAPS:
                 reply = new NXCPMessage(NXCPCodes.CMD_NXCP_CAPS, message.getMessageId());
@@ -77,7 +77,7 @@ public class SessionImpl implements Session {
                 reportNotify(message, reply);
                 break;
             default:
-                reply.setVariableInt32(NXCPCodes.VID_RCC, CommonRCC.NOT_IMPLEMENTED);
+                reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.NOT_IMPLEMENTED);
                 break;
         }
         return new MessageProcessingResult(reply, file);
@@ -88,17 +88,17 @@ public class SessionImpl implements Session {
     */
    private void listReports(NXCPMessage reply) {
         final List<UUID> list = reportManager.listReports();
-        reply.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, list.size());
+        reply.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, list.size());
         for (int i = 0, listSize = list.size(); i < listSize; i++) {
             UUID uuid = list.get(i);
-            reply.setVariable(NXCPCodes.VID_UUID_LIST_BASE + i, uuid);
+            reply.setField(NXCPCodes.VID_UUID_LIST_BASE + i, uuid);
         }
-        reply.setVariableInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+        reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
     }
 
     private void getReportDefinition(NXCPMessage request, NXCPMessage reply) {
-        final UUID reportId = request.getVariableAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
-        final String localeString = request.getVariableAsString(NXCPCodes.VID_LOCALE);
+        final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
+        final String localeString = request.getFieldAsString(NXCPCodes.VID_LOCALE);
         final Locale locale = new Locale(localeString);
         final ReportDefinition definition;
         if (reportId != null) {
@@ -108,49 +108,49 @@ public class SessionImpl implements Session {
         }
 
         if (definition != null) {
-            reply.setVariableInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+            reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
             definition.fillMessage(reply);
         } else {
-            reply.setVariableInt32(NXCPCodes.VID_RCC, CommonRCC.INTERNAL_ERROR);
+            reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.INTERNAL_ERROR);
         }
     }
 
     private void listResults(NXCPMessage request, NXCPMessage reply) {
-        reply.setVariableInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
-        final int userId = request.getVariableAsInteger(NXCPCodes.VID_USER_ID);
-        final UUID reportId = request.getVariableAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
+        reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+        final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
+        final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
         final List<ReportResult> list = reportManager.listResults(reportId, userId);
         long index = NXCPCodes.VID_ROW_DATA_BASE;
         int jobNum = 0;
         for (ReportResult record : list) {
-            reply.setVariable(index++, record.getJobId());
-            reply.setVariableInt32(index++, (int) (record.getExecutionTime().getTime() / 1000));
-            reply.setVariableInt32(index++, record.getUserId());
+            reply.setField(index++, record.getJobId());
+            reply.setFieldInt32(index++, (int) (record.getExecutionTime().getTime() / 1000));
+            reply.setFieldInt32(index++, record.getUserId());
             index += 7;
             jobNum++;
         }
-        reply.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, jobNum);
-        reply.setVariableInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+        reply.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, jobNum);
+        reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
     }
 
     private void scheduleExecution(NXCPMessage request, NXCPMessage reply) {
         int retCode;
-        final UUID reportUuid = request.getVariableAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
+        final UUID reportUuid = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
         if (reportUuid != null) {
             Map<String, Object> parameters = getParametersFromRequest(request);
-            final UUID jobUuid = request.getVariableAsUUID(NXCPCodes.VID_RS_JOB_ID);
-            final int jobType = request.getVariableAsInteger(NXCPCodes.VID_RS_JOB_TYPE);
-            final long timestamp = request.getVariableAsInt64(NXCPCodes.VID_TIMESTAMP);
-            final int userId = request.getVariableAsInteger(NXCPCodes.VID_USER_ID);
+            final UUID jobUuid = request.getFieldAsUUID(NXCPCodes.VID_RS_JOB_ID);
+            final int jobType = request.getFieldAsInt32(NXCPCodes.VID_RS_JOB_TYPE);
+            final long timestamp = request.getFieldAsInt64(NXCPCodes.VID_TIMESTAMP);
+            final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
             if (timestamp == 0) {
                 final UUID jobId = scheduler.execute(jobUuid, userId, reportUuid, parameters);
                 if (jobId != null) {
-                    reply.setVariable(NXCPCodes.VID_JOB_ID, jobId);
+                    reply.setField(NXCPCodes.VID_JOB_ID, jobId);
                 }
                 sendNotify(SessionNotification.RS_RESULTS_MODIFIED, 0);
             } else {
-                final int daysOfWeek = request.getVariableAsInteger(NXCPCodes.VID_DAY_OF_WEEK);
-                final int daysOfMonth = request.getVariableAsInteger(NXCPCodes.VID_DAY_OF_MONTH);
+                final int daysOfWeek = request.getFieldAsInt32(NXCPCodes.VID_DAY_OF_WEEK);
+                final int daysOfMonth = request.getFieldAsInt32(NXCPCodes.VID_DAY_OF_MONTH);
                 scheduler.addRecurrent(jobUuid, reportUuid, jobType, daysOfWeek, daysOfMonth, new Date(timestamp), parameters, userId);
                 sendNotify(SessionNotification.RS_SCHEDULES_MODIFIED, 0);
             }
@@ -160,12 +160,12 @@ public class SessionImpl implements Session {
             retCode = CommonRCC.INVALID_ARGUMENT;
         }
 
-        reply.setVariableInt32(NXCPCodes.VID_RCC, retCode);
+        reply.setFieldInt32(NXCPCodes.VID_RCC, retCode);
     }
 
     private void listSchedules(NXCPMessage request, NXCPMessage reply) {
-        final UUID reportId = request.getVariableAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
-        final int userId = request.getVariableAsInteger(NXCPCodes.VID_USER_ID);
+        final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
+        final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
         List<JobDetail> jobDetailList = scheduler.getSchedules(reportId);
         int jobDetailsNum = 0;
         long varId = NXCPCodes.VID_ROW_DATA_BASE;
@@ -173,14 +173,14 @@ public class SessionImpl implements Session {
             Map<String, Object> jobDataMap = jobDetail.getJobDataMap().getWrappedMap();
             try {
                 if (reportId.equals(jobDataMap.get("reportId")) && ((Integer) jobDataMap.get("userId") == userId || userId == 0)) {
-                    reply.setVariable(varId, (UUID) jobDataMap.get("jobId"));
-                    reply.setVariable(varId + 1, (UUID) jobDataMap.get("reportId"));
-                    reply.setVariableInt32(varId + 2, (Integer) jobDataMap.get("userId"));
-                    reply.setVariableInt64(varId + 3, ((Date) jobDataMap.get("startDate")).getTime()); // TODO: NPE here?
-                    reply.setVariableInt32(varId + 4, (Integer) jobDataMap.get("daysOfWeek"));
-                    reply.setVariableInt32(varId + 5, (Integer) jobDataMap.get("daysOfMonth"));
-                    reply.setVariableInt32(varId + 6, (Integer) jobDataMap.get("jobType"));
-                    reply.setVariable(varId + 7, (String) jobDataMap.get("comments"));
+                    reply.setField(varId, (UUID) jobDataMap.get("jobId"));
+                    reply.setField(varId + 1, (UUID) jobDataMap.get("reportId"));
+                    reply.setFieldInt32(varId + 2, (Integer) jobDataMap.get("userId"));
+                    reply.setFieldInt64(varId + 3, ((Date) jobDataMap.get("startDate")).getTime()); // TODO: NPE here?
+                    reply.setFieldInt32(varId + 4, (Integer) jobDataMap.get("daysOfWeek"));
+                    reply.setFieldInt32(varId + 5, (Integer) jobDataMap.get("daysOfMonth"));
+                    reply.setFieldInt32(varId + 6, (Integer) jobDataMap.get("jobType"));
+                    reply.setField(varId + 7, (String) jobDataMap.get("comments"));
 
                     varId += 20;
                     jobDetailsNum++;
@@ -189,50 +189,50 @@ public class SessionImpl implements Session {
                 logger.error("Application error: ", e);
             }
         }
-        reply.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, jobDetailsNum);
-        reply.setVariableInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+        reply.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, jobDetailsNum);
+        reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
     }
 
     private Map<String, Object> getParametersFromRequest(NXCPMessage request) {
         final HashMap<String, Object> map = new HashMap<String, Object>();
-        final int count = request.getVariableAsInteger(NXCPCodes.VID_NUM_PARAMETERS);
+        final int count = request.getFieldAsInt32(NXCPCodes.VID_NUM_PARAMETERS);
         long id = NXCPCodes.VID_PARAM_LIST_BASE;
         for (int i = 0; i < count; i++) {
-            String key = request.getVariableAsString(id++);
-            String value = request.getVariableAsString(id++);
+            String key = request.getFieldAsString(id++);
+            String value = request.getFieldAsString(id++);
             map.put(key, value);
         }
         return map;
     }
 
     private File renderResult(NXCPMessage request, NXCPMessage reply) {
-        final UUID reportId = request.getVariableAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
-        final UUID jobId = request.getVariableAsUUID(NXCPCodes.VID_JOB_ID);
-        final int formatCode = request.getVariableAsInteger(NXCPCodes.VID_RENDER_FORMAT);
+        final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
+        final UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_JOB_ID);
+        final int formatCode = request.getFieldAsInt32(NXCPCodes.VID_RENDER_FORMAT);
         final ReportRenderFormat format = ReportRenderFormat.valueOf(formatCode);
 
-        reply.setVariableInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+        reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
         sendNotify(SessionNotification.RS_RESULTS_MODIFIED, 0);
         return reportManager.renderResult(reportId, jobId, format);
     }
 
     private void deleteResult(NXCPMessage request, NXCPMessage reply) {
-        final UUID reportId = request.getVariableAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
-        final UUID jobId = request.getVariableAsUUID(NXCPCodes.VID_JOB_ID);
+        final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
+        final UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_JOB_ID);
 
         reportManager.deleteResult(reportId, jobId);
-        reply.setVariableInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+        reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
         sendNotify(SessionNotification.RS_RESULTS_MODIFIED, 0);
     }
 
     private void deleteSchedule(NXCPMessage request, NXCPMessage reply) {
-        final UUID reportId = request.getVariableAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
-        final UUID jobId = request.getVariableAsUUID(NXCPCodes.VID_JOB_ID);
+        final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
+        final UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_JOB_ID);
 
         scheduler.deleteScheduleJob(reportId, jobId);
         notificationService.delete(jobId);
 
-        reply.setVariableInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+        reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
         sendNotify(SessionNotification.RS_SCHEDULES_MODIFIED, 0);
     }
 
@@ -240,17 +240,17 @@ public class SessionImpl implements Session {
      * Add notification when job is done then send a notice to mail
      */
     private void reportNotify(NXCPMessage request, NXCPMessage reply) {
-        final UUID jobId = request.getVariableAsUUID(NXCPCodes.VID_RS_JOB_ID);
-        final int attachFormatCode = request.getVariableAsInteger(NXCPCodes.VID_RENDER_FORMAT);
-        String reportName = request.getVariableAsString(NXCPCodes.VID_RS_REPORT_NAME);
-        final int count = request.getVariableAsInteger(NXCPCodes.VID_NUM_ITEMS);
+        final UUID jobId = request.getFieldAsUUID(NXCPCodes.VID_RS_JOB_ID);
+        final int attachFormatCode = request.getFieldAsInt32(NXCPCodes.VID_RENDER_FORMAT);
+        String reportName = request.getFieldAsString(NXCPCodes.VID_RS_REPORT_NAME);
+        final int count = request.getFieldAsInt32(NXCPCodes.VID_NUM_ITEMS);
         long index = NXCPCodes.VID_ITEM_LIST;
         for (int i = 0; i < count; i++) {
-            String mail = request.getVariableAsString(index + i);
+            String mail = request.getFieldAsString(index + i);
             if (mail != null && jobId != null)
                 notificationService.create(new Notification(jobId, mail, attachFormatCode, reportName));
         }
-        reply.setVariableInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
+        reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
     }
 
     @Override
@@ -263,8 +263,8 @@ public class SessionImpl implements Session {
      */
     public void sendNotify(int code, int data) {
         NXCPMessage msg = new NXCPMessage(NXCPCodes.CMD_RS_NOTIFY);
-        msg.setVariableInt32(NXCPCodes.VID_NOTIFICATION_CODE, code);
-        msg.setVariableInt32(NXCPCodes.VID_NOTIFICATION_DATA, data);
+        msg.setFieldInt32(NXCPCodes.VID_NOTIFICATION_CODE, code);
+        msg.setFieldInt32(NXCPCodes.VID_NOTIFICATION_DATA, data);
         try {
             connector.sendBroadcast(msg);
         } catch (Exception e) {

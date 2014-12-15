@@ -52,7 +52,7 @@ public class PerformanceDataSource extends NXCLDataSource {
                 columns.add(new DciSummaryTableColumn("System.CPU.Usage", "System.CPU.Usage", 0));
                 break;
         }
-        Table table = session.queryAdHocDciSummaryTable(baseObjectId, columns, AggregationFunction.AVERAGE, from, to);
+        Table table = session.queryAdHocDciSummaryTable(baseObjectId, columns, AggregationFunction.AVERAGE, from, to, false);
         for (TableRow row : table.getAllRows()) {
             rows.add(new ReportRow(row));
         }
