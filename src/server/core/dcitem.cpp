@@ -694,7 +694,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp,const void *originalValue, bool 
 
    m_dwErrorCount = 0;
 
-   if(isStatusDCO() && (m_cacheSize == 0 || ((UINT32)*pValue != (UINT32)*m_ppValueCache[0])))
+   if (isStatusDCO() && ((m_cacheSize == 0) || !m_bCacheLoaded || ((UINT32)*pValue != (UINT32)*m_ppValueCache[0])))
    {
       *updateStatus = true;
    }
@@ -716,7 +716,10 @@ bool DCItem::processNewValue(time_t tmTimeStamp,const void *originalValue, bool 
       PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
 
    // Check thresholds and add value to cache
-   checkThresholds(*pValue);
+   if (m_bCacheLoaded)
+   {
+      checkThresholds(*pValue);
+   }
 
    if (m_cacheSize > 0)
    {
@@ -990,6 +993,7 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
 		}
 
       m_cacheSize = dwRequiredSize;
+      m_requiredCacheSize = dwRequiredSize;
       if (m_cacheSize > 0)
       {
          m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * m_cacheSize);
@@ -1002,11 +1006,6 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
    }
    else if (dwRequiredSize > m_cacheSize)
    {
-      // Expand cache
-      m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * dwRequiredSize);
-      for(UINT32 i = m_cacheSize; i < dwRequiredSize; i++)
-         m_ppValueCache[i] = NULL;
-
       // Load missing values from database
       // Skip caching for DCIs where estimated time to fill the cache is less then 5 minutes
       // to reduce load on database at server startup
@@ -1020,13 +1019,14 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
       else
       {
          // will not read data from database, fill cache with empty values
+         m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * dwRequiredSize);
          for(UINT32 i = m_cacheSize; i < dwRequiredSize; i++)
             m_ppValueCache[i] = new ItemValue(_T(""), 1);
          DbgPrintf(7, _T("Cache load skipped for parameter %s [%d]"), m_name, (int)m_id);
+         m_cacheSize = dwRequiredSize;
+         m_bCacheLoaded = true;
       }
-      m_cacheSize = dwRequiredSize;
    }
-   m_bCacheLoaded = true;
 }
 
 /**
@@ -1035,7 +1035,6 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
 void DCItem::reloadCache()
 {
    TCHAR szBuffer[MAX_DB_STRING];
-   BOOL bHasData;
 
    switch(g_dbSyntax)
    {
@@ -1073,18 +1072,23 @@ void DCItem::reloadCache()
    
    lock();
    
+	UINT32 i;
+   for(i = 0; i < m_cacheSize; i++)
+      delete m_ppValueCache[i];
+
+   if (m_cacheSize != m_requiredCacheSize)
+   {
+      m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * m_requiredCacheSize);
+   }
+
    if (hResult != NULL)
    {
-      // Skip already cached values
-		UINT32 i;
-      for(i = 0, bHasData = TRUE; i < m_cacheSize; i++)
-         bHasData = DBFetch(hResult);
-
-      // Create new cache entries
-      for(; (i < m_requiredCacheSize) && bHasData; i++)
+      // Create cache entries
+      bool moreData = true;
+      for(i = 0; (i < m_requiredCacheSize) && moreData; i++)
       {
-         bHasData = DBFetch(hResult);
-         if (bHasData)
+         moreData = DBFetch(hResult);
+         if (moreData)
          {
             DBGetFieldAsync(hResult, 0, szBuffer, MAX_DB_STRING);
             m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldAsyncULong(hResult, 1));
@@ -1104,10 +1108,11 @@ void DCItem::reloadCache()
    else
    {
       // Error reading data from database, fill cache with empty values
-      for(UINT32 i = m_cacheSize; i < m_requiredCacheSize; i++)
+      for(i = 0; i < m_requiredCacheSize; i++)
          m_ppValueCache[i] = new ItemValue(_T(""), 1);
    }
    
+   m_cacheSize = m_requiredCacheSize;
    m_bCacheLoaded = true;
    unlock();
 	
