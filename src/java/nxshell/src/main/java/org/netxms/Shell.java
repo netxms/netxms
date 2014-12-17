@@ -153,6 +153,7 @@ public class Shell {
 
         console.exec("from org.netxms.client import *");
         console.exec("from org.netxms.api.client import *");
+        console.exec("from org.netxms.client.objects import *");
 
         console.set("__name__", "__nxshell__");
 
