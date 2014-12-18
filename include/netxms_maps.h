@@ -109,9 +109,9 @@ public:
    void removeObject(UINT32 id);
    void clear();
 
-   UINT32 getNumObjects() { return m_objectList->size(); }
+   int getNumObjects() { return m_objectList->size(); }
    IntegerArray<UINT32> *getObjects() { return m_objectList; }
-   UINT32 getNumLinks() { return m_linkList->size(); }
+   int getNumLinks() { return m_linkList->size(); }
    ObjectArray<ObjLink> *getLinks() { return m_linkList; }
 
 	void createMessage(NXCPMessage *pMsg);

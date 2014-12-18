@@ -682,12 +682,12 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
    if ((m_filter != NULL) && (objects->getNumObjects() > 0))
    {
       IntegerArray<UINT32> *idList = objects->getObjects();
-	   for(UINT32 i = 0; i < objects->getNumObjects(); i++)
+      for(int i = 0; i < idList->size(); i++)
       {
          NetObj *object = FindObjectById(idList->get(i));
          if ((object == NULL) || !isAllowedOnMap(object))
          {
-            idList->remove(object->getId());
+            idList->remove(i);
             i--;
          }
       }
@@ -727,7 +727,7 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 	}
 
 	// add new objects
-	for(UINT32 i = 0; i < objects->getNumObjects(); i++)
+	for(int i = 0; i < objects->getNumObjects(); i++)
 	{
 		bool found = false;
 		for(int j = 0; j < m_elements->size(); j++)
@@ -751,7 +751,7 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 	}
 
 	// add new links
-	for(UINT32 i = 0; i < objects->getNumLinks(); i++)
+	for(int i = 0; i < objects->getNumLinks(); i++)
 	{
 		bool found = false;
 		for(int j = 0; j < m_links->size(); j++)
