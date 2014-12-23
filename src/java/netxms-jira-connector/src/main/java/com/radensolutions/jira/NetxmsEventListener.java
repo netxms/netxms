@@ -51,11 +51,13 @@ public class NetxmsEventListener implements InitializingBean, DisposableBean {
 
         String name = issueEvent.getUser().getName();
         if (name.equalsIgnoreCase(settingsManager.getJiraAccount())) {
+            log.debug("Ignoring own change");
             return;
         }
 
         String issueProjectKey = issueEvent.getProject().getKey();
         String configuredProjectKey = settingsManager.getProjectKey();
+        log.debug("Issue Project key: {}, Configured Project Key: {}", issueProjectKey, configuredProjectKey);
         if (issueProjectKey.equalsIgnoreCase(configuredProjectKey)) {
             log.debug("Project key matched");
             String comment = getCommentText(issueEvent.getComment());
