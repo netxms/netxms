@@ -59,10 +59,10 @@ public class OverviewAdapter extends BaseAdapter
 		if (obj != null)
 		{
 			addPair(r.getString(R.string.overview_id), Integer.toString((int)obj.getObjectId()));
-			addPair(r.getString(R.string.overview_guid), obj.getGuid().toString());
+			addPair(r.getString(R.string.overview_guid), toString(obj.getGuid()));
 			addPair(r.getString(R.string.overview_class), obj.getClass().getSimpleName());
 			addPair(r.getString(R.string.overview_status), getNodeStatus(obj.getStatus()));
-			addPair(r.getString(R.string.overview_primary_ip), obj.getPrimaryIP().getHostAddress().toString());
+			addPair(r.getString(R.string.overview_primary_ip), obj.getPrimaryIP().getHostAddress());
 			switch (obj.getObjectClass())
 			{
 				case AbstractObject.OBJECT_NODE:
@@ -72,11 +72,11 @@ public class OverviewAdapter extends BaseAdapter
 						addPair(r.getString(R.string.overview_netxms_agent_version), ((Node)obj).getAgentVersion());
 					addPair(r.getString(R.string.overview_system_description), ((Node)obj).getSystemDescription(), false);
 					addPair(r.getString(R.string.overview_platform_name), ((Node)obj).getPlatformName(), false);
-					addPair(r.getString(R.string.overview_boot_time), ((Node)obj).getBootTime().toString(), false);
+					addPair(r.getString(R.string.overview_boot_time), toString(((Node)obj).getBootTime()), false);
 					addPair(r.getString(R.string.overview_snmp_sysname), ((Node)obj).getSnmpSysName(), false);
 					addPair(r.getString(R.string.overview_snmp_oid), ((Node)obj).getSnmpOID(), false);
 					if ((((Node)obj).getFlags() & Node.NF_IS_BRIDGE) != 0)
-						addPair(r.getString(R.string.overview_bridge_base_address), ((Node)obj).getBridgeBaseAddress().toString());
+						addPair(r.getString(R.string.overview_bridge_base_address), toString(((Node)obj).getBridgeBaseAddress()));
 					addPair(r.getString(R.string.overview_driver), ((Node)obj).getDriverName(), false);
 					break;
 				case AbstractObject.OBJECT_MOBILEDEVICE:
@@ -278,4 +278,16 @@ public class OverviewAdapter extends BaseAdapter
 		}
 		return r.getString(R.string.status_unknown);
 	}
+
+	/**
+	 * Covert object to string, protecting from null value
+	 * 
+	 * @param obj Object to convert to string
+	 * @return Object converted to string 
+	 */
+	private String toString(Object obj)
+	{
+		return obj != null ? obj.toString() : "";
+	}
+
 }
