@@ -182,10 +182,93 @@ static void TestStringSet()
 }
 
 /**
+ * Test string class
+ */
+static void TestString()
+{
+   String s;
+
+   StartTest(_T("String - append"));
+   for(int i = 0; i < 256; i++)
+      s.append(_T("ABC "));
+   AssertEquals(s.length(), 1024);
+   AssertTrue(!_tcsncmp(s.getBuffer(), _T("ABC ABC ABC ABC "), 16));
+   EndTest();
+
+   StartTest(_T("String - assign #1"));
+   s = _T("alpha");
+   AssertEquals(s.length(), 5);
+   AssertTrue(!_tcscmp(s.getBuffer(), _T("alpha")));
+   EndTest();
+
+   StartTest(_T("String - assign #2"));
+   String t(_T("init string"));
+   s = t;
+   AssertEquals(s.length(), 11);
+   AssertTrue(!_tcscmp(s.getBuffer(), _T("init string")));
+   EndTest();
+
+   StartTest(_T("String - shrink"));
+   s.shrink();
+   AssertEquals(s.length(), 10);
+   AssertTrue(!_tcscmp(s.getBuffer(), _T("init strin")));
+   EndTest();
+
+   StartTest(_T("String - escape"));
+   s.escapeCharacter('i', '+');
+   AssertEquals(s.length(), 13);
+   AssertTrue(!_tcscmp(s.getBuffer(), _T("+in+it str+in")));
+   EndTest();
+
+   StartTest(_T("String - replace #1"));
+   s = _T("alpha beta gamma");
+   s.replace(_T("beta"), _T("epsilon"));
+   AssertEquals(s.length(), 19);
+   AssertTrue(!_tcscmp(s.getBuffer(), _T("alpha epsilon gamma")));
+   EndTest();
+
+   StartTest(_T("String - replace #2"));
+   s = _T("alpha beta gamma");
+   s.replace(_T("beta"), _T("xxxx"));
+   AssertEquals(s.length(), 16);
+   AssertTrue(!_tcscmp(s.getBuffer(), _T("alpha xxxx gamma")));
+   EndTest();
+
+   StartTest(_T("String - replace #3"));
+   s = _T("alpha beta gamma alpha omega");
+   s.replace(_T("alpha"), _T("Z"));
+   AssertEquals(s.length(), 20);
+   AssertTrue(!_tcscmp(s.getBuffer(), _T("Z beta gamma Z omega")));
+   EndTest();
+
+   StartTest(_T("String - substring #1"));
+   s = _T("alpha beta gamma");
+   TCHAR *str = s.substring(0, 5);
+   AssertTrue(!_tcscmp(str, _T("alpha")));
+   free(str);
+   EndTest();
+
+   StartTest(_T("String - substring #2"));
+   s = _T("alpha beta gamma");
+   str = s.substring(5, -1);
+   AssertTrue(!_tcscmp(str, _T(" beta gamma")));
+   free(str);
+   EndTest();
+
+   StartTest(_T("String - substring #3"));
+   s = _T("alpha beta gamma");
+   str = s.substring(14, 4);
+   AssertTrue(!_tcscmp(str, _T("ma")));
+   free(str);
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
 {
+   TestString();
    TestStringConversion();
    TestStringMap();
    TestStringSet();

@@ -175,7 +175,7 @@ String LogHandle::buildObjectAccessConstraint(const UINT32 userId)
 
       if (list->size() < 1000)
       {
-         constraint.addFormattedString(_T("%s IN ("), m_log->relatedObjectIdColumn);
+         constraint.appendFormattedString(_T("%s IN ("), m_log->relatedObjectIdColumn);
          for(int i = 0; i < list->size(); i++)
          {
             TCHAR buffer[32];
@@ -190,7 +190,7 @@ String LogHandle::buildObjectAccessConstraint(const UINT32 userId)
          for(int i = 0; i < list->size(); i++)
          {
             TCHAR buffer[32];
-   			constraint.addFormattedString(_T("(%s=%d)OR"), m_log->relatedObjectIdColumn, list->get(i));
+   			constraint.appendFormattedString(_T("(%s=%d)OR"), m_log->relatedObjectIdColumn, list->get(i));
             constraint += buffer;
          }
          constraint.shrink(2);
@@ -215,23 +215,23 @@ bool LogHandle::queryInternal(INT64 *rowCount, const UINT32 userId)
 	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
-			query.addFormattedString(_T("SELECT TOP %u %s FROM %s "), m_rowCountLimit, (const TCHAR *)m_queryColumns, m_log->table);
+			query.appendFormattedString(_T("SELECT TOP %u %s FROM %s "), m_rowCountLimit, (const TCHAR *)m_queryColumns, m_log->table);
 			break;
 		case DB_SYNTAX_INFORMIX:
-			query.addFormattedString(_T("SELECT FIRST %u %s FROM %s "), m_rowCountLimit, (const TCHAR *)m_queryColumns, m_log->table);
+			query.appendFormattedString(_T("SELECT FIRST %u %s FROM %s "), m_rowCountLimit, (const TCHAR *)m_queryColumns, m_log->table);
 			break;
 		case DB_SYNTAX_ORACLE:
-			query.addFormattedString(_T("SELECT * FROM (SELECT %s FROM %s"), (const TCHAR *)m_queryColumns, m_log->table);
+			query.appendFormattedString(_T("SELECT * FROM (SELECT %s FROM %s"), (const TCHAR *)m_queryColumns, m_log->table);
 			break;
 		case DB_SYNTAX_SQLITE:
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_MYSQL:
 		case DB_SYNTAX_DB2:
-			query.addFormattedString(_T("SELECT %s FROM %s"), (const TCHAR *)m_queryColumns, m_log->table);
+			query.appendFormattedString(_T("SELECT %s FROM %s"), (const TCHAR *)m_queryColumns, m_log->table);
 			break;
 	}
 
-	query.addFormattedString(_T(" WHERE %s<=") INT64_FMT, m_log->idColumn, m_maxRecordId);
+	query.appendFormattedString(_T(" WHERE %s<=") INT64_FMT, m_log->idColumn, m_maxRecordId);
 
 	int filterSize = m_filter->getNumColumnFilter();
 	if (filterSize > 0)
@@ -264,13 +264,13 @@ bool LogHandle::queryInternal(INT64 *rowCount, const UINT32 userId)
 		case DB_SYNTAX_MYSQL:
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_SQLITE:
-			query.addFormattedString(_T(" LIMIT %u"), m_rowCountLimit);
+			query.appendFormattedString(_T(" LIMIT %u"), m_rowCountLimit);
 			break;
 		case DB_SYNTAX_ORACLE:
-			query.addFormattedString(_T(") WHERE ROWNUM<=%u"), m_rowCountLimit);
+			query.appendFormattedString(_T(") WHERE ROWNUM<=%u"), m_rowCountLimit);
 			break;
 		case DB_SYNTAX_DB2:
-			query.addFormattedString(_T(" FETCH FIRST %u ROWS ONLY"), m_rowCountLimit);
+			query.appendFormattedString(_T(" FETCH FIRST %u ROWS ONLY"), m_rowCountLimit);
 			break;
 	}
 

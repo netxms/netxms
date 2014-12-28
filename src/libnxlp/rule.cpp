@@ -218,7 +218,7 @@ void LogParserRule::expandMacros(const TCHAR *regexp, String &out)
 			// Check for escape
 			if ((curr != regexp) && (*(curr - 1) == _T('\\')))
 			{
-				out.addString(prev, (UINT32)(curr - prev - 1));
+				out.append(prev, (size_t)(curr - prev - 1));
 				out += _T("@");
 			}
 			else
@@ -228,7 +228,7 @@ void LogParserRule::expandMacros(const TCHAR *regexp, String &out)
 				{
 					int i;
 
-					out.addString(prev, (UINT32)(curr - prev));
+					out.append(prev, (size_t)(curr - prev));
 					curr += 2;
 					for(i = 0; (*curr != 0) && (*curr != '}'); i++)
 						name[i] = *curr++;
@@ -237,11 +237,11 @@ void LogParserRule::expandMacros(const TCHAR *regexp, String &out)
 				}
 				else
 				{
-					out.addString(prev, (UINT32)(curr - prev + 1));
+					out.append(prev, (size_t)(curr - prev + 1));
 				}
 			}
 			prev = curr + 1;
 		}
 	}
-	out.addString(prev, (UINT32)(curr - prev));
+	out.append(prev, (size_t)(curr - prev));
 }

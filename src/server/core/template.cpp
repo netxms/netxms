@@ -989,7 +989,7 @@ UINT32 *Template::getDCIEventsList(UINT32 *pdwCount)
  */
 void Template::createNXMPRecord(String &str)
 {
-   str.addFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n\t\t\t<dataCollection>\n"),
+   str.appendFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n\t\t\t<dataCollection>\n"),
 	                       m_id, (const TCHAR *)EscapeStringForXML2(m_name), m_flags);
 
    lockDciAccess(false);
@@ -1002,7 +1002,7 @@ void Template::createNXMPRecord(String &str)
 	if (m_applyFilterSource != NULL)
 	{
 		str += _T("\t\t\t<filter>");
-		str.addDynamicString(EscapeStringForXML(m_applyFilterSource, -1));
+		str.appendPreallocated(EscapeStringForXML(m_applyFilterSource, -1));
 		str += _T("</filter>\n");
 	}
 	unlockProperties();

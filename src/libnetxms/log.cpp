@@ -49,6 +49,9 @@ static int m_logHistorySize = 4;		// Keep up 4 previous log files
 static TCHAR m_dailyLogSuffixTemplate[64] = _T("%Y%m%d");
 static time_t m_currentDayStart = 0;
 static NxLogConsoleWriter m_consoleWriter = (NxLogConsoleWriter)_tprintf;
+static String s_logBuffer;
+static THREAD s_writerThread = INVALID_THREAD_HANDLE;
+static CONDITION s_writerStopCondition = INVALID_CONDITION_HANDLE;
 
 /**
  * Format current time for output
@@ -231,6 +234,54 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_rotate()
 }
 
 /**
+ * Background writer thread
+ */
+static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
+{
+   bool stop = false;
+   while(!stop)
+   {
+      stop = ConditionWait(s_writerStopCondition, 1000);
+
+	   // Check for new day start
+      time_t t = time(NULL);
+	   if ((m_rotationMode == NXLOG_ROTATION_DAILY) && (t >= m_currentDayStart + 86400))
+	   {
+		   RotateLog(FALSE);
+	   }
+
+      MutexLock(m_mutexLogAccess);
+      if (!s_logBuffer.isEmpty())
+      {
+         if (m_flags & NXLOG_PRINT_TO_STDOUT)
+            m_consoleWriter(_T("%s"), s_logBuffer.getBuffer());
+
+         char *data = s_logBuffer.getUTF8String();
+         s_logBuffer.clear();
+         MutexUnlock(m_mutexLogAccess);
+
+         fwrite(data, 1, strlen(data), m_logFileHandle);
+		   fflush(m_logFileHandle);
+
+	      // Check log size
+	      if ((m_logFileHandle != NULL) && (m_rotationMode == NXLOG_ROTATION_BY_SIZE) && (m_maxLogSize != 0))
+	      {
+		      struct stat st;
+
+		      fstat(fileno(m_logFileHandle), &st);
+		      if (st.st_size >= m_maxLogSize)
+			      RotateLog(FALSE);
+	      }
+      }
+      else
+      {
+         MutexUnlock(m_mutexLogAccess);
+      }
+   }
+   return THREAD_OK;
+}
+
+/**
  * Initialize log
  */
 BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
@@ -277,6 +328,12 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
       {
 			m_flags |= NXLOG_IS_OPEN;
          _ftprintf(m_logFileHandle, _T("\n%s Log file opened\n"), FormatLogTimestamp(buffer));
+         if (m_flags & NXLOG_BACKGROUND_WRITER)
+         {
+            s_logBuffer.setAllocationStep(8192);
+            s_writerStopCondition = ConditionCreate(TRUE);
+            s_writerThread = ThreadCreateEx(BackgroundWriterThread, 0, NULL);
+         }
       }
 
       m_mutexLogAccess = MutexCreate();
@@ -302,6 +359,12 @@ void LIBNETXMS_EXPORTABLE nxlog_close()
       }
       else
       {
+         if (m_flags & NXLOG_BACKGROUND_WRITER)
+         {
+            ConditionSet(s_writerStopCondition);
+            ThreadJoin(s_writerThread);
+            ConditionDestroy(s_writerStopCondition);
+         }
          if (m_logFileHandle != NULL)
             fclose(m_logFileHandle);
          if (m_mutexLogAccess != INVALID_MUTEX_HANDLE)
@@ -338,36 +401,51 @@ static void WriteLogToFile(TCHAR *message, const WORD wType)
 	      break;
    }
 
-   // Prevent simultaneous write to log file
-   MutexLock(m_mutexLogAccess);
+   if (m_flags & NXLOG_BACKGROUND_WRITER)
+   {
+      MutexLock(m_mutexLogAccess);
 
-	// Check for new day start
-   time_t t = time(NULL);
-	if ((m_rotationMode == NXLOG_ROTATION_DAILY) && (t >= m_currentDayStart + 86400))
-	{
-		RotateLog(FALSE);
-	}
+	   FormatLogTimestamp(buffer);
+      s_logBuffer.append(buffer);
+      s_logBuffer.append(_T(" "));
+      s_logBuffer.append(loglevel);
+      s_logBuffer.append(message);
 
-	FormatLogTimestamp(buffer);
-   if (m_logFileHandle != NULL)
-	{
-      _ftprintf(m_logFileHandle, _T("%s %s%s"), buffer, loglevel, message);
-		fflush(m_logFileHandle);
-	}
-   if (m_flags & NXLOG_PRINT_TO_STDOUT)
-      m_consoleWriter(_T("%s %s%s"), buffer, loglevel, message);
+      MutexUnlock(m_mutexLogAccess);
+   }
+   else
+   {
+      // Prevent simultaneous write to log file
+      MutexLock(m_mutexLogAccess);
 
-	// Check log size
-	if ((m_logFileHandle != NULL) && (m_rotationMode == NXLOG_ROTATION_BY_SIZE) && (m_maxLogSize != 0))
-	{
-		struct stat st;
+	   // Check for new day start
+      time_t t = time(NULL);
+	   if ((m_rotationMode == NXLOG_ROTATION_DAILY) && (t >= m_currentDayStart + 86400))
+	   {
+		   RotateLog(FALSE);
+	   }
 
-		fstat(fileno(m_logFileHandle), &st);
-		if (st.st_size >= m_maxLogSize)
-			RotateLog(FALSE);
-	}
+	   FormatLogTimestamp(buffer);
+      if (m_logFileHandle != NULL)
+	   {
+         _ftprintf(m_logFileHandle, _T("%s %s%s"), buffer, loglevel, message);
+		   fflush(m_logFileHandle);
+	   }
+      if (m_flags & NXLOG_PRINT_TO_STDOUT)
+         m_consoleWriter(_T("%s %s%s"), buffer, loglevel, message);
 
-   MutexUnlock(m_mutexLogAccess);
+	   // Check log size
+	   if ((m_logFileHandle != NULL) && (m_rotationMode == NXLOG_ROTATION_BY_SIZE) && (m_maxLogSize != 0))
+	   {
+		   struct stat st;
+
+		   fstat(fileno(m_logFileHandle), &st);
+		   if (st.st_size >= m_maxLogSize)
+			   RotateLog(FALSE);
+	   }
+
+      MutexUnlock(m_mutexLogAccess);
+   }
 }
 
 /**

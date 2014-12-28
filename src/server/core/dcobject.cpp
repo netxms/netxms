@@ -287,15 +287,15 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 	temp = src;
 	while((index = temp.find(_T("%{"), index)) != String::npos)
 	{
-		head = temp.subStr(0, index);
+		head = temp.substring(0, index);
 		index2 = temp.find(_T("}"), index);
 		if (index2 == String::npos)
 		{
 			free(head);
 			break;	// Missing closing }
 		}
-		rest = temp.subStr(index2 + 1, -1);
-		macro = temp.subStr(index + 2, index2 - index - 2);
+		rest = temp.substring(index2 + 1, -1);
+		macro = temp.substring(index + 2, index2 - index - 2);
 		StrStrip(macro);
 
 		temp = head;
@@ -303,7 +303,7 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		{
 			if (m_pNode != NULL)
 			{
-				temp.addFormattedString(_T("%d"), m_pNode->getId());
+				temp.appendFormattedString(_T("%d"), m_pNode->getId());
 			}
 			else
 			{

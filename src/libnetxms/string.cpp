@@ -28,27 +28,37 @@
  */
 const int String::npos = -1;
 
-
-//
-// Constructors
-//
-
+/**
+ * Create empty string
+ */
 String::String()
 {
-   m_dwBufSize = 1;
-   m_pszBuffer = NULL;
+   m_buffer = NULL;
+   m_length = 0;
+   m_allocated = 0;
+   m_allocationStep = 256;
 }
 
+/**
+ * Copy constructor
+ */
 String::String(const String &src)
 {
-	m_dwBufSize = src.m_dwBufSize;
-	m_pszBuffer = (src.m_pszBuffer != NULL) ? (TCHAR *)nx_memdup(src.m_pszBuffer, src.m_dwBufSize * sizeof(TCHAR)) : NULL;
+   m_length = src.m_length;
+   m_allocated = src.m_length + 1;
+   m_allocationStep = src.m_allocationStep;
+	m_buffer = ((src.m_buffer != NULL) && (src.m_length > 0)) ? (TCHAR *)nx_memdup(src.m_buffer, m_allocated * sizeof(TCHAR)) : NULL;
 }
 
+/**
+ * Create string with given initial content
+ */
 String::String(const TCHAR *init)
 {
-   m_dwBufSize = (UINT32)_tcslen(init) + 1;
-   m_pszBuffer = _tcsdup(init);
+   m_buffer = _tcsdup(init);
+   m_length = _tcslen(init);
+   m_allocated = m_length + 1;
+   m_allocationStep = 256;
 }
 
 /**
@@ -56,17 +66,18 @@ String::String(const TCHAR *init)
  */
 String::~String()
 {
-   safe_free(m_pszBuffer);
+   safe_free(m_buffer);
 }
 
 /**
  * Operator =
  */
-const String& String::operator =(const TCHAR *pszStr)
+const String& String::operator =(const TCHAR *str)
 {
-   safe_free(m_pszBuffer);
-   m_pszBuffer = _tcsdup(CHECK_NULL_EX(pszStr));
-   m_dwBufSize = (UINT32)_tcslen(CHECK_NULL_EX(pszStr)) + 1;
+   safe_free(m_buffer);
+   m_buffer = _tcsdup(CHECK_NULL_EX(str));
+   m_length = _tcslen(CHECK_NULL_EX(str));
+   m_allocated = m_length + 1;
    return *this;
 }
 
@@ -77,9 +88,11 @@ const String& String::operator =(const String &src)
 {
 	if (&src == this)
 		return *this;
-   safe_free(m_pszBuffer);
-	m_dwBufSize = src.m_dwBufSize;
-	m_pszBuffer = (src.m_pszBuffer != NULL) ? (TCHAR *)nx_memdup(src.m_pszBuffer, src.m_dwBufSize * sizeof(TCHAR)) : NULL;
+   safe_free(m_buffer);
+	m_length = src.m_length;
+   m_allocated = src.m_length + 1;
+   m_allocationStep = src.m_allocationStep;
+	m_buffer = ((src.m_buffer != NULL) && (src.m_length > 0)) ? (TCHAR *)nx_memdup(src.m_buffer, m_allocated * sizeof(TCHAR)) : NULL;
    return *this;
 }
 
@@ -90,10 +103,14 @@ const String& String::operator +=(const TCHAR *str)
 {
 	if (str != NULL)
 	{
-   	UINT32 dwLen = (UINT32)_tcslen(str);
-   	m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwLen) * sizeof(TCHAR));
-   	_tcscpy(&m_pszBuffer[m_dwBufSize - 1], str);
-   	m_dwBufSize += dwLen;
+   	size_t len = _tcslen(str);
+      if (m_length + len >= m_allocated)
+      {
+         m_allocated += max(m_allocationStep, len);
+      	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
+      }
+   	_tcscpy(&m_buffer[m_length], str);
+   	m_length += len;
 	}
    return *this;
 }
@@ -103,13 +120,15 @@ const String& String::operator +=(const TCHAR *str)
  */
 const String& String::operator +=(const String &str)
 {
-   UINT32 dwLen = str.m_dwBufSize;
-   if (dwLen > 1)
+   if (str.m_length > 0)
    {
-      dwLen--;
-	   m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwLen) * sizeof(TCHAR));
-      _tcscpy(&m_pszBuffer[m_dwBufSize - 1], str.m_pszBuffer);
-	   m_dwBufSize += dwLen;
+      if (m_length + str.m_length >= m_allocated)
+      {
+         m_allocated += max(m_allocationStep, str.m_length);
+      	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
+      }
+      memcpy(&m_buffer[m_length], str.m_buffer, (str.m_length + 1) * sizeof(TCHAR));
+	   m_length += str.m_length;
    }
    return *this;
 }
@@ -117,16 +136,16 @@ const String& String::operator +=(const String &str)
 /**
  * Add formatted string to the end of buffer
  */
-void String::addFormattedString(const TCHAR *format, ...)
+void String::appendFormattedString(const TCHAR *format, ...)
 {
    va_list args;
 
 	va_start(args, format);
-	addFormattedStringV(format, args);
+	appendFormattedStringV(format, args);
 	va_end(args);
 }
 
-void String::addFormattedStringV(const TCHAR *format, va_list args)
+void String::appendFormattedStringV(const TCHAR *format, va_list args)
 {
    int len;
    TCHAR *buffer;
@@ -188,47 +207,62 @@ void String::addFormattedStringV(const TCHAR *format, va_list args)
 
 #endif	/* UNICODE */
 
-   *this += buffer;
+   append(buffer, _tcslen(buffer));
    free(buffer);
 }
 
 /**
- * Add string to the end of buffer
+ * Append string to the end of buffer
  */
-void String::addString(const TCHAR *pStr, UINT32 dwSize)
+void String::append(const TCHAR *str, size_t len)
 {
-   m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwSize) * sizeof(TCHAR));
-   memcpy(&m_pszBuffer[m_dwBufSize - 1], pStr, dwSize * sizeof(TCHAR));
-   m_dwBufSize += dwSize;
-	m_pszBuffer[m_dwBufSize - 1] = 0;
+   if (len <= 0)
+      return;
+
+   if (m_length + len >= m_allocated)
+   {
+      m_allocated += max(m_allocationStep, len);
+   	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
+   }
+   memcpy(&m_buffer[m_length], str, len * sizeof(TCHAR));
+   m_length += len;
+   m_buffer[m_length] = 0;
 }
 
 /**
- * Add multibyte string to the end of buffer
+ * Append multibyte string to the end of buffer
  */
-void String::addMultiByteString(const char *pStr, UINT32 dwSize, int nCodePage)
+void String::appendMBString(const char *str, size_t len, int nCodePage)
 {
 #ifdef UNICODE
-   m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwSize) * sizeof(TCHAR));
-	m_dwBufSize += MultiByteToWideChar(nCodePage, (nCodePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, pStr, dwSize, &m_pszBuffer[m_dwBufSize - 1], dwSize);
-	m_pszBuffer[m_dwBufSize - 1] = 0;
+   if (m_length + len >= m_allocated)
+   {
+      m_allocated += max(m_allocationStep, len);
+   	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
+   }
+	m_length += MultiByteToWideChar(nCodePage, (nCodePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[m_length], (int)len);
+	m_buffer[m_length] = 0;
 #else
-	addString(pStr, dwSize);
+	append(str, len);
 #endif
 }
 
 /**
- * Add widechar string to the end of buffer
+ * Append widechar string to the end of buffer
  */
-void String::addWideCharString(const WCHAR *pStr, UINT32 dwSize)
+void String::appendWideString(const WCHAR *str, size_t len)
 {
 #ifdef UNICODE
-	addString(pStr, dwSize);
+	append(str, len);
 #else
-   m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + dwSize) * sizeof(TCHAR));
-	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pStr, dwSize, &m_pszBuffer[m_dwBufSize - 1], dwSize, NULL, NULL);
-   m_dwBufSize += dwSize;
-	m_pszBuffer[m_dwBufSize - 1] = 0;
+   if (m_length + len >= m_allocated)
+   {
+      m_allocated += max(m_allocationStep, len);
+   	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
+   }
+	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, &m_buffer[m_length], len, NULL, NULL);
+   m_length += len;
+	m_buffer[m_length] = 0;
 #endif
 }
 
@@ -237,37 +271,49 @@ void String::addWideCharString(const WCHAR *pStr, UINT32 dwSize)
  */
 void String::escapeCharacter(int ch, int esc)
 {
-   int nCount;
-   UINT32 i;
-
-   if (m_pszBuffer == NULL)
+   if (m_buffer == NULL)
       return;
 
-   nCount = NumChars(m_pszBuffer, ch);
+   int nCount = NumChars(m_buffer, ch);
    if (nCount == 0)
       return;
 
-   m_dwBufSize += nCount;
-   m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, m_dwBufSize * sizeof(TCHAR));
-   for(i = 0; m_pszBuffer[i] != 0; i++)
+   if (m_length + nCount >= m_allocated)
    {
-      if (m_pszBuffer[i] == ch)
+      m_allocated += max(m_allocationStep, nCount);
+   	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
+   }
+
+   m_length += nCount;
+   for(int i = 0; m_buffer[i] != 0; i++)
+   {
+      if (m_buffer[i] == ch)
       {
-         memmove(&m_pszBuffer[i + 1], &m_pszBuffer[i], (m_dwBufSize - i - 1) * sizeof(TCHAR));
-         m_pszBuffer[i] = esc;
+         memmove(&m_buffer[i + 1], &m_buffer[i], (m_length - i) * sizeof(TCHAR));
+         m_buffer[i] = esc;
          i++;
       }
    }
+   m_buffer[m_length] = 0;
 }
 
 /**
  * Set dynamically allocated string as a new buffer
  */
-void String::setBuffer(TCHAR *pszBuffer)
+void String::setBuffer(TCHAR *buffer)
 {
-   safe_free(m_pszBuffer);
-   m_pszBuffer = pszBuffer;
-   m_dwBufSize = (m_pszBuffer != NULL) ? (UINT32)_tcslen(m_pszBuffer) + 1 : 1;
+   safe_free(m_buffer);
+   m_buffer = buffer;
+   if (m_buffer != NULL)
+   {
+      m_length = _tcslen(m_buffer);
+      m_allocated = m_length + 1;
+   }
+   else
+   {
+      m_length = 0;
+      m_allocated = 0;
+   }
 }
 
 /**
@@ -275,37 +321,41 @@ void String::setBuffer(TCHAR *pszBuffer)
  */
 void String::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
 {
-   if (m_pszBuffer == NULL)
+   if (m_buffer == NULL)
       return;
 
-   int lenSrc = (int)_tcslen(pszSrc);
-   int lenDst = (int)_tcslen(pszDst);
+   size_t lenSrc = _tcslen(pszSrc);
+   size_t lenDst = _tcslen(pszDst);
 
-   for(int i = 0; ((int)m_dwBufSize > lenSrc) && (i < (int)m_dwBufSize - lenSrc); i++)
+   for(size_t i = 0; (m_length > lenSrc) && (i <= m_length - lenSrc); i++)
    {
-      if (!memcmp(pszSrc, &m_pszBuffer[i], lenSrc * sizeof(TCHAR)))
+      if (!memcmp(pszSrc, &m_buffer[i], lenSrc * sizeof(TCHAR)))
       {
          if (lenSrc == lenDst)
          {
-            memcpy(&m_pszBuffer[i], pszDst, lenDst * sizeof(TCHAR));
+            memcpy(&m_buffer[i], pszDst, lenDst * sizeof(TCHAR));
             i += lenDst - 1;
          }
          else if (lenSrc > lenDst)
          {
-            memcpy(&m_pszBuffer[i], pszDst, lenDst * sizeof(TCHAR));
+            memcpy(&m_buffer[i], pszDst, lenDst * sizeof(TCHAR));
             i += lenDst;
-            int delta = lenSrc - lenDst;
-            m_dwBufSize -= (UINT32)delta;
-            memmove(&m_pszBuffer[i], &m_pszBuffer[i + delta], (m_dwBufSize - (UINT32)i) * sizeof(TCHAR));
+            size_t delta = lenSrc - lenDst;
+            m_length -= delta;
+            memmove(&m_buffer[i], &m_buffer[i + delta], (m_length - i + 1) * sizeof(TCHAR));
             i--;
          }
          else
          {
-            int delta = lenDst - lenSrc;
-            m_pszBuffer = (TCHAR *)realloc(m_pszBuffer, (m_dwBufSize + (UINT32)delta) * sizeof(TCHAR));
-            memmove(&m_pszBuffer[i + lenDst], &m_pszBuffer[i + lenSrc], ((int)m_dwBufSize - i - lenSrc) * sizeof(TCHAR));
-            m_dwBufSize += (UINT32)delta;
-            memcpy(&m_pszBuffer[i], pszDst, lenDst * sizeof(TCHAR));
+            size_t delta = lenDst - lenSrc;
+            if (m_length + delta >= m_allocated)
+            {
+               m_allocated += max(m_allocationStep, delta);
+               m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
+            }
+            memmove(&m_buffer[i + lenDst], &m_buffer[i + lenSrc], (m_length - i - lenSrc + 1) * sizeof(TCHAR));
+            m_length += delta;
+            memcpy(&m_buffer[i], pszDst, lenDst * sizeof(TCHAR));
             i += lenDst - 1;
          }
       }
@@ -315,23 +365,23 @@ void String::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
 /**
  * Extract substring into buffer
  */
-TCHAR *String::subStr(int nStart, int nLen, TCHAR *pszBuffer)
+TCHAR *String::substring(int nStart, int nLen, TCHAR *pszBuffer)
 {
 	int nCount;
 	TCHAR *pszOut;
 
-	if ((nStart < (int)m_dwBufSize - 1) && (nStart >= 0))
+	if ((nStart < (int)m_length) && (nStart >= 0))
 	{
 		if (nLen == -1)
 		{
-			nCount = (int)m_dwBufSize - nStart - 1;
+			nCount = (int)m_length - nStart;
 		}
 		else
 		{
-			nCount = min(nLen, (int)m_dwBufSize - nStart - 1);
+			nCount = min(nLen, (int)m_length - nStart);
 		}
 		pszOut = (pszBuffer != NULL) ? pszBuffer : (TCHAR *)malloc((nCount + 1) * sizeof(TCHAR));
-		memcpy(pszOut, &m_pszBuffer[nStart], nCount * sizeof(TCHAR));
+		memcpy(pszOut, &m_buffer[nStart], nCount * sizeof(TCHAR));
 		pszOut[nCount] = 0;
 	}
 	else
@@ -345,15 +395,15 @@ TCHAR *String::subStr(int nStart, int nLen, TCHAR *pszBuffer)
 /**
  * Find substring in a string
  */
-int String::find(const TCHAR *pszStr, int nStart)
+int String::find(const TCHAR *str, int nStart)
 {
 	TCHAR *p;
 
-	if ((nStart >= (int)m_dwBufSize - 1) || (nStart < 0))
+	if ((nStart >= (int)m_length) || (nStart < 0))
 		return npos;
 
-	p = _tcsstr(&m_pszBuffer[nStart], pszStr);
-	return (p != NULL) ? (int)(((char *)p - (char *)m_pszBuffer) / sizeof(TCHAR)) : npos;
+	p = _tcsstr(&m_buffer[nStart], str);
+	return (p != NULL) ? (int)(((char *)p - (char *)m_buffer) / sizeof(TCHAR)) : npos;
 }
 
 /**
@@ -361,10 +411,10 @@ int String::find(const TCHAR *pszStr, int nStart)
  */
 void String::trim()
 {
-	if (m_pszBuffer != NULL)
+	if (m_buffer != NULL)
 	{
-		Trim(m_pszBuffer);
-		m_dwBufSize = (UINT32)_tcslen(m_pszBuffer) + 1;
+		Trim(m_buffer);
+		m_length = _tcslen(m_buffer);
 	}
 }
 
@@ -373,12 +423,22 @@ void String::trim()
  */
 void String::shrink(int chars)
 {
-	if (m_dwBufSize > 1)
+	if (m_length > 0)
 	{
-		m_dwBufSize -= min(m_dwBufSize - 1, (UINT32)chars);
-		if (m_pszBuffer != NULL)
-			m_pszBuffer[m_dwBufSize - 1] = 0;
+		m_length -= min(m_length, chars);
+		if (m_buffer != NULL)
+			m_buffer[m_length] = 0;
 	}
+}
+
+/**
+ * Clear string
+ */
+void String::clear()
+{
+   m_length = 0;
+   if (m_buffer != NULL)
+      m_buffer[m_length] = 0;
 }
 
 /**
@@ -387,8 +447,8 @@ void String::shrink(int chars)
 char *String::getUTF8String()
 {
 #ifdef UNICODE
-	return UTF8StringFromWideString(m_pszBuffer);
+	return UTF8StringFromWideString(m_buffer);
 #else
-	return strdup(m_pszBuffer);
+	return strdup(m_buffer);
 #endif
 }

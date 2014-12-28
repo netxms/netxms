@@ -939,7 +939,7 @@ void CreateNXMPTrapRecord(String &str, UINT32 dwId)
    {
       if (m_pTrapCfg[i].dwId == dwId)
       {
-			str.addFormattedString(_T("\t\t<trap id=\"%d\">\n")
+			str.appendFormattedString(_T("\t\t<trap id=\"%d\">\n")
 			                       _T("\t\t\t<oid>%s</oid>\n")
 			                       _T("\t\t\t<description>%s</description>\n")
 			                       _T("\t\t\t<userTag>%s</userTag>\n"), dwId,
@@ -950,27 +950,27 @@ void CreateNXMPTrapRecord(String &str, UINT32 dwId)
 										  (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].szUserTag));
 
 		   EventNameFromCode(m_pTrapCfg[i].dwEventCode, szBuffer);
-			str.addFormattedString(_T("\t\t\t<event>%s</event>\n"), (const TCHAR *)EscapeStringForXML2(szBuffer));
+			str.appendFormattedString(_T("\t\t\t<event>%s</event>\n"), (const TCHAR *)EscapeStringForXML2(szBuffer));
 			if (m_pTrapCfg[i].dwNumMaps > 0)
 			{
 				str += _T("\t\t\t<parameters>\n");
 				for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
 				{
-					str.addFormattedString(_T("\t\t\t\t<parameter id=\"%d\">\n")
+					str.appendFormattedString(_T("\t\t\t\t<parameter id=\"%d\">\n")
 			                             _T("\t\t\t\t\t<flags>%d</flags>\n")
 					                       _T("\t\t\t\t\t<description>%s</description>\n"),
 												  j + 1, m_pTrapCfg[i].pMaps[j].dwFlags,
 												  (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].pMaps[j].szDescription));
                if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
 					{
-						str.addFormattedString(_T("\t\t\t\t\t<oid>%s</oid>\n"),
+						str.appendFormattedString(_T("\t\t\t\t\t<oid>%s</oid>\n"),
 						                       SNMPConvertOIDToText(m_pTrapCfg[i].pMaps[j].dwOidLen,
 													                       m_pTrapCfg[i].pMaps[j].pdwObjectId,
 																				  szBuffer, 1024));
 					}
 					else
 					{
-						str.addFormattedString(_T("\t\t\t\t\t<position>%d</position>\n"),
+						str.appendFormattedString(_T("\t\t\t\t\t<position>%d</position>\n"),
 						                       m_pTrapCfg[i].pMaps[j].dwOidLen & 0x7FFFFFFF);
 					}
 					str += _T("\t\t\t\t</parameter>\n");

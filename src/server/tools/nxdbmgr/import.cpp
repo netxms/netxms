@@ -36,10 +36,10 @@ static int ImportTableCB(void *arg, int cols, char **data, char **names)
 	String query;
 	int i;
 
-	query.addFormattedString(_T("INSERT INTO %s ("), arg);
+	query.appendFormattedString(_T("INSERT INTO %s ("), arg);
 	for(i = 0; i < cols; i++)
 	{
-		query.addMultiByteString(names[i], (DWORD)strlen(names[i]), CP_UTF8);
+		query.appendMBString(names[i], strlen(names[i]), CP_UTF8);
 		query += _T(",");
 	}
 	query.shrink();

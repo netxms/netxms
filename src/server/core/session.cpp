@@ -4851,7 +4851,7 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
                if ((pParent->getObjectClass() == OBJECT_TEMPLATE) &&
                    ((pChild->getObjectClass() == OBJECT_NODE) || (pChild->getObjectClass() == OBJECT_CLUSTER) || (pChild->getObjectClass() == OBJECT_MOBILEDEVICE)))
                {
-                  ((Template *)pParent)->queueRemoveFromTarget(pChild->getId(), pRequest->getFieldAsUInt16(VID_REMOVE_DCI));
+                  ((Template *)pParent)->queueRemoveFromTarget(pChild->getId(), pRequest->getFieldAsBoolean(VID_REMOVE_DCI));
                }
                else if ((pParent->getObjectClass() == OBJECT_CLUSTER) &&
                         (pChild->getObjectClass() == OBJECT_NODE))
@@ -8006,7 +8006,7 @@ void ClientSession::updateScript(NXCPMessage *pRequest)
 				String prepCode = DBPrepareString(g_hCoreDB, pszCode);
             free(pszCode);
 
-				size_t qlen = (size_t)prepCode.getSize() + MAX_DB_STRING + 256;
+				size_t qlen = prepCode.length() + MAX_DB_STRING + 256;
             pszQuery = (TCHAR *)malloc(qlen * sizeof(TCHAR));
 
             if (dwScriptId == 0)
@@ -9537,7 +9537,7 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
          str = _T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>3</formatVersion>\n\t<description>");
 			temp = pRequest->getFieldAsString(VID_DESCRIPTION);
-			str.addDynamicString(EscapeStringForXML(temp, -1));
+			str.appendPreallocated(EscapeStringForXML(temp, -1));
 			free(temp);
          str += _T("</description>\n");
 

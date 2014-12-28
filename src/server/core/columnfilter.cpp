@@ -103,36 +103,36 @@ String ColumnFilter::generateSql()
 		case FILTER_EQUALS:
 			if (m_negated)
 				sql += _T("NOT ");
-			sql.addFormattedString(_T("%s = ") INT64_FMT, m_column, m_value.numericValue);
+			sql.appendFormattedString(_T("%s = ") INT64_FMT, m_column, m_value.numericValue);
 			break;
 		case FILTER_LESS:
 			if (m_negated)
 				sql += _T("NOT ");
-			sql.addFormattedString(_T("%s < ") INT64_FMT, m_column, m_value.numericValue);
+			sql.appendFormattedString(_T("%s < ") INT64_FMT, m_column, m_value.numericValue);
 			break;
 		case FILTER_GREATER:
 			if (m_negated)
 				sql += _T("NOT ");
-			sql.addFormattedString(_T("%s > ") INT64_FMT, m_column, m_value.numericValue);
+			sql.appendFormattedString(_T("%s > ") INT64_FMT, m_column, m_value.numericValue);
 			break;
 		case FILTER_RANGE:
 			if (m_negated)
 				sql += _T("NOT ");
-			sql.addFormattedString(_T("%s BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, m_column, m_value.range.start, m_value.range.end);
+			sql.appendFormattedString(_T("%s BETWEEN ") INT64_FMT _T(" AND ") INT64_FMT, m_column, m_value.range.start, m_value.range.end);
 			break;
 		case FILTER_LIKE:
 			if (m_value.like[0] == 0)
 			{
 				if (m_negated)
-					sql.addFormattedString(_T("(%s IS NOT NULL) AND (%s <> '')"), m_column, m_column);
+					sql.appendFormattedString(_T("(%s IS NOT NULL) AND (%s <> '')"), m_column, m_column);
 				else
-					sql.addFormattedString(_T("(%s IS NULL) OR (%s = '')"), m_column, m_column);
+					sql.appendFormattedString(_T("(%s IS NULL) OR (%s = '')"), m_column, m_column);
 			}
 			else
 			{
 				if (m_negated)
 					sql += _T("NOT ");
-				sql.addFormattedString(_T("%s LIKE %s"), m_column, (const TCHAR *)DBPrepareString(g_hCoreDB, m_value.like));
+				sql.appendFormattedString(_T("%s LIKE %s"), m_column, (const TCHAR *)DBPrepareString(g_hCoreDB, m_value.like));
 			}
 			break;
 		case FILTER_SET:

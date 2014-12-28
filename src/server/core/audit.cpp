@@ -146,10 +146,10 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32
 	NXCPMessage msg;
 
 	va_start(args, format);
-	text.addFormattedStringV(format, args);
+	text.appendFormattedStringV(format, args);
 	va_end(args);
 
-	query.addFormattedString(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message) VALUES(%d,") TIME_T_FMT _T(",%s,%d,%d,%s,%d,%d,%s)"),
+	query.appendFormattedString(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message) VALUES(%d,") TIME_T_FMT _T(",%s,%d,%d,%s,%d,%d,%s)"),
       InterlockedIncrement(&m_recordId), time(NULL), (const TCHAR *)DBPrepareString(g_hCoreDB, subsys), isSuccess ? 1 : 0, 
 		userId, (const TCHAR *)DBPrepareString(g_hCoreDB, workstation), sessionId, objectId, (const TCHAR *)DBPrepareString(g_hCoreDB, text));
 	QueueSQLRequest(query);
@@ -176,10 +176,10 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32
 		}
 		else
 		{
-			extText.addFormattedString(_T("{%d}"), userId);
+			extText.appendFormattedString(_T("{%d}"), userId);
 		}
 
-		extText.addFormattedString(_T("@%s] "), workstation);
+		extText.appendFormattedString(_T("@%s] "), workstation);
 
 		extText += (const TCHAR *)text;
 		SendSyslogRecord((const TCHAR *)extText);

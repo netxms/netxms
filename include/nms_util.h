@@ -102,9 +102,10 @@
 /**
  * nxlog_open() flags
  */
-#define NXLOG_USE_SYSLOG		((UINT32)0x00000001)
-#define NXLOG_PRINT_TO_STDOUT	((UINT32)0x00000002)
-#define NXLOG_IS_OPEN         ((UINT32)0x80000000)
+#define NXLOG_USE_SYSLOG		  ((UINT32)0x00000001)
+#define NXLOG_PRINT_TO_STDOUT	  ((UINT32)0x00000002)
+#define NXLOG_BACKGROUND_WRITER ((UINT32)0x00000004)
+#define NXLOG_IS_OPEN           ((UINT32)0x80000000)
 
 /**
  * nxlog rotation policy
@@ -248,8 +249,10 @@ public:
 class LIBNETXMS_EXPORTABLE String
 {
 protected:
-   TCHAR *m_pszBuffer;
-   UINT32 m_dwBufSize;
+   TCHAR *m_buffer;
+   size_t m_length;
+   size_t m_allocated;
+   int m_allocationStep;
 
 public:
 	static const int npos;
@@ -259,32 +262,38 @@ public:
 	String(const String &src);
    ~String();
 
-	TCHAR *getBuffer() { return m_pszBuffer; }
-   void setBuffer(TCHAR *pszBuffer);
+	TCHAR *getBuffer() { return m_buffer; }
+   void setBuffer(TCHAR *buffer);
 
-   const String& operator =(const TCHAR *pszStr);
+   int getAllocationStep() { return m_allocationStep; }
+   void setAllocationStep(int step) { m_allocationStep = step; }
+
+   const String& operator =(const TCHAR *str);
 	const String& operator =(const String &src);
    const String&  operator +=(const TCHAR *str);
    const String&  operator +=(const String &str);
-   operator const TCHAR*() { return CHECK_NULL_EX(m_pszBuffer); }
+   operator const TCHAR*() { return CHECK_NULL_EX(m_buffer); }
 
 	char *getUTF8String();
 
-	void addString(const TCHAR *pStr, UINT32 dwLen);
-	void addDynamicString(TCHAR *pszStr) { if (pszStr != NULL) { *this += pszStr; free(pszStr); } }
+   void append(const TCHAR *str) { if (str != NULL) append(str, _tcslen(str)); }
+	void append(const TCHAR *str, size_t len);
 
-	void addMultiByteString(const char *pStr, UINT32 size, int nCodePage);
-	void addWideCharString(const WCHAR *pStr, UINT32 size);
+	void appendPreallocated(TCHAR *str) { if (str != NULL) { append(str); free(str); } }
 
-   void addFormattedString(const TCHAR *format, ...);
-   void addFormattedStringV(const TCHAR *format, va_list args);
+	void appendMBString(const char *str, size_t len, int nCodePage);
+	void appendWideString(const WCHAR *str, size_t len);
 
-	UINT32 getSize() { return m_dwBufSize > 0 ? m_dwBufSize - 1 : 0; }
-	BOOL isEmpty() { return m_dwBufSize <= 1; }
+   void appendFormattedString(const TCHAR *format, ...);
+   void appendFormattedStringV(const TCHAR *format, va_list args);
 
-	TCHAR *subStr(int nStart, int nLen, TCHAR *pszBuffer);
-	TCHAR *subStr(int nStart, int nLen) { return subStr(nStart, nLen, NULL); }
-	int find(const TCHAR *pszStr, int nStart = 0);
+   void clear();
+
+	size_t length() const { return m_length; }
+	bool isEmpty() const { return m_length == 0; }
+
+	TCHAR *substring(int nStart, int nLen, TCHAR *pszBuffer = NULL);
+	int find(const TCHAR *str, int nStart = 0);
 
    void escapeCharacter(int ch, int esc);
    void replace(const TCHAR *pszSrc, const TCHAR *pszDst);

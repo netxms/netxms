@@ -197,6 +197,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("Action"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszActionList, NULL },
    { _T("ActionShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShellActionList, NULL },
    { _T("AppAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszAppAgentList, NULL },
+   { _T("BackgroundLogWriter"), CT_BOOLEAN, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_dwFlags, NULL },
    { _T("ControlServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList, NULL },
    { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags, NULL },
 	{ _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDirectory, NULL },
@@ -718,7 +719,8 @@ BOOL Initialize()
 	}
    if (!nxlog_open((g_dwFlags & AF_USE_SYSLOG) ? NXAGENTD_SYSLOG_NAME : g_szLogFile,
 	                ((g_dwFlags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
-	                   ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
+	                ((g_dwFlags & AF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
+                   ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
 	                _T("NXAGENTD.EXE"),
 #ifdef _WIN32
 	                0, NULL))

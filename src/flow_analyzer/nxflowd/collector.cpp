@@ -153,7 +153,7 @@ static int H_DataRecord(ipfixs_node_t *node, ipfixt_node_t *trec, ipfix_datareco
 						fields += _T(",");
 						fields += s_fieldMapping[j].dbField;
 						trec->ipfixt->fields[i].elem->snprint(buffer, sizeof(buffer), data->addrs[i], data->lens[i]);
-						values.addFormattedString(_T(",'%hs'"), buffer);
+						values.appendFormattedString(_T(",'%hs'"), buffer);
 						break;
 					}
 				}
@@ -165,7 +165,7 @@ static int H_DataRecord(ipfixs_node_t *node, ipfixt_node_t *trec, ipfix_datareco
 	{
 		String query = _T("INSERT INTO flows (flow_id,start_time,end_time");
 		query += (const TCHAR *)fields;
-		query.addFormattedString(_T(") VALUES (") INT64_FMT _T(",") INT64_FMT _T(",") INT64_FMT, s_flowId++, flowStartTime, flowEndTime);
+		query.appendFormattedString(_T(") VALUES (") INT64_FMT _T(",") INT64_FMT _T(",") INT64_FMT, s_flowId++, flowStartTime, flowEndTime);
 		query += (const TCHAR *)values;
 		query += _T(")");
 

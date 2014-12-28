@@ -414,7 +414,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		name = XMLGetAttr(attrs, "name");
 #ifdef UNICODE
 		ps->macroName = L"";
-		ps->macroName.addMultiByteString(name, (UINT32)strlen(name), CP_UTF8);
+		ps->macroName.appendMBString(name, strlen(name), CP_UTF8);
 #else
 		ps->macroName = CHECK_NULL_A(name);
 #endif
@@ -439,7 +439,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->ruleContext = L"";
 		const char *context = XMLGetAttr(attrs, "context");
 		if (context != NULL)
-			ps->ruleContext.addMultiByteString(context, (UINT32)strlen(context), CP_UTF8);
+			ps->ruleContext.appendMBString(context, strlen(context), CP_UTF8);
 #else
 		ps->ruleContext = XMLGetAttr(attrs, "context");
 #endif
@@ -653,31 +653,31 @@ static void CharData(void *userData, const XML_Char *s, int len)
 	switch(ps->state)
 	{
 		case XML_STATE_MATCH:
-			ps->regexp.addMultiByteString(s, len, CP_UTF8);
+			ps->regexp.appendMBString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_ID:
-			ps->id.addMultiByteString(s, len, CP_UTF8);
+			ps->id.appendMBString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_LEVEL:
-			ps->level.addMultiByteString(s, len, CP_UTF8);
+			ps->level.appendMBString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_SOURCE:
-			ps->source.addMultiByteString(s, len, CP_UTF8);
+			ps->source.appendMBString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_EVENT:
-			ps->event.addMultiByteString(s, len, CP_UTF8);
+			ps->event.appendMBString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_FILE:
-			ps->file.addMultiByteString(s, len, CP_UTF8);
+			ps->file.appendMBString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_CONTEXT:
-			ps->context.addMultiByteString(s, len, CP_UTF8);
+			ps->context.appendMBString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_DESCRIPTION:
-			ps->description.addMultiByteString(s, len, CP_UTF8);
+			ps->description.appendMBString(s, len, CP_UTF8);
 			break;
 		case XML_STATE_MACRO:
-			ps->macro.addMultiByteString(s, len, CP_UTF8);
+			ps->macro.appendMBString(s, len, CP_UTF8);
 			break;
 		default:
 			break;

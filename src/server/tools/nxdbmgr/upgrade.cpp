@@ -146,7 +146,7 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 {
 	DB_RESULT hResult;
 	TCHAR *query;
-	int queryLen = 512;
+	size_t queryLen = 512;
 	BOOL success = FALSE;
 
 	query = (TCHAR *)malloc(queryLen * sizeof(TCHAR));
@@ -186,9 +186,9 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 		{
 			DecodeSQLString(value);
 			String newValue = DBPrepareString(g_hCoreDB, value);
-			if ((int)newValue.getSize() + 256 > queryLen)
+			if (newValue.length() + 256 > queryLen)
 			{
-				queryLen = newValue.getSize() + 256;
+				queryLen = newValue.length() + 256;
 				query = (TCHAR *)realloc(query, queryLen * sizeof(TCHAR));
 			}
 			if (isStringId)

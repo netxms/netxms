@@ -291,7 +291,7 @@ BOOL NetworkMap::saveToDatabase(DB_HANDLE hdb)
 		e->updateConfig(config);
 		String data = DBPrepareString(hdb, config->createXml());
 		delete config;
-		int len = data.getSize() + 256;
+		size_t len = data.length() + 256;
 		TCHAR *eq = (TCHAR *)malloc(len * sizeof(TCHAR));
       _sntprintf(eq, len, _T("INSERT INTO network_map_elements (map_id,element_id,element_type,element_data,flags) VALUES (%d,%d,%d,%s,%d)"),
 		           m_id, e->getId(), e->getType(), (const TCHAR *)data, e->getFlags());

@@ -586,7 +586,7 @@ void ConfigEntry::print(FILE *file, int level)
 static bool AddAttribute(const TCHAR *key, const void *value, void *userData)
 {
    if (_tcscmp(key, _T("id")))
-      ((String *)userData)->addFormattedString(_T(" %s=\"%s\""), key, (const TCHAR *)value);
+      ((String *)userData)->appendFormattedString(_T(" %s=\"%s\""), key, (const TCHAR *)value);
    return true;
 }
 
@@ -601,9 +601,9 @@ void ConfigEntry::createXml(String &xml, int level)
       *ptr = 0;
 
    if (m_id == 0)
-      xml.addFormattedString(_T("%*s<%s"), level * 4, _T(""), name);
+      xml.appendFormattedString(_T("%*s<%s"), level * 4, _T(""), name);
    else
-      xml.addFormattedString(_T("%*s<%s id=\"%d\""), level * 4, _T(""), name, m_id);
+      xml.appendFormattedString(_T("%*s<%s id=\"%d\""), level * 4, _T(""), name, m_id);
    m_attributes.forEach(AddAttribute, &xml);
    xml += _T(">");
 
@@ -612,21 +612,21 @@ void ConfigEntry::createXml(String &xml, int level)
       xml += _T("\n");
       for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
          e->createXml(xml, level + 1);
-      xml.addFormattedString(_T("%*s"), level * 4, _T(""));
+      xml.appendFormattedString(_T("%*s"), level * 4, _T(""));
    }
 
    if (m_valueCount > 0)
-      xml.addDynamicString(EscapeStringForXML(m_values[0], -1));
-   xml.addFormattedString(_T("</%s>\n"), name);
+      xml.appendPreallocated(EscapeStringForXML(m_values[0], -1));
+   xml.appendFormattedString(_T("</%s>\n"), name);
 
    for(int i = 1, len = 0; i < m_valueCount; i++)
    {
       if (m_id == 0)
-         xml.addFormattedString(_T("%*s<%s>"), level * 4, _T(""), name);
+         xml.appendFormattedString(_T("%*s<%s>"), level * 4, _T(""), name);
       else
-         xml.addFormattedString(_T("%*s<%s id=\"%d\">"), level * 4, _T(""), name, m_id);
-      xml.addDynamicString(EscapeStringForXML(m_values[i], -1));
-      xml.addFormattedString(_T("</%s>\n"), name);
+         xml.appendFormattedString(_T("%*s<%s id=\"%d\">"), level * 4, _T(""), name, m_id);
+      xml.appendPreallocated(EscapeStringForXML(m_values[i], -1));
+      xml.appendFormattedString(_T("</%s>\n"), name);
    }
 
    free(name);
@@ -1283,7 +1283,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
    XML_PARSER_STATE *ps = (XML_PARSER_STATE *) userData;
 
    if ((ps->level > 0) && (ps->level <= MAX_STACK_DEPTH))
-      ps->charData[ps->level - 1].addMultiByteString(s, len, CP_UTF8);
+      ps->charData[ps->level - 1].appendMBString(s, len, CP_UTF8);
 }
 
 /**

@@ -568,7 +568,9 @@ BOOL NXCORE_EXPORTABLE Initialize()
 				_tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
 	}
    if (!nxlog_open((g_flags & AF_USE_SYSLOG) ? NETXMSD_SYSLOG_NAME : g_szLogFile,
-	                ((g_flags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) | ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
+	                ((g_flags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) | 
+	                ((g_flags & AF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) | 
+                   ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
                    _T("LIBNXSRV.DLL"),
 #ifdef _WIN32
 				       0, NULL))
@@ -1331,6 +1333,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_TRAPS_FROM_UNMANAGED_NODES));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_RESOLVE_IP_FOR_EACH_STATUS_POLL));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_PERFDATA_STORAGE_DRIVER_LOADED));
+			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_BACKGROUND_LOG_WRITER));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
 			ConsolePrintf(pCtx, _T("\n"));

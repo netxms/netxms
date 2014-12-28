@@ -67,7 +67,7 @@ BOOL AgentPolicyConfig::saveToDatabase(DB_HANDLE hdb)
 	if (success)
 	{
 		String data = DBPrepareString(hdb, m_fileContent);
-		int len = (int)data.getSize() + 256;
+		size_t len = data.length() + 256;
 		TCHAR *query = (TCHAR *)malloc(len * sizeof(TCHAR));
 
 		_sntprintf(query, len, _T("SELECT policy_id FROM ap_config_files WHERE policy_id=%d"), m_id);
