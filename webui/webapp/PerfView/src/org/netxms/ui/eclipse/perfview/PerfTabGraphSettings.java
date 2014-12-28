@@ -319,7 +319,7 @@ public class PerfTabGraphSettings
 		{
 			if (parentDciId == s.getRuntimeDciInfo().getId())
 				return;	// found valid parent ID
-			if ((parentDciId == s.getRuntimeDciInfo().getTemplateDciId()) &&
+			if (((parentDciId == s.getRuntimeDciInfo().getTemplateDciId()) || (parentDciId == s.getRuntimeDciInfo().getRootTemplateDciId())) &&
 			    s.getRuntimeDciInfo().getInstance().equals(runtimeDciInfo.getInstance()))
 			{
 				// found parent ID from template

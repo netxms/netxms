@@ -1416,7 +1416,7 @@ void DCItem::updateFromTemplate(DCObject *src)
       expandMacros(item->m_instance, m_instance, MAX_DB_STRING);
       m_instanceDiscoveryMethod = item->m_instanceDiscoveryMethod;
       safe_free(m_instanceDiscoveryData);
-	   m_instanceDiscoveryData = (item->m_instanceDiscoveryData != NULL) ? _tcsdup(item->m_instanceDiscoveryData) : NULL;
+	   m_instanceDiscoveryData = _tcsdup_ex(item->m_instanceDiscoveryData);
       safe_free_and_null(m_instanceFilterSource);
       delete_and_null(m_instanceFilter);
       setInstanceFilter(item->m_instanceFilterSource);

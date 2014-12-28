@@ -890,7 +890,7 @@ void DCObject::updateFromTemplate(DCObject *src)
 	m_snmpPort = src->m_snmpPort;
 
 	safe_free(m_pszPerfTabSettings);
-	m_pszPerfTabSettings = (src->m_pszPerfTabSettings != NULL) ? _tcsdup(src->m_pszPerfTabSettings) : NULL;
+	m_pszPerfTabSettings = _tcsdup_ex(src->m_pszPerfTabSettings);
 
    setTransformationScript(src->m_transformationScriptSource);
 

@@ -592,7 +592,7 @@ public:
    bool deleteDCObject(UINT32 dcObjectId, bool needLock);
    bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus);
    int getItemType(UINT32 dwItemId);
-   DCObject *getDCObjectById(UINT32 itemId);
+   DCObject *getDCObjectById(UINT32 itemId, bool lock = true);
    DCObject *getDCObjectByTemplateId(UINT32 tmplItemId);
    DCObject *getDCObjectByIndex(int index);
    DCObject *getDCObjectByName(const TCHAR *name);

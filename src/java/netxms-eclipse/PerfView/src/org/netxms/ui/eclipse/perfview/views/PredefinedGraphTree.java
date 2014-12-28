@@ -20,13 +20,10 @@ package org.netxms.ui.eclipse.perfview.views;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -36,7 +33,6 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IElementComparer;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -58,10 +54,7 @@ import org.netxms.api.client.SessionListener;
 import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.client.ServerAction;
-import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.GraphSettings;
-import org.netxms.client.objects.DashboardRoot;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -422,7 +415,6 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 	/**
 	 * Delete predefined graph(s)
 	 */
-	@SuppressWarnings("unchecked")
 	private void deletePredefinedGraph()
 	{
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
@@ -453,15 +445,17 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 		}
 	}
 
+   /* (non-Javadoc)
+    * @see org.netxms.api.client.SessionListener#notificationHandler(org.netxms.api.client.SessionNotification)
+    */
    @Override
    public void notificationHandler(final SessionNotification n)
    {
       switch(n.getCode())
       {
          case NXCNotification.PREDEFINED_GRAPHS_DELETED:
-            
-            
             viewer.getControl().getDisplay().asyncExec(new Runnable() {
+               @SuppressWarnings("unchecked")
                @Override
                public void run()
                {
@@ -479,6 +473,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
             break;
          case NXCNotification.PREDEFINED_GRAPHS_CHANGED:            
             viewer.getControl().getDisplay().asyncExec(new Runnable() {
+               @SuppressWarnings("unchecked")
                @Override
                public void run()
                {

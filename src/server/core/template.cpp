@@ -690,12 +690,13 @@ int Template::getItemType(UINT32 dwItemId)
 /**
  * Get item by it's id
  */
-DCObject *Template::getDCObjectById(UINT32 itemId)
+DCObject *Template::getDCObjectById(UINT32 itemId, bool lock)
 {
    DCObject *object = NULL;
 
-   lockDciAccess(false);
-   // Check if that item exists
+   if (lock)
+      lockDciAccess(false);
+
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *curr = m_dcObjects->get(i);
@@ -706,7 +707,8 @@ DCObject *Template::getDCObjectById(UINT32 itemId)
 		}
 	}
 
-   unlockDciAccess();
+   if (lock)
+      unlockDciAccess();
    return object;
 }
 

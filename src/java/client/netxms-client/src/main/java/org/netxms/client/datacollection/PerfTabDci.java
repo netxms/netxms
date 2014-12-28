@@ -26,7 +26,8 @@ import org.netxms.base.NXCPMessage;
 public class PerfTabDci
 {
 	private long id;		// DCI ID
-	private long templateDciId;	// ID of related template DCI, or 0 for standalone DCIs
+	private long templateDciId;	  // ID of related template DCI, or 0 for standalone DCIs
+	private long rootTemplateDciId; // Root template DCI ID (for DCI created by instance discovery from template)
 	private int status;
 	private String description;
 	private String perfTabSettings;
@@ -42,6 +43,7 @@ public class PerfTabDci
 		instance = msg.getFieldAsString(baseId + 6);
 		if (instance == null)
 			instance = "";
+		rootTemplateDciId = msg.getFieldAsInt64(baseId + 7);
 	}
 
 	/**
@@ -85,6 +87,14 @@ public class PerfTabDci
 	}
 
 	/**
+    * @return the rootTemplateDciId
+    */
+   public long getRootTemplateDciId()
+   {
+      return rootTemplateDciId;
+   }
+
+   /**
 	 * @return the instance
 	 */
 	public final String getInstance()
