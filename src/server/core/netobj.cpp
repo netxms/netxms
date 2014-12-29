@@ -1012,8 +1012,6 @@ void NetObj::setModified()
  */
 UINT32 NetObj::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 {
-   BOOL bRecalcStatus = FALSE;
-
    if (!bAlreadyLocked)
       lockProperties();
 
@@ -1037,7 +1035,6 @@ UINT32 NetObj::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
       m_iStatusThresholds[1] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_2);
       m_iStatusThresholds[2] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_3);
       m_iStatusThresholds[3] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_4);
-      bRecalcStatus = TRUE;
    }
 
 	// Change image
@@ -1126,9 +1123,6 @@ UINT32 NetObj::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 
    setModified();
    unlockProperties();
-
-   if (bRecalcStatus)
-      calculateCompoundStatus(TRUE);
 
    return RCC_SUCCESS;
 }

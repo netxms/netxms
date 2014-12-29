@@ -1837,6 +1837,8 @@ protected:
 	UINT32 objectIdFromElementId(UINT32 eid);
 	UINT32 elementIdFromObjectId(UINT32 eid);
 
+   void setFilter(const TCHAR *filter);
+
 public:
    NetworkMap();
 	NetworkMap(int type, UINT32 seed);
@@ -1859,7 +1861,6 @@ public:
    int getBackgroundColor() { return m_backgroundColor; }
    void setBackgroundColor(int color) { m_backgroundColor = color; }
 
-	void setFilter(const TCHAR *filter);
    bool isAllowedOnMap(NetObj *object);
 };
 

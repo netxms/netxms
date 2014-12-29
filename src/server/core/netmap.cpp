@@ -829,13 +829,12 @@ UINT32 NetworkMap::elementIdFromObjectId(UINT32 oid)
 }
 
 /**
- * Set filter.
+ * Set filter. Object properties must be already locked.
  *
  * @param filter new filter script code or NULL to clear filter
  */
 void NetworkMap::setFilter(const TCHAR *filter)
 {
-	lockProperties();
 	safe_free(m_filterSource);
 	delete m_filter;
 	if ((filter != NULL) && (*filter != 0))
@@ -852,8 +851,6 @@ void NetworkMap::setFilter(const TCHAR *filter)
 		m_filterSource = NULL;
 		m_filter = NULL;
 	}
-	setModified();
-	unlockProperties();
 }
 
 /**
