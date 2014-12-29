@@ -539,9 +539,6 @@ UINT32 NetworkMap::modifyFromMessage(NXCPMessage *request, BOOL bAlreadyLocked)
 	if (request->isFieldExist(VID_BACKGROUND_COLOR))
 		m_backgroundColor = (int)request->getFieldAsUInt32(VID_BACKGROUND_COLOR);
 
-   if (request->isFieldExist(VID_FILTER))
-		m_backgroundColor = (int)request->getFieldAsUInt32(VID_FILTER);
-
 	if (request->isFieldExist(VID_BACKGROUND))
 	{
 		request->getFieldAsBinary(VID_BACKGROUND, m_background, UUID_LENGTH);

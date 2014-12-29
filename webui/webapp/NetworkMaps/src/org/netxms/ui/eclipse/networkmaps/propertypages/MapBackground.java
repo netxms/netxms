@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2014 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -237,16 +237,16 @@ public class MapBackground extends PropertyPage
       layout = new GridLayout();
       layout.numColumns = 2;
       layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
-      layout.marginHeight = 0;
       layout.marginWidth = 0;
-      layout.marginTop = WidgetHelper.OUTER_SPACING;
       colorArea.setLayout(layout);
+      
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       colorArea.setLayoutData(gd);
       Label label = new Label(colorArea, SWT.NONE);
       label.setText(Messages.get().MapBackground_BkgndColor);
+      
       backgroundColor = new ColorSelector(colorArea);
       backgroundColor.setColorValue(ColorConverter.rgbFromInt(object.getBackgroundColor()));
 
