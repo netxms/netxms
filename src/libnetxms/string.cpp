@@ -106,7 +106,7 @@ const String& String::operator +=(const TCHAR *str)
    	size_t len = _tcslen(str);
       if (m_length + len >= m_allocated)
       {
-         m_allocated += max(m_allocationStep, len);
+         m_allocated += max(m_allocationStep, len + 1);
       	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
       }
    	_tcscpy(&m_buffer[m_length], str);
@@ -124,7 +124,7 @@ const String& String::operator +=(const String &str)
    {
       if (m_length + str.m_length >= m_allocated)
       {
-         m_allocated += max(m_allocationStep, str.m_length);
+         m_allocated += max(m_allocationStep, str.m_length + 1);
       	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
       }
       memcpy(&m_buffer[m_length], str.m_buffer, (str.m_length + 1) * sizeof(TCHAR));
@@ -221,7 +221,7 @@ void String::append(const TCHAR *str, size_t len)
 
    if (m_length + len >= m_allocated)
    {
-      m_allocated += max(m_allocationStep, len);
+      m_allocated += max(m_allocationStep, len + 1);
    	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
    }
    memcpy(&m_buffer[m_length], str, len * sizeof(TCHAR));
@@ -237,7 +237,7 @@ void String::appendMBString(const char *str, size_t len, int nCodePage)
 #ifdef UNICODE
    if (m_length + len >= m_allocated)
    {
-      m_allocated += max(m_allocationStep, len);
+      m_allocated += max(m_allocationStep, len + 1);
    	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
    }
 	m_length += MultiByteToWideChar(nCodePage, (nCodePage == CP_UTF8) ? 0 : MB_PRECOMPOSED, str, (int)len, &m_buffer[m_length], (int)len);
@@ -257,7 +257,7 @@ void String::appendWideString(const WCHAR *str, size_t len)
 #else
    if (m_length + len >= m_allocated)
    {
-      m_allocated += max(m_allocationStep, len);
+      m_allocated += max(m_allocationStep, len + 1);
    	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
    }
 	WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, len, &m_buffer[m_length], len, NULL, NULL);
