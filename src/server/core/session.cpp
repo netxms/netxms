@@ -5742,11 +5742,9 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
 	safe_free(pData);
 }
 
-
-//
-// Send message from poller to client
-//
-
+/**
+ * Send message from poller to client
+ */
 void ClientSession::sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg)
 {
    NXCPMessage msg;
@@ -5758,11 +5756,9 @@ void ClientSession::sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg)
    sendMessage(&msg);
 }
 
-
-//
-// Node poller thread
-//
-
+/**
+ * Node poller thread
+ */
 void ClientSession::pollerThread(Node *pNode, int iPollType, UINT32 dwRqId)
 {
    NXCPMessage msg;
