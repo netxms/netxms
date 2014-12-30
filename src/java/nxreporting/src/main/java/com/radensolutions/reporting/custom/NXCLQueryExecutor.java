@@ -64,6 +64,14 @@ public class NXCLQueryExecutor implements JRQueryExecuter {
             PerformanceDataSource dataSource = new PerformanceDataSource(PerformanceDataSource.Type.TRAFFIC, dataset, parametersMap);
             dataSource.connect(settings.getNetxmsServer(), settings.getNetxmsLogin(), settings.getNetxmsPassword());
             return dataSource;
+        } else if (queryString.equalsIgnoreCase("perf-disk")) {
+            PerformanceDataSource dataSource = new PerformanceDataSource(PerformanceDataSource.Type.DISK, dataset, parametersMap);
+            dataSource.connect(settings.getNetxmsServer(), settings.getNetxmsLogin(), settings.getNetxmsPassword());
+            return dataSource;
+        } else if (queryString.equalsIgnoreCase("inventory-by-platform")) {
+            InventoryDataSource dataSource = new InventoryDataSource(dataset, parametersMap);
+            dataSource.connect(settings.getNetxmsServer(), settings.getNetxmsLogin(), settings.getNetxmsPassword());
+            return dataSource;
         }
         return null;
     }

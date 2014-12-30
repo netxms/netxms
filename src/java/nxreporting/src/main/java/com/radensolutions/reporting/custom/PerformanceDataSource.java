@@ -48,24 +48,45 @@ public class PerformanceDataSource extends NXCLDataSource {
         ArrayList<DciSummaryTableColumn> columns = new ArrayList<DciSummaryTableColumn>();
         switch (type) {
             case CPU:
+                columns.add(new DciSummaryTableColumn("System.CPU.Usage", "System.CPU.Usage", 0));
+                break;
             case TRAFFIC:
                 columns.add(new DciSummaryTableColumn("System.CPU.Usage", "System.CPU.Usage", 0));
                 break;
+            case DISK:
+                columns.add(new DciSummaryTableColumn("FileSystem.UsedPerc", "FileSystem\\.UsedPerc.*", DciSummaryTableColumn.REGEXP_MATCH));
+                break;
         }
-        Table table = session.queryAdHocDciSummaryTable(baseObjectId, columns, AggregationFunction.AVERAGE, from, to, false);
+        Table table = session.queryAdHocDciSummaryTable(baseObjectId, columns, AggregationFunction.AVERAGE, from, to, true);
         for (TableRow row : table.getAllRows()) {
             rows.add(new ReportRow(row));
         }
-        Collections.sort(rows, new Comparator<ReportRow>() {
-            @Override
-            public int compare(ReportRow o1, ReportRow o2) {
-                int avg = o2.average.compareTo(o1.average);
-                if (avg != 0) {
-                    return avg;
-                }
-                return o1.nodeName.compareTo(o2.nodeName);
-            }
-        });
+        switch (type) {
+            case CPU:
+                Collections.sort(rows, new Comparator<ReportRow>() {
+                    @Override
+                    public int compare(ReportRow o1, ReportRow o2) {
+                        int valueResult = o2.value.compareTo(o1.value);
+                        if (valueResult != 0) {
+                            return valueResult;
+                        }
+                        return o1.nodeName.compareTo(o2.nodeName);
+                    }
+                });
+                break;
+            case DISK:
+                Collections.sort(rows, new Comparator<ReportRow>() {
+                    @Override
+                    public int compare(ReportRow o1, ReportRow o2) {
+                        int nameResult = o1.nodeName.compareTo(o2.nodeName);
+                        if (nameResult == 0) {
+                            return o2.value.compareTo(o1.value);
+                        }
+                        return nameResult;
+                    }
+                });
+                break;
+        }
     }
 
     @Override
@@ -84,35 +105,41 @@ public class PerformanceDataSource extends NXCLDataSource {
             return currentRow.nodeName;
         } else if (name.equalsIgnoreCase("id")) {
             return currentRow.id;
-        } else if (name.equalsIgnoreCase("average")) {
-            return currentRow.average;
+        } else if (name.equalsIgnoreCase("instance")) {
+            return currentRow.instance;
+        } else if (name.equalsIgnoreCase("value")) {
+            return currentRow.value;
         }
         return null;
     }
 
     public enum Type {
         CPU,
-        TRAFFIC
+        TRAFFIC,
+        DISK
     }
 
     private class ReportRow {
         long id;
         String nodeName;
-        Double average;
+        String instance;
+        Double value;
 
-        public ReportRow(long id, String nodeName, Double average) {
+        public ReportRow(long id, String nodeName, String instance, Double value) {
             this.id = id;
             this.nodeName = nodeName;
-            this.average = average;
+            this.instance = instance;
+            this.value = value;
         }
 
         public ReportRow(TableRow row) {
             id = row.getObjectId();
             nodeName = row.get(0).getValue();
+            instance = row.get(1).getValue();
             try {
-                average = new Double(row.get(1).getValue());
+                value = new Double(row.get(2).getValue());
             } catch (NumberFormatException e) {
-                average = 0.0;
+                value = 0.0;
             }
         }
     }
