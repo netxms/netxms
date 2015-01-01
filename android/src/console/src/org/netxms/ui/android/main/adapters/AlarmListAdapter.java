@@ -16,6 +16,7 @@ import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.views.CheckableLinearLayout;
 import org.netxms.ui.android.service.ClientConnectorService;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.res.Resources;
@@ -280,6 +281,7 @@ public class AlarmListAdapter extends BaseAdapter
 	 * @see android.widget.Adapter#getView(int, android.view.View,
 	 * android.view.ViewGroup)
 	 */
+	@SuppressLint("RtlHardcoded")
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent)
 	{

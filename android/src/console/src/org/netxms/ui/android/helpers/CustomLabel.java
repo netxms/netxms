@@ -8,18 +8,19 @@ import com.jjoe64.graphview.CustomLabelFormatter;
 public class CustomLabel implements CustomLabelFormatter
 {
 	private int m = 1;
+	private boolean drawDate = false;
 
-	public CustomLabel(int m)
+	public CustomLabel(int m, boolean drawDate)
 	{
 		this.m = m;
+		this.drawDate = drawDate;
 	}
-
 	@Override
 	public String formatLabel(double value, boolean isValueX)
 	{
 		if (isValueX)
 		{
-			SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
+			SimpleDateFormat s = new SimpleDateFormat(drawDate ? "yyyy.MM.dd HH:mm:ss" : "HH:mm:ss");
 			return s.format(new Date((long)value));
 		}
 		else

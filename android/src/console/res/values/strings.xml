@@ -13,7 +13,9 @@
 	<string name="tools">Tools</string>
 	<string name="confirm_tool_execution">Confirm execution</string>
 	<string name="no_items">No items to show&#8230;</string>
-					
+	<string name="warning">Warning</string>
+	<string name="long_time_execution">This task could take a long time to execute. Would you like to proceed anyway?</string>
+						
 	<string name="progress_gathering_data">Gathering data&#8230;</string>
 	<string name="progress_processing_data">Processing data&#8230;</string>
 				
@@ -72,6 +74,9 @@
 	<string name="pref_alarm_sound_minor">Minor alarm sound</string>
 	<string name="pref_alarm_sound_major">Major alarm sound</string>
 	<string name="pref_alarm_sound_critical">Critical alarm sound</string>
+	<string name="pref_alarm_sound_unknown">Unknown alarm sound</string>
+	<string name="pref_alarm_sound_terminate">Terminate alarm sound</string>
+	<string name="pref_alarm_sound_resolve">Resolve alarm sound</string>
 	<string name="pref_global_notification_toast">Toast notification</string>
 	<string name="pref_global_notification_toast_enabled">Toast is enabled</string>
 	<string name="pref_global_notification_toast_disabled">Toast is disabled</string>
@@ -220,13 +225,18 @@
 	<string name="last_values_na">N/A</string>
 	<string name="last_values_pie_chart">Pie Chart</string>
 	<string name="last_values_bar_chart">Bar Chart</string>
-	<string name="last_values_graph_half_hour">Graph last half hour</string>
+	<string name="last_values_graph_ten_minutes">Graph last 10 minutes</string>
+	<string name="last_values_graph_thirty_minutes">Graph last 30 minutes</string>
 	<string name="last_values_graph_one_hour">Graph last hour</string>
-	<string name="last_values_graph_two_hours">Graph last two hours</string>
-	<string name="last_values_graph_four_hours">Graph last four hours</string>
+	<string name="last_values_graph_two_hours">Graph last 2 hours</string>
+	<string name="last_values_graph_four_hours">Graph last 4 hours</string>
+	<string name="last_values_graph_twelve_hours">Graph last 12 hours</string>
 	<string name="last_values_graph_one_day">Graph last day</string>
+	<string name="last_values_graph_two_day">Graph last 2 days</string>
+	<string name="last_values_graph_five_days">Graph last 5 days</string>
 	<string name="last_values_graph_one_week">Graph last week</string>
-	<string name="table_value_placeholder">&lt;&lt; TABLE &gt;&gt;</string>
+	<string name="last_values_graph_one_month">Graph last month</string>
+		<string name="table_value_placeholder">&lt;&lt; TABLE &gt;&gt;</string>
 	<string name="table_last_values">Table last values</string>
 
 	<string name="if_manage">Manage</string>

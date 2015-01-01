@@ -255,6 +255,7 @@ public class BarcodeScannerIntegrator
 	 * Initiates a scan only for a certain set of barcode types, given as strings corresponding to their names in ZXing's
 	 * {@code BarcodeFormat} class like "UPC_A". You can supply constants like {@link #PRODUCT_CODE_TYPES} for example.
 	 */
+	@SuppressWarnings("deprecation")
 	public AlertDialog initiateScan(Collection<String> desiredBarcodeFormats)
 	{
 		Intent intentScan = new Intent(BS_PACKAGE + ".SCAN");
@@ -388,6 +389,7 @@ public class BarcodeScannerIntegrator
 	 * 
 	 * @param text the text string to encode as a barcode
 	 */
+	@SuppressWarnings("deprecation")
 	public void shareText(CharSequence text)
 	{
 		Intent intent = new Intent();
