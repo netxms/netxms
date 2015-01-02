@@ -236,7 +236,8 @@
 	<string name="last_values_graph_five_days">Graph last 5 days</string>
 	<string name="last_values_graph_one_week">Graph last week</string>
 	<string name="last_values_graph_one_month">Graph last month</string>
-		<string name="table_value_placeholder">&lt;&lt; TABLE &gt;&gt;</string>
+	<string name="last_values_graph_one_year">Graph last year</string>
+	<string name="table_value_placeholder">&lt;&lt; TABLE &gt;&gt;</string>
 	<string name="table_last_values">Table last values</string>
 
 	<string name="if_manage">Manage</string>

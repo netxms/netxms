@@ -192,6 +192,8 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
 				return longExecutionDrawGraph(7 * 86400, idList);
 			case R.id.graph_one_month:
 				return longExecutionDrawGraph(30 * 86400, idList);
+			case R.id.graph_one_year:
+				return longExecutionDrawGraph(365 * 86400, idList);
 			case R.id.bar_chart:
 				return drawComparisonChart(DrawBarChart.class);
 			case R.id.pie_chart:
