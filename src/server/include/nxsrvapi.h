@@ -238,6 +238,7 @@ private:
 	int m_allocated;               // Number of allocated entries
    void *m_data;                  // Can be used by custom enumeration handlers
    NX_INTERFACE_INFO *m_interfaces;  // Interface entries
+   bool m_needPrefixWalk;
 
 public:
 	InterfaceList(int initialAlloc = 8);
@@ -252,6 +253,9 @@ public:
 
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }
+
+   bool isPrefixWalkNeeded() { return m_needPrefixWalk; }
+   void setPrefixWalkNeeded() { m_needPrefixWalk = true; }
 };
 
 /**

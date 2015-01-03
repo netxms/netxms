@@ -31,6 +31,7 @@ InterfaceList::InterfaceList(int initialAlloc)
 	m_size = 0;
 	m_data = NULL;
 	m_interfaces = (NX_INTERFACE_INFO *)malloc(sizeof(NX_INTERFACE_INFO) * m_allocated);
+   m_needPrefixWalk = false;
 }
 
 /**

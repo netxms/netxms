@@ -1186,6 +1186,71 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, _T("Session ID missing\n"));
 		}
    }
+	else if (IsCommand(_T("POLL"), szBuffer, 2))
+	{
+		pArg = ExtractWord(pArg, szBuffer);
+		if (szBuffer[0] != 0)
+		{
+         int pollType;
+         if (IsCommand(_T("CONFIGURATION"), szBuffer, 1))
+         {
+            pollType = 1;
+         }
+         else if (IsCommand(_T("STATUS"), szBuffer, 1))
+         {
+            pollType = 2;
+         }
+         else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
+         {
+            pollType = 3;
+         }
+         else
+         {
+            pollType = 0;
+         }
+
+         if (pollType > 0)
+         {
+      		pArg = ExtractWord(pArg, szBuffer);
+			   UINT32 id = _tcstoul(szBuffer, NULL, 0);
+			   if (id != 0)
+			   {
+				   Node *node = (Node *)FindObjectById(id, OBJECT_NODE);
+				   if (node != NULL)
+				   {
+                  switch(pollType)
+                  {
+                     case 1:
+                        node->configurationPoll(NULL, 0, -1, 0);
+                        break;
+                     case 2:
+                        node->statusPoll(NULL, 0, -1);
+                        break;
+                     case 3:
+                        node->topologyPoll(NULL, 0, -1);
+                        break;
+                  }
+				   }
+				   else
+				   {
+					   ConsolePrintf(pCtx, _T("ERROR: Node with ID %d does not exist\n\n"), id);
+				   }
+			   }
+			   else
+			   {
+				   ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+			   }
+         }
+         else
+         {
+   			ConsolePrintf(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY] <node>\n"));
+         }
+		}
+		else
+		{
+			ConsolePrintf(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY] <node>\n"));
+		}
+	}
 	else if (IsCommand(_T("SET"), szBuffer, 3))
 	{
 		pArg = ExtractWord(pArg, szBuffer);
@@ -1767,6 +1832,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   get <variable>            - Get value of server configuration variable\n")
 				_T("   help                      - Display this help\n")
 				_T("   ldapsync                  - Synchronize ldap users with local user database\n")
+            _T("   poll <type> <node>        - Initiate node poll\n")
 				_T("   raise <exception>         - Raise exception\n")
 				_T("   set <variable> <value>    - Set value of server configuration variable\n")
 				_T("   show components <node>    - Show physical components of given node\n")
