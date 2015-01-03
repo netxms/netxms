@@ -22,7 +22,7 @@
     - Added 10 minutes, 12 hours, 5 days, 30 days, last year options in draw graph for last values tab (5, 7, and 30 days asks for confirmation of long task execution)
     - Fixed graphical problem (checkbox) in last values tab
     - Support for KitKat Wear and Lollipop, updated support library v4
-- Fixed issues: #61, #306, #381, #488, #565, #628, #634, #667, #672, #673, #674, #675, #677, #678, #679, #682, #684, #686, #688, #689, #691, #700, #704, #705
+- Fixed issues: #61, #306, #381, #488, #565, #628, #634, #667, #672, #673, #674, #675, #677, #678, #679, #682, #684, #686, #688, #689, #691, #700, #704, #705, #710
 
 
 *
