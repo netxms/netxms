@@ -341,7 +341,7 @@ static InterfaceList *SysGetLocalIfList()
             if (pChar != NULL)
             {
                *pChar = 0;
-               iface.dwIndex = _tcstoul(pBuf, NULL, 10);
+               iface.index = _tcstoul(pBuf, NULL, 10);
                pBuf = pChar + 1;
             }
 
@@ -363,9 +363,9 @@ static InterfaceList *SysGetLocalIfList()
                {
                   pSlash = defaultMask;
                }
-               iface.dwIpAddr = ntohl(_t_inet_addr(pBuf));
+               iface.ipAddr = ntohl(_t_inet_addr(pBuf));
                dwBits = _tcstoul(pSlash, NULL, 10);
-               iface.dwIpNetMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
+               iface.ipNetMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
                pBuf = pChar + 1;
             }
 
@@ -374,7 +374,7 @@ static InterfaceList *SysGetLocalIfList()
             if (pChar != NULL)
             {
                *pChar = 0;
-               iface.dwType = _tcstoul(pBuf, NULL, 10);
+               iface.type = _tcstoul(pBuf, NULL, 10);
                pBuf = pChar + 1;
             }
 
@@ -383,12 +383,12 @@ static InterfaceList *SysGetLocalIfList()
             if (pChar != NULL)
             {
                *pChar = 0;
-               StrToBin(pBuf, iface.bMacAddr, MAC_ADDR_LENGTH);
+               StrToBin(pBuf, iface.macAddr, MAC_ADDR_LENGTH);
                pBuf = pChar + 1;
             }
 
             // Name
-            nx_strncpy(iface.szName, pBuf, MAX_OBJECT_NAME - 1);
+            nx_strncpy(iface.name, pBuf, MAX_OBJECT_NAME - 1);
 
             free(pTemp);
 				pIfList->add(&iface);
