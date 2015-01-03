@@ -419,7 +419,7 @@ public:
 	void getGuid(uuid_t out) { memcpy(out, m_guid, UUID_LENGTH); }
 	const TCHAR *getComments() { return CHECK_NULL_EX(m_pszComments); }
    PostalAddress *getPostalAddress() { return m_postalAddress; }
-   void setPostalAddress(PostalAddress * addr) { delete m_postalAddress; m_postalAddress = addr; }
+   void setPostalAddress(PostalAddress * addr) { delete m_postalAddress; m_postalAddress = addr; markAsModified();}
 
    bool isModified() { return m_isModified; }
    bool isDeleted() { return m_isDeleted; }
