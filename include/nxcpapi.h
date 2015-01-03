@@ -38,7 +38,7 @@ typedef struct
 {
    UINT32 bufferSize;
    UINT32 bufferPos;
-   char buffer[CSCP_TEMP_BUF_SIZE];
+   char buffer[NXCP_TEMP_BUF_SIZE];
 } NXCP_BUFFER;
 
 

@@ -36,18 +36,18 @@
 static UINT32 m_dwSupportedCiphers = 
 #ifdef _WITH_ENCRYPTION
 #ifndef OPENSSL_NO_AES
-   CSCP_SUPPORT_AES_256 |
-   CSCP_SUPPORT_AES_128 |
+   NXCP_SUPPORT_AES_256 |
+   NXCP_SUPPORT_AES_128 |
 #endif
 #ifndef OPENSSL_NO_BF
-   CSCP_SUPPORT_BLOWFISH_256 |
-   CSCP_SUPPORT_BLOWFISH_128 |
+   NXCP_SUPPORT_BLOWFISH_256 |
+   NXCP_SUPPORT_BLOWFISH_128 |
 #endif
 #ifndef OPENSSL_NO_IDEA
-   CSCP_SUPPORT_IDEA |
+   NXCP_SUPPORT_IDEA |
 #endif
 #ifndef OPENSSL_NO_DES
-   CSCP_SUPPORT_3DES |
+   NXCP_SUPPORT_3DES |
 #endif
 #endif   /* _WITH_ENCRYPTION */
    0;
@@ -603,22 +603,22 @@ bool NXCPEncryptionContext::initCipher(int cipher)
 
    switch(cipher)
    {
-      case CSCP_CIPHER_AES_256:
+      case NXCP_CIPHER_AES_256:
          m_keyLength = 32;
          break;
-      case CSCP_CIPHER_AES_128:
+      case NXCP_CIPHER_AES_128:
          m_keyLength = 16;
          break;
-      case CSCP_CIPHER_BLOWFISH_256:
+      case NXCP_CIPHER_BLOWFISH_256:
          m_keyLength = 32;
          break;
-      case CSCP_CIPHER_BLOWFISH_128:
+      case NXCP_CIPHER_BLOWFISH_128:
          m_keyLength = 16;
          break;
-      case CSCP_CIPHER_IDEA:
+      case NXCP_CIPHER_IDEA:
          m_keyLength = 16;
          break;
-      case CSCP_CIPHER_3DES:
+      case NXCP_CIPHER_3DES:
          m_keyLength = 24;
          break;
       default:
@@ -651,34 +651,34 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(UINT32 ciphers)
    // Select cipher
    bool selected = false;
 
-   if (ciphers & CSCP_SUPPORT_AES_256)
+   if (ciphers & NXCP_SUPPORT_AES_256)
    {
-      selected = ctx->initCipher(CSCP_CIPHER_AES_256);
+      selected = ctx->initCipher(NXCP_CIPHER_AES_256);
    }
    
-   if (!selected && (ciphers & CSCP_SUPPORT_BLOWFISH_256))
+   if (!selected && (ciphers & NXCP_SUPPORT_BLOWFISH_256))
    {
-      selected = ctx->initCipher(CSCP_CIPHER_BLOWFISH_256);
+      selected = ctx->initCipher(NXCP_CIPHER_BLOWFISH_256);
    }
    
-   if (!selected && (ciphers & CSCP_SUPPORT_AES_128))
+   if (!selected && (ciphers & NXCP_SUPPORT_AES_128))
    {
-      selected = ctx->initCipher(CSCP_CIPHER_AES_128);
+      selected = ctx->initCipher(NXCP_CIPHER_AES_128);
    }
    
-   if (!selected && (ciphers & CSCP_SUPPORT_BLOWFISH_128))
+   if (!selected && (ciphers & NXCP_SUPPORT_BLOWFISH_128))
    {
-      selected = ctx->initCipher(CSCP_CIPHER_BLOWFISH_128);
+      selected = ctx->initCipher(NXCP_CIPHER_BLOWFISH_128);
    }
    
-   if (!selected && (ciphers & CSCP_SUPPORT_IDEA))
+   if (!selected && (ciphers & NXCP_SUPPORT_IDEA))
    {
-      selected = ctx->initCipher(CSCP_CIPHER_IDEA);
+      selected = ctx->initCipher(NXCP_CIPHER_IDEA);
    }
    
-   if (!selected && (ciphers & CSCP_SUPPORT_3DES))
+   if (!selected && (ciphers & NXCP_SUPPORT_3DES))
    {
-      selected = ctx->initCipher(CSCP_CIPHER_3DES);
+      selected = ctx->initCipher(NXCP_CIPHER_3DES);
    }
 
    if (!selected)

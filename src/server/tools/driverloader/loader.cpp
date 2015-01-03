@@ -1,6 +1,6 @@
 /* 
 ** driverloader - command line tool for network device driver testing
-** Copyright (C) 2013 Raden Solutions
+** Copyright (C) 2013-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by

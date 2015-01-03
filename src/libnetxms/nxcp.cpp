@@ -396,7 +396,7 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuf
          // Receive new portion of data from the network
          // and append it to existing data in buffer
 			iErr = RecvEx(hSocket, &nxcpBuffer->buffer[nxcpBuffer->bufferSize],
-                       CSCP_TEMP_BUF_SIZE - nxcpBuffer->bufferSize, 0, dwTimeout);
+                       NXCP_TEMP_BUF_SIZE - nxcpBuffer->bufferSize, 0, dwTimeout);
          if (iErr <= 0)
             return (iErr == -2) ? 3 : iErr;
          nxcpBuffer->bufferSize += (UINT32)iErr;
@@ -437,7 +437,7 @@ int LIBNETXMS_EXPORTABLE RecvNXCPMessageEx(SOCKET hSocket, NXCP_MESSAGE **msgBuf
    do
    {
 		iErr = RecvEx(hSocket, &nxcpBuffer->buffer[nxcpBuffer->bufferSize],
-		              CSCP_TEMP_BUF_SIZE - nxcpBuffer->bufferSize, 0, dwTimeout);
+		              NXCP_TEMP_BUF_SIZE - nxcpBuffer->bufferSize, 0, dwTimeout);
       if (iErr <= 0)
          return (iErr == -2) ? 3 : iErr;
 

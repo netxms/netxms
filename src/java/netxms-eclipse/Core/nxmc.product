@@ -9,7 +9,7 @@
          NetXMS Management Console
 
 Version 2.0-M1
-Copyright (c) 2003-2014 Raden Solutions
+Copyright (c) 2003-2015 Raden Solutions
       </text>
    </aboutInfo>
 
@@ -35,6 +35,7 @@ Copyright (c) 2003-2014 Raden Solutions
          <bmp/>
       </win>
    </launcher>
+
 
    <vm>
    </vm>

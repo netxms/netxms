@@ -49,24 +49,24 @@
 #define RECORD_ORDER_NORMAL            0
 #define RECORD_ORDER_REVERSED          1
 
-#define CSCP_TEMP_BUF_SIZE             65536
+#define NXCP_TEMP_BUF_SIZE             65536
 
 /**
  * Ciphers
  */
-#define CSCP_CIPHER_AES_256       0
-#define CSCP_CIPHER_BLOWFISH_256  1
-#define CSCP_CIPHER_IDEA          2
-#define CSCP_CIPHER_3DES          3
-#define CSCP_CIPHER_AES_128       4
-#define CSCP_CIPHER_BLOWFISH_128  5
+#define NXCP_CIPHER_AES_256       0
+#define NXCP_CIPHER_BLOWFISH_256  1
+#define NXCP_CIPHER_IDEA          2
+#define NXCP_CIPHER_3DES          3
+#define NXCP_CIPHER_AES_128       4
+#define NXCP_CIPHER_BLOWFISH_128  5
 
-#define CSCP_SUPPORT_AES_256      0x01
-#define CSCP_SUPPORT_BLOWFISH_256 0x02
-#define CSCP_SUPPORT_IDEA         0x04
-#define CSCP_SUPPORT_3DES         0x08
-#define CSCP_SUPPORT_AES_128      0x10
-#define CSCP_SUPPORT_BLOWFISH_128 0x20
+#define NXCP_SUPPORT_AES_256      0x01
+#define NXCP_SUPPORT_BLOWFISH_256 0x02
+#define NXCP_SUPPORT_IDEA         0x04
+#define NXCP_SUPPORT_3DES         0x08
+#define NXCP_SUPPORT_AES_128      0x10
+#define NXCP_SUPPORT_BLOWFISH_128 0x20
 
 #ifdef __HP_aCC
 #pragma pack 1

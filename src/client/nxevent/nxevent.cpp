@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Command line event sender
-** Copyright (C) 2003, 2004, 2005, 206, 2007 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
