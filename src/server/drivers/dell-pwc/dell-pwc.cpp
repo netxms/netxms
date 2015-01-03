@@ -96,11 +96,11 @@ InterfaceList *PowerConnectDriver::getInterfaces(SNMP_Transport *snmp, StringMap
 	for(int i = 0; i < ifList->size(); i++)
 	{
 		NX_INTERFACE_INFO *iface = ifList->get(i);
-		if (iface->dwType == IFTYPE_ETHERNET_CSMACD)
+		if (iface->type == IFTYPE_ETHERNET_CSMACD)
 		{
 			iface->isPhysicalPort = true;
-			iface->dwSlotNumber = (iface->dwIndex / slotSize) + 1;
-			iface->dwPortNumber = iface->dwIndex % slotSize;
+			iface->slot = (iface->index / slotSize) + 1;
+			iface->port = iface->index % slotSize;
 		}
 	}
 

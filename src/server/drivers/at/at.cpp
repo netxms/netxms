@@ -112,15 +112,15 @@ InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMa
             // GS950 does not support atiIfExtnTable so we use ifConnectorPresent from ifXTable
             // to identify physical ports
             TCHAR oid[256];
-            _sntprintf(oid, 256, _T(".1.3.6.1.2.1.31.1.1.1.17.%d"), iface->dwIndex); // ifConnectorPresent
+            _sntprintf(oid, 256, _T(".1.3.6.1.2.1.31.1.1.1.17.%d"), iface->index); // ifConnectorPresent
             UINT32 cp;
             if (SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &cp, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
             {
                if (cp == 1)   // 1 == true
                {
                   iface->isPhysicalPort = true;
-                  iface->dwSlotNumber = 0;
-                  iface->dwPortNumber = iface->dwIndex;
+                  iface->slot = 0;
+                  iface->port = iface->index;
                }
             }
          }
@@ -129,9 +129,9 @@ InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMa
             SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
 
             TCHAR oid[256];
-            _sntprintf(oid, 256, _T(".1.3.6.1.4.1.207.8.33.9.1.1.1.2.%d"), iface->dwIndex);  // module
+            _sntprintf(oid, 256, _T(".1.3.6.1.4.1.207.8.33.9.1.1.1.2.%d"), iface->index);  // module
             request->bindVariable(new SNMP_Variable(oid));
-            _sntprintf(oid, 256, _T(".1.3.6.1.4.1.207.8.33.9.1.1.1.3.%d"), iface->dwIndex);  // port
+            _sntprintf(oid, 256, _T(".1.3.6.1.4.1.207.8.33.9.1.1.1.3.%d"), iface->index);  // port
             request->bindVariable(new SNMP_Variable(oid));
 
             SNMP_PDU *response;
@@ -145,8 +145,8 @@ InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMa
                    (response->getVariable(1)->getType() != ASN_NO_SUCH_OBJECT) &&
                    (response->getVariable(1)->getType() != ASN_NO_SUCH_INSTANCE))
                {
-                  iface->dwSlotNumber = response->getVariable(0)->getValueAsInt();
-                  iface->dwPortNumber = response->getVariable(1)->getValueAsInt();
+                  iface->slot = response->getVariable(0)->getValueAsInt();
+                  iface->port = response->getVariable(1)->getValueAsInt();
                   iface->isPhysicalPort = true;
                }
                delete response;

@@ -92,8 +92,8 @@ static UINT32 HandlerPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport
 	if (iface != NULL)
 	{
 		size_t nameLen = var->getName()->getLength();
-		iface->dwSlotNumber = var->getName()->getValue()[nameLen - 2];
-		iface->dwPortNumber = var->getName()->getValue()[nameLen - 1];
+		iface->slot = var->getName()->getValue()[nameLen - 2];
+		iface->port = var->getName()->getValue()[nameLen - 1];
 		iface->isPhysicalPort = true;
 	}
 	return SNMP_ERR_SUCCESS;

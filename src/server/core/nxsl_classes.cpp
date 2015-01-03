@@ -554,6 +554,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    {
 		pValue = new NXSL_Value((LONG)iface->getAdminState());
    }
+   else if (!_tcscmp(pszAttr, _T("alias")))
+   {
+      pValue = new NXSL_Value(iface->getAlias());
+   }
    else if (!_tcscmp(pszAttr, _T("bridgePortNumber")))
    {
 		pValue = new NXSL_Value(iface->getBridgePortNumber());
@@ -633,6 +637,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    {
 		TCHAR buffer[256];
 		pValue = new NXSL_Value(BinToStr(iface->getMacAddr(), MAC_ADDR_LENGTH, buffer));
+   }
+   else if (!_tcscmp(pszAttr, _T("mtu")))
+   {
+      pValue = new NXSL_Value(iface->getMTU());
    }
    else if (!_tcscmp(pszAttr, _T("name")))
    {

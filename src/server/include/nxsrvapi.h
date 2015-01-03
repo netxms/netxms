@@ -211,17 +211,19 @@ typedef struct
  */
 typedef struct
 {
-   TCHAR szName[MAX_DB_STRING];			// Interface display name
-	TCHAR szDescription[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
-   UINT32 dwIndex;
-   UINT32 dwType;
-	UINT32 dwBridgePortNumber;
-	UINT32 dwSlotNumber;
-	UINT32 dwPortNumber;
-   UINT32 dwIpAddr;
-   UINT32 dwIpNetMask;
-   BYTE bMacAddr[MAC_ADDR_LENGTH];
-   int iNumSecondary;      // Number of secondary IP's on this interface
+   TCHAR name[MAX_DB_STRING];			// Interface display name
+	TCHAR description[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
+	TCHAR alias[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
+   UINT32 index;
+   UINT32 type;
+   UINT32 mtu;
+	UINT32 bridgePort;
+	UINT32 slot;
+	UINT32 port;
+   UINT32 ipAddr;
+   UINT32 ipNetMask;
+   BYTE macAddr[MAC_ADDR_LENGTH];
+   int numSecondary;      // Number of secondary IP's on this interface
 	bool isPhysicalPort;
    bool isSystem;
 } NX_INTERFACE_INFO;

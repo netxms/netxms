@@ -113,19 +113,19 @@ InterfaceList *PassportDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 	// Calculate slot/port pair from ifIndex
 	for(int i = 0; i < ifList->size(); i++)
 	{
-		UINT32 slot = ifList->get(i)->dwIndex / 64;
+		UINT32 slot = ifList->get(i)->index / 64;
 
 		// Some 1600 may report physical ports with indexes started at 1, not 64
 		if ((slot == 0) && is1600Series)
 		{
-			ifList->get(i)->dwSlotNumber = slot;
-			ifList->get(i)->dwPortNumber = ifList->get(i)->dwIndex;
+			ifList->get(i)->slot = slot;
+			ifList->get(i)->port = ifList->get(i)->index;
 			ifList->get(i)->isPhysicalPort = true;
 		}
 		else if ((slot > 0) && (slot <= maxSlot))
 		{
-			ifList->get(i)->dwSlotNumber = slot;
-			ifList->get(i)->dwPortNumber = ifList->get(i)->dwIndex % 64 + 1;
+			ifList->get(i)->slot = slot;
+			ifList->get(i)->port = ifList->get(i)->index % 64 + 1;
 			ifList->get(i)->isPhysicalPort = true;
 		}
 	}

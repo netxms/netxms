@@ -96,11 +96,11 @@ InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attri
 	for(int i = 0; i < ifList->size(); i++)
 	{
 		NX_INTERFACE_INFO *iface = ifList->get(i);
-		if (iface->dwIndex < 1024)
+		if (iface->index < 1024)
 		{
 			iface->isPhysicalPort = true;
-			iface->dwSlotNumber = (iface->dwIndex / slotSize) + 1;
-			iface->dwPortNumber = iface->dwIndex % slotSize;
+			iface->slot = (iface->index / slotSize) + 1;
+			iface->port = iface->index % slotSize;
 		}
 	}
 

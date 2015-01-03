@@ -86,6 +86,7 @@
 #define CT_WORD         5
 #define CT_IGNORE       6
 #define CT_MB_STRING    7
+#define CT_BOOLEAN64    8
 
 /**
  * Uninitialized value for override indicator
@@ -924,7 +925,7 @@ typedef struct
    BYTE type;
    BYTE separator;     // Separator character for lists
    WORD listElements;  // Number of list elements, should be set to 0 before calling NxLoadConfig()
-   UINT32 bufferSize;  // Buffer size for strings or flag to be set for CT_BOOLEAN
+   UINT64 bufferSize;  // Buffer size for strings or flag to be set for CT_BOOLEAN
    UINT32 bufferPos;   // Should be set to 0
    void *buffer;
    void *overrideIndicator;

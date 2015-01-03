@@ -105,23 +105,23 @@ static UINT32 HandlerRapidCityIfList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP
 		NX_INTERFACE_INFO iface;
 
 		memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
-      iface.dwIndex = dwIfIndex;
-      _tcscpy(iface.szName, pVlanList->pList[dwVlanIndex].szName);
-      iface.dwType = IFTYPE_OTHER;
-      memcpy(iface.bMacAddr, pVlanList->pList[dwVlanIndex].bMacAddr, MAC_ADDR_LENGTH);
+      iface.index = dwIfIndex;
+      _tcscpy(iface.name, pVlanList->pList[dwVlanIndex].szName);
+      iface.type = IFTYPE_L2VLAN;
+      memcpy(iface.macAddr, pVlanList->pList[dwVlanIndex].bMacAddr, MAC_ADDR_LENGTH);
       
       size_t nameLen = pVar->getName()->getLength();
 
       // Get IP address
       memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
       oidName[nameLen - 6] = 2;
-      dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &iface.dwIpAddr, sizeof(UINT32), 0);
+      dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &iface.ipAddr, sizeof(UINT32), 0);
 
       if (dwResult == SNMP_ERR_SUCCESS)
       {
          // Get netmask
          oidName[nameLen - 6] = 3;
-         dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &iface.dwIpNetMask, sizeof(UINT32), 0);
+         dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &iface.ipNetMask, sizeof(UINT32), 0);
       }
 
 		pIfList->add(&iface);

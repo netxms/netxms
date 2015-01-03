@@ -725,11 +725,22 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                if (!_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
                   || !_tcsicmp(value, _T("1")))
                {
-                  *((UINT32 *)cfgTemplate[i].buffer) |= cfgTemplate[i].bufferSize;
+                  *((UINT32 *)cfgTemplate[i].buffer) |= (UINT32)cfgTemplate[i].bufferSize;
                }
                else
                {
-                  *((UINT32 *)cfgTemplate[i].buffer) &= ~(cfgTemplate[i].bufferSize);
+                  *((UINT32 *)cfgTemplate[i].buffer) &= ~((UINT32)cfgTemplate[i].bufferSize);
+               }
+               break;
+            case CT_BOOLEAN64:
+               if (!_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
+                  || !_tcsicmp(value, _T("1")))
+               {
+                  *((UINT64 *)cfgTemplate[i].buffer) |= cfgTemplate[i].bufferSize;
+               }
+               else
+               {
+                  *((UINT64 *)cfgTemplate[i].buffer) &= ~(cfgTemplate[i].bufferSize);
                }
                break;
             case CT_STRING:
@@ -748,9 +759,9 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                }
 #ifdef UNICODE
                memset(cfgTemplate[i].buffer, 0, cfgTemplate[i].bufferSize);
-               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, (char *)cfgTemplate[i].buffer, cfgTemplate[i].bufferSize - 1, NULL, NULL);
+               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, (char *)cfgTemplate[i].buffer, (int)cfgTemplate[i].bufferSize - 1, NULL, NULL);
 #else
-               nx_strncpy((TCHAR *)cfgTemplate[i].buffer, value, cfgTemplate[i].bufferSize);
+               nx_strncpy((TCHAR *)cfgTemplate[i].buffer, value, (size_t)cfgTemplate[i].bufferSize);
 #endif
                break;
             case CT_STRING_LIST:

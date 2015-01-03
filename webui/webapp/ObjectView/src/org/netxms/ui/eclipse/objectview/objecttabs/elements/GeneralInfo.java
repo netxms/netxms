@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,9 +70,10 @@ public class GeneralInfo extends TableElement
 				Interface iface = (Interface)object;
 				addPair(Messages.get().GeneralInfo_IfIndex, Integer.toString(iface.getIfIndex()));
 				addPair(Messages.get().GeneralInfo_IfType, Integer.toString(iface.getIfType()));
-				addPair(Messages.get().GeneralInfo_Description, iface.getDescription());
-				addPair(Messages.get().GeneralInfo_AdmState, iface.getAdminStateAsText());
-				addPair(Messages.get().GeneralInfo_OperState, iface.getOperStateAsText());
+				addPair(Messages.get().GeneralInfo_Description, iface.getDescription(), false);
+            addPair("Alias", iface.getAlias(), false);
+            if (iface.getMtu() > 0)
+               addPair("MTU", Integer.toString(iface.getMtu()));
 				addPair(Messages.get().GeneralInfo_MACAddr, iface.getMacAddress().toString());
 				if ((iface.getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
 				{
@@ -91,6 +92,8 @@ public class GeneralInfo extends TableElement
 					addPair(Messages.get().GeneralInfo_IPAddr, iface.getPrimaryIP().getHostAddress());
 					addPair(Messages.get().GeneralInfo_IPNetMask, iface.getSubnetMask().getHostAddress());
 				}
+            addPair(Messages.get().GeneralInfo_AdmState, iface.getAdminStateAsText());
+            addPair(Messages.get().GeneralInfo_OperState, iface.getOperStateAsText());
 				break;
 			case AbstractObject.OBJECT_NODE:
 				AbstractNode node = (AbstractNode)object;

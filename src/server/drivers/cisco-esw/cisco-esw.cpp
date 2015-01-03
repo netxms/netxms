@@ -87,11 +87,11 @@ InterfaceList *CiscoEswDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 	for(int i = 0; i < ifList->size(); i++)
 	{
 		NX_INTERFACE_INFO *iface = ifList->get(i);
-		if ((iface->dwType == IFTYPE_ETHERNET_CSMACD) && (iface->dwIndex <= 48))
+		if ((iface->type == IFTYPE_ETHERNET_CSMACD) && (iface->index <= 48))
 		{
 			iface->isPhysicalPort = true;
-			iface->dwSlotNumber = 1;
-			iface->dwPortNumber = iface->dwIndex;
+			iface->slot = 1;
+			iface->port = iface->index;
 		}
 	}
 

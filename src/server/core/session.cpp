@@ -4411,7 +4411,6 @@ void ClientSession::createObject(NXCPMessage *pRequest)
    TCHAR *pszRequest, *pszResponse, *pszComments;
    UINT32 dwIpAddr, zoneId, nodeId;
    WORD wIpProto, wIpPort;
-	BYTE macAddr[MAC_ADDR_LENGTH];
    BOOL bParentAlwaysValid = FALSE;
 
    // Prepare response message
@@ -4609,18 +4608,20 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 								   NetObjInsert(object, TRUE);
 								   break;
 							   case OBJECT_INTERFACE:
-								   pRequest->getFieldAsBinary(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
-								   object = ((Node *)pParent)->createNewInterface(pRequest->getFieldAsUInt32(VID_IP_ADDRESS),
-								                                                   pRequest->getFieldAsUInt32(VID_IP_NETMASK),
-								                                                   szObjectName, NULL,
-																				               pRequest->getFieldAsUInt32(VID_IF_INDEX),
-								                                                   pRequest->getFieldAsUInt32(VID_IF_TYPE),
-																				               macAddr, 0,
-																				               pRequest->getFieldAsUInt32(VID_IF_SLOT),
-																				               pRequest->getFieldAsUInt32(VID_IF_PORT),
-																				               pRequest->getFieldAsUInt16(VID_IS_PHYS_PORT) ? true : false,
-																								   true,
-                                                                           false);
+                           {
+                              NX_INTERFACE_INFO ifInfo;
+                              memset(&ifInfo, 0, sizeof(ifInfo));
+                              nx_strncpy(ifInfo.name, szObjectName, MAX_DB_STRING);
+                              ifInfo.ipAddr = pRequest->getFieldAsUInt32(VID_IP_ADDRESS);
+                              ifInfo.ipNetMask = pRequest->getFieldAsUInt32(VID_IP_NETMASK);
+                              ifInfo.index = pRequest->getFieldAsUInt32(VID_IF_INDEX);
+                              ifInfo.type = pRequest->getFieldAsUInt32(VID_IF_TYPE);
+								      pRequest->getFieldAsBinary(VID_MAC_ADDR, ifInfo.macAddr, MAC_ADDR_LENGTH);
+                              ifInfo.slot = pRequest->getFieldAsUInt32(VID_IF_SLOT);
+                              ifInfo.port = pRequest->getFieldAsUInt32(VID_IF_PORT);
+                              ifInfo.isPhysicalPort = pRequest->getFieldAsBoolean(VID_IS_PHYS_PORT);
+								      object = ((Node *)pParent)->createNewInterface(&ifInfo, true);
+                           }
 								   break;
 							   default:
 								   // Try to create unknown classes by modules

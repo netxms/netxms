@@ -629,10 +629,12 @@ class NXCORE_EXPORTABLE Interface : public NetObj
 protected:
 	UINT32 m_flags;
 	TCHAR m_description[MAX_DB_STRING];	// Interface description - value of ifDescr for SNMP, equals to name for NetXMS agent
-   UINT32 m_dwIfIndex;
-   UINT32 m_dwIfType;
-   UINT32 m_dwIpNetMask;
-   BYTE m_bMacAddr[MAC_ADDR_LENGTH];
+	TCHAR m_alias[MAX_DB_STRING];	// Interface alias - value of ifAlias for SNMP, empty for NetXMS agent
+   UINT32 m_index;
+   UINT32 m_type;
+   UINT32 m_mtu;
+   UINT32 m_ipNetMask;
+   BYTE m_macAddr[MAC_ADDR_LENGTH];
 	UINT32 m_bridgePortNumber;		// 802.1D port number
 	UINT32 m_slotNumber;				// Vendor/device specific slot number
 	UINT32 m_portNumber;				// Vendor/device specific port number
@@ -671,9 +673,10 @@ public:
    UINT32 getParentNodeId();
 
    UINT32 getZoneId() { return m_zoneId; }
-   UINT32 getIpNetMask() { return m_dwIpNetMask; }
-   UINT32 getIfIndex() { return m_dwIfIndex; }
-   UINT32 getIfType() { return m_dwIfType; }
+   UINT32 getIpNetMask() { return m_ipNetMask; }
+   UINT32 getIfIndex() { return m_index; }
+   UINT32 getIfType() { return m_type; }
+   UINT32 getMTU() { return m_mtu; }
 	UINT32 getBridgePortNumber() { return m_bridgePortNumber; }
 	UINT32 getSlotNumber() { return m_slotNumber; }
 	UINT32 getPortNumber() { return m_portNumber; }
@@ -686,17 +689,18 @@ public:
 	int getDot1xPaeAuthState() { return (int)m_dot1xPaeAuthState; }
 	int getDot1xBackendAuthState() { return (int)m_dot1xBackendAuthState; }
 	const TCHAR *getDescription() { return m_description; }
-   const BYTE *getMacAddr() { return m_bMacAddr; }
+	const TCHAR *getAlias() { return m_alias; }
+   const BYTE *getMacAddr() { return m_macAddr; }
    UINT32 getPingTime();
 	bool isSyntheticMask() { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
 	bool isPhysicalPort() { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
 	bool isLoopback() { return (m_flags & IF_LOOPBACK) ? true : false; }
 	bool isManuallyCreated() { return (m_flags & IF_CREATED_MANUALLY) ? true : false; }
 	bool isExcludedFromTopology() { return (m_flags & (IF_EXCLUDE_FROM_TOPOLOGY | IF_LOOPBACK)) ? true : false; }
-   bool isFake() { return (m_dwIfIndex == 1) &&
-                          (m_dwIfType == IFTYPE_OTHER) &&
+   bool isFake() { return (m_index == 1) &&
+                          (m_type == IFTYPE_OTHER) &&
                           (!_tcscmp(m_name, _T("lan0")) || !_tcscmp(m_name, _T("unknown"))) &&
-                          (!memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
+                          (!memcmp(m_macAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
 
    UINT64 getLastDownEventId() { return m_lastDownEventId; }
    void setLastDownEventId(QWORD id) { m_lastDownEventId = id; }
@@ -712,6 +716,7 @@ public:
 	void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection);
    void clearPeer() { lockProperties(); m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; setModified(); unlockProperties(); }
    void setDescription(const TCHAR *descr) { lockProperties(); nx_strncpy(m_description, descr, MAX_DB_STRING); setModified(); unlockProperties(); }
+   void setAlias(const TCHAR *alias) { lockProperties(); nx_strncpy(m_alias, alias, MAX_DB_STRING); setModified(); unlockProperties(); }
 
 	void updateZoneId();
 
@@ -1155,10 +1160,8 @@ public:
 	time_t getDownTime() const { return m_downSince; }
 
    void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
-   Interface *createNewInterface(UINT32 dwAddr, UINT32 dwNetMask, const TCHAR *name = NULL, const TCHAR *descr = NULL,
-                                 UINT32 dwIndex = 0, UINT32 dwType = 0, BYTE *pbMacAddr = NULL, UINT32 bridgePort = 0,
-											UINT32 slot = 0, UINT32 port = 0, bool physPort = false, bool manuallyCreated = false,
-                                 bool system = false);
+   Interface *createNewInterface(NX_INTERFACE_INFO *ifInfo, bool manuallyCreated);
+   Interface *createNewInterface(UINT32 ipAddr, UINT32 ipNetMask, BYTE *macAddr);
    void deleteInterface(Interface *pInterface);
 
 	void setPrimaryName(const TCHAR *name) { nx_strncpy(m_primaryName, name, MAX_DNS_NAME); }

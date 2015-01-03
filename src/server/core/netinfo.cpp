@@ -307,12 +307,12 @@ static InterfaceList *SysGetLocalIfList()
          for(pAddr = &pInfo->IpAddressList; pAddr != NULL; pAddr = pAddr->Next)
          {
 				memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
-            nx_strncpy(iface.szName, szAdapterName, MAX_OBJECT_NAME);
-            memcpy(iface.bMacAddr, pInfo->Address, MAC_ADDR_LENGTH);
-            iface.dwIndex = pInfo->Index;
-            iface.dwIpAddr = ntohl(inet_addr(pAddr->IpAddress.String));
-            iface.dwIpNetMask = ntohl(inet_addr(pAddr->IpMask.String));
-            iface.dwType = pInfo->Type;
+            nx_strncpy(iface.name, szAdapterName, MAX_OBJECT_NAME);
+            memcpy(iface.macAddr, pInfo->Address, MAC_ADDR_LENGTH);
+            iface.index = pInfo->Index;
+            iface.ipAddr = ntohl(inet_addr(pAddr->IpAddress.String));
+            iface.ipNetMask = ntohl(inet_addr(pAddr->IpMask.String));
+            iface.type = pInfo->Type;
 				pIfList->add(&iface);
          }
       }

@@ -389,6 +389,21 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Upgrade from V343 to V344
+ */
+static BOOL H_UpgradeFromV343(int currVersion, int newVersion)
+{
+    static TCHAR batch[] =
+      _T("ALTER TABLE interfaces ADD mtu integer\n")
+      _T("ALTER TABLE interfaces ADD alias varchar(255)\n")
+      _T("UPDATE interfaces SET mtu=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='344' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V342 to V343
  */
 static BOOL H_UpgradeFromV342(int currVersion, int newVersion)
@@ -8264,6 +8279,7 @@ static struct
    { 340, 341, H_UpgradeFromV340 },
    { 341, 342, H_UpgradeFromV341 },
    { 342, 343, H_UpgradeFromV342 },
+   { 343, 344, H_UpgradeFromV343 },
    { 0, 0, NULL }
 };
 

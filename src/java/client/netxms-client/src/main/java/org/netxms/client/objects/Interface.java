@@ -107,6 +107,7 @@ public class Interface extends GenericObject
 	private InetAddress subnetMask;
 	private int ifIndex;
 	private int ifType;
+	private int mtu;
 	private int slot;
 	private int port;
 	private MacAddress macAddress;
@@ -116,6 +117,7 @@ public class Interface extends GenericObject
 	private LinkLayerDiscoveryProtocol peerDiscoveryProtocol;
 	private long zoneId;
 	private String description;
+	private String alias;
 	private int adminState;
 	private int operState;
 	private int dot1xPaeState;
@@ -132,6 +134,7 @@ public class Interface extends GenericObject
 		subnetMask = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_NETMASK);
 		ifIndex = msg.getFieldAsInt32(NXCPCodes.VID_IF_INDEX);
 		ifType = msg.getFieldAsInt32(NXCPCodes.VID_IF_TYPE);
+      mtu = msg.getFieldAsInt32(NXCPCodes.VID_MTU);
 		slot = msg.getFieldAsInt32(NXCPCodes.VID_IF_SLOT);
 		port = msg.getFieldAsInt32(NXCPCodes.VID_IF_PORT);
 		macAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_MAC_ADDR));
@@ -141,6 +144,7 @@ public class Interface extends GenericObject
 		peerDiscoveryProtocol = LinkLayerDiscoveryProtocol.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_PEER_PROTOCOL));
 		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
 		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
+		alias = msg.getFieldAsString(NXCPCodes.VID_ALIAS);
 		adminState = msg.getFieldAsInt32(NXCPCodes.VID_ADMIN_STATE);
 		operState = msg.getFieldAsInt32(NXCPCodes.VID_OPER_STATE);
 		dot1xPaeState = msg.getFieldAsInt32(NXCPCodes.VID_DOT1X_PAE_STATE);
@@ -440,5 +444,21 @@ public class Interface extends GenericObject
    public LinkLayerDiscoveryProtocol getPeerDiscoveryProtocol()
    {
       return peerDiscoveryProtocol;
+   }
+
+   /**
+    * @return the mtu
+    */
+   public int getMtu()
+   {
+      return mtu;
+   }
+
+   /**
+    * @return the alias
+    */
+   public String getAlias()
+   {
+      return alias;
    }
 }

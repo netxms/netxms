@@ -137,40 +137,40 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		NX_INTERFACE_INFO *iface = ifList->get(i);
 
 		const TCHAR *ptr;
-      if ((ptr = _tcsstr(iface->szName, _T("- Port"))) != NULL)
+      if ((ptr = _tcsstr(iface->name, _T("- Port"))) != NULL)
 		{
 			ptr += 2;
-         memmove(iface->szName, ptr, _tcslen(ptr) + 1);
+         memmove(iface->name, ptr, _tcslen(ptr) + 1);
 		}
-      else if ((ptr = _tcsstr(iface->szName, _T("- Unit"))) != NULL)
+      else if ((ptr = _tcsstr(iface->name, _T("- Unit"))) != NULL)
 		{
 			ptr += 2;
-         memmove(iface->szName, ptr, _tcslen(ptr) + 1);
+         memmove(iface->name, ptr, _tcslen(ptr) + 1);
 		}
-      else if ((_tcsstr(iface->szName, _T("BayStack")) != NULL) ||
-               (_tcsstr(iface->szName, _T("Nortel Ethernet Switch")) != NULL))
+      else if ((_tcsstr(iface->name, _T("BayStack")) != NULL) ||
+               (_tcsstr(iface->name, _T("Nortel Ethernet Switch")) != NULL))
       {
-         ptr = _tcsrchr(iface->szName, _T('-'));
+         ptr = _tcsrchr(iface->name, _T('-'));
          if (ptr != NULL)
          {
             ptr++;
             while(*ptr == _T(' '))
                ptr++;
-            memmove(iface->szName, ptr, _tcslen(ptr) + 1);
+            memmove(iface->name, ptr, _tcslen(ptr) + 1);
          }
       }
-		StrStrip(iface->szName);
+		StrStrip(iface->name);
    }
 	
 	// Calculate slot/port pair from ifIndex
 	UINT32 slotSize = attributes->getULong(_T(".baystack.slotSize"), 64);
 	for(int i = 0; i < ifList->size(); i++)
 	{
-		UINT32 slot = ifList->get(i)->dwIndex / slotSize + 1;
+		UINT32 slot = ifList->get(i)->index / slotSize + 1;
 		if ((slot > 0) && (slot <= 8))
 		{
-			ifList->get(i)->dwSlotNumber = slot;
-			ifList->get(i)->dwPortNumber = ifList->get(i)->dwIndex % slotSize;
+			ifList->get(i)->slot = slot;
+			ifList->get(i)->port = ifList->get(i)->index % slotSize;
 			ifList->get(i)->isPhysicalPort = true;
 		}
 	}
@@ -192,18 +192,18 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 
 			// Add management virtual interface if management IP is missing in interface list
 			for(i = 0; i < ifList->size(); i++)
-				if (ifList->get(i)->dwIpAddr == mgmtIpAddr)
+				if (ifList->get(i)->ipAddr == mgmtIpAddr)
 					break;
 			if (i == ifList->size())
 			{
 				NX_INTERFACE_INFO iface;
 
 				memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
-				iface.dwIpAddr = mgmtIpAddr;
-				iface.dwIpNetMask = mgmtNetMask;
-				iface.dwType = IFTYPE_OTHER;
-				_tcscpy(iface.szName, _T("MGMT"));
-				memcpy(iface.bMacAddr, baseMacAddr, MAC_ADDR_LENGTH);
+				iface.ipAddr = mgmtIpAddr;
+				iface.ipNetMask = mgmtNetMask;
+            iface.type = IFTYPE_OTHER;
+				_tcscpy(iface.name, _T("MGMT"));
+				memcpy(iface.macAddr, baseMacAddr, MAC_ADDR_LENGTH);
 				ifList->add(&iface);
 			}
 		}
@@ -212,12 +212,12 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		for(int i = 0; i < ifList->size(); i++)
 		{
 			NX_INTERFACE_INFO *curr = ifList->get(i);
-			if ((curr->dwSlotNumber != 0) &&
-				 (!memcmp(curr->bMacAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ||
-			     !memcmp(curr->bMacAddr, baseMacAddr, MAC_ADDR_LENGTH)))
+			if ((curr->slot != 0) &&
+				 (!memcmp(curr->macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ||
+			     !memcmp(curr->macAddr, baseMacAddr, MAC_ADDR_LENGTH)))
 			{
-				memcpy(curr->bMacAddr, baseMacAddr, MAC_ADDR_LENGTH);
-				curr->bMacAddr[5] += (BYTE)curr->dwPortNumber;
+				memcpy(curr->macAddr, baseMacAddr, MAC_ADDR_LENGTH);
+				curr->macAddr[5] += (BYTE)curr->port;
 			}
 		}
 	}

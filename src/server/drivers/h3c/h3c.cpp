@@ -91,11 +91,11 @@ static UINT32 PortWalkHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
    for(int i = 0; i < ifList->size(); i++)
    {
       NX_INTERFACE_INFO *iface = ifList->get(i);
-      if (iface->dwIndex == ifIndex)
+      if (iface->index == ifIndex)
       {
          iface->isPhysicalPort = true;
-         iface->dwSlotNumber = var->getName()->getValue()[18];
-         iface->dwPortNumber = var->getName()->getValue()[20];
+         iface->slot = var->getName()->getValue()[18];
+         iface->port = var->getName()->getValue()[20];
          break;
       }
    }

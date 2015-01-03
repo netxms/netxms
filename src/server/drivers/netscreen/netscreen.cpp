@@ -94,26 +94,26 @@ static UINT32 HandlerIfList(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Tra
 
 	NX_INTERFACE_INFO iface;
 	memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
-	iface.dwIndex = varbind->getValueAsUInt();
+	iface.index = varbind->getValueAsUInt();
 
 	oidName[10] = 2;	// nsIfName
-	UINT32 rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface.szName, MAX_DB_STRING * sizeof(TCHAR), SG_STRING_RESULT);
+	UINT32 rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface.name, MAX_DB_STRING * sizeof(TCHAR), SG_STRING_RESULT);
 	if (rc != SNMP_ERR_SUCCESS)
 		return rc;
-	nx_strncpy(iface.szDescription, iface.szName, MAX_DB_STRING);
+	nx_strncpy(iface.description, iface.name, MAX_DB_STRING);
 
 	oidName[10] = 11;	// nsIfMAC
-	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface.bMacAddr, 6, SG_RAW_RESULT);
+	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface.macAddr, 6, SG_RAW_RESULT);
 	if (rc != SNMP_ERR_SUCCESS)
 		return rc;
 
 	oidName[10] = 6;	// nsIfIp
-	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &iface.dwIpAddr, sizeof(UINT32), 0);
+	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &iface.ipAddr, sizeof(UINT32), 0);
 	if (rc != SNMP_ERR_SUCCESS)
 		return rc;
 
 	oidName[10] = 7;	// nsIfNetmask
-	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &iface.dwIpNetMask, sizeof(UINT32), 0);
+	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &iface.ipNetMask, sizeof(UINT32), 0);
 	if (rc != SNMP_ERR_SUCCESS)
 		return rc;
 
@@ -144,16 +144,16 @@ InterfaceList *NetscreenDriver::getInterfaces(SNMP_Transport *snmp, StringMap *a
 			int j;
 			for(j = 0; j < stdIfList->size(); j++)
 			{
-				if (!_tcscmp(iface->szName, stdIfList->get(j)->szName))
+				if (!_tcscmp(iface->name, stdIfList->get(j)->name))
 				{
-					iface->dwIndex = stdIfList->get(j)->dwIndex;
+					iface->index = stdIfList->get(j)->index;
 					break;
 				}
 			}
 			if (j == stdIfList->size())
 			{
 				// Interface nt found in standard interface list (usually tunnel interface)
-				iface->dwIndex += 32768;
+				iface->index += 32768;
 			}
 		}
 	}
