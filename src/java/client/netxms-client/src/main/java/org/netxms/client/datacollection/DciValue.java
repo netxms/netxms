@@ -18,9 +18,10 @@
  */
 package org.netxms.client.datacollection;
 
+import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.IllegalFormatException;
-
 import org.netxms.base.NXCPMessage;
 
 /**
@@ -110,6 +111,109 @@ public abstract class DciValue
 	}
 	
 	/**
+	 * Class to hold value for formatter
+	 */
+	private class Value
+	{
+	   Object value;
+	   String suffix;
+	}
+	
+   /**
+    * Get value ready for formatter
+    * 
+    * @param useMultipliers
+    * @return
+    */
+   private Value getValueForFormat(boolean useMultipliers)
+   {
+      Value v = new Value();
+      v.suffix = "";
+      
+      try
+      {
+         switch(dataType)
+         {
+            case DataCollectionObject.DT_INT:
+            case DataCollectionObject.DT_UINT:
+            case DataCollectionItem.DT_INT64:
+            case DataCollectionItem.DT_UINT64:               
+               if (useMultipliers)
+               {
+                  long i = Long.parseLong(value);
+                  if ((i >= 10000000000000L) || (i <= -10000000000000L))
+                  {
+                     i = i / 1000000000000L;
+                     v.suffix = "T";
+                  }
+                  if ((i >= 10000000000L) || (i <= -10000000000L))
+                  {
+                     i = i / 1000000000L;
+                     v.suffix = "G";
+                  }
+                  if ((i >= 10000000) || (i <= -10000000))
+                  {
+                     i = i / 1000000;
+                     v.suffix = "M";
+                  }
+                  if ((i >= 10000) || (i <= -10000))
+                  {
+                     i = i / 1000;
+                     v.suffix = "K";
+                  }
+                  v.value = Long.valueOf(i);
+               }
+               else
+               {
+                  v.value = Long.parseLong(value);
+               }
+               break;
+            case DataCollectionObject.DT_FLOAT:
+               if (useMultipliers)
+               {
+                  double d = Double.parseDouble(value);
+                  NumberFormat nf = NumberFormat.getNumberInstance();
+                  nf.setMaximumFractionDigits(2);
+                  if ((d >= 10000000000000.0) || (d <= -10000000000000.0))
+                  {
+                     d = d / 1000000000000.0;
+                     v.suffix = "T";
+                  }
+                  if ((d >= 10000000000.0) || (d <= -10000000000.0))
+                  {
+                     d = d / 1000000000.0;
+                     v.suffix = "G";
+                  }
+                  if ((d >= 10000000) || (d <= -10000000))
+                  {
+                     d = d / 1000000;
+                     v.suffix = "M";
+                  }
+                  if ((d >= 10000) || (d <= -10000))
+                  {
+                     d = d / 1000;
+                     v.suffix = "K";
+                  }
+                  v.value = Double.valueOf(d);
+               }
+               else
+               {
+                  v.value = Double.parseDouble(value);
+               }
+               break;
+            default:
+               v.value = value;
+               break;
+         }
+      }     
+      catch(NumberFormatException e)
+      {
+         v.value = value;
+      }
+      return v;
+   }
+
+   /**
 	 * Returns formated DCI value or string with format error and correct type of DCI value;
 	 * 
 	 * @param formatString the string into which will be placed DCI value 
@@ -117,46 +221,51 @@ public abstract class DciValue
 	 */
 	public String format(String formatString)
 	{
-	   Object v;
-	   String dciType = "String";
-	   try
-	   {
-   	   switch(dataType)
-   	   {
-   	      case DataCollectionObject.DT_INT:
-            case DataCollectionObject.DT_UINT:
-               dciType = "Integer";
-   	         v =  Integer.parseInt(value);
-   	         break;
-   	      case DataCollectionObject.DT_FLOAT:
-               dciType = "Float";
-   	         v = Float.parseFloat(value);
-   	         break;
-   	      case DataCollectionItem.DT_INT64:
-   	      case DataCollectionItem.DT_UINT64:
-               dciType = "Long";
-   	         v = Long.parseLong(value);
-   	         break;
-   	      default:
-   	         v = value;
-   	         break;
-   	   }
-	   }	   
-	   catch(NumberFormatException e)
-	   {
-	      v = value;
-	   }
+	   StringBuilder sb = new StringBuilder();
+	   char[] format = formatString.toCharArray();
 	   
-	   String result = "";
-	   try
+	   for(int i = 0; i < format.length; i++)
 	   {
-	      result = String.format(formatString, v);
+	      if (format[i] == '%')
+	      {
+	         i++;
+	         if (format[i] == '%')
+	         {
+	            sb.append('%');
+	         }
+	         else
+	         {
+	            int j;
+	            for(j = i; !Character.isLetter(format[j]) && (j < format.length); j++);
+	            
+	            boolean useMultipliers = false;
+	            if (format[i] == '*')
+	            {
+	               i++;
+	               useMultipliers = true;
+	            }
+	            
+	            final String f = "%" + new String(Arrays.copyOfRange(format, i, j + 1));
+	            i = j;
+	            
+	            try
+	            {
+	               Value v = getValueForFormat(useMultipliers);
+	               sb.append(String.format(f, v.value));
+	               sb.append(v.suffix);
+	            }
+	            catch(IllegalFormatException e)
+	            {
+	               sb.append("<INVALID FORMAT> ("+f+")");
+	            }
+	         }
+	      }
+	      else
+	      {
+	         sb.append(format[i]);
+	      }
 	   }
-	   catch(IllegalFormatException e)
-	   {
-	      result = "String format exception. DCI type " + dciType;
-	   }
-	   return result;
+	   return sb.toString();
 	}
 	
 	/**
