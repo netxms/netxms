@@ -1201,6 +1201,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          response.setFieldInt16(NXCPCodes.VID_KEY_LENGTH, encryptionContext.getKeyLength());
          response.setFieldInt16(NXCPCodes.VID_IV_LENGTH, encryptionContext.getIvLength());
          response.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
+         Logger.debug("NXCSession.setupEncryption", "Cipher selected: " + EncryptionContext.getCipherName(encryptionContext.getCipher()));
       }
       catch(Exception e)
       {

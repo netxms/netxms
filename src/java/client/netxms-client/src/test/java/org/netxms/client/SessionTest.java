@@ -18,6 +18,8 @@
  */
 package org.netxms.client;
 
+import org.netxms.base.Logger;
+import org.netxms.base.LoggingFacility;
 import junit.framework.TestCase;
 
 /**
@@ -36,6 +38,14 @@ public class SessionTest extends TestCase
 
 	protected NXCSession connect(boolean useEncryption) throws Exception
 	{
+      Logger.setLoggingFacility(new LoggingFacility() {       
+         @Override
+         public void writeLog(int level, String tag, String message, Throwable t)
+         {
+            System.out.println("[" + tag + "] " + message);
+         }
+      });
+      
 		NXCSession session = new NXCSession(serverAddress, serverPort, loginName, password, useEncryption);
 		session.connect();
 		return session;
