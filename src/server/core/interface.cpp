@@ -87,6 +87,7 @@ Interface::Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSynth
 	m_zoneId = zoneId;
    m_isHidden = true;
 	m_pingTime = PING_TIME_ON_TIMEOUT;
+	m_pingLastTimeStamp = 0;
 }
 
 /**
@@ -124,6 +125,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32
 	m_zoneId = zoneId;
    m_isHidden = true;
 	m_pingTime = PING_TIME_ON_TIMEOUT;
+	m_pingLastTimeStamp = 0;
 }
 
 /**
@@ -141,6 +143,7 @@ UINT32 Interface::getPingTime()
    if ((time(NULL) - m_pingLastTimeStamp) > g_dwStatusPollingInterval)
    {
       updatePingData();
+      DbgPrintf(7, _T("Interface::getPingTime: update ping time is required! Last ping time %d."), m_pingLastTimeStamp);
    }
    return m_pingTime;
 }
@@ -197,6 +200,9 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
 		m_peerDiscoveryProtocol = (LinkLayerProtocol)DBGetFieldLong(hResult, 0, 18);
 		DBGetField(hResult, 0, 19, m_alias, MAX_DB_STRING);
 		m_mtu = DBGetFieldULong(hResult, 0, 20);
+
+      m_pingTime = PING_TIME_ON_TIMEOUT;
+      m_pingLastTimeStamp = 0;
 
       // Link interface to node
       if (!m_isDeleted)
@@ -435,6 +441,8 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 							long value = _tcstol(buffer, &eptr, 10);
 							if ((*eptr == 0) && (value >= 0))
 							{
+                        m_pingLastTimeStamp = time(NULL);
+                        m_pingTime = value;
 								if (value < 10000)
 								{
 									adminState = IF_ADMIN_STATE_UP;
@@ -442,6 +450,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 								}
 								else
 								{
+                           m_pingTime = PING_TIME_ON_TIMEOUT;
 									adminState = IF_ADMIN_STATE_UNKNOWN;
 									operState = IF_OPER_STATE_DOWN;
 								}
@@ -615,12 +624,75 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
  */
 void Interface::updatePingData()
 {
-   UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
-   if (dwPingStatus != ICMP_SUCCESS)
+   Node *pNode = getParentNode();
+   if (pNode == NULL)
    {
-      m_pingTime = PING_TIME_ON_TIMEOUT;
+      DbgPrintf(7, _T("Interface::updatePingData: Can't find parent node"));
+      return;
    }
-   m_pingLastTimeStamp = time(NULL);
+   UINT32 icmpProxy = pNode->getIcmpProxy();
+
+   if (IsZoningEnabled() && (m_zoneId != 0) && (icmpProxy == 0))
+   {
+      Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+      if (zone != NULL)
+      {
+         icmpProxy = zone->getIcmpProxy();
+      }
+   }
+
+   if (icmpProxy != 0)
+   {
+      DbgPrintf(7, _T("Interface::updatePingData: ping via proxy [%u]"), icmpProxy);
+      Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
+      if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
+      {
+         DbgPrintf(7, _T("Interface::updatePingData: proxy node found: %s"), proxyNode->getName());
+         AgentConnection *conn = proxyNode->createAgentConnection();
+         if (conn != NULL)
+         {
+            TCHAR parameter[64], buffer[64];
+
+            _sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), IpToStr(m_dwIpAddr, buffer));
+            if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
+            {
+               DbgPrintf(7, _T("Interface::updatePingData:  proxy response: \"%s\""), buffer);
+               TCHAR *eptr;
+               long value = _tcstol(buffer, &eptr, 10);
+               m_pingLastTimeStamp = time(NULL);
+               if ((*eptr == 0) && (value >= 0) && (value < 10000))
+               {
+                  m_pingTime = value;
+               }
+               else
+               {
+                  m_pingTime = PING_TIME_ON_TIMEOUT;
+                  DbgPrintf(7, _T("Interface::updatePingData: incorrect value: %d or error while parsing: %s"), value, eptr);
+               }
+            }
+            conn->disconnect();
+            delete conn;
+         }
+         else
+         {
+            DbgPrintf(7, _T("Interface::updatePingData: cannot connect to agent on proxy node [%u]"), icmpProxy);
+         }
+      }
+      else
+      {
+         DbgPrintf(7, _T("Interface::updatePingData: proxy node not available [%u]"), icmpProxy);
+      }
+   }
+   else	// not using ICMP proxy
+   {
+      UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+      if (dwPingStatus != ICMP_SUCCESS)
+      {
+         DbgPrintf(7, _T("Interface::updatePingData: error getting ping %d"), dwPingStatus);
+         m_pingTime = PING_TIME_ON_TIMEOUT;
+      }
+      m_pingLastTimeStamp = time(NULL);
+   }
 }
 
 /**
@@ -940,12 +1012,12 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
 /**
  * Set MAC address for interface
  */
-void Interface::setMacAddr(const BYTE *pbNewMac) 
+void Interface::setMacAddr(const BYTE *pbNewMac)
 {
    lockProperties();
    MacDbRemove(m_macAddr);
    memcpy(m_macAddr, pbNewMac, MAC_ADDR_LENGTH);
    MacDbAddInterface(this);
-   setModified(); 
+   setModified();
    unlockProperties();
 }

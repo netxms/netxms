@@ -1116,6 +1116,7 @@ public:
    virtual ~Node();
 
    virtual int getObjectClass() { return OBJECT_NODE; }
+	UINT32 getIcmpProxy() { return m_icmpProxy; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
