@@ -1141,7 +1141,12 @@ restart_agent_check:
       {
          SetPollerInfo(nPoller, _T("check SNMP"));
          sendPollerMsg(dwRqId, _T("Checking SNMP agent connectivity\r\n"));
-		   dwResult = SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0);
+         const TCHAR *testOid = m_customAttributes.get(_T("snmp.testoid"));
+         if (testOid == NULL)
+         {
+            testOid = _T(".1.3.6.1.2.1.1.2.0");
+         }
+		   dwResult = SnmpGet(m_snmpVersion, pTransport, testOid, NULL, 0, szBuffer, sizeof(szBuffer), 0);
          if ((dwResult == SNMP_ERR_SUCCESS) || (dwResult == SNMP_ERR_NO_OBJECT))
          {
             if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
