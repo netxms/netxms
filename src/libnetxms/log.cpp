@@ -262,6 +262,7 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
 
          fwrite(data, 1, strlen(data), m_logFileHandle);
 		   fflush(m_logFileHandle);
+         free(data);
 
 	      // Check log size
 	      if ((m_logFileHandle != NULL) && (m_rotationMode == NXLOG_ROTATION_BY_SIZE) && (m_maxLogSize != 0))
