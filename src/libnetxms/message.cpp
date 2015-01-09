@@ -105,14 +105,17 @@ NXCPMessage::NXCPMessage(NXCPMessage *msg)
    m_flags = msg->m_flags;
    m_version = msg->m_version;
    m_fields = NULL;
-   m_dataSize = msg->m_dataSize;
 
    if (m_flags & MF_BINARY)
    {
+      m_dataSize = msg->m_dataSize;
       m_data = (BYTE *)nx_memdup(msg->m_data, m_dataSize);
    }
    else
    {
+      m_data = NULL;
+      m_dataSize = 0;
+
       MessageField *entry, *tmp;
       HASH_ITER(hh, msg->m_fields, entry, tmp)
       {
