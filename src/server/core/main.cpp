@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 NetXMS Team
+** Copyright (C) 2003-2015 NetXMS Team
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -73,7 +73,8 @@ extern Queue g_routePollQueue;
 extern Queue g_discoveryPollQueue;
 extern Queue g_nodePollerQueue;
 extern Queue g_conditionPollerQueue;
-extern Queue *g_pItemQueue;
+extern Queue g_dataCollectionQueue;
+extern Queue g_dciCacheLoaderQueue;
 extern Queue g_syslogProcessingQueue;
 extern Queue g_syslogWriteQueue;
 
@@ -567,7 +568,9 @@ BOOL NXCORE_EXPORTABLE Initialize()
 				_tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
 	}
    if (!nxlog_open((g_flags & AF_USE_SYSLOG) ? NETXMSD_SYSLOG_NAME : g_szLogFile,
-	                ((g_flags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) | ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
+	                ((g_flags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) | 
+	                ((g_flags & AF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) | 
+                   ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
                    _T("LIBNXSRV.DLL"),
 #ifdef _WIN32
 				       0, NULL))
@@ -901,6 +904,9 @@ void NXCORE_EXPORTABLE Shutdown()
 	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
 	ConditionSet(m_condShutdown);
 
+   // Stop DCI cache loading thread
+   g_dciCacheLoaderQueue.SetShutdownMode();
+
 #if XMPP_SUPPORTED
    StopXMPPConnector();
 #endif
@@ -1180,6 +1186,71 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, _T("Session ID missing\n"));
 		}
    }
+	else if (IsCommand(_T("POLL"), szBuffer, 2))
+	{
+		pArg = ExtractWord(pArg, szBuffer);
+		if (szBuffer[0] != 0)
+		{
+         int pollType;
+         if (IsCommand(_T("CONFIGURATION"), szBuffer, 1))
+         {
+            pollType = 1;
+         }
+         else if (IsCommand(_T("STATUS"), szBuffer, 1))
+         {
+            pollType = 2;
+         }
+         else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
+         {
+            pollType = 3;
+         }
+         else
+         {
+            pollType = 0;
+         }
+
+         if (pollType > 0)
+         {
+      		pArg = ExtractWord(pArg, szBuffer);
+			   UINT32 id = _tcstoul(szBuffer, NULL, 0);
+			   if (id != 0)
+			   {
+				   Node *node = (Node *)FindObjectById(id, OBJECT_NODE);
+				   if (node != NULL)
+				   {
+                  switch(pollType)
+                  {
+                     case 1:
+                        node->configurationPoll(NULL, 0, -1, 0);
+                        break;
+                     case 2:
+                        node->statusPoll(NULL, 0, -1);
+                        break;
+                     case 3:
+                        node->topologyPoll(NULL, 0, -1);
+                        break;
+                  }
+				   }
+				   else
+				   {
+					   ConsolePrintf(pCtx, _T("ERROR: Node with ID %d does not exist\n\n"), id);
+				   }
+			   }
+			   else
+			   {
+				   ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+			   }
+         }
+         else
+         {
+   			ConsolePrintf(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY] <node>\n"));
+         }
+		}
+		else
+		{
+			ConsolePrintf(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY] <node>\n"));
+		}
+	}
 	else if (IsCommand(_T("SET"), szBuffer, 3))
 	{
 		pArg = ExtractWord(pArg, szBuffer);
@@ -1327,6 +1398,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_TRAPS_FROM_UNMANAGED_NODES));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_RESOLVE_IP_FOR_EACH_STATUS_POLL));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_PERFDATA_STORAGE_DRIVER_LOADED));
+			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_BACKGROUND_LOG_WRITER));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
 			ConsolePrintf(pCtx, _T("\n"));
@@ -1394,7 +1466,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ShowQueueStats(pCtx, &g_conditionPollerQueue, _T("Condition poller"));
 			ShowQueueStats(pCtx, &g_configPollQueue, _T("Configuration poller"));
 			ShowQueueStats(pCtx, &g_topologyPollQueue, _T("Topology poller"));
-			ShowQueueStats(pCtx, g_pItemQueue, _T("Data collector"));
+			ShowQueueStats(pCtx, &g_dataCollectionQueue, _T("Data collector"));
+			ShowQueueStats(pCtx, &g_dciCacheLoaderQueue, _T("DCI cache loader"));
 			ShowQueueStats(pCtx, g_dbWriterQueue, _T("Database writer"));
 			ShowQueueStats(pCtx, g_dciDataWriterQueue, _T("Database writer (IData)"));
 			ShowQueueStats(pCtx, g_dciRawDataWriterQueue, _T("Database writer (raw DCI values)"));
@@ -1759,6 +1832,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   get <variable>            - Get value of server configuration variable\n")
 				_T("   help                      - Display this help\n")
 				_T("   ldapsync                  - Synchronize ldap users with local user database\n")
+            _T("   poll <type> <node>        - Initiate node poll\n")
 				_T("   raise <exception>         - Raise exception\n")
 				_T("   set <variable> <value>    - Set value of server configuration variable\n")
 				_T("   show components <node>    - Show physical components of given node\n")

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +53,9 @@ public class InterfaceListComparator extends ViewerComparator
 			case InterfacesTab.COLUMN_ADMIN_STATE:
 				result = iface1.getAdminState() - iface2.getAdminState();
 				break;
+         case InterfacesTab.COLUMN_ALIAS:
+            result = iface1.getAlias().compareToIgnoreCase(iface2.getAlias());
+            break;
 			case InterfacesTab.COLUMN_DESCRIPTION:
 				result = iface1.getDescription().compareToIgnoreCase(iface2.getDescription());
 				break;
@@ -65,6 +68,9 @@ public class InterfaceListComparator extends ViewerComparator
 			case InterfacesTab.COLUMN_INDEX:
 				result = iface1.getIfIndex() - iface2.getIfIndex();
 				break;
+         case InterfacesTab.COLUMN_MTU:
+            result = iface1.getMtu() - iface2.getMtu();
+            break;
 			case InterfacesTab.COLUMN_NAME:
 				result = iface1.getObjectName().compareToIgnoreCase(iface2.getObjectName());
 				break;

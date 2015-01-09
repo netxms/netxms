@@ -138,13 +138,13 @@ AC_ARG_WITH(client-proxy,
 AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
 [
-	COMPONENTS="$COMPONENTS sqlite agent"
+	COMPONENTS="$COMPONENTS sqlite snmp agent"
 ])
 
 AC_ARG_WITH(static-agent,
 [AS_HELP_STRING(--with-static-agent,build statically linked agent)],
 [
-	COMPONENTS="$COMPONENTS sqlite static-agent"
+	COMPONENTS="$COMPONENTS sqlite snmp static-agent"
 	FORCE_INTERNAL_EXPAT="yes"
 	FORCE_INTERNAL_LIBTRE="yes"
 	FORCE_INTERNAL_JANSSON="yes"
@@ -528,9 +528,15 @@ if test $? = 0; then
 	MODULES="$MODULES sqlite"
 fi
 
+check_substr "$COMPONENTS" "snmp"
+if test $? = 0; then
+	NEED_ZLIB="yes"
+	MODULES="$MODULES snmp"
+fi
+
 check_substr "$COMPONENTS" "static-agent"
 if test $? = 0; then
-	if test "x$COMPONENTS" != "x sqlite static-agent"; then
+	if test "x$COMPONENTS" != "x sqlite snmp static-agent"; then
 		AC_MSG_ERROR(Static agent and other components are mutually exclusive.)
 	fi
 	STATIC_BUILD="yes"
@@ -632,12 +638,6 @@ if test $? = 0; then
 	STATIC_SUBAGENT_LIST="ecs ipso logwatch ping portcheck ups"
 	SUBAGENT_DIRS="ipso"
 	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/ipso/ipso.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
-fi
-
-check_substr "$COMPONENTS" "snmp"
-if test $? = 0; then
-	NEED_ZLIB="yes"
-	MODULES="$MODULES snmp"
 fi
 
 check_substr "$COMPONENTS" "server"

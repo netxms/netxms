@@ -1,11 +1,16 @@
 
     <menu xmlns:android="http://schemas.android.com/apk/res/android">
-        <item android:id="@+id/graph_half_hour" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_half_hour"></item>
+        <item android:id="@+id/graph_ten_minutes" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_ten_minutes"></item>
+        <item android:id="@+id/graph_thirty_minutes" android:checkable="false" android:visible="true" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_thirty_minutes"></item>
         <item android:id="@+id/graph_one_hour" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_one_hour" android:icon="@drawable/ic_menu_line_chart" android:showAsAction="always"></item>
         <item android:id="@+id/graph_two_hours" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_two_hours"></item>
         <item android:id="@+id/graph_four_hours" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_four_hours"></item>
+        <item android:id="@+id/graph_twelve_hours" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_twelve_hours"></item>
         <item android:id="@+id/graph_one_day" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_one_day"></item>
+        <item android:id="@+id/graph_five_days" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_five_days"></item>
         <item android:id="@+id/graph_one_week" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_one_week"></item>
-        <item android:id="@+id/bar_chart" android:title="@string/last_values_bar_chart" android:enabled="true" android:visible="true" android:checkable="false" android:checked="false" android:icon="@drawable/ic_menu_bar_chart" android:showAsAction="always"></item>
-        <item android:id="@+id/pie_chart" android:enabled="true" android:visible="true" android:checkable="false" android:checked="false" android:title="@string/last_values_pie_chart" android:icon="@drawable/ic_menu_pie_chart" android:showAsAction="always"></item>
+        <item android:id="@+id/graph_one_month" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_one_month"></item>
+        <item android:id="@+id/graph_one_year" android:visible="true" android:checkable="false" android:enabled="true" android:checked="false" android:title="@string/last_values_graph_one_year"></item>
+        <item android:id="@+id/bar_chart" android:title="@string/last_values_bar_chart" android:enabled="true" android:visible="true" android:checkable="false" android:checked="false" android:icon="@drawable/ic_menu_bar_chart" android:showAsAction="ifRoom"></item>
+        <item android:id="@+id/pie_chart" android:enabled="true" android:visible="true" android:checkable="false" android:checked="false" android:title="@string/last_values_pie_chart" android:icon="@drawable/ic_menu_pie_chart" android:showAsAction="ifRoom"></item>
     </menu>

@@ -48,7 +48,8 @@ double g_dAvgConfigPollerQueueSize = 0;
 double g_dAvgSyslogProcessingQueueSize = 0;
 double g_dAvgSyslogWriterQueueSize = 0;
 UINT32 g_dwAvgDCIQueuingTime = 0;
-Queue *g_pItemQueue = NULL;
+Queue g_dataCollectionQueue(4096, 256);
+Queue g_dciCacheLoaderQueue;
 
 /**
  * Collect data for DCI
@@ -188,7 +189,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    TCHAR *pBuffer = (TCHAR *)malloc(MAX_LINE_SIZE * sizeof(TCHAR));
    while(!IsShutdownInProgress())
    {
-      DCObject *pItem = (DCObject *)g_pItemQueue->GetOrBlock();
+      DCObject *pItem = (DCObject *)g_dataCollectionQueue.GetOrBlock();
 		DataCollectionTarget *target = (DataCollectionTarget *)pItem->getTarget();
 
 		if (pItem->isScheduledForDeletion())
@@ -307,7 +308,7 @@ static void QueueItems(NetObj *object, void *data)
 {
 	DbgPrintf(8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%d]"),
 				 object->getName(), object->getId());
-	((DataCollectionTarget *)object)->queueItemsForPolling(g_pItemQueue);
+	((DataCollectionTarget *)object)->queueItemsForPolling(&g_dataCollectionQueue);
 }
 
 /**
@@ -387,7 +388,7 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
          break;      // Shutdown has arrived
 
       // Get current values
-      pollerQS[currPos] = g_pItemQueue->Size();
+      pollerQS[currPos] = g_dataCollectionQueue.Size();
       dbWriterQS[currPos] = g_dbWriterQueue->Size();
       iDataWriterQS[currPos] = g_dciDataWriterQueue->Size();
       rawDataWriterQS[currPos] = g_dciRawDataWriterQueue->Size();
@@ -427,29 +428,48 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
 }
 
 /**
+ * DCI cache loader
+ */
+THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
+{
+   DbgPrintf(2, _T("DCI cache loader thread started"));
+   while(true)
+   {
+      DCItem *dci = (DCItem *)g_dciCacheLoaderQueue.GetOrBlock();
+      if (dci == INVALID_POINTER_VALUE)
+         break;
+
+      DbgPrintf(6, _T("Loading cache for DCI %s [%d] on %s [%d]"), 
+         dci->getName(), dci->getId(), dci->getNode()->getName(), dci->getNode()->getId());
+      dci->reloadCache();
+      dci->getNode()->decRefCount();
+   }
+   DbgPrintf(2, _T("DCI cache loader thread stopped"));
+   return THREAD_OK;
+}
+
+/**
  * Initialize data collection subsystem
  */
 BOOL InitDataCollector()
 {
    int i, iNumCollectors;
 
-   // Create collection requests queue
-   g_pItemQueue = new Queue(4096, 256);
-
    // Start data collection threads
    iNumCollectors = ConfigReadInt(_T("NumberOfDataCollectors"), 10);
    for(i = 0; i < iNumCollectors; i++)
       ThreadCreate(DataCollector, 0, NULL);
 
-   // Start item poller thread
    ThreadCreate(ItemPoller, 0, NULL);
-
-   // Start statistics collection thread
    ThreadCreate(StatCollector, 0, NULL);
+   ThreadCreate(CacheLoader, 0, NULL);
 
    return TRUE;
 }
 
+/**
+ * Update parameter list from node
+ */
 static void UpdateParamList(NetObj *object, void *data)
 {
 	ObjectArray<AgentParameterDefinition> *fullList = (ObjectArray<AgentParameterDefinition> *)data;
@@ -476,6 +496,9 @@ static void UpdateParamList(NetObj *object, void *data)
 	((Node *)object)->closeParamList();
 }
 
+/**
+ * Update table list from node
+ */
 static void UpdateTableList(NetObj *object, void *data)
 {
 	ObjectArray<AgentTableDefinition> *fullList = (ObjectArray<AgentTableDefinition> *)data;
@@ -502,6 +525,9 @@ static void UpdateTableList(NetObj *object, void *data)
 	((Node *)object)->closeTableList();
 }
 
+/**
+ * Write full (from all nodes) agent parameters list to NXCP message
+ */
 void WriteFullParamListToMessage(NXCPMessage *pMsg, WORD flags)
 {
    // Gather full parameter list

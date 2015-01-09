@@ -146,7 +146,7 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 {
 	DB_RESULT hResult;
 	TCHAR *query;
-	int queryLen = 512;
+	size_t queryLen = 512;
 	BOOL success = FALSE;
 
 	query = (TCHAR *)malloc(queryLen * sizeof(TCHAR));
@@ -186,9 +186,9 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 		{
 			DecodeSQLString(value);
 			String newValue = DBPrepareString(g_hCoreDB, value);
-			if ((int)newValue.getSize() + 256 > queryLen)
+			if (newValue.length() + 256 > queryLen)
 			{
-				queryLen = newValue.getSize() + 256;
+				queryLen = newValue.length() + 256;
 				query = (TCHAR *)realloc(query, queryLen * sizeof(TCHAR));
 			}
 			if (isStringId)
@@ -389,11 +389,40 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Upgrade from V343 to V344
+ */
+static BOOL H_UpgradeFromV343(int currVersion, int newVersion)
+{
+    static TCHAR batch[] =
+      _T("ALTER TABLE interfaces ADD mtu integer\n")
+      _T("ALTER TABLE interfaces ADD alias varchar(255)\n")
+      _T("UPDATE interfaces SET mtu=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='344' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V342 to V343
+ */
+static BOOL H_UpgradeFromV342(int currVersion, int newVersion)
+{
+   if (g_dbSyntax != DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp DESC)' WHERE var_name='IDataIndexCreationCommand_0'")));
+      ReindexIData();
+   }
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='343' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V341 to V342
  */
 static BOOL H_UpgradeFromV341(int currVersion, int newVersion)
 {
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE object_tools ADD tool_filter $SQL:TEXT"))); //create ne column
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE object_tools ADD tool_filter $SQL:TEXT")));
    DB_RESULT hResult = SQLSelect(_T("SELECT tool_id, matching_oid FROM object_tools"));
    if (hResult != NULL)
    {
@@ -8249,6 +8278,8 @@ static struct
    { 339, 340, H_UpgradeFromV339 },
    { 340, 341, H_UpgradeFromV340 },
    { 341, 342, H_UpgradeFromV341 },
+   { 342, 343, H_UpgradeFromV342 },
+   { 343, 344, H_UpgradeFromV343 },
    { 0, 0, NULL }
 };
 

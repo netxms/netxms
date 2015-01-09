@@ -22,11 +22,9 @@
 
 #include "nxdbmgr.h"
 
-
-//
-// Recreate index
-//
-
+/**
+ * Recreate index
+ */
 static void RecreateIndex(const TCHAR *pszIndex, const TCHAR *pszTable, const TCHAR *pszColumns)
 {
 	TCHAR szQuery[1024];
@@ -52,11 +50,9 @@ static void RecreateIndex(const TCHAR *pszIndex, const TCHAR *pszTable, const TC
 	SQLQuery(szQuery);
 }
 
-
-//
-// Drop all indexes from table - MySQL way
-//
-
+/**
+ * Drop all indexes from table - MySQL way
+ */
 static void DropAllIndexesFromTable_MYSQL(const TCHAR *table)
 {
 	DB_RESULT hResult;
@@ -76,11 +72,9 @@ static void DropAllIndexesFromTable_MYSQL(const TCHAR *table)
 	}
 }
 
-
-//
-// Drop all indexes from table - PostgreSQL way
-//
-
+/**
+ * Drop all indexes from table - PostgreSQL way
+ */
 static void DropAllIndexesFromTable_PGSQL(const TCHAR *table)
 {
 	DB_RESULT hResult;
@@ -100,11 +94,9 @@ static void DropAllIndexesFromTable_PGSQL(const TCHAR *table)
 	}
 }
 
-
-//
-// Drop all indexes from table - SQLite way
-//
-
+/**
+ * Drop all indexes from table - SQLite way
+ */
 static void DropAllIndexesFromTable_SQLITE(const TCHAR *table)
 {
 	DB_RESULT hResult;
@@ -124,11 +116,31 @@ static void DropAllIndexesFromTable_SQLITE(const TCHAR *table)
 	}
 }
 
+/**
+ * Drop all indexes from table - DB/2 way
+ */
+static void DropAllIndexesFromTable_DB2(const TCHAR *table)
+{
+	DB_RESULT hResult;
+	TCHAR query[256], index[128];
 
-//
-// Drop all indexes from table - Oracle way
-//
+	_sntprintf(query, 256, _T("SELECT indname FROM syscat.indexes WHERE tabname=upper('%s') AND tabschema=current_schema"), table);
+	hResult = SQLSelect(query);
+	if (hResult != NULL)
+	{
+		int count = DBGetNumRows(hResult);
+		for(int i = 0; i < count; i++)
+		{
+			_sntprintf(query, 256, _T("DROP INDEX %s"), DBGetField(hResult, i, 0, index, 128));
+			SQLQuery(query);
+		}
+		DBFreeResult(hResult);
+	}
+}
 
+/**
+ * Drop all indexes from table - Oracle way
+ */
 static void DropAllIndexesFromTable_ORACLE(const TCHAR *table)
 {
 	DB_RESULT hResult;
@@ -148,11 +160,9 @@ static void DropAllIndexesFromTable_ORACLE(const TCHAR *table)
 	}
 }
 
-
-//
-// Drop all indexes from table - MS SQL way
-//
-
+/**
+ * Drop all indexes from table - MS SQL way
+ */
 static void DropAllIndexesFromTable_MSSQL(const TCHAR *table)
 {
 	DB_RESULT hResult;
@@ -172,15 +182,16 @@ static void DropAllIndexesFromTable_MSSQL(const TCHAR *table)
 	}
 }
 
-
-//
-// Drop all indexes from table
-//
-
+/**
+ * Drop all indexes from table
+ */
 static void DropAllIndexesFromTable(const TCHAR *table)
 {
 	switch(g_dbSyntax)
 	{
+		case DB_SYNTAX_DB2:
+			DropAllIndexesFromTable_DB2(table);
+			break;
 		case DB_SYNTAX_MYSQL:
 			DropAllIndexesFromTable_MYSQL(table);
 			break;
@@ -202,13 +213,14 @@ static void DropAllIndexesFromTable(const TCHAR *table)
 }
 
 /**
- * Reindex IDATA_xx tables
+ * Reindex IDATA_xx tables for given object class
  */
-void ReindexIData()
+static void ReindexIDataForClass(const TCHAR *objectTable)
 {
 	TCHAR table[32], query[256], queryTemplate[256];
 
-	DB_RESULT hResult = SQLSelect(_T("SELECT id FROM nodes"));
+   _sntprintf(query, 256, _T("SELECT id FROM %s"), objectTable);
+	DB_RESULT hResult = SQLSelect(query);
 	if (hResult == NULL)
 		return;
 
@@ -234,4 +246,15 @@ void ReindexIData()
 	}
 
 	DBFreeResult(hResult);
+}
+
+/**
+ * Re-index all IDATA_xx tables
+ */
+void ReindexIData()
+{
+   ReindexIDataForClass(_T("nodes"));
+   ReindexIDataForClass(_T("clusters"));
+   ReindexIDataForClass(_T("mobile_devices"));
+   ReindexIDataForClass(_T("access_points"));
 }

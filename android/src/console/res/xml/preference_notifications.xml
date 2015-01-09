@@ -12,5 +12,10 @@
 		<RingtonePreference android:key="alarm.sound.minor" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound_minor" android:icon="@drawable/status_minor" />
 		<RingtonePreference android:key="alarm.sound.major" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound_major" android:icon="@drawable/status_major" />
 		<RingtonePreference android:key="alarm.sound.critical" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound_critical" android:icon="@drawable/status_critical" />
-	</PreferenceCategory>
+<!-- Not really useful 
+		<RingtonePreference android:key="alarm.sound.unknown" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound_unknown" android:icon="@drawable/status_unknown" />
+		<RingtonePreference android:key="alarm.sound.terminate" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound_terminate" android:icon="@drawable/status_terminate" />
+		<RingtonePreference android:key="alarm.sound.resolve" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound_resolve" android:icon="@drawable/status_resolve" />
+ -->
+ 	</PreferenceCategory>
 </PreferenceScreen>

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
-** Copyright (C) 2003-2014 Raden Solutions
+** Copyright (C) 2003-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ BOOL g_bCheckDB = FALSE;
  * Help text
  */
 static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING IS_UNICODE_BUILD_STRING _T("\n")
-                           _T("Copyright (c) 2003-2014 Raden Solutions\n\n")
+                           _T("Copyright (c) 2003-2015 Raden Solutions\n\n")
                            _T("Usage: netxmsd [<options>]\n\n")
                            _T("Valid options are:\n")
                            _T("   -e          : Run database check on startup\n")

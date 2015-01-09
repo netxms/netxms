@@ -68,7 +68,8 @@ extern Queue g_routePollQueue;
 extern Queue g_discoveryPollQueue;
 extern Queue g_nodePollerQueue;
 extern Queue g_conditionPollerQueue;
-extern Queue *g_pItemQueue;
+extern Queue g_dataCollectionQueue;
+extern Queue g_dciCacheLoaderQueue;
 
 void UnregisterClientSession(int id);
 void ResetDiscoveryPoller();
@@ -4410,7 +4411,6 @@ void ClientSession::createObject(NXCPMessage *pRequest)
    TCHAR *pszRequest, *pszResponse, *pszComments;
    UINT32 dwIpAddr, zoneId, nodeId;
    WORD wIpProto, wIpPort;
-	BYTE macAddr[MAC_ADDR_LENGTH];
    BOOL bParentAlwaysValid = FALSE;
 
    // Prepare response message
@@ -4608,18 +4608,20 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 								   NetObjInsert(object, TRUE);
 								   break;
 							   case OBJECT_INTERFACE:
-								   pRequest->getFieldAsBinary(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
-								   object = ((Node *)pParent)->createNewInterface(pRequest->getFieldAsUInt32(VID_IP_ADDRESS),
-								                                                   pRequest->getFieldAsUInt32(VID_IP_NETMASK),
-								                                                   szObjectName, NULL,
-																				               pRequest->getFieldAsUInt32(VID_IF_INDEX),
-								                                                   pRequest->getFieldAsUInt32(VID_IF_TYPE),
-																				               macAddr, 0,
-																				               pRequest->getFieldAsUInt32(VID_IF_SLOT),
-																				               pRequest->getFieldAsUInt32(VID_IF_PORT),
-																				               pRequest->getFieldAsUInt16(VID_IS_PHYS_PORT) ? true : false,
-																								   true,
-                                                                           false);
+                           {
+                              NX_INTERFACE_INFO ifInfo;
+                              memset(&ifInfo, 0, sizeof(ifInfo));
+                              nx_strncpy(ifInfo.name, szObjectName, MAX_DB_STRING);
+                              ifInfo.ipAddr = pRequest->getFieldAsUInt32(VID_IP_ADDRESS);
+                              ifInfo.ipNetMask = pRequest->getFieldAsUInt32(VID_IP_NETMASK);
+                              ifInfo.index = pRequest->getFieldAsUInt32(VID_IF_INDEX);
+                              ifInfo.type = pRequest->getFieldAsUInt32(VID_IF_TYPE);
+								      pRequest->getFieldAsBinary(VID_MAC_ADDR, ifInfo.macAddr, MAC_ADDR_LENGTH);
+                              ifInfo.slot = pRequest->getFieldAsUInt32(VID_IF_SLOT);
+                              ifInfo.port = pRequest->getFieldAsUInt32(VID_IF_PORT);
+                              ifInfo.isPhysicalPort = pRequest->getFieldAsBoolean(VID_IS_PHYS_PORT);
+								      object = ((Node *)pParent)->createNewInterface(&ifInfo, true);
+                           }
 								   break;
 							   default:
 								   // Try to create unknown classes by modules
@@ -4850,7 +4852,7 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
                if ((pParent->getObjectClass() == OBJECT_TEMPLATE) &&
                    ((pChild->getObjectClass() == OBJECT_NODE) || (pChild->getObjectClass() == OBJECT_CLUSTER) || (pChild->getObjectClass() == OBJECT_MOBILEDEVICE)))
                {
-                  ((Template *)pParent)->queueRemoveFromTarget(pChild->getId(), pRequest->getFieldAsUInt16(VID_REMOVE_DCI));
+                  ((Template *)pParent)->queueRemoveFromTarget(pChild->getId(), pRequest->getFieldAsBoolean(VID_REMOVE_DCI));
                }
                else if ((pParent->getObjectClass() == OBJECT_CLUSTER) &&
                         (pChild->getObjectClass() == OBJECT_NODE))
@@ -5741,11 +5743,9 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
 	safe_free(pData);
 }
 
-
-//
-// Send message from poller to client
-//
-
+/**
+ * Send message from poller to client
+ */
 void ClientSession::sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg)
 {
    NXCPMessage msg;
@@ -5757,11 +5757,9 @@ void ClientSession::sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg)
    sendMessage(&msg);
 }
 
-
-//
-// Node poller thread
-//
-
+/**
+ * Node poller thread
+ */
 void ClientSession::pollerThread(Node *pNode, int iPollType, UINT32 dwRqId)
 {
    NXCPMessage msg;
@@ -7882,7 +7880,8 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
 	// Queues
 	msg.setField(VID_QSIZE_CONDITION_POLLER, g_conditionPollerQueue.Size());
 	msg.setField(VID_QSIZE_CONF_POLLER, g_configPollQueue.Size());
-	msg.setField(VID_QSIZE_DCI_POLLER, g_pItemQueue->Size());
+	msg.setField(VID_QSIZE_DCI_POLLER, g_dataCollectionQueue.Size());
+	msg.setField(VID_QSIZE_DCI_CACHE_LOADER, g_dciCacheLoaderQueue.Size());
 	msg.setField(VID_QSIZE_DBWRITER, g_dbWriterQueue->Size());
 	msg.setField(VID_QSIZE_EVENT, g_pEventQueue->Size());
 	msg.setField(VID_QSIZE_DISCOVERY, g_discoveryPollQueue.Size());
@@ -8004,7 +8003,7 @@ void ClientSession::updateScript(NXCPMessage *pRequest)
 				String prepCode = DBPrepareString(g_hCoreDB, pszCode);
             free(pszCode);
 
-				size_t qlen = (size_t)prepCode.getSize() + MAX_DB_STRING + 256;
+				size_t qlen = prepCode.length() + MAX_DB_STRING + 256;
             pszQuery = (TCHAR *)malloc(qlen * sizeof(TCHAR));
 
             if (dwScriptId == 0)
@@ -9535,7 +9534,7 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
          str = _T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>3</formatVersion>\n\t<description>");
 			temp = pRequest->getFieldAsString(VID_DESCRIPTION);
-			str.addDynamicString(EscapeStringForXML(temp, -1));
+			str.appendPreallocated(EscapeStringForXML(temp, -1));
 			free(temp);
          str += _T("</description>\n");
 

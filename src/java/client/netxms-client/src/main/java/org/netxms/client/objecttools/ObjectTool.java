@@ -99,7 +99,8 @@ public class ObjectTool
       catch(Exception e)
       {
          filter = new ObjectToolFilter();
-         Logger.debug("ObjectTool.ObjectTool", "Failed to convert object tool filter to string");
+         if (!filterData.isEmpty())
+            Logger.debug("ObjectTool.ObjectTool", "Failed to create object tool filter from XML");
       }
 		
 		createDisplayName();

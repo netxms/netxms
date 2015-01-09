@@ -15,6 +15,8 @@ import org.netxms.ui.android.main.activities.DrawPieChart;
 import org.netxms.ui.android.main.activities.TableLastValues;
 import org.netxms.ui.android.main.adapters.LastValuesAdapter;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
@@ -41,12 +43,15 @@ import android.widget.ListView;
 
 public class LastValuesFragment extends AbstractListFragment implements LoaderManager.LoaderCallbacks<DciValue[]>
 {
-	private LastValuesAdapter adapter = null;
-	private DciValueLoader loader = null;
-	private ListView lv = null;
 	private static final Integer[] DEFAULT_COLORS = { 0x40699C, 0x9E413E, 0x7F9A48, 0x695185, 0x3C8DA3, 0xCC7B38, 0x4F81BD, 0xC0504D,
 			0x9BBB59, 0x8064A2, 0x4BACC6, 0xF79646, 0xAABAD7, 0xD9AAA9, 0xC6D6AC, 0xBAB0C9 };
 	private static final int MAX_COLORS = DEFAULT_COLORS.length;
+
+	private LastValuesAdapter adapter = null;
+	private DciValueLoader loader = null;
+	private ListView lv = null;
+	private long timeFrame = 0;
+	private ArrayList<Long> items = null;
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -61,7 +66,7 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
 	public void onActivityCreated(Bundle savedInstanceState)
 	{
 		super.onActivityCreated(savedInstanceState);
-		adapter = new LastValuesAdapter(getActivity().getApplicationContext());
+		adapter = new LastValuesAdapter(getActivity());
 		setListAdapter(adapter);
 		setListShown(false, true);
 		loader = (DciValueLoader)getActivity().getSupportLoaderManager().initLoader(R.layout.lastvalues_fragment, null, this);
@@ -88,7 +93,7 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
 	@Override
 	public Loader<DciValue[]> onCreateLoader(int arg0, Bundle arg1)
 	{
-		return new DciValueLoader(getActivity().getApplicationContext());
+		return new DciValueLoader(getActivity());
 	}
 
 	@Override
@@ -162,22 +167,33 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
 	 */
 	private boolean handleItemSelection(MenuItem item)
 	{
+		ArrayList<Long> idList = getLastValuesSelection(item);
 		switch (item.getItemId())
 		{
 			case R.id.table_last_value:
-				return showTableLastValue(getLastValuesSelection(item));
-			case R.id.graph_half_hour:
-				return drawGraph(1800, getLastValuesSelection(item));
+				return showTableLastValue(idList);
+			case R.id.graph_ten_minutes:
+				return drawGraph(10 * 60, idList);
+			case R.id.graph_thirty_minutes:
+				return drawGraph(30 * 60, idList);
 			case R.id.graph_one_hour:
-				return drawGraph(3600, getLastValuesSelection(item));
+				return drawGraph(3600, idList);
 			case R.id.graph_two_hours:
-				return drawGraph(7200, getLastValuesSelection(item));
+				return drawGraph(2 * 3600, idList);
 			case R.id.graph_four_hours:
-				return drawGraph(14400, getLastValuesSelection(item));
+				return drawGraph(4 * 3600, idList);
+			case R.id.graph_twelve_hours:
+				return drawGraph(12 * 3600, idList);
 			case R.id.graph_one_day:
-				return drawGraph(86400, getLastValuesSelection(item));
+				return drawGraph(86400, idList);
+			case R.id.graph_five_days:
+				return longExecutionDrawGraph(5 * 86400, idList);
 			case R.id.graph_one_week:
-				return drawGraph(604800, getLastValuesSelection(item));
+				return longExecutionDrawGraph(7 * 86400, idList);
+			case R.id.graph_one_month:
+				return longExecutionDrawGraph(30 * 86400, idList);
+			case R.id.graph_one_year:
+				return longExecutionDrawGraph(365 * 86400, idList);
 			case R.id.bar_chart:
 				return drawComparisonChart(DrawBarChart.class);
 			case R.id.pie_chart:
@@ -208,7 +224,7 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
 	/**
 	 * Show last value for table DCI
 	 * 
-	 * @param position
+	 * @param idList	list of DCI to graph
 	 * @return
 	 */
 	private boolean showTableLastValue(ArrayList<Long> idList)
@@ -226,9 +242,42 @@ public class LastValuesFragment extends AbstractListFragment implements LoaderMa
 	}
 
 	/**
-	 * @param secsBack
-	 * @param val
-	 * @return
+	 * Draw graph for the specified time slot after confirmation of long task execution
+	 * 
+	 * @param secsBack	seconds back since current time
+	 * @param idList	list of DCI to graph
+	 * @return	Always true
+	 */
+	private boolean longExecutionDrawGraph(long secsBack, ArrayList<Long> idList)
+	{
+		timeFrame = secsBack;
+		items = idList;
+
+		new AlertDialog.Builder(getActivity())
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.setTitle(R.string.warning)
+				.setMessage(R.string.long_time_execution)
+				.setCancelable(true)
+				.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener()
+				{
+					@Override
+					public void onClick(DialogInterface dialog, int which)
+					{
+						if (items != null)
+							drawGraph(timeFrame, items);
+					}
+				})
+				.setNegativeButton(R.string.no, null)
+				.show();
+		return true;
+	}
+
+	/**
+	 * Draw graph for the specified time slot
+	 * 
+	 * @param secsBack	seconds back since current time
+	 * @param idList	list of DCI to graph
+	 * @return	Always true
 	 */
 	private boolean drawGraph(long secsBack, ArrayList<Long> idList)
 	{

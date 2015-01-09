@@ -114,7 +114,7 @@ BOOL ExecSQLBatch(const char *pszFile)
 		static const TCHAR *dbengine[] = { _T("mysql"), _T("pgsql"), _T("mssql"), _T("oracle"), _T("sqlite"), _T("db2"), _T("informix") };
 
 		String name;
-		name.addMultiByteString(pszFile, (DWORD)strlen(pszFile), CP_ACP);
+		name.appendMBString(pszFile, strlen(pszFile), CP_ACP);
 		name.replace(_T("@dbengine@"), dbengine[g_dbSyntax]);
 	   pBatch = LoadFile(name, &dwSize);
 	   if (pBatch == NULL)

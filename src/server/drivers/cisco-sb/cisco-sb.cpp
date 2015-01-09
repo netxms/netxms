@@ -88,7 +88,7 @@ InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
    bool highBase = true;
 	for(int i = 0; i < ifList->size(); i++)
    {
-      if (ifList->get(i)->dwIndex < 49)
+      if (ifList->get(i)->index < 49)
       {
          highBase = false;
          break;
@@ -99,13 +99,13 @@ InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
 	for(int i = 0; i < ifList->size(); i++)
 	{
 		NX_INTERFACE_INFO *iface = ifList->get(i);
-		if (iface->dwIndex < 1000)
+		if (iface->index < 1000)
 		{
 			iface->isPhysicalPort = true;
-			iface->dwSlotNumber = (iface->dwIndex - 1) / 110 + 1;
-			iface->dwPortNumber = (iface->dwIndex - 1) % 110 + 1;
+			iface->slot = (iface->index - 1) / 110 + 1;
+			iface->port = (iface->index - 1) % 110 + 1;
          if (highBase)
-            iface->dwPortNumber -= 48;
+            iface->port -= 48;
 		}
 	}
 

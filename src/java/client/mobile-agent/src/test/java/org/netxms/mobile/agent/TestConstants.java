@@ -31,7 +31,7 @@ public class TestConstants
       }
       catch (Exception e)
       {
-         System.out.println("No properties file found." + e.getMessage());
+         System.out.println("No properties file found: " + e.getMessage());
       }
    }
 }

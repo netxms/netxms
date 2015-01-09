@@ -1002,7 +1002,7 @@ void DCTable::createNXMPRecord(String &str)
 
    lock();
 
-   str.addFormattedString(_T("\t\t\t\t<dctable id=\"%d\">\n")
+   str.appendFormattedString(_T("\t\t\t\t<dctable id=\"%d\">\n")
                           _T("\t\t\t\t\t<name>%s</name>\n")
                           _T("\t\t\t\t\t<description>%s</description>\n")
                           _T("\t\t\t\t\t<origin>%d</origin>\n")
@@ -1020,7 +1020,7 @@ void DCTable::createNXMPRecord(String &str)
 	if (m_transformationScriptSource != NULL)
 	{
 		str += _T("\t\t\t\t\t<transformation>");
-		str.addDynamicString(EscapeStringForXML(m_transformationScriptSource, -1));
+		str.appendPreallocated(EscapeStringForXML(m_transformationScriptSource, -1));
 		str += _T("</transformation>\n");
 	}
 
@@ -1028,7 +1028,7 @@ void DCTable::createNXMPRecord(String &str)
    {
       str += _T("\t\t\t\t\t<schedules>\n");
       for(i = 0; i < m_dwNumSchedules; i++)
-         str.addFormattedString(_T("\t\t\t\t\t\t<schedule>%s</schedule>\n"), (const TCHAR *)EscapeStringForXML2(m_ppScheduleList[i]));
+         str.appendFormattedString(_T("\t\t\t\t\t\t<schedule>%s</schedule>\n"), (const TCHAR *)EscapeStringForXML2(m_ppScheduleList[i]));
       str += _T("\t\t\t\t\t</schedules>\n");
    }
 
@@ -1055,7 +1055,7 @@ void DCTable::createNXMPRecord(String &str)
 	if (m_pszPerfTabSettings != NULL)
 	{
 		str += _T("\t\t\t\t\t<perfTabSettings>");
-		str.addDynamicString(EscapeStringForXML(m_pszPerfTabSettings, -1));
+		str.appendPreallocated(EscapeStringForXML(m_pszPerfTabSettings, -1));
 		str += _T("</perfTabSettings>\n");
 	}
 

@@ -250,10 +250,11 @@ void StringSet::addAllFromMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countI
 String StringSet::getAll(const TCHAR *separator)
 {
    String result;
+   result.setAllocationStep(4096);
    StringSetEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if ((separator != NULL) && (result.getSize() > 0))
+      if ((separator != NULL) && (result.length() > 0))
          result += separator;
       result += entry->str;
    }

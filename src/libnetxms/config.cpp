@@ -586,7 +586,7 @@ void ConfigEntry::print(FILE *file, int level)
 static bool AddAttribute(const TCHAR *key, const void *value, void *userData)
 {
    if (_tcscmp(key, _T("id")))
-      ((String *)userData)->addFormattedString(_T(" %s=\"%s\""), key, (const TCHAR *)value);
+      ((String *)userData)->appendFormattedString(_T(" %s=\"%s\""), key, (const TCHAR *)value);
    return true;
 }
 
@@ -601,9 +601,9 @@ void ConfigEntry::createXml(String &xml, int level)
       *ptr = 0;
 
    if (m_id == 0)
-      xml.addFormattedString(_T("%*s<%s"), level * 4, _T(""), name);
+      xml.appendFormattedString(_T("%*s<%s"), level * 4, _T(""), name);
    else
-      xml.addFormattedString(_T("%*s<%s id=\"%d\""), level * 4, _T(""), name, m_id);
+      xml.appendFormattedString(_T("%*s<%s id=\"%d\""), level * 4, _T(""), name, m_id);
    m_attributes.forEach(AddAttribute, &xml);
    xml += _T(">");
 
@@ -612,21 +612,21 @@ void ConfigEntry::createXml(String &xml, int level)
       xml += _T("\n");
       for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
          e->createXml(xml, level + 1);
-      xml.addFormattedString(_T("%*s"), level * 4, _T(""));
+      xml.appendFormattedString(_T("%*s"), level * 4, _T(""));
    }
 
    if (m_valueCount > 0)
-      xml.addDynamicString(EscapeStringForXML(m_values[0], -1));
-   xml.addFormattedString(_T("</%s>\n"), name);
+      xml.appendPreallocated(EscapeStringForXML(m_values[0], -1));
+   xml.appendFormattedString(_T("</%s>\n"), name);
 
    for(int i = 1, len = 0; i < m_valueCount; i++)
    {
       if (m_id == 0)
-         xml.addFormattedString(_T("%*s<%s>"), level * 4, _T(""), name);
+         xml.appendFormattedString(_T("%*s<%s>"), level * 4, _T(""), name);
       else
-         xml.addFormattedString(_T("%*s<%s id=\"%d\">"), level * 4, _T(""), name, m_id);
-      xml.addDynamicString(EscapeStringForXML(m_values[i], -1));
-      xml.addFormattedString(_T("</%s>\n"), name);
+         xml.appendFormattedString(_T("%*s<%s id=\"%d\">"), level * 4, _T(""), name, m_id);
+      xml.appendPreallocated(EscapeStringForXML(m_values[i], -1));
+      xml.appendFormattedString(_T("</%s>\n"), name);
    }
 
    free(name);
@@ -725,11 +725,22 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                if (!_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
                   || !_tcsicmp(value, _T("1")))
                {
-                  *((UINT32 *)cfgTemplate[i].buffer) |= cfgTemplate[i].bufferSize;
+                  *((UINT32 *)cfgTemplate[i].buffer) |= (UINT32)cfgTemplate[i].bufferSize;
                }
                else
                {
-                  *((UINT32 *)cfgTemplate[i].buffer) &= ~(cfgTemplate[i].bufferSize);
+                  *((UINT32 *)cfgTemplate[i].buffer) &= ~((UINT32)cfgTemplate[i].bufferSize);
+               }
+               break;
+            case CT_BOOLEAN64:
+               if (!_tcsicmp(value, _T("yes")) || !_tcsicmp(value, _T("true")) || !_tcsicmp(value, _T("on"))
+                  || !_tcsicmp(value, _T("1")))
+               {
+                  *((UINT64 *)cfgTemplate[i].buffer) |= cfgTemplate[i].bufferSize;
+               }
+               else
+               {
+                  *((UINT64 *)cfgTemplate[i].buffer) &= ~(cfgTemplate[i].bufferSize);
                }
                break;
             case CT_STRING:
@@ -748,9 +759,9 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                }
 #ifdef UNICODE
                memset(cfgTemplate[i].buffer, 0, cfgTemplate[i].bufferSize);
-               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, (char *)cfgTemplate[i].buffer, cfgTemplate[i].bufferSize - 1, NULL, NULL);
+               WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, (char *)cfgTemplate[i].buffer, (int)cfgTemplate[i].bufferSize - 1, NULL, NULL);
 #else
-               nx_strncpy((TCHAR *)cfgTemplate[i].buffer, value, cfgTemplate[i].bufferSize);
+               nx_strncpy((TCHAR *)cfgTemplate[i].buffer, value, (size_t)cfgTemplate[i].bufferSize);
 #endif
                break;
             case CT_STRING_LIST:
@@ -1283,7 +1294,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
    XML_PARSER_STATE *ps = (XML_PARSER_STATE *) userData;
 
    if ((ps->level > 0) && (ps->level <= MAX_STACK_DEPTH))
-      ps->charData[ps->level - 1].addMultiByteString(s, len, CP_UTF8);
+      ps->charData[ps->level - 1].appendMBString(s, len, CP_UTF8);
 }
 
 /**

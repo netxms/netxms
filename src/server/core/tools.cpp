@@ -98,11 +98,9 @@ TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize)
 	return buffer;
 }
 
-
-//
-// Get IP address for local machine
-//
-
+/**
+ * Get IP address for local machine
+ */
 UINT32 GetLocalIpAddr()
 {
    InterfaceList *pIfList;
@@ -114,9 +112,9 @@ UINT32 GetLocalIpAddr()
    {
       // Find first interface with IP address
       for(i = 0; i < pIfList->size(); i++)
-			if ((pIfList->get(i)->dwIpAddr != 0) && ((pIfList->get(i)->dwIpAddr & 0xFF000000) != 0x7F000000))
+			if ((pIfList->get(i)->ipAddr != 0) && ((pIfList->get(i)->ipAddr & 0xFF000000) != 0x7F000000))
          {
-            dwAddr = pIfList->get(i)->dwIpAddr;
+            dwAddr = pIfList->get(i)->ipAddr;
             break;
          }
       delete pIfList;

@@ -31,6 +31,7 @@ InterfaceList::InterfaceList(int initialAlloc)
 	m_size = 0;
 	m_data = NULL;
 	m_interfaces = (NX_INTERFACE_INFO *)malloc(sizeof(NX_INTERFACE_INFO) * m_allocated);
+   m_needPrefixWalk = false;
 }
 
 /**
@@ -61,7 +62,7 @@ NX_INTERFACE_INFO *InterfaceList::findByIfIndex(UINT32 ifIndex)
 {
    // Delete loopback interface(s) from list
    for(int i = 0; i < m_size; i++)
-		if (m_interfaces[i].dwIndex == ifIndex)
+		if (m_interfaces[i].index == ifIndex)
 			return &m_interfaces[i];
 	return NULL;
 }

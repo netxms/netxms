@@ -194,6 +194,7 @@ void MobileDeviceSession::readThread()
       {
 	      debugPrintf(6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
          m_dwEncryptionResult = SetupEncryptionContext(msg, &m_pCtx, NULL, g_pServerKey, NXCP_VERSION);
+         receiver.setEncryptionContext(m_pCtx);
          ConditionSet(m_condEncryptionSetup);
          m_dwEncryptionRqId = 0;
          delete msg;

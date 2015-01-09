@@ -541,7 +541,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 				{
 					for(k = 0; k < m_dwNumResources; k++)
 					{
-						if (m_pResourceList[k].dwIpAddr == pIfList->get(j)->dwIpAddr)
+						if (m_pResourceList[k].dwIpAddr == pIfList->get(j)->ipAddr)
 						{
 							if (m_pResourceList[k].dwCurrOwner != ppPollList[i]->getId())
 							{
@@ -759,8 +759,8 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
 /**
  * Unbind cluster from template
  */
-void Cluster::unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI)
+void Cluster::unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI)
 {
-   DataCollectionTarget::unbindFromTemplate(dwTemplateId, bRemoveDCI);
+   DataCollectionTarget::unbindFromTemplate(dwTemplateId, removeDCI);
    queueUpdate();
 }

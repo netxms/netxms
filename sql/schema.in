@@ -357,6 +357,7 @@ CREATE TABLE interfaces
 	ip_netmask varchar(15) not null,
 	if_type integer not null,
 	if_index integer not null,
+   mtu integer not null,
 	bridge_port integer not null,
 	phy_slot integer not null,
 	phy_port integer not null,
@@ -369,7 +370,8 @@ CREATE TABLE interfaces
 	oper_state integer not null,
 	dot1x_pae_state integer not null,
 	dot1x_backend_state integer not null,
-	description varchar(255),
+	description varchar(255) null,
+   alias varchar(255) null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

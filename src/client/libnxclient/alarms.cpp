@@ -330,7 +330,7 @@ TCHAR *AlarmController::formatAlarmText(NXC_ALARM *alarm, const TCHAR *format)
 			out += prev;
 			break;
 		}
-		out.addString(prev, (UINT32)(curr - prev));
+		out.append(prev, (size_t)(curr - prev));
 		curr++;
 		switch(*curr)
 		{
@@ -344,25 +344,25 @@ TCHAR *AlarmController::formatAlarmText(NXC_ALARM *alarm, const TCHAR *format)
             out += ((object != NULL) && (object->getObjectClass() == OBJECT_NODE)) ? ((Node *)object)->getPrimaryHostname() : _T("<unknown>");
 				break;
 			case 'c':
-				out.addFormattedString(_T("%u"), (unsigned int)alarm->dwRepeatCount);
+				out.appendFormattedString(_T("%u"), (unsigned int)alarm->dwRepeatCount);
 				break;
 			case 'e':
-				out.addFormattedString(_T("%u"), (unsigned int)alarm->dwSourceEventCode);
+				out.appendFormattedString(_T("%u"), (unsigned int)alarm->dwSourceEventCode);
 				break;
 			case 'E':
             out += ((EventController *)m_session->getController(CONTROLLER_EVENTS))->getEventName(alarm->dwSourceEventCode, buffer, 128);
 				break;
 			case 'h':
-				out.addFormattedString(_T("%d"), (int)alarm->nHelpDeskState);
+				out.appendFormattedString(_T("%d"), (int)alarm->nHelpDeskState);
 				break;
 			case 'H':
 				out += helpdeskState[alarm->nHelpDeskState];
 				break;
 			case 'i':
-				out.addFormattedString(_T("%u"), (unsigned int)alarm->dwSourceObject);
+				out.appendFormattedString(_T("%u"), (unsigned int)alarm->dwSourceObject);
 				break;
 			case 'I':
-				out.addFormattedString(_T("%u"), (unsigned int)alarm->dwAlarmId);
+				out.appendFormattedString(_T("%u"), (unsigned int)alarm->dwAlarmId);
 				break;
 			case 'm':
 				out += alarm->szMessage;
@@ -371,13 +371,13 @@ TCHAR *AlarmController::formatAlarmText(NXC_ALARM *alarm, const TCHAR *format)
 				out += (object != NULL) ? object->getName() : _T("<unknown>");
 				break;
 			case 's':
-				out.addFormattedString(_T("%d"), (int)alarm->nCurrentSeverity);
+				out.appendFormattedString(_T("%d"), (int)alarm->nCurrentSeverity);
 				break;
 			case 'S':
 				out += severityText[alarm->nCurrentSeverity];
 				break;
 			case 'x':
-				out.addFormattedString(_T("%d"), (int)alarm->nState);
+				out.appendFormattedString(_T("%d"), (int)alarm->nState);
 				break;
 			case 'X':
 				out += alarmState[alarm->nState];

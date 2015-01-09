@@ -140,7 +140,8 @@
 #define AF_SNMP_TRAP_DISCOVERY                 _ULL(0x0000000020000000)
 #define AF_TRAPS_FROM_UNMANAGED_NODES          _ULL(0x0000000040000000)
 #define AF_RESOLVE_IP_FOR_EACH_STATUS_POLL     _ULL(0x0000000080000000)
-#define AF_PERFDATA_STORAGE_DRIVER_LOADED      _ULL(0x0000000080000000)
+#define AF_PERFDATA_STORAGE_DRIVER_LOADED      _ULL(0x0000000100000000)
+#define AF_BACKGROUND_LOG_WRITER               _ULL(0x0000000200000000)
 #define AF_SERVER_INITIALIZED                  _ULL(0x4000000000000000)
 #define AF_SHUTDOWN                            _ULL(0x8000000000000000)
 
@@ -210,17 +211,19 @@ typedef struct
  */
 typedef struct
 {
-   TCHAR szName[MAX_DB_STRING];			// Interface display name
-	TCHAR szDescription[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
-   UINT32 dwIndex;
-   UINT32 dwType;
-	UINT32 dwBridgePortNumber;
-	UINT32 dwSlotNumber;
-	UINT32 dwPortNumber;
-   UINT32 dwIpAddr;
-   UINT32 dwIpNetMask;
-   BYTE bMacAddr[MAC_ADDR_LENGTH];
-   int iNumSecondary;      // Number of secondary IP's on this interface
+   TCHAR name[MAX_DB_STRING];			// Interface display name
+	TCHAR description[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
+	TCHAR alias[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
+   UINT32 index;
+   UINT32 type;
+   UINT32 mtu;
+	UINT32 bridgePort;
+	UINT32 slot;
+	UINT32 port;
+   UINT32 ipAddr;
+   UINT32 ipNetMask;
+   BYTE macAddr[MAC_ADDR_LENGTH];
+   int numSecondary;      // Number of secondary IP's on this interface
 	bool isPhysicalPort;
    bool isSystem;
 } NX_INTERFACE_INFO;
@@ -235,6 +238,7 @@ private:
 	int m_allocated;               // Number of allocated entries
    void *m_data;                  // Can be used by custom enumeration handlers
    NX_INTERFACE_INFO *m_interfaces;  // Interface entries
+   bool m_needPrefixWalk;
 
 public:
 	InterfaceList(int initialAlloc = 8);
@@ -249,6 +253,9 @@ public:
 
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }
+
+   bool isPrefixWalkNeeded() { return m_needPrefixWalk; }
+   void setPrefixWalkNeeded() { m_needPrefixWalk = true; }
 };
 
 /**

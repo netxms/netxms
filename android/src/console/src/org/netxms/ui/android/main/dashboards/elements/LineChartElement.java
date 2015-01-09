@@ -58,7 +58,6 @@ public class LineChartElement extends AbstractDashboardElement
 		graphView = new LineGraphView(context, config.getTitle());
 		graphView.getGraphViewStyle().setTextSize(Integer.parseInt(sp.getString("global.graph.textsize", "10")));
 		graphView.getGraphViewStyle().setLegendWidth(240);
-		graphView.setCustomLabelFormatter(new CustomLabel(Integer.parseInt(sp.getString("global.multipliers", "1"))));
 		// TODO: 2014May25 Find a best way to handle this setting
 		//graphView.setShowLegend(config.isShowLegend());
 		graphView.setShowLegend(sp.getBoolean("global.graph.legend", true));
@@ -90,6 +89,7 @@ public class LineChartElement extends AbstractDashboardElement
 
 		final long endTime = System.currentTimeMillis();
 		final long startTime = endTime - config.getTimeRangeMillis();
+		graphView.setCustomLabelFormatter(new CustomLabel(Integer.parseInt(sp.getString("global.multipliers", "1")), (endTime - startTime) > 86400 * 1000));
 
 		try
 		{

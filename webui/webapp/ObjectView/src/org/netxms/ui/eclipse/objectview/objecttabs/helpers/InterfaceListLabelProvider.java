@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,6 +73,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 				return null;
 			case InterfacesTab.COLUMN_ADMIN_STATE:
 				return iface.getAdminStateAsText();
+         case InterfacesTab.COLUMN_ALIAS:
+            return iface.getAlias();
 			case InterfacesTab.COLUMN_DESCRIPTION:
 				return iface.getDescription();
 			case InterfacesTab.COLUMN_EXPECTED_STATE:
@@ -88,6 +90,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 				return Long.toString(iface.getObjectId());
 			case InterfacesTab.COLUMN_INDEX:
 				return Integer.toString(iface.getIfIndex());
+         case InterfacesTab.COLUMN_MTU:
+            return Integer.toString(iface.getMtu());
 			case InterfacesTab.COLUMN_NAME:
 				return iface.getObjectName();
 			case InterfacesTab.COLUMN_OPER_STATE:

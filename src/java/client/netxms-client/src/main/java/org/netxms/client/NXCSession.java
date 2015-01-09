@@ -1201,6 +1201,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          response.setFieldInt16(NXCPCodes.VID_KEY_LENGTH, encryptionContext.getKeyLength());
          response.setFieldInt16(NXCPCodes.VID_IV_LENGTH, encryptionContext.getIvLength());
          response.setFieldInt32(NXCPCodes.VID_RCC, RCC.SUCCESS);
+         Logger.debug("NXCSession.setupEncryption", "Cipher selected: " + EncryptionContext.getCipherName(encryptionContext.getCipher()));
       }
       catch(Exception e)
       {
@@ -5529,7 +5530,8 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * SESSION_COUNT, DCI_COUNT, OBJECT_COUNT, NODE_COUNT, PHYSICAL_MEMORY_USED,
     * VIRTUAL_MEMORY_USED, QSIZE_CONDITION_POLLER, QSIZE_CONF_POLLER,
     * QSIZE_DCI_POLLER, QSIZE_DBWRITER, QSIZE_EVENT, QSIZE_DISCOVERY,
-    * QSIZE_NODE_POLLER, QSIZE_ROUTE_POLLER, QSIZE_STATUS_POLLER, ALARM_COUNT
+    * QSIZE_NODE_POLLER, QSIZE_ROUTE_POLLER, QSIZE_STATUS_POLLER, 
+    * QSIZE_DCI_CACHE_LOADER, ALARM_COUNT
     * long[]: ALARMS_BY_SEVERITY
     *
     * @return Server stats as set of named properties.
@@ -5557,6 +5559,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       stats.put("QSIZE_CONDITION_POLLER", response.getFieldAsInt32(NXCPCodes.VID_QSIZE_CONDITION_POLLER));
       stats.put("QSIZE_CONF_POLLER", response.getFieldAsInt32(NXCPCodes.VID_QSIZE_CONF_POLLER));
       stats.put("QSIZE_DCI_POLLER", response.getFieldAsInt32(NXCPCodes.VID_QSIZE_DCI_POLLER));
+      stats.put("QSIZE_DCI_CACHE_LOADER", response.getFieldAsInt32(NXCPCodes.VID_QSIZE_DCI_CACHE_LOADER));
       stats.put("QSIZE_DBWRITER", response.getFieldAsInt32(NXCPCodes.VID_QSIZE_DBWRITER));
       stats.put("QSIZE_EVENT", response.getFieldAsInt32(NXCPCodes.VID_QSIZE_EVENT));
       stats.put("QSIZE_DISCOVERY", response.getFieldAsInt32(NXCPCodes.VID_QSIZE_DISCOVERY));

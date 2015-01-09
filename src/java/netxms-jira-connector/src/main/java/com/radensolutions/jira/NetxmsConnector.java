@@ -52,6 +52,7 @@ public class NetxmsConnector {
             String connAddress = connectionDetails.getAddress();
             int connPort = connectionDetails.getPort();
             NXCSession session = new NXCSession(connAddress, connPort, login, password);
+            session.setIgnoreProtocolVersion(true);
 
             try {
                 session.connect();

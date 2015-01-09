@@ -291,7 +291,7 @@ BOOL NetworkMap::saveToDatabase(DB_HANDLE hdb)
 		e->updateConfig(config);
 		String data = DBPrepareString(hdb, config->createXml());
 		delete config;
-		int len = data.getSize() + 256;
+		size_t len = data.length() + 256;
 		TCHAR *eq = (TCHAR *)malloc(len * sizeof(TCHAR));
       _sntprintf(eq, len, _T("INSERT INTO network_map_elements (map_id,element_id,element_type,element_data,flags) VALUES (%d,%d,%d,%s,%d)"),
 		           m_id, e->getId(), e->getType(), (const TCHAR *)data, e->getFlags());
@@ -539,9 +539,6 @@ UINT32 NetworkMap::modifyFromMessage(NXCPMessage *request, BOOL bAlreadyLocked)
 	if (request->isFieldExist(VID_BACKGROUND_COLOR))
 		m_backgroundColor = (int)request->getFieldAsUInt32(VID_BACKGROUND_COLOR);
 
-   if (request->isFieldExist(VID_FILTER))
-		m_backgroundColor = (int)request->getFieldAsUInt32(VID_FILTER);
-
 	if (request->isFieldExist(VID_BACKGROUND))
 	{
 		request->getFieldAsBinary(VID_BACKGROUND, m_background, UUID_LENGTH);
@@ -682,12 +679,12 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
    if ((m_filter != NULL) && (objects->getNumObjects() > 0))
    {
       IntegerArray<UINT32> *idList = objects->getObjects();
-	   for(UINT32 i = 0; i < objects->getNumObjects(); i++)
+      for(int i = 0; i < idList->size(); i++)
       {
          NetObj *object = FindObjectById(idList->get(i));
          if ((object == NULL) || !isAllowedOnMap(object))
          {
-            idList->remove(object->getId());
+            idList->remove(i);
             i--;
          }
       }
@@ -727,7 +724,7 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 	}
 
 	// add new objects
-	for(UINT32 i = 0; i < objects->getNumObjects(); i++)
+	for(int i = 0; i < objects->getNumObjects(); i++)
 	{
 		bool found = false;
 		for(int j = 0; j < m_elements->size(); j++)
@@ -751,7 +748,7 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 	}
 
 	// add new links
-	for(UINT32 i = 0; i < objects->getNumLinks(); i++)
+	for(int i = 0; i < objects->getNumLinks(); i++)
 	{
 		bool found = false;
 		for(int j = 0; j < m_links->size(); j++)
@@ -829,13 +826,12 @@ UINT32 NetworkMap::elementIdFromObjectId(UINT32 oid)
 }
 
 /**
- * Set filter.
+ * Set filter. Object properties must be already locked.
  *
  * @param filter new filter script code or NULL to clear filter
  */
 void NetworkMap::setFilter(const TCHAR *filter)
 {
-	lockProperties();
 	safe_free(m_filterSource);
 	delete m_filter;
 	if ((filter != NULL) && (*filter != 0))
@@ -852,8 +848,6 @@ void NetworkMap::setFilter(const TCHAR *filter)
 		m_filterSource = NULL;
 		m_filter = NULL;
 	}
-	setModified();
-	unlockProperties();
 }
 
 /**

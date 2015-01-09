@@ -83,7 +83,8 @@ public class NodeBrowser extends AbstractClientActivity
 
 		listView = (ListView)findViewById(R.id.NodeList);
 		listView.setAdapter(adapter);
-		listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+		listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+		{
 			@Override
 			@SuppressWarnings("rawtypes")
 			public void onItemClick(AdapterView parent, View v, int position, long id)
@@ -174,7 +175,7 @@ public class NodeBrowser extends AbstractClientActivity
 
 		AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo)menuInfo;
 		selectedObject = (AbstractObject)adapter.getItem(info.position);
-		
+
 		GeoLocation gl = selectedObject.getGeolocation();
 		if ((gl == null) || (gl.getType() == GeoLocation.UNSET))
 		{
@@ -221,13 +222,14 @@ public class NodeBrowser extends AbstractClientActivity
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onContextItemSelected(android.view.MenuItem)
 	 */
+	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onContextItemSelected(MenuItem item)
 	{
 		if (selectedObject == null)
 			return super.onContextItemSelected(item);
 
-		switch(item.getItemId())
+		switch (item.getItemId())
 		{
 			case R.id.find_switch_port:
 				Intent fspIntent = new Intent(this, ConnectionPointBrowser.class);
@@ -278,7 +280,7 @@ public class NodeBrowser extends AbstractClientActivity
 				{
 					startActivity(intent);
 				}
-				catch(ActivityNotFoundException e)
+				catch (ActivityNotFoundException e)
 				{
 					Toast.makeText(getApplicationContext(), "Navigation unavailable", Toast.LENGTH_LONG);
 				}
@@ -321,7 +323,7 @@ public class NodeBrowser extends AbstractClientActivity
 				}
 				break;
 		}
-		
+
 		return super.onContextItemSelected(item);
 	}
 

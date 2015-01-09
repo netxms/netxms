@@ -159,7 +159,7 @@ static UINT32 HandlerIndex(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport
 {
 	NX_INTERFACE_INFO info;
 	memset(&info, 0, sizeof(NX_INTERFACE_INFO));
-	info.dwIndex = pVar->getValueAsUInt();
+	info.index = pVar->getValueAsUInt();
 	((InterfaceList *)pArg)->add(&info);
    return SNMP_ERR_SUCCESS;
 }
@@ -175,18 +175,18 @@ static UINT32 HandlerIndexIfXTable(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_T
    {
 	   NX_INTERFACE_INFO info;
 	   memset(&info, 0, sizeof(NX_INTERFACE_INFO));
-      info.dwIndex = index;
+      info.index = index;
 	   ((InterfaceList *)pArg)->add(&info);
    }
    return SNMP_ERR_SUCCESS;
 }
 
 /**
- * Handler for enumerating IP addresses
+ * Handler for enumerating IP addresses via ipAddrTable
  */
 static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-   UINT32 dwIndex, dwNetMask, dwResult;
+   UINT32 index, dwNetMask, dwResult;
    UINT32 oidName[MAX_OID_LEN];
 
    size_t nameLen = pVar->getName()->getLength();
@@ -205,32 +205,28 @@ static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpor
 	}
 
    oidName[nameLen - 5] = 2;  // Retrieve interface index for this IP
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &dwIndex, sizeof(UINT32), 0);
+   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &index, sizeof(UINT32), 0);
    if (dwResult == SNMP_ERR_SUCCESS)
    {
 		InterfaceList *ifList = (InterfaceList *)pArg;
-
-		for(int i = 0; i < ifList->size(); i++)
-		{
-         if (ifList->get(i)->dwIndex == dwIndex)
+      NX_INTERFACE_INFO *iface = ifList->findByIfIndex(index);
+      if (iface != NULL)
+      {
+         if (iface->ipAddr != 0)
          {
-            if (ifList->get(i)->dwIpAddr != 0)
-            {
-               // This interface entry already filled, so we have additional IP addresses
-               // on a single interface
-					NX_INTERFACE_INFO iface;
-					memcpy(&iface, ifList->get(i), sizeof(NX_INTERFACE_INFO));
-					iface.dwIpAddr = ntohl(pVar->getValueAsUInt());
-					iface.dwIpNetMask = dwNetMask;
-					ifList->add(&iface);
-            }
-				else
-				{
-					ifList->get(i)->dwIpAddr = ntohl(pVar->getValueAsUInt());
-					ifList->get(i)->dwIpNetMask = dwNetMask;
-				}
-            break;
+            // This interface entry already filled, so we have additional IP addresses
+            // on a single interface
+				NX_INTERFACE_INFO extIface;
+				memcpy(&extIface, iface, sizeof(NX_INTERFACE_INFO));
+				extIface.ipAddr = ntohl(pVar->getValueAsUInt());
+				extIface.ipNetMask = dwNetMask;
+				ifList->add(&extIface);
          }
+			else
+			{
+				iface->ipAddr = ntohl(pVar->getValueAsUInt());
+				iface->ipNetMask = dwNetMask;
+			}
 		}
    }
 	else
@@ -241,6 +237,113 @@ static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpor
 		dwResult = SNMP_ERR_SUCCESS;	// continue walk
 	}
    return dwResult;
+}
+
+/**
+ * Handler for enumerating IP addresses via ipAddressTable
+ */
+static UINT32 HandlerIpAddressTable(UINT32 version, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+{
+   InterfaceList *ifList = (InterfaceList *)arg;
+
+   UINT32 oid[128];
+   size_t oidLen = var->getName()->getLength();
+   memcpy(oid, var->getName()->getValue(), oidLen * sizeof(UINT32));
+
+   // Check address family (1 = ipv4)
+   if (oid[10] != 1)
+      return SNMP_ERR_SUCCESS;
+
+   UINT32 ifIndex = var->getValueAsUInt();
+   NX_INTERFACE_INFO *iface = ifList->findByIfIndex(ifIndex);
+   if (iface == NULL)
+      return SNMP_ERR_SUCCESS;
+
+   // Build IP address from OID
+   UINT32 ipAddr = (oid[12] << 24) | (oid[13] << 16) | (oid[14] << 8) | oid[15];
+   if (iface->ipAddr == ipAddr)
+      return SNMP_ERR_SUCCESS;   // This IP already set from ipAddrTable
+
+   UINT32 netMask = 0;
+
+   // Get address type and prefix
+   SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
+   oid[9] = 4; // ipAddressType
+   request.bindVariable(new SNMP_Variable(oid, oidLen));
+   oid[9] = 5; // ipAddressPrefix
+   request.bindVariable(new SNMP_Variable(oid, oidLen));
+   SNMP_PDU *response;
+   if (snmp->doRequest(&request, &response, g_snmpTimeout, 3) == SNMP_ERR_SUCCESS)
+   {
+      // check number of varbinds and address type (1 = unicast)
+      if ((response->getNumVariables() == 2) && (response->getVariable(0)->getValueAsInt() == 1))
+      {
+         SNMP_ObjectId *prefix = response->getVariable(1)->getValueAsObjectId();
+         if ((prefix != NULL) && !prefix->isZeroDotZero())
+         {
+            // Last element in ipAddressPrefixTable index is prefix length
+            UINT32 len = prefix->getValue()[prefix->getLength() - 1];
+            netMask = ((len > 0) && (len <= 32)) ? (0xFFFFFFFF << (32 - len)) : 0;
+         }
+         else
+         {
+            ifList->setPrefixWalkNeeded();
+         }
+         delete prefix;
+
+         if (iface->ipAddr != 0)
+         {
+            // This interface entry already filled, so we have additional IP addresses
+            // on a single interface
+				NX_INTERFACE_INFO extIface;
+				memcpy(&extIface, iface, sizeof(NX_INTERFACE_INFO));
+				extIface.ipAddr = ipAddr;
+				extIface.ipNetMask = netMask;
+				ifList->add(&extIface);
+         }
+			else
+			{
+				iface->ipAddr = ipAddr;
+				iface->ipNetMask = netMask;
+			}
+      }
+      delete response;
+   }
+
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Handler for enumerating IP address prefixes via ipAddressPrefixTable
+ */
+static UINT32 HandlerIpAddressPrefixTable(UINT32 version, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+{
+   InterfaceList *ifList = (InterfaceList *)arg;
+   const UINT32 *oid = var->getName()->getValue();
+   
+   // Check address family (1 = ipv4)
+   if (oid[10] != 1)
+      return SNMP_ERR_SUCCESS;
+
+   // Build IP address from OID
+   UINT32 prefix = (oid[13] << 24) | (oid[14] << 16) | (oid[15] << 8) | oid[16];
+   UINT32 mask = ((oid[17] > 0) && (oid[17] <= 32)) ? (0xFFFFFFFF << (32 - oid[17])) : 0;
+
+   // Find matching IP and set mask
+   for(int i = 0; i < ifList->size(); i++)
+   {
+      NX_INTERFACE_INFO *iface = ifList->get(i);
+      if (iface->index != oid[12])
+         continue;
+
+      if ((iface->ipAddr & mask) == prefix)
+      {
+         iface->ipNetMask = mask;
+         break;
+      }
+   }
+
+   return SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -289,98 +392,108 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 			NX_INTERFACE_INFO *iface = pIfList->get(i);
 
 			// Get interface description
-	      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%d"), iface->dwIndex);
-	      if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, iface->szDescription, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
+	      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%d"), iface->index);
+	      if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, iface->description, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
          {
             // Try to get name from ifXTable
-	         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->dwIndex);
-	         if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, iface->szDescription, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
+	         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->index);
+	         if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, iface->description, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
    	         break;
          }
 
-         // Get interface alias if needed
+         // Get interface alias
+	      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.18.%d"), iface->index);
+			if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0,
+	                  iface->alias, MAX_DB_STRING * sizeof(TCHAR), 0) == SNMP_ERR_SUCCESS)
+         {
+            StrStrip(iface->alias);
+         }
+         else
+         {
+            iface->alias[0] = 0;
+         }
+
+         // Set name to ifAlias if needed
          if (useAliases > 0)
          {
-		      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.18.%d"), iface->dwIndex);
-				if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0,
-		                  iface->szName, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
-				{
-					iface->szName[0] = 0;		// It's not an error if we cannot get interface alias
-				}
-				else
-				{
-					StrStrip(iface->szName);
-				}
+            _tcscpy(iface->name, iface->alias);
          }
 
 			// Try to get interface name from ifXTable, if unsuccessful or disabled, use ifDescr from ifTable
-         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->dwIndex);
+         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.1.%d"), iface->index);
          if (!useIfXTable ||
 				 (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, szBuffer, sizeof(szBuffer), 0) != SNMP_ERR_SUCCESS))
          {
-		      nx_strncpy(szBuffer, iface->szDescription, 256);
+		      nx_strncpy(szBuffer, iface->description, 256);
 		   }
 
 			// Build full interface object name
          switch(useAliases)
          {
          	case 1:	// Use only alias if available, otherwise name
-         		if (iface->szName[0] == 0)
-	         		nx_strncpy(iface->szName, szBuffer, MAX_DB_STRING);	// Alias is empty or not available
+         		if (iface->name[0] == 0)
+	         		nx_strncpy(iface->name, szBuffer, MAX_DB_STRING);	// Alias is empty or not available
          		break;
          	case 2:	// Concatenate alias with name
          	case 3:	// Concatenate name with alias
-         		if (iface->szName[0] != 0)
+         		if (iface->name[0] != 0)
          		{
 						if (useAliases == 2)
 						{
-         				if  (_tcslen(iface->szName) < (MAX_DB_STRING - 3))
+         				if  (_tcslen(iface->name) < (MAX_DB_STRING - 3))
          				{
-		      				_sntprintf(&iface->szName[_tcslen(iface->szName)], MAX_DB_STRING - _tcslen(iface->szName), _T(" (%s)"), szBuffer);
-		      				iface->szName[MAX_DB_STRING - 1] = 0;
+		      				_sntprintf(&iface->name[_tcslen(iface->name)], MAX_DB_STRING - _tcslen(iface->name), _T(" (%s)"), szBuffer);
+		      				iface->name[MAX_DB_STRING - 1] = 0;
 		      			}
 						}
 						else
 						{
 							TCHAR temp[MAX_DB_STRING];
 
-							_tcscpy(temp, iface->szName);
-		         		nx_strncpy(iface->szName, szBuffer, MAX_DB_STRING);
-         				if  (_tcslen(iface->szName) < (MAX_DB_STRING - 3))
+							_tcscpy(temp, iface->name);
+		         		nx_strncpy(iface->name, szBuffer, MAX_DB_STRING);
+         				if  (_tcslen(iface->name) < (MAX_DB_STRING - 3))
          				{
-		      				_sntprintf(&iface->szName[_tcslen(iface->szName)], MAX_DB_STRING - _tcslen(iface->szName), _T(" (%s)"), temp);
-		      				iface->szName[MAX_DB_STRING - 1] = 0;
+		      				_sntprintf(&iface->name[_tcslen(iface->name)], MAX_DB_STRING - _tcslen(iface->name), _T(" (%s)"), temp);
+		      				iface->name[MAX_DB_STRING - 1] = 0;
 		      			}
 						}
          		}
          		else
          		{
-	         		nx_strncpy(iface->szName, szBuffer, MAX_DB_STRING);	// Alias is empty or not available
+	         		nx_strncpy(iface->name, szBuffer, MAX_DB_STRING);	// Alias is empty or not available
 					}
          		break;
          	default:	// Use only name
-         		nx_strncpy(iface->szName, szBuffer, MAX_DB_STRING);
+         		nx_strncpy(iface->name, szBuffer, MAX_DB_STRING);
          		break;
          }
 
          // Interface type
-         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.3.%d"), iface->dwIndex);
-         if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, &iface->dwType, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.3.%d"), iface->index);
+         if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, &iface->type, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
 			{
-				iface->dwType = IFTYPE_OTHER;
+				iface->type = IFTYPE_OTHER;
+			}
+
+         // Interface MTU
+         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.4.%d"), iface->index);
+         if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, &iface->mtu, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+			{
+				iface->type = IFTYPE_OTHER;
 			}
 
          // MAC address
-         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.6.%d"), iface->dwIndex);
+         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.6.%d"), iface->index);
          memset(szBuffer, 0, MAC_ADDR_LENGTH);
          if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, szBuffer, 256, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
 			{
-	         memcpy(iface->bMacAddr, szBuffer, MAC_ADDR_LENGTH);
+	         memcpy(iface->macAddr, szBuffer, MAC_ADDR_LENGTH);
 			}
 			else
 			{
 				// Unable to get MAC address
-	         memset(iface->bMacAddr, 0, MAC_ADDR_LENGTH);
+	         memset(iface->macAddr, 0, MAC_ADDR_LENGTH);
 			}
       }
 
@@ -394,6 +507,13 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 		{
 			DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): SNMP WALK .1.3.6.1.2.1.4.20.1.1 failed (%s)"), snmp, SNMPGetErrorText(error));
 		}
+
+      // Get IP addresses from ipAddressTable if available
+		SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.4.34.1.3"), HandlerIpAddressTable, pIfList, FALSE);
+      if (pIfList->isPrefixWalkNeeded())
+      {
+   		SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.4.32.1.5"), HandlerIpAddressPrefixTable, pIfList, FALSE);
+      }
    }
 	else
 	{

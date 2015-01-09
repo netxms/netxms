@@ -30,8 +30,9 @@ static struct
 {
 	const TCHAR *oid;
 	UINT32 errorCode;
-} m_oidToErrorMap[] =
+} s_oidToErrorMap[] =
 {
+	{ _T(".1.3.6.1.6.3.11.2.1.3.0"), SNMP_ERR_ENGINE_ID },
 	{ _T(".1.3.6.1.6.3.15.1.1.1.0"), SNMP_ERR_UNSUPP_SEC_LEVEL },
 	{ _T(".1.3.6.1.6.3.15.1.1.2.0"), SNMP_ERR_TIME_WINDOW },
 	{ _T(".1.3.6.1.6.3.15.1.1.3.0"), SNMP_ERR_SEC_NAME },
@@ -74,7 +75,7 @@ void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
 	delete m_securityContext;
 	m_securityContext = ctx;
    delete m_authoritativeEngine;
-   m_authoritativeEngine = (m_securityContext->getAuthoritativeEngine().getIdLen() > 0) ? new SNMP_Engine(&m_securityContext->getAuthoritativeEngine()) : NULL;
+   m_authoritativeEngine = ((m_securityContext != NULL) && (m_securityContext->getAuthoritativeEngine().getIdLen() > 0)) ? new SNMP_Engine(&m_securityContext->getAuthoritativeEngine()) : NULL;
 }
 
 /**
@@ -145,11 +146,11 @@ retry:
 		               SNMP_Variable *var = (*response)->getVariable(0);
 							const TCHAR *oid = var->getName()->getValueAsText();
 							rc = SNMP_ERR_AGENT;
-							for(int i = 0; m_oidToErrorMap[i].oid != NULL; i++)
+							for(int i = 0; s_oidToErrorMap[i].oid != NULL; i++)
 							{
-								if (!_tcscmp(oid, m_oidToErrorMap[i].oid))
+								if (!_tcscmp(oid, s_oidToErrorMap[i].oid))
 								{
-									rc = m_oidToErrorMap[i].errorCode;
+									rc = s_oidToErrorMap[i].errorCode;
 									break;
 								}
 							}

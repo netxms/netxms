@@ -1089,7 +1089,7 @@ void CreateNXMPEventRecord(String &str, UINT32 eventCode)
       p = FindEventTemplate(eventCode);
       if (p != NULL)
       {
-         str.addFormattedString(_T("\t\t<event id=\"%d\">\n")
+         str.appendFormattedString(_T("\t\t<event id=\"%d\">\n")
 			                       _T("\t\t\t<name>%s</name>\n")
                                 _T("\t\t\t<code>%d</code>\n")
                                 _T("\t\t\t<severity>%d</severity>\n")

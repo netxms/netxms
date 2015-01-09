@@ -189,7 +189,7 @@ bool DataCollectionTarget::applyTemplateItem(UINT32 dwTemplateId, DCObject *dcOb
    {
       // Update existing item unless it is disabled
       DCObject *curr = m_dcObjects->get(i);
-		if (curr->getStatus() != ITEM_STATUS_DISABLED || (g_flags & AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE))
+		if ((curr->getStatus() != ITEM_STATUS_DISABLED) || (g_flags & AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE))
 		{
 			curr->updateFromTemplate(dcObject);
 			DbgPrintf(9, _T("DCO \"%s\" NOT disabled or ApplyDCIFromTemplateToDisabledDCI set, updated (%d)"),
@@ -254,11 +254,11 @@ void DataCollectionTarget::cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32
  * Unbind data collection target from template, i.e either remove DCI
  * association with template or remove these DCIs at all
  */
-void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI)
+void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI)
 {
    UINT32 i;
 
-   if (bRemoveDCI)
+   if (removeDCI)
    {
       lockDciAccess(true);  // write lock
 
@@ -317,7 +317,19 @@ UINT32 DataCollectionTarget::getPerfTabDCIList(NXCPMessage *pMsg)
 			if (object->getType() == DCO_TYPE_ITEM)
 			{
 				pMsg->setField(dwId++, ((DCItem *)object)->getInstance());
-				dwId += 3;
+            if ((object->getTemplateItemId() != 0) && (object->getTemplateId() == m_id))
+            {
+               // DCI created via instance discovery - send ID of root template item
+               // to allow UI to resolve double template case
+               // (template -> instance discovery item on node -> actual item on node)
+               DCObject *src = getDCObjectById(object->getTemplateItemId(), false);
+               pMsg->setField(dwId++, (src != NULL) ? src->getTemplateItemId() : 0);
+               dwId += 2;
+            }
+            else
+            {
+				   dwId += 3;
+            }
 			}
 			else
 			{

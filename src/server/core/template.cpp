@@ -690,12 +690,13 @@ int Template::getItemType(UINT32 dwItemId)
 /**
  * Get item by it's id
  */
-DCObject *Template::getDCObjectById(UINT32 itemId)
+DCObject *Template::getDCObjectById(UINT32 itemId, bool lock)
 {
    DCObject *object = NULL;
 
-   lockDciAccess(false);
-   // Check if that item exists
+   if (lock)
+      lockDciAccess(false);
+
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *curr = m_dcObjects->get(i);
@@ -706,7 +707,8 @@ DCObject *Template::getDCObjectById(UINT32 itemId)
 		}
 	}
 
-   unlockDciAccess();
+   if (lock)
+      unlockDciAccess();
    return object;
 }
 
@@ -916,18 +918,16 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
  */
 void Template::queueUpdate()
 {
-   UINT32 i;
-   TEMPLATE_UPDATE_INFO *pInfo;
-
    lockProperties();
-   for(i = 0; i < m_dwChildCount; i++)
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
       if ((m_pChildList[i]->getObjectClass() == OBJECT_NODE) || (m_pChildList[i]->getObjectClass() == OBJECT_CLUSTER) || (m_pChildList[i]->getObjectClass() == OBJECT_MOBILEDEVICE))
       {
          incRefCount();
-         pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
-         pInfo->iUpdateType = APPLY_TEMPLATE;
+         TEMPLATE_UPDATE_INFO *pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
+         pInfo->updateType = APPLY_TEMPLATE;
          pInfo->pTemplate = this;
          pInfo->targetId = m_pChildList[i]->getId();
+         pInfo->removeDCI = false;
          g_pTemplateUpdateQueue->Put(pInfo);
       }
    unlockProperties();
@@ -936,17 +936,15 @@ void Template::queueUpdate()
 /**
  * Queue template remove from node
  */
-void Template::queueRemoveFromTarget(UINT32 targetId, BOOL bRemoveDCI)
+void Template::queueRemoveFromTarget(UINT32 targetId, bool removeDCI)
 {
-   TEMPLATE_UPDATE_INFO *pInfo;
-
    lockProperties();
    incRefCount();
-   pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
-   pInfo->iUpdateType = REMOVE_TEMPLATE;
+   TEMPLATE_UPDATE_INFO *pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
+   pInfo->updateType = REMOVE_TEMPLATE;
    pInfo->pTemplate = this;
    pInfo->targetId = targetId;
-   pInfo->bRemoveDCI = bRemoveDCI;
+   pInfo->removeDCI = removeDCI;
    g_pTemplateUpdateQueue->Put(pInfo);
    unlockProperties();
 }
@@ -991,7 +989,7 @@ UINT32 *Template::getDCIEventsList(UINT32 *pdwCount)
  */
 void Template::createNXMPRecord(String &str)
 {
-   str.addFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n\t\t\t<dataCollection>\n"),
+   str.appendFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n\t\t\t<dataCollection>\n"),
 	                       m_id, (const TCHAR *)EscapeStringForXML2(m_name), m_flags);
 
    lockDciAccess(false);
@@ -1004,7 +1002,7 @@ void Template::createNXMPRecord(String &str)
 	if (m_applyFilterSource != NULL)
 	{
 		str += _T("\t\t\t<filter>");
-		str.addDynamicString(EscapeStringForXML(m_applyFilterSource, -1));
+		str.appendPreallocated(EscapeStringForXML(m_applyFilterSource, -1));
 		str += _T("</filter>\n");
 	}
 	unlockProperties();

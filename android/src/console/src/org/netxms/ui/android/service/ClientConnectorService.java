@@ -909,11 +909,11 @@ public class ClientConnectorService extends Service implements SessionListener
 			case CRITICAL: // Critical
 				return sp.getString("alarm.sound.critical", "");
 			case UNKNOWN: // Unknown
-				return sp.getString("alarm.sound.unknown", "");	// TODO: 2014Oct10 Implement corresponding settings section
+				return sp.getString("alarm.sound.unknown", "");
 			case TERMINATE: // Terminate
-				return sp.getString("alarm.sound.terminate", "");	// TODO: 2014Oct10 Implement corresponding settings section
+				return sp.getString("alarm.sound.terminate", "");
 			case RESOLVE: // Resolve
-				return sp.getString("alarm.sound.resolve", "");	// TODO: 2014Oct10 Implement corresponding settings section
+				return sp.getString("alarm.sound.resolve", "");
 		}
 		return "";
 	}
@@ -938,9 +938,11 @@ public class ClientConnectorService extends Service implements SessionListener
 			case CRITICAL: // Critical
 				return R.drawable.status_critical;
 			case UNKNOWN: // Unknown
+				return R.drawable.status_unknown;
 			case TERMINATE: // Terminate
+				return R.drawable.status_terminate;
 			case RESOLVE: // Resolve
-				return android.R.drawable.stat_notify_sdcard;	// TODO: 2014Oct10 Implement corresponding icon
+				return R.drawable.status_resolve;
 		}
 		return android.R.drawable.stat_notify_sdcard;
 	}

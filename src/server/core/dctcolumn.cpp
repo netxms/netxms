@@ -138,7 +138,7 @@ DCTableColumn::~DCTableColumn()
  */
 void DCTableColumn::createNXMPRecord(String &str, int id)
 {
-   str.addFormattedString(_T("\t\t\t\t\t\t<column id=\"%d\">\n")
+   str.appendFormattedString(_T("\t\t\t\t\t\t<column id=\"%d\">\n")
                           _T("\t\t\t\t\t\t\t<name>%s</name>\n")
                           _T("\t\t\t\t\t\t\t<displayName>%s</displayName>\n")
                           _T("\t\t\t\t\t\t\t<snmpOid>%s</snmpOid>\n")

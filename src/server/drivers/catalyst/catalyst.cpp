@@ -88,8 +88,8 @@ static UINT32 HandlerPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport
 		if (SnmpGet(version, transport, NULL, oid, 14, &slot, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
 			slot = moduleIndex;	// Assume slot # equal to module index if it cannot be read
 
-		iface->dwSlotNumber = slot;
-		iface->dwPortNumber = var->getName()->getValue()[nameLen - 1];
+		iface->slot = slot;
+		iface->port = var->getName()->getValue()[nameLen - 1];
 		iface->isPhysicalPort = true;
 	}
 	return SNMP_ERR_SUCCESS;

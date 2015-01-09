@@ -23,6 +23,11 @@
 #include "nxcore.h"
 
 /**
+ * DCI cache loader queue
+ */
+extern Queue g_dciCacheLoaderQueue;
+
+/**
  * Default constructor for DCItem
  */
 DCItem::DCItem() : DCObject()
@@ -32,7 +37,7 @@ DCItem::DCItem() : DCObject()
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
 	m_sampleCount = 0;
    m_instance[0] = 0;
-   m_dwCacheSize = 0;
+   m_cacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
@@ -55,7 +60,7 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
    m_deltaCalculation = pSrc->m_deltaCalculation;
 	m_sampleCount = pSrc->m_sampleCount;
 	_tcscpy(m_instance, pSrc->m_instance);
-   m_dwCacheSize = 0;
+   m_cacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
@@ -114,7 +119,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
    m_dwTemplateItemId = DBGetFieldULong(hResult, iRow, 12);
    m_thresholds = NULL;
    m_pNode = pNode;
-   m_dwCacheSize = 0;
+   m_cacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
@@ -170,7 +175,7 @@ DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
    m_deltaCalculation = DCM_ORIGINAL_VALUE;
 	m_sampleCount = 0;
    m_thresholds = NULL;
-   m_dwCacheSize = 0;
+   m_cacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
@@ -195,7 +200,7 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
    m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
-   m_dwCacheSize = 0;
+   m_cacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
@@ -266,11 +271,11 @@ void DCItem::clearCache()
 {
    UINT32 i;
 
-   for(i = 0; i < m_dwCacheSize; i++)
+   for(i = 0; i < m_cacheSize; i++)
       delete m_ppValueCache[i];
    safe_free(m_ppValueCache);
    m_ppValueCache = NULL;
-   m_dwCacheSize = 0;
+   m_cacheSize = 0;
 }
 
 /**
@@ -689,7 +694,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp,const void *originalValue, bool 
 
    m_dwErrorCount = 0;
 
-   if(isStatusDCO() && (m_dwCacheSize == 0 || ((UINT32)*pValue != (UINT32)*m_ppValueCache[0])))
+   if (isStatusDCO() && ((m_cacheSize == 0) || !m_bCacheLoaded || ((UINT32)*pValue != (UINT32)*m_ppValueCache[0])))
    {
       *updateStatus = true;
    }
@@ -711,12 +716,15 @@ bool DCItem::processNewValue(time_t tmTimeStamp,const void *originalValue, bool 
       PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
 
    // Check thresholds and add value to cache
-   checkThresholds(*pValue);
-
-   if (m_dwCacheSize > 0)
+   if (m_bCacheLoaded)
    {
-      delete m_ppValueCache[m_dwCacheSize - 1];
-      memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue *) * (m_dwCacheSize - 1));
+      checkThresholds(*pValue);
+   }
+
+   if (m_cacheSize > 0)
+   {
+      delete m_ppValueCache[m_cacheSize - 1];
+      memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue *) * (m_cacheSize - 1));
       m_ppValueCache[0] = pValue;
    }
    else
@@ -975,19 +983,20 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
    }
 
    // Update cache if needed
-   if (dwRequiredSize < m_dwCacheSize)
+   if (dwRequiredSize < m_cacheSize)
    {
       // Destroy unneeded values
-      if (m_dwCacheSize > 0)
+      if (m_cacheSize > 0)
 		{
-         for(UINT32 i = dwRequiredSize; i < m_dwCacheSize; i++)
+         for(UINT32 i = dwRequiredSize; i < m_cacheSize; i++)
             delete m_ppValueCache[i];
 		}
 
-      m_dwCacheSize = dwRequiredSize;
-      if (m_dwCacheSize > 0)
+      m_cacheSize = dwRequiredSize;
+      m_requiredCacheSize = dwRequiredSize;
+      if (m_cacheSize > 0)
       {
-         m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * m_dwCacheSize);
+         m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * m_cacheSize);
       }
       else
       {
@@ -995,99 +1004,119 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
          m_ppValueCache = NULL;
       }
    }
-   else if (dwRequiredSize > m_dwCacheSize)
+   else if (dwRequiredSize > m_cacheSize)
    {
-      // Expand cache
-      m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * dwRequiredSize);
-      for(UINT32 i = m_dwCacheSize; i < dwRequiredSize; i++)
-         m_ppValueCache[i] = NULL;
-
       // Load missing values from database
       // Skip caching for DCIs where estimated time to fill the cache is less then 5 minutes
       // to reduce load on database at server startup
-      if ((m_pNode != NULL) && ((dwRequiredSize - m_dwCacheSize) * m_iPollingInterval > 300))
+      if ((m_pNode != NULL) && ((dwRequiredSize - m_cacheSize) * m_iPollingInterval > 300))
       {
-         TCHAR szBuffer[MAX_DB_STRING];
-         BOOL bHasData;
-
-         switch(g_dbSyntax)
-         {
-            case DB_SYNTAX_MSSQL:
-               _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT TOP %d idata_value,idata_timestamp FROM idata_%d ")
-                                 _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
-                       dwRequiredSize, m_pNode->getId(), m_id);
-               break;
-            case DB_SYNTAX_ORACLE:
-               _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
-                                 _T("WHERE item_id=%d AND ROWNUM <= %d ORDER BY idata_timestamp DESC"),
-                       m_pNode->getId(), m_id, dwRequiredSize);
-               break;
-            case DB_SYNTAX_MYSQL:
-            case DB_SYNTAX_PGSQL:
-            case DB_SYNTAX_SQLITE:
-               _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
-                                 _T("WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
-                       m_pNode->getId(), m_id, dwRequiredSize);
-               break;
-            case DB_SYNTAX_DB2:
-               _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
-                  _T("WHERE item_id=%d ORDER BY idata_timestamp DESC FETCH FIRST %d ROWS ONLY"),
-                  m_pNode->getId(), m_id, dwRequiredSize);
-               break;
-            default:
-               _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
-                                 _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
-                       m_pNode->getId(), m_id);
-               break;
-         }
-			DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         DB_ASYNC_RESULT hResult = DBAsyncSelect(hdb, szBuffer);
-         if (hResult != NULL)
-         {
-            // Skip already cached values
-				UINT32 i;
-            for(i = 0, bHasData = TRUE; i < m_dwCacheSize; i++)
-               bHasData = DBFetch(hResult);
-
-            // Create new cache entries
-            for(; (i < dwRequiredSize) && bHasData; i++)
-            {
-               bHasData = DBFetch(hResult);
-               if (bHasData)
-               {
-                  DBGetFieldAsync(hResult, 0, szBuffer, MAX_DB_STRING);
-                  m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldAsyncULong(hResult, 1));
-               }
-               else
-               {
-                  m_ppValueCache[i] = new ItemValue(_T(""), 1);   // Empty value
-               }
-            }
-
-            // Fill up cache with empty values if we don't have enough values in database
-            for(; i < dwRequiredSize; i++)
-               m_ppValueCache[i] = new ItemValue(_T(""), 1);
-
-            DBFreeAsyncResult(hResult);
-         }
-         else
-         {
-            // Error reading data from database, fill cache with empty values
-            for(UINT32 i = m_dwCacheSize; i < dwRequiredSize; i++)
-               m_ppValueCache[i] = new ItemValue(_T(""), 1);
-         }
-			DBConnectionPoolReleaseConnection(hdb);
+         m_pNode->incRefCount();
+         m_requiredCacheSize = dwRequiredSize;
+         m_bCacheLoaded = false;
+         g_dciCacheLoaderQueue.Put(this);
       }
       else
       {
          // will not read data from database, fill cache with empty values
-         for(UINT32 i = m_dwCacheSize; i < dwRequiredSize; i++)
+         m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * dwRequiredSize);
+         for(UINT32 i = m_cacheSize; i < dwRequiredSize; i++)
             m_ppValueCache[i] = new ItemValue(_T(""), 1);
          DbgPrintf(7, _T("Cache load skipped for parameter %s [%d]"), m_name, (int)m_id);
+         m_cacheSize = dwRequiredSize;
+         m_bCacheLoaded = true;
       }
-      m_dwCacheSize = dwRequiredSize;
    }
+}
+
+/**
+ * Reload cache from database
+ */
+void DCItem::reloadCache()
+{
+   TCHAR szBuffer[MAX_DB_STRING];
+
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_MSSQL:
+         _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT TOP %d idata_value,idata_timestamp FROM idata_%d ")
+                           _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
+                 m_requiredCacheSize, m_pNode->getId(), m_id);
+         break;
+      case DB_SYNTAX_ORACLE:
+         _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT * FROM (SELECT idata_value,idata_timestamp FROM idata_%d ")
+                           _T("WHERE item_id=%d ORDER BY idata_timestamp DESC) WHERE ROWNUM <= %d"),
+                 m_pNode->getId(), m_id, m_requiredCacheSize);
+         break;
+      case DB_SYNTAX_MYSQL:
+      case DB_SYNTAX_PGSQL:
+      case DB_SYNTAX_SQLITE:
+         _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
+                           _T("WHERE item_id=%d ORDER BY idata_timestamp DESC LIMIT %d"),
+                 m_pNode->getId(), m_id, m_requiredCacheSize);
+         break;
+      case DB_SYNTAX_DB2:
+         _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
+            _T("WHERE item_id=%d ORDER BY idata_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+            m_pNode->getId(), m_id, m_requiredCacheSize);
+         break;
+      default:
+         _sntprintf(szBuffer, MAX_DB_STRING, _T("SELECT idata_value,idata_timestamp FROM idata_%d ")
+                           _T("WHERE item_id=%d ORDER BY idata_timestamp DESC"),
+                 m_pNode->getId(), m_id);
+         break;
+   }
+	
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_ASYNC_RESULT hResult = DBAsyncSelect(hdb, szBuffer);
+   
+   lock();
+   
+	UINT32 i;
+   for(i = 0; i < m_cacheSize; i++)
+      delete m_ppValueCache[i];
+
+   if (m_cacheSize != m_requiredCacheSize)
+   {
+      m_ppValueCache = (ItemValue **)realloc(m_ppValueCache, sizeof(ItemValue *) * m_requiredCacheSize);
+   }
+
+   if (hResult != NULL)
+   {
+      // Create cache entries
+      bool moreData = true;
+      for(i = 0; (i < m_requiredCacheSize) && moreData; i++)
+      {
+         moreData = DBFetch(hResult);
+         if (moreData)
+         {
+            DBGetFieldAsync(hResult, 0, szBuffer, MAX_DB_STRING);
+            m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldAsyncULong(hResult, 1));
+         }
+         else
+         {
+            m_ppValueCache[i] = new ItemValue(_T(""), 1);   // Empty value
+         }
+      }
+
+      // Fill up cache with empty values if we don't have enough values in database
+      for(; i < m_requiredCacheSize; i++)
+         m_ppValueCache[i] = new ItemValue(_T(""), 1);
+
+      DBFreeAsyncResult(hResult);
+   }
+   else
+   {
+      // Error reading data from database, fill cache with empty values
+      for(i = 0; i < m_requiredCacheSize; i++)
+         m_ppValueCache[i] = new ItemValue(_T(""), 1);
+   }
+   
+   m_cacheSize = m_requiredCacheSize;
    m_bCacheLoaded = true;
+   unlock();
+	
+   DBConnectionPoolReleaseConnection(hdb);
 }
 
 /**
@@ -1100,7 +1129,7 @@ void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)
    pMsg->setField(dwId++, m_name);
    pMsg->setField(dwId++, m_szDescription);
    pMsg->setField(dwId++, (WORD)m_source);
-   if (m_dwCacheSize > 0)
+   if (m_cacheSize > 0)
    {
       pMsg->setField(dwId++, (WORD)m_dataType);
       pMsg->setField(dwId++, (TCHAR *)m_ppValueCache[0]->getString());
@@ -1158,10 +1187,10 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
    switch(nFunction)
    {
       case F_LAST:
-         pValue = (m_dwCacheSize > 0) ? new NXSL_Value(m_ppValueCache[0]->getString()) : new NXSL_Value;
+         pValue = (m_cacheSize > 0) ? new NXSL_Value(m_ppValueCache[0]->getString()) : new NXSL_Value;
          break;
       case F_DIFF:
-         if (m_dwCacheSize >= 2)
+         if (m_cacheSize >= 2)
          {
             ItemValue result;
 
@@ -1174,12 +1203,12 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
          }
          break;
       case F_AVERAGE:
-         if (m_dwCacheSize > 0)
+         if (m_cacheSize > 0)
          {
             ItemValue result;
 
             CalculateItemValueAverage(result, m_dataType,
-                                      min(m_dwCacheSize, (UINT32)nPolls), m_ppValueCache);
+                                      min(m_cacheSize, (UINT32)nPolls), m_ppValueCache);
             pValue = new NXSL_Value(result.getString());
          }
          else
@@ -1188,12 +1217,12 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
          }
          break;
       case F_DEVIATION:
-         if (m_dwCacheSize > 0)
+         if (m_cacheSize > 0)
          {
             ItemValue result;
 
             CalculateItemValueMD(result, m_dataType,
-                                 min(m_dwCacheSize, (UINT32)nPolls), m_ppValueCache);
+                                 min(m_cacheSize, (UINT32)nPolls), m_ppValueCache);
             pValue = new NXSL_Value(result.getString());
          }
          else
@@ -1218,7 +1247,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
 const TCHAR *DCItem::getLastValue()
 {
    lock();
-   const TCHAR *v = (m_dwCacheSize > 0) ? (const TCHAR *)m_ppValueCache[0]->getString() : NULL;
+   const TCHAR *v = (m_cacheSize > 0) ? (const TCHAR *)m_ppValueCache[0]->getString() : NULL;
    unlock();
    return v;
 }
@@ -1229,7 +1258,7 @@ const TCHAR *DCItem::getLastValue()
 ItemValue *DCItem::getInternalLastValue()
 {
    lock();
-   ItemValue *v = (m_dwCacheSize > 0) ? new ItemValue(m_ppValueCache[0]) : NULL;
+   ItemValue *v = (m_cacheSize > 0) ? new ItemValue(m_ppValueCache[0]) : NULL;
    unlock();
    return v;
 }
@@ -1387,7 +1416,7 @@ void DCItem::updateFromTemplate(DCObject *src)
       expandMacros(item->m_instance, m_instance, MAX_DB_STRING);
       m_instanceDiscoveryMethod = item->m_instanceDiscoveryMethod;
       safe_free(m_instanceDiscoveryData);
-	   m_instanceDiscoveryData = (item->m_instanceDiscoveryData != NULL) ? _tcsdup(item->m_instanceDiscoveryData) : NULL;
+	   m_instanceDiscoveryData = _tcsdup_ex(item->m_instanceDiscoveryData);
       safe_free_and_null(m_instanceFilterSource);
       delete_and_null(m_instanceFilter);
       setInstanceFilter(item->m_instanceFilterSource);
@@ -1456,7 +1485,7 @@ void DCItem::createNXMPRecord(String &str)
 
    lock();
 
-   str.addFormattedString(_T("\t\t\t\t<dci id=\"%d\">\n")
+   str.appendFormattedString(_T("\t\t\t\t<dci id=\"%d\">\n")
                           _T("\t\t\t\t\t<name>%s</name>\n")
                           _T("\t\t\t\t\t<description>%s</description>\n")
                           _T("\t\t\t\t\t<dataType>%d</dataType>\n")
@@ -1482,7 +1511,7 @@ void DCItem::createNXMPRecord(String &str)
 	if (m_transformationScriptSource != NULL)
 	{
 		str += _T("\t\t\t\t\t<transformation>");
-		str.addDynamicString(EscapeStringForXML(m_transformationScriptSource, -1));
+		str.appendPreallocated(EscapeStringForXML(m_transformationScriptSource, -1));
 		str += _T("</transformation>\n");
 	}
 
@@ -1490,7 +1519,7 @@ void DCItem::createNXMPRecord(String &str)
    {
       str += _T("\t\t\t\t\t<schedules>\n");
       for(i = 0; i < m_dwNumSchedules; i++)
-         str.addFormattedString(_T("\t\t\t\t\t\t<schedule>%s</schedule>\n"), (const TCHAR *)EscapeStringForXML2(m_ppScheduleList[i]));
+         str.appendFormattedString(_T("\t\t\t\t\t\t<schedule>%s</schedule>\n"), (const TCHAR *)EscapeStringForXML2(m_ppScheduleList[i]));
       str += _T("\t\t\t\t\t</schedules>\n");
    }
 
@@ -1507,21 +1536,21 @@ void DCItem::createNXMPRecord(String &str)
 	if (m_pszPerfTabSettings != NULL)
 	{
 		str += _T("\t\t\t\t\t<perfTabSettings>");
-		str.addDynamicString(EscapeStringForXML(m_pszPerfTabSettings, -1));
+		str.appendPreallocated(EscapeStringForXML(m_pszPerfTabSettings, -1));
 		str += _T("</perfTabSettings>\n");
 	}
 
    if (m_instanceDiscoveryData != NULL)
 	{
 		str += _T("\t\t\t\t\t<instanceDiscoveryData>");
-		str.addDynamicString(EscapeStringForXML(m_instanceDiscoveryData, -1));
+		str.appendPreallocated(EscapeStringForXML(m_instanceDiscoveryData, -1));
 		str += _T("</instanceDiscoveryData>\n");
 	}
 
    if (m_instanceFilterSource != NULL)
 	{
 		str += _T("\t\t\t\t\t<instanceFilter>");
-		str.addDynamicString(EscapeStringForXML(m_instanceFilterSource, -1));
+		str.appendPreallocated(EscapeStringForXML(m_instanceFilterSource, -1));
 		str += _T("</instanceFilter>\n");
 	}
 

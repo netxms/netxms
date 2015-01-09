@@ -378,6 +378,8 @@ public:
    int compare(const TCHAR *oid);
    int compare(const UINT32 *oid, size_t length);
 	int compare(SNMP_ObjectId *oid);
+
+   bool isZeroDotZero() { return (m_length == 2) && (m_value[0] == 0) && (m_value[1] == 0); }
 };
 
 /**

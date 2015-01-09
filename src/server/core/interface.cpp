@@ -32,9 +32,11 @@ Interface::Interface() : NetObj()
 {
 	m_flags = 0;
 	nx_strncpy(m_description, m_name, MAX_DB_STRING);
-   m_dwIpNetMask = 0;
-   m_dwIfIndex = 0;
-   m_dwIfType = IFTYPE_OTHER;
+   m_alias[0] = 0;
+   m_ipNetMask = 0;
+   m_index = 0;
+   m_type = IFTYPE_OTHER;
+   m_mtu = 0;
 	m_bridgePortNumber = 0;
 	m_slotNumber = 0;
 	m_portNumber = 0;
@@ -43,7 +45,7 @@ Interface::Interface() : NetObj()
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
-   memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
+   memset(m_macAddr, 0, MAC_ADDR_LENGTH);
    m_lastDownEventId = 0;
 	m_pendingStatus = -1;
 	m_pollCount = 0;
@@ -63,10 +65,12 @@ Interface::Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSynth
 
 	_tcscpy(m_name, _T("unknown"));
    _tcscpy(m_description, _T("unknown"));
+   m_alias[0] = 0;
    m_dwIpAddr = dwAddr;
-   m_dwIpNetMask = dwNetMask;
-   m_dwIfIndex = 1;
-   m_dwIfType = IFTYPE_OTHER;
+   m_ipNetMask = dwNetMask;
+   m_index = 1;
+   m_type = IFTYPE_OTHER;
+   m_mtu = 0;
 	m_bridgePortNumber = 0;
 	m_slotNumber = 0;
 	m_portNumber = 0;
@@ -75,7 +79,7 @@ Interface::Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSynth
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
-   memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
+   memset(m_macAddr, 0, MAC_ADDR_LENGTH);
    m_lastDownEventId = 0;
 	m_pendingStatus = -1;
 	m_pollCount = 0;
@@ -83,6 +87,7 @@ Interface::Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSynth
 	m_zoneId = zoneId;
    m_isHidden = true;
 	m_pingTime = PING_TIME_ON_TIMEOUT;
+	m_pingLastTimeStamp = 0;
 }
 
 /**
@@ -98,10 +103,12 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32
 
    nx_strncpy(m_name, name, MAX_OBJECT_NAME);
    nx_strncpy(m_description, descr, MAX_DB_STRING);
-   m_dwIfIndex = index;
-   m_dwIfType = ifType;
+   m_alias[0] = 0;
+   m_index = index;
+   m_type = ifType;
+   m_mtu = 0;
    m_dwIpAddr = ipAddr;
-   m_dwIpNetMask = ipNetMask;
+   m_ipNetMask = ipNetMask;
 	m_bridgePortNumber = 0;
 	m_slotNumber = 0;
 	m_portNumber = 0;
@@ -110,7 +117,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
-   memset(m_bMacAddr, 0, MAC_ADDR_LENGTH);
+   memset(m_macAddr, 0, MAC_ADDR_LENGTH);
    m_lastDownEventId = 0;
 	m_pendingStatus = -1;
 	m_pollCount = 0;
@@ -118,6 +125,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32
 	m_zoneId = zoneId;
    m_isHidden = true;
 	m_pingTime = PING_TIME_ON_TIMEOUT;
+	m_pingLastTimeStamp = 0;
 }
 
 /**
@@ -132,9 +140,10 @@ Interface::~Interface()
  */
 UINT32 Interface::getPingTime()
 {
-   if((time(NULL) - m_pingLastTimeStamp) > g_dwStatusPollingInterval)
+   if ((time(NULL) - m_pingLastTimeStamp) > g_dwStatusPollingInterval)
    {
       updatePingData();
+      DbgPrintf(7, _T("Interface::getPingTime: update ping time is required! Last ping time %d."), m_pingLastTimeStamp);
    }
    return m_pingTime;
 }
@@ -156,7 +165,7 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
 		_T("mac_addr,flags,required_polls,bridge_port,phy_slot,")
 		_T("phy_port,peer_node_id,peer_if_id,description,")
 		_T("dot1x_pae_state,dot1x_backend_state,admin_state,")
-      _T("oper_state,peer_proto FROM interfaces WHERE id=?"));
+      _T("oper_state,peer_proto,alias,mtu FROM interfaces WHERE id=?"));
 	if (hStmt == NULL)
 		return FALSE;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -171,11 +180,11 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
    if (DBGetNumRows(hResult) != 0)
    {
       m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 0);
-      m_dwIpNetMask = DBGetFieldIPAddr(hResult, 0, 1);
-      m_dwIfType = DBGetFieldULong(hResult, 0, 2);
-      m_dwIfIndex = DBGetFieldULong(hResult, 0, 3);
+      m_ipNetMask = DBGetFieldIPAddr(hResult, 0, 1);
+      m_type = DBGetFieldULong(hResult, 0, 2);
+      m_index = DBGetFieldULong(hResult, 0, 3);
       UINT32 nodeId = DBGetFieldULong(hResult, 0, 4);
-		DBGetFieldByteArray2(hResult, 0, 5, m_bMacAddr, MAC_ADDR_LENGTH, 0);
+		DBGetFieldByteArray2(hResult, 0, 5, m_macAddr, MAC_ADDR_LENGTH, 0);
 		m_flags = DBGetFieldULong(hResult, 0, 6);
       m_requiredPollCount = DBGetFieldLong(hResult, 0, 7);
 		m_bridgePortNumber = DBGetFieldULong(hResult, 0, 8);
@@ -189,6 +198,11 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
 		m_adminState = (WORD)DBGetFieldLong(hResult, 0, 16);
 		m_operState = (WORD)DBGetFieldLong(hResult, 0, 17);
 		m_peerDiscoveryProtocol = (LinkLayerProtocol)DBGetFieldLong(hResult, 0, 18);
+		DBGetField(hResult, 0, 19, m_alias, MAX_DB_STRING);
+		m_mtu = DBGetFieldULong(hResult, 0, 20);
+
+      m_pingTime = PING_TIME_ON_TIMEOUT;
+      m_pingLastTimeStamp = 0;
 
       // Link interface to node
       if (!m_isDeleted)
@@ -223,7 +237,7 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
    loadACLFromDB();
 
 	// Validate loopback flag
-	if (((m_dwIpAddr & 0xFF000000) == 0x7F000000) || (m_dwIfType == IFTYPE_SOFTWARE_LOOPBACK))
+	if (((m_dwIpAddr & 0xFF000000) == 0x7F000000) || (m_type == IFTYPE_SOFTWARE_LOOPBACK))
 		m_flags |= IF_LOOPBACK;
 
    return bResult;
@@ -261,15 +275,16 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
          _T("node_id=?,if_type=?,if_index=?,mac_addr=?,flags=?,")
 			_T("required_polls=?,bridge_port=?,phy_slot=?,phy_port=?,")
 			_T("peer_node_id=?,peer_if_id=?,description=?,admin_state=?,")
-			_T("oper_state=?,dot1x_pae_state=?,dot1x_backend_state=?,peer_proto=? WHERE id=?"));
+			_T("oper_state=?,dot1x_pae_state=?,dot1x_backend_state=?,")
+         _T("peer_proto=?,alias=?,mtu=? WHERE id=?"));
 	}
    else
 	{
 		hStmt = DBPrepare(hdb,
 			_T("INSERT INTO interfaces (ip_addr,ip_netmask,node_id,if_type,if_index,mac_addr,")
 			_T("flags,required_polls,bridge_port,phy_slot,phy_port,peer_node_id,peer_if_id,description,")
-         _T("admin_state,oper_state,dot1x_pae_state,dot1x_backend_state,peer_proto,id) ")
-			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+         _T("admin_state,oper_state,dot1x_pae_state,dot1x_backend_state,peer_proto,alias,mtu,id) ")
+			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -278,11 +293,11 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
 	}
 
 	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, IpToStr(m_dwIpAddr, szIpAddr), DB_BIND_STATIC);
-	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, IpToStr(m_dwIpNetMask, szNetMask), DB_BIND_STATIC);
+	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, IpToStr(m_ipNetMask, szNetMask), DB_BIND_STATIC);
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, dwNodeId);
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_dwIfType);
-	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_dwIfIndex);
-	DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, BinToStr(m_bMacAddr, MAC_ADDR_LENGTH, szMacStr), DB_BIND_STATIC);
+	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_type);
+	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_index);
+	DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, BinToStr(m_macAddr, MAC_ADDR_LENGTH, szMacStr), DB_BIND_STATIC);
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_flags);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_requiredPollCount);
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_bridgePortNumber);
@@ -296,7 +311,9 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xPaeAuthState);
 	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (UINT32)m_dot1xBackendAuthState);
 	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (INT32)m_peerDiscoveryProtocol);
-	DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
+	DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_mtu);
+	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -349,7 +366,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
        (!(pNode->getFlags() & NF_DISABLE_NXCP)) && (!(pNode->getRuntimeFlags() & NDF_AGENT_UNREACHABLE)))
    {
       sendPollerMsg(rqId, _T("      Retrieving interface status from NetXMS agent\r\n"));
-      pNode->getInterfaceStatusFromAgent(m_dwIfIndex, &adminState, &operState);
+      pNode->getInterfaceStatusFromAgent(m_index, &adminState, &operState);
 		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new state from NetXMS agent: adinState=%d operState=%d"), m_id, m_name, adminState, operState);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
@@ -367,7 +384,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 		 (snmpTransport != NULL))
    {
       sendPollerMsg(rqId, _T("      Retrieving interface status from SNMP agent\r\n"));
-      pNode->getInterfaceStatusFromSNMP(snmpTransport, m_dwIfIndex, &adminState, &operState);
+      pNode->getInterfaceStatusFromSNMP(snmpTransport, m_index, &adminState, &operState);
 		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new state from SNMP: adminState=%d operState=%d"), m_id, m_name, adminState, operState);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
@@ -424,6 +441,8 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 							long value = _tcstol(buffer, &eptr, 10);
 							if ((*eptr == 0) && (value >= 0))
 							{
+                        m_pingLastTimeStamp = time(NULL);
+                        m_pingTime = value;
 								if (value < 10000)
 								{
 									adminState = IF_ADMIN_STATE_UP;
@@ -431,6 +450,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 								}
 								else
 								{
+                           m_pingTime = PING_TIME_ON_TIMEOUT;
 									adminState = IF_ADMIN_STATE_UNKNOWN;
 									operState = IF_OPER_STATE_DOWN;
 								}
@@ -576,7 +596,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 		   sendPollerMsg(rqId, _T("      Interface status changed to %s\r\n"), GetStatusAsText(m_iStatus, true));
 		   PostEventEx(eventQueue,
 		               (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_iStatus] : statusToEvent[m_iStatus],
-						   pNode->getId(), "dsaad", m_id, m_name, m_dwIpAddr, m_dwIpNetMask, m_dwIfIndex);
+						   pNode->getId(), "dsaad", m_id, m_name, m_dwIpAddr, m_ipNetMask, m_index);
       }
    }
 	else if (expectedState == IF_EXPECTED_STATE_IGNORE)
@@ -604,12 +624,75 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
  */
 void Interface::updatePingData()
 {
-   UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
-   if (dwPingStatus != ICMP_SUCCESS)
+   Node *pNode = getParentNode();
+   if (pNode == NULL)
    {
-      m_pingTime = PING_TIME_ON_TIMEOUT;
+      DbgPrintf(7, _T("Interface::updatePingData: Can't find parent node"));
+      return;
    }
-   m_pingLastTimeStamp = time(NULL);
+   UINT32 icmpProxy = pNode->getIcmpProxy();
+
+   if (IsZoningEnabled() && (m_zoneId != 0) && (icmpProxy == 0))
+   {
+      Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+      if (zone != NULL)
+      {
+         icmpProxy = zone->getIcmpProxy();
+      }
+   }
+
+   if (icmpProxy != 0)
+   {
+      DbgPrintf(7, _T("Interface::updatePingData: ping via proxy [%u]"), icmpProxy);
+      Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
+      if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
+      {
+         DbgPrintf(7, _T("Interface::updatePingData: proxy node found: %s"), proxyNode->getName());
+         AgentConnection *conn = proxyNode->createAgentConnection();
+         if (conn != NULL)
+         {
+            TCHAR parameter[64], buffer[64];
+
+            _sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), IpToStr(m_dwIpAddr, buffer));
+            if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
+            {
+               DbgPrintf(7, _T("Interface::updatePingData:  proxy response: \"%s\""), buffer);
+               TCHAR *eptr;
+               long value = _tcstol(buffer, &eptr, 10);
+               m_pingLastTimeStamp = time(NULL);
+               if ((*eptr == 0) && (value >= 0) && (value < 10000))
+               {
+                  m_pingTime = value;
+               }
+               else
+               {
+                  m_pingTime = PING_TIME_ON_TIMEOUT;
+                  DbgPrintf(7, _T("Interface::updatePingData: incorrect value: %d or error while parsing: %s"), value, eptr);
+               }
+            }
+            conn->disconnect();
+            delete conn;
+         }
+         else
+         {
+            DbgPrintf(7, _T("Interface::updatePingData: cannot connect to agent on proxy node [%u]"), icmpProxy);
+         }
+      }
+      else
+      {
+         DbgPrintf(7, _T("Interface::updatePingData: proxy node not available [%u]"), icmpProxy);
+      }
+   }
+   else	// not using ICMP proxy
+   {
+      UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+      if (dwPingStatus != ICMP_SUCCESS)
+      {
+         DbgPrintf(7, _T("Interface::updatePingData: error getting ping %d"), dwPingStatus);
+         m_pingTime = PING_TIME_ON_TIMEOUT;
+      }
+      m_pingLastTimeStamp = time(NULL);
+   }
 }
 
 /**
@@ -652,10 +735,10 @@ void Interface::paeStatusPoll(ClientSession *pSession, UINT32 rqId, SNMP_Transpo
 	INT32 paeState = PAE_STATE_UNKNOWN, backendState = BACKEND_STATE_UNKNOWN;
 	bool modified = false;
 
-	_sntprintf(oid, 256, _T(".1.0.8802.1.1.1.1.2.1.1.1.%d"), m_dwIfIndex);
+	_sntprintf(oid, 256, _T(".1.0.8802.1.1.1.1.2.1.1.1.%d"), m_index);
 	SnmpGet(pTransport->getSnmpVersion(), pTransport, oid, NULL, 0, &paeState, sizeof(INT32), 0);
 
-	_sntprintf(oid, 256, _T(".1.0.8802.1.1.1.1.2.1.1.2.%d"), m_dwIfIndex);
+	_sntprintf(oid, 256, _T(".1.0.8802.1.1.1.1.2.1.1.2.%d"), m_index);
 	SnmpGet(pTransport->getSnmpVersion(), pTransport, oid, NULL, 0, &backendState, sizeof(INT32), 0);
 
 	if (m_dot1xPaeAuthState != (WORD)paeState)
@@ -710,18 +793,20 @@ void Interface::paeStatusPoll(ClientSession *pSession, UINT32 rqId, SNMP_Transpo
 void Interface::fillMessage(NXCPMessage *pMsg)
 {
    NetObj::fillMessage(pMsg);
-   pMsg->setField(VID_IF_INDEX, m_dwIfIndex);
-   pMsg->setField(VID_IF_TYPE, m_dwIfType);
+   pMsg->setField(VID_IF_INDEX, m_index);
+   pMsg->setField(VID_IF_TYPE, m_type);
+   pMsg->setField(VID_MTU, m_mtu);
    pMsg->setField(VID_IF_SLOT, m_slotNumber);
    pMsg->setField(VID_IF_PORT, m_portNumber);
-   pMsg->setField(VID_IP_NETMASK, m_dwIpNetMask);
-   pMsg->setField(VID_MAC_ADDR, m_bMacAddr, MAC_ADDR_LENGTH);
+   pMsg->setField(VID_IP_NETMASK, m_ipNetMask);
+   pMsg->setField(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
 	pMsg->setField(VID_FLAGS, m_flags);
 	pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
 	pMsg->setField(VID_PEER_NODE_ID, m_peerNodeId);
 	pMsg->setField(VID_PEER_INTERFACE_ID, m_peerInterfaceId);
 	pMsg->setField(VID_PEER_PROTOCOL, (INT16)m_peerDiscoveryProtocol);
 	pMsg->setField(VID_DESCRIPTION, m_description);
+   pMsg->setField(VID_ALIAS, m_alias);
 	pMsg->setField(VID_ADMIN_STATE, m_adminState);
 	pMsg->setField(VID_OPER_STATE, m_operState);
 	pMsg->setField(VID_DOT1X_PAE_STATE, m_dot1xPaeAuthState);
@@ -780,10 +865,10 @@ UINT32 Interface::wakeUp()
 {
    UINT32 dwAddr, dwResult = RCC_NO_MAC_ADDRESS;
 
-   if (memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6))
+   if (memcmp(m_macAddr, "\x00\x00\x00\x00\x00\x00", 6))
    {
-      dwAddr = htonl(m_dwIpAddr | ~m_dwIpNetMask);
-      if (SendMagicPacket(dwAddr, m_bMacAddr, 5))
+      dwAddr = htonl(m_dwIpAddr | ~m_ipNetMask);
+      if (SendMagicPacket(dwAddr, m_macAddr, 5))
          dwResult = RCC_SUCCESS;
       else
          dwResult = RCC_COMM_FAILURE;
@@ -836,14 +921,14 @@ void Interface::setIpAddr(UINT32 dwNewAddr)
  */
 void Interface::setIpNetMask(UINT32 dwNetMask)
 {
-   UINT32 oldNetMask = m_dwIpNetMask;
+   UINT32 oldNetMask = m_ipNetMask;
    lockProperties();
-   m_dwIpNetMask = dwNetMask;
+   m_ipNetMask = dwNetMask;
    setModified();
    unlockProperties();
    PostEvent(EVENT_IF_MASK_CHANGED, m_id, "dsaada", m_id,
                 m_name, m_dwIpAddr,
-                m_dwIpNetMask, m_dwIfIndex, oldNetMask);
+                m_ipNetMask, m_index, oldNetMask);
 }
 
 /**
@@ -918,7 +1003,7 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
          _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"),
          _T("remoteIfMAC"), _T("protocol") };
       PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsahdsddsah", names,
-         m_id, m_dwIfIndex, m_name, m_dwIpAddr, m_bMacAddr, node->getId(), node->getName(),
+         m_id, m_index, m_name, m_dwIpAddr, m_macAddr, node->getId(), node->getName(),
          iface->getId(), iface->getIfIndex(), iface->getName(), iface->IpAddr(), iface->getMacAddr(),
          protocol);
    }
@@ -927,12 +1012,12 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
 /**
  * Set MAC address for interface
  */
-void Interface::setMacAddr(const BYTE *pbNewMac) 
+void Interface::setMacAddr(const BYTE *pbNewMac)
 {
    lockProperties();
-   MacDbRemove(m_bMacAddr);
-   memcpy(m_bMacAddr, pbNewMac, MAC_ADDR_LENGTH);
+   MacDbRemove(m_macAddr);
+   memcpy(m_macAddr, pbNewMac, MAC_ADDR_LENGTH);
    MacDbAddInterface(this);
-   setModified(); 
+   setModified();
    unlockProperties();
 }

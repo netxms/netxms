@@ -141,9 +141,9 @@ static NXSL_DiscoveryClass m_nxslDiscoveryClass;
  * @param doConfPoll if set to true, Node::configurationPoll will be called before exit
  * @param discoveredNode must be set to true if node being added automatically by discovery thread
  */
-Node *PollNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 dwCreationFlags,
-                  WORD agentPort, WORD snmpPort, const TCHAR *pszName, UINT32 dwProxyNode, UINT32 dwSNMPProxy,
-                  Cluster *pCluster, UINT32 zoneId, bool doConfPoll, bool discoveredNode)
+Node NXCORE_EXPORTABLE *PollNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 dwCreationFlags,
+                                    WORD agentPort, WORD snmpPort, const TCHAR *pszName, UINT32 dwProxyNode, UINT32 dwSNMPProxy,
+                                    Cluster *pCluster, UINT32 zoneId, bool doConfPoll, bool discoveredNode)
 {
    Node *pNode;
    TCHAR szIpAddr1[32], szIpAddr2[32];

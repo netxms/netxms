@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,23 +52,25 @@ public class InterfacesTab extends ObjectTab
 {
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_NAME = 1;
-	public static final int COLUMN_TYPE = 2;
-	public static final int COLUMN_INDEX = 3;
-	public static final int COLUMN_SLOT = 4;
-	public static final int COLUMN_PORT = 5;
-	public static final int COLUMN_DESCRIPTION = 6;
-	public static final int COLUMN_MAC_ADDRESS = 7;
-	public static final int COLUMN_IP_ADDRESS = 8;
-	public static final int COLUMN_PEER_NAME = 9;
-	public static final int COLUMN_PEER_MAC_ADDRESS = 10;
-	public static final int COLUMN_PEER_IP_ADDRESS = 11;
-   public static final int COLUMN_PEER_PROTOCOL = 12;
-	public static final int COLUMN_ADMIN_STATE = 13;
-	public static final int COLUMN_OPER_STATE = 14;
-	public static final int COLUMN_EXPECTED_STATE = 15;
-	public static final int COLUMN_STATUS = 16;
-	public static final int COLUMN_8021X_PAE_STATE = 17;
-	public static final int COLUMN_8021X_BACKEND_STATE = 18;
+   public static final int COLUMN_ALIAS = 2;
+	public static final int COLUMN_TYPE = 3;
+	public static final int COLUMN_INDEX = 4;
+	public static final int COLUMN_SLOT = 5;
+	public static final int COLUMN_PORT = 6;
+   public static final int COLUMN_MTU = 7;
+	public static final int COLUMN_DESCRIPTION = 8;
+	public static final int COLUMN_MAC_ADDRESS = 9;
+	public static final int COLUMN_IP_ADDRESS = 10;
+	public static final int COLUMN_PEER_NAME = 11;
+	public static final int COLUMN_PEER_MAC_ADDRESS = 12;
+	public static final int COLUMN_PEER_IP_ADDRESS = 13;
+   public static final int COLUMN_PEER_PROTOCOL = 14;
+	public static final int COLUMN_ADMIN_STATE = 15;
+	public static final int COLUMN_OPER_STATE = 16;
+	public static final int COLUMN_EXPECTED_STATE = 17;
+	public static final int COLUMN_STATUS = 18;
+	public static final int COLUMN_8021X_PAE_STATE = 19;
+	public static final int COLUMN_8021X_BACKEND_STATE = 20;
 	
 	private SortableTableViewer viewer;
 	private InterfaceListLabelProvider labelProvider;
@@ -83,10 +85,12 @@ public class InterfacesTab extends ObjectTab
 		final String[] names = { 
 	      Messages.get().InterfacesTab_ColId, 
 	      Messages.get().InterfacesTab_ColName, 
+	      "Alias",
 	      Messages.get().InterfacesTab_ColIfType, 
 	      Messages.get().InterfacesTab_ColIfIndex, 
 	      Messages.get().InterfacesTab_ColSlot, 
 	      Messages.get().InterfacesTab_ColPort, 
+	      "MTU",
 	      Messages.get().InterfacesTab_ColDescription, 
 	      Messages.get().InterfacesTab_ColMacAddr,
 	      Messages.get().InterfacesTab_ColIpAddr, 
@@ -101,7 +105,7 @@ public class InterfacesTab extends ObjectTab
 	      Messages.get().InterfacesTab_Col8021xPAE, 
 	      Messages.get().InterfacesTab_Col8021xBackend 
 		};
-		final int[] widths = { 60, 150, 90, 70, 70, 70, 150, 100, 90, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
+		final int[] widths = { 60, 150, 150, 90, 70, 70, 70, 70, 150, 100, 90, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		labelProvider = new InterfaceListLabelProvider();
 		viewer.setLabelProvider(labelProvider);
@@ -109,12 +113,12 @@ public class InterfacesTab extends ObjectTab
 		viewer.setComparator(new InterfaceListComparator());
 		viewer.getTable().setHeaderVisible(true);
 		viewer.getTable().setLinesVisible(true);
-		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "InterfaceTable"); //$NON-NLS-1$
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "InterfaceTable.V2"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InterfaceTable"); //$NON-NLS-1$
+				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InterfaceTable.V2"); //$NON-NLS-1$
 			}
 		});
 		createActions();

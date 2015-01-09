@@ -41,29 +41,29 @@ public class ReportDefinition {
     }
 
     public void fillMessage(NXCPMessage message) {
-        message.setVariable(NXCPCodes.VID_NAME, name);
+        message.setField(NXCPCodes.VID_NAME, name);
         final int size = parameters.size();
-        message.setVariableInt32(NXCPCodes.VID_NUM_ITEMS, size);
-        message.setVariableInt32(NXCPCodes.VID_NUM_COLUMNS, numberOfColumns);
+        message.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, size);
+        message.setFieldInt32(NXCPCodes.VID_NUM_COLUMNS, numberOfColumns);
         final Set<Map.Entry<String, ReportParameter>> entries = parameters.entrySet();
         long index = NXCPCodes.VID_ROW_DATA_BASE;
         for (Map.Entry<String, ReportParameter> entry : entries) {
             final ReportParameter parameter = entry.getValue();
 
             // 0
-            message.setVariableInt32(index++, parameter.getIndex());
+            message.setFieldInt32(index++, parameter.getIndex());
             // 1
-            message.setVariable(index++, parameter.getName());
+            message.setField(index++, parameter.getName());
             // 2
-            message.setVariable(index++, parameter.getDescription());
+            message.setField(index++, parameter.getDescription());
             // 3
-            message.setVariable(index++, parameter.getType());
+            message.setField(index++, parameter.getType());
             // 4
-            message.setVariable(index++, parameter.getDefaultValue());
+            message.setField(index++, parameter.getDefaultValue());
             // 5
-            message.setVariable(index++, parameter.getDependsOn());
+            message.setField(index++, parameter.getDependsOn());
             // 6
-            message.setVariableInt32(index++, parameter.getSpan());
+            message.setFieldInt32(index++, parameter.getSpan());
             // 7-9
             index += 3;
         }

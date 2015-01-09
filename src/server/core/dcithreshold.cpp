@@ -763,7 +763,7 @@ void Threshold::createNXMPRecord(String &str, int index)
 
    EventNameFromCode(m_eventCode, activationEvent);
    EventNameFromCode(m_rearmEventCode, deactivationEvent);
-   str.addFormattedString(_T("\t\t\t\t\t\t<threshold id=\"%d\">\n")
+   str.appendFormattedString(_T("\t\t\t\t\t\t<threshold id=\"%d\">\n")
                           _T("\t\t\t\t\t\t\t<function>%d</function>\n")
                           _T("\t\t\t\t\t\t\t<condition>%d</condition>\n")
                           _T("\t\t\t\t\t\t\t<value>%s</value>\n")

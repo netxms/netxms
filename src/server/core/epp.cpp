@@ -229,7 +229,7 @@ EPRule::~EPRule()
  */
 void EPRule::createNXMPRecord(String &str)
 {
-   str.addFormattedString(_T("\t\t<rule id=\"%d\">\n")
+   str.appendFormattedString(_T("\t\t<rule id=\"%d\">\n")
                           _T("\t\t\t<flags>%d</flags>\n")
                           _T("\t\t\t<alarmMessage>%s</alarmMessage>\n")
                           _T("\t\t\t<alarmKey>%s</alarmKey>\n")
@@ -257,7 +257,7 @@ void EPRule::createNXMPRecord(String &str)
          uuid_t guid;
          object->getGuid(guid);
          TCHAR guidText[128];
-         str.addFormattedString(_T("\t\t\t\t<source id=\"%d\">\n")
+         str.appendFormattedString(_T("\t\t\t\t<source id=\"%d\">\n")
                                 _T("\t\t\t\t\t<name>%s</name>\n")
                                 _T("\t\t\t\t\t<guid>%s</guid>\n")
                                 _T("\t\t\t\t\t<class>%d</class>\n")
@@ -274,7 +274,7 @@ void EPRule::createNXMPRecord(String &str)
    {
       TCHAR eventName[MAX_EVENT_NAME];
       EventNameFromCode(m_pdwEventList[i], eventName);
-      str.addFormattedString(_T("\t\t\t\t<event id=\"%d\">\n")
+      str.appendFormattedString(_T("\t\t\t\t<event id=\"%d\">\n")
                              _T("\t\t\t\t\t<name>%s</name>\n")
                              _T("\t\t\t\t</event>\n"),
                              m_pdwEventList[i], (const TCHAR *)EscapeStringForXML2(eventName));
@@ -284,7 +284,7 @@ void EPRule::createNXMPRecord(String &str)
 
    for(UINT32 i = 0; i < m_dwNumActions; i++)
    {
-      str.addFormattedString(_T("\t\t\t\t<action id=\"%d\">\n")
+      str.appendFormattedString(_T("\t\t\t\t<action id=\"%d\">\n")
                              _T("\t\t\t\t</action>\n"),
                              m_pdwActionList[i]);
    }

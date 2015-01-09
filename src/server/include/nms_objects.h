@@ -137,10 +137,10 @@ enum StatusPollType
  */
 struct TEMPLATE_UPDATE_INFO
 {
-   int iUpdateType;
+   int updateType;
    Template *pTemplate;
    UINT32 targetId;
-   BOOL bRemoveDCI;
+   bool removeDCI;
 };
 
 /**
@@ -419,6 +419,7 @@ public:
 	void getGuid(uuid_t out) { memcpy(out, m_guid, UUID_LENGTH); }
 	const TCHAR *getComments() { return CHECK_NULL_EX(m_pszComments); }
    PostalAddress *getPostalAddress() { return m_postalAddress; }
+   void setPostalAddress(PostalAddress * addr) { delete m_postalAddress; m_postalAddress = addr; markAsModified();}
 
    bool isModified() { return m_isModified; }
    bool isDeleted() { return m_isDeleted; }
@@ -591,7 +592,7 @@ public:
    bool deleteDCObject(UINT32 dcObjectId, bool needLock);
    bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus);
    int getItemType(UINT32 dwItemId);
-   DCObject *getDCObjectById(UINT32 itemId);
+   DCObject *getDCObjectById(UINT32 itemId, bool lock = true);
    DCObject *getDCObjectByTemplateId(UINT32 tmplItemId);
    DCObject *getDCObjectByIndex(int index);
    DCObject *getDCObjectByName(const TCHAR *name);
@@ -610,7 +611,7 @@ public:
 	bool isAutoRemoveEnabled() { return ((m_flags & (TF_AUTO_APPLY | TF_AUTO_REMOVE)) == (TF_AUTO_APPLY | TF_AUTO_REMOVE)) ? true : false; }
 	void setAutoApplyFilter(const TCHAR *filter);
    void queueUpdate();
-   void queueRemoveFromTarget(UINT32 targetId, BOOL bRemoveDCI);
+   void queueRemoveFromTarget(UINT32 targetId, bool removeDCI);
 
    void createNXMPRecord(String &str);
 
@@ -628,10 +629,12 @@ class NXCORE_EXPORTABLE Interface : public NetObj
 protected:
 	UINT32 m_flags;
 	TCHAR m_description[MAX_DB_STRING];	// Interface description - value of ifDescr for SNMP, equals to name for NetXMS agent
-   UINT32 m_dwIfIndex;
-   UINT32 m_dwIfType;
-   UINT32 m_dwIpNetMask;
-   BYTE m_bMacAddr[MAC_ADDR_LENGTH];
+	TCHAR m_alias[MAX_DB_STRING];	// Interface alias - value of ifAlias for SNMP, empty for NetXMS agent
+   UINT32 m_index;
+   UINT32 m_type;
+   UINT32 m_mtu;
+   UINT32 m_ipNetMask;
+   BYTE m_macAddr[MAC_ADDR_LENGTH];
 	UINT32 m_bridgePortNumber;		// 802.1D port number
 	UINT32 m_slotNumber;				// Vendor/device specific slot number
 	UINT32 m_portNumber;				// Vendor/device specific port number
@@ -670,9 +673,10 @@ public:
    UINT32 getParentNodeId();
 
    UINT32 getZoneId() { return m_zoneId; }
-   UINT32 getIpNetMask() { return m_dwIpNetMask; }
-   UINT32 getIfIndex() { return m_dwIfIndex; }
-   UINT32 getIfType() { return m_dwIfType; }
+   UINT32 getIpNetMask() { return m_ipNetMask; }
+   UINT32 getIfIndex() { return m_index; }
+   UINT32 getIfType() { return m_type; }
+   UINT32 getMTU() { return m_mtu; }
 	UINT32 getBridgePortNumber() { return m_bridgePortNumber; }
 	UINT32 getSlotNumber() { return m_slotNumber; }
 	UINT32 getPortNumber() { return m_portNumber; }
@@ -685,17 +689,18 @@ public:
 	int getDot1xPaeAuthState() { return (int)m_dot1xPaeAuthState; }
 	int getDot1xBackendAuthState() { return (int)m_dot1xBackendAuthState; }
 	const TCHAR *getDescription() { return m_description; }
-   const BYTE *getMacAddr() { return m_bMacAddr; }
+	const TCHAR *getAlias() { return m_alias; }
+   const BYTE *getMacAddr() { return m_macAddr; }
    UINT32 getPingTime();
 	bool isSyntheticMask() { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
 	bool isPhysicalPort() { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
 	bool isLoopback() { return (m_flags & IF_LOOPBACK) ? true : false; }
 	bool isManuallyCreated() { return (m_flags & IF_CREATED_MANUALLY) ? true : false; }
 	bool isExcludedFromTopology() { return (m_flags & (IF_EXCLUDE_FROM_TOPOLOGY | IF_LOOPBACK)) ? true : false; }
-   bool isFake() { return (m_dwIfIndex == 1) &&
-                          (m_dwIfType == IFTYPE_OTHER) &&
+   bool isFake() { return (m_index == 1) &&
+                          (m_type == IFTYPE_OTHER) &&
                           (!_tcscmp(m_name, _T("lan0")) || !_tcscmp(m_name, _T("unknown"))) &&
-                          (!memcmp(m_bMacAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
+                          (!memcmp(m_macAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
 
    UINT64 getLastDownEventId() { return m_lastDownEventId; }
    void setLastDownEventId(QWORD id) { m_lastDownEventId = id; }
@@ -711,6 +716,7 @@ public:
 	void setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol, bool reflection);
    void clearPeer() { lockProperties(); m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; setModified(); unlockProperties(); }
    void setDescription(const TCHAR *descr) { lockProperties(); nx_strncpy(m_description, descr, MAX_DB_STRING); setModified(); unlockProperties(); }
+   void setAlias(const TCHAR *alias) { lockProperties(); nx_strncpy(m_alias, alias, MAX_DB_STRING); setModified(); unlockProperties(); }
 
 	void updateZoneId();
 
@@ -837,7 +843,7 @@ public:
 
 	bool applyTemplateItem(UINT32 dwTemplateId, DCObject *dcObject);
    void cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32 dwNumItems, UINT32 *pdwItemList);
-   virtual void unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI);
+   virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 
    virtual bool isEventSource();
 
@@ -958,7 +964,7 @@ public:
    virtual void fillMessage(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   virtual void unbindFromTemplate(UINT32 dwTemplateId, BOOL bRemoveDCI);
+   virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 
 	bool isSyncAddr(UINT32 dwAddr);
 	bool isVirtualAddr(UINT32 dwAddr);
@@ -1110,6 +1116,7 @@ public:
    virtual ~Node();
 
    virtual int getObjectClass() { return OBJECT_NODE; }
+	UINT32 getIcmpProxy() { return m_icmpProxy; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -1154,10 +1161,8 @@ public:
 	time_t getDownTime() const { return m_downSince; }
 
    void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
-   Interface *createNewInterface(UINT32 dwAddr, UINT32 dwNetMask, const TCHAR *name = NULL, const TCHAR *descr = NULL,
-                                 UINT32 dwIndex = 0, UINT32 dwType = 0, BYTE *pbMacAddr = NULL, UINT32 bridgePort = 0,
-											UINT32 slot = 0, UINT32 port = 0, bool physPort = false, bool manuallyCreated = false,
-                                 bool system = false);
+   Interface *createNewInterface(NX_INTERFACE_INFO *ifInfo, bool manuallyCreated);
+   Interface *createNewInterface(UINT32 ipAddr, UINT32 ipNetMask, BYTE *macAddr);
    void deleteInterface(Interface *pInterface);
 
 	void setPrimaryName(const TCHAR *name) { nx_strncpy(m_primaryName, name, MAX_DNS_NAME); }
@@ -1836,6 +1841,8 @@ protected:
 	UINT32 objectIdFromElementId(UINT32 eid);
 	UINT32 elementIdFromObjectId(UINT32 eid);
 
+   void setFilter(const TCHAR *filter);
+
 public:
    NetworkMap();
 	NetworkMap(int type, UINT32 seed);
@@ -1858,7 +1865,6 @@ public:
    int getBackgroundColor() { return m_backgroundColor; }
    void setBackgroundColor(int color) { m_backgroundColor = color; }
 
-	void setFilter(const TCHAR *filter);
    bool isAllowedOnMap(NetObj *object);
 };
 

@@ -109,17 +109,17 @@ InterfaceList *Ping3Driver::getInterfaces(SNMP_Transport *snmp, StringMap *attri
          NX_INTERFACE_INFO iface;
          memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
 
-         _tcscpy(iface.szName, _T("eth0"));
-         iface.dwIndex = 1;
-         iface.dwType = IFTYPE_ETHERNET_CSMACD;
+         _tcscpy(iface.name, _T("eth0"));
+         iface.index = 1;
+         iface.type = IFTYPE_ETHERNET_CSMACD;
          iface.isPhysicalPort = true;
 
-         response->getVariable(0)->getRawValue((BYTE *)&iface.dwIpAddr, sizeof(UINT32));
-         response->getVariable(1)->getRawValue((BYTE *)&iface.dwIpNetMask, sizeof(UINT32));
-         response->getVariable(0)->getRawValue(iface.bMacAddr, MAC_ADDR_LENGTH);
+         response->getVariable(0)->getRawValue((BYTE *)&iface.ipAddr, sizeof(UINT32));
+         response->getVariable(1)->getRawValue((BYTE *)&iface.ipNetMask, sizeof(UINT32));
+         response->getVariable(0)->getRawValue(iface.macAddr, MAC_ADDR_LENGTH);
 
-         iface.dwIpAddr = ntohl(iface.dwIpAddr);
-         iface.dwIpNetMask = ntohl(iface.dwIpNetMask);
+         iface.ipAddr = ntohl(iface.ipAddr);
+         iface.ipNetMask = ntohl(iface.ipNetMask);
 
          ifList->add(&iface);
       }
