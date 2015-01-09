@@ -528,6 +528,12 @@ if test $? = 0; then
 	MODULES="$MODULES sqlite"
 fi
 
+check_substr "$COMPONENTS" "snmp"
+if test $? = 0; then
+	NEED_ZLIB="yes"
+	MODULES="$MODULES snmp"
+fi
+
 check_substr "$COMPONENTS" "static-agent"
 if test $? = 0; then
 	if test "x$COMPONENTS" != "x sqlite snmp static-agent"; then
@@ -632,12 +638,6 @@ if test $? = 0; then
 	STATIC_SUBAGENT_LIST="ecs ipso logwatch ping portcheck ups"
 	SUBAGENT_DIRS="ipso"
 	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/ipso/ipso.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
-fi
-
-check_substr "$COMPONENTS" "snmp"
-if test $? = 0; then
-	NEED_ZLIB="yes"
-	MODULES="$MODULES snmp"
 fi
 
 check_substr "$COMPONENTS" "server"
