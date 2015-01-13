@@ -71,6 +71,7 @@ public:
 
    time_t getStartTime() { return m_startTime; }
 
+   static void globalInit();
    static void schedule(Timer *t);
    static void cancel(Timer *t);
 };

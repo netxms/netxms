@@ -618,6 +618,8 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	InitLocalNetInfo();
 
+   Timer::globalInit();
+
 	// Create queue for delayed SQL queries
 	g_dbWriterQueue = new Queue(256, 64);
 	g_dciDataWriterQueue = new Queue(1024, 1024);

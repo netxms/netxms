@@ -670,7 +670,7 @@ inline void ThreadJoin(THREAD hThread)
       pthread_join(hThread, NULL);
 }
 
-inline MUTEX MutexCreate(void)
+inline MUTEX MutexCreate()
 {
    MUTEX mutex;
 

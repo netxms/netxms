@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,8 +26,18 @@
  * Timer queue
  */
 #ifdef _WIN32
-HANDLE Timer::m_queue = CreateTimerQueue();
+HANDLE Timer::m_queue = NULL;
 #endif
+
+/**
+ * Timer class global init
+ */
+void Timer::globalInit()
+{
+#ifdef _WIN32
+   m_queue = CreateTimerQueue();
+#endif
+}
 
 /**
  * Timer constructor
