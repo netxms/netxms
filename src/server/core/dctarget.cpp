@@ -520,7 +520,11 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
       NetObj *object = objectFromParameter(param);
       if ((object != NULL) && (object->getObjectClass() == OBJECT_INTERFACE))
       {
-         _sntprintf(buffer, bufSize, _T("%d"), ((Interface *)object)->getPingTime());
+         UINT32 value = ((Interface *)object)->getPingTime();
+         if (value == 10000)
+            dwError = DCE_COMM_ERROR;
+         else
+            _sntprintf(buffer, bufSize, _T("%d"), value);
       }
       else
       {
@@ -545,7 +549,11 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
 
       if (pObject != NULL)
       {
-         _sntprintf(buffer, bufSize, _T("%d"), ((Interface *)pObject)->getPingTime());
+         UINT32 value = ((Interface *)pObject)->getPingTime();
+         if (value == 10000)
+            dwError = DCE_COMM_ERROR;
+         else
+            _sntprintf(buffer, bufSize, _T("%d"), value);
       }
       else
       {
