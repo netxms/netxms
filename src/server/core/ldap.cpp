@@ -225,8 +225,6 @@ void LDAPConnection::prepareStringForInit(char *connectionLine)
 }
 #endif // _WIN32
 
-
-
 /**
  * Init connection with LDAP(init search line, start checking thread, init check interval)
  */
@@ -246,6 +244,7 @@ void LDAPConnection::initLDAP()
    }
    else
    {
+      DbgPrintf(4, _T("LDAPConnection::initLDAP(): servers=\"%s\" port=%d secure=%s"), m_connList, port, m_secure ? _T("yes") : _T("no"));
       m_ldapConn = ldap_sslinit(m_connList, port, m_secure);
    }
 #else
@@ -272,7 +271,7 @@ void LDAPConnection::initLDAP()
 #endif // HAVE_LDAP_INITIALIZE
    {
       TCHAR *error = getErrorString(errorCode);
-      DbgPrintf(4, _T("LDAPConnection::initLDAP(): LDAP session initialization failed. Error code: %s"), error);
+      DbgPrintf(4, _T("LDAPConnection::initLDAP(): LDAP session initialization failed (%s)"), error);
       safe_free(error);
       return;
    }
@@ -294,6 +293,7 @@ void LDAPConnection::getAllSyncParameters()
    ConfigReadStr(_T("LdapSearchFilter"), m_searchFilter, MAX_DB_STRING, _T("(objectClass=*)"));
    if (m_searchFilter[0] == 0)
       _tcscpy(m_searchFilter, _T("(objectClass=*)"));
+   ConfigReadStr(_T("LdapSyncUserPassword"), m_userPassword, MAX_DB_STRING, _T(""));
 #else
    ConfigReadStrUTF8(_T("LdapConnectionString"), m_connList, MAX_DB_STRING, "");
    ConfigReadStrUTF8(_T("LdapSyncUser"), m_userDN, MAX_DB_STRING, "");
@@ -301,8 +301,8 @@ void LDAPConnection::getAllSyncParameters()
    ConfigReadStrUTF8(_T("LdapSearchFilter"), m_searchFilter, MAX_DB_STRING, "(objectClass=*)");
    if (m_searchFilter[0] == 0)
       strcmp(m_searchFilter, "(objectClass=*)");
-#endif
    ConfigReadStrUTF8(_T("LdapSyncUserPassword"), m_userPassword, MAX_DB_STRING, "");
+#endif
    ConfigReadStrUTF8(_T("LdapMappingName"), m_ldapLoginNameAttr, MAX_DB_STRING, "");
    ConfigReadStrUTF8(_T("LdapMappingFullName"), m_ldapFullNameAttr, MAX_DB_STRING, "");
    ConfigReadStrUTF8(_T("LdapMappingDescription"), m_ldapDescriptionAttr, MAX_DB_STRING, "");
@@ -649,14 +649,15 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
 #ifdef UNICODE
 #ifdef _WIN32
    nx_strncpy(m_userDN, name, MAX_DB_STRING);
+   nx_strncpy(m_userPassword, password, MAX_DB_STRING);
 #else
    char *utf8Name = UTF8StringFromWideString(name);
    strcpy(m_userDN, utf8Name);
    safe_free(utf8Name);
-#endif
    char *utf8Password = UTF8StringFromWideString(password);
    strcpy(m_userPassword, utf8Password);
    safe_free(utf8Password);
+#endif
 #else
    strcpy(m_userDN, name);
    strcpy(m_userPassword, password);
@@ -672,15 +673,16 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
  UINT32 LDAPConnection::loginLDAP()
  {
    int ldap_error;
-   struct berval cred;
-   cred.bv_val = m_userPassword;
-   cred.bv_len = (int)strlen(m_userPassword);
 
    if(m_ldapConn != NULL)
    {
 #ifdef _WIN32
-      ldap_error = ldap_sasl_bind_s(m_ldapConn, m_userDN, _T(""), &cred, NULL, NULL, NULL);
+      ldap_error = ldap_simple_bind_s(m_ldapConn, m_userDN, m_userPassword);
 #else
+      struct berval cred;
+      cred.bv_val = m_userPassword;
+      cred.bv_len = (int)strlen(m_userPassword);
+
       ldap_error = ldap_sasl_bind_s(m_ldapConn, m_userDN, LDAP_SASL_SIMPLE, &cred, NULL, NULL, NULL);
 #endif
       if (ldap_error == LDAP_SUCCESS)
@@ -690,8 +692,8 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
       else
       {
          TCHAR *error = getErrorString(ldap_error);
-         DbgPrintf(4, _T("LDAPConnection::loginLDAP(): LDAP could not login. Error code: %s"), error);
-         safe_free(error);
+         DbgPrintf(4, _T("LDAPConnection::loginLDAP(): cannot login to LDAP server (%s)"), error);
+         free(error);
       }
    }
    else
@@ -723,7 +725,7 @@ TCHAR *LDAPConnection::getErrorString(int ldap_error)
  */
 void LDAPConnection::closeLDAPConnection()
 {
-   DbgPrintf(4, _T("LDAPConnection::closeLDAPConnection(): Disconnect form ldap."));
+   DbgPrintf(4, _T("LDAPConnection::closeLDAPConnection(): Disconnect form LDAP server"));
    if(m_ldapConn != NULL)
    {
 #ifdef _WIN32

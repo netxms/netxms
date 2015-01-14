@@ -4,6 +4,8 @@
 
 - Fixed server hang issue on some Windows versions
 - Fixed SNMPv3 communication issue with HP A series switches
+- Fixed LDAP sync problems on Windows
+- Fixed issues: #699
 
 
 *
