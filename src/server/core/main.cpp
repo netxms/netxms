@@ -142,7 +142,7 @@ UINT32 g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
 UINT32 g_auditFlags;
 UINT32 g_slmPollingInterval;
 TCHAR g_szDataDir[MAX_PATH] = _T("");
-TCHAR g_szLibDir[MAX_PATH] = DEFAULT_LIBDIR;
+TCHAR g_szLibDir[MAX_PATH] = _T("");
 int g_dbSyntax = DB_SYNTAX_UNKNOWN;
 UINT32 NXCORE_EXPORTABLE g_processAffinityMask = DEFAULT_AFFINITY_MASK;
 QWORD g_qwServerId;
@@ -560,6 +560,45 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	g_serverStartTime = time(NULL);
 	srand((unsigned int)g_serverStartTime);
+
+   if (g_szLibDir[0] == 0)
+   {
+      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+      if (homeDir != NULL)
+      {
+#ifdef _WIN32
+         _sntprintf(g_szLibDir, MAX_PATH, _T("%s\\lib"), homeDir);
+#else
+         _sntprintf(g_szLibDir, MAX_PATH, _T("%s/lib/netxms"), homeDir);
+#endif
+      }
+      else
+      {
+#ifdef _WIN32
+         HKEY hKey;
+         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+         {
+            DWORD size = MAX_PATH * sizeof(TCHAR);
+            if (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, (BYTE *)g_szLibDir, &size) == ERROR_SUCCESS)
+            {
+               _tcscat(g_szLibDir, _T("\\lib"));
+            }
+            else
+            {
+               g_szLibDir[0] = 0;
+            }
+            RegCloseKey(hKey);
+         }
+         if (g_szLibDir[0] == 0)
+         {
+            _tcscpy(g_szLibDir, DEFAULT_LIBDIR);
+         }
+#else
+         _tcscpy(g_szLibDir, DEFAULT_LIBDIR);
+#endif
+      }
+      DbgPrintf(1, _T("Data directory set to %s from server configuration variable"), g_szDataDir);
+   }
 
 	if (!(g_flags & AF_USE_SYSLOG))
 	{
