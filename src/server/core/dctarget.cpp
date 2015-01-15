@@ -27,6 +27,8 @@
  */
 DataCollectionTarget::DataCollectionTarget() : Template()
 {
+   m_pingLastTimeStamp = 0;
+   m_pingTime = PING_TIME_TIMEOUT;
 }
 
 /**
@@ -34,6 +36,8 @@ DataCollectionTarget::DataCollectionTarget() : Template()
  */
 DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : Template(name)
 {
+   m_pingLastTimeStamp = 0;
+   m_pingTime = PING_TIME_TIMEOUT;
 }
 
 /**
@@ -41,6 +45,8 @@ DataCollectionTarget::DataCollectionTarget(const TCHAR *name) : Template(name)
  */
 DataCollectionTarget::~DataCollectionTarget()
 {
+   m_pingLastTimeStamp = 0;
+   m_pingTime = PING_TIME_TIMEOUT;
 }
 
 /**
@@ -533,23 +539,31 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
    }
    else if (!_tcsicmp(_T("PingTime"), param))
    {
-      NetObj *pObject = NULL;
-
-      // Find child object with requested ID or name
-      LockChildList(FALSE);
-      for(int i = 0; i < (int)m_dwChildCount; i++)
+      if (m_dwIpAddr != 0)
       {
-         if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && (m_pChildList[i]->IpAddr() == m_dwIpAddr))
+         Interface *iface = NULL;
+
+         // Find interface for primary IP
+         LockChildList(FALSE);
+         for(int i = 0; i < (int)m_dwChildCount; i++)
          {
-            pObject = m_pChildList[i];
-            break;
+            if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && (m_pChildList[i]->IpAddr() == m_dwIpAddr))
+            {
+               iface = (Interface *)m_pChildList[i];
+               break;
+            }
          }
-      }
-      UnlockChildList();
+         UnlockChildList();
 
-      if (pObject != NULL)
-      {
-         UINT32 value = ((Interface *)pObject)->getPingTime();
+         UINT32 value = 10000;
+         if (iface != NULL)
+         {
+            value = iface->getPingTime();
+         }
+         else
+         {
+            value = getPingTime();
+         }
          if (value == 10000)
             dwError = DCE_COMM_ERROR;
          else
@@ -876,4 +890,26 @@ int DataCollectionTarget::getMostCriticalDCIStatus()
 void DataCollectionTarget::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    NetObj::calculateCompoundStatus(bForcedRecalc);
+}
+
+/**
+ * Returns last ping time
+ */
+UINT32 DataCollectionTarget::getPingTime()
+{
+   if ((time(NULL) - m_pingLastTimeStamp) > g_dwStatusPollingInterval)
+   {
+      updatePingData();
+      DbgPrintf(7, _T("DataCollectionTarget::getPingTime: update ping time is required! Last ping time %d."), m_pingLastTimeStamp);
+   }
+   return m_pingTime;
+}
+
+/**
+ * Update ping data
+ */
+void DataCollectionTarget::updatePingData()
+{
+   m_pingLastTimeStamp = 0;
+   m_pingTime = PING_TIME_TIMEOUT;
 }

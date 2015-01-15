@@ -812,7 +812,11 @@ public:
 class NXCORE_EXPORTABLE DataCollectionTarget : public Template
 {
 protected:
+   UINT32 m_pingTime;
+   time_t m_pingLastTimeStamp;
+
 	virtual bool isDataCollectionDisabled();
+   virtual void updatePingData();
 
    NetObj *objectFromParameter(const TCHAR *param);
 
@@ -848,6 +852,8 @@ public:
    virtual bool isEventSource();
 
    int getMostCriticalDCIStatus();
+
+   UINT32 getPingTime();
 };
 
 /**
@@ -904,6 +910,8 @@ protected:
 	ObjectArray<RadioInterfaceInfo> *m_radioInterfaces;
    AccessPointState m_state;
    AccessPointState m_prevState;
+
+   virtual void updatePingData();
 
 public:
    AccessPoint();
@@ -1109,6 +1117,8 @@ protected:
 
    virtual void prepareForDeletion();
    virtual void onObjectDelete(UINT32 dwObjectId);
+
+   virtual void updatePingData();
 
 public:
    Node();

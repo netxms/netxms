@@ -23,8 +23,6 @@
 #include "nxcore.h"
 #include <ieee8021x.h>
 
-#define PING_TIME_ON_TIMEOUT 10000
-
 /**
  * Default constructor for Interface object
  */
@@ -51,7 +49,8 @@ Interface::Interface() : NetObj()
 	m_pollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneId = 0;
-	m_pingTime = PING_TIME_ON_TIMEOUT;
+	m_pingTime = PING_TIME_TIMEOUT;
+   m_pingLastTimeStamp = 0;
 }
 
 /**
@@ -86,7 +85,7 @@ Interface::Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSynth
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneId = zoneId;
    m_isHidden = true;
-	m_pingTime = PING_TIME_ON_TIMEOUT;
+	m_pingTime = PING_TIME_TIMEOUT;
 	m_pingLastTimeStamp = 0;
 }
 
@@ -124,7 +123,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneId = zoneId;
    m_isHidden = true;
-	m_pingTime = PING_TIME_ON_TIMEOUT;
+	m_pingTime = PING_TIME_TIMEOUT;
 	m_pingLastTimeStamp = 0;
 }
 
@@ -201,7 +200,7 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
 		DBGetField(hResult, 0, 19, m_alias, MAX_DB_STRING);
 		m_mtu = DBGetFieldULong(hResult, 0, 20);
 
-      m_pingTime = PING_TIME_ON_TIMEOUT;
+      m_pingTime = PING_TIME_TIMEOUT;
       m_pingLastTimeStamp = 0;
 
       // Link interface to node
@@ -450,7 +449,6 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 								}
 								else
 								{
-                           m_pingTime = PING_TIME_ON_TIMEOUT;
 									adminState = IF_ADMIN_STATE_UNKNOWN;
 									operState = IF_OPER_STATE_DOWN;
 								}
@@ -484,7 +482,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 				}
 				else
 				{
-               m_pingTime = PING_TIME_ON_TIMEOUT;
+               m_pingTime = PING_TIME_TIMEOUT;
 					adminState = IF_ADMIN_STATE_UNKNOWN;
 					operState = IF_OPER_STATE_DOWN;
 				}
@@ -666,7 +664,7 @@ void Interface::updatePingData()
                }
                else
                {
-                  m_pingTime = PING_TIME_ON_TIMEOUT;
+                  m_pingTime = PING_TIME_TIMEOUT;
                   DbgPrintf(7, _T("Interface::updatePingData: incorrect value: %d or error while parsing: %s"), value, eptr);
                }
             }
@@ -689,7 +687,7 @@ void Interface::updatePingData()
       if (dwPingStatus != ICMP_SUCCESS)
       {
          DbgPrintf(7, _T("Interface::updatePingData: error getting ping %d"), dwPingStatus);
-         m_pingTime = PING_TIME_ON_TIMEOUT;
+         m_pingTime = PING_TIME_TIMEOUT;
       }
       m_pingLastTimeStamp = time(NULL);
    }

@@ -6314,3 +6314,72 @@ ObjectArray<WirelessStationInfo> *Node::getWirelessStations()
    unlockProperties();
    return ws;
 }
+
+/**
+ * Update ping data
+ */
+void Node::updatePingData()
+{
+   UINT32 icmpProxy = m_icmpProxy;
+   if (IsZoningEnabled() && (m_zoneId != 0) && (icmpProxy == 0))
+   {
+      Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+      if (zone != NULL)
+      {
+         icmpProxy = zone->getIcmpProxy();
+      }
+   }
+
+   if (icmpProxy != 0)
+   {
+      DbgPrintf(7, _T("Node::updatePingData: ping via proxy [%u]"), icmpProxy);
+      Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
+      if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
+      {
+         DbgPrintf(7, _T("Node::updatePingData: proxy node found: %s"), proxyNode->getName());
+         AgentConnection *conn = proxyNode->createAgentConnection();
+         if (conn != NULL)
+         {
+            TCHAR parameter[64], buffer[64];
+
+            _sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), IpToStr(m_dwIpAddr, buffer));
+            if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
+            {
+               DbgPrintf(7, _T("Node::updatePingData:  proxy response: \"%s\""), buffer);
+               TCHAR *eptr;
+               long value = _tcstol(buffer, &eptr, 10);
+               m_pingLastTimeStamp = time(NULL);
+               if ((*eptr == 0) && (value >= 0) && (value < 10000))
+               {
+                  m_pingTime = value;
+               }
+               else
+               {
+                  m_pingTime = PING_TIME_TIMEOUT;
+                  DbgPrintf(7, _T("Node::updatePingData: incorrect value: %d or error while parsing: %s"), value, eptr);
+               }
+            }
+            conn->disconnect();
+            delete conn;
+         }
+         else
+         {
+            DbgPrintf(7, _T("Node::updatePingData: cannot connect to agent on proxy node [%u]"), icmpProxy);
+         }
+      }
+      else
+      {
+         DbgPrintf(7, _T("Node::updatePingData: proxy node not available [%u]"), icmpProxy);
+      }
+   }
+   else	// not using ICMP proxy
+   {
+      UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+      if (dwPingStatus != ICMP_SUCCESS)
+      {
+         DbgPrintf(7, _T("Node::updatePingData: error getting ping %d"), dwPingStatus);
+         m_pingTime = PING_TIME_TIMEOUT;
+      }
+      m_pingLastTimeStamp = time(NULL);
+   }
+}
