@@ -894,10 +894,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
                while(it.hasNext())
                {
                   Entry<MessageSubscription, MessageHandler> e = it.next();
-                  if (currTime - e.getValue().getLastMessageTimestamp() > commandTimeout)
+                  MessageHandler h = e.getValue();
+                  if (currTime - h.getLastMessageTimestamp() > h.getMessageWaitTimeout())
                   {
-                     e.getValue().setTimeout();
-                     e.getValue().setComplete();
+                     h.setTimeout();
+                     h.setComplete();
                      it.remove();
                   }
                }
@@ -6456,6 +6457,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
             return true;
          }
       };
+      handler.setMessageWaitTimeout(600000); // 10 min timeout
       addMessageSubscription(NXCPCodes.CMD_POLLING_INFO, msg.getMessageId(), handler);
       
       sendMessage(msg);

@@ -28,6 +28,7 @@ public abstract class MessageHandler
    private boolean complete = false;
    private boolean timeout = false;
    private long lastMessageTimestamp = System.currentTimeMillis();
+   private int messageWaitTimeout = 60000;
    
    /**
     * Set handler to complete state. This will signal all waiters and remove subscription. 
@@ -81,6 +82,22 @@ public abstract class MessageHandler
    protected void setTimeout()
    {
       timeout = true;
+   }
+
+   /**
+    * @return the messageWaitTimeout
+    */
+   public int getMessageWaitTimeout()
+   {
+      return messageWaitTimeout;
+   }
+
+   /**
+    * @param messageWaitTimeout the messageWaitTimeout to set
+    */
+   public void setMessageWaitTimeout(int messageWaitTimeout)
+   {
+      this.messageWaitTimeout = messageWaitTimeout;
    }
 
    /**
