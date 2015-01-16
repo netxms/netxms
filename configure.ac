@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.0-M1], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0-M2], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -1572,6 +1572,11 @@ AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
 AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r])
 
 AC_CHECK_DECLS([nanosleep])
+
+# Do not use inet_pton on Solaris as it has binary compatibility problems
+if test "$PLATFORM" != "SunOS"; then
+	AC_CHECK_FUNCS([inet_pton])
+fi
 
 # Check if strerror_r is POSIX-compliant
 if test "$ac_cv_func_strerror_r" = "yes"; then

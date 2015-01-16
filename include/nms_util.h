@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -1516,6 +1516,11 @@ char LIBNETXMS_EXPORTABLE *strptime(const char *buf, const char *fmt, struct tm 
 
 #if !HAVE_TIMEGM
 time_t LIBNETXMS_EXPORTABLE timegm(struct tm *_tm);
+#endif
+
+#if !HAVE_INET_PTON
+int LIBNETXMS_EXPORTABLE nx_inet_pton(int af, const char *src, void *dst);
+#define inet_pton nx_inet_pton
 #endif
 
 #ifdef __cplusplus
