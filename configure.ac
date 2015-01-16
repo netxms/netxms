@@ -92,6 +92,7 @@ HPUX_HPPA="no"
 XMPP_SUPPORT="yes"
 LDAP_SUPPORT="yes"
 DISABLE_READLINE="no"
+TUXEDO_LIBS=""
 
 
 #--------------------------------------------------------------------
@@ -2482,6 +2483,12 @@ if test $? = 0; then
 		TUXEDO_LDFLAGS="$TUXEDO_LDFLAGS -Xlinker --no-as-needed"
 		LDFLAGS="$LDFLAGS -Xlinker --no-as-needed"
 	fi
+
+	if test "$PLATFORM" = "SunOS"; then
+		AC_CHECK_LIB(rt, nanosleep, [ TUXEDO_LIBS="$TUXEDO_LIBS -lrt" ])
+	fi
+
+	LIBS="$LIBS $TUXEDO_LIBS"
 	AC_CHECK_LIB(tux, tpinit, [], [AC_MSG_ERROR(libtux is required for Tuxedo support)])
 
 	CPPFLAGS="$OLD_CPPFLAGS"
@@ -2582,6 +2589,7 @@ AC_SUBST(SQLFLAGS)
 AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(TUXEDO_CPPFLAGS)
 AC_SUBST(TUXEDO_LDFLAGS)
+AC_SUBST(TUXEDO_LIBS)
 
 #--------------------------------------------------------------------
 # Shared libs versions
