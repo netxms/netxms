@@ -1347,6 +1347,8 @@ NXSL_ServerEnv::NXSL_ServerEnv() : NXSL_Environment()
 	registerFunctionSet(g_nxslNumSituationFunctions, g_nxslSituationFunctions);
 	if (g_flags & AF_ENABLE_NXSL_CONTAINER_FUNCS)
 		registerFunctionSet(sizeof(m_nxslServerFunctionsForContainers) / sizeof(NXSL_ExtFunction), m_nxslServerFunctionsForContainers);
+   // Pass event to modules
+   CALL_ALL_MODULES(pfNXSLServerEnvConfig, (this));
 }
 
 /**
