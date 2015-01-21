@@ -6,7 +6,7 @@
 - Fixed SNMPv3 communication issue with HP A series switches
 - Fixed LDAP sync problems on Windows
 - Russian translation improved
-- Fixed issues: #699, #716, #721, #735, #736, #737
+- Fixed issues: #699, #716, #721, #735, #736, #737, #742
 
 
 *
