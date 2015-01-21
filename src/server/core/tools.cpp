@@ -261,7 +261,18 @@ BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
    // Create socket
    hSocket = socket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == INVALID_SOCKET)
+   {
+      DbgPrintf(5, _T("SendMagicPacket: ERROR creating socket: %s."), _tcserror(errno));
       return FALSE;
+   }
+#ifdef SO_BROADCAST
+	BOOL val = TRUE;
+	if(setsockopt(hSocket, SOL_SOCKET, SO_BROADCAST, (char *)&val, sizeof(BOOL)) == -1)
+	{
+         DbgPrintf(5, _T("SendMagicPacket: ERROR setting socket option SO_BROADCAST: %s."), _tcserror(errno));
+         return FALSE;
+   }
+#endif
 
    memset(&addr, 0, sizeof(struct sockaddr_in));
    addr.sin_family = AF_INET;
@@ -271,7 +282,10 @@ BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
    // Send requested number of packets
    for(i = 0; i < iNumPackets; i++)
       if (sendto(hSocket, (char *)bPacketData, 96, 0, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0)
+      {
+         DbgPrintf(5, _T("SendMagicPacket: ERROR sending message: %s."), _tcserror(errno));
          bResult = FALSE;
+      }
 
    // Cleanup
    closesocket(hSocket);
