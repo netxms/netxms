@@ -248,14 +248,15 @@ BOOL ExecCommand(TCHAR *pszCommand)
  */
 BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
 {
-   BYTE *pCurr, bPacketData[96];
+   BYTE *pCurr, bPacketData[102];
    SOCKET hSocket;
    struct sockaddr_in addr;
    BOOL bResult = TRUE;
    int i;
 
    // Create data area
-   for(i = 0, pCurr = bPacketData; i < 16; i++, pCurr += 6)
+   memset(bPacketData, 0xFF, 6);
+   for(i = 0, pCurr = bPacketData + 6; i < 16; i++, pCurr += 6)
       memcpy(pCurr, pbMacAddr, 6);
 
    // Create socket
@@ -270,11 +271,11 @@ BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets)
    memset(&addr, 0, sizeof(struct sockaddr_in));
    addr.sin_family = AF_INET;
    addr.sin_addr.s_addr = dwIpAddr;
-   addr.sin_port = 53;
+   addr.sin_port = htons(53);
 
    // Send requested number of packets
    for(i = 0; i < iNumPackets; i++)
-      if (sendto(hSocket, (char *)bPacketData, 96, 0, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0)
+      if (sendto(hSocket, (char *)bPacketData, 102, 0, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) < 0)
       {
          DbgPrintf(5, _T("SendMagicPacket: ERROR sending message: %s."), _tcserror(errno));
          bResult = FALSE;
