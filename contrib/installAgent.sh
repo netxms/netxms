@@ -3,7 +3,6 @@
 prefix=/opt/netxms
 config=/etc/nxagentd.conf
 log=/tmp/nxagentupdate.log
-#prefix=/usr/local
 configureAdd=
 
 ###############################################################################
@@ -73,7 +72,7 @@ KILLALL -15 nxagentd >>$log 2>&1
 sleep 15 && KILLALL -9 nxagentd >>$log 2>&1
 
 # do configure
-./configure --prefix=$prefix --with-agent $configureAdd >>$log 2>&1
+./configure --prefix=$prefix --with-agent --with-internal-libtre $configureAdd >>$log 2>&1
 	if [ $? != 0 ]; then
 	echo configure failed, restarting old agent  >>$log
 	# Try to restart existing agent
@@ -81,10 +80,17 @@ sleep 15 && KILLALL -9 nxagentd >>$log 2>&1
 	exit 4
 fi
 
+# move old libs to prevent linker errors
+rm -rf $prefix/lib.bak
+mv $prefix/lib $prefix/lib.bak
+
 # build
 $make >>$log 2>&1
 if [ $? != 0 ]; then
 	echo build failed, restarting old agent >>$log
+	# restore lib dir
+	rm -rf $prefix/lib
+	mv $prefix/lib.bak $prefix/lib
 	# Try to restart existing agent
 	$prefix/bin/nxagentd -d -c $config >>$log 2>&1
 	exit 4
@@ -94,6 +100,9 @@ fi
 $make install >>$log 2>&1
 if [ $? != 0 ]; then
 	echo install failed, restarting old agent >>$log
+	# restore lib dir
+	rm -rf $prefix/lib
+	mv $prefix/lib.bak $prefix/lib
 	# Try to restart existing agent
 	$prefix/bin/nxagentd -d -c $config >>$log 2>&1
 	exit 5
@@ -112,4 +121,7 @@ if [ $ret != 0 ]; then
 	echo nxagentd not started \($ret\) >>$log
 	exit 5
 fi
+
+# remove old and temporary files
+rm -rf $prefix/lib.bak
 rm -f $log.tmp

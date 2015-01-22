@@ -35,6 +35,9 @@ target
 .deps
 .idea
 
+/netxms-*.tar.gz
+/*.apkg
+
 /runtime-nxmc.*
 
 /aclocal.m4
