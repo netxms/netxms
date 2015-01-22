@@ -32,6 +32,7 @@ static struct
 	UINT32 errorCode;
 } s_oidToErrorMap[] =
 {
+	{ _T(".1.3.6.1.6.3.11.2.1.3"), SNMP_ERR_ENGINE_ID },
 	{ _T(".1.3.6.1.6.3.11.2.1.3.0"), SNMP_ERR_ENGINE_ID },
 	{ _T(".1.3.6.1.6.3.15.1.1.1.0"), SNMP_ERR_UNSUPP_SEC_LEVEL },
 	{ _T(".1.3.6.1.6.3.15.1.1.2.0"), SNMP_ERR_TIME_WINDOW },

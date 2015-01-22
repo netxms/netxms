@@ -84,6 +84,7 @@ f none /opt/netxms/lib/netxms/ping.nsm 0755 root other
 f none /opt/netxms/lib/netxms/portcheck.nsm 0755 root other
 f none /opt/netxms/lib/netxms/sms.nsm 0755 root other
 f none /opt/netxms/lib/netxms/sunos.nsm 0755 root other
+f none /opt/netxms/lib/netxms/tuxedo.nsm 0755 root other
 f none /opt/netxms/lib/netxms/ups.nsm 0755 root other
 f none /opt/netxms/share/netxms/images/092e4b35-4e7c-42df-b9b7-d5805bfac64e 0644 root other
 f none /opt/netxms/share/netxms/images/1ddb76a3-a05f-4a42-acda-22021768feaf 0644 root other
@@ -516,6 +517,7 @@ s none /opt/netxms/lib/libnsm_ping.so=/opt/netxms/lib/netxms/ping.nsm
 s none /opt/netxms/lib/libnsm_portcheck.so=/opt/netxms/lib/netxms/portcheck.nsm
 s none /opt/netxms/lib/libnsm_sms.so=/opt/netxms/lib/netxms/sms.nsm
 s none /opt/netxms/lib/libnsm_sunos.so=/opt/netxms/lib/netxms/sunos.nsm
+s none /opt/netxms/lib/libnsm_tuxedo.so=/opt/netxms/lib/netxms/tuxedo.nsm
 s none /opt/netxms/lib/libnsm_ups.so=/opt/netxms/lib/netxms/ups.nsm
 s none /opt/netxms/lib/libnxcore.so.1=libnxcore.so.1.0.0
 s none /opt/netxms/lib/libnxcore.so=libnxcore.so.1.0.0

@@ -9,21 +9,30 @@ major.minor.release
 
 * Product version
 
-major.minor-qualifier
+major.minor-qualifier	for pre-release
 
-type denotes release type:
-	Mn	development milestone (like M3)
-	RCn	release candidate (like RC1)
-	RELEASE	stable release
+qualifier denotes release type:
+	Mn		development milestone (like M3)
+	RCn		release candidate (like RC1)
+	no suffix	stable release
+	Pn		patch release (like P1)
 
-so first 2.x version is 2.0-M1 and first release version is 2.0-RELEASE
+so first 2.x version is 2.0-M1 and first release version is 2.0 and first patch release is 2.0-P1
 
 
-* Java API version
+* Java API and package versions
 
-major.minor-qualifier
+major.minor.release
 
-Same as product versioning
+Intended for all packages managed by package managers (Java API, Debian packages, etc.)
+
+Major and minor match product version. Release is number with different ranges corresponding to
+different product qualifiers.
+
+	1 .. 99		development milestone (1 = M1, 2 = M2, etc.)
+	101 .. 199	release candidate (101 = RC1, etc.)
+	200		release
+	301 ..		patch release (301 = P1, etc.)
 
 
 * Eclipse plugins version

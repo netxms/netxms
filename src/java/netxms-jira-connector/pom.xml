@@ -16,7 +16,7 @@
 
     <properties>
         <jira.version>5.2.11</jira.version>
-        <amps.version>4.2.20</amps.version>
+        <amps.version>5.0.11</amps.version>
     </properties>
 
     <name>netxms-connector</name>

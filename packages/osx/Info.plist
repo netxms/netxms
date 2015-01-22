@@ -5,7 +5,7 @@
 	<key>CFBundleExecutable</key>
 	<string>nxmc</string>
 	<key>CFBundleGetInfoString</key>
-	<string>NetXMS Management Console, Copyright Raden Solutions 2013. All rights reserved.</string>
+	<string>NetXMS Management Console, Copyright Raden Solutions 2015. All rights reserved.</string>
 	<key>CFBundleIconFile</key>
 	<string>nxmc.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -56,9 +56,9 @@
 	<key>Eclipse</key>
 	<array>
 		<string>-startup</string>
-		<string>$APP_PACKAGE/Contents/Resources/Java/plugins/org.eclipse.equinox.launcher_1.2.0.v20110502.jar</string>
+		<string>$APP_PACKAGE/Contents/Resources/Java/plugins/org.eclipse.equinox.launcher_1.3.0.v20120522-1813.jar</string>
 		<string>--launcher.library</string>
-		<string>$APP_PACKAGE/Contents/Resources/Java/plugins/org.eclipse.equinox.launcher.cocoa.macosx.x86_64_1.1.101.v20120109-1504/eclipse_1408.so</string>
+		<string>$APP_PACKAGE/Contents/Resources/Java/plugins/org.eclipse.equinox.launcher.cocoa.macosx.x86_64_1.1.200.v20120913-144807/eclipse_1503.so</string>
 		<string>-keyring</string>
 		<string>~/.eclipse_keyring</string>
 		<string>-showlocation</string>

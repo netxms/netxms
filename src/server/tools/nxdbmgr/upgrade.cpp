@@ -411,7 +411,9 @@ static BOOL H_UpgradeFromV342(int currVersion, int newVersion)
    if (g_dbSyntax != DB_SYNTAX_MSSQL)
    {
       CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE INDEX idx_idata_%d_id_timestamp ON idata_%d(item_id,idata_timestamp DESC)' WHERE var_name='IDataIndexCreationCommand_0'")));
+      CHK_EXEC(DBCommit(g_hCoreDB));   // do reindexing outside current transaction
       ReindexIData();
+      CHK_EXEC(DBBegin(g_hCoreDB));
    }
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='343' WHERE var_name='SchemaVersion'")));
    return TRUE;

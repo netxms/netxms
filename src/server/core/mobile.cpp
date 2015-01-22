@@ -274,8 +274,8 @@ void MobileDevice::updateStatus(NXCPMessage *msg)
 UINT32 MobileDevice::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 {
 	UINT32 rc = DataCollectionTarget::getInternalItem(param, bufSize, buffer);
-	if (rc == DCE_SUCCESS)
-		return DCE_SUCCESS;
+	if (rc != DCE_NOT_SUPPORTED)
+		return rc;
 	rc = DCE_SUCCESS;
 
    if (!_tcsicmp(param, _T("MobileDevice.BatteryLevel")))

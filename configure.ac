@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.0-M1], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0-M2], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -92,6 +92,7 @@ HPUX_HPPA="no"
 XMPP_SUPPORT="yes"
 LDAP_SUPPORT="yes"
 DISABLE_READLINE="no"
+TUXEDO_LIBS=""
 
 
 #--------------------------------------------------------------------
@@ -1573,6 +1574,11 @@ AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r])
 
 AC_CHECK_DECLS([nanosleep])
 
+# Do not use inet_pton on Solaris as it has binary compatibility problems
+if test "$PLATFORM" != "SunOS"; then
+	AC_CHECK_FUNCS([inet_pton])
+fi
+
 # Check if strerror_r is POSIX-compliant
 if test "$ac_cv_func_strerror_r" = "yes"; then
 	AC_MSG_CHECKING(if strerror_r is POSIX compliant)
@@ -2477,6 +2483,12 @@ if test $? = 0; then
 		TUXEDO_LDFLAGS="$TUXEDO_LDFLAGS -Xlinker --no-as-needed"
 		LDFLAGS="$LDFLAGS -Xlinker --no-as-needed"
 	fi
+
+	if test "$PLATFORM" = "SunOS"; then
+		AC_CHECK_LIB(rt, nanosleep, [ TUXEDO_LIBS="$TUXEDO_LIBS -lrt" ])
+	fi
+
+	LIBS="$LIBS $TUXEDO_LIBS"
 	AC_CHECK_LIB(tux, tpinit, [], [AC_MSG_ERROR(libtux is required for Tuxedo support)])
 
 	CPPFLAGS="$OLD_CPPFLAGS"
@@ -2577,6 +2589,7 @@ AC_SUBST(SQLFLAGS)
 AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(TUXEDO_CPPFLAGS)
 AC_SUBST(TUXEDO_LDFLAGS)
+AC_SUBST(TUXEDO_LIBS)
 
 #--------------------------------------------------------------------
 # Shared libs versions

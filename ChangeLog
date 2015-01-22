@@ -1,4 +1,16 @@
 *
+* 2.0-M2
+*
+
+- Fixed server hang issue on some Windows versions
+- Fixed SNMPv3 communication issue with HP A series switches
+- Fixed LDAP sync problems on Windows
+- Russian translation improved
+- New MIB added: SYMBOL-CC-WS2000-MIB
+- Fixed issues: #675, #699, #716, #721, #735, #736, #737, #742, #744
+
+
+*
 * 2.0-M1
 *
 

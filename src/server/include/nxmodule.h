@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -24,7 +24,6 @@
 #define _nxmodule_h_
 
 #include <nxdbapi.h>
-
 /**
  * Forward declaration of server classes
  */
@@ -33,6 +32,7 @@ class MobileDeviceSession;
 class Node;
 class Event;
 class NetObj;
+class NXSL_Environment;
 struct NXCORE_LOG;
 
 /**
@@ -87,6 +87,7 @@ typedef struct
 	UINT32 (* pfValidateObjectCreation)(int objectClass, const TCHAR *name, UINT32 ipAddr, UINT32 zoneId, NXCPMessage *request);
    UINT32 (* pfAdditionalLoginCheck)(UINT32 userId, NXCPMessage *request);
    void (* pfClientSessionClose)(ClientSession *session);
+   void (* pfNXSLServerEnvConfig) (NXSL_Environment *env);
    NXCORE_LOG *logs;
    HMODULE hModule;
 } NXMODULE;

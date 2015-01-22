@@ -119,6 +119,8 @@ typedef __console_ctx * CONSOLE_CTX;
 #define MAX_CLIENT_SESSIONS   128
 #define MAX_DEVICE_SESSIONS   256
 
+#define PING_TIME_TIMEOUT     10000
+
 typedef void * HSNMPSESSION;
 
 /**

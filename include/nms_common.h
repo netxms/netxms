@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -239,7 +239,7 @@ typedef signed __int64 int64_t;
 typedef unsigned __int8 uint8_t;
 typedef unsigned __int16 uint16_t;
 typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t; 
+typedef unsigned __int64 uint64_t;
 
 #define INT64_FMT			_T("%I64d")
 #define INT64_FMTA		"%I64d"
@@ -281,6 +281,10 @@ typedef unsigned __int64 uint64_t;
 #define SetSocketNoDelay(s) { \
 	BOOL val = TRUE; \
 	setsockopt(s,  IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(BOOL)); \
+}
+#define SetSocketBroadcast(s) { \
+	BOOL val = TRUE; \
+	setsockopt(s, SOL_SOCKET, SO_BROADCAST, (char *)&val, sizeof(BOOL)); \
 }
 
 #ifdef UNDER_CE
@@ -423,6 +427,11 @@ typedef int SOCKET;
 #define SetSocketNoDelay(s) { \
 	int val = 1; \
 	setsockopt(s,  IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(int)); \
+}
+
+#define SetSocketBroadcast(s) { \
+	int val = 1; \
+	setsockopt(s, SOL_SOCKET, SO_BROADCAST, (char *)&val, sizeof(int)); \
 }
 
 #define SELECT_NFDS(x)  (x)
@@ -656,6 +665,11 @@ typedef int SOCKET;
 	setsockopt(s,  IPPROTO_TCP, TCP_NODELAY, (const void *)&val, sizeof(int)); \
 }
 
+#define SetSocketBroadcast(s) { \
+	int val = 1; \
+	setsockopt(s, SOL_SOCKET, SO_BROADCAST, (const void *)&val, sizeof(int)); \
+}
+
 #define SELECT_NFDS(x)  (x)
 
 #if !(HAVE_SOCKLEN_T) && !defined(_USE_GNU_PTH)
@@ -763,7 +777,7 @@ typedef struct hostent HOSTENT;
 
 /**
  * Windows-specific structures for non-Windows platforms
- */ 
+ */
 #ifndef _WIN32
 
 typedef struct tagPOINT
@@ -1209,10 +1223,10 @@ typedef struct tagICMPHDR
 /**
  * Memory debug
  */
-#ifdef NETXMS_MEMORY_DEBUG												
+#ifdef NETXMS_MEMORY_DEBUG
 
-#ifdef __cplusplus												
-extern "C" {												  
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 void *nx_malloc(size_t, char *, int);
@@ -1222,13 +1236,13 @@ void nx_free(void *, char *, int);
 void InitMemoryDebugger(void);
 void PrintMemoryBlocks(void);
 
-#ifdef __cplusplus												
+#ifdef __cplusplus
 }
 #endif
 
 #define malloc(x) nx_malloc(x, __FILE__, __LINE__)
 #define realloc(p, x) nx_realloc(p, x, __FILE__,  __LINE__)
-#define free(p) nx_free(p, __FILE__, __LINE__)											  
+#define free(p) nx_free(p, __FILE__, __LINE__)
 
 #endif	/* NETXMS_MEMORY_DEBUG */
 

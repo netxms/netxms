@@ -454,6 +454,8 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 						long value = _tcstol(buffer, &eptr, 10);
 						if ((*eptr == 0) && (value >= 0))
 						{
+                     m_pingLastTimeStamp = time(NULL);
+                     m_pingTime = value;
 							if (value < 10000)
                      {
             				sendPollerMsg(rqId, POLLER_ERROR _T("      responded to ICMP ping\r\n"));
@@ -486,7 +488,8 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 		{
 			sendPollerMsg(rqId, _T("      Starting ICMP ping\r\n"));
 			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,%d,NULL,%d)"), m_id, m_name, htonl(m_dwIpAddr), g_icmpPingTimeout, g_icmpPingSize);
-			UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, NULL, g_icmpPingSize);
+			UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+         m_pingLastTimeStamp = time(NULL);
 			if (dwPingStatus == ICMP_SUCCESS)
          {
 				sendPollerMsg(rqId, POLLER_ERROR _T("      responded to ICMP ping\r\n"));
@@ -497,6 +500,7 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 			{
 				sendPollerMsg(rqId, POLLER_ERROR _T("      no response to ICMP ping\r\n"));
             state = AP_DOWN;
+            m_pingTime = PING_TIME_TIMEOUT;
 			}
 			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): ping result %d, state=%d"), m_id, m_name, dwPingStatus, state);
 		}
@@ -506,4 +510,80 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 
    sendPollerMsg(rqId, _T("      Access point status after poll is %s\r\n"), GetStatusAsText(m_iStatus, true));
 	sendPollerMsg(rqId, _T("   Finished status poll on access point %s\r\n"), m_name);
+}
+
+/**
+ * Updates last ping time and ping time
+ */
+void AccessPoint::updatePingData()
+{
+   Node *pNode = getParentNode();
+   if (pNode == NULL)
+   {
+      DbgPrintf(7, _T("AccessPoint::updatePingData: Can't find parent node"));
+      return;
+   }
+   UINT32 icmpProxy = pNode->getIcmpProxy();
+
+   if (IsZoningEnabled() && (pNode->getZoneId() != 0) && (icmpProxy == 0))
+   {
+      Zone *zone = (Zone *)g_idxZoneByGUID.get(pNode->getZoneId());
+      if (zone != NULL)
+      {
+         icmpProxy = zone->getIcmpProxy();
+      }
+   }
+
+   if (icmpProxy != 0)
+   {
+      DbgPrintf(7, _T("AccessPoint::updatePingData: ping via proxy [%u]"), icmpProxy);
+      Node *proxyNode = (Node *)g_idxNodeById.get(icmpProxy);
+      if ((proxyNode != NULL) && proxyNode->isNativeAgent() && !proxyNode->isDown())
+      {
+         DbgPrintf(7, _T("AccessPoint::updatePingData: proxy node found: %s"), proxyNode->getName());
+         AgentConnection *conn = proxyNode->createAgentConnection();
+         if (conn != NULL)
+         {
+            TCHAR parameter[64], buffer[64];
+
+            _sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), IpToStr(m_dwIpAddr, buffer));
+            if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
+            {
+               DbgPrintf(7, _T("AccessPoint::updatePingData:  proxy response: \"%s\""), buffer);
+               TCHAR *eptr;
+               long value = _tcstol(buffer, &eptr, 10);
+               m_pingLastTimeStamp = time(NULL);
+               if ((*eptr == 0) && (value >= 0) && (value < 10000))
+               {
+                  m_pingTime = value;
+               }
+               else
+               {
+                  m_pingTime = PING_TIME_TIMEOUT;
+                  DbgPrintf(7, _T("AccessPoint::updatePingData: incorrect value: %d or error while parsing: %s"), value, eptr);
+               }
+            }
+            conn->disconnect();
+            delete conn;
+         }
+         else
+         {
+            DbgPrintf(7, _T("AccessPoint::updatePingData: cannot connect to agent on proxy node [%u]"), icmpProxy);
+         }
+      }
+      else
+      {
+         DbgPrintf(7, _T("AccessPoint::updatePingData: proxy node not available [%u]"), icmpProxy);
+      }
+   }
+   else	// not using ICMP proxy
+   {
+      UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+      if (dwPingStatus != ICMP_SUCCESS)
+      {
+         DbgPrintf(7, _T("AccessPoint::updatePingData: error getting ping %d"), dwPingStatus);
+         m_pingTime = PING_TIME_TIMEOUT;
+      }
+      m_pingLastTimeStamp = time(NULL);
+   }
 }

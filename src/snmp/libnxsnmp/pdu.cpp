@@ -762,7 +762,7 @@ bool SNMP_PDU::decryptData(BYTE *data, size_t length, BYTE *decryptedData, SNMP_
 		BYTE iv[16];
 		UINT32 boots, engTime;
 		// Use auth. engine from current PDU if possible
-		if ((m_authoritativeEngine.getIdLen() > 0) && (m_authoritativeEngine.getBoots() > 0))
+		if (m_authoritativeEngine.getIdLen() > 0)
 		{
 			boots = htonl(m_authoritativeEngine.getBoots());
 			engTime = htonl(m_authoritativeEngine.getTime());

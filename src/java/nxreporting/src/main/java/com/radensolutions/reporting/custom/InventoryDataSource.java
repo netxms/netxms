@@ -6,16 +6,14 @@ import net.sf.jasperreports.engine.JRField;
 import net.sf.jasperreports.engine.JRValueParameter;
 import org.netxms.api.client.NetXMSClientException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class InventoryDataSource extends NXCLDataSource {
 
@@ -36,10 +34,36 @@ public class InventoryDataSource extends NXCLDataSource {
             row.id = (int) node.getObjectId();
             row.name = node.getObjectName();
             row.uname = node.getSystemDescription();
+            if (node.hasSnmpAgent()) {
+                row.platform = "SNMP";
+            } else if (node.hasAgent()) {
+                row.platform = node.getPlatformName();
+            } else {
+                row.platform = "Unknown";
+            }
             row.primaryIp = node.getPrimaryIP().getHostName();
-            row.bootTime = (int) (node.getBootTime().getTime() / 1000);
+            row.bootTime = (int) (node.getBootTime() == null ? 0 : node.getBootTime().getTime() / 1000);
             row.lastUpdate = 0;
+            DciValue[] lastValues = session.getLastValues(node.getObjectId());
+            for (DciValue lastValue : lastValues) {
+                if (lastValue.getName().equalsIgnoreCase("System.Update.LastInstallTime")) {
+                    try {
+                        row.lastUpdate = Integer.parseInt(lastValue.getValue());
+                    } catch (Exception e) {
+                        row.lastUpdate = 0;
+                    }
+                    break;
+                }
+            }
+            rows.add(row);
         }
+
+        Collections.sort(rows, new Comparator<Row>() {
+            @Override
+            public int compare(Row o1, Row o2) {
+                return o1.platform.compareTo(o2.platform);
+            }
+        });
     }
 
     @Override
@@ -62,6 +86,8 @@ public class InventoryDataSource extends NXCLDataSource {
             return currentRow.uname;
         } else if ("primary_ip".equalsIgnoreCase(name)) {
             return currentRow.primaryIp;
+        } else if ("platform".equalsIgnoreCase(name)) {
+            return currentRow.platform;
         } else if ("boot_time".equalsIgnoreCase(name)) {
             return currentRow.bootTime;
         } else if ("last_update".equalsIgnoreCase(name)) {
@@ -74,6 +100,7 @@ public class InventoryDataSource extends NXCLDataSource {
         int id;
         String name;
         String uname;
+        String platform;
         String primaryIp;
         int bootTime;
         int lastUpdate;
