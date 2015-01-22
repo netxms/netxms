@@ -781,8 +781,8 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
 
          DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
          DBBind(statment, 2, DB_SQLTYPE_INTEGER, i);
-         DBBind(statment, 3, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(dwId++), DB_BIND_DYNAMIC);
-         DBBind(statment, 4, DB_SQLTYPE_VARCHAR, szBuffer, DB_BIND_TRANSIENT);
+         DBBind(statment, 3, DB_SQLTYPE_VARCHAR, szBuffer, DB_BIND_TRANSIENT);
+         DBBind(statment, 4, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(dwId++), DB_BIND_DYNAMIC);
          DBBind(statment, 5, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt16(dwId));
          DBBind(statment, 6, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt16(dwId + 1));
 
