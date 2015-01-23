@@ -47,7 +47,6 @@ include_HEADERS = \
 	nxsnmp.h \
 	nxstat.h \
 	nxtools.h \
-	nxwinui.h \
 	rwlock.h \
 	strophe.h \
 	unicode.h \

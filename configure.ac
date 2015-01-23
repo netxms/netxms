@@ -484,7 +484,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap client nxscript nxcproxy nxlptest tools"
-	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2 tuxedo"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2 tuxedo"
 	SMSDRV_DIRS="kannel websms"
    HDLINK_DIRS="jira"
    PDSDRV_DIRS="rrdtool"
@@ -579,9 +579,9 @@ if test $? = 0; then
 
 	case "$PLATFORM" in
 		Linux)
-			SUBAGENT_DIRS="linux"
-			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/linux/linux.la"
-			STATIC_SUBAGENT_LIST="linux $STATIC_SUBAGENT_LIST"
+			SUBAGENT_DIRS="linux ds18x20"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/linux/linux.la ../subagents/ds18x20/ds18x20.la"
+			STATIC_SUBAGENT_LIST="linux ds18x20 $STATIC_SUBAGENT_LIST"
 			;;
 		FreeBSD)
 			SUBAGENT_DIRS="freebsd"
@@ -676,7 +676,7 @@ if test $? = 0; then
 
 	case "$PLATFORM" in
 		Linux)
-			SUBAGENT_DIRS="linux"
+			SUBAGENT_DIRS="linux ds18x20"
 			;;
 		FreeBSD)
 			SUBAGENT_DIRS="freebsd"
@@ -2662,6 +2662,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/db2/Makefile
 	src/agent/subagents/dbquery/Makefile
 	src/agent/subagents/devemu/Makefile
+	src/agent/subagents/ds18x20/Makefile
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/filemgr/Makefile
 	src/agent/subagents/freebsd/Makefile

@@ -7,6 +7,7 @@
 - Fixed LDAP sync problems on Windows
 - Russian translation improved
 - New MIB added: SYMBOL-CC-WS2000-MIB
+- Subagent for reading DS18T20 and DS18S20 temperature sensors on Linux
 - Fixed issues: #675, #699, #716, #721, #735, #736, #737, #742, #744
 
 
