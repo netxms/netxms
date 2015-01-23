@@ -116,6 +116,7 @@ void WinPerfCounterSet::collectorThread()
 			}
 			else
 			{
+            AgentWriteDebugLog(4, _T("WINPERF: %s: Counter \"%s\" added to query"), szFName, counter->pszName);
 				dwOKCounters++;
 			}
 		}
