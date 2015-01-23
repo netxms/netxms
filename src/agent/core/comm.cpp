@@ -172,7 +172,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
       InetAddress bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET);
       if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET))
       {
-		   servAddr.sin_addr.s_addr = bindAddress.getAddressV4();
+		   servAddr.sin_addr.s_addr = htonl(bindAddress.getAddressV4());
       }
       else
       {
