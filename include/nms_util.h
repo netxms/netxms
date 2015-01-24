@@ -1212,7 +1212,7 @@ BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool
 #endif
 
 const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommand);
-void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);
+TCHAR LIBNETXMS_EXPORTABLE *Trim(TCHAR *str);
 bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bool matchCase);
 TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
 
