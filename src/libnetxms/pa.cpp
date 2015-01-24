@@ -39,10 +39,10 @@ PostalAddress::PostalAddress()
  */
 PostalAddress::PostalAddress(const TCHAR *country, const TCHAR *city, const TCHAR *streetAddress, const TCHAR *postcode)
 {
-   m_country = _tcsdup_ex(country);
-   m_city = _tcsdup_ex(city);
-   m_streetAddress = _tcsdup_ex(streetAddress);
-   m_postcode = _tcsdup_ex(postcode);
+   m_country = Trim(_tcsdup_ex(country));
+   m_city = Trim(_tcsdup_ex(city));
+   m_streetAddress = Trim(_tcsdup_ex(streetAddress));
+   m_postcode = Trim(_tcsdup_ex(postcode));
 }
 
 /**
