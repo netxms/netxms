@@ -1494,6 +1494,15 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, _T("ERROR: Server was compiled without memory debugger\n\n"));
 #endif
 		}
+		else if (IsCommand(_T("MODULES"), szBuffer, 3))
+		{
+         ConsolePrintf(pCtx, _T("Loaded server modules:\n"));
+         for(UINT32 i = 0; i < g_dwNumModules; i++)
+         {
+            ConsolePrintf(pCtx, _T("   %s\n"), g_pModuleList[i].szName);
+         }
+         ConsolePrintf(pCtx, _T("%d modules loaded\n"), g_dwNumModules);
+		}
 		else if (IsCommand(_T("OBJECTS"), szBuffer, 1))
 		{
 			DumpObjects(pCtx);
