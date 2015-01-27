@@ -217,6 +217,7 @@ static BOOL RotateLog(BOOL needLock)
       m_flags |= NXLOG_IS_OPEN;
       TCHAR buffer[32];
       _ftprintf(m_logFileHandle, _T("%s Log file truncated.\n"), FormatLogTimestamp(buffer));
+      fflush(m_logFileHandle);
    }
 
 	if (needLock)
@@ -260,8 +261,7 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
          s_logBuffer.clear();
          MutexUnlock(m_mutexLogAccess);
 
-         fwrite(data, 1, strlen(data), m_logFileHandle);
-		   fflush(m_logFileHandle);
+			write(fileno(m_logFileHandle), data, strlen(data));
          free(data);
 
 	      // Check log size
@@ -329,6 +329,7 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
       {
 			m_flags |= NXLOG_IS_OPEN;
          _ftprintf(m_logFileHandle, _T("\n%s Log file opened\n"), FormatLogTimestamp(buffer));
+         fflush(m_logFileHandle);
          if (m_flags & NXLOG_BACKGROUND_WRITER)
          {
             s_logBuffer.setAllocationStep(8192);
