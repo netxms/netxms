@@ -1566,7 +1566,16 @@ int main(int argc, char *argv[])
                if (realpath(argv[0], __buffer) == NULL)
                {
                   // fallback
-                  nx_strncpy(s_executableName, PREFIX _T("/bin/nxagentd"), sizeof(s_executableName) / sizeof(s_executableName[0]));
+                  TCHAR *path = _tgetenv(_T("NETXMS_HOME"));
+                  if (path != NULL)
+                  {
+                     nx_strncpy(s_executableName, path, sizeof(s_executableName) / sizeof(s_executableName[0]));
+                  }
+                  else
+                  {
+                     nx_strncpy(s_executableName, PREFIX, sizeof(s_executableName) / sizeof(s_executableName[0]));
+                  }
+                  _tcsncat(s_executableName, _T("/bin/nxagentd"), sizeof(s_executableName) / sizeof(s_executableName[0]));
                }
                else
                {
