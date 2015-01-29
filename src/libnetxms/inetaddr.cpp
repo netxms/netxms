@@ -163,6 +163,33 @@ int InetAddress::compareTo(const InetAddress &a) const
 }
 
 /**
+ * Fill sockaddr structure
+ */
+struct sockaddr *InetAddress::fillSockAddr(SockAddrBuffer *buffer, UINT16 port)
+{
+   if (!isValid())
+      return NULL;
+
+   memset(buffer, 0, sizeof(SockAddrBuffer));
+   ((struct sockaddr *)buffer)->sa_family = m_family;
+   if (m_family == AF_INET)
+   {
+      buffer->sa4.sin_addr.s_addr = htonl(m_addr.v4);
+      buffer->sa4.sin_port = htons(port);
+   }
+   else
+   {
+#ifdef WITH_IPV6
+      memcpy(buffer->sa6.sin6_addr.s6_addr, m_addr.v6, 16);
+      buffer->sa6.sin6_port = htons(port);
+#else
+      return NULL;
+#endif
+   }
+   return (struct sockaddr *)buffer;
+}
+
+/**
  * Get host name by IP address
  *
  * @param buffer buffer to place host name to
@@ -276,7 +303,7 @@ InetAddress InetAddress::parse(const char *str)
 #endif
 
    // Check for IPv6 address
-#ifdef _WIN32
+#if defined(_WIN32)
    struct sockaddr_in6 addr6;
    addr6.sin6_family = AF_INET6;
    addrLen = sizeof(addr6);
@@ -284,7 +311,7 @@ InetAddress InetAddress::parse(const char *str)
    {
       return InetAddress(addr6.sin6_addr.u.Byte);
    }
-#else
+#elif defined(WITH_IPV6)
    struct in6_addr addr6;
    if (inet_pton(AF_INET6, str, &addr6))
    {
@@ -301,7 +328,9 @@ InetAddress InetAddress::createFromSockaddr(struct sockaddr *s)
 {
    if (s->sa_family == AF_INET)
       return InetAddress(ntohl(((struct sockaddr_in *)s)->sin_addr.s_addr));
+#ifdef WITH_IPV6
    if (s->sa_family == AF_INET6)
       return InetAddress(((struct sockaddr_in6 *)s)->sin6_addr.s6_addr);
+#endif
    return InetAddress();
 }

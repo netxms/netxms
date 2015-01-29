@@ -299,7 +299,7 @@ protected:
 	virtual void onSnmpTrap(NXCPMessage *pMsg);
 
 public:
-   AgentConnectionEx(UINT32 nodeId, UINT32 ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
+   AgentConnectionEx(UINT32 nodeId, InetAddress ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
             AgentConnection(ipAddr, port, authMethod, secret) { m_nodeId = nodeId; }
    virtual ~AgentConnectionEx();
 

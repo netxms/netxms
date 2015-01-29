@@ -1965,7 +1965,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
 	bool hasChanges = false;
 
 	sendPollerMsg(dwRqId, _T("   Checking NetXMS agent...\r\n"));
-   AgentConnection *pAgentConn = new AgentConnectionEx(m_id, htonl(m_dwIpAddr), m_agentPort, m_agentAuthMethod, m_szSharedSecret);
+   AgentConnection *pAgentConn = new AgentConnectionEx(m_id, m_dwIpAddr, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(pAgentConn);
    DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_name);
 
@@ -3132,7 +3132,7 @@ BOOL Node::connectToAgent(UINT32 *error, UINT32 *socketError)
    // Create new agent connection object if needed
    if (m_pAgentConnection == NULL)
 	{
-      m_pAgentConnection = new AgentConnectionEx(m_id, htonl(m_dwIpAddr), m_agentPort, m_agentAuthMethod, m_szSharedSecret);
+      m_pAgentConnection = new AgentConnectionEx(m_id, m_dwIpAddr, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
 		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_name, m_id);
 	}
 	else
@@ -4374,7 +4374,7 @@ AgentConnectionEx *Node::createAgentConnection()
       return NULL;
 
    DbgPrintf(6, _T("Node::createAgentConnection(%s [%d])"), m_name, (int)m_id);
-   conn = new AgentConnectionEx(m_id, htonl(m_dwIpAddr), m_agentPort, m_agentAuthMethod, m_szSharedSecret);
+   conn = new AgentConnectionEx(m_id, m_dwIpAddr, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(conn);
    if (!conn->connect(g_pServerKey))
    {
@@ -4772,8 +4772,7 @@ void Node::setAgentProxy(AgentConnection *pConn)
 		Node *node = (Node *)g_idxNodeById.get(proxyNode);
       if (node != NULL)
       {
-         pConn->setProxy(htonl(node->m_dwIpAddr), node->m_agentPort,
-                         node->m_agentAuthMethod, node->m_szSharedSecret);
+         pConn->setProxy(node->m_dwIpAddr, node->m_agentPort, node->m_agentAuthMethod, node->m_szSharedSecret);
       }
    }
 }

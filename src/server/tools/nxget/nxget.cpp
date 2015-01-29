@@ -1,6 +1,6 @@
 /* 
 ** nxget - command line tool used to retrieve parameters from NetXMS agent
-** Copyright (C) 2004-2012 Victor Kirhenshtein
+** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
    Operation operation = CMD_GET;
    WORD agentPort = AGENT_LISTEN_PORT, proxyPort = AGENT_LISTEN_PORT;
    WORD wServicePort = 0, wServiceProto = 0;
-   UINT32 dwTimeout = 5000, dwConnTimeout = 30000, dwServiceAddr = 0, dwError, dwAddr, dwProxyAddr;
+   UINT32 dwTimeout = 5000, dwConnTimeout = 30000, dwServiceAddr = 0, dwError;
    TCHAR szSecret[MAX_SECRET_LENGTH] = _T(""), szRequest[MAX_DB_STRING] = _T("");
    TCHAR keyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS, szResponse[MAX_DB_STRING] = _T("");
    char szProxy[MAX_OBJECT_NAME] = "";
@@ -618,26 +618,25 @@ int main(int argc, char *argv[])
          WSADATA wsaData;
          WSAStartup(2, &wsaData);
 #endif
-         dwAddr = ResolveHostNameA(argv[optind]);
-         if (useProxy)
-            dwProxyAddr = ResolveHostNameA(szProxy);
-         if ((dwAddr == INADDR_ANY) || (dwAddr == INADDR_NONE))
+         InetAddress addr = InetAddress::resolveHostName(argv[optind]);
+         InetAddress proxyAddr = useProxy ? InetAddress::resolveHostName(szProxy) : InetAddress();
+         if (!addr.isValid())
          {
             fprintf(stderr, "Invalid host name or address \"%s\"\n", argv[optind]);
          }
-         else if (useProxy && ((dwProxyAddr == INADDR_ANY) || (dwProxyAddr == INADDR_NONE)))
+         else if (useProxy && !proxyAddr.isValid())
          {
             fprintf(stderr, "Invalid host name or address \"%s\"\n", szProxy);
          }
          else
          {
-            AgentConnection conn(dwAddr, agentPort, authMethod, szSecret);
+            AgentConnection conn(addr, agentPort, authMethod, szSecret);
 
 				conn.setConnectionTimeout(dwConnTimeout);
             conn.setCommandTimeout(dwTimeout);
             conn.setEncryptionPolicy(iEncryptionPolicy);
             if (useProxy)
-               conn.setProxy(dwProxyAddr, proxyPort, proxyAuth, szProxySecret);
+               conn.setProxy(proxyAddr, proxyPort, proxyAuth, szProxySecret);
             if (conn.connect(pServerKey, s_verbose, &dwError))
             {
                do

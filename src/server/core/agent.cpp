@@ -46,11 +46,11 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
    TCHAR *pszArgList[32], szBuffer[32];
    char szFormat[] = "ssssssssssssssssssssssssssssssss";
 
-	DbgPrintf(3, _T("AgentConnectionEx::onTrap(): Received trap message from agent at %s, node ID %d"), IpToStr(getIpAddr(), szBuffer), m_nodeId);
+   DbgPrintf(3, _T("AgentConnectionEx::onTrap(): Received trap message from agent at %s, node ID %d"), getIpAddr().toString(szBuffer), m_nodeId);
 	if (m_nodeId != 0)
 		pNode = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
 	if (pNode == NULL)
-		pNode = FindNodeByIP(0, getIpAddr());
+      pNode = FindNodeByIP(0, getIpAddr().getAddressV4());
    if (pNode != NULL)
    {
       if (pNode->Status() != STATUS_UNMANAGED)
@@ -111,7 +111,7 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
    }
    else
    {
-      DbgPrintf(3, _T("AgentConnectionEx::onTrap(): Cannot find node for IP address %s"), IpToStr(getIpAddr(), szBuffer));
+      DbgPrintf(3, _T("AgentConnectionEx::onTrap(): Cannot find node for IP address %s"), getIpAddr().toString(szBuffer));
    }
 }
 
@@ -129,7 +129,7 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 	if (m_nodeId != 0)
 		sender = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
    if (sender == NULL)
-	   sender = FindNodeByIP(0, getIpAddr());
+      sender = FindNodeByIP(0, getIpAddr().getAddressV4());
 
 	if (sender != NULL)
 	{
@@ -266,7 +266,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
    static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
 	SNMP_Engine localEngine(engineId, 12);
 
-	DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): Received SNMP trap message from agent at %s, node ID %d"), IpToStr(getIpAddr(), ipStringBuffer), m_nodeId);
+   DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): Received SNMP trap message from agent at %s, node ID %d"), getIpAddr().toString(ipStringBuffer), m_nodeId);
 	if (m_nodeId != 0)
 		proxyNode = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
    if (proxyNode != NULL)
@@ -373,7 +373,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
    }
    else
    {
-      DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): Cannot find node for IP address %s"), IpToStr(getIpAddr(), ipStringBuffer));
+      DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): Cannot find node for IP address %s"), getIpAddr().toString(ipStringBuffer));
    }
 }
 

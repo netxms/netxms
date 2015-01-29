@@ -68,9 +68,9 @@ THREAD_RESULT THREAD_CALL AgentConnection::receiverThreadStarter(void *pArg)
 /**
  * Constructor for AgentConnection
  */
-AgentConnection::AgentConnection(UINT32 ipAddr, WORD port, int authMethod, const TCHAR *secret)
+AgentConnection::AgentConnection(InetAddress addr, WORD port, int authMethod, const TCHAR *secret)
 {
-   m_dwAddr = ipAddr;
+   m_addr = addr;
    m_wPort = port;
    m_iAuthMethod = authMethod;
    if (secret != NULL)
@@ -174,7 +174,7 @@ void AgentConnection::receiverThread()
    NXCP_BUFFER *pMsgBuffer;
    BYTE *pDecryptionBuffer = NULL;
    int error;
-   TCHAR szBuffer[128], szIpAddr[16];
+   TCHAR szBuffer[128];
 	SOCKET nSocket;
 
    // Initialize raw message receiving function
@@ -251,7 +251,7 @@ void AgentConnection::receiverThread()
          pRawMsg->code = ntohs(pRawMsg->code);
          pRawMsg->numFields = ntohl(pRawMsg->numFields);
          DbgPrintf(6, _T("Received raw message %s from agent at %s"),
-			          NXCPMessageCodeName(pRawMsg->code, szBuffer), IpToStr(getIpAddr(), szIpAddr));
+            NXCPMessageCodeName(pRawMsg->code, szBuffer), (const TCHAR *)m_addr.toString());
 
 			if ((pRawMsg->code == CMD_FILE_DATA) && (pRawMsg->id == m_dwDownloadRequestId))
 			{
@@ -393,7 +393,6 @@ void AgentConnection::receiverThread()
  */
 BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, UINT32 *pdwSocketError)
 {
-   struct sockaddr_in sa;
    TCHAR szBuffer[256];
    BOOL bSuccess = FALSE, bForceEncryption = FALSE, bSecondPass = FALSE;
    UINT32 dwError = 0;
@@ -417,7 +416,7 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, 
       closesocket(m_hSocket);
 
    // Create socket
-   m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
+   m_hSocket = socket(m_bUseProxy ? m_proxyAddr.getFamily() : m_addr.getFamily(), SOCK_STREAM, 0);
    if (m_hSocket == INVALID_SOCKET)
    {
       printMsg(_T("Call to socket() failed"));
@@ -425,25 +424,16 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, 
    }
 
    // Fill in address structure
-   memset(&sa, 0, sizeof(sa));
-   sa.sin_family = AF_INET;
-   if (m_bUseProxy)
-   {
-      sa.sin_addr.s_addr = m_dwProxyAddr;
-      sa.sin_port = htons(m_wProxyPort);
-   }
-   else
-   {
-      sa.sin_addr.s_addr = m_dwAddr;
-      sa.sin_port = htons(m_wPort);
-   }
+   SockAddrBuffer sb;
+   struct sockaddr *sa = m_bUseProxy ? m_proxyAddr.fillSockAddr(&sb, m_wProxyPort) : m_addr.fillSockAddr(&sb, m_wPort);
 
    // Connect to server
-	if (ConnectEx(m_hSocket, (struct sockaddr *)&sa, sizeof(sa), m_connectionTimeout) == -1)
+	if ((sa == NULL) || (ConnectEx(m_hSocket, sa, SA_LEN(sa), m_connectionTimeout) == -1))
    {
       if (bVerbose)
-         printMsg(_T("Cannot establish connection with agent %s"),
-                  IpToStr(ntohl(m_bUseProxy ? m_dwProxyAddr : m_dwAddr), szBuffer));
+         printMsg(_T("Cannot establish connection with agent at %s:%d"),
+            m_bUseProxy ? m_proxyAddr.toString(szBuffer) : m_addr.toString(szBuffer),
+            (int)(m_bUseProxy ? m_wProxyPort : m_wPort));
       dwError = ERR_CONNECT_FAILED;
       goto connect_cleanup;
    }
@@ -489,7 +479,7 @@ setup_encryption:
          bForceEncryption = TRUE;
          goto setup_encryption;
       }
-      printMsg(_T("Authentication to agent %s failed (%s)"), IpToStr(ntohl(m_dwAddr), szBuffer),
+      printMsg(_T("Authentication to agent %s failed (%s)"), m_addr.toString(szBuffer),
                AgentErrorCodeToText(dwError));
       goto connect_cleanup;
    }
@@ -503,8 +493,7 @@ setup_encryption:
          bForceEncryption = TRUE;
          goto setup_encryption;
       }
-      printMsg(_T("Communication with agent %s failed (%s)"), IpToStr(ntohl(m_dwAddr), szBuffer),
-               AgentErrorCodeToText(dwError));
+      printMsg(_T("Communication with agent %s failed (%s)"), m_addr.toString(szBuffer), AgentErrorCodeToText(dwError));
       goto connect_cleanup;
    }
 
@@ -1601,9 +1590,9 @@ ROUTING_TABLE *AgentConnection::getRoutingTable()
 /**
  * Set proxy information
  */
-void AgentConnection::setProxy(UINT32 dwAddr, WORD wPort, int iAuthMethod, const TCHAR *pszSecret)
+void AgentConnection::setProxy(InetAddress addr, WORD wPort, int iAuthMethod, const TCHAR *pszSecret)
 {
-   m_dwProxyAddr = dwAddr;
+   m_proxyAddr = addr;
    m_wProxyPort = wPort;
    m_iProxyAuth = iAuthMethod;
    if (pszSecret != NULL)
@@ -1633,7 +1622,7 @@ UINT32 AgentConnection::setupProxyConnection()
    dwRqId = m_dwRequestId++;
    msg.setCode(CMD_SETUP_PROXY_CONNECTION);
    msg.setId(dwRqId);
-   msg.setField(VID_IP_ADDRESS, (UINT32)ntohl(m_dwAddr));
+   msg.setField(VID_IP_ADDRESS, m_addr.getAddressV4());  // FIXME: V6 support in proxy
    msg.setField(VID_AGENT_PORT, m_wPort);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, 60000);   // Wait 60 seconds for remote connect

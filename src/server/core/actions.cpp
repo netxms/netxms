@@ -173,28 +173,27 @@ static int CompareElements(const void *p1, const void *p2)
  */
 static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 {
-   Node *pNode;
    AgentConnection *pConn;
-   UINT32 dwAddr, dwError;
+   UINT32 dwError;
    int i, nLen, nState, nCount = 0;
    TCHAR *pCmd[128], *pTmp;
 
    // Resolve hostname
-   dwAddr = ResolveHostName(pszTarget);
-   if ((dwAddr == INADDR_ANY) || (dwAddr == INADDR_NONE))
+   InetAddress addr = InetAddress::resolveHostName(pszTarget);
+   if (!addr.isValid())
       return FALSE;
 
-   pNode = FindNodeByIP(0, ntohl(dwAddr));	/* TODO: add possibility to specify action target by object id */
-   if (pNode != NULL)
+   Node *node = FindNodeByIP(0, addr.getAddressV4());	/* TODO: add possibility to specify action target by object id */
+   if (node != NULL)
    {
-      pConn = pNode->createAgentConnection();
+      pConn = node->createAgentConnection();
       if (pConn == NULL)
          return FALSE;
    }
    else
    {
       // Target node is not in our database, try default communication settings
-      pConn = new AgentConnection(dwAddr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
+      pConn = new AgentConnection(addr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
       if (!pConn->connect(g_pServerKey))
       {
          delete pConn;

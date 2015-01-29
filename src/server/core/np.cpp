@@ -339,7 +339,7 @@ static bool HostIsReachable(UINT32 ipAddr, UINT32 zoneId, bool fullCheck, SNMP_T
 		return true;
 
 	// *** NetXMS agent ***
-   AgentConnection *pAgentConn = new AgentConnectionEx(0, htonl(ipAddr), AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
+   AgentConnection *pAgentConn = new AgentConnectionEx(0, ipAddr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
 	if (agentProxy != 0)
 	{
 		Node *proxyNode = (Node *)g_idxNodeById.get(agentProxy);

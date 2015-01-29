@@ -433,7 +433,7 @@ public:
 class LIBNXSRV_EXPORTABLE AgentConnection
 {
 private:
-   UINT32 m_dwAddr;
+   InetAddress m_addr;
    int m_nProtocolVersion;
    int m_iAuthMethod;
    char m_szSecret[MAX_SECRET_LENGTH];
@@ -453,7 +453,7 @@ private:
    NXCPEncryptionContext *m_pCtx;
    int m_iEncryptionPolicy;
    BOOL m_bUseProxy;
-   UINT32 m_dwProxyAddr;
+   InetAddress m_proxyAddr;
    WORD m_wPort;
    WORD m_wProxyPort;
    int m_iProxyAuth;
@@ -478,7 +478,7 @@ protected:
    UINT32 setupEncryption(RSA *pServerKey);
    UINT32 authenticate(BOOL bProxyData);
    UINT32 setupProxyConnection();
-   UINT32 getIpAddr() { return ntohl(m_dwAddr); }
+   const InetAddress& getIpAddr() { return m_addr; }
 	UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(NXCP_MESSAGE*, void *), void *cbArg);
 
    virtual void printMsg(const TCHAR *format, ...);
@@ -496,7 +496,7 @@ protected:
 public:
    BOOL sendMessage(NXCPMessage *pMsg);
    NXCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut) { return m_pMsgWaitQueue->waitForMessage(wCode, dwId, dwTimeOut); }
-   AgentConnection(UINT32 ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
+   AgentConnection(InetAddress addr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
    virtual ~AgentConnection();
 
    BOOL connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL);
@@ -539,7 +539,7 @@ public:
 	UINT32 getCommandTimeout() { return m_dwCommandTimeout; }
    void setRecvTimeout(UINT32 dwTimeout) { m_dwRecvTimeout = max(dwTimeout, 10000); }
    void setEncryptionPolicy(int iPolicy) { m_iEncryptionPolicy = iPolicy; }
-   void setProxy(UINT32 dwAddr, WORD wPort = AGENT_LISTEN_PORT,
+   void setProxy(InetAddress addr, WORD wPort = AGENT_LISTEN_PORT,
                  int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
    void setPort(WORD wPort) { m_wPort = wPort; }
    void setAuthData(int method, const TCHAR *secret);

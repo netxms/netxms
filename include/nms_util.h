@@ -798,6 +798,26 @@ public:
 };
 
 /**
+ * sockaddr buffer
+ */
+union SockAddrBuffer
+{
+   struct sockaddr_in sa4;
+#ifdef WITH_IPV6
+   struct sockaddr_in6 sa6;
+#endif
+};
+
+/**
+ * sockaddr length calculation
+ */
+#ifdef WITH_IPV6
+#define SA_LEN(sa) (((sa)->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
+#else
+#define SA_LEN(sa) sizeof(struct sockaddr_in)
+#endif
+
+/**
  * IP address
  */
 class LIBNETXMS_EXPORTABLE InetAddress
@@ -837,6 +857,8 @@ public:
    TCHAR *toString(TCHAR *buffer) const;
 
    TCHAR *getHostByAddr(TCHAR *buffer, size_t buflen);
+
+   struct sockaddr *fillSockAddr(SockAddrBuffer *buffer, UINT16 port = 0);
 
    static InetAddress resolveHostName(const WCHAR *hostname, int af = AF_INET);
    static InetAddress resolveHostName(const char *hostname, int af = AF_INET);
