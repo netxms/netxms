@@ -2,7 +2,7 @@
 * 2.0-M3
 *
 
-- New NXSL functions: md5, sha1
+- New NXSL functions: gethostbyaddr, gethostbyname, md5, sha1
 
 
 *

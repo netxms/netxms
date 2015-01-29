@@ -836,8 +836,12 @@ public:
    String toString() const;
    TCHAR *toString(TCHAR *buffer) const;
 
+   TCHAR *getHostByAddr(TCHAR *buffer, size_t buflen);
+
    static InetAddress resolveHostName(const WCHAR *hostname, int af = AF_INET);
    static InetAddress resolveHostName(const char *hostname, int af = AF_INET);
+   static InetAddress parse(const WCHAR *str);
+   static InetAddress parse(const char *str);
    static InetAddress createFromSockaddr(struct sockaddr *s);
 };
 

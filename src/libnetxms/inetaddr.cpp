@@ -163,6 +163,42 @@ int InetAddress::compareTo(const InetAddress &a) const
 }
 
 /**
+ * Get host name by IP address
+ *
+ * @param buffer buffer to place host name to
+ * @param buflen buffer length in characters
+ * @return buffer on success, NULL on failure
+ */
+TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen)
+{
+   if (!isValid())
+      return NULL;
+
+   struct hostent *hs = NULL;
+   if (m_family == AF_INET)
+   {
+      UINT32 addr = htonl(m_addr.v4);
+		hs = gethostbyaddr((const char *)&addr, 4, AF_INET);
+   }
+   else
+   {
+		hs = gethostbyaddr((const char *)m_addr.v6, 16, AF_INET6);
+   }
+
+   if (hs == NULL)
+      return NULL;
+
+#ifdef UNICODE
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hs->h_name, -1, buffer, (int)buflen);
+	buffer[buflen - 1] = 0;
+#else
+   nx_strncpy(buffer, hs->h_name, buflen);
+#endif
+
+   return buffer;
+}
+
+/**
  * Resolve hostname
  */
 InetAddress InetAddress::resolveHostName(const WCHAR *hostname, int af)
@@ -177,42 +213,9 @@ InetAddress InetAddress::resolveHostName(const WCHAR *hostname, int af)
  */
 InetAddress InetAddress::resolveHostName(const char *hostname, int af)
 {
-   // Check for IPv4 address
-#ifdef _WIN32
-   char hostnameCopy[256];
-   strncpy(hostnameCopy, hostname, 255);
-
-   struct sockaddr_in addr4;
-   addr4.sin_family = AF_INET;
-   INT addrLen = sizeof(addr4);
-   if (WSAStringToAddressA(hostnameCopy, AF_INET, NULL, (struct sockaddr *)&addr4, &addrLen) == 0)
-   {
-      return InetAddress(ntohl(addr4.sin_addr.s_addr));
-   }
-#else
-   struct in_addr addr4;
-   if (inet_aton(hostname, &addr4))
-   {
-      return InetAddress(ntohl(addr4.s_addr));
-   }
-#endif
-
-   // Check for IPv6 address
-#ifdef _WIN32
-   struct sockaddr_in6 addr6;
-   addr6.sin6_family = AF_INET6;
-   addrLen = sizeof(addr6);
-   if (WSAStringToAddressA(hostnameCopy, AF_INET6, NULL, (struct sockaddr *)&addr6, &addrLen) == 0)
-   {
-      return InetAddress(addr6.sin6_addr.u.Byte);
-   }
-#else
-   struct in6_addr addr6;
-   if (inet_pton(AF_INET6, hostname, &addr6))
-   {
-      return InetAddress(addr6.s6_addr);
-   }
-#endif
+   InetAddress addr = parse(hostname);
+   if (addr.isValid())
+      return addr;
 
    // Not a valid IP address, resolve hostname
 #if HAVE_GETHOSTBYNAME2_R
@@ -234,6 +237,60 @@ InetAddress InetAddress::resolveHostName(const char *hostname, int af)
          return InetAddress((BYTE *)hs->h_addr);
       }
    }
+   return InetAddress();
+}
+
+/**
+ * Parse string as IP address
+ */
+InetAddress InetAddress::parse(const WCHAR *str)
+{
+   char mb[256];
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, str, -1, mb, 256, NULL, NULL);
+   return parse(mb);
+}
+
+/**
+ * Parse string as IP address
+ */
+InetAddress InetAddress::parse(const char *str)
+{
+   // Check for IPv4 address
+#ifdef _WIN32
+   char strCopy[256];
+   strncpy(strCopy, str, 255);
+
+   struct sockaddr_in addr4;
+   addr4.sin_family = AF_INET;
+   INT addrLen = sizeof(addr4);
+   if (WSAStringToAddressA(strCopy, AF_INET, NULL, (struct sockaddr *)&addr4, &addrLen) == 0)
+   {
+      return InetAddress(ntohl(addr4.sin_addr.s_addr));
+   }
+#else
+   struct in_addr addr4;
+   if (inet_aton(str, &addr4))
+   {
+      return InetAddress(ntohl(addr4.s_addr));
+   }
+#endif
+
+   // Check for IPv6 address
+#ifdef _WIN32
+   struct sockaddr_in6 addr6;
+   addr6.sin6_family = AF_INET6;
+   addrLen = sizeof(addr6);
+   if (WSAStringToAddressA(strCopy, AF_INET6, NULL, (struct sockaddr *)&addr6, &addrLen) == 0)
+   {
+      return InetAddress(addr6.sin6_addr.u.Byte);
+   }
+#else
+   struct in6_addr addr6;
+   if (inet_pton(AF_INET6, str, &addr6))
+   {
+      return InetAddress(addr6.s6_addr);
+   }
+#endif
    return InetAddress();
 }
 

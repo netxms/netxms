@@ -33,6 +33,8 @@ int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_exp(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_gethostbyaddr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_gethostbyname(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_floor(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_format(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -83,6 +85,8 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { _T("classof"), F_classof, 1 },
 	{ _T("d2x"), F_d2x, -1 },
    { _T("exp"), F_exp, 1 },
+   { _T("gethostbyaddr"), F_gethostbyaddr, 1 },
+   { _T("gethostbyname"), F_gethostbyname, -1 },
    { _T("floor"), F_floor, 1 },
    { _T("format"), F_format, -1 },
    { _T("gmtime"), F_gmtime, -1 },

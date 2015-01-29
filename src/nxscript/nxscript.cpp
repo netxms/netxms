@@ -96,6 +96,11 @@ int main(int argc, char *argv[])
       return 127;
    }
 
+#ifdef _WIN32
+   WSADATA wsaData;
+   WSAStartup(2, &wsaData);
+#endif
+
 #ifdef UNICODE
 	WCHAR *ucName = WideStringFromMBString(argv[optind]);
    pszSource = NXSLLoadFile(ucName, &dwSize);

@@ -1195,3 +1195,64 @@ int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 
 	return 0;
 }
+
+/**
+ * Resolve IP address to host name
+ */
+int F_gethostbyaddr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	if (!argv[0]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+   InetAddress addr = InetAddress::parse(argv[0]->getValueAsCString());
+   if (addr.isValid())
+   {
+      TCHAR buffer[256];
+      if (addr.getHostByAddr(buffer, 256) != NULL)
+      {
+         *ppResult = new NXSL_Value(buffer);
+      }
+      else
+      {
+         *ppResult = new NXSL_Value;
+      }
+   }
+   else
+   {
+      *ppResult = new NXSL_Value;
+   }
+
+   return 0;
+}
+
+/**
+ * Resolve hostname to IP address
+ */
+int F_gethostbyname(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+	if (!argv[0]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+   int af = AF_INET;
+   if (argc > 1)
+   {
+      if (!argv[1]->isInteger())
+   		return NXSL_ERR_NOT_INTEGER;
+      
+      af = (argv[1]->getValueAsInt32() == 6) ? AF_INET6 : AF_INET;
+   }
+
+   InetAddress addr = InetAddress::resolveHostName(argv[0]->getValueAsCString(), af);
+   if (addr.isValid())
+   {
+      *ppResult = new NXSL_Value((const TCHAR *)addr.toString());
+   }
+   else
+   {
+      *ppResult = new NXSL_Value;
+   }
+   return 0;
+}
