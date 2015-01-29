@@ -9,8 +9,8 @@
 	<classpathentry kind="lib" path="libs/acra-4.4.0.jar"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
-	<classpathentry kind="lib" path="libs/netxms-base-2.0-M1.jar"/>
-	<classpathentry kind="lib" path="libs/netxms-client-2.0-M1.jar"/>
-	<classpathentry kind="lib" path="libs/netxms-client-api-2.0-M1.jar"/>
+	<classpathentry kind="lib" path="libs/netxms-base-2.0-M2.jar"/>
+	<classpathentry kind="lib" path="libs/netxms-client-2.0-M2.jar"/>
+	<classpathentry kind="lib" path="libs/netxms-client-api-2.0-M2.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

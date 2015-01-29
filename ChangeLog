@@ -1,4 +1,11 @@
 *
+* 2.0-M3
+*
+
+- New NXSL functions: md5, sha1
+
+
+*
 * 2.0-M2
 *
 

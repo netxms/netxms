@@ -261,7 +261,13 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
          s_logBuffer.clear();
          MutexUnlock(m_mutexLogAccess);
 
+#ifdef _WIN32
+			fwrite(data, 1, strlen(data), m_logFileHandle);
+#else
+         // write is used here because on linux fwrite is not working
+         // after calling fwprintf on a stream
 			write(fileno(m_logFileHandle), data, strlen(data));
+#endif
          free(data);
 
 	      // Check log size

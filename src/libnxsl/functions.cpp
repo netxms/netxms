@@ -1147,3 +1147,51 @@ int F_inList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
    *ppResult = new NXSL_Value(result ? 1 : 0);
 	return 0;
 }
+
+/**
+ * md5() function implementation
+ */
+int F_md5(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	if (!argv[0]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+   BYTE hash[MD5_DIGEST_SIZE];
+#ifdef UNICODE
+   char *utf8Str = UTF8StringFromWideString(argv[0]->getValueAsCString());
+   CalculateMD5Hash((BYTE *)utf8Str, strlen(utf8Str), hash);
+#else
+   const char *str = argv[0]->getValueAsCString();
+   CalculateMD5Hash((BYTE *)str, strlen(str), hash);
+#endif
+
+   TCHAR text[MD5_DIGEST_SIZE * 2 + 1];
+   BinToStr(hash, MD5_DIGEST_SIZE, text);
+   *ppResult = new NXSL_Value(text);
+
+	return 0;
+}
+
+/**
+ * sha1() function implementation
+ */
+int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	if (!argv[0]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+   BYTE hash[SHA1_DIGEST_SIZE];
+#ifdef UNICODE
+   char *utf8Str = UTF8StringFromWideString(argv[0]->getValueAsCString());
+   CalculateSHA1Hash((BYTE *)utf8Str, strlen(utf8Str), hash);
+#else
+   const char *str = argv[0]->getValueAsCString();
+   CalculateSHA1Hash((BYTE *)str, strlen(str), hash);
+#endif
+
+   TCHAR text[SHA1_DIGEST_SIZE * 2 + 1];
+   BinToStr(hash, SHA1_DIGEST_SIZE, text);
+   *ppResult = new NXSL_Value(text);
+
+	return 0;
+}
