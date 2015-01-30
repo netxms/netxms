@@ -415,6 +415,8 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, 
    if (m_hSocket != -1)
       closesocket(m_hSocket);
 
+   struct sockaddr *sa;
+
    // Create socket
    m_hSocket = socket(m_bUseProxy ? m_proxyAddr.getFamily() : m_addr.getFamily(), SOCK_STREAM, 0);
    if (m_hSocket == INVALID_SOCKET)
@@ -425,7 +427,7 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, 
 
    // Fill in address structure
    SockAddrBuffer sb;
-   struct sockaddr *sa = m_bUseProxy ? m_proxyAddr.fillSockAddr(&sb, m_wProxyPort) : m_addr.fillSockAddr(&sb, m_wPort);
+   sa = m_bUseProxy ? m_proxyAddr.fillSockAddr(&sb, m_wProxyPort) : m_addr.fillSockAddr(&sb, m_wPort);
 
    // Connect to server
 	if ((sa == NULL) || (ConnectEx(m_hSocket, sa, SA_LEN(sa), m_connectionTimeout) == -1))
