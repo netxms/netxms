@@ -6745,7 +6745,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     *
     * @param nodeId node object ID
     * @param remoteFileName fully qualified file name on remote system
-    * @param maxFileSize maximum download size
+    * @param maxFileSize maximum download size, 0 == UNLIMITED
     * @param follow if set to true, server will send file updates as they appear (like for tail -f command) 
     * @return agent file handle which contains server assigned ID and handle for local file
     * @throws IOException  if socket or file I/O error occurs
@@ -6757,7 +6757,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setField(NXCPCodes.VID_FILE_NAME, remoteFileName);
-      msg.setFieldInt32(NXCPCodes.VID_FILE_SIZE_LIMIT , (int)maxFileSize);
+      msg.setFieldInt32(NXCPCodes.VID_FILE_SIZE_LIMIT, (int)maxFileSize);
       msg.setFieldInt16(NXCPCodes.VID_FILE_FOLLOW, follow ? 1 : 0);
       sendMessage(msg);
 
