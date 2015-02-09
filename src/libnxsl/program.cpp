@@ -391,3 +391,24 @@ void NXSL_Program::removeInstructions(UINT32 start, int count)
 		}
 	}
 }
+
+/**
+ * Serialize compiled script
+ */
+BYTE *NXSL_Program::serialize(size_t *size)
+{
+   ByteStream s(8192);
+
+   NXSL_FileHeader header;
+   memset(&header, 0, sizeof(header));
+   memcpy(header.magic, "NXSL", 4);
+   header.version = NXSL_BIN_FORMAT_VERSION;
+   s.write(&header, sizeof(header));
+
+   // Serialize instructions
+   for(int i = 0; i < m_instructionSet->size(); i++)
+   {
+   }
+
+   return s.buffer(size);
+}

@@ -432,23 +432,23 @@ class LIBNXSL_EXPORTABLE NXSL_Instruction
    friend class NXSL_VM;
 
 protected:
-   int m_nOpCode;
+   short m_nOpCode;
+   short m_nStackItems;
    union
    {
       NXSL_Value *m_pConstant;
       TCHAR *m_pszString;
       UINT32 m_dwAddr;
    } m_operand;
-   int m_nStackItems;
    int m_nSourceLine;
 
 public:
-   NXSL_Instruction(int nLine, int nOpCode);
-   NXSL_Instruction(int nLine, int nOpCode, NXSL_Value *pValue);
-   NXSL_Instruction(int nLine, int nOpCode, char *pszString);
-   NXSL_Instruction(int nLine, int nOpCode, char *pszString, int nStackItems);
-   NXSL_Instruction(int nLine, int nOpCode, UINT32 dwAddr);
-   NXSL_Instruction(int nLine, int nOpCode, int nStackItems);
+   NXSL_Instruction(int nLine, short nOpCode);
+   NXSL_Instruction(int nLine, short nOpCode, NXSL_Value *pValue);
+   NXSL_Instruction(int nLine, short nOpCode, char *pszString);
+   NXSL_Instruction(int nLine, short nOpCode, char *pszString, short nStackItems);
+   NXSL_Instruction(int nLine, short nOpCode, UINT32 dwAddr);
+   NXSL_Instruction(int nLine, short nOpCode, short nStackItems);
    NXSL_Instruction(NXSL_Instruction *pSrc);
    ~NXSL_Instruction();
 };
@@ -497,6 +497,7 @@ public:
    UINT32 getCodeSize() { return m_instructionSet->size(); }
 
    void dump(FILE *pFile);
+   BYTE *serialize(size_t *size);
 };
 
 /**

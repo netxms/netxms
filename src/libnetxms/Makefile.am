@@ -1,7 +1,8 @@
-SOURCES = agent.cpp array.cpp base64.cpp config.cpp crypto.cpp dirw_unix.c \
-	  gen_uuid.c geolocation.cpp getopt.c dload.cpp hash.cpp ice.c \
-	  icmp.cpp iconv.cpp inet_pton.c inetaddr.cpp log.cpp main.cpp \
-	  md5.cpp message.cpp msgrecv.cpp msgwq.cpp net.cpp nxcp.cpp pa.cpp \
+SOURCES = agent.cpp array.cpp base64.cpp bytestream.cpp config.cpp \
+	  crypto.cpp dirw_unix.c gen_uuid.c geolocation.cpp getopt.c \
+	  dload.cpp hash.cpp ice.c icmp.cpp iconv.cpp inet_pton.c \
+	  inetaddr.cpp log.cpp main.cpp md5.cpp message.cpp \
+	  msgrecv.cpp msgwq.cpp net.cpp nxcp.cpp pa.cpp \
 	  parisc_atomic.cpp qsort.c queue.cpp rwlock.cpp scandir.c \
 	  serial.cpp sha1.cpp solaris9_atomic.c string.cpp stringlist.cpp \
 	  strmap.cpp strmapbase.cpp strptime.c strset.cpp strtoll.c \

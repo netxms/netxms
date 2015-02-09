@@ -80,6 +80,37 @@
  */
 #define NXSL_STOP_SCRIPT_EXECUTION        -1
 
+#ifdef __HP_aCC
+#pragma pack 1
+#else
+#pragma pack(1)
+#endif
+
+/**
+ * Serialized script header
+ */
+struct NXSL_FileHeader
+{
+   char magic[4];
+   BYTE version;
+   BYTE padding1[3];
+   UINT32 moduleSectionOffset;
+   UINT32 functionSectionOffset;
+   UINT32 constSectionOffset;
+   UINT32 padding2[3];
+};
+
+#ifdef __HP_aCC
+#pragma pack
+#else
+#pragma pack()
+#endif
+
+/**
+ * Binary format version
+ */
+#define NXSL_BIN_FORMAT_VERSION     1
+
 /**
  * Exportable classes
  */

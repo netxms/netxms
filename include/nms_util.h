@@ -591,6 +591,48 @@ public:
 };
 
 /**
+ * Byte stream
+ */
+class LIBNETXMS_EXPORTABLE ByteStream
+{
+private:
+   BYTE *m_data;
+   size_t m_size;
+   size_t m_allocated;
+   size_t m_pos;
+
+public:
+   ByteStream(size_t initial = 8192);
+   ByteStream(const void *data, size_t size);
+   virtual ~ByteStream();
+
+   void seek(size_t pos) { if (pos < m_size) m_pos = pos; }
+   size_t pos() { return m_pos; }
+   size_t size() { return m_size; }
+   bool eos() { return m_pos == m_size; }
+
+   BYTE *buffer(size_t *size) { *size = m_size; return m_data; }
+
+   void write(void *data, size_t size);
+   void write(char c) { write(&c, 1); }
+   void write(BYTE b) { write(&b, 1); }
+   void write(INT16 n) { UINT16 x = htons((UINT16)n); write(&x, 2); }
+   void write(UINT16 n) { UINT16 x = htons(n); write(&x, 2); }
+   void write(INT32 n) { UINT32 x = htonl((UINT32)n); write(&x, 4); }
+   void write(UINT32 n) { UINT32 x = htonl(n); write(&x, 4); }
+   void write(char *s) { write(s, strlen(s)); }
+
+   size_t read(BYTE *buffer, size_t count);
+   char readChar() { return !eos() ? (char)m_data[m_pos++] : 0; }
+   BYTE readByte() { return !eos() ? m_data[m_pos++] : 0; }
+   INT16 readInt16();
+   UINT16 readUInt16();
+   INT32 readInt32();
+   UINT32 readUInt32();
+   size_t readString(char *buffer, size_t count);
+};
+
+/**
  * Auxilliary class for objects which counts references and
  * destroys itself wheren reference count falls to 0
  */

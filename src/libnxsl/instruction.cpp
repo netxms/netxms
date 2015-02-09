@@ -26,7 +26,7 @@
 /**
  * Create instruction without operand
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode)
+NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
@@ -36,7 +36,7 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode)
 /**
  * Create instruction with constant operand
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, NXSL_Value *pValue)
+NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, NXSL_Value *pValue)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
@@ -48,7 +48,7 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, NXSL_Value *pValue)
  * Create instruction with string operand.
  * String must be dynamically allocated.
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString)
+NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, char *pszString)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
@@ -65,7 +65,7 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString)
  * Create instruction with string operand and non-zero stack item count.
  * String must be dynamically allocated.
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString, int nStackItems)
+NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, char *pszString, short nStackItems)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
@@ -81,7 +81,7 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString, int 
 /**
  * Create instruction with address operand
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, UINT32 dwAddr)
+NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, UINT32 dwAddr)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
@@ -91,7 +91,7 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, UINT32 dwAddr)
 /**
  * Create instruction without operand and non-zero stack item count
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, int nStackItems)
+NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, short nStackItems)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;

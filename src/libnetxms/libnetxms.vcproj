@@ -354,6 +354,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\bytestream.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\config.cpp"
 				>
 			</File>

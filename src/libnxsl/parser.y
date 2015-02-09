@@ -277,7 +277,7 @@ TryCatchBlock:
 Statement:
 	Expression ';'
 {
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, (int)1));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, (short)1));
 }
 |	BuiltinStatement
 |	';'
@@ -538,7 +538,7 @@ Operand:
 TypeCast:
 	BuiltinType '(' Expression ')'
 {
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CAST, (int)$1));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CAST, (short)$1));
 }
 ;
 
@@ -708,7 +708,7 @@ ElseStatement:
 ForStatement:
 	T_FOR '(' Expression ';'
 {
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, (int)1));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, (short)1));
 	pCompiler->pushAddr(pScript->getCodeSize());
 }
 	Expression ';'
@@ -719,7 +719,7 @@ ForStatement:
 }
 	Expression ')'
 {
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, (int)1));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, (short)1));
 	UINT32 addrPart3 = pCompiler->popAddr();
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, pCompiler->popAddr()));
 	pCompiler->pushAddr(addrPart3);
@@ -753,7 +753,7 @@ ForEachStatement:
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, pCompiler->popAddr()));
 	pScript->resolveLastJump(OPCODE_JZ);
 	pCompiler->closeBreakLevel(pScript);
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, 1));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, (short)1));
 }
 ;
 
@@ -797,7 +797,7 @@ SwitchStatement:
 	'(' Expression ')' '{' CaseList Default '}'
 {
 	pCompiler->closeBreakLevel(pScript);
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, (int)1));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_POP, (short)1));
 }
 ;
 
