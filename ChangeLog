@@ -3,6 +3,8 @@
 *
 
 - New NXSL functions: gethostbyaddr, gethostbyname, md5, sha1
+- Management console:
+	- Fixed broken popup menu actions on "Interfaces" tab
 
 
 *
