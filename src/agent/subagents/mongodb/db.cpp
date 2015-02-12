@@ -119,7 +119,9 @@ DatabaseInstance::DatabaseInstance(DatabaseInfo *info)
 	m_serverStatusLock = MutexCreate();
    m_stopCondition = ConditionCreate(TRUE);
    m_databaseListLock = MutexCreate();
+   m_dataLock = MutexCreate();
    m_databaseList = NULL;
+   m_data = new StringObjectMap<StringObjectMap<MongoDBCommand> >(true);
 }
 
 /**
@@ -186,7 +188,7 @@ void DatabaseInstance::pollerThread()
       getServerStatus();
       getDatabases();
    }
-   while(!ConditionWait(m_stopCondition, 60000));   // reconnect every 60 seconds
+   while(!ConditionWait(m_stopCondition, 60000));
    AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: poller thread for database %s stopped"), m_info.id);
 }
 
@@ -257,22 +259,46 @@ bool DatabaseInstance::getServerStatus()
 }
 
 /**
- * Returns value of parameter
+ * Returns value of status parameter
  */
 LONG DatabaseInstance::getStatusParam(const char *paramName, TCHAR *value)
 {
-   if(m_serverStatus == NULL)
+   MutexLock(m_serverStatusLock);
+   LONG result = getParam(m_serverStatus, paramName, value);
+   MutexUnlock(m_serverStatusLock);
+   return result;
+}
+
+/**
+ * Returns value of any parameter
+ */
+LONG DatabaseInstance::getParam(bson_t *bsonDoc, const char *paramName, TCHAR *value)
+{
+   if(bsonDoc == NULL)
       return SYSINFO_RC_ERROR;
    bson_iter_t iter;
    bson_iter_t baz;
    LONG result = SYSINFO_RC_UNSUPPORTED;
 
-   MutexLock(m_serverStatusLock);
-   if (bson_iter_init (&iter, m_serverStatus) && bson_iter_find_descendant (&iter, paramName, &baz))
+   //uncomment for debug purposes
+   char *json;
+   if ((json = bson_as_json(bsonDoc, NULL))) {
+#ifdef UNICODE
+      TCHAR *_json = WideStringFromUTF8String(json);
+      AgentWriteDebugLog(NXLOG_DEBUG, _T("MONGODB: trying to get param from %s \n<<<<<<<"), _json);
+      safe_free(_json);
+#else
+      AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: trying to get param from %s \n<<<<<<<"), json);
+#endif // UNICODE
+      bson_free (json);
+   }
+
+   if (bson_iter_init (&iter, bsonDoc) && bson_iter_find_descendant (&iter, paramName, &baz))
    {
+      AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Trying to get parameter. Type: %d"), bson_iter_type(&baz));
       char *val = (char *) malloc(sizeof(char) * MAX_RESULT_LENGTH);
       strncpy(val, "Unknown type", MAX_RESULT_LENGTH);
-      switch(bson_iter_type ((&baz)) )
+      switch(bson_iter_type(&baz))
       {
       case BSON_TYPE_UTF8:
          strncpy(val, bson_iter_utf8(&baz, NULL), MAX_RESULT_LENGTH);
@@ -300,13 +326,12 @@ LONG DatabaseInstance::getStatusParam(const char *paramName, TCHAR *value)
       safe_free(val);
       result = SYSINFO_RC_SUCCESS;
    }
-   AgentWriteDebugLog(NXLOG_DEBUG, _T("MONGODB: Trying to get parameter. Type: %d"), bson_iter_type(&baz));
-   MutexUnlock(m_serverStatusLock);
+
    return result;
 }
 
 /**
- * Returns list of available parameters
+ * Returns list of available status parameters
  */
 NETXMS_SUBAGENT_PARAM *DatabaseInstance::getParameters(int *paramCount)
 {
@@ -390,6 +415,58 @@ LONG DatabaseInstance::setDbNames(StringList *value)
 }
 
 /**
+ * Get parameter from command
+ */
+LONG DatabaseInstance::getOtherParam(const TCHAR *param, const TCHAR *arg, const TCHAR *command, TCHAR *value)
+{
+   TCHAR dbName[MAX_STR];
+   if(!AgentGetParameterArg(param, 2, dbName, MAX_STR))
+      return SYSINFO_RC_ERROR;
+   LONG result = SYSINFO_RC_UNSUPPORTED;
+   MutexLock(m_dataLock);
+   MongoDBCommand *commandData = NULL;
+   StringObjectMap<MongoDBCommand> * list = m_data->get(dbName);
+   if(list != NULL)
+   {
+     commandData = list->get(command);
+   }
+   if(commandData != NULL)
+   {
+      if((GetCurrentTimeMs() - commandData->m_lastUpdateTime) > 60000)
+      {
+         result = commandData->getData(m_dbConn, dbName, command) ?  SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+      }
+      else
+      {
+         result = SYSINFO_RC_SUCCESS;
+      }
+   }
+   else
+   {
+      commandData = new MongoDBCommand();
+      result = commandData->getData(m_dbConn, dbName, command) ?  SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+      list = new StringObjectMap<MongoDBCommand>(true);
+      list->set(command,commandData);
+      m_data->set(dbName,list);
+   }
+
+   if(result == SYSINFO_RC_SUCCESS)
+   {
+#ifdef UNICODE
+      char *_arg = UTF8StringFromWideString(arg);
+      result = getParam(&(commandData->m_result), _arg, value);
+      safe_free(_arg);
+#else
+      result = getParam(&(commandData->m_result), arg, value);
+#endif
+   }
+
+   MutexUnlock(m_dataLock);
+   return result;
+}
+
+
+/**
  * Destructor
  */
 DatabaseInstance::~DatabaseInstance()
@@ -405,4 +482,54 @@ DatabaseInstance::~DatabaseInstance()
    if(m_databaseList != NULL)
       bson_strfreev(m_databaseList);
    MutexDestroy(m_databaseListLock);
+   MutexDestroy(m_dataLock);
+   delete m_data;
+}
+
+
+bool MongoDBCommand::getData(mongoc_client_t *m_dbConn, const TCHAR *dbName, const TCHAR *command)
+{
+   bool sucess = false;
+   m_lastUpdateTime = GetCurrentTimeMs();
+   bson_error_t error;
+#ifdef UNICODE
+   char *_dbName = UTF8StringFromWideString(dbName);
+   mongoc_database_t *database = mongoc_client_get_database (m_dbConn, _dbName);
+   safe_free(_dbName);
+#else
+   mongoc_database_t *database = mongoc_client_get_database(m_dbConn, dbName);
+#endif // UNICODE
+   if(database != NULL)
+   {
+      bson_destroy(&m_result);
+      bson_t cmd;
+      bson_init(&cmd);
+#ifdef UNICODE
+      char *_command = UTF8StringFromWideString(command);
+      bson_append_int32(&cmd, _command, strlen(_command), 1);
+      safe_free(_command);
+#else
+      bson_append_int32(&cmd, command, strlen(command), 1);
+#endif // UNICODE
+      sucess = mongoc_database_command_simple (database, &cmd, NULL, &m_result, &error);
+      bson_destroy (&cmd);
+      AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Command %s executed with result %d"), command, sucess);
+      if(!sucess)
+      {
+#ifdef UNICODE
+         TCHAR *_error = WideStringFromUTF8String(error.message);
+         AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command(%s): %s\n"), command, _error);
+         safe_free(_error);
+#else
+         AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Failed to run command(%s): %s\n"), command, error.message);
+#endif
+      }
+      mongoc_database_destroy(database);
+   }
+   else
+   {
+      AgentWriteDebugLog(NXLOG_INFO, _T("MONGODB: Database not found: %s\n"), dbName);
+      sucess = false;
+   }
+   return sucess;
 }

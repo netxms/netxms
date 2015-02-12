@@ -45,17 +45,14 @@ struct DatabaseInfo
 	TCHAR password[MAX_STR];
 };
 
-/**
- * Table query descriptor
- */
-struct TableDescriptor
+class MongoDBCommand
 {
-   const TCHAR *query;
-   struct
-   {
-      int dataType;
-      const TCHAR *displayName;
-   } columns[32];
+public:
+   MongoDBCommand() { bson_init(&m_result); }
+   INT64 m_lastUpdateTime;
+   bson_t m_result;
+   bool getData(mongoc_client_t *m_dbConn, const TCHAR *dbName, const TCHAR *command);
+   ~MongoDBCommand() { bson_destroy(&m_result); }
 };
 
 /**
@@ -72,9 +69,13 @@ private:
    //server status
 	MUTEX m_serverStatusLock;
    bson_t *m_serverStatus;
-   //Database list with size
+   //Database list
    MUTEX m_databaseListLock;
    char **m_databaseList;
+   //Other data
+   MUTEX m_dataLock;
+   StringObjectMap<StringObjectMap<MongoDBCommand> > *m_data;
+
 
    static THREAD_RESULT THREAD_CALL pollerThreadStarter(void *arg);
    void pollerThread();
@@ -91,8 +92,10 @@ public:
    bool connectionEstablished();
    const TCHAR *getConnectionName() { return m_info.id; }
    LONG getStatusParam(const char *paramName, TCHAR *value);
+   LONG getParam(bson_t *result, const char *paramName, TCHAR *value);
    LONG setDbNames(StringList *value);
    void getDatabases();
+   LONG getOtherParam(const TCHAR *param, const TCHAR *arg, const TCHAR *command, TCHAR *value);
 };
 
 /**
