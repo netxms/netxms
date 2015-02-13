@@ -995,7 +995,7 @@ Interface *Node::createNewInterface(NX_INTERFACE_INFO *info, bool manuallyCreate
 
    // Create interface object
    if (info->name[0] != 0)
-		pInterface = new Interface(info->name, (info->description[0] != 0) ? info->description : info->name, 
+		pInterface = new Interface(info->name, (info->description[0] != 0) ? info->description : info->name,
                                  info->index, info->ipAddr, info->ipNetMask, info->type, m_zoneId);
    else
       pInterface = new Interface(info->ipAddr, info->ipNetMask, m_zoneId, bSyntheticMask);
@@ -4130,6 +4130,22 @@ UINT32 Node::wakeUp()
    for(i = 0; i < m_dwChildCount; i++)
       if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
           (m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
+          (m_pChildList[i]->IpAddr() != 0))
+      {
+         if(memcmp(((Interface *)m_pChildList[i])->getMacAddr(), "\x00\x00\x00\x00\x00\x00", 6))
+         {
+            dwResult = ((Interface *)m_pChildList[i])->wakeUp();
+            break;
+         }
+         else
+         {
+            dwResult = RCC_NO_MAC_ADDRESS;
+         }
+      }
+
+   //If no interface found try to find interface in unmanaged state
+   for(i = 0; i < m_dwChildCount; i++)
+      if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
           (m_pChildList[i]->IpAddr() != 0))
       {
          if(memcmp(((Interface *)m_pChildList[i])->getMacAddr(), "\x00\x00\x00\x00\x00\x00", 6))
