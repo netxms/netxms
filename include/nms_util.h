@@ -1002,7 +1002,7 @@ typedef struct
 /**
  * Code translation structure
  */
-typedef struct  __CODE_TO_TEXT
+typedef struct __CODE_TO_TEXT
 {
    int code;
    const TCHAR *text;
