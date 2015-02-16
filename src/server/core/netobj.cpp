@@ -185,7 +185,7 @@ bool NetObj::loadCommonProperties()
 			{
 				DBGetField(hResult, 0, 0, m_name, MAX_OBJECT_NAME);
 				m_iStatus = DBGetFieldLong(hResult, 0, 1);
-				m_isDeleted = DBGetFieldLong(hResult, 0, 2) ? TRUE : FALSE;
+				m_isDeleted = DBGetFieldLong(hResult, 0, 2) ? true : false;
 				m_bInheritAccessRights = DBGetFieldLong(hResult, 0, 3) ? TRUE : FALSE;
 				m_dwTimeStamp = DBGetFieldULong(hResult, 0, 4);
 				m_iStatusCalcAlg = DBGetFieldLong(hResult, 0, 5);

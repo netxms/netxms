@@ -1443,7 +1443,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   void AddNode(Node *pNode) { AddChild(pNode); pNode->AddParent(this); }
+   void addNode(Node *node) { AddChild(node); node->AddParent(this); }
    virtual void fillMessage(NXCPMessage *pMsg);
 
 	virtual bool showThresholdSummary();

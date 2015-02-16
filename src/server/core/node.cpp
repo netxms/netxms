@@ -1020,7 +1020,7 @@ Interface *Node::createNewInterface(NX_INTERFACE_INFO *info, bool manuallyCreate
    // Bind node to appropriate subnet
    if (pSubnet != NULL)
    {
-      pSubnet->AddNode(this);
+      pSubnet->addNode(this);
 
       // Check if subnet mask is correct on interface
       if ((pSubnet->getIpNetMask() != pInterface->getIpNetMask()) && !pSubnet->isSyntheticMask() && (info->ipNetMask != 0xFFFFFFFF))
@@ -5607,7 +5607,7 @@ void Node::resolveVlanPorts(VlanList *vlanList)
  */
 Subnet *Node::createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask)
 {
-   if(syntheticMask)
+   if (syntheticMask)
    {
       while(FindSubnetByIP(m_zoneId, ipAddr & netMask) != NULL)
       {
@@ -5633,7 +5633,7 @@ Subnet *Node::createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask)
    {
 	   g_pEntireNet->AddSubnet(s);
    }
-   s->AddNode(this);
+   s->addNode(this);
    DbgPrintf(4, _T("Node::createSubnet(): Creating new subnet %s [%d] for node %s [%d]"),
              s->getName(), s->getId(), m_name, m_id);
    return s;
@@ -5683,16 +5683,17 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 				   }
 				   else
 				   {
-					   if (pSubnet->isSyntheticMask())
+                  if (pSubnet->isSyntheticMask() && !pInterface->isSyntheticMask())
 					   {
 						   DbgPrintf(4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
 									    pSubnet->getName(), pSubnet->getId(), m_name, m_id);
-                     if(((pInterface->getIpNetMask() == 0xFFFFFFFF) || (pInterface->getIpNetMask() == 0xFFFFFFFE)) && getParentCount() != 1)
+                     if (((pInterface->getIpNetMask() == 0xFFFFFFFF) || (pInterface->getIpNetMask() == 0xFFFFFFFE)) && (getParentCount() > 1))
                      {
+                        /* Delete subnet object if we try to change it's netmask to 255.255.255.255 or 255.255.255.254 and
+                         node has more than one parent. hasIfaceForPrimaryIp paramteter should prevent us from going in
+                         loop(creating and deleting all the time subnet). */
                         pSubnet->deleteObject();
-                        /*Delete subnet object if we try to checnge it's netmsk to 255.255.255.255 or 255.255.255.254 and
-                         subnet has more than one parent. hasIfaceForPrimaryIp paramteter should prevent us from going in
-                         loop(creating and deleting all the time subnet).*/
+                        pSubnet = NULL;   // prevent binding to deleted subnet
                      }
                      else
                      {
@@ -5705,7 +5706,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 					   {
 						   DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
 									    pSubnet->getName(), pSubnet->getId(), m_name, m_id);
-						   pSubnet->AddNode(this);
+						   pSubnet->addNode(this);
 					   }
 				   }
 			   }
@@ -5741,7 +5742,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 		   {
 			   DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
 						    pSubnet->getName(), pSubnet->getId(), m_name, m_id);
-			   pSubnet->AddNode(this);
+			   pSubnet->addNode(this);
 		   }
       }
       else
