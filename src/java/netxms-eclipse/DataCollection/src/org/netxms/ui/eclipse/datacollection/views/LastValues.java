@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -161,6 +162,7 @@ public class LastValues extends ViewPart
 				actionShowFilter.setChecked(dataView.isFilterEnabled());
 			}
       };
+      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
       actionShowFilter.setChecked(dataView.isFilterEnabled());
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
 		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
@@ -200,6 +202,8 @@ public class LastValues extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+      manager.add(actionShowFilter);
+      manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 }

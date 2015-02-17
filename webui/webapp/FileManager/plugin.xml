@@ -5,7 +5,7 @@
          point="org.eclipse.ui.views">
       <view
             category="org.netxms.ui.eclipse.viewcategory.config"
-            class="org.netxms.ui.eclipse.filemanager.views.ViewServerFile"
+            class="org.netxms.ui.eclipse.filemanager.views.ServerFileManager"
             icon="icons/types/unknown.png"
             id="org.netxms.ui.eclipse.usermanager.view.server_files"
             name="%view.ServerFileList.name"
@@ -115,9 +115,9 @@
             name="%command.name.UploadToServer">
       </command>
       <command
-            description="%command.ServerFileList.description"
+            description="%command.description.ServerFileList"
             id="org.netxms.ui.eclipse.console.category.views.open_server_file_list"
-            name="%command.ServerFileList.name">
+            name="%command.name.ServerFileList">
       </command>
    </extension>
    <extension

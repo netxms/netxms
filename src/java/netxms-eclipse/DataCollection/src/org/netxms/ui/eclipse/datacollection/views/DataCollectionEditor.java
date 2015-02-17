@@ -338,6 +338,7 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+      manager.add(actionShowFilter);
 		manager.add(actionCreateItem);
 		manager.add(actionRefresh);
 		manager.add(actionExportAllToCsv);
@@ -485,6 +486,7 @@ public class DataCollectionEditor extends ViewPart
 				actionShowFilter.setChecked(filterEnabled);
 			}
       };
+      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
       actionShowFilter.setChecked(filterEnabled);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
 		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);

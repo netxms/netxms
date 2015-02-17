@@ -9,7 +9,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TableColumn;
 import org.netxms.client.ServerFile;
-import org.netxms.ui.eclipse.filemanager.views.ViewServerFile;
+import org.netxms.ui.eclipse.filemanager.views.ServerFileManager;
 
 /**
  * Comparator for ServerFile objects
@@ -30,16 +30,16 @@ public class ServerFileComparator extends ViewerComparator
 		int rc;
 		switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
 		{
-		   case ViewServerFile.COLUMN_NAME:
+		   case ServerFileManager.COLUMN_NAME:
             rc = ((ServerFile)e1).getName().compareToIgnoreCase(((ServerFile)e2).getName());
             break;
-         case ViewServerFile.COLUMN_TYPE:
+         case ServerFileManager.COLUMN_TYPE:
             rc = ((ServerFile)e1).getExtension().compareToIgnoreCase(((ServerFile)e2).getExtension());
             break;
-         case ViewServerFile.COLUMN_SIZE:
+         case ServerFileManager.COLUMN_SIZE:
             rc = Long.signum(((ServerFile)e1).getSize() - ((ServerFile)e2).getSize());
             break;
-         case ViewServerFile.COLUMN_MODIFYED:
+         case ServerFileManager.COLUMN_MODIFYED:
             rc = ((ServerFile)e1).getModifyicationTime().compareTo(((ServerFile)e2).getModifyicationTime());
             break;
          default:
