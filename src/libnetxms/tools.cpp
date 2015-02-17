@@ -1265,13 +1265,11 @@ void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize)
 #endif
 }
 
-
-//
-// Get more specific Windows version string
-//
-
 #ifdef _WIN32
 
+/**
+ * Get more specific Windows version string
+ */
 BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strSize)
 {
 	OSVERSIONINFOEX ver;
@@ -1308,6 +1306,12 @@ BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strS
 					break;
 				case 1:
 					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("7") : _T("Server 2008 R2"));
+					break;
+				case 2:
+					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("8") : _T("Server 2012"));
+					break;
+				case 3:
+					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("8.1") : _T("Server 2012 R2"));
 					break;
 				default:
 					_sntprintf(buffer, 256, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);

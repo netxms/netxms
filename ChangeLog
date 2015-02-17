@@ -6,6 +6,7 @@
 - Added posibility to wakeup unmanaged node
 - Management console:
 	- Fixed broken popup menu actions on "Interfaces" tab
+- Fixed issues: #766, #768, #769
 
 
 *

@@ -328,11 +328,9 @@ CREATE TABLE cluster_resources
 	PRIMARY KEY(cluster_id,resource_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Subnets
 */
-
 CREATE TABLE subnets
 (
 	id integer not null,
@@ -343,11 +341,9 @@ CREATE TABLE subnets
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Nodes' interfaces
 */
-
 CREATE TABLE interfaces
 (
 	id integer not null,
@@ -1094,11 +1090,9 @@ CREATE TABLE snmp_trap_log
 
 CREATE INDEX idx_snmp_trap_log_tt ON snmp_trap_log(trap_timestamp);
 
-
 /*
 ** Agent configurations
 */
-
 CREATE TABLE agent_configs
 (
 	config_id integer not null,
@@ -1109,11 +1103,9 @@ CREATE TABLE agent_configs
 	PRIMARY KEY(config_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Address lists
 */
-
 CREATE TABLE address_lists
 (
 	list_type integer not null, // discovery filter, etc.
@@ -1126,11 +1118,9 @@ CREATE TABLE address_lists
 
 CREATE INDEX idx_address_lists_list_type ON address_lists(list_type);
 
-
 /*
 ** Graphs
 */
-
 CREATE TABLE graphs
 (
 	graph_id integer not null,
@@ -1140,11 +1130,9 @@ CREATE TABLE graphs
 	PRIMARY KEY(graph_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Graph access lists
 */
-
 CREATE TABLE graph_acl
 (
 	graph_id integer not null,

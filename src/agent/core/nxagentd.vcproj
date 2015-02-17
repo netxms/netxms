@@ -81,6 +81,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				AdditionalManifestFiles="nxagentd.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -153,6 +154,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="ws2_32.lib"
 				LinkIncremental="2"
+				AdditionalManifestDependencies=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="17"
@@ -162,6 +164,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				AdditionalManifestFiles="nxagentd.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -242,6 +245,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				AdditionalManifestFiles="nxagentd.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -323,6 +327,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
+				AdditionalManifestFiles="nxagentd.manifest"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
