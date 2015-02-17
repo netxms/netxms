@@ -5702,7 +5702,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 					   }
 
 					   // Check if node is linked to this subnet
-					   if (!pSubnet->isChild(m_id))
+					   if ((pSubnet != NULL) && !pSubnet->isChild(m_id))
 					   {
 						   DbgPrintf(4, _T("Restored link between subnet %s [%d] and node %s [%d]"),
 									    pSubnet->getName(), pSubnet->getId(), m_name, m_id);
