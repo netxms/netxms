@@ -93,12 +93,14 @@ public final class ObjectToolExecutor
             message = message.replace("%OBJECT_IP_ADDR%", node.object.getPrimaryIP().getHostAddress()); //$NON-NLS-1$
             message = message.replace("%OBJECT_NAME%", node.object.getObjectName()); //$NON-NLS-1$
             message = message.replace("%OBJECT_ID%", Long.toString(node.object.getObjectId())); //$NON-NLS-1$
+            message = message.replace("%USERNAME%", ConsoleSharedData.getSession().getUserName()); //$NON-NLS-1$
          }
          else
          {
             message = message.replace("%OBJECT_IP_ADDR%", Messages.get().ObjectToolsDynamicMenu_MultipleNodes); //$NON-NLS-1$
             message = message.replace("%OBJECT_NAME%", Messages.get().ObjectToolsDynamicMenu_MultipleNodes); //$NON-NLS-1$
             message = message.replace("%OBJECT_ID%", Messages.get().ObjectToolsDynamicMenu_MultipleNodes); //$NON-NLS-1$
+            message = message.replace("%USERNAME%", ConsoleSharedData.getSession().getUserName()); //$NON-NLS-1$
          }
          if (!MessageDialogHelper.openQuestion(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
                Messages.get().ObjectToolsDynamicMenu_ConfirmExec, message))
@@ -379,6 +381,10 @@ public final class ObjectToolExecutor
                {
                   if (node.alarm != null)
                      sb.append(node.alarm.getState());
+               }
+               else if (name.equals("USERNAME")) //$NON-NLS-1$
+               {
+                  sb.append(ConsoleSharedData.getSession().getUserName());
                }
                else
                {

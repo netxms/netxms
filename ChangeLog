@@ -6,7 +6,8 @@
 - Added posibility to wakeup unmanaged node
 - Management console:
 	- Fixed broken popup menu actions on "Interfaces" tab
-- Fixed issues: #765, #766, #768, #769
+	- Macro %USERNAME% can be used in object tools
+- Fixed issues: #725, #765, #766, #768, #769
 
 
 *
