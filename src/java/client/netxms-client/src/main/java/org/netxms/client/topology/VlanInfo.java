@@ -72,4 +72,20 @@ public class VlanInfo
 	{
 		return ports;
 	}
+
+   /**
+    * Check if given port is within VLAN
+    * 
+    * @param port
+    * @return
+    */
+   public boolean containsPort(int slot, int port)
+   {
+      for(Port p : ports)
+      {
+         if (p.getSlot() == slot && p.getPort() == port)
+            return true;
+      }
+      return false;
+   }
 }

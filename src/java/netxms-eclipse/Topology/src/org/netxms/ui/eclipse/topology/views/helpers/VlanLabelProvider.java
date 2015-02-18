@@ -22,22 +22,29 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import org.eclipse.jface.viewers.IColorProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.topology.Port;
 import org.netxms.client.topology.VlanInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.views.VlanView;
+import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
 
 /**
  * Label provider for VLAN list
  */
-public class VlanLabelProvider extends LabelProvider implements ITableLabelProvider
+public class VlanLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
+   private static final Color HIGHLIGHT = new Color(Display.getDefault(), 255, 216, 0);
+   
 	private NXCSession session;
+	private PortInfo selectedPort = null;
 	
 	/**
 	 * Default constructor
@@ -168,4 +175,33 @@ public class VlanLabelProvider extends LabelProvider implements ITableLabelProvi
 		
 		return sb.toString();
 	}
+
+   /**
+    * @param selectedPort the selectedPort to set
+    */
+   public boolean setSelectedPort(PortInfo selectedPort)
+   {
+      if (selectedPort == this.selectedPort)
+         return false;
+      this.selectedPort = selectedPort;
+      return true;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
+    */
+   @Override
+   public Color getForeground(Object element)
+   {
+      return null;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+    */
+   @Override
+   public Color getBackground(Object element)
+   {
+      return (selectedPort != null) && ((VlanInfo)element).containsPort(selectedPort.getSlot(), selectedPort.getPort()) ? HIGHLIGHT : null;
+   }
 }
