@@ -1778,6 +1778,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
    // Check for forced capabilities recheck
    if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)
    {
+      sendPollerMsg(dwRqId, POLLER_WARNING _T("Capability reset\r\n"));
       m_dwFlags &= ~(NF_IS_NATIVE_AGENT | NF_IS_SNMP | NF_IS_CPSNMP |
                      NF_IS_BRIDGE | NF_IS_ROUTER | NF_IS_OSPF | NF_IS_PRINTER |
 							NF_IS_CDP | NF_IS_LLDP | NF_IS_SONMP | NF_IS_VRRP | NF_HAS_VLANS |
@@ -1888,7 +1889,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 
 		applyUserTemplates();
 		updateContainerMembership();
-		doInstanceDiscovery();
+		doInstanceDiscovery(dwRqId);
 
 		// Get list of installed products
 		if (m_dwFlags & NF_IS_NATIVE_AGENT)
@@ -2906,8 +2907,10 @@ void Node::updateContainerMembership()
 /**
  * Do instance discovery
  */
-void Node::doInstanceDiscovery()
+void Node::doInstanceDiscovery(UINT32 requestId)
 {
+   sendPollerMsg(requestId, _T("Running DCI instance discovery\r\n"));
+
 	// collect instance discovery DCIs
 	ObjectArray<DCItem> rootItems;
    lockDciAccess(false);
@@ -2929,18 +2932,20 @@ void Node::doInstanceDiscovery()
 		DCItem *dci = rootItems.get(i);
 		DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): Updating instances for instance discovery DCI %s [%d]"),
 		          m_name, m_id, dci->getName(), dci->getId());
+      sendPollerMsg(requestId, _T("   Updating instances for %s [%d]\r\n"), dci->getName(), dci->getId());
 		StringMap *instances = getInstanceList(dci);
 		if (instances != NULL)
 		{
 			DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): read %d values"), m_name, m_id, instances->size());
 			dci->filterInstanceList(instances);
-			updateInstances(dci, instances);
+         updateInstances(dci, instances, requestId);
 			delete instances;
 		}
 		else
 		{
 			DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): failed to get instance list for DCI %s [%d]"),
 						 m_name, m_id, dci->getName(), dci->getId());
+         sendPollerMsg(requestId, POLLER_ERROR _T("      Failed to get instance list\r\n"));
 		}
 		dci->setBusyFlag(FALSE);
 	}
@@ -3015,7 +3020,8 @@ static bool FindInstanceCallback(const TCHAR *key, const void *value, void *data
 struct CreateInstanceDCIData
 {
    DCItem *root;
-   Template *object;
+   Node *object;
+   UINT32 requestId;
 };
 
 /**
@@ -3023,11 +3029,12 @@ struct CreateInstanceDCIData
  */
 static bool CreateInstanceDCI(const TCHAR *key, const void *value, void *data)
 {
-   Template *object = ((CreateInstanceDCIData *)data)->object;
+   Node *object = ((CreateInstanceDCIData *)data)->object;
    DCItem *root = ((CreateInstanceDCIData *)data)->root;
 
 	DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): creating new DCI for instance \"%s\""),
 	          object->getName(), object->getId(), root->getName(), root->getId(), key);
+   object->sendPollerMsg(((CreateInstanceDCIData *)data)->requestId, _T("      Creating new DCI for instance \"%s\"\r\n"), key);
 
 	DCItem *dci = new DCItem(root);
    dci->setTemplateId(object->getId(), root->getId());
@@ -3044,7 +3051,7 @@ static bool CreateInstanceDCI(const TCHAR *key, const void *value, void *data)
 /**
  * Update instance DCIs created from instance discovery DCI
  */
-void Node::updateInstances(DCItem *root, StringMap *instances)
+void Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
 {
    lockDciAccess(true);
 
@@ -3071,6 +3078,7 @@ void Node::updateInstances(DCItem *root, StringMap *instances)
 			// not found, delete DCI
 			DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" not found, instance DCI will be deleted"),
 			          m_name, m_id, root->getName(), root->getId(), dciInstance);
+         sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found and will be deleted\r\n"), dciInstance);
 			deleteList.add(object->getId());
 		}
    }
@@ -3082,6 +3090,7 @@ void Node::updateInstances(DCItem *root, StringMap *instances)
    CreateInstanceDCIData data;
    data.root = root;
    data.object = this;
+   data.requestId = requestId;
    instances->forEach(CreateInstanceDCI, &data);
 
    unlockDciAccess();

@@ -81,10 +81,12 @@
 /**
  * Forced poll types
  */
-#define POLL_STATUS           1
-#define POLL_CONFIGURATION    2
-#define POLL_INTERFACE_NAMES  3
-#define POLL_TOPOLOGY         4
+#define POLL_STATUS                 1
+#define POLL_CONFIGURATION_FULL     2
+#define POLL_INTERFACE_NAMES        3
+#define POLL_TOPOLOGY               4
+#define POLL_CONFIGURATION_NORMAL   5
+#define POLL_INSTANCE_DISCOVERY     6
 
 /**
  * Object types

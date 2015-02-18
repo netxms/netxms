@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.netxms.client.constants.NodePollType;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.objectmanager.views.NodePollerView;
@@ -45,17 +46,24 @@ public abstract class AbstractNodePoll implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		if (node != null)
+		if (node == null)
+		   return;
+
+		String msg = getConfirmation();
+		if (msg != null)
 		{
-			try
-			{
-				NodePollerView view = (NodePollerView)window.getActivePage().showView(NodePollerView.ID, Long.toString(node.getObjectId()) + "&" + Integer.toString(getPollType()), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
-				view.startPoll();
-			}
-			catch(PartInitException e)
-			{
-				MessageDialogHelper.openError(window.getShell(), Messages.get().AbstractNodePoll_Error, String.format(Messages.get().AbstractNodePoll_ErrorText, e.getLocalizedMessage()));
-			}
+		   if (!MessageDialogHelper.openQuestion(window.getShell(), "Warning", msg))
+		      return;
+		}
+		
+		try
+		{
+			NodePollerView view = (NodePollerView)window.getActivePage().showView(NodePollerView.ID, Long.toString(node.getObjectId()) + "&" + getPollType(), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
+			view.startPoll();
+		}
+		catch(PartInitException e)
+		{
+			MessageDialogHelper.openError(window.getShell(), Messages.get().AbstractNodePoll_Error, String.format(Messages.get().AbstractNodePoll_ErrorText, e.getLocalizedMessage()));
 		}
 	}
 
@@ -93,5 +101,13 @@ public abstract class AbstractNodePoll implements IObjectActionDelegate
 	 * 
 	 * @return
 	 */
-	abstract protected int getPollType();
+	abstract protected NodePollType getPollType();
+	
+	/**
+	 * @return
+	 */
+	protected String getConfirmation()
+	{
+	   return null;
+	}
 }

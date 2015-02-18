@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,28 @@
  */
 package org.netxms.ui.eclipse.objectmanager.actions;
 
-import org.netxms.client.constants.NodePoller;
+import org.netxms.client.constants.NodePollType;
 
 /**
  * Start configuration poll
  */
-public class ConfigurationPoll extends AbstractNodePoll
+public class FullConfigurationPoll extends AbstractNodePoll
 {
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectmanager.actions.AbstractNodePoll#getPollType()
 	 */
 	@Override
-	protected int getPollType()
+	protected NodePollType getPollType()
 	{
-		return NodePoller.CONFIGURATION_POLL;
+		return NodePollType.CONFIGURATION_FULL;
 	}
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.objectmanager.actions.AbstractNodePoll#getConfirmation()
+    */
+   @Override
+   protected String getConfirmation()
+   {
+      return "Full configuration poll will reset node capabilities and can possibly change container and template binding as well as delete DCIs created by instance discovery. Continue?";
+   }
 }

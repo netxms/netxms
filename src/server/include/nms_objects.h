@@ -396,8 +396,6 @@ protected:
 	bool saveTrustedNodes(DB_HANDLE hdb);
    bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query) { return ExecuteQueryOnObject(hdb, m_id, query); }
 
-   void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...);
-
    virtual void prepareForDeletion();
    virtual void onObjectDelete(UINT32 dwObjectId);
    void addLocationToHistory();
@@ -498,6 +496,8 @@ public:
 
    void setStatusCalculation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
    void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
+
+   void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...);
 
    // Debug methods
    const TCHAR *dbgGetParentList(TCHAR *szBuffer);
@@ -1104,9 +1104,9 @@ protected:
 	bool checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 dwRqId);
 
 	void applyUserTemplates();
-	void doInstanceDiscovery();
+	void doInstanceDiscovery(UINT32 requestId);
 	StringMap *getInstanceList(DCItem *dci);
-	void updateInstances(DCItem *root, StringMap *instances);
+	void updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
 
 	void updateContainerMembership();
 	BOOL updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask);

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2013 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,9 @@ package org.netxms.ui.eclipse.objectmanager.actions;
 import org.netxms.client.constants.NodePollType;
 
 /**
- * Start status poll
- *
+ * Start configuration poll
  */
-public class StatusPoll extends AbstractNodePoll
+public class NormalConfigurationPoll extends AbstractNodePoll
 {
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectmanager.actions.AbstractNodePoll#getPollType()
@@ -32,6 +31,6 @@ public class StatusPoll extends AbstractNodePoll
 	@Override
 	protected NodePollType getPollType()
 	{
-		return NodePollType.STATUS;
+		return NodePollType.CONFIGURATION_NORMAL;
 	}
 }

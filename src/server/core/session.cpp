@@ -5706,7 +5706,8 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
       // We can do polls only for node objects
       if ((object->getObjectClass() == OBJECT_NODE) &&
           ((pData->iPollType == POLL_STATUS) ||
-			  (pData->iPollType == POLL_CONFIGURATION) ||
+			  (pData->iPollType == POLL_CONFIGURATION_FULL) ||
+			  (pData->iPollType == POLL_CONFIGURATION_NORMAL) ||
 			  (pData->iPollType == POLL_TOPOLOGY) ||
 			  (pData->iPollType == POLL_INTERFACE_NAMES)))
       {
@@ -5773,8 +5774,10 @@ void ClientSession::pollerThread(Node *pNode, int iPollType, UINT32 dwRqId)
       case POLL_STATUS:
          pNode->statusPoll(this, dwRqId, -1);
          break;
-      case POLL_CONFIGURATION:
+      case POLL_CONFIGURATION_FULL:
 			pNode->setRecheckCapsFlag();
+         // intentionally no break here
+      case POLL_CONFIGURATION_NORMAL:
          pNode->configurationPoll(this, dwRqId, -1, 0);
          break;
       case POLL_TOPOLOGY:

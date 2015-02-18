@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,8 +91,9 @@ import org.netxms.base.NXCommon;
 import org.netxms.client.agent.config.ConfigContent;
 import org.netxms.client.agent.config.ConfigListElement;
 import org.netxms.client.constants.AggregationFunction;
-import org.netxms.client.constants.RCC;
+import org.netxms.client.constants.NodePollType;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.constants.RCC;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.datacollection.DataCollectionConfiguration;
@@ -6429,16 +6430,16 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
     * received from poller listener's method onPollerMessage will be called.
     *
     * @param nodeId   node object ID
-    * @param pollType poll type (defined in org.netxms.client.constants.NodePoller)
+    * @param pollType poll type
     * @param listener listener
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void pollNode(long nodeId, int pollType, final TextOutputListener listener) throws IOException, NXCException
+   public void pollNode(long nodeId, NodePollType pollType, final TextOutputListener listener) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_POLL_NODE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
-      msg.setFieldInt16(NXCPCodes.VID_POLL_TYPE, pollType);
+      msg.setFieldInt16(NXCPCodes.VID_POLL_TYPE, pollType.getValue());
 
       MessageHandler handler = new MessageHandler() {
          @Override

@@ -426,7 +426,15 @@
                style="push">
          </action>
          <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.ConfigurationPoll"
+               class="org.netxms.ui.eclipse.objectmanager.actions.FullConfigurationPoll"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.FullConfigurationPoll"
+               label="%action.label.ConfPollFull"
+               menubarPath="org.netxms.ui.eclipse.objectmanager.popupActions.PollMenu/additions"
+               style="push">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.NormalConfigurationPoll"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.ConfigurationPoll"
                label="%action.label.ConfPoll"
