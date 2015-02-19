@@ -27,6 +27,7 @@
  */
 extern Queue g_statusPollQueue;
 extern Queue g_configPollQueue;
+extern Queue g_instancePollQueue;
 extern Queue g_topologyPollQueue;
 extern Queue g_routePollQueue;
 extern Queue g_discoveryPollQueue;
@@ -54,6 +55,7 @@ Node::Node() : DataCollectionTarget()
    m_lastDiscoveryPoll = 0;
    m_lastStatusPoll = 0;
    m_lastConfigurationPoll = 0;
+   m_lastInstancePoll = 0;
 	m_lastTopologyPoll = 0;
    m_lastRTUpdate = 0;
 	m_downSince = 0;
@@ -87,7 +89,6 @@ Node::Node() : DataCollectionTarget()
    m_failTimeAgent = 0;
 	m_linkLayerNeighbors = NULL;
 	m_vrrpInfo = NULL;
-	m_lastTopologyPoll = 0;
 	m_pTopology = NULL;
 	m_topologyRebuildTimestamp = 0;
 	m_iPendingStatus = -1;
@@ -133,6 +134,7 @@ Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, U
    m_lastDiscoveryPoll = 0;
    m_lastStatusPoll = 0;
    m_lastConfigurationPoll = 0;
+   m_lastInstancePoll = 0;
 	m_lastTopologyPoll = 0;
    m_lastRTUpdate = 0;
 	m_downSince = 0;
@@ -167,7 +169,6 @@ Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, U
    m_failTimeAgent = 0;
 	m_linkLayerNeighbors = NULL;
 	m_vrrpInfo = NULL;
-	m_lastTopologyPoll = 0;
 	m_pTopology = NULL;
 	m_topologyRebuildTimestamp = 0;
 	m_iPendingStatus = -1;
@@ -1889,7 +1890,6 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
 
 		applyUserTemplates();
 		updateContainerMembership();
-		doInstanceDiscovery(dwRqId);
 
 		// Get list of installed products
 		if (m_dwFlags & NF_IS_NATIVE_AGENT)
@@ -2902,6 +2902,50 @@ void Node::updateContainerMembership()
       pContainer->decRefCount();
    }
    delete containers;
+}
+
+/**
+ * Perform instance discovery poll on node
+ */
+void Node::instanceDiscoveryPoll(ClientSession *session, UINT32 requestId, int pollerId)
+{
+	if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
+	{
+		if (requestId == 0)
+			m_dwDynamicFlags &= ~NDF_QUEUED_FOR_INSTANCE_POLL;
+		return;
+	}
+
+   SetPollerInfo(pollerId, _T("wait for lock"));
+   pollerLock();
+   m_pollRequestor = session;
+   sendPollerMsg(requestId, _T("Starting instance discovery poll for node %s\r\n"), m_name);
+   DbgPrintf(4, _T("Starting instance discovery poll for node %s (ID: %d)"), m_name, m_id);
+
+   // Check if node is marked as unreachable
+   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
+   {
+		SetPollerInfo(pollerId, _T("instance discovery"));
+      doInstanceDiscovery(requestId);
+
+		// Execute hook script
+		SetPollerInfo(pollerId, _T("hook"));
+		executeHookScript(_T("InstancePoll"));
+   }
+   else
+   {
+      sendPollerMsg(requestId, POLLER_WARNING _T("Node is marked as unreachable, instance discovery poll aborted\r\n"));
+      DbgPrintf(4, _T("Node is marked as unreachable, instance discovery poll aborted"));
+   }
+
+   m_lastInstancePoll = time(NULL);
+
+   // Finish instance discovery poll
+   SetPollerInfo(pollerId, _T("cleanup"));
+   if (requestId == 0)
+      m_dwDynamicFlags &= ~NDF_QUEUED_FOR_INSTANCE_POLL;
+   pollerUnlock();
+   DbgPrintf(4, _T("Finished instance discovery poll for node %s (ID: %d)"), m_name, m_id);
 }
 
 /**
@@ -4834,6 +4878,13 @@ void Node::prepareForDeletion()
 		decRefCount();
 	}
 
+	if (g_instancePollQueue.remove(this, NodeQueueComparator))
+	{
+		m_dwDynamicFlags &= ~NDF_QUEUED_FOR_INSTANCE_POLL;
+		DbgPrintf(4, _T("Node::PrepareForDeletion(%s [%d]): removed from instance discovery poller queue"), m_name, (int)m_id);
+		decRefCount();
+	}
+
 	if (g_discoveryPollQueue.remove(this, NodeQueueComparator))
 	{
 		m_dwDynamicFlags &= ~NDF_QUEUED_FOR_DISCOVERY_POLL;
@@ -4863,7 +4914,7 @@ void Node::prepareForDeletion()
       if ((m_dwDynamicFlags &
             (NDF_QUEUED_FOR_STATUS_POLL | NDF_QUEUED_FOR_CONFIG_POLL |
              NDF_QUEUED_FOR_DISCOVERY_POLL | NDF_QUEUED_FOR_ROUTE_POLL |
-				 NDF_QUEUED_FOR_TOPOLOGY_POLL)) == 0)
+             NDF_QUEUED_FOR_TOPOLOGY_POLL | NDF_QUEUED_FOR_INSTANCE_POLL)) == 0)
       {
          unlockProperties();
          break;

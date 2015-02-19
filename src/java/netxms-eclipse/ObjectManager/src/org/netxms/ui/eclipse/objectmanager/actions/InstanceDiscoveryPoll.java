@@ -21,9 +21,9 @@ package org.netxms.ui.eclipse.objectmanager.actions;
 import org.netxms.client.constants.NodePollType;
 
 /**
- * Start configuration poll
+ * Start instance discovery poll
  */
-public class FullConfigurationPoll extends AbstractNodePoll
+public class InstanceDiscoveryPoll extends AbstractNodePoll
 {
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectmanager.actions.AbstractNodePoll#getPollType()
@@ -31,15 +31,6 @@ public class FullConfigurationPoll extends AbstractNodePoll
 	@Override
 	protected NodePollType getPollType()
 	{
-		return NodePollType.CONFIGURATION_FULL;
+		return NodePollType.INSTANCE_DISCOVERY;
 	}
-
-   /* (non-Javadoc)
-    * @see org.netxms.ui.eclipse.objectmanager.actions.AbstractNodePoll#getConfirmation()
-    */
-   @Override
-   protected String getConfirmation()
-   {
-      return "Full configuration poll will reset node capabilities and can possibly change container and template binding. Continue?";
-   }
 }

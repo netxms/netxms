@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2014 Victor Kirhenshtein
+** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -385,6 +385,17 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
       if (!g_bIgnoreErrors)
          return FALSE;
    }
+   return TRUE;
+}
+
+/**
+ * Upgrade from V344 to V345
+ */
+static BOOL H_UpgradeFromV344(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("NumberOfInstancePollers"), _T("10"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("InstancePollingInterval"), _T("600"), 1, 1));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='345' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
 
@@ -8282,6 +8293,7 @@ static struct
    { 341, 342, H_UpgradeFromV341 },
    { 342, 343, H_UpgradeFromV342 },
    { 343, 344, H_UpgradeFromV343 },
+   { 344, 345, H_UpgradeFromV344 },
    { 0, 0, NULL }
 };
 

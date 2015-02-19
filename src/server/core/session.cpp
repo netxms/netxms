@@ -5708,6 +5708,7 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
           ((pData->iPollType == POLL_STATUS) ||
 			  (pData->iPollType == POLL_CONFIGURATION_FULL) ||
 			  (pData->iPollType == POLL_CONFIGURATION_NORMAL) ||
+			  (pData->iPollType == POLL_INSTANCE_DISCOVERY) ||
 			  (pData->iPollType == POLL_TOPOLOGY) ||
 			  (pData->iPollType == POLL_INTERFACE_NAMES)))
       {
@@ -5779,6 +5780,9 @@ void ClientSession::pollerThread(Node *pNode, int iPollType, UINT32 dwRqId)
          // intentionally no break here
       case POLL_CONFIGURATION_NORMAL:
          pNode->configurationPoll(this, dwRqId, -1, 0);
+         break;
+      case POLL_INSTANCE_DISCOVERY:
+         pNode->instanceDiscoveryPoll(this, dwRqId, -1);
          break;
       case POLL_TOPOLOGY:
          pNode->topologyPoll(this, dwRqId, -1);

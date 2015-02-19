@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ struct __poller_state
  */
 Queue g_statusPollQueue;
 Queue g_configPollQueue;
+Queue g_instancePollQueue;
 Queue g_topologyPollQueue;
 Queue g_routePollQueue;
 Queue g_discoveryPollQueue;
@@ -334,6 +335,40 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
       SetPollerState((long)arg, szBuffer);
       ObjectTransactionStart();
       pNode->configurationPoll(NULL, 0, (long)arg, 0);
+      ObjectTransactionEnd();
+      pNode->decRefCount();
+   }
+   SetPollerState((long)arg, _T("finished"));
+   return THREAD_OK;
+}
+
+/**
+ * Instance discovery poller
+ */
+static THREAD_RESULT THREAD_CALL InstanceDiscoveryPoller(void *arg)
+{
+   Node *pNode;
+   TCHAR szBuffer[MAX_OBJECT_NAME + 64];
+
+   // Initialize state info
+   m_pPollerState[(long)arg].iType = 'I';
+   SetPollerState((long)arg, _T("init"));
+
+   // Wait two minutes to give status and configuration pollers chance to run first
+   ThreadSleep(120);
+
+   // Main loop
+   while(!IsShutdownInProgress())
+   {
+      SetPollerState((long)arg, _T("wait"));
+      pNode = (Node *)g_instancePollQueue.GetOrBlock();
+      if (pNode == INVALID_POINTER_VALUE)
+         break;   // Shutdown indicator
+
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->getName(), pNode->getId());
+      SetPollerState((long)arg, szBuffer);
+      ObjectTransactionStart();
+      pNode->instanceDiscoveryPoll(NULL, 0, (long)arg);
       ObjectTransactionEnd();
       pNode->decRefCount();
    }
@@ -748,6 +783,13 @@ static void QueueForPolling(NetObj *object, void *data)
 					DbgPrintf(6, _T("Node %d \"%s\" queued for configuration poll"), (int)node->getId(), node->getName());
 					g_configPollQueue.Put(node);
 				}
+				if (node->isReadyForInstancePoll())
+				{
+					node->incRefCount();
+					node->lockForInstancePoll();
+					DbgPrintf(6, _T("Node %d \"%s\" queued for instance discovery poll"), (int)node->getId(), node->getName());
+					g_instancePollQueue.Put(node);
+				}
 				if (node->isReadyForStatusPoll())
 				{
 					node->incRefCount();
@@ -824,7 +866,7 @@ static void QueueForPolling(NetObj *object, void *data)
 THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 {
    UINT32 dwWatchdogId;
-   int i, iCounter, iNumStatusPollers, iNumConfigPollers;
+   int i, iCounter, iNumStatusPollers, iNumConfigPollers, numInstancePollers;
    int nIndex, iNumDiscoveryPollers, iNumRoutePollers;
    int iNumConditionPollers, iNumTopologyPollers, iNumBusinessServicePollers;
 
@@ -832,11 +874,12 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    iNumConditionPollers = ConfigReadInt(_T("NumberOfConditionPollers"), 10);
    iNumStatusPollers = ConfigReadInt(_T("NumberOfStatusPollers"), 25);
    iNumConfigPollers = ConfigReadInt(_T("NumberOfConfigurationPollers"), 10);
+   numInstancePollers = ConfigReadInt(_T("NumberOfInstancePollers"), 10);
    iNumRoutePollers = ConfigReadInt(_T("NumberOfRoutingTablePollers"), 10);
    iNumDiscoveryPollers = ConfigReadInt(_T("NumberOfDiscoveryPollers"), 1);
    iNumTopologyPollers = ConfigReadInt(_T("NumberOfTopologyPollers"), 10);
    iNumBusinessServicePollers = ConfigReadInt(_T("NumberOfBusinessServicePollers"), 10);
-   m_iNumPollers = iNumStatusPollers + iNumConfigPollers + 
+   m_iNumPollers = iNumStatusPollers + iNumConfigPollers + numInstancePollers +
                    iNumDiscoveryPollers + iNumRoutePollers + iNumConditionPollers + 
 						 iNumTopologyPollers + iNumBusinessServicePollers + 1;
    DbgPrintf(2, _T("PollManager: %d pollers to start"), m_iNumPollers);
@@ -851,6 +894,10 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    // Start configuration pollers
    for(i = 0; i < iNumConfigPollers; i++, nIndex++)
       ThreadCreate(ConfigurationPoller, 0, CAST_TO_POINTER(nIndex, void *));
+
+   // Start instance discovery pollers
+   for(i = 0; i < numInstancePollers; i++, nIndex++)
+      ThreadCreate(InstanceDiscoveryPoller, 0, CAST_TO_POINTER(nIndex, void *));
 
    // Start routing table pollers
    for(i = 0; i < iNumRoutePollers; i++, nIndex++)
@@ -899,26 +946,28 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 
    // Send stop signal to all pollers
    g_statusPollQueue.Clear();
+   g_statusPollQueue.SetShutdownMode();
+
    g_configPollQueue.Clear();
+   g_configPollQueue.SetShutdownMode();
+
+   g_instancePollQueue.Clear();
+   g_instancePollQueue.SetShutdownMode();
+
    g_discoveryPollQueue.Clear();
+   g_discoveryPollQueue.SetShutdownMode();
+
    g_routePollQueue.Clear();
+   g_routePollQueue.SetShutdownMode();
+
    g_conditionPollerQueue.Clear();
-	g_topologyPollQueue.Clear();
-	g_businessServicePollerQueue.Clear();
-   for(i = 0; i < iNumStatusPollers; i++)
-      g_statusPollQueue.Put(INVALID_POINTER_VALUE);
-   for(i = 0; i < iNumConfigPollers; i++)
-      g_configPollQueue.Put(INVALID_POINTER_VALUE);
-   for(i = 0; i < iNumRoutePollers; i++)
-      g_routePollQueue.Put(INVALID_POINTER_VALUE);
-   for(i = 0; i < iNumDiscoveryPollers; i++)
-      g_discoveryPollQueue.Put(INVALID_POINTER_VALUE);
-   for(i = 0; i < iNumConditionPollers; i++)
-      g_conditionPollerQueue.Put(INVALID_POINTER_VALUE);
-   for(i = 0; i < iNumTopologyPollers; i++)
-      g_topologyPollQueue.Put(INVALID_POINTER_VALUE);
-   for(i = 0; i < iNumBusinessServicePollers; i++)
-      g_businessServicePollerQueue.Put(INVALID_POINTER_VALUE);
+   g_conditionPollerQueue.SetShutdownMode();
+
+   g_topologyPollQueue.Clear();
+   g_topologyPollQueue.SetShutdownMode();
+
+   g_businessServicePollerQueue.Clear();
+   g_businessServicePollerQueue.SetShutdownMode();
 
    DbgPrintf(1, _T("PollManager: main thread terminated"));
    return THREAD_OK;

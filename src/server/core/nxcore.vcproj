@@ -983,7 +983,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\nxclapi.h"
+				RelativePath="..\..\..\include\nxcldefs.h"
 				>
 			</File>
 			<File

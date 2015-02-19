@@ -40,6 +40,6 @@ public class FullConfigurationPoll extends AbstractNodePoll
    @Override
    protected String getConfirmation()
    {
-      return "Full configuration poll will reset node capabilities and can possibly change container and template binding as well as delete DCIs created by instance discovery. Continue?";
+      return "Full configuration poll will reset node capabilities and can possibly change container and template binding. Continue?";
    }
 }

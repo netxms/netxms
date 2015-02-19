@@ -47,6 +47,7 @@ extern UINT32 g_dwConfigurationPollingInterval;
 extern UINT32 g_dwRoutingTableUpdateInterval;
 extern UINT32 g_dwTopologyPollingInterval;
 extern UINT32 g_dwConditionPollingInterval;
+extern UINT32 g_instancePollingInterval;
 
 /**
  * Utility functions used by inline methods
@@ -83,22 +84,23 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 /**
  * Node runtime (dynamic) flags
  */
-#define NDF_QUEUED_FOR_STATUS_POLL     0x0001
-#define NDF_QUEUED_FOR_CONFIG_POLL     0x0002
-#define NDF_UNREACHABLE                0x0004
-#define NDF_AGENT_UNREACHABLE          0x0008
-#define NDF_SNMP_UNREACHABLE           0x0010
-#define NDF_QUEUED_FOR_DISCOVERY_POLL  0x0020
-#define NDF_FORCE_STATUS_POLL          0x0040
-#define NDF_FORCE_CONFIGURATION_POLL   0x0080
-#define NDF_QUEUED_FOR_ROUTE_POLL      0x0100
-#define NDF_CPSNMP_UNREACHABLE         0x0200
-#define NDF_RECHECK_CAPABILITIES       0x0400
-#define NDF_POLLING_DISABLED           0x0800
-#define NDF_CONFIGURATION_POLL_PASSED  0x1000
-#define NDF_QUEUED_FOR_TOPOLOGY_POLL   0x2000
-#define NDF_DELETE_IN_PROGRESS         0x4000
-#define NDF_NETWORK_PATH_PROBLEM       0x8000
+#define NDF_QUEUED_FOR_STATUS_POLL     0x000001
+#define NDF_QUEUED_FOR_CONFIG_POLL     0x000002
+#define NDF_UNREACHABLE                0x000004
+#define NDF_AGENT_UNREACHABLE          0x000008
+#define NDF_SNMP_UNREACHABLE           0x000010
+#define NDF_QUEUED_FOR_DISCOVERY_POLL  0x000020
+#define NDF_FORCE_STATUS_POLL          0x000040
+#define NDF_FORCE_CONFIGURATION_POLL   0x000080
+#define NDF_QUEUED_FOR_ROUTE_POLL      0x000100
+#define NDF_CPSNMP_UNREACHABLE         0x000200
+#define NDF_RECHECK_CAPABILITIES       0x000400
+#define NDF_POLLING_DISABLED           0x000800
+#define NDF_CONFIGURATION_POLL_PASSED  0x001000
+#define NDF_QUEUED_FOR_TOPOLOGY_POLL   0x002000
+#define NDF_DELETE_IN_PROGRESS         0x004000
+#define NDF_NETWORK_PATH_PROBLEM       0x008000
+#define NDF_QUEUED_FOR_INSTANCE_POLL   0x010000
 
 #define NDF_PERSISTENT (NDF_UNREACHABLE | NDF_NETWORK_PATH_PROBLEM | NDF_AGENT_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_CPSNMP_UNREACHABLE)
 
@@ -1032,6 +1034,7 @@ protected:
    time_t m_lastDiscoveryPoll;
    time_t m_lastStatusPoll;
    time_t m_lastConfigurationPoll;
+	time_t m_lastInstancePoll;
 	time_t m_lastTopologyPoll;
    time_t m_lastRTUpdate;
    time_t m_failTimeSNMP;
@@ -1209,6 +1212,7 @@ public:
    void setDiscoveryPollTimeStamp();
    void statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller);
    void configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller, UINT32 dwNetMask);
+	void instanceDiscoveryPoll(ClientSession *session, UINT32 requestId, int pollerId);
 	void topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller);
 	void resolveVlanPorts(VlanList *vlanList);
 	void updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId);
@@ -1217,12 +1221,14 @@ public:
 
    bool isReadyForStatusPoll();
    bool isReadyForConfigurationPoll();
+   bool isReadyForInstancePoll();
    bool isReadyForDiscoveryPoll();
    bool isReadyForRoutePoll();
    bool isReadyForTopologyPoll();
 
    void lockForStatusPoll();
    void lockForConfigurationPoll();
+   void lockForInstancePoll();
    void lockForDiscoveryPoll();
    void lockForRoutePoll();
    void lockForTopologyPoll();
@@ -1325,7 +1331,7 @@ inline bool Node::isReadyForStatusPoll()
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_STATUS_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
 			 (getMyCluster() == NULL) &&
-          ((UINT32)time(NULL) - (UINT32)m_lastStatusPoll > g_dwStatusPollingInterval);
+          ((UINT32)(time(NULL) - m_lastStatusPoll) > g_dwStatusPollingInterval);
 }
 
 inline bool Node::isReadyForConfigurationPoll()
@@ -1341,7 +1347,7 @@ inline bool Node::isReadyForConfigurationPoll()
 	       (!(m_dwFlags & NF_DISABLE_CONF_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_CONFIG_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
-          ((UINT32)time(NULL) - (UINT32)m_lastConfigurationPoll > g_dwConfigurationPollingInterval);
+          ((UINT32)(time(NULL) - m_lastConfigurationPoll) > g_dwConfigurationPollingInterval);
 }
 
 inline bool Node::isReadyForDiscoveryPoll()
@@ -1354,7 +1360,7 @@ inline bool Node::isReadyForDiscoveryPoll()
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
-          ((UINT32)time(NULL) - (UINT32)m_lastDiscoveryPoll > g_dwDiscoveryPollingInterval);
+          ((UINT32)(time(NULL) - m_lastDiscoveryPoll) > g_dwDiscoveryPollingInterval);
 }
 
 inline bool Node::isReadyForRoutePoll()
@@ -1366,7 +1372,7 @@ inline bool Node::isReadyForRoutePoll()
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
-          ((UINT32)time(NULL) - (UINT32)m_lastRTUpdate > g_dwRoutingTableUpdateInterval);
+          ((UINT32)(time(NULL) - m_lastRTUpdate) > g_dwRoutingTableUpdateInterval);
 }
 
 inline bool Node::isReadyForTopologyPoll()
@@ -1378,7 +1384,19 @@ inline bool Node::isReadyForTopologyPoll()
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_TOPOLOGY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
-          ((UINT32)time(NULL) - (UINT32)m_lastTopologyPoll > g_dwTopologyPollingInterval);
+          ((UINT32)(time(NULL) - m_lastTopologyPoll) > g_dwTopologyPollingInterval);
+}
+
+inline bool Node::isReadyForInstancePoll()
+{
+	if (m_isDeleted)
+		return false;
+   return (m_iStatus != STATUS_UNMANAGED) &&
+	       (!(m_dwFlags & NF_DISABLE_CONF_POLL)) &&
+          (!(m_dwDynamicFlags & NDF_QUEUED_FOR_INSTANCE_POLL)) &&
+          (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
+          (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
+          ((UINT32)(time(NULL) - m_lastInstancePoll) > g_instancePollingInterval);
 }
 
 inline void Node::lockForStatusPoll()
@@ -1392,6 +1410,13 @@ inline void Node::lockForConfigurationPoll()
 {
    lockProperties();
    m_dwDynamicFlags |= NDF_QUEUED_FOR_CONFIG_POLL;
+   unlockProperties();
+}
+
+inline void Node::lockForInstancePoll()
+{
+   lockProperties();
+   m_dwDynamicFlags |= NDF_QUEUED_FOR_INSTANCE_POLL;
    unlockProperties();
 }
 

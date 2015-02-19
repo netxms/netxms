@@ -68,6 +68,7 @@ extern const TCHAR *g_szMessages[];
  */
 extern Queue g_statusPollQueue;
 extern Queue g_configPollQueue;
+extern Queue g_instancePollQueue;
 extern Queue g_topologyPollQueue;
 extern Queue g_routePollQueue;
 extern Queue g_discoveryPollQueue;
@@ -137,6 +138,7 @@ UINT32 g_dwConfigurationPollingInterval;
 UINT32 g_dwRoutingTableUpdateInterval;
 UINT32 g_dwTopologyPollingInterval;
 UINT32 g_dwConditionPollingInterval;
+UINT32 g_instancePollingInterval;
 UINT32 g_icmpPingSize;
 UINT32 g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
 UINT32 g_auditFlags;
@@ -303,6 +305,7 @@ static void LoadGlobalConfig()
 	g_dwDiscoveryPollingInterval = ConfigReadInt(_T("DiscoveryPollingInterval"), 900);
 	g_dwStatusPollingInterval = ConfigReadInt(_T("StatusPollingInterval"), 60);
 	g_dwConfigurationPollingInterval = ConfigReadInt(_T("ConfigurationPollingInterval"), 3600);
+	g_instancePollingInterval = ConfigReadInt(_T("InstancePollingInterval"), 600);
 	g_dwRoutingTableUpdateInterval = ConfigReadInt(_T("RoutingTableUpdateInterval"), 300);
 	g_dwTopologyPollingInterval = ConfigReadInt(_T("TopologyPollingInterval"), 1800);
 	g_dwConditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
@@ -1515,6 +1518,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		{
 			ShowQueueStats(pCtx, &g_conditionPollerQueue, _T("Condition poller"));
 			ShowQueueStats(pCtx, &g_configPollQueue, _T("Configuration poller"));
+			ShowQueueStats(pCtx, &g_instancePollQueue, _T("Instance discovery poller"));
 			ShowQueueStats(pCtx, &g_topologyPollQueue, _T("Topology poller"));
 			ShowQueueStats(pCtx, &g_dataCollectionQueue, _T("Data collector"));
 			ShowQueueStats(pCtx, &g_dciCacheLoaderQueue, _T("DCI cache loader"));

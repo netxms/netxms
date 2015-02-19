@@ -65,10 +65,12 @@ public class NodePollerView extends ViewPart
          Messages.get().NodePollerView_ConfigPoll,
          "Instance Discovery"
 	   };
+	/*
 	private static final Color COLOR_ERROR = new Color(Display.getCurrent(), 192, 0, 0);
 	private static final Color COLOR_WARNING = new Color(Display.getCurrent(), 255, 128, 0);
 	private static final Color COLOR_INFO = new Color(Display.getCurrent(), 0, 128, 0);
 	private static final Color COLOR_LOCAL = new Color(Display.getCurrent(), 0, 0, 192);
+	*/
 	
 	private NXCSession session;
 	private AbstractNode node;
