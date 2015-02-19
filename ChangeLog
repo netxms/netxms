@@ -9,7 +9,8 @@
 	- Fixed broken popup menu actions on "Interfaces" tab
 	- Macro %USERNAME%4 can be used in object tools
 	- VLAN highlight on port selection in VLAN view
-- Fixed issues: #725, #765, #766, #767, #768, #769, #771
+	- "Use multipliers" option in DCI summary tables
+- Fixed issues: #693, #725, #765, #766, #767, #768, #769, #771
 
 
 *

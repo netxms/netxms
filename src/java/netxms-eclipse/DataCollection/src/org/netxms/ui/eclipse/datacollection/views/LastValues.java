@@ -58,7 +58,6 @@ public class LastValues extends ViewPart
 	private LastValuesWidget dataView;
 	private Action actionRefresh;
 	private Action actionAutoUpdate;
-	private Action actionUseMultipliers;
 	private Action actionShowFilter;
 	
 	/* (non-Javadoc)
@@ -145,15 +144,6 @@ public class LastValues extends ViewPart
 		};
 		actionAutoUpdate.setChecked(dataView.isAutoRefreshEnabled());
 		
-		actionUseMultipliers = new Action(Messages.get().LastValues_UseMultipliers, Action.AS_CHECK_BOX) {
-			@Override
-			public void run()
-			{
-				dataView.setUseMultipliers(!dataView.areMultipliersUsed());
-			}
-		};
-		actionUseMultipliers.setChecked(dataView.areMultipliersUsed());
-
 		actionShowFilter = new Action(Messages.get().LastValues_ShowFilter, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -189,7 +179,7 @@ public class LastValues extends ViewPart
 	{
 		manager.add(actionShowFilter);
 		manager.add(actionAutoUpdate);
-		manager.add(actionUseMultipliers);
+		manager.add(dataView.getActionUseMultipliers());
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
