@@ -4,11 +4,12 @@
 
 - New NXSL functions: gethostbyaddr, gethostbyname, md5, sha1
 - Added posibility to wakeup unmanaged node
+- Instance discovery separated from configuration polls
 - Management console:
 	- Fixed broken popup menu actions on "Interfaces" tab
 	- Macro %USERNAME%4 can be used in object tools
 	- VLAN highlight on port selection in VLAN view
-- Fixed issues: #725, #765, #766, #768, #769, #771
+- Fixed issues: #725, #765, #766, #767, #768, #769, #771
 
 
 *
