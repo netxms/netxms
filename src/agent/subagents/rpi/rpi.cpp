@@ -34,6 +34,16 @@ extern float g_sensorData[];
 extern time_t g_sensorUpdateTime;
 
 /**
+ * Configuration file template
+ */
+static TCHAR *m_enabledPins = NULL;
+static NX_CFG_TEMPLATE m_cfgTemplate[] =
+{
+	{ _T("EnabledPins"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_enabledPins },
+	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+};
+
+/**
  * Sensor reading
  */
 static LONG H_Sensors(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
@@ -53,10 +63,59 @@ static LONG H_Sensors(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
 }
 
 /**
+ * GPIO pin state
+ */
+static LONG H_PinState(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+	LONG ret = SYSINFO_RC_ERROR;
+
+	TCHAR tmp[128];
+	if (!AgentGetParameterArg(param, 1, tmp, 128))
+   {
+		return SYSINFO_RC_UNSUPPORTED;
+   }
+	StrStrip(tmp);
+   long pin = _tcstol(tmp, NULL, 10);
+
+   uint8_t value = bcm2835_gpio_lev((uint8_t)pin);
+   ret_int(value, value == HIGH ? 1 : 0);
+   ret = SYSINFO_RC_SUCCESS;
+
+	return ret;
+}
+
+/**
  * Startup handler
  */
 static BOOL SubagentInit(Config *config)
 {
+	bool success;
+
+	// Parse configuration
+	success = config->parseTemplate(_T("RPI"), m_cfgTemplate);
+	if (success)
+	{
+		TCHAR *item, *end;
+
+		// Parse target list
+		if (m_enabledPins != NULL)
+		{
+			for(item = m_enabledPins; *item != 0; item = end + 1)
+			{
+				end = _tcschr(item, _T('\n'));
+				if (end != NULL)
+            {
+					*end = 0;
+            }
+				StrStrip(item);
+            long pin = _tcstol(item, NULL, 10);
+            AgentWriteDebugLog(1, _T("RPI: configuring pin %d as INPUT"), pin);
+            bcm2835_gpio_fsel((uint8_t)pin, BCM2835_GPIO_FSEL_INPT);
+			}
+			free(m_enabledPins);
+		}
+   }
+
 	return StartSensorCollector();
 }
 
@@ -75,6 +134,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("Sensors.Humidity"), H_Sensors, (TCHAR *)0, DCI_DT_INT, _T("Humidity") },
 	{ _T("Sensors.Temperature"), H_Sensors, (TCHAR *)1, DCI_DT_INT, _T("Temperature") }
+	{ _T("GPIO.PinState"), H_PinState, NULL, DCI_DT_INT, _T("Pin State") }
 };
 
 /**
