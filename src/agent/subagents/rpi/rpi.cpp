@@ -36,9 +36,11 @@ extern time_t g_sensorUpdateTime;
 /**
  * Configuration file template
  */
+static bool m_disableDHT22 = false;
 static TCHAR *m_enabledPins = NULL;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
+   { _T("DisableDHT22"), CT_BOOLEAN, 0, 0, 1, 0, &m_disableDHT22 },
 	{ _T("EnabledPins"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_enabledPins },
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
@@ -49,6 +51,11 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 static LONG H_Sensors(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG ret;
+
+   if (m_disableDHT22) {
+      return SYSINFO_RC_UNSUPPORTED;
+   }
+
 	if (time(NULL) - g_sensorUpdateTime <= 60)
 	{
 		ret_int(value, (int)g_sensorData[(int)arg]);
@@ -116,7 +123,11 @@ static BOOL SubagentInit(Config *config)
 		}
    }
 
-	return StartSensorCollector();
+	BOOL ret = TRUE;
+   if (!m_disableDHT22) {
+      ret = StartSensorCollector();
+   }
+   return ret;
 }
 
 /**
@@ -124,7 +135,9 @@ static BOOL SubagentInit(Config *config)
  */
 static void SubagentShutdown()
 {
-	StopSensorCollector();
+   if (!m_disableDHT22) {
+      StopSensorCollector();
+   }
 }
 
 /**
