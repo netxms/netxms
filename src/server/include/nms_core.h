@@ -175,6 +175,7 @@ typedef void * HSNMPSESSION;
 /**
  * Client session flags
  */
+#define CSF_TERMINATED           ((UINT32)0x00000001)
 #define CSF_EPP_LOCKED           ((UINT32)0x00000002)
 #define CSF_PACKAGE_DB_LOCKED    ((UINT32)0x00000004)
 #define CSF_USER_DB_LOCKED       ((UINT32)0x00000008)
@@ -378,7 +379,7 @@ public:
 /**
  * Client (user) session
  */
-#define DECLARE_THREAD_STARTER(func) static THREAD_RESULT THREAD_CALL ThreadStarter_##func(void *);
+#define DECLARE_THREAD_STARTER(func) static void ThreadStarter_##func(void *);
 
 class NXCORE_EXPORTABLE ClientSession
 {
@@ -441,7 +442,7 @@ private:
    static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL processingThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL updateThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL pollerThreadStarter(void *);
+   static void pollerThreadStarter(void *);
 
 	DECLARE_THREAD_STARTER(getCollectedData)
 	DECLARE_THREAD_STARTER(getTableCollectedData)
@@ -713,6 +714,7 @@ public:
 	UINT64 getSystemRights() { return m_dwSystemAccess; }
    UINT32 getFlags() { return m_dwFlags; }
    bool isAuthenticated() { return (m_dwFlags & CSF_AUTHENTICATED) ? true : false; }
+   bool isTerminated() { return (m_dwFlags & CSF_TERMINATED) ? true : false; }
    bool isConsoleOpen() { return (m_dwFlags & CSF_CONSOLE_OPEN) ? true : false; }
    bool isSubscribed(UINT32 dwChannel) { return (m_dwActiveChannels & dwChannel) ? true : false; }
    WORD getCurrentCmd() { return m_wCurrentCmd; }

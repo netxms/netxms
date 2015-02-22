@@ -925,6 +925,37 @@ void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay
 void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info);
 void LIBNETXMS_EXPORTABLE ThreadPoolSetDebugCallback(void (*cb)(int, const TCHAR *, va_list));
 
+/**
+ * Wrapper data for ThreadPoolExecute
+ */
+template <typename T, typename R> class __ThreadPoolExecute_WrapperData
+{
+public:
+   T *m_object;
+   void (T::*m_func)(R);
+   R m_arg;
+
+   __ThreadPoolExecute_WrapperData(T *object, void (T::*func)(R), R arg) { m_object = object; m_func = func; m_arg = arg; }
+};
+
+/**
+ * Wrapper for ThreadPoolExecute
+ */
+template <typename T, typename R> void __ThreadPoolExecute_Wrapper(void *arg)
+{
+   __ThreadPoolExecute_WrapperData<T, R> *wd = static_cast<__ThreadPoolExecute_WrapperData<T, R> *>(arg);
+   ((*wd->m_object).*(wd->m_func))(wd->m_arg);
+   delete wd;
+}
+
+/**
+ * Execute task as soon as possible (use class member with one argument)
+ */
+template <typename T, typename R> inline void ThreadPoolExecute(ThreadPool *p, T *object, void (T::*f)(R), R arg)
+{
+   ThreadPoolExecute(p, __ThreadPoolExecute_Wrapper<T,R>, new __ThreadPoolExecute_WrapperData<T, R>(object, f, arg));
+}
+
 /* Interlocked increment/decrement functions */
 #ifdef _WIN32
 

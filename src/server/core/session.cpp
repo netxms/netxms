@@ -148,17 +148,16 @@ static void ImageLibraryDeleteCallback(ClientSession *pSession, void *pArg)
 	pData->pMsg = msg; \
 	msg = NULL; /* prevent deletion by main processing thread*/ \
 	m_dwRefCount++; \
-	ThreadCreate(ThreadStarter_##func, 0, pData); \
+	ThreadPoolExecute(g_mainThreadPool, ThreadStarter_##func, pData); \
 }
 
 #define DEFINE_THREAD_STARTER(func) \
-THREAD_RESULT THREAD_CALL ClientSession::ThreadStarter_##func(void *pArg) \
+void ClientSession::ThreadStarter_##func(void *pArg) \
 { \
    ((PROCTHREAD_START_DATA *)pArg)->pSession->func(((PROCTHREAD_START_DATA *)pArg)->pMsg); \
 	((PROCTHREAD_START_DATA *)pArg)->pSession->m_dwRefCount--; \
 	delete ((PROCTHREAD_START_DATA *)pArg)->pMsg; \
 	free(pArg); \
-   return THREAD_OK; \
 }
 
 DEFINE_THREAD_STARTER(getCollectedData)
@@ -207,7 +206,7 @@ THREAD_RESULT THREAD_CALL ClientSession::readThreadStarter(void *pArg)
    return THREAD_OK;
 }
 
-/**
+ /**
  * Client communication write thread starter
  */
 THREAD_RESULT THREAD_CALL ClientSession::writeThreadStarter(void *pArg)
@@ -231,20 +230,6 @@ THREAD_RESULT THREAD_CALL ClientSession::processingThreadStarter(void *pArg)
 THREAD_RESULT THREAD_CALL ClientSession::updateThreadStarter(void *pArg)
 {
    ((ClientSession *)pArg)->updateThread();
-   return THREAD_OK;
-}
-
-/**
- * Forced node poll thread starter
- */
-THREAD_RESULT THREAD_CALL ClientSession::pollerThreadStarter(void *pArg)
-{
-   ((POLLER_START_DATA *)pArg)->pSession->pollerThread(
-      ((POLLER_START_DATA *)pArg)->pNode,
-      ((POLLER_START_DATA *)pArg)->iPollType,
-      ((POLLER_START_DATA *)pArg)->dwRqId);
-   ((POLLER_START_DATA *)pArg)->pSession->decRefCount();
-   free(pArg);
    return THREAD_OK;
 }
 
@@ -547,14 +532,17 @@ void ClientSession::readThread()
       }
    }
 
+   // Mark as terminated (sendMessage calls will not work after that point)
+   m_dwFlags |= CSF_TERMINATED;
+
 	// Finish update thread first
    m_pUpdateQueue->Put(INVALID_POINTER_VALUE);
    ThreadJoin(m_hUpdateThread);
 
    // Notify other threads to exit
    NXCP_MESSAGE *rawMsg;
-	while((rawMsg = (NXCP_MESSAGE *)m_pSendQueue->Get()) != NULL)
-		free(rawMsg);
+   while((rawMsg = (NXCP_MESSAGE *)m_pSendQueue->Get()) != NULL)
+      free(rawMsg);
    m_pSendQueue->Put(INVALID_POINTER_VALUE);
 
    NXCPMessage *msg;
@@ -618,38 +606,8 @@ void ClientSession::writeThread()
       if (rawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
-		if (ntohs(rawMsg->code) != CMD_ADM_MESSAGE)
-      {
-         TCHAR buffer[256];
-			debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(rawMsg->code), buffer));
-      }
-
-      bool result;
-      if (m_pCtx != NULL)
-      {
-         NXCP_ENCRYPTED_MESSAGE *enMsg = m_pCtx->encryptMessage(rawMsg);
-         if (enMsg != NULL)
-         {
-            result = (SendEx(m_hSocket, (char *)enMsg, ntohl(enMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(enMsg->size));
-            free(enMsg);
-         }
-         else
-         {
-            result = false;
-         }
-      }
-      else
-      {
-         result = (SendEx(m_hSocket, (const char *)rawMsg, ntohl(rawMsg->size), 0, m_mutexSocketWrite) == (int)ntohl(rawMsg->size));
-      }
+      sendRawMessage(rawMsg);
       free(rawMsg);
-
-      if (!result)
-      {
-         closesocket(m_hSocket);
-         m_hSocket = -1;
-         break;
-      }
    }
 }
 
@@ -1516,6 +1474,9 @@ void ClientSession::onFileUpload(BOOL bSuccess)
  */
 void ClientSession::sendMessage(NXCPMessage *msg)
 {
+   if (isTerminated())
+      return;
+
 	if (msg->getCode() != CMD_ADM_MESSAGE)
    {
       TCHAR buffer[128];
@@ -1561,8 +1522,21 @@ void ClientSession::sendMessage(NXCPMessage *msg)
  */
 void ClientSession::sendRawMessage(NXCP_MESSAGE *msg)
 {
-   TCHAR buffer[128];
-	debugPrintf(6, _T("Sending raw message %s"), NXCPMessageCodeName(ntohs(msg->code), buffer));
+   if (isTerminated())
+      return;
+
+   UINT16 code = htons(msg->code);
+   if (code != CMD_ADM_MESSAGE)
+   {
+      TCHAR buffer[128];
+	   debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(msg->code), buffer));
+   }
+
+   if ((g_debugLevel >= 8) && (code != CMD_ADM_MESSAGE))
+   {
+      String msgDump = NXCPMessage::dump(msg, NXCP_VERSION);
+      debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+   }
 
    bool result;
    if (m_pCtx != NULL)
@@ -1595,7 +1569,7 @@ void ClientSession::sendRawMessage(NXCP_MESSAGE *msg)
  */
 BOOL ClientSession::sendFile(const TCHAR *file, UINT32 dwRqId, long ofset)
 {
-	return SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, ofset, NULL, NULL, m_mutexSocketWrite);
+   return !isTerminated() ? SendFileOverNXCP(m_hSocket, dwRqId, file, m_pCtx, ofset, NULL, NULL, m_mutexSocketWrite) : FALSE;
 }
 
 /**
@@ -5719,7 +5693,7 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
             m_dwRefCount++;
 
             pData->pNode = (Node *)object;
-            ThreadCreate(pollerThreadStarter, 0, pData);
+            ThreadPoolExecute(g_mainThreadPool, pollerThreadStarter, pData);
             msg.setField(VID_RCC, RCC_OPERATION_IN_PROGRESS);
             msg.setField(VID_POLLER_MESSAGE, _T("Poll request accepted\r\n"));
 				pData = NULL;
@@ -5757,6 +5731,19 @@ void ClientSession::sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg)
    msg.setField(VID_RCC, RCC_OPERATION_IN_PROGRESS);
    msg.setField(VID_POLLER_MESSAGE, pszMsg);
    sendMessage(&msg);
+}
+
+/**
+ * Forced node poll thread starter
+ */
+void ClientSession::pollerThreadStarter(void *pArg)
+{
+   ((POLLER_START_DATA *)pArg)->pSession->pollerThread(
+      ((POLLER_START_DATA *)pArg)->pNode,
+      ((POLLER_START_DATA *)pArg)->iPollType,
+      ((POLLER_START_DATA *)pArg)->dwRqId);
+   ((POLLER_START_DATA *)pArg)->pSession->decRefCount();
+   free(pArg);
 }
 
 /**
@@ -8517,12 +8504,10 @@ static UINT32 WalkerCallback(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpo
    return SNMP_ERR_SUCCESS;
 }
 
-
-//
-// SNMP walker thread
-//
-
-static THREAD_RESULT THREAD_CALL WalkerThread(void *pArg)
+/**
+ * SNMP walker thread
+ */
+static void WalkerThread(void *pArg)
 {
    NXCPMessage msg;
    WALKER_ENUM_CALLBACK_ARGS args;
@@ -8542,7 +8527,6 @@ static THREAD_RESULT THREAD_CALL WalkerThread(void *pArg)
    ((WALKER_THREAD_ARGS *)pArg)->pSession->decRefCount();
    ((WALKER_THREAD_ARGS *)pArg)->object->decRefCount();
    free(pArg);
-   return THREAD_OK;
 }
 
 /**
@@ -8574,7 +8558,7 @@ void ClientSession::StartSnmpWalk(NXCPMessage *pRequest)
             pArg->dwRqId = pRequest->getId();
             pRequest->getFieldAsString(VID_SNMP_OID, pArg->szBaseOID, MAX_OID_LEN * 4);
 
-            ThreadCreate(WalkerThread, 0, pArg);
+            ThreadPoolExecute(g_mainThreadPool, WalkerThread, pArg);
          }
          else
          {
@@ -12096,13 +12080,12 @@ void ClientSession::listLibraryImages(NXCPMessage *request)
 /**
  * Worker thread for server side command execution
  */
-static THREAD_RESULT THREAD_CALL RunCommand(void *arg)
+static void RunCommand(void *arg)
 {
 	DbgPrintf(5, _T("Running server-side command: %s"), (TCHAR *)arg);
 	if (_tsystem((TCHAR *)arg) == -1)
 	   DbgPrintf(5, _T("Failed to execute command \"%s\""), (TCHAR *)arg);
 	free(arg);
-	return THREAD_OK;
 }
 
 /**
@@ -12127,7 +12110,7 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 				TCHAR *expCmd = ((Node *)object)->expandText(cmd);
 				free(cmd);
 				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, nodeId, _T("Server command executed: %s"), expCmd);
-				ThreadCreate(RunCommand, 0, expCmd);
+				ThreadPoolExecute(g_mainThreadPool, RunCommand, expCmd);
 				msg.setField(VID_RCC, RCC_SUCCESS);
 			}
 			else
