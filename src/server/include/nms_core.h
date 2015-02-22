@@ -961,14 +961,15 @@ void ReloadCertificates();
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);
 #endif   /* not _WIN32 */
 
-void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX pCtx);
-void DumpClientSessions(CONSOLE_CTX pCtx);
-void DumpMobileDeviceSessions(CONSOLE_CTX pCtx);
-void ShowPollerState(CONSOLE_CTX pCtx);
+void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX console);
+void DumpClientSessions(CONSOLE_CTX console);
+void DumpMobileDeviceSessions(CONSOLE_CTX console);
+void ShowPollerState(CONSOLE_CTX console);
 void SetPollerInfo(int nIdx, const TCHAR *pszMsg);
-void ShowServerStats(CONSOLE_CTX pCtx);
-void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const TCHAR *pszName);
-void DumpProcess(CONSOLE_CTX pCtx);
+void ShowServerStats(CONSOLE_CTX console);
+void ShowQueueStats(CONSOLE_CTX console, Queue *pQueue, const TCHAR *pszName);
+void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p);
+void DumpProcess(CONSOLE_CTX console);
 
 GRAPH_ACL_ENTRY *LoadGraphACL(DB_HANDLE hdb, UINT32 graphId, int *pnACLSize);
 BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT32 graphUserId, UINT32 graphDesiredAccess);
@@ -1054,5 +1055,7 @@ extern Queue *g_dciRawDataWriterQueue;
 
 extern int NXCORE_EXPORTABLE g_dbSyntax;
 extern FileMonitoringList g_monitoringList;
+
+extern ThreadPool *g_mainThreadPool;
 
 #endif   /* _nms_core_h_ */

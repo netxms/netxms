@@ -155,6 +155,7 @@ UINT32 g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
 UINT32 g_thresholdRepeatInterval = 0;	// Disabled by default
 int g_requiredPolls = 1;
 DB_DRIVER g_dbDriver = NULL;
+ThreadPool *g_mainThreadPool = NULL;
 
 /**
  * Static data
@@ -778,6 +779,11 @@ retry_db_lock:
 	// Create synchronization stuff
 	m_condShutdown = ConditionCreate(TRUE);
 
+   // Create thread pools
+   DbgPrintf(2, _T("Creating thread pools"));
+   ThreadPoolSetDebugCallback(DbgPrintf2);
+   g_mainThreadPool = ThreadPoolCreate(8, 256, _T("MAIN"));
+
 	// Setup unique identifiers table
 	if (!InitIdTable())
 		return FALSE;
@@ -1014,6 +1020,8 @@ void NXCORE_EXPORTABLE Shutdown()
 	ShutdownEventSubsystem();
    ShutdownAlarmManager();
 	DbgPrintf(1, _T("Event processing stopped"));
+
+   ThreadPoolDestroy(g_mainThreadPool);
 
 	delete g_pScriptLibrary;
 
@@ -1596,6 +1604,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		else if (IsCommand(_T("STATS"), szBuffer, 2))
 		{
 			ShowServerStats(pCtx);
+		}
+		else if (IsCommand(_T("THREADS"), szBuffer, 2))
+		{
+			ShowThreadPool(pCtx, g_mainThreadPool);
 		}
 		else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
 		{

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -891,6 +891,39 @@ inline THREAD GetCurrentThreadId()
 #endif   /* _WIN32 */
 
 #include <rwlock.h>
+
+/**
+ * Thread pool
+ */
+struct ThreadPool;
+
+/**
+ * Thread pool information
+ */
+struct ThreadPoolInfo
+{
+   const TCHAR *name;      // pool name
+   int minThreads;         // min threads
+   int maxThreads;         // max threads
+   int curThreads;         // current threads
+   int activeRequests;     // number of active requests
+   int load;               // Pool load in % (can be more than 100% if there are more requests then threads available)
+   int usage;              // Pool usage in %
+};
+
+/**
+ * Worker function for thread pool
+ */
+typedef void (* ThreadPoolWorkerFunction)(void *);
+
+/* Thread pool functions */
+ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(int minThreads, int maxThreads, const TCHAR *name);
+void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p);
+void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunction f, void *arg);
+void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, ThreadPoolWorkerFunction f, void *arg);
+void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, ThreadPoolWorkerFunction f, void *arg);
+void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info);
+void LIBNETXMS_EXPORTABLE ThreadPoolSetDebugCallback(void (*cb)(int, const TCHAR *, va_list));
 
 /* Interlocked increment/decrement functions */
 #ifdef _WIN32

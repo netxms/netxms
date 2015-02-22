@@ -522,6 +522,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tp.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\unicode.cpp"
 				>
 			</File>

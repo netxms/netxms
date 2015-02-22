@@ -147,12 +147,10 @@ BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId)
    return bResult;
 }
 
-
 /**
  * Agent table tool execution thread
  */
-
-static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
+static void GetAgentTable(void *pArg)
 {
    NXCPMessage msg;
    TCHAR *pszEnum, *pszRegEx, *pszLine, szBuffer[256];
@@ -193,7 +191,7 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
       if (statment == NULL)
       {
          DBConnectionPoolReleaseConnection(hdb);
-         return THREAD_OK;
+         return;
       }
       DBBind(statment, 1, DB_SQLTYPE_INTEGER, ((TOOL_STARTUP_INFO *)pArg)->dwToolId);
 
@@ -284,16 +282,12 @@ static THREAD_RESULT THREAD_CALL GetAgentTable(void *pArg)
    ((TOOL_STARTUP_INFO *)pArg)->pSession->decRefCount();
    safe_free(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
    free(pArg);
-   return THREAD_OK;
 }
-
 
 /**
  * Add SNMP variable value to results list
  */
-
-static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar,
-                          LONG nFmt, Node *pNode)
+static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar, LONG nFmt, Node *pNode)
 {
    TCHAR szBuffer[4096];
    Interface *pInterface;
@@ -338,13 +332,10 @@ static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar,
 	table->set(column, szBuffer);
 }
 
-
 /**
  * Handler for SNMP table enumeration
  */
-
-static UINT32 TableHandler(UINT32 dwVersion, SNMP_Variable *pVar,
-                          SNMP_Transport *pTransport, void *pArg)
+static UINT32 TableHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4];
    SNMP_PDU *pRqPDU, *pRespPDU;
@@ -404,12 +395,10 @@ static UINT32 TableHandler(UINT32 dwVersion, SNMP_Variable *pVar,
    return dwResult;
 }
 
-
 /**
  * SNMP table tool execution thread
  */
-
-static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
+static void GetSNMPTable(void *pArg)
 {
    DB_RESULT hResult;
    NXCPMessage msg;
@@ -428,7 +417,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
    if (statment == NULL)
    {
       DBConnectionPoolReleaseConnection(hdb);
-      return THREAD_OK;
+      return;
    }
    DBBind(statment, 1, DB_SQLTYPE_INTEGER, ((TOOL_STARTUP_INFO *)pArg)->dwToolId);
 
@@ -490,9 +479,7 @@ static THREAD_RESULT THREAD_CALL GetSNMPTable(void *pArg)
    ((TOOL_STARTUP_INFO *)pArg)->pSession->decRefCount();
    safe_free(((TOOL_STARTUP_INFO *)pArg)->pszToolData);
    free(pArg);
-   return THREAD_OK;
 }
-
 
 /**
  * Execute table tool
@@ -529,8 +516,7 @@ UINT32 ExecuteTableTool(UINT32 dwToolId, Node *pNode, UINT32 dwRqId, ClientSessi
             pStartup->dwFlags = DBGetFieldULong(hResult, 0, 2);
             pStartup->pNode = pNode;
             pStartup->pSession = pSession;
-            ThreadCreate((nType == TOOL_TYPE_TABLE_SNMP) ? GetSNMPTable : GetAgentTable,
-                         0, pStartup);
+            ThreadPoolExecute(g_mainThreadPool, (nType == TOOL_TYPE_TABLE_SNMP) ? GetSNMPTable : GetAgentTable, pStartup);
          }
          else
          {
