@@ -154,13 +154,13 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
-   { _T("InterfaceName"), CT_STRING, 0, 0, 64, 0, s_ifName },
-   { _T("IpAddress"), CT_STRING, 0, 0, 32, 0, s_ipAddress },
-   { _T("IpNetMask"), CT_STRING, 0, 0, 32, 0, s_ipNetMask },
-   { _T("MacAddress"), CT_STRING, 0, 0, 16, 0, s_macAddress },
-   { _T("HostName"), CT_STRING, 0, 0, 32, 0, s_hostName },
+   { _T("InterfaceName"), CT_STRING, 0, 0, 64, 0, s_ifName, NULL },
+   { _T("IpAddress"), CT_STRING, 0, 0, 32, 0, s_ipAddress, NULL },
+   { _T("IpNetMask"), CT_STRING, 0, 0, 32, 0, s_ipNetMask, NULL },
+   { _T("MacAddress"), CT_STRING, 0, 0, 16, 0, s_macAddress, NULL },
+   { _T("HostName"), CT_STRING, 0, 0, 128, 0, s_hostName, NULL },
    { _T("ParametersConfig"), CT_STRING, 0, 0, MAX_PATH, 0, s_paramConfigFile },
-   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
 };
 
 static bool LoadConfiguration(bool initial)
