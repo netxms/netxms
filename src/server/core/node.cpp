@@ -1125,7 +1125,7 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
    tNow = time(NULL);
 
 restart_agent_check:
-   if(g_flags & AF_RESOLVE_IP_FOR_EACH_STATUS_POLL)
+   if (g_flags & AF_RESOLVE_IP_FOR_EACH_STATUS_POLL)
    {
       updatePrimaryIpAddr();
    }
@@ -3024,7 +3024,8 @@ StringMap *Node::getInstanceList(DCItem *dci)
       node = this;
    }
 
-	StringList *instances;
+	StringList *instances = NULL;
+   StringMap *instanceMap = NULL;
 	switch(dci->getInstanceDiscoveryMethod())
 	{
 		case IDM_AGENT_LIST:
@@ -3034,18 +3035,21 @@ StringMap *Node::getInstanceList(DCItem *dci)
 		   node->getListFromSNMP(dci->getSnmpPort(), dci->getInstanceDiscoveryData(), &instances);
 		   break;
       case IDM_SNMP_WALK_OIDS:
-         node->getOIDSuffixListFromSNMP(dci->getSnmpPort(), dci->getInstanceDiscoveryData(), &instances);
+         node->getOIDSuffixListFromSNMP(dci->getSnmpPort(), dci->getInstanceDiscoveryData(), &instanceMap);
          break;
 		default:
 			instances = NULL;
 			break;
 	}
-   if (instances == NULL)
+   if ((instances == NULL) && (instanceMap == NULL))
       return NULL;
 
-   StringMap *instanceMap = new StringMap;
-   for(int i = 0; i < instances->size(); i++)
-      instanceMap->set(instances->get(i), instances->get(i));
+   if (instanceMap == NULL)
+   {
+      instanceMap = new StringMap;
+      for(int i = 0; i < instances->size(); i++)
+         instanceMap->set(instances->get(i), instances->get(i));
+   }
    delete instances;
 	return instanceMap;
 }
@@ -3421,7 +3425,7 @@ UINT32 Node::getListFromSNMP(WORD port, const TCHAR *oid, StringList **list)
 struct SNMPOIDSuffixListCallback_Data
 {
    size_t oidLen;
-   StringList *values;
+   StringMap *values;
 };
 
 /**
@@ -3435,16 +3439,22 @@ static UINT32 SNMPOIDSuffixListCallback(UINT32 snmpVersion, SNMP_Variable *varbi
       return SNMP_ERR_SUCCESS;
    TCHAR buffer[256];
    SNMPConvertOIDToText(oid->getLength() - data->oidLen, &(oid->getValue()[data->oidLen]), buffer, 256);
-   data->values->add((buffer[0] == _T('.')) ? &buffer[1] : buffer);
+   
+   const TCHAR *key = (buffer[0] == _T('.')) ? &buffer[1] : buffer;
+
+   TCHAR value[256] = _T("");
+   bool convert = false;
+   varbind->getValueAsPrintableString(value, 256, &convert);
+   data->values->set(key, (value[0] != 0) ? value : key);
    return SNMP_ERR_SUCCESS;
 }
 
 /**
  * Get list of OID suffixes from SNMP
  */
-UINT32 Node::getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringList **list)
+UINT32 Node::getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringMap **values)
 {
-   *list = NULL;
+   *values = NULL;
    SNMP_Transport *snmp = createSnmpTransport(port);
    if (snmp == NULL)
       return DCE_COMM_ERROR;
@@ -3458,12 +3468,12 @@ UINT32 Node::getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringList **
       return DCE_NOT_SUPPORTED;
    }
 
-   data.values = new StringList;
+   data.values = new StringMap;
    UINT32 rc = SnmpWalk(snmp->getSnmpVersion(), snmp, oid, SNMPOIDSuffixListCallback, &data, FALSE);
    delete snmp;
    if (rc == SNMP_ERR_SUCCESS)
    {
-      *list = data.values;
+      *values = data.values;
    }
    else
    {
