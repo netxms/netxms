@@ -41,8 +41,8 @@ static TCHAR *m_enabledPins = NULL;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("DisableDHT22"), CT_BOOLEAN, 0, 0, 1, 0, &m_disableDHT22 },
-	{ _T("EnabledPins"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_enabledPins },
-	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+   { _T("EnabledPins"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_enabledPins },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
 /**
@@ -52,9 +52,8 @@ static LONG H_Sensors(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
 {
 	LONG ret;
 
-   if (m_disableDHT22) {
+   if (m_disableDHT22)
       return SYSINFO_RC_UNSUPPORTED;
-   }
 
 	if (time(NULL) - g_sensorUpdateTime <= 60)
 	{
@@ -124,7 +123,8 @@ static BOOL SubagentInit(Config *config)
    }
 
 	BOOL ret = TRUE;
-   if (!m_disableDHT22) {
+   if (!m_disableDHT22)
+   {
       ret = StartSensorCollector();
    }
    return ret;
@@ -135,9 +135,8 @@ static BOOL SubagentInit(Config *config)
  */
 static void SubagentShutdown()
 {
-   if (!m_disableDHT22) {
+   if (!m_disableDHT22)
       StopSensorCollector();
-   }
 }
 
 /**
@@ -147,7 +146,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
 	{ _T("Sensors.Humidity"), H_Sensors, (TCHAR *)0, DCI_DT_INT, _T("Humidity") },
 	{ _T("Sensors.Temperature"), H_Sensors, (TCHAR *)1, DCI_DT_INT, _T("Temperature") }
-	{ _T("GPIO.PinState"), H_PinState, NULL, DCI_DT_INT, _T("Pin State") }
+	{ _T("GPIO.PinState(*)"), H_PinState, NULL, DCI_DT_INT, _T("Pin {instance} state") }
 };
 
 /**
