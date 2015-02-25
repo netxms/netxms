@@ -67,61 +67,12 @@ ARP_CACHE *SnmpGetArpCache(UINT32 dwVersion, SNMP_Transport *pTransport)
    pArpCache->dwNumEntries = 0;
    pArpCache->pEntries = NULL;
 
-   if (SnmpWalk(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.22.1.3"), 
-                HandlerArp, pArpCache, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.22.1.3"), HandlerArp, pArpCache, FALSE) != SNMP_ERR_SUCCESS)
    {
       DestroyArpCache(pArpCache);
       pArpCache = NULL;
    }
    return pArpCache;
-}
-
-/**
- * Get interface status via SNMP
- */
-void SnmpGetInterfaceStatus(UINT32 dwVersion, SNMP_Transport *pTransport, UINT32 dwIfIndex, int *adminState, int *operState)
-{
-   UINT32 dwAdminStatus = 0, dwOperStatus = 0;
-   TCHAR szOid[256];
-
-   // Interface administrative status
-   _sntprintf(szOid, 256, _T(".1.3.6.1.2.1.2.2.1.7.%d"), dwIfIndex);
-   SnmpGet(dwVersion, pTransport, szOid, NULL, 0, &dwAdminStatus, sizeof(UINT32), 0);
-
-   switch(dwAdminStatus)
-   {
-		case IF_ADMIN_STATE_DOWN:
-			*adminState = IF_ADMIN_STATE_DOWN;
-			*operState = IF_OPER_STATE_DOWN;
-         break;
-      case IF_ADMIN_STATE_UP:
-		case IF_ADMIN_STATE_TESTING:
-			*adminState = (int)dwAdminStatus;
-         // Get interface operational status
-         _sntprintf(szOid, 256, _T(".1.3.6.1.2.1.2.2.1.8.%d"), dwIfIndex);
-         SnmpGet(dwVersion, pTransport, szOid, NULL, 0, &dwOperStatus, sizeof(UINT32), 0);
-         switch(dwOperStatus)
-         {
-            case 3:
-					*operState = IF_OPER_STATE_TESTING;
-               break;
-            case 2:  // down: interface is down
-				case 7:	// lowerLayerDown: down due to state of lower-layer interface(s)
-					*operState = IF_OPER_STATE_DOWN;
-               break;
-            case 1:
-					*operState = IF_OPER_STATE_UP;
-               break;
-            default:
-					*operState = IF_OPER_STATE_UNKNOWN;
-               break;
-         }
-         break;
-      default:
-			*adminState = IF_ADMIN_STATE_UNKNOWN;
-			*operState = IF_OPER_STATE_UNKNOWN;
-         break;
-   }
 }
 
 /**

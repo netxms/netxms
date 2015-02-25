@@ -530,6 +530,60 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 }
 
 /**
+ * Get interface status. Both states must be set to UNKNOWN if cannot be read from device.
+ * 
+ * @param snmp SNMP transport
+ * @param attributes node's custom attributes
+ * @param driverData driver's data
+ * @param ifIndex interface index
+ * @param adminState OUT: interface administrative state
+ * @param operState OUT: interface operational state
+ */
+void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, UINT32 ifIndex, InterfaceAdminState *adminState, InterfaceOperState *operState)
+{
+   UINT32 state = 0;
+   TCHAR oid[256];
+   _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7.%d"), (int)ifIndex); // Interface administrative state
+   SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &state, sizeof(UINT32), 0);
+
+   switch(state)
+   {
+		case 2:
+			*adminState = IF_ADMIN_STATE_DOWN;
+			*operState = IF_OPER_STATE_DOWN;
+         break;
+      case 1:
+		case 3:
+			*adminState = (InterfaceAdminState)state;
+         // Get interface operational state
+         state = 0;
+         _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8.%d"), (int)ifIndex);
+         SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &state, sizeof(UINT32), 0);
+         switch(state)
+         {
+            case 3:
+					*operState = IF_OPER_STATE_TESTING;
+               break;
+            case 2:  // down: interface is down
+				case 7:	// lowerLayerDown: down due to state of lower-layer interface(s)
+					*operState = IF_OPER_STATE_DOWN;
+               break;
+            case 1:
+					*operState = IF_OPER_STATE_UP;
+               break;
+            default:
+					*operState = IF_OPER_STATE_UNKNOWN;
+               break;
+         }
+         break;
+      default:
+			*adminState = IF_ADMIN_STATE_UNKNOWN;
+			*operState = IF_OPER_STATE_UNKNOWN;
+         break;
+   }
+}
+
+/**
  * Handler for VLAN enumeration
  */
 static UINT32 HandlerVlanList(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)

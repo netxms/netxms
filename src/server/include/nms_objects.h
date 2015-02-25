@@ -1197,8 +1197,8 @@ public:
    AccessPoint *findAccessPointByRadioId(int rfIndex);
    ObjectArray<WirelessStationInfo> *getWirelessStations();
 	BOOL isMyIP(UINT32 dwIpAddr);
-   void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 dwIndex, int *adminState, int *operState);
-   void getInterfaceStatusFromAgent(UINT32 dwIndex, int *adminState, int *operState);
+   void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 dwIndex, InterfaceAdminState *adminState, InterfaceOperState *operState);
+   void getInterfaceStatusFromAgent(UINT32 dwIndex, InterfaceAdminState *adminState, InterfaceOperState *operState);
    ROUTING_TABLE *getRoutingTable();
    ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }
 	LinkLayerNeighbors *getLinkLayerNeighbors();

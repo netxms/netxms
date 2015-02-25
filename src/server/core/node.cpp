@@ -4229,15 +4229,23 @@ UINT32 Node::wakeUp()
 /**
  * Get status of interface with given index from SNMP agent
  */
-void Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 index, int *adminState, int *operState)
+void Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 index, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
-   SnmpGetInterfaceStatus(m_snmpVersion, pTransport, index, adminState, operState);
+	if (m_driver != NULL)
+	{
+      m_driver->getInterfaceState(pTransport, &m_customAttributes, m_driverData, index, adminState, operState);
+   }
+   else
+   {
+      *adminState = IF_ADMIN_STATE_UNKNOWN;
+      *operState = IF_OPER_STATE_UNKNOWN;
+   }
 }
 
 /**
  * Get status of interface with given index from native agent
  */
-void Node::getInterfaceStatusFromAgent(UINT32 index, int *adminState, int *operState)
+void Node::getInterfaceStatusFromAgent(UINT32 index, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
    TCHAR szParam[128], szBuffer[32];
 
@@ -4245,7 +4253,7 @@ void Node::getInterfaceStatusFromAgent(UINT32 index, int *adminState, int *operS
    _sntprintf(szParam, 128, _T("Net.Interface.AdminStatus(%u)"), index);
    if (getItemFromAgent(szParam, 32, szBuffer) == DCE_SUCCESS)
    {
-      *adminState = _tcstol(szBuffer, NULL, 0);
+      *adminState = (InterfaceAdminState)_tcstol(szBuffer, NULL, 0);
 
       switch(*adminState)
       {

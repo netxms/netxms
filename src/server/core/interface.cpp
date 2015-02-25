@@ -356,8 +356,8 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
    sendPollerMsg(rqId, _T("   Starting status poll on interface %s\r\n"), m_name);
    sendPollerMsg(rqId, _T("      Current interface status is %s\r\n"), GetStatusAsText(m_iStatus, true));
 
-	int adminState = IF_ADMIN_STATE_UNKNOWN;
-	int operState = IF_OPER_STATE_UNKNOWN;
+	InterfaceAdminState adminState = IF_ADMIN_STATE_UNKNOWN;
+	InterfaceOperState operState = IF_OPER_STATE_UNKNOWN;
    BOOL bNeedPoll = TRUE;
 
    // Poll interface using different methods

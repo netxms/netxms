@@ -242,18 +242,24 @@
 /**
  * Interface administrative states
  */
-#define IF_ADMIN_STATE_UNKNOWN   0
-#define IF_ADMIN_STATE_UP        1
-#define IF_ADMIN_STATE_DOWN      2
-#define IF_ADMIN_STATE_TESTING   3
+enum InterfaceAdminState
+{
+   IF_ADMIN_STATE_UNKNOWN = 0,
+   IF_ADMIN_STATE_UP      = 1,
+   IF_ADMIN_STATE_DOWN    = 2,
+   IF_ADMIN_STATE_TESTING = 3
+};
 
 /**
  * Interface operational states
  */
-#define IF_OPER_STATE_UNKNOWN    0
-#define IF_OPER_STATE_UP         1
-#define IF_OPER_STATE_DOWN       2
-#define IF_OPER_STATE_TESTING    3
+enum InterfaceOperState
+{
+   IF_OPER_STATE_UNKNOWN = 0,
+   IF_OPER_STATE_UP      = 1,
+   IF_OPER_STATE_DOWN    = 2,
+   IF_OPER_STATE_TESTING = 3
+};
 
 /**
  * Node ifXTable usage mode
