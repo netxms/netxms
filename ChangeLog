@@ -11,7 +11,7 @@
 	- Macro %USERNAME%4 can be used in object tools
 	- VLAN highlight on port selection in VLAN view
 	- "Use multipliers" option in DCI summary tables
-- Fixed issues: #690, #693, #725, #765, #766, #767, #768, #769, #771
+- Fixed issues: #690, #693, #725, #756, #765, #766, #767, #768, #769, #771
 
 
 *
