@@ -878,6 +878,11 @@ static BOOL RealPostEvent(Queue *queue, UINT32 eventCode, UINT32 sourceId,
    }
 
    RWLockUnlock(m_rwlockTemplateAccess);
+
+   if (pEventTemplate == NULL)
+   {
+      DbgPrintf(3, _T("RealPostEvent: event with code %d not defined"), eventCode);
+   }
    return bResult;
 }
 
