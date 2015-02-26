@@ -24,6 +24,11 @@
 #include "libnetxms.h"
 
 /**
+ * Constant representing no address
+ */
+const InetAddress InetAddress::NONE = InetAddress();
+
+/**
  * Create IPv4 address object
  */
 InetAddress::InetAddress(UINT32 addr)
@@ -103,6 +108,27 @@ TCHAR *InetAddress::toString(TCHAR *buffer) const
 }
 
 /**
+ * Build hash key. Supplied array must be at least 18 bytes long.
+ */
+BYTE *InetAddress::buildHashKey(BYTE *key) const
+{
+   if (m_family == AF_INET)
+   {
+      key[0] = 6;
+      key[1] = AF_INET;
+      memcpy(&key[2], &m_addr.v4, 4);
+      memset(&key[6], 0, 12);
+   }
+   else
+   {
+      key[0] = 18;
+      key[1] = AF_INET6;
+      memcpy(&key[2], &m_addr.v6, 16);
+   }
+   return key;
+}
+
+/**
  * Check if this InetAddress contain given InetAddress using current network mask
  */
 bool InetAddress::contain(const InetAddress &a) const
@@ -129,6 +155,41 @@ bool InetAddress::contain(const InetAddress &a) const
             addr[i] = 0;
       }
       return !memcmp(addr, m_addr.v6, 16);
+   }
+}
+
+/**
+ * Check if this InetAddress are in same subnet with given InetAddress
+ */
+bool InetAddress::sameSubnet(const InetAddress &a) const
+{
+   if (a.m_family != m_family)
+      return false;
+
+   if (m_family == AF_INET)
+   {
+      UINT32 mask = (m_maskBits > 0) ? (0xFFFFFFFF << (32 - m_maskBits)) : 0;
+      return (a.m_addr.v4 & mask) == (m_addr.v4 & mask);
+   }
+   else
+   {
+      BYTE addr1[16], addr2[16];
+      memcpy(addr1, a.m_addr.v6, 16);
+      memcpy(addr2, m_addr.v6, 16);
+      if (m_maskBits < 128)
+      {
+         int b = m_maskBits / 8;
+         int shift = m_maskBits % 8;
+         BYTE mask = (shift > 0) ? (BYTE)((1 << (8 - shift)) & 0xFF) : 0;
+         addr1[b] &= mask;
+         addr2[b] &= mask;
+         for(int i = b + 1; i < 16; i++)
+         {
+            addr1[i] = 0;
+            addr2[i] = 0;
+         }
+      }
+      return !memcmp(addr1, addr2, 16);
    }
 }
 
@@ -165,7 +226,7 @@ int InetAddress::compareTo(const InetAddress &a) const
 /**
  * Fill sockaddr structure
  */
-struct sockaddr *InetAddress::fillSockAddr(SockAddrBuffer *buffer, UINT16 port)
+struct sockaddr *InetAddress::fillSockAddr(SockAddrBuffer *buffer, UINT16 port) const
 {
    if (!isValid())
       return NULL;
@@ -196,7 +257,7 @@ struct sockaddr *InetAddress::fillSockAddr(SockAddrBuffer *buffer, UINT16 port)
  * @param buflen buffer length in characters
  * @return buffer on success, NULL on failure
  */
-TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen)
+TCHAR *InetAddress::getHostByAddr(TCHAR *buffer, size_t buflen) const
 {
    if (!isValid())
       return NULL;

@@ -619,14 +619,25 @@ double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int iRow, int iCol
 }
 
 /**
- * Get field's value as IP address
+ * Get field's value as IPv4 address
  */
 UINT32 LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColumn)
 {
    TCHAR *pszVal, szBuffer[256];
 
    pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
-   return pszVal == NULL ? INADDR_NONE : ntohl(_t_inet_addr(pszVal));
+   return pszVal == NULL ? 0 : _t_inet_addr(pszVal);
+}
+
+/**
+ * Get field's value as IP address
+ */
+InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_RESULT hResult, int iRow, int iColumn)
+{
+   TCHAR *pszVal, szBuffer[256];
+
+   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
+   return pszVal == NULL ? InetAddress() : InetAddress::parse(pszVal);
 }
 
 /**
@@ -971,13 +982,23 @@ double LIBNXDB_EXPORTABLE DBGetFieldAsyncDouble(DB_ASYNC_RESULT hResult, int iCo
 }
 
 /**
- * Get field's value as IP address from asynchronous SELECT result
+ * Get field's value as IPv4 address from asynchronous SELECT result
  */
 UINT32 LIBNXDB_EXPORTABLE DBGetFieldAsyncIPAddr(DB_ASYNC_RESULT hResult, int iColumn)
 {
    TCHAR szBuffer[64];
    
    return (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL) ? INADDR_NONE : ntohl(_t_inet_addr(szBuffer));
+}
+
+/**
+ * Get field's value as IP address from asynchronous SELECT result
+ */
+InetAddress LIBNXDB_EXPORTABLE DBGetFieldAsyncInetAddr(DB_ASYNC_RESULT hResult, int iColumn)
+{
+   TCHAR szBuffer[64];
+   
+   return (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL) ? InetAddress() : InetAddress::parse(szBuffer);
 }
 
 /**

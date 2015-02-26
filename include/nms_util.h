@@ -889,6 +889,7 @@ public:
    const BYTE *getAddressV6() const { return (m_family == AF_INET6) ? m_addr.v6 : (const BYTE *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"; }
 
    bool contain(const InetAddress &a) const;
+   bool sameSubnet(const InetAddress &a) const;
    bool equals(const InetAddress &a) const;
    int compareTo(const InetAddress &a) const;
 
@@ -898,15 +899,19 @@ public:
    String toString() const;
    TCHAR *toString(TCHAR *buffer) const;
 
-   TCHAR *getHostByAddr(TCHAR *buffer, size_t buflen);
+   BYTE *buildHashKey(BYTE *key) const;
 
-   struct sockaddr *fillSockAddr(SockAddrBuffer *buffer, UINT16 port = 0);
+   TCHAR *getHostByAddr(TCHAR *buffer, size_t buflen) const;
+
+   struct sockaddr *fillSockAddr(SockAddrBuffer *buffer, UINT16 port = 0) const;
 
    static InetAddress resolveHostName(const WCHAR *hostname, int af = AF_INET);
    static InetAddress resolveHostName(const char *hostname, int af = AF_INET);
    static InetAddress parse(const WCHAR *str);
    static InetAddress parse(const char *str);
    static InetAddress createFromSockaddr(struct sockaddr *s);
+
+   static const InetAddress NONE;
 };
 
 /**
@@ -1312,8 +1317,6 @@ void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, c
 
 BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd);
 
-UINT32 LIBNETXMS_EXPORTABLE IcmpPing(UINT32 dwAddr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize);
-
 int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText);
 
 HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText);
@@ -1601,6 +1604,8 @@ int LIBNETXMS_EXPORTABLE nx_inet_pton(int af, const char *src, void *dst);
 //
 
 #ifdef __cplusplus
+
+UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress& addr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize);
 
 TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length);
 String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *str, int length = -1);

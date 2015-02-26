@@ -36,21 +36,18 @@
 #include <iphlpapi.h>
 #include <icmpapi.h>
 
-//
-// Do an ICMP ping to specific address
-// Return value: TRUE if host is alive and FALSE otherwise
-// Parameters: dwAddr - IP address with network byte order
-//             iNumRetries - number of retries
-//             dwTimeout - Timeout waiting for response in milliseconds
-//
-
-UINT32 LIBNETXMS_EXPORTABLE IcmpPing(UINT32 dwAddr, int iNumRetries,
-                                    UINT32 dwTimeout, UINT32 *pdwRTT,
-                                    UINT32 dwPacketSize)
+/**
+ * Do an ICMP ping to specific address
+ * Return value: TRUE if host is alive and FALSE otherwise
+ * Parameters: addr - IP address
+ *             iNumRetries - number of retries
+ *             dwTimeout - Timeout waiting for response in milliseconds
+ */
+UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize)
 {
    static char payload[MAX_PING_SIZE] = "NetXMS ICMP probe [01234567890]";
 
-	HANDLE hIcmpFile = IcmpCreateFile();
+   HANDLE hIcmpFile = (addr.getFamily() == AF_INET) ? IcmpCreateFile() : Icmp6CreateFile();
 	if (hIcmpFile == INVALID_HANDLE_VALUE)
 		return ICMP_API_ERROR;
 
@@ -59,7 +56,23 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(UINT32 dwAddr, int iNumRetries,
 	UINT32 rc = ICMP_API_ERROR;
 	do
 	{
-		rc = IcmpSendEcho(hIcmpFile, dwAddr, payload, (WORD)dwPacketSize, NULL, reply, (WORD)(dwPacketSize + sizeof(ICMP_ECHO_REPLY)), dwTimeout);
+		if (addr.getFamily() == AF_INET)
+      {
+         rc = IcmpSendEcho(hIcmpFile, htonl(addr.getAddressV4()), payload, (WORD)dwPacketSize, NULL, reply, (WORD)(dwPacketSize + sizeof(ICMP_ECHO_REPLY)), dwTimeout);
+      }
+      else
+      {
+         sockaddr_in6 sa, da;
+
+         memset(&sa, 0, sizeof(sa));
+         sa.sin6_family = AF_INET6;
+
+         memset(&da, 0, sizeof(sa));
+         da.sin6_family = AF_INET6;
+         memcpy(da.sin6_addr.s6_addr, addr.getAddressV6(), 16);
+
+         rc = Icmp6SendEcho2(hIcmpFile, NULL, NULL, NULL, &sa, &da, payload, (WORD)dwPacketSize, NULL, reply, (WORD)(dwPacketSize + sizeof(ICMP_ECHO_REPLY)), dwTimeout);
+      }
 		if (rc != 0)
 		{
 #if defined(_WIN64)
@@ -179,9 +192,7 @@ static WORD IPChecksum(BYTE *addr, int len)
 //             dwTimeout - Timeout waiting for response in milliseconds
 //
 
-UINT32 LIBNETXMS_EXPORTABLE IcmpPing(UINT32 dwAddr, int iNumRetries,
-                                    UINT32 dwTimeout, UINT32 *pdwRTT,
-                                    UINT32 dwPacketSize)
+UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize)
 {
    SOCKET sock;
    struct sockaddr_in saDest;
@@ -214,7 +225,7 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(UINT32 dwAddr, int iNumRetries,
 
    // Setup destination address structure
    memset(&saDest, 0, sizeof(sockaddr_in));
-   saDest.sin_addr.s_addr = dwAddr;
+   saDest.sin_addr.s_addr = htonl(addr.getAddressV4());
    saDest.sin_family = AF_INET;
    saDest.sin_port = 0;
 
