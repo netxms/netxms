@@ -67,6 +67,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.ImageTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -245,15 +247,32 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		viewer.setLabelProvider(labelProvider);
       viewer.setBackgroundColor(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND).getRGB());
 
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
-			IDialogSettings settings = Activator.getDefault().getDialogSettings();
 			alwaysFitLayout = settings.getBoolean(viewId + ".alwaysFitLayout");
 			labelProvider.setObjectFigureType(ObjectFigureType.values()[settings.getInt(viewId + ".objectFigureType")]); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{
 		}
+		
+		// Zoom level restore and save
+		try
+		{
+		   viewer.zoomTo(settings.getDouble(viewId + ".zoom"));
+		}
+		catch(NumberFormatException e)
+		{
+		}
+		viewer.getGraphControl().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            IDialogSettings settings = Activator.getDefault().getDialogSettings();
+            settings.put(viewId + ".zoom", viewer.getZoom());
+         }
+      });
 
 		getSite().setSelectionProvider(this);
 

@@ -532,6 +532,16 @@ public class ExtendedGraphViewer extends GraphViewer
 	}
 	
 	/**
+	 * Get current zoom level
+	 * 
+	 * @return
+	 */
+	public double getZoom()
+	{
+	   return getZoomManager().getZoom();
+	}
+	
+	/**
 	 * Create zoom actions
 	 * @return
 	 */
