@@ -336,7 +336,7 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int iNumRetries, U
                if (recvfrom(sock, (char *)&reply, sizeof(ECHOREPLY), 0, (struct sockaddr *)&saSrc, &iAddrLen) > 0)
                {
                   // Check response
-                  if ((reply.m_ipHdr.m_iaSrc.s_addr == dwAddr) && 
+                  if ((reply.m_ipHdr.m_iaSrc.s_addr == addr.getAddressV4()) && 
                       (reply.m_icmpHdr.m_cType == 0) &&
                       (reply.m_icmpHdr.m_wId == ICMP_REQUEST_ID) &&
                       (reply.m_icmpHdr.m_wSeq == request.m_icmpHdr.m_wSeq))
@@ -354,7 +354,7 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int iNumRetries, U
                   if ((reply.m_icmpHdr.m_cType == 3) &&
                       (reply.m_icmpHdr.m_cCode == 1))    // code 1 is "host unreacheable"
                   {
-                     if (((IPHDR *)reply.m_cData)->m_iaDst.s_addr == dwAddr)
+                     if (((IPHDR *)reply.m_cData)->m_iaDst.s_addr == addr.getAddressV4())
                      {
 #ifdef USE_KQUEUE
 			               close(kq);
