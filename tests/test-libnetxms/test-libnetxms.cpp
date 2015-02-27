@@ -264,14 +264,40 @@ static void TestString()
 }
 
 /**
+ * Test InetAddress class
+ */
+static void TestInetAddress()
+{
+   InetAddress a;
+
+   StartTest(_T("InetAddress - isSubnetBroadcast() - IPv4"));
+   a = InetAddress::parse("192.168.0.255");
+   AssertTrue(a.isSubnetBroadcast(24));
+   AssertFalse(a.isSubnetBroadcast(23));
+   EndTest();
+
+   StartTest(_T("InetAddress - isSubnetBroadcast() - IPv6"));
+   a = InetAddress::parse("fe80::ffff:ffff:ffff:ffff");
+   AssertTrue(a.isSubnetBroadcast(64));
+   AssertFalse(a.isSubnetBroadcast(63));
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
 {
+#ifdef _WIN32
+   WSADATA wsaData;
+	WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
+
    TestString();
    TestStringConversion();
    TestStringMap();
    TestStringSet();
    TestMsgWaitQueue();
+   TestInetAddress();
    return 0;
 }

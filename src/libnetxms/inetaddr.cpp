@@ -126,7 +126,7 @@ BYTE *InetAddress::buildHashKey(BYTE *key) const
 /**
  * Get corresponding subnet address for this InetAddress
  */
-InetAddress InetAddress::getSubnetAddress()
+InetAddress InetAddress::getSubnetAddress() const
 {
    InetAddress addr(*this);
    if ((m_family == AF_INET) && (m_maskBits < 32))
@@ -143,6 +143,33 @@ InetAddress InetAddress::getSubnetAddress()
          addr.m_addr.v6[i] = 0;
    }
    return addr;
+}
+
+/**
+ * Check if this address is a subnet broadcast for given subnet mask length
+ */
+bool InetAddress::isSubnetBroadcast(int maskBits) const
+{
+   if (m_family == AF_INET)
+   {
+      UINT32 mask = 0xFFFFFFFF << (32 - maskBits);
+      return (m_addr.v4 & (~mask)) == (~mask);
+   }
+   if (m_family == AF_INET6)
+   {
+      BYTE addr[16];
+      memcpy(addr, m_addr.v6, 16);
+      if (maskBits < 128)
+      {
+         int b = maskBits / 8;
+         int shift = maskBits % 8;
+         addr[b] |= ((BYTE)0xFF >> shift);
+         for(int i = b + 1; i < 16; i++)
+            addr[i] = 0xFF;
+      }
+      return !memcmp(addr, m_addr.v6, 16);
+   }
+   return false;
 }
 
 /**
