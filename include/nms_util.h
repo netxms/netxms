@@ -860,6 +860,22 @@ union SockAddrBuffer
 #endif
 
 /**
+ * Compare addresses in sockaddr
+ */
+inline bool SocketAddressEquals(struct sockaddr *a1, struct sockaddr *a2)
+{
+   if (a1->sa_family != a2->sa_family)
+      return false;
+   if (a1->sa_family == AF_INET)
+      return ((struct sockaddr_in *)a1)->sin_addr.s_addr == ((struct sockaddr_in *)a2)->sin_addr.s_addr;
+#ifdef WITH_IPV6
+   if (a1->sa_family == AF_INET6)
+      return !memcmp(((struct sockaddr_in6 *)a1)->sin6_addr.s6_addr, ((struct sockaddr_in6 *)a2)->sin6_addr.s6_addr, 16);
+#endif
+   return false;
+}
+
+/**
  * IP address
  */
 class LIBNETXMS_EXPORTABLE InetAddress
