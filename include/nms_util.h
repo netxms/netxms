@@ -896,7 +896,8 @@ public:
    void setMaskBits(int m) { m_maskBits = m; }
    int getMaskBits() const { return m_maskBits; }
 
-   InetAddress getSubnetAddress();
+   InetAddress getSubnetAddress() const;
+   bool isSubnetBroadcast(int maskBits) const;
 
    String toString() const;
    TCHAR *toString(TCHAR *buffer) const;
