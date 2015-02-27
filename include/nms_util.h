@@ -899,6 +899,7 @@ public:
    bool isMulticast() const;
    bool isBroadcast() const;
    bool isValid() const { return m_family != AF_UNSPEC; }
+   bool isValidUnicast() { return isValid() && !isAnyLocal() && !isLoopback() && !isMulticast() && !isBroadcast(); }
 
    int getFamily() const { return m_family; }
    UINT32 getAddressV4() const { return (m_family == AF_INET) ? m_addr.v4 : 0; }

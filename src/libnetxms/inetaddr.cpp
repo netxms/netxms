@@ -204,6 +204,7 @@ bool InetAddress::contain(const InetAddress &a) const
 
 /**
  * Check if this InetAddress are in same subnet with given InetAddress
+ * (using mask bits from this InetAddress)
  */
 bool InetAddress::sameSubnet(const InetAddress &a) const
 {
