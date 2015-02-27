@@ -626,7 +626,7 @@ UINT32 LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iCol
    TCHAR *pszVal, szBuffer[256];
 
    pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
-   return pszVal == NULL ? 0 : _t_inet_addr(pszVal);
+   return pszVal == NULL ? 0 : ntohl(_t_inet_addr(pszVal));
 }
 
 /**
