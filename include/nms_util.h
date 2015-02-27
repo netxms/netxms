@@ -896,6 +896,8 @@ public:
    void setMaskBits(int m) { m_maskBits = m; }
    int getMaskBits() const { return m_maskBits; }
 
+   InetAddress getSubnetAddress();
+
    String toString() const;
    TCHAR *toString(TCHAR *buffer) const;
 
@@ -910,8 +912,6 @@ public:
    static InetAddress parse(const WCHAR *str);
    static InetAddress parse(const char *str);
    static InetAddress createFromSockaddr(struct sockaddr *s);
-
-   static const InetAddress NONE;
 };
 
 /**

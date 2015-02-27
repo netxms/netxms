@@ -24,11 +24,6 @@
 #include "libnetxms.h"
 
 /**
- * Constant representing no address
- */
-const InetAddress InetAddress::NONE = InetAddress();
-
-/**
  * Create IPv4 address object
  */
 InetAddress::InetAddress(UINT32 addr)
@@ -126,6 +121,28 @@ BYTE *InetAddress::buildHashKey(BYTE *key) const
       memcpy(&key[2], &m_addr.v6, 16);
    }
    return key;
+}
+
+/**
+ * Get corresponding subnet address for this InetAddress
+ */
+InetAddress InetAddress::getSubnetAddress()
+{
+   InetAddress addr(*this);
+   if ((m_family == AF_INET) && (m_maskBits < 32))
+   {
+      addr.m_addr.v4 = m_addr.v4 & (0xFFFFFFFF << (32 - m_maskBits));
+   }
+   else if ((m_family == AF_INET6) && (m_maskBits < 128))
+   {
+      int b = m_maskBits / 8;
+      int shift = m_maskBits % 8;
+      BYTE mask = (shift > 0) ? (BYTE)((1 << (8 - shift)) & 0xFF) : 0;
+      addr.m_addr.v6[b] &= mask;
+      for(int i = b + 1; i < 16; i++)
+         addr.m_addr.v6[i] = 0;
+   }
+   return addr;
 }
 
 /**
