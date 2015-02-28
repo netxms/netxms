@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.0-M2], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0-M3], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -94,6 +94,8 @@ LDAP_SUPPORT="yes"
 DISABLE_READLINE="no"
 TUXEDO_LIBS=""
 MONGODB_LIBS=""
+DISABLE_IPV6="no"
+IPV6_SUPPORT="no"
 
 
 #--------------------------------------------------------------------
@@ -426,6 +428,12 @@ AC_ARG_ENABLE(iconv,
 [AS_HELP_STRING(--disable-iconv,do not use iconv() for text conversions)],
 [
 	DISABLE_ICONV="yes"
+])
+
+AC_ARG_ENABLE(ipv6,
+[AS_HELP_STRING(--disable-ipv6,disable IPv6 support)],
+[
+	DISABLE_IPV6="yes"
 ])
 
 AC_ARG_ENABLE(iconv-cache,
@@ -1355,6 +1363,28 @@ AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
 #endif
 ]])
 
+
+#--------------------------------------------------------------------
+# Checks for IPv6 support
+#--------------------------------------------------------------------
+
+if test "x$DISABLE_IPV6" != "xyes"; then
+	AC_CHECK_DECL(AF_INET6,,,[
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+	])
+	if test "x$ac_cv_have_decl_AF_INET6" = "xyes"; then
+		AC_CHECK_TYPE(struct sockaddr_in6, [ 
+			AC_DEFINE(WITH_IPV6, 1, Define to have IPv6 support) 
+			IPV6_SUPPORT="yes"
+		],,[
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+		])
+	fi
+fi
 
 #--------------------------------------------------------------------
 # Checks for other libs.
@@ -2883,6 +2913,11 @@ echo
 	echo "Prefix                  : ${prefix}"
 	echo "Platform                : ${PLATFORM}"
 	echo "Shared library suffix   : ${SHLIB_SUFFIX}"
+if test "x$IPV6_SUPPORT" = "xyes"; then
+	echo "IPv6 support            : YES"
+else
+	echo "IPv6 support            : NO"
+fi
 if test "x${BUILD_SERVER}" = "xyes"; then
 	echo "Build Server            : YES"
 	echo "Server libs             : ${SERVER_LIBS}"
