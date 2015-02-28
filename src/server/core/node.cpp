@@ -913,12 +913,12 @@ bool Node::isMyIP(const InetAddress& addr)
 /**
  * Create new interface - convenience wrapper
  */
-Interface *Node::createNewInterface(UINT32 ipAddr, UINT32 ipNetMask, BYTE *macAddr)
+Interface *Node::createNewInterface(const InetAddress& ipAddr, BYTE *macAddr)
 {
    NX_INTERFACE_INFO info;
    memset(&info, 0, sizeof(info));
-   info.ipAddr = ipAddr;
-   info.ipNetMask = ipNetMask;
+   info.ipAddr = ipAddr.getAddressV4();
+   info.ipNetMask = 0xFFFFFFFF << (32 - ipAddr.getMaskBits());
    if (macAddr != NULL)
       memcpy(info.macAddr, macAddr, MAC_ADDR_LENGTH);
    return createNewInterface(&info, false);
@@ -934,8 +934,9 @@ Interface *Node::createNewInterface(NX_INTERFACE_INFO *info, bool manuallyCreate
 	Cluster *pCluster;
 	bool bSyntheticMask = false;
 
-	DbgPrintf(5, _T("Node::createNewInterface(%08X, %08X, %s, %d, %d, bp=%d, slot=%d, port=%d) called for node %s [%d]"),
-	          info->ipAddr, info->ipNetMask, info->name, info->index, info->type, info->bridgePort, info->slot, info->port, m_name, m_id);
+	DbgPrintf(5, _T("Node::createNewInterface(%08X/%08X, %s, %d, %d, bp=%d, slot=%d, port=%d) called for node %s [%d]"),
+//      (const TCHAR *)info->ipAddr.toString(), info->ipAddr.getMaskBits(), info->name, info->index, info->type, info->bridgePort, info->slot, info->port, m_name, m_id);
+      info->ipAddr, info->ipNetMask, info->name, info->index, info->type, info->bridgePort, info->slot, info->port, m_name, m_id);
 
    // Find subnet to place interface object to
 	if ((info->ipAddr != 0) && (info->type != IFTYPE_SOFTWARE_LOOPBACK) && ((info->ipAddr & 0xFF000000) != 0x7F000000))
@@ -1751,7 +1752,7 @@ void Node::updatePrimaryIpAddr()
 /**
  * Perform configuration poll on node
  */
-void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller, UINT32 dwNetMask)
+void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller, int maskBits)
 {
 	if (m_dwDynamicFlags & NDF_DELETE_IN_PROGRESS)
 	{
@@ -1839,7 +1840,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
       SetPollerInfo(nPoller, _T("interface check"));
       sendPollerMsg(dwRqId, _T("Capability check finished\r\n"));
 
-		if (updateInterfaceConfiguration(dwRqId, dwNetMask))
+		if (updateInterfaceConfiguration(dwRqId, maskBits))
 			hasChanges = true;
 
       m_lastConfigurationPoll = time(NULL);
@@ -2566,7 +2567,7 @@ void Node::checkIfXTable(SNMP_Transport *pTransport)
 /**
  * Update interface configuration
  */
-BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
+BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, int maskBits)
 {
    InterfaceList *pIfList;
    Interface **ppDeleteList;
@@ -2761,7 +2762,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
 						TCHAR szMac[20];
 						MACToStr(macAddr, szMac);
 						DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
-                  createNewInterface(m_ipAddress.getAddressV4(), dwNetMask, pMacAddr);
+                  createNewInterface(m_ipAddress, pMacAddr);
 					}
             }
 				else
@@ -2800,7 +2801,9 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
 				TCHAR szMac[20];
 				MACToStr(macAddr, szMac);
 				DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
-         	createNewInterface(m_ipAddress.getAddressV4(), dwNetMask, pMacAddr);
+            InetAddress ifaceAddr = m_ipAddress;
+            ifaceAddr.setMaskBits(maskBits);
+         	createNewInterface(ifaceAddr, pMacAddr);
 			}
       }
 		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): pflist == NULL, dwCount = %u"), m_name, m_id, dwCount);

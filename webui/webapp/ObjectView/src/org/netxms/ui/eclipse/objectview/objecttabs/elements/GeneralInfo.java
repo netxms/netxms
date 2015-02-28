@@ -89,8 +89,7 @@ public class GeneralInfo extends TableElement
 				{
 					if (session.isZoningEnabled())
 						addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(iface.getZoneId()));
-					addPair(Messages.get().GeneralInfo_IPAddr, iface.getPrimaryIP().getHostAddress());
-					addPair(Messages.get().GeneralInfo_IPNetMask, iface.getSubnetMask().getHostAddress());
+					addPair(Messages.get().GeneralInfo_IPAddr, iface.getPrimaryIP().getHostAddress() + "/" + iface.getSubnetMaskBits());
 				}
             addPair(Messages.get().GeneralInfo_AdmState, iface.getAdminStateAsText());
             addPair(Messages.get().GeneralInfo_OperState, iface.getOperStateAsText());

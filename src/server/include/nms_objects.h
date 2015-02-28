@@ -1133,7 +1133,7 @@ protected:
 	void updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
 
 	void updateContainerMembership();
-	BOOL updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask);
+	BOOL updateInterfaceConfiguration(UINT32 dwRqId, int maskBits);
 
 	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
 
@@ -1196,7 +1196,7 @@ public:
 
    void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
    Interface *createNewInterface(NX_INTERFACE_INFO *ifInfo, bool manuallyCreated);
-   Interface *createNewInterface(UINT32 ipAddr, UINT32 ipNetMask, BYTE *macAddr);
+   Interface *createNewInterface(const InetAddress& ipAddr, BYTE *macAddr);
    void deleteInterface(Interface *pInterface);
 
 	void setPrimaryName(const TCHAR *name) { nx_strncpy(m_primaryName, name, MAX_DNS_NAME); }
@@ -1232,7 +1232,7 @@ public:
 	void setRecheckCapsFlag() { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
    void setDiscoveryPollTimeStamp();
    void statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller);
-   void configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller, UINT32 dwNetMask);
+   void configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller, int maskBits);
 	void instanceDiscoveryPoll(ClientSession *session, UINT32 requestId, int pollerId);
 	void topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller);
 	void resolveVlanPorts(VlanList *vlanList);

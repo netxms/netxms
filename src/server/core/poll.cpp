@@ -62,7 +62,7 @@ static void CreateManagementNode(UINT32 ipAddr, UINT32 netMask)
 	Node *pNode = new Node(ipAddr, NF_IS_LOCAL_MGMT, 0, 0, 0);
    NetObjInsert(pNode, TRUE);
 	pNode->setName(GetLocalHostName(buffer, 256));
-   pNode->configurationPoll(NULL, 0, -1, netMask);
+   pNode->configurationPoll(NULL, 0, -1, BitsInMask(netMask));
    pNode->unhide();
    g_dwMgmtNode = pNode->getId();   // Set local management node ID
    PostEvent(EVENT_NODE_ADDED, pNode->getId(), NULL);
