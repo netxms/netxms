@@ -222,7 +222,7 @@ THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
 	SetSocketReuseFlag(sock);
 #ifdef IPV6_V6ONLY
    int on = 1;
-   setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(int));
+   setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(int));
 #endif
 
    // Fill in local address structure

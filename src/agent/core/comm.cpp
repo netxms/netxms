@@ -148,7 +148,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 #endif
 #ifdef IPV6_V6ONLY
       int on = 1;
-      setsockopt(hSocket6, IPPROTO_IPV6, IPV6_V6ONLY, &on, sizeof(int));
+      setsockopt(hSocket6, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(int));
 #endif
    }
 #endif
