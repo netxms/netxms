@@ -953,6 +953,8 @@ enum AggregationFunction
 
 #define TRAP_VARBIND_FORCE_TEXT     0x0001
 
+#ifdef __cplusplus
+
 /**
  * IP network
  */
@@ -1062,5 +1064,7 @@ typedef struct
 	InetAddress ipAddr;
 	UINT32 dwCurrOwner;
 } CLUSTER_RESOURCE;
+
+#endif	/* __cplusplus */
 
 #endif   /* _nxcldefs_h_ */

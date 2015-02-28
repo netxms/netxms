@@ -219,7 +219,7 @@ static ARP_CACHE *SysGetLocalArpCache()
             pChar = _tcschr(pBuf, _T(' '));
             if (pChar != NULL)
                *pChar = 0;
-            pArpCache->pEntries[i].dwIpAddr = ntohl(_t_inet_addr(pBuf));
+            pArpCache->pEntries[i].ipAddr = InetAddress::parse(pBuf);
 
             // Interface index
             if (pChar != NULL)

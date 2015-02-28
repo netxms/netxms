@@ -279,10 +279,12 @@ UINT32 SNMP_UDPTransport::createUDPTransport(const InetAddress& hostAddr, WORD p
 		   localAddr.sa4.sin_family = AF_INET;
 		   localAddr.sa4.sin_addr.s_addr = htonl(INADDR_ANY);
       }
+#ifdef WITH_IPV6
       else
       {
 		   localAddr.sa6.sin6_family = AF_INET6;
       }
+#endif
 
       // We use bind() and later sendto() instead of connect()
 		// to handle cases with some strange devices responding to SNMP
