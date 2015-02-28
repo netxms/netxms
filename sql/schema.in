@@ -308,8 +308,8 @@ CREATE TABLE cluster_members
 CREATE TABLE cluster_sync_subnets
 (
 	cluster_id integer not null,
-	subnet_addr varchar(15) not null,
-	subnet_mask varchar(15) not null,
+	subnet_addr varchar(48) not null,
+	subnet_mask integer not null,
 	PRIMARY KEY(cluster_id,subnet_addr)
 ) TABLE_TYPE;
 
@@ -323,7 +323,7 @@ CREATE TABLE cluster_resources
 	cluster_id integer not null,
 	resource_id integer not null,
 	resource_name varchar(255),
-	ip_addr varchar(15) not null,
+	ip_addr varchar(48) not null,
 	current_owner integer not null,
 	PRIMARY KEY(cluster_id,resource_id)
 ) TABLE_TYPE;
@@ -334,8 +334,8 @@ CREATE TABLE cluster_resources
 CREATE TABLE subnets
 (
 	id integer not null,
-	ip_addr varchar(15) not null,
-	ip_netmask varchar(15) not null,
+	ip_addr varchar(48) not null,
+	ip_netmask integer not null,
 	zone_guid integer not null,
 	synthetic_mask integer not null,
 	PRIMARY KEY(id)
@@ -349,8 +349,8 @@ CREATE TABLE interfaces
 	id integer not null,
 	node_id integer not null,
 	flags integer not null,
-	ip_addr varchar(15) not null,
-	ip_netmask varchar(15) not null,
+	ip_addr varchar(48) not null,
+	ip_netmask integer not null,
 	if_type integer not null,
 	if_index integer not null,
    mtu integer not null,
@@ -381,7 +381,7 @@ CREATE TABLE network_services
 	id integer not null,
 	node_id integer not null,
 	service_type integer not null,
-	ip_bind_addr varchar(15) not null,
+	ip_bind_addr varchar(48) not null,
 	ip_proto integer not null,
 	ip_port integer not null,
 	check_request SQL_TEXT null,
@@ -409,8 +409,8 @@ CREATE TABLE vpn_connector_networks
 (
 	vpn_id integer not null,
 	network_type integer not null,	// 0 == local, 1 == remote
-	ip_addr varchar(15) not null,
-	ip_netmask varchar(15) not null,
+	ip_addr varchar(48) not null,
+	ip_netmask integer not null,
 	PRIMARY KEY(vpn_id,ip_addr)
 ) TABLE_TYPE;
 
@@ -1081,7 +1081,7 @@ CREATE TABLE snmp_trap_log
 (
 	trap_id SQL_INT64 not null,
 	trap_timestamp integer not null,
-	ip_addr varchar(15) not null,
+	ip_addr varchar(48) not null,
 	object_id integer not null,
 	trap_oid varchar(255) not null,
 	trap_varlist SQL_TEXT null,
@@ -1111,8 +1111,8 @@ CREATE TABLE address_lists
 	list_type integer not null, // discovery filter, etc.
 	community_id integer not null, // community id for snmp community addr list, otherwise 0
 	addr_type integer not null, // 0 - addr/mask, 1 - address range
-	addr1 varchar(15) not null,
-	addr2 varchar(15) not null,
+	addr1 varchar(48) not null,
+	addr2 varchar(48) not null,
 	PRIMARY KEY(list_type,community_id,addr_type,addr1,addr2)
 ) TABLE_TYPE;
 

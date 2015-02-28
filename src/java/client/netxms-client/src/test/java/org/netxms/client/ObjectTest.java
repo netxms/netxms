@@ -184,7 +184,7 @@ public class ObjectTest extends SessionTest
       Set<AbstractObject> subnets = object.getAllChilds(AbstractObject.OBJECT_SUBNET);
       for(AbstractObject s : subnets)
       {
-         System.out.println(s.getObjectName() + ": " + ((Subnet)s).getSubnetMask().getHostAddress() + "/" + ((Subnet)s).getMaskBits());
+         System.out.println(s.getObjectName() + ": " + ((Subnet)s).getPrimaryIP().getHostAddress() + "/" + ((Subnet)s).getMaskBits());
       }
       
       session.disconnect();

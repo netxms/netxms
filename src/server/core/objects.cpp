@@ -42,11 +42,11 @@ CONTAINER_CATEGORY *g_pContainerCatList = NULL;
 Queue *g_pTemplateUpdateQueue = NULL;
 
 ObjectIndex g_idxObjectById;
-ObjectIndex g_idxSubnetByAddr;
-ObjectIndex g_idxInterfaceByAddr;
+InetAddressIndex g_idxSubnetByAddr;
+InetAddressIndex g_idxInterfaceByAddr;
 ObjectIndex g_idxZoneByGUID;
 ObjectIndex g_idxNodeById;
-ObjectIndex g_idxNodeByAddr;
+InetAddressIndex g_idxNodeByAddr;
 ObjectIndex g_idxClusterById;
 ObjectIndex g_idxMobileDeviceById;
 ObjectIndex g_idxAccessPointById;
@@ -363,8 +363,8 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
                }
                else
                {
-                  if (pObject->IpAddr() != 0)
-					      g_idxNodeByAddr.put(pObject->IpAddr(), pObject);
+                  if (pObject->getIpAddress().isValidUnicast())
+					      g_idxNodeByAddr.put(pObject->getIpAddress(), pObject);
                }
             }
             break;
@@ -379,7 +379,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             MacDbAddAccessPoint((AccessPoint *)pObject);
             break;
          case OBJECT_SUBNET:
-            if (pObject->IpAddr() != 0)
+            if (pObject->getIpAddress().isValidUnicast())
             {
 					if (IsZoningEnabled())
 					{
@@ -396,14 +396,14 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 					}
 					else
 					{
-						g_idxSubnetByAddr.put(pObject->IpAddr(), pObject);
+						g_idxSubnetByAddr.put(pObject->getIpAddress(), pObject);
 					}
                if (bNewObject)
-                  PostEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isaa", pObject->getId(), pObject->getName(), pObject->IpAddr(), ((Subnet *)pObject)->getIpNetMask());
+                  PostEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isAd", pObject->getId(), pObject->getName(), &pObject->getIpAddress(), pObject->getIpAddress().getMaskBits());
             }
             break;
          case OBJECT_INTERFACE:
-            if ((pObject->IpAddr() != 0) && !((Interface *)pObject)->isExcludedFromTopology())
+            if (pObject->getIpAddress().isValidUnicast() && !((Interface *)pObject)->isExcludedFromTopology())
             {
 					if (IsZoningEnabled())
 					{
@@ -420,9 +420,9 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 					}
 					else
 					{
-						if (g_idxInterfaceByAddr.put(pObject->IpAddr(), pObject))
-							DbgPrintf(1, _T("WARNING: duplicate interface IP address %08X (interface object %s [%d])"),
-										 pObject->IpAddr(), pObject->getName(), (int)pObject->getId());
+						if (g_idxInterfaceByAddr.put(pObject->getIpAddress(), pObject))
+							DbgPrintf(1, _T("WARNING: duplicate interface IP address %s (interface object %s [%d])"),
+										 (const TCHAR *)pObject->getIpAddress().toString(), pObject->getName(), (int)pObject->getId());
 					}
             }
             MacDbAddInterface((Interface *)pObject);
@@ -519,8 +519,8 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
             }
             else
             {
-			      if (pObject->IpAddr() != 0)
-				      g_idxNodeByAddr.remove(pObject->IpAddr());
+			      if (pObject->getIpAddress().isValidUnicast())
+				      g_idxNodeByAddr.remove(pObject->getIpAddress());
             }
          }
          break;
@@ -535,7 +535,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          MacDbRemove(((AccessPoint *)pObject)->getMacAddr());
          break;
       case OBJECT_SUBNET:
-         if (pObject->IpAddr() != 0)
+         if (pObject->getIpAddress().isValidUnicast())
          {
 				if (IsZoningEnabled())
 				{
@@ -552,12 +552,12 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 				}
 				else
 				{
-					g_idxSubnetByAddr.remove(pObject->IpAddr());
+					g_idxSubnetByAddr.remove(pObject->getIpAddress());
 				}
          }
          break;
       case OBJECT_INTERFACE:
-         if (pObject->IpAddr() != 0)
+         if (pObject->getIpAddress().isValidUnicast())
          {
 				if (IsZoningEnabled())
 				{
@@ -574,10 +574,10 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 				}
 				else
 				{
-					NetObj *o = g_idxInterfaceByAddr.get(pObject->IpAddr());
+					NetObj *o = g_idxInterfaceByAddr.get(pObject->getIpAddress());
 					if ((o != NULL) && (o->getId() == pObject->getId()))
 					{
-						g_idxInterfaceByAddr.remove(pObject->IpAddr());
+						g_idxInterfaceByAddr.remove(pObject->getIpAddress());
 					}
 				}
          }
@@ -648,9 +648,9 @@ MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId
 /**
  * Find node by IP address
  */
-Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, UINT32 ipAddr)
+Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddress& ipAddr)
 {
-   if (ipAddr == 0)
+   if (!ipAddr.isValidUnicast())
       return NULL;
 
 	Zone *zone = IsZoningEnabled() ? (Zone *)g_idxZoneByGUID.get(zoneId) : NULL;
@@ -688,9 +688,9 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, UINT32 ipAddr)
 /**
  * Find interface by IP address
  */
-Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, UINT32 ipAddr)
+Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, const InetAddress& ipAddr)
 {
-   if (ipAddr == 0)
+   if (!ipAddr.isValidUnicast())
       return NULL;
 
 	Zone *zone = IsZoningEnabled() ? (Zone *)g_idxZoneByGUID.get(zoneId) : NULL;
@@ -784,9 +784,9 @@ Node NXCORE_EXPORTABLE *FindNodeByBridgeId(const BYTE *bridgeId)
 /**
  * Find subnet by IP address
  */
-Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, UINT32 ipAddr)
+Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, const InetAddress& ipAddr)
 {
-   if (ipAddr == 0)
+   if (!ipAddr.isValidUnicast())
       return NULL;
 
 	Subnet *subnet = NULL;
@@ -810,9 +810,9 @@ Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, UINT32 ipAddr)
  */
 struct SUBNET_MATCHING_DATA
 {
-   DWORD ipAddr;     // IP address to find subnet for
-   int maskLen;      // Current match mask length
-   Subnet *subnet;   // search result
+   InetAddress ipAddr; // IP address to find subnet for
+   int maskLen;        // Current match mask length
+   Subnet *subnet;     // search result
 };
 
 /**
@@ -821,9 +821,9 @@ struct SUBNET_MATCHING_DATA
 static void SubnetMatchCallback(NetObj *object, void *arg)
 {
    SUBNET_MATCHING_DATA *data = (SUBNET_MATCHING_DATA *)arg;
-   if ((data->ipAddr & ((Subnet *)object)->getIpNetMask()) == ((Subnet *)object)->IpAddr())
+   if (((Subnet *)object)->getIpAddress().contain(data->ipAddr))
    {
-      int maskLen = BitsInMask(((Subnet *)object)->getIpNetMask());
+      int maskLen = ((Subnet *)object)->getIpAddress().getMaskBits();
       if (maskLen > data->maskLen)
       {
          data->maskLen = maskLen;
@@ -835,13 +835,13 @@ static void SubnetMatchCallback(NetObj *object, void *arg)
 /**
  * Find subnet for given IP address
  */
-Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneId, UINT32 dwNodeAddr)
+Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneId, const InetAddress& nodeAddr)
 {
-   if (dwNodeAddr == 0)
+   if (!nodeAddr.isValidUnicast())
       return NULL;
 
    SUBNET_MATCHING_DATA matchData;
-   matchData.ipAddr = dwNodeAddr;
+   matchData.ipAddr = nodeAddr;
    matchData.maskLen = -1;
    matchData.subnet = NULL;
 	if (IsZoningEnabled())
@@ -945,19 +945,20 @@ Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName)
 	return (Template *)g_idxObjectById.find(TemplateNameComparator, (void *)pszName);
 }
 
-
-//
-// Find cluster by resource IP
-//
-
+/**
+ * Callback for FindClusterByResourceIP
+ */
 static bool ClusterResourceIPComparator(NetObj *object, void *ipAddr)
 {
-	return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() && ((Cluster *)object)->isVirtualAddr(CAST_FROM_POINTER(ipAddr, UINT32));
+	return (object->getObjectClass() == OBJECT_CLUSTER) && !object->isDeleted() && ((Cluster *)object)->isVirtualAddr(*((const InetAddress *)ipAddr));
 }
 
-Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(UINT32 ipAddr)
+/**
+ * Find cluster by resource IP
+ */
+Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(const InetAddress& ipAddr)
 {
-	return (Cluster *)g_idxObjectById.find(ClusterResourceIPComparator, CAST_TO_POINTER(ipAddr, void *));
+	return (Cluster *)g_idxObjectById.find(ClusterResourceIPComparator, (void *)&ipAddr);
 }
 
 /**
@@ -965,7 +966,7 @@ Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(UINT32 ipAddr)
  */
 struct __cluster_ip_data
 {
-	UINT32 ipAddr;
+	InetAddress ipAddr;
 	UINT32 zoneId;
 };
 
@@ -985,7 +986,7 @@ static bool ClusterIPComparator(NetObj *object, void *data)
  * Check if given IP address is used by cluster (it's either
  * resource IP or located on one of sync subnets)
  */
-bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zoneId, UINT32 ipAddr)
+bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zoneId, const InetAddress& ipAddr)
 {
 	struct __cluster_ip_data data;
 	data.zoneId = zoneId;
@@ -1755,7 +1756,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
 	ConsolePrintf(pCtx, _T("Object ID %d \"%s\"\n")
                        _T("   Class: %s  Primary IP: %s  Status: %s  IsModified: %d  IsDeleted: %d\n"),
 					  object->getId(), object->getName(), (object->getObjectClass() < OBJECT_CUSTOM) ? g_szClassName[object->getObjectClass()] : _T("Custom"),
-                 IpToStr(object->IpAddr(), dd->buffer),
+                 object->getIpAddress().toString(dd->buffer),
                  GetStatusAsText(object->Status(), true),
                  object->isModified(), object->isDeleted());
    ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"), 
@@ -1774,7 +1775,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
                        ((Node *)object)->getObjectId());
          break;
       case OBJECT_SUBNET:
-         ConsolePrintf(pCtx, _T("   Network mask: %s\n"), IpToStr(((Subnet *)object)->getIpNetMask(), dd->buffer));
+         ConsolePrintf(pCtx, _T("   Network mask: %d\n"), object->getIpAddress().getMaskBits());
          break;
       case OBJECT_CONTAINER:
          pCat = FindContainerCategory(((Container *)object)->getCategory());
@@ -1920,14 +1921,14 @@ void NetObjDelete(NetObj *pObject)
 /**
  * Update interface index when IP address changes
  */
-void UpdateInterfaceIndex(UINT32 dwOldIpAddr, UINT32 dwNewIpAddr, Interface *iface)
+void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, Interface *iface)
 {
 	if (IsZoningEnabled())
 	{
 		Zone *zone = (Zone *)g_idxZoneByGUID.get(iface->getZoneId());
 		if (zone != NULL)
 		{
-			zone->updateInterfaceIndex(dwOldIpAddr, dwNewIpAddr, iface);
+			zone->updateInterfaceIndex(oldIpAddr, newIpAddr, iface);
 		}
 		else
 		{
@@ -1937,8 +1938,8 @@ void UpdateInterfaceIndex(UINT32 dwOldIpAddr, UINT32 dwNewIpAddr, Interface *ifa
 	}
 	else
 	{
-		g_idxInterfaceByAddr.remove(dwOldIpAddr);
-		g_idxInterfaceByAddr.put(dwNewIpAddr, iface);
+		g_idxInterfaceByAddr.remove(oldIpAddr);
+		g_idxInterfaceByAddr.put(newIpAddr, iface);
 	}
 }
 

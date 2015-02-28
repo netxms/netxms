@@ -193,7 +193,7 @@ enum ActionCallbackEvent
 typedef struct
 {
    UINT32 dwIndex;       // Interface index
-   UINT32 dwIpAddr;
+   InetAddress ipAddr;
    BYTE bMacAddr[MAC_ADDR_LENGTH];
 } ARP_ENTRY;
 
@@ -516,7 +516,7 @@ public:
    UINT32 execAction(const TCHAR *pszAction, int argc, TCHAR **argv, bool withOutput = false, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = NULL, void *cbData = NULL);
    UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL);
    UINT32 startUpgrade(const TCHAR *pszPkgName);
-   UINT32 checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType, WORD wPort = 0,
+   UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
    UINT32 getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);
    UINT32 getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize);
@@ -553,21 +553,21 @@ public:
 class LIBNXSRV_EXPORTABLE SNMP_ProxyTransport : public SNMP_Transport
 {
 protected:
-	AgentConnection *m_pAgentConnection;
-	NXCPMessage *m_pResponse;
-	UINT32 m_dwIpAddr;
-	WORD m_wPort;
+	AgentConnection *m_agentConnection;
+	NXCPMessage *m_response;
+	InetAddress m_ipAddr;
+	WORD m_port;
 	bool m_waitForResponse;
 
 public:
-	SNMP_ProxyTransport(AgentConnection *pConn, UINT32 dwIpAddr, WORD wPort);
+	SNMP_ProxyTransport(AgentConnection *conn, const InetAddress& ipAddr, WORD port);
 	virtual ~SNMP_ProxyTransport();
 
    virtual int readMessage(SNMP_PDU **ppData, UINT32 dwTimeout = INFINITE,
                            struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL,
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pdu);
-   virtual UINT32 getPeerIpAddress();
+   virtual InetAddress getPeerIpAddress();
 
    void setWaitForResponse(bool wait) { m_waitForResponse = wait; }
 };

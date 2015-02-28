@@ -166,7 +166,7 @@ static ARP_CACHE *SysGetLocalArpCache()
           (sysArpCache->table[i].dwType == 4))  // Only static and dynamic entries
       {
          pArpCache->pEntries[pArpCache->dwNumEntries].dwIndex = sysArpCache->table[i].dwIndex;
-         pArpCache->pEntries[pArpCache->dwNumEntries].dwIpAddr = ntohl(sysArpCache->table[i].dwAddr);
+         pArpCache->pEntries[pArpCache->dwNumEntries].ipAddr = ntohl(sysArpCache->table[i].dwAddr);
          memcpy(pArpCache->pEntries[pArpCache->dwNumEntries].bMacAddr, sysArpCache->table[i].bPhysAddr, 6);
          pArpCache->dwNumEntries++;
       }

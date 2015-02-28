@@ -1092,6 +1092,9 @@ typedef struct
 // Base value for cluster resource list
 #define VID_RESOURCE_LIST_BASE      ((UINT32)0x20000000)
 
+// Base value for cluster sync network list
+#define VID_SYNC_SUBNETS_BASE       ((UINT32)0x28000000)
+
 // Base value for agent's enum values
 #define VID_ENUM_VALUE_BASE         ((UINT32)0x10000000)
 

@@ -41,10 +41,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.base.InetAddressEx;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.ClusterSyncNetwork;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
@@ -68,7 +68,7 @@ public class ClusterNetworks extends PropertyPage
 	private Button addButton;
 	private Button editButton;
 	private Button deleteButton;
-	private List<ClusterSyncNetwork> networks = null;
+	private List<InetAddressEx> networks = null;
 	private boolean isModified = false;
 	
 	/* (non-Javadoc)
@@ -97,9 +97,9 @@ public class ClusterNetworks extends PropertyPage
       viewer.setLabelProvider(new NetworkListLabelProvider());
       viewer.setComparator(new NetworkListComparator());
       
-      networks = new ArrayList<ClusterSyncNetwork>(object.getSyncNetworks().size());
-      for(ClusterSyncNetwork n : object.getSyncNetworks())
-      	networks.add(new ClusterSyncNetwork(n));
+      networks = new ArrayList<InetAddressEx>(object.getSyncNetworks().size());
+      for(InetAddressEx n : object.getSyncNetworks())
+      	networks.add(new InetAddressEx(n));
       viewer.setInput(networks.toArray());
       
       GridData gridData = new GridData();
@@ -207,7 +207,7 @@ public class ClusterNetworks extends PropertyPage
 		ClusterNetworkEditDialog dlg = new ClusterNetworkEditDialog(getShell(), null, null);
 		if (dlg.open() == Window.OK)
 		{
-			ClusterSyncNetwork n = new ClusterSyncNetwork(dlg.getAddress(), dlg.getMask());
+		   InetAddressEx n = new InetAddressEx(dlg.getAddress(), dlg.getMask());
 			networks.add(n);
 			viewer.setInput(networks.toArray());
 			viewer.setSelection(new StructuredSelection(n));
@@ -224,12 +224,12 @@ public class ClusterNetworks extends PropertyPage
 		if (selection.size() != 1)
 			return;
 		
-		ClusterSyncNetwork n = (ClusterSyncNetwork)selection.getFirstElement();
-		ClusterNetworkEditDialog dlg = new ClusterNetworkEditDialog(getShell(), n.getSubnetAddress(), n.getSubnetMask());
+		InetAddressEx n = (InetAddressEx)selection.getFirstElement();
+		ClusterNetworkEditDialog dlg = new ClusterNetworkEditDialog(getShell(), n.address, n.maskFromBits());
 		if (dlg.open() == Window.OK)
 		{
-			n.setSubnetAddress(dlg.getAddress());
-			n.setSubnetMask(dlg.getMask());
+			n.address = dlg.getAddress();
+			n.mask = InetAddressEx.bitsInMask(dlg.getMask());
 			viewer.update(n, null);
 			isModified = true;
 		}

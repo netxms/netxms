@@ -163,7 +163,7 @@ void ForwardingDatabase::print(CONSOLE_CTX ctx, Node *owner)
 	for(int i = 0; i < m_fdbSize; i++)
    {
       Node *node = (Node *)FindObjectById(m_fdb[i].nodeObject, OBJECT_NODE);
-      Interface *iface = owner->findInterface(m_fdb[i].ifIndex, INADDR_ANY);
+      Interface *iface = owner->findInterfaceByIndex(m_fdb[i].ifIndex);
       ConsolePrintf(ctx, _T("%s | %7d | %-20s | %4d | %5d | %s\n"), MACToStr(m_fdb[i].macAddr, macAddrStr),
          m_fdb[i].ifIndex, (iface != NULL) ? iface->getName() : _T("\x1b[31;1mUNKNOWN\x1b[0m"), 
          m_fdb[i].port, m_fdb[i].nodeObject, (node != NULL) ? node->getName() : _T("\x1b[31;1mUNKNOWN\x1b[0m"));
@@ -187,7 +187,7 @@ void ForwardingDatabase::fillMessage(NXCPMessage *msg)
       msg->setField(fieldId++, m_fdb[i].nodeObject);
       msg->setField(fieldId++, m_fdb[i].vlanId);
       msg->setField(fieldId++, m_fdb[i].type);
-      Interface *iface = (node != NULL) ? node->findInterface(m_fdb[i].ifIndex, INADDR_ANY) : NULL;
+      Interface *iface = (node != NULL) ? node->findInterfaceByIndex(m_fdb[i].ifIndex) : NULL;
       if (iface != NULL)
       {
          msg->setField(fieldId++, iface->getName());

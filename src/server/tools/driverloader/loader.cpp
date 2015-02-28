@@ -157,7 +157,7 @@ static void LoadDriver(const char *driver, const char *host, int snmpVersion, in
    }
    
    SNMP_Transport *transport = new SNMP_UDPTransport;
-   ((SNMP_UDPTransport *)transport)->createUDPTransport(NULL, ResolveHostNameA(host), snmpPort);
+   ((SNMP_UDPTransport *)transport)->createUDPTransport(InetAddress::resolveHostName(host), snmpPort);
    transport->setSnmpVersion(snmpVersion);
    transport->setSecurityContext(new SNMP_SecurityContext(community));
 

@@ -62,7 +62,7 @@ static int SetVariables(int argc, TCHAR *argv[])
 
    // Create SNMP transport
    pTransport = new SNMP_UDPTransport;
-   dwResult = pTransport->createUDPTransport(argv[0], 0, m_port);
+   dwResult = pTransport->createUDPTransport(argv[0], m_port);
    if (dwResult != SNMP_ERR_SUCCESS)
    {
       _tprintf(_T("Unable to create UDP transport: %s\n"), SNMPGetErrorText(dwResult));

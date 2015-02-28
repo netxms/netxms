@@ -28,10 +28,8 @@
 VPNConnector::VPNConnector() : NetObj()
 {
    m_dwPeerGateway = 0;
-   m_dwNumLocalNets = 0;
-   m_dwNumRemoteNets = 0;
-   m_pLocalNetList = NULL;
-   m_pRemoteNetList = NULL;
+   m_localNetworks = new ObjectArray<InetAddress>(8, 8, true);
+   m_remoteNetworks = new ObjectArray<InetAddress>(8, 8, true);
 }
 
 /**
@@ -40,10 +38,8 @@ VPNConnector::VPNConnector() : NetObj()
 VPNConnector::VPNConnector(bool hidden) : NetObj()
 {
    m_dwPeerGateway = 0;
-   m_dwNumLocalNets = 0;
-   m_dwNumRemoteNets = 0;
-   m_pLocalNetList = NULL;
-   m_pRemoteNetList = NULL;
+   m_localNetworks = new ObjectArray<InetAddress>(8, 8, true);
+   m_remoteNetworks = new ObjectArray<InetAddress>(8, 8, true);
    m_isHidden = hidden;
 }
 
@@ -52,8 +48,8 @@ VPNConnector::VPNConnector(bool hidden) : NetObj()
  */
 VPNConnector::~VPNConnector()
 {
-   safe_free(m_pLocalNetList);
-   safe_free(m_pRemoteNetList);
+   delete m_localNetworks;
+   delete m_remoteNetworks;
 }
 
 /**
@@ -61,41 +57,26 @@ VPNConnector::~VPNConnector()
  */
 BOOL VPNConnector::loadFromDatabase(UINT32 dwId)
 {
-   TCHAR szQuery[256];
-   DB_RESULT hResult;
-   UINT32 i, dwNodeId;
-   NetObj *pObject;
-   BOOL bResult = FALSE;
-
    m_id = dwId;
 
    if (!loadCommonProperties())
       return FALSE;
 
    // Load network lists
-   _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask FROM vpn_connector_networks WHERE vpn_id=%d AND network_type=0"), m_id);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   TCHAR szQuery[256];
+   _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask,network_type FROM vpn_connector_networks WHERE vpn_id=%d"), m_id);
+   DB_RESULT hResult = DBSelect(g_hCoreDB, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
-   m_dwNumLocalNets = DBGetNumRows(hResult);
-   m_pLocalNetList = (IP_NETWORK *)malloc(sizeof(IP_NETWORK) * m_dwNumLocalNets);
-   for(i = 0; i < m_dwNumLocalNets; i++)
+   int count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
    {
-      m_pLocalNetList[i].dwAddr = DBGetFieldIPAddr(hResult, i, 0);
-      m_pLocalNetList[i].dwMask = DBGetFieldIPAddr(hResult, i, 1);
-   }
-   DBFreeResult(hResult);
-
-   _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask FROM vpn_connector_networks WHERE vpn_id=%d AND network_type=1"), m_id);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult == NULL)
-      return FALSE;     // Query failed
-   m_dwNumRemoteNets = DBGetNumRows(hResult);
-   m_pRemoteNetList = (IP_NETWORK *)malloc(sizeof(IP_NETWORK) * m_dwNumRemoteNets);
-   for(i = 0; i < m_dwNumRemoteNets; i++)
-   {
-      m_pRemoteNetList[i].dwAddr = DBGetFieldIPAddr(hResult, i, 0);
-      m_pRemoteNetList[i].dwMask = DBGetFieldIPAddr(hResult, i, 1);
+      InetAddress addr = DBGetFieldInetAddr(hResult, i, 0);
+      addr.setMaskBits(DBGetFieldLong(hResult, i, 1));
+      if (DBGetFieldLong(hResult, i, 2) == 0)
+         m_localNetworks->add(new InetAddress(addr));
+      else
+         m_remoteNetworks->add(new InetAddress(addr));
    }
    DBFreeResult(hResult);
    
@@ -105,15 +86,16 @@ BOOL VPNConnector::loadFromDatabase(UINT32 dwId)
    if (hResult == NULL)
       return FALSE;     // Query failed
 
+   BOOL success = FALSE;
    if (DBGetNumRows(hResult) != 0)
    {
-      dwNodeId = DBGetFieldULong(hResult, 0, 0);
+      UINT32 dwNodeId = DBGetFieldULong(hResult, 0, 0);
       m_dwPeerGateway = DBGetFieldULong(hResult, 0, 1);
 
       // Link VPN connector to node
       if (!m_isDeleted)
       {
-         pObject = FindObjectById(dwNodeId);
+         NetObj *pObject = FindObjectById(dwNodeId);
          if (pObject == NULL)
          {
             nxlog_write(MSG_INVALID_NODE_ID_EX, NXLOG_ERROR, "dds", dwId, dwNodeId, _T("VPN connector"));
@@ -126,12 +108,12 @@ BOOL VPNConnector::loadFromDatabase(UINT32 dwId)
          {
             pObject->AddChild(this);
             AddParent(pObject);
-            bResult = TRUE;
+            success = TRUE;
          }
       }
       else
       {
-         bResult = TRUE;
+         success = TRUE;
       }
    }
 
@@ -140,7 +122,7 @@ BOOL VPNConnector::loadFromDatabase(UINT32 dwId)
    // Load access list
    loadACLFromDB();
 
-   return bResult;
+   return success;
 }
 
 /**
@@ -148,60 +130,45 @@ BOOL VPNConnector::loadFromDatabase(UINT32 dwId)
  */
 BOOL VPNConnector::saveToDatabase(DB_HANDLE hdb)
 {
-   TCHAR szQuery[1024], szIpAddr[16], szNetMask[16];
-   BOOL bNewObject = TRUE;
-   Node *pNode;
-   UINT32 i, dwNodeId;
-   DB_RESULT hResult;
-
    // Lock object's access
    lockProperties();
 
    saveCommonProperties(hdb);
 
-   // Check for object's existence in database
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM vpn_connectors WHERE id=%d"), m_id);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         bNewObject = FALSE;
-      DBFreeResult(hResult);
-   }
-
    // Determine owning node's ID
-   pNode = getParentNode();
-   if (pNode != NULL)
-      dwNodeId = pNode->getId();
-   else
-      dwNodeId = 0;
+   Node *pNode = getParentNode();
+   UINT32 dwNodeId = (pNode != NULL) ? pNode->getId() : 0;
 
    // Form and execute INSERT or UPDATE query
-   if (bNewObject)
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO vpn_connectors (id,node_id,peer_gateway) VALUES (%d,%d,%d)"),
-              m_id, dwNodeId, m_dwPeerGateway);
-   else
+   TCHAR szQuery[1024];
+   if (IsDatabaseRecordExist(hdb, _T("vpn_connectors"), _T("id"), m_id))
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("UPDATE vpn_connectors SET node_id=%d,peer_gateway=%d WHERE id=%d"),
               dwNodeId, m_dwPeerGateway, m_id);
+   else
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO vpn_connectors (id,node_id,peer_gateway) VALUES (%d,%d,%d)"),
+              m_id, dwNodeId, m_dwPeerGateway);
    DBQuery(hdb, szQuery);
 
    // Save network list
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM vpn_connector_networks WHERE vpn_id=%d"), m_id);
    DBQuery(hdb, szQuery);
-   for(i = 0; i < m_dwNumLocalNets; i++)
+
+   int i;
+   TCHAR buffer[64];
+   for(i = 0; i < m_localNetworks->size(); i++)
    {
+      InetAddress *addr = m_localNetworks->get(i);
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
-		           _T("INSERT INTO vpn_connector_networks (vpn_id,network_type,ip_addr,ip_netmask) VALUES (%d,0,'%s','%s')"),
-              m_id, IpToStr(m_pLocalNetList[i].dwAddr, szIpAddr),
-              IpToStr(m_pLocalNetList[i].dwMask, szNetMask));
+		           _T("INSERT INTO vpn_connector_networks (vpn_id,network_type,ip_addr,ip_netmask) VALUES (%d,0,'%s',%d)"),
+                 (int)m_id, addr->toString(buffer), addr->getMaskBits());
       DBQuery(hdb, szQuery);
    }
-   for(i = 0; i < m_dwNumRemoteNets; i++)
+   for(i = 0; i < m_remoteNetworks->size(); i++)
    {
+      InetAddress *addr = m_remoteNetworks->get(i);
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
-			        _T("INSERT INTO vpn_connector_networks (vpn_id,network_type,ip_addr,ip_netmask) VALUES (%d,1,'%s','%s')"),
-              m_id, IpToStr(m_pRemoteNetList[i].dwAddr, szIpAddr),
-              IpToStr(m_pRemoteNetList[i].dwMask, szNetMask));
+			        _T("INSERT INTO vpn_connector_networks (vpn_id,network_type,ip_addr,ip_netmask) VALUES (%d,1,'%s',%d)"),
+                 (int)m_id, addr->toString(buffer), addr->getMaskBits());
       DBQuery(hdb, szQuery);
    }
 
@@ -252,24 +219,19 @@ Node *VPNConnector::getParentNode()
  */
 void VPNConnector::fillMessage(NXCPMessage *pMsg)
 {
-   UINT32 i, dwId;
-
    NetObj::fillMessage(pMsg);
    pMsg->setField(VID_PEER_GATEWAY, m_dwPeerGateway);
-   pMsg->setField(VID_NUM_LOCAL_NETS, m_dwNumLocalNets);
-   pMsg->setField(VID_NUM_REMOTE_NETS, m_dwNumRemoteNets);
+   pMsg->setField(VID_NUM_LOCAL_NETS, (UINT32)m_localNetworks->size());
+   pMsg->setField(VID_NUM_REMOTE_NETS, (UINT32)m_remoteNetworks->size());
 
-   for(i = 0, dwId = VID_VPN_NETWORK_BASE; i < m_dwNumLocalNets; i++)
-   {
-      pMsg->setField(dwId++, m_pLocalNetList[i].dwAddr);
-      pMsg->setField(dwId++, m_pLocalNetList[i].dwMask);
-   }
+   UINT32 fieldId;
+   int i;
 
-   for(i = 0; i < m_dwNumRemoteNets; i++)
-   {
-      pMsg->setField(dwId++, m_pRemoteNetList[i].dwAddr);
-      pMsg->setField(dwId++, m_pRemoteNetList[i].dwMask);
-   }
+   for(i = 0, fieldId = VID_VPN_NETWORK_BASE; i < m_localNetworks->size(); i++)
+      pMsg->setField(fieldId++, *m_localNetworks->get(i));
+
+   for(i = 0; i < m_remoteNetworks->size(); i++)
+      pMsg->setField(fieldId++, *m_remoteNetworks->get(i));
 }
 
 /**
@@ -288,39 +250,17 @@ UINT32 VPNConnector::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocke
    if ((pRequest->isFieldExist(VID_NUM_LOCAL_NETS)) &&
        (pRequest->isFieldExist(VID_NUM_REMOTE_NETS)))
    {
-      UINT32 i, dwId = VID_VPN_NETWORK_BASE;
+      int i;
+      UINT32 fieldId = VID_VPN_NETWORK_BASE;
 
-      m_dwNumLocalNets = pRequest->getFieldAsUInt32(VID_NUM_LOCAL_NETS);
-      if (m_dwNumLocalNets > 0)
-      {
-         m_pLocalNetList = (IP_NETWORK *)realloc(m_pLocalNetList, sizeof(IP_NETWORK) * m_dwNumLocalNets);
-         for(i = 0; i < m_dwNumLocalNets; i++)
-         {
-            m_pLocalNetList[i].dwAddr = pRequest->getFieldAsUInt32(dwId++);
-            m_pLocalNetList[i].dwMask = pRequest->getFieldAsUInt32(dwId++);
-         }
-      }
-      else
-      {
-         safe_free(m_pLocalNetList);
-         m_pLocalNetList = NULL;
-      }
+      m_localNetworks->clear();
+      int count = pRequest->getFieldAsInt32(VID_NUM_LOCAL_NETS);
+      for(i = 0; i < count; i++)
+         m_localNetworks->add(new InetAddress(pRequest->getFieldAsInetAddress(fieldId++)));
 
-      m_dwNumRemoteNets = pRequest->getFieldAsUInt32(VID_NUM_REMOTE_NETS);
-      if (m_dwNumRemoteNets > 0)
-      {
-         m_pRemoteNetList = (IP_NETWORK *)realloc(m_pRemoteNetList, sizeof(IP_NETWORK) * m_dwNumRemoteNets);
-         for(i = 0; i < m_dwNumRemoteNets; i++)
-         {
-            m_pRemoteNetList[i].dwAddr = pRequest->getFieldAsUInt32(dwId++);
-            m_pRemoteNetList[i].dwMask = pRequest->getFieldAsUInt32(dwId++);
-         }
-      }
-      else
-      {
-         safe_free(m_pRemoteNetList);
-         m_pRemoteNetList = NULL;
-      }
+      count = pRequest->getFieldAsInt32(VID_NUM_REMOTE_NETS);
+      for(i = 0; i < count; i++)
+         m_remoteNetworks->add(new InetAddress(pRequest->getFieldAsInetAddress(fieldId++)));
    }
 
    return NetObj::modifyFromMessage(pRequest, TRUE);
@@ -329,58 +269,55 @@ UINT32 VPNConnector::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocke
 /**
  * Check if given address falls into one of the local nets
  */
-BOOL VPNConnector::isLocalAddr(UINT32 dwIpAddr)
+bool VPNConnector::isLocalAddr(const InetAddress& addr)
 {
-   UINT32 i;
-   BOOL bResult = FALSE;
+   bool result = false;
 
    lockProperties();
 
-   for(i = 0; i < m_dwNumLocalNets; i++)
-      if ((dwIpAddr & m_pLocalNetList[i].dwMask) == m_pLocalNetList[i].dwAddr)
+   for(int i = 0; i < m_localNetworks->size(); i++)
+      if (m_localNetworks->get(i)->contain(addr))
       {
-         bResult = TRUE;
+         result = true;
          break;
       }
 
    unlockProperties();
-   return bResult;
+   return result;
 }
 
 /**
  * Check if given address falls into one of the remote nets
  */
-BOOL VPNConnector::isRemoteAddr(UINT32 dwIpAddr)
+bool VPNConnector::isRemoteAddr(const InetAddress& addr)
 {
-   UINT32 i;
-   BOOL bResult = FALSE;
+   bool result = false;
 
    lockProperties();
 
-   for(i = 0; i < m_dwNumRemoteNets; i++)
-      if ((dwIpAddr & m_pRemoteNetList[i].dwMask) == m_pRemoteNetList[i].dwAddr)
+   for(int i = 0; i < m_remoteNetworks->size(); i++)
+      if (m_remoteNetworks->get(i)->contain(addr))
       {
-         bResult = TRUE;
+         result = true;
          break;
       }
 
    unlockProperties();
-   return bResult;
+   return result;
 }
 
 /**
  * Get address of peer gateway
  */
-UINT32 VPNConnector::getPeerGatewayAddr()
+InetAddress VPNConnector::getPeerGatewayAddr()
 {
    NetObj *pObject;
-   UINT32 dwAddr = 0;
 
    pObject = FindObjectById(m_dwPeerGateway);
    if (pObject != NULL)
    {
       if (pObject->getObjectClass() == OBJECT_NODE)
-         dwAddr = pObject->IpAddr();
+         return pObject->getIpAddress();
    }
-   return dwAddr;
+   return InetAddress();
 }

@@ -297,7 +297,7 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 		object = FindObjectById(event->getSourceId());
 		if (object != NULL)
 		{
-			msg.setField(VID_IP_ADDRESS, object->IpAddr());
+			msg.setField(VID_IP_ADDRESS, object->getIpAddress());
 			msg.setField(VID_EVENT_CODE, event->getCode());
 			msg.setField(VID_EVENT_NAME, event->getName());
 			if (event->getUserTag() != NULL)

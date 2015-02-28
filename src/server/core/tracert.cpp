@@ -24,7 +24,7 @@
 /**
  * Network path constructor
  */
-NetworkPath::NetworkPath(UINT32 srcAddr)
+NetworkPath::NetworkPath(const InetAddress& srcAddr)
 {
    m_sourceAddress = srcAddr;
 	m_hopCount = 0;
@@ -47,7 +47,7 @@ NetworkPath::~NetworkPath()
 /**
  * Add hop to path
  */
-void NetworkPath::addHop(UINT32 nextHop, NetObj *currentObject, UINT32 ifIndex, bool isVpn, const TCHAR *name)
+void NetworkPath::addHop(const InetAddress& nextHop, NetObj *currentObject, UINT32 ifIndex, bool isVpn, const TCHAR *name)
 {
 	if (m_hopCount == m_allocated)
 	{
@@ -87,9 +87,10 @@ void NetworkPath::fillMessage(NXCPMessage *msg)
  */
 NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
 {
-   UINT32 srcAddr, srcIfIndex;
-   if (!pSrc->getOutwardInterface(pDest->IpAddr(), &srcAddr, &srcIfIndex))
-      srcAddr = pSrc->IpAddr();
+   UINT32 srcIfIndex;
+   InetAddress srcAddr;
+   if (!pSrc->getOutwardInterface(pDest->getIpAddress(), &srcAddr, &srcIfIndex))
+      srcAddr = pSrc->getIpAddress();
 
    NetworkPath *path = new NetworkPath(srcAddr);
 
@@ -97,14 +98,15 @@ NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
    Node *pCurr, *pNext;
    for(pCurr = pSrc; (pCurr != pDest) && (pCurr != NULL) && (hopCount < 30); pCurr = pNext, hopCount++)
    {
-      UINT32 dwNextHop, dwIfIndex;
+      UINT32 dwIfIndex;
+      InetAddress nextHop;
       bool isVpn;
       TCHAR name[MAX_OBJECT_NAME];
-      if (pCurr->getNextHop(srcAddr, pDest->IpAddr(), &dwNextHop, &dwIfIndex, &isVpn, name))
+      if (pCurr->getNextHop(srcAddr, pDest->getIpAddress(), &nextHop, &dwIfIndex, &isVpn, name))
       {
-			pNext = FindNodeByIP(pSrc->getZoneId(), dwNextHop);
-			path->addHop(dwNextHop, pCurr, dwIfIndex, isVpn, name);
-         if ((pNext == pCurr) || (dwNextHop == 0))
+			pNext = FindNodeByIP(pSrc->getZoneId(), nextHop);
+			path->addHop(nextHop, pCurr, dwIfIndex, isVpn, name);
+         if ((pNext == pCurr) || !nextHop.isValid())
             pNext = NULL;     // Directly connected subnet or too many hops, stop trace
       }
       else
@@ -114,7 +116,7 @@ NetworkPath *TraceRoute(Node *pSrc, Node *pDest)
    }
 	if (pCurr == pDest)
 	{
-		path->addHop(0, pCurr, 0, false, _T(""));
+      path->addHop(InetAddress(), pCurr, 0, false, _T(""));
 		path->setComplete();
 	}
 

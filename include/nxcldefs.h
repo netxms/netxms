@@ -1059,7 +1059,7 @@ typedef struct
 {
 	UINT32 dwId;
 	TCHAR szName[MAX_DB_STRING];
-	UINT32 dwIpAddr;
+	InetAddress ipAddr;
 	UINT32 dwCurrOwner;
 } CLUSTER_RESOURCE;
 

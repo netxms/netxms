@@ -33,9 +33,9 @@ Zone::Zone() : NetObj()
    m_agentProxy = 0;
    m_snmpProxy = 0;
 	m_icmpProxy = 0;
-	m_idxNodeByAddr = new ObjectIndex;
-	m_idxInterfaceByAddr = new ObjectIndex;
-	m_idxSubnetByAddr = new ObjectIndex;
+	m_idxNodeByAddr = new InetAddressIndex;
+	m_idxInterfaceByAddr = new InetAddressIndex;
+	m_idxSubnetByAddr = new InetAddressIndex;
 }
 
 /**
@@ -49,9 +49,9 @@ Zone::Zone(UINT32 zoneId, const TCHAR *name) : NetObj()
    m_agentProxy = 0;
    m_snmpProxy = 0;
 	m_icmpProxy = 0;
-	m_idxNodeByAddr = new ObjectIndex;
-	m_idxInterfaceByAddr = new ObjectIndex;
-	m_idxSubnetByAddr = new ObjectIndex;
+	m_idxNodeByAddr = new InetAddressIndex;
+	m_idxInterfaceByAddr = new InetAddressIndex;
+	m_idxSubnetByAddr = new InetAddressIndex;
 }
 
 /**
@@ -198,7 +198,7 @@ UINT32 Zone::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 /**
  * Update interface index
  */
-void Zone::updateInterfaceIndex(UINT32 oldIp, UINT32 newIp, Interface *iface)
+void Zone::updateInterfaceIndex(const InetAddress& oldIp, const InetAddress& newIp, Interface *iface)
 {
 	m_idxInterfaceByAddr->remove(oldIp);
 	m_idxInterfaceByAddr->put(newIp, iface);

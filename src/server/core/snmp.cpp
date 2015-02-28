@@ -46,7 +46,7 @@ static UINT32 HandlerArp(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *
       ((ARP_CACHE *)pArg)->dwNumEntries++;
       ((ARP_CACHE *)pArg)->pEntries = (ARP_ENTRY *)realloc(((ARP_CACHE *)pArg)->pEntries,
                sizeof(ARP_ENTRY) * ((ARP_CACHE *)pArg)->dwNumEntries);
-      ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIpAddr = ntohl(pVar->getValueAsUInt());
+      ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].ipAddr = ntohl(pVar->getValueAsUInt());
       memcpy(((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].bMacAddr, bMac, 6);
       ((ARP_CACHE *)pArg)->pEntries[((ARP_CACHE *)pArg)->dwNumEntries - 1].dwIndex = dwIndex;
    }

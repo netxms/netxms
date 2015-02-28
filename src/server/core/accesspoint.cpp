@@ -402,8 +402,8 @@ void AccessPoint::updateState(AccessPointState state)
 
    static const TCHAR *names[] = { _T("id"), _T("name"), _T("macAddr"), _T("ipAddr"), _T("vendor"), _T("model"), _T("serialNumber") };
    PostEventWithNames((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : ((state == AP_UNADOPTED) ? EVENT_AP_UNADOPTED : EVENT_AP_DOWN), 
-      m_nodeId, "ishasss", names,
-      m_id, m_name, m_macAddr, m_dwIpAddr, 
+      m_nodeId, "ishAsss", names,
+      m_id, m_name, m_macAddr, &m_ipAddress, 
       CHECK_NULL_EX(m_vendor), CHECK_NULL_EX(m_model), CHECK_NULL_EX(m_serialNumber));
 }
 
@@ -420,7 +420,7 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 
    /* TODO: read status from controller via driver and use ping as last resort only */
 
-   if (m_dwIpAddr != 0)
+   if (m_ipAddress.isValid())
    {
 		UINT32 icmpProxy = 0;
 
@@ -446,7 +446,7 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 				{
 					TCHAR parameter[64], buffer[64];
 
-					_sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), IpToStr(m_dwIpAddr, buffer));
+					_sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), m_ipAddress.toString(buffer));
 					if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
 					{
 						DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): proxy response: \"%s\""), m_id, m_name, buffer);
@@ -486,9 +486,10 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 		}
 		else	// not using ICMP proxy
 		{
+         TCHAR buffer[64];
 			sendPollerMsg(rqId, _T("      Starting ICMP ping\r\n"));
-			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,%d,NULL,%d)"), m_id, m_name, htonl(m_dwIpAddr), g_icmpPingTimeout, g_icmpPingSize);
-			UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+			DbgPrintf(7, _T("AccessPoint::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,NULL,%d)"), m_id, m_name, m_ipAddress.toString(buffer), g_icmpPingTimeout, g_icmpPingSize);
+			UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
          m_pingLastTimeStamp = time(NULL);
 			if (dwPingStatus == ICMP_SUCCESS)
          {
@@ -546,7 +547,7 @@ void AccessPoint::updatePingData()
          {
             TCHAR parameter[64], buffer[64];
 
-            _sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), IpToStr(m_dwIpAddr, buffer));
+            _sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), m_ipAddress.toString(buffer));
             if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
             {
                DbgPrintf(7, _T("AccessPoint::updatePingData:  proxy response: \"%s\""), buffer);
@@ -578,7 +579,7 @@ void AccessPoint::updatePingData()
    }
    else	// not using ICMP proxy
    {
-      UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+      UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
       if (dwPingStatus != ICMP_SUCCESS)
       {
          DbgPrintf(7, _T("AccessPoint::updatePingData: error getting ping %d"), dwPingStatus);

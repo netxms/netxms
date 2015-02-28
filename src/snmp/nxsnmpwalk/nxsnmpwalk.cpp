@@ -61,7 +61,7 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
 
    // Create SNMP transport
    pTransport = new SNMP_UDPTransport;
-   dwResult = pTransport->createUDPTransport(pszHost, 0, m_port);
+   dwResult = pTransport->createUDPTransport(pszHost, m_port);
    if (dwResult != SNMP_ERR_SUCCESS)
    {
       _tprintf(_T("Unable to create UDP transport: %s\n"), SNMPGetErrorText(dwResult));

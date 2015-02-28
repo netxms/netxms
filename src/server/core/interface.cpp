@@ -31,7 +31,6 @@ Interface::Interface() : NetObj()
 	m_flags = 0;
 	nx_strncpy(m_description, m_name, MAX_DB_STRING);
    m_alias[0] = 0;
-   m_ipNetMask = 0;
    m_index = 0;
    m_type = IFTYPE_OTHER;
    m_mtu = 0;
@@ -56,17 +55,16 @@ Interface::Interface() : NetObj()
 /**
  * Constructor for "fake" interface object
  */
-Interface::Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSyntheticMask) : NetObj()
+Interface::Interface(const InetAddress& addr, UINT32 zoneId, bool bSyntheticMask) : NetObj()
 {
 	m_flags = bSyntheticMask ? IF_SYNTHETIC_MASK : 0;
-	if ((dwAddr & 0xFF000000) == 0x7F000000)
+   if (addr.isLoopback())
 		m_flags |= IF_LOOPBACK;
 
 	_tcscpy(m_name, _T("unknown"));
    _tcscpy(m_description, _T("unknown"));
    m_alias[0] = 0;
-   m_dwIpAddr = dwAddr;
-   m_ipNetMask = dwNetMask;
+   m_ipAddress = addr;
    m_index = 1;
    m_type = IFTYPE_OTHER;
    m_mtu = 0;
@@ -92,10 +90,10 @@ Interface::Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSynth
 /**
  * Constructor for normal interface object
  */
-Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32 ipAddr, UINT32 ipNetMask, UINT32 ifType, UINT32 zoneId)
+Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddress& addr, UINT32 ifType, UINT32 zoneId)
           : NetObj()
 {
-	if (((ipAddr & 0xFF000000) == 0x7F000000) || (ifType == IFTYPE_SOFTWARE_LOOPBACK))
+   if (addr.isLoopback() || (ifType == IFTYPE_SOFTWARE_LOOPBACK))
 		m_flags = IF_LOOPBACK;
 	else
 		m_flags = 0;
@@ -106,8 +104,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32
    m_index = index;
    m_type = ifType;
    m_mtu = 0;
-   m_dwIpAddr = ipAddr;
-   m_ipNetMask = ipNetMask;
+   m_ipAddress = addr;
 	m_bridgePortNumber = 0;
 	m_slotNumber = 0;
 	m_portNumber = 0;
@@ -178,8 +175,8 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
 
    if (DBGetNumRows(hResult) != 0)
    {
-      m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 0);
-      m_ipNetMask = DBGetFieldIPAddr(hResult, 0, 1);
+      m_ipAddress = DBGetFieldInetAddr(hResult, 0, 0);
+      m_ipAddress.setMaskBits(DBGetFieldLong(hResult, 0, 1));
       m_type = DBGetFieldULong(hResult, 0, 2);
       m_index = DBGetFieldULong(hResult, 0, 3);
       UINT32 nodeId = DBGetFieldULong(hResult, 0, 4);
@@ -236,7 +233,7 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
    loadACLFromDB();
 
 	// Validate loopback flag
-	if (((m_dwIpAddr & 0xFF000000) == 0x7F000000) || (m_type == IFTYPE_SOFTWARE_LOOPBACK))
+	if (m_ipAddress.isLoopback() || (m_type == IFTYPE_SOFTWARE_LOOPBACK))
 		m_flags |= IF_LOOPBACK;
 
    return bResult;
@@ -247,7 +244,7 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
  */
 BOOL Interface::saveToDatabase(DB_HANDLE hdb)
 {
-   TCHAR szMacStr[16], szIpAddr[16], szNetMask[16];
+   TCHAR szMacStr[16], szIpAddr[64];
    UINT32 dwNodeId;
 
    lockProperties();
@@ -291,8 +288,8 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
 		return FALSE;
 	}
 
-	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, IpToStr(m_dwIpAddr, szIpAddr), DB_BIND_STATIC);
-	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, IpToStr(m_ipNetMask, szNetMask), DB_BIND_STATIC);
+	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(szIpAddr), DB_BIND_STATIC);
+	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_ipAddress.getMaskBits());
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, dwNodeId);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_type);
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_index);
@@ -399,7 +396,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
    if (bNeedPoll)
    {
 		// Pings cannot be used for cluster sync interfaces
-      if ((pNode->getFlags() & NF_DISABLE_ICMP) || clusterSync || (m_dwIpAddr == 0) || isLoopback())
+      if ((pNode->getFlags() & NF_DISABLE_ICMP) || clusterSync || !m_ipAddress.isValid() || isLoopback())
       {
 			// Interface doesn't have an IP address, so we can't ping it
 			sendPollerMsg(rqId, POLLER_WARNING _T("      Interface status cannot be determined\r\n"));
@@ -430,9 +427,9 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 					AgentConnection *conn = proxyNode->createAgentConnection();
 					if (conn != NULL)
 					{
-						TCHAR parameter[64], buffer[64];
+						TCHAR parameter[128], buffer[64];
 
-						_sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), IpToStr(m_dwIpAddr, buffer));
+						_sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), m_ipAddress.toString(buffer));
 						if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
 						{
 							DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): proxy response: \"%s\""), m_id, m_name, buffer);
@@ -472,8 +469,9 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 			else	// not using ICMP proxy
 			{
 				sendPollerMsg(rqId, _T("      Starting ICMP ping\r\n"));
-				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(0x%08X,3,%d,%d,%d)"), m_id, m_name, htonl(m_dwIpAddr), g_icmpPingTimeout, m_pingTime, g_icmpPingSize);
-				UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+				DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d,%d)"), 
+               m_id, m_name, (const TCHAR *)m_ipAddress.toString(), g_icmpPingTimeout, m_pingTime, g_icmpPingSize);
+				UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
             m_pingLastTimeStamp = time(NULL);
 				if (dwPingStatus == ICMP_SUCCESS)
 				{
@@ -594,7 +592,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 		   sendPollerMsg(rqId, _T("      Interface status changed to %s\r\n"), GetStatusAsText(m_iStatus, true));
 		   PostEventEx(eventQueue,
 		               (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_iStatus] : statusToEvent[m_iStatus],
-						   pNode->getId(), "dsaad", m_id, m_name, m_dwIpAddr, m_ipNetMask, m_index);
+						   pNode->getId(), "dsAdd", m_id, m_name, &m_ipAddress, m_ipAddress.getMaskBits(), m_index);
       }
    }
 	else if (expectedState == IF_EXPECTED_STATE_IGNORE)
@@ -649,9 +647,9 @@ void Interface::updatePingData()
          AgentConnection *conn = proxyNode->createAgentConnection();
          if (conn != NULL)
          {
-            TCHAR parameter[64], buffer[64];
+            TCHAR parameter[128], buffer[64];
 
-            _sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), IpToStr(m_dwIpAddr, buffer));
+            _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), m_ipAddress.toString(buffer));
             if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
             {
                DbgPrintf(7, _T("Interface::updatePingData:  proxy response: \"%s\""), buffer);
@@ -683,7 +681,7 @@ void Interface::updatePingData()
    }
    else	// not using ICMP proxy
    {
-      UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+      UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
       if (dwPingStatus != ICMP_SUCCESS)
       {
          DbgPrintf(7, _T("Interface::updatePingData: error getting ping %d"), dwPingStatus);
@@ -796,7 +794,6 @@ void Interface::fillMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_MTU, m_mtu);
    pMsg->setField(VID_IF_SLOT, m_slotNumber);
    pMsg->setField(VID_IF_PORT, m_portNumber);
-   pMsg->setField(VID_IP_NETMASK, m_ipNetMask);
    pMsg->setField(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
 	pMsg->setField(VID_FLAGS, m_flags);
 	pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
@@ -865,7 +862,7 @@ UINT32 Interface::wakeUp()
 
    if (memcmp(m_macAddr, "\x00\x00\x00\x00\x00\x00", 6))
    {
-      dwAddr = htonl(m_dwIpAddr | ~m_ipNetMask);
+      dwAddr = htonl(m_ipAddress.getAddressV4() | ~(0xFFFFFFFF << m_ipAddress.getMaskBits()));
       if (SendMagicPacket(dwAddr, m_macAddr, 5))
          dwResult = RCC_SUCCESS;
       else
@@ -905,11 +902,11 @@ UINT32 Interface::getParentNodeId()
 /**
  * Change interface's IP address
  */
-void Interface::setIpAddr(UINT32 dwNewAddr)
+void Interface::setIpAddr(const InetAddress& newAddr)
 {
-   UpdateInterfaceIndex(m_dwIpAddr, dwNewAddr, this);
+   UpdateInterfaceIndex(m_ipAddress, newAddr, this);
    lockProperties();
-   m_dwIpAddr = dwNewAddr;
+   m_ipAddress = newAddr;
    setModified();
    unlockProperties();
 }
@@ -917,16 +914,15 @@ void Interface::setIpAddr(UINT32 dwNewAddr)
 /**
  * Change interface's IP subnet mask
  */
-void Interface::setIpNetMask(UINT32 dwNetMask)
+void Interface::setIpNetMask(int maskBits)
 {
-   UINT32 oldNetMask = m_ipNetMask;
+   int oldNetMask = m_ipAddress.getMaskBits();
    lockProperties();
-   m_ipNetMask = dwNetMask;
+   m_ipAddress.setMaskBits(maskBits);
    setModified();
    unlockProperties();
-   PostEvent(EVENT_IF_MASK_CHANGED, m_id, "dsaada", m_id,
-                m_name, m_dwIpAddr,
-                m_ipNetMask, m_index, oldNetMask);
+   PostEvent(EVENT_IF_MASK_CHANGED, m_id, "dsAddd", m_id,
+                m_name, &m_ipAddress, m_ipAddress.getMaskBits(), m_index, oldNetMask);
 }
 
 /**
@@ -1000,9 +996,9 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
          _T("localIfIP"), _T("localIfMAC"), _T("remoteNodeId"), _T("remoteNodeName"),
          _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"),
          _T("remoteIfMAC"), _T("protocol") };
-      PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsahdsddsah", names,
-         m_id, m_index, m_name, m_dwIpAddr, m_macAddr, node->getId(), node->getName(),
-         iface->getId(), iface->getIfIndex(), iface->getName(), iface->IpAddr(), iface->getMacAddr(),
+      PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsAhdsddsAhd", names,
+         m_id, m_index, m_name, &m_ipAddress, m_macAddr, node->getId(), node->getName(),
+         iface->getId(), iface->getIfIndex(), iface->getName(), &iface->getIpAddress(), iface->getMacAddr(),
          protocol);
    }
 }

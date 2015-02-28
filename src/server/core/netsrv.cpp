@@ -100,11 +100,11 @@ BOOL NetworkService::saveToDatabase(DB_HANDLE hdb)
    }
 	if (hStmt != NULL)
 	{
-	   TCHAR szIpAddr[32];
+	   TCHAR szIpAddr[64];
 
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_hostNode->getId());
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_serviceType);
-		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, IpToStr(m_dwIpAddr, szIpAddr), DB_BIND_STATIC);
+		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(szIpAddr), DB_BIND_STATIC);
 		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_proto);
 		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_port);
 		DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_request, DB_BIND_STATIC);
@@ -154,7 +154,7 @@ BOOL NetworkService::loadFromDatabase(UINT32 dwId)
    {
       dwHostNodeId = DBGetFieldULong(hResult, 0, 0);
       m_serviceType = DBGetFieldLong(hResult, 0, 1);
-      m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 2);
+      m_ipAddress = DBGetFieldInetAddr(hResult, 0, 2);
       m_proto = (WORD)DBGetFieldULong(hResult, 0, 3);
       m_port = (WORD)DBGetFieldULong(hResult, 0, 4);
       m_request = DBGetField(hResult, 0, 5, NULL, 0);
@@ -286,7 +286,7 @@ UINT32 NetworkService::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLoc
 
    // Listen IP address
    if (pRequest->isFieldExist(VID_IP_ADDRESS))
-      m_dwIpAddr = pRequest->getFieldAsUInt32(VID_IP_ADDRESS);
+      m_ipAddress = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
 
    // Service type
    if (pRequest->isFieldExist(VID_SERVICE_TYPE))
@@ -354,13 +354,13 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
 
    if (pNode != NULL)
    {
-      TCHAR szBuffer[16];
+      TCHAR szBuffer[64];
       UINT32 dwStatus;
 
       sendPollerMsg(rqId, _T("      Polling service from node %s [%s]\r\n"),
-                    pNode->getName(), IpToStr(pNode->IpAddr(), szBuffer));
+                    pNode->getName(), pNode->getIpAddress().toString(szBuffer));
       if (pNode->checkNetworkService(&dwStatus, 
-                                     (m_dwIpAddr == 0) ? m_hostNode->IpAddr() : m_dwIpAddr,
+                                     m_ipAddress.isValid() ? m_ipAddress : m_hostNode->getIpAddress(),
                                      m_serviceType, m_port, m_proto, 
                                      m_request, m_response, &m_responseTime) == ERR_SUCCESS)
       {

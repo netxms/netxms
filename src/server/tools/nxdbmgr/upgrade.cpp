@@ -389,6 +389,105 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Convert network masks from dotted decimal format to number of bits
+ */
+static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR *idColumn, const TCHAR *idColumn2 = NULL, const TCHAR *condition = NULL)
+{
+   TCHAR query[256];
+   
+   if (idColumn2 != NULL)
+      _sntprintf(query, 256, _T("SELECT %s,%s,%s FROM %s"), idColumn, column, idColumn2, table);
+   else
+      _sntprintf(query, 256, _T("SELECT %s,%s FROM %s"), idColumn, column, table);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == NULL)
+      return FALSE;
+
+   _sntprintf(query, 256, _T("ALTER TABLE %s DROP COLUMN %s"), table, column);
+   BOOL success = SQLQuery(query);
+   
+   if (success)
+   {
+      _sntprintf(query, 256, _T("ALTER TABLE %s ADD %s integer"), table, column);
+      success = SQLQuery(query);
+   }
+
+   if (success)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; (i < count) && success; i++)
+      {
+         if (idColumn2 != NULL)
+         {
+            TCHAR id2[256];
+            _sntprintf(query, 256, _T("UPDATE %s SET %s=%d WHERE %s=%d AND %s='%s'"), 
+               table, column, BitsInMask(DBGetFieldIPAddr(hResult, i, 1)), idColumn, DBGetFieldLong(hResult, i, 0),
+               idColumn2, DBGetField(hResult, i, 2, id2, 256));
+         }
+         else
+         {
+            _sntprintf(query, 256, _T("UPDATE %s SET %s=%d WHERE %s=%d"), 
+               table, column, BitsInMask(DBGetFieldIPAddr(hResult, i, 1)), idColumn, DBGetFieldLong(hResult, i, 0));
+         }
+         success = SQLQuery(query);
+      }
+   }
+
+   DBFreeResult(hResult);
+   return success;
+}
+
+/**
+ * Upgrade from V345 to V346
+ */
+static BOOL H_UpgradeFromV345(int currVersion, int newVersion)
+{
+   CHK_EXEC(ResizeColumn(_T("cluster_sync_subnets"), _T("subnet_addr"), 48));
+   CHK_EXEC(ResizeColumn(_T("cluster_resources"), _T("ip_addr"), 48));
+   CHK_EXEC(ResizeColumn(_T("subnets"), _T("ip_addr"), 48));
+   CHK_EXEC(ResizeColumn(_T("interfaces"), _T("ip_addr"), 48));
+   CHK_EXEC(ResizeColumn(_T("network_services"), _T("ip_bind_addr"), 48));
+   CHK_EXEC(ResizeColumn(_T("vpn_connector_networks"), _T("ip_addr"), 48));
+   CHK_EXEC(ResizeColumn(_T("snmp_trap_log"), _T("ip_addr"), 48));
+   CHK_EXEC(ResizeColumn(_T("address_lists"), _T("addr1"), 48));
+   CHK_EXEC(ResizeColumn(_T("address_lists"), _T("addr2"), 48));
+   CHK_EXEC(ResizeColumn(_T("nodes"), _T("primary_ip"), 48));
+
+   CHK_EXEC(ConvertNetMasks(_T("cluster_sync_subnets"), _T("subnet_mask"), _T("cluster_id")));
+   CHK_EXEC(ConvertNetMasks(_T("subnets"), _T("ip_netmask"), _T("id")));
+   CHK_EXEC(ConvertNetMasks(_T("interfaces"), _T("ip_netmask"), _T("id")));
+   CHK_EXEC(ConvertNetMasks(_T("vpn_connector_networks"), _T("ip_netmask"), _T("vpn_id"), _T("ip_addr")));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT community_id,addr_type,addr1,addr2 FROM address_lists WHERE list_type=0"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      if (count > 0)
+      {
+         CHK_EXEC(SQLQuery(_T("DELETE FROM address_lists WHERE list_type=0")));
+
+         for(int i = 0; i < count; i++)
+         {
+            TCHAR query[256], addr[64];
+            _sntprintf(query, 256, _T("INSERT INTO address_lists (list_type,community_id,addr_type,addr1,addr2) VALUES (0,%d,%d,'%s','%d')"),
+               DBGetFieldLong(hResult, i, 0), DBGetFieldLong(hResult, i, 1), DBGetField(hResult, i, 2, addr, 64),
+               BitsInMask(DBGetFieldIPAddr(hResult, i, 3)));
+            CHK_EXEC(SQLQuery(query));
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='346' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V344 to V345
  */
 static BOOL H_UpgradeFromV344(int currVersion, int newVersion)
@@ -8294,6 +8393,7 @@ static struct
    { 342, 343, H_UpgradeFromV342 },
    { 343, 344, H_UpgradeFromV343 },
    { 344, 345, H_UpgradeFromV344 },
+   { 345, 346, H_UpgradeFromV345 },
    { 0, 0, NULL }
 };
 

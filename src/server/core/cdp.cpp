@@ -63,7 +63,7 @@ static UINT32 CDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transp
 			TCHAR ifName[MAX_CONNECTOR_NAME] = _T("");
 			pRespPDU->getVariable(0)->getValueAsString(ifName, MAX_CONNECTOR_NAME);
 			DbgPrintf(6, _T("CDP(%s [%d]): remote port is \"%s\""), node->getName(), node->getId(), ifName);
-			Interface *ifRemote = remoteNode->findInterface(ifName);
+			Interface *ifRemote = remoteNode->findInterfaceByName(ifName);
 			if (ifRemote != NULL)
 			{
 				DbgPrintf(6, _T("CDP(%s [%d]): remote interface object is %s [%d]"), node->getName(), node->getId(), ifRemote->getName(), ifRemote->getId());

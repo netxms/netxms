@@ -147,7 +147,7 @@ static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 		return NXSL_ERR_BAD_CLASS;
 
 	Node *node = (Node *)object->getData();
-	Interface *ifc = node->findInterface(argv[1]->getValueAsUInt32(), INADDR_ANY);
+	Interface *ifc = node->findInterfaceByIndex(argv[1]->getValueAsUInt32());
 	if (ifc != NULL)
 	{
 		*ppResult = new NXSL_Value(ifc->getName());
@@ -177,7 +177,7 @@ static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 		return NXSL_ERR_BAD_CLASS;
 
 	Node *node = (Node *)object->getData();
-	Interface *ifc = node->findInterface(argv[1]->getValueAsUInt32(), INADDR_ANY);
+	Interface *ifc = node->findInterfaceByIndex(argv[1]->getValueAsUInt32());
 	if (ifc != NULL)
 	{
 		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, ifc));
@@ -580,7 +580,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	const TCHAR *pname = argv[2]->getValueAsCString();
 	if (*pname == 0)
 		pname = argv[1]->getValueAsCString();
-	Node *node = PollNewNode(ntohl(ResolveHostName(pname)), 0, 0, 0, 0, argv[1]->getValueAsCString(), 0, 0, NULL, 0, true, false);
+   Node *node = PollNewNode(InetAddress::resolveHostName(pname), 0, 0, 0, argv[1]->getValueAsCString(), 0, 0, NULL, 0, true, false);
 	if (node != NULL)
 	{
 		node->setPrimaryName(pname);

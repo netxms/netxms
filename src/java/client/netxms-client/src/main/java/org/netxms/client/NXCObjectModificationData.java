@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.netxms.base.GeoLocation;
+import org.netxms.base.InetAddressEx;
 import org.netxms.base.PostalAddress;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
@@ -36,7 +37,6 @@ import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.objects.ClusterResource;
-import org.netxms.client.objects.ClusterSyncNetwork;
 
 /**
  * This class is used to hold data for NXCSession.modifyObject()
@@ -158,7 +158,7 @@ public class NXCObjectModificationData
 	private int ifXTablePolicy;
 	private String reportDefinition;
 	private List<ClusterResource> resourceList;
-	private List<ClusterSyncNetwork> networkList;
+	private List<InetAddressEx> networkList;
 	private int statusCalculationMethod;
 	private int statusPropagationMethod;
 	private ObjectStatus fixedPropagatedStatus;
@@ -1111,7 +1111,7 @@ public class NXCObjectModificationData
 	/**
 	 * @return the networkList
 	 */
-	public List<ClusterSyncNetwork> getNetworkList()
+	public List<InetAddressEx> getNetworkList()
 	{
 		return networkList;
 	}
@@ -1119,7 +1119,7 @@ public class NXCObjectModificationData
 	/**
 	 * @param networkList the networkList to set
 	 */
-	public void setNetworkList(List<ClusterSyncNetwork> networkList)
+	public void setNetworkList(List<InetAddressEx> networkList)
 	{
 		this.networkList = networkList;
 		flags |= MODIFY_CLUSTER_NETWORKS;

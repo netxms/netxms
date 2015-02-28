@@ -257,11 +257,11 @@ void MobileDevice::updateStatus(NXCPMessage *msg)
    }
 
 	if (msg->isFieldExist(VID_IP_ADDRESS))
-		m_dwIpAddr = msg->getFieldAsUInt32(VID_IP_ADDRESS);
+		m_ipAddress = msg->getFieldAsInetAddress(VID_IP_ADDRESS);
 
-	TCHAR temp[32];
+	TCHAR temp[64];
 	DbgPrintf(5, _T("Mobile device %s [%d] updated from agent (battery=%d addr=%s loc=[%s %s])"),
-	          m_name, (int)m_id, m_batteryLevel, IpToStr(m_dwIpAddr, temp),
+	          m_name, (int)m_id, m_batteryLevel, m_ipAddress.toString(temp),
 				 m_geoLocation.getLatitudeAsString(), m_geoLocation.getLongitudeAsString());
 
 	setModified();

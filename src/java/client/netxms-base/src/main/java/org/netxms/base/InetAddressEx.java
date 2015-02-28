@@ -38,6 +38,27 @@ public class InetAddressEx
       this.mask = mask;
    }
 
+   /**
+    * @param address
+    * @param mask
+    */
+   public InetAddressEx(InetAddress address, InetAddress mask)
+   {
+      this.address = address;
+      this.mask = bitsInMask(mask);
+   }
+
+   /**
+    * Copy constructor
+    * 
+    * @param src
+    */
+   public InetAddressEx(InetAddressEx src)
+   {
+      this.address = src.address;
+      this.mask = src.mask;
+   }
+
    /* (non-Javadoc)
     * @see java.lang.Object#toString()
     */
@@ -45,5 +66,65 @@ public class InetAddressEx
    public String toString()
    {
       return address.getHostAddress() + "/" + mask;
+   }
+   
+   /**
+    * Calculate number of bits in network mask
+    * 
+    * @param mask
+    * @return
+    */
+   public static int bitsInMask(InetAddress mask)
+   {
+      int bits = 0;
+      byte[] bytes = mask.getAddress();
+      for(byte b : bytes)
+      {
+         if (b == 0xFF)
+         {
+            bits += 8;
+            continue;
+         }
+         for(int m = 0x80; m != 0; m = m >> 1)
+         {
+            if ((b & m) != m)
+               break;
+            bits++;
+         }
+      }
+      return bits;
+   }
+   
+   /**
+    * Convert bit count into mask
+    * 
+    * @param bits
+    * @return
+    */
+   public InetAddress maskFromBits()
+   {
+      try
+      {
+         byte[] bytes = address.getAddress();
+         int bits = mask;
+         int i = 0;
+         while(bits > 8)
+         {
+            bytes[i++] = (byte)0xFF;
+            bits -= 8;
+         }
+         byte b = (byte)0x80;
+         while(bits > 0)
+         {
+            bytes[i] |= b;
+            b = (byte)(b >> 1);
+            bits--;
+         }
+         return InetAddress.getByAddress(bytes);
+      }
+      catch(Exception e)
+      {
+         return null;
+      }
    }
 }

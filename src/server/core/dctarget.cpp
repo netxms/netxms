@@ -539,7 +539,7 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
    }
    else if (!_tcsicmp(_T("PingTime"), param))
    {
-      if (m_dwIpAddr != 0)
+      if (m_ipAddress.isValid())
       {
          Interface *iface = NULL;
 
@@ -547,7 +547,7 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
          LockChildList(FALSE);
          for(int i = 0; i < (int)m_dwChildCount; i++)
          {
-            if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && (m_pChildList[i]->IpAddr() == m_dwIpAddr))
+            if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && m_pChildList[i]->getIpAddress().equals(m_ipAddress))
             {
                iface = (Interface *)m_pChildList[i];
                break;

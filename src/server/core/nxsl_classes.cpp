@@ -152,9 +152,9 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
    }
    else if (!_tcscmp(pszAttr, _T("ipAddr")))
    {
-      TCHAR szBuffer[32];
-      IpToStr(object->IpAddr(), szBuffer);
-      pValue = new NXSL_Value(szBuffer);
+      TCHAR buffer[64];
+      object->getIpAddress().toString(buffer);
+      pValue = new NXSL_Value(buffer);
    }
    else if (!_tcscmp(pszAttr, _T("type")))
    {
@@ -365,7 +365,6 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
    Node *pNode;
    NXSL_Value *pValue = NULL;
-   TCHAR szBuffer[256];
 
    pNode = (Node *)pObject->getData();
    if (!_tcscmp(pszAttr, _T("agentVersion")))
@@ -409,8 +408,9 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    }
    else if (!_tcscmp(pszAttr, _T("ipAddr")))
    {
-      IpToStr(pNode->IpAddr(), szBuffer);
-      pValue = new NXSL_Value(szBuffer);
+      TCHAR buffer[64];
+      pNode->getIpAddress().toString(buffer);
+      pValue = new NXSL_Value(buffer);
    }
    else if (!_tcscmp(pszAttr, _T("isAgent")))
    {
@@ -607,15 +607,13 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    }
    else if (!_tcscmp(pszAttr, _T("ipAddr")))
    {
-		TCHAR buffer[256];
-      IpToStr(iface->IpAddr(), buffer);
+      TCHAR buffer[64];
+      iface->getIpAddress().toString(buffer);
       pValue = new NXSL_Value(buffer);
    }
    else if (!_tcscmp(pszAttr, _T("ipNetMask")))
    {
-		TCHAR buffer[256];
-		IpToStr(iface->getIpNetMask(), buffer);
-      pValue = new NXSL_Value(buffer);
+      pValue = new NXSL_Value(iface->getIpAddress().getMaskBits());
    }
    else if (!_tcscmp(pszAttr, _T("isExcludedFromTopology")))
    {

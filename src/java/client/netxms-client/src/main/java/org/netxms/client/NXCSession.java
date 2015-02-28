@@ -80,6 +80,7 @@ import org.netxms.api.client.users.UserManager;
 import org.netxms.base.CompatTools;
 import org.netxms.base.EncryptionContext;
 import org.netxms.base.GeoLocation;
+import org.netxms.base.InetAddressEx;
 import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPDataInputStream;
@@ -134,7 +135,6 @@ import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
-import org.netxms.client.objects.ClusterSyncNetwork;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.Dashboard;
@@ -185,7 +185,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 {
    // Various public constants
    public static final int DEFAULT_CONN_PORT = 4701;
-   public static final int CLIENT_PROTOCOL_VERSION = 45;
+   public static final int CLIENT_PROTOCOL_VERSION = 46;
 
    // Authentication types
    public static final int AUTH_TYPE_PASSWORD = 0;
@@ -1039,18 +1039,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       {
          super.finalize();
       }
-   }
-
-   /**
-    * Convert IP address to 32 bit integer
-    *
-    * @param addr
-    * @return
-    */
-   private static long int32FromInetAddress(InetAddress addr)
-   {
-      byte[] bytes = addr.getAddress();
-      return (((long)bytes[0] & 0xFF) << 24)  | (((long)bytes[1] & 0xFF) << 16) | (((long)bytes[2] & 0xFF) << 8) | ((long)bytes[3] & 0xFF);
    }
 
    /**
@@ -4170,14 +4158,11 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       {
          int count = data.getNetworkList().size();
          msg.setFieldInt32(NXCPCodes.VID_NUM_SYNC_SUBNETS, count);
-         long[] subnets = new long[count * 2];
-         int pos = 0;
-         for(ClusterSyncNetwork n : data.getNetworkList())
+         long varId = NXCPCodes.VID_SYNC_SUBNETS_BASE;
+         for(InetAddressEx n : data.getNetworkList())
          {
-            subnets[pos++] = int32FromInetAddress(n.getSubnetAddress());
-            subnets[pos++] = int32FromInetAddress(n.getSubnetMask());
+            msg.setField(varId++, n);
          }
-         msg.setField(NXCPCodes.VID_SYNC_SUBNETS, subnets);
       }
 
       if ((flags & NXCObjectModificationData.MODIFY_PRIMARY_NAME) != 0)

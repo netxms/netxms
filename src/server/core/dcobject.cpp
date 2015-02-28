@@ -325,9 +325,8 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		{
 			if (m_pNode != NULL)
 			{
-				TCHAR ipAddr[32];
-
-				temp += IpToStr(m_pNode->IpAddr(), ipAddr);
+				TCHAR ipAddr[64];
+				temp += m_pNode->getIpAddress().toString(ipAddr);
 			}
 			else
 			{

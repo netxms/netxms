@@ -1118,11 +1118,6 @@ typedef struct tagICMPHDR
 #endif
 
 /**
- * Check if IP address is a broadcast
- */
-#define IsBroadcastAddress(addr, mask) (((addr) & (~(mask))) == (~(mask)))
-
-/**
  * Check if given string is NULL and always return valid pointer
  */
 #define CHECK_NULL(x)      ((x) == NULL ? _T("(null)") : (x))

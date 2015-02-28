@@ -159,7 +159,7 @@ public class NXCPMessage
 				byteArrayInputStream.mark(byteArrayInputStream.available());
 				
 				// Read first 8 bytes - any DF (data field) is at least 8 bytes long
-				byte[] df = new byte[16];
+				byte[] df = new byte[32];
 				inputStream.readFully(df, 0, 8);
 	
 				switch(df[4])
@@ -185,6 +185,9 @@ public class NXCPMessage
 							inputStream.skipBytes(8 - rem);
 						}
 						break;
+					case NXCPMessageField.TYPE_INETADDR:    // address always 32 byte long
+					   inputStream.readFully(df, 8, 24);
+					   break;
 				}
 	
 				final NXCPMessageField variable = new NXCPMessageField(df);
@@ -327,6 +330,17 @@ public class NXCPMessage
 		setField(new NXCPMessageField(fieldId, value));
 	}
 
+   /**
+    * Set field of INETADDR type
+    * 
+    * @param fieldId
+    * @param value
+    */
+   public void setField(long fieldId, InetAddressEx value)
+   {
+      setField(new NXCPMessageField(fieldId, value));
+   }
+	
 	/**
 	 * Set field of BINARY type to GUID value (byte array of length 16).
 	 * 
@@ -453,6 +467,18 @@ public class NXCPMessage
 		return (var != null) ? var.getAsInetAddress() : null;
 	}
 	
+   /**
+    * Get field as InetAddressEx
+    * 
+    * @param fieldId
+    * @return
+    */
+   public InetAddressEx getFieldAsInetAddressEx(final long fieldId)
+   {
+      final NXCPMessageField var = findField(fieldId);
+      return (var != null) ? var.getAsInetAddressEx() : null;
+   }
+   
 	/**
 	 * Get field as UUID (GUID)
 	 * 

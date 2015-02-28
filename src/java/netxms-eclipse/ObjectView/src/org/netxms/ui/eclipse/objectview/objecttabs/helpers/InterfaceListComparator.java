@@ -95,7 +95,7 @@ public class InterfaceListComparator extends ViewerComparator
 			case InterfacesTab.COLUMN_IP_ADDRESS:
 				result = ComparatorHelper.compareInetAddresses(iface1.getPrimaryIP(), iface2.getPrimaryIP());
 				if(result == 0)
-				   result = ComparatorHelper.compareInetAddresses(iface1.getSubnetMask(), iface2.getSubnetMask());
+				   result = iface1.getSubnetMaskBits() - iface2.getSubnetMaskBits();
 				break;
 			default:
 				result = 0;

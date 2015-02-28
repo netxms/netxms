@@ -112,11 +112,11 @@ Node::Node() : DataCollectionTarget()
 /**
  * Constructor for new node object
  */
-Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 dwZone) : DataCollectionTarget()
+Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 dwZone) : DataCollectionTarget()
 {
-	IpToStr(dwAddr, m_primaryName);
+   addr.toString(m_primaryName);
    m_iStatus = STATUS_UNKNOWN;
-   m_dwIpAddr = dwAddr;
+   m_ipAddress = addr;
    m_dwFlags = dwFlags;
    m_dwDynamicFlags = 0;
    m_zoneId = dwZone;
@@ -129,7 +129,7 @@ Node::Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, U
 	char community[MAX_COMMUNITY_LENGTH];
    ConfigReadStrA(_T("DefaultCommunityString"), community, MAX_COMMUNITY_LENGTH, "public");
 	m_snmpSecurity = new SNMP_SecurityContext(community);
-   IpToStr(dwAddr, m_name);    // Make default name from IP address
+   addr.toString(m_name);    // Make default name from IP address
    m_szObjectId[0] = 0;
    m_lastDiscoveryPoll = 0;
    m_lastStatusPoll = 0;
@@ -272,7 +272,7 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
    }
 
    DBGetField(hResult, 0, 0, m_primaryName, MAX_DNS_NAME);
-   m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 1);
+   m_ipAddress = DBGetFieldInetAddr(hResult, 0, 1);
    m_dwFlags = DBGetFieldULong(hResult, 0, 2);
    m_snmpVersion = DBGetFieldLong(hResult, 0, 3);
    m_agentAuthMethod = (WORD)DBGetFieldLong(hResult, 0, 4);
@@ -428,9 +428,9 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 		return FALSE;
 	}
 
-   TCHAR ipAddr[16], baseAddress[16];
+   TCHAR ipAddr[64], baseAddress[16];
 
-	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, IpToStr(m_dwIpAddr, ipAddr), DB_BIND_STATIC);
+	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(ipAddr), DB_BIND_STATIC);
 	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_primaryName, DB_BIND_STATIC);
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_wSNMPPort);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_dwFlags);
@@ -666,7 +666,7 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
  * @param hostAddr IP address to match or INADDR_ANY to select first matching interface
  * @return pointer to interface object or NULL if appropriate interface couldn't be found
  */
-Interface *Node::findInterface(UINT32 ifIndex, UINT32 hostAddr)
+Interface *Node::findInterfaceByIndex(UINT32 ifIndex)
 {
    UINT32 i;
    Interface *pInterface;
@@ -676,15 +676,10 @@ Interface *Node::findInterface(UINT32 ifIndex, UINT32 hostAddr)
       if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
          pInterface = (Interface *)m_pChildList[i];
-			if ((pInterface->getIfIndex() == ifIndex) || (ifIndex == INVALID_INDEX))
+			if (pInterface->getIfIndex() == ifIndex)
          {
-            if (((pInterface->IpAddr() & pInterface->getIpNetMask()) ==
-                 (hostAddr & pInterface->getIpNetMask())) ||
-                (hostAddr == INADDR_ANY))
-            {
-               UnlockChildList();
-               return pInterface;
-            }
+            UnlockChildList();
+            return pInterface;
          }
       }
    UnlockChildList();
@@ -695,7 +690,7 @@ Interface *Node::findInterface(UINT32 ifIndex, UINT32 hostAddr)
  * Find interface by name or description
  * Returns pointer to interface object or NULL if appropriate interface couldn't be found
  */
-Interface *Node::findInterface(const TCHAR *name)
+Interface *Node::findInterfaceByName(const TCHAR *name)
 {
    UINT32 i;
    Interface *pInterface;
@@ -764,12 +759,12 @@ Interface *Node::findInterfaceByMAC(const BYTE *macAddr)
  * Find interface by IP address
  * Returns pointer to interface object or NULL if appropriate interface couldn't be found
  */
-Interface *Node::findInterfaceByIP(UINT32 ipAddr)
+Interface *Node::findInterfaceByIP(const InetAddress& addr)
 {
    UINT32 i;
    Interface *pInterface;
 
-	if (ipAddr == 0)
+   if (!addr.isValid())
 		return NULL;
 
    LockChildList(FALSE);
@@ -777,7 +772,7 @@ Interface *Node::findInterfaceByIP(UINT32 ipAddr)
       if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
          pInterface = (Interface *)m_pChildList[i];
-			if (pInterface->IpAddr() == ipAddr)
+			if (pInterface->getIpAddress().equals(addr))
          {
             UnlockChildList();
             return pInterface;
@@ -897,7 +892,7 @@ AccessPoint *Node::findAccessPointByBSSID(const BYTE *bssid)
 /**
  * Check if given IP address is one of node's interfaces
  */
-BOOL Node::isMyIP(UINT32 ipAddr)
+bool Node::isMyIP(const InetAddress& addr)
 {
    UINT32 i;
 
@@ -905,14 +900,14 @@ BOOL Node::isMyIP(UINT32 ipAddr)
    for(i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
-         if (((Interface *)m_pChildList[i])->IpAddr() == ipAddr)
+         if (((Interface *)m_pChildList[i])->getIpAddress().equals(addr))
          {
             UnlockChildList();
-            return TRUE;
+            return true;
          }
       }
    UnlockChildList();
-   return FALSE;
+   return false;
 }
 
 /**
@@ -979,7 +974,7 @@ Interface *Node::createNewInterface(NX_INTERFACE_INFO *info, bool manuallyCreate
 				// Ignore mask 255.255.255.254 - it's invalid
 				if ((info->ipAddr < 0xE0000000) && (info->ipNetMask != 0xFFFFFFFF) && (info->ipNetMask != 0xFFFFFFFE))
 				{
-					pSubnet = createSubnet(info->ipAddr, info->ipNetMask, bSyntheticMask);
+					pSubnet = createSubnet(InetAddress(info->ipAddr, info->ipNetMask), bSyntheticMask);
 				}
 			}
 			else
@@ -987,7 +982,7 @@ Interface *Node::createNewInterface(NX_INTERFACE_INFO *info, bool manuallyCreate
 				// Set correct netmask if we was asked for it
 				if (info->ipNetMask == 0)
 				{
-					info->ipNetMask = pSubnet->getIpNetMask();
+					info->ipNetMask = 0xFFFFFFFF << (32 - pSubnet->getIpAddress().getMaskBits());
 					bSyntheticMask = pSubnet->isSyntheticMask();
 				}
 			}
@@ -997,9 +992,9 @@ Interface *Node::createNewInterface(NX_INTERFACE_INFO *info, bool manuallyCreate
    // Create interface object
    if (info->name[0] != 0)
 		pInterface = new Interface(info->name, (info->description[0] != 0) ? info->description : info->name,
-                                 info->index, info->ipAddr, info->ipNetMask, info->type, m_zoneId);
+                                 info->index, InetAddress(info->ipAddr, info->ipNetMask), info->type, m_zoneId);
    else
-      pInterface = new Interface(info->ipAddr, info->ipNetMask, m_zoneId, bSyntheticMask);
+      pInterface = new Interface(InetAddress(info->ipAddr, info->ipNetMask), m_zoneId, bSyntheticMask);
    pInterface->setMacAddr(info->macAddr);
 	pInterface->setBridgePortNumber(info->bridgePort);
 	pInterface->setSlotNumber(info->slot);
@@ -1014,9 +1009,9 @@ Interface *Node::createNewInterface(NX_INTERFACE_INFO *info, bool manuallyCreate
    if (!m_isHidden)
       pInterface->unhide();
    if (!pInterface->isSystem())
-      PostEvent(EVENT_INTERFACE_ADDED, m_id, "dsaad", pInterface->getId(),
-                pInterface->getName(), pInterface->IpAddr(),
-                pInterface->getIpNetMask(), pInterface->getIfIndex());
+      PostEvent(EVENT_INTERFACE_ADDED, m_id, "dsAdd", pInterface->getId(),
+                pInterface->getName(), &pInterface->getIpAddress(),
+                pInterface->getIpAddress().getMaskBits(), pInterface->getIfIndex());
 
    // Bind node to appropriate subnet
    if (pSubnet != NULL)
@@ -1024,11 +1019,11 @@ Interface *Node::createNewInterface(NX_INTERFACE_INFO *info, bool manuallyCreate
       pSubnet->addNode(this);
 
       // Check if subnet mask is correct on interface
-      if ((pSubnet->getIpNetMask() != pInterface->getIpNetMask()) && !pSubnet->isSyntheticMask() && (info->ipNetMask != 0xFFFFFFFF))
+      if ((pSubnet->getIpAddress().getMaskBits() != pInterface->getIpAddress().getMaskBits()) && !pSubnet->isSyntheticMask() && (info->ipNetMask != 0xFFFFFFFF))
 		{
-         PostEvent(EVENT_INCORRECT_NETMASK, m_id, "idsaa", pInterface->getId(),
+         PostEvent(EVENT_INCORRECT_NETMASK, m_id, "idsdd", pInterface->getId(),
                    pInterface->getIfIndex(), pInterface->getName(),
-                   pInterface->getIpNetMask(), pSubnet->getIpNetMask());
+                   pInterface->getIpAddress().getMaskBits(), pSubnet->getIpAddress().getMaskBits());
 		}
    }
 
@@ -1045,7 +1040,7 @@ void Node::deleteInterface(Interface *pInterface)
 	DbgPrintf(5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d])"), m_name, m_id, pInterface->getName(), pInterface->getId());
 
    // Check if we should unlink node from interface's subnet
-   if ((pInterface->IpAddr() != 0) && !pInterface->isExcludedFromTopology())
+   if (pInterface->getIpAddress().isValidUnicast() && !pInterface->isExcludedFromTopology())
    {
       BOOL bUnlink = TRUE;
 
@@ -1053,8 +1048,7 @@ void Node::deleteInterface(Interface *pInterface)
       for(i = 0; i < m_dwChildCount; i++)
          if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
             if (m_pChildList[i] != pInterface)
-               if ((((Interface *)m_pChildList[i])->IpAddr() & ((Interface *)m_pChildList[i])->getIpNetMask()) ==
-                   (pInterface->IpAddr() & pInterface->getIpNetMask()))
+               if (((Interface *)m_pChildList[i])->getIpAddress().getSubnetAddress().equals(pInterface->getIpAddress().getSubnetAddress()))
                {
                   bUnlink = FALSE;
                   break;
@@ -1064,7 +1058,7 @@ void Node::deleteInterface(Interface *pInterface)
       if (bUnlink)
       {
          // Last interface in subnet, should unlink node
-         Subnet *pSubnet = FindSubnetByIP(m_zoneId, pInterface->IpAddr() & pInterface->getIpNetMask());
+         Subnet *pSubnet = FindSubnetByIP(m_zoneId, pInterface->getIpAddress().getSubnetAddress());
          if (pSubnet != NULL)
          {
             DeleteParent(pSubnet);
@@ -1131,7 +1125,7 @@ restart_agent_check:
    }
 
    // Check SNMP agent connectivity
-   if ((m_dwFlags & NF_IS_SNMP) && (!(m_dwFlags & NF_DISABLE_SNMP)) && (m_dwIpAddr != 0))
+   if ((m_dwFlags & NF_IS_SNMP) && (!(m_dwFlags & NF_DISABLE_SNMP)) && m_ipAddress.isValidUnicast())
    {
       TCHAR szBuffer[256];
       UINT32 dwResult;
@@ -1196,7 +1190,7 @@ restart_agent_check:
    }
 
    // Check native agent connectivity
-   if ((m_dwFlags & NF_IS_NATIVE_AGENT) && (!(m_dwFlags & NF_DISABLE_NXCP)) && (m_dwIpAddr != 0))
+   if ((m_dwFlags & NF_IS_NATIVE_AGENT) && (!(m_dwFlags & NF_DISABLE_NXCP)) && m_ipAddress.isValidUnicast())
    {
       DbgPrintf(6, _T("StatusPoll(%s): checking agent"), m_name);
       SetPollerInfo(nPoller, _T("check agent"));
@@ -1297,7 +1291,7 @@ restart_agent_check:
          case OBJECT_INTERFACE:
 			   DbgPrintf(7, _T("StatusPoll(%s): polling interface %d [%s]"), m_name, ppPollList[i]->getId(), ppPollList[i]->getName());
             ((Interface *)ppPollList[i])->statusPoll(pSession, dwRqId, pQueue,
-					(pCluster != NULL) ? pCluster->isSyncAddr(((Interface *)ppPollList[i])->IpAddr()) : FALSE,
+					(pCluster != NULL) ? pCluster->isSyncAddr(((Interface *)ppPollList[i])->getIpAddress()) : FALSE,
 					pTransport, m_icmpProxy);
             break;
          case OBJECT_NETWORKSERVICE:
@@ -1321,7 +1315,7 @@ restart_agent_check:
 
    // Check if entire node is down
 	// This check is disabled for nodes without IP address
-	if (m_dwIpAddr != 0)
+	if (m_ipAddress.isValidUnicast())
 	{
 		LockChildList(FALSE);
 		if (m_dwChildCount > 0)
@@ -1585,7 +1579,7 @@ bool Node::checkNetworkPath(UINT32 dwRqId)
 
 	// Check directly connected switch
    sendPollerMsg(dwRqId, _T("Checking ethernet connectivity...\r\n"));
-	Interface *iface = findInterface(INVALID_INDEX, m_dwIpAddr);
+	Interface *iface = findInterfaceByIP(m_ipAddress);
 	if ((iface != NULL) && (iface->getPeerNodeId() != 0))
 	{
 		DbgPrintf(6, _T("Node::checkNetworkPath(%s [%d]): found interface object for primary IP: %s [%d]"), m_name, m_id, iface->getName(), iface->getId());
@@ -1727,19 +1721,19 @@ void Node::updatePrimaryIpAddr()
 	if (m_primaryName[0] == 0)
 		return;
 
-	UINT32 ipAddr = ntohl(ResolveHostName(m_primaryName));
-	if ((ipAddr != m_dwIpAddr) && ((ipAddr != INADDR_ANY) || _tcscmp(m_primaryName, _T("0.0.0.0"))) && (ipAddr != INADDR_NONE))
+   InetAddress ipAddr = InetAddress::resolveHostName(m_primaryName);
+   if (!ipAddr.equals(m_ipAddress) && (ipAddr.isValidUnicast() || !_tcscmp(m_primaryName, _T("0.0.0.0"))))
 	{
-		TCHAR buffer1[32], buffer2[32];
+		TCHAR buffer1[64], buffer2[64];
 
 		DbgPrintf(4, _T("IP address for node %s [%d] changed from %s to %s"),
-			m_name, (int)m_id, IpToStr(m_dwIpAddr, buffer1), IpToStr(ipAddr, buffer2));
-		PostEvent(EVENT_IP_ADDRESS_CHANGED, m_id, "aa", ipAddr, m_dwIpAddr);
+         m_name, (int)m_id, m_ipAddress.toString(buffer1), ipAddr.toString(buffer2));
+		PostEvent(EVENT_IP_ADDRESS_CHANGED, m_id, "AA", &ipAddr, &m_ipAddress);
 
       if (m_dwFlags & NF_REMOTE_AGENT)
       {
          lockProperties();
-         m_dwIpAddr = ipAddr;
+         m_ipAddress = ipAddr;
          setModified();
          unlockProperties();
       }
@@ -1817,10 +1811,10 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller
       if (ConfigReadInt(_T("EnableCheckPointSNMP"), 0))
       {
          DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP on port 260"), m_name);
-         if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && (m_dwIpAddr != 0))
+         if (!((m_dwFlags & NF_IS_CPSNMP) && (m_dwDynamicFlags & NDF_CPSNMP_UNREACHABLE)) && m_ipAddress.isValidUnicast())
          {
 			   SNMP_Transport *pTransport = new SNMP_UDPTransport;
-			   ((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
+			   ((SNMP_UDPTransport *)pTransport)->createUDPTransport(m_ipAddress, CHECKPOINT_SNMP_PORT);
             if (SnmpGet(SNMP_VERSION_1, pTransport,
                         _T(".1.3.6.1.4.1.2620.1.1.10.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
             {
@@ -1960,13 +1954,13 @@ bool Node::confPollAgent(UINT32 dwRqId)
 {
    DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent Flags={%08X} DynamicFlags={%08X}"), m_name, m_dwFlags, m_dwDynamicFlags);
 	if (((m_dwFlags & NF_IS_NATIVE_AGENT) && (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)) ||
-	    (m_dwIpAddr == 0) || (m_dwFlags & NF_DISABLE_NXCP))
+	    !m_ipAddress.isValidUnicast() || (m_dwFlags & NF_DISABLE_NXCP))
 		return false;
 
 	bool hasChanges = false;
 
 	sendPollerMsg(dwRqId, _T("   Checking NetXMS agent...\r\n"));
-   AgentConnection *pAgentConn = new AgentConnectionEx(m_id, m_dwIpAddr, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
+   AgentConnection *pAgentConn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(pAgentConn);
    DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - connecting"), m_name);
 
@@ -2155,7 +2149,7 @@ static UINT32 CountingSnmpWalkerCallback(UINT32 version, SNMP_Variable *var, SNM
 bool Node::confPollSnmp(UINT32 dwRqId)
 {
 	if (((m_dwFlags & NF_IS_SNMP) && (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)) ||
-	    (m_dwIpAddr == 0) || (m_dwFlags & NF_DISABLE_SNMP))
+	    !m_ipAddress.isValidUnicast() || (m_dwFlags & NF_DISABLE_SNMP))
 		return false;
 
 	bool hasChanges = false;
@@ -2611,7 +2605,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
 					for(j = 0; j < pIfList->size(); j++)
 					{
 						if ((pIfList->get(j)->index == pInterface->getIfIndex()) &&
-							 (pIfList->get(j)->ipAddr == pInterface->IpAddr()))
+							 pInterface->getIpAddress().equals(pIfList->get(j)->ipAddr))
 							break;
 					}
 
@@ -2631,8 +2625,8 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
          for(j = 0; j < iDelCount; j++)
          {
             sendPollerMsg(dwRqId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), ppDeleteList[j]->getName());
-            PostEvent(EVENT_INTERFACE_DELETED, m_id, "dsaa", ppDeleteList[j]->getIfIndex(),
-                      ppDeleteList[j]->getName(), ppDeleteList[j]->IpAddr(), ppDeleteList[j]->getIpNetMask());
+            PostEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", ppDeleteList[j]->getIfIndex(),
+                      ppDeleteList[j]->getName(), &ppDeleteList[j]->getIpAddress(), ppDeleteList[j]->getIpAddress().getMaskBits());
             deleteInterface(ppDeleteList[j]);
          }
          hasChanges = TRUE;
@@ -2653,7 +2647,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
                Interface *pInterface = (Interface *)m_pChildList[i];
 
                if ((ifInfo->index == pInterface->getIfIndex()) &&
-                   (ifInfo->ipAddr == pInterface->IpAddr()))
+                   pInterface->getIpAddress().equals(ifInfo->ipAddr))
                {
                   // Existing interface, check configuration
                   if (memcmp(ifInfo->macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) && memcmp(ifInfo->macAddr, pInterface->getMacAddr(), MAC_ADDR_LENGTH))
@@ -2695,9 +2689,9 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
 						{
 							pInterface->setPhysicalPortFlag(ifInfo->isPhysicalPort);
 						}
-						if ((ifInfo->ipNetMask != 0) && (ifInfo->ipNetMask != pInterface->getIpNetMask()))
+						if ((ifInfo->ipNetMask != 0) && (ifInfo->ipNetMask != pInterface->getIpAddress().getMaskBits()))
 						{
-							pInterface->setIpNetMask(ifInfo->ipNetMask);
+							pInterface->setIpNetMask(BitsInMask(ifInfo->ipNetMask));
 						}
                   bNewInterface = FALSE;
                   break;
@@ -2738,8 +2732,8 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
          {
             sendPollerMsg(dwRqId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"),
                           ppDeleteList[j]->getName());
-            PostEvent(EVENT_INTERFACE_DELETED, m_id, "dsaa", ppDeleteList[j]->getIfIndex(),
-                      ppDeleteList[j]->getName(), ppDeleteList[j]->IpAddr(), ppDeleteList[j]->getIpNetMask());
+            PostEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", ppDeleteList[j]->getIfIndex(),
+                      ppDeleteList[j]->getName(), &ppDeleteList[j]->getIpAddress(), ppDeleteList[j]->getIpAddress().getMaskBits());
             deleteInterface(ppDeleteList[j]);
          }
          safe_free(ppDeleteList);
@@ -2754,29 +2748,29 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
          if (pInterface->isFake())
          {
             // Check if primary IP is different from interface's IP
-            if (pInterface->IpAddr() != m_dwIpAddr)
+            if (!pInterface->getIpAddress().equals(m_ipAddress))
             {
                deleteInterface(pInterface);
-					if (m_dwIpAddr != 0)
+					if (m_ipAddress.isValidUnicast())
 					{
 						memset(macAddr, 0, MAC_ADDR_LENGTH);
-						Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
+						Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_ipAddress);
 						if (pSubnet != NULL)
-							pSubnet->findMacAddress(m_dwIpAddr, macAddr);
+							pSubnet->findMacAddress(m_ipAddress, macAddr);
 						pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
 						TCHAR szMac[20];
 						MACToStr(macAddr, szMac);
 						DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
-                  createNewInterface(m_dwIpAddr, dwNetMask, pMacAddr);
+                  createNewInterface(m_ipAddress.getAddressV4(), dwNetMask, pMacAddr);
 					}
             }
 				else
 				{
 					// check MAC address
 					memset(macAddr, 0, MAC_ADDR_LENGTH);
-					Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
+					Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_ipAddress);
 					if (pSubnet != NULL)
-						pSubnet->findMacAddress(m_dwIpAddr, macAddr);
+						pSubnet->findMacAddress(m_ipAddress, macAddr);
 					if (memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) && memcmp(macAddr, pInterface->getMacAddr(), MAC_ADDR_LENGTH))
 					{
                   TCHAR szOldMac[16], szNewMac[16];
@@ -2796,17 +2790,17 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask)
       else if (dwCount == 0)
       {
          // No interfaces at all, create pseudo-interface
-			if (m_dwIpAddr != 0)
+			if (m_ipAddress.isValidUnicast())
 			{
 				memset(macAddr, 0, MAC_ADDR_LENGTH);
-				Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
+				Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_ipAddress);
 				if (pSubnet != NULL)
-					pSubnet->findMacAddress(m_dwIpAddr, macAddr);
+					pSubnet->findMacAddress(m_ipAddress, macAddr);
 				pMacAddr = !memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ? NULL : macAddr;
 				TCHAR szMac[20];
 				MACToStr(macAddr, szMac);
 				DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
-         	createNewInterface(m_dwIpAddr, dwNetMask, pMacAddr);
+         	createNewInterface(m_ipAddress.getAddressV4(), dwNetMask, pMacAddr);
 			}
       }
 		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): pflist == NULL, dwCount = %u"), m_name, m_id, dwCount);
@@ -2886,6 +2880,7 @@ void Node::updateContainerMembership()
 				pContainer->AddChild(this);
 				AddParent(pContainer);
 				PostEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
+            pContainer->calculateCompoundStatus();
 			}
 		}
 		else
@@ -2897,6 +2892,7 @@ void Node::updateContainerMembership()
 				pContainer->DeleteChild(this);
 				DeleteParent(pContainer);
 				PostEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
+            pContainer->calculateCompoundStatus();
 			}
 		}
       pContainer->decRefCount();
@@ -3152,7 +3148,7 @@ bool Node::connectToSMCLP()
    // Create new connection object if needed
    if (m_smclpConnection == NULL)
 	{
-      m_smclpConnection = new SMCLP_Connection(m_dwIpAddr, 23);
+      m_smclpConnection = new SMCLP_Connection(m_ipAddress.getAddressV4(), 23);
 		DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): new connection created"), m_name, m_id);
 	}
 	else
@@ -3167,7 +3163,7 @@ bool Node::connectToSMCLP()
 		// Close current connection or clean up after broken connection
 		m_smclpConnection->disconnect();
       delete m_smclpConnection;
-      m_smclpConnection = new SMCLP_Connection(m_dwIpAddr, 23);
+      m_smclpConnection = new SMCLP_Connection(m_ipAddress.getAddressV4(), 23);
 		DbgPrintf(7, _T("Node::connectToSMCLP(%s [%d]): existing connection reset"), m_name, m_id);
 	}
 
@@ -3189,7 +3185,7 @@ BOOL Node::connectToAgent(UINT32 *error, UINT32 *socketError)
    // Create new agent connection object if needed
    if (m_pAgentConnection == NULL)
 	{
-      m_pAgentConnection = new AgentConnectionEx(m_id, m_dwIpAddr, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
+      m_pAgentConnection = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
 		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_name, m_id);
 	}
 	else
@@ -3499,7 +3495,7 @@ UINT32 Node::getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, T
 		SNMP_Transport *pTransport;
 
 		pTransport = new SNMP_UDPTransport;
-		((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), CHECKPOINT_SNMP_PORT);
+		((SNMP_UDPTransport *)pTransport)->createUDPTransport(m_ipAddress, CHECKPOINT_SNMP_PORT);
       dwResult = SnmpGet(SNMP_VERSION_1, pTransport, szParam, NULL, 0, szBuffer, dwBufSize * sizeof(TCHAR), SG_STRING_RESULT);
 		delete pTransport;
    }
@@ -3760,15 +3756,16 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
 		{
 			TCHAR arg[256] = _T("");
 	      AgentGetParameterArg(param, 1, arg, 256);
-			UINT32 destAddr = ntohl(_t_inet_addr(arg));
-			if ((destAddr > 0) && (destAddr < 0xE0000000))
+         InetAddress destAddr = InetAddress::parse(arg);
+			if (destAddr.isValidUnicast())
 			{
 			   bool isVpn;
-   			UINT32 nextHop, ifIndex;
+   			UINT32 ifIndex;
+            InetAddress nextHop;
             TCHAR name[MAX_OBJECT_NAME];
-				if (getNextHop(m_dwIpAddr, destAddr, &nextHop, &ifIndex, &isVpn, name))
+				if (getNextHop(m_ipAddress, destAddr, &nextHop, &ifIndex, &isVpn, name))
 				{
-					IpToStr(nextHop, buffer);
+               nextHop.toString(buffer);
 				}
 				else
 				{
@@ -4010,7 +4007,7 @@ UINT32 Node::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
       bool wasRemoteAgent = ((m_dwFlags & NF_REMOTE_AGENT) != 0);
       m_dwFlags &= NF_SYSTEM_FLAGS;
       m_dwFlags |= pRequest->getFieldAsUInt32(VID_FLAGS) & NF_USER_FLAGS;
-      if (wasRemoteAgent && !(m_dwFlags & NF_REMOTE_AGENT) && (m_dwIpAddr != 0))
+      if (wasRemoteAgent && !(m_dwFlags & NF_REMOTE_AGENT) && m_ipAddress.isValidUnicast())
       {
          if (IsZoningEnabled())
          {
@@ -4026,10 +4023,10 @@ UINT32 Node::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
          }
          else
          {
-				g_idxNodeByAddr.put(m_dwIpAddr, this);
+				g_idxNodeByAddr.put(m_ipAddress, this);
          }
       }
-      else if (!wasRemoteAgent && (m_dwFlags & NF_REMOTE_AGENT) && (m_dwIpAddr != 0))
+      else if (!wasRemoteAgent && (m_dwFlags & NF_REMOTE_AGENT) && m_ipAddress.isValidUnicast())
       {
          if (IsZoningEnabled())
          {
@@ -4045,7 +4042,7 @@ UINT32 Node::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
          }
          else
          {
-				g_idxNodeByAddr.remove(m_dwIpAddr);
+				g_idxNodeByAddr.remove(m_ipAddress);
          }
       }
    }
@@ -4053,15 +4050,14 @@ UINT32 Node::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change primary IP address
    if (pRequest->isFieldExist(VID_IP_ADDRESS))
    {
-      UINT32 i, ipAddr;
-
-      ipAddr = pRequest->getFieldAsUInt32(VID_IP_ADDRESS);
+      InetAddress ipAddr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
 
       // Check if received IP address is one of node's interface addresses
       LockChildList(FALSE);
+      UINT32 i;
       for(i = 0; i < m_dwChildCount; i++)
          if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
-             (m_pChildList[i]->IpAddr() == ipAddr))
+             m_pChildList[i]->getIpAddress().equals(ipAddr))
             break;
       UnlockChildList();
       if (i == m_dwChildCount)
@@ -4075,7 +4071,7 @@ UINT32 Node::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 		// Update primary name if it is not set with the same message
 		if (!pRequest->isFieldExist(VID_PRIMARY_NAME))
 		{
-			IpToStr(m_dwIpAddr, m_primaryName);
+			m_ipAddress.toString(m_primaryName);
 		}
 
 		agentLock();
@@ -4193,7 +4189,7 @@ UINT32 Node::wakeUp()
    for(i = 0; i < m_dwChildCount; i++)
       if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
           (m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
-          (m_pChildList[i]->IpAddr() != 0))
+          m_pChildList[i]->getIpAddress().isValidUnicast())
       {
          if(memcmp(((Interface *)m_pChildList[i])->getMacAddr(), "\x00\x00\x00\x00\x00\x00", 6))
          {
@@ -4208,10 +4204,9 @@ UINT32 Node::wakeUp()
 
    //If no interface found try to find interface in unmanaged state
    for(i = 0; i < m_dwChildCount; i++)
-      if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
-          (m_pChildList[i]->IpAddr() != 0))
+      if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && m_pChildList[i]->getIpAddress().isValidUnicast())
       {
-         if(memcmp(((Interface *)m_pChildList[i])->getMacAddr(), "\x00\x00\x00\x00\x00\x00", 6))
+         if (memcmp(((Interface *)m_pChildList[i])->getMacAddr(), "\x00\x00\x00\x00\x00\x00", 6))
          {
             dwResult = ((Interface *)m_pChildList[i])->wakeUp();
             break;
@@ -4384,7 +4379,7 @@ void Node::openTableList(ObjectArray<AgentTableDefinition> **tableList)
 /**
  * Check status of network service
  */
-UINT32 Node::checkNetworkService(UINT32 *pdwStatus, UINT32 ipAddr, int iServiceType,
+UINT32 Node::checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, int iServiceType,
                                 WORD wPort, WORD wProto, TCHAR *pszRequest,
                                 TCHAR *pszResponse, UINT32 *responseTime)
 {
@@ -4461,7 +4456,7 @@ AgentConnectionEx *Node::createAgentConnection()
       return NULL;
 
    DbgPrintf(6, _T("Node::createAgentConnection(%s [%d])"), m_name, (int)m_id);
-   conn = new AgentConnectionEx(m_id, m_dwIpAddr, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
+   conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(conn);
    if (!conn->connect(g_pServerKey))
    {
@@ -4476,9 +4471,9 @@ AgentConnectionEx *Node::createAgentConnection()
  * Set node's primary IP address.
  * Assumed that all necessary locks already in place
  */
-void Node::setPrimaryIPAddress(UINT32 addr)
+void Node::setPrimaryIPAddress(const InetAddress& addr)
 {
-	if ((addr == m_dwIpAddr) || (m_dwFlags & NF_REMOTE_AGENT))
+   if (addr.equals(m_ipAddress) || (m_dwFlags & NF_REMOTE_AGENT))
 		return;
 
 	if (IsZoningEnabled())
@@ -4489,19 +4484,19 @@ void Node::setPrimaryIPAddress(UINT32 addr)
 			DbgPrintf(1, _T("Internal error: zone is NULL in Node::setPrimaryIPAddress (zone ID = %d)"), (int)m_zoneId);
 			return;
 		}
-		if (m_dwIpAddr != 0)
+		if (m_ipAddress.isValid())
 			zone->removeFromIndex(this);
-		m_dwIpAddr = addr;
-		if (m_dwIpAddr != 0)
+		m_ipAddress = addr;
+		if (m_ipAddress.isValid())
 			zone->addToIndex(this);
 	}
 	else
 	{
-		if (m_dwIpAddr != 0)
-			g_idxNodeByAddr.remove(m_dwIpAddr);
-		m_dwIpAddr = addr;
-		if (m_dwIpAddr != 0)
-			g_idxNodeByAddr.put(m_dwIpAddr, this);
+		if (m_ipAddress.isValid())
+			g_idxNodeByAddr.remove(m_ipAddress);
+		m_ipAddress = addr;
+		if (m_ipAddress.isValid())
+			g_idxNodeByAddr.put(m_ipAddress, this);
 	}
 }
 
@@ -4510,7 +4505,7 @@ void Node::setPrimaryIPAddress(UINT32 addr)
  *
  * @param ipAddr new IP address
  */
-void Node::changeIPAddress(UINT32 ipAddr)
+void Node::changeIPAddress(const InetAddress& ipAddr)
 {
    UINT32 i;
 
@@ -4519,12 +4514,12 @@ void Node::changeIPAddress(UINT32 ipAddr)
    lockProperties();
 
 	// check if primary name is an IP address
-	if (ntohl(ResolveHostName(m_primaryName)) == m_dwIpAddr)
+   if (InetAddress::resolveHostName(m_primaryName).equals(m_ipAddress))
 	{
-		TCHAR ipAddrText[16];
-		IpToStr(m_dwIpAddr, ipAddrText);
+		TCHAR ipAddrText[64];
+		m_ipAddress.toString(ipAddrText);
 		if (!_tcscmp(ipAddrText, m_primaryName))
-			IpToStr(ipAddr, m_primaryName);
+			ipAddr.toString(m_primaryName);
 
 		setPrimaryIPAddress(ipAddr);
 		m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
@@ -4660,7 +4655,7 @@ ROUTING_TABLE *Node::getRoutingTable()
 /**
  * Get outward interface for routing to given destination address
  */
-bool Node::getOutwardInterface(UINT32 destAddr, UINT32 *srcAddr, UINT32 *srcIfIndex)
+bool Node::getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, UINT32 *srcIfIndex)
 {
    bool found = false;
    routingTableLock();
@@ -4668,11 +4663,11 @@ bool Node::getOutwardInterface(UINT32 destAddr, UINT32 *srcAddr, UINT32 *srcIfIn
    {
       for(int i = 0; i < m_pRoutingTable->iNumEntries; i++)
 		{
-         if ((destAddr & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr)
+         if ((destAddr.getAddressV4() & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr)
          {
             *srcIfIndex = m_pRoutingTable->pRoutes[i].dwIfIndex;
-            Interface *iface = findInterface(m_pRoutingTable->pRoutes[i].dwIfIndex, INADDR_ANY);
-            *srcAddr = ((iface != NULL) && (iface->IpAddr() != 0)) ? iface->IpAddr() : m_dwIpAddr;  // use primary IP if outward interface does not have Ip address or cannot be found
+            Interface *iface = findInterfaceByIndex(m_pRoutingTable->pRoutes[i].dwIfIndex);
+            *srcAddr = ((iface != NULL) && iface->getIpAddress().isValidUnicast()) ? iface->getIpAddress() : m_ipAddress;  // use primary IP if outward interface does not have Ip address or cannot be found
             found = true;
             break;
          }
@@ -4689,7 +4684,7 @@ bool Node::getOutwardInterface(UINT32 destAddr, UINT32 *srcAddr, UINT32 *srcIfIn
 /**
  * Get next hop for given destination address
  */
-bool Node::getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *ifIndex, bool *isVpn, TCHAR *name)
+bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, UINT32 *ifIndex, bool *isVpn, TCHAR *name)
 {
    UINT32 i;
    bool nextHopFound = false;
@@ -4713,10 +4708,9 @@ bool Node::getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *
 				break;
 			}
 		}
-		else if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && (m_pChildList[i]->IpAddr() != 0))
+		else if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && m_pChildList[i]->getIpAddress().isValid())
 		{
-			UINT32 mask = ((Interface *)m_pChildList[i])->getIpNetMask();
-			if ((destAddr & mask) == (m_pChildList[i]->IpAddr() & mask))
+			if (m_pChildList[i]->getIpAddress().sameSubnet(destAddr))
 			{
 				*nextHop = destAddr;
 				*ifIndex = ((Interface *)m_pChildList[i])->getIfIndex();
@@ -4745,10 +4739,10 @@ bool Node::getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *
       for(i = 0; i < (UINT32)m_pRoutingTable->iNumEntries; i++)
 		{
          if ((!nextHopFound || (m_pRoutingTable->pRoutes[i].dwDestMask == 0xFFFFFFFF)) &&
-			    ((destAddr & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr))
+             ((destAddr.getAddressV4() & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr))
          {
-            Interface *iface = findInterface(m_pRoutingTable->pRoutes[i].dwIfIndex, INADDR_ANY);
-            if ((m_pRoutingTable->pRoutes[i].dwNextHop == 0) && (iface != NULL) && (iface->getIpNetMask() == 0xFFFFFFFF))
+            Interface *iface = findInterfaceByIndex(m_pRoutingTable->pRoutes[i].dwIfIndex);
+            if ((m_pRoutingTable->pRoutes[i].dwNextHop == 0) && (iface != NULL) && (iface->getIpAddress().getHostBits() == 0))
             {
                // On Linux XEN VMs can be pointed by individual host routes to virtual interfaces
                // where each vif has netmask 255.255.255.255 and next hop in routing table set to 0.0.0.0
@@ -4859,7 +4853,7 @@ void Node::setAgentProxy(AgentConnection *pConn)
 		Node *node = (Node *)g_idxNodeById.get(proxyNode);
       if (node != NULL)
       {
-         pConn->setProxy(node->m_dwIpAddr, node->m_agentPort, node->m_agentAuthMethod, node->m_szSharedSecret);
+         pConn->setProxy(node->m_ipAddress, node->m_agentPort, node->m_agentAuthMethod, node->m_szSharedSecret);
       }
    }
 }
@@ -5011,7 +5005,7 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 	if (snmpProxy == 0)
 	{
 		pTransport = new SNMP_UDPTransport;
-		((SNMP_UDPTransport *)pTransport)->createUDPTransport(NULL, htonl(m_dwIpAddr), (port != 0) ? port : m_wSNMPPort);
+		((SNMP_UDPTransport *)pTransport)->createUDPTransport(m_ipAddress, (port != 0) ? port : m_wSNMPPort);
 	}
 	else
 	{
@@ -5023,7 +5017,7 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 			pConn = proxyNode->createAgentConnection();
 			if (pConn != NULL)
 			{
-				pTransport = new SNMP_ProxyTransport(pConn, m_dwIpAddr, (port != 0) ? port : m_wSNMPPort);
+				pTransport = new SNMP_ProxyTransport(pConn, m_ipAddress, (port != 0) ? port : m_wSNMPPort);
 			}
 		}
 	}
@@ -5083,23 +5077,15 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 {
 	BOOL bSuccess = FALSE;
 	BOOL bNameTruncated = FALSE;
-	HOSTENT *hs;
-	UINT32 i, dwAddr;
 	TCHAR szBuffer[256];
 
 	DbgPrintf(4, _T("Resolving name for node %d [%s]..."), m_id, m_name);
 
 	// Try to resolve primary IP
-	dwAddr = htonl(m_dwIpAddr);
-	hs = gethostbyaddr((const char *)&dwAddr, 4, AF_INET);
-	if (hs != NULL)
+   TCHAR name[MAX_OBJECT_NAME];
+	if (m_ipAddress.getHostByAddr(name, MAX_OBJECT_NAME) != NULL)
 	{
-#ifdef UNICODE
-		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hs->h_name, -1, m_name, MAX_OBJECT_NAME);
-		m_name[MAX_OBJECT_NAME - 1] = 0;
-#else
-		nx_strncpy(m_name, hs->h_name, MAX_OBJECT_NAME);
-#endif
+		nx_strncpy(m_name, name, MAX_OBJECT_NAME);
 		if (!(g_flags & AF_USE_FQDN_FOR_NODE_NAMES))
 		{
 			TCHAR *pPoint = _tcschr(m_name, _T('.'));
@@ -5115,26 +5101,16 @@ BOOL Node::resolveName(BOOL useOnlyDNS)
 	{
 		// Try to resolve each interface's IP address
 		LockChildList(FALSE);
-		for(i = 0; i < m_dwChildCount; i++)
+		for(UINT32 i = 0; i < m_dwChildCount; i++)
 		{
 			if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
-			    !((Interface *)m_pChildList[i])->isLoopback())
+			    !((Interface *)m_pChildList[i])->isLoopback() && m_pChildList[i]->getIpAddress().isValidUnicast())
 			{
-				dwAddr = htonl(m_pChildList[i]->IpAddr());
-				if (dwAddr != 0)
-				{
-					hs = gethostbyaddr((const char *)&dwAddr, 4, AF_INET);
-					if (hs != NULL)
-					{
-#ifdef UNICODE
-						MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, hs->h_name, -1, m_name, MAX_OBJECT_NAME);
-						m_name[MAX_OBJECT_NAME - 1] = 0;
-#else
-						nx_strncpy(m_name, hs->h_name, MAX_OBJECT_NAME);
-#endif
-						bSuccess = TRUE;
-						break;
-					}
+            if (m_pChildList[i]->getIpAddress().getHostByAddr(name, MAX_OBJECT_NAME) != NULL)
+            {
+					nx_strncpy(m_name, name, MAX_OBJECT_NAME);
+					bSuccess = TRUE;
+					break;
 				}
 			}
 		}
@@ -5404,8 +5380,8 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 			{
 				DbgPrintf(5, _T("Node::topologyPoll(%s [%d]): found peer node %s [%d], localIfIndex=%d remoteIfIndex=%d"),
 				          m_name, m_id, object->getName(), object->getId(), ni->ifLocal, ni->ifRemote);
-				Interface *ifLocal = findInterface(ni->ifLocal, INADDR_ANY);
-				Interface *ifRemote = ((Node *)object)->findInterface(ni->ifRemote, INADDR_ANY);
+				Interface *ifLocal = findInterfaceByIndex(ni->ifLocal);
+            Interface *ifRemote = ((Node *)object)->findInterfaceByIndex(ni->ifRemote);
 				DbgPrintf(5, _T("Node::topologyPoll(%s [%d]): localIfObject=%s remoteIfObject=%s"), m_name, m_id,
 				          (ifLocal != NULL) ? ifLocal->getName() : _T("(null)"),
 				          (ifRemote != NULL) ? ifRemote->getName() : _T("(null)"));
@@ -5535,10 +5511,10 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
                if ((node != NULL) && (ws->ipAddr == 0))
                {
                   Interface *iface = node->findInterfaceByMAC(ws->macAddr);
-                  if ((iface != NULL) && (iface->IpAddr() != 0))
-                     ws->ipAddr = iface->IpAddr();
+                  if ((iface != NULL) && iface->getIpAddress().isValidUnicast())
+                     ws->ipAddr = iface->getIpAddress().getAddressV4();
                   else
-                     ws->ipAddr = node->IpAddr();
+                     ws->ipAddr = node->getIpAddress().getAddressV4();
                }
 				}
 			}
@@ -5665,7 +5641,7 @@ void Node::resolveVlanPorts(VlanList *vlanList)
 			switch(vlan->getPortReferenceMode())
 			{
 				case VLAN_PRM_IFINDEX:	// interface index
-					iface = findInterface(portId, INADDR_ANY);
+               iface = findInterfaceByIndex(portId);
 					break;
 				case VLAN_PRM_BPORT:		// bridge port number
 					iface = findBridgePort(portId);
@@ -5683,17 +5659,17 @@ void Node::resolveVlanPorts(VlanList *vlanList)
 /**
  * Create new subnet and bins to this node
  */
-Subnet *Node::createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask)
+Subnet *Node::createSubnet(const InetAddress& baseAddr, bool syntheticMask)
 {
+   InetAddress addr = baseAddr.getSubnetAddress();
    if (syntheticMask)
    {
-      while(FindSubnetByIP(m_zoneId, ipAddr & netMask) != NULL)
+      while(FindSubnetByIP(m_zoneId, addr) != NULL)
       {
-         netMask = (netMask >> 1) | 0xFFFFFF00;
+         addr.setMaskBits(addr.getMaskBits() + 1);
       }
    }
-   ipAddr = ipAddr & netMask;
-   Subnet *s = new Subnet(ipAddr, netMask, m_zoneId, syntheticMask);
+   Subnet *s = new Subnet(addr, m_zoneId, syntheticMask);
    NetObjInsert(s, TRUE);
    if (g_flags & AF_ENABLE_ZONING)
    {
@@ -5712,7 +5688,7 @@ Subnet *Node::createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask)
 	   g_pEntireNet->AddSubnet(s);
    }
    s->addNode(this);
-   DbgPrintf(4, _T("Node::createSubnet(): Creating new subnet %s [%d] for node %s [%d]"),
+   DbgPrintf(4, _T("Node::createSubnet(): Created new subnet %s [%d] for node %s [%d]"),
              s->getName(), s->getId(), m_name, m_id);
    return s;
 }
@@ -5736,21 +5712,21 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 		   NX_INTERFACE_INFO *iface = pIfList->get(i);
 		   if (iface->ipAddr != 0)
 		   {
-			   Interface *pInterface = findInterface(iface->index, iface->ipAddr);
-			   if (pInterface == NULL)
+			   Interface *pInterface = findInterfaceByIndex(iface->index);
+			   if ((pInterface == NULL) || !pInterface->getIpAddress().equals(iface->ipAddr))
 			   {
-				   nxlog_write(MSG_INTERNAL_ERROR, EVENTLOG_WARNING_TYPE, "s", _T("Cannot find interface object in Node::CheckSubnetBinding()"));
+				   nxlog_write(MSG_INTERNAL_ERROR, EVENTLOG_WARNING_TYPE, "s", _T("Cannot find interface object in Node::checkSubnetBinding()"));
 				   break;	// Something goes really wrong
 			   }
 
-			   if (pInterface->IpAddr() == m_dwIpAddr)
+			   if (pInterface->getIpAddress().equals(m_ipAddress))
                hasIfaceForPrimaryIp = true;
 
 			   if (pInterface->isExcludedFromTopology())
 				   continue;
 
 			   // Is cluster interconnect interface?
-			   bool isSync = (pCluster != NULL) ? pCluster->isSyncAddr(pInterface->IpAddr()) : false;
+			   bool isSync = (pCluster != NULL) ? pCluster->isSyncAddr(pInterface->getIpAddress()) : false;
 
 			   Subnet *pSubnet = FindSubnetForNode(m_zoneId, iface->ipAddr);
 			   if (pSubnet != NULL)
@@ -5765,7 +5741,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 					   {
 						   DbgPrintf(4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
 									    pSubnet->getName(), pSubnet->getId(), m_name, m_id);
-                     if (((pInterface->getIpNetMask() == 0xFFFFFFFF) || (pInterface->getIpNetMask() == 0xFFFFFFFE)) && (getParentCount() > 1))
+                     if ((pInterface->getIpAddress().getHostBits() < 2) && (getParentCount() > 1))
                      {
                         /* Delete subnet object if we try to change it's netmask to 255.255.255.255 or 255.255.255.254 and
                          node has more than one parent. hasIfaceForPrimaryIp paramteter should prevent us from going in
@@ -5775,7 +5751,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
                      }
                      else
                      {
-                        pSubnet->setCorrectMask(pInterface->IpAddr() & pInterface->getIpNetMask(), pInterface->getIpNetMask());
+                        pSubnet->setCorrectMask(pInterface->getIpAddress().getSubnetAddress());
                      }
 					   }
 
@@ -5790,18 +5766,27 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 			   }
 			   else if (!isSync)
 			   {
+               DbgPrintf(6, _T("Missing subnet for interface %s [%d]"), iface->name, iface->index);
+
 				   // Ignore mask 255.255.255.255 - some point-to-point interfaces can have such mask
 				   // Ignore mask 255.255.255.254 - it's invalid
 				   if ((iface->ipNetMask != 0xFFFFFFFF) && (iface->ipNetMask != 0xFFFFFFFE))
-                  pSubnet = createSubnet(iface->ipAddr, iface->ipNetMask, false);
+               {
+                  pSubnet = createSubnet(InetAddress(iface->ipAddr, iface->ipNetMask), false);
+					   pSubnet->addNode(this);
+               }
+               else
+               {
+                  DbgPrintf(6, _T("Subnet not required for interface %s [%d]"), iface->name, iface->index);
+               }
 			   }
 
 			   // Check if subnet mask is correct on interface
-			   if ((pSubnet != NULL) && (pSubnet->getIpNetMask() != pInterface->getIpNetMask()) && (iface->ipNetMask != 0xFFFFFFFF))
+			   if ((pSubnet != NULL) && (pSubnet->getIpAddress().getMaskBits() != pInterface->getIpAddress().getMaskBits()) && (iface->ipNetMask != 0xFFFFFFFF))
 			   {
-				   PostEvent(EVENT_INCORRECT_NETMASK, m_id, "idsaa", pInterface->getId(),
+				   PostEvent(EVENT_INCORRECT_NETMASK, m_id, "idsdd", pInterface->getId(),
 							    pInterface->getIfIndex(), pInterface->getName(),
-							    pInterface->getIpNetMask(), pSubnet->getIpNetMask());
+							    pInterface->getIpAddress().getMaskBits(), pSubnet->getIpAddress().getMaskBits());
 			   }
 		   }
 	   }
@@ -5810,9 +5795,9 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
    // Some devices may report interface list, but without IP
    // To prevent such nodes from hanging at top of the tree, attempt
    // to find subnet node primary IP
-   if ((m_dwIpAddr != 0) && !(m_dwFlags & NF_REMOTE_AGENT) && !hasIfaceForPrimaryIp)
+   if (m_ipAddress.isValidUnicast() && !(m_dwFlags & NF_REMOTE_AGENT) && !hasIfaceForPrimaryIp)
    {
-	   Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_dwIpAddr);
+	   Subnet *pSubnet = FindSubnetForNode(m_zoneId, m_ipAddress);
       if (pSubnet != NULL)
       {
 		   // Check if node is linked to this subnet
@@ -5825,7 +5810,9 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
       }
       else
       {
-		   pSubnet = createSubnet(m_dwIpAddr, 0xFFFFFF00, true);
+         InetAddress addr(m_ipAddress);
+         addr.setMaskBits((addr.getFamily() == AF_INET) ? 24 : 64);
+		   pSubnet = createSubnet(addr, true);
       }
    }
 
@@ -5838,7 +5825,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 		if (m_pParentList[i]->getObjectClass() == OBJECT_SUBNET)
 		{
 			Subnet *pSubnet = (Subnet *)m_pParentList[i];
-			if ((pSubnet->IpAddr() == (m_dwIpAddr & pSubnet->getIpNetMask())) && !(m_dwFlags & NF_REMOTE_AGENT))
+			if (pSubnet->getIpAddress().contain(m_ipAddress) && !(m_dwFlags & NF_REMOTE_AGENT))
             continue;   // primary IP is in given subnet
 
          UINT32 j;
@@ -5849,11 +5836,11 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
 					if (((Interface *)m_pChildList[j])->isExcludedFromTopology())
 						continue;
 
-					if (pSubnet->IpAddr() == (m_pChildList[j]->IpAddr() & pSubnet->getIpNetMask()))
+					if (pSubnet->getIpAddress().contain(m_pChildList[j]->getIpAddress()))
 					{
 						if (pCluster != NULL)
 						{
-							if (pCluster->isSyncAddr(m_pChildList[j]->IpAddr()))
+							if (pCluster->isSyncAddr(m_pChildList[j]->getIpAddress()))
 							{
 								j = m_dwChildCount;	// Cause to unbind from this subnet
 							}
@@ -5879,6 +5866,7 @@ void Node::checkSubnetBinding(InterfaceList *pIfList)
       NetObj *o = unlinkList.get(n);
       o->DeleteChild(this);
 		DeleteParent(o);
+      o->calculateCompoundStatus();
 	}
 }
 
@@ -6094,9 +6082,9 @@ TCHAR *Node::expandText(const TCHAR *textTemplate)
                   dwPos += (UINT32)_tcslen(m_name);
                   break;
                case 'a':   // IP address of the node
-                  dwSize += 16;
+                  dwSize += 48;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-						IpToStr(m_dwIpAddr, &pText[dwPos]);
+						m_ipAddress.toString(&pText[dwPos]);
                   dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'i':   // Node identifier
@@ -6434,9 +6422,9 @@ void Node::updatePingData()
          AgentConnection *conn = proxyNode->createAgentConnection();
          if (conn != NULL)
          {
-            TCHAR parameter[64], buffer[64];
+            TCHAR parameter[128], buffer[64];
 
-            _sntprintf(parameter, 64, _T("Icmp.Ping(%s)"), IpToStr(m_dwIpAddr, buffer));
+            _sntprintf(parameter, 128, _T("Icmp.Ping(%s)"), m_ipAddress.toString(buffer));
             if (conn->getParameter(parameter, 64, buffer) == ERR_SUCCESS)
             {
                DbgPrintf(7, _T("Node::updatePingData:  proxy response: \"%s\""), buffer);
@@ -6468,7 +6456,7 @@ void Node::updatePingData()
    }
    else	// not using ICMP proxy
    {
-      UINT32 dwPingStatus = IcmpPing(htonl(m_dwIpAddr), 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
+      UINT32 dwPingStatus = IcmpPing(m_ipAddress, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
       if (dwPingStatus != ICMP_SUCCESS)
       {
          DbgPrintf(7, _T("Node::updatePingData: error getting ping %d"), dwPingStatus);

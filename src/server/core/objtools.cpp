@@ -306,7 +306,7 @@ static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar, LONG nF
             break;
          case CFMT_IFINDEX:   // Column is an interface index, convert to interface name
             dwIndex = pVar->getValueAsUInt();
-            pInterface = pNode->findInterface(dwIndex, INADDR_ANY);
+            pInterface = pNode->findInterfaceByIndex(dwIndex);
             if (pInterface != NULL)
             {
                nx_strncpy(szBuffer, pInterface->getName(), 4096);

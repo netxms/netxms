@@ -782,7 +782,7 @@ ARP_CACHE *AgentConnection::getArpCache()
          pChar = _tcschr(pBuf, _T(' '));
          if (pChar != NULL)
             *pChar = 0;
-         pArpCache->pEntries[i].dwIpAddr = ntohl(_t_inet_addr(pBuf));
+         pArpCache->pEntries[i].ipAddr = ntohl(_t_inet_addr(pBuf));
 
          // Interface index
          if (pChar != NULL)
@@ -1236,7 +1236,7 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
 /**
  * Check status of network service via agent
  */
-UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType,
+UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType,
                                             WORD wPort, WORD wProto, const TCHAR *pszRequest, 
                                             const TCHAR *pszResponse, UINT32 *responseTime)
 {
@@ -1251,7 +1251,7 @@ UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, 
 
    msg.setCode(CMD_CHECK_NETWORK_SERVICE);
    msg.setId(dwRqId);
-   msg.setField(VID_IP_ADDRESS, dwIpAddr);
+   msg.setField(VID_IP_ADDRESS, addr);
    msg.setField(VID_SERVICE_TYPE, (WORD)iServiceType);
    msg.setField(VID_IP_PORT,
       (wPort != 0) ? wPort :

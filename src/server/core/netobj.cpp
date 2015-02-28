@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,7 +42,6 @@ NetObj::NetObj()
    m_isDeleted = false;
    m_isHidden = false;
 	m_isSystem = false;
-   m_dwIpAddr = 0;
    m_dwChildCount = 0;
    m_pChildList = NULL;
    m_dwParentCount = 0;
@@ -920,7 +919,7 @@ void NetObj::fillMessage(NXCPMessage *pMsg)
 	pMsg->setField(VID_GUID, m_guid, UUID_LENGTH);
    pMsg->setField(VID_OBJECT_NAME, m_name);
    pMsg->setField(VID_OBJECT_STATUS, (WORD)m_iStatus);
-   pMsg->setField(VID_IP_ADDRESS, m_dwIpAddr);
+   pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
    pMsg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
    pMsg->setField(VID_IS_SYSTEM, (WORD)(m_isSystem ? 1 : 0));
 

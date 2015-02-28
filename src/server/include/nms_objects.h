@@ -182,6 +182,32 @@ public:
 	void forEach(void (*callback)(NetObj *, void *), void *data);
 };
 
+struct InetAddressIndexEntry;
+
+/**
+ * Object index by IP address
+ */
+class NXCORE_EXPORTABLE InetAddressIndex
+{
+private:
+   InetAddressIndexEntry *m_root;
+	RWLOCK m_lock;
+
+public:
+   InetAddressIndex();
+   ~InetAddressIndex();
+
+	bool put(const InetAddress& addr, NetObj *object);
+	void remove(const InetAddress& addr);
+	NetObj *get(const InetAddress& addr);
+	NetObj *find(bool (*comparator)(NetObj *, void *), void *data);
+
+	int size();
+	ObjectArray<NetObj> *getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *) = NULL, void *userData = NULL);
+
+	void forEach(void (*callback)(NetObj *, void *), void *data);
+};
+
 /**
  * Node component
  */
@@ -345,7 +371,7 @@ protected:
    MUTEX m_mutexRefCount;     // Reference counter access mutex
    RWLOCK m_rwlockParentList; // Lock for parent list
    RWLOCK m_rwlockChildList;  // Lock for child list
-   UINT32 m_dwIpAddr;
+   InetAddress m_ipAddress;
 	GeoLocation m_geoLocation;
    PostalAddress *m_postalAddress;
    ClientSession *m_pollRequestor;
@@ -410,7 +436,7 @@ public:
 
    virtual int getObjectClass() { return OBJECT_GENERIC; }
 
-   UINT32 IpAddr() { return m_dwIpAddr; }
+   const InetAddress& getIpAddress() { return m_ipAddress; }
    UINT32 getId() { return m_id; }
    const TCHAR *getName() { return m_name; }
    int Status() { return m_iStatus; }
@@ -635,7 +661,6 @@ protected:
    UINT32 m_index;
    UINT32 m_type;
    UINT32 m_mtu;
-   UINT32 m_ipNetMask;
    BYTE m_macAddr[MAC_ADDR_LENGTH];
 	UINT32 m_bridgePortNumber;		// 802.1D port number
 	UINT32 m_slotNumber;				// Vendor/device specific slot number
@@ -662,8 +687,8 @@ protected:
 
 public:
    Interface();
-   Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSyntheticMask);
-   Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32 ipAddr, UINT32 ipNetMask, UINT32 ifType, UINT32 zoneId);
+   Interface(const InetAddress& addr, UINT32 zoneId, bool bSyntheticMask);
+   Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddress& addr, UINT32 ifType, UINT32 zoneId);
    virtual ~Interface();
 
    virtual int getObjectClass() { return OBJECT_INTERFACE; }
@@ -675,7 +700,6 @@ public:
    UINT32 getParentNodeId();
 
    UINT32 getZoneId() { return m_zoneId; }
-   UINT32 getIpNetMask() { return m_ipNetMask; }
    UINT32 getIfIndex() { return m_index; }
    UINT32 getIfType() { return m_type; }
    UINT32 getMTU() { return m_mtu; }
@@ -708,8 +732,8 @@ public:
    void setLastDownEventId(QWORD id) { m_lastDownEventId = id; }
 
    void setMacAddr(const BYTE *pbNewMac);
-   void setIpAddr(UINT32 dwNewAddr);
-   void setIpNetMask(UINT32 dwNewMask);
+   void setIpAddr(const InetAddress& newAddr);
+   void setIpNetMask(int maskBits);
    void setBridgePortNumber(UINT32 bpn) { m_bridgePortNumber = bpn; setModified(); }
    void setSlotNumber(UINT32 slot) { m_slotNumber = slot; setModified(); }
    void setPortNumber(UINT32 port) { m_portNumber = port; setModified(); }
@@ -781,10 +805,8 @@ class NXCORE_EXPORTABLE VPNConnector : public NetObj
 {
 protected:
    UINT32 m_dwPeerGateway;        // Object ID of peer gateway
-   UINT32 m_dwNumLocalNets;
-   IP_NETWORK *m_pLocalNetList;
-   UINT32 m_dwNumRemoteNets;
-   IP_NETWORK *m_pRemoteNetList;
+   ObjectArray<InetAddress> *m_localNetworks;
+   ObjectArray<InetAddress> *m_remoteNetworks;
 
    Node *getParentNode();
 
@@ -802,10 +824,10 @@ public:
    virtual void fillMessage(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   BOOL isLocalAddr(UINT32 dwIpAddr);
-   BOOL isRemoteAddr(UINT32 dwIpAddr);
+   bool isLocalAddr(const InetAddress& addr);
+   bool isRemoteAddr(const InetAddress& addr);
    UINT32 getPeerGatewayId() { return m_dwPeerGateway; }
-   UINT32 getPeerGatewayAddr();
+   InetAddress getPeerGatewayAddr();
 };
 
 /**
@@ -938,7 +960,7 @@ public:
    AccessPointState getState() { return m_state; }
    Node *getParentNode();
 
-   void setIpAddr(UINT32 ipAddr) { lockProperties(); m_dwIpAddr = ipAddr; setModified(); unlockProperties(); }
+   void setIpAddr(const InetAddress& ipAddr) { lockProperties(); m_ipAddress = ipAddr; setModified(); unlockProperties(); }
 
 	void attachToNode(UINT32 nodeId);
 	void updateRadioInterfaces(ObjectArray<RadioInterfaceInfo> *ri);
@@ -953,8 +975,7 @@ class NXCORE_EXPORTABLE Cluster : public DataCollectionTarget
 {
 protected:
 	UINT32 m_dwClusterType;
-   UINT32 m_dwNumSyncNets;
-   IP_NETWORK *m_pSyncNetList;
+   ObjectArray<InetAddress> *m_syncNetworks;
 	UINT32 m_dwNumResources;
 	CLUSTER_RESOURCE *m_pResourceList;
 	UINT32 m_dwFlags;
@@ -976,8 +997,8 @@ public:
 
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 
-	bool isSyncAddr(UINT32 dwAddr);
-	bool isVirtualAddr(UINT32 dwAddr);
+	bool isSyncAddr(const InetAddress& addr);
+	bool isVirtualAddr(const InetAddress& addr);
 	bool isResourceOnNode(UINT32 dwResource, UINT32 dwNode);
    UINT32 getZoneId() { return m_zoneId; }
 
@@ -1090,12 +1111,12 @@ protected:
 	void addVrrpInterfaces(InterfaceList *ifList);
 	BOOL resolveName(BOOL useOnlyDNS);
    void setAgentProxy(AgentConnection *pConn);
-	void setPrimaryIPAddress(UINT32 addr);
+	void setPrimaryIPAddress(const InetAddress& addr);
 
    UINT32 getInterfaceCount(Interface **ppInterface);
 
    void checkInterfaceNames(InterfaceList *pIfList);
-   Subnet *createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask);
+   Subnet *createSubnet(const InetAddress& baseAddr, bool syntheticMask);
 	void checkAgentPolicyBinding(AgentConnection *conn);
 	void updatePrimaryIpAddr();
 	bool confPollAgent(UINT32 dwRqId);
@@ -1125,7 +1146,7 @@ protected:
 
 public:
    Node();
-   Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 dwZone);
+   Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 dwZone);
    virtual ~Node();
 
    virtual int getObjectClass() { return OBJECT_NODE; }
@@ -1181,30 +1202,30 @@ public:
 	void setPrimaryName(const TCHAR *name) { nx_strncpy(m_primaryName, name, MAX_DNS_NAME); }
 	void setAgentPort(WORD port) { m_agentPort = port; }
 	void setSnmpPort(WORD port) { m_wSNMPPort = port; }
-   void changeIPAddress(UINT32 dwIpAddr);
+   void changeIPAddress(const InetAddress& ipAddr);
 	void changeZone(UINT32 newZone);
 
    ARP_CACHE *getArpCache();
    InterfaceList *getInterfaceList();
-   Interface *findInterface(UINT32 dwIndex, UINT32 dwHostAddr);
-   Interface *findInterface(const TCHAR *name);
+   Interface *findInterfaceByIndex(UINT32 ifIndex);
+   Interface *findInterfaceByName(const TCHAR *name);
 	Interface *findInterfaceByMAC(const BYTE *macAddr);
-	Interface *findInterfaceByIP(UINT32 ipAddr);
+	Interface *findInterfaceByIP(const InetAddress& addr);
 	Interface *findInterfaceBySlotAndPort(UINT32 slot, UINT32 port);
 	Interface *findBridgePort(UINT32 bridgePortNumber);
    AccessPoint *findAccessPointByMAC(const BYTE *macAddr);
    AccessPoint *findAccessPointByBSSID(const BYTE *bssid);
    AccessPoint *findAccessPointByRadioId(int rfIndex);
    ObjectArray<WirelessStationInfo> *getWirelessStations();
-	BOOL isMyIP(UINT32 dwIpAddr);
+	bool isMyIP(const InetAddress& addr);
    void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 dwIndex, InterfaceAdminState *adminState, InterfaceOperState *operState);
    void getInterfaceStatusFromAgent(UINT32 dwIndex, InterfaceAdminState *adminState, InterfaceOperState *operState);
    ROUTING_TABLE *getRoutingTable();
    ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }
 	LinkLayerNeighbors *getLinkLayerNeighbors();
 	VlanList *getVlans();
-   bool getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *ifIndex, bool *isVpn, TCHAR *name);
-   bool getOutwardInterface(UINT32 destAddr, UINT32 *srcAddr, UINT32 *srcIfIndex);
+   bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, UINT32 *ifIndex, bool *isVpn, TCHAR *name);
+   bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, UINT32 *srcIfIndex);
 	ComponentTree *getComponents();
    bool getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
 
@@ -1281,7 +1302,7 @@ public:
    UINT32 wakeUp();
 
    void addService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
-   UINT32 checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType, WORD wPort = 0,
+   UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
 
    QWORD getLastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
@@ -1449,7 +1470,6 @@ class NXCORE_EXPORTABLE Subnet : public NetObj
 	friend void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedSubnet, bool vpnLink, bool includeEndNodes);
 
 protected:
-   UINT32 m_dwIpNetMask;
    UINT32 m_zoneId;
 	bool m_bSyntheticMask;
 
@@ -1459,7 +1479,7 @@ protected:
 
 public:
    Subnet();
-   Subnet(UINT32 dwAddr, UINT32 dwNetMask, UINT32 dwZone, bool bSyntheticMask);
+   Subnet(const InetAddress& addr, UINT32 dwZone, bool bSyntheticMask);
    virtual ~Subnet();
 
    virtual int getObjectClass() { return OBJECT_SUBNET; }
@@ -1468,18 +1488,17 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   void addNode(Node *node) { AddChild(node); node->AddParent(this); }
+   void addNode(Node *node) { AddChild(node); node->AddParent(this); calculateCompoundStatus(TRUE); }
    virtual void fillMessage(NXCPMessage *pMsg);
 
 	virtual bool showThresholdSummary();
 
-   UINT32 getIpNetMask() { return m_dwIpNetMask; }
    UINT32 getZoneId() { return m_zoneId; }
 	bool isSyntheticMask() { return m_bSyntheticMask; }
 
-	void setCorrectMask(UINT32 dwAddr, UINT32 dwMask);
+	void setCorrectMask(const InetAddress& addr);
 
-	bool findMacAddress(UINT32 ipAddr, BYTE *macAddr);
+	bool findMacAddress(const InetAddress& ipAddr, BYTE *macAddr);
 
    UINT32 *buildAddressMap(int *length);
 };
@@ -1621,9 +1640,9 @@ protected:
    UINT32 m_agentProxy;
    UINT32 m_snmpProxy;
 	UINT32 m_icmpProxy;
-	ObjectIndex *m_idxNodeByAddr;
-	ObjectIndex *m_idxInterfaceByAddr;
-	ObjectIndex *m_idxSubnetByAddr;
+	InetAddressIndex *m_idxNodeByAddr;
+	InetAddressIndex *m_idxInterfaceByAddr;
+	InetAddressIndex *m_idxSubnetByAddr;
 
 public:
    Zone();
@@ -1648,16 +1667,16 @@ public:
 
    void addSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
 
-	void addToIndex(Subnet *subnet) { m_idxSubnetByAddr->put(subnet->IpAddr(), subnet); }
-	void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->IpAddr(), iface); }
-	void addToIndex(Node *node) { m_idxNodeByAddr->put(node->IpAddr(), node); }
-	void removeFromIndex(Subnet *subnet) { m_idxSubnetByAddr->remove(subnet->IpAddr()); }
-	void removeFromIndex(Interface *iface) { m_idxInterfaceByAddr->remove(iface->IpAddr()); }
-	void removeFromIndex(Node *node) { m_idxNodeByAddr->remove(node->IpAddr()); }
-	void updateInterfaceIndex(UINT32 oldIp, UINT32 newIp, Interface *iface);
-	Subnet *getSubnetByAddr(UINT32 ipAddr) { return (Subnet *)m_idxSubnetByAddr->get(ipAddr); }
-	Interface *getInterfaceByAddr(UINT32 ipAddr) { return (Interface *)m_idxInterfaceByAddr->get(ipAddr); }
-	Node *getNodeByAddr(UINT32 ipAddr) { return (Node *)m_idxNodeByAddr->get(ipAddr); }
+	void addToIndex(Subnet *subnet) { m_idxSubnetByAddr->put(subnet->getIpAddress(), subnet); }
+	void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->getIpAddress(), iface); }
+	void addToIndex(Node *node) { m_idxNodeByAddr->put(node->getIpAddress(), node); }
+	void removeFromIndex(Subnet *subnet) { m_idxSubnetByAddr->remove(subnet->getIpAddress()); }
+	void removeFromIndex(Interface *iface) { m_idxInterfaceByAddr->remove(iface->getIpAddress()); }
+	void removeFromIndex(Node *node) { m_idxNodeByAddr->remove(node->getIpAddress()); }
+	void updateInterfaceIndex(const InetAddress& oldIp, const InetAddress& newIp, Interface *iface);
+	Subnet *getSubnetByAddr(const InetAddress& ipAddr) { return (Subnet *)m_idxSubnetByAddr->get(ipAddr); }
+	Interface *getInterfaceByAddr(const InetAddress& ipAddr) { return (Interface *)m_idxInterfaceByAddr->get(ipAddr); }
+	Node *getNodeByAddr(const InetAddress& ipAddr) { return (Node *)m_idxNodeByAddr->get(ipAddr); }
 	Subnet *findSubnet(bool (*comparator)(NetObj *, void *), void *data) { return (Subnet *)m_idxSubnetByAddr->find(comparator, data); }
 	Interface *findInterface(bool (*comparator)(NetObj *, void *), void *data) { return (Interface *)m_idxInterfaceByAddr->find(comparator, data); }
 	Node *findNode(bool (*comparator)(NetObj *, void *), void *data) { return (Node *)m_idxNodeByAddr->find(comparator, data); }
@@ -2168,7 +2187,7 @@ void NXCORE_EXPORTABLE NetObjInsert(NetObj *pObject, BOOL bNewObject);
 void NetObjDeleteFromIndexes(NetObj *pObject);
 void NetObjDelete(NetObj *pObject);
 
-void UpdateInterfaceIndex(UINT32 dwOldIpAddr, UINT32 dwNewIpAddr, Interface *pObject);
+void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, Interface *iface);
 ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp);
 
 void NXCORE_EXPORTABLE MacDbAddAccessPoint(AccessPoint *ap);
@@ -2182,22 +2201,22 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass);
 const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName);
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
-Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, UINT32 ipAddr);
+Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddress& ipAddr);
 Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);
 Node NXCORE_EXPORTABLE *FindNodeByBridgeId(const BYTE *bridgeId);
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId);
-Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, UINT32 ipAddr);
+Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, const InetAddress& ipAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description);
-Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, UINT32 ipAddr);
-Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneId, UINT32 dwNodeAddr);
+Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, const InetAddress& ipAddr);
+Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneId, const InetAddress& nodeAddr);
 MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId);
 AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr);
 UINT32 NXCORE_EXPORTABLE FindLocalMgmtNode();
 CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(UINT32 dwId);
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(UINT32 dwZoneGUID);
-Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(UINT32 zone, UINT32 ipAddr);
-bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zone, UINT32 ipAddr);
+Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(UINT32 zone, const InetAddress& ipAddr);
+bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zone, const InetAddress& ipAddr);
 
 BOOL LoadObjects();
 void DumpObjects(CONSOLE_CTX pCtx);
@@ -2230,9 +2249,9 @@ extern BOOL g_bModificationsLocked;
 extern Queue *g_pTemplateUpdateQueue;
 
 extern ObjectIndex NXCORE_EXPORTABLE g_idxObjectById;
-extern ObjectIndex NXCORE_EXPORTABLE g_idxSubnetByAddr;
-extern ObjectIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
-extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeByAddr;
+extern InetAddressIndex NXCORE_EXPORTABLE g_idxSubnetByAddr;
+extern InetAddressIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
+extern InetAddressIndex NXCORE_EXPORTABLE g_idxNodeByAddr;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByGUID;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxClusterById;

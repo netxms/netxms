@@ -18,8 +18,8 @@
  */
 package org.netxms.client.objects;
 
-import java.net.InetAddress;
-import org.netxms.base.*;
+import org.netxms.base.NXCPCodes;
+import org.netxms.base.NXCPMessage;
 import org.netxms.client.MacAddress;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.LinkLayerDiscoveryProtocol;
@@ -104,7 +104,6 @@ public class Interface extends GenericObject
 		};
 	
 	private int flags;
-	private InetAddress subnetMask;
 	private int ifIndex;
 	private int ifType;
 	private int mtu;
@@ -131,7 +130,6 @@ public class Interface extends GenericObject
 		super(msg, session);
 		
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
-		subnetMask = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_NETMASK);
 		ifIndex = msg.getFieldAsInt32(NXCPCodes.VID_IF_INDEX);
 		ifType = msg.getFieldAsInt32(NXCPCodes.VID_IF_TYPE);
       mtu = msg.getFieldAsInt32(NXCPCodes.VID_MTU);
@@ -177,10 +175,12 @@ public class Interface extends GenericObject
 	/**
 	 * @return Interface subnet mask
 	 */
+	/*
 	public InetAddress getSubnetMask()
 	{
 		return subnetMask;
 	}
+	*/
 	
 	/**
 	 * Get number of bits in subnet mask
@@ -189,26 +189,7 @@ public class Interface extends GenericObject
 	 */
 	public int getSubnetMaskBits()
 	{
-      byte[] addr = subnetMask.getAddress();
-      int bits = 0;
-      for(int i = 0; i < addr.length; i++)
-      {
-         if (addr[i] == (byte)0xFF)
-         {
-            bits += 8;
-         }
-         else
-         {
-            for(int j = 0x80; j > 0; j >>= 1)
-            {
-               if ((addr[i] & j) == 0)
-                  break;
-               bits++;
-            }
-            break;
-         }
-      }
-      return bits;
+	   return primaryIP.mask;
 	}
 
 	/**

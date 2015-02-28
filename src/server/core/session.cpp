@@ -4383,8 +4383,9 @@ void ClientSession::createObject(NXCPMessage *pRequest)
    int iClass, iServiceType;
    TCHAR szObjectName[MAX_OBJECT_NAME], nodePrimaryName[MAX_DNS_NAME], deviceId[MAX_OBJECT_NAME];
    TCHAR *pszRequest, *pszResponse, *pszComments;
-   UINT32 dwIpAddr, zoneId, nodeId;
+   UINT32 zoneId, nodeId;
    WORD wIpProto, wIpPort;
+   InetAddress ipAddr;
    BOOL bParentAlwaysValid = FALSE;
 
    // Prepare response message
@@ -4401,16 +4402,16 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 		if (pRequest->isFieldExist(VID_PRIMARY_NAME))
 		{
 			pRequest->getFieldAsString(VID_PRIMARY_NAME, nodePrimaryName, MAX_DNS_NAME);
-			dwIpAddr = ntohl(ResolveHostName(nodePrimaryName));
+         ipAddr = InetAddress::resolveHostName(nodePrimaryName);
 		}
 		else
 		{
-			dwIpAddr = pRequest->getFieldAsUInt32(VID_IP_ADDRESS);
-			IpToStr(dwIpAddr, nodePrimaryName);
+         ipAddr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
+         ipAddr.toString(nodePrimaryName);
 		}
-      if ((pParent == NULL) && (dwIpAddr != 0))
+      if ((pParent == NULL) && ipAddr.isValidUnicast())
       {
-         pParent = FindSubnetForNode(zoneId, dwIpAddr);
+         pParent = FindSubnetForNode(zoneId, ipAddr);
          bParentAlwaysValid = TRUE;
       }
    }
@@ -4445,7 +4446,7 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 	               {
 		               if (g_pModuleList[i].pfValidateObjectCreation != NULL)
 		               {
-                        moduleRCC = g_pModuleList[i].pfValidateObjectCreation(iClass, szObjectName, dwIpAddr, zoneId, pRequest);
+                        moduleRCC = g_pModuleList[i].pfValidateObjectCreation(iClass, szObjectName, ipAddr, zoneId, pRequest);
 			               if (moduleRCC != RCC_SUCCESS)
                         {
                            DbgPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s (RCC=%d)"), szObjectName, iClass, g_pModuleList[i].szName, moduleRCC);
@@ -4462,16 +4463,16 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 						   switch(iClass)
 						   {
 							   case OBJECT_NODE:
-								   object = PollNewNode(dwIpAddr,
-															    pRequest->getFieldAsUInt32(VID_IP_NETMASK),
-															    pRequest->getFieldAsUInt32(VID_CREATION_FLAGS),
-															    pRequest->getFieldAsUInt16(VID_AGENT_PORT),
-															    pRequest->getFieldAsUInt16(VID_SNMP_PORT),
-															    szObjectName,
-															    pRequest->getFieldAsUInt32(VID_AGENT_PROXY),
-															    pRequest->getFieldAsUInt32(VID_SNMP_PROXY),
-															    (pParent != NULL) ? ((pParent->getObjectClass() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL,
-															    zoneId, false, false);
+                           ipAddr.setMaskBits(pRequest->getFieldAsInt32(VID_IP_NETMASK));
+								   object = PollNewNode(ipAddr,
+															   pRequest->getFieldAsUInt32(VID_CREATION_FLAGS),
+															   pRequest->getFieldAsUInt16(VID_AGENT_PORT),
+															   pRequest->getFieldAsUInt16(VID_SNMP_PORT),
+															   szObjectName,
+															   pRequest->getFieldAsUInt32(VID_AGENT_PROXY),
+															   pRequest->getFieldAsUInt32(VID_SNMP_PROXY),
+															   (pParent != NULL) ? ((pParent->getObjectClass() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL,
+															   zoneId, false, false);
 								   if (object != NULL)
 								   {
 									   ((Node *)object)->setPrimaryName(nodePrimaryName);
@@ -6987,8 +6988,8 @@ void ClientSession::changeObjectZone(NXCPMessage *pRequest)
 				if (zone != NULL)
 				{
 					// Check if target zone already have object with same primary IP
-					if ((FindNodeByIP(zoneId, node->IpAddr()) == NULL) &&
-						 (FindSubnetByIP(zoneId, node->IpAddr()) == NULL))
+					if ((FindNodeByIP(zoneId, node->getIpAddress()) == NULL) &&
+						 (FindSubnetByIP(zoneId, node->getIpAddress()) == NULL))
 					{
 						node->changeZone(zoneId);
 						msg.setField(VID_RCC, RCC_SUCCESS);
@@ -10698,8 +10699,7 @@ void ClientSession::registerAgent(NXCPMessage *pRequest)
 				NEW_NODE *info;
 
 				info = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-				info->dwIpAddr = ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr);
-				info->dwNetMask = 0;
+            info->ipAddr = InetAddress::createFromSockaddr(m_clientAddr);
 				info->zoneId = 0;	// Add to default zone
 				info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
 				g_nodePollerQueue.Put(info);
@@ -11588,7 +11588,7 @@ void ClientSession::findMacAddress(NXCPMessage *request)
 	      msg.setField(VID_LOCAL_NODE_ID, localNodeId);
 		   msg.setField(VID_LOCAL_INTERFACE_ID, localIfId);
 		   msg.setField(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
-		   msg.setField(VID_IP_ADDRESS, (localIf != NULL) ? localIf->IpAddr() : (UINT32)0);
+		   msg.setField(VID_IP_ADDRESS, (localIf != NULL) ? localIf->getIpAddress() : InetAddress());
 		   msg.setField(VID_CONNECTION_TYPE, (UINT16)type);
          if (cp->getObjectClass() == OBJECT_INTERFACE)
             debugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifName=%s ifIndex=%d"), node->getId(), cp->getId(), cp->getName(), ((Interface *)cp)->getIfIndex());
@@ -13537,7 +13537,7 @@ void ClientSession::getRoutingTable(NXCPMessage *request)
                msg.setField(id++, rt->pRoutes[i].dwNextHop);
                msg.setField(id++, rt->pRoutes[i].dwIfIndex);
                msg.setField(id++, rt->pRoutes[i].dwRouteType);
-               Interface *iface = node->findInterface(rt->pRoutes[i].dwIfIndex, INADDR_ANY);
+               Interface *iface = node->findInterfaceByIndex(rt->pRoutes[i].dwIfIndex);
                if (iface != NULL)
                {
                   msg.setField(id++, iface->getName());

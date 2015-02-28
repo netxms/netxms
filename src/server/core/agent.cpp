@@ -26,7 +26,7 @@
  * Externals
  */
 extern Queue g_nodePollerQueue;
-void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq);
+void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq);
 
 /**
  * Destructor for extended agent connection class
@@ -288,7 +288,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
 
       if (acceptTrap)
       {
-         UINT32 originSenderIP = msg->getFieldAsUInt32(VID_IP_ADDRESS);
+         InetAddress originSenderIP = msg->getFieldAsInetAddress(VID_IP_ADDRESS);
          UINT32 pduLenght = msg->getFieldAsUInt32(VID_PDU_SIZE);
          BYTE *pduBytes = (BYTE*)malloc(pduLenght);
          msg->getFieldAsBinary(VID_PDU, pduBytes, pduLenght);
@@ -323,11 +323,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                      SNMP_SecurityContext *context = pTransport->getSecurityContext();
                      context->setAuthoritativeEngine(localEngine);
                   }
-                  struct sockaddr_in addr;
-                  addr.sin_family = AF_INET;
-                  addr.sin_addr.s_addr = htonl(originSenderIP);
-                  addr.sin_port = htons(msg->getFieldAsUInt16(VID_PORT));
-                  ProcessTrap(pdu, &addr, pTransport, &localEngine, pdu->getCommand() == SNMP_INFORM_REQUEST);
+                  ProcessTrap(pdu, originSenderIP, msg->getFieldAsUInt16(VID_PORT), pTransport, &localEngine, pdu->getCommand() == SNMP_INFORM_REQUEST);
                }
                else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
                {
@@ -367,7 +363,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
          }
          else
          {
-            DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): not possible to find origin node with IP %s and not acepted traps from unknown source."), IpToStr(originSenderIP, ipStringBuffer));
+            DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): cannot find origin node with IP %s and not accepting traps from unknown sources"), originSenderIP.toString(ipStringBuffer));
          }
       }
    }

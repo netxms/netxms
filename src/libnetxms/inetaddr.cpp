@@ -34,6 +34,16 @@ InetAddress::InetAddress(UINT32 addr)
 }
 
 /**
+ * Create IPv4 address object
+ */
+InetAddress::InetAddress(UINT32 addr, UINT32 mask)
+{
+   m_family = AF_INET;
+   m_addr.v4 = addr;
+   m_maskBits = BitsInMask(mask);
+}
+
+/**
  * Create IPv6 address object
  */
 InetAddress::InetAddress(BYTE *addr)
@@ -239,13 +249,15 @@ bool InetAddress::sameSubnet(const InetAddress &a) const
 }
 
 /**
- * Check if two inet addresses are equals
+ * Check if two inet addresses are equal
+ * This method ignores mask bits and only compares addresses. 
+ * To compare two address/mask pairs use InetAddress::compareTo.
  */
 bool InetAddress::equals(const InetAddress &a) const
 {
    if (a.m_family != m_family)
       return false;
-   return ((m_family == AF_INET) ? (a.m_addr.v4 == m_addr.v4) : !memcmp(a.m_addr.v6, m_addr.v6, 16)) && (a.m_maskBits == m_maskBits);
+   return ((m_family == AF_INET) ? (a.m_addr.v4 == m_addr.v4) : !memcmp(a.m_addr.v6, m_addr.v6, 16));
 }
 
 /**

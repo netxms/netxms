@@ -28,8 +28,7 @@
 Cluster::Cluster() : DataCollectionTarget()
 {
 	m_dwClusterType = 0;
-	m_dwNumSyncNets = 0;
-	m_pSyncNetList= NULL;
+   m_syncNetworks = new ObjectArray<InetAddress>(8, 8, true);
 	m_dwNumResources = 0;
 	m_pResourceList = NULL;
 	m_tmLastPoll = 0;
@@ -43,8 +42,7 @@ Cluster::Cluster() : DataCollectionTarget()
 Cluster::Cluster(const TCHAR *pszName, UINT32 zoneId) : DataCollectionTarget(pszName)
 {
 	m_dwClusterType = 0;
-	m_dwNumSyncNets = 0;
-	m_pSyncNetList= NULL;
+   m_syncNetworks = new ObjectArray<InetAddress>(8, 8, true);
 	m_dwNumResources = 0;
 	m_pResourceList = NULL;
 	m_tmLastPoll = 0;
@@ -57,7 +55,7 @@ Cluster::Cluster(const TCHAR *pszName, UINT32 zoneId) : DataCollectionTarget(psz
  */
 Cluster::~Cluster()
 {
-	safe_free(m_pSyncNetList);
+   delete m_syncNetworks;
 	safe_free(m_pResourceList);
 }
 
@@ -140,15 +138,12 @@ BOOL Cluster::loadFromDatabase(UINT32 dwId)
 			hResult = DBSelect(g_hCoreDB, szQuery);
 			if (hResult != NULL)
 			{
-				m_dwNumSyncNets = DBGetNumRows(hResult);
-				if (m_dwNumSyncNets > 0)
+				int count = DBGetNumRows(hResult);
+				for(i = 0; i < count; i++)
 				{
-					m_pSyncNetList = (IP_NETWORK *)malloc(sizeof(IP_NETWORK) * m_dwNumSyncNets);
-					for(i = 0; i < (int)m_dwNumSyncNets; i++)
-					{
-						m_pSyncNetList[i].dwAddr = DBGetFieldIPAddr(hResult, i, 0);
-						m_pSyncNetList[i].dwMask = DBGetFieldIPAddr(hResult, i, 1);
-					}
+               InetAddress *addr = new InetAddress(DBGetFieldInetAddr(hResult, i, 0));
+               addr->setMaskBits(DBGetFieldLong(hResult, i, 1));
+               m_syncNetworks->add(addr);
 				}
 				DBFreeResult(hResult);
 			}
@@ -173,7 +168,7 @@ BOOL Cluster::loadFromDatabase(UINT32 dwId)
 					{
 						m_pResourceList[i].dwId = DBGetFieldULong(hResult, i, 0);
 						DBGetField(hResult, i, 1, m_pResourceList[i].szName, MAX_DB_STRING);
-						m_pResourceList[i].dwIpAddr = DBGetFieldIPAddr(hResult, i, 2);
+						m_pResourceList[i].ipAddr = DBGetFieldInetAddr(hResult, i, 2);
 						m_pResourceList[i].dwCurrOwner = DBGetFieldULong(hResult, i, 3);
 					}
 				}
@@ -198,7 +193,7 @@ BOOL Cluster::loadFromDatabase(UINT32 dwId)
  */
 BOOL Cluster::saveToDatabase(DB_HANDLE hdb)
 {
-	TCHAR szQuery[4096], szIpAddr[16], szNetMask[16];
+	TCHAR szQuery[4096], szIpAddr[64];
    BOOL bResult;
    UINT32 i;
 
@@ -260,11 +255,11 @@ BOOL Cluster::saveToDatabase(DB_HANDLE hdb)
 			{
 				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_sync_subnets WHERE cluster_id=%d"), m_id);
 				DBQuery(hdb, szQuery);
-				for(i = 0; i < m_dwNumSyncNets; i++)
+				for(int i = 0; i < m_syncNetworks->size(); i++)
 				{
-					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_sync_subnets (cluster_id,subnet_addr,subnet_mask) VALUES (%d,'%s','%s')"),
-								 m_id, IpToStr(m_pSyncNetList[i].dwAddr, szIpAddr),
-								 IpToStr(m_pSyncNetList[i].dwMask, szNetMask));
+               InetAddress *net = m_syncNetworks->get(i);
+					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_sync_subnets (cluster_id,subnet_addr,subnet_mask) VALUES (%d,'%s',%d)"),
+                          (int)m_id, net->toString(szIpAddr), net->getMaskBits());
 					bResult = DBQuery(hdb, szQuery);
 					if (!bResult)
 						break;
@@ -291,7 +286,7 @@ BOOL Cluster::saveToDatabase(DB_HANDLE hdb)
 				{
 					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_resources (cluster_id,resource_id,resource_name,ip_addr,current_owner) VALUES (%d,%d,%s,'%s',%d)"),
 					           m_id, m_pResourceList[i].dwId, (const TCHAR *)DBPrepareString(hdb, m_pResourceList[i].szName),
-								  IpToStr(m_pResourceList[i].dwIpAddr, szIpAddr),
+								  m_pResourceList[i].ipAddr.toString(szIpAddr),
 								  m_pResourceList[i].dwCurrOwner);
 					bResult = DBQuery(hdb, szQuery);
 					if (!bResult)
@@ -347,15 +342,17 @@ void Cluster::fillMessage(NXCPMessage *pMsg)
    DataCollectionTarget::fillMessage(pMsg);
    pMsg->setField(VID_CLUSTER_TYPE, m_dwClusterType);
 	pMsg->setField(VID_ZONE_ID, m_zoneId);
-	pMsg->setField(VID_NUM_SYNC_SUBNETS, m_dwNumSyncNets);
-	if (m_dwNumSyncNets > 0)
-		pMsg->setFieldFromInt32Array(VID_SYNC_SUBNETS, m_dwNumSyncNets * 2, (UINT32 *)m_pSyncNetList);
-	pMsg->setField(VID_NUM_RESOURCES, m_dwNumResources);
+
+   pMsg->setField(VID_NUM_SYNC_SUBNETS, (UINT32)m_syncNetworks->size());
+   for(i = 0, dwId = VID_SYNC_SUBNETS_BASE; i < (UINT32)m_syncNetworks->size(); i++)
+      pMsg->setField(dwId++, *(m_syncNetworks->get(i)));
+
+   pMsg->setField(VID_NUM_RESOURCES, m_dwNumResources);
 	for(i = 0, dwId = VID_RESOURCE_LIST_BASE; i < m_dwNumResources; i++, dwId += 6)
 	{
 		pMsg->setField(dwId++, m_pResourceList[i].dwId);
 		pMsg->setField(dwId++, m_pResourceList[i].szName);
-		pMsg->setField(dwId++, m_pResourceList[i].dwIpAddr);
+		pMsg->setField(dwId++, m_pResourceList[i].ipAddr);
 		pMsg->setField(dwId++, m_pResourceList[i].dwCurrOwner);
 	}
 }
@@ -375,16 +372,13 @@ UINT32 Cluster::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
    // Change sync subnets
    if (pRequest->isFieldExist(VID_NUM_SYNC_SUBNETS))
 	{
-      m_dwNumSyncNets = pRequest->getFieldAsUInt32(VID_NUM_SYNC_SUBNETS);
-		if (m_dwNumSyncNets > 0)
-		{
-			m_pSyncNetList = (IP_NETWORK *)realloc(m_pSyncNetList, sizeof(IP_NETWORK) * m_dwNumSyncNets);
-			pRequest->getFieldAsInt32Array(VID_SYNC_SUBNETS, m_dwNumSyncNets * 2, (UINT32 *)m_pSyncNetList);
-		}
-		else
-		{
-			safe_free_and_null(m_pSyncNetList);
-		}
+      m_syncNetworks->clear();
+      int count = pRequest->getFieldAsInt32(VID_NUM_SYNC_SUBNETS);
+      UINT32 fieldId = VID_SYNC_SUBNETS_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         m_syncNetworks->add(new InetAddress(pRequest->getFieldAsInetAddress(fieldId++)));
+      }
 	}
 
    // Change resource list
@@ -402,7 +396,7 @@ UINT32 Cluster::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 			{
 				pList[i].dwId = pRequest->getFieldAsUInt32(dwId++);
 				pRequest->getFieldAsString(dwId++, pList[i].szName, MAX_DB_STRING);
-				pList[i].dwIpAddr = pRequest->getFieldAsUInt32(dwId++);
+				pList[i].ipAddr = pRequest->getFieldAsInetAddress(dwId++);
 			}
 
 			// Update current owner information in existing resources
@@ -435,15 +429,14 @@ UINT32 Cluster::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 /**
  * Check if given address is within sync network
  */
-bool Cluster::isSyncAddr(UINT32 dwAddr)
+bool Cluster::isSyncAddr(const InetAddress& addr)
 {
-	UINT32 i;
 	bool bRet = false;
 
 	lockProperties();
-	for(i = 0; i < m_dwNumSyncNets; i++)
+	for(int i = 0; i < m_syncNetworks->size(); i++)
 	{
-		if ((dwAddr & m_pSyncNetList[i].dwMask) == m_pSyncNetList[i].dwAddr)
+		if (m_syncNetworks->get(i)->contain(addr))
 		{
 			bRet = true;
 			break;
@@ -456,7 +449,7 @@ bool Cluster::isSyncAddr(UINT32 dwAddr)
 /**
  * Check if given address is a resource address
  */
-bool Cluster::isVirtualAddr(UINT32 dwAddr)
+bool Cluster::isVirtualAddr(const InetAddress& addr)
 {
 	UINT32 i;
 	bool bRet = false;
@@ -464,7 +457,7 @@ bool Cluster::isVirtualAddr(UINT32 dwAddr)
 	lockProperties();
 	for(i = 0; i < m_dwNumResources; i++)
 	{
-		if (m_pResourceList[i].dwIpAddr == dwAddr)
+      if (m_pResourceList[i].ipAddr.equals(addr))
 		{
 			bRet = true;
 			break;
@@ -541,7 +534,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 				{
 					for(k = 0; k < m_dwNumResources; k++)
 					{
-						if (m_pResourceList[k].dwIpAddr == pIfList->get(j)->ipAddr)
+                  if (m_pResourceList[k].ipAddr.equals(pIfList->get(j)->ipAddr))
 						{
 							if (m_pResourceList[k].dwCurrOwner != ppPollList[i]->getId())
 							{

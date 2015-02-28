@@ -413,49 +413,48 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
  */
 static bool PollerQueueElementComparator(void *key, void *element)
 {
-	return CAST_FROM_POINTER(key, UINT32) == ((NEW_NODE *)element)->dwIpAddr;
+   return ((InetAddress *)key)->equals(((NEW_NODE *)element)->ipAddr);
 }
 
 /**
  * Check potential new node from ARP cache or routing table
  */
-static void CheckPotentialNode(Node *node, UINT32 ipAddr, UINT32 ifIndex, BYTE *macAddr = NULL)
+static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifIndex, BYTE *macAddr = NULL)
 {
-	TCHAR buffer[32];
+	TCHAR buffer[64];
 
-	DbgPrintf(6, _T("DiscoveryPoller(): checking potential node %s at %d"), IpToStr(ipAddr, buffer), ifIndex);
-	if ((ipAddr != 0) && (ipAddr != 0xFFFFFFFF) && ((ipAddr & 0xFF000000) != 0x7F000000) &&
+	DbgPrintf(6, _T("DiscoveryPoller(): checking potential node %s at %d"), ipAddr.toString(buffer), ifIndex);
+   if (ipAddr.isValid() && !ipAddr.isBroadcast() && !ipAddr.isLoopback() && !ipAddr.isMulticast() &&
 	    (FindNodeByIP(node->getZoneId(), ipAddr) == NULL) && !IsClusterIP(node->getZoneId(), ipAddr) && 
-		 (g_nodePollerQueue.find(CAST_TO_POINTER(ipAddr, void *), PollerQueueElementComparator) == NULL))
+		 (g_nodePollerQueue.find((void *)&ipAddr, PollerQueueElementComparator) == NULL))
    {
-      Interface *pInterface = node->findInterface(ifIndex, ipAddr);
-      if (pInterface != NULL)
+      Interface *pInterface = node->findInterfaceByIndex(ifIndex);
+      if ((pInterface != NULL) && pInterface->getIpAddress().sameSubnet(ipAddr))
 		{
-			DbgPrintf(6, _T("DiscoveryPoller(): interface found: %s [%d] addr=%s mask=%s ifIndex=%d"),
-			          pInterface->getName(), pInterface->getId(), IpToStr(pInterface->IpAddr(), buffer),
-			          IpToStr(pInterface->getIpNetMask(), &buffer[16]), pInterface->getIfIndex());
-         if ((ipAddr < 0xE0000000) && !IsBroadcastAddress(ipAddr, pInterface->getIpNetMask()))
+			DbgPrintf(6, _T("DiscoveryPoller(): interface found: %s [%d] addr=%s/%d ifIndex=%d"),
+			          pInterface->getName(), pInterface->getId(), pInterface->getIpAddress().toString(buffer),
+			          pInterface->getIpAddress().getMaskBits(), pInterface->getIfIndex());
+         if (!ipAddr.isSubnetBroadcast(pInterface->getIpAddress().getMaskBits()))
          {
             NEW_NODE *pInfo;
-				TCHAR buf1[16], buf2[16];
+				TCHAR buffer[64];
 
             pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-            pInfo->dwIpAddr = ipAddr;
-            pInfo->dwNetMask = pInterface->getIpNetMask();
+            pInfo->ipAddr = ipAddr;
+            pInfo->ipAddr.setMaskBits(pInterface->getIpAddress().getMaskBits());
 				pInfo->zoneId = node->getZoneId();
 				pInfo->ignoreFilter = FALSE;
 				if (macAddr == NULL)
 					memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
 				else
 					memcpy(pInfo->bMacAddr, macAddr, MAC_ADDR_LENGTH);
-				DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%s"),
-				          IpToStr(pInfo->dwIpAddr, buf1), 
-				          IpToStr(pInfo->dwNetMask, buf2));
+				DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%d"),
+				          pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
             g_nodePollerQueue.Put(pInfo);
          }
 			else
 			{
-				DbgPrintf(6, _T("DiscoveryPoller(): potential node %s rejected - broadcast/multicast address"), IpToStr(ipAddr, buffer));
+            DbgPrintf(6, _T("DiscoveryPoller(): potential node %s rejected - broadcast/multicast address"), ipAddr.toString(buffer));
 			}
 		}
 		else
@@ -465,7 +464,7 @@ static void CheckPotentialNode(Node *node, UINT32 ipAddr, UINT32 ifIndex, BYTE *
    }
 	else
 	{
-		DbgPrintf(6, _T("DiscoveryPoller(): potential node %s rejected"), IpToStr(ipAddr, buffer));
+		DbgPrintf(6, _T("DiscoveryPoller(): potential node %s rejected"), ipAddr.toString(buffer));
 	}
 }
 
@@ -479,8 +478,8 @@ static void CheckHostRoute(Node *node, ROUTE *route)
 	Interface *iface;
 
 	DbgPrintf(6, _T("DiscoveryPoller(): checking host route %s at %d"), IpToStr(route->dwDestAddr, buffer), route->dwIfIndex);
-	iface = node->findInterface(route->dwIfIndex, route->dwDestAddr);
-	if (iface != NULL)
+	iface = node->findInterfaceByIndex(route->dwIfIndex);
+	if ((iface != NULL) && iface->getIpAddress().sameSubnet(route->dwDestAddr))
 	{
 		CheckPotentialNode(node, route->dwDestAddr, route->dwIfIndex);
 	}
@@ -496,7 +495,7 @@ static void CheckHostRoute(Node *node, ROUTE *route)
 static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 {
    Node *pNode;
-   TCHAR szBuffer[MAX_OBJECT_NAME + 64], szIpAddr[16];
+   TCHAR szBuffer[MAX_OBJECT_NAME + 64], szIpAddr[64];
    ARP_CACHE *pArpCache;
 	ROUTING_TABLE *rt;
 	UINT32 i;
@@ -527,7 +526,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       SetPollerState((long)arg, szBuffer);
 
       DbgPrintf(4, _T("Starting discovery poll for node %s (%s) in zone %d"),
-		          pNode->getName(), IpToStr(pNode->IpAddr(), szIpAddr), (int)pNode->getZoneId());
+		          pNode->getName(), pNode->getIpAddress().toString(szIpAddr), (int)pNode->getZoneId());
 
       // Retrieve and analize node's ARP cache
       pArpCache = pNode->getArpCache();
@@ -535,13 +534,13 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       {
          for(i = 0; i < pArpCache->dwNumEntries; i++)
 				if (memcmp(pArpCache->pEntries[i].bMacAddr, "\xFF\xFF\xFF\xFF\xFF\xFF", 6))	// Ignore broadcast addresses
-					CheckPotentialNode(pNode, pArpCache->pEntries[i].dwIpAddr, pArpCache->pEntries[i].dwIndex, pArpCache->pEntries[i].bMacAddr);
+					CheckPotentialNode(pNode, pArpCache->pEntries[i].ipAddr, pArpCache->pEntries[i].dwIndex, pArpCache->pEntries[i].bMacAddr);
          DestroyArpCache(pArpCache);
       }
 
 		// Retrieve and analize node's routing table
       DbgPrintf(5, _T("Discovery poll for node %s (%s) - reading routing table"),
-                pNode->getName(), IpToStr(pNode->IpAddr(), szIpAddr));
+                pNode->getName(), pNode->getIpAddress().toString(szIpAddr));
 		rt = pNode->getRoutingTable();
 		if (rt != NULL)
 		{
@@ -555,7 +554,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 		}
 
       DbgPrintf(4, _T("Finished discovery poll for node %s (%s)"),
-                pNode->getName(), IpToStr(pNode->IpAddr(), szIpAddr));
+                pNode->getName(), pNode->getIpAddress().toString(szIpAddr));
       pNode->setDiscoveryPollTimeStamp();
       pNode->decRefCount();
    }
@@ -690,14 +689,14 @@ static void CheckRange(int nType, UINT32 dwAddr1, UINT32 dwAddr2)
             pSubnet = FindSubnetForNode(0, dwAddr);
             if (pSubnet != NULL)
             {
-               if ((pSubnet->IpAddr() != dwAddr) && 
-                   !IsBroadcastAddress(dwAddr, pSubnet->getIpNetMask()))
+               if (!pSubnet->getIpAddress().equals(dwAddr) && 
+                   !InetAddress(dwAddr).isSubnetBroadcast(pSubnet->getIpAddress().getMaskBits()))
                {
                   NEW_NODE *pInfo;
 
                   pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-                  pInfo->dwIpAddr = dwAddr;
-                  pInfo->dwNetMask = pSubnet->getIpNetMask();
+                  pInfo->ipAddr = dwAddr;
+                  pInfo->ipAddr.setMaskBits(pSubnet->getIpAddress().getMaskBits());
 						pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 						pInfo->ignoreFilter = FALSE;
 						memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
@@ -709,8 +708,7 @@ static void CheckRange(int nType, UINT32 dwAddr1, UINT32 dwAddr2)
                NEW_NODE *pInfo;
 
                pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-               pInfo->dwIpAddr = dwAddr;
-               pInfo->dwNetMask = 0;
+               pInfo->ipAddr = dwAddr;
 					pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 					pInfo->ignoreFilter = FALSE;
 					memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);

@@ -244,18 +244,17 @@ static void BroadcastNewTrap(ClientSession *pSession, void *pArg)
 /**
  * Process trap
  */
-void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq)
+void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq)
 {
-   UINT32 dwOriginAddr, dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
+   UINT32 dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
    TCHAR *pszTrapArgs, szBuffer[4096];
    SNMP_Variable *pVar;
    Node *pNode;
 	BOOL processed = FALSE;
    int iResult;
 
-   dwOriginAddr = ntohl(pOrigin->sin_addr.s_addr);
    DbgPrintf(4, _T("Received SNMP %s %s from %s"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"),
-             pdu->getTrapId()->getValueAsText(), IpToStr(dwOriginAddr, szBuffer));
+             pdu->getTrapId()->getValueAsText(), srcAddr.toString(szBuffer));
 	if (isInformRq)
 	{
 		SNMP_PDU *response = new SNMP_PDU(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
@@ -270,7 +269,7 @@ void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTr
 	}
 
    // Match IP address to object
-   pNode = FindNodeByIP(0, dwOriginAddr);
+   pNode = FindNodeByIP(0, srcAddr);
 
    // Write trap to log if required
    if (m_bLogAllTraps || (pNode != NULL))
@@ -297,7 +296,7 @@ void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTr
       _sntprintf(szQuery, 8192, _T("INSERT INTO snmp_trap_log (trap_id,trap_timestamp,")
                                 _T("ip_addr,object_id,trap_oid,trap_varlist) VALUES ")
                                 _T("(") INT64_FMT _T(",%d,'%s',%d,'%s',%s)"),
-                 m_qnTrapId, dwTimeStamp, IpToStr(dwOriginAddr, szBuffer),
+                 m_qnTrapId, dwTimeStamp, srcAddr.toString(szBuffer),
                  (pNode != NULL) ? pNode->getId() : (UINT32)0, pdu->getTrapId()->getValueAsText(),
                  (const TCHAR *)DBPrepareString(g_hCoreDB, pszTrapArgs));
       QueueSQLRequest(szQuery);
@@ -308,7 +307,7 @@ void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTr
       msg.setField(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
       msg.setField(VID_TRAP_LOG_MSG_BASE, (QWORD)m_qnTrapId);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 1, dwTimeStamp);
-      msg.setField(VID_TRAP_LOG_MSG_BASE + 2, dwOriginAddr);
+      msg.setField(VID_TRAP_LOG_MSG_BASE + 2, srcAddr);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 3, (pNode != NULL) ? pNode->getId() : (UINT32)0);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 4, (TCHAR *)pdu->getTrapId()->getValueAsText());
       msg.setField(VID_TRAP_LOG_MSG_BASE + 5, pszTrapArgs);
@@ -370,7 +369,7 @@ void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTr
 
          if (dwMatchLen > 0)
          {
-            GenerateTrapEvent(pNode->getId(), dwMatchIdx, pdu, (int)ntohs(pOrigin->sin_port));
+            GenerateTrapEvent(pNode->getId(), dwMatchIdx, pdu, srcPort);
          }
          else     // Process unmatched traps
          {
@@ -394,7 +393,7 @@ void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTr
                // Generate default event for unmatched traps
                const TCHAR *names[3] = { _T("oid"), NULL, _T("sourcePort") };
                PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, pNode->getId(), "ssd", names,
-                  pdu->getTrapId()->getValueAsText(), pszTrapArgs, (int)ntohs(pOrigin->sin_port));
+                  pdu->getTrapId()->getValueAsText(), pszTrapArgs, srcPort);
                free(pszTrapArgs);
             }
          }
@@ -407,17 +406,17 @@ void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTr
    }
    else if (g_flags & AF_SNMP_TRAP_DISCOVERY)  // unknown node, discovery enabled
    {
-      DbgPrintf(4, _T("ProcessTrap: trap not matched to node, adding new IP address %s for discovery"), IpToStr(dwOriginAddr, szBuffer));
-      Subnet *subnet = FindSubnetForNode(0, dwOriginAddr);
+      DbgPrintf(4, _T("ProcessTrap: trap not matched to node, adding new IP address %s for discovery"), srcAddr.toString(szBuffer));
+      Subnet *subnet = FindSubnetForNode(0, srcAddr);
       if (subnet != NULL)
       {
-         if ((subnet->IpAddr() != dwOriginAddr) && !IsBroadcastAddress(dwOriginAddr, subnet->getIpNetMask()))
+         if (!subnet->getIpAddress().equals(srcAddr) && !srcAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
          {
             NEW_NODE *pInfo;
 
             pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-            pInfo->dwIpAddr = dwOriginAddr;
-            pInfo->dwNetMask = subnet->getIpNetMask();
+            pInfo->ipAddr = srcAddr;
+            pInfo->ipAddr.setMaskBits(subnet->getIpAddress().getMaskBits());
 				pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 				pInfo->ignoreFilter = FALSE;
 				memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
@@ -429,8 +428,7 @@ void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTr
          NEW_NODE *pInfo;
 
          pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-         pInfo->dwIpAddr = dwOriginAddr;
-         pInfo->dwNetMask = 0;
+         pInfo->ipAddr = srcAddr;
 			pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 			pInfo->ignoreFilter = FALSE;
 			memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
@@ -461,17 +459,13 @@ static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addr
  */
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 {
-   SOCKET hSocket;
-   struct sockaddr_in addr;
-   int iBytes;
-   socklen_t nAddrLen;
    SNMP_UDPTransport *pTransport;
    SNMP_PDU *pdu;
 
 	static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
 	SNMP_Engine localEngine(engineId, 12);
 
-   hSocket = socket(AF_INET, SOCK_DGRAM, 0);
+   SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == INVALID_SOCKET)
    {
       nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "SNMPTrapReceiver");
@@ -482,19 +476,20 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 	SetSocketReuseFlag(hSocket);
 
    // Fill in local address structure
-   memset(&addr, 0, sizeof(struct sockaddr_in));
-   addr.sin_family = AF_INET;
-   addr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
-   addr.sin_port = htons(m_wTrapPort);
+   struct sockaddr_in servAddr;
+   memset(&servAddr, 0, sizeof(struct sockaddr_in));
+   servAddr.sin_family = AF_INET;
+   servAddr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
+   servAddr.sin_port = htons(m_wTrapPort);
 
    // Bind socket
-   if (bind(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
+   if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
       nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", m_wTrapPort, _T("SNMPTrapReceiver"), WSAGetLastError());
       closesocket(hSocket);
       return THREAD_OK;
    }
-	nxlog_write(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), m_wTrapPort);
+	nxlog_write(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), m_wTrapPort);
 
    pTransport = new SNMP_UDPTransport(hSocket);
 	pTransport->enableEngineIdAutoupdate(true);
@@ -504,9 +499,10 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    // Wait for packets
    while(!IsShutdownInProgress())
    {
-      nAddrLen = sizeof(struct sockaddr_in);
-      iBytes = pTransport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &nAddrLen, ContextFinder);
-      if ((iBytes > 0) && (pdu != NULL))
+      struct sockaddr_in addr;
+      socklen_t addrLen = sizeof(struct sockaddr_in);
+      int bytes = pTransport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &addrLen, ContextFinder);
+      if ((bytes > 0) && (pdu != NULL))
       {
 			DbgPrintf(6, _T("SNMPTrapReceiver: received PDU of type %d"), pdu->getCommand());
 			if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
@@ -516,7 +512,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 					SNMP_SecurityContext *context = pTransport->getSecurityContext();
 					context->setAuthoritativeEngine(localEngine);
 				}
-            ProcessTrap(pdu, &addr, pTransport, &localEngine, pdu->getCommand() == SNMP_INFORM_REQUEST);
+            ProcessTrap(pdu, InetAddress::createFromSockaddr((struct sockaddr *)&addr), ntohs(addr.sin_port), pTransport, &localEngine, pdu->getCommand() == SNMP_INFORM_REQUEST);
 			}
 			else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
 			{

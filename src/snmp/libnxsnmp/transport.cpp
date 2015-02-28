@@ -248,73 +248,67 @@ SNMP_UDPTransport::SNMP_UDPTransport(SOCKET hSocket) : SNMP_Transport()
 }
 
 /**
- * Create SNMP_UDPTransport transport connected to given host
- * Will try to resolve host name if it's not null, otherwise
- * IP address will be used
+ * Create SNMP_UDPTransport transport connected to given host using host name
  */
-UINT32 SNMP_UDPTransport::createUDPTransport(const TCHAR *pszHostName, UINT32 dwHostAddr, WORD wPort)
+UINT32 SNMP_UDPTransport::createUDPTransport(const TCHAR *hostName, WORD port)
 {
+   return createUDPTransport(InetAddress::resolveHostName(hostName), port);
+}
+
+/**
+ * Create SNMP_UDPTransport transport connected to given host
+ */
+UINT32 SNMP_UDPTransport::createUDPTransport(const InetAddress& hostAddr, WORD port)
+{
+   if (!hostAddr.isValid())
+      return SNMP_ERR_HOSTNAME;
+
+   hostAddr.fillSockAddr(&m_peerAddr, port);
+
    UINT32 dwResult;
 
-   // Fill in remote address structure
-   memset(&m_peerAddr, 0, sizeof(struct sockaddr_in));
-   m_peerAddr.sin_family = AF_INET;
-   m_peerAddr.sin_port = htons(wPort);
-
-   // Resolve hostname
-   if (pszHostName != NULL)
-   {
-      m_peerAddr.sin_addr.s_addr = ResolveHostName(pszHostName);
-   }
-   else
-   {
-      m_peerAddr.sin_addr.s_addr = dwHostAddr;
-   }
-
    // Create and connect socket
-   if ((m_peerAddr.sin_addr.s_addr != INADDR_ANY) &&
-       (m_peerAddr.sin_addr.s_addr != INADDR_NONE))
+   m_hSocket = socket(hostAddr.getFamily(), SOCK_DGRAM, 0);
+   if (m_hSocket != INVALID_SOCKET)
    {
-      m_hSocket = socket(AF_INET, SOCK_DGRAM, 0);
-      if (m_hSocket != INVALID_SOCKET)
+      SockAddrBuffer localAddr;
+
+		memset(&localAddr, 0, sizeof(SockAddrBuffer));
+      if (hostAddr.getFamily() == AF_INET)
       {
-			struct sockaddr_in localAddr;
-
-			memset(&localAddr, 0, sizeof(struct sockaddr_in));
-			localAddr.sin_family = AF_INET;
-			localAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-         // We use bind() and later sendto() instead of connect()
-			// to handle cases with some strange devices responding to SNMP
-			// requests from random port insted of 161 where request was sent
-			// (currently only one such device known is AS/400)
-         if (bind(m_hSocket, (struct sockaddr *)&localAddr, sizeof(struct sockaddr_in)) == 0)
-         {
-				// Set non-blocking mode
-#ifdef _WIN32
-				u_long one = 1;
-				ioctlsocket(m_hSocket, FIONBIO, &one);
-#endif
-				m_connected = true;
-            dwResult = SNMP_ERR_SUCCESS;
-         }
-         else
-         {
-            closesocket(m_hSocket);
-            m_hSocket = -1;
-            dwResult = SNMP_ERR_SOCKET;
-         }
+		   localAddr.sa4.sin_family = AF_INET;
+		   localAddr.sa4.sin_addr.s_addr = htonl(INADDR_ANY);
       }
       else
       {
+		   localAddr.sa6.sin6_family = AF_INET6;
+      }
+
+      // We use bind() and later sendto() instead of connect()
+		// to handle cases with some strange devices responding to SNMP
+		// requests from random port insted of 161 where request was sent
+		// (currently only one such device known is AS/400)
+      if (bind(m_hSocket, (struct sockaddr *)&localAddr, SA_LEN((struct sockaddr *)&localAddr)) == 0)
+      {
+			// Set non-blocking mode
+#ifdef _WIN32
+			u_long one = 1;
+			ioctlsocket(m_hSocket, FIONBIO, &one);
+#endif
+			m_connected = true;
+         dwResult = SNMP_ERR_SUCCESS;
+      }
+      else
+      {
+         closesocket(m_hSocket);
+         m_hSocket = -1;
          dwResult = SNMP_ERR_SOCKET;
       }
    }
    else
    {
-      dwResult = SNMP_ERR_HOSTNAME;
+      dwResult = SNMP_ERR_SOCKET;
    }
-
    return dwResult;
 }
 
@@ -346,8 +340,7 @@ int SNMP_UDPTransport::recvData(UINT32 dwTimeout, struct sockaddr *pSender, sock
 {
    fd_set rdfs;
    struct timeval tv;
-	struct sockaddr_in srcAddrBuffer;
-	socklen_t srcAddrLenBuffer = sizeof(struct sockaddr_in);
+   SockAddrBuffer srcAddrBuffer;
 
 retry_wait:
    if (dwTimeout != INFINITE)
@@ -382,25 +375,30 @@ retry_wait:
    }
 
 	struct sockaddr *senderAddr = (pSender != NULL) ? pSender : (struct sockaddr *)&srcAddrBuffer;
-	socklen_t *senderAddrLen = (piAddrSize != NULL) ? piAddrSize : &srcAddrLenBuffer;
+   socklen_t srcAddrLenBuffer = (piAddrSize != NULL) ? *piAddrSize : sizeof(srcAddrBuffer);
    int rc = recvfrom(m_hSocket, (char *)&m_pBuffer[m_dwBufferPos + m_dwBytesInBuffer],
                      (int)(m_dwBufferSize - (m_dwBufferPos + m_dwBytesInBuffer)), 0,
-                     senderAddr, senderAddrLen);
+                     senderAddr, &srcAddrLenBuffer);
 
 	// Validate sender's address if socket is connected
 	if ((rc >= 0) && m_connected)
 	{
 		// Packet from wrong address, ignore it
-		if (((struct sockaddr_in *)senderAddr)->sin_addr.s_addr != m_peerAddr.sin_addr.s_addr)
+      if (!SocketAddressEquals(senderAddr, (struct sockaddr *)&m_peerAddr))
 		{
 			goto retry_wait;
 		}
 	}
 
+	if (piAddrSize != NULL)
+   {
+      *piAddrSize = srcAddrLenBuffer;
+   }
+
 	// Update peer address
 	if ((rc >= 0) && m_updatePeerOnRecv)
 	{
-		memcpy(&m_peerAddr, senderAddr, sizeof(struct sockaddr_in));
+		memcpy(&m_peerAddr, senderAddr, SA_LEN(senderAddr));
 	}
 
 	return rc;
@@ -503,7 +501,7 @@ int SNMP_UDPTransport::sendMessage(SNMP_PDU *pPDU)
    size_t size = pPDU->encode(&pBuffer, m_securityContext);
    if (size != 0)
    {
-      nBytes = sendto(m_hSocket, (char *)pBuffer, (int)size, 0, (struct sockaddr *)&m_peerAddr, sizeof(struct sockaddr_in));
+      nBytes = sendto(m_hSocket, (char *)pBuffer, (int)size, 0, (struct sockaddr *)&m_peerAddr, SA_LEN((struct sockaddr *)&m_peerAddr));
       free(pBuffer);
    }
 
@@ -513,7 +511,7 @@ int SNMP_UDPTransport::sendMessage(SNMP_PDU *pPDU)
 /**
  * Get peer IPv4 address (in host byte order)
  */
-UINT32 SNMP_UDPTransport::getPeerIpAddress()
+InetAddress SNMP_UDPTransport::getPeerIpAddress()
 {
-   return ntohl(m_peerAddr.sin_addr.s_addr);
+   return InetAddress::createFromSockaddr((struct sockaddr *)&m_peerAddr);
 }

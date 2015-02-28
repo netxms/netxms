@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,12 +26,12 @@
 /**
  * Constructor
  */
-SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *pConn, UINT32 dwIpAddr, WORD wPort)
+SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *conn, const InetAddress& ipAddr, WORD port)
 {
-	m_pAgentConnection = pConn;
-	m_dwIpAddr = dwIpAddr;
-	m_wPort = wPort;
-	m_pResponse = NULL;
+	m_agentConnection = conn;
+	m_ipAddr = ipAddr;
+	m_port = port;
+	m_response = NULL;
 	m_waitForResponse = true;
 }
 
@@ -40,8 +40,8 @@ SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *pConn, UINT32 dwIpAddr
  */
 SNMP_ProxyTransport::~SNMP_ProxyTransport()
 {
-	delete m_pAgentConnection;
-	delete m_pResponse;
+	delete m_agentConnection;
+	delete m_response;
 }
 
 /**
@@ -51,22 +51,22 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 {
    BYTE *pBuffer;
    int nRet = -1;
-	NXCPMessage msg(m_pAgentConnection->getProtocolVersion());
+	NXCPMessage msg(m_agentConnection->getProtocolVersion());
 
    size_t size = pdu->encode(&pBuffer, m_securityContext);
    if (size != 0)
    {
 		msg.setCode(CMD_SNMP_REQUEST);
-		msg.setField(VID_IP_ADDRESS, m_dwIpAddr);
-		msg.setField(VID_PORT, m_wPort);
+		msg.setField(VID_IP_ADDRESS, m_ipAddr);
+		msg.setField(VID_PORT, m_port);
 		msg.setField(VID_PDU_SIZE, (UINT32)size);
 		msg.setField(VID_PDU, pBuffer, (UINT32)size);
       free(pBuffer);
 
       if(m_waitForResponse)
       {
-         m_pResponse = m_pAgentConnection->customRequest(&msg);
-         if (m_pResponse != NULL)
+         m_response = m_agentConnection->customRequest(&msg);
+         if (m_response != NULL)
          {
             nRet = 1;
          }
@@ -87,14 +87,14 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
 	BYTE *pBuffer;
 	UINT32 dwSize;
 
-	if (m_pResponse == NULL)
+	if (m_response == NULL)
 		return -1;
 
-	if (m_pResponse->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
+	if (m_response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS)
 	{
-		dwSize = m_pResponse->getFieldAsUInt32(VID_PDU_SIZE);
+		dwSize = m_response->getFieldAsUInt32(VID_PDU_SIZE);
 		pBuffer = (BYTE *)malloc(dwSize);
-		m_pResponse->getFieldAsBinary(VID_PDU, pBuffer, dwSize);
+		m_response->getFieldAsBinary(VID_PDU, pBuffer, dwSize);
 
 		if (contextFinder != NULL)
 			setSecurityContext(contextFinder(pSender, *piAddrSize));
@@ -113,14 +113,14 @@ int SNMP_ProxyTransport::readMessage(SNMP_PDU **ppData, UINT32 dwTimeout,
 		nRet = -1;
 	}
 
-	delete_and_null(m_pResponse);
+	delete_and_null(m_response);
 	return nRet;
 }
 
 /**
- * Get peer IPv4 address (in host byte order)
+ * Get peer IP address
  */
-UINT32 SNMP_ProxyTransport::getPeerIpAddress()
+InetAddress SNMP_ProxyTransport::getPeerIpAddress()
 {
-   return m_dwIpAddr;
+   return m_ipAddr;
 }

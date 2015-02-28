@@ -1083,36 +1083,36 @@ static bool IsCommand(const TCHAR *cmdTemplate, TCHAR *pszString, int iMinChars)
 }
 
 /**
- * Dump index
+ * Dump index callback (by IP address)
  */
-struct __dump_index_data
+static void DumpIndexCallbackByInetAddr(NetObj *object, void *data)
 {
-	CONSOLE_CTX console;
-	bool indexByIP;
-};
-
-static void DumpIndexCallback(NetObj *object, void *data)
-{
-	struct __dump_index_data *d = (struct __dump_index_data *)data;
-	if (d->indexByIP)
-	{
-		TCHAR buffer[16];
-		ConsolePrintf(d->console, _T("%08X [%-15s] %p %s\n"), object->IpAddr(),
-				IpToStr(object->IpAddr(), buffer),
-				object, object->getName());
-	}
-	else
-	{
-		ConsolePrintf(d->console, _T("%08X %p %s\n"), object->getId(), object, object->getName());
-	}
+	TCHAR buffer[64];
+	ConsolePrintf((CONSOLE_CTX)data, _T("%-40s %p %s [%d]\n"), object->getIpAddress().toString(buffer), object, object->getName(), (int)object->getId());
 }
 
-static void DumpIndex(CONSOLE_CTX pCtx, ObjectIndex *index, bool indexByIp)
+/**
+ * Dump index (by IP address)
+ */
+static void DumpIndex(CONSOLE_CTX pCtx, InetAddressIndex *index)
 {
-	struct __dump_index_data data;
-	data.console = pCtx;
-	data.indexByIP = indexByIp;
-	index->forEach(DumpIndexCallback, &data);
+	index->forEach(DumpIndexCallbackByInetAddr, pCtx);
+}
+
+/**
+ * Dump index callback (by ID)
+ */
+static void DumpIndexCallbackById(NetObj *object, void *data)
+{
+	ConsolePrintf((CONSOLE_CTX)data, _T("%08X %p %s\n"), object->getId(), object, object->getName());
+}
+
+/**
+ * Dump index (by ID)
+ */
+static void DumpIndex(CONSOLE_CTX pCtx, ObjectIndex *index)
+{
+	index->forEach(DumpIndexCallbackById, pCtx);
 }
 
 /**
@@ -1462,31 +1462,31 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 
 			if (IsCommand(_T("CONDITION"), szBuffer, 1))
 			{
-				DumpIndex(pCtx, &g_idxConditionById, false);
+				DumpIndex(pCtx, &g_idxConditionById);
 			}
 			else if (IsCommand(_T("ID"), szBuffer, 2))
 			{
-				DumpIndex(pCtx, &g_idxObjectById, false);
+				DumpIndex(pCtx, &g_idxObjectById);
 			}
 			else if (IsCommand(_T("INTERFACE"), szBuffer, 2))
 			{
-				DumpIndex(pCtx, &g_idxInterfaceByAddr, true);
+				DumpIndex(pCtx, &g_idxInterfaceByAddr);
 			}
 			else if (IsCommand(_T("NODEADDR"), szBuffer, 5))
 			{
-				DumpIndex(pCtx, &g_idxNodeByAddr, true);
+				DumpIndex(pCtx, &g_idxNodeByAddr);
 			}
 			else if (IsCommand(_T("NODEID"), szBuffer, 5))
 			{
-				DumpIndex(pCtx, &g_idxNodeById, false);
+				DumpIndex(pCtx, &g_idxNodeById);
 			}
 			else if (IsCommand(_T("SUBNET"), szBuffer, 1))
 			{
-				DumpIndex(pCtx, &g_idxSubnetByAddr, true);
+				DumpIndex(pCtx, &g_idxSubnetByAddr);
 			}
 			else if (IsCommand(_T("ZONE"), szBuffer, 1))
 			{
-				DumpIndex(pCtx, &g_idxZoneByGUID, true);
+				DumpIndex(pCtx, &g_idxZoneByGUID);
 			}
 			else
 			{
@@ -1851,14 +1851,14 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 							ConsolePrintf(pCtx, _T("Trace from %s to %s (%d hops, %s, source IP %s):\n"),
 									pObject1->getName(), pObject2->getName(), pTrace->getHopCount(),
 									pTrace->isComplete() ? _T("complete") : _T("incomplete"),
-                           IpToStr(pTrace->getSourceAddress(), sourceIp));
+                           pTrace->getSourceAddress().toString(sourceIp));
  							for(i = 0; i < pTrace->getHopCount(); i++)
 							{
 								HOP_INFO *hop = pTrace->getHopInfo(i);
 								ConsolePrintf(pCtx, _T("[%d] %s %s %s %d\n"),
 										hop->object->getId(),
 										hop->object->getName(),
-										IpToStr(hop->nextHop, szNextHop),
+										hop->nextHop.toString(szNextHop),
 										hop->isVpn ? _T("VPN Connector ID:") : _T("Interface Index: "),
 										hop->ifIndex);
 							}

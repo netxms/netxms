@@ -241,8 +241,7 @@ typedef void * HSNMPSESSION;
  */
 typedef struct
 {
-   UINT32 dwIpAddr;
-   UINT32 dwNetMask;
+   InetAddress ipAddr;
 	UINT32 zoneId;
 	BOOL ignoreFilter;
 	BYTE bMacAddr[MAC_ADDR_LENGTH];
@@ -265,9 +264,7 @@ typedef struct
  */
 typedef struct
 {
-   UINT32 dwIpAddr;
-   UINT32 dwNetMask;
-   UINT32 dwSubnetAddr;
+   InetAddress ipAddr;
    UINT32 dwFlags;
    int nSNMPVersion;
    TCHAR szObjectId[MAX_OID_LEN * 4];    // SNMP OID
@@ -886,7 +883,7 @@ void WatchdogNotify(UINT32 dwId);
 void WatchdogPrintStatus(CONSOLE_CTX pCtx);
 
 void CheckForMgmtNode();
-Node NXCORE_EXPORTABLE *PollNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 dwCreationFlags, WORD agentPort,
+Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreationFlags, WORD agentPort,
                                     WORD snmpPort, const TCHAR *pszName, UINT32 dwProxyNode, UINT32 dwSNMPProxy, Cluster *pCluster,
 						                  UINT32 zoneId, bool doConfPoll, bool discoveredNode);
 

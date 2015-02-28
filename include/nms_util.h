@@ -892,6 +892,7 @@ private:
 public:
    InetAddress();
    InetAddress(UINT32 addr);
+   InetAddress(UINT32 addr, UINT32 mask);
    InetAddress(BYTE *addr);
 
    bool isAnyLocal() const;
@@ -899,7 +900,7 @@ public:
    bool isMulticast() const;
    bool isBroadcast() const;
    bool isValid() const { return m_family != AF_UNSPEC; }
-   bool isValidUnicast() { return isValid() && !isAnyLocal() && !isLoopback() && !isMulticast() && !isBroadcast(); }
+   bool isValidUnicast() const { return isValid() && !isAnyLocal() && !isLoopback() && !isMulticast() && !isBroadcast(); }
 
    int getFamily() const { return m_family; }
    UINT32 getAddressV4() const { return (m_family == AF_INET) ? m_addr.v4 : 0; }
@@ -912,6 +913,7 @@ public:
 
    void setMaskBits(int m) { m_maskBits = m; }
    int getMaskBits() const { return m_maskBits; }
+   int getHostBits() const { return (m_family == AF_INET) ? (32 - m_maskBits) : (128 - m_maskBits); }
 
    InetAddress getSubnetAddress() const;
    bool isSubnetBroadcast(int maskBits) const;

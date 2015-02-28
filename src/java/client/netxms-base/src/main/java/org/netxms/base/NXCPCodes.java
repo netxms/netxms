@@ -864,6 +864,7 @@ public class NXCPCodes
 	public static final long VID_CUSTOM_ATTRIBUTES_BASE = 0x70000000L;
    public static final long VID_MODULE_DATA_BASE = 0x71000000L;
 	public static final long VID_RESOURCE_LIST_BASE = 0x20000000L;
+   public static final long VID_SYNC_SUBNETS_BASE = 0x28000000L;
 	public static final long VID_ENUM_VALUE_BASE = 0x10000000L;
 	public static final long VID_ACTION_ARG_BASE = 0x10000000L;
 	public static final long VID_PARAM_LIST_BASE = 0x10000000L;

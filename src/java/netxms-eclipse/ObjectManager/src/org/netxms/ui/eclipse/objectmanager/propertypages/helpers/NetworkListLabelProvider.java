@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.objectmanager.propertypages.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.objects.ClusterSyncNetwork;
+import org.netxms.base.InetAddressEx;
 import org.netxms.ui.eclipse.objectmanager.propertypages.ClusterNetworks;
 
 /**
@@ -44,15 +44,15 @@ public class NetworkListLabelProvider extends LabelProvider implements ITableLab
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		if (!(element instanceof ClusterSyncNetwork))
+		if (!(element instanceof InetAddressEx))
 			return null;
 
 		switch(columnIndex)
 		{
 			case ClusterNetworks.COLUMN_ADDRESS:
-				return ((ClusterSyncNetwork)element).getSubnetAddress().getHostAddress();
+				return ((InetAddressEx)element).address.getHostAddress();
 			case ClusterNetworks.COLUMN_NETMASK:
-				return ((ClusterSyncNetwork)element).getSubnetMask().getHostAddress();
+				return Integer.toString(((InetAddressEx)element).mask);
 		}
 		return null;
 	}
