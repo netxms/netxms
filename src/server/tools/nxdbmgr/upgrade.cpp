@@ -403,8 +403,7 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
    if (hResult == NULL)
       return FALSE;
 
-   _sntprintf(query, 256, _T("ALTER TABLE %s DROP COLUMN %s"), table, column);
-   BOOL success = SQLQuery(query);
+   BOOL success = SQLDropColumn(table, column);
    
    if (success)
    {
@@ -571,10 +570,7 @@ static BOOL H_UpgradeFromV341(int currVersion, int newVersion)
          }
       }
    }
-   static TCHAR batch[] =
-      _T("ALTER TABLE object_tools DROP COLUMN matching_oid\n")
-      _T("<END>");
-   CHK_EXEC(SQLBatch(batch));//delete old column
+   CHK_EXEC(SQLDropColumn(_T("object_tools"), _T("matching_oid"))); //delete old column
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='342' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
