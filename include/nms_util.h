@@ -955,7 +955,10 @@ public:
 
    int size() const { return m_list->size(); }
    bool hasAddress(const InetAddress& addr) const { return indexOf(addr) != -1; }
+   const InetAddress& findSameSubnetAddress(const InetAddress& addr) const;
    const InetAddress& getFirstUnicastAddress() const;
+   const InetAddress& getFirstUnicastAddressV4() const;
+   bool hasValidUnicastAddress() const { return getFirstUnicastAddress().isValid(); }
 
    const ObjectArray<InetAddress> *getList() const { return m_list; }
 };

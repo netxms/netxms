@@ -517,3 +517,31 @@ const InetAddress& InetAddressList::getFirstUnicastAddress() const
    }
    return InetAddress::INVALID;
 }
+
+/**
+ * Get first valid IPv4 unicast address from the list
+ */
+const InetAddress& InetAddressList::getFirstUnicastAddressV4() const
+{
+   for(int i = 0; i < m_list->size(); i++)
+   {
+      InetAddress *a = m_list->get(i);
+      if ((a->getFamily() == AF_INET) && a->isValidUnicast())
+         return *a;
+   }
+   return InetAddress::INVALID;
+}
+
+/**
+ * Check if given address is within same subnet as one of addresses on this list
+ */
+const InetAddress& InetAddressList::findSameSubnetAddress(const InetAddress& addr) const
+{
+   for(int i = 0; i < m_list->size(); i++)
+   {
+      InetAddress *a = m_list->get(i);
+      if (a->sameSubnet(addr))
+         return *a;
+   }
+   return InetAddress::INVALID;
+}
