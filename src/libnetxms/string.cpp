@@ -280,7 +280,7 @@ void String::escapeCharacter(int ch, int esc)
 
    if (m_length + nCount >= m_allocated)
    {
-      m_allocated += max(m_allocationStep, nCount);
+      m_allocated += max(m_allocationStep, (size_t)nCount);
    	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
    }
 
@@ -425,7 +425,7 @@ void String::shrink(int chars)
 {
 	if (m_length > 0)
 	{
-		m_length -= min(m_length, chars);
+		m_length -= min(m_length, (size_t)chars);
 		if (m_buffer != NULL)
 			m_buffer[m_length] = 0;
 	}

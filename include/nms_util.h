@@ -253,7 +253,7 @@ protected:
    TCHAR *m_buffer;
    size_t m_length;
    size_t m_allocated;
-   int m_allocationStep;
+   size_t m_allocationStep;
 
 public:
 	static const int npos;
@@ -266,8 +266,8 @@ public:
 	TCHAR *getBuffer() { return m_buffer; }
    void setBuffer(TCHAR *buffer);
 
-   int getAllocationStep() { return m_allocationStep; }
-   void setAllocationStep(int step) { m_allocationStep = step; }
+   size_t getAllocationStep() { return m_allocationStep; }
+   void setAllocationStep(size_t step) { m_allocationStep = step; }
 
    const String& operator =(const TCHAR *str);
 	const String& operator =(const String &src);
@@ -323,15 +323,15 @@ protected:
 	void (*m_objectDestructor)(void *);
 
    Array(void *data, int initial, int grow, size_t elementSize);
-   void *__getBuffer() { return m_data; }
+   void *__getBuffer() const { return m_data; }
 
 public:
 	Array(int initial = 0, int grow = 16, bool owner = false);
 	virtual ~Array();
 
 	int add(void *element);
-   void *get(int index) { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
-   int indexOf(void *element);
+   void *get(int index) const { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
+   int indexOf(void *element) const;
 	void set(int index, void *element);
 	void replace(int index, void *element);
 	void remove(int index) { internalRemove(index, true); }
@@ -340,12 +340,12 @@ public:
 	void unlink(void *element) { internalRemove(indexOf(element), false); }
 	void clear();
    void sort(int (*cb)(const void *, const void *));
-   void *find(const void *key, int (*cb)(const void *, const void *));
+   void *find(const void *key, int (*cb)(const void *, const void *)) const;
 
-	int size() { return m_size; }
+	int size() const { return m_size; }
 
 	void setOwner(bool owner) { m_objectOwner = owner; }
-	bool isOwner() { return m_objectOwner; }
+	bool isOwner() const { return m_objectOwner; }
 };
 
 /**
@@ -361,8 +361,8 @@ public:
 	virtual ~ObjectArray() { }
 
 	int add(T *object) { return Array::add((void *)object); }
-	T *get(int index) { return (T*)Array::get(index); }
-   int indexOf(T *object) { return Array::indexOf((void *)object); }
+	T *get(int index) const { return (T*)Array::get(index); }
+   int indexOf(T *object) const { return Array::indexOf((void *)object); }
 	void set(int index, T *object) { Array::set(index, (void *)object); }
 	void replace(int index, T *object) { Array::replace(index, (void *)object); }
 	void remove(int index) { Array::remove(index); }
@@ -384,12 +384,12 @@ public:
 	virtual ~IntegerArray() { }
 
    int add(T value) { return Array::add(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
-   T get(int index) { return m_storePointers ? CAST_FROM_POINTER(Array::get(index), T) : *((T*)Array::get(index)); }
-   int indexOf(T value) { return Array::indexOf(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   T get(int index) const { return m_storePointers ? CAST_FROM_POINTER(Array::get(index), T) : *((T*)Array::get(index)); }
+   int indexOf(T value) const { return Array::indexOf(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
    void set(int index, T value) { Array::set(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
    void replace(int index, T value) { Array::replace(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
 
-   T *getBuffer() { return (T*)__getBuffer(); }
+   T *getBuffer() const { return (T*)__getBuffer(); }
 };
 
 /**
@@ -406,8 +406,8 @@ public:
 	virtual ~StructArray() { }
 
 	int add(T *element) { return Array::add((void *)element); }
-	T *get(int index) { return (T*)Array::get(index); }
-   int indexOf(T *element) { return Array::indexOf((void *)element); }
+	T *get(int index) const { return (T*)Array::get(index); }
+   int indexOf(T *element) const { return Array::indexOf((void *)element); }
 	void set(int index, T *element) { Array::set(index, (void *)element); }
 	void replace(int index, T *element) { Array::replace(index, (void *)element); }
 	void remove(int index) { Array::remove(index); }
@@ -415,7 +415,7 @@ public:
 	void unlink(int index) { Array::unlink(index); }
    void unlink(T *element) { Array::unlink((void *)element); }
 
-   T *getBuffer() { return (T*)__getBuffer(); }
+   T *getBuffer() const { return (T*)__getBuffer(); }
 };
 
 /**
@@ -932,6 +932,32 @@ public:
    static InetAddress parse(const WCHAR *str);
    static InetAddress parse(const char *str);
    static InetAddress createFromSockaddr(struct sockaddr *s);
+
+   static const InetAddress INVALID;
+};
+
+/**
+ * IP address list
+ */
+class LIBNETXMS_EXPORTABLE InetAddressList
+{
+private:
+   ObjectArray<InetAddress> *m_list;
+
+   int indexOf(const InetAddress& addr) const;
+
+public:
+   InetAddressList();
+   ~InetAddressList();
+
+   void add(const InetAddress& addr);
+   void remove(const InetAddress& addr);
+
+   int size() const { return m_list->size(); }
+   bool hasAddress(const InetAddress& addr) const { return indexOf(addr) != -1; }
+   const InetAddress& getFirstUnicastAddress() const;
+
+   const ObjectArray<InetAddress> *getList() const { return m_list; }
 };
 
 /**

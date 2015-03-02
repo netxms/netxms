@@ -122,7 +122,7 @@ NXCPMessage *AbstractMessageReceiver::readMessage(UINT32 timeout, MessageReceive
       }
       if (m_bytesToSkip > 0)
       {
-         if (bytes <= m_bytesToSkip)
+         if (bytes <= (int)m_bytesToSkip)
          {
             m_bytesToSkip -= bytes;
          }

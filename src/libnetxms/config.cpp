@@ -749,7 +749,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                {
                   break;   // this parameter was already initialized, and override from config is forbidden
                }
-               nx_strncpy((TCHAR *)cfgTemplate[i].buffer, value, cfgTemplate[i].bufferSize);
+               nx_strncpy((TCHAR *)cfgTemplate[i].buffer, value, (size_t)cfgTemplate[i].bufferSize);
                break;
             case CT_MB_STRING:
                if ((cfgTemplate[i].overrideIndicator != NULL) &&
@@ -758,7 +758,7 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                   break;   // this parameter was already initialized, and override from config is forbidden
                }
 #ifdef UNICODE
-               memset(cfgTemplate[i].buffer, 0, cfgTemplate[i].bufferSize);
+               memset(cfgTemplate[i].buffer, 0, (size_t)cfgTemplate[i].bufferSize);
                WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, value, -1, (char *)cfgTemplate[i].buffer, (int)cfgTemplate[i].bufferSize - 1, NULL, NULL);
 #else
                nx_strncpy((TCHAR *)cfgTemplate[i].buffer, value, (size_t)cfgTemplate[i].bufferSize);

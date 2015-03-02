@@ -24,6 +24,11 @@
 #include "libnetxms.h"
 
 /**
+ * Invalid address
+ */
+const InetAddress InetAddress::INVALID = InetAddress();
+
+/**
  * Create IPv4 address object
  */
 InetAddress::InetAddress(UINT32 addr)
@@ -451,4 +456,64 @@ InetAddress InetAddress::createFromSockaddr(struct sockaddr *s)
       return InetAddress(((struct sockaddr_in6 *)s)->sin6_addr.s6_addr);
 #endif
    return InetAddress();
+}
+
+/**
+ * Address list constructor
+ */
+InetAddressList::InetAddressList()
+{
+   m_list = new ObjectArray<InetAddress>(8, 8, true);
+}
+
+/**
+ * Address list destructor
+ */
+InetAddressList::~InetAddressList()
+{
+   delete m_list;
+}
+
+/**
+ * Add address to list
+ */
+void InetAddressList::add(const InetAddress &addr)
+{
+   if (!hasAddress(addr))
+      m_list->add(new InetAddress(addr));
+}
+
+/**
+ * Remove address from list
+ */
+void InetAddressList::remove(const InetAddress &addr)
+{
+   int index = indexOf(addr);
+   if (index != -1)
+      m_list->remove(index);
+}
+
+/**
+ * Get index in list of given address
+ */
+int InetAddressList::indexOf(const InetAddress &addr) const
+{
+   for(int i = 0; i < m_list->size(); i++)
+      if (m_list->get(i)->equals(addr))
+         return i;
+   return -1;
+}
+
+/**
+ * Get first valid unicast address from the list
+ */
+const InetAddress& InetAddressList::getFirstUnicastAddress() const
+{
+   for(int i = 0; i < m_list->size(); i++)
+   {
+      InetAddress *a = m_list->get(i);
+      if (a->isValidUnicast())
+         return *a;
+   }
+   return InetAddress::INVALID;
 }
