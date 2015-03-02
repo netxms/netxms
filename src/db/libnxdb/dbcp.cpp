@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2008, 2009 Alex Kirhenshtein
+** Copyright (C) 2008-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -59,6 +59,7 @@ static void DBConnectionPoolPopulate()
          conn->inUse = false;
          conn->connectTime = time(NULL);
          conn->lastAccessTime = conn->connectTime;
+         conn->usageCount = 0;
          conn->srcFile[0] = 0;
          conn->srcLine = 0;
          m_connections.add(conn);
@@ -94,38 +95,93 @@ static void DBConnectionPoolShrink()
 	MutexUnlock(m_poolAccessMutex);
 }
 
-/**
- * Reconnect old connections
+/*
+ * Reset connection
  */
-static void DBConnectionPoolReconnect()
+static bool ResetConnection(PoolConnectionInfo *conn)
+{
+	time_t now = time(NULL);
+	DBDisconnect(conn->handle);
+
+	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+	conn->handle = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, m_schema, errorText);
+	if (conn->handle != NULL)
+   {
+		conn->connectTime = now;
+		conn->lastAccessTime = now;
+		conn->usageCount = 0;
+
+		__DBDbgPrintf(3, _T("Database Connection Pool: connection %p reconnected"), conn->handle);
+		return true;
+	}
+   else
+   {
+		__DBDbgPrintf(3, _T("Database Connection Pool: connection %p reconnect failure (%s)"), conn->handle, errorText);
+		return false;
+	}
+}
+
+/**
+ * Callback for sorting reset list
+ */
+static int ResetListSortCallback(const void *e1, const void *e2)
+{
+   return ((PoolConnectionInfo *)e1)->usageCount > ((PoolConnectionInfo *)e2)->usageCount ? -1 :
+		(((PoolConnectionInfo *)e1)->usageCount == ((PoolConnectionInfo *)e2)->usageCount ? 0 : 1);
+}
+
+/**
+ * Reset expired connections
+ */
+static void ResetExpiredConnections()
 {
    time_t now = time(NULL);
+
    MutexLock(m_poolAccessMutex);
-   for(int i = 0; i < m_connections.size(); i++)
-   {
-      PoolConnectionInfo *conn = m_connections.get(i);
-      if (!conn->inUse && (now - conn->connectTime > m_connectionTTL))
+
+	int availCount = 0;
+   ObjectArray<PoolConnectionInfo> reconnList(m_connections.size(), 16, false);
+	for(int i = 0; i < m_connections.size(); i++)
+	{
+		PoolConnectionInfo *conn = m_connections.get(i);
+		if (!conn->inUse)
       {
-	      DBDisconnect(conn->handle);
-
-	      TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-         conn->handle = DBConnect(m_driver, m_server, m_dbName, m_login, m_password, m_schema, errorText);
-         if (conn->handle != NULL)
+         availCount++;
+         if (now - conn->connectTime > m_connectionTTL)
          {
-            conn->connectTime = now;
-            conn->lastAccessTime = now;
-
-            __DBDbgPrintf(3, _T("Database Connection Pool: connection %d reconnected"), i);
+            reconnList.add(conn);
          }
-         else
-         {
-            __DBDbgPrintf(3, _T("Database Connection Pool: connection %d reconnect failure (%s)"), i, errorText);
-            m_connections.remove(i);
-         }
-         break;   // no more then one reconnect at a time to prevent locking pool for long time
       }
+	}
+	
+   int count = min(availCount / 2 + 1, reconnList.size()); // reset no more than 50% of available connections
+   if (count < reconnList.size())
+   {
+      reconnList.sort(ResetListSortCallback);
+      while(reconnList.size() > count)
+         reconnList.remove(count);
    }
+
+   for(int i = 0; i < count; i++)
+      reconnList.get(i)->inUse = true;
    MutexUnlock(m_poolAccessMutex);
+
+   // do reconnects
+   for(int i = 0; i < count; i++)
+	{
+   	PoolConnectionInfo *conn = reconnList.get(i);
+   	bool success = ResetConnection(conn);
+   	MutexLock(m_poolAccessMutex);
+		if (success)
+		{
+			conn->inUse = false;
+		}
+		else
+		{
+			m_connections.remove(conn);
+		}
+		MutexUnlock(m_poolAccessMutex);
+	}
 }
 
 /**
@@ -135,12 +191,12 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
 {
 	__DBDbgPrintf(1, _T("Database Connection Pool maintenance thread started"));
 
-   while(!ConditionWait(m_condShutdown, 300000))
+   while(!ConditionWait(m_condShutdown, (m_connectionTTL > 0) ? m_connectionTTL * 750 : 300000))
    {
       DBConnectionPoolShrink();
       if (m_connectionTTL > 0)
       {
-         DBConnectionPoolReconnect();
+         ResetExpiredConnections();
       }
    }
 
@@ -216,21 +272,31 @@ retry:
 	MutexLock(m_poolAccessMutex);
 
 	DB_HANDLE handle = NULL;
-   for(int i = 0; i < m_connections.size(); i++)
+
+	// find less used connection
+   UINT32 count = 0xFFFFFFFF;
+	int index = -1;
+   for(int i = 0; (i < m_connections.size()) && (count > 0); i++)
 	{
       PoolConnectionInfo *conn = m_connections.get(i);
-		if (!conn->inUse)
-		{
-			handle = conn->handle;
-			conn->inUse = true;
-         conn->lastAccessTime = time(NULL);
-         strncpy(conn->srcFile, srcFile, 128);
-         conn->srcLine = srcLine;
-			break;
+      if (!conn->inUse && (conn->usageCount < count))
+      {
+         count = conn->usageCount;
+         index = i;
 		}
 	}
 
-   if (handle == NULL && (m_connections.size() < m_maxPoolSize))
+	if (index > -1)
+	{
+		PoolConnectionInfo *conn = m_connections.get(index);
+		handle = conn->handle;
+		conn->inUse = true;
+		conn->lastAccessTime = time(NULL);
+		conn->usageCount++;
+		strncpy(conn->srcFile, srcFile, 128);
+		conn->srcLine = srcLine;
+	}
+   else if (m_connections.size() < m_maxPoolSize)
 	{
 	   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
       PoolConnectionInfo *conn = new PoolConnectionInfo;
@@ -240,6 +306,7 @@ retry:
          conn->inUse = true;
          conn->connectTime = time(NULL);
          conn->lastAccessTime = conn->connectTime;
+         conn->usageCount = 0;
          strncpy(conn->srcFile, srcFile, 128);
          conn->srcLine = srcLine;
          m_connections.add(conn);

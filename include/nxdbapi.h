@@ -93,6 +93,7 @@ struct PoolConnectionInfo
    bool inUse;
    time_t lastAccessTime;
    time_t connectTime;
+   UINT32 usageCount;
    char srcFile[128];
    int srcLine;
 };
