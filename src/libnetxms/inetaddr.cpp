@@ -29,6 +29,16 @@
 const InetAddress InetAddress::INVALID = InetAddress();
 
 /**
+ * IPv4 link local subnet
+ */
+static const InetAddress IPV4_LINK_LOCAL = InetAddress(0xA9FE0000, 0xFFFF0000);
+
+/**
+ * IPv6 link local subnet
+ */
+static const InetAddress IPV6_LINK_LOCAL = InetAddress((const BYTE *)"\xfe\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 10);
+
+/**
  * Create IPv4 address object
  */
 InetAddress::InetAddress(UINT32 addr)
@@ -51,11 +61,11 @@ InetAddress::InetAddress(UINT32 addr, UINT32 mask)
 /**
  * Create IPv6 address object
  */
-InetAddress::InetAddress(BYTE *addr)
+InetAddress::InetAddress(const BYTE *addr, int maskBits)
 {
    m_family = AF_INET6;
    memcpy(m_addr.v6, addr, 16);
-   m_maskBits = 128;
+   m_maskBits = maskBits;
 }
 
 /**
@@ -97,6 +107,14 @@ bool InetAddress::isMulticast() const
 bool InetAddress::isBroadcast() const
 {
    return (m_family == AF_INET) ? (m_addr.v4 == 0xFFFFFFFF) : false;
+}
+
+/**
+ * Returns true if address is a link local address
+ */
+bool InetAddress::isLinkLocal() const
+{
+   return (m_family == AF_INET) ? IPV4_LINK_LOCAL.contain(*this) : IPV6_LINK_LOCAL.contain(*this);
 }
 
 /**
@@ -152,7 +170,7 @@ InetAddress InetAddress::getSubnetAddress() const
    {
       int b = m_maskBits / 8;
       int shift = m_maskBits % 8;
-      BYTE mask = (shift > 0) ? (BYTE)((1 << (8 - shift)) & 0xFF) : 0;
+      BYTE mask = (shift > 0) ? (BYTE)(0xFF << (8 - shift)) : 0;
       addr.m_addr.v6[b] &= mask;
       for(int i = b + 1; i < 16; i++)
          addr.m_addr.v6[i] = 0;
@@ -169,20 +187,6 @@ bool InetAddress::isSubnetBroadcast(int maskBits) const
    {
       UINT32 mask = 0xFFFFFFFF << (32 - maskBits);
       return (m_addr.v4 & (~mask)) == (~mask);
-   }
-   if (m_family == AF_INET6)
-   {
-      BYTE addr[16];
-      memcpy(addr, m_addr.v6, 16);
-      if (maskBits < 128)
-      {
-         int b = maskBits / 8;
-         int shift = maskBits % 8;
-         addr[b] |= ((BYTE)0xFF >> shift);
-         for(int i = b + 1; i < 16; i++)
-            addr[i] = 0xFF;
-      }
-      return !memcmp(addr, m_addr.v6, 16);
    }
    return false;
 }
@@ -208,7 +212,7 @@ bool InetAddress::contain(const InetAddress &a) const
       {
          int b = m_maskBits / 8;
          int shift = m_maskBits % 8;
-         BYTE mask = (shift > 0) ? (BYTE)((1 << (8 - shift)) & 0xFF) : 0;
+         BYTE mask = (shift > 0) ? (BYTE)(0xFF << (8 - shift)) : 0;
          addr[b] &= mask;
          for(int i = b + 1; i < 16; i++)
             addr[i] = 0;
@@ -240,7 +244,7 @@ bool InetAddress::sameSubnet(const InetAddress &a) const
       {
          int b = m_maskBits / 8;
          int shift = m_maskBits % 8;
-         BYTE mask = (shift > 0) ? (BYTE)((1 << (8 - shift)) & 0xFF) : 0;
+         BYTE mask = (shift > 0) ? (BYTE)(0xFF << (8 - shift)) : 0;
          addr1[b] &= mask;
          addr2[b] &= mask;
          for(int i = b + 1; i < 16; i++)
