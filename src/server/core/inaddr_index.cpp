@@ -30,6 +30,7 @@ struct InetAddressIndexEntry
 {
    UT_hash_handle hh;
    BYTE key[18];
+   InetAddress addr;
    NetObj *object;
 };
 
@@ -59,7 +60,7 @@ InetAddressIndex::~InetAddressIndex()
 /**
  * Put object into index
  *
- * @param key object's key
+ * @param addr IP address
  * @param object object
  * @return true if existing object was replaced
  */
@@ -81,6 +82,7 @@ bool InetAddressIndex::put(const InetAddress& addr, NetObj *object)
    {
       entry = (InetAddressIndexEntry *)malloc(sizeof(InetAddressIndexEntry));
       memcpy(entry->key, key, 18);
+      entry->addr = addr;
       HASH_ADD_KEYPTR(hh, m_root, entry->key, 18, entry);
       replace = false;
    }
@@ -88,6 +90,24 @@ bool InetAddressIndex::put(const InetAddress& addr, NetObj *object)
 
    RWLockUnlock(m_lock);
    return replace;
+}
+
+/**
+ * Put object into index
+ *
+ * @param addrList IP address list
+ * @param object object
+ * @return true if existing object was replaced
+ */
+bool InetAddressIndex::put(const InetAddressList *addrList, NetObj *object)
+{
+   bool replaced = false;
+   for(int i = 0; i < addrList->size(); i++)
+   {
+      if (put(addrList->get(i), object))
+         replaced = true;
+   }
+   return replaced;
 }
 
 /**
@@ -197,13 +217,13 @@ ObjectArray<NetObj> *InetAddressIndex::getObjects(bool updateRefCount, bool (*fi
 /**
  * Execute given callback for each object
  */
-void InetAddressIndex::forEach(void (*callback)(NetObj *, void *), void *data)
+void InetAddressIndex::forEach(void (*callback)(const InetAddress& addr, NetObj *, void *), void *data)
 {
    RWLockReadLock(m_lock, INFINITE);
    InetAddressIndexEntry *entry, *tmp;
    HASH_ITER(hh, m_root, entry, tmp)
    {
-      callback(entry->object, data);
+      callback(entry->addr, entry->object, data);
    }
    RWLockUnlock(m_lock);
 }

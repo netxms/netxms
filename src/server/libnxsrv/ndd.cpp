@@ -157,10 +157,7 @@ void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, 
  */
 static UINT32 HandlerIndex(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-	NX_INTERFACE_INFO info;
-	memset(&info, 0, sizeof(NX_INTERFACE_INFO));
-	info.index = pVar->getValueAsUInt();
-	((InterfaceList *)pArg)->add(&info);
+	((InterfaceList *)pArg)->add(new InterfaceInfo(pVar->getValueAsUInt()));
    return SNMP_ERR_SUCCESS;
 }
 
@@ -173,10 +170,7 @@ static UINT32 HandlerIndexIfXTable(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_T
    UINT32 index = name->getValue()[name->getLength() - 1];
    if (((InterfaceList *)pArg)->findByIfIndex(index) == NULL)
    {
-	   NX_INTERFACE_INFO info;
-	   memset(&info, 0, sizeof(NX_INTERFACE_INFO));
-      info.index = index;
-	   ((InterfaceList *)pArg)->add(&info);
+	   ((InterfaceList *)pArg)->add(new InterfaceInfo(index));
    }
    return SNMP_ERR_SUCCESS;
 }
@@ -209,24 +203,10 @@ static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpor
    if (dwResult == SNMP_ERR_SUCCESS)
    {
 		InterfaceList *ifList = (InterfaceList *)pArg;
-      NX_INTERFACE_INFO *iface = ifList->findByIfIndex(index);
+      InterfaceInfo *iface = ifList->findByIfIndex(index);
       if (iface != NULL)
       {
-         if (iface->ipAddr != 0)
-         {
-            // This interface entry already filled, so we have additional IP addresses
-            // on a single interface
-				NX_INTERFACE_INFO extIface;
-				memcpy(&extIface, iface, sizeof(NX_INTERFACE_INFO));
-				extIface.ipAddr = ntohl(pVar->getValueAsUInt());
-				extIface.ipNetMask = dwNetMask;
-				ifList->add(&extIface);
-         }
-			else
-			{
-				iface->ipAddr = ntohl(pVar->getValueAsUInt());
-				iface->ipNetMask = dwNetMask;
-			}
+         iface->ipAddrList.add(InetAddress(ntohl(pVar->getValueAsUInt()), BitsInMask(dwNetMask)));
 		}
    }
 	else
@@ -250,21 +230,30 @@ static UINT32 HandlerIpAddressTable(UINT32 version, SNMP_Variable *var, SNMP_Tra
    size_t oidLen = var->getName()->getLength();
    memcpy(oid, var->getName()->getValue(), oidLen * sizeof(UINT32));
 
-   // Check address family (1 = ipv4)
-   if (oid[10] != 1)
+   // Check address family (1 = ipv4, 2 = ipv6)
+   if ((oid[10] != 1) && (oid[10] != 2))
       return SNMP_ERR_SUCCESS;
 
    UINT32 ifIndex = var->getValueAsUInt();
-   NX_INTERFACE_INFO *iface = ifList->findByIfIndex(ifIndex);
+   InterfaceInfo *iface = ifList->findByIfIndex(ifIndex);
    if (iface == NULL)
       return SNMP_ERR_SUCCESS;
 
    // Build IP address from OID
-   UINT32 ipAddr = (oid[12] << 24) | (oid[13] << 16) | (oid[14] << 8) | oid[15];
-   if (iface->ipAddr == ipAddr)
+   InetAddress addr;
+   if (oid[10] == 1)
+   {
+      addr = InetAddress((UINT32)((oid[12] << 24) | (oid[13] << 16) | (oid[14] << 8) | oid[15]));
+   }
+   else
+   {
+      BYTE bytes[16];
+      for(int i = 12, j = 0; j < 16; i++, j++)
+         bytes[j] = (BYTE)oid[i];
+      addr = InetAddress(bytes);
+   }
+   if (iface->hasAddress(addr))
       return SNMP_ERR_SUCCESS;   // This IP already set from ipAddrTable
-
-   UINT32 netMask = 0;
 
    // Get address type and prefix
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -282,34 +271,17 @@ static UINT32 HandlerIpAddressTable(UINT32 version, SNMP_Variable *var, SNMP_Tra
          if ((prefix != NULL) && !prefix->isZeroDotZero())
          {
             // Last element in ipAddressPrefixTable index is prefix length
-            UINT32 len = prefix->getValue()[prefix->getLength() - 1];
-            netMask = ((len > 0) && (len <= 32)) ? (0xFFFFFFFF << (32 - len)) : 0;
+            addr.setMaskBits((int)prefix->getValue()[prefix->getLength() - 1]);
          }
          else
          {
             ifList->setPrefixWalkNeeded();
          }
          delete prefix;
-
-         if (iface->ipAddr != 0)
-         {
-            // This interface entry already filled, so we have additional IP addresses
-            // on a single interface
-				NX_INTERFACE_INFO extIface;
-				memcpy(&extIface, iface, sizeof(NX_INTERFACE_INFO));
-				extIface.ipAddr = ipAddr;
-				extIface.ipNetMask = netMask;
-				ifList->add(&extIface);
-         }
-			else
-			{
-				iface->ipAddr = ipAddr;
-				iface->ipNetMask = netMask;
-			}
+         iface->ipAddrList.add(addr);
       }
       delete response;
    }
-
    return SNMP_ERR_SUCCESS;
 }
 
@@ -321,28 +293,39 @@ static UINT32 HandlerIpAddressPrefixTable(UINT32 version, SNMP_Variable *var, SN
    InterfaceList *ifList = (InterfaceList *)arg;
    const UINT32 *oid = var->getName()->getValue();
    
-   // Check address family (1 = ipv4)
-   if (oid[10] != 1)
+   // Check address family (1 = ipv4, 2 = ipv6)
+   if ((oid[10] != 1) && (oid[10] != 2))
       return SNMP_ERR_SUCCESS;
 
    // Build IP address from OID
-   UINT32 prefix = (oid[13] << 24) | (oid[14] << 16) | (oid[15] << 8) | oid[16];
-   UINT32 mask = ((oid[17] > 0) && (oid[17] <= 32)) ? (0xFFFFFFFF << (32 - oid[17])) : 0;
-
-   // Find matching IP and set mask
-   for(int i = 0; i < ifList->size(); i++)
+   InetAddress prefix;
+   if (oid[10] == 1)
    {
-      NX_INTERFACE_INFO *iface = ifList->get(i);
-      if (iface->index != oid[12])
-         continue;
-
-      if ((iface->ipAddr & mask) == prefix)
-      {
-         iface->ipNetMask = mask;
-         break;
-      }
+      prefix = InetAddress((UINT32)((oid[13] << 24) | (oid[14] << 16) | (oid[15] << 8) | oid[16]));
+      prefix.setMaskBits((int)oid[17]);
+   }
+   else
+   {
+      BYTE bytes[16];
+      for(int i = 13, j = 0; j < 16; i++, j++)
+         bytes[j] = (BYTE)oid[i];
+      prefix = InetAddress(bytes);
+      prefix.setMaskBits((int)oid[29]);
    }
 
+   // Find matching IP and set mask
+   InterfaceInfo *iface = ifList->findByIfIndex(oid[12]);
+   if (iface != NULL)
+   {
+      for(int i = 0; i < iface->ipAddrList.size(); i++)
+      {
+         InetAddress *addr = iface->ipAddrList.getList()->get(i);
+         if ((addr != NULL) && prefix.contain(*addr))
+         {
+            addr->setMaskBits(prefix.getMaskBits());
+         }
+      }
+   }
    return SNMP_ERR_SUCCESS;
 }
 
@@ -389,7 +372,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
       // Enumerate interfaces
 		for(i = 0; i < pIfList->size(); i++)
       {
-			NX_INTERFACE_INFO *iface = pIfList->get(i);
+			InterfaceInfo *iface = pIfList->get(i);
 
 			// Get interface description
 	      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%d"), iface->index);

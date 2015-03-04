@@ -268,7 +268,7 @@ static void TestString()
  */
 static void TestInetAddress()
 {
-   InetAddress a;
+   InetAddress a, b, c;
 
    StartTest(_T("InetAddress - isSubnetBroadcast() - IPv4"));
    a = InetAddress::parse("192.168.0.255");
@@ -278,8 +278,44 @@ static void TestInetAddress()
 
    StartTest(_T("InetAddress - isSubnetBroadcast() - IPv6"));
    a = InetAddress::parse("fe80::ffff:ffff:ffff:ffff");
-   AssertTrue(a.isSubnetBroadcast(64));
+   AssertFalse(a.isSubnetBroadcast(64));
    AssertFalse(a.isSubnetBroadcast(63));
+   EndTest();
+
+   StartTest(_T("InetAddress - isLinkLocal() - IPv4"));
+   a = InetAddress::parse("169.254.17.198");
+   AssertTrue(a.isLinkLocal());
+   a = InetAddress::parse("192.168.1.1");
+   AssertFalse(a.isLinkLocal());
+   EndTest();
+
+   StartTest(_T("InetAddress - isLinkLocal() - IPv6"));
+   a = InetAddress::parse("fe80::1");
+   AssertTrue(a.isLinkLocal());
+   a = InetAddress::parse("2000:1234::1");
+   AssertFalse(a.isLinkLocal());
+   EndTest();
+
+   StartTest(_T("InetAddress - sameSubnet() - IPv4"));
+   a = InetAddress::parse("192.168.1.43");
+   a.setMaskBits(23);
+   b = InetAddress::parse("192.168.0.180");
+   b.setMaskBits(23);
+   c = InetAddress::parse("192.168.2.22");
+   c.setMaskBits(23);
+   AssertTrue(a.sameSubnet(b));
+   AssertFalse(a.sameSubnet(c));
+   EndTest();
+
+   StartTest(_T("InetAddress - sameSubnet() - IPv6"));
+   a = InetAddress::parse("2000:1234:1000:1000::1");
+   a.setMaskBits(62);
+   b = InetAddress::parse("2000:1234:1000:1001::cdef:1");
+   b.setMaskBits(62);
+   c = InetAddress::parse("2000:1234:1000:1007::1");
+   c.setMaskBits(62);
+   AssertTrue(a.sameSubnet(b));
+   AssertFalse(a.sameSubnet(c));
    EndTest();
 }
 

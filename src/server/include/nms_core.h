@@ -895,7 +895,7 @@ bool IsLoggedIn(UINT32 dwUserId);
 bool NXCORE_EXPORTABLE KillClientSession(int id);
 
 void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);
-UINT32 GetLocalIpAddr();
+InetAddress GetLocalIpAddr();
 TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize);
 
 BOOL ExecCommand(TCHAR *pszCommand);

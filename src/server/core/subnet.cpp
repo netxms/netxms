@@ -150,6 +150,7 @@ bool Subnet::deleteFromDatabase(DB_HANDLE hdb)
 void Subnet::fillMessage(NXCPMessage *pMsg)
 {
    NetObj::fillMessage(pMsg);
+   pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
    pMsg->setField(VID_ZONE_ID, m_zoneId);
 	pMsg->setField(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));
 }

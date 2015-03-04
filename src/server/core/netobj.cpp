@@ -919,7 +919,6 @@ void NetObj::fillMessage(NXCPMessage *pMsg)
 	pMsg->setField(VID_GUID, m_guid, UUID_LENGTH);
    pMsg->setField(VID_OBJECT_NAME, m_name);
    pMsg->setField(VID_OBJECT_STATUS, (WORD)m_iStatus);
-   pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
    pMsg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
    pMsg->setField(VID_IS_SYSTEM, (WORD)(m_isSystem ? 1 : 0));
 

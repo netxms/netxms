@@ -55,14 +55,14 @@ static int m_iNumPollers = 0;
 /**
  * Create management node object
  */
-static void CreateManagementNode(UINT32 ipAddr, UINT32 netMask)
+static void CreateManagementNode(const InetAddress& addr)
 {
 	TCHAR buffer[256];
 
-	Node *pNode = new Node(ipAddr, NF_IS_LOCAL_MGMT, 0, 0, 0);
+	Node *pNode = new Node(addr, NF_IS_LOCAL_MGMT, 0, 0, 0);
    NetObjInsert(pNode, TRUE);
 	pNode->setName(GetLocalHostName(buffer, 256));
-   pNode->configurationPoll(NULL, 0, -1, BitsInMask(netMask));
+   pNode->configurationPoll(NULL, 0, -1, addr.getMaskBits());
    pNode->unhide();
    g_dwMgmtNode = pNode->getId();   // Set local management node ID
    PostEvent(EVENT_NODE_ADDED, pNode->getId(), NULL);
@@ -155,10 +155,10 @@ void CheckForMgmtNode()
    {
       for(i = 0; i < pIfList->size(); i++)
       {
-         NX_INTERFACE_INFO *iface = pIfList->get(i);
-         if ((iface->type == IFTYPE_SOFTWARE_LOOPBACK) || ((iface->ipAddr & 0xFF000000) == 0x7F000000) || (iface->ipAddr == 0))
+         InterfaceInfo *iface = pIfList->get(i);
+         if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
             continue;
-         if ((pNode = FindNodeByIP(0, iface->ipAddr)) != NULL)
+         if ((pNode = FindNodeByIP(0, &iface->ipAddrList)) != NULL)
          {
             // Check management node flag
             if (!(pNode->getFlags() & NF_IS_LOCAL_MGMT))
@@ -175,11 +175,18 @@ void CheckForMgmtNode()
          // Find interface with IP address
          for(i = 0; i < pIfList->size(); i++)
          {
-            NX_INTERFACE_INFO *iface = pIfList->get(i);
-            if ((iface->type != IFTYPE_SOFTWARE_LOOPBACK) && ((iface->ipAddr & 0xFF000000) != 0x7F000000) && (iface->ipAddr != 0))
+            InterfaceInfo *iface = pIfList->get(i);
+            if ((iface->type == IFTYPE_SOFTWARE_LOOPBACK) || (iface->ipAddrList.size() == 0))
+               continue;
+
+            for(int j = 0; j < iface->ipAddrList.size(); j++)
             {
-   				CreateManagementNode(iface->ipAddr, iface->ipNetMask);
-               break;
+               const InetAddress& addr = iface->ipAddrList.get(j);
+               if (addr.isValidUnicast())
+               {
+   				   CreateManagementNode(addr);
+                  break;
+               }
             }
          }
       }
@@ -205,7 +212,7 @@ void CheckForMgmtNode()
 		}
 		else
 		{
-			CreateManagementNode(0, 0);
+			CreateManagementNode(InetAddress());
 		}
 	}
 }
@@ -429,33 +436,40 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
 		 (g_nodePollerQueue.find((void *)&ipAddr, PollerQueueElementComparator) == NULL))
    {
       Interface *pInterface = node->findInterfaceByIndex(ifIndex);
-      if ((pInterface != NULL) && pInterface->getIpAddress().sameSubnet(ipAddr))
+      if (pInterface != NULL)
 		{
-			DbgPrintf(6, _T("DiscoveryPoller(): interface found: %s [%d] addr=%s/%d ifIndex=%d"),
-			          pInterface->getName(), pInterface->getId(), pInterface->getIpAddress().toString(buffer),
-			          pInterface->getIpAddress().getMaskBits(), pInterface->getIfIndex());
-         if (!ipAddr.isSubnetBroadcast(pInterface->getIpAddress().getMaskBits()))
+         const InetAddress& interfaceAddress = pInterface->getIpAddressList()->findSameSubnetAddress(ipAddr);
+         if (interfaceAddress.isValidUnicast())
          {
-            NEW_NODE *pInfo;
-				TCHAR buffer[64];
+			   DbgPrintf(6, _T("DiscoveryPoller(): interface found: %s [%d] addr=%s/%d ifIndex=%d"),
+               pInterface->getName(), pInterface->getId(), interfaceAddress.toString(buffer), interfaceAddress.getMaskBits(), pInterface->getIfIndex());
+            if (!ipAddr.isSubnetBroadcast(interfaceAddress.getMaskBits()))
+            {
+               NEW_NODE *pInfo;
+				   TCHAR buffer[64];
 
-            pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-            pInfo->ipAddr = ipAddr;
-            pInfo->ipAddr.setMaskBits(pInterface->getIpAddress().getMaskBits());
-				pInfo->zoneId = node->getZoneId();
-				pInfo->ignoreFilter = FALSE;
-				if (macAddr == NULL)
-					memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-				else
-					memcpy(pInfo->bMacAddr, macAddr, MAC_ADDR_LENGTH);
-				DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%d"),
-				          pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
-            g_nodePollerQueue.Put(pInfo);
+               pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+               pInfo->ipAddr = ipAddr;
+               pInfo->ipAddr.setMaskBits(interfaceAddress.getMaskBits());
+				   pInfo->zoneId = node->getZoneId();
+				   pInfo->ignoreFilter = FALSE;
+				   if (macAddr == NULL)
+					   memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+				   else
+					   memcpy(pInfo->bMacAddr, macAddr, MAC_ADDR_LENGTH);
+				   DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%d"),
+				             pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
+               g_nodePollerQueue.Put(pInfo);
+            }
+			   else
+			   {
+               DbgPrintf(6, _T("DiscoveryPoller(): potential node %s rejected - broadcast/multicast address"), ipAddr.toString(buffer));
+			   }
          }
-			else
-			{
-            DbgPrintf(6, _T("DiscoveryPoller(): potential node %s rejected - broadcast/multicast address"), ipAddr.toString(buffer));
-			}
+         else
+         {
+   			DbgPrintf(6, _T("DiscoveryPoller(): interface object found but IP address not found"));
+         }
 		}
 		else
 		{
@@ -479,7 +493,7 @@ static void CheckHostRoute(Node *node, ROUTE *route)
 
 	DbgPrintf(6, _T("DiscoveryPoller(): checking host route %s at %d"), IpToStr(route->dwDestAddr, buffer), route->dwIfIndex);
 	iface = node->findInterfaceByIndex(route->dwIfIndex);
-	if ((iface != NULL) && iface->getIpAddress().sameSubnet(route->dwDestAddr))
+	if ((iface != NULL) && iface->getIpAddressList()->findSameSubnetAddress(route->dwDestAddr).isValidUnicast())
 	{
 		CheckPotentialNode(node, route->dwDestAddr, route->dwIfIndex);
 	}

@@ -20,6 +20,7 @@ package org.netxms.client;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import org.netxms.base.InetAddressEx;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkService;
 
@@ -42,8 +43,7 @@ public class NXCObjectCreationData
 	private String primaryName;
 	private int agentPort;
 	private int snmpPort;
-	private InetAddress ipAddress;
-	private InetAddress ipNetMask;
+	private InetAddressEx ipAddress;
 	private long agentProxyId;
 	private long snmpProxyId;
 	private int mapType;
@@ -83,8 +83,7 @@ public class NXCObjectCreationData
 		
 		try
 		{
-			ipAddress = InetAddress.getByName("127.0.0.1");
-			ipNetMask = InetAddress.getByName("0.0.0.0");
+			ipAddress = new InetAddressEx(InetAddress.getByName("127.0.0.1"), 8);
 		}
 		catch(UnknownHostException e)
 		{
@@ -199,7 +198,7 @@ public class NXCObjectCreationData
 	/**
 	 * @return the ipAddress
 	 */
-	public InetAddress getIpAddress()
+	public InetAddressEx getIpAddress()
 	{
 		return ipAddress;
 	}
@@ -207,25 +206,9 @@ public class NXCObjectCreationData
 	/**
 	 * @param ipAddress the ipAddress to set
 	 */
-	public void setIpAddress(InetAddress ipAddress)
+	public void setIpAddress(InetAddressEx ipAddress)
 	{
 		this.ipAddress = ipAddress;
-	}
-
-	/**
-	 * @return the ipNetMask
-	 */
-	public InetAddress getIpNetMask()
-	{
-		return ipNetMask;
-	}
-
-	/**
-	 * @param ipNetMask the ipNetMask to set
-	 */
-	public void setIpNetMask(InetAddress ipNetMask)
-	{
-		this.ipNetMask = ipNetMask;
 	}
 
 	/**

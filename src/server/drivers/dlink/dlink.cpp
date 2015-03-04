@@ -95,7 +95,7 @@ InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attri
 	// Find physical ports
 	for(int i = 0; i < ifList->size(); i++)
 	{
-		NX_INTERFACE_INFO *iface = ifList->get(i);
+		InterfaceInfo *iface = ifList->get(i);
 		if (iface->index < 1024)
 		{
 			iface->isPhysicalPort = true;

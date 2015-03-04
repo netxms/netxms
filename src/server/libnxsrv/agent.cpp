@@ -613,8 +613,6 @@ void AgentConnection::destroyResultData()
 InterfaceList *AgentConnection::getInterfaceList()
 {
    InterfaceList *pIfList = NULL;
-	NX_INTERFACE_INFO iface;
-   UINT32 i, dwBits;
    TCHAR *pChar, *pBuf;
 
    if (getList(_T("Net.InterfaceList")) == ERR_SUCCESS)
@@ -623,17 +621,17 @@ InterfaceList *AgentConnection::getInterfaceList()
 
       // Parse result set. Each line should have the following format:
       // index ip_address/mask_bits iftype mac_address name
-      for(i = 0; i < m_dwNumDataLines; i++)
+      for(UINT32 i = 0; i < m_dwNumDataLines; i++)
       {
          pBuf = m_ppDataLines[i];
-			memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
+         InterfaceInfo *iface = new InterfaceInfo(0);
 
          // Index
          pChar = _tcschr(pBuf, ' ');
          if (pChar != NULL)
          {
             *pChar = 0;
-            iface.index = _tcstoul(pBuf, NULL, 10);
+            iface->index = _tcstoul(pBuf, NULL, 10);
             pBuf = pChar + 1;
          }
 
@@ -655,9 +653,9 @@ InterfaceList *AgentConnection::getInterfaceList()
             {
                pSlash = defaultMask;
             }
-            iface.ipAddr = ntohl(_t_inet_addr(pBuf));
-            dwBits = _tcstoul(pSlash, NULL, 10);
-            iface.ipNetMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
+            InetAddress addr = InetAddress::parse(pBuf);
+            addr.setMaskBits(_tcstol(pSlash, NULL, 10));
+            iface->ipAddrList.add(addr);
             pBuf = pChar + 1;
          }
 
@@ -666,7 +664,7 @@ InterfaceList *AgentConnection::getInterfaceList()
          if (pChar != NULL)
          {
             *pChar = 0;
-            iface.type = _tcstoul(pBuf, NULL, 10);
+            iface->type = _tcstoul(pBuf, NULL, 10);
             pBuf = pChar + 1;
          }
 
@@ -675,15 +673,15 @@ InterfaceList *AgentConnection::getInterfaceList()
          if (pChar != NULL)
          {
             *pChar = 0;
-            StrToBin(pBuf, iface.macAddr, MAC_ADDR_LENGTH);
+            StrToBin(pBuf, iface->macAddr, MAC_ADDR_LENGTH);
             pBuf = pChar + 1;
          }
 
          // Name (set description to name)
-         nx_strncpy(iface.name, pBuf, MAX_DB_STRING);
-			nx_strncpy(iface.description, pBuf, MAX_DB_STRING);
+         nx_strncpy(iface->name, pBuf, MAX_DB_STRING);
+			nx_strncpy(iface->description, pBuf, MAX_DB_STRING);
 
-			pIfList->add(&iface);
+			pIfList->add(iface);
       }
 
       lock();

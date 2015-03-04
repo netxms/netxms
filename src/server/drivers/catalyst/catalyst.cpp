@@ -77,7 +77,7 @@ static UINT32 HandlerPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport
 {
 	InterfaceList *ifList = (InterfaceList *)arg;
 
-	NX_INTERFACE_INFO *iface = ifList->findByIfIndex(var->getValueAsUInt());
+	InterfaceInfo *iface = ifList->findByIfIndex(var->getValueAsUInt());
 	if (iface != NULL)
 	{
 		size_t nameLen = var->getName()->getLength();

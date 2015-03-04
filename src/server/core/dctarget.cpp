@@ -521,59 +521,6 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
          dwError = DCE_NOT_SUPPORTED;
       }
    }
-   else if (MatchString(_T("PingTime(*)"), param, FALSE))
-   {
-      NetObj *object = objectFromParameter(param);
-      if ((object != NULL) && (object->getObjectClass() == OBJECT_INTERFACE))
-      {
-         UINT32 value = ((Interface *)object)->getPingTime();
-         if (value == 10000)
-            dwError = DCE_COMM_ERROR;
-         else
-            _sntprintf(buffer, bufSize, _T("%d"), value);
-      }
-      else
-      {
-         dwError = DCE_NOT_SUPPORTED;
-      }
-   }
-   else if (!_tcsicmp(_T("PingTime"), param))
-   {
-      if (m_ipAddress.isValid())
-      {
-         Interface *iface = NULL;
-
-         // Find interface for primary IP
-         LockChildList(FALSE);
-         for(int i = 0; i < (int)m_dwChildCount; i++)
-         {
-            if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && m_pChildList[i]->getIpAddress().equals(m_ipAddress))
-            {
-               iface = (Interface *)m_pChildList[i];
-               break;
-            }
-         }
-         UnlockChildList();
-
-         UINT32 value = 10000;
-         if (iface != NULL)
-         {
-            value = iface->getPingTime();
-         }
-         else
-         {
-            value = getPingTime();
-         }
-         if (value == 10000)
-            dwError = DCE_COMM_ERROR;
-         else
-            _sntprintf(buffer, bufSize, _T("%d"), value);
-      }
-      else
-      {
-         dwError = DCE_NOT_SUPPORTED;
-      }
-   }
    else
    {
       dwError = DCE_NOT_SUPPORTED;

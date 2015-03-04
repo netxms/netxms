@@ -23,11 +23,9 @@
 
 #include "avaya-ers.h"
 
-
-//
-// VLAN information structure
-//
-
+/**
+ * VLAN information structure
+ */
 struct VLAN_INFO
 {
    TCHAR szName[MAX_OBJECT_NAME];
@@ -36,12 +34,14 @@ struct VLAN_INFO
    BYTE bMacAddr[MAC_ADDR_LENGTH];
 };
 
+/**
+ * VLAN list structure
+ */
 struct VLAN_LIST
 {
    UINT32 dwNumVlans;
    VLAN_INFO *pList;
 };
-
 
 /**
  * Handler for VLAN enumeration on Avaya ERS
@@ -102,29 +102,33 @@ static UINT32 HandlerRapidCityIfList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP
    // Create new interface only if we have VLAN with same interface index
    if (dwVlanIndex < pVlanList->dwNumVlans)
    {
-		NX_INTERFACE_INFO iface;
-
-		memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
-      iface.index = dwIfIndex;
-      _tcscpy(iface.name, pVlanList->pList[dwVlanIndex].szName);
-      iface.type = IFTYPE_L2VLAN;
-      memcpy(iface.macAddr, pVlanList->pList[dwVlanIndex].bMacAddr, MAC_ADDR_LENGTH);
+		InterfaceInfo *iface = new InterfaceInfo(dwIfIndex);
+      _tcscpy(iface->name, pVlanList->pList[dwVlanIndex].szName);
+      iface->type = IFTYPE_L2VLAN;
+      memcpy(iface->macAddr, pVlanList->pList[dwVlanIndex].bMacAddr, MAC_ADDR_LENGTH);
       
       size_t nameLen = pVar->getName()->getLength();
 
       // Get IP address
+      UINT32 ipAddr, ipNetMask;
+
       memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
       oidName[nameLen - 6] = 2;
-      dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &iface.ipAddr, sizeof(UINT32), 0);
+      dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &ipAddr, sizeof(UINT32), 0);
 
       if (dwResult == SNMP_ERR_SUCCESS)
       {
          // Get netmask
          oidName[nameLen - 6] = 3;
-         dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &iface.ipNetMask, sizeof(UINT32), 0);
+         dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &ipNetMask, sizeof(UINT32), 0);
       }
 
-		pIfList->add(&iface);
+      if (dwResult == SNMP_ERR_SUCCESS)
+      {
+         iface->ipAddrList.add(InetAddress(ipAddr, ipNetMask));
+      }
+
+		pIfList->add(iface);
    }
    else
    {

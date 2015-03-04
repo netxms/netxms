@@ -3712,7 +3712,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          case AbstractObject.OBJECT_NODE:
             if (data.getPrimaryName() != null) msg.setField(NXCPCodes.VID_PRIMARY_NAME, data.getPrimaryName());
             msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
-            msg.setField(NXCPCodes.VID_IP_NETMASK, data.getIpNetMask());
             msg.setFieldInt16(NXCPCodes.VID_AGENT_PORT, data.getAgentPort());
             msg.setFieldInt16(NXCPCodes.VID_SNMP_PORT, data.getSnmpPort());
             msg.setFieldInt32(NXCPCodes.VID_CREATION_FLAGS, data.getCreationFlags());
@@ -3741,7 +3740,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          case AbstractObject.OBJECT_INTERFACE:
             msg.setField(NXCPCodes.VID_MAC_ADDR, data.getMacAddress().getValue());
             msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
-            msg.setField(NXCPCodes.VID_IP_NETMASK, data.getIpNetMask());
             msg.setFieldInt32(NXCPCodes.VID_IF_TYPE, data.getIfType());
             msg.setFieldInt32(NXCPCodes.VID_IF_INDEX, data.getIfIndex());
             msg.setFieldInt32(NXCPCodes.VID_IF_SLOT, data.getSlot());

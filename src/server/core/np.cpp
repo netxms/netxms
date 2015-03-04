@@ -193,7 +193,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreation
    if (dwCreationFlags & NXC_NCF_CREATE_UNMANAGED)
    {
       pNode->setMgmtStatus(FALSE);
-      pNode->checkSubnetBinding(NULL);
+      pNode->checkSubnetBinding();
    }
 
    // Add default DCIs
@@ -471,7 +471,7 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
 		}
 
 		Node *oldNode = iface->getParentNode();
-		if (iface->getIpAddress().equals(oldNode->getIpAddress()))
+      if (iface->getIpAddressList()->hasAddress(oldNode->getIpAddress()))
 		{
 			// we should change node's primary IP only if old IP for this MAC was also node's primary IP
 			TCHAR szOldIpAddr[16];
