@@ -1043,9 +1043,9 @@ void Node::deleteInterface(Interface *iface)
          const InetAddress *addr = list->get(i);
 
          LockChildList(FALSE);
-         for(UINT32 j = 0; j < m_dwChildCount; i++)
-            if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && (m_pChildList[i] != iface) &&
-                ((Interface *)m_pChildList[i])->getIpAddressList()->findSameSubnetAddress(*addr).isValid())
+         for(UINT32 j = 0; j < m_dwChildCount; j++)
+            if ((m_pChildList[j]->getObjectClass() == OBJECT_INTERFACE) && (m_pChildList[j] != iface) &&
+                ((Interface *)m_pChildList[j])->getIpAddressList()->findSameSubnetAddress(*addr).isValid())
             {
                doUnlink = false;
                break;
