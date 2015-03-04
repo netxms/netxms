@@ -351,7 +351,7 @@ static InterfaceList *SysGetLocalIfList()
             }
 
             bool newInterface = false;
-            InterfaceInfo *iface = pIfList->findByIndex(ifIndex);
+            InterfaceInfo *iface = pIfList->findByIfIndex(ifIndex);
             if (iface == NULL)
             {
                iface = new InterfaceInfo(ifIndex);
@@ -378,7 +378,7 @@ static InterfaceList *SysGetLocalIfList()
                }
                InetAddress addr = InetAddress::parse(pBuf);
                addr.setMaskBits(_tcstol(pSlash, NULL, 10));
-               iface->ipAddrList.add(new InetAddress(addr));
+               iface->ipAddrList.add(addr);
                pBuf = pChar + 1;
             }
 
@@ -389,7 +389,7 @@ static InterfaceList *SysGetLocalIfList()
                if (pChar != NULL)
                {
                   *pChar = 0;
-                  iface.type = _tcstoul(pBuf, NULL, 10);
+                  iface->type = _tcstoul(pBuf, NULL, 10);
                   pBuf = pChar + 1;
                }
 
@@ -398,14 +398,14 @@ static InterfaceList *SysGetLocalIfList()
                if (pChar != NULL)
                {
                   *pChar = 0;
-                  StrToBin(pBuf, iface.macAddr, MAC_ADDR_LENGTH);
+                  StrToBin(pBuf, iface->macAddr, MAC_ADDR_LENGTH);
                   pBuf = pChar + 1;
                }
 
                // Name
-               nx_strncpy(iface.name, pBuf, MAX_OBJECT_NAME - 1);
+               nx_strncpy(iface->name, pBuf, MAX_OBJECT_NAME - 1);
 
-   				pIfList->add(iface);
+               pIfList->add(iface);
             }
             free(pTemp);
          }

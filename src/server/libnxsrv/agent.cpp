@@ -621,7 +621,7 @@ InterfaceList *AgentConnection::getInterfaceList()
 
       // Parse result set. Each line should have the following format:
       // index ip_address/mask_bits iftype mac_address name
-      for(UINT i = 0; i < m_dwNumDataLines; i++)
+      for(UINT32 i = 0; i < m_dwNumDataLines; i++)
       {
          pBuf = m_ppDataLines[i];
          InterfaceInfo *iface = new InterfaceInfo(0);
