@@ -148,6 +148,11 @@ TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer)
 				curr++;
 			}
 			while((*curr == 0) && (i < 8));
+         if (i == 8)
+         {
+   			*out++ = _T(':');
+            break;
+         }
 			i--;
 			hasNulls = true;
 		}

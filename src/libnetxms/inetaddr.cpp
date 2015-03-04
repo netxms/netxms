@@ -123,7 +123,7 @@ bool InetAddress::isLinkLocal() const
 String InetAddress::toString() const
 {
    TCHAR buffer[64];
-   String s = (m_family == AF_INET) ? IpToStr(m_addr.v4, buffer) : Ip6ToStr(m_addr.v6, buffer);
+   String s = (m_family == AF_UNSPEC) ? _T("UNSPEC") : ((m_family == AF_INET) ? IpToStr(m_addr.v4, buffer) : Ip6ToStr(m_addr.v6, buffer));
    return s;
 }
 
@@ -132,6 +132,11 @@ String InetAddress::toString() const
  */
 TCHAR *InetAddress::toString(TCHAR *buffer) const
 {
+   if (m_family == AF_UNSPEC)
+   {
+      _tcscpy(buffer, _T("UNSPEC"));
+      return buffer;
+   }
    return (m_family == AF_INET) ? IpToStr(m_addr.v4, buffer) : Ip6ToStr(m_addr.v6, buffer);
 }
 
