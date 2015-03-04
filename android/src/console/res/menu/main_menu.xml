@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu
-  xmlns:android="http://schemas.android.com/apk/res/android">
-	<item android:enabled="true" android:id="@android:id/home" android:title="@string/home" android:visible="true" android:checkable="false" android:checked="false" android:icon="@android:drawable/ic_menu_myplaces" android:showAsAction="ifRoom"></item>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+	<item android:enabled="true" android:id="@android:id/home" android:title="@string/home" android:visible="true" android:checkable="false" android:checked="false" android:icon="@android:drawable/ic_menu_myplaces" android:showAsAction="ifRoom" tools:targetApi="11"></item>
     <item android:enabled="true" android:id="@+id/settings" android:title="@string/settings" android:visible="true" android:checkable="false" android:checked="false" android:icon="@drawable/ic_menu_preferences" android:showAsAction="ifRoom"></item>
 </menu>

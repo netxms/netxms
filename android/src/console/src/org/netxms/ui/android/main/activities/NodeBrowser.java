@@ -37,6 +37,7 @@ import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
@@ -188,15 +189,20 @@ public class NodeBrowser extends AbstractClientActivity
 			List<ObjectTool> tools = service.getTools();
 			if (tools != null)
 			{
+				SubMenu subMenu = menu.addSubMenu(Menu.NONE, 0, 0, getString(R.string.menu_tools));
 				Iterator<ObjectTool> tl = tools.iterator();
 				ObjectTool tool;
 				while (tl.hasNext())
 				{
 					tool = tl.next();
-					if ((tool.getType() == ObjectTool.TYPE_ACTION || tool.getType() == ObjectTool.TYPE_SERVER_COMMAND) &&
-							tool.isApplicableForNode((Node)selectedObject))
+					switch (tool.getType())
 					{
-						menu.add(Menu.NONE, (int)tool.getId(), 0, tool.getDisplayName());
+						case ObjectTool.TYPE_INTERNAL:
+						case ObjectTool.TYPE_ACTION:
+						case ObjectTool.TYPE_SERVER_COMMAND:
+							if (tool.isApplicableForNode((Node)selectedObject))
+								subMenu.add(Menu.NONE, (int)tool.getId(), 0, tool.getDisplayName());
+							break;
 					}
 				}
 			}
@@ -207,7 +213,6 @@ public class NodeBrowser extends AbstractClientActivity
 			hideMenuItem(menu, R.id.poll);
 		}
 	}
-
 	/**
 	 * @param menu
 	 * @param id
