@@ -5773,6 +5773,8 @@ Subnet *Node::createSubnet(const InetAddress& baseAddr, bool syntheticMask)
  */
 void Node::checkSubnetBinding()
 {
+   TCHAR buffer[64];
+
 	Cluster *pCluster = getMyCluster();
 
    // Build consolidated IP address list
@@ -5789,7 +5791,9 @@ void Node::checkSubnetBinding()
       {
          const InetAddress& a = iface->getIpAddressList()->get(m);
          if (a.isValidUnicast())
+         {
             addrList.add(a);
+         }
       }
    }
    UnlockChildList();
@@ -5799,6 +5803,7 @@ void Node::checkSubnetBinding()
    for(int i = 0; i < addrList.size(); i++)
    {
       const InetAddress& addr = addrList.get(i);
+      DbgPrintf(5, _T("Node::checkSubnetBinding(%s [%d]): checking address %s/%d"), m_name, m_id, addr.toString(buffer), addr.getMaskBits());
 
 	   Interface *iface = findInterfaceByIP(addr);
       if (iface == NULL)
@@ -5813,6 +5818,7 @@ void Node::checkSubnetBinding()
 	   Subnet *pSubnet = FindSubnetForNode(m_zoneId, addr);
 	   if (pSubnet != NULL)
 	   {
+         DbgPrintf(5, _T("Node::checkSubnetBinding(%s [%d]): found subnet %s [%d]"), m_name, m_id, pSubnet->getName(), pSubnet->getId());
 		   if (isSync)
 		   {
 			   pSubnet = NULL;	// No further checks on this subnet
@@ -5849,7 +5855,7 @@ void Node::checkSubnetBinding()
 	   else if (!isSync)
 	   {
          DbgPrintf(6, _T("Missing subnet for address %s/%d on interface %s [%d]"), 
-            (const TCHAR *)addr.toString(), addr.getMaskBits(), iface->getName(), iface->getIfIndex());
+            addr.toString(buffer), addr.getMaskBits(), iface->getName(), iface->getIfIndex());
 
 		   // Ignore mask 255.255.255.255 - some point-to-point interfaces can have such mask
 		   // Ignore mask 255.255.255.254 - it's invalid
@@ -5861,7 +5867,7 @@ void Node::checkSubnetBinding()
          else
          {
             DbgPrintf(6, _T("Subnet not required for address %s/%d on interface %s [%d]"), 
-               (const TCHAR *)addr.toString(), addr.getMaskBits(), iface->getName(), iface->getIfIndex());
+               addr.toString(buffer), addr.getMaskBits(), iface->getName(), iface->getIfIndex());
          }
 	   }
 

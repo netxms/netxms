@@ -65,7 +65,7 @@ public class InetAddressEx
    @Override
    public String toString()
    {
-      return address.getHostAddress() + "/" + mask;
+      return address.getHostAddress().replaceFirst("(^|:)(0+(:|$)){2,8}", "::") + "/" + mask;
    }
    
    /**

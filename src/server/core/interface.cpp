@@ -40,6 +40,8 @@ Interface::Interface() : NetObj()
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
+   m_adminState = IF_ADMIN_STATE_UNKNOWN;
+   m_operState = IF_OPER_STATE_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
    memset(m_macAddr, 0, MAC_ADDR_LENGTH);
@@ -74,6 +76,8 @@ Interface::Interface(const InetAddressList& addrList, UINT32 zoneId, bool bSynth
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
+   m_adminState = IF_ADMIN_STATE_UNKNOWN;
+   m_operState = IF_OPER_STATE_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
    memset(m_macAddr, 0, MAC_ADDR_LENGTH);
@@ -110,6 +114,8 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
 	m_portNumber = 0;
 	m_peerNodeId = 0;
 	m_peerInterfaceId = 0;
+   m_adminState = IF_ADMIN_STATE_UNKNOWN;
+   m_operState = IF_OPER_STATE_UNKNOWN;
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
@@ -265,8 +271,10 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
          if (list->get(i)->isLoopback())
             count++;
       }
-      if (count == list->size()) // all loopback addresses
+      if ((count > 0) && (count == list->size())) // all loopback addresses
    		m_flags |= IF_LOOPBACK;
+      else
+         m_flags &= ~IF_LOOPBACK;
    }
 
    return bResult;
@@ -360,8 +368,6 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
 
    if (success && (m_ipAddressList.size() > 0))
    {
-      success = FALSE;
-
 		hStmt = DBPrepare(hdb, _T("INSERT INTO interface_address_list (iface_id,ip_addr,ip_netmask) VALUES (?,?,?)"));
       if (hStmt != NULL)
       {
@@ -376,6 +382,10 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
             success = DBExecute(hStmt);
          }
          DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = FALSE;
       }
    }
 

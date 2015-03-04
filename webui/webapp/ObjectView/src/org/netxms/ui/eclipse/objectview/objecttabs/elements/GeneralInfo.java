@@ -142,6 +142,7 @@ public class GeneralInfo extends TableElement
 				Subnet subnet = (Subnet)object;
 				if (session.isZoningEnabled())
 					addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(subnet.getZoneId()));
+            addPair("IP Address", subnet.getNetworkAddress().toString());
 				break;
 			case AbstractObject.OBJECT_ZONE:
 				Zone zone = (Zone)object;

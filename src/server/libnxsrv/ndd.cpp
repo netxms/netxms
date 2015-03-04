@@ -206,7 +206,7 @@ static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpor
       InterfaceInfo *iface = ifList->findByIfIndex(index);
       if (iface != NULL)
       {
-         iface->ipAddrList.add(InetAddress(ntohl(pVar->getValueAsUInt()), BitsInMask(dwNetMask)));
+         iface->ipAddrList.add(InetAddress(ntohl(pVar->getValueAsUInt()), dwNetMask));
 		}
    }
 	else
