@@ -403,7 +403,8 @@ static InterfaceList *SysGetLocalIfList()
                }
 
                // Name
-               nx_strncpy(iface->name, pBuf, MAX_OBJECT_NAME - 1);
+               nx_strncpy(iface->name, pBuf, MAX_DB_STRING);
+   			   nx_strncpy(iface->description, pBuf, MAX_DB_STRING);
 
                pIfList->add(iface);
             }

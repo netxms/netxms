@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -624,15 +624,23 @@ InterfaceList *AgentConnection::getInterfaceList()
       for(UINT32 i = 0; i < m_dwNumDataLines; i++)
       {
          pBuf = m_ppDataLines[i];
-         InterfaceInfo *iface = new InterfaceInfo(0);
+         UINT32 ifIndex = 0;
 
          // Index
          pChar = _tcschr(pBuf, ' ');
          if (pChar != NULL)
          {
             *pChar = 0;
-            iface->index = _tcstoul(pBuf, NULL, 10);
+            ifIndex = _tcstoul(pBuf, NULL, 10);
             pBuf = pChar + 1;
+         }
+
+         bool newInterface = false;
+         InterfaceInfo *iface = pIfList->findByIfIndex(ifIndex);
+         if (iface == NULL)
+         {
+            iface = new InterfaceInfo(ifIndex);
+            newInterface = true;
          }
 
          // Address and mask
@@ -659,29 +667,32 @@ InterfaceList *AgentConnection::getInterfaceList()
             pBuf = pChar + 1;
          }
 
-         // Interface type
-         pChar = _tcschr(pBuf, ' ');
-         if (pChar != NULL)
+         if (newInterface)
          {
-            *pChar = 0;
-            iface->type = _tcstoul(pBuf, NULL, 10);
-            pBuf = pChar + 1;
+            // Interface type
+            pChar = _tcschr(pBuf, ' ');
+            if (pChar != NULL)
+            {
+               *pChar = 0;
+               iface->type = _tcstoul(pBuf, NULL, 10);
+               pBuf = pChar + 1;
+            }
+
+            // MAC address
+            pChar = _tcschr(pBuf, ' ');
+            if (pChar != NULL)
+            {
+               *pChar = 0;
+               StrToBin(pBuf, iface->macAddr, MAC_ADDR_LENGTH);
+               pBuf = pChar + 1;
+            }
+
+            // Name (set description to name)
+            nx_strncpy(iface->name, pBuf, MAX_DB_STRING);
+			   nx_strncpy(iface->description, pBuf, MAX_DB_STRING);
+
+			   pIfList->add(iface);
          }
-
-         // MAC address
-         pChar = _tcschr(pBuf, ' ');
-         if (pChar != NULL)
-         {
-            *pChar = 0;
-            StrToBin(pBuf, iface->macAddr, MAC_ADDR_LENGTH);
-            pBuf = pChar + 1;
-         }
-
-         // Name (set description to name)
-         nx_strncpy(iface->name, pBuf, MAX_DB_STRING);
-			nx_strncpy(iface->description, pBuf, MAX_DB_STRING);
-
-			pIfList->add(iface);
       }
 
       lock();
@@ -734,7 +745,6 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
 
    return dwRetCode;
 }
-
 
 /**
  * Get ARP cache
@@ -794,11 +804,9 @@ ARP_CACHE *AgentConnection::getArpCache()
    return pArpCache;
 }
 
-
 /**
  * Send dummy command to agent (can be used for keepalive)
  */
-
 UINT32 AgentConnection::nop()
 {
    NXCPMessage msg(m_nProtocolVersion);
@@ -812,7 +820,6 @@ UINT32 AgentConnection::nop()
    else
       return ERR_CONNECTION_BROKEN;
 }
-
 
 /**
  * Wait for request completion code
