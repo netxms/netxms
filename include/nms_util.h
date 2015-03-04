@@ -968,6 +968,8 @@ public:
    bool isLoopbackOnly() const;
 
    const ObjectArray<InetAddress> *getList() const { return m_list; }
+
+   void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;
 };
 
 /**

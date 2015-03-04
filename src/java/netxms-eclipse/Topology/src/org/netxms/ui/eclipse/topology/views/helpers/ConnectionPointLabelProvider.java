@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -102,7 +102,10 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 				if (addr != null)
 					return addr.getHostAddress();
 				Interface iface = (Interface)session.findObjectById(cp.getLocalInterfaceId(), Interface.class);
-				return (iface != null) ? iface.getPrimaryIP().getHostAddress() : ""; //$NON-NLS-1$
+				if (iface == null)
+				   return ""; //$NON-NLS-1$
+				InetAddress a = iface.getFirstUnicastAddress();
+				return (a != null) ? a.getHostAddress() : ""; //$NON-NLS-1$
 			case HostSearchResults.COLUMN_SWITCH:
 				return getObjectName(cp.getNodeId());
 			case HostSearchResults.COLUMN_PORT:

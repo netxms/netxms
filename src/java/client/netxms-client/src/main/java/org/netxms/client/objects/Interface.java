@@ -18,6 +18,10 @@
  */
 package org.netxms.client.objects;
 
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
+import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.MacAddress;
@@ -110,6 +114,7 @@ public class Interface extends GenericObject
 	private int slot;
 	private int port;
 	private MacAddress macAddress;
+	private List<InetAddressEx> ipAddressList;
 	private int requiredPollCount;
 	private long peerNodeId;
 	private long peerInterfaceId;
@@ -147,6 +152,12 @@ public class Interface extends GenericObject
 		operState = msg.getFieldAsInt32(NXCPCodes.VID_OPER_STATE);
 		dot1xPaeState = msg.getFieldAsInt32(NXCPCodes.VID_DOT1X_PAE_STATE);
 		dot1xBackendState = msg.getFieldAsInt32(NXCPCodes.VID_DOT1X_BACKEND_STATE);
+		
+		int count = msg.getFieldAsInt32(NXCPCodes.VID_IP_ADDRESS_COUNT);
+		ipAddressList = new ArrayList<InetAddressEx>(count);
+		long fieldId = NXCPCodes.VID_IP_ADDRESS_LIST_BASE; 
+		for(int i = 0; i < count; i++)
+		   ipAddressList.add(msg.getFieldAsInetAddressEx(fieldId++));
 	}
 	
 	/**
@@ -170,26 +181,6 @@ public class Interface extends GenericObject
 			}
 		}
 		return node;
-	}
-
-	/**
-	 * @return Interface subnet mask
-	 */
-	/*
-	public InetAddress getSubnetMask()
-	{
-		return subnetMask;
-	}
-	*/
-	
-	/**
-	 * Get number of bits in subnet mask
-	 * 
-	 * @return
-	 */
-	public int getSubnetMaskBits()
-	{
-	   return primaryIP.mask;
 	}
 
 	/**
@@ -441,5 +432,79 @@ public class Interface extends GenericObject
    public String getAlias()
    {
       return alias;
+   }
+
+   /**
+    * @return the ipAddressList
+    */
+   public List<InetAddressEx> getIpAddressList()
+   {
+      return ipAddressList;
+   }
+   
+   /**
+    * Check if given address present on interface
+    * 
+    * @param addr
+    * @return
+    */
+   public boolean hasAddress(InetAddressEx addr)
+   {
+      return hasAddress(addr.address);
+   }
+
+   /**
+    * Check if given address present on interface
+    * 
+    * @param addr
+    * @return
+    */
+   public boolean hasAddress(InetAddress addr)
+   {
+      for(InetAddressEx a : ipAddressList)
+         if (a.address.equals(addr))
+            return true;
+      return false;
+   }
+   
+   /**
+    * Get first unicast address
+    * 
+    * @return
+    */
+   public InetAddress getFirstUnicastAddress()
+   {
+      InetAddressEx a = getFirstUnicastAddressEx();
+      return (a != null) ? a.address : null;
+   }
+   
+   /**
+    * Get first unicast address
+    * 
+    * @return
+    */
+   public InetAddressEx getFirstUnicastAddressEx()
+   {
+      for(InetAddressEx a : ipAddressList)
+         if (!a.address.isAnyLocalAddress() && !a.address.isLinkLocalAddress() && !a.address.isLoopbackAddress() && !a.address.isMulticastAddress())
+            return a;
+      return null;
+   }
+   
+   /**
+    * Get IP address list as string
+    * 
+    * @return
+    */
+   public String getIpAddressListAsString()
+   {
+      StringBuilder sb = new StringBuilder();
+      for(InetAddressEx a : ipAddressList)
+      {
+         if (sb.length() > 0)
+            sb.append(", ");
+         sb.append(a.toString());
+      }
+      return sb.toString();
    }
 }

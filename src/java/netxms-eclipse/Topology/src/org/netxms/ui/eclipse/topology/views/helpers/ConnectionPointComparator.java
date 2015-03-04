@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.topology.views.helpers;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
@@ -73,20 +72,13 @@ public class ConnectionPointComparator extends ViewerComparator
 			case HostSearchResults.COLUMN_IP_ADDRESS:
 				Interface iface1 = (Interface)session.findObjectById(((ConnectionPoint)e1).getLocalInterfaceId(), Interface.class);
 				Interface iface2 = (Interface)session.findObjectById(((ConnectionPoint)e2).getLocalInterfaceId(), Interface.class);
-				try
-				{
-					InetAddress a1 = ((ConnectionPoint)e1).getLocalIpAddress();
-					InetAddress a2 = ((ConnectionPoint)e2).getLocalIpAddress();
-					if (a1 == null)
-						a1 = (iface1 != null) ? iface1.getPrimaryIP() : InetAddress.getByAddress(new byte[] { 0, 0, 0, 0});
-					if (a2 == null)
-						a2 = (iface2 != null) ? iface2.getPrimaryIP() : InetAddress.getByAddress(new byte[] { 0, 0, 0, 0});
-					result = ComparatorHelper.compareInetAddresses(a1, a2);
-				}
-				catch(UnknownHostException e)
-				{
-					result = 0;
-				}
+				InetAddress a1 = ((ConnectionPoint)e1).getLocalIpAddress();
+				InetAddress a2 = ((ConnectionPoint)e2).getLocalIpAddress();
+				if ((a1 == null) && (iface1 != null))
+					a1 = iface1.getFirstUnicastAddress();
+            if ((a2 == null) && (iface2 != null))
+               a2 = iface2.getFirstUnicastAddress();
+				result = ComparatorHelper.compareInetAddresses(a1, a2);
 				break;
 			default:
 				result = 0;

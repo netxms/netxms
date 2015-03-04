@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.tools;
 
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 
 /**
@@ -27,6 +29,18 @@ public class ComparatorHelper
 {
 	public static int compareInetAddresses(InetAddress a1, InetAddress a2)
 	{
+	   if (a1 == null)
+	      return (a2 == null) ? 0 : -1;
+
+	   if (a2 == null)
+         return 1;
+	   
+	   if ((a1 instanceof Inet4Address) && (a2 instanceof Inet6Address))
+	      return -1;
+
+	   if ((a1 instanceof Inet6Address) && (a2 instanceof Inet4Address))
+         return 1;
+	   
 		byte[] b1 = a1.getAddress(); 
 		byte[] b2 = a2.getAddress();
 		int length = Math.min(b1.length, b2.length);

@@ -491,8 +491,7 @@ public class NXCPCodes
 	public static final long VID_ZONE_ID = 147;
 	public static final long VID_ZONING_ENABLED = 148;
 	public static final long VID_ICMP_PROXY = 149;
-	public static final long VID_ADDR_LIST_SIZE = 150;
-	public static final long VID_IP_ADDR_LIST = 151;
+	public static final long VID_IP_ADDRESS_COUNT = 150;
 	public static final long VID_REMOVE_DCI = 152;
 	public static final long VID_TEMPLATE_ID = 153;
 	public static final long VID_PUBLIC_KEY = 154;
@@ -864,6 +863,7 @@ public class NXCPCodes
 	public static final long VID_CUSTOM_ATTRIBUTES_BASE = 0x70000000L;
    public static final long VID_MODULE_DATA_BASE = 0x71000000L;
 	public static final long VID_RESOURCE_LIST_BASE = 0x20000000L;
+	public static final long VID_IP_ADDRESS_LIST_BASE = 0x7F000000L;
    public static final long VID_SYNC_SUBNETS_BASE = 0x28000000L;
 	public static final long VID_ENUM_VALUE_BASE = 0x10000000L;
 	public static final long VID_ACTION_ARG_BASE = 0x10000000L;

@@ -585,3 +585,16 @@ bool InetAddressList::isLoopbackOnly() const
    }
    return true;
 }
+
+/**
+ * Fill NXCP message
+ */
+void InetAddressList::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const
+{
+   msg->setField(sizeFieldId, m_list->size());
+   UINT32 fieldId = baseFieldId;
+   for(int i = 0; i < m_list->size(); i++)
+   {
+      msg->setField(fieldId++, *m_list->get(i));
+   }
+}

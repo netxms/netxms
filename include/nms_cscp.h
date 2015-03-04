@@ -693,8 +693,8 @@ typedef struct
 #define VID_ZONE_ID                 ((UINT32)147)
 #define VID_ZONING_ENABLED          ((UINT32)148)
 #define VID_ICMP_PROXY              ((UINT32)149)
-#define VID_ADDR_LIST_SIZE          ((UINT32)150)
-#define VID_IP_ADDR_LIST            ((UINT32)151)
+#define VID_IP_ADDRESS_COUNT        ((UINT32)150)
+// unused #define VID_IP_ADDR_LIST            ((UINT32)151)
 #define VID_REMOVE_DCI              ((UINT32)152)
 #define VID_TEMPLATE_ID             ((UINT32)153)
 #define VID_PUBLIC_KEY              ((UINT32)154)
@@ -1088,6 +1088,9 @@ typedef struct
 // Base value for custom attributes and module data
 #define VID_CUSTOM_ATTRIBUTES_BASE  ((UINT32)0x70000000)
 #define VID_MODULE_DATA_BASE        ((UINT32)0x71000000)
+
+// IP address list base
+#define VID_IP_ADDRESS_LIST_BASE    ((UINT32)0x7F000000)
 
 // Base value for cluster resource list
 #define VID_RESOURCE_LIST_BASE      ((UINT32)0x20000000)

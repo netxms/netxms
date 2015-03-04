@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,11 +35,14 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.netxms.base.InetAddressEx;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
-import org.netxms.ui.eclipse.objectbrowser.widgets.internal.AddressListLabelProvider;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.helpers.AddressListElement;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.helpers.AddressListLabelProvider;
+import org.netxms.ui.eclipse.tools.ComparatorHelper;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -101,16 +104,10 @@ public class IPAddressSelectionDialog extends Dialog
 		viewer.getControl().setLayoutData(gd);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setComparator(new ViewerComparator() {
-			private long addrAsLong(InetAddress addrObject)
-			{
-				byte[] addr = addrObject.getAddress();
-				return ((long)(addr[0] & 0xFF) << 24) | ((long)(addr[1] & 0xFF) << 16) | ((long)(addr[2] & 0xFF) << 8) | (long)(addr[3] & 0xFF);
-			}
-			
 			@Override
 			public int compare(Viewer viewer, Object e1, Object e2)
 			{
-				return Long.signum(addrAsLong(((Interface)e1).getPrimaryIP()) - addrAsLong(((Interface)e2).getPrimaryIP()));
+				return ComparatorHelper.compareInetAddresses(((AddressListElement)e1).address, ((AddressListElement)e2).address);
 			}
 		});
 		viewer.setLabelProvider(new AddressListLabelProvider());
@@ -126,15 +123,17 @@ public class IPAddressSelectionDialog extends Dialog
 		tc.setText(Messages.get().IPAddressSelectionDialog_Interface);
 		tc.setWidth(150);
 		
-		Set<AbstractObject> addrList = new HashSet<AbstractObject>();
+		Set<AddressListElement> addrList = new HashSet<AddressListElement>();
 		for(AbstractObject o : node.getChildsAsArray())
 		{
 			if (o instanceof Interface)
 			{
-				InetAddress addr = o.getPrimaryIP();
-				if (!addr.isAnyLocalAddress() && !addr.isLinkLocalAddress() && !addr.isLoopbackAddress())
+				for(InetAddressEx a : ((Interface)o).getIpAddressList())
 				{
-					addrList.add(o);
+   				if (!a.address.isAnyLocalAddress() && !a.address.isLinkLocalAddress() && !a.address.isLoopbackAddress() && !a.address.isMulticastAddress())
+   				{
+   					addrList.add(new AddressListElement((Interface)o, a.address));
+   				}
 				}
 			}
 		}
@@ -155,7 +154,7 @@ public class IPAddressSelectionDialog extends Dialog
 			MessageDialogHelper.openWarning(getShell(), Messages.get().IPAddressSelectionDialog_Warning, Messages.get().IPAddressSelectionDialog_WarningText);
 			return;
 		}
-		address = ((Interface)selection.getFirstElement()).getPrimaryIP();
+		address = ((AddressListElement)selection.getFirstElement()).address;
 		super.okPressed();
 	}
 

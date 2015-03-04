@@ -85,11 +85,13 @@ public class GeneralInfo extends TableElement
 						addPair(Messages.get().GeneralInfo_8021xBackend, iface.getDot1xBackendStateAsText());
 					}
 				}
-				if (!iface.getPrimaryIP().isAnyLocalAddress())
+				if (iface.getIpAddressList().size() > 0)
 				{
 					if (session.isZoningEnabled())
 						addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(iface.getZoneId()));
-					addPair(Messages.get().GeneralInfo_IPAddr, iface.getPrimaryIP().getHostAddress() + "/" + iface.getSubnetMaskBits());
+					addPair(Messages.get().GeneralInfo_IPAddr, iface.getIpAddressList().get(0).toString());
+					for(int i = 1; i < iface.getIpAddressList().size(); i++)
+	               addPair("", iface.getIpAddressList().get(i).toString());
 				}
             addPair(Messages.get().GeneralInfo_AdmState, iface.getAdminStateAsText());
             addPair(Messages.get().GeneralInfo_OperState, iface.getOperStateAsText());

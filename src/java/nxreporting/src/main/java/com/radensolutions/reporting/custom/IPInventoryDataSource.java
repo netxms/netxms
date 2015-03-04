@@ -51,7 +51,7 @@ public class IPInventoryDataSource extends NXCLDataSource {
     public Object getFieldValue(JRField jrField) throws JRException {
         String name = jrField.getName();
         if (name.equalsIgnoreCase("ip")) {
-            if (subnet.getMaskBits() < 24) {
+            if (subnet.getSubnetMask() < 24) {
                 return String.format(".%d.%d", (currentRow.index & 0xFF00) >> 8, currentRow.index & 0xFF);
             }
             return String.format(".%d", currentRow.index & 0xFF);
@@ -60,7 +60,7 @@ public class IPInventoryDataSource extends NXCLDataSource {
         } else if (name.equalsIgnoreCase("name")) {
             return currentRow.name;
         } else if (name.equalsIgnoreCase("subnet")) {
-            return String.format("%s/%d", subnet.getPrimaryIP().getHostAddress(), subnet.getMaskBits());
+            return subnet.getNetworkAddress().toString();
         }
         return null;
     }

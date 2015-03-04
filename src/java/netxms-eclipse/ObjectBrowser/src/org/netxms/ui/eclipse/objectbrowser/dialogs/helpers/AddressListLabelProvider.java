@@ -16,18 +16,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.objectbrowser.widgets.internal;
+package org.netxms.ui.eclipse.objectbrowser.dialogs.helpers;
 
-import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.objects.Interface;
 
 /**
  * Label provider for IP address list
- *
  */
-public class AddressListLabelProvider implements ITableLabelProvider
+public class AddressListLabelProvider extends LabelProvider implements ITableLabelProvider
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -47,43 +45,10 @@ public class AddressListLabelProvider implements ITableLabelProvider
 		switch(columnIndex)
 		{
 			case 0:
-				return ((Interface)element).getPrimaryIP().getHostAddress();
+				return ((AddressListElement)element).address.getHostAddress();
 			case 1:
-				return ((Interface)element).getObjectName();
+				return ((AddressListElement)element).iface.getObjectName();
 		}
 		return null;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
-	@Override
-	public void addListener(ILabelProviderListener listener)
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
-	 */
-	@Override
-	public void dispose()
-	{
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
-	 */
-	@Override
-	public boolean isLabelProperty(Object element, String property)
-	{
-		return false;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
-	 */
-	@Override
-	public void removeListener(ILabelProviderListener listener)
-	{
 	}
 }

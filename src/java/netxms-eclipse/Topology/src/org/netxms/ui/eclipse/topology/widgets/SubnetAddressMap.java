@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.topology.widgets;
 
+import java.net.Inet4Address;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
@@ -87,15 +88,16 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 	public void setSubnet(Subnet subnet)
 	{
 	   this.subnet = subnet;
-	   if (subnet != null)
+	   if ((subnet != null) && (subnet.getSubnetAddress() instanceof Inet4Address))
 	   {
-         rowCount = ((1 << (32 - subnet.getMaskBits())) + ELEMENTS_PER_ROW - 1) / ELEMENTS_PER_ROW;
+         rowCount = ((1 << (32 - subnet.getSubnetMask())) + ELEMENTS_PER_ROW - 1) / ELEMENTS_PER_ROW;
          if (rowCount > MAX_ROWS)
             rowCount = MAX_ROWS;
 	   }
 	   else
 	   {
 	      rowCount = 0;
+	      this.subnet = null;
 	   }
 	   refresh();
 	}
@@ -198,7 +200,7 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 		int y = VERTICAL_MARGIN;
 		int row = 0;
 		int column = 0;
-      byte[] address = subnet.getPrimaryIP().getAddress();
+      byte[] address = subnet.getSubnetAddress().getAddress();
 		for(int i = 0; i < addressMap.length; i++)
 		{
 			drawAddress(address, addressMap[i], x, y, e.gc);
@@ -237,7 +239,7 @@ public class SubnetAddressMap extends Canvas implements PaintListener, MouseTrac
 	 */
 	private void drawAddress(byte[] address, long nodeId, int x, int y, GC gc)
 	{
-		final String label = (subnet.getMaskBits() < 24) ? 
+		final String label = (subnet.getSubnetMask() < 24) ? 
 		      ("." + ((int)address[address.length - 2] & 0xFF) + "." + ((int)address[address.length - 1] & 0xFF)) : //$NON-NLS-1$ //$NON-NLS-2$
 		         ("." + ((int)address[address.length - 1] & 0xFF)); //$NON-NLS-1$
 		Rectangle rect = new Rectangle(x, y, ELEMENT_WIDTH, ELEMENT_HEIGHT);

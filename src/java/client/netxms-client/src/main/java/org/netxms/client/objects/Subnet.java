@@ -18,6 +18,8 @@
  */
 package org.netxms.client.objects;
 
+import java.net.InetAddress;
+import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
@@ -28,6 +30,7 @@ import org.netxms.client.NXCSession;
 public class Subnet extends GenericObject
 {
 	private long zoneId;
+	private InetAddressEx networkAddress;
 
 	/**
 	 * @param msg
@@ -37,28 +40,35 @@ public class Subnet extends GenericObject
 		super(msg, session);
 		
 		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
+      networkAddress = msg.getFieldAsInetAddressEx(NXCPCodes.VID_IP_ADDRESS);
 	}
 	
 	/**
+    * @return the networkAddress
+    */
+   public InetAddressEx getNetworkAddress()
+   {
+      return networkAddress;
+   }
+
+   /**
+    * @return the networkAddress
+    */
+   public InetAddress getSubnetAddress()
+   {
+      return networkAddress.address;
+   }
+
+   /**
 	 * Get number of bits in subnet mask
 	 * 
 	 * @return
 	 */
-	public int getMaskBits()
+	public int getSubnetMask()
 	{
-	   return primaryIP.mask;
+	   return networkAddress.mask;
 	}
 	
-	/**
-	 * @return Subnet mask
-	 */
-	/*
-	public InetAddress getSubnetMask()
-	{
-		return subnetMask;
-	}
-	*/
-
 	/* (non-Javadoc)
 	 * @see org.netxms.client.NXCObject#getObjectClassName()
 	 */

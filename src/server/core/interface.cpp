@@ -905,6 +905,7 @@ void Interface::paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *nod
 void Interface::fillMessage(NXCPMessage *pMsg)
 {
    NetObj::fillMessage(pMsg);
+   m_ipAddressList.fillMessage(pMsg, VID_IP_ADDRESS_COUNT, VID_IP_ADDRESS_LIST_BASE);
    pMsg->setField(VID_IF_INDEX, m_index);
    pMsg->setField(VID_IF_TYPE, m_type);
    pMsg->setField(VID_MTU, m_mtu);
