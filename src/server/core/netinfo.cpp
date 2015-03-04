@@ -240,7 +240,6 @@ static ARP_CACHE *SysGetLocalArpCache()
 static InterfaceList *SysGetLocalIfList()
 {
    InterfaceList *pIfList = NULL;
-	NX_INTERFACE_INFO iface;
 
 #ifdef _WIN32
    DWORD dwSize;
@@ -306,14 +305,20 @@ static InterfaceList *SysGetLocalIfList()
          // Compose result for each ip address
          for(pAddr = &pInfo->IpAddressList; pAddr != NULL; pAddr = pAddr->Next)
          {
-				memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
-            nx_strncpy(iface.name, szAdapterName, MAX_OBJECT_NAME);
-            memcpy(iface.macAddr, pInfo->Address, MAC_ADDR_LENGTH);
-            iface.index = pInfo->Index;
-            iface.ipAddr = ntohl(inet_addr(pAddr->IpAddress.String));
-            iface.ipNetMask = ntohl(inet_addr(pAddr->IpMask.String));
-            iface.type = pInfo->Type;
-				pIfList->add(&iface);
+            InterfaceInfo *iface = pIfList->findByIfIndex(pInfo->Index);
+            if (iface != NULL)
+            {
+               iface->ipAddrList.add(InetAddress(ntohl(inet_addr(pAddr->IpAddress.String)), ntohl(inet_addr(pAddr->IpMask.String))));
+            }
+            else
+            {
+               iface = new InterfaceInfo(pInfo->Index);
+               nx_strncpy(iface->name, szAdapterName, MAX_OBJECT_NAME);
+               memcpy(iface->macAddr, pInfo->Address, MAC_ADDR_LENGTH);
+               iface->ipAddrList.add(InetAddress(ntohl(inet_addr(pAddr->IpAddress.String)), ntohl(inet_addr(pAddr->IpMask.String))));
+               iface->type = pInfo->Type;
+				   pIfList->add(iface);
+            }
          }
       }
    }
@@ -332,17 +337,25 @@ static InterfaceList *SysGetLocalIfList()
          pIfList = new InterfaceList(list.size());
          for(i = 0; i < list.size(); i++)
          {
-				memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
             TCHAR *pTemp = _tcsdup(list.get(i));
             TCHAR *pBuf = pTemp;
 
             // Index
+            UINT32 ifIndex = 0;
             pChar = _tcschr(pBuf, ' ');
             if (pChar != NULL)
             {
                *pChar = 0;
-               iface.index = _tcstoul(pBuf, NULL, 10);
+               ifIndex = _tcstoul(pBuf, NULL, 10);
                pBuf = pChar + 1;
+            }
+
+            bool newInterface = false;
+            InterfaceInfo *iface = pIfList->findByIndex(ifIndex);
+            if (iface == NULL)
+            {
+               iface = new InterfaceInfo(ifIndex);
+               newInterface = true;
             }
 
             // Address and mask
@@ -363,35 +376,38 @@ static InterfaceList *SysGetLocalIfList()
                {
                   pSlash = defaultMask;
                }
-               iface.ipAddr = ntohl(_t_inet_addr(pBuf));
-               dwBits = _tcstoul(pSlash, NULL, 10);
-               iface.ipNetMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
+               InetAddress addr = InetAddress::parse(pBuf);
+               addr.setMaskBits(_tcstol(pSlash, NULL, 10));
+               iface->ipAddrList.add(new InetAddress(addr));
                pBuf = pChar + 1;
             }
 
-            // Interface type
-            pChar = _tcschr(pBuf, ' ');
-            if (pChar != NULL)
+            if (newInterface)
             {
-               *pChar = 0;
-               iface.type = _tcstoul(pBuf, NULL, 10);
-               pBuf = pChar + 1;
+               // Interface type
+               pChar = _tcschr(pBuf, ' ');
+               if (pChar != NULL)
+               {
+                  *pChar = 0;
+                  iface.type = _tcstoul(pBuf, NULL, 10);
+                  pBuf = pChar + 1;
+               }
+
+               // MAC address
+               pChar = _tcschr(pBuf, ' ');
+               if (pChar != NULL)
+               {
+                  *pChar = 0;
+                  StrToBin(pBuf, iface.macAddr, MAC_ADDR_LENGTH);
+                  pBuf = pChar + 1;
+               }
+
+               // Name
+               nx_strncpy(iface.name, pBuf, MAX_OBJECT_NAME - 1);
+
+   				pIfList->add(iface);
             }
-
-            // MAC address
-            pChar = _tcschr(pBuf, ' ');
-            if (pChar != NULL)
-            {
-               *pChar = 0;
-               StrToBin(pBuf, iface.macAddr, MAC_ADDR_LENGTH);
-               pBuf = pChar + 1;
-            }
-
-            // Name
-            nx_strncpy(iface.name, pBuf, MAX_OBJECT_NAME - 1);
-
             free(pTemp);
-				pIfList->add(&iface);
          }
       }
    }

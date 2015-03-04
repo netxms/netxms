@@ -209,24 +209,41 @@ typedef struct
 /**
  * Interface information structure used by discovery functions and AgentConnection class
  */
-typedef struct
+class InterfaceInfo
 {
+public:
+   UINT32 index;
    TCHAR name[MAX_DB_STRING];			// Interface display name
 	TCHAR description[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
 	TCHAR alias[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
-   UINT32 index;
    UINT32 type;
    UINT32 mtu;
 	UINT32 bridgePort;
 	UINT32 slot;
 	UINT32 port;
-   UINT32 ipAddr;
-   UINT32 ipNetMask;
+   InetAddressList ipAddrList;
    BYTE macAddr[MAC_ADDR_LENGTH];
-   int numSecondary;      // Number of secondary IP's on this interface
 	bool isPhysicalPort;
    bool isSystem;
-} NX_INTERFACE_INFO;
+
+   InterfaceInfo(UINT32 ifIndex)
+   { 
+      index = ifIndex;
+      name[0] = 0;
+      description[0] = 0;
+      alias[0] = 0;
+      type = IFTYPE_OTHER;
+      mtu = 1500;
+      bridgePort = 0;
+      slot = 0;
+      port = 0;
+      memset(macAddr, 0, sizeof(macAddr));
+      isPhysicalPort = false;
+      isSystem = false;
+   }
+
+   bool hasAddress(const InetAddress& addr) { return ipAddrList.hasAddress(addr); }
+};
 
 /**
  * Interface list used by discovery functions and AgentConnection class
@@ -234,22 +251,20 @@ typedef struct
 class LIBNXSRV_EXPORTABLE InterfaceList
 {
 private:
-   int m_size;       				 // Number of valid entries
-	int m_allocated;               // Number of allocated entries
+   ObjectArray<InterfaceInfo> *m_interfaces;
    void *m_data;                  // Can be used by custom enumeration handlers
-   NX_INTERFACE_INFO *m_interfaces;  // Interface entries
    bool m_needPrefixWalk;
 
 public:
 	InterfaceList(int initialAlloc = 8);
 	~InterfaceList();
 
-	void add(NX_INTERFACE_INFO *iface);
-	void remove(int index);
+   void add(InterfaceInfo *iface) { m_interfaces->add(iface); }
+   void remove(int index) { m_interfaces->remove(index); }
 
-	int size() { return m_size; }
-	NX_INTERFACE_INFO *get(int index) { return ((index >= 0) && (index < m_size)) ? &m_interfaces[index] : NULL; }
-	NX_INTERFACE_INFO *findByIfIndex(UINT32 ifIndex);
+	int size() { return m_interfaces->size(); }
+	InterfaceInfo *get(int index) { return m_interfaces->get(index); }
+	InterfaceInfo *findByIfIndex(UINT32 ifIndex);
 
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }

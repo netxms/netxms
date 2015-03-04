@@ -73,7 +73,6 @@ public class CreateInterface implements IObjectActionDelegate
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_INTERFACE, dlg.getName(), parentId);
 				cd.setMacAddress(dlg.getMacAddress());
 				cd.setIpAddress(dlg.getIpAddress());
-				cd.setIpNetMask(dlg.getIpNetMask());
 				cd.setPhysicalPort(dlg.isPhysicalPort());
 				cd.setSlot(dlg.getSlot());
 				cd.setPort(dlg.getPort());

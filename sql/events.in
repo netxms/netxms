@@ -882,6 +882,34 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
          '   6) Interface old mask'
       );
 
+   INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+      (
+         EVENT_IF_IPADDR_ADDED, 'SYS_IF_IPADDR_ADDED',
+         EVENT_SEVERITY_NORMAL, 1,
+         'IP address %3/%4 added to interface "%2"',
+         'Generated when IP address added to interface.' CONCAT CRLF CONCAT
+         'Parameters:' CONCAT CRLF CONCAT
+         '   1) Interface object ID' CONCAT CRLF CONCAT
+         '   2) Interface name' CONCAT CRLF CONCAT
+         '   3) IP address' CONCAT CRLF CONCAT
+         '   4) Network mask' CONCAT CRLF CONCAT
+         '   5) Interface index'
+      );
+      
+   INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+      (
+         EVENT_IF_IPADDR_DELETED, 'SYS_IF_IPADDR_DELETED',
+         EVENT_SEVERITY_NORMAL, 1,
+         'IP address %3/%4 deleted from interface "%2"',
+         'Generated when IP address deleted from interface.' CONCAT CRLF CONCAT
+         'Parameters:' CONCAT CRLF CONCAT
+         '   1) Interface object ID' CONCAT CRLF CONCAT
+         '   2) Interface name' CONCAT CRLF CONCAT
+         '   3) IP address' CONCAT CRLF CONCAT
+         '   4) Network mask' CONCAT CRLF CONCAT
+         '   5) Interface index'
+      );
+
 /*
 ** SNMP traps
 */

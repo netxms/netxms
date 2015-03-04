@@ -106,7 +106,7 @@ InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMa
       // Find physical ports
       for(int i = 0; i < ifList->size(); i++)
       {
-         NX_INTERFACE_INFO *iface = ifList->get(i);
+         InterfaceInfo *iface = ifList->get(i);
          if (isGS950)
          {
             // GS950 does not support atiIfExtnTable so we use ifConnectorPresent from ifXTable

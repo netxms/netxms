@@ -349,8 +349,6 @@ CREATE TABLE interfaces
 	id integer not null,
 	node_id integer not null,
 	flags integer not null,
-	ip_addr varchar(48) not null,
-	ip_netmask integer not null,
 	if_type integer not null,
 	if_index integer not null,
    mtu integer not null,
@@ -371,6 +369,16 @@ CREATE TABLE interfaces
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+/*
+** Interface IP addresses
+*/
+CREATE TABLE interface_address_list
+(
+   iface_id integer not null,
+	ip_addr varchar(48) not null,
+	ip_netmask integer not null,
+   PRIMARY KEY(iface_id,ip_addr)
+) TABLE_TYPE;
 
 /*
 ** Network services

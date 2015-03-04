@@ -199,6 +199,7 @@ bool AccessPoint::deleteFromDatabase(DB_HANDLE hdb)
 void AccessPoint::fillMessage(NXCPMessage *msg)
 {
    DataCollectionTarget::fillMessage(msg);
+   msg->setField(VID_IP_ADDRESS, m_ipAddress);
 	msg->setField(VID_NODE_ID, m_nodeId);
 	msg->setField(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
 	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));

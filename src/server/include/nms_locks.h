@@ -44,7 +44,7 @@
 /*** Functions ***/
 #ifndef _NETXMS_DB_SCHEMA_
 
-BOOL InitLocks(UINT32 *pdwIpAddr, TCHAR *pszInfo);
+BOOL InitLocks(InetAddress *ipAddr, TCHAR *pszInfo);
 BOOL LockComponent(UINT32 dwId, int sessionId, const TCHAR *pszOwnerInfo, UINT32 *pdwCurrentOwner, TCHAR *pszCurrentOwnerInfo);
 void UnlockComponent(UINT32 dwId);
 void RemoveAllSessionLocks(int sessionId);

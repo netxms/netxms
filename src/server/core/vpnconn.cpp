@@ -317,7 +317,7 @@ InetAddress VPNConnector::getPeerGatewayAddr()
    if (pObject != NULL)
    {
       if (pObject->getObjectClass() == OBJECT_NODE)
-         return pObject->getIpAddress();
+         return ((Node *)pObject)->getIpAddress();
    }
    return InetAddress();
 }

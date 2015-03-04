@@ -84,7 +84,7 @@ InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 
    for(int i = 0; i < ifList->size(); i++)
    {
-      NX_INTERFACE_INFO *iface = ifList->get(i);
+      InterfaceInfo *iface = ifList->get(i);
       if (iface->type == IFTYPE_ETHERNET_CSMACD)
       {
          iface->isPhysicalPort = true;

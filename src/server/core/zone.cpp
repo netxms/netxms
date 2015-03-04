@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -210,4 +210,24 @@ void Zone::updateInterfaceIndex(const InetAddress& oldIp, const InetAddress& new
 bool Zone::showThresholdSummary()
 {
 	return true;
+}
+
+/**
+ * Remove interface from index
+ */
+void Zone::removeFromIndex(Interface *iface)
+{
+   const ObjectArray<InetAddress> *list = iface->getIpAddressList()->getList();
+   for(int i = 0; i < list->size(); i++)
+   {
+      InetAddress *addr = list->get(i);
+      if (addr->isValidUnicast())
+      {
+	      NetObj *o = m_idxInterfaceByAddr->get(*addr);
+	      if ((o != NULL) && (o->getId() == iface->getId()))
+	      {
+		      m_idxInterfaceByAddr->remove(*addr);
+	      }
+      }
+   }
 }

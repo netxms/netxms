@@ -952,7 +952,10 @@ public:
    ~InetAddressList();
 
    void add(const InetAddress& addr);
+   void add(const InetAddressList& addrList);
+   void replace(const InetAddress& addr);
    void remove(const InetAddress& addr);
+   void clear() { m_list->clear(); }
    const InetAddress& get(int index) const { const InetAddress *a = m_list->get(index); return (a != NULL) ? *a : InetAddress::INVALID; }
 
    int size() const { return m_list->size(); }
@@ -962,6 +965,7 @@ public:
    const InetAddress& getFirstUnicastAddress() const;
    const InetAddress& getFirstUnicastAddressV4() const;
    bool hasValidUnicastAddress() const { return getFirstUnicastAddress().isValid(); }
+   bool isLoopbackOnly() const;
 
    const ObjectArray<InetAddress> *getList() const { return m_list; }
 };

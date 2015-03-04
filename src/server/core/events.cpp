@@ -273,7 +273,7 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                case 'a':   // IP address of event source
                   dwSize += 64;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  pObject->getIpAddress().toString(&pText[dwPos]);
+                  GetObjectIpAddress(pObject).toString(&pText[dwPos]);
                   dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'g':   // Source object's GUID

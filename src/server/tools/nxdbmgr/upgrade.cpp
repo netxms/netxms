@@ -437,6 +437,76 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
 }
 
 /**
+ * Upgrade from V347 to V348
+ */
+static BOOL H_UpgradeFromV347(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_IPADDR_ADDED, _T("SYS_IF_IPADDR_ADDED"), SEVERITY_NORMAL, EF_LOG,
+         _T("IP address %3/%4 added to interface \"%2\""),
+         _T("Generated when IP address added to interface.\r\n")
+         _T("Parameters:\r\n")
+         _T("    1) Interface object ID\r\n")
+         _T("    2) Interface name\r\n")
+         _T("    3) IP address\r\n")
+         _T("    4) Network mask\r\n")
+         _T("    5) Interface index")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_IPADDR_DELETED, _T("SYS_IF_IPADDR_DELETED"), SEVERITY_NORMAL, EF_LOG,
+         _T("IP address %3/%4 deleted from interface \"%2\""),
+         _T("Generated when IP address deleted from interface.\r\n")
+         _T("Parameters:\r\n")
+         _T("    1) Interface object ID\r\n")
+         _T("    2) Interface name\r\n")
+         _T("    3) IP address\r\n")
+         _T("    4) Network mask\r\n")
+         _T("    5) Interface index")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='348' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V346 to V347
+ */
+static BOOL H_UpgradeFromV346(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE interface_address_list (")
+      _T("   iface_id integer not null,")
+      _T("	 ip_addr varchar(48) not null,")
+      _T("	 ip_netmask integer not null,")
+      _T("   PRIMARY KEY(iface_id,ip_addr))")));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,ip_addr,ip_netmask FROM interfaces WHERE ip_addr<>'0.0.0.0'"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         TCHAR query[256], addr[64];
+         _sntprintf(query, 256, _T("INSERT INTO interface_address_list (iface_id,ip_addr,ip_netmask) VALUES (%d,'%s',%d)"),
+            DBGetFieldLong(hResult, i, 0), DBGetField(hResult, i, 1, addr, 64), DBGetFieldLong(hResult, i, 2));
+         CHK_EXEC(SQLQuery(query));
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+
+   static TCHAR batch[] =
+      _T("ALTER TABLE interfaces DROP COLUMN ip_addr\n")
+      _T("ALTER TABLE interfaces DROP COLUMN ip_netmask\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='347' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V345 to V346
  */
 static BOOL H_UpgradeFromV345(int currVersion, int newVersion)
@@ -502,7 +572,7 @@ static BOOL H_UpgradeFromV344(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV343(int currVersion, int newVersion)
 {
-    static TCHAR batch[] =
+   static TCHAR batch[] =
       _T("ALTER TABLE interfaces ADD mtu integer\n")
       _T("ALTER TABLE interfaces ADD alias varchar(255)\n")
       _T("UPDATE interfaces SET mtu=0\n")
@@ -8390,6 +8460,8 @@ static struct
    { 343, 344, H_UpgradeFromV343 },
    { 344, 345, H_UpgradeFromV344 },
    { 345, 346, H_UpgradeFromV345 },
+   { 346, 347, H_UpgradeFromV346 },
+   { 347, 348, H_UpgradeFromV347 },
    { 0, 0, NULL }
 };
 

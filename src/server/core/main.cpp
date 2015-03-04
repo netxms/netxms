@@ -559,7 +559,6 @@ static void LogConsoleWriter(const TCHAR *format, ...)
 BOOL NXCORE_EXPORTABLE Initialize()
 {
 	int i, iDBVersion;
-	UINT32 dwAddr;
 	TCHAR szInfo[256];
 
 	g_serverStartTime = time(NULL);
@@ -730,16 +729,17 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	// Initialize locks
 retry_db_lock:
-	if (!InitLocks(&dwAddr, szInfo))
+   InetAddress addr;
+	if (!InitLocks(&addr, szInfo))
 	{
-		if (dwAddr == UNLOCKED)    // Some SQL problems
+      if (!addr.isValid())    // Some SQL problems
 		{
 			nxlog_write(MSG_INIT_LOCKS_FAILED, EVENTLOG_ERROR_TYPE, NULL);
 		}
 		else     // Database already locked by another server instance
 		{
 			// Check for lock from crashed/terminated local process
-			if (dwAddr == GetLocalIpAddr())
+			if (GetLocalIpAddr().equals(addr))
 			{
 				UINT32 dwPID;
 
@@ -751,7 +751,7 @@ retry_db_lock:
 					goto retry_db_lock;
 				}
 			}
-			nxlog_write(MSG_DB_LOCKED, EVENTLOG_ERROR_TYPE, "as", dwAddr, szInfo);
+			nxlog_write(MSG_DB_LOCKED, EVENTLOG_ERROR_TYPE, "As", &addr, szInfo);
 		}
 		return FALSE;
 	}
@@ -1085,10 +1085,10 @@ static bool IsCommand(const TCHAR *cmdTemplate, TCHAR *pszString, int iMinChars)
 /**
  * Dump index callback (by IP address)
  */
-static void DumpIndexCallbackByInetAddr(NetObj *object, void *data)
+static void DumpIndexCallbackByInetAddr(const InetAddress& addr, NetObj *object, void *data)
 {
 	TCHAR buffer[64];
-	ConsolePrintf((CONSOLE_CTX)data, _T("%-40s %p %s [%d]\n"), object->getIpAddress().toString(buffer), object, object->getName(), (int)object->getId());
+	ConsolePrintf((CONSOLE_CTX)data, _T("%-40s %p %s [%d]\n"), addr.toString(buffer), object, object->getName(), (int)object->getId());
 }
 
 /**

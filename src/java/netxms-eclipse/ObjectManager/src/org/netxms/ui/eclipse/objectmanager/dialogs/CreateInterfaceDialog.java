@@ -18,7 +18,9 @@
  */
 package org.netxms.ui.eclipse.objectmanager.dialogs;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -29,6 +31,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.base.InetAddressEx;
 import org.netxms.client.MacAddress;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.IPAddressValidator;
@@ -46,6 +49,8 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class CreateInterfaceDialog extends Dialog
 {
+   private static final int DEFAULT_MASK_BITS = 8;
+   
 	private LabeledText nameField;
 	private LabeledText macAddrField;
 	private LabeledText ipAddrField;
@@ -56,8 +61,7 @@ public class CreateInterfaceDialog extends Dialog
 	
 	private String name;
 	private MacAddress macAddress;
-	private InetAddress ipAddress;
-	private InetAddress ipNetMask;
+	private InetAddressEx ipAddress;
 	private int ifIndex;
 	private int ifType;
 	private int slot;
@@ -193,8 +197,8 @@ public class CreateInterfaceDialog extends Dialog
 		{
 			name = nameField.getText().trim();
 			macAddress = macAddrField.getText().trim().isEmpty() ? new MacAddress() : MacAddress.parseMacAddress(macAddrField.getText());
-			ipAddress = ipAddrField.getText().trim().isEmpty() ? InetAddress.getByName("0.0.0.0") : InetAddress.getByName(ipAddrField.getText()); //$NON-NLS-1$
-			ipNetMask = ipMaskField.getText().trim().isEmpty() ? InetAddress.getByName("0.0.0.0") : InetAddress.getByName(ipMaskField.getText()); //$NON-NLS-1$
+			InetAddress addr = ipAddrField.getText().trim().isEmpty() ? InetAddress.getByName("0.0.0.0") : InetAddress.getByName(ipAddrField.getText()); //$NON-NLS-1$
+			ipAddress = new InetAddressEx(addr, getMaskBits(ipMaskField.getText().trim(), addr instanceof Inet4Address ? 32 : 128));
 			slot = physicalPort ? Integer.parseInt(slotField.getText()) : 0;
 			port = physicalPort ? Integer.parseInt(portField.getText()) : 0;
 			
@@ -204,6 +208,32 @@ public class CreateInterfaceDialog extends Dialog
 		{
 			MessageDialogHelper.openError(getShell(), Messages.get().CreateInterfaceDialog_Error, String.format("Internal error: %s", e.getMessage())); //$NON-NLS-1$
 		}
+	}
+	
+	private int getMaskBits(String mask, int maxBits)
+	{
+	   if (mask.isEmpty())
+	      return DEFAULT_MASK_BITS;
+	   
+	   try
+	   {
+	      int bits = Integer.parseInt(mask);
+	      return ((bits >= 0) && (bits <= maxBits)) ? bits : DEFAULT_MASK_BITS;
+	   }
+	   catch(NumberFormatException e)
+	   {
+	   }
+	   
+	   try
+	   {
+	      InetAddress addr = InetAddress.getByName(mask);
+	      return InetAddressEx.bitsInMask(addr);
+	   }
+	   catch(UnknownHostException e)
+	   {
+	   }
+	   
+	   return DEFAULT_MASK_BITS;
 	}
 
 	/**
@@ -233,17 +263,9 @@ public class CreateInterfaceDialog extends Dialog
 	/**
 	 * @return the ipAddress
 	 */
-	public InetAddress getIpAddress()
+	public InetAddressEx getIpAddress()
 	{
 		return ipAddress;
-	}
-
-	/**
-	 * @return the ipNetMask
-	 */
-	public InetAddress getIpNetMask()
-	{
-		return ipNetMask;
 	}
 
 	/**

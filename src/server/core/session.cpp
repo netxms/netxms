@@ -4584,12 +4584,11 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 								   break;
 							   case OBJECT_INTERFACE:
                            {
-                              NX_INTERFACE_INFO ifInfo;
-                              memset(&ifInfo, 0, sizeof(ifInfo));
+                              InterfaceInfo ifInfo(pRequest->getFieldAsUInt32(VID_IF_INDEX));
                               nx_strncpy(ifInfo.name, szObjectName, MAX_DB_STRING);
-                              ifInfo.ipAddr = pRequest->getFieldAsUInt32(VID_IP_ADDRESS);
-                              ifInfo.ipNetMask = pRequest->getFieldAsUInt32(VID_IP_NETMASK);
-                              ifInfo.index = pRequest->getFieldAsUInt32(VID_IF_INDEX);
+                              InetAddress addr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
+                              if (addr.isValidUnicast())
+                                 ifInfo.ipAddrList.add(addr);
                               ifInfo.type = pRequest->getFieldAsUInt32(VID_IF_TYPE);
 								      pRequest->getFieldAsBinary(VID_MAC_ADDR, ifInfo.macAddr, MAC_ADDR_LENGTH);
                               ifInfo.slot = pRequest->getFieldAsUInt32(VID_IF_SLOT);
@@ -11588,7 +11587,7 @@ void ClientSession::findMacAddress(NXCPMessage *request)
 	      msg.setField(VID_LOCAL_NODE_ID, localNodeId);
 		   msg.setField(VID_LOCAL_INTERFACE_ID, localIfId);
 		   msg.setField(VID_MAC_ADDR, macAddr, MAC_ADDR_LENGTH);
-		   msg.setField(VID_IP_ADDRESS, (localIf != NULL) ? localIf->getIpAddress() : InetAddress());
+         msg.setField(VID_IP_ADDRESS, (localIf != NULL) ? localIf->getIpAddressList()->getFirstUnicastAddress() : InetAddress::INVALID);
 		   msg.setField(VID_CONNECTION_TYPE, (UINT16)type);
          if (cp->getObjectClass() == OBJECT_INTERFACE)
             debugPrintf(5, _T("findMacAddress: nodeId=%d ifId=%d ifName=%s ifIndex=%d"), node->getId(), cp->getId(), cp->getName(), ((Interface *)cp)->getIfIndex());

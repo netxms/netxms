@@ -130,6 +130,8 @@
 #define EVENT_AP_UNADOPTED                73
 #define EVENT_AP_DOWN                     74
 #define EVENT_IF_MASK_CHANGED             75
+#define EVENT_IF_IPADDR_ADDED             76
+#define EVENT_IF_IPADDR_DELETED           77
 
 #define EVENT_SNMP_UNMATCHED_TRAP         500
 #define EVENT_SNMP_COLD_START             501

@@ -363,8 +363,8 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
                }
                else
                {
-                  if (pObject->getIpAddress().isValidUnicast())
-					      g_idxNodeByAddr.put(pObject->getIpAddress(), pObject);
+                  if (((Node *)pObject)->getIpAddress().isValidUnicast())
+					      g_idxNodeByAddr.put(((Node *)pObject)->getIpAddress(), pObject);
                }
             }
             break;
@@ -379,7 +379,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             MacDbAddAccessPoint((AccessPoint *)pObject);
             break;
          case OBJECT_SUBNET:
-            if (pObject->getIpAddress().isValidUnicast())
+            if (((Subnet *)pObject)->getIpAddress().isValidUnicast())
             {
 					if (IsZoningEnabled())
 					{
@@ -396,14 +396,17 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 					}
 					else
 					{
-						g_idxSubnetByAddr.put(pObject->getIpAddress(), pObject);
+						g_idxSubnetByAddr.put(((Subnet *)pObject)->getIpAddress(), pObject);
 					}
                if (bNewObject)
-                  PostEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isAd", pObject->getId(), pObject->getName(), &pObject->getIpAddress(), pObject->getIpAddress().getMaskBits());
+               {
+                  PostEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isAd", pObject->getId(), pObject->getName(), 
+                     &((Subnet *)pObject)->getIpAddress(), ((Subnet *)pObject)->getIpAddress().getMaskBits());
+               }
             }
             break;
          case OBJECT_INTERFACE:
-            if (pObject->getIpAddress().isValidUnicast() && !((Interface *)pObject)->isExcludedFromTopology())
+            if (!((Interface *)pObject)->isExcludedFromTopology())
             {
 					if (IsZoningEnabled())
 					{
@@ -420,9 +423,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 					}
 					else
 					{
-						if (g_idxInterfaceByAddr.put(pObject->getIpAddress(), pObject))
-							DbgPrintf(1, _T("WARNING: duplicate interface IP address %s (interface object %s [%d])"),
-										 (const TCHAR *)pObject->getIpAddress().toString(), pObject->getName(), (int)pObject->getId());
+						g_idxInterfaceByAddr.put(((Interface *)pObject)->getIpAddressList(), pObject);
 					}
             }
             MacDbAddInterface((Interface *)pObject);
@@ -519,8 +520,8 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
             }
             else
             {
-			      if (pObject->getIpAddress().isValidUnicast())
-				      g_idxNodeByAddr.remove(pObject->getIpAddress());
+			      if (((Node *)pObject)->getIpAddress().isValidUnicast())
+				      g_idxNodeByAddr.remove(((Node *)pObject)->getIpAddress());
             }
          }
          break;
@@ -535,7 +536,7 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
          MacDbRemove(((AccessPoint *)pObject)->getMacAddr());
          break;
       case OBJECT_SUBNET:
-         if (pObject->getIpAddress().isValidUnicast())
+         if (((Subnet *)pObject)->getIpAddress().isValidUnicast())
          {
 				if (IsZoningEnabled())
 				{
@@ -552,35 +553,40 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 				}
 				else
 				{
-					g_idxSubnetByAddr.remove(pObject->getIpAddress());
+					g_idxSubnetByAddr.remove(((Subnet *)pObject)->getIpAddress());
 				}
          }
          break;
       case OBJECT_INTERFACE:
-         if (pObject->getIpAddress().isValidUnicast())
-         {
-				if (IsZoningEnabled())
+			if (IsZoningEnabled())
+			{
+				Zone *zone = (Zone *)g_idxZoneByGUID.get(((Interface *)pObject)->getZoneId());
+				if (zone != NULL)
 				{
-					Zone *zone = (Zone *)g_idxZoneByGUID.get(((Interface *)pObject)->getZoneId());
-					if (zone != NULL)
-					{
-						zone->removeFromIndex((Interface *)pObject);
-					}
-					else
-					{
-						DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"),
-						          (int)((Interface *)pObject)->getZoneId(), pObject->getName(), (int)pObject->getId());
-					}
+					zone->removeFromIndex((Interface *)pObject);
 				}
 				else
 				{
-					NetObj *o = g_idxInterfaceByAddr.get(pObject->getIpAddress());
-					if ((o != NULL) && (o->getId() == pObject->getId()))
-					{
-						g_idxInterfaceByAddr.remove(pObject->getIpAddress());
-					}
+					DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"),
+					          (int)((Interface *)pObject)->getZoneId(), pObject->getName(), (int)pObject->getId());
 				}
-         }
+			}
+			else
+			{
+            const ObjectArray<InetAddress> *list = ((Interface *)pObject)->getIpAddressList()->getList();
+            for(int i = 0; i < list->size(); i++)
+            {
+               InetAddress *addr = list->get(i);
+               if (addr->isValidUnicast())
+               {
+				      NetObj *o = g_idxInterfaceByAddr.get(*addr);
+				      if ((o != NULL) && (o->getId() == pObject->getId()))
+				      {
+					      g_idxInterfaceByAddr.remove(*addr);
+				      }
+               }
+            }
+			}
          MacDbRemove(((Interface *)pObject)->getMacAddr());
          break;
       case OBJECT_ZONE:
@@ -683,6 +689,20 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddress& ipAddr)
 		iface = (Interface *)g_idxInterfaceByAddr.get(ipAddr);
 	}
 	return (iface != NULL) ? iface->getParentNode() : NULL;
+}
+
+/**
+ * Find node by IP address using first match from IP address list
+ */
+Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddressList *ipAddrList)
+{
+   for(int i = 0; i < ipAddrList->size(); i++)
+   {
+      Node *node = FindNodeByIP(zoneId, ipAddrList->get(i));
+      if (node != NULL)
+         return node;
+   }
+   return NULL;
 }
 
 /**
@@ -818,7 +838,7 @@ struct SUBNET_MATCHING_DATA
 /**
  * Subnet matching callback
  */
-static void SubnetMatchCallback(NetObj *object, void *arg)
+static void SubnetMatchCallback(const InetAddress& addr, NetObj *object, void *arg)
 {
    SUBNET_MATCHING_DATA *data = (SUBNET_MATCHING_DATA *)arg;
    if (((Subnet *)object)->getIpAddress().contain(data->ipAddr))
@@ -1754,9 +1774,8 @@ static void DumpObjectCallback(NetObj *object, void *data)
    CONTAINER_CATEGORY *pCat;
 
 	ConsolePrintf(pCtx, _T("Object ID %d \"%s\"\n")
-                       _T("   Class: %s  Primary IP: %s  Status: %s  IsModified: %d  IsDeleted: %d\n"),
+                       _T("   Class: %s  Status: %s  IsModified: %d  IsDeleted: %d\n"),
 					  object->getId(), object->getName(), (object->getObjectClass() < OBJECT_CUSTOM) ? g_szClassName[object->getObjectClass()] : _T("Custom"),
-                 object->getIpAddress().toString(dd->buffer),
                  GetStatusAsText(object->Status(), true),
                  object->isModified(), object->isDeleted());
    ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"), 
@@ -1768,14 +1787,26 @@ static void DumpObjectCallback(NetObj *object, void *data)
    switch(object->getObjectClass())
    {
       case OBJECT_NODE:
-         ConsolePrintf(pCtx, _T("   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n"),
+         ConsolePrintf(pCtx, _T("   Primary IP: %s\n   IsSNMP: %d IsAgent: %d IsLocal: %d OID: %s\n"),
+                       ((Node *)object)->getIpAddress().toString(dd->buffer),
                        ((Node *)object)->isSNMPSupported(),
                        ((Node *)object)->isNativeAgent(),
                        ((Node *)object)->isLocalManagement(),
                        ((Node *)object)->getObjectId());
          break;
       case OBJECT_SUBNET:
-         ConsolePrintf(pCtx, _T("   Network mask: %d\n"), object->getIpAddress().getMaskBits());
+         ConsolePrintf(pCtx, _T("   IP address: %s/%d\n"), ((Subnet *)object)->getIpAddress().toString(dd->buffer), ((Subnet *)object)->getIpAddress().getMaskBits());
+         break;
+      case OBJECT_ACCESSPOINT:
+         ConsolePrintf(pCtx, _T("   IP address: %s\n"), ((AccessPoint *)object)->getIpAddress().toString(dd->buffer));
+         break;
+      case OBJECT_INTERFACE:
+         ConsolePrintf(pCtx, _T("   MAC address: %s\n"), MACToStr(((Interface *)object)->getMacAddr(), dd->buffer));
+         for(int n = 0; n < ((Interface *)object)->getIpAddressList()->size(); n++)
+         {
+            const InetAddress& a = ((Interface *)object)->getIpAddressList()->get(n);
+            ConsolePrintf(pCtx, _T("   IP address: %s/%d\n"), a.toString(dd->buffer), a.getMaskBits());
+         }
          break;
       case OBJECT_CONTAINER:
          pCat = FindContainerCategory(((Container *)object)->getCategory());

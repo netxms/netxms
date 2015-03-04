@@ -140,32 +140,31 @@ static BOOL FindSubnetForNode(DWORD id, const TCHAR *name)
 	DB_RESULT hResult, hResult2;
 	TCHAR query[256], buffer[32];
 	int i, count;
-	DWORD addr, mask, subnet;
 	BOOL success = FALSE;
 
 	// Read list of interfaces of given node
-	_sntprintf(query, 256, _T("SELECT ip_addr,ip_netmask FROM interfaces WHERE node_id=%d"), id);
+	_sntprintf(query, 256, _T("SELECT l.ip_addr,l.ip_netmask FROM interfaces i INNER JOIN interface_address_list l ON l.iface_id = i.id WHERE node_id=%d"), id);
 	hResult = SQLSelect(query);
 	if (hResult != NULL)
 	{
 		count = DBGetNumRows(hResult);
 		for(i = 0; i < count; i++)
 		{
-			addr = DBGetFieldIPAddr(hResult, i, 0);
-			mask = DBGetFieldIPAddr(hResult, i, 1);
-			subnet = addr & mask;
+			InetAddress addr = DBGetFieldInetAddr(hResult, i, 0);
+         addr.setMaskBits(DBGetFieldLong(hResult, i, 1));
+         InetAddress subnet = addr.getSubnetAddress();
 			
-			_sntprintf(query, 256, _T("SELECT id FROM subnets WHERE ip_addr='%s'"), IpToStr(subnet, buffer));
+         _sntprintf(query, 256, _T("SELECT id FROM subnets WHERE ip_addr='%s'"), subnet.toString(buffer));
 			hResult2 = SQLSelect(query);
 			if (hResult2 != NULL)
 			{
 				if (DBGetNumRows(hResult2) > 0)
 				{
-					subnet = DBGetFieldULong(hResult2, 0, 0);
+					UINT32 subnetId = DBGetFieldULong(hResult2, 0, 0);
 					m_iNumErrors++;
-					if (GetYesNo(_T("\rUnlinked node object %d (\"%s\") can be linked to subnet %d (%s). Link?"), id, name, subnet, buffer))
+					if (GetYesNo(_T("\rUnlinked node object %d (\"%s\") can be linked to subnet %d (%s). Link?"), id, name, subnetId, buffer))
 					{
-						_sntprintf(query, 256, _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), subnet, id);
+						_sntprintf(query, 256, _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), subnetId, id);
 						if (SQLQuery(query))
 						{
 							success = TRUE;

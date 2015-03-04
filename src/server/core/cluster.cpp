@@ -534,7 +534,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 				{
 					for(k = 0; k < m_dwNumResources; k++)
 					{
-                  if (m_pResourceList[k].ipAddr.equals(pIfList->get(j)->ipAddr))
+                  if (pIfList->get(j)->hasAddress(m_pResourceList[k].ipAddr))
 						{
 							if (m_pResourceList[k].dwCurrOwner != ppPollList[i]->getId())
 							{

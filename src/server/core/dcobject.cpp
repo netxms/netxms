@@ -323,10 +323,10 @@ void DCObject::expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen)
 		}
 		else if (!_tcscmp(macro, _T("node_primary_ip")))
 		{
-			if (m_pNode != NULL)
+			if ((m_pNode != NULL) && (m_pNode->getObjectClass() == OBJECT_NODE))
 			{
 				TCHAR ipAddr[64];
-				temp += m_pNode->getIpAddress().toString(ipAddr);
+				temp += ((Node *)m_pNode)->getIpAddress().toString(ipAddr);
 			}
 			else
 			{

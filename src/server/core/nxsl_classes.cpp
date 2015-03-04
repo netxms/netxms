@@ -153,7 +153,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
    else if (!_tcscmp(pszAttr, _T("ipAddr")))
    {
       TCHAR buffer[64];
-      object->getIpAddress().toString(buffer);
+      GetObjectIpAddress(object).toString(buffer);
       pValue = new NXSL_Value(buffer);
    }
    else if (!_tcscmp(pszAttr, _T("type")))
@@ -608,12 +608,12 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    else if (!_tcscmp(pszAttr, _T("ipAddr")))
    {
       TCHAR buffer[64];
-      iface->getIpAddress().toString(buffer);
+      iface->getIpAddressList()->getFirstUnicastAddress().toString(buffer);
       pValue = new NXSL_Value(buffer);
    }
    else if (!_tcscmp(pszAttr, _T("ipNetMask")))
    {
-      pValue = new NXSL_Value(iface->getIpAddress().getMaskBits());
+      pValue = new NXSL_Value(iface->getIpAddressList()->getFirstUnicastAddress().getMaskBits());
    }
    else if (!_tcscmp(pszAttr, _T("isExcludedFromTopology")))
    {

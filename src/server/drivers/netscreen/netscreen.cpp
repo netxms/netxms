@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Netscreen firewalls
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -92,32 +92,45 @@ static UINT32 HandlerIfList(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Tra
 	UINT32 oidName[MAX_OID_LEN];
 	memcpy(oidName, varbind->getName()->getValue(), nameLen * sizeof(UINT32));
 
-	NX_INTERFACE_INFO iface;
-	memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
-	iface.index = varbind->getValueAsUInt();
+	InterfaceInfo *iface = new InterfaceInfo(varbind->getValueAsUInt());
 
 	oidName[10] = 2;	// nsIfName
-	UINT32 rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface.name, MAX_DB_STRING * sizeof(TCHAR), SG_STRING_RESULT);
+	UINT32 rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface->name, MAX_DB_STRING * sizeof(TCHAR), SG_STRING_RESULT);
 	if (rc != SNMP_ERR_SUCCESS)
+   {
+      delete iface;
 		return rc;
-	nx_strncpy(iface.description, iface.name, MAX_DB_STRING);
+   }
+	nx_strncpy(iface->description, iface->name, MAX_DB_STRING);
 
 	oidName[10] = 11;	// nsIfMAC
-	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface.macAddr, 6, SG_RAW_RESULT);
+	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface->macAddr, 6, SG_RAW_RESULT);
 	if (rc != SNMP_ERR_SUCCESS)
+   {
+      delete iface;
 		return rc;
+   }
 
 	oidName[10] = 6;	// nsIfIp
-	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &iface.ipAddr, sizeof(UINT32), 0);
+   UINT32 ipAddr;
+	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &ipAddr, sizeof(UINT32), 0);
 	if (rc != SNMP_ERR_SUCCESS)
+   {
+      delete iface;
 		return rc;
+   }
 
 	oidName[10] = 7;	// nsIfNetmask
-	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &iface.ipNetMask, sizeof(UINT32), 0);
+   UINT32 ipNetMask;
+	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &ipNetMask, sizeof(UINT32), 0);
 	if (rc != SNMP_ERR_SUCCESS)
+   {
+      delete iface;
 		return rc;
+   }
 
-	ifList->add(&iface);
+   iface->ipAddrList.add(InetAddress(ipAddr, ipNetMask));
+	ifList->add(iface);
 	return SNMP_ERR_SUCCESS;
 }
 
@@ -140,7 +153,7 @@ InterfaceList *NetscreenDriver::getInterfaces(SNMP_Transport *snmp, StringMap *a
 		// Fix interface indexes
 		for(int i = 0; i < ifList->size(); i++)
 		{
-			NX_INTERFACE_INFO *iface = ifList->get(i);
+			InterfaceInfo *iface = ifList->get(i);
 			int j;
 			for(j = 0; j < stdIfList->size(); j++)
 			{
@@ -152,7 +165,7 @@ InterfaceList *NetscreenDriver::getInterfaces(SNMP_Transport *snmp, StringMap *a
 			}
 			if (j == stdIfList->size())
 			{
-				// Interface nt found in standard interface list (usually tunnel interface)
+				// Interface not found in standard interface list (usually tunnel interface)
 				iface->index += 32768;
 			}
 		}

@@ -488,6 +488,15 @@ void InetAddressList::add(const InetAddress &addr)
 }
 
 /**
+ * Add multiple addresses to list
+ */
+void InetAddressList::add(const InetAddressList &addrList)
+{
+   for(int i = 0; i < addrList.m_list->size(); i++)
+      add(*(addrList.m_list->get(i)));
+}
+
+/**
  * Remove address from list
  */
 void InetAddressList::remove(const InetAddress &addr)
@@ -495,6 +504,18 @@ void InetAddressList::remove(const InetAddress &addr)
    int index = indexOf(addr);
    if (index != -1)
       m_list->remove(index);
+}
+
+/**
+ * Replace IP address (update it's properties - currently only network mask)
+ */
+void InetAddressList::replace(const InetAddress& addr)
+{
+   int index = indexOf(addr);
+   if (index != -1)
+   {
+      m_list->get(index)->setMaskBits(addr.getMaskBits());
+   }
 }
 
 /**
@@ -548,4 +569,19 @@ const InetAddress& InetAddressList::findSameSubnetAddress(const InetAddress& add
          return *a;
    }
    return InetAddress::INVALID;
+}
+
+/**
+ * Check if all addresses in list are loopback
+ */
+bool InetAddressList::isLoopbackOnly() const
+{
+   if (m_list->size() == 0)
+      return false;
+   for(int i = 0; i < m_list->size(); i++)
+   {
+      if (!m_list->get(i)->isLoopback())
+         return false;
+   }
+   return true;
 }
