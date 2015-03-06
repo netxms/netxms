@@ -940,7 +940,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
 	bool bSyntheticMask = false;
    TCHAR buffer[64];
 
-	DbgPrintf(5, _T("Node::createNewInterface(%s, %d, %d, bp=%d, slot=%d, port=%d) called for node %s [%d]"),
+	DbgPrintf(5, _T("Node::createNewInterface(\"%s\", %d, %d, bp=%d, slot=%d, port=%d) called for node %s [%d]"),
       info->name, info->index, info->type, info->bridgePort, info->slot, info->port, m_name, m_id);
    for(int i = 0; i < info->ipAddrList.size(); i++)
    {
@@ -971,6 +971,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
 				   {
 					   bSyntheticMask = true;
                   addr.setMaskBits((addr.getFamily() == AF_INET) ? 24 : 64);
+                  info->ipAddrList.replace(addr);
 				   }
 
 				   // Create new subnet object
@@ -984,8 +985,9 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
 				   // Set correct netmask if we was asked for it
                if (addr.getMaskBits() == 0)
 				   {
-                  addr.setMaskBits(pSubnet->getIpAddress().getMaskBits());
 					   bSyntheticMask = pSubnet->isSyntheticMask();
+                  addr.setMaskBits(pSubnet->getIpAddress().getMaskBits());
+                  info->ipAddrList.replace(addr);
 				   }
 			   }
             if (pSubnet != NULL)
@@ -2777,7 +2779,9 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, int maskBits)
 						TCHAR szMac[20];
 						MACToStr(macAddr, szMac);
 						DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
-                  createNewInterface(m_ipAddress, pMacAddr);
+                  InetAddress ifaceAddr = m_ipAddress;
+                  ifaceAddr.setMaskBits(maskBits);
+                  createNewInterface(ifaceAddr, pMacAddr);
 					}
             }
 				else
