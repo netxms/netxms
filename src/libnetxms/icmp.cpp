@@ -51,41 +51,60 @@ UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress &addr, int iNumRetries, U
 	if (hIcmpFile == INVALID_HANDLE_VALUE)
 		return ICMP_API_ERROR;
 
-	char *reply = (char *)alloca(dwPacketSize + sizeof(ICMP_ECHO_REPLY));
+   DWORD replySize = dwPacketSize + 16 + ((addr.getFamily() == AF_INET) ? sizeof(ICMP_ECHO_REPLY) : sizeof(ICMPV6_ECHO_REPLY));
+	char *reply = (char *)alloca(replySize);
 	int retries = iNumRetries;
 	UINT32 rc = ICMP_API_ERROR;
 	do
 	{
 		if (addr.getFamily() == AF_INET)
       {
-         rc = IcmpSendEcho(hIcmpFile, htonl(addr.getAddressV4()), payload, (WORD)dwPacketSize, NULL, reply, (WORD)(dwPacketSize + sizeof(ICMP_ECHO_REPLY)), dwTimeout);
+         rc = IcmpSendEcho(hIcmpFile, htonl(addr.getAddressV4()), payload, (WORD)dwPacketSize, NULL, reply, replySize, dwTimeout);
       }
       else
       {
          sockaddr_in6 sa, da;
 
          memset(&sa, 0, sizeof(sa));
+         sa.sin6_addr = in6addr_any;
          sa.sin6_family = AF_INET6;
 
-         memset(&da, 0, sizeof(sa));
+         memset(&da, 0, sizeof(da));
          da.sin6_family = AF_INET6;
          memcpy(da.sin6_addr.s6_addr, addr.getAddressV6(), 16);
 
-         rc = Icmp6SendEcho2(hIcmpFile, NULL, NULL, NULL, &sa, &da, payload, (WORD)dwPacketSize, NULL, reply, (WORD)(dwPacketSize + sizeof(ICMP_ECHO_REPLY)), dwTimeout);
+         IP_OPTION_INFORMATION opt;
+         memset(&opt, 0, sizeof(opt));
+         opt.Ttl = 127;
+         rc = Icmp6SendEcho2(hIcmpFile, NULL, NULL, NULL, &sa, &da, payload, (WORD)dwPacketSize, &opt, reply, replySize, dwTimeout);
       }
 		if (rc != 0)
 		{
+         ULONG status;
+         ULONG rtt;
+         if (addr.getFamily() == AF_INET)
+         {
 #if defined(_WIN64)
-			ICMP_ECHO_REPLY32 *er = (ICMP_ECHO_REPLY32 *)reply;
+			   ICMP_ECHO_REPLY32 *er = (ICMP_ECHO_REPLY32 *)reply;
 #else
-			ICMP_ECHO_REPLY *er = (ICMP_ECHO_REPLY *)reply;
+			   ICMP_ECHO_REPLY *er = (ICMP_ECHO_REPLY *)reply;
 #endif
-			switch(er->Status)
+            status = er->Status;
+            rtt = er->RoundTripTime;
+         }
+         else
+         {
+			   ICMPV6_ECHO_REPLY *er = (ICMPV6_ECHO_REPLY *)reply;
+            status = er->Status;
+            rtt = er->RoundTripTime;
+         }
+
+			switch(status)
 			{
 				case IP_SUCCESS:
 					rc = ICMP_SUCCESS;
 					if (pdwRTT != NULL)
-						*pdwRTT = er->RoundTripTime;
+						*pdwRTT = rtt;
 					break;
 				case IP_REQ_TIMED_OUT:
 					rc = ICMP_TIMEOUT;

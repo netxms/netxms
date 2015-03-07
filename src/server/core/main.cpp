@@ -1238,6 +1238,48 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, _T("Session ID missing\n"));
 		}
    }
+	else if (IsCommand(_T("PING"), szBuffer, 4))
+	{
+		pArg = ExtractWord(pArg, szBuffer);
+		if (szBuffer[0] != 0)
+		{
+         InetAddress addr = InetAddress::parse(szBuffer);
+         if (addr.isValid())
+         {
+            UINT32 rtt;
+            UINT32 rc = IcmpPing(addr, 1, 2000, &rtt, 128);
+            switch(rc)
+            {
+               case ICMP_SUCCESS:
+                  ConsolePrintf(pCtx, _T("Success, RTT = %d ms\n"), (int)rtt);
+                  break;
+               case ICMP_UNREACHEABLE:
+                  ConsolePrintf(pCtx, _T("Destination unreachable\n"));
+                  break;
+               case ICMP_TIMEOUT:
+                  ConsolePrintf(pCtx, _T("Request timeout\n"));
+                  break;
+               case ICMP_RAW_SOCK_FAILED:
+                  ConsolePrintf(pCtx, _T("Cannot create raw socket\n"));
+                  break;
+               case ICMP_API_ERROR:
+                  ConsolePrintf(pCtx, _T("API error\n"));
+                  break;
+               default:
+                  ConsolePrintf(pCtx, _T("ERROR %d\n"), (int)rc);
+                  break;
+            }
+         }
+         else
+         {
+            ConsolePrintf(pCtx, _T("Invalid IP address\n"));
+         }
+      }
+      else
+      {
+         ConsolePrintf(pCtx, _T("Usage: PING <address>\n"));
+      }
+   }
 	else if (IsCommand(_T("POLL"), szBuffer, 2))
 	{
 		pArg = ExtractWord(pArg, szBuffer);

@@ -813,7 +813,7 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 			*adminState = IF_ADMIN_STATE_UNKNOWN;
 			*operState = IF_OPER_STATE_DOWN;
 		}
-		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): ping result %d, adminState=%d, operState=%d"), m_id, m_name, dwPingStatus, adminState, operState);
+		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): ping result %d, adminState=%d, operState=%d"), m_id, m_name, dwPingStatus, *adminState, *operState);
 	}
 }
 
