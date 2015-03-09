@@ -23,6 +23,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <nms_util.h>
 
 #include <locale.h>
 #include <sys/utsname.h>
@@ -79,16 +80,15 @@ typedef struct t_ProcEnt
 /**
  * Interface info
  */
-typedef struct t_IfInfo
+struct InterfaceInfo
 {
-   t_IfInfo* next;
-   UINT32 index;
-   char addr[40];
-   BYTE mask;
-   UINT32 type;
-   char mac[16];
+   int index;
+   int type;
+   int mtu;
+   BYTE macAddr[8];
    char name[16];
-} IFINFO;
+   ObjectArray<InetAddress> addrList;
+};
 
 /**
  * Netlink

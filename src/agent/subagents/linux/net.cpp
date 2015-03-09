@@ -19,6 +19,7 @@
  **/
 
 #include <linux_subagent.h>
+#include <net/if_arp.h>
 
 LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
@@ -218,7 +219,10 @@ LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pVa
    return nRet;
 }
 
-static int SendMessage(int socket)
+/**
+ * Send netlink message
+ */
+static int SendMessage(int socket, unsigned short type)
 {
    sockaddr_nl kernel = {};
    msghdr message = {};
@@ -228,11 +232,12 @@ static int SendMessage(int socket)
    kernel.nl_family = AF_NETLINK;
 
    request.header.nlmsg_len = NLMSG_LENGTH(sizeof(rtgenmsg));
-   request.header.nlmsg_type = RTM_GETLINK;
+   request.header.nlmsg_type = type;
    request.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP;
    request.header.nlmsg_seq = 1;
-   request.header.nlmsg_pid = GetCurrentProcessId();
-   request.message.rtgen_family = AF_PACKET;
+   request.header.nlmsg_pid = getpid();
+   //request.message.rtgen_family = AF_PACKET;
+   request.message.rtgen_family = AF_UNSPEC;
 
    io.iov_base = &request;
    io.iov_len = request.header.nlmsg_len;
@@ -244,14 +249,17 @@ static int SendMessage(int socket)
    return sendmsg(socket, (msghdr*) &message, 0);
 }
 
-static int ReceiveMessage(int socket, char* replyBuffer)
+/**
+ * Receive netlink message
+ */
+static int ReceiveMessage(int socket, char *replyBuffer, size_t replyBufferSize)
 {
    iovec io;
    msghdr reply = {};
    sockaddr_nl kernel;
 
    io.iov_base = replyBuffer;
-   io.iov_len = 4096;
+   io.iov_len = replyBufferSize;
    kernel.nl_family = AF_NETLINK;
    reply.msg_iov = &io;
    reply.msg_iovlen = 1;
@@ -261,164 +269,274 @@ static int ReceiveMessage(int socket, char* replyBuffer)
    return recvmsg(socket, &reply, 0);
 }
 
-static IFINFO* ParseMessage(nlmsghdr* messageHeader)
+/**
+ * Interface type conversion table
+ */
+static struct
 {
-   ifinfomsg* interface;
-   rtattr* attribute;
-   int len;
-   IFINFO* interfaceInfo = new IFINFO();
+   int netlinkType;
+   int snmpType;
+} s_ifTypeConversion[] =
+{
+   { ARPHRD_ARCNET, IFTYPE_ARCNET },
+   { ARPHRD_ATM, IFTYPE_ATM },
+   { ARPHRD_DLCI, IFTYPE_FRDLCIENDPT },
+   { ARPHRD_ETHER, IFTYPE_ETHERNET_CSMACD },
+   { ARPHRD_EETHER, IFTYPE_ETHERNET_CSMACD },
+   { ARPHRD_FDDI, IFTYPE_FDDI },
+   { ARPHRD_IEEE1394, IFTYPE_IEEE1394 },
+   { ARPHRD_IEEE80211, IFTYPE_IEEE80211 },
+   { ARPHRD_IEEE80211_PRISM, IFTYPE_IEEE80211 },
+   { ARPHRD_IEEE80211_RADIOTAP, IFTYPE_IEEE80211 },
+   { ARPHRD_INFINIBAND, IFTYPE_INFINIBAND },
+   { ARPHRD_LOOPBACK, IFTYPE_SOFTWARE_LOOPBACK },
+   { ARPHRD_PPP, IFTYPE_PPP },
+   { ARPHRD_SLIP, IFTYPE_SLIP },
+   { ARPHRD_TUNNEL, IFTYPE_TUNNEL },
+   { ARPHRD_TUNNEL6, IFTYPE_TUNNEL },
+   { -1, -1 }
+};
 
-   interface = (ifinfomsg*) NLMSG_DATA(messageHeader);
-   len = messageHeader->nlmsg_len - NLMSG_LENGTH(sizeof(*interface));
+/**
+ * Parse interface information (RTM_NEWLINK) message
+ */
+static InterfaceInfo *ParseInterfaceMessage(nlmsghdr *messageHeader)
+{
+   InterfaceInfo *ifInfo = new InterfaceInfo();
 
-   for(attribute = IFLA_RTA(interface); RTA_OK(attribute, len); attribute = RTA_NEXT(attribute, len))
+   struct ifinfomsg *interface = (ifinfomsg *)NLMSG_DATA(messageHeader);
+   int len = messageHeader->nlmsg_len - NLMSG_LENGTH(sizeof(struct ifinfomsg));
+
+   for(struct rtattr *attribute = IFLA_RTA(interface); RTA_OK(attribute, len); attribute = RTA_NEXT(attribute, len))
    {
-
-      if (attribute->rta_type == IFLA_IFNAME)
+      switch(attribute->rta_type)
       {
-         strncpy(interfaceInfo->name, (char*) RTA_DATA(attribute), sizeof(interfaceInfo->name));
-      }
-
-      if (attribute->rta_type == IFLA_ADDRESS)
-      {
-         BYTE* hw = (BYTE*) RTA_DATA(attribute);
-         snprintf(interfaceInfo->mac, sizeof(interfaceInfo->mac), "%02X%02X%02X%02X%02X%02X", hw[0], hw[1], hw[2], hw[3], hw[4], hw[5]);
+         case IFLA_IFNAME:
+            strncpy(ifInfo->name, (char *)RTA_DATA(attribute), sizeof(ifInfo->name));
+            break;
+         case IFLA_ADDRESS:
+            memcpy(ifInfo->macAddr, (BYTE *)RTA_DATA(attribute), 6);
+            break;
+         case IFLA_MTU:
+            ifInfo->mtu = *((unsigned int *)RTA_DATA(attribute));
+            break;
       }
    }
 
-   // TODO: replace these calls with netlink (if possible)
-   int inetSocket;
-   struct ifreq ifr = {};
+   ifInfo->index = interface->ifi_index;
 
-   inetSocket = socket(AF_INET, SOCK_DGRAM, 0);
-
-   ifr.ifr_addr.sa_family = AF_INET;
-   strncpy(ifr.ifr_name, interfaceInfo->name, IFNAMSIZ - 1);
-
-   ioctl(inetSocket, SIOCGIFADDR, &ifr);
-   sockaddr_in *socketAddress = (sockaddr_in *)&ifr.ifr_addr;
-   inet_ntop(AF_INET, &socketAddress->sin_addr, interfaceInfo->addr, 24);
-
-   ioctl(inetSocket, SIOCGIFNETMASK, &ifr);
-   sockaddr_in *socketMask = (sockaddr_in *)&ifr.ifr_addr;
-   interfaceInfo->mask = (BYTE)BitsInMask(ntohl(socketMask->sin_addr.s_addr));
-
-   close(inetSocket);
-
-   interfaceInfo->index = interface->ifi_index;
-   interfaceInfo->type = interface->ifi_type;
-
-   return interfaceInfo;
-}
-
-static IFINFO *GetInterfaceInfo(int socket)
-{
-   if (SendMessage(socket) == -1)
+   ifInfo->type = IFTYPE_OTHER;
+   for(int i = 0; s_ifTypeConversion[i].netlinkType != -1; i++)
    {
-      AgentWriteDebugLog(4, _T("GetInterfaceInfo: SendMessage failed (%s)"), _tcserror(errno));
-      return NULL;
-   }
-
-   nlmsghdr* msg_ptr;
-   int msgLen;
-   int done = 0;
-   IFINFO* interfaceInfo = NULL;
-   IFINFO* curIfInfo = NULL;
-   char replyBuffer[8192];
-
-   while(!done)
-   {
-      msgLen = ReceiveMessage(socket, replyBuffer);
-      if (msgLen <= 0)
+      if (interface->ifi_type == s_ifTypeConversion[i].netlinkType)
       {
-         AgentWriteDebugLog(4, _T("GetInterfaceInfo: ReceiveMessage failed (%s)"), _tcserror(errno));
+         ifInfo->type = s_ifTypeConversion[i].snmpType;
          break;
       }
+   }
+   return ifInfo;
+}
 
-      for(msg_ptr = (nlmsghdr*) replyBuffer; NLMSG_OK(msg_ptr, msgLen); msg_ptr = NLMSG_NEXT(msg_ptr, msgLen))
+/**
+ * Parse interface address (RTM_NEWADDR) message
+ */
+static void ParseAddressMessage(nlmsghdr *messageHeader, ObjectArray<InterfaceInfo> *ifList)
+{
+   struct ifaddrmsg *addrMsg = (struct ifaddrmsg *)NLMSG_DATA(messageHeader);
+   if ((addrMsg->ifa_family != AF_INET) && (addrMsg->ifa_family != AF_INET6))
+      return;  // protocol not supported
+
+   // Find interface by index
+   InterfaceInfo *iface = NULL;
+   for(int i = 0; i < ifList->size(); i++)
+   {
+      if (ifList->get(i)->index == addrMsg->ifa_index)
       {
-         if (msg_ptr->nlmsg_type == RTM_NEWLINK)
-         {
-            IFINFO* ifInfo = ParseMessage(msg_ptr);
-
-            if (curIfInfo != NULL)
-               curIfInfo->next = ifInfo;
-            else
-               interfaceInfo = ifInfo;
-
-            curIfInfo = ifInfo;
-         }
-         else if (msg_ptr->nlmsg_type == NLMSG_DONE)
-         {
-            done++;
-         }
+         iface = ifList->get(i);
+         break;
       }
    }
+   if (iface == NULL)
+   {
+      AgentWriteDebugLog(5, _T("ParseInterfaceMessage: cannot find interface with index %d"), addrMsg->ifa_index);
+      return;  // interface not found
+   }
 
-   return interfaceInfo;
+   //int len = messageHeader->nlmsg_len - NLMSG_LENGTH(sizeof(struct ifaddrmsg));
+   InetAddress *addr = NULL;
+   int len = IFA_PAYLOAD(messageHeader);
+   for(struct rtattr *attribute = IFA_RTA(addrMsg); RTA_OK(attribute, len); attribute = RTA_NEXT(attribute, len))
+   {
+      // Address may be given as IFA_ADDRESS or IFA_LOCAL
+      // We prefer IFA_LOCAL because it should be local address
+      // for point-to-point interfaces. For normal broadcast interfaces
+      // only IFA_ADDRESS may be set.
+      if ((attribute->rta_type == IFA_LOCAL) || (attribute->rta_type == IFA_ADDRESS))
+      {
+         delete addr;  // if it was created from IFA_ADDRESS
+         addr = (addrMsg->ifa_family == AF_INET) ? 
+            new InetAddress(ntohl(*((UINT32 *)RTA_DATA(attribute)))) :
+            new InetAddress((BYTE *)RTA_DATA(attribute));
+         if (attribute->rta_type == IFA_LOCAL)
+            break;
+      }
+   }
+   
+   if (addr != NULL)
+   {
+      addr->setMaskBits(addrMsg->ifa_prefixlen);
+      iface->addrList.add(addr);
+   }
 }
 
-static void FreeInterfaceInfo(IFINFO* ifInfo)
-{
-   if (ifInfo == NULL)
-      return;
-
-   FreeInterfaceInfo(ifInfo->next);
-   delete ifInfo;
-   ifInfo = NULL;
-}
-
-LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, AbstractCommSession *session)
+/**
+ * Get interfce information
+ */
+static ObjectArray<InterfaceInfo> *GetInterfaces()
 {
    int netlinkSocket = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
    if (netlinkSocket == -1)
    {
-      AgentWriteDebugLog(4, _T("H_NetIfList: failed to opens socket"));
-      return SYSINFO_RC_ERROR;
+      AgentWriteDebugLog(4, _T("GetInterfaces: failed to opens socket"));
+      return NULL;
    }
 
    setsockopt(netlinkSocket, SOL_SOCKET, SO_REUSEADDR, NULL, 0);
 
    sockaddr_nl local = {};
    local.nl_family = AF_NETLINK;
-   local.nl_pid = GetCurrentProcessId();
+   local.nl_pid = getpid();
    local.nl_groups = 0;
 
-   if (bind(netlinkSocket, (sockaddr*) &local, sizeof(local)) < 0)
+   bool done;
+   ObjectArray<InterfaceInfo> *ifList = NULL;
+
+   if (bind(netlinkSocket, (struct sockaddr *)&local, sizeof(local)) < 0)
    {
-      AgentWriteDebugLog(4, _T("H_NetIfList: failed to bind socket"));
-      close(netlinkSocket);
-      return SYSINFO_RC_ERROR;
+      AgentWriteDebugLog(4, _T("GetInterfaces: failed to bind socket"));
+      goto failure_1;
    }
 
-   IFINFO* interfaceInfo = GetInterfaceInfo(netlinkSocket);
-   close(netlinkSocket);
+   // Send request to read interface list
+   if (SendMessage(netlinkSocket, RTM_GETLINK) == -1)
+   {
+      AgentWriteDebugLog(4, _T("GetInterfaces: SendMessage(RTM_GETLINK) failed (%s)"), _tcserror(errno));
+      goto failure_1;
+   }
 
-   if (interfaceInfo == NULL)
+   ifList = new ObjectArray<InterfaceInfo>(16, 16, true);
+
+   // Read and parse interface list
+   done = false;
+   while(!done)
+   {
+      char replyBuffer[8192];
+      int msgLen = ReceiveMessage(netlinkSocket, replyBuffer, sizeof(replyBuffer));
+      if (msgLen <= 0)
+      {
+         AgentWriteDebugLog(4, _T("GetInterfaces: ReceiveMessage failed (%s)"), _tcserror(errno));
+         goto failure_2;
+      }
+
+      for(struct nlmsghdr *msg_ptr = (struct nlmsghdr *)replyBuffer; NLMSG_OK(msg_ptr, msgLen); msg_ptr = NLMSG_NEXT(msg_ptr, msgLen))
+      {
+         if (msg_ptr->nlmsg_type == RTM_NEWLINK)
+         {
+            ifList->add(ParseInterfaceMessage(msg_ptr));
+         }
+         else if (msg_ptr->nlmsg_type == NLMSG_DONE)
+         {
+            done = true;
+         }
+      }
+   }
+
+   // Send request to read IP address list
+   if (SendMessage(netlinkSocket, RTM_GETADDR) == -1)
+   {
+      AgentWriteDebugLog(4, _T("GetInterfaces: SendMessage(RTM_GETADDR) failed (%s)"), _tcserror(errno));
+      goto failure_2;
+   }
+
+   // Read and parse address list
+   done = false;
+   while(!done)
+   {
+      char replyBuffer[8192];
+      int msgLen = ReceiveMessage(netlinkSocket, replyBuffer, sizeof(replyBuffer));
+      if (msgLen <= 0)
+      {
+         AgentWriteDebugLog(4, _T("GetInterfaces: ReceiveMessage failed (%s)"), _tcserror(errno));
+         goto failure_2;
+      }
+
+      for(struct nlmsghdr *msg_ptr = (struct nlmsghdr *)replyBuffer; NLMSG_OK(msg_ptr, msgLen); msg_ptr = NLMSG_NEXT(msg_ptr, msgLen))
+      {
+         if (msg_ptr->nlmsg_type == RTM_NEWADDR)
+         {
+            ParseAddressMessage(msg_ptr, ifList);
+         }
+         else if (msg_ptr->nlmsg_type == NLMSG_DONE)
+         {
+            done = true;
+         }
+      }
+   }
+
+   close(netlinkSocket);
+   return ifList;
+
+failure_2:
+   delete ifList;
+
+failure_1:
+   close(netlinkSocket);
+   return NULL;
+}
+
+/**
+ * Handler for Net.InterfaceList list
+ */
+LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, AbstractCommSession *session)
+{
+   ObjectArray<InterfaceInfo> *ifList = GetInterfaces();
+   if (ifList == NULL)
    {
       AgentWriteDebugLog(4, _T("H_NetIfList: failed to get interface list"));
       return SYSINFO_RC_ERROR;
    }
 
-   TCHAR infoString[1024];
-   IFINFO* curInterface = interfaceInfo;
-   while(curInterface != NULL)
+   TCHAR infoString[1024], macAddr[32], ipAddr[64];
+   for(int i = 0; i < ifList->size(); i++)
    {
-      _sntprintf(infoString, 1024, _T("%d %hs/%d %d %hs %hs"),
-         curInterface->index,
-         curInterface->addr,
-         curInterface->mask,
-         curInterface->type,
-         curInterface->mac,
-         curInterface->name);
-      pValue->add(infoString);
-
-      curInterface = curInterface->next;
-
-      AgentWriteDebugLog(9, _T("H_NetIfList: got interface (%s)"), infoString);
+      InterfaceInfo *iface = ifList->get(i);
+      if (iface->addrList.size() > 0)
+      {
+         for(int j = 0; j < iface->addrList.size(); j++)
+         {
+            const InetAddress *addr = iface->addrList.get(j);
+				_sntprintf(infoString, 1024, _T("%d %s/%d %d %s %hs"),
+					iface->index,
+					addr->toString(ipAddr),
+					addr->getMaskBits(),
+					iface->type,
+					MACToStr(iface->macAddr, macAddr),
+					iface->name);
+            pValue->add(infoString);
+         }
+      }
+      else
+      {
+			_sntprintf(infoString, 1024, _T("%d 0.0.0.0/0 %d %s %hs"),
+				iface->index,
+				iface->type,
+				MACToStr(iface->macAddr, macAddr),
+				iface->name);
+         pValue->add(infoString);
+      }
    }
 
-   FreeInterfaceInfo(interfaceInfo);
+   delete ifList;
    return SYSINFO_RC_SUCCESS;
 }
 
