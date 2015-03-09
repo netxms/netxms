@@ -300,9 +300,9 @@ static struct
 /**
  * Parse interface information (RTM_NEWLINK) message
  */
-static InterfaceInfo *ParseInterfaceMessage(nlmsghdr *messageHeader)
+static LinuxInterfaceInfo *ParseInterfaceMessage(nlmsghdr *messageHeader)
 {
-   InterfaceInfo *ifInfo = new InterfaceInfo();
+   LinuxInterfaceInfo *ifInfo = new LinuxInterfaceInfo();
 
    struct ifinfomsg *interface = (ifinfomsg *)NLMSG_DATA(messageHeader);
    int len = messageHeader->nlmsg_len - NLMSG_LENGTH(sizeof(struct ifinfomsg));
@@ -340,14 +340,14 @@ static InterfaceInfo *ParseInterfaceMessage(nlmsghdr *messageHeader)
 /**
  * Parse interface address (RTM_NEWADDR) message
  */
-static void ParseAddressMessage(nlmsghdr *messageHeader, ObjectArray<InterfaceInfo> *ifList)
+static void ParseAddressMessage(nlmsghdr *messageHeader, ObjectArray<LinuxInterfaceInfo> *ifList)
 {
    struct ifaddrmsg *addrMsg = (struct ifaddrmsg *)NLMSG_DATA(messageHeader);
    if ((addrMsg->ifa_family != AF_INET) && (addrMsg->ifa_family != AF_INET6))
       return;  // protocol not supported
 
    // Find interface by index
-   InterfaceInfo *iface = NULL;
+   LinuxInterfaceInfo *iface = NULL;
    for(int i = 0; i < ifList->size(); i++)
    {
       if (ifList->get(i)->index == addrMsg->ifa_index)
@@ -392,7 +392,7 @@ static void ParseAddressMessage(nlmsghdr *messageHeader, ObjectArray<InterfaceIn
 /**
  * Get interfce information
  */
-static ObjectArray<InterfaceInfo> *GetInterfaces()
+static ObjectArray<LinuxInterfaceInfo> *GetInterfaces()
 {
    int netlinkSocket = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
    if (netlinkSocket == -1)
@@ -409,7 +409,7 @@ static ObjectArray<InterfaceInfo> *GetInterfaces()
    local.nl_groups = 0;
 
    bool done;
-   ObjectArray<InterfaceInfo> *ifList = NULL;
+   ObjectArray<LinuxInterfaceInfo> *ifList = NULL;
 
    if (bind(netlinkSocket, (struct sockaddr *)&local, sizeof(local)) < 0)
    {
@@ -424,7 +424,7 @@ static ObjectArray<InterfaceInfo> *GetInterfaces()
       goto failure_1;
    }
 
-   ifList = new ObjectArray<InterfaceInfo>(16, 16, true);
+   ifList = new ObjectArray<LinuxInterfaceInfo>(16, 16, true);
 
    // Read and parse interface list
    done = false;
@@ -499,7 +499,7 @@ failure_1:
  */
 LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, AbstractCommSession *session)
 {
-   ObjectArray<InterfaceInfo> *ifList = GetInterfaces();
+   ObjectArray<LinuxInterfaceInfo> *ifList = GetInterfaces();
    if (ifList == NULL)
    {
       AgentWriteDebugLog(4, _T("H_NetIfList: failed to get interface list"));
@@ -509,7 +509,7 @@ LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, A
    TCHAR infoString[1024], macAddr[32], ipAddr[64];
    for(int i = 0; i < ifList->size(); i++)
    {
-      InterfaceInfo *iface = ifList->get(i);
+      LinuxInterfaceInfo *iface = ifList->get(i);
       if (iface->addrList.size() > 0)
       {
          for(int j = 0; j < iface->addrList.size(); j++)

@@ -15,8 +15,8 @@ SUBAGENT = netbsd
 pkglib_LTLIBRARIES = netbsd.la
 netbsd_la_SOURCES = netbsd.cpp system.cpp disk.cpp net.cpp proc.cpp proc2.cpp
 netbsd_la_CPPFLAGS=-I@top_srcdir@/include
-netbsd_la_LDFLAGS = -module -avoid-version -lkvm
-netbsd_la_LIBADD = ../../../libnetxms/libnetxms.la
+netbsd_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
+netbsd_la_LIBADD = ../../../libnetxms/libnetxms.la -lkvm
 
 EXTRA_DIST = disk.h net.h system.h
 

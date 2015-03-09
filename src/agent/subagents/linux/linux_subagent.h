@@ -80,7 +80,7 @@ typedef struct t_ProcEnt
 /**
  * Interface info
  */
-struct InterfaceInfo
+struct LinuxInterfaceInfo
 {
    int index;
    int type;
