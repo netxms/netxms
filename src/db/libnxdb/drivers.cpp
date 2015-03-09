@@ -172,7 +172,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	if (alreadyLoaded)
 	{
       if (s_writeLog)
-			__DBWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Reusing already loaded database driver \"%s\""), s_drivers[position]->m_name);
+			__DBWriteLog(EVENTLOG_INFORMATION_TYPE, _T("Reusing already loaded database driver \"%hs\""), s_drivers[position]->m_name);
 		goto reuse_driver;
 	}
 
