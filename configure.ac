@@ -846,7 +846,7 @@ case "$PLATFORM" in
       if test "x$CXX" = "xaCC"; then
          CPPFLAGS="$CPPFLAGS -D_HP_ATOMIC_INLINE"
 	 CFLAGS="$CFLAGS -AC99"
-         CXXFLAGS="-mt $CXXFLAGS +W749 +W829"
+         CXXFLAGS="-mt $CXXFLAGS +W749 +W829 +W4232"
          LDFLAGS="$LDFLAGS -mt"
       fi
       if test `uname -m` != 'ia64'; then

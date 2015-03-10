@@ -178,7 +178,7 @@ int sock_is_recoverable(const int error)
 int sock_connect_error(const sock_t sock)
 {
     struct sockaddr sa;
-    unsigned len;
+    socklen_t len;
     char temp;
 
     sa.sa_family = AF_INET;

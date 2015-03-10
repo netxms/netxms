@@ -244,11 +244,19 @@ void xmpp_log(const xmpp_ctx_t * const ctx,
 	      va_list ap)
 {
     int oldret, ret;
-    char smbuf[1024];
-    char *buf;
+#if HAVE_DECL_VA_COPY
     va_list copy;
+    char smbuf[1024];
+#else
+    char smbuf[8192];
+#endif
+    char *buf;
+
+    if (ctx->log->handler == NULL)
+       return;
 
     buf = smbuf;
+#if HAVE_DECL_VA_COPY
     va_copy(copy, ap);
     ret = xmpp_vsnprintf(buf, 1023, fmt, ap);
     if (ret > 1023) {
@@ -262,15 +270,20 @@ void xmpp_log(const xmpp_ctx_t * const ctx,
 	oldret = ret;
 	ret = xmpp_vsnprintf(buf, ret + 1, fmt, copy);
 	if (ret > oldret) {
+            xmpp_free(ctx, buf);
 	    xmpp_error(ctx, "log", "Unexpected error");
 	    return;
 	}
     } else {
         va_end(copy);
     }
+#else
+    xmpp_vsnprintf(buf, 8191, fmt, ap);
+#endif
 
-    if (ctx->log->handler)
-        ctx->log->handler(ctx->log->userdata, level, area, buf);
+    ctx->log->handler(ctx->log->userdata, level, area, buf);
+    if (buf != smbuf)
+       xmpp_free(ctx, buf);
 }
 
 /** Write to the log at the ERROR level.

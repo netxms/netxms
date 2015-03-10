@@ -174,9 +174,10 @@ AbstractObject::AbstractObject(NXCPMessage *msg)
    m_submapId = msg->getFieldAsUInt32(VID_SUBMAP_ID);
 
 	// Custom attributes
+   int i;
 	int count = msg->getFieldAsInt32(VID_NUM_CUSTOM_ATTRIBUTES);
    UINT32 id = VID_CUSTOM_ATTRIBUTES_BASE;
-	for(int i = 0; i < count; i++, id += 2)
+	for(i = 0; i < count; i++, id += 2)
 	{
 		m_customAttributes.setPreallocated(msg->getFieldAsString(id), msg->getFieldAsString(id + 1));
 	}
@@ -185,14 +186,14 @@ AbstractObject::AbstractObject(NXCPMessage *msg)
 	count = msg->getFieldAsInt32(VID_PARENT_CNT);
    m_parents = new IntegerArray<UINT32>(count);
    id = VID_PARENT_ID_BASE;
-	for(int i = 0; i < count; i++, id++)
+	for(i = 0; i < count; i++, id++)
       m_parents->add(msg->getFieldAsUInt32(id));
 
    // Children
 	count = msg->getFieldAsInt32(VID_CHILD_CNT);
    m_children = new IntegerArray<UINT32>(count);
    id = VID_CHILD_ID_BASE;
-	for(int i = 0; i < count; i++, id++)
+	for(i = 0; i < count; i++, id++)
       m_children->add(msg->getFieldAsUInt32(id));
 }
 
