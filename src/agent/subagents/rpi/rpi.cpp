@@ -20,6 +20,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <bcm2835.h>
 
 /**
  * 
@@ -73,8 +74,6 @@ static LONG H_Sensors(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
  */
 static LONG H_PinState(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-	LONG ret = SYSINFO_RC_ERROR;
-
 	TCHAR tmp[128];
 	if (!AgentGetParameterArg(param, 1, tmp, 128))
    {
@@ -83,11 +82,9 @@ static LONG H_PinState(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstr
 	StrStrip(tmp);
    long pin = _tcstol(tmp, NULL, 10);
 
-   uint8_t value = bcm2835_gpio_lev((uint8_t)pin);
-   ret_int(value, value == HIGH ? 1 : 0);
-   ret = SYSINFO_RC_SUCCESS;
-
-	return ret;
+   uint8_t level = bcm2835_gpio_lev((uint8_t)pin);
+   ret_int(value, level == HIGH ? 1 : 0);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -114,7 +111,7 @@ static BOOL SubagentInit(Config *config)
 					*end = 0;
             }
 				StrStrip(item);
-            long pin = _tcstol(item, NULL, 10);
+            int pin = (int)_tcstol(item, NULL, 10);
             AgentWriteDebugLog(1, _T("RPI: configuring pin %d as INPUT"), pin);
             bcm2835_gpio_fsel((uint8_t)pin, BCM2835_GPIO_FSEL_INPT);
 			}
@@ -144,9 +141,9 @@ static void SubagentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
+	{ _T("GPIO.PinState(*)"), H_PinState, NULL, DCI_DT_INT, _T("Pin {instance} state") },
 	{ _T("Sensors.Humidity"), H_Sensors, (TCHAR *)0, DCI_DT_INT, _T("Humidity") },
 	{ _T("Sensors.Temperature"), H_Sensors, (TCHAR *)1, DCI_DT_INT, _T("Temperature") }
-	{ _T("GPIO.PinState(*)"), H_PinState, NULL, DCI_DT_INT, _T("Pin {instance} state") }
 };
 
 /**
