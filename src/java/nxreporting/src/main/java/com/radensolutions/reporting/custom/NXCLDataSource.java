@@ -42,4 +42,5 @@ public abstract class NXCLDataSource implements JRDataSource {
 
     public abstract void loadData(NXCSession session) throws IOException, NetXMSClientException;
 
+    public abstract void setQuery(String query);
 }
