@@ -42,7 +42,7 @@ static TCHAR *m_enabledPins = NULL;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("DisableDHT22"), CT_BOOLEAN, 0, 0, 1, 0, &m_disableDHT22 },
-   { _T("EnabledPins"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_enabledPins },
+   { _T("EnabledPins"), CT_STRING_LIST, _T(','), 0, 0, 0, &m_enabledPins },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
@@ -92,10 +92,14 @@ static LONG H_PinState(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstr
  */
 static BOOL SubagentInit(Config *config)
 {
-	bool success;
+   if (!bcm2835_init()) 
+   {    
+      AgentWriteLog(NXLOG_ERROR, _T("RPI: call to bcm2835_init failed"));
+      return FALSE;
+   }
 
 	// Parse configuration
-	success = config->parseTemplate(_T("RPI"), m_cfgTemplate);
+	bool success = config->parseTemplate(_T("RPI"), m_cfgTemplate);
 	if (success)
 	{
 		TCHAR *item, *end;
@@ -105,7 +109,7 @@ static BOOL SubagentInit(Config *config)
 		{
 			for(item = m_enabledPins; *item != 0; item = end + 1)
 			{
-				end = _tcschr(item, _T('\n'));
+				end = _tcschr(item, _T(','));
 				if (end != NULL)
             {
 					*end = 0;
