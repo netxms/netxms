@@ -3801,7 +3801,7 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 			DWORD nodeId = DBGetFieldULong(hResult, i, 0);
 			DWORD dciId = DBGetFieldULong(hResult, i, 1);
 
-			if (IsNodeExist(nodeId))
+			if (IsDatabaseRecordExist(_T("nodes"), _T("id"), nodeId))
 			{
 				_sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d AND idata_value LIKE '%%#%%'"), nodeId, dciId);
 				DB_RESULT hData = SQLSelect(query);

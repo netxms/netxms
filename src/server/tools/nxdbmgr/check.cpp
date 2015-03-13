@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2012 Victor Kirhenshtein
+** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -341,25 +341,6 @@ static void CheckNodes()
 }
 
 /**
- * Check if node exists
- */
-BOOL IsNodeExist(DWORD dwId)
-{
-	TCHAR szQuery[256];
-	DB_RESULT hResult;
-	BOOL bRet = FALSE;
-
-   _sntprintf(szQuery, 256, _T("SELECT id FROM nodes WHERE id=%d"), dwId);
-   hResult = SQLSelect(szQuery);
-   if (hResult != NULL)
-   {
-      bRet = (DBGetNumRows(hResult) > 0);
-      DBFreeResult(hResult);
-   }
-	return bRet;
-}
-
-/**
  * Check node component objects
  */
 static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
@@ -505,7 +486,7 @@ static void CheckClusters()
       for(i = 0; i < dwNumRows; i++)
       {
          dwObjectId = DBGetFieldULong(hResult, i, 1);
-			if (!IsNodeExist(dwObjectId))
+			if (!IsDatabaseRecordExist(_T("nodes"), _T("id"), dwObjectId))
 			{
             m_iNumErrors++;
             dwId = DBGetFieldULong(hResult, i, 0);
@@ -893,7 +874,9 @@ static void CheckTemplateNodeMapping()
          dwNodeId = DBGetFieldULong(hResult, i, 1);
 
          // Check node existence
-         if (!IsNodeExist(dwNodeId))
+         if (!IsDatabaseRecordExist(_T("nodes"), _T("id"), dwNodeId) &&
+             !IsDatabaseRecordExist(_T("clusters"), _T("id"), dwNodeId) &&
+             !IsDatabaseRecordExist(_T("mobile_devices"), _T("id"), dwNodeId))
          {
             m_iNumErrors++;
 				GetObjectName(dwTemplateId, name);

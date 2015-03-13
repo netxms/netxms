@@ -458,6 +458,31 @@ DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault)
 }
 
 /**
+ * Check if given record exists in database
+ */
+bool IsDatabaseRecordExist(const TCHAR *table, const TCHAR *idColumn, UINT32 id)
+{
+	bool exist = false;
+
+	TCHAR query[256];
+	_sntprintf(query, 256, _T("SELECT %s FROM %s WHERE %s=?"), idColumn, table, idColumn);
+
+   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, query);
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			exist = (DBGetNumRows(hResult) > 0);
+			DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
+	return exist;
+}
+
+/**
  * Check that database has correct schema version and is not locked
  */
 BOOL ValidateDatabase()
