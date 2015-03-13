@@ -6,6 +6,7 @@
 - Added posibility to wakeup unmanaged node
 - Instance discovery separated from configuration polls
 - Instance discovery type "SNMP Walk - OIDs" sets instance name to OID value by default
+- GPIO.PinState parameter in Raspberry Pi subagent
 - Management console:
 	- Fixed broken popup menu actions on "Interfaces" tab
 	- Macro %USERNAME%4 can be used in object tools
