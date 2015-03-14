@@ -67,6 +67,7 @@ import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesLabelProv
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -112,8 +113,9 @@ public class LastValuesWidget extends Composite
 	 * @param style style
 	 * @param _node node to display data for
 	 * @param configPrefix configuration prefix for saving/restoring viewer settings
+	 * @param validator additional visibility validator (used to suppress unneded refresh calls, may be null)
 	 */
-	public LastValuesWidget(ViewPart viewPart, Composite parent, int style, AbstractObject dcTarget, final String configPrefix)
+	public LastValuesWidget(ViewPart viewPart, Composite parent, int style, AbstractObject dcTarget, final String configPrefix, VisibilityValidator validator)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -133,7 +135,7 @@ public class LastValuesWidget extends Composite
 				
 				getDataFromServer();
 			}
-		});
+		}, validator);
 		addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -248,7 +250,8 @@ public class LastValuesWidget extends Composite
 		createActions();
 		createPopupMenu();
 
-		getDataFromServer();
+		if ((validator == null) || validator.isVisible())
+		   getDataFromServer();
 		
 		// Set initial focus to filter input line
 		if (filterEnabled)

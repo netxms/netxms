@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -488,7 +488,7 @@ public class AlarmDetails extends ViewPart
 							AbstractObject object = session.findObjectById(alarm.getSourceObjectId());
 							if (object != null)
 							{
-								lastValuesWidget = new LastValuesWidget(AlarmDetails.this, dataArea, SWT.BORDER, object, "AlarmDetails.LastValues"); //$NON-NLS-1$
+								lastValuesWidget = new LastValuesWidget(AlarmDetails.this, dataArea, SWT.BORDER, object, "AlarmDetails.LastValues", null); //$NON-NLS-1$
 								lastValuesWidget.refresh();
 							}
 						}

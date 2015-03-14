@@ -83,7 +83,7 @@ public class LastValues extends ViewPart
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		dataView = new LastValuesWidget(this, parent, SWT.NONE, dcTarget, "LastValuesWidget"); //$NON-NLS-1$
+		dataView = new LastValuesWidget(this, parent, SWT.NONE, dcTarget, "LastValuesWidget", null); //$NON-NLS-1$
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);

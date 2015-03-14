@@ -32,6 +32,7 @@ public class ViewRefreshController implements IPartListener
 {
    private Runnable timer;
    private Runnable handler;
+   private VisibilityValidator validator;
    private IWorkbenchPage page;
    private Display display;
    private String id;
@@ -40,7 +41,7 @@ public class ViewRefreshController implements IPartListener
    private boolean disposed = false;
    
    /**
-    * Constructor
+    * Create refresh controller attached to given view part.
     * 
     * @param part
     * @param interval
@@ -48,7 +49,21 @@ public class ViewRefreshController implements IPartListener
     */
    public ViewRefreshController(final IViewPart part, int interval, Runnable handler)
    {
+      this(part, interval, handler, null);
+   }
+   
+   /**
+    * Create refresh controller attached to given view part.
+    * 
+    * @param part
+    * @param interval
+    * @param handler
+    * @param validator
+    */
+   public ViewRefreshController(final IViewPart part, int interval, Runnable handler, VisibilityValidator validator)
+   {
       this.handler = handler;
+      this.validator = validator;
       this.interval = interval;
       id = part.getSite().getId();
       secondaryId = ((IViewSite)part.getSite()).getSecondaryId();
@@ -58,7 +73,8 @@ public class ViewRefreshController implements IPartListener
          @Override
          public void run()
          {
-            if (page.isPartVisible(part))
+            if (page.isPartVisible(part) &&
+                ((ViewRefreshController.this.validator == null) || ViewRefreshController.this.validator.isVisible()))
             {
                ViewRefreshController.this.handler.run();
             }
@@ -107,7 +123,8 @@ public class ViewRefreshController implements IPartListener
       if ((interval > 0) &&
           part.getSite().getId().equals(id) && 
           (part.getSite() instanceof IViewSite) &&
-          compareStrings(((IViewSite)part.getSite()).getSecondaryId(), secondaryId))
+          compareStrings(((IViewSite)part.getSite()).getSecondaryId(), secondaryId) &&
+          ((ViewRefreshController.this.validator == null) || ViewRefreshController.this.validator.isVisible()))
       {
          handler.run();
       }

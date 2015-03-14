@@ -45,6 +45,7 @@ import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**
@@ -61,16 +62,18 @@ public class PerfTabGraph extends DashboardComposite
 	private NXCSession session;
 	private long timeInterval;
 	private IViewPart viewPart;
+	private VisibilityValidator validator;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public PerfTabGraph(Composite parent, long nodeId, PerfTabDci dci, PerfTabGraphSettings settings, IViewPart viewPart)
+	public PerfTabGraph(Composite parent, long nodeId, PerfTabDci dci, PerfTabGraphSettings settings, IViewPart viewPart, VisibilityValidator validator)
 	{
 		super(parent, SWT.BORDER);
 		this.nodeId = nodeId;
 		this.viewPart = viewPart;
+		this.validator = validator;
 		items.add(dci);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
@@ -143,14 +146,15 @@ public class PerfTabGraph extends DashboardComposite
 				
 				refreshData();
 			}
-		});
-		refreshData();
+		}, validator);
+		if (validator.isVisible())
+		   refreshData();
 	}
 
 	/**
 	 * Refresh graph's data
 	 */
-	private void refreshData()
+	public void refreshData()
 	{
 		if (updateInProgress)
 			return;
