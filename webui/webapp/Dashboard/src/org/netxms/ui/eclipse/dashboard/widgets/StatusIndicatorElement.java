@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Canvas;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
@@ -37,6 +36,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
  * Status indicator
@@ -45,7 +45,7 @@ public class StatusIndicatorElement extends ElementWidget
 {
 	private StatusIndicatorConfig config;
 	private Canvas canvas;
-	private Runnable refreshTimer;
+	private ViewRefreshController refreshController;
 	private Font font;
 	private ObjectStatus status = ObjectStatus.UNKNOWN;
 	private int xSize;
@@ -87,6 +87,7 @@ public class StatusIndicatorElement extends ElementWidget
 			public void widgetDisposed(DisposeEvent e)
 			{
 				font.dispose();
+            refreshController.dispose();
 			}
 		});
 
@@ -115,7 +116,7 @@ public class StatusIndicatorElement extends ElementWidget
 	}
 
 	/**
-	 * 
+	 * Refresh element content
 	 */
 	protected void refreshData()
 	{
@@ -133,25 +134,20 @@ public class StatusIndicatorElement extends ElementWidget
 	}
 
 	/**
-	 * 
+	 * Start element refresh timer
 	 */
 	protected void startRefreshTimer()
 	{
-		final Display display = getDisplay();
-		refreshTimer = new Runnable() {
+		refreshController = new ViewRefreshController(viewPart, 1, new Runnable() {
 			@Override
 			public void run()
 			{
 				if (StatusIndicatorElement.this.isDisposed())
-				{
 					return;
-				}
 
 				refreshData();
-				display.timerExec(1000, this);
 			}
-		};
-		display.timerExec(1000, refreshTimer);
+		});
 		refreshData();
 	}
 

@@ -139,7 +139,7 @@ public class LastValues extends ViewPart
 			@Override
 			public void run()
 			{
-				dataView.setAutoRefreshEnabled(!dataView.isAutoRefreshEnabled());
+				dataView.setAutoRefreshEnabled(actionAutoUpdate.isChecked());
 			}
 		};
 		actionAutoUpdate.setChecked(dataView.isAutoRefreshEnabled());

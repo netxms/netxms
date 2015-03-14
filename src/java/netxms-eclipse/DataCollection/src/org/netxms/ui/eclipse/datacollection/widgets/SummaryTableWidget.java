@@ -43,6 +43,7 @@ import org.netxms.ui.eclipse.datacollection.widgets.internal.TableItemComparator
 import org.netxms.ui.eclipse.datacollection.widgets.internal.TableLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -58,8 +59,7 @@ public class SummaryTableWidget extends Composite
    private TableLabelProvider labelProvider;
    private Action actionExportToCsv;
    private Action actionUseMultipliers;
-   private Runnable timer;
-   private int autoRefreshInterval = 0;
+   private ViewRefreshController refreshController;
    private boolean useMultipliers = true;
 
    /**
@@ -99,17 +99,23 @@ public class SummaryTableWidget extends Composite
       
       createPopupMenu();
       
-      timer = new Runnable() {
+      refreshController = new ViewRefreshController(viewPart, -1, new Runnable() {
          @Override
          public void run()
          {
             if (isDisposed())
                return;
             refresh();
-            if (autoRefreshInterval > 0)
-               getDisplay().timerExec(autoRefreshInterval, timer);
          }
-      };
+      });
+      
+      addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            refreshController.dispose();
+         }
+      });
    }
 
    /**
@@ -220,10 +226,7 @@ public class SummaryTableWidget extends Composite
     */
    public void setAutoRefresh(int interval)
    {
-      getDisplay().timerExec(-1, timer);  // kill existing timer if any
-      autoRefreshInterval = interval * 1000;
-      if (autoRefreshInterval > 0)
-         getDisplay().timerExec(autoRefreshInterval, timer);
+      refreshController.setInterval(interval);
    }
 
    /**

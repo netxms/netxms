@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,14 +21,14 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
@@ -45,6 +45,7 @@ import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.LineChartConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
  * Line chart element
@@ -53,8 +54,7 @@ public class LineChartElement extends ElementWidget
 {
 	private HistoricalDataChart chart;
 	private LineChartConfig config;
-	private int refreshInterval;
-	private Runnable refreshTimer;
+	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
 	private NXCSession session;
 
@@ -77,8 +77,6 @@ public class LineChartElement extends ElementWidget
 			config = new LineChartConfig();
 		}
 
-		refreshInterval = config.getRefreshRate() * 1000;
-		
 		setLayout(new FillLayout());
 		
 		chart = ChartFactory.createLineChart(this, SWT.NONE);
@@ -106,8 +104,7 @@ public class LineChartElement extends ElementWidget
 		}
 		chart.setItemStyles(styles);
 
-		final Display display = getDisplay();
-		refreshTimer = new Runnable() {
+		refreshController = new ViewRefreshController(viewPart, config.getRefreshRate(), new Runnable() {
 			@Override
 			public void run()
 			{
@@ -115,11 +112,17 @@ public class LineChartElement extends ElementWidget
 					return;
 				
 				refreshData();
-				display.timerExec(refreshInterval, this);
 			}
-		};
-		display.timerExec(refreshInterval, refreshTimer);
+		});
 		refreshData();
+		
+		addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            refreshController.dispose();
+         }
+      });
 	}
 
 	/**

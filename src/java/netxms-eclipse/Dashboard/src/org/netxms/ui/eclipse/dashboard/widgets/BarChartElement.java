@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ public class BarChartElement extends ComparisonChartElement
 			config = new BarChartConfig();
 		}
 
-		refreshInterval = config.getRefreshRate() * 1000;
+		refreshInterval = config.getRefreshRate();
 		chart = ChartFactory.createBarChart(this, SWT.NONE);
 		chart.setTitleVisible(config.isShowTitle());
 		chart.setChartTitle(config.getTitle());

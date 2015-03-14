@@ -66,6 +66,7 @@ import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesFilter;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -94,8 +95,8 @@ public class LastValuesWidget extends Composite
 	private LastValuesComparator comparator;
 	private LastValuesFilter filter;
 	private boolean autoRefreshEnabled = false;
-	private int autoRefreshInterval = 30000;	// in milliseconds
-	private Runnable refreshTimer;
+	private int autoRefreshInterval = 30;	// in seconds
+	private ViewRefreshController refreshController;
 	private Action actionUseMultipliers;
 	private Action actionShowErrors;
 	private Action actionShowDisabled;
@@ -123,7 +124,7 @@ public class LastValuesWidget extends Composite
 		
 		final IDialogSettings ds = Activator.getDefault().getDialogSettings();
 		
-		refreshTimer = new Runnable() {
+		refreshController = new ViewRefreshController(viewPart, -1, new Runnable() {
 			@Override
 			public void run()
 			{
@@ -131,9 +132,15 @@ public class LastValuesWidget extends Composite
 					return;
 				
 				getDataFromServer();
-				getDisplay().timerExec(autoRefreshInterval, this);
 			}
-		};
+		});
+		addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            refreshController.dispose();
+         }
+      });
 		
 		setLayout(new FormLayout());
 		
@@ -210,7 +217,12 @@ public class LastValuesWidget extends Composite
 		
 		try
 		{
-			ds.getInt(configPrefix + ".autoRefreshInterval"); //$NON-NLS-1$
+			autoRefreshInterval = ds.getInt(configPrefix + ".autoRefreshInterval"); //$NON-NLS-1$
+			if (autoRefreshInterval >= 1000)
+			{
+			   // assume it was saved by old version in milliseconds
+			   autoRefreshInterval /= 1000;
+			}
 		}
 		catch(NumberFormatException e)
 		{
@@ -401,9 +413,7 @@ public class LastValuesWidget extends Composite
 	public void setAutoRefreshEnabled(boolean autoRefreshEnabled)
 	{
 		this.autoRefreshEnabled = autoRefreshEnabled;
-		getDisplay().timerExec(-1, refreshTimer);
-		if (autoRefreshEnabled)
-			getDisplay().timerExec(autoRefreshInterval, refreshTimer);
+		refreshController.setInterval(autoRefreshEnabled ? autoRefreshInterval : -1);
 	}
 
 	/**

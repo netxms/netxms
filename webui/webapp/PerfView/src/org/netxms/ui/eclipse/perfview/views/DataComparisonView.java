@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,6 +57,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
  * View for comparing DCI values visually using charts.
@@ -68,7 +69,7 @@ public class DataComparisonView extends ViewPart
 	
 	private static final String KEY_CHART_TYPE = "chartType"; //$NON-NLS-1$
 	private static final String KEY_AUTO_REFRESH = "autoRefresh"; //$NON-NLS-1$
-	private static final String KEY_REFRESH_INTERVAL = "refreshInterval"; //$NON-NLS-1$
+	private static final String KEY_REFRESH_INTERVAL = "autoRefreshInterval"; //$NON-NLS-1$
 	private static final String KEY_LOG_SCALE = "logScale"; //$NON-NLS-1$
 	private static final String KEY_3D_VIEW = "enable3DView"; //$NON-NLS-1$
 	private static final String KEY_TRANSPOSED = "isTransposed"; //$NON-NLS-1$
@@ -80,11 +81,11 @@ public class DataComparisonView extends ViewPart
 	protected NXCSession session;
 	private boolean updateInProgress = false;
 	protected ArrayList<GraphItem> items = new ArrayList<GraphItem>(8);
-	private Runnable refreshTimer;
+	private ViewRefreshController refreshController;
 	private boolean autoRefreshEnabled = true;
 	private boolean useLogScale = false;
 	private boolean showIn3D = true;
-	private int autoRefreshInterval = 30000;	// 30 seconds
+	private int autoRefreshInterval = 30;	// 30 seconds
 	private int chartType = DataComparisonChart.BAR_CHART;
 	private boolean transposed = false;
 	private boolean showLegend = true;
@@ -300,8 +301,7 @@ public class DataComparisonView extends ViewPart
 		
 		updateChart();
 
-		final Display display = getSite().getShell().getDisplay();
-		refreshTimer = new Runnable() {
+		refreshController = new ViewRefreshController(this, autoRefreshEnabled ? autoRefreshInterval : -1, new Runnable() {
 			@Override
 			public void run()
 			{
@@ -309,12 +309,8 @@ public class DataComparisonView extends ViewPart
 					return;
 
 				updateChart();
-				if (autoRefreshEnabled)
-					display.timerExec(autoRefreshInterval, this);
 			}
-		};
-		if (autoRefreshEnabled)
-			display.timerExec(autoRefreshInterval, refreshTimer);
+		});
 	}
 
 	/* (non-Javadoc)
@@ -365,7 +361,7 @@ public class DataComparisonView extends ViewPart
 			{
 				autoRefreshEnabled = !autoRefreshEnabled;
 				setChecked(autoRefreshEnabled);
-				getSite().getShell().getDisplay().timerExec(autoRefreshEnabled ? autoRefreshInterval : -1, refreshTimer);
+				refreshController.setInterval(autoRefreshEnabled ? autoRefreshInterval : -1);
 			}
 		};
 		actionAutoRefresh.setChecked(autoRefreshEnabled);
@@ -708,6 +704,7 @@ public class DataComparisonView extends ViewPart
 	@Override
 	public void dispose()
 	{
+	   refreshController.dispose();
 		for(Image i : titleImages)
 		{
 			if (i != null)
