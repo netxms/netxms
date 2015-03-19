@@ -45,11 +45,48 @@
 
 #include <base64.h>
 
+/*** Byte swapping ***/
+#if WORDS_BIGENDIAN
+#define htonq(x) (x)
+#define ntohq(x) (x)
+#define htond(x) (x)
+#define ntohd(x) (x)
+#define SwapWideString(x)
+#else
+#ifdef HAVE_HTONLL
+#define htonq(x) htonll(x)
+#else
+#define htonq(x) __bswap_64(x)
+#endif
+#ifdef HAVE_NTOHLL
+#define ntohq(x) ntohll(x)
+#else
+#define ntohq(x) __bswap_64(x)
+#endif
+#define htond(x) __bswap_double(x)
+#define ntohd(x) __bswap_double(x)
+#define SwapWideString(x)  __bswap_wstr(x)
+#endif
 
-//
-// Serial communications
-//
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+#if defined(_WIN32) || !(HAVE_DECL___BSWAP_32)
+UINT32 LIBNETXMS_EXPORTABLE __bswap_32(UINT32 dwVal);
+#endif
+#if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
+UINT64 LIBNETXMS_EXPORTABLE __bswap_64(UINT64 qwVal);
+#endif
+double LIBNETXMS_EXPORTABLE __bswap_double(double dVal);
+void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr);
+
+#ifdef __cplusplus
+}
+#endif
+
+
+/*** Serial communications ***/
 #ifdef _WIN32
 
 #define FLOW_NONE       0
@@ -606,30 +643,40 @@ public:
    ByteStream(const void *data, size_t size);
    virtual ~ByteStream();
 
-   void seek(size_t pos) { if (pos < m_size) m_pos = pos; }
+   static ByteStream *load(const TCHAR *file);
+
+   void seek(size_t pos) { if (pos <= m_size) m_pos = pos; }
    size_t pos() { return m_pos; }
    size_t size() { return m_size; }
    bool eos() { return m_pos == m_size; }
 
    BYTE *buffer(size_t *size) { *size = m_size; return m_data; }
 
-   void write(void *data, size_t size);
+   void write(const void *data, size_t size);
    void write(char c) { write(&c, 1); }
    void write(BYTE b) { write(&b, 1); }
    void write(INT16 n) { UINT16 x = htons((UINT16)n); write(&x, 2); }
    void write(UINT16 n) { UINT16 x = htons(n); write(&x, 2); }
    void write(INT32 n) { UINT32 x = htonl((UINT32)n); write(&x, 4); }
    void write(UINT32 n) { UINT32 x = htonl(n); write(&x, 4); }
-   void write(char *s) { write(s, strlen(s)); }
+   void write(INT64 n) { UINT64 x = htonq((UINT64)n); write(&x, 8); }
+   void write(UINT64 n) { UINT64 x = htonq(n); write(&x, 8); }
+   void write(double n) { double x = htond(n); write(&x, 8); }
+   void writeString(const TCHAR *s);
 
-   size_t read(BYTE *buffer, size_t count);
+   size_t read(void *buffer, size_t count);
    char readChar() { return !eos() ? (char)m_data[m_pos++] : 0; }
    BYTE readByte() { return !eos() ? m_data[m_pos++] : 0; }
    INT16 readInt16();
    UINT16 readUInt16();
    INT32 readInt32();
    UINT32 readUInt32();
-   size_t readString(char *buffer, size_t count);
+   INT64 readInt64();
+   UINT64 readUInt64();
+   double readDouble();
+   TCHAR *readString();
+
+   bool save(int f);
 };
 
 /**
@@ -1169,28 +1216,6 @@ typedef struct _dir_struc_w
 // Functions
 //
 
-#if WORDS_BIGENDIAN
-#define htonq(x) (x)
-#define ntohq(x) (x)
-#define htond(x) (x)
-#define ntohd(x) (x)
-#define SwapWideString(x)
-#else
-#ifdef HAVE_HTONLL
-#define htonq(x) htonll(x)
-#else
-#define htonq(x) __bswap_64(x)
-#endif
-#ifdef HAVE_NTOHLL
-#define ntohq(x) ntohll(x)
-#else
-#define ntohq(x) __bswap_64(x)
-#endif
-#define htond(x) __bswap_double(x)
-#define ntohd(x) __bswap_double(x)
-#define SwapWideString(x)  __bswap_wstr(x)
-#endif
-
 #ifdef UNDER_CE
 #define close(x)        CloseHandle((HANDLE)(x))
 #endif
@@ -1231,15 +1256,6 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flag
 extern "C"
 {
 #endif
-
-#if defined(_WIN32) || !(HAVE_DECL___BSWAP_32)
-UINT32 LIBNETXMS_EXPORTABLE __bswap_32(UINT32 dwVal);
-#endif
-#if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
-UINT64 LIBNETXMS_EXPORTABLE __bswap_64(UINT64 qwVal);
-#endif
-double LIBNETXMS_EXPORTABLE __bswap_double(double dVal);
-void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr);
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 #if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)

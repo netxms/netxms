@@ -94,10 +94,12 @@ struct NXSL_FileHeader
    char magic[4];
    BYTE version;
    BYTE padding1[3];
+   UINT32 codeSectionOffset;
+   UINT32 stringSectionOffset;
+   UINT32 constSectionOffset;
    UINT32 moduleSectionOffset;
    UINT32 functionSectionOffset;
-   UINT32 constSectionOffset;
-   UINT32 padding2[3];
+   UINT32 padding2;
 };
 
 #ifdef __HP_aCC

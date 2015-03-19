@@ -21,6 +21,8 @@
 **
 **/
 
+#define _CRT_NONSTDC_NO_WARNINGS
+
 #include "nxscript.h"
 
 
@@ -40,14 +42,16 @@ int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
  */
 int main(int argc, char *argv[])
 {
-   TCHAR *pszSource, szError[1024], entryPoint[256] = _T("");
+   TCHAR *pszSource, szError[1024];
+   TCHAR entryPoint[256] = _T("");
+   char outFile[MAX_PATH] = "";
    UINT32 dwSize;
    NXSL_Program *pScript;
    NXSL_Environment *pEnv;
    NXSL_Value **ppArgs;
    NXSL_ExtFunction func;
    int i, ch;
-   bool dump = false, printResult = false;
+   bool dump = false, printResult = false, compileOnly = false, binary = false;
 
    func.m_iNumArgs = 0;
    func.m_pfHandler = F_new;
@@ -56,14 +60,20 @@ int main(int argc, char *argv[])
    m_pTestClass = new NXSL_TestClass;
 
    WriteToTerminal(_T("NetXMS Scripting Host  Version \x1b[1m") NETXMS_VERSION_STRING _T("\x1b[0m\n")
-                   _T("Copyright (c) 2005-2013 Victor Kirhenshtein\n\n"));
+                   _T("Copyright (c) 2005-2015 Victor Kirhenshtein\n\n"));
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "de:ru")) != -1)
+   while((ch = getopt(argc, argv, "bcde:o:r")) != -1)
    {
       switch(ch)
       {
+         case 'b':
+            binary = true;
+            break;
+         case 'c':
+            compileOnly = true;
+            break;
          case 'd':
             dump = true;
             break;
@@ -75,6 +85,10 @@ int main(int argc, char *argv[])
 				nx_strncpy(entryPoint, optarg, 256);
 #endif
 				break;
+         case 'o':
+				strncpy(outFile, optarg, MAX_PATH - 1);
+            outFile[MAX_PATH - 1] = 0;
+            break;
 			case 'r':
 				printResult = true;
 				break;
@@ -89,8 +103,11 @@ int main(int argc, char *argv[])
    {
       _tprintf(_T("Usage: nxscript [options] script [arg1 [... argN]]\n\n")
                _T("Valid options are:\n")
+               _T("   -b         Input is a binary file\n")
+               _T("   -c         Compile only\n")
                _T("   -d         Dump compiled script code\n")
 				   _T("   -e <name>  Entry point\n")
+               _T("   -o <file>  Write compiled script\n")
                _T("   -r         Print script return value\n")
                _T("\n"));
       return 127;
@@ -101,62 +118,103 @@ int main(int argc, char *argv[])
    WSAStartup(2, &wsaData);
 #endif
 
+   if (binary)
+   {
 #ifdef UNICODE
-	WCHAR *ucName = WideStringFromMBString(argv[optind]);
-   pszSource = NXSLLoadFile(ucName, &dwSize);
-	free(ucName);
+	   WCHAR *ucName = WideStringFromMBString(argv[optind]);
+      ByteStream *s = ByteStream::load(ucName);
+	   free(ucName);
 #else
-   pszSource = NXSLLoadFile(argv[optind], &dwSize);
+      ByteStream *s = ByteStream::load(argv[optind]);
 #endif
-	if (pszSource != NULL)
-	{
+      if (s == NULL)
+      {
+		   _tprintf(_T("Error: cannot load input file \"%hs\"\n"), argv[optind]);
+         return 1;
+      }
+
+      pScript = NXSL_Program::load(*s, szError, 1024);
+      delete s;
+   }
+   else
+   {
+#ifdef UNICODE
+	   WCHAR *ucName = WideStringFromMBString(argv[optind]);
+      pszSource = NXSLLoadFile(ucName, &dwSize);
+	   free(ucName);
+#else
+      pszSource = NXSLLoadFile(argv[optind], &dwSize);
+#endif
+	   if (pszSource == NULL)
+	   {
+		   _tprintf(_T("Error: cannot load input file \"%hs\"\n"), argv[optind]);
+         return 1;
+      }
+
 		pScript = NXSLCompile(pszSource, szError, 1024);
 		free(pszSource);
-		if (pScript != NULL)
-		{
-			if (dump)
-				pScript->dump(stdout);
-			pEnv = new NXSL_Environment;
-			pEnv->registerFunctionSet(1, &func);
+   }
+
+	if (pScript != NULL)
+	{
+		if (dump)
+			pScript->dump(stdout);
+
+      if (outFile[0] != 0)
+      {
+         int f = open(outFile, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IREAD | S_IWRITE);
+         if (f != -1)
+         {
+            ByteStream s(8192);
+            pScript->serialize(s);
+            s.save(f);
+            close(f);
+         }
+         else
+         {
+            _tprintf(_T("ERROR: cannot open output file \"%hs\": %s\n"), _tcserror(errno));
+         }
+      }
+
+      if (!compileOnly)
+      {
+		   pEnv = new NXSL_Environment;
+		   pEnv->registerFunctionSet(1, &func);
 
          // Create VM
          NXSL_VM *vm = new NXSL_VM(pEnv);
 
-			// Prepare arguments
-			if (argc - optind > 1)
-			{
-				ppArgs = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * (argc - optind - 1));
-				for(i = optind + 1; i < argc; i++)
-					ppArgs[i - optind - 1] = new NXSL_Value(argv[i]);
-			}
-			else
-			{
-				ppArgs = NULL;
-			}
+		   // Prepare arguments
+		   if (argc - optind > 1)
+		   {
+			   ppArgs = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * (argc - optind - 1));
+			   for(i = optind + 1; i < argc; i++)
+				   ppArgs[i - optind - 1] = new NXSL_Value(argv[i]);
+		   }
+		   else
+		   {
+			   ppArgs = NULL;
+		   }
 
          if (vm->load(pScript) &&
-			    vm->run(argc - optind - 1, ppArgs, NULL, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL))
-			{
-				NXSL_Value *result = vm->getResult();
-				if (printResult)
+		       vm->run(argc - optind - 1, ppArgs, NULL, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL))
+		   {
+			   NXSL_Value *result = vm->getResult();
+			   if (printResult)
                WriteToTerminalEx(_T("Result = %s\n"), (result != NULL) ? result->getValueAsCString() : _T("(null)"));
-			}
-			else
-			{
-				WriteToTerminalEx(_T("%s\n"), vm->getErrorText());
-			}
-			safe_free(ppArgs);
+		   }
+		   else
+		   {
+			   WriteToTerminalEx(_T("%s\n"), vm->getErrorText());
+		   }
+		   safe_free(ppArgs);
          delete vm;
-         delete pScript;
-		}
-		else
-		{
-			WriteToTerminalEx(_T("%s\n"), szError);
-		}
+      }
+      delete pScript;
 	}
 	else
 	{
-		_tprintf(_T("Error: cannot load input file \"%hs\"\n"), argv[optind]);
+		WriteToTerminalEx(_T("%s\n"), szError);
 	}
    return 0;
 }
