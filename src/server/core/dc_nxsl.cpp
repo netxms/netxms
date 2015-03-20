@@ -462,35 +462,35 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
  * Format: PushDCIData(node, dciId, value)
  * No return value
  */
- static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
- {
+static int F_PushDCIData(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
    if (!argv[0]->isObject())
-		return NXSL_ERR_NOT_OBJECT;
+      return NXSL_ERR_NOT_OBJECT;
 
-	if (!argv[1]->isInteger())
-		return NXSL_ERR_NOT_INTEGER;
+   if (!argv[1]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
 
-    if (!argv[2]->isString())
-        return NXSL_ERR_NOT_STRING;
+   if (!argv[2]->isString())
+      return NXSL_ERR_NOT_STRING;
 
    NXSL_Object *object = argv[0]->getValueAsObject();
-	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
-		return NXSL_ERR_BAD_CLASS;
-	DataCollectionTarget *node = (Node *)object->getData();
+   if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+   DataCollectionTarget *node = (Node *)object->getData();
 
-    bool success = false;
+   bool success = false;
 	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
-    if ((dci != NULL) && (dci->getDataSource() == DS_PUSH_AGENT))
-    {
+   if ((dci != NULL) && (dci->getDataSource() == DS_PUSH_AGENT))
+   {
       time_t t = time(NULL);
       success = node->processNewDCValue(dci, t, argv[2]->getValueAsCString());
       if (success)
-        dci->setLastPollTime(t);
-    }
-    
-    *ppResult = new NXSL_Value(success ? 1 : 0);
-    return 0;
- }
+         dci->setLastPollTime(t);
+   }
+
+   *ppResult = new NXSL_Value(success ? 1 : 0);
+   return 0;
+}
 
 /**
  * Additional NXSL functions for DCI manipulation

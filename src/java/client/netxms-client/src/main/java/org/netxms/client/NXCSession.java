@@ -4948,12 +4948,21 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          @Override
          public boolean processMessage(NXCPMessage m)
          {
-            String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
-            if (text != null)
+            if (m.getFieldAsInt32(NXCPCodes.VID_RCC) != RCC.SUCCESS)
             {
-               if (listener != null)
-                  listener.messageReceived(text);
+               String errorMessage = m.getFieldAsString(NXCPCodes.VID_ERROR_TEXT);
+               if ((errorMessage != null) && (listener != null))
+               {
+                  listener.messageReceived(errorMessage + "\n\n");
+               }
             }
+            
+            String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
+            if ((text != null) && (listener != null))
+            {
+               listener.messageReceived(text);
+            }
+            
             if (m.isEndOfSequence())
                setComplete();
             return true;
