@@ -462,7 +462,7 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUTF8String(const char *s)
  */
 char LIBNETXMS_EXPORTABLE *UTF8StringFromMBString(const char *s)
 {
-   int len = strlen(s) * 3;   // assume worst case - 3 bytes per character
+   int len = (int)strlen(s) * 3 + 1;   // assume worst case - 3 bytes per character
    char *out = (char *)malloc(len);
    mb_to_utf8(s, -1, out, len);
    return out;
@@ -751,7 +751,31 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *
 
 #endif	/* UNICODE_UCS4 */
 
-#if !defined(_WIN32)
+#ifdef _WIN32
+
+/**
+ * Convert UTF-8 to multibyte
+ */
+size_t LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int dstLen)
+{
+   int len = (int)strlen(src) + 1;
+   WCHAR *buffer = (len <= 32768) ? (WCHAR *)alloca(len) : (WCHAR *)malloc(len);
+   MultiByteToWideChar(CP_UTF8, 0, src, -1, buffer, len);
+   return WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, dst, dstLen, NULL, NULL);
+}
+
+/**
+ * Convert multibyte to UTF-8
+ */
+size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, int dstLen)
+{
+   int len = (int)strlen(src) + 1;
+   WCHAR *buffer = (len <= 32768) ? (WCHAR *)alloca(len) : (WCHAR *)malloc(len);
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, src, -1, buffer, len);
+   return WideCharToMultiByte(CP_UTF8, 0, buffer, -1, dst, dstLen, NULL, NULL);
+}
+
+#else /* not _WIN32 */
 
 /**
  * Convert UCS-2 to multibyte
