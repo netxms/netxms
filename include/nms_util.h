@@ -316,6 +316,7 @@ public:
 
    void append(const TCHAR *str) { if (str != NULL) append(str, _tcslen(str)); }
 	void append(const TCHAR *str, size_t len);
+   void append(const TCHAR c) { append(&c, 1); }
 
 	void appendPreallocated(TCHAR *str) { if (str != NULL) { append(str); free(str); } }
 

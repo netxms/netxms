@@ -53,6 +53,8 @@ Source: "..\..\..\Release\nxpush.exe"; DestDir: "{app}\bin"; Flags: ignoreversio
 Source: "..\..\..\Release\libnxmap.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\Release\libnxclient.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 
+;#include "custom.iss"
+
 #include "common.iss"
 
 Function GetCustomCmdLine(Param: String): String;

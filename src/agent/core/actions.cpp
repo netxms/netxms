@@ -183,6 +183,40 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
    msg.setCode(CMD_COMMAND_OUTPUT);
    msg.deleteAllFields();
 
+   DebugPrintf(INVALID_INDEX, 4, _T("ActionExecutionThread: Expanding command \"%s\""), data->m_cmdLine);
+
+   // Substitute $1 .. $9 with actual arguments
+   if (data->m_args != NULL)
+   {
+      String cmdLine;
+      for(const TCHAR *sptr = data->m_cmdLine; *sptr != 0; sptr++)
+         if (*sptr == _T('$'))
+         {
+            sptr++;
+            if (*sptr == 0)
+               break;   // Single $ character at the end of line
+            if ((*sptr >= _T('1')) && (*sptr <= _T('9')))
+            {
+               int argNum = *sptr - _T('1');
+               if (argNum < data->m_args->size())
+               {
+                  cmdLine.append(data->m_args->get(argNum));
+               }
+            }
+            else
+            {
+               cmdLine.append(*sptr);
+            }
+         }
+         else
+         {
+            cmdLine.append(*sptr);
+         }
+      free(data->m_cmdLine);
+      data->m_cmdLine = _tcsdup(cmdLine.getBuffer());
+   }
+
+   DebugPrintf(INVALID_INDEX, 4, _T("ActionExecutionThread: Executing \"%s\""), data->m_cmdLine);
    FILE *pipe = _tpopen(data->m_cmdLine, _T("r"));
    if (pipe != NULL)
    {
