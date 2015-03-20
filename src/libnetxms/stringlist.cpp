@@ -170,6 +170,48 @@ void StringList::replace(int index, const TCHAR *value)
 }
 
 /**
+ * Add or replace string at given position
+ */
+void StringList::addOrReplace(int index, const TCHAR *value)
+{
+   if (index < 0)
+      return;
+
+   if (index < m_count)
+   {
+	   safe_free(m_values[index]);
+      m_values[index] = _tcsdup(value);
+   }
+   else
+   {
+      for(int i = m_count; i < index; i++)
+         add(_T(""));
+      add(value);
+   }
+}
+
+/**
+ * Add or replace string at given position
+ */
+void StringList::addOrReplacePreallocated(int index, TCHAR *value)
+{
+   if (index < 0)
+      return;
+
+   if (index < m_count)
+   {
+	   safe_free(m_values[index]);
+      m_values[index] = value;
+   }
+   else
+   {
+      for(int i = m_count; i < index; i++)
+         add(_T(""));
+      addPreallocated(value);
+   }
+}
+
+/**
  * Get index of given value. Returns zero-based index ot -1 
  * if given value not found in the list. If list contains duplicate values,
  * index of first occurence will be returned.

@@ -574,6 +574,8 @@ public:
 	void add(UINT64 value);
 	void add(double value);
 	void replace(int index, const TCHAR *value);
+	void addOrReplace(int index, const TCHAR *value);
+	void addOrReplacePreallocated(int index, TCHAR *value);
 	void clear();
 	int size() { return m_count; }
 	const TCHAR *get(int index) { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
