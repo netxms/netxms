@@ -1486,6 +1486,11 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const WCHAR *pwszString)
 WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString);
 #endif
 
+size_t LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int dstLen);
+size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, int dstLen);
+char LIBNETXMS_EXPORTABLE *MBStringFromUTF8String(const char *s);
+char LIBNETXMS_EXPORTABLE *UTF8StringFromMBString(const char *s);
+
 #if !defined(_WIN32) && !HAVE_WSTAT
 int wstat(const WCHAR *_path, struct stat *_sbuf);
 #endif

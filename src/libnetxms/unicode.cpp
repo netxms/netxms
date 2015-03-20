@@ -446,6 +446,29 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString)
 }
 
 /**
+ * Convert UTF8 string to multibyte string using current codepage and
+ * allocating multibyte string dynamically
+ */
+char LIBNETXMS_EXPORTABLE *MBStringFromUTF8String(const char *s)
+{
+   int len = (int)strlen(s) + 1;
+   char *out = (char *)malloc(len);
+   utf8_to_mb(s, -1, out, len);
+   return out;
+}
+
+/**
+ * Convert multibyte string to UTF8 string allocating UTF8 string dynamically
+ */
+char LIBNETXMS_EXPORTABLE *UTF8StringFromMBString(const char *s)
+{
+   int len = strlen(s) * 3;   // assume worst case - 3 bytes per character
+   char *out = (char *)malloc(len);
+   mb_to_utf8(s, -1, out, len);
+   return out;
+}
+
+/**
  * Get OpenSSL error string as UNICODE string
  * Buffer must be at least 256 character long
  */
@@ -647,9 +670,9 @@ WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString)
 }
 
 /**
- * Convert UCS-2 to UTF-8
+ * Convert UCS-2 to UTF-8 using stub (no actual conversion for character codes above 0x007F)
  */
-inline size_t ucs2_to_utf8_simple_copy(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
+static size_t ucs2_to_utf8_simple_copy(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
    const UCS2CHAR *psrc;
    char *pdst;
@@ -659,14 +682,17 @@ inline size_t ucs2_to_utf8_simple_copy(const UCS2CHAR *src, int srcLen, char *ds
    if (size >= dstLen)
       size = dstLen - 1;
    for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-      *pdst = (*psrc < 256) ? (char) (*psrc) : '?';
+      *pdst = (*psrc < 128) ? (char) (*psrc) : '?';
    *pdst = 0;
    return size;
 }
 
 #ifndef __DISABLE_ICONV
 
-inline size_t ucs2_to_utf8_iconv(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
+/**
+ * Convert UCS-2 to UTF-8 using iconv
+ */
+static size_t ucs2_to_utf8_iconv(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
    iconv_t cd;
    const char *inbuf;
@@ -711,6 +737,9 @@ inline size_t ucs2_to_utf8_iconv(const UCS2CHAR *src, int srcLen, char *dst, int
 
 #endif
 
+/**
+ * Convert UCS-2 to UTF-8
+ */
 size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
 #if HAVE_ICONV && !defined(__DISABLE_ICONV)
@@ -905,6 +934,166 @@ char LIBNETXMS_EXPORTABLE *MBStringFromUCS2String(const UCS2CHAR *pszString)
 }
 
 #endif /* !UNICODE_UCS2 */
+
+/**
+ * Convert multibyte to UTF-8 using stub (no actual conversion for character codes above 0x7F)
+ */
+static size_t mb_to_utf8_simple_copy(const char *src, int srcLen, char *dst, int dstLen)
+{
+   const char *psrc;
+   char *pdst;
+   int pos, size;
+
+   size = (srcLen == -1) ? strlen(src) : srcLen;
+   if (size >= dstLen)
+      size = dstLen - 1;
+   for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
+      *pdst = (*psrc < 128) ? (char) (*psrc) : '?';
+   *pdst = 0;
+   return size;
+}
+
+#ifndef __DISABLE_ICONV
+
+/**
+ * Convert multibyte to UTF-8 using iconv
+ */
+static size_t mb_to_utf8_iconv(const char *src, int srcLen, char *dst, int dstLen)
+{
+   iconv_t cd;
+   const char *inbuf;
+   char *outbuf;
+   size_t count, inbytes, outbytes;
+
+   cd = IconvOpen("UTF-8", m_cpDefault);
+   if (cd == (iconv_t)(-1))
+   {
+      return mb_to_utf8_simple_copy(src, srcLen, dst, dstLen);
+   }
+
+   inbuf = (const char *)src;
+   inbytes = (srcLen == -1) ? strlen(src) + 1 : (size_t)srcLen;
+   outbuf = (char *)dst;
+   outbytes = (size_t)dstLen;
+   count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
+   IconvClose(cd);
+
+   if (count == (size_t) - 1)
+   {
+      if (errno == EILSEQ)
+      {
+         count = dstLen * sizeof(char) - outbytes;
+      }
+      else
+      {
+         count = 0;
+      }
+   }
+   else
+   {
+      count = dstLen - outbytes;
+   }
+   if ((srcLen == -1) && (outbytes >= 1))
+   {
+      *((char *)outbuf) = 0;
+   }
+
+   return count;
+}
+
+#endif
+
+/**
+ * Convert multibyte to UTF-8
+ */
+size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, int dstLen)
+{
+#if HAVE_ICONV && !defined(__DISABLE_ICONV)
+   return mb_to_utf8_iconv(src, srcLen, dst, dstLen);
+#else
+   return mb_to_utf8_simple_copy(src, srcLen, dst, dstLen);
+#endif
+}
+
+/**
+ * Convert UTF-8 to multibyte using stub (no actual conversion for character codes above 0x7F)
+ */
+static size_t utf8_to_mb_simple_copy(const char *src, int srcLen, char *dst, int dstLen)
+{
+   const char *psrc;
+   char *pdst;
+   int pos, size;
+
+   size = (srcLen == -1) ? strlen(src) : srcLen;
+   if (size >= dstLen)
+      size = dstLen - 1;
+   for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
+      *pdst = (*psrc < 128) ? (char) (*psrc) : '?';
+   *pdst = 0;
+   return size;
+}
+
+#ifndef __DISABLE_ICONV
+
+/**
+ * Convert UTF-8 to multibyte using iconv
+ */
+static size_t utf8_to_mb_iconv(const char *src, int srcLen, char *dst, int dstLen)
+{
+   iconv_t cd;
+   const char *inbuf;
+   char *outbuf;
+   size_t count, inbytes, outbytes;
+
+   cd = IconvOpen(m_cpDefault, "UTF-8");
+   if (cd == (iconv_t)(-1))
+   {
+      return utf8_to_mb_simple_copy(src, srcLen, dst, dstLen);
+   }
+
+   inbuf = (const char *)src;
+   inbytes = (srcLen == -1) ? strlen(src) + 1 : (size_t)srcLen;
+   outbuf = (char *)dst;
+   outbytes = (size_t)dstLen;
+   count = iconv(cd, (ICONV_CONST char **)&inbuf, &inbytes, &outbuf, &outbytes);
+   IconvClose(cd);
+
+   if (count == (size_t) - 1)
+   {
+      if (errno == EILSEQ)
+      {
+         count = dstLen * sizeof(char) - outbytes;
+      }
+      else
+      {
+         count = 0;
+      }
+   }
+   else
+   {
+      count = dstLen - outbytes;
+   }
+   if ((srcLen == -1) && (outbytes >= 1))
+   {
+      *((char *)outbuf) = 0;
+   }
+
+   return count;
+}
+
+#endif
+
+/**
+ * Convert UTF-8 to multibyte
+ */
+size_t LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int dstLen)
+{
+#if HAVE_ICONV && !defined(__DISABLE_ICONV)
+   return utf8_to_mb_iconv(src, srcLen, dst, dstLen);
+#else
+   return utf8_to_mb_simple_copy(src, srcLen, dst, dstLen);
+#endif
+}
 
 #endif	/* !defined(_WIN32) */
 
