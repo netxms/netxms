@@ -1589,6 +1589,28 @@ int LIBNETXMS_EXPORTABLE wcscasecmp(const wchar_t *s1, const wchar_t *s2);
 int LIBNETXMS_EXPORTABLE wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
 #endif
 
+#ifndef _WIN32
+
+#if HAVE_ITOA && !HAVE__ITOA
+#define _itoa itoa
+#undef HAVE__ITOA
+#define HAVE__ITOA 1
+#endif
+#if !HAVE__ITOA && !defined(_WIN32)
+char LIBNETXMS_EXPORTABLE *_itoa(int value, char *str, int base);
+#endif
+
+#if HAVE_ITOW && !HAVE__ITOW
+#define _itow itow
+#undef HAVE__ITOW
+#define HAVE__ITOW 1
+#endif
+#if !HAVE__ITOW && !defined(_WIN32)
+WCHAR LIBNETXMS_EXPORTABLE *_itow(int value, WCHAR *str, int base);
+#endif
+
+#endif /* _WIN32 */
+
 #ifdef _WIN32
 #ifdef UNICODE
 DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *filename);

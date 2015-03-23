@@ -1615,7 +1615,7 @@ AC_CHECK_FUNCS([gettimeofday memmove memset bcopy strchr strcspn strdup strerror
 AC_CHECK_FUNCS([strrchr strlwr strtol strtoul strtoll strtoull setlocale])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
-AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r])
+AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r itoa _itoa])
 
 AC_CHECK_DECLS([nanosleep])
 
@@ -1958,6 +1958,7 @@ AC_CHECK_FUNCS([wcslwr wcserror wcserror_r wfopen wfopen64 fputws putws])
 AC_CHECK_FUNCS([wopen wstat waccess wgetenv wrename wunlink wremove wchdir])
 AC_CHECK_FUNCS([wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod vwscanf])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
+AC_CHECK_FUNCS([itow _itow])
 
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,

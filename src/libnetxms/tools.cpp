@@ -2190,3 +2190,67 @@ WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str)
 }
 
 #endif
+
+#if !HAVE__ITOA && !defined(_WIN32)
+
+/**
+ * _itoa() implementation
+ */
+char LIBNETXMS_EXPORTABLE *_itoa(int value, char *str, int base)
+{
+   char *p = str;
+   if (value < 0)
+   {
+      *p++ = '-';
+      value = -value;
+   }
+   
+   char buffer[64];
+   char *t = buffer;
+   do
+   {
+      int rem = value % base;
+      *t++ = (rem < 10) ? (rem + '0') : (rem - 10 + 'a');
+      value = value / base;
+   } while(value > 0);
+
+   t--;
+   while(t >= buffer)
+      *p++ = *t--;
+   *p = 0;
+   return str;
+}
+
+#endif
+
+#if !HAVE__ITOA && !defined(_WIN32)
+
+/**
+ * _itow() implementation
+ */
+WCHAR LIBNETXMS_EXPORTABLE *_itow(int value, WCHAR *str, int base)
+{
+   WCHAR *p = str;
+   if (value < 0)
+   {
+      *p++ = '-';
+      value = -value;
+   }
+   
+   WCHAR buffer[64];
+   WCHAR *t = buffer;
+   do
+   {
+      int rem = value % base;
+      *t++ = (rem < 10) ? (rem + '0') : (rem - 10 + 'a');
+      value = value / base;
+   } while(value > 0);
+
+   t--;
+   while(t >= buffer)
+      *p++ = *t--;
+   *p = 0;
+   return str;
+}
+
+#endif

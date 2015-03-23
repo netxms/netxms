@@ -320,6 +320,31 @@ static void TestInetAddress()
 }
 
 /**
+ * Test itoa/itow
+ */
+static void TestItoa()
+{
+   char buffer[64];
+   WCHAR wbuffer[64];
+
+   StartTest(_T("itoa"));
+   AssertTrue(!strcmp(_itoa(127, buffer, 10), "127"));
+   AssertTrue(!strcmp(_itoa(0, buffer, 10), "0"));
+   AssertTrue(!strcmp(_itoa(-3, buffer, 10), "-3"));
+   AssertTrue(!strcmp(_itoa(0555, buffer, 8), "555"));
+   AssertTrue(!strcmp(_itoa(0xFA48, buffer, 16), "fa48"));
+   EndTest();
+
+   StartTest(_T("itow"));
+   AssertTrue(!wcscmp(_itow(127, wbuffer, 10), L"127"));
+   AssertTrue(!wcscmp(_itow(0, wbuffer, 10), L"0"));
+   AssertTrue(!wcscmp(_itow(-3, wbuffer, 10), L"-3"));
+   AssertTrue(!wcscmp(_itow(0555, wbuffer, 8), L"555"));
+   AssertTrue(!wcscmp(_itow(0xFA48, wbuffer, 16), L"fa48"));
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -335,5 +360,6 @@ int main(int argc, char *argv[])
    TestStringSet();
    TestMsgWaitQueue();
    TestInetAddress();
+   TestItoa();
    return 0;
 }
