@@ -8,6 +8,8 @@ import net.sf.jasperreports.engine.query.JRQueryExecuter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
@@ -54,19 +56,24 @@ public class NXCLQueryExecutor implements JRQueryExecuter {
             URL[] urls = {new URL("file:" + reportLocation)};
             ReportClassLoader classLoader = new ReportClassLoader(urls, getClass().getClassLoader());
             Class<NXCLDataSource> aClass = (Class<NXCLDataSource>) classLoader.loadClass("report.DataSource");
-            NXCLDataSource dataSource = aClass.newInstance();
+            Constructor<NXCLDataSource> constructor = aClass.getConstructor(JRDataset.class, Map.class);
+            NXCLDataSource dataSource = constructor.newInstance(dataset, parametersMap);
             JRQueryChunk chunk = dataset.getQuery().getChunks()[0];
             dataSource.setQuery(chunk.getText().trim());
             dataSource.connect(settings.getNetxmsServer(), settings.getNetxmsLogin(), settings.getNetxmsPassword());
             return dataSource;
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            // ignore
         } catch (MalformedURLException e) {
-            e.printStackTrace();
+            log.error("Can't load report data source", e);
         } catch (InstantiationException e) {
-            e.printStackTrace();
+            log.error("Can't load report data source", e);
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            log.error("Can't load report data source", e);
+        } catch (NoSuchMethodException e) {
+            log.error("Can't load report data source", e);
+        } catch (InvocationTargetException e) {
+            log.error("Can't load report data source", e);
         }
         return null;
     }
