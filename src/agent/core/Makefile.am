@@ -11,15 +11,15 @@ nxagentd_LDADD = ../appagent/libappagent.la @top_srcdir@/src/db/libnxdb/libnxdb.
 else
 nxagentd_LDADD = ../appagent/libappagent.la @top_srcdir@/src/db/libnxdb/libnxdb.la @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la @SUBAGENT_LIBS@ 
 endif
+if USE_ENCRYPTION
+nxagentd_LDADD += -lssl
+endif
 if STATIC_BUILD
 if ALL_STATIC
 nxagentd_LDFLAGS = -all-static
 else
 nxagentd_LDFLAGS = -static
 endif
-endif
-if USE_ENCRYPTION
-nxagentd_LIBADD += -lssl
 endif
 CLEANFILES = messages.c messages.h static_subagents.cpp
 
