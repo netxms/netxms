@@ -93,7 +93,7 @@ void MongoLogging(mongoc_log_level_t  log_level, const char *log_domain, const c
          break;
    }
 #ifdef UNICODE
-   AgentWriteLog(severity, _T("MONGODB: Driver message: Domain: %hs. Message: %hs"), _log_domain, _message);
+   AgentWriteLog(severity, _T("MONGODB: Driver message: Domain: %hs. Message: %hs"), log_domain, message);
 #else
    AgentWriteLog(severity, _T("MONGODB: Driver message: Domain: %s. Message: %s"),log_domain, message);
 #endif // UNICODE
@@ -232,10 +232,10 @@ DECLARE_SUBAGENT_ENTRY_POINT(MONGODB)
    if (s_info.parameters != NULL)
       return FALSE;  // Most likely another instance of MONGODB subagent already loaded
 
-   BOOL result = LoadConfiguration(config);
+   //BOOL result = LoadConfiguration(config);
 
 	*ppInfo = &s_info;
-	return result;
+	return FALSE;
 }
 
 #ifdef _WIN32
