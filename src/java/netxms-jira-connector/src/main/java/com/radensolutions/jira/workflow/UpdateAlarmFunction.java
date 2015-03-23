@@ -6,10 +6,14 @@ import com.opensymphony.module.propertyset.PropertySet;
 import com.opensymphony.workflow.WorkflowException;
 import com.radensolutions.jira.NetxmsConnector;
 import com.radensolutions.jira.SettingsManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 public class UpdateAlarmFunction extends AbstractJiraFunctionProvider {
+
+    private static final Logger log = LoggerFactory.getLogger(UpdateAlarmFunction.class);
 
     public static final String ACKNOWLEDGED = "acknowledged";
     public static final String RESOLVED = "resolved";
@@ -43,6 +47,7 @@ public class UpdateAlarmFunction extends AbstractJiraFunctionProvider {
         if (args.containsKey(UpdateAlarmFunctionFactory.KEY)) {
             String operation = ((String) args.get(UpdateAlarmFunctionFactory.KEY));
             String issueKey = issue.getKey();
+            log.debug(String.format("Update alarm, operation: %s, key: %s", operation, issueKey));
             boolean ret = true;
             if (operation.equals(ACKNOWLEDGED)) {
                 ret = connector.acknowledgeAlarm(issueKey);
