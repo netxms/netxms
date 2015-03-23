@@ -562,7 +562,7 @@ private:
 
 public:
 	StringList();
-	StringList(StringList *src);
+	StringList(const StringList *src);
 	StringList(const TCHAR *src, const TCHAR *separator);
 	~StringList();
 
@@ -577,10 +577,10 @@ public:
 	void addOrReplace(int index, const TCHAR *value);
 	void addOrReplacePreallocated(int index, TCHAR *value);
 	void clear();
-	int size() { return m_count; }
-	const TCHAR *get(int index) { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
-	int indexOf(const TCHAR *value);
-	int indexOfIgnoreCase(const TCHAR *value);
+	int size() const { return m_count; }
+	const TCHAR *get(int index) const { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
+	int indexOf(const TCHAR *value) const;
+	int indexOfIgnoreCase(const TCHAR *value) const;
 	void remove(int index);
    void addAll(const StringList *src);
    void merge(const StringList *src, bool matchCase);

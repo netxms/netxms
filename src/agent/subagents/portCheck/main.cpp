@@ -5,10 +5,6 @@
 #include <nxcldefs.h>
 #include <nxcpapi.h>
 
-#ifdef _WITH_ENCRYPTION
-#include <openssl/ssl.h>
-#endif
-
 #ifdef _WIN32
 #define PORTCHECK_EXPORTABLE __declspec(dllexport) __cdecl
 #else
@@ -171,10 +167,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 static BOOL SubagentInit(Config *config)
 {
 	config->parseTemplate(_T("portCheck"), m_cfgTemplate);
-#ifdef _WITH_ENCRYPTION
-   SSL_library_init();
-   SSL_load_error_strings();
-#endif
 	return TRUE;
 }
 

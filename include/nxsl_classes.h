@@ -170,18 +170,19 @@ private:
 
 public:
 	NXSL_Array();
-	NXSL_Array(NXSL_Array *src);
+	NXSL_Array(const NXSL_Array *src);
+   NXSL_Array(const StringList *values);
 	~NXSL_Array();
 
 	void incRefCount() { m_refCount++; }
 	void decRefCount() { m_refCount--; }
-	BOOL isUnused() { return m_refCount < 1; }
+	BOOL isUnused() const { return m_refCount < 1; }
 
 	void set(int index, NXSL_Value *value);
-	NXSL_Value *get(int index);
-	NXSL_Value *getByPosition(int position);
+	NXSL_Value *get(int index) const;
+	NXSL_Value *getByPosition(int position) const;
 
-	int size() { return m_size; }
+	int size() const { return m_size; }
 };
 
 /**

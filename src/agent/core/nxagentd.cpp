@@ -42,6 +42,9 @@
 #include <sys/sysctl.h>
 #endif
 
+#ifdef _WITH_ENCRYPTION
+#include <openssl/ssl.h>
+#endif
 
 /**
  * Externals
@@ -775,6 +778,14 @@ BOOL Initialize()
       nxlog_write(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       return FALSE;
    }
+
+   // Initialize libssl - it is not used by core agent
+   // but may be needed by some subagents. Allowing first load of libssl by
+   // subagent via dlopen() may lead to undesired side effects
+#ifdef _WITH_ENCRYPTION
+   SSL_library_init();
+   SSL_load_error_strings();
+#endif
 
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{

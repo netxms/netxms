@@ -18,6 +18,9 @@ else
 nxagentd_LDFLAGS = -static
 endif
 endif
+if USE_ENCRYPTION
+nxagentd_LIBADD += -lssl
+endif
 CLEANFILES = messages.c messages.h static_subagents.cpp
 
 messages.c: messages.h

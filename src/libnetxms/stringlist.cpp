@@ -39,7 +39,7 @@ StringList::StringList()
 /**
  * Constructor: create copy of existing string list
  */
-StringList::StringList(StringList *src)
+StringList::StringList(const StringList *src)
 {
 	m_count = 0;
    m_allocated = src->m_allocated;
@@ -216,7 +216,7 @@ void StringList::addOrReplacePreallocated(int index, TCHAR *value)
  * if given value not found in the list. If list contains duplicate values,
  * index of first occurence will be returned.
  */
-int StringList::indexOf(const TCHAR *value)
+int StringList::indexOf(const TCHAR *value) const
 {
 	for(int i = 0; i < m_count; i++)
 		if ((m_values[i] != NULL) && !_tcscmp(m_values[i], value))
@@ -229,7 +229,7 @@ int StringList::indexOf(const TCHAR *value)
  * if given value not found in the list. If list contains duplicate values,
  * index of first occurence will be returned.
  */
-int StringList::indexOfIgnoreCase(const TCHAR *value)
+int StringList::indexOfIgnoreCase(const TCHAR *value) const
 {
 	for(int i = 0; i < m_count; i++)
 		if ((m_values[i] != NULL) && !_tcsicmp(m_values[i], value))

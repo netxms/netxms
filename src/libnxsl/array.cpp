@@ -37,20 +37,41 @@ NXSL_Array::NXSL_Array()
 /**
  *  Create copy of given array
  */
-NXSL_Array::NXSL_Array(NXSL_Array *src)
+NXSL_Array::NXSL_Array(const NXSL_Array *src)
 {
-	int i;
-
 	m_refCount = 0;
 	m_size = src->m_size;
 	m_allocated = src->m_size;
 	if (m_size > 0)
 	{
 		m_data = (NXSL_ArrayElement *)malloc(sizeof(NXSL_ArrayElement) * m_size);
-		for(i = 0; i < m_size; i++)
+		for(int i = 0; i < m_size; i++)
 		{
 			m_data[i].index = src->m_data[i].index;
 			m_data[i].value = new NXSL_Value(src->m_data[i].value);
+		}
+	}
+	else
+	{
+		m_data = NULL;
+	}
+}
+
+/**
+ * Create array populated with values from string list
+ */
+NXSL_Array::NXSL_Array(const StringList *values)
+{
+	m_refCount = 0;
+	m_size = values->size();
+	m_allocated = m_size;
+	if (m_size > 0)
+	{
+		m_data = (NXSL_ArrayElement *)malloc(sizeof(NXSL_ArrayElement) * m_size);
+		for(int i = 0; i < m_size; i++)
+		{
+			m_data[i].index = i;
+			m_data[i].value = new NXSL_Value(values->get(i));
 		}
 	}
 	else
@@ -82,7 +103,7 @@ static int CompareElements(const void *p1, const void *p2)
 /**
  * Get element by index
  */
-NXSL_Value *NXSL_Array::get(int index)
+NXSL_Value *NXSL_Array::get(int index) const
 {
 	NXSL_ArrayElement *element, key;
 
@@ -94,7 +115,7 @@ NXSL_Value *NXSL_Array::get(int index)
 /**
  * Get element by internal position (used by iterator)
  */
-NXSL_Value *NXSL_Array::getByPosition(int position)
+NXSL_Value *NXSL_Array::getByPosition(int position) const
 {
 	if ((position < 0) || (position >= m_size))
 		return NULL;
