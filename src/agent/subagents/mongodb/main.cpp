@@ -93,13 +93,9 @@ void MongoLogging(mongoc_log_level_t  log_level, const char *log_domain, const c
          break;
    }
 #ifdef UNICODE
-   TCHAR *_message = WideStringFromUTF8String(message);
-   TCHAR *_log_domain = WideStringFromUTF8String(log_domain);
-   AgentWriteLog(severity, _T("MONGODB: Driver message: Domain: %s. Message: %s"), _log_domain, _message);
-   safe_free(_message);
-   safe_free(_log_domain);
+   AgentWriteLog(severity, _T("MONGODB: Driver message: Domain: %hs. Message: %hs"), _log_domain, _message);
 #else
-   AgentWriteLog(severity, _T("MONGODB: Internal error. Domain: %s. Message: %s"),log_domain, message);
+   AgentWriteLog(severity, _T("MONGODB: Driver message: Domain: %s. Message: %s"),log_domain, message);
 #endif // UNICODE
 }
 

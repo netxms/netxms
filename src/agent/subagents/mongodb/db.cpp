@@ -67,7 +67,7 @@ bool AddMongoDBFromConfig(const TCHAR *config)
    DatabaseInstance *db = new DatabaseInstance(&info);
    if(db->connectionEstablished())
    {
-      AgentWriteDebugLog(NXLOG_WARNING, _T("MONGODB: Connsection estables and db added to list: %s"), info.id);
+      AgentWriteDebugLog(NXLOG_WARNING, _T("MONGODB: Connection estables and db added to list: %s"), info.id);
       g_instances->add(db);
       sucess = true;
    }
