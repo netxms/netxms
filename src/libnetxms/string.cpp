@@ -230,6 +230,46 @@ void String::append(const TCHAR *str, size_t len)
 }
 
 /**
+ * Append integer
+ */
+void String::append(INT32 n)
+{
+   TCHAR buffer[64];
+   append(_itot(n, buffer, 10));
+}
+
+/**
+ * Append integer
+ */
+void String::append(UINT32 n)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, _T("%u"), n);
+   append(buffer);
+}
+
+/**
+ * Append integer
+ */
+void String::append(INT64 n)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, INT64_FMT, n);
+   append(buffer);
+}
+
+/**
+ * Append integer
+ */
+void String::append(UINT64 n)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, UINT64_FMT, n);
+   append(buffer);
+}
+
+
+/**
  * Append multibyte string to the end of buffer
  */
 void String::appendMBString(const char *str, size_t len, int nCodePage)

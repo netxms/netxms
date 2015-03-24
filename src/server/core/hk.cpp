@@ -115,7 +115,7 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
  */
 static void CleanDciData(NetObj *object, void *data)
 {
-	((DataCollectionTarget *)object)->cleanDCIData();
+	((DataCollectionTarget *)object)->cleanDCIData((DB_HANDLE)data);
 }
 
 /**
@@ -158,6 +158,7 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
    while(!SleepAndCheckForShutdown(sleepTime))
    {
+      DbgPrintf(4, _T("Housekeeper: wakeup"));
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
 		CleanAlarmHistory(hdb);
@@ -209,9 +210,9 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 			DeleteEmptySubnets();
 
 		// Remove expired DCI data
-		g_idxNodeById.forEach(CleanDciData, NULL);
-		g_idxClusterById.forEach(CleanDciData, NULL);
-		g_idxMobileDeviceById.forEach(CleanDciData, NULL);
+		g_idxNodeById.forEach(CleanDciData, hdb);
+		g_idxClusterById.forEach(CleanDciData, hdb);
+		g_idxMobileDeviceById.forEach(CleanDciData, hdb);
 
 		DBConnectionPoolReleaseConnection(hdb);
 

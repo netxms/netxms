@@ -874,7 +874,7 @@ public:
    void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData);
 
    void updateDciCache();
-   void cleanDCIData();
+   void cleanDCIData(DB_HANDLE hdb);
    void queueItemsForPolling(Queue *pPollerQueue);
 	bool processNewDCValue(DCObject *dco, time_t currTime, const void *value);
 

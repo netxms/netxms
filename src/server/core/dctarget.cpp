@@ -117,12 +117,60 @@ void DataCollectionTarget::updateDciCache()
 /**
  * Clean expired DCI data
  */
-void DataCollectionTarget::cleanDCIData()
+void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 {
+   String queryItems = _T("DELETE FROM idata_");
+   queryItems.append(m_id);
+   queryItems.append(_T(" WHERE "));
+
+   String queryTables = _T("DELETE FROM tdata_");
+   queryTables.append(m_id);
+   queryTables.append(_T(" WHERE "));
+
+   int itemCount = 0;
+   int tableCount = 0;
+   time_t now = time(NULL);
+
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
-      m_dcObjects->get(i)->deleteExpiredData();
+   {
+      DCObject *o = m_dcObjects->get(i);
+      if (o->getType() == DCO_TYPE_ITEM)
+      {
+         if (itemCount > 0)
+            queryItems.append(_T(" OR "));
+         queryItems.append(_T("(item_id="));
+         queryItems.append(o->getId());
+         queryItems.append(_T(" AND idata_timestamp<"));
+         queryItems.append((INT64)(now - o->getRetentionTime() * 86400));
+         queryItems.append(_T(')'));
+         itemCount++;
+      }
+      else if (o->getType() == DCO_TYPE_TABLE)
+      {
+         if (tableCount > 0)
+            queryTables.append(_T(" OR "));
+         queryTables.append(_T("(item_id="));
+         queryTables.append(o->getId());
+         queryTables.append(_T(" AND tdata_timestamp<"));
+         queryTables.append((INT64)(now - o->getRetentionTime() * 86400));
+         queryTables.append(_T(')'));
+         tableCount++;
+      }
+   }
    unlockDciAccess();
+
+   if (itemCount > 0)
+   {
+      DbgPrintf(6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryItems);
+      DBQuery(hdb, queryItems);
+   }
+
+   if (tableCount > 0)
+   {
+      DbgPrintf(6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryTables);
+      DBQuery(hdb, queryTables);
+   }
 }
 
 /**

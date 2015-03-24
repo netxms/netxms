@@ -8,6 +8,7 @@
 - Instance discovery type "SNMP Walk - OIDs" sets instance name to OID value by default
 - GPIO.PinState parameter in Raspberry Pi subagent
 - Server housekeeping process runs once per day at fixed configurable time
+- Server housekeeping process performance optimization
 - Management console:
 	- Fixed broken popup menu actions on "Interfaces" tab
 	- Macro %USERNAME%4 can be used in object tools

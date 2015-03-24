@@ -267,6 +267,7 @@ public:
 	bool isStatusDCO() {return (m_flags & DCF_CALCULATE_NODE_STATUSS) ? true : false; }
    int getAggregationFunction() { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
    Template *getNode() { return m_pNode; }
+   int getRetentionTime() { return m_iRetentionTime; }
 
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
