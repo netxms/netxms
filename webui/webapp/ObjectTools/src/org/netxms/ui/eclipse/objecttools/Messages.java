@@ -83,7 +83,7 @@ public class Messages extends NLS
    public String General_Select;
    public String General_ShowInCommands;
    public String General_ShowInCommandsTooltip;
-   public String General_SNMPTableOptions;
+   public String General_SNMPListOptions;
    public String General_Title;
    public String General_URL;
    public String General_UseAsIndex;
@@ -145,7 +145,7 @@ public class Messages extends NLS
    public String ObjectToolsLabelProvider_TypeInternal;
    public String ObjectToolsLabelProvider_TypeLocalCmd;
    public String ObjectToolsLabelProvider_TypeServerCmd;
-   public String ObjectToolsLabelProvider_TypeSNMPTable;
+   public String ObjectToolsLabelProvider_TypeSNMPList;
    public String ObjectToolsLabelProvider_TypeURL;
    public String OpenObjectToolsEditor_Error;
    public String OpenObjectToolsEditor_ErrorOpenView;
