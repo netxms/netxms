@@ -49,7 +49,7 @@ public class Messages extends NLS
    public static String Filter_AgentNeeded;
    public static String Filter_OIDShouldMatch;
    public static String Filter_SNMPNeeded;
-   public static String General_AgentAction;
+   public static String General_AgentCommand;
    public static String General_AllFiles;
    public static String General_CannotLoadImage;
    public static String General_Clear;
@@ -136,7 +136,7 @@ public class Messages extends NLS
    public static String ObjectToolsEditor_JobSave;
    public static String ObjectToolsEditor_JobSaveError;
    public static String ObjectToolsEditor_New;
-   public static String ObjectToolsLabelProvider_TypeAction;
+   public static String ObjectToolsLabelProvider_TypeAgentCmd;
    public static String ObjectToolsLabelProvider_TypeAgentTable;
    public static String ObjectToolsLabelProvider_TypeDownloadFile;
    public static String ObjectToolsLabelProvider_TypeInternal;

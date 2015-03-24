@@ -34,7 +34,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 {
 	private final String[] toolTypes = { 
 		Messages.get().ObjectToolsLabelProvider_TypeInternal, 
-		Messages.get().ObjectToolsLabelProvider_TypeAction, 
+		Messages.get().ObjectToolsLabelProvider_TypeAgentCmd, 
 		Messages.get().ObjectToolsLabelProvider_TypeSNMPList, 
 		Messages.get().ObjectToolsLabelProvider_TypeAgentTable, 
 		Messages.get().ObjectToolsLabelProvider_TypeURL,

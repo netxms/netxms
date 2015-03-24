@@ -140,7 +140,7 @@ public class General extends PropertyPage
 				createOutputGroup(dialogArea);
 				break;
 			case ObjectTool.TYPE_ACTION:
-				textData.setLabel(Messages.get().General_AgentAction);
+				textData.setLabel(Messages.get().General_AgentCommand);
 				createOutputGroup(dialogArea);
 				break;
 			case ObjectTool.TYPE_URL:
