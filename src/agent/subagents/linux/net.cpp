@@ -1,6 +1,6 @@
 /* 
  ** NetXMS subagent for GNU/Linux
- ** Copyright (C) 2004-2013 Raden Solutions
+ ** Copyright (C) 2004-2015 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -143,6 +143,9 @@ LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue,
    return nRet;
 }
 
+/**
+ * Handler for Net.IP.RoutingTable
+ */
 LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
    int nRet = SYSINFO_RC_ERROR;
@@ -515,14 +518,17 @@ LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, A
          for(int j = 0; j < iface->addrList.size(); j++)
          {
             const InetAddress *addr = iface->addrList.get(j);
-				_sntprintf(infoString, 1024, _T("%d %s/%d %d %s %hs"),
-					iface->index,
-					addr->toString(ipAddr),
-					addr->getMaskBits(),
-					iface->type,
-					MACToStr(iface->macAddr, macAddr),
-					iface->name);
-            pValue->add(infoString);
+            if ((addr->getFamily() == AF_INET) || session->isIPv6Aware())
+            {
+               _sntprintf(infoString, 1024, _T("%d %s/%d %d %s %hs"),
+                  iface->index,
+                  addr->toString(ipAddr),
+                  addr->getMaskBits(),
+                  iface->type,
+                  MACToStr(iface->macAddr, macAddr),
+                  iface->name);
+               pValue->add(infoString);
+            }
          }
       }
       else
