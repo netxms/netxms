@@ -2254,3 +2254,22 @@ WCHAR LIBNETXMS_EXPORTABLE *_itow(int value, WCHAR *str, int base)
 }
 
 #endif
+
+/**
+ * Get sleep time until specific time
+ */
+int LIBNETXMS_EXPORTABLE GetSleepTime(int hour, int minute, int second)
+{
+   time_t now = time(NULL);
+
+   struct tm localTime;
+#if HAVE_LOCALTIME_R
+   localtime_r(&now, &localTime);
+#else
+   memcpy(&localTime, localtime(&now), sizeof(struct tm));
+#endif
+
+   int target = hour * 3600 + minute * 60 + second;
+   int curr = localTime.tm_hour * 3600 + localTime.tm_min * 60 + localTime.tm_sec;
+   return (target >= curr) ? target - curr : 86400 - (curr - target);
+}

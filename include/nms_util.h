@@ -1698,13 +1698,15 @@ int LIBNETXMS_EXPORTABLE nx_inet_pton(int af, const char *src, void *dst);
 #define inet_pton nx_inet_pton
 #endif
 
+int LIBNETXMS_EXPORTABLE GetSleepTime(int hour, int minute, int second);
+
 #ifdef __cplusplus
 }
 #endif
 
 
 //
-// C++ only finctions
+// C++ only functions
 //
 
 #ifdef __cplusplus

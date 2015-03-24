@@ -437,6 +437,17 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
 }
 
 /**
+ * Upgrade from V348 to V349
+ */
+static BOOL H_UpgradeFromV348(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='HouseKeepingInterval'")));
+   CHK_EXEC(CreateConfigParam(_T("HousekeeperStartTime"), _T("02:00"), 1, 1));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='349' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V347 to V348
  */
 static BOOL H_UpgradeFromV347(int currVersion, int newVersion)
@@ -8462,6 +8473,7 @@ static struct
    { 345, 346, H_UpgradeFromV345 },
    { 346, 347, H_UpgradeFromV346 },
    { 347, 348, H_UpgradeFromV347 },
+   { 348, 349, H_UpgradeFromV348 },
    { 0, 0, NULL }
 };
 
