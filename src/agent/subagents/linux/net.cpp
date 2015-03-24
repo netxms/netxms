@@ -518,7 +518,7 @@ LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, A
          for(int j = 0; j < iface->addrList.size(); j++)
          {
             const InetAddress *addr = iface->addrList.get(j);
-            if ((addr->getFamily() == AF_INET) || session->isIPv6Aware())
+            if ((addr->getFamily() == AF_INET) || (session == NULL) || session->isIPv6Aware())
             {
                _sntprintf(infoString, 1024, _T("%d %s/%d %d %s %hs"),
                   iface->index,
