@@ -9911,7 +9911,7 @@ void ClientSession::saveGraph(NXCPMessage *pRequest)
             //send notificaion
 				NXCPMessage update;
 				int dwId = VID_GRAPH_LIST_BASE;
-            update.setCode(CMD_GRAPH_UPDATE_OBJEC);
+            update.setCode(CMD_GRAPH_UPDATE);
             update.setField(dwId++, graphId);
             update.setField(dwId++, m_dwUserId);
             update.setField(dwId++, dwGraphName);

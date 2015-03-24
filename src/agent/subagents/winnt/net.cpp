@@ -219,27 +219,30 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abst
          for(IP_ADAPTER_UNICAST_ADDRESS *pAddr = iface->FirstUnicastAddress; pAddr != NULL; pAddr = pAddr->Next)
          {
             TCHAR ipAddr[64];
-            InetAddress addr = InetAddress::createFromSockaddr(pAddr->Address.lpSockaddr);
-            if (g_isWin5)
+            if ((pAddr->Address.lpSockaddr->sa_family == AF_INET) || session->isIPv6Aware())
             {
-               for(IP_ADAPTER_PREFIX *p = iface->FirstPrefix; p != NULL; p = p->Next)
+               InetAddress addr = InetAddress::createFromSockaddr(pAddr->Address.lpSockaddr);
+               if (g_isWin5)
                {
-                  InetAddress prefix = InetAddress::createFromSockaddr(p->Address.lpSockaddr);
-                  prefix.setMaskBits(p->Length);
-                  if (prefix.contain(addr))
+                  for(IP_ADAPTER_PREFIX *p = iface->FirstPrefix; p != NULL; p = p->Next)
                   {
-                     addr.setMaskBits(prefix.getMaskBits());
-                     break;
+                     InetAddress prefix = InetAddress::createFromSockaddr(p->Address.lpSockaddr);
+                     prefix.setMaskBits(p->Length);
+                     if (prefix.contain(addr))
+                     {
+                        addr.setMaskBits(prefix.getMaskBits());
+                        break;
+                     }
                   }
                }
+               else
+               {
+                  addr.setMaskBits(pAddr->OnLinkPrefixLength);
+               }
+               _sntprintf(adapterInfo, MAX_ADAPTER_NAME_LENGTH + 128, _T("%d %s/%d %d %s %s"), iface->IfIndex, 
+                          addr.toString(ipAddr), addr.getMaskBits(), iface->IfType, macAddr, iface->FriendlyName);
+               value->add(adapterInfo);
             }
-            else
-            {
-               addr.setMaskBits(pAddr->OnLinkPrefixLength);
-            }
-            _sntprintf(adapterInfo, MAX_ADAPTER_NAME_LENGTH + 128, _T("%d %s/%d %d %s %s"), iface->IfIndex, 
-                       addr.toString(ipAddr), addr.getMaskBits(), iface->IfType, macAddr, iface->FriendlyName);
-            value->add(adapterInfo);
          }
       }
    }

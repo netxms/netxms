@@ -299,6 +299,7 @@ private:
    bool m_controlServer;
    bool m_proxyConnection;
    bool m_acceptTraps;
+   bool m_ipv6Aware;
    int m_hCurrFile;
    UINT32 m_dwFileRqId;
 	NXCPEncryptionContext *m_pCtx;
@@ -342,6 +343,8 @@ public:
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
 
 	virtual const InetAddress& getServerAddress() { return m_serverAddr; }
+
+   virtual bool isIPv6Aware() { return m_ipv6Aware; }
 
    UINT32 getIndex() { return m_dwIndex; }
    void setIndex(UINT32 dwIndex) { if (m_dwIndex == INVALID_INDEX) m_dwIndex = dwIndex; }

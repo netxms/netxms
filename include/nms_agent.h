@@ -365,6 +365,8 @@ public:
    virtual bool isControlServer() = 0;
    virtual const InetAddress& getServerAddress() = 0;
 
+   virtual bool isIPv6Aware() = 0;
+
    virtual void sendMessage(NXCPMessage *pMsg) = 0;
    virtual void sendRawMessage(NXCP_MESSAGE *pMsg) = 0;
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) = 0;

@@ -528,7 +528,8 @@ typedef struct
 #define CMD_EXECUTE_SCRIPT_UPDATE      0x0130
 #define CMD_FILEMGR_CREATE_FOLDER      0x0131
 #define CMD_QUERY_ADHOC_SUMMARY_TABLE  0x0132
-#define CMD_GRAPH_UPDATE_OBJEC         0x0133
+#define CMD_GRAPH_UPDATE               0x0133
+#define CMD_ENABLE_IPV6                0x0134
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -694,7 +695,7 @@ typedef struct
 #define VID_ZONING_ENABLED          ((UINT32)148)
 #define VID_ICMP_PROXY              ((UINT32)149)
 #define VID_IP_ADDRESS_COUNT        ((UINT32)150)
-// unused #define VID_IP_ADDR_LIST            ((UINT32)151)
+#define VID_ENABLED                 ((UINT32)151)
 #define VID_REMOVE_DCI              ((UINT32)152)
 #define VID_TEMPLATE_ID             ((UINT32)153)
 #define VID_PUBLIC_KEY              ((UINT32)154)

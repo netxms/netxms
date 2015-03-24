@@ -520,7 +520,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
                   case NXCPCodes.CMD_IMAGE_LIBRARY_UPDATE:
                      processImageLibraryUpdate(msg);
                      break;
-                  case NXCPCodes.CMD_GRAPH_UPDATE_OBJEC:
+                  case NXCPCodes.CMD_GRAPH_UPDATE:
                      GraphSettings graph = new GraphSettings(msg, NXCPCodes.VID_GRAPH_LIST_BASE);
                      sendNotification(new NXCNotification(NXCNotification.PREDEFINED_GRAPHS_CHANGED, graph.getId(), graph));
                      break;
