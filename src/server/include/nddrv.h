@@ -29,7 +29,7 @@
 /**
  *API version
  */
-#define NDDRV_API_VERSION           4
+#define NDDRV_API_VERSION           5
 
 /**
  * Driver header

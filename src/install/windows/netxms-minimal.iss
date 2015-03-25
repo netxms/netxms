@@ -167,6 +167,8 @@ Source: "..\..\..\Release\ping3.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignorever
 Source: "..\..\..\Release\ping3.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\procurve.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server
 Source: "..\..\..\Release\procurve.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\Release\qtech-olt.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server
+Source: "..\..\..\Release\qtech-olt.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\symbol-ws.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server
 Source: "..\..\..\Release\symbol-ws.pdb"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\ubnt.ndd"; DestDir: "{app}\lib\ndd"; Flags: ignoreversion; Components: server

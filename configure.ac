@@ -2836,6 +2836,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/ntws/Makefile
 	src/server/drivers/ping3/Makefile
 	src/server/drivers/procurve/Makefile
+	src/server/drivers/qtech-olt/Makefile
 	src/server/drivers/symbol-ws/Makefile
 	src/server/drivers/ubnt/Makefile
 	src/server/hdlink/Makefile
