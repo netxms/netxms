@@ -445,23 +445,29 @@ static BOOL H_UpgradeFromV349(int currVersion, int newVersion)
 	{
       case DB_SYNTAX_ORACLE:
 		case DB_SYNTAX_DB2:
-			CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=object_properties.comments||chr(13)||chr(10)||ap_common.description WHERE object_properties.object_id=ap_common.id AND ap_common.description IS NOT NULL AND ap_common.description<>''")));
-			break;
-		case DB_SYNTAX_MSSQL:
-			CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=object_properties.comments+char(13)+char(10)+ap_common.description WHERE object_properties.object_id=ap_common.id AND NULLIF(ap_common.description, '') IS NOT NULL")));
+      case DB_SYNTAX_MSSQL:
+			CHK_EXEC(SQLQuery(_T("UPDATE ap_common SET description = CONCAT(chr(13),chr(10), description) WHERE description IS NOT NULL OR description<>''")));
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = CONCAT(comments, (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id));")));
 			break;
 		case DB_SYNTAX_PGSQL:
-			CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=object_properties.comments||'\015\012'||ap_common.description WHERE object_properties.object_id=ap_common.id AND ap_common.description!='' AND ap_common.description IS NOT NULL")));
+			CHK_EXEC(SQLQuery(_T("UPDATE ap_common SET description = CONCAT('\015\012', description) WHERE description IS NOT NULL OR description<>''")));
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = CONCAT(comments, (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id));")));
 			break;
 		case DB_SYNTAX_SQLITE:
-         CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=object_properties.comments||char(13,10)||ap_common.description WHERE object_properties.object_id=ap_common.id AND ap_common.description!=''AND ap_common.description IS NOT NULL")));
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET object_properties.comments= \
+                               object_properties.comments||char(13,10)||\
+                               (SELECT ap_common.description FROM ap_common WERE object_properties.object_id=ap_common.id)\
+                                WHERE EXISTS (\
+                                SELECT * FROM object_properties \
+                                WHERE object_properties.object_id=ap_common.id AND (ap_common.description!='' OR ap_common.description IS NOT NULL))")));
 			break;
 		case DB_SYNTAX_MYSQL:
-			CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=CONCAT(object_properties.comments, '\r\n', ap_common.description) WHERE object_properties.object_id=ap_common.id AND ap_common.description!=''AND ap_common.description IS NOT NULL")));
+			CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=CONCAT(object_properties.comments, '\r\n', ap_common.description) WHERE object_properties.object_id=ap_common.id AND (ap_common.description!='' OR ap_common.description IS NOT NULL)")));
 			break;
 		default:
-			CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=object_properties.comments+char(13)+char(10)+ap_common.description WHERE object_properties.object_id=ap_common.id AND ap_common.description!=''AND ap_common.description IS NOT NULL")));
-			break;
+			CHK_EXEC(SQLQuery(_T("UPDATE ap_common SET description = CONCAT(chr(13),chr(10), description) WHERE description IS NOT NULL OR description<>''")));
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = CONCAT(comments, (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id));")));
+         break;
 	}
 
 
