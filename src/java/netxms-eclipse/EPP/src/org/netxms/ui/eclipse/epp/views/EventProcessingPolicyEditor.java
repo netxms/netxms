@@ -943,7 +943,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	{
 		for(RuleEditor e : selection)
 		{
-			policy.deleteRule(e.getRuleNumber() - 1);
+			policy.deleteRule(e.getRule());
 			ruleEditors.remove(e);
 			e.dispose();
 		}
@@ -1008,7 +1008,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		for(RuleEditor e : selection)
 		{
 			clipboard.add(e.getRule());
-			policy.deleteRule(e.getRuleNumber() - 1);
+			policy.deleteRule(e.getRule());
 			ruleEditors.remove(e);
 			e.dispose();
 		}

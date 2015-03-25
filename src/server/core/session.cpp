@@ -4226,10 +4226,9 @@ void ClientSession::closeEPP(UINT32 dwRqId)
 }
 
 
-//
-// Save event processing policy
-//
-
+/**
+ * Save event processing policy
+ */
 void ClientSession::saveEPP(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
@@ -4274,10 +4273,9 @@ void ClientSession::saveEPP(NXCPMessage *pRequest)
 }
 
 
-//
-// Process EPP rule received from client
-//
-
+/**
+ * Process EPP rule received from client
+ */
 void ClientSession::processEPPRecord(NXCPMessage *pRequest)
 {
    if (!(m_dwFlags & CSF_EPP_LOCKED))

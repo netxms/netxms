@@ -64,11 +64,11 @@ public class EventProcessingPolicy
 	 * 
 	 * @param index zero-based index
 	 */
-	public void deleteRule(int index)
+	public void deleteRule(EventProcessingPolicyRule rule)
 	{
 		try
 		{
-			rules.remove(index);
+			rules.remove(rule);
 		}
 		catch(IndexOutOfBoundsException e)
 		{
