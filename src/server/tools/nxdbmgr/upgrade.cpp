@@ -394,7 +394,7 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR *idColumn, const TCHAR *idColumn2 = NULL, const TCHAR *condition = NULL)
 {
    TCHAR query[256];
-   
+
    if (idColumn2 != NULL)
       _sntprintf(query, 256, _T("SELECT %s,%s,%s FROM %s"), idColumn, column, idColumn2, table);
    else
@@ -404,7 +404,7 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
       return FALSE;
 
    BOOL success = SQLDropColumn(table, column);
-   
+
    if (success)
    {
       _sntprintf(query, 256, _T("ALTER TABLE %s ADD %s integer"), table, column);
@@ -419,13 +419,13 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
          if (idColumn2 != NULL)
          {
             TCHAR id2[256];
-            _sntprintf(query, 256, _T("UPDATE %s SET %s=%d WHERE %s=%d AND %s='%s'"), 
+            _sntprintf(query, 256, _T("UPDATE %s SET %s=%d WHERE %s=%d AND %s='%s'"),
                table, column, BitsInMask(DBGetFieldIPAddr(hResult, i, 1)), idColumn, DBGetFieldLong(hResult, i, 0),
                idColumn2, DBGetField(hResult, i, 2, id2, 256));
          }
          else
          {
-            _sntprintf(query, 256, _T("UPDATE %s SET %s=%d WHERE %s=%d"), 
+            _sntprintf(query, 256, _T("UPDATE %s SET %s=%d WHERE %s=%d"),
                table, column, BitsInMask(DBGetFieldIPAddr(hResult, i, 1)), idColumn, DBGetFieldLong(hResult, i, 0));
          }
          success = SQLQuery(query);
@@ -435,6 +435,41 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
    DBFreeResult(hResult);
    return success;
 }
+
+/**
+ * Upgrade from V349 to V350
+ */
+static BOOL H_UpgradeFromV349(int currVersion, int newVersion)
+{
+   switch(g_dbSyntax)
+	{
+      case DB_SYNTAX_ORACLE:
+		case DB_SYNTAX_DB2:
+			CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=object_properties.comments||chr(13)||chr(10)||ap_common.description WHERE object_properties.object_id=ap_common.id AND ap_common.description IS NOT NULL AND ap_common.description<>''")));
+			break;
+		case DB_SYNTAX_MSSQL:
+			CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=object_properties.comments+char(13)+char(10)+ap_common.description WHERE object_properties.object_id=ap_common.id AND NULLIF(ap_common.description, '') IS NOT NULL")));
+			break;
+		case DB_SYNTAX_PGSQL:
+			CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=object_properties.comments||'\015\012'||ap_common.description WHERE object_properties.object_id=ap_common.id AND ap_common.description!='' AND ap_common.description IS NOT NULL")));
+			break;
+		case DB_SYNTAX_SQLITE:
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=object_properties.comments||char(13,10)||ap_common.description WHERE object_properties.object_id=ap_common.id AND ap_common.description!=''AND ap_common.description IS NOT NULL")));
+			break;
+		case DB_SYNTAX_MYSQL:
+			CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=CONCAT(object_properties.comments, '\r\n', ap_common.description) WHERE object_properties.object_id=ap_common.id AND ap_common.description!=''AND ap_common.description IS NOT NULL")));
+			break;
+		default:
+			CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=object_properties.comments+char(13)+char(10)+ap_common.description WHERE object_properties.object_id=ap_common.id AND ap_common.description!=''AND ap_common.description IS NOT NULL")));
+			break;
+	}
+
+
+    CHK_EXEC(SQLQuery(_T("ALTER TABLE ap_common DROP COLUMN description")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='350' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
 
 /**
  * Upgrade from V348 to V349
@@ -8474,6 +8509,7 @@ static struct
    { 346, 347, H_UpgradeFromV346 },
    { 347, 348, H_UpgradeFromV347 },
    { 348, 349, H_UpgradeFromV348 },
+   { 349, 350, H_UpgradeFromV349 },
    { 0, 0, NULL }
 };
 

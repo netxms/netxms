@@ -30,7 +30,6 @@ public class AgentPolicy extends GenericObject
 {
 	private int version;
 	private int policyType;
-	private String description;
 	
 	/**
 	 * @param msg
@@ -42,7 +41,6 @@ public class AgentPolicy extends GenericObject
 		
 		policyType = msg.getFieldAsInt32(NXCPCodes.VID_POLICY_TYPE);
 		version = msg.getFieldAsInt32(NXCPCodes.VID_VERSION);
-		description = msg.getFieldAsString(NXCPCodes.VID_DESCRIPTION);
 	}
 
 	/* (non-Javadoc)
@@ -68,13 +66,5 @@ public class AgentPolicy extends GenericObject
 	public int getPolicyType()
 	{
 		return policyType;
-	}
-
-	/**
-	 * @return the description
-	 */
-	public String getDescription()
-	{
-		return description;
 	}
 }

@@ -4,16 +4,6 @@
 
   <extension
      point = "org.eclipse.ui.propertyPages">
-        <page
-           id="org.netxms.ui.eclipse.policymanager.propertypages.Policy"
-           name="%page.name.Policy"
-	       class="org.netxms.ui.eclipse.policymanager.propertypages.Policy">
-          <enabledWhen>
-             <instanceof
-                  value="org.netxms.client.objects.AgentPolicy">
-             </instanceof>
-          </enabledWhen>
-        </page>
 
         <page
            id="org.netxms.ui.eclipse.policymanager.propertypages.ConfigFile"

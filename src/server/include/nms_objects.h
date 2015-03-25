@@ -1773,14 +1773,12 @@ class NXCORE_EXPORTABLE AgentPolicy : public NetObj
 protected:
 	UINT32 m_version;
 	int m_policyType;
-	TCHAR *m_description;
 
 	BOOL savePolicyCommonProperties(DB_HANDLE hdb);
 
 public:
    AgentPolicy(int type);
    AgentPolicy(const TCHAR *name, int type);
-   virtual ~AgentPolicy();
 
    virtual int getObjectClass() { return OBJECT_AGENTPOLICY; }
 
