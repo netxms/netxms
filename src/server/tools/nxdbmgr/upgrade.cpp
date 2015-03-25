@@ -444,30 +444,28 @@ static BOOL H_UpgradeFromV349(int currVersion, int newVersion)
    switch(g_dbSyntax)
 	{
       case DB_SYNTAX_ORACLE:
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = comments || chr(13) || chr(10) || (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL)")));
+			break;
 		case DB_SYNTAX_DB2:
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = comments || chr(13) || chr(10) || (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL AND description <> '')")));
+         break;
       case DB_SYNTAX_MSSQL:
-			CHK_EXEC(SQLQuery(_T("UPDATE ap_common SET description = CONCAT(chr(13),chr(10), description) WHERE description IS NOT NULL OR description<>''")));
-         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = CONCAT(comments, (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id))")));
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = comments + char(13) + char(10) + (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL AND description <> '')")));
 			break;
 		case DB_SYNTAX_PGSQL:
-			CHK_EXEC(SQLQuery(_T("UPDATE ap_common SET description = CONCAT('\r\n', description) WHERE description IS NOT NULL OR description<>''")));
-         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = CONCAT(comments, (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id))")));
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = comments || '\\015\\012' || (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL AND description <> '')")));
 			break;
 		case DB_SYNTAX_SQLITE:
-         CHK_EXEC(SQLQuery(_T("UPDATE ap_common SET description = '\r\n'|| description WHERE description IS NOT NULL OR description<>''")));
-         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = comments || (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id)")));
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = comments || char(13,10) || (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL AND description <> '')")));
 			break;
 		case DB_SYNTAX_MYSQL:
-			CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=CONCAT(object_properties.comments, '\r\n', ap_common.description) WHERE object_properties.object_id=ap_common.id AND (ap_common.description!='' OR ap_common.description IS NOT NULL)")));
+			CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=CONCAT(object_properties.comments, '\\r\\n', ap_common.description) WHERE object_properties.object_id=ap_common.id AND (ap_common.description!='' AND ap_common.description IS NOT NULL)")));
 			break;
 		default:
-			CHK_EXEC(SQLQuery(_T("UPDATE ap_common SET description = CONCAT(chr(13),chr(10), description) WHERE description IS NOT NULL OR description<>''")));
-         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = CONCAT(comments, (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id))")));
          break;
 	}
 
-
-    CHK_EXEC(SQLQuery(_T("ALTER TABLE ap_common DROP COLUMN description")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE ap_common DROP COLUMN description")));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='350' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
