@@ -465,7 +465,7 @@ static BOOL H_UpgradeFromV349(int currVersion, int newVersion)
          break;
 	}
 
-   CHK_EXEC(SQLQuery(_T("ALTER TABLE ap_common DROP COLUMN description")));
+   CHK_EXEC(SQLDropColumn(_T("ap_common"), _T("description")));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='350' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
