@@ -260,7 +260,7 @@ static TCHAR m_szHelpText[] =
    _T("Usage: nxagentd [options]\n")
    _T("Where valid options are:\n")
    _T("   -c <file>  : Use configuration file <file> (default ") AGENT_DEFAULT_CONFIG _T(")\n")
-   _T("   -C         : Check configuration file and exit\n")
+   _T("   -C         : Load configuration file, dump resulting configuration, and exit\n")
    _T("   -d         : Run as daemon/service\n")
 	_T("   -D <level> : Set debug level (0..9)\n")
 #ifdef _WIN32
@@ -1690,12 +1690,16 @@ int main(int argc, char *argv[])
                if (dir != NULL)
                {
                   validConfig = g_config->loadConfigDirectory(dir, _T("agent"), false);
-                  ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), dir);
+                  if (!validConfig)
+                  {
+                     ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), dir);
+                  }
                }
             }
 
             if (validConfig)
             {
+               g_config->print(stdout);
                validConfig = g_config->parseTemplate(_T("agent"), m_cfgTemplate);
             }
 

@@ -26,6 +26,12 @@
 #include <expat.h>
 #include <nxstat.h>
 
+#if defined(_WIN32)
+#define isatty _isatty
+#elif !HAVE_ISATTY
+#define isatty(x) (true)
+#endif
+
 /**
  * Expand value
  */
@@ -570,14 +576,37 @@ void ConfigEntry::setAttribute(const TCHAR *name, bool value)
 /**
  * Print config entry
  */
-void ConfigEntry::print(FILE *file, int level)
+void ConfigEntry::print(FILE *file, int level, TCHAR *prefix)
 {
-   _tprintf(_T("%*s%s\n"), level * 4, _T(""), m_name);
-   for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
-      e->print(file, level + 1);
+   if (isatty(fileno(file)))
+      WriteToTerminalEx(_T("%s\x1b[32;1m%s\x1b[0m\n"), prefix, m_name);
+   else
+      _tprintf(_T("%s%s\n"), prefix, m_name);
 
-   for(int i = 0, len = 0; i < m_valueCount; i++)
-      _tprintf(_T("%*svalue: %s\n"), level * 4 + 2, _T(""), m_values[i]);
+   if (level > 0)
+   {
+      prefix[(level - 1) * 4 + 1] = (m_next == NULL) ? _T(' ') : _T('|');
+      prefix[(level - 1) * 4 + 2] = _T(' ');
+   }
+
+   // Do not print empty values for non-leaf nodes
+   if ((m_first == NULL) || ((m_valueCount > 0) && (m_values[0][0] != 0)))
+   {
+      for(int i = 0, len = 0; i < m_valueCount; i++)
+      {
+         if (isatty(fileno(file)))
+            WriteToTerminalEx(_T("%s  value: \x1b[1m%s\x1b[0m\n"), prefix, m_values[i]);
+         else
+            _tprintf(_T("%s  value: %s\n"), prefix, m_values[i]);
+      }
+   }
+
+   for(ConfigEntry *e = m_first; e != NULL; e = e->getNext())
+   {
+      _tcscat(prefix, _T(" +- "));
+      e->print(file, level + 1, prefix);
+      prefix[level * 4] = 0;
+   }
 }
 
 /**
@@ -1440,8 +1469,9 @@ bool Config::loadConfigDirectory(const TCHAR *path, const TCHAR *defaultIniSecti
 
 void Config::print(FILE *file)
 {
+   TCHAR prefix[256] = _T("");
    if (m_root != NULL)
-      m_root->print(file, 0);
+      m_root->print(file, 0, prefix);
 }
 
 /**

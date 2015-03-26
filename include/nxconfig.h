@@ -106,7 +106,7 @@ public:
 	ObjectArray<ConfigEntry> *getOrderedSubEntries(const TCHAR *mask);
 	void unlinkEntry(ConfigEntry *entry);
 
-	void print(FILE *file, int level);
+	void print(FILE *file, int level, TCHAR *prefix);
 	void createXml(String &xml, int level = 0);
 };
 
