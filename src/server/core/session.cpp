@@ -163,6 +163,7 @@ void ClientSession::ThreadStarter_##func(void *pArg) \
 DEFINE_THREAD_STARTER(getCollectedData)
 DEFINE_THREAD_STARTER(getTableCollectedData)
 DEFINE_THREAD_STARTER(clearDCIData)
+DEFINE_THREAD_STARTER(forceDCIPoll)
 DEFINE_THREAD_STARTER(queryL2Topology)
 DEFINE_THREAD_STARTER(sendEventLog)
 DEFINE_THREAD_STARTER(sendSyslog)
@@ -859,6 +860,9 @@ void ClientSession::processingThread()
             break;
 			case CMD_CLEAR_DCI_DATA:
 				CALL_IN_NEW_THREAD(clearDCIData, pMsg);
+				break;
+			case CMD_FORCE_DCI_POLL:
+				CALL_IN_NEW_THREAD(forceDCIPoll, pMsg);
 				break;
          case CMD_OPEN_EPP:
             openEPP(pMsg);
@@ -3412,6 +3416,61 @@ void ClientSession::clearDCIData(NXCPMessage *pRequest)
 				}
          }
          else  // User doesn't have DELETE rights on object
+         {
+            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else     // Object is not a node
+      {
+         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Force DCI data poll for given DCI
+ */
+void ClientSession::forceDCIPoll(NXCPMessage *pRequest)
+{
+   NXCPMessage msg;
+   NetObj *object;
+	UINT32 dwItemId;
+
+   // Prepare response message
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(pRequest->getId());
+
+   // Get node id and check object class and access rights
+   object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_MOBILEDEVICE) || (object->getObjectClass() == OBJECT_CLUSTER))
+      {
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+         {
+				dwItemId = pRequest->getFieldAsUInt32(VID_DCI_ID);
+				debugPrintf(4, _T("ForceDCIPoll: request for DCI %d at node %d"), dwItemId, object->getId());
+            DCObject *dci = ((Template *)object)->getDCObjectById(dwItemId);
+				if (dci != NULL)
+				{
+               dci->setLastPollTime(0);
+					msg.setField(VID_RCC, RCC_SUCCESS);
+					debugPrintf(4, _T("ForceDCIPoll: DCI %d at node %d"), dwItemId, object->getId());
+				}
+				else
+				{
+					msg.setField(VID_RCC, RCC_INVALID_DCI_ID);
+					debugPrintf(4, _T("ForceDCIPoll: DCI %d at node %d not found"), dwItemId, object->getId());
+				}
+         }
+         else  // User doesn't have READ rights on object
          {
             msg.setField(VID_RCC, RCC_ACCESS_DENIED);
          }

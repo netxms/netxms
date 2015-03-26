@@ -530,6 +530,7 @@ typedef struct
 #define CMD_QUERY_ADHOC_SUMMARY_TABLE  0x0132
 #define CMD_GRAPH_UPDATE               0x0133
 #define CMD_ENABLE_IPV6                0x0134
+#define CMD_FORCE_DCI_POLL             0x0135
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

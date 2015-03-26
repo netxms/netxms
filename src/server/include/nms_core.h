@@ -444,6 +444,7 @@ private:
 	DECLARE_THREAD_STARTER(getCollectedData)
 	DECLARE_THREAD_STARTER(getTableCollectedData)
 	DECLARE_THREAD_STARTER(clearDCIData)
+	DECLARE_THREAD_STARTER(forceDCIPoll)
 	DECLARE_THREAD_STARTER(queryParameter)
 	DECLARE_THREAD_STARTER(queryAgentTable)
 	DECLARE_THREAD_STARTER(queryL2Topology)
@@ -512,6 +513,7 @@ private:
    void getTableCollectedData(NXCPMessage *pRequest);
 	bool getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *object, int dciType);
 	void clearDCIData(NXCPMessage *pRequest);
+	void forceDCIPoll(NXCPMessage *pRequest);
    void changeDCIStatus(NXCPMessage *pRequest);
    void getLastValues(NXCPMessage *pRequest);
    void getLastValuesByDciId(NXCPMessage *pRequest);

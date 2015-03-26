@@ -328,6 +328,7 @@ public class NXCPCodes
    public static final int CMD_QUERY_ADHOC_SUMMARY_TABLE = 0x0132;
    public static final int CMD_GRAPH_UPDATE = 0x0133;
    public static final int CMD_ENABLE_IPV6 = 0x0134;
+   public static final int CMD_FORCE_DCI_POLL = 0x0135;
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
