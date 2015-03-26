@@ -21,7 +21,7 @@
 	- Invisible dashboards and charts do not refresh itself automatically
 - Android console:
     - Implemented feature #776 (WoL)
-- Fixed issues: #690, #693, #725, #752, #756, #757, #758, #765, #766, #767, #768, #769, #770, #771, #779, #782, #787, #789, #790
+- Fixed issues: #690, #693, #725, #752, #756, #757, #758, #760, #765, #766, #767, #768, #769, #770, #771, #779, #782, #787, #789, #790
 
 
 *
