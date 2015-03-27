@@ -124,6 +124,7 @@
 #define DCIDESC_FS_FREE                           _T("Free space on file system {instance}")
 #define DCIDESC_FS_FREEPERC                       _T("Percentage of free space on file system {instance}")
 #define DCIDESC_FS_TOTAL                          _T("Total space on file system {instance}")
+#define DCIDESC_FS_TYPE                           _T("Type of file system {instance}")
 #define DCIDESC_FS_USED                           _T("Used space on file system {instance}")
 #define DCIDESC_FS_USEDPERC                       _T("Percentage of used space on file system {instance}")
 #define DCIDESC_NET_INTERFACE_64BITCOUNTERS       _T("Is 64bit interface counters supported")

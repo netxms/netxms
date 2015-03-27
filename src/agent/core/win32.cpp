@@ -214,6 +214,21 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
 }
 
 /**
+ * Handler for FileSystem.Type(*) parameter
+ */
+LONG H_FileSystemType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR path[MAX_PATH];
+   if (!AgentGetParameterArg(cmd, 1, path, MAX_PATH))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (path[_tcslen(path) - 1] != _T('\\'))
+      _tcscat(path, _T("\\"));
+
+   return GetVolumeInformation(path, NULL, 0, NULL, NULL, NULL, value, MAX_RESULT_LENGTH) ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+}
+
+/**
  * Handler for disk space information parameters
  */
 LONG H_DiskInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
@@ -224,6 +239,7 @@ LONG H_DiskInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractC
 
    if (!AgentGetParameterArg(pszCmd, 1, szPath, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
+
    if (GetDiskFreeSpaceEx(szPath, &availBytes, &totalBytes, &freeBytes))
    {
       switch(CAST_FROM_POINTER(pArg, int))

@@ -10,6 +10,7 @@
 - Server housekeeping process runs once per day at fixed configurable time
 - Server housekeeping process performance optimization
 - Added driver for Qtech OLT switches
+- New agent parameter FileSystem.Type(*)
 - Management console:
 	- Fixed broken popup menu actions on "Interfaces" tab
 	- Macro %USERNAME%4 can be used in object tools
