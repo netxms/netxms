@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2013 Raden Solutions
+** Copyright (C) 2004-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,12 +25,10 @@
  */
 static void FindMountpointByDevice(char *dev, int size)
 {
-	char *name;
-	struct mntent *mnt;
-	FILE *f;
-
-	f = setmntent(_PATH_MOUNTED, "r");
-	if (f != NULL) {
+	FILE *f = setmntent(_PATH_MOUNTED, "r");
+	if (f != NULL) 
+   {
+      struct mntent *mnt;
 		while ((mnt = getmntent(f)) != NULL)
 		{
 			if (!strcmp(mnt->mnt_fsname, dev))
@@ -247,6 +245,40 @@ LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstra
    else
    {
       AgentWriteDebugLog(4, _T("Linux: H_MountPoints: cannot open /etc/mtab"));
+      rc = SYSINFO_RC_ERROR;
+   }
+   return rc;
+}
+
+/**
+ * Handler for FileSystem.Type(*)
+ */
+LONG H_FileSystemType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   char path[MAX_PATH];
+   if (!AgentGetParameterArgA(cmd, 1, path, MAX_PATH))
+      return SYSINFO_RC_UNSUPPORTED;
+   
+   LONG rc = SYSINFO_RC_UNSUPPORTED;
+
+	FILE *f = setmntent(_PATH_MOUNTED, "r");
+	if (f != NULL) 
+   {
+      struct mntent *mnt;
+		while((mnt = getmntent(f)) != NULL)
+		{
+			if (!strcmp(mnt->mnt_fsname, path) || !strcmp(mnt->mnt_dir, path))
+			{
+            ret_mbstring(value, mnt->mnt_type);
+            rc = SYSINFO_RC_SUCCESS;
+				break;
+			}
+		}
+		endmntent(f);
+	}
+   else
+   {
+      AgentWriteDebugLog(4, _T("Linux: H_FileSystemType: call to setmntent failed"));
       rc = SYSINFO_RC_ERROR;
    }
    return rc;
