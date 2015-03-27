@@ -1973,8 +1973,6 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB))
    {
-      TCHAR szQuery[8192], szName[MAX_EVENT_NAME];
-
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
       // Check if event with specific code exists
@@ -1985,42 +1983,45 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
       if (bEventExist || (dwEventCode >= FIRST_USER_EVENT_ID))
       {
          // Prepare and execute SQL query
-         pRequest->getFieldAsString(VID_NAME, szName, MAX_EVENT_NAME);
-         if (IsValidObjectName(szName))
+         TCHAR name[MAX_EVENT_NAME];
+         pRequest->getFieldAsString(VID_NAME, name, MAX_EVENT_NAME);
+         if (IsValidObjectName(name, TRUE))
          {
-				TCHAR szMessage[MAX_EVENT_MSG_LENGTH], *pszDescription;
-
-            pRequest->getFieldAsString(VID_MESSAGE, szMessage, MAX_EVENT_MSG_LENGTH);
-            pszDescription = pRequest->getFieldAsString(VID_DESCRIPTION);
-
+            DB_STATEMENT hStmt;
             if (bEventExist)
             {
-               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("UPDATE event_cfg SET event_name='%s',severity=%d,flags=%d,message=%s,description=%s WHERE event_code=%d"),
-                       szName, pRequest->getFieldAsUInt32(VID_SEVERITY), pRequest->getFieldAsUInt32(VID_FLAGS),
-							  (const TCHAR *)DBPrepareString(g_hCoreDB, szMessage),
-							  (const TCHAR *)DBPrepareString(g_hCoreDB, pszDescription), dwEventCode);
+               hStmt = DBPrepare(hdb, _T("UPDATE event_cfg SET event_name=?,severity=?,flags=?,message=?,description=? WHERE event_code=?"));
             }
             else
             {
-               _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,")
-                                _T("message,description) VALUES (%d,'%s',%d,%d,%s,%s)"),
-                       dwEventCode, szName, pRequest->getFieldAsUInt32(VID_SEVERITY),
-                       pRequest->getFieldAsUInt32(VID_FLAGS), (const TCHAR *)DBPrepareString(g_hCoreDB, szMessage),
-							  (const TCHAR *)DBPrepareString(g_hCoreDB, pszDescription));
+               hStmt = DBPrepare(hdb, _T("INSERT INTO event_cfg (event_name,severity,flags,message,description,event_code) VALUES (?,?,?,?,?,?)"));
             }
 
-            safe_free(pszDescription);
-
-            if (DBQuery(hdb, szQuery))
+            if (hStmt != NULL)
             {
-               msg.setField(VID_RCC, RCC_SUCCESS);
-               ReloadEvents();
-               NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
+               DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, pRequest->getFieldAsInt32(VID_SEVERITY));
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, pRequest->getFieldAsInt32(VID_FLAGS));
+               DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(VID_MESSAGE), DB_BIND_DYNAMIC, MAX_EVENT_MSG_LENGTH - 1);
+               DBBind(hStmt, 5, DB_SQLTYPE_TEXT, pRequest->getFieldAsString(VID_DESCRIPTION), DB_BIND_DYNAMIC);
+               DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, dwEventCode);
 
-					NXCPMessage nmsg(pRequest);
-					nmsg.setCode(CMD_EVENT_DB_UPDATE);
-					nmsg.setField(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ETMPL_CHANGED);
-					EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
+               if (DBExecute(hStmt))
+               {
+                  msg.setField(VID_RCC, RCC_SUCCESS);
+                  ReloadEvents();
+                  NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
+
+					   NXCPMessage nmsg(pRequest);
+					   nmsg.setCode(CMD_EVENT_DB_UPDATE);
+					   nmsg.setField(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ETMPL_CHANGED);
+					   EnumerateClientSessions(SendEventDBChangeNotification, &nmsg);
+               }
+               else
+               {
+                  msg.setField(VID_RCC, RCC_DB_FAILURE);
+               }
+               DBFreeStatement(hStmt);
             }
             else
             {
@@ -5871,22 +5872,15 @@ void ClientSession::onTrap(NXCPMessage *pRequest)
 	}
    else   // Client is the source
 	{
-		if (m_clientAddr->sa_family == AF_INET)
-		{
-			UINT32 addr = ntohl(((struct sockaddr_in *)m_clientAddr)->sin_addr.s_addr);
-			if (addr == 0x7F000001)
-				object = FindObjectById(g_dwMgmtNode);	// Client on loopback
-			else
-				object = FindNodeByIP(0, addr);
-		}
-		else
-		{
-#ifdef WITH_IPV6
-			object = NULL;	// TODO: find object by IPv6 address
-#else
-			object = NULL;
-#endif
-		}
+      InetAddress addr = InetAddress::createFromSockaddr(m_clientAddr);
+      if (addr.isLoopback())
+      {
+			object = FindObjectById(g_dwMgmtNode);
+      }
+      else
+      {
+			object = FindNodeByIP(0, addr);
+      }
 	}
    if (object != NULL)
    {
