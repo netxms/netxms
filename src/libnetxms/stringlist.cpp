@@ -91,7 +91,7 @@ void StringList::addPreallocated(TCHAR *value)
 		m_allocated += ALLOCATION_STEP;
 		m_values = (TCHAR **)realloc(m_values, sizeof(TCHAR *) * m_allocated);
 	}
-	m_values[m_count++] = (value != NULL) ? value : _tcsdup(_T(""));
+	m_values[m_count++] = value;
 }
 
 /**
@@ -99,7 +99,7 @@ void StringList::addPreallocated(TCHAR *value)
  */
 void StringList::add(const TCHAR *value)
 {
-	addPreallocated(_tcsdup(value));
+   addPreallocated(_tcsdup_ex(value));
 }
 
 /**
@@ -166,7 +166,7 @@ void StringList::replace(int index, const TCHAR *value)
 		return;
 
 	safe_free(m_values[index]);
-	m_values[index] = _tcsdup(value);
+	m_values[index] = _tcsdup_ex(value);
 }
 
 /**
@@ -180,12 +180,12 @@ void StringList::addOrReplace(int index, const TCHAR *value)
    if (index < m_count)
    {
 	   safe_free(m_values[index]);
-      m_values[index] = _tcsdup(value);
+      m_values[index] = _tcsdup_ex(value);
    }
    else
    {
       for(int i = m_count; i < index; i++)
-         add(_T(""));
+         addPreallocated(NULL);
       add(value);
    }
 }
@@ -206,7 +206,7 @@ void StringList::addOrReplacePreallocated(int index, TCHAR *value)
    else
    {
       for(int i = m_count; i < index; i++)
-         add(_T(""));
+         addPreallocated(NULL);
       addPreallocated(value);
    }
 }
@@ -291,7 +291,7 @@ TCHAR *StringList::join(const TCHAR *separator)
    for(i = 1; i < m_count; i++)
    {
       _tcscat(result, separator);
-      _tcscat(result, m_values[i]);
+      _tcscat(result, CHECK_NULL_EX(m_values[i]));
    }
    return result;
 }
