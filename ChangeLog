@@ -2,7 +2,7 @@
 * 2.0-M3
 *
 
-- New NXSL functions: gethostbyaddr, gethostbyname, md5, sha1
+- New NXSL functions: gethostbyaddr, gethostbyname, md5, sha1, AgentReadList
 - Added posibility to wakeup unmanaged node
 - Instance discovery separated from configuration polls
 - Instance discovery type "SNMP Walk - OIDs" sets instance name to OID value by default
