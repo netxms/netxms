@@ -1615,7 +1615,8 @@ AC_CHECK_FUNCS([gettimeofday memmove memset bcopy strchr strcspn strdup strerror
 AC_CHECK_FUNCS([strrchr strlwr strtol strtoul strtoll strtoull setlocale])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
-AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r itoa _itoa isatty])
+AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo])
+AC_CHECK_FUNCS([itoa _itoa isatty])
 
 AC_CHECK_DECLS([nanosleep])
 

@@ -142,6 +142,8 @@
 #define DCIDESC_NET_INTERFACE_SPEED               _T("Speed of interface {instance}")
 #define DCIDESC_NET_IP_FORWARDING                 _T("IP forwarding status")
 #define DCIDESC_NET_IP6_FORWARDING                _T("IPv6 forwarding status")
+#define DCIDESC_NET_RESOLVER_ADDRBYNAME           _T("Resolver: address for name {instance}")
+#define DCIDESC_NET_RESOLVER_NAMEBYADDR           _T("Resolver: name for address {instance}")
 #define DCIDESC_PHYSICALDISK_FIRMWARE             _T("Firmware version of hard disk {instance}")
 #define DCIDESC_PHYSICALDISK_MODEL                _T("Model of hard disk {instance}")
 #define DCIDESC_PHYSICALDISK_SERIALNUMBER         _T("Serial number of hard disk {instance}")

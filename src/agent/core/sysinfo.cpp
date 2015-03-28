@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -430,4 +430,36 @@ LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
 	}
 
 	return nRet;
+}
+
+/**
+ * Handler for Net.Resolver.AddressByName parameter
+ */
+LONG H_ResolverAddrByName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR name[256];
+   if (!AgentGetParameterArg(cmd, 1, name, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   InetAddress addr = InetAddress::resolveHostName(name);
+   addr.toString(value);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Net.Resolver.NameByAddress parameter
+ */
+LONG H_ResolverNameByAddr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR name[256];
+   if (!AgentGetParameterArg(cmd, 1, name, 256))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   InetAddress addr = InetAddress::parse(name);
+   if (!addr.isValid())
+      return SYSINFO_RC_UNSUPPORTED;
+
+   if (addr.getHostByAddr(value, MAX_RESULT_LENGTH) == NULL)
+      addr.toString(value);   // return address itself if cannot be back resolved
+   return SYSINFO_RC_SUCCESS;
 }

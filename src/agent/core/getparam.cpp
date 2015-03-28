@@ -42,6 +42,8 @@ LONG H_ExternalList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abstr
 LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SessionAgents(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_SystemTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ResolverAddrByName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_ResolverNameByAddr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 #ifdef _WIN32
 LONG H_CPUCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -241,6 +243,8 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("File.Time.Access(*)"), H_FileTime, (TCHAR *)FILETIME_ATIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_ACCESS },
    { _T("File.Time.Change(*)"), H_FileTime, (TCHAR *)FILETIME_CTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_CHANGE },
    { _T("File.Time.Modify(*)"), H_FileTime, (TCHAR *)FILETIME_MTIME, DCI_DT_UINT64, DCIDESC_FILE_TIME_MODIFY },
+   { _T("Net.Resolver.AddressByName(*)"), H_ResolverAddrByName, NULL, DCI_DT_STRING, DCIDESC_NET_RESOLVER_ADDRBYNAME },
+   { _T("Net.Resolver.NameByAddress(*)"), H_ResolverNameByAddr, NULL, DCI_DT_STRING, DCIDESC_NET_RESOLVER_NAMEBYADDR },
    { _T("System.CurrentTime"), H_SystemTime, NULL, DCI_DT_INT64, DCIDESC_SYSTEM_CURRENTTIME },
    { _T("System.PlatformName"), H_PlatformName, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_PLATFORMNAME }
 };

@@ -377,6 +377,15 @@ InetAddress InetAddress::resolveHostName(const char *hostname, int af)
       return addr;
 
    // Not a valid IP address, resolve hostname
+#if HAVE_GETADDRINFO
+   struct addrinfo *ai;
+   if (getaddrinfo(hostname, NULL, NULL, &ai) == 0)
+   {
+      addr = InetAddress::createFromSockaddr(ai->ai_addr);
+      freeaddrinfo(ai);
+      return addr;
+   }
+#else
 #if HAVE_GETHOSTBYNAME2_R
    struct hostent h, *hs = NULL;
    char buffer[1024];
@@ -396,6 +405,7 @@ InetAddress InetAddress::resolveHostName(const char *hostname, int af)
          return InetAddress((BYTE *)hs->h_addr);
       }
    }
+#endif /* HAVE_GETADDRINFO */
    return InetAddress();
 }
 

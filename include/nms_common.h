@@ -179,6 +179,8 @@ typedef int bool;
 #define HAVE_VSCWPRINTF         1
 #endif
 
+#define HAVE_GETADDRINFO        1
+
 #ifndef va_copy
 #define va_copy(x,y)            (x = y)
 #endif
