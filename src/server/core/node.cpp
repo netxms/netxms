@@ -1719,7 +1719,32 @@ void Node::updatePrimaryIpAddr()
 	if (m_primaryName[0] == 0)
 		return;
 
-   InetAddress ipAddr = InetAddress::resolveHostName(m_primaryName);
+   InetAddress ipAddr = InetAddress::parse(m_primaryName);
+   if (!ipAddr.isValid() && (m_zoneId != 0))
+   {
+      // resolve address through proxy agent
+      Zone *zone = FindZoneByGUID(m_zoneId);
+      if (zone != NULL)
+      {
+         Node *proxy = (Node *)FindObjectById(zone->getAgentProxy(), OBJECT_NODE);
+         if (proxy != NULL)
+         {
+            TCHAR query[256], buffer[128];
+            _sntprintf(query, 256, _T("Net.Resolver.AddressByName(%s)"), m_primaryName);
+            if (proxy->getItemFromAgent(query, 128, buffer) == ERR_SUCCESS)
+            {
+               ipAddr = InetAddress::parse(buffer);
+            }
+         }
+      }
+   }
+
+   // Resolve address through local resolver
+   if (!ipAddr.isValid())
+   {
+      ipAddr = InetAddress::resolveHostName(m_primaryName);
+   }
+
    if (!ipAddr.equals(m_ipAddress) && (ipAddr.isValidUnicast() || !_tcscmp(m_primaryName, _T("0.0.0.0"))))
 	{
 		TCHAR buffer1[64], buffer2[64];
