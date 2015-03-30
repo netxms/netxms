@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -79,7 +79,7 @@ BOOL VPNConnector::loadFromDatabase(UINT32 dwId)
          m_remoteNetworks->add(new InetAddress(addr));
    }
    DBFreeResult(hResult);
-   
+
    // Load custom properties
    _sntprintf(szQuery, 256, _T("SELECT node_id,peer_gateway FROM vpn_connectors WHERE id=%d"), dwId);
    hResult = DBSelect(g_hCoreDB, szQuery);
@@ -158,7 +158,7 @@ BOOL VPNConnector::saveToDatabase(DB_HANDLE hdb)
    for(i = 0; i < m_localNetworks->size(); i++)
    {
       InetAddress *addr = m_localNetworks->get(i);
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), 
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
 		           _T("INSERT INTO vpn_connector_networks (vpn_id,network_type,ip_addr,ip_netmask) VALUES (%d,0,'%s',%d)"),
                  (int)m_id, addr->toString(buffer), addr->getMaskBits());
       DBQuery(hdb, szQuery);
@@ -217,9 +217,12 @@ Node *VPNConnector::getParentNode()
 /**
  * Create NXCP message with object's data
  */
-void VPNConnector::fillMessage(NXCPMessage *pMsg)
+void VPNConnector::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 {
-   NetObj::fillMessage(pMsg);
+   if (!alreadyLocked)
+		lockProperties();
+
+   NetObj::fillMessage(pMsg, TRUE);
    pMsg->setField(VID_PEER_GATEWAY, m_dwPeerGateway);
    pMsg->setField(VID_NUM_LOCAL_NETS, (UINT32)m_localNetworks->size());
    pMsg->setField(VID_NUM_REMOTE_NETS, (UINT32)m_remoteNetworks->size());
@@ -232,6 +235,9 @@ void VPNConnector::fillMessage(NXCPMessage *pMsg)
 
    for(i = 0; i < m_remoteNetworks->size(); i++)
       pMsg->setField(fieldId++, *m_remoteNetworks->get(i));
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**

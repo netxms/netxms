@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -191,7 +191,7 @@ BOOL Container::saveToDatabase(DB_HANDLE hdb)
 			DBQuery(hdb, query);
 		}
 		UnlockChildList();
-	
+
 		// Save access list
 		saveACLToDB(hdb);
 
@@ -247,7 +247,7 @@ void Container::linkChildObjects()
 /**
  * Calculate status for compound object based on childs' status
  */
-void Container::calculateCompoundStatus(BOOL bForcedRecalc) 
+void Container::calculateCompoundStatus(BOOL bForcedRecalc)
 {
 	NetObj::calculateCompoundStatus(bForcedRecalc);
 
@@ -263,12 +263,18 @@ void Container::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create NXCP message with object's data
  */
-void Container::fillMessage(NXCPMessage *pMsg)
+void Container::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 {
-   NetObj::fillMessage(pMsg);
+   if (!alreadyLocked)
+		lockProperties();
+
+   NetObj::fillMessage(pMsg, TRUE);
    pMsg->setField(VID_CATEGORY, m_dwCategory);
 	pMsg->setField(VID_FLAGS, m_flags);
 	pMsg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**

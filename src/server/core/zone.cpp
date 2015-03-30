@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
@@ -122,7 +122,7 @@ BOOL Zone::saveToDatabase(DB_HANDLE hdb)
    lockProperties();
 
    saveCommonProperties(hdb);
-   
+
    // Check for object's existence in database
    _sntprintf(szQuery, 8192, _T("SELECT id FROM zones WHERE id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
@@ -166,13 +166,19 @@ bool Zone::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Zone::fillMessage(NXCPMessage *pMsg)
+void Zone::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 {
-   NetObj::fillMessage(pMsg);
+   if (!alreadyLocked)
+		lockProperties();
+
+   NetObj::fillMessage(pMsg, TRUE);
    pMsg->setField(VID_ZONE_ID, m_zoneId);
    pMsg->setField(VID_AGENT_PROXY, m_agentProxy);
    pMsg->setField(VID_SNMP_PROXY, m_snmpProxy);
    pMsg->setField(VID_ICMP_PROXY, m_icmpProxy);
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**

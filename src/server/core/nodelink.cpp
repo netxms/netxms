@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2012 Raden Solutions
 **
@@ -124,7 +124,7 @@ BOOL NodeLink::saveToDatabase(DB_HANDLE hdb)
 
 	hStmt = DBPrepare(g_hCoreDB, bNewObject ? _T("INSERT INTO node_links (node_id,nodelink_id) VALUES (?,?)") :
 											  _T("UPDATE node_links SET node_id=? WHERE nodelink_id=?"));
-	if (hStmt == NULL)	
+	if (hStmt == NULL)
 	{
 		unlockProperties();
 		return FALSE;
@@ -161,10 +161,16 @@ bool NodeLink::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void NodeLink::fillMessage(NXCPMessage *pMsg)
+void NodeLink::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 {
-	ServiceContainer::fillMessage(pMsg);
+   if (!alreadyLocked)
+		lockProperties();
+
+	ServiceContainer::fillMessage(pMsg, TRUE);
 	pMsg->setField(VID_NODE_ID, m_nodeId);
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**

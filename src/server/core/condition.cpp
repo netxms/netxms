@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -107,7 +107,7 @@ BOOL Condition::loadFromDatabase(UINT32 dwId)
    m_inactiveStatus = DBGetFieldLong(hResult, 0, 4);
    m_scriptSource = DBGetField(hResult, 0, 5, NULL, 0);
    DecodeSQLString(m_scriptSource);
-   
+
    DBFreeResult(hResult);
 
    // Compile script
@@ -183,7 +183,7 @@ BOOL Condition::saveToDatabase(DB_HANDLE hdb)
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
    {
-      _sntprintf(pszQuery, qlen, 
+      _sntprintf(pszQuery, qlen,
 			                 _T("INSERT INTO conditions (id,activation_event,")
                           _T("deactivation_event,source_object,active_status,")
                           _T("inactive_status,script) VALUES (%d,%d,%d,%d,%d,%d,'%s')"),
@@ -240,11 +240,14 @@ bool Condition::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message from object
  */
-void Condition::fillMessage(NXCPMessage *pMsg)
+void Condition::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 {
    UINT32 i, dwId;
 
-   NetObj::fillMessage(pMsg);
+   if (!alreadyLocked)
+		lockProperties();
+
+   NetObj::fillMessage(pMsg, TRUE);
    pMsg->setField(VID_SCRIPT, CHECK_NULL_EX(m_scriptSource));
    pMsg->setField(VID_ACTIVATION_EVENT, m_activationEventCode);
    pMsg->setField(VID_DEACTIVATION_EVENT, m_deactivationEventCode);
@@ -261,6 +264,9 @@ void Condition::fillMessage(NXCPMessage *pMsg)
       pMsg->setField(dwId++, (WORD)GetDCObjectType(m_dciList[i].nodeId, m_dciList[i].id));
       dwId += 5;
    }
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**

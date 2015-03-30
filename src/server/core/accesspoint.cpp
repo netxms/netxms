@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -196,9 +196,12 @@ bool AccessPoint::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void AccessPoint::fillMessage(NXCPMessage *msg)
+void AccessPoint::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
 {
-   DataCollectionTarget::fillMessage(msg);
+   if (!alreadyLocked)
+		lockProperties();
+
+   DataCollectionTarget::fillMessage(msg, TRUE);
    msg->setField(VID_IP_ADDRESS, m_ipAddress);
 	msg->setField(VID_NODE_ID, m_nodeId);
 	msg->setField(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
@@ -227,6 +230,9 @@ void AccessPoint::fillMessage(NXCPMessage *msg)
    {
       msg->setField(VID_RADIO_COUNT, (WORD)0);
    }
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**
@@ -402,9 +408,9 @@ void AccessPoint::updateState(AccessPointState state)
 	unlockProperties();
 
    static const TCHAR *names[] = { _T("id"), _T("name"), _T("macAddr"), _T("ipAddr"), _T("vendor"), _T("model"), _T("serialNumber") };
-   PostEventWithNames((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : ((state == AP_UNADOPTED) ? EVENT_AP_UNADOPTED : EVENT_AP_DOWN), 
+   PostEventWithNames((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : ((state == AP_UNADOPTED) ? EVENT_AP_UNADOPTED : EVENT_AP_DOWN),
       m_nodeId, "ishAsss", names,
-      m_id, m_name, m_macAddr, &m_ipAddress, 
+      m_id, m_name, m_macAddr, &m_ipAddress,
       CHECK_NULL_EX(m_vendor), CHECK_NULL_EX(m_model), CHECK_NULL_EX(m_serialNumber));
 }
 

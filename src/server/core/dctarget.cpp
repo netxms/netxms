@@ -82,9 +82,15 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void DataCollectionTarget::fillMessage(NXCPMessage *msg)
+void DataCollectionTarget::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
 {
-   Template::fillMessage(msg);
+   if (!alreadyLocked)
+		lockProperties();
+
+   Template::fillMessage(msg, TRUE);
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**
@@ -829,10 +835,10 @@ void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Ta
             }
             else
             {
-               tableData->setAt(row, i + offset, 
+               tableData->setAt(row, i + offset,
                   ((DCItem *)object)->getAggregateValue(
-                     tableDefinition->getAggregationFunction(), 
-                     tableDefinition->getPeriodStart(), 
+                     tableDefinition->getAggregationFunction(),
+                     tableDefinition->getPeriodStart(),
                      tableDefinition->getPeriodEnd()));
             }
 

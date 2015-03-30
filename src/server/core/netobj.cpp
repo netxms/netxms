@@ -677,9 +677,9 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
       return;
 
    int mostCriticalAlarm = GetMostCriticalStatusForObject(m_id);
-   int mostCriticalDCI = 
+   int mostCriticalDCI =
       (getObjectClass() == OBJECT_NODE || getObjectClass() == OBJECT_MOBILEDEVICE || getObjectClass() == OBJECT_CLUSTER || getObjectClass() == OBJECT_ACCESSPOINT) ?
-         ((DataCollectionTarget *)this)->getMostCriticalDCIStatus() : STATUS_UNKNOWN; 
+         ((DataCollectionTarget *)this)->getMostCriticalDCIStatus() : STATUS_UNKNOWN;
 
    UINT32 i;
    int oldStatus = m_iStatus;
@@ -910,9 +910,12 @@ static bool SendModuleDataCallback(const TCHAR *key, const void *value, void *da
 /**
  * Create NXCP message with object's data
  */
-void NetObj::fillMessage(NXCPMessage *pMsg)
+void NetObj::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 {
    UINT32 i, dwId;
+
+   if (!alreadyLocked)
+		lockProperties();
 
    pMsg->setField(VID_OBJECT_CLASS, (WORD)getObjectClass());
    pMsg->setField(VID_OBJECT_ID, m_id);
@@ -977,6 +980,9 @@ void NetObj::fillMessage(NXCPMessage *pMsg)
    {
       pMsg->setField(VID_MODULE_DATA_COUNT, (UINT16)0);
    }
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**

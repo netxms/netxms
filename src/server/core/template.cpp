@@ -821,12 +821,18 @@ void Template::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create NXCP message with object's data
  */
-void Template::fillMessage(NXCPMessage *pMsg)
+void Template::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 {
-   NetObj::fillMessage(pMsg);
+   if (!alreadyLocked)
+		lockProperties();
+
+   NetObj::fillMessage(pMsg, TRUE);
    pMsg->setField(VID_TEMPLATE_VERSION, m_dwVersion);
 	pMsg->setField(VID_FLAGS, m_flags);
 	pMsg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_applyFilterSource));
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**

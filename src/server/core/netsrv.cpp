@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -117,7 +117,7 @@ BOOL NetworkService::saveToDatabase(DB_HANDLE hdb)
 
 		DBFreeStatement(hStmt);
 	}
-                 
+
    // Save access list
    saveACLToDB(hdb);
 
@@ -228,9 +228,12 @@ bool NetworkService::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void NetworkService::fillMessage(NXCPMessage *pMsg)
+void NetworkService::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 {
-   NetObj::fillMessage(pMsg);
+   if (!alreadyLocked)
+		lockProperties();
+
+   NetObj::fillMessage(pMsg, TRUE);
    pMsg->setField(VID_SERVICE_TYPE, (WORD)m_serviceType);
    pMsg->setField(VID_IP_PROTO, m_proto);
    pMsg->setField(VID_IP_PORT, m_port);
@@ -239,6 +242,9 @@ void NetworkService::fillMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_SERVICE_RESPONSE, CHECK_NULL_EX(m_response));
 	pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
 	pMsg->setField(VID_RESPONSE_TIME, m_responseTime);
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**
@@ -359,9 +365,9 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
 
       sendPollerMsg(rqId, _T("      Polling service from node %s [%s]\r\n"),
                     pNode->getName(), pNode->getIpAddress().toString(szBuffer));
-      if (pNode->checkNetworkService(&dwStatus, 
+      if (pNode->checkNetworkService(&dwStatus,
                                      m_ipAddress.isValid() ? m_ipAddress : m_hostNode->getIpAddress(),
-                                     m_serviceType, m_port, m_proto, 
+                                     m_serviceType, m_port, m_proto,
                                      m_request, m_response, &m_responseTime) == ERR_SUCCESS)
       {
          newStatus = (dwStatus == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
@@ -388,7 +394,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
 		newStatus = STATUS_UNKNOWN;
 		DbgPrintf(6, _T("StatusPoll(%s): Status for network service %s reset to UNKNOWN"), pNode->getName(), m_name);
 	}
-   
+
    if (newStatus != oldStatus)
    {
 		if (newStatus == m_pendingStatus)
@@ -406,7 +412,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
 			m_iStatus = newStatus;
 			m_pendingStatus = -1;	// Invalidate pending status
 			sendPollerMsg(rqId, _T("      Service status changed to %s\r\n"), GetStatusAsText(m_iStatus, true));
-			PostEventEx(eventQueue, m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP : 
+			PostEventEx(eventQueue, m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP :
 							(m_iStatus == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
 							m_hostNode->getId(), "sdd", m_name, m_id, m_serviceType);
 			lockProperties();

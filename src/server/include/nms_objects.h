@@ -488,7 +488,7 @@ public:
    virtual void setMgmtStatus(BOOL bIsManaged);
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 	virtual void postModify();
 
@@ -606,7 +606,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
@@ -756,7 +756,7 @@ public:
 
    void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy);
 
-	virtual void fillMessage(NXCPMessage *pMsg);
+	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    UINT32 wakeUp();
@@ -801,7 +801,7 @@ public:
 
    void statusPoll(ClientSession *session, UINT32 rqId, Node *pollerNode, Queue *eventQueue);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    UINT32 getResponseTime() { return m_responseTime; }
@@ -830,7 +830,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    bool isLocalAddr(const InetAddress& addr);
@@ -860,7 +860,7 @@ public:
 
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void fillMessage(NXCPMessage *pMsg);
+	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
@@ -917,7 +917,7 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void fillMessage(NXCPMessage *pMsg);
+	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
@@ -959,7 +959,7 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void fillMessage(NXCPMessage *pMsg);
+	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller);
@@ -1003,7 +1003,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
@@ -1305,7 +1305,7 @@ public:
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext();
 
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
    void writeParamListToMessage(NXCPMessage *pMsg, WORD flags);
 	void writeWinPerfObjectsToMessage(NXCPMessage *msg);
@@ -1503,7 +1503,7 @@ public:
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
    void addNode(Node *node) { AddChild(node); node->AddParent(this); calculateCompoundStatus(TRUE); }
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
 
 	virtual bool showThresholdSummary();
 
@@ -1587,7 +1587,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool showThresholdSummary();
@@ -1641,7 +1641,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 };
 
@@ -1670,7 +1670,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool showThresholdSummary();
@@ -1747,7 +1747,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    void check();
@@ -1786,7 +1786,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
@@ -1815,7 +1815,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
@@ -1922,7 +1922,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void onObjectDelete(UINT32 dwObjectId);
@@ -1984,7 +1984,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
+   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool showThresholdSummary();
@@ -2031,7 +2031,7 @@ public:
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 	virtual BOOL loadFromDatabase(UINT32 dwId);
 
-	virtual void fillMessage(NXCPMessage *pMsg);
+	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
 	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 	virtual void postModify();
 
@@ -2080,7 +2080,7 @@ public:
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void fillMessage(NXCPMessage *pMsg);
+	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
 	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
@@ -2134,7 +2134,7 @@ public:
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void fillMessage(NXCPMessage *pMsg);
+	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
 	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	bool isReadyForPolling();
@@ -2167,7 +2167,7 @@ public:
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 	virtual BOOL loadFromDatabase(UINT32 dwId);
 
-	virtual void fillMessage(NXCPMessage *pMsg);
+	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
 	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	void execute();

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Raden Solutions
 **
@@ -224,7 +224,7 @@ BOOL SlmCheck::saveToDatabase(DB_HANDLE hdb)
 	lockProperties();
 
 	saveCommonProperties(hdb);
-   
+
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id FROM slm_checks WHERE id=?"));
 	if (hStmt == NULL)
 		goto finish;
@@ -237,10 +237,10 @@ BOOL SlmCheck::saveToDatabase(DB_HANDLE hdb)
 	}
 	DBFreeStatement(hStmt);
 
-	hStmt = DBPrepare(g_hCoreDB, bNewObject ? 
+	hStmt = DBPrepare(g_hCoreDB, bNewObject ?
 		_T("INSERT INTO slm_checks (id,type,content,threshold_id,reason,is_template,template_id,current_ticket) VALUES (?,?,?,?,?,?,?,?)") :
 		_T("UPDATE slm_checks SET id=?,type=?,content=?,threshold_id=?,reason=?,is_template=?,template_id=?,current_ticket=? WHERE id=?"));
-	if (hStmt == NULL)	
+	if (hStmt == NULL)
 		goto finish;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, UINT32(m_type));
@@ -252,7 +252,7 @@ BOOL SlmCheck::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_currentTicketId);
 	if (!bNewObject)
 		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
-	
+
 	if (!DBExecute(hStmt))
 	{
 		DBFreeStatement(hStmt);
@@ -285,9 +285,12 @@ bool SlmCheck::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void SlmCheck::fillMessage(NXCPMessage *pMsg)
+void SlmCheck::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 {
-	NetObj::fillMessage(pMsg);
+   if (!alreadyLocked)
+		lockProperties();
+
+	NetObj::fillMessage(pMsg, TRUE);
 	pMsg->setField(VID_SLMCHECK_TYPE, UINT32(m_type));
 	pMsg->setField(VID_SCRIPT, CHECK_NULL_EX(m_script));
 	pMsg->setField(VID_REASON, m_reason);
@@ -295,6 +298,9 @@ void SlmCheck::fillMessage(NXCPMessage *pMsg)
 	pMsg->setField(VID_IS_TEMPLATE, (WORD)(m_isTemplate ? 1 : 0));
 	if (m_threshold != NULL)
 		m_threshold->createMessage(pMsg, VID_THRESHOLD_BASE);
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**

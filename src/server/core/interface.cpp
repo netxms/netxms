@@ -693,7 +693,7 @@ void Interface::updatePingData()
       for(int i = 0; (i < list->size()) && (dwPingStatus != ICMP_SUCCESS); i++)
       {
          const InetAddress *a = list->get(i);
-		   DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d,%d)"), 
+		   DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d,%d)"),
             m_id, m_name, (const TCHAR *)a->toString(), g_icmpPingTimeout, m_pingTime, g_icmpPingSize);
 		   dwPingStatus = IcmpPing(*a, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
       }
@@ -796,7 +796,7 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
          const InetAddress *a = list->get(i);
          if (a->isValidUnicast() && ((cluster == NULL) || !cluster->isSyncAddr(*a)))
          {
-		      DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d,%d)"), 
+		      DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): calling IcmpPing(%s,3,%d,%d,%d)"),
                m_id, m_name, (const TCHAR *)a->toString(), g_icmpPingTimeout, m_pingTime, g_icmpPingSize);
 		      dwPingStatus = IcmpPing(*a, 3, g_icmpPingTimeout, &m_pingTime, g_icmpPingSize);
          }
@@ -912,9 +912,12 @@ void Interface::paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *nod
 /**
  * Create NXCP message with object's data
  */
-void Interface::fillMessage(NXCPMessage *pMsg)
+void Interface::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 {
-   NetObj::fillMessage(pMsg);
+   if (!alreadyLocked)
+		lockProperties();
+
+   NetObj::fillMessage(pMsg, TRUE);
    m_ipAddressList.fillMessage(pMsg, VID_IP_ADDRESS_COUNT, VID_IP_ADDRESS_LIST_BASE);
    pMsg->setField(VID_IF_INDEX, m_index);
    pMsg->setField(VID_IF_TYPE, m_type);
@@ -934,6 +937,9 @@ void Interface::fillMessage(NXCPMessage *pMsg)
 	pMsg->setField(VID_DOT1X_PAE_STATE, m_dot1xPaeAuthState);
 	pMsg->setField(VID_DOT1X_BACKEND_STATE, m_dot1xBackendAuthState);
 	pMsg->setField(VID_ZONE_ID, m_zoneId);
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**
@@ -1102,8 +1108,8 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
          _T("remoteIfId"), _T("remoteIfIndex"), _T("remoteIfName"), _T("remoteIfIP"),
          _T("remoteIfMAC"), _T("protocol") };
       PostEventWithNames(EVENT_IF_PEER_CHANGED, getParentNodeId(), "ddsAhdsddsAhd", names,
-         m_id, m_index, m_name, &m_ipAddressList.getFirstUnicastAddress(), m_macAddr, 
-         node->getId(), node->getName(), iface->getId(), iface->getIfIndex(), iface->getName(), 
+         m_id, m_index, m_name, &m_ipAddressList.getFirstUnicastAddress(), m_macAddr,
+         node->getId(), node->getName(), iface->getId(), iface->getIfIndex(), iface->getName(),
          &iface->getIpAddressList()->getFirstUnicastAddress(), iface->getMacAddr(), protocol);
    }
 }
@@ -1121,7 +1127,7 @@ void Interface::setMacAddr(const BYTE *pbNewMac)
    unlockProperties();
 }
 
-/** 
+/**
  * Set IP address (should be used only for fake interfaces with single IP)
  */
 void Interface::setIpAddress(const InetAddress& addr)

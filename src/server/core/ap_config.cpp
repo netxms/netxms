@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
@@ -140,10 +140,16 @@ BOOL AgentPolicyConfig::loadFromDatabase(UINT32 dwId)
 // Create NXCP message with policy data
 //
 
-void AgentPolicyConfig::fillMessage(NXCPMessage *msg)
+void AgentPolicyConfig::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
 {
-	AgentPolicy::fillMessage(msg);
+   if (!alreadyLocked)
+		lockProperties();
+
+	AgentPolicy::fillMessage(msg, TRUE);
 	msg->setField(VID_CONFIG_FILE_DATA, CHECK_NULL_EX(m_fileContent));
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**

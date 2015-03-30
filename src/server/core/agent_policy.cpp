@@ -208,11 +208,17 @@ BOOL AgentPolicy::loadFromDatabase(UINT32 dwId)
 // Create NXCP message with policy data
 //
 
-void AgentPolicy::fillMessage(NXCPMessage *msg)
+void AgentPolicy::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
 {
-	NetObj::fillMessage(msg);
+   if (!alreadyLocked)
+		lockProperties();
+
+	NetObj::fillMessage(msg, TRUE);
 	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);
 	msg->setField(VID_VERSION, m_version);
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**

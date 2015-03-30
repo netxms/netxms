@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Raden Solutions
 **
@@ -91,12 +91,18 @@ bool ServiceContainer::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void ServiceContainer::fillMessage(NXCPMessage *pMsg)
+void ServiceContainer::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 {
-   Container::fillMessage(pMsg);
+   if (!alreadyLocked)
+		lockProperties();
+
+   Container::fillMessage(pMsg, TRUE);
    pMsg->setField(VID_UPTIME_DAY, m_uptimeDay);
    pMsg->setField(VID_UPTIME_WEEK, m_uptimeWeek);
    pMsg->setField(VID_UPTIME_MONTH, m_uptimeMonth);
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**
@@ -251,14 +257,14 @@ double ServiceContainer::getUptimeFromDBFor(Period period, INT32 *downtime)
 				continue;
 			if (newStatus == STATUS_NORMAL)
 				*downtime += (LONG)(changeTimestamp - prevChangeTimestamp);
-			else 
+			else
 				prevChangeTimestamp = changeTimestamp;
 			realRows++;
 		}
 		if (newStatus == STATUS_CRITICAL) // the service is still down, add period till now
 			*downtime += LONG(time(NULL) - prevChangeTimestamp);
 		// no rows for period && critical status -> downtime from beginning till now
-		if (realRows == 0 && m_iStatus == STATUS_CRITICAL)  
+		if (realRows == 0 && m_iStatus == STATUS_CRITICAL)
 			*downtime = timediffTillNow;
 		percentage = 100.0 - (double)(*downtime * 100) / (double)getSecondsInPeriod(period);
 		DbgPrintf(7, _T("++++ ServiceContainer::getUptimeFromDBFor(), downtime %ld"), *downtime);
@@ -271,7 +277,7 @@ double ServiceContainer::getUptimeFromDBFor(Period period, INT32 *downtime)
 }
 
 /**
- * Update uptime counters 
+ * Update uptime counters
  */
 void ServiceContainer::updateUptimeStats(time_t currentTime, BOOL updateChilds)
 {
@@ -289,7 +295,7 @@ void ServiceContainer::updateUptimeStats(time_t currentTime, BOOL updateChilds)
 
 	if (m_iStatus == STATUS_CRITICAL && m_prevUptimeUpdateStatus == STATUS_CRITICAL)
 	{
-		downtimeBetweenPolls = LONG(currentTime - m_prevUptimeUpdateTime);		
+		downtimeBetweenPolls = LONG(currentTime - m_prevUptimeUpdateTime);
 		DbgPrintf(7, _T("++++ ServiceContainer::updateUptimeStats() both statuses critical"));
 	}
 
@@ -299,7 +305,7 @@ void ServiceContainer::updateUptimeStats(time_t currentTime, BOOL updateChilds)
 		m_downtimeDay = 0;
 	m_uptimeDay = 100.0 - (double)(m_downtimeDay * 100) / (double)ServiceContainer::getSecondsInPeriod(DAY);
 	m_prevDiffDay = timediffTillNow;
-	DbgPrintf(7, _T("++++ ServiceContainer::updateUptimeStats() m_downtimeDay %ld, timediffTillNow %ld, downtimeBetweenPolls %ld"), 
+	DbgPrintf(7, _T("++++ ServiceContainer::updateUptimeStats() m_downtimeDay %ld, timediffTillNow %ld, downtimeBetweenPolls %ld"),
 		m_downtimeDay, timediffTillNow, downtimeBetweenPolls);
 
 	timediffTillNow = ServiceContainer::getSecondsSinceBeginningOf(WEEK, NULL);
@@ -396,7 +402,7 @@ INT32 ServiceContainer::getSecondsInMonth()
 	int days = 31;
 
 	if (month == 3 || month == 5 || month == 8 || month == 10)
-		days = 30;	
+		days = 30;
 	else if (month == 1) /* February */
 		days = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0) ? 29 : 28;
 

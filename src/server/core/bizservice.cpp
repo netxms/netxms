@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2011 NetXMS Team
 **
@@ -157,9 +157,15 @@ bool BusinessService::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void BusinessService::fillMessage(NXCPMessage *pMsg)
+void BusinessService::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 {
-   ServiceContainer::fillMessage(pMsg);
+   if (!alreadyLocked)
+		lockProperties();
+
+   ServiceContainer::fillMessage(pMsg, TRUE);
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**

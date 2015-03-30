@@ -177,9 +177,12 @@ bool MobileDevice::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void MobileDevice::fillMessage(NXCPMessage *msg)
+void MobileDevice::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
 {
-   DataCollectionTarget::fillMessage(msg);
+   if (!alreadyLocked)
+		lockProperties();
+
+   DataCollectionTarget::fillMessage(msg, TRUE);
 	msg->setField(VID_DEVICE_ID, CHECK_NULL_EX(m_deviceId));
 	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
 	msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
@@ -189,6 +192,9 @@ void MobileDevice::fillMessage(NXCPMessage *msg)
 	msg->setField(VID_USER_ID, CHECK_NULL_EX(m_userId));
 	msg->setField(VID_BATTERY_LEVEL, (UINT32)m_batteryLevel);
 	msg->setField(VID_LAST_CHANGE_TIME, (QWORD)m_lastReportTime);
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**

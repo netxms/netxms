@@ -472,9 +472,12 @@ BOOL NetworkMap::loadFromDatabase(UINT32 dwId)
 /**
  * Fill NXCP message with object's data
  */
-void NetworkMap::fillMessage(NXCPMessage *msg)
+void NetworkMap::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
 {
-	NetObj::fillMessage(msg);
+   if (!alreadyLocked)
+		lockProperties();
+
+	NetObj::fillMessage(msg, TRUE);
 
 	msg->setField(VID_MAP_TYPE, (WORD)m_mapType);
 	msg->setField(VID_LAYOUT, (WORD)m_layout);
@@ -505,6 +508,9 @@ void NetworkMap::fillMessage(NXCPMessage *msg)
 		m_links->get(i)->fillMessage(msg, varId);
 		varId += 20;
 	}
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**

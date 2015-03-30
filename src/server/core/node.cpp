@@ -957,7 +957,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
          InetAddress addr = info->ipAddrList.get(i);
          bool addToSubnet = addr.isValidUnicast() && ((pCluster == NULL) || !pCluster->isSyncAddr(addr));
 		   DbgPrintf(5, _T("Node::createNewInterface: node=%s [%d] ip=%s/%d cluster=%s [%d] add=%s"),
-		             m_name, m_id, addr.toString(buffer), addr.getMaskBits(), 
+		             m_name, m_id, addr.toString(buffer), addr.getMaskBits(),
                    (pCluster != NULL) ? pCluster->getName() : _T("(null)"),
                    (pCluster != NULL) ? pCluster->getId() : 0, addToSubnet ? _T("yes") : _T("no"));
 		   if (addToSubnet)
@@ -1001,7 +1001,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
    // Create interface object
    Interface *pInterface;
    if (info->name[0] != 0)
-		pInterface = new Interface(info->name, (info->description[0] != 0) ? info->description : info->name, 
+		pInterface = new Interface(info->name, (info->description[0] != 0) ? info->description : info->name,
                                  info->index, info->ipAddrList, info->type, m_zoneId);
    else
       pInterface = new Interface(info->ipAddrList, m_zoneId, bSyntheticMask);
@@ -2659,7 +2659,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, int maskBits)
                if (ifInfo->index == pInterface->getIfIndex())
                {
                   // Existing interface, check configuration
-                  if (memcmp(ifInfo->macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) && 
+                  if (memcmp(ifInfo->macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) &&
                       memcmp(ifInfo->macAddr, pInterface->getMacAddr(), MAC_ADDR_LENGTH))
                   {
                      TCHAR szOldMac[16], szNewMac[16];
@@ -3482,7 +3482,7 @@ static UINT32 SNMPOIDSuffixListCallback(UINT32 snmpVersion, SNMP_Variable *varbi
       return SNMP_ERR_SUCCESS;
    TCHAR buffer[256];
    SNMPConvertOIDToText(oid->getLength() - data->oidLen, &(oid->getValue()[data->oidLen]), buffer, 256);
-   
+
    const TCHAR *key = (buffer[0] == _T('.')) ? &buffer[1] : buffer;
 
    TCHAR value[256] = _T("");
@@ -4050,9 +4050,12 @@ UINT32 Node::getTableForClient(const TCHAR *name, Table **table)
 /**
  * Create CSCP message with object's data
  */
-void Node::fillMessage(NXCPMessage *pMsg)
+void Node::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 {
-   DataCollectionTarget::fillMessage(pMsg);
+   if (!alreadyLocked)
+		lockProperties();
+
+   DataCollectionTarget::fillMessage(pMsg, TRUE);
    pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
 	pMsg->setField(VID_PRIMARY_NAME, m_primaryName);
    pMsg->setField(VID_FLAGS, m_dwFlags);
@@ -4092,6 +4095,9 @@ void Node::fillMessage(NXCPMessage *pMsg)
 		pMsg->setField(VID_DRIVER_NAME, m_driver->getName());
 		pMsg->setField(VID_DRIVER_VERSION, m_driver->getVersion());
 	}
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**
@@ -4841,7 +4847,7 @@ bool Node::getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, I
              ((destAddr.getAddressV4() & m_pRoutingTable->pRoutes[i].dwDestMask) == m_pRoutingTable->pRoutes[i].dwDestAddr))
          {
             Interface *iface = findInterfaceByIndex(m_pRoutingTable->pRoutes[i].dwIfIndex);
-            if ((m_pRoutingTable->pRoutes[i].dwNextHop == 0) && (iface != NULL) && 
+            if ((m_pRoutingTable->pRoutes[i].dwNextHop == 0) && (iface != NULL) &&
                 (iface->getIpAddressList()->getFirstUnicastAddressV4().getHostBits() == 0))
             {
                // On Linux XEN VMs can be pointed by individual host routes to virtual interfaces
@@ -5883,7 +5889,7 @@ void Node::checkSubnetBinding()
 	   }
 	   else if (!isSync)
 	   {
-         DbgPrintf(6, _T("Missing subnet for address %s/%d on interface %s [%d]"), 
+         DbgPrintf(6, _T("Missing subnet for address %s/%d on interface %s [%d]"),
             addr.toString(buffer), addr.getMaskBits(), iface->getName(), iface->getIfIndex());
 
 		   // Ignore mask 255.255.255.255 - some point-to-point interfaces can have such mask
@@ -5895,7 +5901,7 @@ void Node::checkSubnetBinding()
          }
          else
          {
-            DbgPrintf(6, _T("Subnet not required for address %s/%d on interface %s [%d]"), 
+            DbgPrintf(6, _T("Subnet not required for address %s/%d on interface %s [%d]"),
                addr.toString(buffer), addr.getMaskBits(), iface->getName(), iface->getIfIndex());
          }
 	   }

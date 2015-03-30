@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -335,11 +335,14 @@ bool Cluster::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void Cluster::fillMessage(NXCPMessage *pMsg)
+void Cluster::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 {
 	UINT32 i, dwId;
 
-   DataCollectionTarget::fillMessage(pMsg);
+   if (!alreadyLocked)
+		lockProperties();
+
+   DataCollectionTarget::fillMessage(pMsg, TRUE);
    pMsg->setField(VID_CLUSTER_TYPE, m_dwClusterType);
 	pMsg->setField(VID_ZONE_ID, m_zoneId);
 
@@ -355,6 +358,9 @@ void Cluster::fillMessage(NXCPMessage *pMsg)
 		pMsg->setField(dwId++, m_pResourceList[i].ipAddr);
 		pMsg->setField(dwId++, m_pResourceList[i].dwCurrOwner);
 	}
+
+	if(!alreadyLocked)
+      unlockProperties();
 }
 
 /**
@@ -653,9 +659,9 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 
       Node *node = (Node *)m_pChildList[i];
       DCObject *dco = node->getDCObjectByTemplateId(item->getId());
-      if ((dco != NULL) && 
-          (dco->getType() == DCO_TYPE_ITEM) && 
-          (dco->getStatus() == ITEM_STATUS_ACTIVE) && 
+      if ((dco != NULL) &&
+          (dco->getType() == DCO_TYPE_ITEM) &&
+          (dco->getStatus() == ITEM_STATUS_ACTIVE) &&
           (dco->getErrorCount() == 0) &&
           dco->matchClusterResource())
       {
@@ -717,9 +723,9 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
 
       Node *node = (Node *)m_pChildList[i];
       DCObject *dco = node->getDCObjectByTemplateId(table->getId());
-      if ((dco != NULL) && 
-          (dco->getType() == DCO_TYPE_TABLE) && 
-          (dco->getStatus() == ITEM_STATUS_ACTIVE) && 
+      if ((dco != NULL) &&
+          (dco->getType() == DCO_TYPE_TABLE) &&
+          (dco->getStatus() == ITEM_STATUS_ACTIVE) &&
           (dco->getErrorCount() == 0) &&
           dco->matchClusterResource())
       {
