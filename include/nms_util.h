@@ -1434,8 +1434,9 @@ BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strS
 INT64 LIBNETXMS_EXPORTABLE GetProcessRSS();
 #endif
 
-#if !(HAVE_DAEMON)
-int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose);
+#if !HAVE_DAEMON || !HAVE_DECL_DAEMON
+int LIBNETXMS_EXPORTABLE __daemon(int nochdir, int noclose);
+#define daemon __daemon
 #endif
 
 UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr);

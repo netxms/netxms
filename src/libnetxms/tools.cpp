@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -639,14 +639,12 @@ TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 dwError, TCHAR *pszBuffer,
 
 #endif
 
+#if (!HAVE_DAEMON || !HAVE_DECL_DAEMON) && !defined(_NETWARE) && !defined(_WIN32)
 
-//
-// daemon() implementation for systems which doesn't have one
-//
-
-#if !(HAVE_DAEMON) && !defined(_NETWARE) && !defined(_WIN32)
-
-int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose)
+/**
+ * daemon() implementation for systems which doesn't have one
+ */
+int LIBNETXMS_EXPORTABLE __daemon(int nochdir, int noclose)
 {
    int pid;
 

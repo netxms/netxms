@@ -39,24 +39,24 @@
 #define SF_IF_ALL_ZONES 0x00000001
 #define SF_GLOBAL_ZONE  0x00000002
 
+/**
+ * File system info types
+ */
+enum
+{
+   DISK_FREE,
+   DISK_USED,
+   DISK_TOTAL,
+   DISK_AVAIL,
+   DISK_USED_PERC,
+   DISK_AVAIL_PERC,
+   DISK_FREE_PERC,
+   DISK_FSTYPE
+};
 
-//
-// File system info types
-//
-
-#define DISK_FREE	0
-#define DISK_USED	1
-#define DISK_TOTAL	2
-#define DISK_AVAIL      3
-#define DISK_USED_PERC  4
-#define DISK_AVAIL_PERC 5
-#define DISK_FREE_PERC  6
-
-
-//
-// Request types for H_MemoryInfo
-//
-
+/**
+ * Request types for H_MemoryInfo
+ */
 enum
 {
    MEMINFO_PHYSICAL_FREE,
@@ -76,11 +76,9 @@ enum
    MEMINFO_VIRTUAL_USEDPCT
 };
 
-
-//
-// Types for Process.XXX() parameters
-//
-
+/**
+ * Types for Process.XXX() parameters
+ */
 enum
 {
    PROCINFO_IO_READ_B,
@@ -97,11 +95,9 @@ enum
    PROCINFO_CPUTIME
 };
 
-
-//
-// I/O stats request types
-//
-
+/**
+ * I/O stats request types
+ */
 enum
 {	
    IOSTAT_NUM_READS,
@@ -122,22 +118,18 @@ enum
    IOSTAT_QUEUE_MAX
 };
 
-
-//
-// Process list entry structure
-//
-
+/**
+ * Process list entry structure
+ */
 typedef struct t_ProcEnt
 {
    unsigned int nPid;
    char szProcName[128];
 } PROC_ENT;
 
-
 //
 // Functions
 //
-
 int mac_addr_dlpi(char *pszIfName, u_char *pMacAddr);
 LONG ReadKStatValue(const char *pszModule, LONG nInstance, const char *pszName,
       const char *pszStat, TCHAR *pValue, kstat_named_t *pRawValue);
@@ -148,11 +140,9 @@ THREAD_RESULT THREAD_CALL IOStatCollector(void *arg);
 void kstat_lock();
 void kstat_unlock();
 
-
 //
 // Global variables
 //
-
 extern BOOL g_bShutdown;
 extern DWORD g_flags;
 

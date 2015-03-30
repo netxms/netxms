@@ -1212,6 +1212,42 @@ if test "x$CXX" != "xaCC"; then
 	fi
 fi
 
+
+#--------------------------------------------------------------------
+# Check for additional system libraries
+#--------------------------------------------------------------------
+
+AC_CHECK_LIB(xnet, accept)
+AC_CHECK_LIB(socket, if_nameindex)
+AC_CHECK_LIB(dl, dlopen)
+AC_CHECK_LIB(kstat, kstat_open)
+
+# sockets/resolver
+if test "$BUILD_SERVER-$XMPP_SUPPORT" = "yes-yes"; then
+	AC_CHECK_HEADERS([arpa/nameser_compat.h])
+	AC_CHECK_FUNC(res_query, , [AC_CHECK_LIB(resolv, res_query, [], [AC_CHECK_LIB(resolv, __res_query)])])
+fi
+AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])
+AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(resolv, gethostbyname)])
+AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(nsl, gethostbyname)])
+
+if test "x$ac_cv_lib_nsl_gethostbyname" != "xyes" && test "x$ac_cv_func_gethostbyname" != "xyes" ; then
+	AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(socket, gethostbyname)])
+fi
+
+if test "$ac_cv_lib_nsl_gethostbyname" = "$ac_cv_func_gethostbyname" ; then
+	AC_MSG_CHECKING([if we can include libnsl + libsocket])
+	LIBS="-lnsl -lsocket $LIBS"
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[(void) gethostbyname]])],[my_ac_link_result=yes],[my_ac_link_result=no ])
+	if test "$my_ac_link_result" = "no" ; then
+		AC_MSG_RESULT([failure])
+		AC_MSG_ERROR([unable to use gethostbyname()])
+	else
+		AC_MSG_RESULT([success])
+	fi
+fi
+
+
 #--------------------------------------------------------------------
 # Check for threads library - either POSIX or GNU
 #--------------------------------------------------------------------
@@ -1389,11 +1425,6 @@ fi
 #--------------------------------------------------------------------
 # Checks for other libs.
 #--------------------------------------------------------------------
-
-AC_CHECK_LIB(xnet, accept)
-AC_CHECK_LIB(socket, if_nameindex)
-AC_CHECK_LIB(dl, dlopen)
-AC_CHECK_LIB(kstat, kstat_open)
 
 if test "x$BUILD_SERVER" = "xyes" ; then
    AC_CHECK_LIB(termcap, tgetstr, [SERVER_LIBS="$SERVER_LIBS -ltermcap"], [AC_CHECK_LIB(ncurses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lncurses"], AC_CHECK_LIB(curses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lcurses"]))])
@@ -1618,7 +1649,7 @@ AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
 AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo])
 AC_CHECK_FUNCS([itoa _itoa isatty])
 
-AC_CHECK_DECLS([nanosleep])
+AC_CHECK_DECLS([nanosleep, daemon])
 
 # Do not use inet_pton on Solaris as it has binary compatibility problems
 if test "$PLATFORM" != "SunOS"; then
@@ -1674,31 +1705,6 @@ AC_MSG_RESULT(no)
 
 AC_CHECK_FUNCS([sysctlbyname sysctlnametomib])
 AC_CHECK_FUNCS([tcgetattr tcsetattr cfsetospeed cfsetispeed])
-
-# sockets/resolver
-if test "$BUILD_SERVER-$XMPP_SUPPORT" = "yes-yes"; then
-	AC_CHECK_HEADERS([arpa/nameser_compat.h])
-	AC_CHECK_FUNC(res_query, , [AC_CHECK_LIB(resolv, res_query, [], [AC_CHECK_LIB(resolv, __res_query)])])
-fi
-AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])
-AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(resolv, gethostbyname)])
-AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(nsl, gethostbyname)])
-
-if test "x$ac_cv_lib_nsl_gethostbyname" != "xyes" && test "x$ac_cv_func_gethostbyname" != "xyes" ; then
-	AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(socket, gethostbyname)])
-fi
-
-if test "$ac_cv_lib_nsl_gethostbyname" = "$ac_cv_func_gethostbyname" ; then
-	AC_MSG_CHECKING([if we can include libnsl + libsocket])
-	LIBS="-lnsl -lsocket $LIBS"
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[(void) gethostbyname]])],[my_ac_link_result=yes],[my_ac_link_result=no ])
-	if test "$my_ac_link_result" = "no" ; then
-		AC_MSG_RESULT([failure])
-		AC_MSG_ERROR([unable to use gethostbyname()])
-	else
-		AC_MSG_RESULT([success])
-	fi
-fi
 
 # asprintf, scprintf, etc.
 AC_CHECK_FUNCS([asprintf aswprintf vasprintf vaswprintf])
