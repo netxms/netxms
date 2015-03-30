@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,6 +67,8 @@ public class FDBLabelProvider extends LabelProvider implements ITableLabelProvid
             if (e.getVlanId() == 0)
                return ""; //$NON-NLS-1$
             return Integer.toString(e.getVlanId());
+         case SwitchForwardingDatabaseView.COLUMN_TYPE:
+            return (e.getType() == 3) ? "dynamic" : ((e.getType() == 5) ? "static" : "unknown");
       }
       return null;
    }

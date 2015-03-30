@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -62,6 +62,9 @@ public class FDBComparator extends ViewerComparator
             break;
          case SwitchForwardingDatabaseView.COLUMN_VLAN:
             result = fdb1.getVlanId() - fdb2.getVlanId();
+            break;
+         case SwitchForwardingDatabaseView.COLUMN_TYPE:
+            result = fdb1.getType() - fdb2.getType();
             break;
          default:
             result = 0;

@@ -134,7 +134,7 @@ public:
    void setCurrentVlanId(UINT16 vlanId) { m_currentVlanId = vlanId; }
    UINT16 getCurrentVlanId() { return m_currentVlanId; }
 
-	UINT32 findMacAddress(const BYTE *macAddr);
+	UINT32 findMacAddress(const BYTE *macAddr, bool *isStatic);
 	bool isSingleMacOnPort(UINT32 ifIndex, BYTE *macAddr = NULL);
 	int getMacCountOnPort(UINT32 ifIndex);
 

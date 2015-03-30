@@ -85,27 +85,40 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
 		{
 			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%d]"),
 			          macAddrText, node->getName(), (int)node->getId());
-			UINT32 ifIndex = fdb->findMacAddress(macAddr);
+         bool isStatic;
+			UINT32 ifIndex = fdb->findMacAddress(macAddr, &isStatic);
 			if (ifIndex != 0)
 			{
+			   DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): MAC address found on interface %d (%s)"),
+                      macAddrText, ifIndex, isStatic ? _T("static") : _T("dynamic"));
 				int count = fdb->getMacCountOnPort(ifIndex);
 				if (count == 1)
 				{
-					Interface *iface = node->findInterfaceByIndex(ifIndex);
-					if (iface != NULL)
-					{
-						DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%d] on node %s [%d]"), macAddrText,
-									 iface->getName(), (int)iface->getId(), iface->getParentNode()->getName(), (int)iface->getParentNode()->getId());
-                  cp = iface;
-                  *type = CP_TYPE_DIRECT;
-					}
-					else
-					{
-						DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): cannot find interface object for node %s [%d] ifIndex %d"),
-									 macAddrText, node->getName(), node->getId(), ifIndex);
-					}
+               if (isStatic)
+               {
+                  // keep it as best match and continue search for dynamic connection
+   					bestMatchCount = count;
+					   bestMatchNode = node;
+					   bestMatchIfIndex = ifIndex;
+               }
+               else
+               {
+					   Interface *iface = node->findInterfaceByIndex(ifIndex);
+					   if (iface != NULL)
+					   {
+						   DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%d] on node %s [%d]"), macAddrText,
+									    iface->getName(), (int)iface->getId(), iface->getParentNode()->getName(), (int)iface->getParentNode()->getId());
+                     cp = iface;
+                     *type = CP_TYPE_DIRECT;
+					   }
+					   else
+					   {
+						   DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): cannot find interface object for node %s [%d] ifIndex %d"),
+									    macAddrText, node->getName(), node->getId(), ifIndex);
+					   }
+               }
 				}
-				else if (count < bestMatchCount)
+            else if (count < bestMatchCount)
 				{
 					bestMatchCount = count;
 					bestMatchNode = node;
@@ -176,6 +189,11 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
 	if ((cp == NULL) && (bestMatchNode != NULL))
 	{
 		cp = bestMatchNode->findInterfaceByIndex(bestMatchIfIndex);
+      if (bestMatchCount == 1)
+      {
+         // static best match
+         *type = CP_TYPE_DIRECT;
+      }
 	}
 	return cp;
 }

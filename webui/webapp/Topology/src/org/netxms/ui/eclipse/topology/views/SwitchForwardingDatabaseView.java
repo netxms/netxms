@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,6 +63,7 @@ public class SwitchForwardingDatabaseView extends ViewPart
 	public static final int COLUMN_INTERFACE = 2;
    public static final int COLUMN_VLAN = 3;
 	public static final int COLUMN_NODE = 4;
+   public static final int COLUMN_TYPE = 5;
 	
 	private NXCSession session;
 	private long rootObject;
@@ -97,8 +98,15 @@ public class SwitchForwardingDatabaseView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		final String[] names = { Messages.get().SwitchForwardingDatabaseView_ColMacAddr, Messages.get().SwitchForwardingDatabaseView_ColPort, Messages.get().SwitchForwardingDatabaseView_ConIface, Messages.get().SwitchForwardingDatabaseView_ColVlan, Messages.get().SwitchForwardingDatabaseView_ColNode };
-		final int[] widths = { 180, 100, 200, 100, 250 };
+		final String[] names = { 
+		      Messages.get().SwitchForwardingDatabaseView_ColMacAddr, 
+		      Messages.get().SwitchForwardingDatabaseView_ColPort, 
+		      Messages.get().SwitchForwardingDatabaseView_ConIface, 
+		      Messages.get().SwitchForwardingDatabaseView_ColVlan, 
+		      Messages.get().SwitchForwardingDatabaseView_ColNode,
+		      "Type"
+		   };
+		final int[] widths = { 180, 100, 200, 100, 250, 110 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_MAC_ADDRESS, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new FDBLabelProvider());
