@@ -525,7 +525,7 @@ LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, A
                   addr->toString(ipAddr),
                   addr->getMaskBits(),
                   iface->type,
-                  MACToStr(iface->macAddr, macAddr),
+                  BinToStr(iface->macAddr, 6, macAddr),
                   iface->name);
                pValue->add(infoString);
             }
@@ -536,7 +536,7 @@ LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, A
 			_sntprintf(infoString, 1024, _T("%d 0.0.0.0/0 %d %s %hs"),
 				iface->index,
 				iface->type,
-				MACToStr(iface->macAddr, macAddr),
+				BinToStr(iface->macAddr, 6, macAddr),
 				iface->name);
          pValue->add(infoString);
       }
