@@ -47,6 +47,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.ui.eclipse.objects.ObjectWrapper;
 import org.netxms.ui.eclipse.objecttools.api.NodeInfo;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolExecutor;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolsCache;
@@ -200,6 +201,12 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 				AbstractNode n = (AbstractNode)session.findObjectById(((Alarm)o).getSourceObjectId(), AbstractNode.class);
 				if (n != null)
 					nodes.add(new NodeInfo(n, (Alarm)o));
+			} 
+			else if (o instanceof ObjectWrapper)
+			{
+			   AbstractNode n = ((ObjectWrapper)o).getObject();
+			   if (n != null)
+			      nodes.add(new NodeInfo(n, null));
 			}
 		}
 		return nodes;

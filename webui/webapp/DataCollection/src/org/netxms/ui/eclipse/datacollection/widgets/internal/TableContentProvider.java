@@ -3,9 +3,17 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets.internal;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
+import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
+import org.netxms.client.TableRow;
+import org.netxms.client.events.Alarm;
+import org.netxms.client.objects.AbstractNode;
+import org.netxms.ui.eclipse.objects.ObjectWrapper;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Content provider for NetXMS table viewer
@@ -40,7 +48,14 @@ public class TableContentProvider implements IStructuredContentProvider
 		if (table == null)
 			return new Object[0];
 		
-		return table.getAllRows();
+		List <RowWrapper> list = new ArrayList<RowWrapper>();
+		TableRow[] rows = table.getAllRows();
+		for(int i = 0; i < rows.length; i++)
+		{
+		   list.add(new RowWrapper(rows[i]));		   
+		}
+		
+		return list.toArray();
 	}
 
 	/* (non-Javadoc)
@@ -49,5 +64,27 @@ public class TableContentProvider implements IStructuredContentProvider
 	@Override
 	public void dispose()
 	{
+	}
+	
+	class RowWrapper extends TableRow implements ObjectWrapper
+	{
+	   /**
+	    * Abstract object that will be given to selector
+	    */
+	   public AbstractNode object;  
+
+      public RowWrapper(TableRow src)
+      {
+         super(src);
+         final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+         object = (AbstractNode)session.findObjectByName(src.get(0).getValue());
+      }
+
+      @Override
+      public AbstractNode getObject()
+      {
+         return object;
+      }
+	   
 	}
 }

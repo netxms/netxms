@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.datacollection.widgets;
 import java.util.Arrays;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
@@ -36,6 +37,7 @@ import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
+import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.TableContentProvider;
@@ -136,6 +138,10 @@ public class SummaryTableWidget extends Composite
       // Create menu.
       Menu menu = menuMgr.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
+      
+      // Register menu for extension.
+      if (viewPart != null)
+         viewPart.getSite().registerContextMenu(menuMgr, viewer);
    }
 
    /**
@@ -145,6 +151,8 @@ public class SummaryTableWidget extends Composite
    protected void fillContextMenu(IMenuManager manager)
    {
       manager.add(actionUseMultipliers);
+      manager.add(new Separator());
+      manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
       manager.add(new Separator());
       manager.add(actionExportToCsv);
    }

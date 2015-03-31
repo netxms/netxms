@@ -33,6 +33,9 @@
                      <instanceof
                            value="org.netxms.client.objects.Cluster">
                      </instanceof>
+                     <instanceof
+                           value="org.netxms.ui.eclipse.objects.ObjectWrapper">
+                     </instanceof>
                   </or>
                </iterate>
             </visibleWhen>
