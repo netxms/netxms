@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -27,6 +27,11 @@
  * Check if statement handle is valid
  */
 #define IS_VALID_STATEMENT_HANDLE(s) ((s != NULL) && (s->m_connection != NULL))
+
+/**
+ * Session init callback
+ */
+static void (*s_sessionInitCb)(DB_HANDLE session) = NULL;
 
 /**
  * Invalidate all prepared statements on connection
@@ -95,6 +100,8 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
          if (driver->m_fpDrvSetPrefetchLimit != NULL)
             driver->m_fpDrvSetPrefetchLimit(hDrvConn, driver->m_defaultPrefetchLimit);
 		   __DBDbgPrintf(4, _T("New DB connection opened: handle=%p"), hConn);
+         if (s_sessionInitCb != NULL)
+            s_sessionInitCb(hConn);
       }
       else
       {
@@ -168,6 +175,8 @@ static void DBReconnect(DB_HANDLE hConn)
       {
          if (hConn->m_driver->m_fpDrvSetPrefetchLimit != NULL)
             hConn->m_driver->m_fpDrvSetPrefetchLimit(hConn->m_connection, hConn->m_driver->m_defaultPrefetchLimit);
+         if (s_sessionInitCb != NULL)
+            s_sessionInitCb(hConn);
          break;
       }
       if (nCount == 0)
@@ -206,6 +215,14 @@ bool LIBNXDB_EXPORTABLE DBSetPrefetchLimit(DB_HANDLE hConn, int limit)
    if (hConn->m_driver->m_fpDrvSetPrefetchLimit == NULL)
       return false;  // Not supported by driver
    return hConn->m_driver->m_fpDrvSetPrefetchLimit(hConn->m_connection, limit);
+}
+
+/**
+ * Set session initialization callback
+ */
+void LIBNXDB_EXPORTABLE DBSetSessionInitCallback(void (*cb)(DB_HANDLE))
+{
+   s_sessionInitCb = cb;
 }
 
 /**
