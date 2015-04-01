@@ -380,7 +380,7 @@ public class Legend extends Canvas implements ILegend, PaintListener
 
       if (extended)
       {
-         width += (Util.getExtentInGC(getFont(), "Max: 000000.000000").x + MARGIN) * 3;
+         width += (Util.getExtentInGC(getFont(), "Max: 000000.000000").x + MARGIN) * 4;
       }
       
       setLayoutData(new ChartLayoutData(width, height));
@@ -436,6 +436,9 @@ public class Legend extends Canvas implements ILegend, PaintListener
       x += shift;
 
       gc.drawText(String.format("Min: %s", Chart.roundedDecimalValue(series.getMinY(), 0.0005)), x, r.y, true);
+      x += shift;
+
+      gc.drawText(String.format("Cur: %s", Chart.roundedDecimalValue(series.getCurY(), 0.0005)), x, r.y, true);
    }
 
    /*

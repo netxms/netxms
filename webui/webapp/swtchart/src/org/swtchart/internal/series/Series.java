@@ -786,4 +786,12 @@ abstract public class Series implements ISeries
    {
       return avgY;
    }
+   
+   /**
+    * @return current Y value
+    */
+   public double getCurY()
+   {
+      return ((ySeries != null) && (ySeries.length > 0)) ? ySeries[0] : 0;
+   }
 }

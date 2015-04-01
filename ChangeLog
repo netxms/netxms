@@ -21,11 +21,13 @@
 	- "Always fit layout to screen" option in network maps
 	- Last selected zoom level preserved on network map close
 	- Invisible dashboards and charts do not refresh itself automatically
+	- "Current" column in extended line chart legend
 - Android console:
     - Implemented feature #776 (WoL)
 - Fixed issues: #690, #693, #702, #725, #745, #750, #752, #755, #756, #757, 
                 #758, #759, #760, #763, #764, #765, #766, #767, #768, #769, 
-                #770, #771, #776, #778, #779, #782, #787, #789, #790, #793
+                #770, #771, #776, #778, #779, #782, #785, #787, #789, #790, 
+                #793
 
 
 *
