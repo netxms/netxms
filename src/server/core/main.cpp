@@ -1558,7 +1558,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		}
 		else if (IsCommand(_T("OBJECTS"), szBuffer, 1))
 		{
-			DumpObjects(pCtx);
+			// Get filter
+			pArg = ExtractWord(pArg, szBuffer);
+         StrStrip(szBuffer);
+         DumpObjects(pCtx, (szBuffer[0] != 0) ? szBuffer : NULL);
 		}
 		else if (IsCommand(_T("POLLERS"), szBuffer, 1))
 		{
@@ -1950,7 +1953,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   show flags                - Show internal server flags\n")
 				_T("   show index <index>        - Show internal index\n")
 				_T("   show modules              - Show loaded server modules\n")
-				_T("   show objects              - Dump network objects to screen\n")
+				_T("   show objects [<filter>]   - Dump network objects to screen\n")
 				_T("   show pollers              - Show poller threads state information\n")
 				_T("   show queues               - Show internal queues statistics\n")
 				_T("   show routing-table <node> - Show cached routing table for node\n")

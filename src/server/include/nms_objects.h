@@ -2246,7 +2246,7 @@ Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(UINT32 zone, const InetAddres
 bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zone, const InetAddress& ipAddr);
 
 BOOL LoadObjects();
-void DumpObjects(CONSOLE_CTX pCtx);
+void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter);
 
 void DeleteUserFromAllObjects(UINT32 dwUserId);
 

@@ -5682,9 +5682,14 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
 		BYTE macAddr[MAC_ADDR_LENGTH];
 		if (fdb->isSingleMacOnPort(ifLocal->getIfIndex(), macAddr))
 		{
+         TCHAR buffer[64];
+         DbgPrintf(6, _T("Node::addHostConnections(%s [%d]): found single MAC %s on interface %s"), 
+            m_name, (int)m_id, MACToStr(macAddr, buffer), ifLocal->getName());
 			Interface *ifRemote = FindInterfaceByMAC(macAddr);
 			if (ifRemote != NULL)
 			{
+            DbgPrintf(6, _T("Node::addHostConnections(%s [%d]): found remote interface %s [%d]"), 
+               m_name, (int)m_id, ifRemote->getName(), ifRemote->getId());
 				Node *peerNode = ifRemote->getParentNode();
 				if (peerNode != NULL)
 				{
@@ -5695,6 +5700,7 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
 					info.objectId = peerNode->getId();
 					info.isPtToPt = true;
 					info.protocol = LL_PROTO_FDB;
+               info.isCached = false;
 					nbs->addConnection(&info);
 				}
 			}

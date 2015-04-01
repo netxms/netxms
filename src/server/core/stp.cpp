@@ -81,6 +81,7 @@ static UINT32 STPPortListHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Tr
                   info.objectId = bridge->getId();
                   info.isPtToPt = true;
                   info.protocol = LL_PROTO_STP;
+                  info.isCached = false;
                   ((LinkLayerNeighbors *)arg)->addConnection(&info);
                }
                else

@@ -1762,6 +1762,7 @@ struct __dump_objects_data
 {
 	CONSOLE_CTX console;
 	TCHAR *buffer;
+   const TCHAR *filter;
 };
 
 /**
@@ -1770,6 +1771,11 @@ struct __dump_objects_data
 static void DumpObjectCallback(NetObj *object, void *data)
 {
 	struct __dump_objects_data *dd = (struct __dump_objects_data *)data;
+
+   // Apply name filter
+   if ((dd->filter != NULL) && !MatchString(dd->filter, object->getName(), false))
+      return;
+
 	CONSOLE_CTX pCtx = dd->console;
    CONTAINER_CATEGORY *pCat;
 
@@ -1823,12 +1829,13 @@ static void DumpObjectCallback(NetObj *object, void *data)
 /**
  * Dump objects to debug console
  */
-void DumpObjects(CONSOLE_CTX pCtx)
+void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter)
 {
 	struct __dump_objects_data data;
 
    data.buffer = (TCHAR *)malloc(128000 * sizeof(TCHAR));
 	data.console = pCtx;
+   data.filter = filter;
 	g_idxObjectById.forEach(DumpObjectCallback, &data);
 	free(data.buffer);
 }
