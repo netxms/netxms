@@ -335,6 +335,7 @@ public class LastValuesWidget extends Composite
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+      manager.add(new Separator());
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(GroupMarkers.MB_SECONDARY));

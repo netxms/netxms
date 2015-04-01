@@ -58,6 +58,7 @@ import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.api.DciOpenHandler;
@@ -103,6 +104,7 @@ public class LastValuesWidget extends Composite
 	private Action actionShowDisabled;
 	private Action actionShowUnsupported;
 	private Action actionExportToCsv;
+	private Action actionCopyToClipboard;
 	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
 	
 	/**
@@ -302,6 +304,14 @@ public class LastValuesWidget extends Composite
 		actionShowDisabled.setChecked(isShowDisabled());
 		
 		actionExportToCsv = new ExportToCsvAction(viewPart, dataViewer, true);
+		
+		actionCopyToClipboard = new Action("&Copy to clipboard", SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            copySelection();
+         }
+      };
 	}
 	
 	/**
@@ -335,6 +345,8 @@ public class LastValuesWidget extends Composite
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+      manager.add(new Separator());
+		manager.add(actionCopyToClipboard);
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(GroupMarkers.MB_SECONDARY));
@@ -658,5 +670,30 @@ public class LastValuesWidget extends Composite
 	{
 		DciOpenHandler handler;
 		int priority;
+	}
+	
+	/**
+	 * Copy selection to clipboard
+	 */
+	private void copySelection()
+	{
+	   IStructuredSelection selection = (IStructuredSelection)dataViewer.getSelection();
+	   if (selection.isEmpty())
+	      return;
+	   
+	   final String nl = System.getProperty("line.separator");
+	   StringBuilder sb = new StringBuilder();
+	   for(Object o : selection.toList())
+	   {
+	      if (sb.length() > 0)
+	         sb.append(nl);
+	      DciValue v = (DciValue)o;
+	      sb.append(v.getDescription());
+	      sb.append(" = ");
+	      sb.append(v.getValue());
+	   }
+	   if (selection.size() > 1)
+	      sb.append(nl);
+	   WidgetHelper.copyToClipboard(sb.toString());
 	}
 }
