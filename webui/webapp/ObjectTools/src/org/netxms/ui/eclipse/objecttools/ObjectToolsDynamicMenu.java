@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -204,9 +204,9 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 			} 
 			else if (o instanceof ObjectWrapper)
 			{
-			   AbstractNode n = ((ObjectWrapper)o).getObject();
-			   if (n != null)
-			      nodes.add(new NodeInfo(n, null));
+			   AbstractObject n = ((ObjectWrapper)o).getObject();
+			   if ((n != null) && (n instanceof AbstractNode))
+			      nodes.add(new NodeInfo((AbstractNode)n, null));
 			}
 		}
 		return nodes;

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Symbol WS series wireless switches
-** Copyright (C) 2013 Raden Solutions
+** Copyright (C) 2013-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -113,7 +113,6 @@ int SymbolDriver::getClusterMode(SNMP_Transport *snmp, StringMap *attributes, Dr
    return ret;
 }
 
-
 /*
  * Check switch for wireless capabilities
  *
@@ -125,7 +124,6 @@ bool SymbolDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attribu
 {
    return true;
 }
-
 
 /**
  * Handler for access point enumeration - unadopted

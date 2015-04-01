@@ -385,7 +385,7 @@ extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQu
 		stmt->bindings = new Array(8, 8, false);
       stmt->batchBindings = NULL;
 		stmt->buffers = new Array(8, 8, true);
-      stmt->batchMode = 0;
+      stmt->batchMode = false;
       stmt->batchSize = 0;
 		OCIHandleAlloc(pConn->handleEnv, (void **)&stmt->handleError, OCI_HTYPE_ERROR, 0, NULL);
 		*pdwError = DBERR_SUCCESS;

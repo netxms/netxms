@@ -823,6 +823,7 @@ NetObj *Node::findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *ty
 	NetObj *cp = NULL;
    LockChildList(FALSE);
    for(UINT32 i = 0; i < m_dwChildCount; i++)
+   {
       if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
          Interface *iface = (Interface *)m_pChildList[i];
@@ -834,6 +835,7 @@ NetObj *Node::findConnectionPoint(UINT32 *localIfId, BYTE *localMacAddr, int *ty
 				break;
 			}
 		}
+   }
    UnlockChildList();
    return cp;
 }

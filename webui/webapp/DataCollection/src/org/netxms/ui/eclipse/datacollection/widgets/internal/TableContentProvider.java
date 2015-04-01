@@ -1,5 +1,20 @@
 /**
+ * NetXMS - open source network management system
+ * Copyright (C) 2013-2015 Raden Solutions
  * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.datacollection.widgets.internal;
 
@@ -10,14 +25,13 @@ import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableRow;
-import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objects.ObjectWrapper;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Content provider for NetXMS table viewer
- *
  */
 public class TableContentProvider implements IStructuredContentProvider
 {
@@ -66,25 +80,20 @@ public class TableContentProvider implements IStructuredContentProvider
 	{
 	}
 	
+	/**
+	 * Row wrapper for selection provider
+	 */
 	class RowWrapper extends TableRow implements ObjectWrapper
 	{
-	   /**
-	    * Abstract object that will be given to selector
-	    */
-	   public AbstractNode object;  
-
       public RowWrapper(TableRow src)
       {
          super(src);
-         final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-         object = (AbstractNode)session.findObjectByName(src.get(0).getValue());
       }
 
       @Override
-      public AbstractNode getObject()
+      public AbstractObject getObject()
       {
-         return object;
+         return ((NXCSession)ConsoleSharedData.getSession()).findObjectById(getObjectId(), AbstractNode.class);
       }
-	   
 	}
 }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,17 @@
  */
 package org.netxms.ui.eclipse.objects;
 
-import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 
 /**
- * Selection wrapper for Objects 
+ * Selection wrapper for objects 
  */
 public interface ObjectWrapper
 {
-   AbstractNode getObject(); 
+   /**
+    * Get NetXMS object for selection
+    * 
+    * @return
+    */
+   AbstractObject getObject(); 
 }
