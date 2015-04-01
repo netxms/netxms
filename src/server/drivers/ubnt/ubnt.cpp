@@ -165,7 +165,7 @@ static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Tr
          ParseMACAddress(macAddrText, macAddr);
 
          TCHAR name[MAX_OBJECT_NAME];
-         AccessPointInfo *ap = new AccessPointInfo(macAddr, 0, AP_ADOPTED, response->getVariable(0)->getValueAsString(name, MAX_OBJECT_NAME), NULL, NULL, NULL);
+         AccessPointInfo *ap = new AccessPointInfo(apIndex, macAddr, InetAddress::INVALID, AP_ADOPTED, response->getVariable(0)->getValueAsString(name, MAX_OBJECT_NAME), NULL, NULL, NULL);
       
          RadioInterfaceInfo radio;
          memset(&radio, 0, sizeof(RadioInterfaceInfo));

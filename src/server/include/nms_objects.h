@@ -936,6 +936,7 @@ public:
 class NXCORE_EXPORTABLE AccessPoint : public DataCollectionTarget
 {
 protected:
+   UINT32 m_index;
    InetAddress m_ipAddress;
 	UINT32 m_nodeId;
 	BYTE m_macAddr[MAC_ADDR_LENGTH];
@@ -950,7 +951,7 @@ protected:
 
 public:
    AccessPoint();
-   AccessPoint(const TCHAR *name, BYTE *macAddr);
+   AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr);
    virtual ~AccessPoint();
 
    virtual int getObjectClass() { return OBJECT_ACCESSPOINT; }
@@ -962,9 +963,10 @@ public:
 	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
    virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
-   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller);
+   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
 
-	BYTE *getMacAddr() { return m_macAddr; }
+   UINT32 getIndex() { return m_index; }
+	const BYTE *getMacAddr() { return m_macAddr; }
    const InetAddress& getIpAddress() { return m_ipAddress; }
 	bool isMyRadio(int rfIndex);
 	bool isMyRadio(const BYTE *macAddr);
@@ -974,7 +976,7 @@ public:
 
 	void attachToNode(UINT32 nodeId);
    void setIpAddress(const InetAddress& addr) { lockProperties(); m_ipAddress = addr; setModified(); unlockProperties(); }
-	void updateRadioInterfaces(ObjectArray<RadioInterfaceInfo> *ri);
+	void updateRadioInterfaces(const ObjectArray<RadioInterfaceInfo> *ri);
 	void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
    void updateState(AccessPointState state);
 };
@@ -1252,6 +1254,7 @@ public:
 	void updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId);
    void updateRoutingTable();
 	void checkSubnetBinding();
+   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport);
 
    bool isReadyForStatusPoll();
    bool isReadyForConfigurationPoll();

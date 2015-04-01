@@ -157,6 +157,7 @@ static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Tr
          TCHAR ipAddr[32], name[MAX_OBJECT_NAME], model[MAX_OBJECT_NAME], serial[MAX_OBJECT_NAME];
          AccessPointInfo *ap = 
             new AccessPointInfo(
+               0,
                macAddr,
                ntohl(_t_inet_addr(response->getVariable(1)->getValueAsString(ipAddr, 32))),
                (response->getVariable(2)->getValueAsInt() == 1) ? AP_ADOPTED : AP_UNADOPTED,

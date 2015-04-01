@@ -1301,7 +1301,7 @@ restart_agent_check:
             break;
          case OBJECT_ACCESSPOINT:
 			   DbgPrintf(7, _T("StatusPoll(%s): polling access point %d [%s]"), m_name, ppPollList[i]->getId(), ppPollList[i]->getName());
-            ((AccessPoint *)ppPollList[i])->statusPoll(pSession, dwRqId, pQueue, this);
+            ((AccessPoint *)ppPollList[i])->statusPoll(pSession, dwRqId, pQueue, this, pTransport);
             break;
          default:
             DbgPrintf(7, _T("StatusPoll(%s): skipping object %d [%s] class %d"), m_name, ppPollList[i]->getId(), ppPollList[i]->getName(), ppPollList[i]->getObjectClass());
@@ -2472,7 +2472,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 							   name += info->getRadioInterfaces()->get(j)->name;
 						   }
                   }
-						ap = new AccessPoint((const TCHAR *)name, info->getMacAddr());
+                  ap = new AccessPoint((const TCHAR *)name, info->getIndex(), info->getMacAddr());
 						NetObjInsert(ap, TRUE);
 						DbgPrintf(5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_name, ap->getName(), ap->getId());
                   newAp = true;
@@ -6588,4 +6588,14 @@ void Node::updatePingData()
       }
       m_pingLastTimeStamp = time(NULL);
    }
+}
+
+/**
+ * Get access point state via driver
+ */
+AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport)
+{
+   if (m_driver == NULL)
+      return AP_UNKNOWN;
+   return m_driver->getAccessPointState(snmpTransport, &m_customAttributes, m_driverData, ap->getIndex(), ap->getMacAddr(), ap->getIpAddress());
 }

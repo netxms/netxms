@@ -50,7 +50,7 @@ void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *transport)
                info->getState() == AP_ADOPTED ? _T("adopted") : _T("unadopted"),
                info->getModel(),
                info->getSerial());
-         ObjectArray<RadioInterfaceInfo> *interfaces = info->getRadioInterfaces();
+         const ObjectArray<RadioInterfaceInfo> *interfaces = info->getRadioInterfaces();
          _tprintf(_T("\t\tRadio Interfaces:\n"));
          for (int j = 0; j < interfaces->size(); j++)
          {

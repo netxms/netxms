@@ -437,6 +437,21 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
 }
 
 /**
+ * Upgrade from V350 to V351
+ */
+static BOOL H_UpgradeFromV350(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE access_points ADD ap_index integer\n")
+      _T("UPDATE access_points SET ap_index=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='351' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V349 to V350
  */
 static BOOL H_UpgradeFromV349(int currVersion, int newVersion)
@@ -469,7 +484,6 @@ static BOOL H_UpgradeFromV349(int currVersion, int newVersion)
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='350' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
-
 
 /**
  * Upgrade from V348 to V349
@@ -8510,6 +8524,7 @@ static struct
    { 347, 348, H_UpgradeFromV347 },
    { 348, 349, H_UpgradeFromV348 },
    { 349, 350, H_UpgradeFromV349 },
+   { 350, 351, H_UpgradeFromV350 },
    { 0, 0, NULL }
 };
 

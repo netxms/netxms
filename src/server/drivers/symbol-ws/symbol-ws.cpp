@@ -164,7 +164,7 @@ static UINT32 HandlerAccessPointListUnadopted(UINT32 version, SNMP_Variable *var
          break;
    }
 
-   AccessPointInfo *info = new AccessPointInfo((BYTE *)var->getValue(), 0, AP_UNADOPTED, NULL, NULL, model, NULL);
+   AccessPointInfo *info = new AccessPointInfo(apIndex, (BYTE *)var->getValue(), InetAddress::INVALID, AP_UNADOPTED, NULL, NULL, model, NULL);
    apList->add(info);
 
    return SNMP_ERR_SUCCESS;
@@ -259,11 +259,11 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
    AccessPointInfo *info;
    if (ret == SNMP_ERR_SUCCESS)
    {
-      info = new AccessPointInfo((BYTE *)var->getValue(), 0, AP_ADOPTED, NULL, NULL, model, serial);
+      info = new AccessPointInfo(apIndex, (BYTE *)var->getValue(), InetAddress::INVALID, AP_ADOPTED, NULL, NULL, model, serial);
       apList->add(info);
    }
 
-   for (int i = 0; (i < (int)numberOfRadios) && (ret == SNMP_ERR_SUCCESS) && radioIndex[i] != 0; i++)
+   for(int i = 0; (i < (int)numberOfRadios) && (ret == SNMP_ERR_SUCCESS) && radioIndex[i] != 0; i++)
    {
       UINT32 descOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 11, 5, 1, 3, 0 }; // wsCcRfRadioDescr
       UINT32 macOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 11, 11, 1, 1, 0 }; // wsCcRfRadioStatusRadioMac

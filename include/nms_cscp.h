@@ -1040,6 +1040,7 @@ typedef struct
 #define VID_QSIZE_DCI_CACHE_LOADER  ((UINT32)492)
 #define VID_MTU                     ((UINT32)493)
 #define VID_ALIAS                   ((UINT32)494)
+#define VID_AP_INDEX                ((UINT32)495)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

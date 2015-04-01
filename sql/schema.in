@@ -220,6 +220,7 @@ CREATE TABLE access_points
 	model varchar(128) null,
 	serial_number varchar(64) null,
    ap_state integer not null,
+   ap_index integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

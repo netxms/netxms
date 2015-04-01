@@ -25,8 +25,9 @@
 /**
  * Access point info constructor
  */
-AccessPointInfo::AccessPointInfo(BYTE *macAddr, UINT32 ipAddr, AccessPointState state, const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial)
+AccessPointInfo::AccessPointInfo(UINT32 index, const BYTE *macAddr, const InetAddress& ipAddr, AccessPointState state, const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial)
 {
+   m_index = index;
 	memcpy(m_macAddr, macAddr, MAC_ADDR_LENGTH);
    m_ipAddr = ipAddr;
 	m_state = state;
@@ -763,4 +764,21 @@ ObjectArray<AccessPointInfo> *NetworkDeviceDriver::getAccessPoints(SNMP_Transpor
 ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    return NULL;
+}
+
+/**
+ * Get access point state
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @param apIndex access point index
+ * @param macAdddr access point MAC address
+ * @param ipAddr access point IP address
+ * @return state of access point or AP_UNKNOWN if it cannot be determined
+ */
+AccessPointState NetworkDeviceDriver::getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, 
+                                                          UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr)
+{
+   return AP_UNKNOWN;
 }

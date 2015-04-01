@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.client.objects;
 
@@ -17,6 +32,7 @@ import org.netxms.client.topology.RadioInterface;
 public class AccessPoint extends GenericObject
 {
 	private long nodeId;
+	private int index;
 	private MacAddress macAddress;
 	private InetAddress ipAddress;
    private AccessPointState state;
@@ -33,6 +49,7 @@ public class AccessPoint extends GenericObject
 	{
 		super(msg, session);
 		nodeId = msg.getFieldAsInt64(NXCPCodes.VID_NODE_ID);
+      index = msg.getFieldAsInt32(NXCPCodes.VID_AP_INDEX);
 		macAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_MAC_ADDR));
 		ipAddress = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
 		state = AccessPointState.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_STATE));
@@ -77,6 +94,14 @@ public class AccessPoint extends GenericObject
 	}
 
 	/**
+    * @return the index
+    */
+   public int getIndex()
+   {
+      return index;
+   }
+
+   /**
 	 * @return the macAddress
 	 */
 	public MacAddress getMacAddress()
