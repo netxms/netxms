@@ -427,6 +427,10 @@ protected:
 
    virtual void prepareForDeletion();
    virtual void onObjectDelete(UINT32 dwObjectId);
+   
+   virtual void fillMessageInternal(NXCPMessage *msg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *msg);
+
    void addLocationToHistory();
    bool isLocationTableExists();
    bool createLocationHistoryTable(DB_HANDLE hdb);
@@ -485,14 +489,15 @@ public:
    void resetStatus() { m_iStatus = STATUS_UNKNOWN; setModified(); }
    void setComments(TCHAR *text);	/* text must be dynamically allocated */
 
-   virtual void setMgmtStatus(BOOL bIsManaged);
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   void fillMessage(NXCPMessage *msg);
+   UINT32 modifyFromMessage(NXCPMessage *msg);
 
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 	virtual void postModify();
 
    void commentsToMessage(NXCPMessage *pMsg);
+
+   virtual void setMgmtStatus(BOOL bIsManaged);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    UINT32 getUserRights(UINT32 dwUserId);
    BOOL checkAccessRights(UINT32 dwUserId, UINT32 dwRequiredRights);
@@ -584,6 +589,9 @@ protected:
 
    virtual void prepareForDeletion();
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
    void loadItemsFromDB();
    void destroyItems();
    void updateInstanceDiscoveryItems(DCItem *dci);
@@ -605,9 +613,6 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
@@ -689,6 +694,9 @@ protected:
 protected:
    virtual void onObjectDelete(UINT32 dwObjectId);
 
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    Interface();
    Interface(const InetAddressList& addrList, UINT32 zoneId, bool bSyntheticMask);
@@ -756,9 +764,6 @@ public:
 
    void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy);
 
-	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-
    UINT32 wakeUp();
 	void setExpectedState(int state);
 	void updatePingData();
@@ -786,6 +791,9 @@ protected:
 
    virtual void onObjectDelete(UINT32 dwObjectId);
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    NetworkService();
    NetworkService(int iServiceType, WORD wProto, WORD wPort,
@@ -801,9 +809,6 @@ public:
 
    void statusPoll(ClientSession *session, UINT32 rqId, Node *pollerNode, Queue *eventQueue);
 
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-
    UINT32 getResponseTime() { return m_responseTime; }
 };
 
@@ -817,6 +822,9 @@ protected:
    ObjectArray<InetAddress> *m_localNetworks;
    ObjectArray<InetAddress> *m_remoteNetworks;
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
    Node *getParentNode();
 
 public:
@@ -829,9 +837,6 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    bool isLocalAddr(const InetAddress& addr);
    bool isRemoteAddr(const InetAddress& addr);
@@ -848,6 +853,9 @@ protected:
    UINT32 m_pingTime;
    time_t m_pingLastTimeStamp;
 
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 	virtual bool isDataCollectionDisabled();
    virtual void updatePingData();
 
@@ -859,9 +867,6 @@ public:
    virtual ~DataCollectionTarget();
 
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-
-	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
@@ -906,6 +911,9 @@ protected:
 	LONG m_batteryLevel;
    InetAddress m_ipAddress;
 
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    MobileDevice();
    MobileDevice(const TCHAR *name, const TCHAR *deviceId);
@@ -916,9 +924,6 @@ public:
    virtual BOOL loadFromDatabase(UINT32 dwId);
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-
-	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
@@ -947,6 +952,9 @@ protected:
    AccessPointState m_state;
    AccessPointState m_prevState;
 
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
    virtual void updatePingData();
 
 public:
@@ -959,9 +967,6 @@ public:
    virtual BOOL loadFromDatabase(UINT32 dwId);
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-
-	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
 
@@ -995,6 +1000,9 @@ protected:
 	time_t m_tmLastPoll;
 	UINT32 m_zoneId;
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
 	Cluster();
    Cluster(const TCHAR *pszName, UINT32 zoneId);
@@ -1004,9 +1012,6 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 
@@ -1155,6 +1160,9 @@ protected:
 
    virtual void prepareForDeletion();
    virtual void onObjectDelete(UINT32 dwObjectId);
+
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
    virtual void updatePingData();
 
@@ -1308,8 +1316,6 @@ public:
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext();
 
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
    void writeParamListToMessage(NXCPMessage *pMsg, WORD flags);
 	void writeWinPerfObjectsToMessage(NXCPMessage *msg);
 	void writePackageListToMessage(NXCPMessage *msg);
@@ -1492,6 +1498,8 @@ protected:
 
    virtual void prepareForDeletion();
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+
    void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedNode, bool includeEndNodes);
 
 public:
@@ -1506,7 +1514,6 @@ public:
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
    void addNode(Node *node) { AddChild(node); node->AddParent(this); calculateCompoundStatus(TRUE); }
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
 
 	virtual bool showThresholdSummary();
 
@@ -1579,6 +1586,9 @@ protected:
 	NXSL_VM *m_bindFilter;
 	TCHAR *m_bindFilterSource;
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    Container();
    Container(const TCHAR *pszName, UINT32 dwCategory);
@@ -1589,9 +1599,6 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool showThresholdSummary();
 
@@ -1633,6 +1640,9 @@ class NXCORE_EXPORTABLE Rack : public Container
 protected:
 	int m_height;	// Rack height in units
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    Rack();
    Rack(const TCHAR *name, int height);
@@ -1643,9 +1653,6 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 };
 
 /**
@@ -1662,6 +1669,9 @@ protected:
 	InetAddressIndex *m_idxInterfaceByAddr;
 	InetAddressIndex *m_idxSubnetByAddr;
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    Zone();
    Zone(UINT32 zoneId, const TCHAR *name);
@@ -1672,9 +1682,6 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool showThresholdSummary();
 
@@ -1739,6 +1746,9 @@ protected:
    time_t m_lastPoll;
    bool m_queuedForPolling;
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    Condition();
    Condition(bool hidden);
@@ -1749,9 +1759,6 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    void check();
 
@@ -1779,6 +1786,9 @@ protected:
 
 	BOOL savePolicyCommonProperties(DB_HANDLE hdb);
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    AgentPolicy(int type);
    AgentPolicy(const TCHAR *name, int type);
@@ -1788,9 +1798,6 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
 	virtual bool createUninstallMessage(NXCPMessage *msg);
@@ -1807,6 +1814,9 @@ class NXCORE_EXPORTABLE AgentPolicyConfig : public AgentPolicy
 protected:
 	TCHAR *m_fileContent;
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    AgentPolicyConfig();
    AgentPolicyConfig(const TCHAR *name);
@@ -1817,9 +1827,6 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
 	virtual bool createUninstallMessage(NXCPMessage *msg);
@@ -1907,6 +1914,9 @@ protected:
 	TCHAR *m_filterSource;
 	NXSL_VM *m_filter;
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 	void updateObjects(nxmap_ObjList *objects);
 	UINT32 objectIdFromElementId(UINT32 eid);
 	UINT32 elementIdFromObjectId(UINT32 eid);
@@ -1924,9 +1934,6 @@ public:
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void onObjectDelete(UINT32 dwObjectId);
 
@@ -1975,6 +1982,9 @@ protected:
 	UINT32 m_options;
 	ObjectArray<DashboardElement> *m_elements;
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    Dashboard();
    Dashboard(const TCHAR *name);
@@ -1986,9 +1996,6 @@ public:
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool showThresholdSummary();
 };
@@ -2012,7 +2019,10 @@ protected:
 
    virtual void onObjectDelete(UINT32 objectId);
 
-	void setScript(const TCHAR *script);
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
+   void setScript(const TCHAR *script);
 	UINT32 getOwnerId();
 	NXSL_Value *getNodeObjectForNXSL();
 	bool insertTicket();
@@ -2034,8 +2044,6 @@ public:
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 	virtual BOOL loadFromDatabase(UINT32 dwId);
 
-	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 	virtual void postModify();
 
 	void execute();
@@ -2071,6 +2079,9 @@ protected:
 	static INT32 getSecondsInPeriod(Period period) { return period == MONTH ? getSecondsInMonth() : (period == WEEK ? (3600 * 24 * 7) : (3600 * 24)); }
 	static INT32 getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
 
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 	void initServiceContainer();
 	BOOL addHistoryRecord();
 	double getUptimeFromDBFor(Period period, INT32 *downtime);
@@ -2082,9 +2093,6 @@ public:
 	virtual BOOL loadFromDatabase(UINT32 dwId);
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
-
-	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 	virtual void setStatus(int newStatus);
@@ -2126,6 +2134,9 @@ protected:
 
    virtual void prepareForDeletion();
 
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
 	BusinessService();
 	BusinessService(const TCHAR *name);
@@ -2136,9 +2147,6 @@ public:
 	virtual BOOL loadFromDatabase(UINT32 dwId);
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
-
-	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	bool isReadyForPolling();
 	void lockForPolling();
@@ -2157,6 +2165,9 @@ protected:
 
    virtual void onObjectDelete(UINT32 dwObjectId);
 
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 	void applyTemplate(SlmCheck *tmpl);
 
 public:
@@ -2169,9 +2180,6 @@ public:
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 	virtual BOOL loadFromDatabase(UINT32 dwId);
-
-	virtual void fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked = FALSE);
-	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	void execute();
 	void applyTemplates();

@@ -91,29 +91,20 @@ bool ServiceContainer::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void ServiceContainer::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void ServiceContainer::fillMessageInternal(NXCPMessage *pMsg)
 {
-   if (!alreadyLocked)
-		lockProperties();
-
-   Container::fillMessage(pMsg, TRUE);
+   Container::fillMessageInternal(pMsg);
    pMsg->setField(VID_UPTIME_DAY, m_uptimeDay);
    pMsg->setField(VID_UPTIME_WEEK, m_uptimeWeek);
    pMsg->setField(VID_UPTIME_MONTH, m_uptimeMonth);
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from message
  */
-UINT32 ServiceContainer::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 ServiceContainer::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
-   return Container::modifyFromMessage(pRequest, TRUE);
+   return Container::modifyFromMessageInternal(pRequest);
 }
 
 /**

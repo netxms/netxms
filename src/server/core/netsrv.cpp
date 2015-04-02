@@ -228,12 +228,9 @@ bool NetworkService::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void NetworkService::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void NetworkService::fillMessageInternal(NXCPMessage *pMsg)
 {
-   if (!alreadyLocked)
-		lockProperties();
-
-   NetObj::fillMessage(pMsg, TRUE);
+   NetObj::fillMessageInternal(pMsg);
    pMsg->setField(VID_SERVICE_TYPE, (WORD)m_serviceType);
    pMsg->setField(VID_IP_PROTO, m_proto);
    pMsg->setField(VID_IP_PORT, m_port);
@@ -242,19 +239,13 @@ void NetworkService::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
    pMsg->setField(VID_SERVICE_RESPONSE, CHECK_NULL_EX(m_response));
 	pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_requiredPollCount);
 	pMsg->setField(VID_RESPONSE_TIME, m_responseTime);
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from message
  */
-UINT32 NetworkService::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 NetworkService::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
    // Polling node
    if (pRequest->isFieldExist(VID_POLLER_NODE_ID))
    {
@@ -324,7 +315,7 @@ UINT32 NetworkService::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLoc
       m_response = pRequest->getFieldAsString(VID_SERVICE_RESPONSE);
    }
 
-   return NetObj::modifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessageInternal(pRequest);
 }
 
 /**

@@ -183,12 +183,10 @@ bool Dashboard::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Dashboard::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
+void Dashboard::fillMessageInternal(NXCPMessage *msg)
 {
-   if (!alreadyLocked)
-		lockProperties();
+	Container::fillMessageInternal(msg);
 
-	Container::fillMessage(msg, TRUE);
 	msg->setField(VID_NUM_COLUMNS, (WORD)m_numColumns);
 	msg->setField(VID_FLAGS, m_options);
 	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
@@ -202,19 +200,13 @@ void Dashboard::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
 		msg->setField(varId++, CHECK_NULL_EX(element->m_layout));
 		varId += 7;
 	}
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from NXCP message
  */
-UINT32 Dashboard::modifyFromMessage(NXCPMessage *request, BOOL alreadyLocked)
+UINT32 Dashboard::modifyFromMessageInternal(NXCPMessage *request)
 {
-	if (!alreadyLocked)
-		lockProperties();
-
 	if (request->isFieldExist(VID_NUM_COLUMNS))
 		m_numColumns = (int)request->getFieldAsUInt16(VID_NUM_COLUMNS);
 
@@ -238,7 +230,7 @@ UINT32 Dashboard::modifyFromMessage(NXCPMessage *request, BOOL alreadyLocked)
 		}
 	}
 
-	return Container::modifyFromMessage(request, TRUE);
+	return Container::modifyFromMessageInternal(request);
 }
 
 /**

@@ -203,43 +203,30 @@ BOOL AgentPolicy::loadFromDatabase(UINT32 dwId)
 	return TRUE;
 }
 
-
-//
-// Create NXCP message with policy data
-//
-
-void AgentPolicy::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
+/**
+ * Create NXCP message with policy data
+ */
+void AgentPolicy::fillMessageInternal(NXCPMessage *msg)
 {
-   if (!alreadyLocked)
-		lockProperties();
-
-	NetObj::fillMessage(msg, TRUE);
+	NetObj::fillMessageInternal(msg);
 	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);
 	msg->setField(VID_VERSION, m_version);
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify policy from message
  */
-UINT32 AgentPolicy::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 AgentPolicy::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
 	if (pRequest->isFieldExist(VID_VERSION))
 		m_version = pRequest->getFieldAsUInt32(VID_VERSION);
 
-   return NetObj::modifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessageInternal(pRequest);
 }
 
-
-//
-// Create deployment message
-//
-
+/**
+ * Create deployment message
+ */
 bool AgentPolicy::createDeploymentMessage(NXCPMessage *msg)
 {
 	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);

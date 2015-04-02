@@ -263,28 +263,20 @@ void Container::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create NXCP message with object's data
  */
-void Container::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void Container::fillMessageInternal(NXCPMessage *pMsg)
 {
-   if (!alreadyLocked)
-		lockProperties();
+   NetObj::fillMessageInternal(pMsg);
 
-   NetObj::fillMessage(pMsg, TRUE);
    pMsg->setField(VID_CATEGORY, m_dwCategory);
 	pMsg->setField(VID_FLAGS, m_flags);
 	pMsg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from message
  */
-UINT32 Container::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Container::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
    // Change flags
    if (pRequest->isFieldExist(VID_FLAGS))
 		m_flags = pRequest->getFieldAsUInt32(VID_FLAGS);
@@ -297,7 +289,7 @@ UINT32 Container::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 		safe_free(script);
 	}
 
-   return NetObj::modifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessageInternal(pRequest);
 }
 
 /**

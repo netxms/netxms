@@ -166,29 +166,20 @@ bool Zone::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Zone::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void Zone::fillMessageInternal(NXCPMessage *pMsg)
 {
-   if (!alreadyLocked)
-		lockProperties();
-
-   NetObj::fillMessage(pMsg, TRUE);
+   NetObj::fillMessageInternal(pMsg);
    pMsg->setField(VID_ZONE_ID, m_zoneId);
    pMsg->setField(VID_AGENT_PROXY, m_agentProxy);
    pMsg->setField(VID_SNMP_PROXY, m_snmpProxy);
    pMsg->setField(VID_ICMP_PROXY, m_icmpProxy);
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from message
  */
-UINT32 Zone::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Zone::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
 	if (pRequest->isFieldExist(VID_AGENT_PROXY))
 		m_agentProxy = pRequest->getFieldAsUInt32(VID_AGENT_PROXY);
 
@@ -198,7 +189,7 @@ UINT32 Zone::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 	if (pRequest->isFieldExist(VID_ICMP_PROXY))
 		m_icmpProxy = pRequest->getFieldAsUInt32(VID_ICMP_PROXY);
 
-   return NetObj::modifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessageInternal(pRequest);
 }
 
 /**

@@ -912,12 +912,10 @@ void Interface::paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *nod
 /**
  * Create NXCP message with object's data
  */
-void Interface::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void Interface::fillMessageInternal(NXCPMessage *pMsg)
 {
-   if (!alreadyLocked)
-		lockProperties();
+   NetObj::fillMessageInternal(pMsg);
 
-   NetObj::fillMessage(pMsg, TRUE);
    m_ipAddressList.fillMessage(pMsg, VID_IP_ADDRESS_COUNT, VID_IP_ADDRESS_LIST_BASE);
    pMsg->setField(VID_IF_INDEX, m_index);
    pMsg->setField(VID_IF_TYPE, m_type);
@@ -937,19 +935,13 @@ void Interface::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 	pMsg->setField(VID_DOT1X_PAE_STATE, m_dot1xPaeAuthState);
 	pMsg->setField(VID_DOT1X_BACKEND_STATE, m_dot1xBackendAuthState);
 	pMsg->setField(VID_ZONE_ID, m_zoneId);
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from message
  */
-UINT32 Interface::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Interface::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
    // Number of required polls
    if (pRequest->isFieldExist(VID_REQUIRED_POLLS))
       m_requiredPollCount = (int)pRequest->getFieldAsUInt16(VID_REQUIRED_POLLS);
@@ -971,7 +963,7 @@ UINT32 Interface::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_flags |= newFlags;
 	}
 
-   return NetObj::modifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessageInternal(pRequest);
 }
 
 /**

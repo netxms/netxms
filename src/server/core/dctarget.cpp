@@ -82,26 +82,17 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void DataCollectionTarget::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
+void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg)
 {
-   if (!alreadyLocked)
-		lockProperties();
-
-   Template::fillMessage(msg, TRUE);
-
-	if(!alreadyLocked)
-      unlockProperties();
+   Template::fillMessageInternal(msg);
 }
 
 /**
  * Modify object from message
  */
-UINT32 DataCollectionTarget::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
-   return Template::modifyFromMessage(pRequest, TRUE);
+   return Template::modifyFromMessageInternal(pRequest);
 }
 
 /**

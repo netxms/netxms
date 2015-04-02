@@ -115,28 +115,19 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Rack::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void Rack::fillMessageInternal(NXCPMessage *pMsg)
 {
-   if (!alreadyLocked)
-		lockProperties();
-
-   Container::fillMessage(pMsg, TRUE);
+   Container::fillMessageInternal(pMsg);
    pMsg->setField(VID_HEIGHT, (WORD)m_height);
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from message
  */
-UINT32 Rack::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Rack::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
 	if (pRequest->isFieldExist(VID_HEIGHT))
 		m_height = (int)pRequest->getFieldAsUInt16(VID_HEIGHT);
 
-   return Container::modifyFromMessage(pRequest, TRUE);
+   return Container::modifyFromMessageInternal(pRequest);
 }

@@ -147,18 +147,12 @@ bool Subnet::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void Subnet::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void Subnet::fillMessageInternal(NXCPMessage *pMsg)
 {
-   if (!alreadyLocked)
-		lockProperties();
-
-   NetObj::fillMessage(pMsg, TRUE);
+   NetObj::fillMessageInternal(pMsg);
    pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
    pMsg->setField(VID_ZONE_ID, m_zoneId);
 	pMsg->setField(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**

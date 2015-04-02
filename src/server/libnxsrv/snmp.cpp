@@ -144,7 +144,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                      case ASN_COUNTER32:
                      case ASN_GAUGE32:
                      case ASN_TIMETICKS:
-                        *((LONG *)pValue) = pVar->getValueAsInt();
+                        *((INT32 *)pValue) = pVar->getValueAsInt();
                         break;
                      case ASN_IP_ADDR:
                         *((UINT32 *)pValue) = ntohl(pVar->getValueAsUInt());

@@ -135,45 +135,32 @@ BOOL AgentPolicyConfig::loadFromDatabase(UINT32 dwId)
 	return success;
 }
 
-
-//
-// Create NXCP message with policy data
-//
-
-void AgentPolicyConfig::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
+/**
+ * Create NXCP message with policy data
+ */
+void AgentPolicyConfig::fillMessageInternal(NXCPMessage *msg)
 {
-   if (!alreadyLocked)
-		lockProperties();
-
-	AgentPolicy::fillMessage(msg, TRUE);
+   AgentPolicy::fillMessageInternal(msg);
 	msg->setField(VID_CONFIG_FILE_DATA, CHECK_NULL_EX(m_fileContent));
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify policy from message
  */
-UINT32 AgentPolicyConfig::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 AgentPolicyConfig::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
 	if (pRequest->isFieldExist(VID_CONFIG_FILE_DATA))
 	{
 		safe_free(m_fileContent);
 		m_fileContent = pRequest->getFieldAsString(VID_CONFIG_FILE_DATA);
 	}
 
-	return AgentPolicy::modifyFromMessage(pRequest, TRUE);
+   return AgentPolicy::modifyFromMessageInternal(pRequest);
 }
 
-
-//
-// Create deployment message
-//
-
+/**
+ * Create deployment message
+ */
 bool AgentPolicyConfig::createDeploymentMessage(NXCPMessage *msg)
 {
 	if (!AgentPolicy::createDeploymentMessage(msg))

@@ -821,28 +821,19 @@ void Template::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create NXCP message with object's data
  */
-void Template::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void Template::fillMessageInternal(NXCPMessage *pMsg)
 {
-   if (!alreadyLocked)
-		lockProperties();
-
-   NetObj::fillMessage(pMsg, TRUE);
+   NetObj::fillMessageInternal(pMsg);
    pMsg->setField(VID_TEMPLATE_VERSION, m_dwVersion);
 	pMsg->setField(VID_FLAGS, m_flags);
 	pMsg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_applyFilterSource));
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from NXCP message
  */
-UINT32 Template::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
    // Change template version
    if (pRequest->isFieldExist(VID_TEMPLATE_VERSION))
       m_dwVersion = pRequest->getFieldAsUInt32(VID_TEMPLATE_VERSION);
@@ -871,7 +862,7 @@ UINT32 Template::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 		}
 	}
 
-   return NetObj::modifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessageInternal(pRequest);
 }
 
 /**

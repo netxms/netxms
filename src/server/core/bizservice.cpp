@@ -157,26 +157,17 @@ bool BusinessService::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void BusinessService::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void BusinessService::fillMessageInternal(NXCPMessage *pMsg)
 {
-   if (!alreadyLocked)
-		lockProperties();
-
-   ServiceContainer::fillMessage(pMsg, TRUE);
-
-	if(!alreadyLocked)
-      unlockProperties();
+   ServiceContainer::fillMessageInternal(pMsg);
 }
 
 /**
  * Modify object from message
  */
-UINT32 BusinessService::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 BusinessService::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
-   return ServiceContainer::modifyFromMessage(pRequest, TRUE);
+   return ServiceContainer::modifyFromMessageInternal(pRequest);
 }
 
 /**

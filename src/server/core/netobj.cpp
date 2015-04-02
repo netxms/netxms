@@ -908,15 +908,10 @@ static bool SendModuleDataCallback(const TCHAR *key, const void *value, void *da
 }
 
 /**
- * Create NXCP message with object's data
+ * Fill NXCP message with object's data
  */
-void NetObj::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void NetObj::fillMessageInternal(NXCPMessage *pMsg)
 {
-   UINT32 i, dwId;
-
-   if (!alreadyLocked)
-		lockProperties();
-
    pMsg->setField(VID_OBJECT_CLASS, (WORD)getObjectClass());
    pMsg->setField(VID_OBJECT_ID, m_id);
 	pMsg->setField(VID_GUID, m_guid, UUID_LENGTH);
@@ -924,18 +919,6 @@ void NetObj::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
    pMsg->setField(VID_OBJECT_STATUS, (WORD)m_iStatus);
    pMsg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
    pMsg->setField(VID_IS_SYSTEM, (WORD)(m_isSystem ? 1 : 0));
-
-   LockParentList(FALSE);
-   pMsg->setField(VID_PARENT_CNT, m_dwParentCount);
-   for(i = 0, dwId = VID_PARENT_ID_BASE; i < m_dwParentCount; i++, dwId++)
-      pMsg->setField(dwId, m_pParentList[i]->getId());
-   UnlockParentList();
-
-   LockChildList(FALSE);
-   pMsg->setField(VID_CHILD_CNT, m_dwChildCount);
-   for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_dwChildCount; i++, dwId++)
-      pMsg->setField(dwId, m_pChildList[i]->getId());
-   UnlockChildList();
 
    pMsg->setField(VID_INHERIT_RIGHTS, (WORD)m_bInheritAccessRights);
    pMsg->setField(VID_STATUS_CALCULATION_ALG, (WORD)m_iStatusCalcAlg);
@@ -980,9 +963,30 @@ void NetObj::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
    {
       pMsg->setField(VID_MODULE_DATA_COUNT, (UINT16)0);
    }
+}
 
-	if(!alreadyLocked)
-      unlockProperties();
+/**
+ * Fill NXCP message with object's data
+ */
+void NetObj::fillMessage(NXCPMessage *msg)
+{ 
+   lockProperties(); 
+   fillMessageInternal(msg); 
+   unlockProperties(); 
+
+   UINT32 i, dwId;
+
+   LockParentList(FALSE);
+   msg->setField(VID_PARENT_CNT, m_dwParentCount);
+   for(i = 0, dwId = VID_PARENT_ID_BASE; i < m_dwParentCount; i++, dwId++)
+      msg->setField(dwId, m_pParentList[i]->getId());
+   UnlockParentList();
+
+   LockChildList(FALSE);
+   msg->setField(VID_CHILD_CNT, m_dwChildCount);
+   for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_dwChildCount; i++, dwId++)
+      msg->setField(dwId, m_pChildList[i]->getId());
+   UnlockChildList();
 }
 
 /**
@@ -1012,13 +1016,22 @@ void NetObj::setModified()
 }
 
 /**
+ * Modify object from NXCP message - common wrapper
+ */
+UINT32 NetObj::modifyFromMessage(NXCPMessage *msg)
+{ 
+   lockProperties(); 
+   UINT32 rcc = modifyFromMessageInternal(msg);
+   setModified();
+   unlockProperties();
+   return rcc; 
+}
+
+/**
  * Modify object from NXCP message
  */
-UINT32 NetObj::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
    // Change object's name
    if (pRequest->isFieldExist(VID_OBJECT_NAME))
       pRequest->getFieldAsString(VID_OBJECT_NAME, m_name, MAX_OBJECT_NAME);
@@ -1124,9 +1137,6 @@ UINT32 NetObj::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
       pRequest->getFieldAsString(VID_POSTCODE, buffer, 32);
       m_postalAddress->setPostCode(buffer);
    }
-
-   setModified();
-   unlockProperties();
 
    return RCC_SUCCESS;
 }

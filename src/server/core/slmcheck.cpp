@@ -285,12 +285,9 @@ bool SlmCheck::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void SlmCheck::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void SlmCheck::fillMessageInternal(NXCPMessage *pMsg)
 {
-   if (!alreadyLocked)
-		lockProperties();
-
-	NetObj::fillMessage(pMsg, TRUE);
+	NetObj::fillMessageInternal(pMsg);
 	pMsg->setField(VID_SLMCHECK_TYPE, UINT32(m_type));
 	pMsg->setField(VID_SCRIPT, CHECK_NULL_EX(m_script));
 	pMsg->setField(VID_REASON, m_reason);
@@ -298,19 +295,13 @@ void SlmCheck::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 	pMsg->setField(VID_IS_TEMPLATE, (WORD)(m_isTemplate ? 1 : 0));
 	if (m_threshold != NULL)
 		m_threshold->createMessage(pMsg, VID_THRESHOLD_BASE);
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from message
  */
-UINT32 SlmCheck::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 SlmCheck::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-	if (!bAlreadyLocked)
-		lockProperties();
-
 	if (pRequest->isFieldExist(VID_SLMCHECK_TYPE))
 		m_type = CheckType(pRequest->getFieldAsUInt32(VID_SLMCHECK_TYPE));
 
@@ -328,14 +319,12 @@ UINT32 SlmCheck::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_threshold->updateFromMessage(pRequest, VID_THRESHOLD_BASE);
 	}
 
-	return NetObj::modifyFromMessage(pRequest, TRUE);
+	return NetObj::modifyFromMessageInternal(pRequest);
 }
 
-
-//
-// Post-modify hook
-//
-
+/**
+ * Callback for post-modify hook
+ */
 static void UpdateFromTemplateCallback(NetObj *object, void *data)
 {
 	SlmCheck *check = (SlmCheck *)object;
@@ -345,6 +334,9 @@ static void UpdateFromTemplateCallback(NetObj *object, void *data)
 		check->updateFromTemplate(tmpl);
 }
 
+/**
+ * Post-modify hook
+ */
 void SlmCheck::postModify()
 {
 	if (m_isTemplate)

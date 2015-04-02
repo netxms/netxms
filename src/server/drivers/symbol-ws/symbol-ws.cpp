@@ -164,7 +164,7 @@ static UINT32 HandlerAccessPointListUnadopted(UINT32 version, SNMP_Variable *var
          break;
    }
 
-   AccessPointInfo *info = new AccessPointInfo(apIndex, (BYTE *)var->getValue(), InetAddress::INVALID, AP_UNADOPTED, NULL, NULL, model, NULL);
+   AccessPointInfo *info = new AccessPointInfo(apIndex, var->getValue(), InetAddress::INVALID, AP_UNADOPTED, NULL, NULL, model, NULL);
    apList->add(info);
 
    return SNMP_ERR_SUCCESS;
@@ -355,6 +355,66 @@ ObjectArray<AccessPointInfo> *SymbolDriver::getAccessPoints(SNMP_Transport *snmp
    }
 
    return apList;
+}
+
+/**
+ * Data for AP search
+ */
+struct AP_SEARCH_DATA
+{
+   BYTE macAddr[MAC_ADDR_LENGTH];
+   bool found;
+};
+
+/**
+ * Handler for unadopted access point search by MAC
+ */
+static UINT32 HandlerAccessPointFindUnadopted(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+{
+   AP_SEARCH_DATA *data = (AP_SEARCH_DATA *)arg;
+   if (!memcmp(var->getValue(), data->macAddr, MAC_ADDR_LENGTH))
+   {
+      data->found = true;
+   }
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
+ * Get access point state
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @param apIndex access point index
+ * @param macAdddr access point MAC address
+ * @param ipAddr access point IP address
+ * @return state of access point or AP_UNKNOWN if it cannot be determined
+ */
+AccessPointState SymbolDriver::getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
+                                                   UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr)
+{
+   TCHAR oid[256];
+
+   // Check that AP still in adopted list
+   _sntprintf(oid, 256, _T(".1.3.6.1.4.1.388.14.3.2.1.9.2.1.9.%d"), apIndex);
+   UINT32 count = 0;
+   if (SnmpGetEx(snmp, oid, NULL, 0, &count, sizeof(UINT32), 0, NULL) == SNMP_ERR_SUCCESS)
+   {
+      if (count > 0)
+         return AP_ADOPTED;
+   }
+
+   // Check if AP became unadopted
+   AP_SEARCH_DATA data;
+   memcpy(data.macAddr, macAddr, MAC_ADDR_LENGTH);
+   data.found = false;
+   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.9.4.1.2"), 
+                HandlerAccessPointFindUnadopted, &data, FALSE) != SNMP_ERR_SUCCESS)
+   {
+      return AP_UNKNOWN;
+   }
+
+   return data.found ? AP_UNADOPTED : AP_DOWN;  // consider AP down if not found in unadopted list
 }
 
 /**

@@ -217,12 +217,9 @@ Node *VPNConnector::getParentNode()
 /**
  * Create NXCP message with object's data
  */
-void VPNConnector::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void VPNConnector::fillMessageInternal(NXCPMessage *pMsg)
 {
-   if (!alreadyLocked)
-		lockProperties();
-
-   NetObj::fillMessage(pMsg, TRUE);
+   NetObj::fillMessageInternal(pMsg);
    pMsg->setField(VID_PEER_GATEWAY, m_dwPeerGateway);
    pMsg->setField(VID_NUM_LOCAL_NETS, (UINT32)m_localNetworks->size());
    pMsg->setField(VID_NUM_REMOTE_NETS, (UINT32)m_remoteNetworks->size());
@@ -235,19 +232,13 @@ void VPNConnector::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 
    for(i = 0; i < m_remoteNetworks->size(); i++)
       pMsg->setField(fieldId++, *m_remoteNetworks->get(i));
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from message
  */
-UINT32 VPNConnector::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 VPNConnector::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
    // Peer gateway
    if (pRequest->isFieldExist(VID_PEER_GATEWAY))
       m_dwPeerGateway = pRequest->getFieldAsUInt32(VID_PEER_GATEWAY);
@@ -269,7 +260,7 @@ UINT32 VPNConnector::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocke
          m_remoteNetworks->add(new InetAddress(pRequest->getFieldAsInetAddress(fieldId++)));
    }
 
-   return NetObj::modifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessageInternal(pRequest);
 }
 
 /**

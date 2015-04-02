@@ -335,14 +335,11 @@ bool Cluster::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void Cluster::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void Cluster::fillMessageInternal(NXCPMessage *pMsg)
 {
 	UINT32 i, dwId;
 
-   if (!alreadyLocked)
-		lockProperties();
-
-   DataCollectionTarget::fillMessage(pMsg, TRUE);
+   DataCollectionTarget::fillMessageInternal(pMsg);
    pMsg->setField(VID_CLUSTER_TYPE, m_dwClusterType);
 	pMsg->setField(VID_ZONE_ID, m_zoneId);
 
@@ -358,19 +355,13 @@ void Cluster::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 		pMsg->setField(dwId++, m_pResourceList[i].ipAddr);
 		pMsg->setField(dwId++, m_pResourceList[i].dwCurrOwner);
 	}
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from message
  */
-UINT32 Cluster::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Cluster::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
    // Change cluster type
    if (pRequest->isFieldExist(VID_CLUSTER_TYPE))
       m_dwClusterType = pRequest->getFieldAsUInt32(VID_CLUSTER_TYPE);
@@ -429,7 +420,7 @@ UINT32 Cluster::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_dwNumResources = dwCount;
 	}
 
-   return DataCollectionTarget::modifyFromMessage(pRequest, TRUE);
+   return DataCollectionTarget::modifyFromMessageInternal(pRequest);
 }
 
 /**

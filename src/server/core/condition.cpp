@@ -240,14 +240,10 @@ bool Condition::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message from object
  */
-void Condition::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void Condition::fillMessageInternal(NXCPMessage *pMsg)
 {
-   UINT32 i, dwId;
+   NetObj::fillMessageInternal(pMsg);
 
-   if (!alreadyLocked)
-		lockProperties();
-
-   NetObj::fillMessage(pMsg, TRUE);
    pMsg->setField(VID_SCRIPT, CHECK_NULL_EX(m_scriptSource));
    pMsg->setField(VID_ACTIVATION_EVENT, m_activationEventCode);
    pMsg->setField(VID_DEACTIVATION_EVENT, m_deactivationEventCode);
@@ -255,7 +251,7 @@ void Condition::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
    pMsg->setField(VID_ACTIVE_STATUS, (WORD)m_activeStatus);
    pMsg->setField(VID_INACTIVE_STATUS, (WORD)m_inactiveStatus);
    pMsg->setField(VID_NUM_ITEMS, m_dciCount);
-   for(i = 0, dwId = VID_DCI_LIST_BASE; (i < m_dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
+   for(UINT32 i = 0, dwId = VID_DCI_LIST_BASE; (i < m_dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
    {
       pMsg->setField(dwId++, m_dciList[i].id);
       pMsg->setField(dwId++, m_dciList[i].nodeId);
@@ -264,21 +260,15 @@ void Condition::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
       pMsg->setField(dwId++, (WORD)GetDCObjectType(m_dciList[i].nodeId, m_dciList[i].id));
       dwId += 5;
    }
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from NXCP message
  */
-UINT32 Condition::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Condition::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
    UINT32 i, dwId;
    NetObj *pObject;
-
-   if (!bAlreadyLocked)
-      lockProperties();
 
    // Change script
    if (pRequest->isFieldExist(VID_SCRIPT))
@@ -366,7 +356,7 @@ UINT32 Condition::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
       }
    }
 
-   return NetObj::modifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessageInternal(pRequest);
 }
 
 /**

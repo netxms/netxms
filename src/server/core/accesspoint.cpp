@@ -200,12 +200,9 @@ bool AccessPoint::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void AccessPoint::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
+void AccessPoint::fillMessageInternal(NXCPMessage *msg)
 {
-   if (!alreadyLocked)
-		lockProperties();
-
-   DataCollectionTarget::fillMessage(msg, TRUE);
+   DataCollectionTarget::fillMessageInternal(msg);
    msg->setField(VID_IP_ADDRESS, m_ipAddress);
 	msg->setField(VID_NODE_ID, m_nodeId);
 	msg->setField(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
@@ -235,20 +232,14 @@ void AccessPoint::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
    {
       msg->setField(VID_RADIO_COUNT, (WORD)0);
    }
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from message
  */
-UINT32 AccessPoint::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 AccessPoint::modifyFromMessageInternal(NXCPMessage *msg)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
-   return DataCollectionTarget::modifyFromMessage(pRequest, TRUE);
+   return DataCollectionTarget::modifyFromMessageInternal(msg);
 }
 
 /**
@@ -407,16 +398,33 @@ void AccessPoint::updateState(AccessPointState state)
    m_state = state;
    if (m_iStatus != STATUS_UNMANAGED)
    {
-      m_iStatus = (state == AP_ADOPTED) ? STATUS_NORMAL : ((state == AP_UNADOPTED) ? STATUS_MAJOR : STATUS_CRITICAL);
+      switch(state)
+      {
+         case AP_ADOPTED:
+            m_iStatus = STATUS_NORMAL;
+            break;
+         case AP_UNADOPTED:
+            m_iStatus = STATUS_MAJOR;
+            break;
+         case AP_DOWN:
+            m_iStatus = STATUS_CRITICAL;
+            break;
+         default:
+            m_iStatus = STATUS_UNKNOWN;
+            break;
+      }
    }
    setModified();
 	unlockProperties();
 
-   static const TCHAR *names[] = { _T("id"), _T("name"), _T("macAddr"), _T("ipAddr"), _T("vendor"), _T("model"), _T("serialNumber") };
-   PostEventWithNames((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : ((state == AP_UNADOPTED) ? EVENT_AP_UNADOPTED : EVENT_AP_DOWN),
-      m_nodeId, "ishAsss", names,
-      m_id, m_name, m_macAddr, &m_ipAddress,
-      CHECK_NULL_EX(m_vendor), CHECK_NULL_EX(m_model), CHECK_NULL_EX(m_serialNumber));
+   if ((state == AP_ADOPTED) || (state == AP_UNADOPTED) || (state == AP_DOWN))
+   {
+      static const TCHAR *names[] = { _T("id"), _T("name"), _T("macAddr"), _T("ipAddr"), _T("vendor"), _T("model"), _T("serialNumber") };
+      PostEventWithNames((state == AP_ADOPTED) ? EVENT_AP_ADOPTED : ((state == AP_UNADOPTED) ? EVENT_AP_UNADOPTED : EVENT_AP_DOWN),
+         m_nodeId, "ishAsss", names,
+         m_id, m_name, m_macAddr, &m_ipAddress,
+         CHECK_NULL_EX(m_vendor), CHECK_NULL_EX(m_model), CHECK_NULL_EX(m_serialNumber));
+   }
 }
 
 /**

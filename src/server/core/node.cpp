@@ -4052,12 +4052,9 @@ UINT32 Node::getTableForClient(const TCHAR *name, Table **table)
 /**
  * Create CSCP message with object's data
  */
-void Node::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
+void Node::fillMessageInternal(NXCPMessage *pMsg)
 {
-   if (!alreadyLocked)
-		lockProperties();
-
-   DataCollectionTarget::fillMessage(pMsg, TRUE);
+   DataCollectionTarget::fillMessageInternal(pMsg);
    pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
 	pMsg->setField(VID_PRIMARY_NAME, m_primaryName);
    pMsg->setField(VID_FLAGS, m_dwFlags);
@@ -4097,19 +4094,13 @@ void Node::fillMessage(NXCPMessage *pMsg, BOOL alreadyLocked)
 		pMsg->setField(VID_DRIVER_NAME, m_driver->getName());
 		pMsg->setField(VID_DRIVER_VERSION, m_driver->getVersion());
 	}
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from NXCP message
  */
-UINT32 Node::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
    // Change flags
    if (pRequest->isFieldExist(VID_FLAGS))
    {
@@ -4171,7 +4162,6 @@ UINT32 Node::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
       UnlockChildList();
       if (i == m_dwChildCount)
       {
-         unlockProperties();
          return RCC_INVALID_IP_ADDR;
       }
 
@@ -4209,12 +4199,10 @@ UINT32 Node::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 			// Check if received id is a valid node id
 			if (pObject == NULL)
 			{
-				unlockProperties();
 				return RCC_INVALID_OBJECT_ID;
 			}
 			if (pObject->getObjectClass() != OBJECT_NODE)
 			{
-				unlockProperties();
 				return RCC_INVALID_OBJECT_ID;
 			}
 		}
@@ -4283,7 +4271,7 @@ UINT32 Node::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
    if (pRequest->isFieldExist(VID_USE_IFXTABLE))
       m_nUseIfXTable = (BYTE)pRequest->getFieldAsUInt16(VID_USE_IFXTABLE);
 
-   return DataCollectionTarget::modifyFromMessage(pRequest, TRUE);
+   return DataCollectionTarget::modifyFromMessageInternal(pRequest);
 }
 
 /**

@@ -177,12 +177,10 @@ bool MobileDevice::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void MobileDevice::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
+void MobileDevice::fillMessageInternal(NXCPMessage *msg)
 {
-   if (!alreadyLocked)
-		lockProperties();
+   DataCollectionTarget::fillMessageInternal(msg);
 
-   DataCollectionTarget::fillMessage(msg, TRUE);
 	msg->setField(VID_DEVICE_ID, CHECK_NULL_EX(m_deviceId));
 	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
 	msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
@@ -192,20 +190,14 @@ void MobileDevice::fillMessage(NXCPMessage *msg, BOOL alreadyLocked)
 	msg->setField(VID_USER_ID, CHECK_NULL_EX(m_userId));
 	msg->setField(VID_BATTERY_LEVEL, (UINT32)m_batteryLevel);
 	msg->setField(VID_LAST_CHANGE_TIME, (QWORD)m_lastReportTime);
-
-	if(!alreadyLocked)
-      unlockProperties();
 }
 
 /**
  * Modify object from message
  */
-UINT32 MobileDevice::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 MobileDevice::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
-   return DataCollectionTarget::modifyFromMessage(pRequest, TRUE);
+   return DataCollectionTarget::modifyFromMessageInternal(pRequest);
 }
 
 /**
