@@ -495,8 +495,11 @@ setup_encryption:
          bForceEncryption = TRUE;
          goto setup_encryption;
       }
-      printMsg(_T("Communication with agent %s failed (%s)"), m_addr.toString(szBuffer), AgentErrorCodeToText(dwError));
-      goto connect_cleanup;
+      if (dwError != ERR_UNKNOWN_COMMAND) // Older agents may not support enable IPv6 command
+      {
+         printMsg(_T("Communication with agent %s failed (%s)"), m_addr.toString(szBuffer), AgentErrorCodeToText(dwError));
+         goto connect_cleanup;
+      }
    }
 
    if (m_bUseProxy && !bSecondPass)
