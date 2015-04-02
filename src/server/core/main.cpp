@@ -554,6 +554,14 @@ static void LogConsoleWriter(const TCHAR *format, ...)
 }
 
 /**
+ * Oracle session init callback
+ */
+static void OracleSessionInitCallback(DB_HANDLE hdb)
+{
+   DBQuery(hdb, _T("ALTER SESSION SET DDL_LOCK_TIMEOUT = 60"));
+}
+
+/**
  * Server initialization
  */
 BOOL NXCORE_EXPORTABLE Initialize()
@@ -699,6 +707,13 @@ BOOL NXCORE_EXPORTABLE Initialize()
 		return FALSE;
 	}
 
+	// Read database syntax
+	g_dbSyntax = DBGetSyntax(g_hCoreDB);
+   if (g_dbSyntax == DB_SYNTAX_ORACLE)
+   {
+      DBSetSessionInitCallback(OracleSessionInitCallback);
+   }
+
 	int baseSize = ConfigReadInt(_T("ConnectionPoolBaseSize"), 5);
 	int maxSize = ConfigReadInt(_T("ConnectionPoolMaxSize"), 20);
 	int cooldownTime = ConfigReadInt(_T("ConnectionPoolCooldownTime"), 300);
@@ -708,9 +723,6 @@ BOOL NXCORE_EXPORTABLE Initialize()
    UINT32 lrt = ConfigReadULong(_T("LongRunningQueryThreshold"), 0);
    if (lrt != 0)
       DBSetLongRunningThreshold(lrt);
-
-	// Read database syntax
-	g_dbSyntax = DBGetSyntax(g_hCoreDB);
 
 	// Read server ID
 	ConfigReadStr(_T("ServerID"), szInfo, 256, _T(""));

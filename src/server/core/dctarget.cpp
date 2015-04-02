@@ -57,24 +57,29 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
    bool success = Template::deleteFromDatabase(hdb);
    if (success)
    {
+      const TCHAR *cascade = _T("");
+      switch(g_dbSyntax)
+      {
+         case DB_SYNTAX_ORACLE:
+            cascade = _T("CASCADE CONSTRAINTS PURGE");
+            break;
+         case DB_SYNTAX_PGSQL:
+            cascade = _T("CASCADE");
+            break;
+      }
+
       TCHAR query[256];
       _sntprintf(query, 256, _T("DROP TABLE idata_%d"), (int)m_id);
-      success = DBQuery(hdb, query) ? true : false;
-      if (success)
-      {
-         _sntprintf(query, 256, _T("DROP TABLE tdata_rows_%d"), (int)m_id);
-         success = DBQuery(hdb, query) ? true : false;
-      }
-      if (success)
-      {
-         _sntprintf(query, 256, _T("DROP TABLE tdata_records_%d"), (int)m_id);
-         success = DBQuery(hdb, query) ? true : false;
-      }
-      if (success)
-      {
-         _sntprintf(query, 256, _T("DROP TABLE tdata_%d"), (int)m_id);
-         success = DBQuery(hdb, query) ? true : false;
-      }
+      QueueSQLRequest(query);
+
+      _sntprintf(query, 256, _T("DROP TABLE tdata_rows_%d %s"), (int)m_id, cascade);
+      QueueSQLRequest(query);
+
+      _sntprintf(query, 256, _T("DROP TABLE tdata_records_%d %s"), (int)m_id, cascade);
+      QueueSQLRequest(query);
+
+      _sntprintf(query, 256, _T("DROP TABLE tdata_%d %s"), (int)m_id, cascade);
+      QueueSQLRequest(query);
    }
    return success;
 }
