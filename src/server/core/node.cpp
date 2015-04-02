@@ -5366,6 +5366,14 @@ nxmap_ObjList *Node::buildIPTopology(UINT32 *pdwStatus, int radius, bool include
  */
 void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedSubnet, bool vpnLink, bool includeEndNodes)
 {
+   if (topology.isObjectExist(m_id))
+   {
+      // this node was processed already
+	   if (seedSubnet != 0)
+         topology.linkObjects(seedSubnet, m_id, vpnLink ? LINK_TYPE_VPN : LINK_TYPE_NORMAL);
+      return;
+   }
+
 	topology.addObject(m_id);
 	if (seedSubnet != 0)
       topology.linkObjects(seedSubnet, m_id, vpnLink ? LINK_TYPE_VPN : LINK_TYPE_NORMAL);
@@ -5382,10 +5390,13 @@ void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 s
 			if ((m_pParentList[i]->getId() == seedSubnet) || (m_pParentList[i]->getObjectClass() != OBJECT_SUBNET))
 				continue;
 
-			topology.addObject(m_pParentList[i]->getId());
+         if (!topology.isObjectExist(m_pParentList[i]->getId()))
+         {
+			   topology.addObject(m_pParentList[i]->getId());
+			   m_pParentList[i]->incRefCount();
+			   subnets.add((Subnet *)m_pParentList[i]);
+         }
 			topology.linkObjects(m_id, m_pParentList[i]->getId());
-			m_pParentList[i]->incRefCount();
-			subnets.add((Subnet *)m_pParentList[i]);
 		}
 		UnlockParentList();
 

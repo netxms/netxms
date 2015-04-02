@@ -164,13 +164,24 @@ void nxmap_ObjList::clear()
 }
 
 /**
+ * Compare object IDs
+ */
+static int CompareObjectId(const void *e1, const void *e2)
+{
+   UINT32 id1 = *((UINT32 *)e1);
+   UINT32 id2 = *((UINT32 *)e2);
+   return (id1 < id2) ? -1 : ((id1 > id2) ? 1 : 0);
+}
+
+/**
  * Add object to list
  */
 void nxmap_ObjList::addObject(UINT32 id)
 {
-   if (m_objectList->indexOf(id) == -1)
+   if (!isObjectExist(id))
    {
       m_objectList->add(id);
+      m_objectList->sort(CompareObjectId);
    }
 }
 
@@ -351,5 +362,5 @@ bool nxmap_ObjList::isLinkExist(UINT32 objectId1, UINT32 objectId2)
  */
 bool nxmap_ObjList::isObjectExist(UINT32 objectId)
 {
-   return !(m_objectList->indexOf(objectId) == -1);
+   return bsearch(&objectId, m_objectList->getBuffer(), m_objectList->size(), sizeof(UINT32), CompareObjectId) != NULL;
 }

@@ -661,6 +661,7 @@ void NetworkMap::updateContent()
 		default:
 			break;
 	}
+	DbgPrintf(6, _T("NetworkMap::updateContent(%s [%d]): completed"), m_name, m_id);
 }
 
 /**
