@@ -60,6 +60,9 @@ public class CloneDashboard implements IObjectActionDelegate
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)
+	 */
 	@Override
 	public void selectionChanged(final IAction action, final ISelection selection)
 	{
@@ -76,11 +79,13 @@ public class CloneDashboard implements IObjectActionDelegate
 		action.setEnabled(sourceObject != null);
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
+	 */
 	@Override
 	public void setActivePart(final IAction action, final IWorkbenchPart targetPart)
 	{
 		part = targetPart;
 		window = targetPart.getSite().getWorkbenchWindow();
 	}
-
 }

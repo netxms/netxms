@@ -226,6 +226,12 @@
                label="%action.label.OpenMap"
                menubarPath="additions">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.CloneNetworkMap"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.Clone"
+               label="Clone..."
+               menubarPath="additions">
+         </action>
       </objectContribution>
    </extension>
    <extension

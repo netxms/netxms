@@ -24,6 +24,8 @@ import java.util.UUID;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.NXCObjectCreationData;
+import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
@@ -100,6 +102,24 @@ public class NetworkMap extends GenericObject
 			links.add(new NetworkMapLink(msg, varId));
 			varId += 20;
 		}
+	}
+	
+	/**
+	 * Prepare object creation and modification data to create map copy
+	 * 
+	 * @param cd
+	 * @param md
+	 */
+	public void prepareCopy(NXCObjectCreationData cd, NXCObjectModificationData md)
+	{
+	   cd.setMapType(mapType);
+	   cd.setSeedObjectId(seedObjectId);
+	   
+	   md.setMapLayout(layout);
+	   md.setMapBackground(background, backgroundLocation, backgroundZoom, backgroundColor);
+      md.setDiscoveryRadius(discoveryRadius);
+      md.setFilter(filter);
+	   md.setMapContent(elements, links);
 	}
 
 	/* (non-Javadoc)

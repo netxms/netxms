@@ -22,6 +22,7 @@
 	- Last selected zoom level preserved on network map close
 	- Invisible dashboards and charts do not refresh itself automatically
 	- "Current" column in extended line chart legend
+	- Option to clone network maps
 - Android console:
     - Implemented feature #776 (WoL)
 - Fixed issues: #690, #693, #702, #725, #745, #750, #752, #755, #756, #757,
