@@ -42,6 +42,8 @@ public:
    virtual bool isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
    virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
    virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
+   virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
+                                                UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr);
 };
 
 #endif

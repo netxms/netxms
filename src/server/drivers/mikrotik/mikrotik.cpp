@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Mikrotik routers
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -211,6 +211,23 @@ ObjectArray<AccessPointInfo> *MikrotikDriver::getAccessPoints(SNMP_Transport *sn
       return NULL;
    }
    return apList;
+}
+
+/**
+ * Get access point state
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @param apIndex access point index
+ * @param macAdddr access point MAC address
+ * @param ipAddr access point IP address
+ * @return state of access point or AP_UNKNOWN if it cannot be determined
+ */
+AccessPointState MikrotikDriver::getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
+                                                     UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr)
+{
+   return AP_ADOPTED;
 }
 
 /**
