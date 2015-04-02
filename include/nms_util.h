@@ -405,6 +405,7 @@ public:
 	int add(T *object) { return Array::add((void *)object); }
 	T *get(int index) const { return (T*)Array::get(index); }
    int indexOf(T *object) const { return Array::indexOf((void *)object); }
+   bool contains(T *object) const { return indexOf(object) >= 0; }
 	void set(int index, T *object) { Array::set(index, (void *)object); }
 	void replace(int index, T *object) { Array::replace(index, (void *)object); }
 	void remove(int index) { Array::remove(index); }
@@ -428,6 +429,7 @@ public:
    int add(T value) { return Array::add(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
    T get(int index) const { return m_storePointers ? CAST_FROM_POINTER(Array::get(index), T) : *((T*)Array::get(index)); }
    int indexOf(T value) const { return Array::indexOf(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   bool contains(T value) const { return indexOf(value) >= 0; }
    void set(int index, T value) { Array::set(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
    void replace(int index, T value) { Array::replace(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
 
@@ -450,6 +452,7 @@ public:
 	int add(T *element) { return Array::add((void *)element); }
 	T *get(int index) const { return (T*)Array::get(index); }
    int indexOf(T *element) const { return Array::indexOf((void *)element); }
+   bool contains(T *element) const { return indexOf(element) >= 0; }
 	void set(int index, T *element) { Array::set(index, (void *)element); }
 	void replace(int index, T *element) { Array::replace(index, (void *)element); }
 	void remove(int index) { Array::remove(index); }

@@ -2589,32 +2589,72 @@ void Node::checkIfXTable(SNMP_Transport *pTransport)
 }
 
 /**
+ * Delete duplicate interfaces
+ * (find and delete multiple interfaces with same ifIndex value created by version prior to 2.0-M3)
+ */
+bool Node::deleteDuplicateInterfaces(UINT32 rqid)
+{
+   ObjectArray<Interface> deleteList(16, 16, false);
+
+   LockChildList(FALSE);
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   {
+      if ((m_pChildList[i]->getObjectClass() != OBJECT_INTERFACE) ||
+          ((Interface *)m_pChildList[i])->isManuallyCreated())
+         continue;
+      Interface *iface = (Interface *)m_pChildList[i];
+      for(UINT32 j = i + 1; j < m_dwChildCount; j++)
+      {
+         if ((m_pChildList[j]->getObjectClass() != OBJECT_INTERFACE) ||
+             ((Interface *)m_pChildList[j])->isManuallyCreated() ||
+             (deleteList.contains((Interface *)m_pChildList[j])))
+            continue;
+         if (iface->getIfIndex() == ((Interface *)m_pChildList[j])->getIfIndex())
+         {
+            deleteList.add((Interface *)m_pChildList[j]);
+            DbgPrintf(6, _T("Node::deleteDuplicateInterfaces(%s [%d]): found duplicate interface %s [%d], original %s [%d], ifIndex=%d"),
+               m_name, m_id, m_pChildList[j]->getName(), m_pChildList[j]->getId(), iface->getName(), iface->getId(), iface->getIfIndex());
+         }
+      }
+   }
+   UnlockChildList();
+
+   for(int i = 0; i < deleteList.size(); i++)
+   {
+      Interface *iface = deleteList.get(i);
+      sendPollerMsg(rqid, POLLER_WARNING _T("   Duplicate interface \"%s\" deleted\r\n"), iface->getName());
+      deleteInterface(iface);
+   }
+
+   return deleteList.size() > 0;
+}
+
+/**
  * Update interface configuration
  */
-BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, int maskBits)
+bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
 {
-   InterfaceList *pIfList;
-   Interface **ppDeleteList;
-   int i, j, iDelCount;
-	BOOL hasChanges = FALSE;
-	Cluster *pCluster = getMyCluster();
+   sendPollerMsg(rqid, _T("Checking interface configuration...\r\n"));
 
-   sendPollerMsg(dwRqId, _T("Checking interface configuration...\r\n"));
-   pIfList = getInterfaceList();
+   bool hasChanges = deleteDuplicateInterfaces(rqid);
+
+   InterfaceList *pIfList = getInterfaceList();
    if (pIfList != NULL)
    {
 		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): got %d interfaces"), m_name, m_id, pIfList->size());
 
       // Find non-existing interfaces
       LockChildList(FALSE);
-      ppDeleteList = (Interface **)malloc(sizeof(Interface *) * m_dwChildCount);
-      for(i = 0, iDelCount = 0; i < (int)m_dwChildCount; i++)
+      Interface **ppDeleteList = (Interface **)malloc(sizeof(Interface *) * m_dwChildCount);
+      int delCount = 0;
+      for(UINT32 i = 0; i < m_dwChildCount; i++)
       {
          if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
          {
             Interface *pInterface = (Interface *)m_pChildList[i];
 				if (!pInterface->isManuallyCreated())
 				{
+               int j;
 					for(j = 0; j < pIfList->size(); j++)
 					{
 						if (pIfList->get(j)->index == pInterface->getIfIndex())
@@ -2624,7 +2664,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, int maskBits)
 					if (j == pIfList->size())
 					{
 						// No such interface in current configuration, add it to delete list
-						ppDeleteList[iDelCount++] = pInterface;
+						ppDeleteList[delCount++] = pInterface;
 					}
 				}
          }
@@ -2632,27 +2672,27 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, int maskBits)
       UnlockChildList();
 
       // Delete non-existent interfaces
-      if (iDelCount > 0)
+      if (delCount > 0)
       {
-         for(j = 0; j < iDelCount; j++)
+         for(int j = 0; j < delCount; j++)
          {
-            sendPollerMsg(dwRqId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), ppDeleteList[j]->getName());
+            sendPollerMsg(rqid, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), ppDeleteList[j]->getName());
             const InetAddress& addr = ppDeleteList[j]->getFirstIpAddress();
             PostEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", ppDeleteList[j]->getIfIndex(), ppDeleteList[j]->getName(), &addr, addr.getMaskBits());
             deleteInterface(ppDeleteList[j]);
          }
-         hasChanges = TRUE;
+         hasChanges = true;
       }
       safe_free(ppDeleteList);
 
       // Add new interfaces and check configuration of existing
-      for(j = 0; j < pIfList->size(); j++)
+      for(int j = 0; j < pIfList->size(); j++)
       {
 			InterfaceInfo *ifInfo = pIfList->get(j);
          BOOL bNewInterface = TRUE;
 
          LockChildList(FALSE);
-         for(i = 0; i < (int)m_dwChildCount; i++)
+         for(UINT32 i = 0; i < m_dwChildCount; i++)
          {
             if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
             {
@@ -2747,9 +2787,9 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, int maskBits)
          if (bNewInterface)
          {
             // New interface
-            sendPollerMsg(dwRqId, POLLER_INFO _T("   Found new interface \"%s\"\r\n"), ifInfo->name);
+            sendPollerMsg(rqid, POLLER_INFO _T("   Found new interface \"%s\"\r\n"), ifInfo->name);
             createNewInterface(ifInfo, false);
-            hasChanges = TRUE;
+            hasChanges = true;
          }
       }
    }
@@ -2758,23 +2798,24 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, int maskBits)
       Interface *pInterface;
       UINT32 dwCount;
 
-      sendPollerMsg(dwRqId, POLLER_ERROR _T("Unable to get interface list from node\r\n"));
+      sendPollerMsg(rqid, POLLER_ERROR _T("Unable to get interface list from node\r\n"));
 		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): Unable to get interface list from node"), m_name, m_id);
 
       // Delete all existing interfaces in case of forced capability recheck
       if (m_dwDynamicFlags & NDF_RECHECK_CAPABILITIES)
       {
          LockChildList(FALSE);
-         ppDeleteList = (Interface **)malloc(sizeof(Interface *) * m_dwChildCount);
-         for(i = 0, iDelCount = 0; i < (int)m_dwChildCount; i++)
+         Interface **ppDeleteList = (Interface **)malloc(sizeof(Interface *) * m_dwChildCount);
+         int delCount = 0;
+         for(UINT32 i = 0; i < m_dwChildCount; i++)
          {
 				if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && !((Interface *)m_pChildList[i])->isManuallyCreated())
-               ppDeleteList[iDelCount++] = (Interface *)m_pChildList[i];
+               ppDeleteList[delCount++] = (Interface *)m_pChildList[i];
          }
          UnlockChildList();
-         for(j = 0; j < iDelCount; j++)
+         for(int j = 0; j < delCount; j++)
          {
-            sendPollerMsg(dwRqId, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"),
+            sendPollerMsg(rqid, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"),
                           ppDeleteList[j]->getName());
             const InetAddress& addr = ppDeleteList[j]->getIpAddressList()->getFirstUnicastAddress();
             PostEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", ppDeleteList[j]->getIfIndex(),
@@ -2858,7 +2899,7 @@ BOOL Node::updateInterfaceConfiguration(UINT32 dwRqId, int maskBits)
 	delete pIfList;
    checkSubnetBinding();
 
-	sendPollerMsg(dwRqId, _T("Interface configuration check finished\r\n"));
+	sendPollerMsg(rqid, _T("Interface configuration check finished\r\n"));
 	return hasChanges;
 }
 

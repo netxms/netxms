@@ -1152,7 +1152,8 @@ protected:
 	void updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
 
 	void updateContainerMembership();
-	BOOL updateInterfaceConfiguration(UINT32 dwRqId, int maskBits);
+	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
+   bool deleteDuplicateInterfaces(UINT32 rqid); 
 
 	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
 
