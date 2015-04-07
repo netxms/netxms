@@ -464,7 +464,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
          _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.4.%d"), iface->index);
          if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, &iface->mtu, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
 			{
-				iface->type = IFTYPE_OTHER;
+				iface->mtu = 0;
 			}
 
          // MAC address

@@ -677,7 +677,22 @@ InterfaceList *AgentConnection::getInterfaceList()
             if (pChar != NULL)
             {
                *pChar = 0;
-               iface->type = _tcstoul(pBuf, NULL, 10);
+
+               TCHAR *eptr;
+               iface->type = _tcstoul(pBuf, &eptr, 10);
+            
+               // newer agents can return if_type(mtu)
+               if (*eptr == _T('('))
+               {
+                  pBuf = eptr + 1;
+                  eptr = _tcschr(pBuf, _T(')'));
+                  if (eptr != NULL)
+                  {
+                     *eptr = 0;
+                     iface->mtu = _tcstol(pBuf, NULL, 10);
+                  }
+               }
+
                pBuf = pChar + 1;
             }
 

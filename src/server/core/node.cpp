@@ -1014,6 +1014,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
    pInterface->setPhysicalPortFlag(info->isPhysicalPort);
 	pInterface->setManualCreationFlag(manuallyCreated);
    pInterface->setSystemFlag(info->isSystem);
+   pInterface->setMTU(info->mtu);
 
    // Insert to objects' list and generate event
    NetObjInsert(pInterface, TRUE);
@@ -2741,6 +2742,10 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
 						{
 							pInterface->setPhysicalPortFlag(ifInfo->isPhysicalPort);
 						}
+                  if (ifInfo->mtu != pInterface->getMTU())
+                  {
+                     pInterface->setMTU(ifInfo->mtu);
+                  }
 
                   // Check for deleted IPs and changed masks
                   const InetAddressList *ifList = pInterface->getIpAddressList();

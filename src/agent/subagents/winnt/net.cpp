@@ -213,7 +213,10 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abst
       {
          TCHAR macAddr[32], adapterInfo[MAX_ADAPTER_NAME_LENGTH + 128];
 
-         BinToStr(iface->PhysicalAddress, iface->PhysicalAddressLength, macAddr);
+         if (iface->PhysicalAddressLength > 0)
+            BinToStr(iface->PhysicalAddress, iface->PhysicalAddressLength, macAddr);
+         else
+            _tcscpy(macAddr, _T("000000000000"));
 
          // Compose result string for each IP address
          for(IP_ADAPTER_UNICAST_ADDRESS *pAddr = iface->FirstUnicastAddress; pAddr != NULL; pAddr = pAddr->Next)
@@ -239,8 +242,9 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abst
                {
                   addr.setMaskBits(pAddr->OnLinkPrefixLength);
                }
-               _sntprintf(adapterInfo, MAX_ADAPTER_NAME_LENGTH + 128, _T("%d %s/%d %d %s %s"), iface->IfIndex, 
-                          addr.toString(ipAddr), addr.getMaskBits(), iface->IfType, macAddr, iface->FriendlyName);
+               _sntprintf(adapterInfo, MAX_ADAPTER_NAME_LENGTH + 128, _T("%d %s/%d %d(%u) %s %s"), iface->IfIndex, 
+                          addr.toString(ipAddr), addr.getMaskBits(), iface->IfType, 
+                          iface->Mtu & 0x7FFFFFFF, macAddr, iface->FriendlyName);
                value->add(adapterInfo);
             }
          }

@@ -759,6 +759,7 @@ public:
    void addIpAddress(const InetAddress& addr);
    void deleteIpAddress(InetAddress addr);
    void setNetMask(const InetAddress& addr);
+	void setMTU(int mtu) { m_mtu = mtu; setModified(); }
 
 	void updateZoneId();
 
