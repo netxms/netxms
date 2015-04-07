@@ -12,6 +12,7 @@
 - Added driver for Qtech OLT switches
 - New agent parameter FileSystem.Type(*)
 - New agent parameters Net.Resolver.AddressByName(*) and Net.Resolver.NameByAddress(*)
+- Fixed broken SNMP proxy functionality in agent
 - Management console:
 	- Fixed broken popup menu actions on "Interfaces" tab
 	- Macro %USERNAME%4 can be used in object tools

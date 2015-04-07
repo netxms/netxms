@@ -1004,19 +1004,19 @@ String NXCPMessage::dump(NXCP_MESSAGE *msg, int version)
       {
          case NXCP_DT_INT32:
             convertedField->df_int32 = ntohl(convertedField->df_int32);
-            out.appendFormattedString(_T("  ** [%6d] INT32  %d\n"), (int)convertedField->fieldId, convertedField->df_int32);
+            out.appendFormattedString(_T("  ** [%6d] INT32    %d\n"), (int)convertedField->fieldId, convertedField->df_int32);
             break;
          case NXCP_DT_INT64:
             convertedField->df_int64 = ntohq(convertedField->df_int64);
-            out.appendFormattedString(_T("  ** [%6d] INT64  ") INT64_FMT _T("\n"), (int)convertedField->fieldId, convertedField->df_int64);
+            out.appendFormattedString(_T("  ** [%6d] INT64    ") INT64_FMT _T("\n"), (int)convertedField->fieldId, convertedField->df_int64);
             break;
          case NXCP_DT_INT16:
             convertedField->df_int16 = ntohs(convertedField->df_int16);
-            out.appendFormattedString(_T("  ** [%6d] INT16  %d\n"), (int)convertedField->fieldId, (int)convertedField->df_int16);
+            out.appendFormattedString(_T("  ** [%6d] INT16    %d\n"), (int)convertedField->fieldId, (int)convertedField->df_int16);
             break;
          case NXCP_DT_FLOAT:
             convertedField->df_real = ntohd(convertedField->df_real);
-            out.appendFormattedString(_T("  ** [%6d] FLOAT  %f\n"), (int)convertedField->fieldId, convertedField->df_real);
+            out.appendFormattedString(_T("  ** [%6d] FLOAT    %f\n"), (int)convertedField->fieldId, convertedField->df_real);
             break;
          case NXCP_DT_STRING:
 #if !(WORDS_BIGENDIAN)
@@ -1025,12 +1025,12 @@ String NXCPMessage::dump(NXCP_MESSAGE *msg, int version)
                convertedField->df_string.value[i] = ntohs(convertedField->df_string.value[i]);
 #endif
             str = GetStringFromField((BYTE *)convertedField + 8);
-            out.appendFormattedString(_T("  ** [%6d] STRING \"%s\"\n"), (int)convertedField->fieldId, str);
+            out.appendFormattedString(_T("  ** [%6d] STRING   \"%s\"\n"), (int)convertedField->fieldId, str);
             free(str);
             break;
          case NXCP_DT_BINARY:
             convertedField->df_string.length = ntohl(convertedField->df_string.length);
-            out.appendFormattedString(_T("  ** [%6d] BINARY len=%d\n"), (int)convertedField->fieldId, (int)convertedField->df_string.length);
+            out.appendFormattedString(_T("  ** [%6d] BINARY   len=%d\n"), (int)convertedField->fieldId, (int)convertedField->df_string.length);
             break;
          case NXCP_DT_INETADDR:
             {

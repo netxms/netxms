@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,18 +22,14 @@
 
 #include "nxagentd.h"
 
-
 /**
- * Constants
+ * SNMP buffer size
  */
-
 #define SNMP_BUFFER_SIZE		65536
-
 
 /**
  * Read PDU from network
  */
-
 static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize)
 {
    fd_set rdfs;
@@ -88,36 +84,32 @@ static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize)
  */
 void ProxySNMPRequest(NXCPMessage *pRequest, NXCPMessage *pResponse)
 {
-	BYTE *pduIn, *pduOut;
-	UINT32 dwSizeIn, dwSizeOut;
-	SOCKET hSocket;
-	int nRetries;
-	struct sockaddr_in addr;
-
-	dwSizeIn = pRequest->getFieldAsUInt32(VID_PDU_SIZE);
+	UINT32 dwSizeIn = pRequest->getFieldAsUInt32(VID_PDU_SIZE);
 	if (dwSizeIn > 0)
 	{
-		pduIn = (BYTE *)malloc(dwSizeIn);
+		BYTE *pduIn = (BYTE *)malloc(dwSizeIn);
 		if (pduIn != NULL)
 		{
 			pRequest->getFieldAsBinary(VID_PDU, pduIn, dwSizeIn);
 
-			hSocket = socket(AF_INET, SOCK_DGRAM, 0);
+			SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
 			if (hSocket != INVALID_SOCKET)
 			{
-				memset(&addr, 0, sizeof(struct sockaddr_in));
-				addr.sin_family = AF_INET;
-				addr.sin_addr.s_addr = htonl(pRequest->getFieldAsUInt32(VID_IP_ADDRESS));
-				addr.sin_port = htons(pRequest->getFieldAsUInt16(VID_PORT));
-				if (connect(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != -1)
+				InetAddress addr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
+            SockAddrBuffer sa;
+            addr.fillSockAddr(&sa, pRequest->getFieldAsUInt16(VID_PORT));
+				if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) != -1)
 				{
-					pduOut = (BYTE *)malloc(SNMP_BUFFER_SIZE);
+printf("WILL SEND PDU TO %s\n\n",inet_ntoa(((struct sockaddr_in *)&sa)->sin_addr));
+					BYTE *pduOut = (BYTE *)malloc(SNMP_BUFFER_SIZE);
 					if (pduOut != NULL)
 					{
+                  int nRetries;
 						for(nRetries = 0; nRetries < 3; nRetries++)
 						{
 							if (send(hSocket, (char *)pduIn, dwSizeIn, 0) == (int)dwSizeIn)
 							{
+                        UINT32 dwSizeOut;
 								if (ReadPDU(hSocket, pduOut, &dwSizeOut))
 								{
 									pResponse->setField(VID_PDU_SIZE, dwSizeOut);
