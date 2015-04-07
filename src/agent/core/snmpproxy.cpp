@@ -83,7 +83,6 @@ static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize)
 	return FALSE;
 }
 
-
 /**
  * Send SNMP request to target, receive response, and send it to server
  */

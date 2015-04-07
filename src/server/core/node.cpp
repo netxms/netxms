@@ -5151,7 +5151,7 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 	}
 	else
 	{
-		Node *proxyNode = (Node *)g_idxNodeById.get(snmpProxy);
+      Node *proxyNode = (snmpProxy == m_id) ? this : (Node *)g_idxNodeById.get(snmpProxy);
 		if (proxyNode != NULL)
 		{
 			AgentConnection *pConn;
@@ -5159,7 +5159,8 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 			pConn = proxyNode->createAgentConnection();
 			if (pConn != NULL)
 			{
-				pTransport = new SNMP_ProxyTransport(pConn, m_ipAddress, (port != 0) ? port : m_wSNMPPort);
+            // Use loopback address if node is SNMP proxy for itself
+            pTransport = new SNMP_ProxyTransport(pConn, (snmpProxy == m_id) ? InetAddress::LOOPBACK : m_ipAddress, (port != 0) ? port : m_wSNMPPort);
 			}
 		}
 	}

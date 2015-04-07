@@ -29,6 +29,11 @@
 const InetAddress InetAddress::INVALID = InetAddress();
 
 /**
+ * Loopback address (IPv4)
+ */
+const InetAddress InetAddress::LOOPBACK = InetAddress(0x7F000001);
+
+/**
  * IPv4 link local subnet
  */
 static const InetAddress IPV4_LINK_LOCAL = InetAddress(0xA9FE0000, 0xFFFF0000);

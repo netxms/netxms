@@ -992,6 +992,7 @@ public:
    static InetAddress createFromSockaddr(struct sockaddr *s);
 
    static const InetAddress INVALID;
+   static const InetAddress LOOPBACK;
 };
 
 /**
