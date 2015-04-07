@@ -1032,6 +1032,16 @@ String NXCPMessage::dump(NXCP_MESSAGE *msg, int version)
             convertedField->df_string.length = ntohl(convertedField->df_string.length);
             out.appendFormattedString(_T("  ** [%6d] BINARY len=%d\n"), (int)convertedField->fieldId, (int)convertedField->df_string.length);
             break;
+         case NXCP_DT_INETADDR:
+            {
+               InetAddress a = 
+                  (convertedField->df_inetaddr.family == NXCP_AF_INET) ?
+                     InetAddress(ntohl(convertedField->df_inetaddr.addr.v4)) :
+                     InetAddress(convertedField->df_inetaddr.addr.v6);
+               a.setMaskBits(convertedField->df_inetaddr.maskBits);
+               out.appendFormattedString(_T("  ** [%6d] INETADDR %s\n"), (int)convertedField->fieldId, (const TCHAR *)a.toString());
+            }
+            break;
          default:
             out.appendFormattedString(_T("  ** [%6d] unknown type %d\n"), (int)convertedField->fieldId, (int)field->type);
             break;
