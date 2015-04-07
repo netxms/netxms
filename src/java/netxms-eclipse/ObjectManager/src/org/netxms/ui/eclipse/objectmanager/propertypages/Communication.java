@@ -369,7 +369,7 @@ public class Communication extends PropertyPage
 		{
 			// Validate primary name
 			final String hostName = primaryName.getText().trim();
-			if (!hostName.matches("^([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+$")) //$NON-NLS-1$
+			if (!hostName.matches("^(([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+|[A-Fa-f0-9:]+)$")) //$NON-NLS-1$
 			{
 				MessageDialogHelper.openWarning(getShell(), Messages.get().Communication_Warning, 
 				      String.format(Messages.get().Communication_WarningInvalidHostname, hostName));

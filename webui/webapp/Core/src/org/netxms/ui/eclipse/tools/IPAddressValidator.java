@@ -25,7 +25,7 @@ import org.netxms.ui.eclipse.console.Messages;
  */
 public class IPAddressValidator implements TextFieldValidator
 {
-	private static final String IP_ADDRESS_PATTERN = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"; //$NON-NLS-1$
+	private static final String IP_ADDRESS_PATTERN = "^(([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+|[A-Fa-f0-9:]+)$"; //$NON-NLS-1$
 	
 	private boolean allowEmpty;
 	
