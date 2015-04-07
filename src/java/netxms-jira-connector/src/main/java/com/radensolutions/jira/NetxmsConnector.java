@@ -47,6 +47,7 @@ public class NetxmsConnector {
         String login = settingsManager.getLogin();
         String password = settingsManager.getPassword();
         boolean success = false;
+        boolean alarmNotFound = false;
         for (String server : servers) {
             ConnectionDetails connectionDetails = new ConnectionDetails(server).parse();
             String connAddress = connectionDetails.getAddress();
@@ -58,8 +59,8 @@ public class NetxmsConnector {
                 session.connect();
                 log.debug("Connected to " + server);
                 // do stuff
-                action.execute(session);
                 success = true;
+                action.execute(session);
                 log.debug("Action executed on " + server);
             } catch (IOException e) {
                 log.error("Connection failed", e);
@@ -67,12 +68,12 @@ public class NetxmsConnector {
                 if (e.getErrorCode() != RCC.INVALID_ALARM_ID) {
                     log.error("Connection failed", e);
                 }
-            }
-            if (success) {
-                break;
+                else {
+                    alarmNotFound = true;
+                }
             }
         }
-        return success;
+        return success || alarmNotFound;
     }
 
     public boolean testConnection(String server, String login, String password, StringBuffer errorMessage) {
