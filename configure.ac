@@ -916,6 +916,21 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 
 	AC_LANG_POP([C++])
 
+	MACHINE=`uname -m`
+	if test "x$MACHINE" = "xi686" -o "x$MACHINE" = "xi586"; then
+			AC_MSG_CHECKING(whether C compiler accepts -march=$MACHINE)
+			OLD_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="$CPPFLAGS -march=$MACHINE"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ 
+					AC_MSG_RESULT(yes) 
+				], 
+				[ 
+					CPPFLAGS="$OLD_CPPFLAGS"
+					AC_MSG_RESULT(no)
+				])
+	fi
+
 	if test "x$PLATFORM" = "xHP-UX"; then
 		if test "x$FORCE_32BIT_BUILD" = "xyes"; then
 			AC_MSG_CHECKING(whether C compiler accepts -milp32)
