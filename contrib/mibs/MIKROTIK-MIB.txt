@@ -9,11 +9,11 @@ OBJECT-GROUP FROM SNMPv2-CONF
 NOTIFICATION-GROUP FROM SNMPv2-CONF;
 
 mikrotikExperimentalModule MODULE-IDENTITY
-  LAST-UPDATED "201301210000Z"
+  LAST-UPDATED "201404100000Z"
   ORGANIZATION "MikroTik"
   CONTACT-INFO "@mikrotik.com"
   DESCRIPTION ""
-  REVISION "201301210000Z"
+  REVISION "201404100000Z"
   DESCRIPTION ""
   ::= { mikrotik 1 }
 
@@ -37,6 +37,7 @@ mtxrGps OBJECT IDENTIFIER ::= { mtXRouterOs 12 }
 mtxrWirelessModem OBJECT IDENTIFIER ::= { mtXRouterOs 13 }
 mtxrInterfaceStats OBJECT IDENTIFIER ::= { mtXRouterOs 14 }
 mtxrPOE OBJECT IDENTIFIER ::= { mtXRouterOs 15 }
+mtxrLTEModem OBJECT IDENTIFIER ::= { mtXRouterOs 16 }
 
 ObjectIndex ::= TEXTUAL-CONVENTION
     DISPLAY-HINT "x"
@@ -750,6 +751,13 @@ mtxrHlCurrent OBJECT-TYPE
     DESCRIPTION "mA"
     ::= { mtxrHealth 13 }
 
+mtxrHlProcessorFrequency OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "Mhz"
+    ::= { mtxrHealth 14 }
+
 mtxrLicSoftwareId OBJECT-TYPE
     SYNTAX DisplayString
     MAX-ACCESS read-only
@@ -1138,7 +1146,8 @@ MtxrNeighborTableEntry ::= SEQUENCE {
 	mtxrNeighborVersion DisplayString,
 	mtxrNeighborPlatform DisplayString,
 	mtxrNeighborIdentity DisplayString,
-	mtxrNeighborSoftwareID DisplayString
+	mtxrNeighborSoftwareID DisplayString,
+        mtxrNeighborInterfaceID ObjectIndex
 }
 
 mtxrNeighborIndex OBJECT-TYPE
@@ -1189,6 +1198,13 @@ mtxrNeighborSoftwareID OBJECT-TYPE
     STATUS current
     DESCRIPTION ""
     ::= { mtxrNeighborTableEntry 7 }
+
+mtxrNeighborInterfaceID OBJECT-TYPE
+    SYNTAX ObjectIndex
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION ""
+    ::= { mtxrNeighborTableEntry 8 }
 
 -- GROUPS *********************************************************************
 
@@ -1256,7 +1272,8 @@ mtxrHealthGroup OBJECT-GROUP OBJECTS {
         mtxrHlTwelveVoltage, mtxrHlSensorTemperature, mtxrHlCpuTemperature,
         mtxrHlBoardTemperature, mtxrHlVoltage, mtxrHlActiveFan, 
 	mtxrHlTemperature, mtxrHlProcessorTemperature,
-        mtxrHlCurrent, mtxrHlPower
+        mtxrHlCurrent, mtxrHlPower,
+        mtxrHlProcessorFrequency
     }
     STATUS current
     DESCRIPTION ""
@@ -1315,7 +1332,8 @@ mtxrNeighborGroup OBJECT-GROUP OBJECTS {
 	mtxrNeighborVersion,
 	mtxrNeighborPlatform,
 	mtxrNeighborIdentity,
-	mtxrNeighborSoftwareID
+	mtxrNeighborSoftwareID,
+	mtxrNeighborInterfaceID
     }
     STATUS current
     DESCRIPTION ""
@@ -1452,6 +1470,14 @@ mtxrPOEGroup OBJECT-GROUP OBJECTS {
     STATUS current
     DESCRIPTION ""
     ::= { mtXRouterOsGroups 18 }
+
+mtxrLTEModemGroup OBJECT-GROUP OBJECTS {
+        mtxrLTEModemInterfaceIndex,
+        mtxrLTEModemSignalRSRP
+    }
+    STATUS current
+    DESCRIPTION ""
+    ::= { mtXRouterOsGroups 19 }
 
 -- TRAPS **********************************************************************
 
@@ -2169,6 +2195,41 @@ mtxrPOEPower OBJECT-TYPE
     DESCRIPTION "W"
     ::= { mtxrPOEEntry 6 }
 
+-- LTE Modem ************************************************************
+
+mtxrLTEModemTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF MtxrLTEModemEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION "LTE Modems"
+    ::= { mtxrLTEModem 1 }
+
+mtxrLTEModemEntry OBJECT-TYPE
+    SYNTAX MtxrLTEModemEntry
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION ""
+    INDEX { mtxrLTEModemInterfaceIndex }
+    ::= { mtxrLTEModemTable 1 }
+
+MtxrLTEModemEntry ::= SEQUENCE {
+    mtxrLTEModemInterfaceIndex ObjectIndex,
+    mtxrLTEModemSignalRSRP Integer32
+}
+
+mtxrLTEModemInterfaceIndex OBJECT-TYPE
+    SYNTAX ObjectIndex
+    MAX-ACCESS not-accessible
+    STATUS current
+    DESCRIPTION ""
+    ::= { mtxrLTEModemEntry 1 }
+
+mtxrLTEModemSignalRSRP OBJECT-TYPE
+    SYNTAX Integer32
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "dBm"
+    ::= { mtxrLTEModemEntry 2 }
+
 -- ***************************************************************************
 END
-
