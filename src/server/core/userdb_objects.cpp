@@ -311,7 +311,8 @@ User::User(DB_RESULT hResult, int row) : UserDatabaseObject(hResult, row)
 	if (StrToBin(DBGetField(hResult, row, 7, buffer, 256), m_passwordHash, SHA1_DIGEST_SIZE) != SHA1_DIGEST_SIZE)
 	{
 		nxlog_write(MSG_INVALID_SHA1_HASH, EVENTLOG_WARNING_TYPE, "s", m_name);
-		CalculateSHA1Hash((BYTE *)"netxms", 7, m_passwordHash);
+		CalculateSHA1Hash((BYTE *)"netxms", 6, m_passwordHash);
+      m_flags |= UF_MODIFIED | UF_CHANGE_PASSWORD;
 	}
 
 	DBGetField(hResult, row, 8, m_fullName, MAX_USER_FULLNAME);
