@@ -925,6 +925,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
       
       NotificationProcessor()
       {
+         setName("Session Notification Processor");
          setDaemon(true);
          start();
       }
