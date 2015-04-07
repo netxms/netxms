@@ -1,8 +1,8 @@
 -- -----------------------------------------------------------------------------
 -- MIB NAME : L2 Management MIB
 -- FILE NAME: L2mgmtDes3200.mib
--- DATE     : 2010/10/04
--- VERSION  : 2.36
+-- DATE     : 2014/12/23
+-- VERSION  : 2.38
 -- PURPOSE  : To construct the MIB structure for L2 Management of the switch
 --            for proprietary enterprise
 -- -----------------------------------------------------------------------------
@@ -13,6 +13,12 @@
 --  [New Object]
 --  [Modification]
 -- Notes: (Requested by who and which project)
+-- -----------------------------------------------------------------------------
+-- Version 2.38, 2014/12/23,Leslie Lin
+-- Add swL2NniGvrpBpduAddress for GVRP's BPDU MAC address of the NNI port
+-- -----------------------------------------------------------------------------
+-- Version 2.37, 2013/12/05,Leslie Lin
+-- modify range of swL2PortSecurityMaxLernAddr
 -- -----------------------------------------------------------------------------
 -- Version 2.36, 2010/10/04, Marco Visaya
 -- [New Object]
@@ -226,7 +232,7 @@ DES3200-10-L2MGMT-MIB DEFINITIONS ::= BEGIN
 	des3200-10					FROM SWPRIMGMT-DES3200-MIB;
 		
 	swL2MgmtMIB MODULE-IDENTITY
-		LAST-UPDATED "1010040000Z"
+		LAST-UPDATED "1412230000Z"
 	  	ORGANIZATION "D-Link, Inc."
 	  	CONTACT-INFO
 	   		"http://support.dlink.com"
@@ -3646,7 +3652,7 @@ learned source addresses are discarded (e.g. dropped) and no more new addresses
         ::= { swL2PortSecurityControlEntry 1 }
 
     swL2PortSecurityMaxLernAddr OBJECT-TYPE
-        SYNTAX  INTEGER (0..64)
+        SYNTAX  INTEGER (0..1024)
         MAX-ACCESS  read-write
         STATUS  current
         DESCRIPTION
@@ -5321,6 +5327,17 @@ learned source addresses are discarded (e.g. dropped) and no more new addresses
 		 a port from the untagged membership of the PVID's VLAN, the
 		 port's PVID will be assigned with 'default VLAN'."
     	::= {  swL2VlanMgmt 3} 
+
+	swL2NniGvrpBpduAddress OBJECT-TYPE
+	   SYNTAX  INTEGER {
+	   		dot1d(1),
+	   		dot1ad(2)
+	   		}
+	   MAX-ACCESS  read-write
+	   STATUS  current
+	   DESCRIPTION
+    		"Specifies the GVRP's BPDU MAC address of the NNI port with Q-in-Q status."
+	   ::= { swL2VlanMgmt 4 }
 
 -- ********************************************************************
 --  swL2DhcpLocalRelayMgmt        OBJECT IDENTIFIER ::= { swL2MgmtMIB 24 }

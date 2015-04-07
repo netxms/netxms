@@ -1,0 +1,146 @@
+-------------------------------------------------------------------------------
+--  SSL module MIB      
+-------------------------------------------------------------------------------
+-- Version 0.02
+-- 2004/3/30 14:30
+-- By Jesson Lee
+-- Remove swSSLVersionSSLv3 and  swSSLVersionTLSv1Admin objects
+-- Add swSSLStatusAdmin object
+-- Add swSSLCacheTimeout object
+-- Remove swSSLCertificateRequest object
+-- Remove swSSLCertificateFileType object
+
+-------------------------------------------------------------------------------
+-- Version 0.01
+-- 2003/7/2 02:22
+
+-------------------------------------------------------------------------------
+
+
+SSL-MIB DEFINITIONS ::= BEGIN
+
+
+-- -------------------------------------------------------------
+-- SSL System Access Control MIB
+-- -------------------------------------------------------------
+
+
+IMPORTS
+ 	IpAddress
+ 	    FROM RFC1155-SMI
+    MODULE-IDENTITY, OBJECT-TYPE, Unsigned32
+        FROM SNMPv2-SMI
+    DisplayString
+            FROM SNMPv2-TC
+    MODULE-COMPLIANCE, OBJECT-GROUP
+        FROM SNMPv2-CONF
+
+	dlink-common-mgmt	FROM DLINK-ID-REC-MIB;
+
+
+swSSLMIB MODULE-IDENTITY
+    LAST-UPDATED "9911220000Z"
+    ORGANIZATION "Working Group"
+    CONTACT-INFO
+        "  "
+    DESCRIPTION
+        "The  Secure Socket Layer MIB."
+    ::= { dlink-common-mgmt 7}
+
+swSSLMgmt OBJECT IDENTIFIER ::= { swSSLMIB 1 }
+
+-- -------------------------------------------------------------
+-- Textual Conventions
+-- -------------------------------------------------------------
+        
+ swSSLStatusAdmin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the SSL feature is support or not	."
+        ::= { swSSLMgmt 1}
+
+ swSSLCipherSuites OBJECT-TYPE
+    	SYNTAX      BITS {
+                    rsa-with-rc4-128-MD5 (0),
+                    rsa-with-3des-ede-cbc-sha(1),
+                    dhe-dss-with-3des-ede-cbc-sha(2),
+                    rsa-export-with-rc4-40-md5(3)                  
+                	}
+    	MAX-ACCESS  read-write
+    	STATUS      current                  
+        DESCRIPTION
+            "This object indicates the ciphersuites are enabled or not in the system.
+             If the bit is 1 , indicate that ciphersuite is enabled , else is disabled . "
+        ::= { swSSLMgmt 2}
+ 
+ swSSLCacheTimeout OBJECT-TYPE
+    	SYNTAX     Unsigned32 (60..86400)
+    	MAX-ACCESS  read-write
+    	STATUS      current                  
+        DESCRIPTION
+            "This object indicates the Cache Timeout value for SSL module to refresh the session 
+            resume data kept in database"
+        ::= { swSSLMgmt 3}
+        
+swSSLCertificateFile OBJECT IDENTIFIER ::= { swSSLMIB 2 }
+
+----------------------------------------------------------------------------------------------
+
+
+    swSSLCertificateFileIPAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The IP address where the file to be downloaded is located"
+        ::= {  swSSLCertificateFile 1 }
+
+    swSSLCertificateFilePath OBJECT-TYPE
+        SYNTAX  DisplayString  (SIZE (0..64))
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The description for the certificate file name included full path to be downloaded ."
+        ::= { swSSLCertificateFile 2 }
+        
+    swSSLCertificateKeyFilePath OBJECT-TYPE
+        SYNTAX  DisplayString  (SIZE (0..64))
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The description for the key file name included full path to be downloaded ."
+        ::= { swSSLCertificateFile 3 }        
+                                                    
+     swSSLCertificateFileCtrl OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    inactive(2),
+                    start(3),
+                    delete(4)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object provides the user to download certificate or key file. "
+        ::= { swSSLCertificateFile 4 }
+
+	swSSLCertificateFileShowSatus OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    none(1),
+                    rsa(2),
+                    dsa(3)
+                  }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Show certificate file status."
+        ::= { swSSLCertificateFile 5 }    
+-- -------------------------------------------------------------------------------------
+
+END

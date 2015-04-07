@@ -1,8 +1,8 @@
 -- -----------------------------------------------------------------------------
 -- MIB NAME : L3 Management MIB
 -- FILE NAME: des3200-28f-L3mgmt.mib
--- DATE     : 2009/11/07
--- VERSION  : 1.02
+-- DATE     : 2015/02/04
+-- VERSION  : 1.03
 -- PURPOSE  : To construct the MIB structure of Layer 3 Network Management Information
 --            for proprietary enterprise
 -- -----------------------------------------------------------------------------
@@ -13,6 +13,12 @@
 --  [New Object]
 --  [Modification]
 -- Notes: (Requested by who and which project)  
+--
+-- Version 1.03, 2015/02/04, Zoey Chen
+-- Description:
+-- [New Object]
+-- Add swL3IpCtrlDhcpv6ClientState and swL3Ipv6AddressCtrlAddressType 
+--    to support DHCPv6 Client.   
 --  
 -- Version 1.02 2009/11/07,  Eli
 -- Description:
@@ -109,6 +115,8 @@ Ipv6Address ::= TEXTUAL-CONVENTION
                 INTEGER,                   
             swL3IpCtrlIpv6LinkLocalAutoState
             	INTEGER,
+            swL3IpCtrlDhcpv6ClientState
+            	INTEGER,
             swL3IpCtrlIpDhcpOption12State
             	INTEGER,
             swL3IpCtrlIpDhcpOption12HostName
@@ -150,7 +158,18 @@ Ipv6Address ::= TEXTUAL-CONVENTION
         DESCRIPTION
             "The state of the IPv6 link local auto."
         ::= { swL3IpCtrlEntry 17 }    
-        	        
+        
+    swL3IpCtrlDhcpv6ClientState OBJECT-TYPE
+        SYNTAX  INTEGER {
+			enabled(1),
+			disabled(2)
+		}
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The object indicates the state of the DHCPv6 client."
+        ::= { swL3IpCtrlEntry 20 }
+        
     swL3IpCtrlIpDhcpOption12State OBJECT-TYPE
         SYNTAX  INTEGER {
                     enabled(1),
@@ -387,7 +406,9 @@ Ipv6Address ::= TEXTUAL-CONVENTION
 --            swL3Ipv6AddressCtrlAutonomousFlag
 --                INTEGER,
             swL3Ipv6AddressCtrlState
-                RowStatus     
+                RowStatus,
+            swL3Ipv6AddressCtrlAddressType
+                INTEGER
             }        
 
     swL3Ipv6AddressCtrlInterfaceName OBJECT-TYPE
@@ -466,6 +487,21 @@ Ipv6Address ::= TEXTUAL-CONVENTION
             for creating, modifying, and deleting instances of the objects 
             in this table."
         ::= { swL3Ipv6AddressCtrlEntry 8 }
+
+    swL3Ipv6AddressCtrlAddressType OBJECT-TYPE
+        SYNTAX  INTEGER {
+			manual(1),
+			dhcpv6(2),
+			stateless(3)
+		}    
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+		"This object indicates the type of the IPv6 address.
+ 		 manual(1): the IPv6 address is configured by user.
+		 dhcpv6(2): the IPv6 address is assigned by DHCPv6 server.
+		 stateless(3): the IPv6 address is assigned by router advertisement."
+        ::= { swL3Ipv6AddressCtrlEntry 9 }
         
      swL3IpCtrlAllIpIfState OBJECT-TYPE                                       
     	SYNTAX  INTEGER {

@@ -1,0 +1,33 @@
+SWPRIMGMT-DES30XXP-MIB	DEFINITIONS ::= BEGIN
+	IMPORTS
+		MODULE-IDENTITY			FROM SNMPv2-SMI
+		dlink-products,dlink-mgmt	FROM DLINK-ID-REC-MIB;
+	
+	dlink-des30xxproductProd OBJECT IDENTIFIER ::= {dlink-products 63}
+
+--	dlink-des37xxproductProd OBJECT IDENTIFIER ::= {dlink-products 95}
+	
+	dlink-des3028Prod	OBJECT IDENTIFIER ::= {dlink-des30xxproductProd 6}
+	dlink-des3028PProd	OBJECT IDENTIFIER ::= {dlink-des30xxproductProd 7}
+	
+	dlink-des3052Prod	OBJECT IDENTIFIER ::= {dlink-des30xxproductProd 8}
+	dlink-des3052PProd	OBJECT IDENTIFIER ::= {dlink-des30xxproductProd 9}
+
+--	dlink-des3728pProd OBJECT IDENTIFIER ::= {dlink-des37xxproductProd 1}
+--	dlink-des3752pProd OBJECT IDENTIFIER ::= {dlink-des37xxproductProd 2}
+	
+	des30xxSeriesProd	OBJECT IDENTIFIER ::= {dlink-mgmt 63}
+
+--	des37xxSeriseProd OBJECT IDENTIFIER ::= {dlink-mgmt 95}
+	
+	des3028			OBJECT IDENTIFIER ::= {des30xxSeriesProd 6}
+	des3028p		OBJECT IDENTIFIER ::= {des30xxSeriesProd 7}
+	
+	des3052			OBJECT IDENTIFIER ::= {des30xxSeriesProd 8}
+	des3052p		OBJECT IDENTIFIER ::= {des30xxSeriesProd 9}
+	
+	des3028g		OBJECT IDENTIFIER ::= {des30xxSeriesProd 11}
+
+--	des3728p		OBJECT IDENTIFIER ::= {des37xxSeriseProd 1}
+--	des3752p		OBJECT IDENTIFIER ::= {des37xxSeriseProd 2}
+END

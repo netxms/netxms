@@ -1,0 +1,821 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : QoS-MIB
+-- FILE NAME: QoS.mib
+-- DATE     : 2010/12/23
+-- VERSION  : 1.04
+-- PURPOSE  : To construct the MIB structure of QoS function for
+--            proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------      
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)  
+-- ----------------------------------------------------------------------------- 
+-- Version 1.04, 2010/12/23, Jespersen Cai   
+-- [Modification]
+-- change the value range of swQoSBandwidthRxRate,swQoSBandwidthTxRate,
+-- swCoSBandwidthMinRate,swCoSBandwidthMaxRate
+-- Requset By Jespersen Cai for DGS-3620 
+-- ----------------------------------------------------------------------------- 
+-- Version 1.03, 2009/10/20, Elise Ren   
+-- [New Object]
+-- Add swQos8021pColorMapGlobalCtrlTable and swQosDscpMapGlobalCtrlTable
+-- for some chip's implementation.
+-- Requset By Elise Ren for DES-3810 
+-- ----------------------------------------------------------------------------- 
+-- Version 1.02, 2009/4/9, Elise Ren   
+-- [New Object]
+-- 1. Add swQoSScheduleProfileTable
+-- 2. Add swQoSScheduleGroupTable 
+--    for support schedule configuration based on profile.
+-- Requset By Elise Ren for DES3710 
+-- 3. Add swCoSBandwidthControlTable
+--    based on "D-Link Switch Series CLI QoS Commands Rev 0.53.a4".
+-- Request By Hans Song for project DES35xxR2 
+-- -----------------------------------------------------------------------------
+-- Version 1.01, 2009/2/16, Green Zhu
+-- [New Object]
+-- 1. Add swQos8021pColorMapMgmt, swQosDscpTrustPortMgmt and swQosDscpMapMgmt 
+--    based on "D-Link Switch Series CLI QoS Commands Rev 0.51".
+-- [Modification]
+-- 1. Modify the range of swQoSBandwidthRxRate and swQoSBandwidthTxRate from
+--  (0|64..1000000) to (0|64..1024000).
+-- Notes: Requested by green zhu for DES35xx.
+--
+-- Version 1.00, 2008/4/17, Kelvin Tao
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+
+QoS-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,Unsigned32,Integer32
+                                        FROM SNMPv2-SMI
+        dlink-common-mgmt		FROM DLINK-ID-REC-MIB
+	dot1dBasePort			FROM BRIDGE-MIB   
+	PortList             FROM Q-BRIDGE-MIB;
+
+		
+    	
+    swQoSMIB MODULE-IDENTITY
+          LAST-UPDATED "201012230000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+		    "The structure of QoS for the proprietary enterprise."
+        ::= { dlink-common-mgmt 61 }
+
+    swQoSCtrl                OBJECT IDENTIFIER ::= { swQoSMIB 1 }
+    swQoSInfo                OBJECT IDENTIFIER ::= { swQoSMIB 2 }
+    swQoSMgmt                OBJECT IDENTIFIER ::= { swQoSMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- swQoSCtrl
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- swQoSInfo
+-- -----------------------------------------------------------------------------
+            	
+-- -----------------------------------------------------------------------------
+-- swQoSMgmt
+-- -----------------------------------------------------------------------------
+
+	swQoSBandwidthControlTable OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwQoSBandwidthControlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "."
+		::= { swQoSMgmt 1 }
+	
+	swQoSBandwidthControlEntry OBJECT-TYPE
+		SYNTAX  SwQoSBandwidthControlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list of information contained in the swQoSBandwidthControlTable."
+		INDEX   { swQoSBandwidthPort }
+		::= { swQoSBandwidthControlTable 1 }
+	
+	SwQoSBandwidthControlEntry ::=
+		SEQUENCE {
+		  swQoSBandwidthPort
+		      INTEGER,
+		  swQoSBandwidthRxRate
+		      INTEGER,
+		  swQoSBandwidthTxRate
+		      INTEGER,
+		  swQoSBandwidthRadiusRxRate
+		      INTEGER,
+		  swQoSBandwidthRadiusTxRate
+		      INTEGER
+		}
+	
+	swQoSBandwidthPort OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the port number."
+		::= { swQoSBandwidthControlEntry 1 }
+	
+	swQoSBandwidthRxRate OBJECT-TYPE
+		SYNTAX  INTEGER (0|8..10240000)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates Rx Rate of the specified port. 
+		       Value 0 means no limit."
+		::= { swQoSBandwidthControlEntry 2 }
+	
+	swQoSBandwidthTxRate OBJECT-TYPE
+		SYNTAX  INTEGER (0|8..10240000)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the Tx Rate of the specified port. 
+		       A value of 0 means no limit."
+		::= { swQoSBandwidthControlEntry 3 }				
+	
+	swQoSBandwidthRadiusRxRate OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "The Rx Rate value comes from the RADIUS server,
+		       If an 802.1X port is authenticated, this value
+		       will overwrite the locally configured Rx Rate. "
+		::= { swQoSBandwidthControlEntry 4 }	
+	swQoSBandwidthRadiusTxRate OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "The Tx Rate value comes from the RADIUS server,
+		       If an 802.1X port is authenticated, this value
+		       will overwrite the locally configured Tx Rate. "
+		::= { swQoSBandwidthControlEntry 5 }
+		
+-- -----------------------------------------------------------------------------
+
+	swQoSSchedulingTable OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwQoSSchedulingEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "."
+		::= { swQoSMgmt 2 }
+	
+	swQoSSchedulingEntry OBJECT-TYPE
+		SYNTAX  SwQoSSchedulingEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list of information contained in the swQoSSchedulingTable."
+		INDEX   { swQoSSchedulingPort,swQoSSchedulingClassID }
+		::= { swQoSSchedulingTable 1 }
+	
+	SwQoSSchedulingEntry ::=
+		SEQUENCE {
+                        swQoSSchedulingPort
+                                INTEGER,
+			swQoSSchedulingClassID
+		    	        INTEGER,
+			swQoSSchedulingWeight
+                                INTEGER,
+			swQoSSchedulingMechanism
+		    	        INTEGER,
+			swQoSSchedulingMechanismEffec
+				INTEGER    		
+		}
+	
+	swQoSSchedulingPort OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the port number."
+		::= { swQoSSchedulingEntry 1 }
+	
+	swQoSSchedulingClassID OBJECT-TYPE
+		SYNTAX  INTEGER (0..7)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the hardware queue number."
+		::= { swQoSSchedulingEntry 2 }
+	
+	swQoSSchedulingWeight  OBJECT-TYPE
+		SYNTAX  INTEGER (0..127)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the maximum number of packets the above specified hardware
+                      priority queue will be allowed to transmit before allowing
+                      the next lowest priority queue to transmit its packets."
+		::= { swQoSSchedulingEntry 3 }	
+		
+	swQoSSchedulingMechanism OBJECT-TYPE
+		SYNTAX	INTEGER {
+                       strict(1),
+                       wrr(2)
+                       }
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the mechanism of QoS scheduling.
+
+                      This object indicates the Qos Scheduling Mechanism mode on a port."
+		::= { swQoSSchedulingEntry 4 }
+
+	swQoSSchedulingMechanismEffec OBJECT-TYPE
+		SYNTAX	INTEGER {
+                       strict(1),
+                       wrr(2)
+                       }
+                MAX-ACCESS  read-only
+	        STATUS  current
+	        DESCRIPTION
+                     "Indicates the effective mechanism of QoS scheduling.
+
+                     If the swQoSSchedulingWeight is configured to be 0,
+                     then this object will always display strict (1)."
+    	       ::= { swQoSSchedulingEntry 5 }
+    	
+-- -----------------------------------------------------------------------------
+
+	swQoS8021pDefaultPriorityTable OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwQoS8021pDefaultPriorityEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "."
+		::= { swQoSMgmt 3 }
+	
+	swQoS8021pDefaultPriorityEntry OBJECT-TYPE
+		SYNTAX  SwQoS8021pDefaultPriorityEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list of information contained in the swQoS8021pDefaultPriorityTable."
+		INDEX   { dot1dBasePort }
+		::= { swQoS8021pDefaultPriorityTable 1 }
+	
+	SwQoS8021pDefaultPriorityEntry ::=
+		SEQUENCE {
+		  swQoS8021pRadiusPriority
+		      INTEGER
+		}
+
+       swQoS8021pRadiusPriority OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the value of 802.1p comes from RADIUS server.
+		
+                      If an 802.1X port is authenticated,
+                      this value will overwrite the local configured value."
+		::= { swQoS8021pDefaultPriorityEntry 1 }	
+	
+-- -----------------------------------------------------------------------------
+
+        swQosHolPreventionMgmt    OBJECT IDENTIFIER ::= { swQoSMgmt 4 }
+        
+	swQoSHolPreventionCtrl OBJECT-TYPE
+		SYNTAX	INTEGER {
+                       enabled(1),
+                       disabled(2)
+                       }
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This controls QoS HoL Prevention."
+		::= { swQosHolPreventionMgmt 6 }		
+
+-- -----------------------------------------------------------------------------
+
+        swQosInBandMgmt         OBJECT IDENTIFIER ::= { swQoSMgmt 5  }
+
+        swQosInBandMgmtSetDefPriority OBJECT-TYPE
+                SYNTAX  INTEGER  {
+                       other(1),
+                       action(2)
+                       }
+                MAX-ACCESS  read-write
+                STATUS  current
+                DESCRIPTION
+                      "Sets the default priority. It is project dependent."
+                ::= { swQosInBandMgmt 1 }
+
+        swQosInBandMgmtPktPriority OBJECT-TYPE
+               SYNTAX  INTEGER (0..7)
+               MAX-ACCESS  read-write
+               STATUS  current
+               DESCRIPTION
+                     "Specifies the priority of packets, the range is 0-7. 7 is the highest priority."
+               ::= { swQosInBandMgmt 2 }
+               
+-- ----------------------------------------------------------------------------
+        swQos8021pColorMapMgmt         OBJECT IDENTIFIER ::= { swQoSMgmt 6  }
+        swQos8021pColorMapCtrlTable  OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwQos8021pColorMapCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains information about priority map
+		      to packet color on each port."
+		::= { swQos8021pColorMapMgmt 1 }
+
+        swQos8021pColorMapCtrlEntry OBJECT-TYPE
+		SYNTAX  SwQos8021pColorMapCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list that contains priority map to packet color per port."
+		INDEX   { swQos8021pColorMapCtrlPortIndex,swQos8021pColorMapCtrlPriorityIndex }
+		::= { swQos8021pColorMapCtrlTable 1 }
+
+        SwQos8021pColorMapCtrlEntry ::=
+		SEQUENCE {
+                swQos8021pColorMapCtrlPortIndex
+                    INTEGER,
+                swQos8021pColorMapCtrlPriorityIndex
+                    INTEGER,
+                swQos8021pColorMapCtrlColor
+                    INTEGER
+		}
+		
+        swQos8021pColorMapCtrlPortIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the port number."
+		::= { swQos8021pColorMapCtrlEntry 1 }
+		
+        swQos8021pColorMapCtrlPriorityIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the source priority of
+		      incoming packets."
+		::= { swQos8021pColorMapCtrlEntry 2 }
+			
+        swQos8021pColorMapCtrlColor OBJECT-TYPE
+		SYNTAX  INTEGER {
+			green(1),
+			red(2),
+			yellow(3)
+		}
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the source priority of
+		      incoming packets."
+		::= { swQos8021pColorMapCtrlEntry 3 }	
+
+-- -----------------------------------------------------------------------------
+        swQos8021pColorMapGlobalCtrlTable  OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwQos8021pColorMapGlobalCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains information about priority map
+		      to packet color."
+		::= { swQos8021pColorMapMgmt 2 }
+
+        swQos8021pColorMapGlobalCtrlEntry OBJECT-TYPE
+		SYNTAX  SwQos8021pColorMapGlobalCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list that contains priority map to packet color."
+		INDEX   { swQos8021pColorMapGlobalCtrlPriorityIndex }
+		::= { swQos8021pColorMapGlobalCtrlTable 1 }
+
+        SwQos8021pColorMapGlobalCtrlEntry ::=
+		SEQUENCE {
+                swQos8021pColorMapGlobalCtrlPriorityIndex
+                    INTEGER,
+                swQos8021pColorMapGlobalCtrlColor
+                    INTEGER
+		}
+		       
+        swQos8021pColorMapGlobalCtrlPriorityIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the source priority of
+		      incoming packets."
+		::= { swQos8021pColorMapGlobalCtrlEntry 1 }
+			
+        swQos8021pColorMapGlobalCtrlColor OBJECT-TYPE
+		SYNTAX  INTEGER {
+			green(1),
+			red(2),
+			yellow(3)
+		}
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the source priority of
+		      incoming packets."
+		::= { swQos8021pColorMapGlobalCtrlEntry 2 }	
+
+-- ----------------------------------------------------------------------------
+          swQosDscpTrustPortMgmt         OBJECT IDENTIFIER ::= { swQoSMgmt 7  }
+        swQosDscpTrustPortCtrlTable  OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwQosDscpTrustPortCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains information about the
+		      DSCP trust portlist."
+		::= { swQosDscpTrustPortMgmt 1 }
+
+        swQosDscpTrustPortCtrlEntry OBJECT-TYPE
+		SYNTAX  SwQosDscpTrustPortCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list that contains the DSCP trusted state per port."
+		INDEX   { swQosDscpTrustPortCtrlPortIndex }
+		::= { swQosDscpTrustPortCtrlTable 1 }
+
+        SwQosDscpTrustPortCtrlEntry ::=
+		SEQUENCE {
+                swQosDscpTrustPortCtrlPortIndex
+                    INTEGER,
+                swQosDscpTrustPortCtrlState
+                    INTEGER
+		}
+		
+        swQosDscpTrustPortCtrlPortIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the port number."
+		::= { swQosDscpTrustPortCtrlEntry 1 }
+			
+        swQosDscpTrustPortCtrlState OBJECT-TYPE
+		SYNTAX  INTEGER {
+			enabled(1),
+			disabled(2)
+		}
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object is used to enable/disable the DSCP
+		      trusted state on a selected port."
+		DEFVAL { disabled }
+		::= { swQosDscpTrustPortCtrlEntry 2 }
+						
+-- ----------------------------------------------------------------------------
+          swQosDscpMapMgmt         OBJECT IDENTIFIER ::= { swQoSMgmt 8  }
+        swQosDscpMapCtrlTable  OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwQosDscpMapCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains information about
+		      DSCP map to priority and packet color on
+		      each port."
+		::= { swQosDscpMapMgmt 	1 }
+
+        swQosDscpMapCtrlEntry OBJECT-TYPE
+		SYNTAX  SwQosDscpMapCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list that contains DSCP map information
+		      for each port."
+		INDEX   { swQosDscpMapCtrlPortIndex, swQosDscpMapCtrlDscpIndex }
+		::= { swQosDscpMapCtrlTable 1 }
+
+        SwQosDscpMapCtrlEntry ::=
+		SEQUENCE {
+                swQosDscpMapCtrlPortIndex
+                    INTEGER,
+                swQosDscpMapCtrlDscpIndex
+                    INTEGER,
+                swQosDscpMapCtrl8021pPriority
+                    INTEGER,
+                swQosDscpMapCtrlNewDscp
+                    INTEGER,
+                swQosDscpMapCtrlColor
+                    INTEGER
+		}
+		
+        swQosDscpMapCtrlPortIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the port number."
+		::= { swQosDscpMapCtrlEntry 1 }
+			
+        swQosDscpMapCtrlDscpIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the source DSCP incoming packet."
+		::= { swQosDscpMapCtrlEntry 2 }
+				
+        swQosDscpMapCtrl8021pPriority OBJECT-TYPE
+		SYNTAX  INTEGER(0..7)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the 802.1p priority on each port.
+		      Default value is:
+		      DSCP	Priority
+		      0-7	0
+		      8-15	1
+		      16-23	2
+		      24-31	3
+		      32-39	4
+		      40-47	5
+		      48-55	6
+		      56-63	7
+		      "
+		::= { swQosDscpMapCtrlEntry 3 }
+		
+        swQosDscpMapCtrlNewDscp OBJECT-TYPE
+		SYNTAX  INTEGER(0..63)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the new DSCP map on each port."
+		::= { swQosDscpMapCtrlEntry 4 }
+	
+        swQosDscpMapCtrlColor OBJECT-TYPE
+		SYNTAX  INTEGER {
+			green(1),
+			red(2),
+			yellow(3)
+		}
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object maps the color for packets on each port."
+		::= { swQosDscpMapCtrlEntry 5 }	
+
+-- ----------------------------------------------------------------------------
+        swQosDscpMapGlobalCtrlTable  OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwQosDscpMapGlobalCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains information about
+		      DSCP map to priority and packet color."
+		::= { swQosDscpMapMgmt 	2 }
+
+        swQosDscpMapGlobalCtrlEntry OBJECT-TYPE
+		SYNTAX  SwQosDscpMapGlobalCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list that contains DSCP map information."
+		INDEX   {swQosDscpMapGlobalCtrlDscpIndex }
+		::= { swQosDscpMapGlobalCtrlTable 1 }
+
+        SwQosDscpMapGlobalCtrlEntry ::=
+		SEQUENCE {
+                swQosDscpMapGlobalCtrlDscpIndex
+                    INTEGER,
+                swQosDscpMapGlobalCtrl8021pPriority
+                    INTEGER,
+                swQosDscpMapGlobalCtrlNewDscp
+                    INTEGER,
+                swQosDscpMapGlobalCtrlColor
+                    INTEGER
+		}		
+        			
+        swQosDscpMapGlobalCtrlDscpIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the source DSCP incoming packet."
+		::= { swQosDscpMapGlobalCtrlEntry 1 }
+				
+        swQosDscpMapGlobalCtrl8021pPriority OBJECT-TYPE
+		SYNTAX  INTEGER(0..7)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the 802.1p priority.
+		      Default value is:
+		      DSCP	Priority
+		      0-7	0
+		      8-15	1
+		      16-23	2
+		      24-31	3
+		      32-39	4
+		      40-47	5
+		      48-55	6
+		      56-63	7
+		      "
+		::= { swQosDscpMapGlobalCtrlEntry 2 }
+		
+        swQosDscpMapGlobalCtrlNewDscp OBJECT-TYPE
+		SYNTAX  INTEGER(0..63)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the new DSCP map."
+		::= { swQosDscpMapGlobalCtrlEntry 3 }
+	
+        swQosDscpMapGlobalCtrlColor OBJECT-TYPE
+		SYNTAX  INTEGER {
+			green(1),
+			red(2),
+			yellow(3)
+		}
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object maps the color for packets."
+		::= { swQosDscpMapGlobalCtrlEntry 4 }	
+
+-- -----------------------------------------------------------------------------
+
+	swCoSBandwidthControlTable OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwCoSBandwidthControlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains information about
+		       CoS Bandwidth Control on each port."
+		::= { swQoSMgmt 9 }
+	
+	swCoSBandwidthControlEntry OBJECT-TYPE
+		SYNTAX  SwCoSBandwidthControlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list that contains CoS Bandwidth Control information
+		      for each port."
+		INDEX   { swCoSBandwidthPort, swCoSBandwidthCoSID }
+		::= { swCoSBandwidthControlTable 1 }
+	
+	SwCoSBandwidthControlEntry ::=
+		SEQUENCE {
+		  swCoSBandwidthPort
+		      INTEGER,
+		  swCoSBandwidthCoSID
+		      INTEGER,
+		  swCoSBandwidthMinRate
+		      INTEGER,      
+		  swCoSBandwidthMaxRate
+		      INTEGER
+		}
+	
+	swCoSBandwidthPort OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the port number."
+		::= { swCoSBandwidthControlEntry 1 }
+	
+	swCoSBandwidthCoSID OBJECT-TYPE
+		SYNTAX  INTEGER (0..7)
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the hardware queue number."
+		::= { swCoSBandwidthControlEntry 2 }
+	
+	swCoSBandwidthMinRate OBJECT-TYPE
+		SYNTAX  INTEGER (0|8..10240000)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the Minimum Rate of the specified port. 
+		       A value of 0 means no limit."
+		::= { swCoSBandwidthControlEntry 3 }				
+	
+	swCoSBandwidthMaxRate OBJECT-TYPE
+		SYNTAX  INTEGER (0|8..10240000) 
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the Maximum Rate of the specified port. 
+		       A value of 0 means no limit."
+		::= { swCoSBandwidthControlEntry 4 }
+-- -----------------------------------------------------------------------------
+
+    swQoSScheduleProfileTable OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwQoSScheduleProfileEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains information about
+		       schedule profile."
+		::= { swQoSMgmt 10 } 
+		
+	swQoSScheduleProfileEntry OBJECT-TYPE
+		SYNTAX  SwQoSScheduleProfileEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list of information contained in the swQoSScheduleProfileTable."
+		INDEX   { swQoSScheduleProfileId,swQoSScheduleProfileCoSID }
+		::= { swQoSScheduleProfileTable 1 }     
+		
+	SwQoSScheduleProfileEntry ::=
+		SEQUENCE {
+           		swQoSScheduleProfileId
+                                INTEGER,
+			swQoSScheduleProfileCoSID
+		    	        INTEGER,
+			swQoSScheduleProfileWeight
+                                INTEGER,
+			swQoSScheduleProfileMechanism
+		    	        INTEGER		 		
+		}   
+		
+	swQoSScheduleProfileId OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the profile identification."
+		::= { swQoSScheduleProfileEntry 1 }
+		
+	swQoSScheduleProfileCoSID OBJECT-TYPE
+		SYNTAX  INTEGER (0..7)
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the hardware queue number."
+		::= { swQoSScheduleProfileEntry 2 } 
+
+	swQoSScheduleProfileMechanism OBJECT-TYPE
+		SYNTAX	INTEGER {
+                       strict(1),
+                       wrr(2)
+                       }
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the mechanism of the specify hardware queue"
+		::= { swQoSScheduleProfileEntry 3 }	
+		
+	swQoSScheduleProfileWeight  OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the maximum number of packets the above specified hardware
+                      priority queue will be allowed to transmit before allowing
+                      the next lowest priority queue to transmit its packets."
+		::= { swQoSScheduleProfileEntry 4 }
+	       
+-- -----------------------------------------------------------------------------
+                                                    
+	swQoSScheduleGroupTable OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwQoSScheduleGroupEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains information about
+		       schedule group."
+		::= { swQoSMgmt 11 }  
+		
+	swQoSScheduleGroupEntry OBJECT-TYPE
+		SYNTAX  SwQoSScheduleGroupEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list of information contained in the swQoSScheduleGroupTable."
+		INDEX   { swQoSScheduleProfileId }
+		::= { swQoSScheduleGroupTable 1 } 
+			
+	SwQoSScheduleGroupEntry ::=
+		SEQUENCE {  
+			swQoSScheduleGroupPortMember
+                           PortList
+        	}    
+ 	swQoSScheduleGroupPortMember OBJECT-TYPE
+		SYNTAX  PortList
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "Indicates the ports that use the specified profile identification."
+		::= { swQoSScheduleGroupEntry 1 }   
+
+
+END

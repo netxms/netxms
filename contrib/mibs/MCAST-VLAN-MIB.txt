@@ -1,0 +1,881 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : MCAST-VLAN-MIB
+-- FILE NAME: McastVLAN.mib
+-- DATE     : 2013/10/11
+-- VERSION  : 1.07
+-- PURPOSE  : To construct the MIB structure of IGMP&MLD snooping multicast VLAN
+--            function for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+
+-- Version 1.07, 2013/10/11, Wesley Wang
+-- [New Object]
+-- Add New objects swISMVlanCustomerVlanID in swISMVlanTable and 
+-- swMSMVlanCustomerVlanID in swMSMVlanTable to support multicast 
+-- VLAN to work with QinQ.
+-- Notes:Requested by Wesley Wang for DGS3120 R3.10.
+--
+-- Version 1.06, 2012/04/27, Wesley Wang
+-- [New Object]
+-- Add New objects swMSMVlanRepSourceAddrFromPorts in swMSMVlanTable and 
+-- swISMVlanRepSourceAddrFromPorts in swISMVlanTable to support multicast 
+-- VLAN replace source address improvement.
+-- Notes:Requested by Wesley Wang for Codebase.
+--
+-- Version 1.05, 2012/02/13, Bruce Ge
+-- [New Object]
+-- Add New object swMSMVlanRepSourceAddrActionType in swMSMVlanTable to support
+-- MSM VLAN replace source address.
+-- Notes:Requested by Bruce Ge for Codebase.
+--
+-- Version 1.04, 2011/3/22, Wesley Wang	   
+-- [New Object]
+-- Add New object swISMVlanRepSourceAddrActionType in swISMVlanTable to support
+-- ISM VLAN replace system IP address.
+-- Notes:Requested by Wesley Wang for DES3700-28-ME only.
+--
+-- Version 1.03, 2011/2/25, Wesley Wang	   
+-- [New Object]
+-- Add swISMVlanAutoAssignVLANState and swMSMVlanAutoAssignVLANStateState to configure
+-- auto assign VLAN state. 
+-- Notes:Requested by Wesley Wang for DES3810.
+--
+-- Version 1.02, 2010/01/11, Lina Liu
+-- [Modification]
+-- 1.Correct the clerical error of swISMVlanForwardUnmactchedState to 
+-- swISMVlanForwardUnmatchedState.
+-- 2.Correct the clerical error of swMSMVlanForwardUnmactchedState to 
+-- swMSMVlanForwardUnmatchedState.
+-- Notes:Requested by Lina Liu for DGS3700.
+--
+-- Version 1.01, 2009/9/9, Phoenix Xie
+-- [New Object]
+-- 1.Add swISMVlanForwardUnmactchedState and swMSMVlanForwardUnmactchedState
+-- in swMcastVlanCtrl to configure the forwarding state for Multicast VLAN unmatched packet. 
+-- Notes:Requested by Phoenix Xie for DES3810.
+-- 
+-- Version 1.00, 2008/7/9, Kelvin Tao
+-- This is the first formal version for universal MIB definition.
+-- Notes:This mib is integrate the ISMVLAN.mib.	
+-- -----------------------------------------------------------------------------
+
+
+MCAST-VLAN-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,Unsigned32,Integer32
+                                          FROM SNMPv2-SMI
+        DisplayString,RowStatus           FROM SNMPv2-TC
+        InetAddressType, InetAddress      FROM INET-ADDRESS-MIB
+        dlink-common-mgmt		  FROM DLINK-ID-REC-MIB;
+
+		
+    	
+    swMcastVlanMIB MODULE-IDENTITY
+          LAST-UPDATED "201310110000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+		    "The structure of IGMP&MLD snooping multicast VLAN for
+                    the proprietary enterprise."
+        ::= { dlink-common-mgmt 64 }
+
+    PortList                  ::= OCTET STRING(SIZE (0..127))
+     	
+    swMcastVlanCtrl             OBJECT IDENTIFIER ::= { swMcastVlanMIB 1 }
+    swMcastVlanInfo             OBJECT IDENTIFIER ::= { swMcastVlanMIB 2 }
+    swMcastVlanMgmt             OBJECT IDENTIFIER ::= { swMcastVlanMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- swMcastVlanCtrl
+-- -----------------------------------------------------------------------------
+
+     swISMVlanGlobalState  OBJECT-TYPE
+        SYNTAX  INTEGER
+                {
+                  enabled(1),
+                  disabled(2)
+                }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+               "This indicates the global state of the IGMP snooping multicast VLAN."
+        ::={ swMcastVlanCtrl 1 }
+
+     swMSMVlanGlobalState  OBJECT-TYPE
+        SYNTAX  INTEGER
+                {
+                  enabled(1),
+                  disabled(2)
+                }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+               "This indicates the global state of the MLD snooping multicast VLAN."
+        ::={ swMcastVlanCtrl 2 }
+        
+     swISMVlanForwardUnmatchedState  OBJECT-TYPE
+        SYNTAX  INTEGER
+                {
+                  enabled(1),
+                  disabled(2)
+                }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+               "This indicates the IGMP snooping multicast VLAN's forwarding 
+               state for Multicast VLAN unmatched packet."
+        ::={ swMcastVlanCtrl 3 }
+
+     swMSMVlanForwardUnmatchedState  OBJECT-TYPE
+        SYNTAX  INTEGER
+                {
+                  enabled(1),
+                  disabled(2)
+                }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+               "This indicates the MLD snooping multicast VLAN's forwarding 
+               state for Multicast VLAN unmatched packet."
+        ::={ swMcastVlanCtrl 4 }
+        
+     swISMVlanAutoAssignVLANState  OBJECT-TYPE
+        SYNTAX  INTEGER
+                {
+                  enabled(1),
+                  disabled(2)
+                }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+               "This indicates the IGMP snooping multicast VLAN's auto assign VLAN state."
+        ::={ swMcastVlanCtrl 5 }
+
+     swMSMVlanAutoAssignVLANState  OBJECT-TYPE
+        SYNTAX  INTEGER
+                {
+                  enabled(1),
+                  disabled(2)
+                }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+               "This indicates the MLD snooping multicast VLAN's auto assign VLAN state."
+        ::={ swMcastVlanCtrl 6 }
+
+-- -----------------------------------------------------------------------------
+-- swMcastVlanInfo
+-- -----------------------------------------------------------------------------
+    	     	
+-- -----------------------------------------------------------------------------
+-- swMcastVlanMgmt
+-- -----------------------------------------------------------------------------
+
+    swISMVlanTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwISMVlanEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This contains information about the IGMP snooping multicast VLAN table."
+        ::= { swMcastVlanMgmt 1 }
+
+    swISMVlanEntry OBJECT-TYPE
+        SYNTAX  SwISMVlanEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swISMVlanTable."
+        INDEX  { swISMVlanID}
+        ::= { swISMVlanTable 1 }
+
+    SwISMVlanEntry ::=
+        SEQUENCE {
+            swISMVlanID
+                INTEGER,
+            swISMVlanName
+                DisplayString,
+            swISMVlanSourcePort
+                PortList,
+            swISMVlanMemberPort
+                PortList,
+            swISMVlanTagMemberPort
+                PortList,
+            swISMVlanUntagSourcePort
+       	        PortList,
+            swISMVlanState
+                INTEGER,
+       	    swISMVlanRepSourceAddrType
+       	        InetAddressType,
+            swISMVlanRepSourceAddr
+                InetAddress,
+            swISMVlanRemapPriority
+                INTEGER,
+            swISMVlanReplacePriority
+                INTEGER,
+            swISMVlanProfileIDList
+                DisplayString,
+            swISMVlanRowStatus
+                RowStatus,
+            swISMVlanRepSourceAddrActionType
+                INTEGER,
+            swISMVlanRepSourceAddrFromPorts
+                INTEGER,
+            swISMVlanCustomerVlanID
+            	INTEGER
+        }
+
+    swISMVlanID OBJECT-TYPE
+        SYNTAX  INTEGER (2..4094)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the VLAN ID of the IGMP snooping multicast
+             VLAN entry."
+        ::= { swISMVlanEntry 1 }
+
+    swISMVlanName OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..32))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This indicates the VLAN name of the IGMP snooping multicast
+             VLAN entry."
+        ::= { swISMVlanEntry 2 }
+
+    swISMVlanSourcePort OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the port list of the source ports of the IGMP
+             snooping multicast VLAN. The source ports will be set as tag ports
+             of the VLAN entry and the IGMP control messages received from the
+             member ports will be forwarded to the source ports."
+        ::= { swISMVlanEntry 3 }
+
+    swISMVlanMemberPort OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the port list of the member ports of the IGMP
+             snooping multicast VLAN. The source ports will be set as untagged ports
+             of the VLAN entry and the IGMP control messages received from the
+             member ports will be forwarded to the source ports."
+        ::= { swISMVlanEntry 4 }
+
+    swISMVlanTagMemberPort OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the port list of the tag member ports of the IGMP
+             snooping multicast VLAN."
+        ::= { swISMVlanEntry 5 }
+
+    swISMVlanUntagSourcePort   OBJECT-TYPE
+        SYNTAX PortList
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "This indicates the untagged member ports to add to the multicast VLAN."
+        ::={ swISMVlanEntry 6}        
+    		
+    swISMVlanState OBJECT-TYPE
+        SYNTAX  INTEGER{
+        	enabled(1),
+        	disabled(2)
+        	}
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This can be used to enable or disable the IGMP snooping multicast VLAN."
+        ::= { swISMVlanEntry 7 }
+
+    swISMVlanRepSourceAddrType OBJECT-TYPE
+    	SYNTAX  InetAddressType
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This is the type of multicast VLAN replacement address as specified by
+	    object 'swISMVlanRepSourceAddr'."
+        ::= { swISMVlanEntry 8 }
+
+    swISMVlanRepSourceAddr OBJECT-TYPE
+    	SYNTAX  InetAddress
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This is the replacement address of this multicast VLAN."
+        ::= { swISMVlanEntry 9 }
+            	
+    swISMVlanRemapPriority   OBJECT-TYPE
+        SYNTAX INTEGER (-1|0..7)
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "This is the priority value (0 to 7) to be associated with the data traffic
+            to be forwarded on the multicast VLAN.
+            When set to -1, the packet's original priority will be used."
+        DEFVAL {-1}
+        ::={ swISMVlanEntry 10}
+
+        swISMVlanReplacePriority  OBJECT-TYPE
+        SYNTAX INTEGER {
+                   enabled(1),
+                   disabled(2)
+                   }
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "This specifies that a packet's priority will be changed by the switch
+            based on the remap priority. This flag will only take effect
+            when remap priority is set."
+        ::={ swISMVlanEntry 11}
+
+    swISMVlanProfileIDList OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This specifies a profile ID list for each VLAN ID
+            of the IGMP snooping multicast VLAN entry."
+        ::= { swISMVlanEntry 12 }
+
+        
+    swISMVlanRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This indicates the status of this entry."
+        ::= { swISMVlanEntry 13 }
+
+    swISMVlanRepSourceAddrActionType OBJECT-TYPE
+        SYNTAX INTEGER {
+                   user-configure(1),
+                   system-ip(2),
+                   not-replace(3)
+                   }
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "This object specifies that swISMVlanRepSourceAddr is user 
+	     configured IP address or 'System' interface's primary address.
+	     If this object is 'not-replace', identifies 
+	     swISMVlanRepSourceAddr object does not take effect."
+        ::={ swISMVlanEntry 14}
+        
+    swISMVlanRepSourceAddrFromPorts OBJECT-TYPE
+        SYNTAX INTEGER {
+                   source-port(1),
+                   member-port(2),
+                   both(3)
+                   }
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+             "If from is specified, the user need choose the port role on which the replace 
+             source IP function will work. The default setting is 'both'.
+	     If 'souce_port' is chosen, source IP address of the IGMP report/leave packet 
+	     receiving on any multicast VLAN source port will be replaced.
+             If 'member_port' is chosen, source IP address of the IGMP report/leave packet 
+             receiving on any multicast VLAN member port will be replaced. 
+	     If the option both is chosen, source IP address of the IGMP report/leave packet 
+	     receiving on any port in the MVLAN will be replaced."
+        ::={ swISMVlanEntry 15}  
+        
+    swISMVlanCustomerVlanID OBJECT-TYPE
+        SYNTAX INTEGER (0..4094)
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "Specify Tthe customer VALN ID carrying in IGMP query when QinQ function 
+            is enabled.
+	    If zero is specified, no customer VLAN ID will be carried in IGMP query.
+	    The default setting is zero."
+        ::={ swISMVlanEntry 16} 
+        
+-- -----------------------------------------------------------------------------
+
+    swISMVlanGroupProfTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwISMVlanGroupProfEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains the IGMP snooping multicast VLAN
+            group profile name."
+        ::= { swMcastVlanMgmt 2 }
+
+    swISMVlanGroupProfEntry OBJECT-TYPE
+        SYNTAX  SwISMVlanGroupProfEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swISMVlanGroupProfTable."
+        INDEX  { swISMVlanGroupProfName }
+        ::= { swISMVlanGroupProfTable 1 }
+
+    SwISMVlanGroupProfEntry ::=
+        SEQUENCE {
+            swISMVlanGroupProfName
+                DisplayString,
+            swISMVlanGroupProfID
+                INTEGER,
+            swISMVlanGroupProfStatus
+                RowStatus
+        }
+
+    swISMVlanGroupProfName	OBJECT-TYPE
+    	SYNTAX      DisplayString
+    	MAX-ACCESS  read-only
+    	STATUS      current
+    	DESCRIPTION
+            "This indicates the name of the IGMP snooping multicast VLAN
+            group profile."
+    	::= { swISMVlanGroupProfEntry 1  }
+    	
+    swISMVlanGroupProfID	OBJECT-TYPE
+	SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the index of the IGMP snooping multicast VLAN
+            group profile."
+        ::= { swISMVlanGroupProfEntry 2 }
+
+    swISMVlanGroupProfStatus	OBJECT-TYPE
+        SYNTAX   RowStatus
+        MAX-ACCESS read-create
+        STATUS   current
+        DESCRIPTION
+        	"This indicates the status of this entry."		
+        ::= { swISMVlanGroupProfEntry 3 }
+           	
+-- -----------------------------------------------------------------------------
+
+    swISMVlanGroupProfAddrTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwISMVlanGroupProfAddrEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains the multicast address of each
+            IGMP snooping multicast VLAN group profile."
+        ::= { swMcastVlanMgmt 3 }
+
+    swISMVlanGroupProfAddrEntry OBJECT-TYPE
+        SYNTAX  SwISMVlanGroupProfAddrEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swISMVlanGroupProfAddrTable."
+        INDEX  { swISMVlanGroupProfName,swISMVlanGroupProfAddrType,
+               swISMVlanGroupProfAddrStart,swISMVlanGroupProfAddrEnd }
+        ::= { swISMVlanGroupProfAddrTable 1 }
+
+    SwISMVlanGroupProfAddrEntry ::=
+        SEQUENCE {
+            swISMVlanGroupProfAddrType
+                InetAddressType,
+            swISMVlanGroupProfAddrStart
+                InetAddress,
+            swISMVlanGroupProfAddrEnd
+                InetAddress,
+            swISMVlanGroupProfAddrStatus
+                RowStatus
+        }
+
+    swISMVlanGroupProfAddrType OBJECT-TYPE
+    	SYNTAX  InetAddressType
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This is the type of multicast address as specified by
+	    object 'swISMVlanGroupProfAddrToIp'."
+        ::= { swISMVlanGroupProfAddrEntry 1 }
+        
+    swISMVlanGroupProfAddrStart	OBJECT-TYPE
+    	SYNTAX      InetAddress
+    	MAX-ACCESS  read-only
+    	STATUS      current
+    	DESCRIPTION
+       		"This specifies the multicast address list for this profile."
+    	::= { swISMVlanGroupProfAddrEntry 2  }
+            		
+    swISMVlanGroupProfAddrEnd	OBJECT-TYPE
+    	SYNTAX      InetAddress
+    	MAX-ACCESS  read-only
+    	STATUS      current
+    	DESCRIPTION
+       		"The specifies the multicast address list for this profile."
+    	::= { swISMVlanGroupProfAddrEntry 3  }
+    	
+    swISMVlanGroupProfAddrStatus	OBJECT-TYPE
+        SYNTAX   RowStatus
+        MAX-ACCESS read-create
+        STATUS   current
+        DESCRIPTION
+        	"This indicates the status of this entry."		
+        ::= { swISMVlanGroupProfAddrEntry 4 }
+
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+
+    swMSMVlanTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMSMVlanEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This contains information about the MLD snooping multicast VLAN table."
+        ::= { swMcastVlanMgmt 4 }
+
+    swMSMVlanEntry OBJECT-TYPE
+        SYNTAX  SwMSMVlanEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swMSMVlanTable."
+        INDEX  { swMSMVlanID}
+        ::= { swMSMVlanTable 1 }
+
+    SwMSMVlanEntry ::=
+        SEQUENCE {
+            swMSMVlanID
+                INTEGER,
+            swMSMVlanName
+                DisplayString,
+            swMSMVlanSourcePort
+                PortList,
+            swMSMVlanMemberPort
+                PortList,
+            swMSMVlanTagMemberPort
+                PortList,
+            swMSMVlanUntagSourcePort
+       	        PortList,
+            swMSMVlanState
+                INTEGER,
+       	    swMSMVlanRepSourceAddrType
+       	        InetAddressType,
+            swMSMVlanRepSourceAddr
+                InetAddress,
+            swMSMVlanRemapPriority
+                INTEGER,
+            swMSMVlanReplacePriority
+                INTEGER,
+            swMSMVlanProfileIDList
+                DisplayString,
+            swMSMVlanRowStatus
+                RowStatus,
+            swMSMVlanRepSourceAddrActionType
+                INTEGER,
+            swMSMVlanRepSourceAddrFromPorts
+                INTEGER,
+            swMSMVlanCustomerVlanID
+            	INTEGER
+        }
+
+    swMSMVlanID OBJECT-TYPE
+        SYNTAX  INTEGER (2..4094)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the VLAN ID of the MLD snooping multicast
+             VLAN entry."
+        ::= { swMSMVlanEntry 1 }
+
+    swMSMVlanName OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (0..32))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This indicates the VLAN name of the MLD snooping multicast
+             VLAN entry."
+        ::= { swMSMVlanEntry 2 }
+
+    swMSMVlanSourcePort OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the port list of the source ports of the MLD
+             snooping multicast VLAN. The source ports will be set as tag ports
+             of the VLAN entry and the MLD control messages received from the
+             member ports will be forwarded to the source ports."
+        ::= { swMSMVlanEntry 3 }
+
+    swMSMVlanMemberPort OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the port list of the member ports of the MLD
+             snooping multicast VLAN. The source ports will be set as untagged ports
+             of the VLAN entry and the MLD control messages received from the
+             member ports will be forwarded to the source ports."
+        ::= { swMSMVlanEntry 4 }
+
+    swMSMVlanTagMemberPort OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This indicates the port list of the tag member ports of the MLD
+             snooping multicast VLAN."
+        ::= { swMSMVlanEntry 5 }
+
+    swMSMVlanUntagSourcePort   OBJECT-TYPE
+        SYNTAX PortList
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+            "This indicates the untagged member ports to add to the multicast VLAN."
+        ::={ swMSMVlanEntry 6}
+    		
+    swMSMVlanState OBJECT-TYPE
+        SYNTAX  INTEGER{
+        	enabled(1),
+        	disabled(2)
+        	}
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This can be used to enable or disable the MLD snooping multicast VLAN."
+        ::= { swMSMVlanEntry 7 }
+
+    swMSMVlanRepSourceAddrType OBJECT-TYPE
+    	SYNTAX  InetAddressType
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This is the type of multicast VLAN replacement address as specified by
+	    object 'swMSMVlanRepSourceAddr'."
+        ::= { swMSMVlanEntry 8 }
+
+    swMSMVlanRepSourceAddr OBJECT-TYPE
+    	SYNTAX  InetAddress
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This is the replacement address of this multicast VLAN."
+        ::= { swMSMVlanEntry 9 }
+            	
+    swMSMVlanRemapPriority   OBJECT-TYPE
+        SYNTAX INTEGER (-1|0..7)
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "This is the priority value (0 to 7) to be associated with the data traffic
+            to be forwarded on the multicast VLAN.
+            When set to -1, the packet's original priority will be used."
+        DEFVAL {-1}
+        ::={ swMSMVlanEntry 10}
+
+        swMSMVlanReplacePriority  OBJECT-TYPE
+        SYNTAX INTEGER {
+                   enabled(1),
+                   disabled(2)
+                   }
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "This specifies that a packet's priority will be changed by the switch
+            based on the remap priority. This flag will only take effect
+            when remap priority is set."
+        ::={ swMSMVlanEntry 11}
+
+    swMSMVlanProfileIDList OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This specifies a profile ID list for each VLAN ID
+            of the MLD snooping multicast VLAN entry."
+        ::= { swMSMVlanEntry 12 }
+
+
+    swMSMVlanRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This indicates the status of this entry."
+        ::= { swMSMVlanEntry 13 }
+
+    swMSMVlanRepSourceAddrActionType OBJECT-TYPE
+        SYNTAX INTEGER {
+                   user-configure(1),
+                   system-ip(2),
+                   not-replace(3)
+                   }
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "This object specifies that swMSMVlanRepSourceAddr is user 
+			configured IP address or 'System' interface's IPv6 Link-Local
+			address.  This object is 'not-replace', identifies 
+            swMSMVlanRepSourceAddr object does not take effect."
+        ::={ swMSMVlanEntry 14}
+        
+    swMSMVlanRepSourceAddrFromPorts OBJECT-TYPE
+        SYNTAX INTEGER {
+                   source-port(1),
+                   member-port(2),
+                   both(3)
+                   }
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "If from is specified, the user need choose the port role on which the replace 
+             source IP function will work. The default setting is 'both'.
+	     If 'souce_port' is chosen, source IP address of the MLD report/done packet 
+	     receiving on any multicast VLAN source port will be replaced.
+             If 'member_port' is chosen, source IP address of the MLD report/done packet 
+             receiving on any multicast VLAN member port will be replaced. 
+	     If the option both is chosen, source IP address of the MLD report/done packet 
+	     receiving on any port in the MVLAN will be replaced."
+        ::={ swMSMVlanEntry 15}  
+        
+     swMSMVlanCustomerVlanID OBJECT-TYPE
+        SYNTAX INTEGER (0..4094)
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "Specify Tthe customer VALN ID carrying in MLD query when QinQ function 
+            is enabled.
+	    If zero is specified, no customer VLAN ID will be carried in MLD query.
+	    The default setting is zero."
+        ::={ swMSMVlanEntry 16} 
+           
+-- -----------------------------------------------------------------------------
+
+    swMSMVlanGroupProfTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMSMVlanGroupProfEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains the MLD snooping multicast VLAN
+            group profile name."
+        ::= { swMcastVlanMgmt 5 }
+
+    swMSMVlanGroupProfEntry OBJECT-TYPE
+        SYNTAX  SwMSMVlanGroupProfEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swMSMVlanGroupProfTable."
+        INDEX  { swMSMVlanGroupProfName }
+        ::= { swMSMVlanGroupProfTable 1 }
+
+    SwMSMVlanGroupProfEntry ::=
+        SEQUENCE {
+            swMSMVlanGroupProfName
+                DisplayString,
+            swMSMVlanGroupProfID
+                INTEGER,
+            swMSMVlanGroupProfStatus
+                RowStatus
+        }
+
+    swMSMVlanGroupProfName	OBJECT-TYPE
+    	SYNTAX      DisplayString
+    	MAX-ACCESS  read-only
+    	STATUS      current
+    	DESCRIPTION
+            "This indicates the name of the MLD snooping multicast VLAN
+            group profile."
+    	::= { swMSMVlanGroupProfEntry 1  }
+    	
+    swMSMVlanGroupProfID	OBJECT-TYPE
+	SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This indicates the index of the MLD snooping multicast VLAN
+            group profile."
+        ::= { swMSMVlanGroupProfEntry 2 }
+
+    swMSMVlanGroupProfStatus	OBJECT-TYPE
+        SYNTAX   RowStatus
+        MAX-ACCESS read-create
+        STATUS   current
+        DESCRIPTION
+        	"This indicates the status of this entry."		
+        ::= { swMSMVlanGroupProfEntry 3 }
+           	
+-- -----------------------------------------------------------------------------
+
+    swMSMVlanGroupProfAddrTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMSMVlanGroupProfAddrEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains the multicast address of each
+            MLD snooping multicast VLAN group profile."
+        ::= { swMcastVlanMgmt 6 }
+
+    swMSMVlanGroupProfAddrEntry OBJECT-TYPE
+        SYNTAX  SwMSMVlanGroupProfAddrEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swMSMVlanGroupProfAddrTable."
+        INDEX  { swMSMVlanGroupProfName,swMSMVlanGroupProfAddrType,
+               swMSMVlanGroupProfAddrStart,swMSMVlanGroupProfAddrEnd }
+        ::= { swMSMVlanGroupProfAddrTable 1 }
+
+    SwMSMVlanGroupProfAddrEntry ::=
+        SEQUENCE {
+            swMSMVlanGroupProfAddrType
+                InetAddressType,
+            swMSMVlanGroupProfAddrStart
+                InetAddress,
+            swMSMVlanGroupProfAddrEnd
+                InetAddress,
+            swMSMVlanGroupProfAddrStatus
+                RowStatus
+        }
+
+    swMSMVlanGroupProfAddrType OBJECT-TYPE
+    	SYNTAX  InetAddressType
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This is the type of multicast address as specified by
+	    object 'swMSMVlanGroupProfAddrToIp'."
+        ::= { swMSMVlanGroupProfAddrEntry 1 }
+
+    swMSMVlanGroupProfAddrStart	OBJECT-TYPE
+    	SYNTAX      InetAddress
+    	MAX-ACCESS  read-only
+    	STATUS      current
+    	DESCRIPTION
+       		"This specifies the multicast address list for this profile."
+    	::= { swMSMVlanGroupProfAddrEntry 2  }
+            		
+    swMSMVlanGroupProfAddrEnd	OBJECT-TYPE
+    	SYNTAX      InetAddress
+    	MAX-ACCESS  read-only
+    	STATUS      current
+    	DESCRIPTION
+       		"The specifies the multicast address list for this profile."
+    	::= { swMSMVlanGroupProfAddrEntry 3  }
+    	
+    swMSMVlanGroupProfAddrStatus	OBJECT-TYPE
+        SYNTAX   RowStatus
+        MAX-ACCESS read-create
+        STATUS   current
+        DESCRIPTION
+        	"This indicates the status of this entry."		
+        ::= { swMSMVlanGroupProfAddrEntry 4 }
+        
+END

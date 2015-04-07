@@ -1,0 +1,2576 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : EGRESSACL-MIB
+-- FILE NAME: EgressACL.MIB  
+-- DATE     : 2010/01/11
+-- VERSION  : 1.00  
+-- PURPOSE  : To construct the MIB structure of egress ACL information for
+--            proprietary enterprise			 
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+-- [New Object]
+-- [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2010/01/11, Peterson Zhou
+-- This is the first formal version for universal MIB definition.
+-- Notes:Requested by Peterson Zhou for project DGS3210	
+-- -----------------------------------------------------------------------------
+
+EGRESSACL-MIB DEFINITIONS ::= BEGIN
+
+        IMPORTS
+        Counter32,Counter64,TimeTicks,NOTIFICATION-TYPE,
+        MODULE-IDENTITY,OBJECT-TYPE,IpAddress, Unsigned32
+                                        FROM SNMPv2-SMI
+        MacAddress, RowStatus           FROM SNMPv2-TC
+        DisplayString                   FROM RFC1213-MIB
+        SnmpAdminString                 FROM SNMP-FRAMEWORK-MIB 
+        PortList, VlanIdOrNone          FROM Q-BRIDGE-MIB
+        Ipv6Address                     FROM IPV6-TC                   
+        dlink-common-mgmt               FROM DLINK-ID-REC-MIB;
+
+    swEgressAclMgmtMIB MODULE-IDENTITY
+            LAST-UPDATED "1001110000Z"
+            ORGANIZATION "D-Link Corp."
+            CONTACT-INFO
+                "http://support.dlink.com"
+            DESCRIPTION
+                    "The structure of Egress Access Control List information for the
+                    proprietary enterprise."
+        ::= { dlink-common-mgmt 89 }
+
+    swEgressAclInfo		 		 OBJECT IDENTIFIER ::= { swEgressAclMgmtMIB 1 }
+    swEgressAclMaskMgmt          OBJECT IDENTIFIER ::= { swEgressAclMgmtMIB 2 }  
+    swEgressAclRuleMgmt          OBJECT IDENTIFIER ::= { swEgressAclMgmtMIB 3 }  
+    swEgressAclMeteringMgmt      OBJECT IDENTIFIER ::= { swEgressAclMgmtMIB 4 }
+    
+-- -----------------------------------------------------------------------------
+-- swEgressAclInfo
+-- -----------------------------------------------------------------------------
+    swEgressACLTotalUsedRuleEntries OBJECT-TYPE
+        SYNTAX INTEGER
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "The total number of used egress ACL rule entries."
+        ::={ swEgressAclInfo 1}
+
+    swEgressACLTotalUnusedRuleEntries OBJECT-TYPE
+        SYNTAX INTEGER
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "The total number of unused egress ACL rule entries."
+        ::={ swEgressAclInfo 2} 
+ 
+-- -----------------------------------------------------------------------------
+-- swEgressACLEthernetTable
+-- -----------------------------------------------------------------------------
+  swEgressACLEthernetTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwEgressACLEthernetEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains egress ACL mask Ethernet information.
+             The access profile will be created on the switch to define which
+             part of each outgoing frame's layer 2 header will be examined
+             by the switch. Masks entered will be combined with the
+             values the switch finds in the specified frame header fields."
+        ::= { swEgressAclMaskMgmt 1 }
+
+    swEgressACLEthernetEntry OBJECT-TYPE
+        SYNTAX  SwEgressACLEthernetEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information about the egress ACL for Ethernet."
+        INDEX  { swEgressACLEthernetProfileID }
+        ::= { swEgressACLEthernetTable 1 }
+
+    SwEgressACLEthernetEntry ::=
+        SEQUENCE {
+            swEgressACLEthernetProfileID
+                INTEGER,
+            swEgressACLEthernetRowStatus
+                RowStatus,    
+            swEgressACLEthernetProfileName
+                DisplayString,
+            swEgressACLEthernetUsevlan
+                INTEGER,      
+            swEgressACLEthernetVlanMask
+            	OCTET STRING,
+            swEgressACLEthernetUse8021p
+                INTEGER, 
+            swEgressACLEthernetUseEthernetType
+                INTEGER,
+            swEgressACLEthernetMacAddrMaskState
+                INTEGER,
+            swEgressACLEthernetSrcMacAddrMask
+                MacAddress,
+            swEgressACLEthernetDstMacAddrMask
+                MacAddress,
+            swEgressACLEthernetUnusedRuleEntries
+                INTEGER
+           }
+
+    swEgressACLEthernetProfileID OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The ID of the egress ACL mask entry unique to the mask list. The maximum value of this object depends on the device."
+        ::= { swEgressACLEthernetEntry 1 }  
+             
+    swEgressACLEthernetRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swEgressACLEthernetEntry 2 }   
+        
+    swEgressACLEthernetProfileName OBJECT-TYPE
+        SYNTAX DisplayString(SIZE(1..32))
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "The name of the egress ACL mask entry unique to the mask list."
+        ::= { swEgressACLEthernetEntry 3 }
+       
+    swEgressACLEthernetUsevlan OBJECT-TYPE
+        SYNTAX  INTEGER {
+             enabled(1),
+             disabled(2)
+             }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the switch will examine the VLAN part of each packet header."
+        ::= { swEgressACLEthernetEntry 4 }  
+        
+    swEgressACLEthernetVlanMask OBJECT-TYPE
+        SYNTAX OCTET STRING(SIZE(2))
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "The mask used for the VLAN ID.
+             Valid values are from 0x0000 to 0x0FFF.
+             The default value is 0x0FFF
+            "
+        ::= { swEgressACLEthernetEntry 5 }  
+           
+     swEgressACLEthernetUse8021p OBJECT-TYPE
+        SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies if the switch will examine the 802.1p priority value in the frame's header
+              or not."
+        ::= { swEgressACLEthernetEntry 6 }
+
+     swEgressACLEthernetUseEthernetType OBJECT-TYPE
+        SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies if the switch will examine the Ethernet type value in each frame's header
+              or not."
+        ::= { swEgressACLEthernetEntry 7 }
+    
+
+     swEgressACLEthernetMacAddrMaskState OBJECT-TYPE
+                SYNTAX  INTEGER {
+               other(1),
+               dst-mac-addr(2),
+               src-mac-addr(3),
+               dst-src-mac-addr(4)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of the MAC address mask.
+                other (1) - Neither source MAC address nor destination MAC address is masked.
+                dst-mac-addr (2) - Destination MAC addresses within received frames are
+                    to be filtered when matched with the MAC address entry for the table.
+                src-mac-addr (3) - Source MAC addresses within received frames are to
+                    be filtered when matched with the MAC address entry for the table.
+                dst-src-mac-addr (4) - Source or destination MAC addresses within received
+                    frames are to be filtered when matched with the MAC address entry of the table."
+        ::= { swEgressACLEthernetEntry 8 }
+
+    swEgressACLEthernetSrcMacAddrMask OBJECT-TYPE
+        SYNTAX  MacAddress
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object specifies the MAC address mask for the source MAC address."
+        ::= { swEgressACLEthernetEntry 9 }
+
+    swEgressACLEthernetDstMacAddrMask OBJECT-TYPE
+        SYNTAX  MacAddress
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object specifies the MAC address mask for the destination MAC address."
+        ::= { swEgressACLEthernetEntry 10 }
+
+    swEgressACLEthernetUnusedRuleEntries OBJECT-TYPE
+        SYNTAX INTEGER
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "The number of unused rule entries of this Ethernet profile entry."
+        ::={ swEgressACLEthernetEntry 11}
+       
+-- -----------------------------------------------------------------------------
+-- swEgressACLIpTable
+-- -----------------------------------------------------------------------------
+    swEgressACLIpTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwEgressACLIpEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains the egress ACL mask for IP information.
+             Access profiles will be created on the switch to define which
+             part of the outgoing frame's IP layer packet header will be
+             examined by the switch. Masks entered will be combined
+             with the values the switch finds in the specified frame
+             header fields."
+        ::= { swEgressAclMaskMgmt 2 }
+
+    swEgressACLIpEntry OBJECT-TYPE
+        SYNTAX  SwEgressACLIpEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information about the egress ACL of the IP layer."
+        INDEX  { swEgressACLIpProfileID }
+        ::= { swEgressACLIpTable 1 }
+
+    SwEgressACLIpEntry ::=
+        SEQUENCE {
+            swEgressACLIpProfileID
+                INTEGER,   
+            swEgressACLIpRowStatus
+                RowStatus,    
+            swEgressACLIpProfileName
+                DisplayString,
+            swEgressACLIpUsevlan
+                INTEGER, 
+            swEgressACLIpVlanMask
+                OCTET STRING,
+            swEgressACLIpIpAddrMaskState
+                INTEGER,
+            swEgressACLIpSrcIpAddrMask
+                IpAddress,
+            swEgressACLIpDstIpAddrMask
+                IpAddress,
+            swEgressACLIpUseDSCP
+                INTEGER,
+            swEgressACLIpUseProtoType
+                INTEGER,
+            swEgressACLIpIcmpOption
+                INTEGER,
+            swEgressACLIpIgmpOption
+                INTEGER,
+            swEgressACLIpTcpOption
+                INTEGER,
+            swEgressACLIpUdpOption
+                INTEGER,
+            swEgressACLIpTCPorUDPSrcPortMask
+                OCTET STRING,
+            swEgressACLIpTCPorUDPDstPortMask
+                OCTET STRING,
+            swEgressACLIpTCPFlagBit
+                INTEGER,
+            swEgressACLIpTCPFlagBitMask
+                INTEGER,
+            swEgressACLIpProtoIDOption
+                INTEGER,
+            swEgressACLIpProtoID
+                INTEGER,
+            swEgressACLIpProtoIDMask
+                OCTET STRING,
+            swEgressACLIpUnusedRuleEntries
+                INTEGER
+        } 
+        
+    swEgressACLIpProfileID OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The ID of the egress ACL mask entry, which is unique to the mask list. The maximum value of this object depends on the device."
+        ::= { swEgressACLIpEntry 1 }   
+       
+    swEgressACLIpRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swEgressACLIpEntry 2 }
+    
+    swEgressACLIpProfileName OBJECT-TYPE
+        SYNTAX DisplayString(SIZE(1..32))
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "The name of the egress ACL mask entry unique to the mask list."
+        ::= { swEgressACLIpEntry 3 }
+        
+    swEgressACLIpUsevlan OBJECT-TYPE
+        SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the IP layer VLAN part is examined or not."
+        ::= { swEgressACLIpEntry 4 }   
+        
+     swEgressACLIpVlanMask OBJECT-TYPE
+        SYNTAX OCTET STRING(SIZE(2))
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "The mask used for the VLAN ID.
+             Valid values are from 0x0000 to 0x0FFF.
+             The default value is 0x0FFF.
+            "
+        ::= { swEgressACLIpEntry 5 }            
+
+     swEgressACLIpIpAddrMaskState OBJECT-TYPE
+                SYNTAX  INTEGER {
+               other(1),
+               dst-ip-addr(2),
+               src-ip-addr(3),
+               dst-src-ip-addr(4)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of IP address mask.
+
+             other (1) - Neither source IP address nor destination IP address is
+                masked.
+             dst-ip-addr (2) - Destination IP addresses within received frames
+                are to be filtered when matched with the IP address entry of the table.
+             src-ip-addr (3) - Source IP addresses within received frames are
+                to be filtered when matched with the IP address entry of the table.
+             dst-src-ip-addr (4) - Destination or source IP addresses within received
+                frames are to be filtered when matched with the IP address entry of the
+                table."
+        ::= { swEgressACLIpEntry 6 }
+
+    swEgressACLIpSrcIpAddrMask OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object specifies the IP address mask for the source IP address."
+        ::= { swEgressACLIpEntry 7 }
+
+    swEgressACLIpDstIpAddrMask OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object specifies the IP address mask for the destination IP address."
+        ::= { swEgressACLIpEntry 8 }
+
+    swEgressACLIpUseDSCP OBJECT-TYPE
+        SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the DSCP protocol in the packet header
+             is to be examined or not."
+        ::= { swEgressACLIpEntry 9 }
+
+    swEgressACLIpUseProtoType OBJECT-TYPE
+        SYNTAX  INTEGER {
+               none(1),
+               icmp(2),
+               igmp(3),
+               tcp(4),
+               udp(5),
+               protocolId(6)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "That object indicates which protocol will be examined."
+        ::= { swEgressACLIpEntry 10 }
+
+    swEgressACLIpIcmpOption OBJECT-TYPE
+        SYNTAX  INTEGER {
+               none(1),
+               type(2),
+               code(3),
+               type-code(4)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates which fields are defined for ICMP.
+             none (1)- Both fields are null.
+             type (2)- Type field identified.
+             code (3)- Code field identified.
+             type-code (4)- Both ICMP fields identified.
+            "
+        ::= { swEgressACLIpEntry 11 }
+
+    swEgressACLIpIgmpOption OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+              }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Indicates if the IGMP options field is identified or not."
+        ::= { swEgressACLIpEntry 12 }
+
+    swEgressACLIpTcpOption OBJECT-TYPE
+        SYNTAX  INTEGER {
+               other(1),
+               dst-addr(2),
+               src-addr(3),
+               dst-src-addr(4)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of the filtered address of TCP.
+
+             other (1) - Neither source port nor destination port is
+                masked.
+             dst-addr (2) - Packets will be filtered if this destination port
+                is identified in received frames.
+             src-addr (3) - Packets will be filtered if this source port is
+                identified in received frames.
+             dst-src-addr (4) - Packets will be filtered if this destination
+                or source port is identified in received frames."
+        ::= { swEgressACLIpEntry 13 }
+
+    swEgressACLIpUdpOption OBJECT-TYPE
+        SYNTAX  INTEGER {
+               other(1),
+               dst-addr(2),
+               src-addr(3),
+               dst-src-addr(4)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of the filtered address of UDP .
+
+             other (1) - Neither source port nor destination port is
+                masked.
+             dst-addr (2) - Packets will be filtered if this destination port
+                is identified in received frames.
+             src-addr (3) - Packets will be filtered if this source port is
+                identified in received frames.
+             dst-src-addr (4) - Packets will be filtered if this destination
+                or source port is identified in received frames."
+
+        ::= { swEgressACLIpEntry 14 }
+
+    swEgressACLIpTCPorUDPSrcPortMask OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE(2))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies a TCP port mask for the source port if swEgressACLIpUseProtoType is TCP
+             Specifies a UDP port mask for the source port if swEgressACLIpUseProtoType is UDP.
+             "
+        ::= { swEgressACLIpEntry 15 }
+
+    swEgressACLIpTCPorUDPDstPortMask OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE(2))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies a TCP port mask for the destination port if swEgressACLIpUseProtoType is TCP
+             Specifies a UDP port mask for the destination port if swEgressACLIpUseProtoType is UDP."
+        ::= { swEgressACLIpEntry 16 }
+
+    swEgressACLIpTCPFlagBit OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies a TCP connection flag mask."
+        ::= { swEgressACLIpEntry 17 }
+
+    swEgressACLIpTCPFlagBitMask OBJECT-TYPE
+        SYNTAX  INTEGER(0..63)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "A value which indicates the set of TCP flags that this
+             entity may potentially offer. The value is a sum of flag bits.
+             This sum initially takes the value zero. Then, for each flag, L,
+             is added in the range 1 through 6, for which this node performs
+             transactions where 2^(L-1) is added to the sum.
+             Note that values should be calculated accordingly:
+
+                 Flag      functionality
+                   6        urg bit
+                   5        ack bit
+                   4        psh bit
+                   3        rst bit
+                   2        syn bit
+                   1        fin bit
+             For example, if you want to enable urg bit and ack bit, you
+             should set value 48{2^(5-1) + 2^(6-1)}."
+        ::= { swEgressACLIpEntry 18 }
+
+    swEgressACLIpProtoIDOption OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies if the switch will examine each frame's protocol ID field or not."
+        ::= { swEgressACLIpEntry 19 }
+
+    swEgressACLIpProtoID OBJECT-TYPE
+        SYNTAX  INTEGER(0..255)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the rule applies to the IP protocol ID behind the IP header."
+        ::= { swEgressACLIpEntry 20 }
+
+    swEgressACLIpProtoIDMask OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE(4))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the rule applies to the IP protocol ID and the mask options
+             behind the IP header."
+        ::= { swEgressACLIpEntry 21 }
+
+   swEgressACLIpUnusedRuleEntries OBJECT-TYPE
+        SYNTAX INTEGER
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "The number of unused rule entries this IP profile entry."
+        ::={ swEgressACLIpEntry 22}
+
+-- -----------------------------------------------------------------------------
+-- swEgressACLIpv6MaskTable
+-- -----------------------------------------------------------------------------
+    swEgressACLIpv6MaskTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwEgressACLIpv6MaskEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+          "This table contains IPv6 egress ACL mask information.
+           An access profile will be created on the switch to define which
+           parts of each outgoing frame's IPv6 part of the packet header will
+           be examined by the switch. Masks entered will be combined
+           with the values the switch finds in the specified frame header fields."
+        ::= { swEgressAclMaskMgmt 3 }
+
+    swEgressACLIpv6MaskEntry OBJECT-TYPE
+        SYNTAX  SwEgressACLIpv6MaskEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+          "A list of information about egress ACL for IPv6."
+        INDEX  { swEgressACLIpv6MaskProfileID }
+        ::= { swEgressACLIpv6MaskTable 1 }
+
+    SwEgressACLIpv6MaskEntry ::=
+        SEQUENCE {
+            swEgressACLIpv6MaskProfileID
+                INTEGER,        
+            swEgressACLIpv6MaskRowStatus
+                RowStatus,
+            swEgressACLIpv6MaskProfileName
+                DisplayString,
+            swEgressACLIpv6MaskClass
+                INTEGER,
+            swEgressACLIpv6IpAddrMaskState
+                INTEGER,
+            swEgressACLIpv6MaskSrcIpv6Mask
+                Ipv6Address,
+            swEgressACLIpv6MaskDstIpv6Mask
+                Ipv6Address,  
+            swEgressACLIpv6MaskUseProtoType
+                INTEGER,
+            swEgressACLIpv6MaskIcmpOption
+                INTEGER,
+            swEgressACLIpv6MaskTcpOption
+                INTEGER,
+            swEgressACLIpv6MaskUdpOption
+                INTEGER,
+            swEgressACLIpv6MaskTCPorUDPSrcPortMask
+                OCTET STRING,
+            swEgressACLIpv6MaskTCPorUDPDstPortMask
+                OCTET STRING,  
+            swEgressACLIpv6MaskUnusedRuleEntries
+                INTEGER
+        }           
+        
+    swEgressACLIpv6MaskProfileID OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The ID of the egress ACL mask entry, which is unique to the mask list. The maximum value of this object depends on the device."
+        ::= { swEgressACLIpv6MaskEntry 1 }
+           
+     swEgressACLIpv6MaskRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swEgressACLIpv6MaskEntry 2 }
+                  
+     swEgressACLIpv6MaskProfileName OBJECT-TYPE
+        SYNTAX DisplayString(SIZE(1..32))
+        MAX-ACCESS read-create
+        STATUS current
+        DESCRIPTION
+            "The name of egress ACL mask entry unique to the mask list."
+        ::= { swEgressACLIpv6MaskEntry 3 }
+
+    swEgressACLIpv6MaskClass OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the class field in the IPv6 packet header
+			is to be examined or not."
+        ::= { swEgressACLIpv6MaskEntry 4 }
+
+    swEgressACLIpv6IpAddrMaskState OBJECT-TYPE
+                SYNTAX  INTEGER {
+               other(1),
+               dst-ipv6-addr(2),
+               src-ipv6-addr(3),
+               dst-src-ipv6-addr(4)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of the IPv6 address mask.
+
+            other (1) - Neither source IPv6 address nor destination IPv6 address is
+                masked.
+            dst-ipv6-addr (2) - Received frame destination IPv6 address is
+                currently used to be filtered as it meets with the IPv6
+                address entry of the table.
+            src-ipv6-addr (3) - Received frame source IPv6 address is currently
+                used to be filtered as it meets with the IPv6 address entry of
+                the table.
+            dst-src-ipv6-addr (4) - Received frame destination IPv6 address or
+                source IPv6 address is currently used to be filtered as it meets
+                with the IPv6 address entry of the table."
+        ::= { swEgressACLIpv6MaskEntry 5 }
+
+    swEgressACLIpv6MaskSrcIpv6Mask OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object specifies the IPv6 address mask for the source IPv6 address."
+        ::= { swEgressACLIpv6MaskEntry 6 }
+
+    swEgressACLIpv6MaskDstIpv6Mask OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object specifies the IPv6 address mask for the destination IPv6 address."
+        ::= { swEgressACLIpv6MaskEntry 7 }
+                
+    swEgressACLIpv6MaskUseProtoType OBJECT-TYPE
+        SYNTAX  INTEGER {
+               none(1),
+               tcp(2),
+               udp(3),
+               icmp(4)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "That object indicates which protocol will be examined."
+        ::= { swEgressACLIpv6MaskEntry 8 }
+
+    swEgressACLIpv6MaskIcmpOption OBJECT-TYPE
+        SYNTAX  INTEGER {
+               none(1),
+               type(2),
+               code(3),
+               type-code(4)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates which fields are defined for ICMP.
+             none (1)- Both fields are null.
+             type (2)- Type field identified.
+             code (3)- Code field identified.
+             type-code (4)- Both ICMP fields identified.
+            "
+        ::= { swEgressACLIpv6MaskEntry 9 }
+        
+    swEgressACLIpv6MaskTcpOption OBJECT-TYPE
+        SYNTAX  INTEGER {
+               other(1),
+               dst-addr(2),
+               src-addr(3),
+               dst-src-addr(4)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of the filtered address of TCP.
+
+             other (1) - Neither source port nor destination port is
+                masked.
+             dst-addr (2) - Packets will be filtered if this destination port
+                is identified in received frames.
+             src-addr (3) - Packets will be filtered if this source port is
+                identified in received frames.
+             dst-src-addr (4) - Packets will be filtered if this destination
+                or source port is identified in received frames."
+        ::= { swEgressACLIpv6MaskEntry 10 }
+
+    swEgressACLIpv6MaskUdpOption OBJECT-TYPE
+        SYNTAX  INTEGER {
+               other(1),
+               dst-addr(2),
+               src-addr(3),
+               dst-src-addr(4)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of the filtered address of UDP.
+
+             other (1) - Neither source port nor destination port is
+                masked.
+             dst-addr (2) - Packets will be filtered if this destination port
+                is identified in received frames.
+             src-addr (3) - Packets will be filtered if this source port is
+                identified in received frames.
+             dst-src-addr (4) - Packets will be filtered if this destination
+                or source port is identified in received frames."
+
+        ::= { swEgressACLIpv6MaskEntry 11 }
+
+    swEgressACLIpv6MaskTCPorUDPSrcPortMask OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE(2))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies a TCP port mask for the source port if swEgressACLIpv6MaskUseProtoType is TCP
+             Specifies a UDP port mask for the source port if swEgressACLIpv6MaskUseProtoType is UDP.
+             "
+        ::= { swEgressACLIpv6MaskEntry 12 }
+
+    swEgressACLIpv6MaskTCPorUDPDstPortMask OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE(2))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies a TCP port mask for the destination port if swEgressACLIpv6MaskUseProtoType is TCP
+             Specifies a UDP port mask for the destination port if swEgressACLIpv6MaskUseProtoType is UDP."
+        ::= { swEgressACLIpv6MaskEntry 13 } 
+            
+   swEgressACLIpv6MaskUnusedRuleEntries OBJECT-TYPE
+        SYNTAX INTEGER
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "The number of unused rule entries of this IPv6 profile entry."
+        ::={ swEgressACLIpv6MaskEntry 14}
+      
+-- -----------------------------------------------------------------------------
+-- swEgressACLMaskDelAllState
+-- -----------------------------------------------------------------------------
+    swEgressACLMaskDelAllState OBJECT-TYPE
+        SYNTAX      INTEGER{
+                none(1),
+                start(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "Used to delete all egress ACL masks."
+        ::= { swEgressAclMaskMgmt 4 } 
+        
+        
+-- -----------------------------------------------------------------------------
+-- swEgressACLEtherRuleTable
+-- -----------------------------------------------------------------------------
+    swEgressACLEtherRuleTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwEgressACLEtherRuleEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains Ethernet egress ACL information."
+        ::= { swEgressAclRuleMgmt 1 }
+
+    swEgressACLEtherRuleEntry OBJECT-TYPE
+        SYNTAX  SwEgressACLEtherRuleEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information about the egress ACL rule of the layer 2 part of each packet."
+        INDEX  { swEgressACLEtherRuleProfileID,swEgressACLEtherRuleAccessID }
+        ::= { swEgressACLEtherRuleTable 1 }
+
+    SwEgressACLEtherRuleEntry ::=
+        SEQUENCE {
+            swEgressACLEtherRuleProfileID
+                INTEGER,
+            swEgressACLEtherRuleAccessID
+                INTEGER,
+            swEgressACLEtherRuleRowStatus
+                RowStatus,
+            swEgressACLEtherRuleMatchVID
+                VlanIdOrNone,
+            swEgressACLEtherRuleMatchVlanMask
+                OCTET STRING,
+            swEgressACLEtherRuleSrcMacAddress
+                MacAddress,
+            swEgressACLEtherRuleMaskSrcMacAddress
+                MacAddress,
+            swEgressACLEtherRuleDstMacAddress
+                MacAddress,
+            swEgressACLEtherRuleMaskDstMacAddress
+                MacAddress,
+            swEgressACLEtherRule8021P
+                INTEGER,
+            swEgressACLEtherRuleEtherType
+                OCTET STRING,
+            swEgressACLEtherRuleVID
+                VlanIdOrNone,
+            swEgressACLEtherRulePort
+                INTEGER,
+            swEgressACLEtherRulePortGroup
+               INTEGER,
+            swEgressACLEtherRulePermit
+                INTEGER,
+            swEgressACLEtherRuleEnableReplacePriority
+                INTEGER,
+            swEgressACLEtherRuleReplacePriority
+                INTEGER,
+            swEgressACLEtherRuleEnableReplaceDscp
+                INTEGER,
+            swEgressACLEtherRuleReplaceDscp
+                INTEGER,
+            swEgressAclEtherRuleTimeRangeName
+                DisplayString
+      }
+
+    swEgressACLEtherRuleProfileID OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The ID of the egress ACL rule entry, which is unique to the mask list.
+             The maximum value of this object depends on the device."
+        ::= { swEgressACLEtherRuleEntry 1 }
+
+    swEgressACLEtherRuleAccessID OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The ID of the the egress ACL rule entry relates to the swEgressACLEtherRuleProfileID.
+             When row creation is set to 0, this indicates the access ID will be assigned automatically.
+             When set from 1 to 65535, an access ID will be created for the rule.
+            "
+        ::= { swEgressACLEtherRuleEntry 2 }
+
+    swEgressACLEtherRuleRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swEgressACLEtherRuleEntry 3 }
+
+    swEgressACLEtherRuleMatchVID OBJECT-TYPE
+        SYNTAX  VlanIdOrNone
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the access rule will apply only to packets with
+             this VLAN ID. It is applied to the specified ports configured by swEgressACLEtherRulePortGroup.
+             Note:A value of 0 indicates that this object is not active."
+        ::= { swEgressACLEtherRuleEntry 4 }
+
+
+    swEgressACLEtherRuleMatchVlanMask OBJECT-TYPE
+        SYNTAX  OCTET STRING(SIZE(2))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the per rule mask for the VLAN field as defined in swEgressACLEtherRuleVlan object.
+             The value of this object when not in use is the corresponding mask in the profile mask.
+             Once the value of this object is modified, the per rule mask will take effect.
+            "
+        ::= { swEgressACLEtherRuleEntry 5 }
+
+    swEgressACLEtherRuleSrcMacAddress OBJECT-TYPE
+        SYNTAX  MacAddress
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the access rule will apply to only packets with
+             this source MAC address."
+        ::= { swEgressACLEtherRuleEntry 6 }
+
+    swEgressACLEtherRuleMaskSrcMacAddress OBJECT-TYPE
+        SYNTAX  MacAddress
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the per rule mask for the source MAC addres field as defined in swEgressACLEtherRuleSrcMacAddress object.
+             The value of this object when not in use is the corresponding mask in the profile mask.
+             Once the value of this object is modified, the per rule mask will take effect.
+            "
+        ::= { swEgressACLEtherRuleEntry 7 }
+
+
+    swEgressACLEtherRuleDstMacAddress OBJECT-TYPE
+        SYNTAX  MacAddress
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the access rule will apply to packets
+              with this destination MAC address."
+        ::= { swEgressACLEtherRuleEntry 8 }
+
+     swEgressACLEtherRuleMaskDstMacAddress OBJECT-TYPE
+        SYNTAX  MacAddress
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the per rule mask for the destination MAC addres field as defined in swEgressACLEtherRuleDstMacAddress object.
+             The value of this object when not in use is the corresponding mask in the profile mask.
+             Once the value of this object is modified, the per rule mask will take effect.
+            "
+        ::= { swEgressACLEtherRuleEntry 9 }
+
+    swEgressACLEtherRule8021P OBJECT-TYPE
+        SYNTAX  INTEGER(-1..7)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the access rule will apply to packets with
+              this 802.1p priority value. A value of -1 indicates that this object is not active."
+        ::= { swEgressACLEtherRuleEntry 10 }
+
+    swEgressACLEtherRuleEtherType OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE (2))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the access rule will apply to packets with this
+             hexadecimal 802.1Q Ethernet type value in the packet header."
+        ::= { swEgressACLEtherRuleEntry 11 }
+
+    swEgressACLEtherRuleVID OBJECT-TYPE
+        SYNTAX  VlanIdOrNone
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the VLAN-based ACL rule. There are two conditions:
+             1. this rule will apply to all the ports;
+             2. packets must belong to this VLAN.
+
+             This object and swEgressACLEtherRulePortGroup,swEgressACLEtherRulePort cannot be set together.
+             When you set swEgressACLEtherRulePortGroup or swEgressACLEtherRulePort, the value of this object will change to 0 automatically.
+             This object cannot be set to 0."
+        ::= { swEgressACLEtherRuleEntry 12 }
+        
+    swEgressACLEtherRulePort OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the access rule will only apply to the port.
+             This object and swEgressACLEtherRuleVID,swEgressACLEtherRulePortGroup can not be set together.
+	     When you set swEgressACLEtherRuleVID or swEgressACLEtherRulePortGroup,
+             the value of this object will change to 0 automatically.
+             This object can not be set to 0.
+	     A value of 0 indicates that this object is not active."
+        ::= { swEgressACLEtherRuleEntry 13 }
+        
+    swEgressACLEtherRulePortGroup OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the access rule will only apply to port(s) which belong to this port group.
+             This object and swEgressACLEtherRuleVID, swEgressACLEtherRulePort can not be set together.When you set swEgressACLEtherRuleVID or swEgressACLEtherRulePort
+             the value of this object will change to 0 automatically.
+             Note:The range of this object is (0..N). The value N means the max number. It is
+                  determined by the project itself.A value of 0 indicates that this object is not active."
+        ::= { swEgressACLEtherRuleEntry 14 }
+
+    swEgressACLEtherRulePermit OBJECT-TYPE
+        SYNTAX  INTEGER {
+               deny(1),
+               permit(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the result of the packet examination is 'permit' or 'deny'.
+             The default is 'permit'.
+             deny - Specifies that packets matching the access profile
+                    are not permitted to be forwarded by the switch and will be filtered.
+             permit - Specifies that packets matching the access profile are
+                      permitted to be forwarded by the switch.
+            "
+        ::= { swEgressACLEtherRuleEntry 15 }
+
+    swEgressACLEtherRuleEnableReplacePriority OBJECT-TYPE
+        SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies if the switch will change priorities of packets that match the access profile
+             802.1p priority tag field or not ."
+        ::= { swEgressACLEtherRuleEntry 16 }
+
+    swEgressACLEtherRuleReplacePriority OBJECT-TYPE
+        SYNTAX  INTEGER(-1..7)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the priority will be changed in packets while the swEgressACLEtherRuleEnablePriority
+             is enabled.A value of -1 indicates that this object is not active."
+        ::= { swEgressACLEtherRuleEntry 17 }
+
+    swEgressACLEtherRuleEnableReplaceDscp OBJECT-TYPE
+        SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies if the switch will change priorities of packets that match the access profile
+             DSCP field or not.
+            "
+        ::= { swEgressACLEtherRuleEntry 18 }
+
+    swEgressACLEtherRuleReplaceDscp OBJECT-TYPE
+        SYNTAX  INTEGER(-1..63)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies a value to be written to the DSCP field of an outgoing packet
+             that meets the criteria specified in the first part of the command.
+             This value will over-write the value in the DSCP field of the packet.
+             A value of -1 indicates that this object is not active."
+        ::= { swEgressACLEtherRuleEntry 19 }
+        
+    swEgressAclEtherRuleTimeRangeName OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies a name of a time-range associated with a specific egress
+             ACL entry. The time-range name must first be created before being
+             associated with the access rule. If this name is an empty
+             string, the time-range profile will no longer be
+             associated with the access rule. When a rule is de-associated
+             with a time range, the access rule will be enabled all the
+             time."
+        ::= { swEgressACLEtherRuleEntry 20 }
+
+-- -----------------------------------------------------------------------------
+-- swEgressACLIpRuleTable
+-- -----------------------------------------------------------------------------
+    swEgressACLIpRuleTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwEgressACLIpRuleEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            ""
+        ::= { swEgressAclRuleMgmt 2 }
+
+    swEgressACLIpRuleEntry OBJECT-TYPE
+        SYNTAX  SwEgressACLIpRuleEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            ""
+        INDEX  { swEgressACLIpRuleProfileID , swEgressACLIpRuleAccessID }
+        ::= { swEgressACLIpRuleTable 1 }
+
+    SwEgressACLIpRuleEntry ::=
+        SEQUENCE {
+            swEgressACLIpRuleProfileID
+                INTEGER,
+            swEgressACLIpRuleAccessID
+                INTEGER,
+            swEgressACLIpRuleRowStatus
+                RowStatus,
+            swEgressACLIpRuleMatchVID
+                VlanIdOrNone,
+            swEgressACLIpMatchVlanMask
+                OCTET STRING,
+            swEgressACLIpRuleSrcIpaddress
+                IpAddress,
+            swEgressACLIpRuleMaskSrcIpaddress
+                IpAddress,
+            swEgressACLIpRuleDstIpaddress
+                IpAddress,
+            swEgressACLIpRuleMaskDstIpaddress
+                IpAddress,
+            swEgressACLIpRuleDscp
+                INTEGER,
+            swEgressACLIpRuleProtocol
+                INTEGER,
+            swEgressACLIpRuleType
+                INTEGER,
+            swEgressACLIpRuleCode
+                INTEGER,
+            swEgressACLIpRuleSrcPort
+                INTEGER,
+            swEgressACLIpRuleMaskSrcPort
+                OCTET STRING,
+            swEgressACLIpRuleDstPort
+                INTEGER,
+            swEgressACLIpRuleMaskDstPort
+                OCTET STRING,
+            swEgressACLIpRuleFlagBits
+                INTEGER,
+            swEgressACLIpRuleProtoID
+                INTEGER,
+            swEgressACLIpRuleUserDefine
+                OCTET STRING,
+            swEgressACLIpRuleUserDefineMask
+                OCTET STRING,
+            swEgressACLIpRuleVID
+                VlanIdOrNone,
+            swEgressACLIpRulePort
+                INTEGER,
+            swEgressACLIpRulePortGroup
+                INTEGER,
+            swEgressACLIpRulePermit
+                INTEGER,
+            swEgressACLIpRuleEnableReplacePriority
+                INTEGER,
+            swEgressACLIpRuleReplacePriority
+                INTEGER,
+            swEgressACLIpRuleEnableReplaceDscp
+                INTEGER,
+            swEgressACLIpRuleReplaceDscp
+                INTEGER,
+            swEgressAclIpRuleTimeRangeName
+                DisplayString
+                
+        }
+
+    swEgressACLIpRuleProfileID OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The ID of the egress ACL mask entry, which is unique to the mask list.
+            The maximum value of this object depends on the device."
+        ::= { swEgressACLIpRuleEntry 1 }
+
+    swEgressACLIpRuleAccessID OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The ID of the egress ACL rule entry relates to the swEgressACLEtherRuleProfileID.
+             When row creation is set to 0, this indicates the access ID will be assigned automatically.
+             When set from 1 to 65535, an access ID will be created for the rule."
+        ::= { swEgressACLIpRuleEntry 2 }
+
+    swEgressACLIpRuleRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swEgressACLIpRuleEntry 3 }
+
+    swEgressACLIpRuleMatchVID OBJECT-TYPE
+        SYNTAX  VlanIdOrNone
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the access rule will apply only to packets with
+             this VLAN ID. It is applied to the specified ports configured by swEgressACLIpRulePortGroup.
+             Note:A value of 0 indicates that this object is not active."
+        ::= { swEgressACLIpRuleEntry 4 }
+
+    swEgressACLIpMatchVlanMask OBJECT-TYPE
+        SYNTAX  OCTET STRING(SIZE(2))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the per rule mask for the VLAN as defined in swEgressACLIpRuleVlan object.
+            The value of this object when not in use is the corresponding mask in the profile mask.
+            Once the value of this object is modified, the per rule mask will take effect.
+            This object is writeable only once.
+            "
+        ::= { swEgressACLIpRuleEntry 5 }
+
+    swEgressACLIpRuleSrcIpaddress OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies an IP source address."
+        ::= { swEgressACLIpRuleEntry 6 }
+
+    swEgressACLIpRuleMaskSrcIpaddress OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the per rule mask for the source IP address as defined in swEgressACLIpRuleSrcIpaddress object.
+            The value of this object when not in use is the corresponding mask in the profile mask.
+            Once the value of this object is modified, the per rule mask will take effect.
+            This object is writeable only once.
+			"
+        ::= { swEgressACLIpRuleEntry 7 }
+
+    swEgressACLIpRuleDstIpaddress OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies an IP destination address."
+        ::= { swEgressACLIpRuleEntry 8 }
+
+    swEgressACLIpRuleMaskDstIpaddress OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+           "Specifies the per rule mask for the destination IP address as defined in swEgressACLIpRuleMaskDstIpaddress object.
+            The value of this object when not in use is the corresponding mask in the profile mask.
+            Once the value of this object is modified, the per rule mask will take effect.
+            This object is writeable only once.
+			"
+        ::= { swEgressACLIpRuleEntry 9 }
+
+    swEgressACLIpRuleDscp OBJECT-TYPE
+        SYNTAX  INTEGER(-1..63)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the value of DSCP. The value can be configured from 0 to 63.
+            A value of -1 indicates that this object is not active."
+        ::= { swEgressACLIpRuleEntry 10 }
+
+    swEgressACLIpRuleProtocol OBJECT-TYPE
+        SYNTAX  INTEGER {
+               none(1),
+               icmp(2),
+               igmp(3),
+               tcp(4),
+               udp(5),
+               protocolId(6)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the IP protocol."
+        ::= { swEgressACLIpRuleEntry 11 }
+
+    swEgressACLIpRuleType OBJECT-TYPE
+        SYNTAX  INTEGER(-1..255)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the rule applies to the value of ICMP/IGMP type traffic.
+            A value of -1 denotes that this object is not active."
+        ::= { swEgressACLIpRuleEntry 12 }
+
+    swEgressACLIpRuleCode OBJECT-TYPE
+        SYNTAX  INTEGER(-1..255)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the rule applies to the value of ICMP code traffic.
+            A value of -1 denotes that this object is not active."
+        ::= { swEgressACLIpRuleEntry 13 }
+
+    swEgressACLIpRuleSrcPort OBJECT-TYPE
+        SYNTAX  INTEGER(-1..65535)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the rule applies to the range of the TCP/UDP source ports.
+            A value of -1 indicates that this object is not active."
+        ::= { swEgressACLIpRuleEntry 14 }
+
+    swEgressACLIpRuleMaskSrcPort OBJECT-TYPE
+        SYNTAX  OCTET STRING(SIZE(2))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+           "Specifies the per rule mask for the L4 source port as defined in swEgressACLIpRuleSrcPort object.
+            The value of this object when not in use is the corresponding mask in the profile mask.
+            Once the value of this object is modified, the per rule mask will take effect.
+            This object is writeable only once.
+			"
+        ::= { swEgressACLIpRuleEntry 15 }
+
+    swEgressACLIpRuleDstPort OBJECT-TYPE
+        SYNTAX  INTEGER(-1..65535)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the TCP/UDP destination port range.
+            A value of -1 indicates that this object is not active."
+        ::= { swEgressACLIpRuleEntry 16 }
+
+    swEgressACLIpRuleMaskDstPort OBJECT-TYPE
+        SYNTAX  OCTET STRING(SIZE(2))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+           "Specifies the per rule mask for the L4 destination port as defined in swEgressACLIpRuleDstPort object.
+            The value of this object when not in use is the corresponding mask in the profile mask.
+            Once the value of this object is modified, the per rule mask will take effect.
+            This object is writeable only once.
+            "
+        ::= { swEgressACLIpRuleEntry 17 }
+
+    swEgressACLIpRuleFlagBits OBJECT-TYPE
+        SYNTAX  INTEGER(0..63)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "A value which indicates the set of TCP flags that this
+             entity may potentially offer. The value is a sum of flag bits.
+             This sum initially takes the value zero. Then, for each flag, L
+             is added in the range 1 through 6, for which this node performs
+             transactions, where 2^(L - 1) is added to the sum.
+             Note that values should be calculated accordingly:
+
+                 Flag      functionality
+                   6        urg bit
+                   5        ack bit
+                   4        psh bit
+                   3        rst bit
+                   2        syn bit
+                   1        fin bit
+             For example, it you want to enable urg bit and ack bit, you
+             should set value 48{2^(5-1) + 2^(6-1)}."
+        ::= { swEgressACLIpRuleEntry 18 }
+
+    swEgressACLIpRuleProtoID OBJECT-TYPE
+        SYNTAX  INTEGER(-1..255)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the rule applies to the value of IP protocol ID traffic.
+            A value of -1 indicates that this object is not active."
+        ::= { swEgressACLIpRuleEntry 19 }
+
+    swEgressACLIpRuleUserDefine OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE(4))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the rule applies to the first four byte behind the IP header."
+        ::= { swEgressACLIpRuleEntry 20 }
+        
+    swEgressACLIpRuleUserDefineMask OBJECT-TYPE
+        SYNTAX  OCTET STRING (SIZE(4))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the per rule mask for the first four byte behind the IP header as defined in
+             swEgressACLIpRuleUserDefine object."
+        ::= { swEgressACLIpRuleEntry 21 }
+
+    swEgressACLIpRuleVID OBJECT-TYPE
+        SYNTAX  VlanIdOrNone
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the VLAN-based rule. There are two conditions:
+             1. this rule will apply to all the ports;
+             2. packets must belong to this VLAN.
+
+             This object and swEgressACLIpRulePortGroup,swEgressACLIpRulePort cannot be set together.
+             When you set swEgressACLIpRulePortGroup or swEgressACLIpRulePort , the value of this object will change to 0 automatically.
+             This object cannot be set 0."
+        ::= { swEgressACLIpRuleEntry 22 }
+        
+    swEgressACLIpRulePort OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the access rule will only apply to the port.
+             This object and swEgressACLIpRuleVID,swEgressACLIpRulePortGroup can not be set together.When you set swEgressACLIpRuleVID or swEgressACLIpRulePortGroup,
+             the value of this object will change to 0 automatically.
+             This object can not be set to 0. 
+	     A value of 0 indicates that this object is not active."
+        ::= { swEgressACLIpRuleEntry 23}
+
+    swEgressACLIpRulePortGroup OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the access rule will only apply to port(s)which belong to this port group.
+             This object and swEgressACLIpRuleVID,swEgressACLIpRulePort can not be set together.
+             When you set swEgressACLIpRuleVID or swEgressACLIpRulePort , the value of this object will change to 0 automatically.
+             Note:The range of this object is (0..N).The value N means the max number.It is
+                  determined by the project itself. A value of 0 indicates that this object is not active."
+        ::= { swEgressACLIpRuleEntry 24 }
+
+    swEgressACLIpRulePermit OBJECT-TYPE
+        SYNTAX  INTEGER {
+               deny(1),
+               permit(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the result of the packet examination is 'permit' or 'deny'.
+             The default is 'permit'.
+             deny - Specifies that packets matching the access profile
+                    are not permitted to be forwarded by the switch and will be filtered.
+             permit - Specifies that packets matching the access profile are
+                      permitted to be forwarded by the switch.
+            "
+        ::= { swEgressACLIpRuleEntry 25 }
+
+     swEgressACLIpRuleEnableReplacePriority OBJECT-TYPE
+        SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies whether the packets that match the access profile will change the
+             802.1p priority tag field by the switch or not."
+        ::= { swEgressACLIpRuleEntry 26 }
+
+    swEgressACLIpRuleReplacePriority OBJECT-TYPE
+        SYNTAX  INTEGER(-1..7)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the priority will change in packets while the swEgressACLIpRuleEnablePriority
+             is enabled.A value of -1 indicates that this object is not active."
+        ::= { swEgressACLIpRuleEntry 27 }
+
+    swEgressACLIpRuleEnableReplaceDscp OBJECT-TYPE
+        SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies if the switch will change priorities of packets that match the access profile
+             DSCP field or not.
+            "
+        ::= { swEgressACLIpRuleEntry 28 }
+
+    swEgressACLIpRuleReplaceDscp OBJECT-TYPE
+        SYNTAX  INTEGER(-1..63)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies a value to be written to the DSCP field of an outgoing packet
+             that meets the criteria specified in the first part of the command.
+             This value will over-write the value in the DSCP field of the packet.
+             A value of -1 indicates that this object is not active."
+        ::= { swEgressACLIpRuleEntry 29 }
+
+    swEgressAclIpRuleTimeRangeName OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies a name of a time-range associated with a specific egress
+             ACL entry. The time-range name must first be created before being
+             associated with the access rule. If this name is an empty
+             string, the time-range profile will no longer be
+             associated with the access rule. When a rule is de-associated
+             with a time range, the access rule will be enabled all the
+             time."
+        ::= { swEgressACLIpRuleEntry 30 }
+
+-- -----------------------------------------------------------------------------
+-- swACLIpv6RuleTable
+-- -----------------------------------------------------------------------------
+    swEgressACLIpv6RuleTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwEgressACLIpv6RuleEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains the IPv6 egress ACL rule information."
+        ::= { swEgressAclRuleMgmt 3 }
+
+    swEgressACLIpv6RuleEntry OBJECT-TYPE
+        SYNTAX  SwEgressACLIpv6RuleEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information about egress ACL rules regarding the IPv6 part of each packet."
+        INDEX  { swEgressACLIpv6RuleProfileID,swEgressACLIpv6RuleAccessID }
+        ::= { swEgressACLIpv6RuleTable 1 }
+
+    SwEgressACLIpv6RuleEntry ::=
+        SEQUENCE {
+            swEgressACLIpv6RuleProfileID
+                INTEGER,
+            swEgressACLIpv6RuleAccessID
+                INTEGER,
+            swEgressACLIpv6RuleRowStatus
+                RowStatus,
+            swEgressACLIpv6RuleClass
+                INTEGER,
+            swEgressACLIpv6RuleSrcIpv6Addr
+                Ipv6Address,
+            swEgressACLIpv6RuleMaskSrcIpv6Addr
+                Ipv6Address,
+            swEgressACLIpv6RuleDstIpv6Addr
+                Ipv6Address,
+            swEgressACLIpv6RuleMaskDstIpv6Addr
+                 Ipv6Address,
+            swEgressACLIpv6RuleProtocol
+                INTEGER,
+            swEgressACLIpv6RuleType
+                INTEGER,
+            swEgressACLIpv6RuleCode
+                INTEGER,
+            swEgressACLIpv6RuleSrcPort
+                INTEGER,
+            swEgressACLIpv6RuleMaskSrcPort
+                OCTET STRING,
+            swEgressACLIpv6RuleDstPort
+                INTEGER,
+            swEgressACLIpv6RuleMaskDstPort
+                OCTET STRING,
+            swEgressACLIpv6RuleVID
+                VlanIdOrNone,
+            swEgressACLIpv6RulePort
+                INTEGER,
+            swEgressACLIpv6RulePortGroup
+                INTEGER,
+            swEgressACLIpv6RulePermit
+                INTEGER,
+            swEgressACLIpv6RuleEnableReplacePriority
+                INTEGER,
+            swEgressACLIpv6RuleReplacePriority
+                INTEGER,
+            swEgressACLIpv6RuleEnableReplaceDscp
+                INTEGER,
+            swEgressACLIpv6RuleReplaceDscp
+                INTEGER,
+            swEgressAclIpv6RuleTimeRangeName
+                DisplayString
+        }
+
+    swEgressACLIpv6RuleProfileID OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The ID of the egress ACL mask entry, which is unique to the mask list. The maximum value of this object depends on the device."
+        ::= { swEgressACLIpv6RuleEntry 1 }
+
+    swEgressACLIpv6RuleAccessID OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The ID of the the egress ACL rule entry relates to the swEgressACLEtherRuleProfileID.
+             When row creation is set to 0, this indicates the access ID will be assigned automatically.
+             When set from 1 to 65535, an access ID will be created for the rule."
+        ::= { swEgressACLIpv6RuleEntry 2 }
+
+    swEgressACLIpv6RuleRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swEgressACLIpv6RuleEntry 3 }
+
+    swEgressACLIpv6RuleClass OBJECT-TYPE
+        SYNTAX  INTEGER (-1..255)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the rule applies to the IPv6 class field.
+            A value of -1 indicates that this object is not active."
+        ::= { swEgressACLIpv6RuleEntry 4 }
+
+    swEgressACLIpv6RuleSrcIpv6Addr OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the rule applies to the source IPv6 address."
+        ::= { swEgressACLIpv6RuleEntry 5 }
+
+    swEgressACLIpv6RuleMaskSrcIpv6Addr OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the per rule mask of swEgressACLIpv6RuleSrcIpv6Addr.
+            The value of this object when not in use is the corresponding mask in the profile mask.
+            Once the value of this object is modified, the per rule mask will take effect.
+            This object is writeable only once.
+            "
+        ::= { swEgressACLIpv6RuleEntry 6 }
+
+
+    swEgressACLIpv6RuleDstIpv6Addr OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the rule applies to the destination IPv6 address."
+        ::= { swEgressACLIpv6RuleEntry 7 }
+
+     swEgressACLIpv6RuleMaskDstIpv6Addr OBJECT-TYPE
+         SYNTAX  Ipv6Address
+         MAX-ACCESS  read-create
+         STATUS  current
+         DESCRIPTION
+             "Specifies that the rule applies to the destination IPv6 address."
+         ::= { swEgressACLIpv6RuleEntry 8 }
+
+     swEgressACLIpv6RuleProtocol OBJECT-TYPE
+        SYNTAX  INTEGER {
+               none(1),
+               tcp(2),
+               udp(3),
+               icmp(4)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the IPv6 protocol."
+        ::= { swEgressACLIpv6RuleEntry 9 }
+
+     swEgressACLIpv6RuleType OBJECT-TYPE
+        SYNTAX  INTEGER(-1..255)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the rule applies to the value of ICMP type traffic.
+            A value of -1 denotes that this object is not active."
+        ::= { swEgressACLIpv6RuleEntry 10 }
+
+    swEgressACLIpv6RuleCode OBJECT-TYPE
+        SYNTAX  INTEGER(-1..255)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the rule applies to the value of ICMP code traffic.
+            A value of -1 denotes that this object is not active."
+        ::= { swEgressACLIpv6RuleEntry 11 }
+
+     swEgressACLIpv6RuleSrcPort OBJECT-TYPE
+        SYNTAX  INTEGER(-1..65535)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the rule applies to the range of the TCP/UDP source ports.
+            A value of -1 indicates that this object is not active."
+        ::= { swEgressACLIpv6RuleEntry 12 }
+
+     swEgressACLIpv6RuleMaskSrcPort OBJECT-TYPE
+        SYNTAX  OCTET STRING(SIZE(2))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the per rule mask of swEgressACLIpv6RuleSrcPort.
+            The value of this object when not in use is the corresponding mask in the profile mask.
+            Once the value of this object is modified, the per rule mask will take effect.
+            This object is writeable only once.
+            "
+        ::= { swEgressACLIpv6RuleEntry 13 }
+
+    swEgressACLIpv6RuleDstPort OBJECT-TYPE
+        SYNTAX  INTEGER(-1..65535)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the TCP/UDP destination port range.
+            A value of -1 indicates that this object is not active."
+        ::= { swEgressACLIpv6RuleEntry 14 }
+
+    swEgressACLIpv6RuleMaskDstPort OBJECT-TYPE
+        SYNTAX  OCTET STRING(SIZE(2))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the per rule mask of swEgressACLIpv6RuleDstPort.
+            The value of this object when not in use is the corresponding mask in the profile mask.
+            Once the value of this object is modified, the per rule mask will take effect.
+            This object is writeable only once.
+            "
+        ::= { swEgressACLIpv6RuleEntry 15 }
+
+     swEgressACLIpv6RuleVID OBJECT-TYPE
+        SYNTAX  VlanIdOrNone
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies this rule only applies to the specified VLAN. There are two conditions:
+             1.only the portlist that belongs to this VLAN will be included;
+             2.packets must belong to this VLAN.
+
+             This object and swEgressACLIpv6RulePortGroup,swEgressACLIpv6RulePort cannot be set together.
+             When you set swEgressACLIpv6RulePortGroup or swEgressACLIpv6RulePort, the value of this object will change to 0 automatically.
+             The object cannot be set 0."
+        ::= { swEgressACLIpv6RuleEntry 16 }
+
+     swEgressACLIpv6RulePort OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the access rule will only apply to the port.
+             This object and swEgressACLIpv6RuleVID,swEgressACLIpv6RulePortGroup can not be set together.When you set swEgressACLIpv6RuleVID or swEgressACLIpv6RulePortGroup,
+             the value of this object will change to 0 automatically.
+             This object can not be set to 0.
+	     A value of 0 indicates that this object is not active."
+        ::= { swEgressACLIpv6RuleEntry 17 }
+        
+     swEgressACLIpv6RulePortGroup OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies that the access rule will apply only to port(s)which belong to this port group.
+             This object and swEgressACLIpv6RuleVID,swEgressACLIpv6RulePort can not be set together.
+             When you set swEgressACLIpv6RuleVID or swEgressACLIpv6RulePort, the value of this object will change to 0 automatically.
+             Note:The range of this object is (0..N).The value N means the max number.It is
+                  determined by the project itself.A value of 0 indicates that this object is not active."
+        ::= { swEgressACLIpv6RuleEntry 18 }
+
+    swEgressACLIpv6RulePermit OBJECT-TYPE
+        SYNTAX  INTEGER {
+               deny(1),
+               permit(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+        "This object indicates if the result of the packet examination is 'permit' or 'deny'.
+         The default is 'permit'.
+             deny - Specifies that packets matching the access profile
+                    are not permitted to be forwarded by the switch and will be filtered.
+             permit - Specifies that packets matching the access profile are
+                      permitted to be forwarded by the switch.
+             "
+        ::= { swEgressACLIpv6RuleEntry 19 }
+
+    swEgressACLIpv6RuleEnableReplacePriority OBJECT-TYPE
+        SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies if the switch will change priorities of packets that match the access profile
+             802.1p priority tag or not."
+        ::= { swEgressACLIpv6RuleEntry 20 }
+
+    swEgressACLIpv6RuleReplacePriority OBJECT-TYPE
+        SYNTAX  INTEGER(-1..7)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the priority will change in packets while the swEgressACLIpv6RuleReplacePriority
+             is enabled.A value of -1 indicates that this object is not active."
+        ::= { swEgressACLIpv6RuleEntry 21 }
+
+    swEgressACLIpv6RuleEnableReplaceDscp OBJECT-TYPE
+        SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies if the switch will change priorities of packets that match the access profile
+             DSCP field or not."
+        ::= { swEgressACLIpv6RuleEntry 22 }
+
+    swEgressACLIpv6RuleReplaceDscp OBJECT-TYPE
+        SYNTAX  INTEGER(-1..63)
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies a value to be written to the DSCP field of an outgoing packet
+             that meets the criteria specified in the first part of the command.
+             This value will over-write the value in the DSCP field of the packet.
+             A value of -1 indicates that this object is not active."
+        ::= { swEgressACLIpv6RuleEntry 23 }
+        
+    swEgressAclIpv6RuleTimeRangeName OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies a name of a time-range associated with a specific egress
+             ACL entry. The time-range name must first be created before being
+             associated with the access rule. If this name is an empty
+             string, the time-range profile will no longer be
+             associated with the access rule. When a rule is de-associated
+             with a time range, the access rule will be enabled all the
+             time."
+        ::= { swEgressACLIpv6RuleEntry 24 }
+
+-- -----------------------------------------------------------------------------
+-- swEgressACLCounterTable
+-- -----------------------------------------------------------------------------
+       swEgressACLCounterTable OBJECT-TYPE
+           SYNTAX      SEQUENCE OF SwEgressACLCounterEntry
+           MAX-ACCESS  not-accessible
+           STATUS      current
+           DESCRIPTION
+               "This table maintains counter information associated with a specific
+                rule in the egress ACL rule table. Please refer to the swEgressACLEtherRuleTable,
+                swEgressACLIpRuleTable, swEgressACLIpv6RuleTable for detailed ACL rule information."
+           ::= { swEgressAclRuleMgmt 4 }
+
+       swEgressACLCounterEntry OBJECT-TYPE
+           SYNTAX      SwEgressACLCounterEntry
+           MAX-ACCESS  not-accessible
+           STATUS      current
+           DESCRIPTION
+               "The entry maintains counter information associated with the egress ACL
+                rule table."
+           INDEX { swEgressACLCounterProfileID, swEgressACLCounterAccessID}
+           ::= { swEgressACLCounterTable 1 }
+
+       SwEgressACLCounterEntry ::=
+           SEQUENCE {
+               swEgressACLCounterProfileID
+                   INTEGER,
+               swEgressACLCounterAccessID
+                   INTEGER,
+               swEgressACLCounterState
+                   INTEGER,
+               swEgressACLCounterTotalCounter
+                   Counter64,
+               swEgressACLCounterGreenCounter
+                   Counter64,
+               swEgressACLCounterYellowCounter
+                   Counter64,
+               swEgressACLCounterRedCounter
+                   Counter64
+           }
+
+    swEgressACLCounterProfileID OBJECT-TYPE
+        SYNTAX      INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The ID of the egress ACL mask entry, which is unique in the mask
+             list."
+        ::= { swEgressACLCounterEntry 1 }
+
+    swEgressACLCounterAccessID OBJECT-TYPE
+        SYNTAX      INTEGER(1..65535)
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The ID of the egress ACL rule entry as related to the
+             swEgressACLCounterProfileID."
+        ::= { swEgressACLCounterEntry 2 }
+
+    swEgressACLCounterState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                enabled(1),
+                disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Specifies whether the counter feature will be enabled or disabled.
+             1. This is optional. The default is 'disabled'.
+             2. If the rule is not bound with flow-meter, then all packets that match will be counted.
+             If the rule is bound with flow-meter, then the 'counter' will be overridden.
+             "
+        ::= { swEgressACLCounterEntry 3 }
+
+    swEgressACLCounterTotalCounter OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of matched packets."
+        ::= { swEgressACLCounterEntry 4 }
+
+    swEgressACLCounterGreenCounter OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of matched green packets."
+        ::= { swEgressACLCounterEntry 5 }
+
+    swEgressACLCounterYellowCounter OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of matched yellow packets."
+        ::= { swEgressACLCounterEntry 6 }
+
+    swEgressACLCounterRedCounter OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of matched red packets."
+        ::= { swEgressACLCounterEntry 7 }
+
+-- -----------------------------------------------------------------------------
+-- swEgressAclMeteringMgmt
+-- -----------------------------------------------------------------------------
+      swEgressAclMeterTable OBJECT-TYPE
+                SYNTAX      SEQUENCE OF SwEgressAclMeterEntry
+                MAX-ACCESS  not-accessible
+                STATUS      current
+                DESCRIPTION
+                   "This table is used to configure the flow-based metering function.
+                    The access rule must first be created before the parameters of this
+                    function can be applied. Users may set the preferred bandwidth for
+                    this rule, in Kbps; once the bandwidth has been exceeded, overflow
+                    packets will be either dropped or set for a drop precedence,
+                    depending on user configuration."
+                ::= { swEgressAclMeteringMgmt 1 }
+
+        swEgressAclMeterEntry OBJECT-TYPE
+                SYNTAX      SwEgressAclMeterEntry
+                MAX-ACCESS  not-accessible
+                STATUS      current
+                DESCRIPTION
+                   "This entry displays parameters and configurations set for the flow
+                    metering function."
+                INDEX { swEgressAclMeterProfileID, swEgressAclMeterAccessID}
+                ::= { swEgressAclMeterTable 1 }
+
+        SwEgressAclMeterEntry ::=
+           SEQUENCE {
+               swEgressAclMeterProfileID
+                   INTEGER,
+               swEgressAclMeterAccessID
+                   INTEGER,
+               swEgressAclMeterRowStatus
+                   RowStatus,
+               swEgressAclMeterMode
+                   INTEGER,
+               swEgressAclMeterTrtcmCir
+                   INTEGER,
+               swEgressAclMeterTrtcmCbs
+                   INTEGER,
+               swEgressAclMeterTrtcmPir
+                   INTEGER,
+               swEgressAclMeterTrtcmPbs
+                   INTEGER,
+               swEgressAclMeterTrtcmColorMode
+                   INTEGER,
+               swEgressAclMeterTrtcmConformState
+                   INTEGER,
+               swEgressAclMeterTrtcmConformReplaceDscp
+                   INTEGER,
+               swEgressAclMeterTrtcmConformCounterState
+                   INTEGER,
+               swEgressAclMeterTrtcmExceedState
+                   INTEGER,
+               swEgressAclMeterTrtcmExceedReplaceDscp
+                   INTEGER,
+               swEgressAclMeterTrtcmExceedCounterState
+                   INTEGER,
+               swEgressAclMeterTrtcmViolateState
+                   INTEGER,
+               swEgressAclMeterTrtcmViolateReplaceDscp
+                   INTEGER,
+               swEgressAclMeterTrtcmViolateCounterState
+                   INTEGER,
+               swEgressAclMeterSrtcmCir
+                   INTEGER,
+               swEgressAclMeterSrtcmCbs
+                   INTEGER,
+               swEgressAclMeterSrtcmEbs
+                   INTEGER,
+               swEgressAclMeterSrtcmColorMode
+                   INTEGER,
+               swEgressAclMeterSrtcmConformState
+                   INTEGER,
+               swEgressAclMeterSrtcmConformReplaceDscp
+                   INTEGER,
+               swEgressAclMeterSrtcmConformCounterState
+                   INTEGER,
+               swEgressAclMeterSrtcmExceedState
+                   INTEGER,
+               swEgressAclMeterSrtcmExceedReplaceDscp
+                   INTEGER,
+               swEgressAclMeterSrtcmExceedCounterState
+                   INTEGER,
+               swEgressAclMeterSrtcmViolateState
+                   INTEGER,
+               swEgressAclMeterSrtcmViolateReplaceDscp
+                   INTEGER,
+               swEgressAclMeterSrtcmViolateCounterState
+                   INTEGER
+             }
+
+        swEgressAclMeterProfileID OBJECT-TYPE
+                SYNTAX      INTEGER
+                MAX-ACCESS  not-accessible
+                STATUS      current
+                DESCRIPTION
+                   "The ID of the ACL mask entry is unique in the mask list. The maximum value of this object depends on the device."
+                ::= { swEgressAclMeterEntry 1 }
+
+        swEgressAclMeterAccessID OBJECT-TYPE
+                SYNTAX      INTEGER(1..65535)
+                MAX-ACCESS  not-accessible
+                STATUS      current
+                DESCRIPTION
+                   "The ID of the egress ACL rule entry as related to the swEgressAclMeterProfileID."
+                ::= { swEgressAclMeterEntry 2 }
+
+        swEgressAclMeterRowStatus OBJECT-TYPE
+            SYNTAX  RowStatus
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "This object indicates the status of this entry."
+            ::= { swEgressAclMeterEntry 3 }
+
+        swEgressAclMeterMode OBJECT-TYPE
+            SYNTAX  INTEGER {
+                   other(1),
+                   tr-tcm(2),
+                   sr-tcm(3)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "tr-tcm: two rate three color mode;
+                 sr-tcm: single rate three color mode;
+                "
+            ::= { swEgressAclMeterEntry 4 }
+
+        swEgressAclMeterTrtcmCir OBJECT-TYPE
+            SYNTAX  INTEGER
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the 'committed information rate' of 'two rate three color mode'.
+                 The unit is Kbps.A value of -1 indicates that this object is not active."
+            ::= { swEgressAclMeterEntry 5 }
+
+        swEgressAclMeterTrtcmCbs OBJECT-TYPE
+            SYNTAX  INTEGER
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the 'committed burst size' of 'two rate three color mode'.
+                 1. The unit is Kbytes. That is to say, 1 means 1Kbytes.
+                 2. This parameter is an optional parameter. The default value is 4kbytes.
+                 Note:The set value range is 0..N. The value N is determined by project.
+                 A value of -1 indicates that this object is not active.
+                "
+            ::= { swEgressAclMeterEntry 6 }
+
+        swEgressAclMeterTrtcmPir OBJECT-TYPE
+            SYNTAX  INTEGER
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the 'Peak Information Rate' of 'two rate three color mode'.
+                 The unit is Kbps.A value of -1 indicates that this object is not active."
+            ::= { swEgressAclMeterEntry 7 }
+
+        swEgressAclMeterTrtcmPbs OBJECT-TYPE
+            SYNTAX  INTEGER
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the 'peak burst size' of 'two rate three color mode'.
+                 1. The unit is Kbytes. That is to say, 1 means 1kbytes.
+                 2. This parameter is an optional parameter. The default value is 4kbytes.
+                 Note:The set value range is 0..N.The value N is determined by project.
+                 A value of -1 indicates that this object is not active.
+                "
+            ::= { swEgressAclMeterEntry 8 }
+
+        swEgressAclMeterTrtcmColorMode OBJECT-TYPE
+            SYNTAX  INTEGER {
+                   color-blind(1),
+                   color-aware(2)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the meter mode.
+                 The default is color-blind mode. The final color of the packet is determined
+                 by the initial color of the packet and the metering result."
+            ::= { swEgressAclMeterEntry 9 }
+
+        swEgressAclMeterTrtcmConformState OBJECT-TYPE
+            SYNTAX  INTEGER {
+                   other(1),
+                   permit(2),
+                   replace-dscp(3)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the action state when packet is in 'green color'.
+                 permit: permit the packet.
+                 replace-dscp:  change the DSCP value of packet.
+                "
+            ::= { swEgressAclMeterEntry 10 }
+
+        swEgressAclMeterTrtcmConformReplaceDscp OBJECT-TYPE
+            SYNTAX  INTEGER (-1..63)
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the DSCP value of the packet when the packet is in 'green color'.
+                A value of -1 indicates that this object is not active."
+            ::= { swEgressAclMeterEntry 11 }
+
+        swEgressAclMeterTrtcmConformCounterState OBJECT-TYPE
+            SYNTAX  INTEGER {
+                    enabled(1),
+                    disabled(2)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the counter state when the packet is in 'green color'.
+                 1.     This is optional. The default is 'disabled'.
+                 2.     The resource may be limited so that the counter cannot be turned on. The limitation is project dependent.
+                 3.     counter will be cleared when the function is disabled.
+                "
+            ::= { swEgressAclMeterEntry 12 }
+
+        swEgressAclMeterTrtcmExceedState OBJECT-TYPE
+            SYNTAX  INTEGER {
+                   other(1),
+                   permit(2),
+                   replace-dscp(3),
+                   drop(4)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the action state when packet is in 'yellow color'.
+                 permit: permit the packet.
+                 replace-dscp: change the DSCP value of the packet.
+                 drop: drop the packet.
+                "
+            ::= { swEgressAclMeterEntry 13 }
+
+        swEgressAclMeterTrtcmExceedReplaceDscp OBJECT-TYPE
+            SYNTAX  INTEGER (-1..63)
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the DSCP value of packet when packet is in 'yellow color'.
+                A value of -1 indicates that this object is not active."
+            ::= { swEgressAclMeterEntry 14 }
+
+        swEgressAclMeterTrtcmExceedCounterState OBJECT-TYPE
+            SYNTAX  INTEGER {
+                    enabled(1),
+                    disabled(2)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the counter state when packet is in 'yellow color'.
+                 1.     This is optional. The default is 'disabled'.
+                 2.     The resource may be limited so that the counter cannot be turned on. The limitation is project dependent.
+                 3.     counter will be cleared when the function is disabled.
+                "
+            ::= { swEgressAclMeterEntry 15 }
+
+        swEgressAclMeterTrtcmViolateState OBJECT-TYPE
+            SYNTAX  INTEGER {
+                   other(1),
+                   permit(2),
+                   replace-dscp(3),
+                   drop(4)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the action state when packet is in 'red color'.
+                 permit: permit the packet.
+                 replace-dscp: change the DSCP value of packet.
+                 drop: drop the packet.
+                "
+            ::= { swEgressAclMeterEntry 16 }
+
+        swEgressAclMeterTrtcmViolateReplaceDscp OBJECT-TYPE
+            SYNTAX  INTEGER (-1..63)
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the DSCP value of the packet when packet is in 'red color'.
+                A value of -1 indicates that this object is not active."
+            ::= { swEgressAclMeterEntry 17 }
+
+        swEgressAclMeterTrtcmViolateCounterState OBJECT-TYPE
+            SYNTAX  INTEGER {
+                    enabled(1),
+                    disabled(2)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the counter state when packet is in 'red color'.
+                 1.     This is optional. The default is 'disabled'.
+                 2.     The resource may be limited so that the counter cannot be turned on. The limitation is project dependent.
+                 3.     counter will be cleared when the function is disabled.
+                "
+            ::= { swEgressAclMeterEntry 18 }
+
+        swEgressAclMeterSrtcmCir OBJECT-TYPE
+            SYNTAX  INTEGER
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the 'committed information rate' of 'single rate three color mode'.
+                 The unit is Kbps.
+                 A value of -1 indicates that this object is not active"
+            ::= { swEgressAclMeterEntry 19 }
+
+        swEgressAclMeterSrtcmCbs OBJECT-TYPE
+            SYNTAX  INTEGER
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the 'committed burst size' of 'single rate three color mode'.
+                 The unit is Kbytes. That is to say, 1 means 1Kbytes.
+                 The set value range is 0..N.The value N is determined by project.
+                 A value of -1 indicates that this object is not active.
+                "
+            ::= { swEgressAclMeterEntry 20 }
+
+        swEgressAclMeterSrtcmEbs OBJECT-TYPE
+            SYNTAX  INTEGER
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the 'Excess burst size' of 'single rate three color mode'.
+                 The unit is Kbytes. That is to say, 1 means 1kbytes.
+                 The set value range is 0..N.The value N is determined by project.
+                 A value of -1 indicates that this object is not active.
+                "
+            ::= { swEgressAclMeterEntry 21 }
+
+        swEgressAclMeterSrtcmColorMode OBJECT-TYPE
+            SYNTAX  INTEGER {
+                   color-blind(1),
+                   color-aware(2)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the meter mode.
+                 The default is color-blind mode. The final color of packet is determined
+                 by the initial color of the packet and the metering result."
+            ::= { swEgressAclMeterEntry 22 }
+
+        swEgressAclMeterSrtcmConformState OBJECT-TYPE
+            SYNTAX  INTEGER {
+                   other(1),
+                   permit(2),
+                   replace-dscp(3)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the action state when the packet is in 'green color'.
+                 permit: permit the packet.
+                 replace-dscp: change the DSCP value of packet.
+                "
+            ::= { swEgressAclMeterEntry 23 }
+
+        swEgressAclMeterSrtcmConformReplaceDscp OBJECT-TYPE
+            SYNTAX  INTEGER (-1..63)
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the DSCP value of the packet when packet is in 'green color'.
+                A value of -1 indicates that this object is not active."
+            ::= { swEgressAclMeterEntry 24 }
+
+        swEgressAclMeterSrtcmConformCounterState OBJECT-TYPE
+            SYNTAX  INTEGER {
+                    enabled(1),
+                    disabled(2)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the counter state when the packet is in 'green color'.
+                 1.     This is optional. The default is 'disabled'.
+                 2.     The resource may be limited such that counter cannot be turned on. The limitation is project dependent.
+                 3.     counter will be cleared when the function is disabled.
+                "
+            ::= { swEgressAclMeterEntry 25 }
+
+        swEgressAclMeterSrtcmExceedState OBJECT-TYPE
+            SYNTAX  INTEGER {
+                   other(1),
+                   permit(2),
+                   replace-dscp(3),
+                   drop(4)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the action state when the packet is in 'yellow color'.
+                 permit: permit the packet.
+                 replace-dscp: change the DSCP value of packet.
+                 drop: drop the packet.
+                "
+            ::= { swEgressAclMeterEntry 26 }
+
+        swEgressAclMeterSrtcmExceedReplaceDscp OBJECT-TYPE
+            SYNTAX  INTEGER (-1..63)
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the DSCP value of the packet when packet is in 'yellow color'.
+                A value of -1 indicates that this object is not active."
+            ::= { swEgressAclMeterEntry 27 }
+
+        swEgressAclMeterSrtcmExceedCounterState OBJECT-TYPE
+            SYNTAX  INTEGER {
+                    enabled(1),
+                    disabled(2)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the counter state when the packet is in 'yellow color'.
+                 1.     This is optional. The default is 'disabled'.
+                 2.     The resource may be limited such that counter cannot be turned on. The limitation is project dependent.
+                 3.     counter will be cleared when the function is disabled.
+                "
+            ::= { swEgressAclMeterEntry 28 }
+
+        swEgressAclMeterSrtcmViolateState OBJECT-TYPE
+            SYNTAX  INTEGER {
+                   other(1),
+                   permit(2),
+                   replace-dscp(3),
+                   drop(4)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the action state when the packet is in 'red color'.
+                 permit: permit the packet.
+                 replace-dscp: change the DSCP value of packet.
+                 drop: drop the packet.
+                "
+            ::= { swEgressAclMeterEntry 29 }
+
+        swEgressAclMeterSrtcmViolateReplaceDscp OBJECT-TYPE
+            SYNTAX  INTEGER (-1..63)
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the DSCP value of the packet when packet is in 'red color'.
+                A value of -1 indicates that this object is not active."
+            ::= { swEgressAclMeterEntry 30 }
+
+       swEgressAclMeterSrtcmViolateCounterState OBJECT-TYPE
+            SYNTAX  INTEGER {
+                   enabled(1),
+                   disabled(2)
+                   }
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Specifies the counter state when the packet is in 'red color'.
+                 1.     This is optional. The default is 'diabled'.
+                 2.     The resource may be limited so that the counter cannot be turned on. The limitation is project dependent.
+                 3.     counter will be cleared when the function is disabled.
+                "
+            ::= { swEgressAclMeterEntry 31 }
+            
+      swEgressAclRateTable OBJECT-TYPE
+                SYNTAX      SEQUENCE OF SwEgressAclRateEntry
+                MAX-ACCESS  not-accessible
+                STATUS      current
+                DESCRIPTION
+                   "This table is used to configure the single rate two color metering function.
+                    The egress access rule must first be created before the parameters of this
+                    function can be applied. Users may set the preferred bandwidth for
+                    this rule, in Kbps; once the bandwidth has been exceeded, overflow
+                    packets will be either dropped or set for a drop precedence,
+                    depending on user configuration."
+                ::= { swEgressAclMeteringMgmt 2 }
+
+        swEgressAclRateEntry OBJECT-TYPE
+                SYNTAX      SwEgressAclRateEntry
+                MAX-ACCESS  not-accessible
+                STATUS      current
+                DESCRIPTION
+                   "This entry displays parameters and configurations set for the single rate two color function."
+                INDEX { swEgressAclRateProfileID, swEgressAclRateAccessID}
+                ::= { swEgressAclRateTable 1 }
+
+        SwEgressAclRateEntry ::=
+           SEQUENCE {
+               swEgressAclRateProfileID
+                   INTEGER,
+               swEgressAclRateAccessID
+                   INTEGER,
+               swEgressAclRateRowStatus
+                   RowStatus,
+               swEgressAclRate
+                   INTEGER,
+               swEgressAclBurstSize
+                   INTEGER,
+               swEgressAclRateActionForRateExceed
+                   INTEGER,
+               swEgressAclRateRemarkDscp
+                   INTEGER
+           }
+
+        swEgressAclRateProfileID OBJECT-TYPE
+                SYNTAX      INTEGER
+                MAX-ACCESS  not-accessible
+                STATUS      current
+                DESCRIPTION
+                   "The ID of the egress ACL mask entry is unique in the mask list. The maximum value of this object depends on the device."
+                ::= { swEgressAclRateEntry 1 }
+
+        swEgressAclRateAccessID OBJECT-TYPE
+                SYNTAX      INTEGER(1..65535)
+                MAX-ACCESS  not-accessible
+                STATUS      current
+                DESCRIPTION
+                   "The ID of the egress ACL rule entry as related to the swEgressAclRateProfileID."
+                ::= { swEgressAclRateEntry 2 }
+                
+        swEgressAclRateRowStatus OBJECT-TYPE
+            SYNTAX  RowStatus
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "This object indicates the status of this entry."
+            ::= { swEgressAclRateEntry 3 }
+            
+        swEgressAclRate OBJECT-TYPE
+                SYNTAX INTEGER
+                MAX-ACCESS  read-create
+                STATUS      current
+                DESCRIPTION
+                   "Specifies the committed bandwidth in Kbps for the flow.
+                   A value of -1 indicates that this object is not active.
+                    NOTE:
+                        Users must set the swEgressAclRateActionForRateExceed object to activate this entry."
+                ::= { swEgressAclRateEntry 4 }
+
+       swEgressAclBurstSize OBJECT-TYPE
+            SYNTAX  INTEGER
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "This specifies the burst size for the single rate two color mode.
+                 The unit is Kbytes. That is to say, 1 means 1kbytes.
+                 The set value range is 0..N, the value N is determined by project.
+                 A value of -1 indicates that this object is not active.
+                 This parameter is an optional parameter. The default value is 4kbytes.
+                 "
+            ::= { swEgressAclRateEntry 5 }
+
+        swEgressAclRateActionForRateExceed OBJECT-TYPE
+                SYNTAX INTEGER {
+               		other(1),
+               		drop-packet(2),
+               		remark-dscp(3)
+               }
+                MAX-ACCESS  read-create
+                STATUS      current
+                DESCRIPTION
+                   "Specifies the action to take for those packets exceeding the committed rate.
+                    drop-packet: drop the packet.
+                    replace-dscp: change the DSCP value of the packet.
+                    NOTE:
+                        Users must set the swEgressAclRate to activate this entry."
+                ::= { swEgressAclRateEntry 6 }
+
+        swEgressAclRateRemarkDscp OBJECT-TYPE
+            SYNTAX  INTEGER (-1..63)
+            MAX-ACCESS  read-create
+            STATUS  current
+            DESCRIPTION
+                "Mark the packet with a specified DSCP.
+                 It can be set when swEgressAclRateActionForRateExceed sets remark-dscp(3).
+                 A value of -1 indicates that this object is not active."
+            ::= { swEgressAclRateEntry 7 }
+
+
+      swEgressAclMeteringNumOfEntryInUse OBJECT-TYPE
+                SYNTAX      INTEGER
+                MAX-ACCESS  read-only
+                STATUS      current
+                DESCRIPTION
+                   "Used to display total entries of the flow metering."
+                ::= { swEgressAclMeteringMgmt 3 }
+END

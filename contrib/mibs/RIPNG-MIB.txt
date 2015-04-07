@@ -1,0 +1,160 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : RIPng-MIB
+-- FILE NAME: RIPng.mib  
+-- DATE     : 2009/09/15
+-- VERSION  : 1.00  
+-- PURPOSE  : To construct the MIB structure of RIPng function for
+--            proprietary enterprise			 
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+-- [New Object]
+-- [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2009/09/15, Rock Zhang
+-- This is the first formal version for universal MIB definition.
+-- Notes:Requested by Rock Zhang for project DGS3600	
+-- -----------------------------------------------------------------------------
+
+RIPNG-MIB DEFINITIONS ::= BEGIN
+
+	IMPORTS
+		MODULE-IDENTITY, OBJECT-TYPE		FROM SNMPv2-SMI     
+		DisplayString						FROM SNMPv2-TC
+		dlink-common-mgmt					FROM DLINK-ID-REC-MIB;
+
+	swRIPngMIB MODULE-IDENTITY
+		LAST-UPDATED "0909150000Z"
+		ORGANIZATION "D-Link Corp."
+		CONTACT-INFO
+			"http://support.dlink.com"
+		DESCRIPTION
+			"The structure of RIPng for the proprietary enterprise."
+			::= { dlink-common-mgmt 83}
+			
+
+	swRIPngGlobalState  OBJECT-TYPE
+		SYNTAX	INTEGER {
+				enabled(1),
+				disabled(2)
+				}
+		MAX-ACCESS   read-write
+		STATUS   current
+		DESCRIPTION
+			"This object indicates the RIPng global state."
+		DEFVAL {disabled}
+		::= { swRIPngMIB 1 }  
+    
+	swRIPngMethod	OBJECT-TYPE
+		SYNTAX	INTEGER {
+				no-horizon(1),
+				split-horizon(2),
+				poison-reverse(3)
+				}  
+		MAX-ACCESS	read-write
+		STATUS	current
+		DESCRIPTION
+			"This object indicates the method to be done while sending
+			routing informations.
+			If the configured value is split-horizon(2) then routes learnt on a 
+			interface are not sent over that interface. 
+			If the configured value is poison-reverse(3) then such routes are sent 
+			with a metric of 16."  
+		DEFVAL {split-horizon}
+		::= {swRIPngMIB 2}   
+              
+	swRIPngUpdateTime OBJECT-TYPE
+		SYNTAX	INTEGER (5..65535)
+		MAX-ACCESS	read-write
+		STATUS	current
+		DESCRIPTION
+			"This object indicates the RIPng update interval in second."  
+		DEFVAL {30}
+		::= {swRIPngMIB 3}
+        
+	swRIPngExpireTime OBJECT-TYPE
+		SYNTAX	INTEGER (1..65535)
+		MAX-ACCESS	read-write
+		STATUS	current
+		DESCRIPTION
+			"This object indicates the period in second for which a dynamic RIPng route
+			will be kept in the IPv6 routing table without receiving any updates for the
+			route. 
+			After this time interval, the route will not be valid and will be aged out."
+		DEFVAL {180}
+			::= {swRIPngMIB 4}
+              
+	swRIPngGarbageCollectionTime OBJECT-TYPE
+		SYNTAX	INTEGER (1..65535)
+		MAX-ACCESS	read-write
+		STATUS	current
+		DESCRIPTION
+			"This object indicates the period in seconds for a RIPng route which
+			has aged out is retained in the IPv6 Routing Table. After
+			this time interval the route is deleted from the IPv6 Routing Table."  
+		DEFVAL {120}
+		::= {swRIPngMIB 5}   
+     
+-- ---------------------------------------------------------------------------------------------------------
+-- swRIPngIfTable
+-- ---------------------------------------------------------------------------------------------------------
+	swRIPngIfTable	OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwRIPngIfEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+			"This table contains RIPng interface information."
+		::= { swRIPngMIB 6 }    
+    
+	swRIPngIfEntry OBJECT-TYPE
+		SYNTAX  SwRIPngIfEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+			"A list of information about RIPng interface."
+		INDEX  { swRIPngIfName }
+		::= { swRIPngIfTable 1 }     
+        
+	SwRIPngIfEntry ::= 
+		SEQUENCE {
+			swRIPngIfName
+			DisplayString,
+			swRIPngIfState
+			INTEGER,                
+			swRIPngIfMetric                
+			INTEGER
+			}     
+            
+	swRIPngIfName	OBJECT-TYPE
+		SYNTAX  DisplayString
+		MAX-ACCESS  not-accessible	
+		STATUS  current
+		DESCRIPTION
+			"This object indicates the interface name."
+		::= { swRIPngIfEntry 1 }
+     
+	swRIPngIfState		OBJECT-TYPE
+		SYNTAX	INTEGER { 
+				enabled(1),
+				disabled(2)
+				}    
+		MAX-ACCESS	read-write  
+		STATUS current
+		DESCRIPTION
+			"This object indicates the RIPng state of the interface." 
+		DEFVAL {disabled} 
+		::= { swRIPngIfEntry 2}
+     
+	swRIPngIfMetric	OBJECT-TYPE
+		SYNTAX INTEGER (1..15)
+		MAX-ACCESS read-write
+		STATUS current
+		DESCRIPTION
+			"This object indicates the metric value of the interface." 
+		DEFVAL {1}
+		::= { swRIPngIfEntry 3}
+    
+END

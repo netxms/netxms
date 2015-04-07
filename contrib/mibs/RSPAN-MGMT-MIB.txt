@@ -1,0 +1,179 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : RSPAN-MGMT-MIB
+-- FILE NAME: RSPAN.mib
+-- DATE     : 2012/11/19
+-- VERSION  : 1.01
+-- PURPOSE  : To construct the MIB structure of RSPAN function for
+--            proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.01, 2009/10/27, Jok Long
+-- [New Object]
+-- Add swRSPANSrcMirrGroupID to support multiple mirror session for RSPAN source function.
+--
+-- Version 1.00, 2008/7/29, Grape Pu
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+
+RSPAN-MGMT-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        OBJECT-TYPE			FROM SNMPv2-SMI
+        RowStatus           			FROM SNMPv2-TC
+        dlink-common-mgmt			FROM DLINK-ID-REC-MIB;
+        
+	VlanId		::= INTEGER (1..4094)
+    	PortList                	::= OCTET STRING(SIZE (0..127))	 
+    	
+    swRSPANMIB MODULE-IDENTITY
+          LAST-UPDATED "200903100000Z"
+          ORGANIZATION "D-Link Crop."
+          CONTACT-INFO
+		"http://support.dlink.com"
+          DESCRIPTION
+		"The structure of RSPAN management for the proprietary enterprise."
+        ::= { dlink-common-mgmt 68 }
+
+    swRSPANCtrl		OBJECT IDENTIFIER ::= { swRSPANMIB 1 }
+    swRSPANInfo		OBJECT IDENTIFIER ::= { swRSPANMIB 2 }
+    swRSPANMgmt		OBJECT IDENTIFIER ::= { swRSPANMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- swRSPANCtrl                OBJECT IDENTIFIER ::= { swRSPANMIB 1 }
+-- -----------------------------------------------------------------------------
+
+    swRSPANState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the RSPAN state.
+            enabled (1) - This entry resides in the table.
+            disabled (2) - Writes this value to the object and then removes the
+                corresponding entry from the table."
+        ::= { swRSPANCtrl 1 }
+        
+-- -----------------------------------------------------------------------------
+-- swRSPANInfo                OBJECT IDENTIFIER ::= { swRSPANMIB 2 }
+-- -----------------------------------------------------------------------------
+
+   swRSPANMaxSupportedEntry OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the maximum number of RSPAN entries supported."
+        ::= { swRSPANInfo 1 }
+
+   swRSPANCurrentNumEntries OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the current number of RSPAN entries."
+        ::= { swRSPANInfo 2 }
+
+-- -----------------------------------------------------------------------------
+-- swRSPANMgmt                OBJECT IDENTIFIER ::= { swRSPANMIB 3 }
+-- -----------------------------------------------------------------------------
+
+    swRSPANTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwRSPANEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains information about every RSPAN session."
+        ::= { swRSPANMgmt 1 }
+
+    swRSPANEntry OBJECT-TYPE
+        SYNTAX  SwRSPANEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is a list of information for each RSPAN."
+        INDEX   { swRSPANVLANID }
+        ::= { swRSPANTable 1 }
+
+    SwRSPANEntry ::= 
+        SEQUENCE {
+            swRSPANVLANID 
+                VlanId,
+            swRSPANSourceIngress 
+                PortList,
+            swRSPANSourceEgress 
+                PortList,
+            swRSPANRedirct
+                PortList,
+            swRSPANRowStatus
+                RowStatus,
+            swRSPANSrcMirrGroupID
+                INTEGER
+        }
+
+    swRSPANVLANID OBJECT-TYPE
+        SYNTAX  VlanId
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the RSPAN VLAN of the entry."
+        ::= { swRSPANEntry 1 }
+
+    swRSPANSourceIngress OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the packets received on source ports 
+	will be mirrored to target ports in the source switch."
+        ::= { swRSPANEntry 2 }
+        
+    swRSPANSourceEgress OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the packets sent on source ports 
+	will be mirrored to target ports in the source switch."
+        ::= { swRSPANEntry 3 }
+
+    swRSPANRedirct OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the output port of the RSPAN VLAN packets 
+	in the mediate or destination switch."
+        ::= { swRSPANEntry 4 }
+
+    swRSPANRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+             "This object indicates the status of this entry."
+        ::= { swRSPANEntry 5 }
+        
+   swRSPANSrcMirrGroupID OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+			"This object indicates the mirror session which used for RSPAN mirrored function.
+			The value range is (0..N), N is determined by project.
+			0 indicates no mirror group configured for RSPAN source.
+
+			When set 0, means to clear the mirror group from RSPAN source."
+        ::= { swRSPANEntry 6 }
+
+END

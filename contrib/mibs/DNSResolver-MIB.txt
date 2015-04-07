@@ -1,0 +1,498 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : DNSResolver Common mib
+-- FILE NAME: DNSResolver.mib
+-- DATE     : 2009/05/15
+-- VERSION  : 1.00
+-- PURPOSE  : To define MIB objects for DNS Resolver.
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2009/05/15, Mark Luo
+-- This is the initial draft for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+DNSResolver-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,
+        OBJECT-TYPE,
+        IpAddress               FROM SNMPv2-SMI
+        RowStatus,DisplayString               FROM SNMPv2-TC
+        dlink-common-mgmt       FROM DLINK-ID-REC-MIB
+        Ipv6Address			  	FROM IPV6-TC; 
+
+    swDNSResolverMIB MODULE-IDENTITY
+        LAST-UPDATED "0905150000Z"
+        ORGANIZATION "D-Link Corp."
+        CONTACT-INFO
+            "http://support.dlink.com"
+        DESCRIPTION
+            "This MIB module defining objects for the management of
+             DNS Resolver."
+        ::= { dlink-common-mgmt 85 }
+
+	swDNSResolverMIBObjects OBJECT IDENTIFIER ::= { swDNSResolverMIB 1 }
+-- -----------------------------------------------------------------------------
+-- Textual conventions
+-- -----------------------------------------------------------------------------
+	DnsName ::= TEXTUAL-CONVENTION
+       -- A DISPLAY-HINT would be nice, but difficult to express.
+		STATUS  current
+		DESCRIPTION
+               "A DNS name is a sequence of labels.  When DNS names are
+               displayed, the boundaries between labels are typically
+               indicated by dots (e.g. `Acme' and `COM' are labels in
+               the name `Acme.COM').  In the DNS protocol, however, no
+               such separators are needed because each label is encoded
+               as a length octet followed by the indicated number of
+               octets of label.  For example, `Acme.COM' is encoded as
+               the octet sequence { 4, 'A', 'c', 'm', 'e', 3, 'C', 'O',
+               'M', 0 } (the final 0 is the length of the name of the
+               root domain, which appears implicitly at the end of any
+               DNS name).  This MIB uses the same encoding as the DNS
+               protocol.
+
+               A DnsName must always be a fully qualified name.  It is
+               an error to encode a relative domain name as a DnsName
+               without first making it a fully qualified name."
+		REFERENCE
+			"RFC-1034 section 3.1."
+		SYNTAX  OCTET STRING (SIZE (0..255))
+
+	DnsTime ::= TEXTUAL-CONVENTION
+		DISPLAY-HINT "4d"
+		STATUS  current
+		DESCRIPTION
+               "DnsTime values are 32-bit unsigned integers which
+               measure time in seconds."
+		REFERENCE
+			"RFC-1035."
+		SYNTAX  INTEGER
+
+
+    swDNSResState  OBJECT-TYPE
+           SYNTAX  INTEGER {
+                               enabled(1),
+                               disabled(2)
+                             }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+               "This object indicates the DNS Resolver state."
+        DEFVAL {enabled}
+        ::={swDNSResolverMIBObjects 1}
+
+    swDNSResNameSrvTimeOut  OBJECT-TYPE
+        SYNTAX      INTEGER (1..60)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+               "This object indicates the DNS Resolver name server time out."
+        DEFVAL {3}
+        ::={swDNSResolverMIBObjects 2}
+
+-- -----------------------------------------------------------------------------
+-- swDNSResNameSrv
+-- -----------------------------------------------------------------------------
+	swDNSResNameSrv OBJECT IDENTIFIER ::= { swDNSResolverMIBObjects 3 }
+
+    swDNSResStaticNameSrvTable OBJECT-TYPE
+        SYNTAX          SEQUENCE OF SwDNSResStaticNameSrvEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+              "This table contains DNS resolver static name server information."
+        ::= { swDNSResNameSrv 1}
+
+    swDNSResStaticNameSrvEntry OBJECT-TYPE
+        SYNTAX          SwDNSResStaticNameSrvEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+              "A list of information about DNS resolver static name server."
+        INDEX { swDNSResStaticNameSrvIndex }
+        ::= { swDNSResStaticNameSrvTable 1 }
+
+    SwDNSResStaticNameSrvEntry ::=
+        SEQUENCE {
+            swDNSResStaticNameSrvIndex
+                INTEGER,
+            swDNSResStaticNameSrvRowStatus
+                RowStatus,
+                swDNSResStaticNameSrvIPaddr
+                IpAddress,
+			swDNSResStaticNameSrvPriority
+                INTEGER
+       }
+
+    swDNSResStaticNameSrvIndex OBJECT-TYPE
+        SYNTAX      INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DNS resolver static name server table index."
+        ::= { swDNSResStaticNameSrvEntry 1 }
+        
+    swDNSResStaticNameSrvRowStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swDNSResStaticNameSrvEntry 2 }
+        
+    swDNSResStaticNameSrvIPaddr OBJECT-TYPE
+        SYNTAX      IpAddress
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DNS resolver static name server IP address."
+        ::= { swDNSResStaticNameSrvEntry 3 }
+        
+    swDNSResStaticNameSrvPriority OBJECT-TYPE
+        SYNTAX      INTEGER {
+                               primary(1),
+                               secondary(2)
+                             }
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DNS resolver static name server priority, primary name
+            server or secondary name server."
+        ::= { swDNSResStaticNameSrvEntry 4 }
+        
+-- -----------------------------------------------------------------------------
+-- swDNSResDynamicNameSrvTable
+-- -----------------------------------------------------------------------------
+    swDNSResDynamicNameSrvTable OBJECT-TYPE
+        SYNTAX          SEQUENCE OF SwDNSResDynamicNameSrvEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+              "This table contains DNS resolver dynamic name server information."
+        ::= { swDNSResNameSrv 2}
+
+    swDNSResDynamicNameSrvEntry OBJECT-TYPE
+        SYNTAX          SwDNSResDynamicNameSrvEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+              "A list of information about DNS resolver dynamic name server."
+        INDEX { swDNSResDynamicNameSrvIndex }
+        ::= { swDNSResDynamicNameSrvTable 1 }
+
+    SwDNSResDynamicNameSrvEntry ::=
+        SEQUENCE {
+            swDNSResDynamicNameSrvIndex
+                INTEGER,
+            swDNSResDynamicNameSrvIPaddr
+                IpAddress,
+            swDNSResDynamicNameSrvPriority
+                 INTEGER
+       }
+
+    swDNSResDynamicNameSrvIndex OBJECT-TYPE
+        SYNTAX      INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DNS resolver dynamic name server table index."
+        ::= { swDNSResDynamicNameSrvEntry 1 }
+
+    swDNSResDynamicNameSrvIPaddr OBJECT-TYPE
+        SYNTAX      IpAddress
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DNS resolver dynamic name server IP address."
+        ::= { swDNSResDynamicNameSrvEntry 2 }
+        
+    swDNSResDynamicNameSrvPriority OBJECT-TYPE
+        SYNTAX      INTEGER {
+                               primary(1),
+                               secondary(2)
+                             }
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DNS resolver dynamic name server priority, primary name
+            server or secondary name server."
+        ::= { swDNSResDynamicNameSrvEntry 3 }
+
+-- -----------------------------------------------------------------------------
+-- swDNSResIPv6NameSrv
+-- -----------------------------------------------------------------------------                  
+	swDNSResStaticIPv6NameSrvTable OBJECT-TYPE       
+        SYNTAX          SEQUENCE OF SwDNSResStaticIPv6NameSrvEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+              "The table specifies DNS resolver static name server information."
+        ::= { swDNSResNameSrv 3}
+
+    swDNSResStaticIPv6NameSrvEntry OBJECT-TYPE
+        SYNTAX          SwDNSResStaticIPv6NameSrvEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+              "This entry includes all DNS resolver static name server information."
+        INDEX { swDNSResStaticIPv6NameSrvIndex }
+        ::= { swDNSResStaticIPv6NameSrvTable 1 }
+
+    SwDNSResStaticIPv6NameSrvEntry ::=
+        SEQUENCE {
+            swDNSResStaticIPv6NameSrvIndex
+                INTEGER,
+            swDNSResStaticIPv6NameSrvaddr
+                Ipv6Address,         
+            swDNSResStaticIPv6NameSrvIntfName
+                DisplayString,
+			swDNSResStaticIPv6NameSrvPriority
+                INTEGER,
+            swDNSResStaticIPv6NameSrvRowStatus
+                RowStatus
+                 }
+
+    swDNSResStaticIPv6NameSrvIndex OBJECT-TYPE
+        SYNTAX      INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DNS resolver static name server table index."
+        ::= { swDNSResStaticIPv6NameSrvEntry 1 }
+                
+    swDNSResStaticIPv6NameSrvaddr OBJECT-TYPE
+        SYNTAX      Ipv6Address
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the the DNS resolver static name server IP address."
+        ::= { swDNSResStaticIPv6NameSrvEntry 2 }
+                           
+    swDNSResStaticIPv6NameSrvIntfName  OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (1..12))
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This node is used to specify the interface name 
+             when swDNSResStaticIPv6NameSrvaddr is a link local address. "
+        ::= { swDNSResStaticIPv6NameSrvEntry 3 }	
+
+    swDNSResStaticIPv6NameSrvPriority OBJECT-TYPE
+        SYNTAX      INTEGER {
+                               primary(1),
+                               secondary(2)
+                             }
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DNS resolver static name server priority, primary name
+            server or secondary name server."
+        ::= { swDNSResStaticIPv6NameSrvEntry 4 }  
+        
+    swDNSResStaticIPv6NameSrvRowStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "This object manages this entry."
+        ::= { swDNSResStaticIPv6NameSrvEntry 100 }
+  
+-- -----------------------------------------------------------------------------
+-- swDNSResHost
+-- -----------------------------------------------------------------------------
+	swDNSResHost OBJECT IDENTIFIER ::= { swDNSResolverMIBObjects 4 }
+
+-- -----------------------------------------------------------------------------
+-- swDNSResStaticHostTable
+-- -----------------------------------------------------------------------------
+    swDNSResStaticHostTable OBJECT-TYPE
+        SYNTAX          SEQUENCE OF SwDNSResStaticHostEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+              "This table contains DNS resolver static host information."
+        ::= { swDNSResHost 1}
+
+    swDNSResStaticHostEntry OBJECT-TYPE
+        SYNTAX          SwDNSResStaticHostEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+              "A list of information about DNS resolver static host."
+        INDEX { swDNSResStaticHostIndex }
+        ::= { swDNSResStaticHostTable 1 }
+
+    SwDNSResStaticHostEntry ::=
+        SEQUENCE {
+            swDNSResStaticHostIndex
+                INTEGER,
+            swDNSResStaticHostRowStatus
+                RowStatus,
+            swDNSResStaticHostName
+                DnsName,
+            swDNSResStaticHostIPaddr
+                IpAddress,
+            swDNSResStaticHostIPv6addr
+            	Ipv6Address,
+            swDNSResStaticHostIPv6IntfName
+            	DisplayString
+       }
+
+    swDNSResStaticHostIndex OBJECT-TYPE
+        SYNTAX      INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DNS resolver static host table index."
+        ::= { swDNSResStaticHostEntry 1 }
+        
+    swDNSResStaticHostRowStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swDNSResStaticHostEntry 2 }
+        
+    swDNSResStaticHostName OBJECT-TYPE
+        SYNTAX      DnsName
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DNS resolver static host name."
+        ::= { swDNSResStaticHostEntry 3 }
+
+    swDNSResStaticHostIPaddr OBJECT-TYPE
+        SYNTAX      IpAddress
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the the DNS resolver static host IP address."
+        ::= { swDNSResStaticHostEntry 4 }
+     swDNSResStaticHostIPv6addr  OBJECT-TYPE
+        SYNTAX      Ipv6Address
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the the DNS resolver static host IPv6 address.
+            Note: current IPv6 doesn't support VRF."
+        ::= { swDNSResStaticHostEntry 6 }     
+
+    swDNSResStaticHostIPv6IntfName  OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (1..12))
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This node is used to specify the interface name 
+             when swDNSResStaticHostIPv6addr is a link local address. "
+        ::= { swDNSResStaticHostEntry 7 }	
+
+-- -----------------------------------------------------------------------------
+-- swDNSResDynamicHostTable
+-- -----------------------------------------------------------------------------
+    swDNSResDynamicHostTable OBJECT-TYPE
+        SYNTAX          SEQUENCE OF SwDNSResDynamicHostEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+              "This table contains DNS resolver dynamic host information."
+        ::= { swDNSResHost 2}
+
+    swDNSResDynamicHostEntry OBJECT-TYPE
+        SYNTAX          SwDNSResDynamicHostEntry
+        MAX-ACCESS      not-accessible
+        STATUS          current
+        DESCRIPTION
+              "A list of information about DNS resolver dynamic host."
+        INDEX { swDNSResDynamicHostIndex }
+        ::= { swDNSResDynamicHostTable 1 }
+
+    SwDNSResDynamicHostEntry ::=
+        SEQUENCE {
+           swDNSResDynamicHostIndex
+                INTEGER,
+            swDNSResDynamicHostName
+                DnsName,
+            swDNSResDynamicHostIPaddr
+                IpAddress,
+           swDNSResDynamicHostTTL
+                DnsTime,
+           swDNSResDynamicHostClearCtrl
+                INTEGER,
+           swDNSResDynamicHostIPv6addr
+           		Ipv6Address,
+           swDNSResDynamicHostIPv6IntfName
+                DisplayString
+       }
+
+    swDNSResDynamicHostIndex OBJECT-TYPE
+        SYNTAX      INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DNS resolver dynamic host index."
+        ::= { swDNSResDynamicHostEntry 1 }
+       
+    swDNSResDynamicHostName OBJECT-TYPE
+        SYNTAX      DnsName
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DNS resolver dynamic host name."
+        ::= { swDNSResDynamicHostEntry 2 }
+
+    swDNSResDynamicHostIPaddr OBJECT-TYPE
+        SYNTAX      IpAddress
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DNS resolver dynamic host IP address."
+        ::= { swDNSResDynamicHostEntry 3 }
+        
+    swDNSResDynamicHostTTL OBJECT-TYPE
+        SYNTAX      DnsTime
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the time of the dynamic host remained in caches to live."
+        ::= { swDNSResDynamicHostEntry 4 }
+
+    swDNSResDynamicHostClearCtrl OBJECT-TYPE
+		SYNTAX INTEGER  {
+				other(1),
+				start(2)
+			}
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "Used to clear DNS resolver dynamic host.
+			 Setting this value to 'start' will execute the clear action,
+			 Once cleared, the value returns to 'other'."
+        ::= { swDNSResDynamicHostEntry 5 }
+	
+swDNSResDynamicHostIPv6addr OBJECT-TYPE
+        SYNTAX      Ipv6Address
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the DNS resolver dynamic host IPv6 address.
+            Note: current IPv6 doesn't support VRF."
+        ::= { swDNSResDynamicHostEntry 7 }
+
+    swDNSResDynamicHostIPv6IntfName  OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE (1..12))
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This node is used to specify the interface name 
+             when swDNSResDynamicHostIPv6addr is a link local address. "
+        ::= { swDNSResDynamicHostEntry 8 }
+
+END

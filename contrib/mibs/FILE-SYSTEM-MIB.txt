@@ -1,0 +1,972 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : File System Common mib
+-- FILE NAME: FS.mib
+-- DATE     : 2009/05/25
+-- VERSION  : 2.05
+-- PURPOSE  : To construct the MIB structure of file system management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.05, 2009/5/25, Stone Chen
+-- Description:
+--  [New Object]
+--  1. Add object swFSFileDelOption and swFSFileDelActivity to swFSFileDel.
+--     For support more delete option.
+-- Notes: Requested by Stone Chen for DES3810.
+--
+-- Version 2.04, 2008/12/18, Richard Shi
+-- Description:
+--  [Modification]
+--  1. Change the value-list of swFSCopyActivity.
+--     For support more copy mode.
+--  [New Object]
+--  1. add objects swFSCopyConfigID, swFSCopyImageID.
+--     For support more ID of firmware image/config copy.
+-- Notes: Requested by Richard shi for DGS3200R1.5
+--
+-- Version 2.03, 2007/5/18, Yan Zhang
+-- Description:
+--  [Modification]
+--  1. Change the name of object swFSCopySource to swFSCopySourceName.
+--  2. Change the name of object swFSCopyDestination to swFSCopyDestinationName.
+--  [New Object]
+--  1. add objects swFSCopyDestinationUnitID, swFSCopyDestinationDriveID for CLI.
+--  2. add objects swFSMoveCtrl, swFSMoveSourceName, swFSMoveDestinationName,
+--  swFSMoveDestinationUnitID, swFSMoveDestinationDriveID, swFSMoveActivity for CLI.
+-- Notes: Requested by Yan Zhang for DGS36xxR2
+--
+-- Version 2.02, 2007/4/30, Yan Zhang
+-- Description:
+--  [Modification]
+--  1. change the name of objects which have string "Media": from "Media" to "Drive".
+--    (The CLI Command uses "Drive" as standard discription.)
+--  2. add 'g(6) - z(25)' in the value list of object swFSDriveInfoDriveID,
+--     add 'g(7) - z(26)' in the value list of object swFSDriveFormatDriveID.
+--  [New Object]
+--  1. add objects swFSDriveChangeCtrl, swFSDriveChangeUnitID, swFSDriveChangeDriveID
+--     and swFSDriveCurrentDirectory.
+--  2. add swFSDriveInfoStackTable.
+--  3. add object swFSDirectorySize in swFSDirectoryTable.
+-- Notes: Requested by Yan Zhang for DGS36xxR2
+--
+-- Version 2.01, 2007/4/6, yedda
+-- Description:
+--  [Modification]
+--    to change the index from swFSMediaInfoID to swFSMediaInfoIndex of
+--    swFSMediaInfoEntry for correct the mib defined error issue.
+--    (it will cause D-view compiling error)
+-- Notes: reported from Yan Zhang
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+	FILE-SYSTEM-MIB DEFINITIONS ::= BEGIN
+
+
+	IMPORTS
+	          MODULE-IDENTITY, mib-2, OBJECT-TYPE, Integer32,
+	          Gauge32, Counter32, NOTIFICATION-TYPE
+	                FROM SNMPv2-SMI
+	          DisplayString
+	                FROM SNMPv2-TC
+	          MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+	                FROM SNMPv2-CONF
+
+
+	          dlink-common-mgmt
+	          		FROM DLINK-ID-REC-MIB;
+
+
+
+	swFileSystemMIB MODULE-IDENTITY
+	    LAST-UPDATED "0905250000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+		    "The MIB module for managing file system."
+        ::= { dlink-common-mgmt 14 }
+
+	swFSBasicInfo			OBJECT IDENTIFIER ::= { swFileSystemMIB 1 }
+	swFSDriveCtrl			OBJECT IDENTIFIER ::= { swFileSystemMIB 2 }
+	swFSDirectoryCtrl		OBJECT IDENTIFIER ::= { swFileSystemMIB 3 }
+	swFSFileCtrl			OBJECT IDENTIFIER ::= { swFileSystemMIB 4 }
+	swFSCopyCtrl			OBJECT IDENTIFIER ::= { swFileSystemMIB 5 }
+	swFSMoveCtrl			OBJECT IDENTIFIER ::= { swFileSystemMIB 6 }
+
+
+-- -----------------------------------------------------------------------------
+-- swFSBasicInfo
+-- -----------------------------------------------------------------------------
+	swFSBasicInfoCtrlStatus OBJECT-TYPE
+		SYNTAX	INTEGER {
+			other(0),
+			start(1),
+			finish(2),
+			in-process(3),
+			fail(4),
+			invalid-drive-name(5),
+			same-file-name(6),
+			root-area-full(7),
+			insufficient-disk(8),
+			invalid-directory(9),
+			file-readonly(10),
+			exist-same-directory(11),
+			exist-file-in-directory(12),
+			no-file-or-dir(13),
+			no-format(14),
+			no-storage-media(15),
+			fs-no-match-media(16),
+			error-input(17),
+			error-char(18),
+			error-filename(19),
+			access-media-error(20)
+		}
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"This object describes users operations regarding the file status,
+			 such as media format, file copying, deleting files, making directories,
+			 deleting directories and renaming files. This object will return current
+			 status values."
+        ::= { swFSBasicInfo 1 }
+
+
+	swFSBasicInfoCtrlProcess OBJECT-TYPE
+		SYNTAX  INTEGER (0..100)
+        UNITS	"%"
+        MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"This object indicates the current user operation process as a percentage."
+        ::= { swFSBasicInfo 2 }
+
+-- -----------------------------------------------------------------------------
+-- swFSDriveCtrl
+-- -----------------------------------------------------------------------------
+	swFSDriveInfoTable OBJECT-TYPE
+		SYNTAX      SEQUENCE OF SwFSDriveInfoEntry
+	  	MAX-ACCESS  not-accessible
+	  	STATUS      current
+	  	DESCRIPTION
+	    	"This table will display information regarding the drive."
+		::= { swFSDriveCtrl 1 }
+
+	swFSDriveInfoEntry OBJECT-TYPE
+		SYNTAX      SwFSDriveInfoEntry
+	  	MAX-ACCESS  not-accessible
+	  	STATUS      current
+		DESCRIPTION
+			"."
+		INDEX  {swFSDriveInfoIndex}
+		::= { swFSDriveInfoTable 1 }
+
+	SwFSDriveInfoEntry ::= SEQUENCE {
+		swFSDriveInfoIndex
+			INTEGER,
+		swFSDriveInfoDriveID
+	  		INTEGER,
+	  	swFSDriveInfoType
+	    	DisplayString,
+	    	swFSDriveInfoSize
+	    	Integer32,
+	   	swFSDriveInfoPartition
+	    	DisplayString,
+	    	swFSDriveInfoFStype
+	    	DisplayString
+		}
+
+	swFSDriveInfoIndex OBJECT-TYPE
+		SYNTAX      INTEGER
+		MAX-ACCESS  not-accessible
+		STATUS      current
+		DESCRIPTION
+			"This object will index drive entries."
+        ::= { swFSDriveInfoEntry 1 }
+
+	swFSDriveInfoDriveID OBJECT-TYPE
+		SYNTAX	INTEGER {
+			a(0),
+			b(1),
+			c(2),
+			d(3),
+			e(4),
+			f(5),
+			g(6),
+			h(7),
+			i(8),
+			j(9),
+			k(10),
+			l(11),
+			m(12),
+			n(13),
+			o(14),
+			p(15),
+			q(16),
+			r(17),
+			s(18),
+			t(19),
+			u(20),
+			v(21),
+			w(22),
+			x(23),
+			y(24),
+			z(25)
+		}
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"Indicates the drive ID."
+        ::= { swFSDriveInfoEntry 2 }
+
+	swFSDriveInfoType OBJECT-TYPE
+		SYNTAX	DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"Indicates the drive type."
+        ::= { swFSDriveInfoEntry 3 }
+
+    swFSDriveInfoSize OBJECT-TYPE
+		SYNTAX Integer32
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Indicates the drive size."
+      	::= { swFSDriveInfoEntry 4 }
+
+	swFSDriveInfoPartition OBJECT-TYPE
+		SYNTAX	DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"Indicates the drive partition."
+        ::= { swFSDriveInfoEntry 5 }
+
+    swFSDriveInfoFStype OBJECT-TYPE
+		SYNTAX	DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"Indicates the FS type."
+        ::= { swFSDriveInfoEntry 6 }
+
+-- -----------------------------------------------------------------------------
+--	swFSDriveFormatTable OBJECT-TYPE
+--		SYNTAX      SEQUENCE OF SwFSDriveFormatEntry
+--	  	MAX-ACCESS  not-accessible
+--	  	STATUS      current
+--	  	DESCRIPTION
+--	    	"."
+--		::= { swFSDriveCtrl 2 }
+
+--	swFSDriveFormatEntry OBJECT-TYPE
+--		SYNTAX      SwFSDriveFormatEntry
+--	  	MAX-ACCESS  not-accessible
+--	  	STATUS      current
+--		DESCRIPTION
+--			"."
+--		INDEX    { swFSDriveFormatDriveID}
+--		::= { swFSDriveFormatTable 1 }
+
+--	SwFSDriveFormatEntry ::= SEQUENCE {
+--		swFSDriveFormatindex
+--	  		Integer32,
+--		swFSDriveFormatDriveID
+--	  		INTEGER,
+--	  	swFSDriveFormatFat
+--	    	INTEGER,
+--	    swFSDriveFormatLabelName
+--	    	DisplayString
+--	   	}
+
+--	swFSDriveFormatindex OBJECT-TYPE
+--		SYNTAX	Integer32 (1..2147483647)
+--		MAX-ACCESS  not-accessible
+--		STATUS      current
+--		DESCRIPTION
+--			"."
+--       ::= { swFSDriveFormatEntry 1 }
+
+--	swFSDriveFormatDriveID OBJECT-TYPE
+--		SYNTAX	INTEGER {
+--			a(0),
+--			b(1),
+--			c(2),
+--			d(3),
+--			e(4),
+--			f(5)
+--		}
+--		MAX-ACCESS  read-only
+--		STATUS      current
+--		DESCRIPTION
+--			"."
+--       ::= { swFSDriveFormatEntry 2 }
+
+--	swFSDriveFormatFat OBJECT-TYPE
+--		SYNTAX INTEGER  {
+--			fat16(1),
+--			fat32(2)
+--		}
+--		MAX-ACCESS  read-write
+--		STATUS      current
+--		DESCRIPTION
+--			"."
+--        ::= { swFSDriveFormatEntry 3 }
+
+--	swFSDriveFormatLabelName OBJECT-TYPE
+--		SYNTAX	DisplayString (SIZE (0..8))
+--		MAX-ACCESS  read-write
+--		STATUS      current
+--		DESCRIPTION
+--			"."
+--       ::= { swFSDriveFormatEntry 4 }
+
+
+	swFSDriveFormatCtrl			OBJECT IDENTIFIER ::= { swFSDriveCtrl 2 }
+
+	swFSDriveFormatDriveID OBJECT-TYPE
+		SYNTAX	INTEGER {
+			none(0),
+			a(1),
+			b(2),
+			c(3),
+			d(4),
+			e(5),
+			f(6),
+			g(7),
+			h(8),
+			i(9),
+			j(10),
+			k(11),
+			l(12),
+			m(13),
+			n(14),
+			o(15),
+			p(16),
+			q(17),
+			r(18),
+			s(19),
+			t(20),
+			u(21),
+			v(22),
+			w(23),
+			x(24),
+			y(25),
+			z(26)
+		}
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Used to assign a format type to the drive ID.
+			 If none (1) is specified, the switch will default to the current drive."
+        ::= { swFSDriveFormatCtrl 1 }
+
+	swFSDriveFormatFat OBJECT-TYPE
+		SYNTAX INTEGER  {
+			fat16(1),
+			fat32(2)
+		}
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Use to assign FS type."
+        ::= { swFSDriveFormatCtrl 2 }
+
+	swFSDriveFormatLabelName OBJECT-TYPE
+		SYNTAX	DisplayString (SIZE (0..8))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Use to label a name for this drive."
+        ::= { swFSDriveFormatCtrl 3 }
+
+    swFSDriveFormatType OBJECT-TYPE
+		SYNTAX INTEGER  {
+			fast(1),
+			full(2),
+			full-with-mbr(3)
+        }
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Use to select format type:
+			fast: clear the file and directory information in the partion header.
+            full: clear the file and directory information in the partion header
+                  and the all data sectors in the partion.
+            full-with-mbr: clear all data sectors in the disk ( or on the storage
+                           drive) and rebuild the partion information."
+        ::= { swFSDriveFormatCtrl 4 }
+
+	swFSDriveFormatActivity OBJECT-TYPE
+		SYNTAX INTEGER  {
+			none(1),
+			start(2)
+        }
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"When this object is set to start(2),the device will begin
+			 to format the designated drive."
+        ::= { swFSDriveFormatCtrl 5 }
+
+
+-- -----------------------------------------------------------------------------
+	swFSDriveChangeCtrl			OBJECT IDENTIFIER ::= { swFSDriveCtrl 3 }
+
+	swFSDriveChangeUnitID OBJECT-TYPE
+		SYNTAX      INTEGER
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Use to assign the current unit ID.
+			 If it is not specified, it refers to the master unit."
+        ::= { swFSDriveChangeCtrl 1 }
+
+	swFSDriveChangeDriveID OBJECT-TYPE
+		SYNTAX	INTEGER {
+			none(1),
+			a(2),
+			b(3),
+			c(4),
+			d(5),
+			e(6),
+			f(7),
+			g(8),
+			h(9),
+			i(10),
+			j(11),
+			k(12),
+			l(13),
+			m(14),
+			n(15),
+			o(16),
+			p(17),
+			q(18),
+			r(19),
+			s(20),
+			t(21),
+			u(22),
+			v(23),
+			w(24),
+			x(25),
+			y(26),
+			z(27)
+		}
+	        MAX-ACCESS  read-write
+	        STATUS  current
+	        DESCRIPTION
+	            "Specifies the drive ID. To set this object will change the current drive."
+        ::= { swFSDriveChangeCtrl 2 }
+
+	swFSDriveCurrentDirectory  OBJECT-TYPE
+	        SYNTAX  DisplayString  (SIZE (0..64))
+	        MAX-ACCESS  read-write
+	        STATUS  current
+	        DESCRIPTION
+	            "Change the current directory to this directory. The path name can be specified either
+	             as a full path name or partial name. Entering a partial path name denotes that the
+	             directory is to be a part of the current directory. "
+        ::= { swFSDriveChangeCtrl 3 }
+
+-- -----------------------------------------------------------------------------
+	swFSDriveInfoStackTable OBJECT-TYPE
+		SYNTAX      SEQUENCE OF SwFSDriveInfoStackEntry
+	  	MAX-ACCESS  not-accessible
+	  	STATUS      current
+	  	DESCRIPTION
+	    	      "This table indicates information about the drives of devices stacked with
+	    	       the current device."
+		::= { swFSDriveCtrl 4 }
+
+	swFSDriveInfoStackEntry OBJECT-TYPE
+		SYNTAX      SwFSDriveInfoStackEntry
+	  	MAX-ACCESS  not-accessible
+	  	STATUS      current
+		DESCRIPTION
+			"A list of information about each drive of devices stacked with this device."
+		INDEX  { swFSDriveInfoStackUnitID, swFSDriveInfoStackIndex}
+		::= { swFSDriveInfoStackTable 1 }
+
+	SwFSDriveInfoStackEntry ::= SEQUENCE {
+		swFSDriveInfoStackUnitID
+			INTEGER	,
+		swFSDriveInfoStackIndex
+			INTEGER,
+		swFSDriveInfoStackDriveID
+	  		INTEGER,
+	  	swFSDriveInfoStackType
+	    		DisplayString,
+	    	swFSDriveInfoStackSize
+	    		Integer32,
+	   	swFSDriveInfoStackPartition
+	    		DisplayString,
+	    	swFSDriveInfoStackFStype
+	    		DisplayString
+		}
+
+	swFSDriveInfoStackUnitID OBJECT-TYPE
+		SYNTAX      INTEGER
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"The Unit ID of each device stacked with the current device."
+        ::= { swFSDriveInfoStackEntry 1 }
+
+	swFSDriveInfoStackIndex OBJECT-TYPE
+		SYNTAX      INTEGER
+		MAX-ACCESS  not-accessible
+		STATUS      current
+		DESCRIPTION
+			"The drive index of each device stacked with the current device."
+        ::= { swFSDriveInfoStackEntry 2 }
+
+	swFSDriveInfoStackDriveID OBJECT-TYPE
+		SYNTAX	INTEGER {
+			a(1),
+			b(2),
+			c(3),
+			d(4),
+			e(5),
+			f(6),
+			g(7),
+			h(8),
+			i(9),
+			j(10),
+			k(11),
+			l(12),
+			m(13),
+			n(14),
+			o(15),
+			p(16),
+			q(17),
+			r(18),
+			s(19),
+			t(20),
+			u(21),
+			v(22),
+			w(23),
+			x(24),
+			y(25),
+			z(26)
+		}
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"Indicates the drive ID."
+        ::= { swFSDriveInfoStackEntry 3 }
+
+	swFSDriveInfoStackType OBJECT-TYPE
+		SYNTAX	DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"Indicates the drive type."
+        ::= { swFSDriveInfoStackEntry 4 }
+
+    swFSDriveInfoStackSize OBJECT-TYPE
+		SYNTAX Integer32
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Indicates the drive size."
+      	::= { swFSDriveInfoStackEntry 5 }
+
+	swFSDriveInfoStackPartition OBJECT-TYPE
+		SYNTAX	DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"Indicates the drive partition."
+        ::= { swFSDriveInfoStackEntry 6 }
+
+    swFSDriveInfoStackFStype OBJECT-TYPE
+		SYNTAX	DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"Indicates the FS type."
+        ::= { swFSDriveInfoStackEntry 7 }
+
+-- -----------------------------------------------------------------------------
+-- swFSDirectoryctrl
+-- -----------------------------------------------------------------------------
+	swFSDirectoryMake	OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"make directory (md/mkdir).
+			 Used to create a directory on a drive."
+		::= { swFSDirectoryCtrl 1 }
+
+	swFSDirectoryDel	OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"delete directory (rd/rmdir).
+			 Used to delete a directory on a drive."
+		::= { swFSDirectoryCtrl 2 }
+
+
+-- -----------------------------------------------------------------------------
+	swFSctrlDirectoryDir OBJECT IDENTIFIER ::= { swFSDirectoryCtrl 3 }
+	swFSDirectoryPath	OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Used to control the path directory."
+		::= { swFSctrlDirectoryDir 1 }
+
+	swFSDirectoryTable OBJECT-TYPE
+		SYNTAX      SEQUENCE OF SwFSDirectoryEntry
+	  	MAX-ACCESS  not-accessible
+	  	STATUS      current
+	  	DESCRIPTION
+	    	"This table lists file and directory information."
+		::= { swFSctrlDirectoryDir 2 }
+
+	swFSDirectoryEntry OBJECT-TYPE
+		SYNTAX      SwFSDirectoryEntry
+	  	MAX-ACCESS  not-accessible
+	  	STATUS      current
+		DESCRIPTION
+			"."
+		INDEX    { swFSDirectoryName}
+		::= { swFSDirectoryTable 1 }
+
+	SwFSDirectoryEntry ::= SEQUENCE {
+		swFSDirectoryName
+	    	DisplayString,
+	    swFSDirectoryAttr
+	    	INTEGER,
+	    swFSDirectoryTime
+	    	DisplayString,
+	    swFSDirectorySize
+	    	INTEGER
+		}
+
+	swFSDirectoryName OBJECT-TYPE
+		SYNTAX	DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"Indicates a file name or directory in this directory."
+        ::= { swFSDirectoryEntry 1 }
+
+    swFSDirectoryAttr	OBJECT-TYPE
+		SYNTAX INTEGER  {
+			dir(1),
+			file(2)
+        }
+		MAX-ACCESS  read-only
+		STATUS      current
+		DESCRIPTION
+			"Displays the attributes of this entry.
+			 dir(1) - it's a directory.
+			 file(2) -  it's a file."
+		::= { swFSDirectoryEntry 2 }
+
+    swFSDirectoryTime OBJECT-TYPE
+		SYNTAX	DisplayString (SIZE (0..32))
+		MAX-ACCESS read-only
+		STATUS current
+		DESCRIPTION
+			"Indicates the time of creation or modification of this file."
+      	::= { swFSDirectoryEntry 3 }
+
+        swFSDirectorySize OBJECT-TYPE
+	        SYNTAX INTEGER
+	        UNITS       "bytes"
+	        MAX-ACCESS  read-only
+	        STATUS      current
+	        DESCRIPTION
+	        "Indicates the file size."
+        ::= { swFSDirectoryEntry 4 }
+
+-- -----------------------------------------------------------------------------
+-- swFSFileCtrl
+-- -----------------------------------------------------------------------------
+	swFSFileRename	OBJECT IDENTIFIER ::= { swFSFileCtrl 1 }
+	swFSFileSourceName	OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION	"Use to assign the source file to rename.
+					 Please input path and filename to rename."
+		::= { swFSFileRename 1 }
+
+	swFSFileTargetName	OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION	"Use to assign the destination file to rename.
+					 Please input path and filename to rename."
+		::= { swFSFileRename 2 }
+
+	swFSFileRenameActivity	OBJECT-TYPE
+		SYNTAX INTEGER  {
+			none(1),
+			start(2)
+        }
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"When this object is set to start(2), the device will begin
+			 renaming the file."
+		::= { swFSFileRename 3 }
+
+-- -----------------------------------------------------------------------------
+   swFSFileDel	OBJECT IDENTIFIER ::= { swFSFileCtrl 2 }
+-- -----------------------------------------------------------------------------
+	swFSFileDelName	OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION	"Use to delete a file. Please input path and filename
+					 to delete."
+		::= { swFSFileDel 1 }
+
+	swFSFileDelOption	OBJECT-TYPE
+		SYNTAX INTEGER  {
+			none(1),
+			recursive(2)
+        }
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"When this object is set to none(1), the file will be deleted.
+			When this object is set to recursive(2), the directory will be deleted despite
+			of whether there is any file in it."
+		::= { swFSFileDel 2 }
+
+	swFSFileDelActivity	OBJECT-TYPE
+		SYNTAX INTEGER  {
+			none(1),
+			start(2)
+        }
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"When this object is set to start(2), the device will begin
+			 deleting the file."
+		::= { swFSFileDel 3 }
+
+-- -----------------------------------------------------------------------------
+-- swFSCopyCtrl
+-- -----------------------------------------------------------------------------
+	swFSCopySourceName	OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION	"Use to assign the source file to copy.
+					 Please input path and filename."
+		::= { swFSCopyCtrl 1 }
+
+	swFSCopyDestinationName	OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION	"Use to assign the destination file to copy.
+					 Please input path and filename."
+		::= { swFSCopyCtrl 2 }
+
+	swFSCopyActivity	OBJECT-TYPE
+		SYNTAX INTEGER  {
+			none(1),
+			start(2),
+			file-to-file(3),
+			file-to-image(4),
+			file-to-config(5),
+			file-to-prom(6),
+			image-to-file(7),
+			config-to-file(8),
+			log-to-file(9),
+			prom-to-file(10)			
+                }
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"This command is used to copy a file to another file in
+                         the file system. A file located in a drive of a unit can
+                         be copied to another file located in another drive of
+                         another unit. For any project that does not support the file
+                         system on the flash, the system file such as runtime
+                         image/configuration / prom /log can still be copied to
+                         media or from media that supports the file system via
+                         this command using the reserved keyword.
+                         The keyword here refers to image-id, config-id, prom,
+                          or log."
+		::= { swFSCopyCtrl 3 }
+
+	swFSCopyDestinationUnitID OBJECT-TYPE
+		SYNTAX      INTEGER
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Use to assign the destination unit ID to copy.
+			 If it is specified, swFSCopyDestinationDriveID should
+			 be specified also.
+			 If it is not specified, it refers to the current unit
+			 specified by swFSDriveChangeUnitID. If the current unit
+			 is not specified also, it refers to the master unit.
+			"
+        ::= { swFSCopyCtrl 4 }
+
+	swFSCopyDestinationDriveID OBJECT-TYPE
+		SYNTAX	INTEGER {
+			none(1),
+			a(2),
+			b(3),
+			c(4),
+			d(5),
+			e(6),
+			f(7),
+			g(8),
+			h(9),
+			i(10),
+			j(11),
+			k(12),
+			l(13),
+			m(14),
+			n(15),
+			o(16),
+			p(17),
+			q(18),
+			r(19),
+			s(20),
+			t(21),
+			u(22),
+			v(23),
+			w(24),
+			x(25),
+			y(26),
+			z(27)
+		}
+	        MAX-ACCESS  read-write
+	        STATUS  current
+	        DESCRIPTION
+	            "Specifies the destination drive ID to copy.
+	             If swFSCopyDestinationUnitID is specified, this object
+	             should be specified also.
+	             If it is not specified, it refers to the current drive
+	             specified by swFSDriveChangeDriveID."
+        ::= { swFSCopyCtrl 5 }
+        
+	swFSCopyConfigID     OBJECT-TYPE
+		SYNTAX INTEGER
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Specifies the specific configuration to copied."
+		::= { swFSCopyCtrl 6 }
+		
+        swFSCopyImageID	    OBJECT-TYPE
+		SYNTAX INTEGER  
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Specifies the specific firmware image to copied."
+		::= { swFSCopyCtrl 7 }
+
+        
+        
+
+-- -----------------------------------------------------------------------------
+-- swFSMoveCtrl
+-- -----------------------------------------------------------------------------
+	swFSMoveSourceName	OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Use to assign the source file to move.
+			 Please input path and filename."
+		::= { swFSMoveCtrl 1 }
+
+	swFSMoveDestinationUnitID OBJECT-TYPE
+		SYNTAX      INTEGER
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Use to assign the destination unit ID to move.
+			 If it is specified, swFSMoveDestinationDriveID should
+			 be specified also.
+			 If it is not specified, it refers to the current unit
+			 specified by swFSDriveChangeUnitID. If the current unit
+			 is not specified also, it refers to the master unit.
+			"
+        	::= { swFSMoveCtrl 2 }
+
+	swFSMoveDestinationDriveID OBJECT-TYPE
+		SYNTAX	INTEGER {
+			none(1),
+			a(2),
+			b(3),
+			c(4),
+			d(5),
+			e(6),
+			f(7),
+			g(8),
+			h(9),
+			i(10),
+			j(11),
+			k(12),
+			l(13),
+			m(14),
+			n(15),
+			o(16),
+			p(17),
+			q(18),
+			r(19),
+			s(20),
+			t(21),
+			u(22),
+			v(23),
+			w(24),
+			x(25),
+			y(26),
+			z(27)
+		}
+	        MAX-ACCESS  read-write
+	        STATUS  current
+	        DESCRIPTION
+	            "Specifies the destination drive ID to move.
+	             If swFSMoveDestinationUnitID is specified, this object
+	             should be specified also.
+	             If it is not specified, it refers to the current drive
+	             specified by swFSDriveChangeDriveID."
+        	::= { swFSMoveCtrl 3 }
+
+	swFSMoveDestinationName	OBJECT-TYPE
+		SYNTAX  DisplayString (SIZE (0..255))
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"Use to assign the destination file to move.
+			 Please input path and filename."
+		::= { swFSMoveCtrl 4 }
+
+	swFSMoveActivity	OBJECT-TYPE
+		SYNTAX INTEGER  {
+			none(1),
+			start(2)
+        	}
+		MAX-ACCESS  read-write
+		STATUS      current
+		DESCRIPTION
+			"When this object is set to start(2), the device will
+			 begin moving the file."
+		::= { swFSMoveCtrl 5 }
+
+END

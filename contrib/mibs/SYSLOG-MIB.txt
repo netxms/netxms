@@ -1,0 +1,293 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : System Log Common mib
+-- FILE NAME: SSL.mib
+-- DATE     : 2009/02/17
+-- VERSION  : 2.02
+-- PURPOSE  : To construct the MIB structure of System Log management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.02, 2009/02/17, Susan Lu
+-- [New Object]
+-- [1]Add "swSysLogServerAddrType" and "swSysLogServerAddr" to support IPv6 
+--    syslog server.   
+-- [Modification]
+-- [1]Obsolete "swSysLogServerIPAddress".
+--    For support IPv6 syslog server.
+-- Notes: Requested by Susan Lu for DES3200
+--
+-- Version 2.01, 2009/01/15, Green zhu
+-- [Modification]
+-- [1]Add value list "emergency(4)", "alert(5)", "critical(6)", "error(7)",
+--    "notice(8)" and "debug(9)" in swSysLogServerSeverity.
+--    For support 8 severity levels.
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- ----------------------------------------------------------------------------- 
+
+SYSLOG-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,IpAddress
+                                        FROM SNMPv2-SMI
+        InetAddress, InetAddressType  FROM INET-ADDRESS-MIB
+        RowStatus           		FROM SNMPv2-TC
+    	dlink-common-mgmt  	        FROM DLINK-ID-REC-MIB;
+
+
+    swSysLogMIB MODULE-IDENTITY
+	    LAST-UPDATED "0902170000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+		    "The Structure of System Log Information for the
+		     proprietary enterprise."
+        ::= { dlink-common-mgmt 12 }
+
+    swSysLogCtrlState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               other(1),
+               disabled(2),
+               enabled(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object enables or disables the System Log function
+            during system runtime."
+        ::= { swSysLogMIB 1 }
+ 
+-- -----------------------------------------------------------------------------
+-- swSysLogServerTable
+-- -----------------------------------------------------------------------------
+    swSysLogServerTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwSysLogServerEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains System Log Server information."
+        ::= { swSysLogMIB 2 }
+
+    swSysLogServerEntry OBJECT-TYPE
+        SYNTAX  SwSysLogServerEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information about the System Log Server."
+        INDEX  { swSysLogServerIndex }
+        ::= { swSysLogServerTable 1 }
+
+    SwSysLogServerEntry ::=
+        SEQUENCE {
+            swSysLogServerIndex
+                INTEGER,
+            swSysLogServerIPAddress
+                IpAddress,
+            swSysLogServerFacility
+                INTEGER,
+             swSysLogServerSeverity
+                INTEGER,
+            swSysLogServerUDPPort
+                INTEGER,
+            swSysLogServerState
+                INTEGER,
+            swSysLogServerRowStatus
+                RowStatus,  
+            swSysLogServerAddrType   
+          	InetAddressType,
+	    swSysLogServerAddr       
+		InetAddress  
+        }
+
+    swSysLogServerIndex OBJECT-TYPE
+        SYNTAX  INTEGER (1..4)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The index entry of the unique System Log Server entry."
+        ::= { swSysLogServerEntry 1 }
+
+    swSysLogServerIPAddress OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-create
+        STATUS  obsolete
+        DESCRIPTION
+            "specifies the IP address of the System Log Server."
+        ::= { swSysLogServerEntry 2 }
+
+    -- The Facilities and Severities of the messages are numerically coded with decimal
+    -- values.  Some of the operating system daemons and processes have been assigned
+    -- Facility values.  Process and daemons that have not been explicitly assigned a
+    -- Facility may use any of the "local use" facilities or they may use the "use-level"
+    -- Facility.  Those Facilities that have been designated are shown in Table 1 and
+    -- Severity level indicators are described in Table 2 of RFC3614 along with  their
+    -- numerical code values.
+    --    However, in this mib, only Numerical Code 16 ~ 23; Facilities(local0 ~ local7)
+    -- are implemented in Facilities. Severity levels included are informational, warning
+    -- and critical.
+
+    swSysLogServerFacility OBJECT-TYPE
+		SYNTAX  INTEGER {
+               local0(0),
+               local1(1),
+               local2(2),
+               local3(3),
+               local4(4),
+               local5(5),
+               local6(6),
+               local7(7)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "syslog Message Facilities"
+        ::= { swSysLogServerEntry 3 }
+
+    swSysLogServerSeverity OBJECT-TYPE
+        SYNTAX  INTEGER {
+               all(1),
+               warning(2),
+               informational(3),
+               emergency(4),
+               alert(5),
+               critical(6),
+               error(7),
+               notice(8),
+               debug(9)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "syslog Message Severities"
+        ::= { swSysLogServerEntry 4 }
+
+    swSysLogServerUDPPort OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "syslog uses the user datagram protocol (UDP) as its underlying transport
+             layer mechanism. The UDP port that has been assigned to syslog is 514. It
+             is RECOMMENDED that the source port also be 514 to indicate that the message
+             is from the syslog process of the sender, but there have been cases seen
+             where valid syslog messages have come from a sender with a source port other
+             than 514. If the sender uses a source port other than 514 then it is
+             RECOMMENDED that subsequent messages
+             will always be  from  the single consistent port used by the sender."
+        DEFVAL  { 514 }
+        ::= { swSysLogServerEntry 5 }
+
+    swSysLogServerState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               other(1),
+               disabled(2),
+               enabled(3)
+               }
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Enables or disables the specified System Log Server during runtime."
+        ::= { swSysLogServerEntry 6 }
+
+    swSysLogServerRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Indicates the status of this entry. When creating a syslog server
+             entry, the IP address should also be set."
+        ::= { swSysLogServerEntry 7 }  
+         
+    swSysLogServerAddrType OBJECT-TYPE
+        SYNTAX        InetAddressType
+        MAX-ACCESS    read-create
+        STATUS        current
+        DESCRIPTION
+            "Specifies the address type of the System Log Server."
+        ::= { swSysLogServerEntry 8 }
+  
+    swSysLogServerAddr	OBJECT-TYPE
+    	SYNTAX	InetAddress
+    	MAX-ACCESS   read-create
+    	STATUS	current
+    	DESCRIPTION
+               "Specifies the address of the System Log Server."   
+       ::= { swSysLogServerEntry 9 }  
+        
+
+
+-- -----------------------------------------------------------------------------
+-- swLogSaveCtrl
+-- -----------------------------------------------------------------------------
+    swLogSaveCtrl			OBJECT IDENTIFIER ::= { swSysLogMIB 3 }
+
+    swLogSaveMethod OBJECT-TYPE
+        SYNTAX  INTEGER {
+        	   time-interval(1),
+        	   on-demand(2),
+       		   log-trigger(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This configuration is used to set the method used to save logs."
+        ::= { swLogSaveCtrl 1 }
+
+    swLogSaveTimeInterval OBJECT-TYPE
+        SYNTAX  INTEGER (1..65535)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Save log to flash every xxx minutes if the time interval method is implemented
+            (if no log entries occur during this period, don't save)."
+        ::= { swLogSaveCtrl 2 }
+
+-- -----------------------------------------------------------------------------
+  swSysLogCtrl	OBJECT IDENTIFIER ::= { swSysLogMIB 4 }
+
+  swSysLogCtrlClearLog OBJECT-TYPE
+        SYNTAX  INTEGER{
+        	other(1),
+        	start(2)
+        	}
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "Clear the switch history log."
+        ::= { swSysLogCtrl 1 }
+
+  swSysLogCtrlClearDangerousCtrl OBJECT IDENTIFIER ::= { swSysLogCtrl 2 }
+
+  swSysLogCtrlClearDangerousUnitID OBJECT-TYPE
+        SYNTAX      INTEGER
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "Used to clear dangerous logs on a specific unit. The default
+             value of this object is the ID of the master unit. That is,
+             the master ID will be read before making any changes. The last
+             value written to the object will be kept and then be supplied
+             for successive GET/GET-NEXT requests."
+        ::= { swSysLogCtrlClearDangerousCtrl 1 }
+
+  swSysLogCtrlClearDangerousLog OBJECT-TYPE
+        SYNTAX  INTEGER{
+        	other(1),
+        	start(2)
+        	}
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "Clear the dangerous switch logs."
+        ::= { swSysLogCtrlClearDangerousCtrl 2 }
+
+END

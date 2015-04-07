@@ -1,0 +1,620 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Secure Shell Common mib
+-- FILE NAME: SSH.mib
+-- DATE     : 2013/02/27
+-- VERSION  : 2.06
+-- PURPOSE  : To construct the MIB structure of Secure Shell management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--    
+-- Version 2.06, 2013/02/27, Jessy Ji
+-- Description:
+--   Add swSSHPublKeyOwnerTable to associate a public key to SSH user account.
+--    
+-- Version 2.05, 2012/03/05, Jessy Ji
+-- Description:
+--   Add node swSSHBypassLoginScreenState to control secondary password authentcation.
+--
+-- Version 2.04, 2011/10/26, Jessy Ji
+-- Description:
+--   Add node swSSHPublicKeyMgmt to support downloading and uploading public key via TFTP protocol.
+--
+-- Version 2.03, 2011/06/20, Jessy Ji
+-- Description:
+--   Change the value range of node swSSHConnectionTimeout from 120-600 to 30-600.
+--
+-- Version 2.02, 2009/12/21, Dandelion
+-- Description:
+--   Add swSSHUserHostIPv6Addr for supporting SSH IPv6 Host_based method authentication.
+--
+-- Version 2.01, 2008/06/17, Green
+-- Description:
+--   Correct the object name from swSSHEncryptAlgCAST28Admin to 
+--   swSSHEncryptAlgCAST128Admin.
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+SSH-MIB DEFINITIONS ::= BEGIN
+
+
+IMPORTS
+    Unsigned32                       FROM SNMPv2-SMI
+    IpAddress                        FROM RFC1155-SMI
+    Ipv6Address	                     FROM IPV6-TC
+    InetAddressType, InetAddress     FROM INET-ADDRESS-MIB		   
+    MODULE-IDENTITY, OBJECT-TYPE     FROM SNMPv2-SMI
+    RowStatus,DisplayString          FROM SNMPv2-TC
+    MODULE-COMPLIANCE, OBJECT-GROUP  FROM SNMPv2-CONF
+    SnmpAdminString                  FROM SNMP-FRAMEWORK-MIB
+    dlink-common-mgmt                FROM DLINK-ID-REC-MIB;
+
+    swSSHMIB MODULE-IDENTITY
+        LAST-UPDATED "201302270000Z"
+        ORGANIZATION "D-Link Corp."
+        CONTACT-INFO
+            "http://support.dlink.com"
+        DESCRIPTION
+            "The Secure Shell module MIB."
+        ::= { dlink-common-mgmt 6}
+
+    swSSHMgmt OBJECT IDENTIFIER ::= { swSSHMIB 1 }
+
+-- -----------------------------------------------------------------------------
+-- Textual Conventions
+-- -----------------------------------------------------------------------------
+    swSSHVersion OBJECT-TYPE
+        SYNTAX  INTEGER(1..10)
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the SSH version supported in the system."
+        ::= { swSSHMgmt 1}
+
+    swSSHAdmin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the Secure Shell is enabled or disabled."
+        ::= { swSSHMgmt 2}
+
+    swSSHMaxAuthFailAttempts OBJECT-TYPE
+        SYNTAX  INTEGER (2..20)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the maximum AAC authentication attempts allowed."
+        ::= { swSSHMgmt 3}
+    swSSHSessionKeyRekeying OBJECT-TYPE
+        SYNTAX  INTEGER {
+                        never(0),
+                        ten-min(10),
+                        thirty-min(30),
+                        sixty-min(60)
+                       }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the time interval in minutes to negotiate new session keys
+            for client and server."
+        ::= { swSSHMgmt 4}
+
+    swSSHMaxSession OBJECT-TYPE
+        SYNTAX  INTEGER(1..8)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the SSH supported max session for the system."
+        ::= { swSSHMgmt 5}
+
+    swSSHConnectionTimeout OBJECT-TYPE
+        SYNTAX  INTEGER(30..600)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates connection timeout."
+        ::= { swSSHMgmt 6}
+
+    swSSHListenedPort OBJECT-TYPE
+        SYNTAX  INTEGER(1..65535)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates listened port."
+        ::= { swSSHMgmt 7}
+
+    swSSHBypassLoginScreenState OBJECT-TYPE
+        SYNTAX  INTEGER {   
+                    enabled(1),
+                    disabled(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object is used to enable or disable bypassing login 
+            screen which is used to avoid a secondary username/password 
+            authentication for users using SSH public key authentication."
+        ::= { swSSHMgmt 8}
+
+
+-- -----------------------------------------------------------------------------
+-- groups in the SSH MIB
+-- -----------------------------------------------------------------------------
+
+
+-- -----------------------------------------------------------------------------
+    swSSHCtrlAlgGroup OBJECT IDENTIFIER ::= { swSSHMIB 3 }
+
+    swSSHEncryptAlgCtrl OBJECT IDENTIFIER ::= { swSSHCtrlAlgGroup 1 }
+
+    swSSHEncryptAlg3DESAdmin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the DES encryption algorithm is enabled or disabled."
+        ::= { swSSHEncryptAlgCtrl 1}
+
+    swSSHEncryptAlgBlowfishAdmin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the Blowfish encryption algorithm is enabled or disabled
+    		."
+        ::= { swSSHEncryptAlgCtrl 2}
+
+    swSSHEncryptAlgAES128Admin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the AES128 encryption algorithm is enabled or disabled
+    		."
+        ::= { swSSHEncryptAlgCtrl 3}
+
+    swSSHEncryptAlgAES192Admin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the AES192 encryption algorithm is enabled or disabled."
+        ::= { swSSHEncryptAlgCtrl 4}
+
+    swSSHEncryptAlgAES256Admin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the AES256 encryption algorithm is enabled or disabled."
+        ::= { swSSHEncryptAlgCtrl 5}
+
+    swSSHEncryptAlgArcfourAdmin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the Arcfour encryption algorithm is enabled or disabled."
+        ::= { swSSHEncryptAlgCtrl 6}
+
+    swSSHEncryptAlgCAST128Admin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the CAST128 encryption algorithm is enabled or disabled."
+        ::= { swSSHEncryptAlgCtrl 7}
+
+    swSSHEncryptAlgTwofish128Admin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the Twofish128 encryption algorithm is enabled or disabled."
+        ::= { swSSHEncryptAlgCtrl 8}
+
+    swSSHEncryptAlgTwofish192Admin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the Twofish192 encryption algorithm is enabled or disabled."
+        ::= { swSSHEncryptAlgCtrl 9}
+
+    swSSHEncryptAlgTwofish256Admin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the Twofish256 encryption algorithm is enabled or disabled."
+        ::= { swSSHEncryptAlgCtrl 10}
+
+
+-- -----------------------------------------------------------------------------
+    swSSHAuthenMethodCtrl OBJECT IDENTIFIER ::= { swSSHCtrlAlgGroup 2 }
+
+    swSSHAuthenMethodPasswdAdmin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the password authentication is enabled or disabled."
+        ::= { swSSHAuthenMethodCtrl 1}
+
+    swSSHAuthenMethodPubKeyAdmin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the Public Key authentication is enabled or disabled."
+        ::= { swSSHAuthenMethodCtrl 2}
+
+    swSSHAuthenMethodHostKeyAdmin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the Host Key authentication is enabled or disabled."
+        ::= { swSSHAuthenMethodCtrl 3}
+
+-- -----------------------------------------------------------------------------
+    swSSHInteAlgCtrl OBJECT IDENTIFIER ::= { swSSHCtrlAlgGroup 3 }
+
+    swSSHInteAlgSHA1Admin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the HMAC-SHA1 algorithm is enabled or disabled."
+        ::= { swSSHInteAlgCtrl 1}
+
+    swSSHInteAlgMD5Admin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the HMAC-MD5 algorithm is enabled or disabled."
+        ::= { swSSHInteAlgCtrl 2}
+
+
+--  swSSHKeyExDAdmin OBJECT IDENTIFIER ::= { swSSHCtrlAlgGroup 4 }
+
+--   swSSHKeyExDAdmin OBJECT-TYPE
+--        SYNTAX  INTEGER {
+--                    other(1),
+--                    disabled(2),
+--                    enabled(3)
+--                }
+--        MAX-ACCESS  read-write
+--        STATUS  current
+--        DESCRIPTION
+--            "This object indicates if the Diffie Hellman algorithm is enabled or disabled
+--			."
+--        ::= { swSSHCtrlAlgGroup 4}
+
+-- -----------------------------------------------------------------------------
+    swSSHPublKeyCtrl OBJECT IDENTIFIER ::= { swSSHCtrlAlgGroup 5 }
+
+    swSSHPublKeyRSAAdmin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the RSA algorithm is enabled or disabled."
+        ::= { swSSHPublKeyCtrl 1}
+
+    swSSHPublKeyDSAAdmin OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the DSA algorithm is enabled or disabled."
+        ::= { swSSHPublKeyCtrl 2}
+
+-- -----------------------------------------------------------------------------
+-- SSH User Info Management
+-- -----------------------------------------------------------------------------
+    swSSHUserMgmt 	OBJECT IDENTIFIER ::= {swSSHMIB 4}
+
+    swSSHUserCtrlTable OBJECT-TYPE
+    	SYNTAX SEQUENCE OF SshUserEntry
+    		MAX-ACCESS not-accessible
+            STATUS current
+            DESCRIPTION
+            	"The SSH user table."
+            ::= { swSSHUserMgmt 1 }
+
+    swSSHUserCtrlEntry OBJECT-TYPE
+    		SYNTAX SshUserEntry
+            MAX-ACCESS not-accessible
+            STATUS current
+            DESCRIPTION
+            	"The entries of SSH user table."
+            INDEX  { swSSHUserName }
+            ::= { swSSHUserCtrlTable 1 }
+
+    SshUserEntry ::=
+    	SEQUENCE {
+    		swSSHUserName 		SnmpAdminString,
+    		swSSHUserAuthMode	INTEGER,
+    		swSSHUserHostName	SnmpAdminString,
+    		swSSHUserHostIPAddr 	IpAddress,
+    		swSSHUserHostIPv6Addr 	Ipv6Address
+    	}
+
+    swSSHUserName OBJECT-TYPE
+    	SYNTAX	SnmpAdminString (SIZE(1..15))
+    	MAX-ACCESS read-only
+    	STATUS	current
+    	DESCRIPTION
+    		"SSH user name."
+    	::= { swSSHUserCtrlEntry 1 }
+
+    swSSHUserAuthMode OBJECT-TYPE
+    	SYNTAX INTEGER {
+    		hostbased(1),
+    		password(2),
+    		publickey(3)
+    		}
+    	MAX-ACCESS read-write
+    	STATUS current
+    	DESCRIPTION
+    		"Specifies the auth mode for a user."
+    	::= { swSSHUserCtrlEntry 2 }
+
+    swSSHUserHostName OBJECT-TYPE
+    	SYNTAX SnmpAdminString (SIZE(1..32))
+    	MAX-ACCESS read-write
+    	STATUS current
+    	DESCRIPTION
+    		"Specifies the host name of host-based auth mode."
+    	::= { swSSHUserCtrlEntry 3 }
+
+    swSSHUserHostIPAddr OBJECT-TYPE
+    	SYNTAX IpAddress
+    	MAX-ACCESS read-write
+    	STATUS current
+    	DESCRIPTION
+    		"Specifies the host IP address of host-based auth mode."
+    	::= { swSSHUserCtrlEntry 4 }
+
+   swSSHUserHostIPv6Addr OBJECT-TYPE
+        SYNTAX  	Ipv6Address
+        MAX-ACCESS  read-write
+        STATUS  	current
+        DESCRIPTION
+    		"Specifies the host IPv6 address of host-based auth mode."
+    	::= { swSSHUserCtrlEntry 5 }
+
+-- -----------------------------------------------------------------------------
+-- SSH Public Key Management
+-- -----------------------------------------------------------------------------
+    swSSHPublicKeyMgmt 	OBJECT IDENTIFIER ::= {swSSHMIB 5}
+
+    swSSHPublKeyTftpServerIPAddressType OBJECT-TYPE
+        SYNTAX  InetAddressType
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "A value that represents a type of Internet address.
+             ipv4(1)  An IPv4 address as defined by the
+                      InetAddressIPv4 textual convention.
+
+             ipv6(2)   An IPv6 address as defined by the
+                       InetAddressIPv6 textual convention.
+
+             dns(16)   A DNS domain name as defined by the
+                       InetAddressDNS textual convention.
+        	"
+    	::= { swSSHPublicKeyMgmt 1 }
+
+    swSSHPublKeyTftpServerIPAddress OBJECT-TYPE
+        SYNTAX  InetAddress
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+        	"Denotes a generic Internet address. "
+    	::= { swSSHPublicKeyMgmt 2 }
+        
+    swSSHPublKeyTftpServerFileName OBJECT-TYPE
+     	SYNTAX  	DisplayString (SIZE(1..64))
+    	MAX-ACCESS read-write
+    	STATUS current
+        DESCRIPTION
+            "Specify the path name and file name of the TFTP server. It can be a relative 
+             path name or an absolute path name. If path name is not specified, it refers 
+             to the TFTP server path. The maximum length is 64 characters."
+        ::= { swSSHPublicKeyMgmt 3}
+       
+    swSSHPublKeyAction OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    download(1),
+                    upload(2),
+                    other(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object allows the administrator to download or upload 
+			the SSH public key file to or from the switch through TFTP 
+			protocol.
+             
+            NOTE - The newly downloaded public keys will overwrite the 
+			previously downloaded public keys. You must pay attention 
+			to the previous keys before you overwrite them."
+        ::= { swSSHPublicKeyMgmt 10}
+		
+    swSSHPublKeyOwnerTable OBJECT-TYPE
+    	SYNTAX SEQUENCE OF SshPublKeyOwnerEntry
+    		MAX-ACCESS not-accessible
+            STATUS current
+            DESCRIPTION
+            	"The SSH user table."
+            ::= { swSSHPublicKeyMgmt 11 }
+
+    swPublKeyOwnerEntry OBJECT-TYPE
+    		SYNTAX SshPublKeyOwnerEntry
+            MAX-ACCESS not-accessible
+            STATUS current
+            DESCRIPTION
+            	"The entries of SSH public key ownership table."
+            INDEX  { swPublKeyEntryIndex }
+            ::= { swSSHPublKeyOwnerTable 1 }
+
+    SshPublKeyOwnerEntry ::=
+    	SEQUENCE {
+    		swPublKeyEntryIndex 	Unsigned32,
+    		swPublKeyIndex	    Unsigned32,
+			swPublKeyType	    INTEGER,
+			swPublKeyString     DisplayString,
+    		swPublKeyUserName	SnmpAdminString,
+    		swPublKeyRowStatus 	RowStatus
+    	}	
+
+    swPublKeyEntryIndex OBJECT-TYPE
+        SYNTAX  Unsigned32 
+        MAX-ACCESS    not-accessible
+        STATUS        current
+        DESCRIPTION   
+            "The index of this table.
+			The administrator should use a non-existed value of this 
+			objected for creating a new entry."
+    ::= { swPublKeyOwnerEntry 1 }	
+
+    swPublKeyIndex OBJECT-TYPE
+        SYNTAX  Unsigned32 
+        MAX-ACCESS    read-write
+        STATUS        current
+        DESCRIPTION   
+            "The index of a public key.
+			 Once the authorized public keys file (each line of the 
+			 file contains one key) is downloaded to the switch, 
+			 each key will be automatically assigned an index which 
+			 is started from one. The administrator can associate 
+			 the public key with a user account based on the index."
+    ::= { swPublKeyOwnerEntry 2 }
+
+    swPublKeyType OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    rsa(1),                         
+                    dsa(2)
+                }
+        MAX-ACCESS    read-only
+        STATUS        current
+        DESCRIPTION   
+            "The SSH public key type. 
+
+             rsa  - A public-key cryptosystem defined by Rivest,
+                  Shamir and Adleman.
+
+             dsa  - Digital Signature Algorithm, a public key
+                  cipher used to generate digital signatures."
+    ::= { swPublKeyOwnerEntry 3 }	
+	
+    swPublKeyString              OBJECT-TYPE
+        SYNTAX          DisplayString (SIZE (0..255))
+        MAX-ACCESS      read-only
+        STATUS          current
+        DESCRIPTION
+            "The content of SSH public key string."
+        ::= { swPublKeyOwnerEntry 4 }	
+    	
+    swPublKeyUserName     OBJECT-TYPE
+        SYNTAX          SnmpAdminString (SIZE (0..15))
+        MAX-ACCESS      read-write
+        STATUS          current
+        DESCRIPTION
+            "The owner of this public key.
+			If this filed does not contain any value, this indicates that 
+			this public key has not been associated any user account."
+        ::= { swPublKeyOwnerEntry 5 }		
+		
+    swPublKeyRowStatus       OBJECT-TYPE
+        SYNTAX          RowStatus
+        MAX-ACCESS      read-create
+        STATUS          current
+        DESCRIPTION
+               "Status of this SSH public key."
+        ::= { swPublKeyOwnerEntry 20 }		
+END

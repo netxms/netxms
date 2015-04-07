@@ -1,0 +1,255 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : LOCAL-LOOPBACK-MIB
+-- FILE NAME: LocalLoopback.mib
+-- DATE     : 2008/8/11
+-- VERSION  : 1.00
+-- PURPOSE  : To construct the MIB structure of local loopback function for
+--            proprietary enterprise.
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2008/8/11, Kelvin Tao
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+
+LOCAL-LOOPBACK-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,Integer32,Counter32
+                                          FROM SNMPv2-SMI
+        dlink-common-mgmt		  FROM DLINK-ID-REC-MIB;
+
+		
+    	
+    swLocalLoopbackMIB MODULE-IDENTITY
+          LAST-UPDATED "200808110000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+		    "The structure of local loopback for the proprietary
+                    enterprise."
+        ::= { dlink-common-mgmt 67 }
+     	
+    swLocalLoopbackCtrl           OBJECT IDENTIFIER ::= { swLocalLoopbackMIB 1 }
+    swLocalLoopbackInfo           OBJECT IDENTIFIER ::= { swLocalLoopbackMIB 2 }
+    swLocalLoopbackMgmt           OBJECT IDENTIFIER ::= { swLocalLoopbackMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- swLocalLoopbackCtrl
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- swLocalLoopbackInfo
+-- -----------------------------------------------------------------------------
+    	     	
+-- -----------------------------------------------------------------------------
+-- swLocalLoopbackMgmt
+-- -----------------------------------------------------------------------------
+
+    swLocalLoopbackConfigTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwLocalLoopbackConfigEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains the configuration of local loopback."
+        ::= { swLocalLoopbackMgmt 1 }
+
+    swLocalLoopbackConfigEntry OBJECT-TYPE
+        SYNTAX  SwLocalLoopbackConfigEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swLocalLoopbackConfigTable."
+        INDEX  { swLocalLoopbackPort }
+        ::= { swLocalLoopbackConfigTable 1 }
+
+    SwLocalLoopbackConfigEntry ::=
+        SEQUENCE {
+            swLocalLoopbackPort
+                INTEGER,
+            swLocalLoopbackMethod
+                INTEGER,
+            swLocalLoopbackMode
+            	INTEGER,
+            swLocalLoopbackState
+            	INTEGER
+        }
+
+    swLocalLoopbackPort OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the port number."
+        ::= { swLocalLoopbackConfigEntry 1 }
+
+    swLocalLoopbackMethod OBJECT-TYPE
+        SYNTAX  INTEGER{
+                other(1),
+                internal(2),
+                external(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the method of loopback.
+
+            Note: This object and swLocalLoopbackMode must be set together."
+        ::= { swLocalLoopbackConfigEntry 2 }
+
+    swLocalLoopbackMode OBJECT-TYPE
+        SYNTAX  INTEGER{
+                other(1),
+                mac(2),
+                phy-copper(3),
+                phy-fiber(4)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the mode of loopback.
+
+            Note: This object and swLocalLoopbackMethod must be set together."
+        ::= { swLocalLoopbackConfigEntry 3 }
+
+
+    swLocalLoopbackState OBJECT-TYPE
+        SYNTAX  INTEGER{
+                enabled(1),
+                disabled(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the state of loopback.
+
+            enabled (1): for internal loopback, start loopback test;
+            for external loopback, set port(s) to external loopback mode.
+            disabled (2): for internal loopback, stop loopback test;
+            for external loopback, recover port(s) from external loopback mode.
+            "
+        ::= { swLocalLoopbackConfigEntry 4 }
+        
+    swLocalLoopbackResultTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwLocalLoopbackResultEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains the result of local loopback."
+        ::= { swLocalLoopbackMgmt 2 }
+
+    swLocalLoopbackResultEntry OBJECT-TYPE
+        SYNTAX  SwLocalLoopbackResultEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swLocalLoopbackResultTable."
+        INDEX  { swLocalLoopbackPort }
+        ::= { swLocalLoopbackResultTable 1 }
+
+    SwLocalLoopbackResultEntry ::=
+        SEQUENCE {
+            swLocalLoopback64Tx
+                Counter32,
+            swLocalLoopback64Rx
+                Counter32,
+            swLocalLoopback512Tx
+                Counter32,
+            swLocalLoopback512Rx
+                Counter32,
+            swLocalLoopback1024Tx
+            	Counter32,
+            swLocalLoopback1024Rx
+            	Counter32,
+            swLocalLoopback1536Tx
+            	Counter32,
+            swLocalLoopback1536Rx
+            	Counter32,
+            swLocalLoopbackStatus
+            	INTEGER       	
+        }
+        
+    swLocalLoopback64Tx OBJECT-TYPE
+        SYNTAX  Counter32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the 64-byte packets of loopback Tx."
+        ::= { swLocalLoopbackResultEntry 1 }
+
+    swLocalLoopback64Rx OBJECT-TYPE
+        SYNTAX  Counter32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the 64-byte packets of loopback Rx."
+        ::= { swLocalLoopbackResultEntry 2 }
+        
+    swLocalLoopback512Tx OBJECT-TYPE
+        SYNTAX  Counter32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the 512-byte packets of loopback Tx."
+        ::= { swLocalLoopbackResultEntry 3 }
+
+    swLocalLoopback512Rx OBJECT-TYPE
+        SYNTAX  Counter32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the 512-byte packets of loopback Rx."
+        ::= { swLocalLoopbackResultEntry 4 }
+
+    swLocalLoopback1024Tx OBJECT-TYPE
+        SYNTAX  Counter32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the 1024-byte packets of loopback Tx."
+        ::= { swLocalLoopbackResultEntry 5 }
+        
+    swLocalLoopback1024Rx OBJECT-TYPE
+        SYNTAX  Counter32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the 1024-byte packets of loopback Rx."
+        ::= { swLocalLoopbackResultEntry 6 }
+        
+    swLocalLoopback1536Tx OBJECT-TYPE
+        SYNTAX  Counter32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the 1536-byte packets of loopback Tx."
+        ::= { swLocalLoopbackResultEntry 7 }
+
+    swLocalLoopback1536Rx OBJECT-TYPE
+        SYNTAX  Counter32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the 1536-byte packets of loopback Rx."
+        ::= { swLocalLoopbackResultEntry 8 }
+
+    swLocalLoopbackStatus OBJECT-TYPE
+        SYNTAX  INTEGER{
+                other(1),
+                success(2),
+                fail(3)
+                }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of loopback."
+        ::= { swLocalLoopbackResultEntry 9 }
+END

@@ -1,0 +1,126 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Policy Route Common mib
+-- FILE NAME: PolicyRoute.mib
+-- DATE     : 2007/03/27
+-- VERSION  : 2.00
+-- PURPOSE  : To construct the MIB structure of policy route management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+POLICY-ROUTE-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,
+        IpAddress,Unsigned32            FROM SNMPv2-SMI
+        MacAddress, RowStatus           FROM SNMPv2-TC
+        DisplayString                   FROM RFC1213-MIB
+        SnmpAdminString                 FROM SNMP-FRAMEWORK-MIB
+        dlink-common-mgmt               FROM DLINK-ID-REC-MIB;
+
+    swPolicyRouteMIB MODULE-IDENTITY
+            LAST-UPDATED "0703270000Z"
+            ORGANIZATION "D-Link Corp."
+            CONTACT-INFO
+                "http://support.dlink.com"
+            DESCRIPTION
+                "The structure of policy route management for the
+                 proprietary enterprise."
+        ::= { dlink-common-mgmt 32 }
+
+-- -----------------------------------------------------------------------------
+   swPolicyRouteCtrl            OBJECT IDENTIFIER ::= { swPolicyRouteMIB 1 }
+   swPolicyRouteInfo            OBJECT IDENTIFIER ::= { swPolicyRouteMIB 2 }
+   swPolicyRouteMgmt            OBJECT IDENTIFIER ::= { swPolicyRouteMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- swPolicyRouteMgmt            OBJECT IDENTIFIER ::= { swPolicyRouteMIB 3 }
+-- -----------------------------------------------------------------------------
+   swPolicyRouteTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF SwPolicyRouteEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "A table containing policy route information."
+        ::= { swPolicyRouteMgmt 1 }
+
+    swPolicyRouteEntry OBJECT-TYPE
+        SYNTAX      SwPolicyRouteEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "A policy route information list."
+        INDEX { swPolicyRouteName }
+        ::= { swPolicyRouteTable 1 }
+
+    SwPolicyRouteEntry ::=
+        SEQUENCE {
+            swPolicyRouteName
+                DisplayString,
+            swPolicyRouteProfileId
+                INTEGER,
+            swPolicyRouteAccessId
+                INTEGER,
+            swPolicyRouteNextHop
+                IpAddress,
+            swPolicyRouteRowStatus
+                RowStatus
+        }
+
+    swPolicyRouteName OBJECT-TYPE
+        SYNTAX      DisplayString(SIZE(1..32))
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+           "The name of a unique policy route rule in the table,
+            with a max length of 32 characters."
+        ::= { swPolicyRouteEntry 1 }
+
+    swPolicyRouteProfileId OBJECT-TYPE
+        SYNTAX      INTEGER
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+           "The ID of the ACL mask entry."
+        ::= { swPolicyRouteEntry 2 }
+
+    swPolicyRouteAccessId OBJECT-TYPE
+        SYNTAX      INTEGER
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+           "The ID of the ACL rule entry."
+        ::= { swPolicyRouteEntry 3 }
+
+    swPolicyRouteNextHop OBJECT-TYPE
+        SYNTAX      IpAddress
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+           "IP address of the next hop."
+        ::= { swPolicyRouteEntry 4 }
+
+    swPolicyRouteRowStatus  OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+           "To create a row for this table, a manager must set this object
+            to either createAndGo(4) or createAndWait(5).
+            Setting the `swPolicyRouteRowStatus' as active(1) means
+            enabling this rule. When `swPolicyRouteRowStatus' is set to
+            notInService(2), this rule is disabled."
+        ::= { swPolicyRouteEntry 5 }
+
+END
+  

@@ -1,0 +1,85 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : radius accounting mib
+-- FILE NAME: radiusAccounting.mib
+-- DATE     : 2007/12/20
+-- VERSION  : 2.01
+-- PURPOSE  : To construct the MIB structure of RADIUS accounting management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.01, 2007/12/20, Jenny
+-- [New Object]
+-- 1.add object accountingNetworkState.
+-- [Modification]
+-- 1.change the name of accountingExecTypeState to accountingShellState.
+-- 2.change the name of accountingSystemTypeState to accountingSystemState.
+-- Requested by Jenny for project DES3500
+-- 
+-- Version 2.00, 2007/10/26, Jenny
+-- This is the first formal version for universal MIB definition.
+-- Requested by Jenny for project DES3500.
+-- -----------------------------------------------------------------------------
+
+RADIUS-ACCOUNTING-MIB DEFINITIONS ::= BEGIN
+    IMPORTS
+        TEXTUAL-CONVENTION	, DisplayString		FROM SNMPv2-TC
+        MODULE-IDENTITY, OBJECT-TYPE			FROM SNMPv2-SMI
+        dlink-common-mgmt				FROM DLINK-ID-REC-MIB;
+
+swRadiusAccountMGMTMIB  MODULE-IDENTITY
+	LAST-UPDATED "0712200000Z"
+	ORGANIZATION "D-Link Corp."
+	CONTACT-INFO
+		"http://support.dlink.com"
+	DESCRIPTION
+		"The structure of RADIUS accounting for the proprietary enterprise."
+	::= { dlink-common-mgmt 55 }
+
+
+radiusAccountCtrl        OBJECT IDENTIFIER ::= { swRadiusAccountMGMTMIB 1 }
+
+accountingShellState OBJECT-TYPE
+    SYNTAX	INTEGER {
+    		enabled(1),
+    		disabled(2)
+    		}
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Specifies the status of the RADIUS accounting service for shell events."
+    DEFVAL {disabled}
+    ::= { radiusAccountCtrl 1 }
+
+accountingSystemState OBJECT-TYPE
+    SYNTAX      INTEGER{
+    		enabled(1),
+    		disabled(2)
+    		}
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Specifies the status of the RADIUS accounting service for system events."
+    DEFVAL {disabled}    
+    ::= { radiusAccountCtrl 2 }
+
+accountingNetworkState OBJECT-TYPE
+    SYNTAX      INTEGER{
+    		enabled(1),
+    		disabled(2)
+    		}
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Specifies the status of the RADIUS accounting service for 
+        802.1x port access control."
+    DEFVAL {disabled}    
+    ::= { radiusAccountCtrl 3 }
+    
+END

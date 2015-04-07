@@ -1,0 +1,173 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : UDP Helper mib
+-- FILE NAME: UDPHelper.mib
+-- DATE     : 2011/1/10
+-- VERSION  : 1.00
+-- PURPOSE  : To construct the MIB structure of UDP Helper function for
+--            proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version 1.00, 2011/1/10, Easion Tang
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+
+UDP-Helper-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,IpAddress, Unsigned32,Integer32
+                                        FROM SNMPv2-SMI
+        RowStatus           						FROM SNMPv2-TC
+        DisplayString                   FROM RFC1213-MIB
+        dlink-common-mgmt		FROM DLINK-ID-REC-MIB;
+        
+		 
+    	
+    swUDPHelperMIB MODULE-IDENTITY
+          LAST-UPDATED "201101100000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+		    "The Structure of UDP Helper management for the proprietary enterprise."
+        ::= { dlink-common-mgmt 99 }
+                           
+    swUDPHelperMIBObjects			OBJECT IDENTIFIER ::= { swUDPHelperMIB 1 }
+    swUDPHelperGeneralGroup      	OBJECT IDENTIFIER ::= { swUDPHelperMIBObjects 1 }
+ 
+-- -----------------------------------------------------------------------------
+-- swUDPHelperCtrl                OBJECT IDENTIFIER ::= { swUDPHelperMIB 1 }
+-- -----------------------------------------------------------------------------
+
+    swUDPHelperState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates UDP Helper function is enabled or
+             disabled.
+            "
+        ::= { swUDPHelperGeneralGroup 1 }
+      
+-- -----------------------------------------------------------------------------
+-- swUDPHelperMgmt                OBJECT IDENTIFIER ::= { swUDPHelperMIB 2 }
+-- -----------------------------------------------------------------------------
+
+	swUDPHelperPortCtrlTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwUDPHelperPortCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table indicates the UDP ports that
+							UDP Helper would process."
+        ::= { swUDPHelperMIBObjects 2 }
+
+    swUDPHelperPortCtrlEntry OBJECT-TYPE
+        SYNTAX  SwUDPHelperPortCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information indicates the UDP ports that
+							UDP Helper would process."
+        INDEX  { swUDPHelperPortNumber }
+        ::= { swUDPHelperPortCtrlTable 1 }
+
+    SwUDPHelperPortCtrlEntry ::=
+        SEQUENCE {
+            swUDPHelperPortNumber
+                INTEGER,
+            swUDPHelperPortCtrlRowStatus
+                RowStatus
+        }
+        
+    swUDPHelperPortNumber OBJECT-TYPE
+        SYNTAX INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS current
+        DESCRIPTION
+            "This object indicates the UDP ports that
+             UDP Helper would process. The default UDP 
+             port is NULL. The max ports numbers can be 
+             configured is project dependent support.
+             
+             37: time, Time service;
+             49: tacacs, Terminal Access Controller Access Control System service;
+             53: dns, Domain Naming System;
+             69: tftp, Trivial File Transfer Protocol;
+             137: netbios-ns, NetBIOS Name Server;
+             138: netbios-ds, NetBIOS Datagram Server."
+        ::= { swUDPHelperPortCtrlEntry 1 }
+        
+    swUDPHelperPortCtrlRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swUDPHelperPortCtrlEntry 2 }
+        
+           
+-- -----------------------------------------------------------------------------
+-- swUDPHelperServerCtrlTable          
+-- -----------------------------------------------------------------------------        
+                
+    swUDPHelperServerCtrlTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwUDPHelperServerCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table indicates the IP address as a destination to forward
+             UDP packets to."
+        ::= { swUDPHelperMIBObjects 3 }
+
+    swUDPHelperServerCtrlEntry OBJECT-TYPE
+        SYNTAX  SwUDPHelperServerCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information indicates the IP address as a destination
+             to forward UDP packets to."
+        INDEX  { swUDPHelperServerCtrlInterfaceName,  swUDPHelperServerCtrlServer}
+        ::= { swUDPHelperServerCtrlTable 1 }
+
+    SwUDPHelperServerCtrlEntry ::=
+        SEQUENCE {
+            swUDPHelperServerCtrlInterfaceName
+                DisplayString,
+            swUDPHelperServerCtrlServer
+                IpAddress,
+            swUDPHelperServerCtrlRowStatus
+                RowStatus
+        }
+
+    swUDPHelperServerCtrlInterfaceName OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE(0..12))
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the name of the IP interface."
+        ::= { swUDPHelperServerCtrlEntry 1 }
+
+    swUDPHelperServerCtrlServer OBJECT-TYPE
+        SYNTAX IpAddress
+        MAX-ACCESS  not-accessible
+        STATUS current
+        DESCRIPTION
+            "This object indicates the UDP Helper server IP address."
+        ::= { swUDPHelperServerCtrlEntry 2 }
+
+    swUDPHelperServerCtrlRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swUDPHelperServerCtrlEntry 3 }
+
+
+   
+END

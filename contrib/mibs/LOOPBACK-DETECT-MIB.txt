@@ -1,0 +1,266 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Loopback-Detect mib
+-- FILE NAME: LBD.mib
+-- DATE     : 2010/03/01
+-- VERSION  : 1.14
+-- PURPOSE  : To construct the MIB structure of Loopback Detect function
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)    
+--  
+-- Version 1.14, 2010/03/01, Jessy Ji
+-- [New Object]
+--   Add swLoopDetectLogState to control the LBD log state.  
+-- Request by Jessy Ji for project DGS3120.	
+--
+-- Version 1.13, 2008/10/06, Green Zhu
+-- [Modification]
+--   Change the loop_detected,and loop_cleared to loop-detected and loop-cleared.
+--
+-- Version 1.12, 2008/9/26, Green Zhu
+-- [Modification]
+--   Rename all trap objects. 
+--
+-- Version 1.11, 2008/9/16, Wesley Wang
+-- Request By Wesley Wang for project DGS3400
+-- [New Object]
+--   Add swLoopDetectTrapMode
+--
+-- Version 1.10, 2008/09/02, Elvis Tsai
+-- [New Object]
+--   Add Notify Prefix
+--      swL2PortLoopOccurred, swL2PortLoopRestart, swL2VlanLoopOccurred, swL2VlanLoopRestart
+--   Add Binding object for trap
+--      swVlanLoopDetectVID
+--
+-- Version 1.00, 2007/7/23, Elvis Tsai
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+    LOOPBACK-DETECT-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE     FROM SNMPv2-SMI
+        DisplayString                   FROM RFC1213-MIB
+        dlink-common-mgmt               FROM DLINK-ID-REC-MIB;
+
+    swLoopDetectMIB MODULE-IDENTITY
+	    LAST-UPDATED "1003010000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+        DESCRIPTION
+            "The structure of loopback detection management for the
+            proprietary enterprise."
+        ::= { dlink-common-mgmt 41 }
+
+    swLoopDetectCtrl                OBJECT IDENTIFIER ::= { swLoopDetectMIB 1 }
+    swLoopDetectInfo                OBJECT IDENTIFIER ::= { swLoopDetectMIB 2 }
+    swLoopDetectPortMgmt            OBJECT IDENTIFIER ::= { swLoopDetectMIB 3 }
+
+    swLoopDetectNotify              OBJECT IDENTIFIER ::= { swLoopDetectMIB 10 }
+
+-- ----------------------------------------------------------------------------
+--  swLoopDetectMgmt
+-- ----------------------------------------------------------------------------
+    swLoopDetectAdminState OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       enabled(1),
+                       disabled(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the loopback detection status for the system."
+        ::= { swLoopDetectCtrl 1 }
+
+    swLoopDetectInterval OBJECT-TYPE
+        SYNTAX      INTEGER (1..32767)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the interval value. The range is from 1 to 32767 seconds."
+        ::= { swLoopDetectCtrl 2 }
+
+    swLoopDetectRecoverTime OBJECT-TYPE
+        SYNTAX      INTEGER (0..1000000)
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the recover time. The range is from 60 to 1000000.
+             The value of 0 disables the recover function."
+        ::= { swLoopDetectCtrl 3 }
+
+    swLoopDetectMode OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       vlan-based(1),
+                       port-based(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the loopback detection mode for the system."
+        ::= { swLoopDetectCtrl 4 }
+
+    swLoopDetectTrapMode OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       none(1),
+                       loop-detected(2),
+                       loop-cleared(3),
+                       both(4)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the loopback detection trap mode for the system."
+        ::= { swLoopDetectCtrl 5 } 
+         
+    swLoopDetectLogState OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       enabled(1),
+                       disabled(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the LBD log state."
+		DEFVAL {enabled}
+        ::= { swLoopDetectCtrl 6 }
+        
+-- ----------------------------------------------------------------------------
+    swLoopDetectPortTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF SwLoopDetectPortEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The table specifies the loopback detection function specified by port."
+        ::= { swLoopDetectPortMgmt 1 }
+
+    swLoopDetectPortEntry OBJECT-TYPE
+        SYNTAX      SwLoopDetectPortEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The table specifies the loopback detection function specified by port."
+        INDEX  { swLoopDetectPortIndex }
+        ::= { swLoopDetectPortTable 1 }
+
+    SwLoopDetectPortEntry ::=
+        SEQUENCE {
+            swLoopDetectPortIndex
+                INTEGER,
+            swLoopDetectPortState
+                INTEGER,
+            swLoopDetectPortLoopVLAN
+                DisplayString,
+            swLoopDetectPortLoopStatus
+                INTEGER
+        }
+
+    swLoopDetectPortIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the module's port number. The range is from 1 to
+             the maximum port number specified in the module"
+        ::= { swLoopDetectPortEntry 1 }
+
+    swLoopDetectPortState OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       enabled(1),
+                       disabled(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the loopback detection function state on the port."
+        ::= { swLoopDetectPortEntry 2 }
+
+    swLoopDetectPortLoopVLAN OBJECT-TYPE
+        SYNTAX      DisplayString
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the VLAN list that has detected a loopback."
+        ::= { swLoopDetectPortEntry 3 }
+
+    swLoopDetectPortLoopStatus OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       normal(1),
+                       loop(2),
+                       error(3)
+                    }
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the port status."
+        ::= { swLoopDetectPortEntry 4 }
+
+-- ----------------------------------------------------------------------------
+--	swLoopDetectNotify        OBJECT IDENTIFIER ::= { swLoopDetectMIB 4 }
+-- ----------------------------------------------------------------------------
+	swLoopDetectNotifyPrefix   OBJECT IDENTIFIER ::= { swLoopDetectNotify 0 }
+
+    swPortLoopOccurred  NOTIFICATION-TYPE
+        OBJECTS
+             {
+                swLoopDetectPortIndex
+             }
+        STATUS  current
+        DESCRIPTION
+               "The trap is sent when a port loop occurs."
+        ::= { swLoopDetectNotifyPrefix 1 }
+
+    swPortLoopRestart  NOTIFICATION-TYPE
+        OBJECTS
+             {
+                swLoopDetectPortIndex
+             }
+        STATUS  current
+        DESCRIPTION
+              "The trap is sent when a port loop restarts after the interval time."
+        ::= { swLoopDetectNotifyPrefix 2 }
+
+    swVlanLoopOccurred  NOTIFICATION-TYPE
+        OBJECTS
+             {
+                swLoopDetectPortIndex,
+                swVlanLoopDetectVID
+             }
+        STATUS  current
+        DESCRIPTION
+               "The trap is sent when a Port with a VID loop occurs."
+        ::= { swLoopDetectNotifyPrefix 3 }
+
+    swVlanLoopRestart NOTIFICATION-TYPE
+        OBJECTS
+             {
+                swLoopDetectPortIndex,
+                swVlanLoopDetectVID
+             }
+        STATUS  current
+        DESCRIPTION
+               "The trap is sent when a Port with a VID loop restarts after the interval time."
+        ::= { swLoopDetectNotifyPrefix 4 }
+
+-- ----------------------------------------------------------------------------
+--  swLoopDetectNotificationBidings   OBJECT IDENTIFIER ::= { swLoopDetectNotify 1 }
+-- ----------------------------------------------------------------------------
+    swLoopDetectNotificationBidings   OBJECT IDENTIFIER ::= { swLoopDetectNotify 1 }
+
+    swVlanLoopDetectVID OBJECT-TYPE
+        SYNTAX      INTEGER
+        MAX-ACCESS  accessible-for-notify
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the VID that has detected a loopback."
+        ::= { swLoopDetectNotificationBidings 1 }
+
+END

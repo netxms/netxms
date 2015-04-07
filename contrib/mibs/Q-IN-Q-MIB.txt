@@ -1,0 +1,867 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Q-IN-Q Common mib
+-- FILE NAME: QinQ.mib
+-- DATE     : 2009/10/30
+-- VERSION  : 2.05
+-- PURPOSE  : To construct the MIB structure of Q-in-Q
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.05, 2009/10/30, Tom Jin
+-- [Modification]
+-- 1. Modify the range of swVlanTranslatePriority from
+--  (0..7) to (-1|0..7);
+-- 2. Modify the range of swQinQRule8021p and swQinQPriority from
+--  (0..7) to (-1|0..7).
+-- Requested by Tom for project DES3810.
+--
+-- Version 2.04, 2009/04/08, Tom Jin
+--  [New Object]
+-- 1. add table swDoubleVlanTranslateTable;
+-- 2. add object swQinQPortInnerTpid in swQinQPortTable;
+-- 3. add object swQinQRuleActivePort in swQinQRuleTable.
+-- For double vlan translation.
+-- Requested by Tom for project DES3700.
+--
+-- Version 2.03, 2009/03/31, Peter Hsieh
+--  [New Object]
+-- [1]Add swQinQPortTrustCVID and swQinQPortVlanTranslation objects in
+--    in swQinQPortTable, and swVlanTranslationCVIDTable.
+--    For vlan translation function.
+-- Requested by Peter for project DES3200.
+--
+-- Version 2.02, 2008/04/08, Kelvin Tao
+--  [New Object]
+-- 1. add object swQinQInnerTpid;
+-- 2. add object swQinQPortInnerTagState and swQinQPortInnerTag in swQinQPortTable.
+-- Requested by Kelvin for project DGS3700.
+--
+-- Version 2.01, 2007/12/05, Jenny
+--  [New Object]
+-- 1. add object swQinQPortUseInnerPriority in swQinQPortTable;
+-- 2. add table swVlanTranslateTable.
+-- Requested by Jenny for project DES3500.
+--
+-- Version 2.00, 2007/10/25, Jenny
+-- This is the first formal version for universal MIB definition.
+-- Requested by Jenny for project DES3500.
+-- -----------------------------------------------------------------------------
+
+Q-IN-Q-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,IpAddress   FROM SNMPv2-SMI
+        MacAddress,RowStatus,DisplayString	FROM SNMPv2-TC
+        PortList                                FROM Q-BRIDGE-MIB
+        dlink-common-mgmt               	FROM DLINK-ID-REC-MIB;
+
+     swQinQMIB MODULE-IDENTITY
+          LAST-UPDATED "0904080000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+            "http://support.dlink.com"
+          DESCRIPTION
+            "The structure of Q-in-Q information for the
+	     proprietary enterprise."
+          ::= { dlink-common-mgmt 57 }
+
+    VlanId	::= INTEGER (1..4094)
+
+    swQinQCtrl            OBJECT IDENTIFIER ::= { swQinQMIB 1 }
+    swQinQInfo            OBJECT IDENTIFIER ::= { swQinQMIB 2 }
+    swQinQPortMgmt        OBJECT IDENTIFIER ::= { swQinQMIB 3 }
+    swQinQMgmt            OBJECT IDENTIFIER ::= { swQinQMIB 4 }
+	
+-- -----------------------------------------------------------------------------
+-- swQinQCtrl            OBJECT IDENTIFIER ::= { swQinQMIB 1 }
+-- -----------------------------------------------------------------------------
+swQinQState OBJECT-TYPE
+    SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+            "This object is used to enable/disable the Q-in-Q status."
+    DEFVAL {disabled}
+    ::= { swQinQCtrl 1 }
+
+swQinQInnerTpid OBJECT-TYPE
+    SYNTAX  OCTET STRING (SIZE (2))
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+            "This object is used to set the system's inner TPID."
+    ::= { swQinQCtrl 2 }
+-- -----------------------------------------------------------------------------
+-- swQinQInfo            OBJECT IDENTIFIER ::= { swQinQMIB 2}
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- swQinQPortMgmt         OBJECT IDENTIFIER ::= { swQinQMIB 3}
+-- -----------------------------------------------------------------------------
+swQinQPortTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwQinQPortEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains Q-in-Q VLAN mode information about each port."
+    ::= { swQinQPortMgmt 1 }
+
+swQinQPortEntry OBJECT-TYPE
+    SYNTAX      SwQinQPortEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of Q-in-Q VLAN mode information for each port."
+    INDEX { swQinQPortIndex }
+    ::= { swQinQPortTable 1 }
+
+SwQinQPortEntry ::=
+    SEQUENCE {
+        swQinQPortIndex
+            INTEGER,
+        swQinQPortRole
+            INTEGER,
+        swQinQPortMissDrop
+            INTEGER,
+        swQinQPortTpid
+            OCTET STRING,
+        swQinQPortUseInnerPriority
+            INTEGER,
+        swQinQPortInnerTagState
+            INTEGER,
+        swQinQPortInnerTag
+            OCTET STRING,
+       swQinQPortTrustCVID
+            INTEGER,
+        swQinQPortVlanTranslation
+            INTEGER,
+        swQinQPortInnerTpid
+            OCTET STRING
+        }
+
+swQinQPortIndex OBJECT-TYPE
+    SYNTAX      INTEGER(1..65535)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the module's port number."
+    ::= { swQinQPortEntry 1 }
+
+swQinQPortRole OBJECT-TYPE
+    SYNTAX      INTEGER {
+               nni(1),
+               uni(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object sets the port role in Q-in-Q mode. It can be
+        UNI port or NNI port."
+    ::= { swQinQPortEntry 2 }
+
+swQinQPortMissDrop OBJECT-TYPE
+    SYNTAX      INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object is used to enable/disable C-VLAN based SP-VLAN assignment miss drop.
+        If missdrop is enabled, the packet that does not match any assignment rule in
+        the Q-in-Q profile will be dropped.
+        If missdrop is disabled, then the packet will be assigned to the PVID of the
+        received port."
+    ::= { swQinQPortEntry 3 }
+
+swQinQPortTpid OBJECT-TYPE
+    SYNTAX  OCTET STRING (SIZE (2))
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+	"Specifies the outer TPID for each port."
+    ::= { swQinQPortEntry 4 }
+
+swQinQPortUseInnerPriority OBJECT-TYPE
+    SYNTAX      INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "This object specifies whether to use the priority in the C-VLAN
+        tag as the priority in the SP-VLAN tag."
+    ::= { swQinQPortEntry 5 }
+
+swQinQPortInnerTagState OBJECT-TYPE
+    SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+	"Specifies whether to add inner tag for ingress untagged packets."
+    ::= { swQinQPortEntry 6 }
+
+swQinQPortInnerTag OBJECT-TYPE
+    SYNTAX  OCTET STRING (SIZE (2))
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+	"If swQinQPortInnerTagState is enabled, this object specifies the inner tag."
+::= { swQinQPortEntry 7 }
+
+swQinQPortTrustCVID OBJECT-TYPE
+    SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+	"If swQinQState is enabled, this object specifies whether to use the C-VID
+	 of the ingress packet to get S-VID on the UNI port or not."
+    ::= { swQinQPortEntry 8 }
+
+swQinQPortVlanTranslation OBJECT-TYPE
+    SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+	"If swQinQState and swQinQPortTrustCVID are enabled, this object specifies
+	 whether to lookup VLAN translation table to get S-VID by the C-VID of
+	 the ingress packet on the UNI port or not."
+    ::= { swQinQPortEntry 9 }
+
+swQinQPortInnerTpid OBJECT-TYPE
+    SYNTAX  OCTET STRING (SIZE (2))
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+	"Specifies the inner TPID for each port."
+    ::= { swQinQPortEntry 10 }
+-- ----------------------------------------------------------------------------
+swQinQPortRuleTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwQinQPortRuleEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that is used to configure a port's Q-in-Q SP-VLAN assignment rule."
+    ::= { swQinQPortMgmt 2 }
+
+swQinQPortRuleEntry OBJECT-TYPE
+    SYNTAX      SwQinQPortRuleEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of Q-in-Q SP-VLAN assignment rules for each port."
+    INDEX { swQinQPortRuleIndex,swQinQProfileId }
+    ::= { swQinQPortRuleTable 1 }
+
+SwQinQPortRuleEntry ::=
+    SEQUENCE {
+        swQinQPortRuleIndex
+            INTEGER,
+        swQinQProfileId
+            INTEGER,
+        swQinQPortRuleRowStatus
+            RowStatus
+        }
+
+swQinQPortRuleIndex OBJECT-TYPE
+    SYNTAX      INTEGER(1..65535)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the module's port number."
+    ::= { swQinQPortRuleEntry 1 }
+
+swQinQProfileId OBJECT-TYPE
+    SYNTAX      INTEGER(1..65535)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the Q-in-Q profile ID."
+    ::= { swQinQPortRuleEntry 2 }
+
+swQinQPortRuleRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swQinQPortRuleEntry 3 }
+
+-- ----------------------------------------------------------------------------
+swVlanTranslateTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwVlanTranslateEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains VLAN translation information."
+    ::= { swQinQPortMgmt 3 }
+
+    swVlanTranslateEntry OBJECT-TYPE
+    SYNTAX      SwVlanTranslateEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of VLAN translation information."
+    INDEX   {swVlanTranslatePortIndex,
+               swVlanTranslateCVID}
+    ::= { swVlanTranslateTable 1 }
+
+    SwVlanTranslateEntry ::=
+    SEQUENCE {
+        swVlanTranslatePortIndex
+            INTEGER,
+        swVlanTranslateCVID
+            VlanId,
+        swVlanTranslateSVID
+            VlanId,
+        swVlanTranslateSVIDOperation
+            INTEGER,
+        swVlanTranslatePriority
+            INTEGER,
+        swVlanTranslateRowStatus
+            RowStatus
+    }
+    swVlanTranslatePortIndex OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the module's port number."
+    ::= { swVlanTranslateEntry 1 }
+
+    swVlanTranslateCVID OBJECT-TYPE
+    SYNTAX      VlanId
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The customer VLAN identifier in a C-TAG."
+    ::= { swVlanTranslateEntry 2 }
+
+    swVlanTranslateSVID OBJECT-TYPE
+    SYNTAX      VlanId
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "A VLAN identifier conveyed in an S-TAG."
+    ::= { swVlanTranslateEntry 3 }
+
+    swVlanTranslateSVIDOperation OBJECT-TYPE
+    SYNTAX      INTEGER {
+                  add(1),
+                  replace(2)
+                }
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "The 'add' action indicates to add a tag for the assigned SP-VLAN
+	before the C-VLAN tag. If there is S-TAG in the packet, this rule
+	will not take effect.
+	The 'replace' action indicates to replace the C-VLAN in the tag by
+	the SP-VLAN. If there is no C-TAG in the packet, this rule will not
+	take effect."
+    ::= { swVlanTranslateEntry 4 }
+
+    swVlanTranslatePriority OBJECT-TYPE
+    SYNTAX      INTEGER (-1|0..7)
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "The priority of the S-TAG.
+        -1 is default value."
+    ::= { swVlanTranslateEntry 5 }
+
+    swVlanTranslateRowStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the status of this entry."
+    ::= { swVlanTranslateEntry 6 }
+
+-- ----------------------------------------------------------------------------
+swDoubleVlanTranslateTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwDoubleVlanTranslateEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains Double Tag VLAN translation information."
+    ::= { swQinQPortMgmt 4 }
+
+    swDoubleVlanTranslateEntry OBJECT-TYPE
+    SYNTAX      SwDoubleVlanTranslateEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of Double Tag VLAN translation information
+        , only work on NNI port."
+    INDEX   {swDoubleVlanTranslatePortIndex,
+               swDoubleVlanTranslateSVID,
+               swDoubleVlanTranslateCVID}
+    ::= { swDoubleVlanTranslateTable 1 }
+
+    SwDoubleVlanTranslateEntry ::=
+    SEQUENCE {
+        swDoubleVlanTranslatePortIndex
+            INTEGER,
+        swDoubleVlanTranslateSVID
+            VlanId,
+        swDoubleVlanTranslateCVID
+            VlanId,
+        swDoubleVlanTranslateNewSVID
+            VlanId,
+        swDoubleVlanTranslateOperation
+            INTEGER,
+        swDoubleVlanTranslatePriority
+            INTEGER,
+        swDoubleVlanTranslateRowStatus
+            RowStatus
+    }
+    swDoubleVlanTranslatePortIndex OBJECT-TYPE
+    SYNTAX      INTEGER
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the module's port number."
+    ::= { swDoubleVlanTranslateEntry 1 }
+
+    swDoubleVlanTranslateSVID OBJECT-TYPE
+    SYNTAX      VlanId
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The customer VLAN identifier in a S-TAG."
+    ::= { swDoubleVlanTranslateEntry 2 }
+
+    swDoubleVlanTranslateCVID OBJECT-TYPE
+    SYNTAX      VlanId
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "The customer VLAN identifier in a C-TAG."
+    ::= { swDoubleVlanTranslateEntry 3 }
+
+    swDoubleVlanTranslateOperation OBJECT-TYPE
+    SYNTAX      INTEGER {replace(2)}
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "The 'replace' action indicates to replace the S-VLAN in the tag by
+	the New S-VLAN."
+    ::= { swDoubleVlanTranslateEntry 4}
+
+    swDoubleVlanTranslateNewSVID OBJECT-TYPE
+    SYNTAX      VlanId
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "The SP-VLAN identifier used to replace."
+    ::= { swDoubleVlanTranslateEntry 5 }
+
+    swDoubleVlanTranslatePriority OBJECT-TYPE
+    SYNTAX      INTEGER (-1|0..7)
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "The priority of the S-TAG.
+        -1 is default value."
+    ::= { swDoubleVlanTranslateEntry 6 }
+
+    swDoubleVlanTranslateRowStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the status of this entry."
+    ::= { swDoubleVlanTranslateEntry 7 }
+
+-- -----------------------------------------------------------------------------
+-- swQinQMgmt            OBJECT IDENTIFIER ::= { swQinQMIB 4 }
+-- -----------------------------------------------------------------------------
+swQinQProfileTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF SwQinQProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "This table is used to create a Q-in-Q profile to assign SP-VLAN.
+        Multiple rules can be specified for a Q-in-Q profile.
+	"
+    ::= { swQinQMgmt 1 }
+
+swQinQProfileEntry OBJECT-TYPE
+    SYNTAX  SwQinQProfileEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "A list containing Q-in-Q profile information."
+    INDEX  { swQinQProfileID }
+    ::= { swQinQProfileTable 1 }
+
+SwQinQProfileEntry ::=
+    SEQUENCE {
+	swQinQProfileID
+            INTEGER,
+        swQinQProfileRowStatus
+             RowStatus
+     }
+
+swQinQProfileID OBJECT-TYPE
+    SYNTAX  INTEGER (1..65535)
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+	"Specifies the Q-in-Q profile ID."
+    ::= { swQinQProfileEntry 1 }
+
+swQinQProfileRowStatus OBJECT-TYPE
+    SYNTAX  RowStatus
+    MAX-ACCESS  read-create
+    STATUS  current
+    DESCRIPTION
+	"This object indicates the status of this entry."
+    ::= { swQinQProfileEntry 2 }
+
+-- ----------------------------------------------------------------------------
+swQinQRuleTable OBJECT-TYPE
+    SYNTAX  SEQUENCE OF SwQinQRuleEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "This table contains Q-in-Q rule information. These rules will
+        indicate whether to add a tag for the SP-VLAN or to replace the
+        inner C-VLAN in the tag by the SP-VLAN. If the matched packet
+        has a SP-VLAN tag and the action is 'add', this rule will not
+        take effect for the packet. If the matched packet has no C-VLAN
+        tag and the action is 'replace', this rule will not take effect too.
+
+        C-VLAN based Q-in-Q rules have lower priority than flow-based Q-in-Q rules.
+        For flow-based Q-in-Q rules in the same profile, the rule's priority is
+        decided by the rule's ID; a smaller ID has a higher priority."
+    ::= { swQinQMgmt 2 }
+
+swQinQRuleEntry OBJECT-TYPE
+    SYNTAX  SwQinQRuleEntry
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "A list of information about Q-in-Q rules."
+    INDEX  { swQinQRuleProfileID,swQinQRuleAccessID }
+    ::= { swQinQRuleTable 1 }
+
+SwQinQRuleEntry ::=
+    SEQUENCE {
+	swQinQRuleProfileID
+            INTEGER,
+        swQinQRuleAccessID
+            INTEGER,
+        swQinQRuleClassifySrcMacAddr
+            MacAddress,
+        swQinQRuleClassifySrcMacAddrMask
+            MacAddress,
+        swQinQRuleClassifyDstMacAddr
+            MacAddress,
+        swQinQRuleClassifyDstMacAddrMask
+            MacAddress,
+        swQinQRuleSrcIPv4Address
+            IpAddress,
+        swQinQRuleSrcIPv4AddrMask
+            IpAddress,
+        swQinQRuleDstIPv4Address
+            IpAddress,
+        swQinQRuleDstIPv4AddrMask
+            IpAddress,
+        swQinQRuleInnerVid
+            DisplayString,
+        swQinQRuleOuterVid
+            DisplayString,
+        swQinQRule8021p
+            INTEGER,
+        swQinQRuleIpProtocol
+            INTEGER,
+        swQinQRuleSourcePort
+            INTEGER,
+        swQinQRuleDestinationPort
+            INTEGER,
+        swQinQRuleSpvidOperation
+            INTEGER,
+        swQinQRuleSpvid
+            INTEGER,
+        swQinQPriority
+            INTEGER,
+        swQinQRuleRowStatus
+            RowStatus,
+        swQinQRuleActivePort
+            PortList
+     }
+
+swQinQRuleProfileID OBJECT-TYPE
+    SYNTAX  INTEGER (1..65535)
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+	"Specifies the profile ID."
+    ::= { swQinQRuleEntry 1 }
+
+swQinQRuleAccessID OBJECT-TYPE
+    SYNTAX  INTEGER (0..65535)
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+	"Specifies the ID of the Q-in-Q rule entry related to the swQinQRuleProfileID."
+    ::= { swQinQRuleEntry 2 }
+
+swQinQRuleClassifySrcMacAddr OBJECT-TYPE
+    SYNTAX  MacAddress
+    MAX-ACCESS  read-create
+    STATUS  current
+    DESCRIPTION
+	"Specifies the source MAC address."
+    ::= { swQinQRuleEntry 3 }
+
+swQinQRuleClassifySrcMacAddrMask OBJECT-TYPE
+    SYNTAX  MacAddress
+    MAX-ACCESS  read-create
+    STATUS  current
+    DESCRIPTION
+	"Specifies the source MAC address mask."
+    ::= { swQinQRuleEntry 4 }
+
+swQinQRuleClassifyDstMacAddr OBJECT-TYPE
+    SYNTAX  MacAddress
+    MAX-ACCESS  read-create
+    STATUS  current
+    DESCRIPTION
+	"Specifies the destination MAC address."
+    ::= { swQinQRuleEntry 5 }
+
+swQinQRuleClassifyDstMacAddrMask OBJECT-TYPE
+    SYNTAX  MacAddress
+    MAX-ACCESS  read-create
+    STATUS  current
+    DESCRIPTION
+	"Specifies the destination MAC address mask."
+    ::= { swQinQRuleEntry 6 }
+
+swQinQRuleSrcIPv4Address OBJECT-TYPE
+    SYNTAX  IpAddress
+    MAX-ACCESS  read-create
+    STATUS  current
+    DESCRIPTION
+	"Specifies an IPv4 source address."
+    ::= { swQinQRuleEntry 7 }
+
+swQinQRuleSrcIPv4AddrMask OBJECT-TYPE
+    SYNTAX  IpAddress
+    MAX-ACCESS  read-create
+    STATUS  current
+    DESCRIPTION
+	"Specifies the IPv4 source address mask."
+    ::= { swQinQRuleEntry 8 }
+
+swQinQRuleDstIPv4Address OBJECT-TYPE
+    SYNTAX  IpAddress
+    MAX-ACCESS  read-create
+    STATUS  current
+    DESCRIPTION
+	"Specifies an IPv4 destination address."
+    ::= { swQinQRuleEntry 9 }
+
+swQinQRuleDstIPv4AddrMask OBJECT-TYPE
+    SYNTAX  IpAddress
+    MAX-ACCESS  read-create
+    STATUS  current
+    DESCRIPTION
+	"Specifies the IPv4 destination address mask."
+    ::= { swQinQRuleEntry 10 }
+
+swQinQRuleInnerVid OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+	"Specifies the packet's inner VID range."
+    ::={ swQinQRuleEntry 11 }
+	
+swQinQRuleOuterVid OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+	"Specifies the packet's outer VID range."
+    ::={ swQinQRuleEntry 12 }
+
+swQinQRule8021p OBJECT-TYPE
+    SYNTAX  INTEGER(-1|0..7)
+    MAX-ACCESS  read-create
+    STATUS  current
+    DESCRIPTION
+	"Specifies the packet's 802.1p priority.
+        -1 means the 802.1p priority is not set"
+    ::= { swQinQRuleEntry 13 }
+
+swQinQRuleIpProtocol OBJECT-TYPE
+    SYNTAX INTEGER
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+    	"Specifies the IP protocol."
+    ::= { swQinQRuleEntry 14 }
+
+swQinQRuleSourcePort OBJECT-TYPE
+    SYNTAX INTEGER
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+    	"Specifies the source port number."
+    ::= { swQinQRuleEntry 15 }
+
+swQinQRuleDestinationPort OBJECT-TYPE
+    SYNTAX INTEGER
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+    	"Specifies the destination port number."
+    ::= { swQinQRuleEntry 16 }
+
+swQinQRuleSpvidOperation OBJECT-TYPE
+    SYNTAX  INTEGER {
+    	add(1),
+    	replace(2)
+    }
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+    	"The 'add' action indicates to add a tag for the assigned SP-VLAN
+    	before the C-VLAN tag. If there is S-TAG in the packet, this rule
+    	will not take effect.
+    	
+    	The 'replace' action indicates to replace the C-VLAN in the tag by
+    	the SP-VLAN. If there is no C-TAG in the packet, this rule will not
+    	take effect."
+    ::= { swQinQRuleEntry 17 }
+
+swQinQRuleSpvid OBJECT-TYPE
+    SYNTAX  INTEGER(1..4094)
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+    	"Specifies the SP-VLAN ID to be assigned to the matched packet."
+    ::= { swQinQRuleEntry 18 }
+
+swQinQPriority OBJECT-TYPE
+    SYNTAX INTEGER(-1|0..7)
+    MAX-ACCESS read-create
+    STATUS current
+    DESCRIPTION
+    	"Specifies the priority of the SP-VLAN.
+        -1 is default value."
+    ::= { swQinQRuleEntry 19 }
+
+swQinQRuleRowStatus OBJECT-TYPE
+    SYNTAX  RowStatus
+    MAX-ACCESS  read-create
+    STATUS  current
+    DESCRIPTION
+	"This object indicates the status of this entry."
+    ::= { swQinQRuleEntry 20 }
+
+swQinQRuleActivePort OBJECT-TYPE
+    SYNTAX PortList
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+	"Specifies the active port list which the rule takes effect."
+    ::={ swQinQRuleEntry 21 }
+
+-- ----------------------------------------------------------------------------
+swVlanTranslationCVIDTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwVlanTranslationCVIDEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains VLAN translation information applied in enabling
+         port's swQinQPortVlanTranslation, swQinQPortTrustCVID and QinQ."
+    ::= { swQinQMgmt 3 }
+
+    swVlanTranslationCVIDEntry OBJECT-TYPE
+    SYNTAX      SwVlanTranslationCVIDEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of VLAN translation information applied in enabling a
+         port's swQinQPortVlanTranslation, swQinQPortTrustCVID and QinQ."
+    INDEX   {swVlanTranslationCVID}
+    ::= { swVlanTranslationCVIDTable 1 }
+
+    SwVlanTranslationCVIDEntry ::=
+    SEQUENCE {
+        swVlanTranslationCVID
+            VlanId,
+        swVlanTranslationSVID
+            VlanId,
+        swVlanTranslationSVIDOperation
+            INTEGER,
+        swVlanTranslationCVIDRowStatus
+            RowStatus
+    }
+
+    swVlanTranslationCVID OBJECT-TYPE
+    SYNTAX      VlanId
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The customer VLAN identifier in a C-TAG."
+    ::= { swVlanTranslationCVIDEntry 1 }
+
+    swVlanTranslationSVID OBJECT-TYPE
+    SYNTAX      VlanId
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "A VLAN identifier conveyed in an S-TAG."
+    ::= { swVlanTranslationCVIDEntry 2 }
+
+    swVlanTranslationSVIDOperation OBJECT-TYPE
+    SYNTAX      INTEGER {
+                  add(1),
+                  replace(2)
+                }
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "The 'add' action indicates to add a tag for the assigned SP-VLAN
+	before the C-VLAN tag. If there is S-TAG in the packet, this rule
+	will not take effect.
+	The 'replace' action indicates to replace the C-VLAN in the tag by
+	the SP-VLAN. If there is no C-TAG in the packet, this rule will not
+	take effect."
+    ::= { swVlanTranslationCVIDEntry 3 }
+
+    swVlanTranslationCVIDRowStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "This object indicates the status of this entry."
+::= { swVlanTranslationCVIDEntry 4 }
+
+END

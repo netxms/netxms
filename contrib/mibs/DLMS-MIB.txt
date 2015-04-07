@@ -1,0 +1,346 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : D-Link License Management System mib
+-- FILE NAME: DLMS.mib
+-- DATE     : 2011/8/10
+-- VERSION  : 1.01
+-- PURPOSE  : To construct the MIB structure of DLMS function
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- Version 1.01, 2011/8/10, Yedda Liao
+-- 1. Add swDlmsInstallStackUnitId,swDlmsStackLicense group for stacking.
+-- -----------------------------------------------------------------------------
+-- Version 1.00, 2011/5/25, Yedda Liao
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+
+DLMS-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,
+        OBJECT-TYPE,
+        NOTIFICATION-TYPE,
+        Integer32            
+                    										FROM SNMPv2-SMI                                       
+        DisplayString        						FROM SNMPv2-TC
+        dlink-common-mgmt								FROM DLINK-ID-REC-MIB;
+        
+		 
+    	
+    swDlmsMIB MODULE-IDENTITY
+          LAST-UPDATED "201108100000Z"
+          ORGANIZATION "D-Link Corporation"
+          CONTACT-INFO
+						"       D-Link Corporation
+
+              Postal: No. 289, Sinhu 3rd Rd., Neihu District,
+                      Taipei City 114, Taiwan, R.O.C
+              Tel   : +886-2-66000123
+              E-mail: tsd@dlink.com.tw
+            "
+          DESCRIPTION
+		    			"The D-Link License Management System module"
+        ::= { dlink-common-mgmt 101 }
+    
+    swDlmsNotifications			OBJECT IDENTIFIER ::= { swDlmsMIB 0 }                       
+    swDlmsObjects						OBJECT IDENTIFIER ::= { swDlmsMIB 1 }
+    	swDlmsGeneralGroup			OBJECT IDENTIFIER ::= { swDlmsObjects 1 }
+    	swDlmsLicense						OBJECT IDENTIFIER ::= { swDlmsObjects 2 }
+    	swDlmsStackLicense			OBJECT IDENTIFIER ::= { swDlmsObjects 3 }
+ 
+-- -----------------------------------------------------------------------------
+-- swDlmsGeneralGroup     OBJECT IDENTIFIER ::= { swDlmsObjects 1 }
+-- -----------------------------------------------------------------------------
+		swDlmsInstallAc OBJECT-TYPE
+        SYNTAX			OCTET STRING (SIZE (0..25))
+        MAX-ACCESS  read-write
+        STATUS			current
+        DESCRIPTION
+            "This object is used to install an activation code.
+						 swDlmsInstallStackUnitId, to be used to specify the unit ID
+ 						 when performing an AC installation."
+        ::= { swDlmsGeneralGroup 1 }
+                
+    swDlmsInstallStackUnitId OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS read-write
+        STATUS  current
+        DESCRIPTION
+             "Specifies which unit of the switch stack the activation code will 
+              be installed. If the ID equals zero, it means the current device."
+				DEFVAL { 0 }
+        ::={ swDlmsGeneralGroup 2 }
+      
+-- -----------------------------------------------------------------------------
+-- swDlmsLicense					OBJECT IDENTIFIER ::= { swDlmsObjects 2 }
+-- -----------------------------------------------------------------------------
+		swDlmsLicenseModelTable OBJECT-TYPE
+        SYNTAX			SEQUENCE OF SwDlmsLicenseModelEntry
+        MAX-ACCESS	not-accessible
+        STATUS			current
+        DESCRIPTION
+            "This table indicates license model.
+             The table is for non-stackable device."            
+        ::= { swDlmsLicense 1 }
+
+    swDlmsLicenseModelEntry OBJECT-TYPE
+        SYNTAX			SwDlmsLicenseModelEntry
+        MAX-ACCESS	not-accessible
+        STATUS			current
+        DESCRIPTION
+            "Information about a license model."
+        INDEX  { swDlmsLicenseModelName }
+        ::= { swDlmsLicenseModelTable 1 }
+
+    SwDlmsLicenseModelEntry ::=
+        SEQUENCE {
+            swDlmsLicenseModelName
+                DisplayString,
+            swDlmsLicenseModelRemaining
+                DisplayString
+        }
+        
+    swDlmsLicenseModelName OBJECT-TYPE
+        SYNTAX			DisplayString
+        MAX-ACCESS	read-only
+        STATUS			current
+        DESCRIPTION
+            "This object indicates the license model name."
+				::= { swDlmsLicenseModelEntry 1 }
+        
+    swDlmsLicenseModelRemaining OBJECT-TYPE
+        SYNTAX			DisplayString
+        MAX-ACCESS  read-only
+        STATUS			current
+        DESCRIPTION
+            "This object indicates the license remaining time."
+        ::= { swDlmsLicenseModelEntry 2 }
+                   
+-- -----------------------------------------------------------------------------
+		swDlmsLicenseAcTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwDlmsLicenseAcEntry
+        MAX-ACCESS	not-accessible
+        STATUS			current
+        DESCRIPTION
+            "This table lists activation codes.
+             The table is for non-stackable device."
+        ::= { swDlmsLicense 2 }
+
+    swDlmsLicenseAcEntry OBJECT-TYPE
+        SYNTAX			SwDlmsLicenseAcEntry
+        MAX-ACCESS  not-accessible
+        STATUS			current
+        DESCRIPTION
+						"A list of information indicates a activation code."
+        INDEX  { swDlmsLicenseModelName, swDlmsLicenseAc}
+        ::= { swDlmsLicenseAcTable 1 }
+
+    SwDlmsLicenseAcEntry ::=
+        SEQUENCE {
+            swDlmsLicenseAc
+                OCTET STRING,
+            swDlmsLicenseAcStatus
+                INTEGER
+        }
+
+    swDlmsLicenseAc OBJECT-TYPE
+        SYNTAX			OCTET STRING
+        MAX-ACCESS  read-only
+        STATUS			current
+        DESCRIPTION
+            "This object indicates the activation code."
+        ::= { swDlmsLicenseAcEntry 1 }
+
+    swDlmsLicenseAcStatus OBJECT-TYPE
+        SYNTAX			INTEGER {active(1), expired(2)}
+        MAX-ACCESS  read-only
+        STATUS 			current
+        DESCRIPTION
+            "This object indicates the AC status."
+        ::= { swDlmsLicenseAcEntry 2 }  
+  
+-- -----------------------------------------------------------------------------
+-- swDlmsStackLicense					OBJECT IDENTIFIER ::= { swDlmsObjects 3 }
+-- -----------------------------------------------------------------------------
+		swDlmsStackLicenseModelTable OBJECT-TYPE
+        SYNTAX			SEQUENCE OF SwDlmsStackLicenseModelEntry
+        MAX-ACCESS	not-accessible
+        STATUS			current
+        DESCRIPTION
+            "This table indicates information about license models of devices
+             stacked with the current device.             
+             The table is for stackable device."
+        ::= { swDlmsStackLicense 1 }
+
+    swDlmsStackLicenseModelEntry OBJECT-TYPE
+        SYNTAX			SwDlmsStackLicenseModelEntry
+        MAX-ACCESS	not-accessible
+        STATUS			current
+        DESCRIPTION
+            "A list of information about each license model of devices stacked
+             with this device."
+        INDEX  { swDlmsStackLicenseModelUnitId,
+                 swDlmsStackLicenseModelName }
+        ::= { swDlmsStackLicenseModelTable 1 }
+
+    SwDlmsStackLicenseModelEntry ::=
+        SEQUENCE {
+        		swDlmsStackLicenseModelUnitId
+        				Integer32,	
+            swDlmsStackLicenseModelName
+                DisplayString,
+            swDlmsStackLicenseModelRemaining
+                DisplayString
+        }
+        
+    swDlmsStackLicenseModelUnitId OBJECT-TYPE
+        SYNTAX			Integer32
+        MAX-ACCESS	read-only
+        STATUS			current
+        DESCRIPTION
+            "Specifies which unit of the switch stack.
+             If the ID equals zero, it means the current device."
+				::= { swDlmsStackLicenseModelEntry 1 }
+        
+    swDlmsStackLicenseModelName OBJECT-TYPE
+        SYNTAX			DisplayString
+        MAX-ACCESS	read-only
+        STATUS			current
+        DESCRIPTION
+            "This object indicates the license model name."
+				::= { swDlmsStackLicenseModelEntry 2 }
+        
+    swDlmsStackLicenseModelRemaining OBJECT-TYPE
+        SYNTAX			DisplayString
+        MAX-ACCESS  read-only
+        STATUS			current
+        DESCRIPTION
+            "This object indicates the license remaining time."
+        ::= { swDlmsStackLicenseModelEntry 3 }
+                   
+-- -----------------------------------------------------------------------------
+		swDlmsStackLicenseAcTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwDlmsStackLicenseAcEntry
+        MAX-ACCESS	not-accessible
+        STATUS			current
+        DESCRIPTION
+            "This table indicates information about activation codes of devices
+             stacked with the current device.             
+             The table is for stackable device."
+        ::= { swDlmsStackLicense 2 }
+
+    swDlmsStackLicenseAcEntry OBJECT-TYPE
+        SYNTAX			SwDlmsStackLicenseAcEntry
+        MAX-ACCESS  not-accessible
+        STATUS			current
+        DESCRIPTION
+            "A list of information about each activation code of devices
+						 stacked with this device."
+        INDEX  { swDlmsStackLicenseModelUnitId,
+                 swDlmsStackLicenseModelName,
+                 swDlmsStackLicenseAc
+               }
+        ::= { swDlmsStackLicenseAcTable 1 }
+
+    SwDlmsStackLicenseAcEntry ::=
+        SEQUENCE {
+            swDlmsStackLicenseAc
+                OCTET STRING,
+            swDlmsStackLicenseAcStatus
+                INTEGER
+        }
+
+    swDlmsStackLicenseAc OBJECT-TYPE
+        SYNTAX			OCTET STRING
+        MAX-ACCESS  read-only
+        STATUS			current
+        DESCRIPTION
+            "This object indicates the activation code."
+        ::= { swDlmsStackLicenseAcEntry 1 }
+
+    swDlmsStackLicenseAcStatus OBJECT-TYPE
+        SYNTAX			INTEGER {active(1), expired(2)}
+        MAX-ACCESS  read-only
+        STATUS 			current
+        DESCRIPTION
+            "This object indicates the AC status."
+        ::= { swDlmsStackLicenseAcEntry 2 }
+
+-- -----------------------------------------------------------------------------
+-- swDlmsNotifications		OBJECT IDENTIFIER ::= { swDlmsMIB 0 }
+-- -----------------------------------------------------------------------------  
+		swDlmsIllegalAc NOTIFICATION-TYPE
+				OBJECTS {
+									swDlmsInstallAc
+								}
+				STATUS  current
+				DESCRIPTION
+					"Generated when the user inputs an illegal activation code."
+				::= { swDlmsNotifications 1 }
+      
+		swDlmsLicenseExpired NOTIFICATION-TYPE
+      OBJECTS {
+        				swDlmsLicenseModelName,
+        				swDlmsLicenseAc
+      				}
+      STATUS  current
+      DESCRIPTION
+          "The notification is sent when a license of non-stackable device
+           is expired."
+      ::= { swDlmsNotifications 2 }
+
+		swDlmsLicenseInstallationSuccess NOTIFICATION-TYPE
+      OBJECTS {
+        				swDlmsLicenseModelName,
+      					swDlmsInstallAc
+     					}
+      STATUS  current
+      DESCRIPTION
+          "The notification is sent when a license of non-stackable device was installed successfully."
+      ::= { swDlmsNotifications 3 }
+      
+		swDlmsLicenseExpiresIn30Days NOTIFICATION-TYPE
+      OBJECTS {
+        				swDlmsLicenseModelName,
+      					swDlmsInstallAc
+     					}
+      STATUS  current
+      DESCRIPTION
+          "When a license of non-stackable device is going to expire, the notification is sent before 30 days."
+      ::= { swDlmsNotifications 4 }
+      
+		swDlmsStackLicenseExpired NOTIFICATION-TYPE
+      OBJECTS {
+        				swDlmsStackLicenseModelUnitId,
+        				swDlmsStackLicenseModelName,
+        				swDlmsStackLicenseAc
+      				}
+      STATUS  current
+      DESCRIPTION
+          "The notification is sent when a license of devices stacked is expired."
+      ::= { swDlmsNotifications 21 }
+
+		swDlmsStackLicenseInstallationSuccess NOTIFICATION-TYPE
+      OBJECTS {
+        				swDlmsStackLicenseModelUnitId,
+        				swDlmsStackLicenseModelName,
+      					swDlmsInstallAc
+     					}
+      STATUS  current
+      DESCRIPTION
+          "The notification is sent when a license of devices stacked was installed successfully."
+      ::= { swDlmsNotifications 22 }
+      
+		swDlmsStackLicenseExpiresIn30Days NOTIFICATION-TYPE
+      OBJECTS {
+        				swDlmsStackLicenseModelUnitId,
+        				swDlmsStackLicenseModelName,
+      					swDlmsInstallAc
+     					}
+      STATUS  current
+      DESCRIPTION
+          "When a license of devices stacked is going to expire, the notification is sent before 30 days."
+      ::= { swDlmsNotifications 23 }
+
+
+END

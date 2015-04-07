@@ -1,0 +1,464 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : DHCPv6 Server mib
+-- FILE NAME: DHCPv6Server.mib
+-- DATE     : 2010/02/01
+-- VERSION  : 1.00
+-- PURPOSE  : To construct the MIB structure of DHCPv6 Server
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+-- [New Object]
+-- [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2010/02/01, Sammy
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+DHCPv6-Server-MIB DEFINITIONS ::= BEGIN
+
+-- -----------------------------------------------------------------------------
+-- DHCPv6 Server MIB
+-- -----------------------------------------------------------------------------
+
+
+IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,Unsigned32     	FROM SNMPv2-SMI
+        RowStatus,DisplayString                   	FROM SNMPv2-TC
+        Ipv6Address         			       		FROM IPV6-TC
+        dlink-common-mgmt               			FROM DLINK-ID-REC-MIB;
+
+     swDHCPv6ServerMIB MODULE-IDENTITY
+          LAST-UPDATED "1002010000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+           "The structure of DHCPv6 Server management for the
+		    		proprietary enterprise."
+          ::= { dlink-common-mgmt 90 }
+
+	swDHCPv6ServerMIBObjects		OBJECT IDENTIFIER ::= { swDHCPv6ServerMIB 1 }
+
+-- -----------------------------------------------------------------------------
+-- swDHCPv6ServerStateCtrl	OBJECT IDENTIFIER ::= { swDHCPv6ServerMIBObjects 1 }
+-- -----------------------------------------------------------------------------
+	swDHCPv6ServerStateCtrl	OBJECT IDENTIFIER ::= { swDHCPv6ServerMIBObjects 1 }
+
+	swDHCPv6ServerState OBJECT-TYPE
+    	SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+    	MAX-ACCESS  read-write
+    	STATUS  current
+    	DESCRIPTION
+            "This object enables or disables the DHCPv6 Server state
+             of the device."
+    	::= { swDHCPv6ServerStateCtrl 1 }
+  
+    swDHCPv6ServerCtrlTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwDHCPv6ServerCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+             "This table indicates the DHCPv6 Server state for a specified interface."
+        ::= { swDHCPv6ServerStateCtrl 2 }
+
+    swDHCPv6ServerCtrlEntry OBJECT-TYPE
+        SYNTAX  SwDHCPv6ServerCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information about swDHCPv6ServerCtrlTable."
+        INDEX  { swDHCPv6ServerIfName }
+        ::= { swDHCPv6ServerCtrlTable 1 }
+
+    SwDHCPv6ServerCtrlEntry ::=
+        SEQUENCE {
+            swDHCPv6ServerIfName
+                DisplayString,
+            swDHCPv6ServerCtrlState
+                INTEGER
+        }
+
+    swDHCPv6ServerIfName OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE(0..12))
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the name of the server interface."
+        ::= { swDHCPv6ServerCtrlEntry 1 }
+
+    swDHCPv6ServerCtrlState OBJECT-TYPE
+        SYNTAX  INTEGER {
+	               enabled(1),   
+	               disabled(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the DHCPv6 Server state for a specified interface."
+        ::= { swDHCPv6ServerCtrlEntry 2 }
+
+-- -----------------------------------------------------------------------------
+-- swDHCPv6ServerPoolMgmt	OBJECT IDENTIFIER ::= { swDHCPv6ServerMIBObjects 2 }
+-- -----------------------------------------------------------------------------
+	swDHCPv6ServerPoolMgmt	OBJECT IDENTIFIER ::= { swDHCPv6ServerMIBObjects 2 }
+
+-- -----------------------------------------------------------------------------
+-- swDHCPv6ServerPoolTable	{ swDHCPv6ServerPoolMgmt 1 }
+-- -----------------------------------------------------------------------------
+
+swDHCPv6ServerPoolTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwDHCPv6ServerPoolEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains DHCPv6 Server pool information."
+    ::= { swDHCPv6ServerPoolMgmt 1 }
+
+swDHCPv6ServerPoolEntry OBJECT-TYPE
+    SYNTAX      SwDHCPv6ServerPoolEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of DHCPv6 Server pool information."
+    INDEX { swDHCPv6ServerPoolName }
+    ::= { swDHCPv6ServerPoolTable 1 }
+
+SwDHCPv6ServerPoolEntry ::=
+    SEQUENCE {
+        swDHCPv6ServerPoolName
+            DisplayString,
+        swDHCPv6ServerPoolBeginAddress
+            Ipv6Address,
+        swDHCPv6ServerPoolEndAddress
+            Ipv6Address,
+        swDHCPv6ServerPoolAddressPrefixLen
+            INTEGER,
+        swDHCPv6ServerPoolDomainName
+        	DisplayString,
+        swDHCPv6ServerPoolPreferredLifetime
+        	Unsigned32,
+        swDHCPv6ServerPoolValidLifetime
+            Unsigned32,
+        swDHCPv6ServerPoolRowStatus 
+        	RowStatus
+        }
+
+swDHCPv6ServerPoolName OBJECT-TYPE
+	SYNTAX  DisplayString	(SIZE(1..12))
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "The name of this pool entry."
+    ::= { swDHCPv6ServerPoolEntry 1 }
+
+swDHCPv6ServerPoolBeginAddress OBJECT-TYPE
+    SYNTAX  Ipv6Address
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "The beginning IPv6 network address of this DHCPv6 pool entry."
+    ::= { swDHCPv6ServerPoolEntry 2 }
+
+swDHCPv6ServerPoolEndAddress OBJECT-TYPE
+    SYNTAX  Ipv6Address
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "The ending IPv6 network address of this DHCPv6 pool entry."
+    ::= { swDHCPv6ServerPoolEntry 3 }
+
+swDHCPv6ServerPoolAddressPrefixLen OBJECT-TYPE
+    SYNTAX  INTEGER
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "The IPv6 network address prefix length of this DHCPv6 pool entry."
+    ::= { swDHCPv6ServerPoolEntry 4 }
+
+swDHCPv6ServerPoolDomainName OBJECT-TYPE
+    SYNTAX  DisplayString	(SIZE(1..255))
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "The domain name is used by the client when resolving hostnames with the DNS."
+    ::= { swDHCPv6ServerPoolEntry 5 }
+
+swDHCPv6ServerPoolPreferredLifetime OBJECT-TYPE
+    SYNTAX      Unsigned32(60..4294967295)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The amount of time (in seconds) that the IPv6 address, 
+        based on the specified pool, remains in the preferred state."
+    ::= { swDHCPv6ServerPoolEntry 6 }
+
+swDHCPv6ServerPoolValidLifetime OBJECT-TYPE
+    SYNTAX      Unsigned32      (60..4294967295)
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The amount of time (in seconds) that the IPv6 address, 
+        based on the specified pool, remains in the valid state."
+    ::= { swDHCPv6ServerPoolEntry 7 }
+
+swDHCPv6ServerPoolRowStatus  OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "This object manages this entry."
+    ::= { swDHCPv6ServerPoolEntry 100 }
+
+-- -----------------------------------------------------------------------------
+-- swDHCPv6ServerDNSServerAddressTable	 { swDHCPv6ServerPoolMgmt 2 }
+-- -----------------------------------------------------------------------------
+swDHCPv6ServerDNSServerAddressTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwDHCPv6ServerDNSServerAddressEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains the IPv6 address of a DNS server
+        that is available to a DHCPv6 client."
+    ::= { swDHCPv6ServerPoolMgmt 2 }
+
+swDHCPv6ServerDNSServerAddressEntry OBJECT-TYPE
+    SYNTAX      SwDHCPv6ServerDNSServerAddressEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of DNS server information."
+    INDEX { swDHCPv6ServerPoolName, swDHCPv6ServerDNSServerAddressIndex }
+    ::= { swDHCPv6ServerDNSServerAddressTable 1 }
+
+SwDHCPv6ServerDNSServerAddressEntry ::=
+    SEQUENCE {
+        swDHCPv6ServerDNSServerAddressIndex
+        		INTEGER,
+        swDHCPv6ServerDNSServerAddress
+        		Ipv6Address,
+        swDHCPv6ServerDNSServerAddressRowStatus
+        		RowStatus
+        }
+
+swDHCPv6ServerDNSServerAddressIndex OBJECT-TYPE
+    SYNTAX  INTEGER
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "The DNS Server address number."
+    ::= { swDHCPv6ServerDNSServerAddressEntry 1 }
+
+swDHCPv6ServerDNSServerAddress OBJECT-TYPE
+    SYNTAX  Ipv6Address
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+        "The IPv6 address of a DNS Server that is available to a DHCPv6 client."
+    ::= { swDHCPv6ServerDNSServerAddressEntry 2 }
+
+swDHCPv6ServerDNSServerAddressRowStatus OBJECT-TYPE
+    SYNTAX  RowStatus
+    MAX-ACCESS  read-create
+    STATUS  current
+    DESCRIPTION
+        "This object manages this entry."
+    ::= { swDHCPv6ServerDNSServerAddressEntry 100}
+
+-- -----------------------------------------------------------------------------
+-- swDHCPv6ServerManualBindingTable	 { swDHCPv6ServerPoolMgmt 3 }
+-- -----------------------------------------------------------------------------
+swDHCPv6ServerManualBindingTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwDHCPv6ServerManualBindingEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains information regarding the binding
+        of a pool of IPv6 addresses to a DHCPv6 Server."
+    ::= { swDHCPv6ServerMIBObjects 3 }
+
+swDHCPv6ServerManualBindingEntry OBJECT-TYPE
+    SYNTAX      SwDHCPv6ServerManualBindingEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of manual pool bindings."
+    INDEX { swDHCPv6ServerPoolName,swDHCPv6ServerManualBindingIpv6Address }
+    ::= { swDHCPv6ServerManualBindingTable 1 }
+
+SwDHCPv6ServerManualBindingEntry ::=
+    SEQUENCE {
+        swDHCPv6ServerManualBindingIpv6Address
+            Ipv6Address,
+        swDHCPv6ServerManualBindingDUID 
+        	DisplayString,
+        swDHCPv6ServerManualBindingRowStatus
+        	RowStatus
+        }
+
+swDHCPv6ServerManualBindingIpv6Address OBJECT-TYPE
+    SYNTAX  Ipv6Address
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "IPv6 address which will be assigned to specified client."
+    ::= { swDHCPv6ServerManualBindingEntry 1 }
+
+swDHCPv6ServerManualBindingDUID  OBJECT-TYPE
+		SYNTAX		DisplayString	(SIZE(1..28))
+		MAX-ACCESS	read-create
+		STATUS		current
+		DESCRIPTION
+			"The DUID of a client."
+		::= { swDHCPv6ServerManualBindingEntry 2 }
+
+
+swDHCPv6ServerManualBindingRowStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "This object manages this entry."
+    ::= { swDHCPv6ServerManualBindingEntry 100 }
+
+-- -----------------------------------------------------------------------------
+-- swDHCPv6ServerExcludedAddressTable	 { swDHCPv6ServerMIBObjects 3 }
+-- -----------------------------------------------------------------------------
+
+swDHCPv6ServerExcludedAddressTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwDHCPv6ServerExcludedAddressEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains an IPv6 addresses group that
+ 		the DHCPv6 Server should not assign to a DHCPv6 client."
+    ::= { swDHCPv6ServerMIBObjects 4 }
+
+swDHCPv6ServerExcludedAddressEntry OBJECT-TYPE
+    SYNTAX      SwDHCPv6ServerExcludedAddressEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A list of manual pool bindings."
+    INDEX { swDHCPv6ServerPoolName,swDHCPv6ServerExcludedAddressBegin,swDHCPv6ServerExcludedAddressEnd }
+    ::= { swDHCPv6ServerExcludedAddressTable 1 }
+
+SwDHCPv6ServerExcludedAddressEntry ::=
+    SEQUENCE {
+        swDHCPv6ServerExcludedAddressBegin
+            Ipv6Address,
+        swDHCPv6ServerExcludedAddressEnd 
+        	Ipv6Address,
+        swDHCPv6ServerExcludedAddressRowStatus
+        	RowStatus
+        }
+
+swDHCPv6ServerExcludedAddressBegin OBJECT-TYPE
+    SYNTAX  Ipv6Address
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "The starting IPv6 address of the excluded address range."
+    ::= { swDHCPv6ServerExcludedAddressEntry 1 }
+
+swDHCPv6ServerExcludedAddressEnd OBJECT-TYPE
+    SYNTAX  Ipv6Address
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "The end IPv6 address of this exclude address range."
+    ::= { swDHCPv6ServerExcludedAddressEntry 2 }
+
+swDHCPv6ServerExcludedAddressRowStatus OBJECT-TYPE
+    SYNTAX      RowStatus
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "This object manages this entry."
+    ::= { swDHCPv6ServerExcludedAddressEntry 100 }
+
+-- -----------------------------------------------------------------------------
+-- swDHCPv6ServerBindingTable	 { swDHCPv6ServerMIBObjects 4 }
+-- -----------------------------------------------------------------------------
+swDHCPv6ServerBindingTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF SwDHCPv6ServerBindingEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains information regarding dynamic
+        binding information of a pool of IPv6 addresses."
+    ::= {  swDHCPv6ServerMIBObjects 5 }
+
+swDHCPv6ServerBindingEntry OBJECT-TYPE
+    SYNTAX      SwDHCPv6ServerBindingEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A pool of IPv6 addresses that are listed as bound to a DHCPv6 Server."
+    INDEX { swDHCPv6ServerPoolName, swDHCPv6ServerBindingIpv6Address}
+    ::= { swDHCPv6ServerBindingTable 1 }
+
+SwDHCPv6ServerBindingEntry ::=
+    SEQUENCE {
+        swDHCPv6ServerBindingIpv6Address
+        		Ipv6Address,
+        swDHCPv6ServerBindingDUID 
+        		DisplayString,
+        swDHCPv6ServerBindingPreferredLifetime
+        		Unsigned32, 
+        swDHCPv6ServerBindingValidLifetime
+        		Unsigned32,
+        swDHCPv6ServerBindingClearState
+        		INTEGER
+        }
+
+swDHCPv6ServerBindingIpv6Address OBJECT-TYPE
+    SYNTAX  Ipv6Address
+    MAX-ACCESS  not-accessible
+    STATUS  current
+    DESCRIPTION
+        "IPv6 addresses which have been assigned to a specified client."
+    ::= { swDHCPv6ServerBindingEntry 1 }
+
+swDHCPv6ServerBindingDUID OBJECT-TYPE
+		SYNTAX		DisplayString    (SIZE(1..28))
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"The DUID of a client."
+		::= { swDHCPv6ServerBindingEntry 2 }
+
+swDHCPv6ServerBindingPreferredLifetime OBJECT-TYPE
+	SYNTAX  Unsigned32      (60..4294967295)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION
+		"The preferred-lifetime of the binding entry in seconds."
+	::= { swDHCPv6ServerBindingEntry 3 }
+                                               
+swDHCPv6ServerBindingValidLifetime OBJECT-TYPE
+	SYNTAX  Unsigned32      (60..4294967295)
+	MAX-ACCESS  read-only
+	STATUS  current
+	DESCRIPTION
+		"The valid-lifetime of the binding entry in seconds."
+	::= { swDHCPv6ServerBindingEntry 4 }
+                                              
+swDHCPv6ServerBindingClearState OBJECT-TYPE
+		SYNTAX  INTEGER {
+		none(1),
+		start(2)
+	}
+	MAX-ACCESS  read-write
+	STATUS  current
+	DESCRIPTION
+		"This object is used to clear this entry."
+	::= { swDHCPv6ServerBindingEntry 5 }
+
+END

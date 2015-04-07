@@ -1,0 +1,127 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : CPU protect Common mib
+-- FILE NAME: CPUProtect.mib
+-- DATE     : 2012/07/13
+-- VERSION  : 1.01
+-- PURPOSE  : To construct the MIB structure of CPU Protect management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2012/06/21, Lillian
+-- This is the first formal version for universal MIB definition.
+--
+-- Version 1.01, 2012/07/13, Lillian
+-- [Modification]
+-- 1. Remove the node ¡°swCPUProtectProtocolRowStatus¡±
+-- 2. Modify the access state of ¡°swCPUProtectProtocolRate¡± from ¡°Read-Create¡± to ¡°Read-Write¡±.
+-- 3. Modify the description of the node "swCPUProtectProtocolRate".
+
+-- -----------------------------------------------------------------------------
+
+CPU-PROTECT-MIB DEFINITIONS ::= BEGIN
+
+	IMPORTS
+
+	          MODULE-IDENTITY, OBJECT-TYPE
+        			FROM SNMPv2-SMI
+	          TruthValue, RowStatus,DisplayString 
+					FROM SNMPv2-TC
+	          MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+	                FROM SNMPv2-CONF
+
+	          dlink-common-mgmt
+	          		FROM DLINK-ID-REC-MIB;
+
+	swCPUProtectMIB MODULE-IDENTITY
+	    LAST-UPDATED "201207130000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        " "
+	    DESCRIPTION
+		    "The MIB module for managing cpu protect engine."
+        ::= { dlink-common-mgmt 106 }
+
+
+
+    swCPUProtectGlobalMgmt			OBJECT IDENTIFIER ::= { swCPUProtectMIB 1 }
+
+-- -----------------------------------------------------------------------------
+-- swCPUProtectGlobalMgmt
+-- -----------------------------------------------------------------------------
+	swCPUProtectState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the CPU Protect state of the switch.Only 
+			enabled the feature, the rate limit for packets will be effective."
+        ::= { swCPUProtectGlobalMgmt 1 }
+
+-- -----------------------------------------------------------------------------
+--	swCPUProtectProtocolTable OBJECT IDENTIFIER ::= { swCPUProtectMIB 2 }
+-- -----------------------------------------------------------------------------
+	swCPUProtectProtocolTable  OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwCPUProtectProtocolEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A table that holds the CPU Protected rate limit settings of the device."
+        ::= { swCPUProtectMIB 2}
+		
+	swCPUProtectProtocolEntry OBJECT-TYPE
+        SYNTAX  SwCPUProtectProtocolEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of CPU Protected rate limit settings of the device."
+        INDEX   { swCPUProtectProtocolType }
+        ::= { swCPUProtectProtocolTable 1 }
+
+	SwCPUProtectProtocolEntry ::= 
+        SEQUENCE {
+            swCPUProtectProtocolType
+                INTEGER,
+            swCPUProtectProtocolRate
+                INTEGER
+        }
+
+	swCPUProtectProtocolType OBJECT-TYPE
+        SYNTAX INTEGER {
+            arp(1),
+            bpdu(2),
+            icmp(3),
+            igmp(4),
+            snmp(5)
+           }
+        MAX-ACCESS  read-only
+        STATUS current
+        DESCRIPTION
+            "This object indicates the CPU Protect Protocol type."
+    ::= { swCPUProtectProtocolEntry 1 }
+
+	swCPUProtectProtocolRate	OBJECT-TYPE
+    	SYNTAX INTEGER
+        MAX-ACCESS  read-write
+        STATUS current
+        DESCRIPTION
+            "The range for configuring rate-limit in packet per second (pps). A value of -1 
+			means no-limit and all packets of specified type will not be controlled. the default 
+			value is no-limit. The rate values are 0 to N. When 0 is set on the specified type, 
+			all packets of the specified type will be dropped.The value N means the maximum rate 
+			which is project dependent.If the specific packet that sends to the CPU exceeds the 
+			above rate,it will be dropped."
+    ::= { swCPUProtectProtocolEntry 2 }  
+	
+
+
+END
