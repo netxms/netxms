@@ -2,6 +2,7 @@
 * 2.0-M3
 *
 
+- IPv6 support: communications, address information, topology
 - New NXSL functions: gethostbyaddr, gethostbyname, md5, sha1, AgentReadList
 - Added posibility to wakeup unmanaged node
 - Instance discovery separated from configuration polls
@@ -15,7 +16,7 @@
 - Fixed broken SNMP proxy functionality in agent
 - Management console:
 	- Fixed broken popup menu actions on "Interfaces" tab
-	- Macro %USERNAME%4 can be used in object tools
+	- Macro %USERNAME% can be used in object tools
 	- VLAN highlight on port selection in VLAN view
 	- "Use multipliers" option in DCI summary tables
 	- "Zoom to fit" action in network maps
