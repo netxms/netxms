@@ -62,10 +62,10 @@ public class OverviewAdapter extends BaseAdapter
 			addPair(r.getString(R.string.overview_guid), toString(obj.getGuid()));
 			addPair(r.getString(R.string.overview_class), obj.getClass().getSimpleName());
 			addPair(r.getString(R.string.overview_status), getNodeStatus(obj.getStatus()));
-			addPair(r.getString(R.string.overview_primary_ip), obj.getPrimaryIP().getHostAddress());
 			switch (obj.getObjectClass())
 			{
 				case AbstractObject.OBJECT_NODE:
+					addPair(r.getString(R.string.overview_primary_ip), ((Node)obj).getPrimaryIP().getHostAddress());
 					addPair(r.getString(R.string.overview_zone_id), Long.toString(((Node)obj).getZoneId()));
 					addPair(r.getString(R.string.overview_primary_hostname), ((Node)obj).getPrimaryName());
 					if (((Node)obj).hasAgent())
