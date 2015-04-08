@@ -100,7 +100,6 @@ void ProxySNMPRequest(NXCPMessage *pRequest, NXCPMessage *pResponse)
             addr.fillSockAddr(&sa, pRequest->getFieldAsUInt16(VID_PORT));
 				if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) != -1)
 				{
-printf("WILL SEND PDU TO %s\n\n",inet_ntoa(((struct sockaddr_in *)&sa)->sin_addr));
 					BYTE *pduOut = (BYTE *)malloc(SNMP_BUFFER_SIZE);
 					if (pduOut != NULL)
 					{

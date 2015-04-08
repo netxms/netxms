@@ -1,7 +1,7 @@
 [Setup]
 AppName=NetXMS WebUI
-AppVerName=NetXMS WebUI 2.0-M2
-AppVersion=2.0-M2
+AppVerName=NetXMS WebUI 2.0-M3
+AppVersion=2.0-M3
 AppPublisher=Raden Solutions
 AppPublisherURL=http://www.radensolutions.com
 AppSupportURL=http://www.netxms.org
