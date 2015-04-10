@@ -990,7 +990,7 @@ UINT32 Interface::wakeUp()
       const InetAddress addr = m_ipAddressList.getFirstUnicastAddressV4();
       if (addr.isValid())
       {
-         UINT32 destAddr = htonl(addr.getAddressV4() | ~(0xFFFFFFFF << addr.getMaskBits()));
+         UINT32 destAddr = htonl(addr.getAddressV4() | ~(0xFFFFFFFF << (32 - addr.getMaskBits())));
          if (SendMagicPacket(destAddr, m_macAddr, 5))
             rcc = RCC_SUCCESS;
          else
