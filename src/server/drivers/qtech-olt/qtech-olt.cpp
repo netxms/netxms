@@ -88,7 +88,7 @@ static UINT32 HandlerIndex(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport
 
     InterfaceInfo *info = new InterfaceInfo(pVar->getValueAsUInt() + oid[14] * 1000);
     info->slot = oid[14];
-    info->port = info->index;
+    info->port = info->index - info->slot * 1000;
     info->isPhysicalPort = true;
     ((InterfaceList *)pArg)->add(info);
     return SNMP_ERR_SUCCESS;
