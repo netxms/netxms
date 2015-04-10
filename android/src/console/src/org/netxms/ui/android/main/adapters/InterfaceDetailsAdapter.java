@@ -54,6 +54,7 @@ public class InterfaceDetailsAdapter extends BaseAdapter
 	{
 		addRow(r.getString(R.string.if_id), Long.toString(i.getObjectId()));
 		addRow(r.getString(R.string.if_name), i.getObjectName());
+    addRow(r.getString(R.string.if_alias), i.getAlias());
 		addRow(r.getString(R.string.if_type), Integer.toString(i.getIfType()));
 		addRow(r.getString(R.string.if_index), Integer.toString(i.getIfIndex()));
 		addRow(r.getString(R.string.if_slot), Integer.toString(i.getSlot()));

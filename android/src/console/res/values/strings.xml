@@ -203,6 +203,7 @@
 	<string name="if_ignore">IGNORE</string>
 	<string name="if_id">ID</string>
 	<string name="if_name">Name</string>
+  <string name="if_alias">Alias</string>
 	<string name="if_type">ifType</string>
 	<string name="if_index">ifIndex</string>
 	<string name="if_slot">Slot</string>
