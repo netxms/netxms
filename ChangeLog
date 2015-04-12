@@ -3,6 +3,8 @@
 *
 
 - Fixed broken WoL functionality
+- Fixed broken PING subagent
+- IPv6 support in PING subagent
 
 
 *
