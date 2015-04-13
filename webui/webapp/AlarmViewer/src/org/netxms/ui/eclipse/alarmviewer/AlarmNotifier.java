@@ -217,8 +217,8 @@ public class AlarmNotifier
       {
          JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
          File localFile = new File(workspaceUrl.getPath(), fileName);
-         String id = localFile.getAbsolutePath();
-         DownloadServiceHandler.addDownload(id, fileName, localFile, "audio/wav");//$NON-NLS-1$
+         String id = "audio-" + fileName;
+         DownloadServiceHandler.addDownload(id, fileName, localFile, "audio/wav"); //$NON-NLS-1$
          StringBuilder js = new StringBuilder();
          js.append("var audio = new Audio('");//$NON-NLS-1$
          js.append(DownloadServiceHandler.createDownloadUrl(id));
