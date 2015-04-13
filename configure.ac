@@ -2366,7 +2366,7 @@ if test $? = 0; then
 		LD_RUN_PATH="${MYSQL_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 	fi
 
-	AC_CHECK_HEADER(mysql.h,,AC_MSG_ERROR([Cannot find mysql.h - check your PostgreSQL client installation]))
+	AC_CHECK_HEADER(mysql.h,,AC_MSG_ERROR([Cannot find mysql.h - check your MySQL client installation]))
 
 	AC_CHECK_LIB(mysqlclient, mysql_init, [MYSQL_LIBS="-lmysqlclient"],
 		[AC_MSG_ERROR(libmysqlclient is requred for MySQL support)])
