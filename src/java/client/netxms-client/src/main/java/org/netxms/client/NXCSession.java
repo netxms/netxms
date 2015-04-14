@@ -185,7 +185,6 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
 {
    // Various public constants
    public static final int DEFAULT_CONN_PORT = 4701;
-   public static final int CLIENT_PROTOCOL_VERSION = 46;
 
    // Authentication types
    public static final int AUTH_TYPE_PASSWORD = 0;
@@ -286,6 +285,7 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    private Map<String, String> recievedUpdates = new HashMap<String, String>();
 
    // Server information
+   private ProtocolVersion protocolVersion;
    private String serverVersion = "(unknown)";
    private byte[] serverId = new byte[8];
    private String serverTimeZone;
@@ -1693,9 +1693,10 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
          sendMessage(request);
          NXCPMessage response = waitForMessage(NXCPCodes.CMD_REQUEST_COMPLETED, request.getMessageId());
 
-         if ((response.getFieldAsInt32(NXCPCodes.VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION) && !ignoreProtocolVersion)
+         protocolVersion = new ProtocolVersion(response);
+         if (!protocolVersion.isCorrectVersion(ProtocolVersion.INDEX_BASE) && !ignoreProtocolVersion)
          {
-            Logger.warning("NXCSession.connect", "connection failed, server protocol version is " + 
+            Logger.warning("NXCSession.connect", "connection failed, server protocol version (BASE) is " + 
                response.getFieldAsInt32(NXCPCodes.VID_PROTOCOL_VERSION));
             throw new NXCException(RCC.BAD_PROTOCOL);
          }
@@ -1909,6 +1910,22 @@ public class NXCSession implements Session, ScriptLibraryManager, UserManager, S
    public void setIgnoreProtocolVersion(boolean ignoreProtocolVersion)
    {
       this.ignoreProtocolVersion = ignoreProtocolVersion;
+   }
+   
+   /**
+    * Validate protocol versions
+    * 
+    * @param versions
+    * @return
+    */
+   public boolean validateProtocolVersions(int[] versions)
+   {
+      if (protocolVersion == null)
+         return false;
+      for(int index : versions)
+         if (!protocolVersion.isCorrectVersion(index))
+            return false;
+      return true;
    }
 
    /* (non-Javadoc)

@@ -1041,6 +1041,7 @@ typedef struct
 #define VID_MTU                     ((UINT32)493)
 #define VID_ALIAS                   ((UINT32)494)
 #define VID_AP_INDEX                ((UINT32)495)
+#define VID_PROTOCOL_VERSION_EX     ((UINT32)496)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

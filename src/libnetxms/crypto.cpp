@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -33,7 +33,7 @@
  * Supported ciphers. By default, we support all ciphers compiled
  * into OpenSSL library.
  */
-static UINT32 m_dwSupportedCiphers = 
+static UINT32 s_supportedCiphers = 
 #ifdef _WITH_ENCRYPTION
 #ifndef OPENSSL_NO_AES
    NXCP_SUPPORT_AES_256 |
@@ -168,11 +168,11 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCal
 
    // validate supported ciphers
    CryptoDbgPrintf(1, _T("Validating ciphers"));
-   m_dwSupportedCiphers &= dwEnabledCiphers;
+   s_supportedCiphers &= dwEnabledCiphers;
    UINT32 cipherBit = 1;
    for(i = 0; i < NETXMS_MAX_CIPHERS; i++, cipherBit = cipherBit << 1)
    {
-      if ((m_dwSupportedCiphers & cipherBit) == 0)
+      if ((s_supportedCiphers & cipherBit) == 0)
       {
          CryptoDbgPrintf(1, _T("   %s disabled (config)"), s_cipherNames[i]);
          continue;
@@ -185,7 +185,7 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCal
       }
       else
       {
-         m_dwSupportedCiphers &= ~cipherBit;
+         s_supportedCiphers &= ~cipherBit;
          CryptoDbgPrintf(1, _T("   %s disabled (validation failed)"), s_cipherNames[i]);
       }
    }
@@ -201,9 +201,34 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCal
 /**
  * Get supported ciphers
  */
-UINT32 LIBNETXMS_EXPORTABLE CSCPGetSupportedCiphers()
+UINT32 LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphers()
 {
-   return m_dwSupportedCiphers;
+   return s_supportedCiphers;
+}
+
+/**
+ * Get supported ciphers as text
+ */
+String LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphersAsText()
+{
+   String s;
+   UINT32 cipherBit = 1;
+   for(int i = 0; i < NETXMS_MAX_CIPHERS; i++, cipherBit = cipherBit << 1)
+   {
+      if ((s_supportedCiphers & cipherBit) == 0)
+      {
+         continue;
+      }
+      NXCPEncryptionContext *ctx = NXCPEncryptionContext::create(cipherBit);
+      if (ctx != NULL)
+      {
+         delete ctx;
+         if (s.length() > 0)
+            s.append(_T(", "));
+         s.append(s_cipherNames[i]);
+      }
+   }
+   return s;
 }
 
 /**
@@ -246,7 +271,7 @@ UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *msg,
       (*ppResponse)->setId(msg->getId());
       (*ppResponse)->disableEncryption();
 
-      dwCiphers = msg->getFieldAsUInt32(VID_SUPPORTED_ENCRYPTION) & m_dwSupportedCiphers;
+      dwCiphers = msg->getFieldAsUInt32(VID_SUPPORTED_ENCRYPTION) & s_supportedCiphers;
       if (dwCiphers == 0)
       {
          (*ppResponse)->setField(VID_RCC, RCC_NO_CIPHERS);
@@ -331,7 +356,7 @@ void LIBNETXMS_EXPORTABLE PrepareKeyRequestMsg(NXCPMessage *msg, RSA *pServerKey
    BYTE *pKeyBuffer, *pBufPos;
 
    msg->setCode(CMD_REQUEST_SESSION_KEY);
-   msg->setField(VID_SUPPORTED_ENCRYPTION, m_dwSupportedCiphers);
+   msg->setField(VID_SUPPORTED_ENCRYPTION, s_supportedCiphers);
 
 	if (useX509Format)
 	{

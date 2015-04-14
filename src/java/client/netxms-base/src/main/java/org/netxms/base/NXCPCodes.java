@@ -838,6 +838,7 @@ public class NXCPCodes
    public static final long VID_MTU = 493;
    public static final long VID_ALIAS = 494;
    public static final long VID_AP_INDEX = 495;
+   public static final long VID_PROTOCOL_VERSION_EX = 496;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

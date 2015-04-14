@@ -61,7 +61,9 @@ static DWORD SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
          NXCSetDebugCallback(DebugCallback);
 
       NXCSession *session = new NXCSession();
-      dwResult = session->connect(m_szServer, m_szLogin, m_szPassword, bEncrypt ? NXCF_ENCRYPT : 0, _T("nxevent/") NETXMS_VERSION_STRING);
+      static UINT32 protocolVersions[] = { CPV_INDEX_TRAP };
+      dwResult = session->connect(m_szServer, m_szLogin, m_szPassword, bEncrypt ? NXCF_ENCRYPT : 0, _T("nxevent/") NETXMS_VERSION_STRING,
+                                  protocolVersions, sizeof(protocolVersions) / sizeof(UINT32));
       if (dwResult != RCC_SUCCESS)
       {
          _tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(dwResult));
