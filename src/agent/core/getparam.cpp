@@ -99,7 +99,7 @@ static LONG H_SupportedCiphers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pV
 {
    UINT32 dwCiphers;
 
-   dwCiphers = CSCPGetSupportedCiphers();
+   dwCiphers = NXCPGetSupportedCiphers();
    if (dwCiphers == 0)
    {
       ret_string(pValue, _T("NONE"));
