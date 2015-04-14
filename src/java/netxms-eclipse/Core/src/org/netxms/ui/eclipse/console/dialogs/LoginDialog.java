@@ -50,7 +50,7 @@ import org.netxms.certificate.loader.exception.KeyStoreLoaderException;
 import org.netxms.certificate.manager.CertificateManager;
 import org.netxms.certificate.subject.Subject;
 import org.netxms.certificate.subject.SubjectParser;
-import org.netxms.client.NXCSession;
+import org.netxms.client.constants.AuthenticationType;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.BrandingManager;
 import org.netxms.ui.eclipse.console.Messages;
@@ -75,7 +75,7 @@ public class LoginDialog extends Dialog
    private Certificate certificate;
    private Color labelColor;
    private final CertificateManager certMgr;
-   private int authMethod; 
+   private AuthenticationType authMethod = AuthenticationType.PASSWORD; 
 
    /**
     * @param parentShell
@@ -196,7 +196,7 @@ public class LoginDialog extends Dialog
       comboAuth = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN | SWT.READ_ONLY, Messages.get().LoginDialog_Auth, gd, toolkit);
       comboAuth.add(Messages.get().LoginDialog_Passwd);
       comboAuth.add(Messages.get().LoginDialog_Cert);
-      comboAuth.select(authMethod);
+      comboAuth.select(authMethod.getValue());
       comboAuth.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -235,13 +235,13 @@ public class LoginDialog extends Dialog
 
       try
       {
-      	authMethod = settings.getInt("Connect.AuthMethod"); //$NON-NLS-1$
+      	authMethod = AuthenticationType.getByValue(settings.getInt("Connect.AuthMethod")); //$NON-NLS-1$
       }
       catch(NumberFormatException e)
       {
-      	authMethod = NXCSession.AUTH_TYPE_PASSWORD;
+      	authMethod = AuthenticationType.PASSWORD;
       }
-      comboAuth.select(authMethod);
+      comboAuth.select(authMethod.getValue());
       selectAuthenticationField(false);
             
       // Set initial focus
@@ -255,9 +255,9 @@ public class LoginDialog extends Dialog
       }
       else
       {
-      	if (authMethod == NXCSession.AUTH_TYPE_PASSWORD)
+      	if (authMethod == AuthenticationType.PASSWORD)
       		textPassword.setFocus();
-      	else if (authMethod == NXCSession.AUTH_TYPE_CERTIFICATE)
+      	else if (authMethod == AuthenticationType.CERTIFICATE)
       		comboCert.setFocus();
       }
 
@@ -271,13 +271,13 @@ public class LoginDialog extends Dialog
     */
    private void selectAuthenticationField(boolean doLayout)
    {
-   	authMethod = comboAuth.getSelectionIndex();
+   	authMethod = AuthenticationType.getByValue(comboAuth.getSelectionIndex());
    	switch(authMethod)
    	{
-   		case NXCSession.AUTH_TYPE_PASSWORD:
+   		case PASSWORD:
    	      ((StackLayout)authEntryFields.getLayout()).topControl = textPassword;
    	      break;
-   		case NXCSession.AUTH_TYPE_CERTIFICATE:
+   		case CERTIFICATE:
    			fillCertCombo();
    	      ((StackLayout)authEntryFields.getLayout()).topControl = comboCert.getParent();
    	      break;
@@ -299,7 +299,7 @@ public class LoginDialog extends Dialog
    @Override
    protected void okPressed()
    {
-   	if ((authMethod == NXCSession.AUTH_TYPE_CERTIFICATE) && (comboCert.getSelectionIndex() == -1))
+   	if ((authMethod == AuthenticationType.CERTIFICATE) && (comboCert.getSelectionIndex() == -1))
    	{
    		MessageDialogHelper.openWarning(getShell(), Messages.get().LoginDialog_Warning, Messages.get().LoginDialog_NoCertSelected);
    		return;
@@ -314,7 +314,7 @@ public class LoginDialog extends Dialog
       settings.put("Connect.Server", comboServer.getText()); //$NON-NLS-1$
       settings.put("Connect.ServerHistory", items.toArray(new String[items.size()])); //$NON-NLS-1$
       settings.put("Connect.Login", textLogin.getText()); //$NON-NLS-1$
-      settings.put("Connect.AuthMethod", authMethod); //$NON-NLS-1$
+      settings.put("Connect.AuthMethod", authMethod.getValue()); //$NON-NLS-1$
       if (certificate != null)
          settings.put("Connect.Certificate", ((X509Certificate)certificate).getSubjectDN().toString());
 

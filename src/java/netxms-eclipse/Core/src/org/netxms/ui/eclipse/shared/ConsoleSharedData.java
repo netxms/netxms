@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.shared;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.swt.widgets.TrayItem;
-import org.netxms.api.client.Session;
+import org.netxms.client.NXCSession;
 
 /**
  * Shared data for NXMC extensions
@@ -29,7 +29,7 @@ import org.netxms.api.client.Session;
  */
 public class ConsoleSharedData
 {
-	private static Session session = null;
+	private static NXCSession session = null;
 	private static TrayItem trayIcon = null;
 	private static Map<String, Object> consoleProperties = new HashMap<String, Object>(0);
 	
@@ -38,7 +38,7 @@ public class ConsoleSharedData
 	 * 
 	 * @return Current session
 	 */
-	public static Session getSession()
+	public static NXCSession getSession()
 	{
 		return session;
 	}
@@ -48,7 +48,7 @@ public class ConsoleSharedData
 	 * 
 	 * @param session Current session
 	 */
-	public static void setSession(Session session)
+	public static void setSession(NXCSession session)
 	{
 		ConsoleSharedData.session = session;
 	}

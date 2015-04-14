@@ -1,7 +1,6 @@
 @echo off
 
 del /q /s /f netxms-base\target\*
-del /q /s /f netxms-client-api\target\*
 del /q /s /f netxms-client\target\*
 del /q /s /f mobile-agent\target\*
 
@@ -16,7 +15,6 @@ for /f "tokens=2 delims=>< " %%a in ('findstr "<version>" pom.xml') do (
 :break
 
 copy netxms-base\target\netxms-base-%version%.jar ..\..\..\android\src\console\libs\
-copy netxms-client-api\target\netxms-client-api-%version%.jar ..\..\..\android\src\console\libs\
 copy netxms-client\target\netxms-client-%version%.jar ..\..\..\android\src\console\libs\
 
 copy netxms-base\target\netxms-base-%version%.jar ..\..\..\android\src\agent\libs\

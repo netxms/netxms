@@ -30,10 +30,9 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.api.client.Session;
-import org.netxms.api.client.users.AbstractUserObject;
-import org.netxms.api.client.users.User;
-import org.netxms.api.client.users.UserManager;
+import org.netxms.client.NXCSession;
+import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.User;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -46,7 +45,7 @@ import org.netxms.ui.eclipse.usermanager.Messages;
  */
 public class Authentication extends PropertyPage
 {
-	private Session session;
+	private NXCSession session;
 	private User object;
 	private Button checkDisabled;
 	private Button checkChangePassword;
@@ -174,7 +173,7 @@ public class Authentication extends PropertyPage
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				((UserManager)session).modifyUserDBObject(object, UserManager.USER_MODIFY_FLAGS | UserManager.USER_MODIFY_AUTH_METHOD | UserManager.USER_MODIFY_CERT_MAPPING);
+				session.modifyUserDBObject(object, AbstractUserObject.MODIFY_FLAGS | AbstractUserObject.MODIFY_AUTH_METHOD | AbstractUserObject.MODIFY_CERT_MAPPING);
 			}
 
 			@Override

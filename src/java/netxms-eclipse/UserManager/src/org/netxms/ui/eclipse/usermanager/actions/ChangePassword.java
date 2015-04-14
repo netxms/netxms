@@ -24,8 +24,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
-import org.netxms.api.client.Session;
-import org.netxms.api.client.users.UserManager;
+import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -67,7 +66,7 @@ public class ChangePassword implements IWorkbenchWindowActionDelegate
 		final ChangePasswordDialog dlg = new ChangePasswordDialog(window.getShell(), true);
 		if (dlg.open() == Window.OK)
 		{
-			final Session session = ConsoleSharedData.getSession();
+			final NXCSession session = ConsoleSharedData.getSession();
 			ConsoleJob job = new ConsoleJob(Messages.get().ChangePassword_JobTitle, null, Activator.PLUGIN_ID, null) {
 				@Override
 				protected String getErrorMessage()
@@ -78,7 +77,7 @@ public class ChangePassword implements IWorkbenchWindowActionDelegate
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					((UserManager)session).setUserPassword(session.getUserId(), dlg.getPassword(), dlg.getOldPassword());
+					session.setUserPassword(session.getUserId(), dlg.getPassword(), dlg.getOldPassword());
 					runInUIThread(new Runnable() {						
 						@Override
 						public void run()

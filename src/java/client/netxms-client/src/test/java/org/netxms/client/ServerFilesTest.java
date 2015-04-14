@@ -20,6 +20,7 @@ package org.netxms.client;
 
 import java.io.FileReader;
 import java.io.IOException;
+import org.netxms.client.server.ServerFile;
 
 /**
  * Test functionality related to server file store

@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.nxsl.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.api.client.scripts.Script;
+import org.netxms.client.Script;
 import org.netxms.ui.eclipse.nxsl.views.ScriptLibrary;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 

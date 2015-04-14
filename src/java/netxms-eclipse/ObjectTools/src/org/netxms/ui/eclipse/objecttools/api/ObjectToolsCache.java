@@ -28,10 +28,10 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.ImageData;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.objecttools.Activator;
 
@@ -88,7 +88,7 @@ public class ObjectToolsCache
 
 	   reload();
 	   
-      session.addListener(new NXCListener() {
+      session.addListener(new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {

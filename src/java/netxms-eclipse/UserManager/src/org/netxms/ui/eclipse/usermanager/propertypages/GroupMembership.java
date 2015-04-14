@@ -37,10 +37,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.api.client.users.AbstractUserObject;
-import org.netxms.api.client.users.User;
-import org.netxms.api.client.users.UserGroup;
-import org.netxms.api.client.users.UserManager;
+import org.netxms.client.NXCSession;
+import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.User;
+import org.netxms.client.users.UserGroup;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -56,7 +56,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class GroupMembership extends PropertyPage
 {
 	private SortableTableViewer groupList;
-	private UserManager userManager;
+	private NXCSession session;
 	private User object;
 	private HashMap<Long, AbstractUserObject> groups = new HashMap<Long, AbstractUserObject>(0);
 
@@ -66,7 +66,7 @@ public class GroupMembership extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		userManager = (UserManager)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		object = (User)getElement().getAdapter(User.class);
@@ -159,7 +159,7 @@ public class GroupMembership extends PropertyPage
       // Initial data
 		for(long groupId : object.getGroups())
 		{
-			final AbstractUserObject group = userManager.findUserDBObjectById(groupId);
+			final AbstractUserObject group = session.findUserDBObjectById(groupId);
 			if (group != null)
 			{
 				groups.put(group.getId(), group);
@@ -190,7 +190,7 @@ public class GroupMembership extends PropertyPage
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				userManager.modifyUserDBObject(object, UserManager.USER_MODIFY_GROUP_MEMBERSHIP);
+				session.modifyUserDBObject(object, AbstractUserObject.MODIFY_GROUP_MEMBERSHIP);
 			}
 
 			@Override

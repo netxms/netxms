@@ -24,7 +24,7 @@
    <extension
          point="org.eclipse.core.runtime.adapters">
       <factory
-            adaptableType="org.netxms.client.ServerFile"
+            adaptableType="org.netxms.client.server.ServerFile"
             class="org.netxms.ui.eclipse.filemanager.ServerFileAdapterFactory">
          <adapter
                type="org.eclipse.ui.model.IWorkbenchAdapter">

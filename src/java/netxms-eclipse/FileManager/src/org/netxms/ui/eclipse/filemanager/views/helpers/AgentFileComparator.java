@@ -7,7 +7,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TreeColumn;
-import org.netxms.client.ServerFile;
+import org.netxms.client.server.ServerFile;
 import org.netxms.ui.eclipse.filemanager.views.ServerFileManager;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 

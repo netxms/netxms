@@ -20,7 +20,7 @@ package org.netxms.client;
 
 import java.util.Map;
 
-import org.netxms.api.client.servermanager.ServerVariable;
+import org.netxms.client.server.ServerVariable;
 
 /**
  * Test functionality related to server configuration cariables

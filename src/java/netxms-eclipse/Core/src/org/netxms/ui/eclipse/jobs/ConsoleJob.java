@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
-import org.netxms.api.client.NetXMSClientException;
+import org.netxms.client.NXCException;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -142,7 +142,7 @@ public abstract class ConsoleJob extends Job
     */
    protected IStatus createFailureStatus(Exception e)
    {
-      return new Status(Status.ERROR, pluginId, (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode()
+      return new Status(Status.ERROR, pluginId, (e instanceof NXCException) ? ((NXCException)e).getErrorCode()
             : 0, getErrorMessage() + ": " + e.getMessage(), passException ? e : null); //$NON-NLS-1$
    }
 

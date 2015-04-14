@@ -2,21 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Client Library API plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.clientlibrary;singleton:=true
-Bundle-Version: 2.0.3
+Bundle-Version: 2.0.4
 Bundle-Vendor: netxms.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: lib/simple-xml-2.6.4.jar,
  .
-Export-Package: org.netxms.api.client,
- org.netxms.api.client.constants,
- org.netxms.api.client.images,
- org.netxms.api.client.mt,
- org.netxms.api.client.reporting,
- org.netxms.api.client.scripts,
- org.netxms.api.client.servermanager,
- org.netxms.api.client.services,
- org.netxms.api.client.users,
- org.netxms.base,
+Export-Package: org.netxms.base,
  org.netxms.certificate.loader,
  org.netxms.certificate.loader.exception,
  org.netxms.certificate.manager,
@@ -33,12 +24,17 @@ Export-Package: org.netxms.api.client,
  org.netxms.client.maps,
  org.netxms.client.maps.configs,
  org.netxms.client.maps.elements,
+ org.netxms.client.mt,
  org.netxms.client.objects,
  org.netxms.client.objecttools,
  org.netxms.client.packages,
+ org.netxms.client.reporting,
+ org.netxms.client.server,
+ org.netxms.client.services,
  org.netxms.client.situations,
  org.netxms.client.snmp,
  org.netxms.client.topology,
+ org.netxms.client.users,
  org.netxms.client.xml,
  org.simpleframework.xml,
  org.simpleframework.xml.convert,

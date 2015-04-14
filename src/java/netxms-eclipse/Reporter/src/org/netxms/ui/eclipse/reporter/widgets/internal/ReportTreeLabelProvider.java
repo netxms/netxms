@@ -2,7 +2,7 @@ package org.netxms.ui.eclipse.reporter.widgets.internal;
 
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.api.client.reporting.ReportDefinition;
+import org.netxms.client.reporting.ReportDefinition;
 import org.netxms.ui.eclipse.reporter.Activator;
 
 public class ReportTreeLabelProvider extends LabelProvider

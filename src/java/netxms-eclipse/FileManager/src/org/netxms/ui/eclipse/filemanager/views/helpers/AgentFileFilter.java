@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.filemanager.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.ServerFile;
+import org.netxms.client.server.ServerFile;
 
 /**
  * Filter for server file editor

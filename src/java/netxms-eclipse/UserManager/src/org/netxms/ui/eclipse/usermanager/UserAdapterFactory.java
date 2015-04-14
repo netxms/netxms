@@ -21,11 +21,11 @@ package org.netxms.ui.eclipse.usermanager;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.model.IWorkbenchAdapter;
-import org.netxms.api.client.users.AbstractUserObject;
-import org.netxms.api.client.users.User;
-import org.netxms.api.client.users.UserGroup;
-import org.netxms.api.client.users.UserManager;
-import org.netxms.api.client.users.AbstractAccessListElement;
+import org.netxms.client.NXCSession;
+import org.netxms.client.users.AbstractAccessListElement;
+import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.User;
+import org.netxms.client.users.UserGroup;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -99,7 +99,7 @@ public class UserAdapterFactory implements IAdapterFactory
 						long[] members = ((UserGroup)o).getMembers();
 						AbstractUserObject[] childrens = new User[members.length];
 						for(int i = 0; i < members.length; i++)
-							childrens[i] = ((UserManager)ConsoleSharedData.getSession()).findUserDBObjectById(members[i]);
+							childrens[i] = ConsoleSharedData.getSession().findUserDBObjectById(members[i]);
 						return childrens;
 					}
 
@@ -144,8 +144,8 @@ public class UserAdapterFactory implements IAdapterFactory
 					public String getLabel(Object object)
 					{
 						long userId = ((AbstractAccessListElement)object).getUserId();
-						UserManager umgr = (UserManager)ConsoleSharedData.getSession();
-						AbstractUserObject dbo = umgr.findUserDBObjectById(userId);
+						NXCSession session = ConsoleSharedData.getSession();
+						AbstractUserObject dbo = session.findUserDBObjectById(userId);
 						return (dbo != null) ? dbo.getName() : ("{" + Long.toString(userId) + "}"); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 

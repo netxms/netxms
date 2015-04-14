@@ -18,7 +18,6 @@
  */
 package org.netxms.client;
 
-import org.netxms.api.client.SessionNotification;
 
 /**
  * Client library notification

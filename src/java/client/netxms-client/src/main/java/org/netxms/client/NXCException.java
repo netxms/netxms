@@ -22,21 +22,32 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
-import org.netxms.api.client.NetXMSClientException;
 
 /**
  * NetXMS client library exception. Used to report API call errors.
  */
-public class NXCException extends NetXMSClientException
+public class NXCException extends Exception
 {
-	private static final long serialVersionUID = -3247688667511123892L;
+   private static final long serialVersionUID = 1453981595988661915L;
 
-	/**
+   /**
+    * Application-specific error code
+    */
+   protected int errorCode;
+   
+   /**
+    * Additional information about this error
+    */
+   protected String additionalInfo;
+
+   /**
 	 * @param errorCode
 	 */
 	public NXCException(int errorCode)
 	{
-		super(errorCode);
+      super();
+      this.errorCode = errorCode;
+      this.additionalInfo = null;
 	}
 
 	/**
@@ -45,13 +56,18 @@ public class NXCException extends NetXMSClientException
 	 */
 	public NXCException(int errorCode, String additionalInfo)
 	{
-		super(errorCode, additionalInfo);
+      super();
+      this.errorCode = errorCode;
+      this.additionalInfo = additionalInfo;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.netxms.api.client.NetXMSClientException#getErrorMessage(int, java.lang.String)
-	 */
-	@Override
+   /**
+    * Get error message text for given error code. Must not return null.
+    * 
+    * @param code error code
+    * @param lang language code
+    * @return error message for given code
+    */
 	protected String getErrorMessage(int code, String lang)
 	{
 	   try
@@ -71,4 +87,33 @@ public class NXCException extends NetXMSClientException
          return "Error " + Integer.toString(code);
 	   }
 	}
+
+   /**
+    * Get exception's error code.
+    * 
+    * @return the errorCode
+    */
+   public int getErrorCode()
+   {
+      return errorCode;
+   }
+
+   /* (non-Javadoc)
+    * @see java.lang.Throwable#getMessage()
+    */
+   @Override
+   public String getMessage()
+   {
+      return getErrorMessage(errorCode, "en");
+   }
+
+   /* (non-Javadoc)
+    * @see java.lang.Throwable#getLocalizedMessage()
+    */
+   @Override
+   public String getLocalizedMessage()
+   {
+      Locale locale = Locale.getDefault();
+      return getErrorMessage(errorCode, locale.getLanguage());
+   }
 }

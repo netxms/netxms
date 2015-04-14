@@ -41,14 +41,13 @@ import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
-import org.netxms.api.client.Session;
-import org.netxms.api.client.users.UserManager;
 import org.netxms.certificate.loader.KeyStoreRequestListener;
 import org.netxms.certificate.manager.CertificateManager;
 import org.netxms.certificate.manager.CertificateManagerProvider;
 import org.netxms.certificate.request.KeyStoreEntryPasswordRequestListener;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
@@ -115,7 +114,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
    {
       IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 
-      Session session = ConsoleSharedData.getSession();
+      NXCSession session = ConsoleSharedData.getSession();
       Activator activator = Activator.getDefault();
       StatusLineContributionItem statusItemConnection = activator.getStatusItemConnection();
       statusItemConnection.setImage(Activator.getImageDescriptor(
@@ -227,7 +226,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
          else if (s.startsWith("-password=")) //$NON-NLS-1$
          {
             password = s.substring(10);
-            settings.put("Connect.AuthMethod", NXCSession.AUTH_TYPE_PASSWORD); //$NON-NLS-1$
+            settings.put("Connect.AuthMethod", AuthenticationType.PASSWORD.getValue()); //$NON-NLS-1$
          }
          else if (s.equals("-auto")) //$NON-NLS-1$
          {
@@ -260,22 +259,24 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
                settings.get("Connect.Login"), //$NON-NLS-1$
                encrypt, ignoreProtocolVersion);
 
-         int authMethod;
+         AuthenticationType authMethod;
          try
          {
-         	authMethod = settings.getInt("Connect.AuthMethod"); //$NON-NLS-1$
+         	authMethod = AuthenticationType.getByValue(settings.getInt("Connect.AuthMethod")); //$NON-NLS-1$
          }
          catch(NumberFormatException e)
          {
-         	authMethod = NXCSession.AUTH_TYPE_PASSWORD;
+         	authMethod = AuthenticationType.PASSWORD;
          }
          switch(authMethod)
          {
-            case NXCSession.AUTH_TYPE_PASSWORD:
+            case PASSWORD:
                job.setPassword(password);
                break;
-            case NXCSession.AUTH_TYPE_CERTIFICATE:
+            case CERTIFICATE:
                job.setCertificate(loginDialog.getCertificate(), getSignature(certMgr, loginDialog.getCertificate()));
+               break;
+            default:
                break;
          }
 
@@ -319,7 +320,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 
       // Suggest user to change password if it is expired
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      if ((session.getAuthType() == NXCSession.AUTH_TYPE_PASSWORD) && session.isPasswordExpired())
+      if ((session.getAuthenticationMethod() == AuthenticationType.PASSWORD) && session.isPasswordExpired())
       {
          requestPasswordChange(loginDialog.getPassword(), session);
       }
@@ -366,7 +367,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
     * @param currentPassword
     * @param session
     */
-   private void requestPasswordChange(final String currentPassword, final Session session)
+   private void requestPasswordChange(final String currentPassword, final NXCSession session)
    {
       final PasswordExpiredDialog dlg = new PasswordExpiredDialog(null);
 
@@ -382,7 +383,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
                try
                {
                   monitor.setTaskName(Messages.get().ApplicationWorkbenchWindowAdvisor_ChangingPassword);
-                  ((UserManager)session).setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
+                  session.setUserPassword(session.getUserId(), dlg.getPassword(), currentPassword);
                   monitor.setTaskName(""); //$NON-NLS-1$
                }
                catch(Exception e)

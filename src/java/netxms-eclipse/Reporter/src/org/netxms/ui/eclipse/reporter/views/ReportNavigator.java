@@ -17,14 +17,14 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.NetXMSClientException;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.api.client.reporting.ReportDefinition;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.reporting.ReportDefinition;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.reporter.Activator;
@@ -186,7 +186,7 @@ public class ReportNavigator extends ViewPart
 						final ReportDefinition definition = session.getReportDefinition(reportId);
 						definitions.add(definition);
 					}
-					catch (NetXMSClientException e)
+					catch (NXCException e)
 					{
 						if (e.getErrorCode() == RCC.INTERNAL_ERROR)
 							notGeneratedReport.add(reportId);

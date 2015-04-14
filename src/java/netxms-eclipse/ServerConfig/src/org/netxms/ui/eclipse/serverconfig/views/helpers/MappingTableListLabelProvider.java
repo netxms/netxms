@@ -6,8 +6,8 @@ package org.netxms.ui.eclipse.serverconfig.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.api.client.mt.MappingTable;
-import org.netxms.api.client.mt.MappingTableDescriptor;
+import org.netxms.client.mt.MappingTable;
+import org.netxms.client.mt.MappingTableDescriptor;
 import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.views.MappingTables;
 

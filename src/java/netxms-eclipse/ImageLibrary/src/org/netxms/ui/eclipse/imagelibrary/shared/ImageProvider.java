@@ -16,7 +16,7 @@ import org.eclipse.swt.SWTException;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.netxms.api.client.images.LibraryImage;
+import org.netxms.client.LibraryImage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.imagelibrary.Activator;

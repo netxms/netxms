@@ -50,9 +50,8 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.scripts.Script;
-import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.client.NXCSession;
+import org.netxms.client.Script;
 import org.netxms.client.TextOutputListener;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -75,7 +74,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptExecutor"; //$NON-NLS-1$
 
    private NXCSession session;
-   private ScriptLibraryManager scriptLibraryManager;
+   private NXCSession scriptLibraryManager;
    private boolean modified = false;
    private long objectId;
 
@@ -105,7 +104,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
 
       session = (NXCSession)ConsoleSharedData.getSession();
       objectId = Long.parseLong(site.getSecondaryId());
-      scriptLibraryManager = (ScriptLibraryManager)ConsoleSharedData.getSession();
+      scriptLibraryManager = ConsoleSharedData.getSession();
 
       setPartName(String.format(Messages.get().ScriptExecutor_PartName, session.getObjectName(objectId)));
    }

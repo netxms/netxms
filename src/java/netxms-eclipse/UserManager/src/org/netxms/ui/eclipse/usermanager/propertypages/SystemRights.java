@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.usermanager.propertypages;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
@@ -29,9 +28,9 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.api.client.constants.UserAccessRights;
-import org.netxms.api.client.users.AbstractUserObject;
-import org.netxms.api.client.users.UserManager;
+import org.netxms.client.NXCSession;
+import org.netxms.client.constants.UserAccessRights;
+import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.usermanager.Activator;
@@ -42,7 +41,7 @@ import org.netxms.ui.eclipse.usermanager.Messages;
  */
 public class SystemRights extends PropertyPage
 {
-	private UserManager userManager;
+	private NXCSession session;
 	private AbstractUserObject object;
 	private Map<Long, Button> buttons = new HashMap<Long, Button>();
 	
@@ -52,7 +51,7 @@ public class SystemRights extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		userManager = (UserManager)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		object = (AbstractUserObject)getElement().getAdapter(AbstractUserObject.class);
@@ -131,7 +130,7 @@ public class SystemRights extends PropertyPage
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				userManager.modifyUserDBObject(object, UserManager.USER_MODIFY_ACCESS_RIGHTS);
+				session.modifyUserDBObject(object, AbstractUserObject.MODIFY_ACCESS_RIGHTS);
 			}
 
 			@Override

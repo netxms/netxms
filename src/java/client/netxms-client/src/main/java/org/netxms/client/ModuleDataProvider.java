@@ -21,8 +21,8 @@
  */
 package org.netxms.client;
 
-import org.netxms.api.client.services.ServiceHandler;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.services.ServiceHandler;
 
 /**
  * Module data provider

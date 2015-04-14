@@ -26,7 +26,7 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.reporting.ReportDefinition;
+import org.netxms.client.reporting.ReportDefinition;
 import org.netxms.ui.eclipse.reporter.widgets.ReportExecutionForm;
 
 /**

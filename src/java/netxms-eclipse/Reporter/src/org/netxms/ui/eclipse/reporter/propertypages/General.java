@@ -11,7 +11,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.api.client.reporting.ReportingJob;
+import org.netxms.client.reporting.ReportingJob;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**

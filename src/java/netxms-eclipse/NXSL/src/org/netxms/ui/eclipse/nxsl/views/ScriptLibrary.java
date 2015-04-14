@@ -46,8 +46,8 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.scripts.Script;
-import org.netxms.api.client.scripts.ScriptLibraryManager;
+import org.netxms.client.NXCSession;
+import org.netxms.client.Script;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
@@ -73,7 +73,7 @@ public class ScriptLibrary extends ViewPart
 
 	private static final String TABLE_CONFIG_PREFIX = "ScriptLibrary"; //$NON-NLS-1$
 	
-	private ScriptLibraryManager scriptLibraryManager;
+	private NXCSession session;
 	private SortableTableViewer viewer;
 	private RefreshAction actionRefresh;
 	private Action actionNew;
@@ -87,7 +87,7 @@ public class ScriptLibrary extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		scriptLibraryManager = (ScriptLibraryManager)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		
 		parent.setLayout(new FillLayout());
 		
@@ -280,7 +280,7 @@ public class ScriptLibrary extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<Script> library = scriptLibraryManager.getScriptLibrary();
+				final List<Script> library = session.getScriptLibrary();
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -304,7 +304,7 @@ public class ScriptLibrary extends ViewPart
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					final long id = scriptLibraryManager.modifyScript(0, dlg.getName(), ""); //$NON-NLS-1$
+					final long id = session.modifyScript(0, dlg.getName(), ""); //$NON-NLS-1$
 					runInUIThread(new Runnable()
 					{
 						@Override
@@ -364,7 +364,7 @@ public class ScriptLibrary extends ViewPart
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					scriptLibraryManager.renameScript(script.getId(), dlg.getName());
+					session.renameScript(script.getId(), dlg.getName());
 					runInUIThread(new Runnable()
 					{
 						@Override
@@ -413,7 +413,7 @@ public class ScriptLibrary extends ViewPart
 				while(it.hasNext())
 				{
 					Script script = (Script)it.next();
-					scriptLibraryManager.deleteScript(script.getId());
+					session.deleteScript(script.getId());
 				}
 			}
 

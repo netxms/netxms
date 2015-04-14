@@ -21,7 +21,6 @@ package org.netxms.client;
 import java.util.List;
 import java.util.UUID;
 
-import org.netxms.api.client.images.LibraryImage;
 import org.netxms.client.constants.RCC;
 
 /**

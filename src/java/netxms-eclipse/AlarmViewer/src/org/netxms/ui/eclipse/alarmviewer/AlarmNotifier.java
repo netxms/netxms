@@ -41,11 +41,10 @@ import org.eclipse.swt.widgets.TrayItem;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.Session;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
@@ -61,7 +60,7 @@ public class AlarmNotifier
 {
    public static String[] severityArray = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    
-   private static NXCListener listener = null;
+   private static SessionListener listener = null;
    private static Map<Long, Integer> alarmStates = new HashMap<Long, Integer>();
    private static int outstandingAlarms = 0;
    private static long lastReminderTime = 0;
@@ -96,7 +95,7 @@ public class AlarmNotifier
       {
       }
 
-      listener = new NXCListener() {
+      listener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {
@@ -248,7 +247,7 @@ public class AlarmNotifier
     */
    public static void stop()
    {
-      Session session = ConsoleSharedData.getSession();
+      NXCSession session = ConsoleSharedData.getSession();
       if ((session != null) && (listener != null))
          session.removeListener(listener);
    }

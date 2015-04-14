@@ -4,7 +4,7 @@ import com.radensolutions.reporting.job.GeneratorJob;
 import com.radensolutions.reporting.service.NotificationService;
 import com.radensolutions.reporting.service.ReportScheduler;
 import com.radensolutions.reporting.service.Session;
-import org.netxms.api.client.SessionNotification;
+import org.netxms.client.SessionNotification;
 import org.quartz.*;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.impl.matchers.KeyMatcher;

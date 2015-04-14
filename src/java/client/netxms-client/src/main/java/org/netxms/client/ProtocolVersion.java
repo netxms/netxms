@@ -18,6 +18,7 @@
  */
 package org.netxms.client;
 
+import java.util.Arrays;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
@@ -83,5 +84,14 @@ public final class ProtocolVersion
       if ((index < 0) || (index >= CURRENT_VERSION.length))
          return false;
       return getVersion(index) == CURRENT_VERSION[index];
+   }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "ProtocolVersion [versions=" + Arrays.toString(versions) + "]";
    }
 }

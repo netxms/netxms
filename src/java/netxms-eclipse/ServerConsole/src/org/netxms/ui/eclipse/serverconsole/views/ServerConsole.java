@@ -40,7 +40,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.ServerConsoleListener;
+import org.netxms.client.server.ServerConsoleListener;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconsole.Activator;

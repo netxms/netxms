@@ -25,7 +25,7 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.NXCSession;
-import org.netxms.client.ServerFile;
+import org.netxms.client.server.ServerFile;
 import org.netxms.ui.eclipse.filemanager.Activator;
 import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;

@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.serverconfig.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.api.client.servermanager.ServerVariable;
+import org.netxms.client.server.ServerVariable;
 
 /**
  * Filter for DCi editor

@@ -42,13 +42,13 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.client.ServerJob;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
+import org.netxms.client.server.ServerJob;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverjobmanager.Activator;
@@ -83,7 +83,7 @@ public class ServerJobManager extends ViewPart
 	
 	private SortableTableViewer viewer;
 	private NXCSession session = null;
-	private NXCListener clientListener = null;
+	private SessionListener clientListener = null;
 	
 	private RefreshAction actionRefresh;
 	private Action actionRestartJob;
@@ -134,7 +134,7 @@ public class ServerJobManager extends ViewPart
 		});
 		
 		// Create listener for notifications received from server via client library
-		clientListener = new NXCListener() {
+		clientListener = new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{

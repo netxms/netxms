@@ -43,12 +43,11 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.Session;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.api.client.users.AbstractUserObject;
-import org.netxms.api.client.users.User;
-import org.netxms.api.client.users.UserManager;
+import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
+import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.User;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -67,8 +66,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class UserManagementView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.usermanager.view.user_manager"; //$NON-NLS-1$
-	public static final String JOB_FAMILY = "UserManagerJob"; //$NON-NLS-1$
+	public static final String ID = "org.netxms.ui.eclipse.session.view.user_manager"; //$NON-NLS-1$
+	public static final String JOB_FAMILY = "sessionJob"; //$NON-NLS-1$
 
 	// Columns
 	public static final int COLUMN_NAME = 0;
@@ -78,8 +77,7 @@ public class UserManagementView extends ViewPart
 	public static final int COLUMN_GUID = 4;
 
 	private TableViewer viewer;
-	private Session session;
-	private UserManager userManager;
+	private NXCSession session;
 	private SessionListener sessionListener;
 	private boolean databaseLocked = false;
 	private boolean editNewUser = false;
@@ -100,7 +98,6 @@ public class UserManagementView extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		session = ConsoleSharedData.getSession();
-		userManager = (UserManager)ConsoleSharedData.getSession();
 
 		final String[] names = { Messages.get().UserManagementView_Name, Messages.get().UserManagementView_Type, Messages.get().UserManagementView_FullName, Messages.get().UserManagementView_Description, Messages.get().UserManagementView_GUID };
 		final int[] widths = { 100, 80, 180, 250, 250 };
@@ -144,7 +141,7 @@ public class UserManagementView extends ViewPart
 						@Override
 						public void run()
 						{
-							viewer.setInput(userManager.getUserDatabaseObjects());
+							viewer.setInput(session.getUserDatabaseObjects());
 							if (editNewUser && (n.getSubCode() == SessionNotification.USER_DB_OBJECT_CREATED))
 							{
 								editNewUser = false;
@@ -162,13 +159,13 @@ public class UserManagementView extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				userManager.lockUserDatabase();
+				session.lockUserDatabase();
 				databaseLocked = true;
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						viewer.setInput(userManager.getUserDatabaseObjects());
+						viewer.setInput(session.getUserDatabaseObjects());
 						session.addListener(sessionListener);
 					}
 				});
@@ -241,7 +238,7 @@ public class UserManagementView extends ViewPart
 			@Override
 			public void run()
 			{
-				viewer.setInput(userManager.getUserDatabaseObjects());
+				viewer.setInput(session.getUserDatabaseObjects());
 			}
 		};
 
@@ -290,7 +287,7 @@ public class UserManagementView extends ViewPart
 					{
 						try
 						{
-							userManager.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
+							session.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
 						}
 						catch(Exception e)
 						{
@@ -418,7 +415,7 @@ public class UserManagementView extends ViewPart
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					userManager.unlockUserDatabase();
+					session.unlockUserDatabase();
 				}
 
 				@Override
@@ -444,7 +441,7 @@ public class UserManagementView extends ViewPart
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					editNewUser = dlg.isEditAfterCreate();
-					userManager.createUser(dlg.getLoginName());
+					session.createUser(dlg.getLoginName());
 				}
 
 				@Override
@@ -469,7 +466,7 @@ public class UserManagementView extends ViewPart
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					editNewUser = dlg.isEditAfterCreate();
-					userManager.createUserGroup(dlg.getLoginName());
+					session.createUserGroup(dlg.getLoginName());
 				}
 
 				@Override
@@ -501,7 +498,7 @@ public class UserManagementView extends ViewPart
 			{
 				for(Object object : selection.toList())
 				{
-					userManager.deleteUserDBObject(((AbstractUserObject)object).getId());
+					session.deleteUserDBObject(((AbstractUserObject)object).getId());
 				}
 			}
 
@@ -527,7 +524,7 @@ public class UserManagementView extends ViewPart
             for(Object object : selection.toList())
             {
                ((AbstractUserObject)object).setFlags(((AbstractUserObject)object).getFlags() & ~AbstractUserObject.DISABLED);
-               userManager.modifyUserDBObject(((AbstractUserObject)object), UserManager.USER_MODIFY_FLAGS);
+               session.modifyUserDBObject(((AbstractUserObject)object), AbstractUserObject.MODIFY_FLAGS);
             }
          }
 
@@ -553,7 +550,7 @@ public class UserManagementView extends ViewPart
             for(Object object : selection.toList())
             {
                ((AbstractUserObject)object).setFlags(((AbstractUserObject)object).getFlags() | AbstractUserObject.DISABLED);
-               userManager.modifyUserDBObject(((AbstractUserObject)object), UserManager.USER_MODIFY_FLAGS);
+               session.modifyUserDBObject(((AbstractUserObject)object), AbstractUserObject.MODIFY_FLAGS);
             }
          }
 
@@ -579,7 +576,7 @@ public class UserManagementView extends ViewPart
             for(Object object : selection.toList())
             {                
                ((AbstractUserObject)object).setFlags(((AbstractUserObject)object).getFlags() & ~AbstractUserObject.LDAP_USER);
-               userManager.modifyUserDBObject(((AbstractUserObject)object), UserManager.USER_MODIFY_FLAGS);
+               session.modifyUserDBObject(((AbstractUserObject)object), AbstractUserObject.MODIFY_FLAGS);
             }
             
          }
