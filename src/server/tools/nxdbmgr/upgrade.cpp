@@ -269,7 +269,7 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column)
 /**
  * Resize varchar column
  */
-static BOOL ResizeColumn(const TCHAR *table, const TCHAR *column, int newSize)
+static BOOL ResizeColumn(const TCHAR *table, const TCHAR *column, int newSize, bool nullable)
 {
 	TCHAR query[1024];
 
@@ -279,7 +279,7 @@ static BOOL ResizeColumn(const TCHAR *table, const TCHAR *column, int newSize)
 			_sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET DATA TYPE varchar(%d)"), table, column, newSize);
 			break;
 		case DB_SYNTAX_MSSQL:
-			_sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s varchar(%d)"), table, column, newSize);
+         _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s varchar(%d) %s NULL"), table, column, newSize, nullable ? _T("") : _T("NOT"));
 			break;
 		case DB_SYNTAX_PGSQL:
 			_sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s TYPE varchar(%d)"), table, column, newSize);
@@ -465,7 +465,7 @@ static BOOL H_UpgradeFromV349(int currVersion, int newVersion)
          CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = comments || chr(13) || chr(10) || (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL AND description <> '')")));
          break;
       case DB_SYNTAX_MSSQL:
-         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = comments + char(13) + char(10) + (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL AND description <> '')")));
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = CAST(comments AS varchar(4000)) + char(13) + char(10) + CAST((SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) AS varchar(4000)) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL AND datalength(description) <> 0)")));
 			break;
 		case DB_SYNTAX_PGSQL:
          CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = comments || '\\015\\012' || (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL AND description <> '')")));
@@ -571,16 +571,23 @@ static BOOL H_UpgradeFromV346(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV345(int currVersion, int newVersion)
 {
-   CHK_EXEC(ResizeColumn(_T("cluster_sync_subnets"), _T("subnet_addr"), 48));
-   CHK_EXEC(ResizeColumn(_T("cluster_resources"), _T("ip_addr"), 48));
-   CHK_EXEC(ResizeColumn(_T("subnets"), _T("ip_addr"), 48));
-   CHK_EXEC(ResizeColumn(_T("interfaces"), _T("ip_addr"), 48));
-   CHK_EXEC(ResizeColumn(_T("network_services"), _T("ip_bind_addr"), 48));
-   CHK_EXEC(ResizeColumn(_T("vpn_connector_networks"), _T("ip_addr"), 48));
-   CHK_EXEC(ResizeColumn(_T("snmp_trap_log"), _T("ip_addr"), 48));
-   CHK_EXEC(ResizeColumn(_T("address_lists"), _T("addr1"), 48));
-   CHK_EXEC(ResizeColumn(_T("address_lists"), _T("addr2"), 48));
-   CHK_EXEC(ResizeColumn(_T("nodes"), _T("primary_ip"), 48));
+   if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(DropPrimaryKey(_T("cluster_sync_subnets")));
+      CHK_EXEC(DropPrimaryKey(_T("address_lists")));
+      CHK_EXEC(DropPrimaryKey(_T("vpn_connector_networks")));
+   }
+
+   CHK_EXEC(ResizeColumn(_T("cluster_sync_subnets"), _T("subnet_addr"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("cluster_resources"), _T("ip_addr"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("subnets"), _T("ip_addr"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("interfaces"), _T("ip_addr"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("network_services"), _T("ip_bind_addr"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("vpn_connector_networks"), _T("ip_addr"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("snmp_trap_log"), _T("ip_addr"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("address_lists"), _T("addr1"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("address_lists"), _T("addr2"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("nodes"), _T("primary_ip"), 48, false));
 
    CHK_EXEC(ConvertNetMasks(_T("cluster_sync_subnets"), _T("subnet_mask"), _T("cluster_id")));
    CHK_EXEC(ConvertNetMasks(_T("subnets"), _T("ip_netmask"), _T("id")));
@@ -610,6 +617,13 @@ static BOOL H_UpgradeFromV345(int currVersion, int newVersion)
    {
       if (!g_bIgnoreErrors)
          return FALSE;
+   }
+
+   if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE cluster_sync_subnets ADD CONSTRAINT pk_cluster_sync_subnets PRIMARY KEY (cluster_id,subnet_addr)")));
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE address_lists ADD CONSTRAINT pk_address_lists PRIMARY KEY (list_type,community_id,addr_type,addr1,addr2)")));
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE vpn_connector_networks ADD CONSTRAINT pk_vpn_connector_networks PRIMARY KEY (vpn_id,ip_addr)")));
    }
 
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='346' WHERE var_name='SchemaVersion'")));
@@ -771,8 +785,8 @@ static BOOL H_UpgradeFromV336(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV335(int currVersion, int newVersion)
 {
-   CHK_EXEC(ResizeColumn(_T("network_map_links"), _T("connector_name1"), 255));
-   CHK_EXEC(ResizeColumn(_T("network_map_links"), _T("connector_name2"), 255));
+   CHK_EXEC(ResizeColumn(_T("network_map_links"), _T("connector_name1"), 255, true));
+   CHK_EXEC(ResizeColumn(_T("network_map_links"), _T("connector_name2"), 255, true));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='336' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -2098,13 +2112,13 @@ static BOOL H_UpgradeFromV269(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
 {
-	CHK_EXEC(ResizeColumn(_T("alarms"), _T("message"), 2000));
-	CHK_EXEC(ResizeColumn(_T("alarm_events"), _T("message"), 2000));
-	CHK_EXEC(ResizeColumn(_T("event_log"), _T("event_message"), 2000));
-	CHK_EXEC(ResizeColumn(_T("event_cfg"), _T("message"), 2000));
-	CHK_EXEC(ResizeColumn(_T("event_policy"), _T("alarm_message"), 2000));
-	CHK_EXEC(ResizeColumn(_T("items"), _T("name"), 1024));
-	CHK_EXEC(ResizeColumn(_T("dc_tables"), _T("name"), 1024));
+	CHK_EXEC(ResizeColumn(_T("alarms"), _T("message"), 2000, true));
+	CHK_EXEC(ResizeColumn(_T("alarm_events"), _T("message"), 2000, true));
+	CHK_EXEC(ResizeColumn(_T("event_log"), _T("event_message"), 2000, true));
+	CHK_EXEC(ResizeColumn(_T("event_cfg"), _T("message"), 2000, true));
+	CHK_EXEC(ResizeColumn(_T("event_policy"), _T("alarm_message"), 2000, true));
+	CHK_EXEC(ResizeColumn(_T("items"), _T("name"), 1024, true));
+	CHK_EXEC(ResizeColumn(_T("dc_tables"), _T("name"), 1024, true));
 
 	CHK_EXEC(SetColumnNullable(_T("event_policy"), _T("alarm_key")));
 	CHK_EXEC(SetColumnNullable(_T("event_policy"), _T("alarm_message")));
