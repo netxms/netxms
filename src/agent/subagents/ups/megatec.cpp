@@ -170,7 +170,7 @@ void MegatecInterface::queryDynamicData()
          }
          
          // curr should point to bit flags now
-         strcpy(m_paramList[UPS_PARAM_ONLINE_STATUS].szValue, curr[0] == '1' ? "1" : "0");
+         strcpy(m_paramList[UPS_PARAM_ONLINE_STATUS].szValue, curr[0] == '1' ? (curr[1] == '1' ? "2" : "1") : "0");
          m_paramList[UPS_PARAM_ONLINE_STATUS].dwFlags &= ~UPF_NULL_VALUE;
 
          // recalculate battery voltage for online devices
