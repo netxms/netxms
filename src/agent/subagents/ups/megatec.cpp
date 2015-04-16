@@ -165,7 +165,13 @@ void MegatecInterface::queryDynamicData()
             int index = paramIndex[i];
             if (index == -1)
                continue;
-            strcpy(m_paramList[index].szValue, buffer);
+
+            char *p = buffer;
+            while(*p == '0')
+               p++;
+            if (*p == 0)
+               p--;
+            strcpy(m_paramList[index].szValue, p);
             m_paramList[index].dwFlags &= ~UPF_NULL_VALUE;
          }
          

@@ -2,8 +2,10 @@
 * 2.0-M4
 *
 
+- MEGATEC protocol support in UPS subagent
 - Fixed broken WoL functionality
 - Fixed broken PING subagent
+- Fixed database upgrade issues on MS SQL
 - IPv6 support in PING subagent
 
 
