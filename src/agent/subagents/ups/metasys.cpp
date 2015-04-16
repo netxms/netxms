@@ -136,7 +136,7 @@ static void DecodeValue(BYTE *data, int format, char *value)
 /**
  * Constructor
  */
-MetaSysInterface::MetaSysInterface(TCHAR *pszDevice) : SerialInterface(pszDevice)
+MetaSysInterface::MetaSysInterface(const TCHAR *device) : SerialInterface(device)
 {
 	if (m_portSpeed == 0)
 		m_portSpeed = 2400;

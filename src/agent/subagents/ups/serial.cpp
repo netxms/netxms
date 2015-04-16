@@ -25,7 +25,7 @@
 /**
  * Create serial interface
  */
-SerialInterface::SerialInterface(TCHAR *device) : UPSInterface(device)
+SerialInterface::SerialInterface(const TCHAR *device) : UPSInterface(device)
 {
 	m_portSpeed = 0;
 	m_dataBits = 8;
@@ -33,7 +33,7 @@ SerialInterface::SerialInterface(TCHAR *device) : UPSInterface(device)
 	m_stopBits = ONESTOPBIT;
 	
 	TCHAR *p;
-	if ((p = _tcschr(m_pszDevice, _T(','))) != NULL)
+	if ((p = _tcschr(m_device, _T(','))) != NULL)
 	{
 		*p = 0; p++;
 		int tmp = _tcstol(p, NULL, 10);
@@ -86,25 +86,26 @@ SerialInterface::SerialInterface(TCHAR *device) : UPSInterface(device)
 /**
  * Read line from serial port
  */
-BOOL SerialInterface::readLineFromSerial(char *pszBuffer, int nBufLen)
+bool SerialInterface::readLineFromSerial(char *buffer, size_t bufLen, char eol)
 {
-   int nPos = 0, nRet;
+   size_t pos = 0;
+   int bytes;
 
-   memset(pszBuffer, 0, nBufLen);
+   memset(buffer, 0, bufLen);
    do
    {
-      nRet = m_serial.read(&pszBuffer[nPos], 1);
-      if (nRet > 0)
-         nPos += nRet;
-   } while((nRet > 0) && (pszBuffer[nPos - 1] != '\n') && (nPos < nBufLen));
-   if (nRet != -1)
+      bytes = m_serial.read(&buffer[pos], 1);
+      if (bytes > 0)
+         pos += bytes;
+   } while((bytes > 0) && (buffer[pos - 1] != eol) && (pos < bufLen));
+   if (bytes != -1)
    {
-      if (pszBuffer[nPos - 2] == '\r')
-         pszBuffer[nPos - 2] = 0;
+      if ((eol == '\n') && (pos > 1) && (buffer[pos - 2] == '\r'))
+         buffer[pos - 2] = 0;
       else
-         pszBuffer[nPos - 1] = 0;
+         buffer[pos - 1] = 0;
    }
-   return nRet > 0;
+   return bytes > 0;
 }
 
 /**
@@ -112,7 +113,7 @@ BOOL SerialInterface::readLineFromSerial(char *pszBuffer, int nBufLen)
  */
 BOOL SerialInterface::open()
 {
-   return m_serial.open(m_pszDevice);
+   return m_serial.open(m_device);
 }
 
 /**

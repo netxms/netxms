@@ -51,6 +51,7 @@ extern "C" {
 #define UPS_PROTOCOL_METASYS	   3
 #define UPS_PROTOCOL_MICRODOWELL	4
 #define UPS_PROTOCOL_USB         5
+#define UPS_PROTOCOL_MEGATEC     6
 
 #define BCMXCP_BUFFER_SIZE       1024
 #define BCMXCP_MAP_SIZE          128
@@ -104,7 +105,7 @@ private:
    void commThread();
 
 protected:
-   TCHAR *m_pszDevice;
+   TCHAR *m_device;
    TCHAR *m_pszName;
    BOOL m_bIsConnected;
    UPS_PARAMETER m_paramList[UPS_PARAM_COUNT];
@@ -122,25 +123,6 @@ protected:
    virtual void close();
    virtual BOOL validateConnection();
 
-public:
-   UPSInterface(TCHAR *pszDevice);
-   virtual ~UPSInterface();
-
-   const TCHAR *getDevice() { return m_pszDevice; }
-   const TCHAR *getName() { return CHECK_NULL(m_pszName); }
-   virtual const TCHAR *getType() { return _T("GENERIC"); }
-   BOOL isConnected() { return m_bIsConnected; }
-
-   void setName(const char *pszName);
-#ifdef UNICODE
-   void setName(const WCHAR *pszName);
-#endif
-   void setIndex(int nIndex) { m_nIndex = nIndex; }
-
-   void startCommunication();
-
-   LONG getParameter(int nParam, TCHAR *pszValue);
-
    virtual void queryModel();
    virtual void queryFirmwareVersion();
    virtual void queryMfgDate();
@@ -155,6 +137,28 @@ public:
    virtual void queryPowerLoad();
    virtual void queryEstimatedRuntime();
    virtual void queryOnlineStatus();
+
+public:
+   UPSInterface(const TCHAR *device);
+   virtual ~UPSInterface();
+
+   const TCHAR *getDevice() { return m_device; }
+   const TCHAR *getName() { return CHECK_NULL(m_pszName); }
+   virtual const TCHAR *getType() { return _T("GENERIC"); }
+   BOOL isConnected() { return m_bIsConnected; }
+
+   void setName(const char *pszName);
+#ifdef UNICODE
+   void setName(const WCHAR *pszName);
+#endif
+   void setIndex(int nIndex) { m_nIndex = nIndex; }
+
+   void startCommunication();
+
+   LONG getParameter(int nParam, TCHAR *pszValue);
+
+   virtual void queryStaticData();
+   virtual void queryDynamicData();
 };
 
 /**
@@ -172,10 +176,10 @@ protected:
    virtual BOOL open();
    virtual void close();
 
-   BOOL readLineFromSerial(char *pszBuffer, int nBufLen);
+   bool readLineFromSerial(char *buffer, size_t bufLen, char eol = '\n');
 
 public:
-   SerialInterface(TCHAR *pszDevice);
+   SerialInterface(const TCHAR *device);
 };
 
 /**
@@ -188,11 +192,6 @@ protected:
    virtual BOOL validateConnection();
 
    void queryParameter(const char *pszRq, UPS_PARAMETER *p, int nType, int chSep);
-
-public:
-   APCInterface(TCHAR *pszDevice);
-
-   virtual const TCHAR *getType() { return _T("APC"); }
 
    virtual void queryModel();
    virtual void queryFirmwareVersion();
@@ -208,6 +207,34 @@ public:
    virtual void queryPowerLoad();
    virtual void queryEstimatedRuntime();
    virtual void queryOnlineStatus();
+
+public:
+   APCInterface(const TCHAR *device);
+
+   virtual const TCHAR *getType() { return _T("APC"); }
+};
+
+/**
+ * APC UPS interface
+ */
+class MegatecInterface : public SerialInterface
+{
+private:
+   double m_packs;
+
+   void calculatePacks(double nominalVoltage, double actualVoltage);
+
+protected:
+   virtual BOOL open();
+   virtual BOOL validateConnection();
+
+public:
+   MegatecInterface(const TCHAR *device);
+
+   virtual const TCHAR *getType() { return _T("MEGATEC"); }
+
+   virtual void queryStaticData();
+   virtual void queryDynamicData();
 };
 
 /**
@@ -235,11 +262,6 @@ protected:
    int recvData(int nCommand);
    void readParameter(int nIndex, int nFormat, UPS_PARAMETER *pParam);
 
-public:
-   BCMXCPInterface(TCHAR *pszDevice);
-
-   virtual const TCHAR *getType() { return _T("BCMXCP"); }
-
    virtual void queryTemperature();
    virtual void queryLineFrequency();
    virtual void queryBatteryLevel();
@@ -252,6 +274,11 @@ public:
    virtual void querySerialNumber();
    virtual void queryOnlineStatus();
    virtual void queryPowerLoad();
+
+public:
+   BCMXCPInterface(const TCHAR *device);
+
+   virtual const TCHAR *getType() { return _T("BCMXCP"); }
 };
 
 /**
@@ -271,11 +298,6 @@ protected:
    void readParameter(int command, int offset, int format, UPS_PARAMETER *param);
    void parseModelId();
 
-public:
-   MetaSysInterface(TCHAR *pszDevice);
-
-   virtual const TCHAR *getType() { return _T("METASYS"); }
-
    virtual void queryTemperature();
    virtual void queryInputVoltage();
    virtual void queryOutputVoltage();
@@ -285,6 +307,11 @@ public:
    virtual void querySerialNumber();
    virtual void queryOnlineStatus();
    virtual void queryPowerLoad();
+
+public:
+   MetaSysInterface(const TCHAR *device);
+
+   virtual const TCHAR *getType() { return _T("METASYS"); }
 };
 
 /**
@@ -300,11 +327,6 @@ protected:
 
 	int ge2kva;
 
-public:
-   MicrodowellInterface(TCHAR *pszDevice);
-
-   virtual const TCHAR *getType() { return _T("MICRODOWELL"); }
-
    virtual void queryModel();
    virtual void queryFirmwareVersion();
    virtual void queryMfgDate();
@@ -319,6 +341,11 @@ public:
    virtual void queryPowerLoad();
    virtual void queryEstimatedRuntime();
    virtual void queryOnlineStatus();
+
+public:
+   MicrodowellInterface(const TCHAR *device);
+
+   virtual const TCHAR *getType() { return _T("MICRODOWELL"); }
 };
 
 #ifdef _WIN32
@@ -344,12 +371,6 @@ protected:
    void readStringParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam);
    void readIntParam(USAGE nPage, USAGE nUsage, UPS_PARAMETER *pParam, int nDiv, BOOL bDouble);
 
-public:
-   USBInterface(TCHAR *pszDevice);
-   virtual ~USBInterface();
-
-   virtual const TCHAR *getType() { return _T("USB"); }
-
    virtual void queryModel();
    virtual void querySerialNumber();
    virtual void queryBatteryVoltage();
@@ -358,6 +379,12 @@ public:
    virtual void queryPowerLoad();
    virtual void queryEstimatedRuntime();
    virtual void queryOnlineStatus();
+
+public:
+   USBInterface(const TCHAR *device);
+   virtual ~USBInterface();
+
+   virtual const TCHAR *getType() { return _T("USB"); }
 };
 
 #endif

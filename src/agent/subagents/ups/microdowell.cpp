@@ -25,7 +25,7 @@
 /**
  * Constructor
  */
-MicrodowellInterface::MicrodowellInterface(TCHAR *pszDevice) : SerialInterface(pszDevice)
+MicrodowellInterface::MicrodowellInterface(const TCHAR *device) : SerialInterface(device)
 {
 	if (m_portSpeed == 0)
 		m_portSpeed = 19200;
@@ -102,7 +102,7 @@ BOOL MicrodowellInterface::open()
 		buff[11] = 0;
 		if (buff[3] != 'E' || buff[4] != 'N' || buff[5] != 'T')
 		{
-			AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("Unknown Microdowell UPS model on port %s (%hs)"), m_pszDevice, buff);
+			AgentWriteLog(EVENTLOG_WARNING_TYPE, _T("Unknown Microdowell UPS model on port %s (%hs)"), m_device, buff);
 		}
 		else
 		{
