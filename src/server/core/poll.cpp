@@ -185,6 +185,7 @@ void CheckForMgmtNode()
                if (addr.isValidUnicast())
                {
    				   CreateManagementNode(addr);
+                  i = pIfList->size();    // stop walking interface list
                   break;
                }
             }
