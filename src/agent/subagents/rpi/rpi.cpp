@@ -38,11 +38,13 @@ extern time_t g_sensorUpdateTime;
  * Configuration file template
  */
 static bool m_disableDHT22 = false;
-static TCHAR *m_enabledPins = NULL;
+static TCHAR *m_inputPins = NULL;
+static TCHAR *m_outputPins = NULL;
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("DisableDHT22"), CT_BOOLEAN, 0, 0, 1, 0, &m_disableDHT22 },
-   { _T("EnabledPins"), CT_STRING_LIST, _T(','), 0, 0, 0, &m_enabledPins },
+   { _T("InputPins"), CT_STRING_LIST, _T(','), 0, 0, 0, &m_inputPins },
+   { _T("OutputPins"), CT_STRING_LIST, _T(','), 0, 0, 0, &m_outputPins },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
@@ -88,6 +90,24 @@ static LONG H_PinState(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstr
 }
 
 /**
+ * Set GPIO pin state
+ */
+static LONG H_SetPinState(const TCHAR *action, StringList *arguments, const TCHAR *data, AbstractCommSession *session)
+{
+   TCHAR *pinStr = arguments->get(0);
+   TCHAR *stateStr = arguments->get(1);
+   if (pinStr == NULL || stateStr == NULL) {
+      return ERR_INTERNAL_ERROR;
+   }
+   long pin = _tcstol(pinStr, NULL, 10);
+   long state = _tcstol(pinStr, NULL, 10);
+
+   bcm2835_gpio_write(pin, state == 1 ? HIGH : LOW);
+
+	return ERR_SUCCESS;
+}
+
+/**
  * Startup handler
  */
 static BOOL SubagentInit(Config *config)
@@ -104,10 +124,9 @@ static BOOL SubagentInit(Config *config)
 	{
 		TCHAR *item, *end;
 
-		// Parse target list
-		if (m_enabledPins != NULL)
+		if (m_inputPins != NULL)
 		{
-			for(item = m_enabledPins; *item != 0; item = end + 1)
+			for(item = m_inputPins; *item != 0; item = end + 1)
 			{
 				end = _tcschr(item, _T(','));
 				if (end != NULL)
@@ -119,7 +138,23 @@ static BOOL SubagentInit(Config *config)
             AgentWriteDebugLog(1, _T("RPI: configuring pin %d as INPUT"), pin);
             bcm2835_gpio_fsel((uint8_t)pin, BCM2835_GPIO_FSEL_INPT);
 			}
-			free(m_enabledPins);
+			free(m_inputPins);
+		}
+		if (m_outputPins != NULL)
+		{
+			for(item = m_outputPins; *item != 0; item = end + 1)
+			{
+				end = _tcschr(item, _T(','));
+				if (end != NULL)
+            {
+					*end = 0;
+            }
+				StrStrip(item);
+            int pin = (int)_tcstol(item, NULL, 10);
+            AgentWriteDebugLog(1, _T("RPI: configuring pin %d as OUTPUT"), pin);
+            bcm2835_gpio_fsel((uint8_t)pin, BCM2835_GPIO_FSEL_OUTP);
+			}
+			free(m_outputPins);
 		}
    }
 
@@ -151,6 +186,14 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 };
 
 /**
+ * Subagent's actions
+ */
+static NETXMS_SUBAGENT_ACTION m_actions[] =
+{
+	{ _T("GPIO.SetPinState"), H_SetPinState, NULL, _T("Set GPIO pin ($1) state to high/low ($2 - 1/0)") }
+};
+
+/**
  * Subagent information
  */
 static NETXMS_SUBAGENT_INFO m_info =
@@ -164,7 +207,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 	m_parameters,
 	0, NULL,		// lists
 	0, NULL,		// tables
-	0, NULL,		// actions
+	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
+	m_actions,
 	0, NULL		// push parameters
 };
 
