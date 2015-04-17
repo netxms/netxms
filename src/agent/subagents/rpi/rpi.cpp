@@ -94,9 +94,10 @@ static LONG H_PinState(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstr
  */
 static LONG H_SetPinState(const TCHAR *action, StringList *arguments, const TCHAR *data, AbstractCommSession *session)
 {
-   TCHAR *pinStr = arguments->get(0);
-   TCHAR *stateStr = arguments->get(1);
-   if (pinStr == NULL || stateStr == NULL) {
+   const TCHAR *pinStr = arguments->get(0);
+   const TCHAR *stateStr = arguments->get(1);
+   if (pinStr == NULL || stateStr == NULL) 
+   {
       return ERR_INTERNAL_ERROR;
    }
    long pin = _tcstol(pinStr, NULL, 10);
@@ -104,7 +105,7 @@ static LONG H_SetPinState(const TCHAR *action, StringList *arguments, const TCHA
 
    bcm2835_gpio_write(pin, state == 1 ? HIGH : LOW);
 
-	return ERR_SUCCESS;
+   return ERR_SUCCESS;
 }
 
 /**
