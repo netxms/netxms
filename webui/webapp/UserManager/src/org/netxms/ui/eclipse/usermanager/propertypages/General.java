@@ -25,15 +25,14 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.api.client.Session;
-import org.netxms.api.client.users.AbstractUserObject;
-import org.netxms.api.client.users.User;
-import org.netxms.api.client.users.UserManager;
-import org.netxms.ui.eclipse.usermanager.Activator;
-import org.netxms.ui.eclipse.usermanager.Messages;
+import org.netxms.client.NXCSession;
+import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.User;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.usermanager.Activator;
+import org.netxms.ui.eclipse.usermanager.Messages;
 
 /**
  * User's "general" property page
@@ -49,7 +48,7 @@ public class General extends PropertyPage
 	private String initialDescription;
    private String initialXmppId;
 	private AbstractUserObject object;
-	private Session session;
+	private NXCSession session;
 	
 	/**
 	 * Default constructor
@@ -138,16 +137,16 @@ public class General extends PropertyPage
 				initialDescription = newDescription;
 				initialXmppId = newXmppId;
 				
-				int fields = UserManager.USER_MODIFY_LOGIN_NAME | UserManager.USER_MODIFY_DESCRIPTION;
+				int fields = AbstractUserObject.MODIFY_LOGIN_NAME | AbstractUserObject.MODIFY_DESCRIPTION;
 				object.setName(newName);
 				object.setDescription(newDescription);
 				if (object instanceof User)
 				{
 					((User)object).setFullName(newFullName);
                ((User)object).setXmppId(newXmppId);
-					fields |= UserManager.USER_MODIFY_FULL_NAME | UserManager.USER_MODIFY_XMPP_ID;
+					fields |= AbstractUserObject.MODIFY_FULL_NAME | AbstractUserObject.MODIFY_XMPP_ID;
 				}
-				((UserManager)session).modifyUserDBObject(object, fields);
+				session.modifyUserDBObject(object, fields);
 			}
 			
 			@Override

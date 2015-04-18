@@ -54,11 +54,11 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.api.client.constants.UserAccessRights;
-import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
@@ -104,7 +104,7 @@ public class AlarmList extends CompositeWithMessageBar
 
    private final IViewPart viewPart;
    private NXCSession session = null;
-   private NXCListener clientListener = null;
+   private SessionListener clientListener = null;
    private RefreshTimer refreshTimer;
    private SortableTableViewer alarmViewer;
    private AlarmListFilter alarmFilter;
@@ -200,7 +200,7 @@ public class AlarmList extends CompositeWithMessageBar
       });
 
       // Add client library listener
-      clientListener = new NXCListener() {
+      clientListener = new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {

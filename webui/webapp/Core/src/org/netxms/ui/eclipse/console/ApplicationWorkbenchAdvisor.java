@@ -35,10 +35,9 @@ import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.eclipse.ui.model.ContributionComparator;
 import org.eclipse.ui.model.IContributionService;
-import org.netxms.api.client.Session;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.ui.eclipse.console.api.LoginForm;
 import org.netxms.ui.eclipse.console.dialogs.PasswordExpiredDialog;
 import org.netxms.ui.eclipse.jobs.LoginJob;
@@ -208,7 +207,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 
 		if (success)
 		{
-			final Session session = (Session)RWT.getUISession().getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
+			final NXCSession session = (NXCSession)RWT.getUISession().getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
          final Display display = Display.getCurrent();
          session.addListener(new SessionListener() {
             @Override

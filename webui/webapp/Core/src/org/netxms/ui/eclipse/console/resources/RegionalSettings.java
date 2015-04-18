@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.console.resources;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.netxms.api.client.Session;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -62,7 +61,7 @@ public class RegionalSettings
 		switch(dateTimeFormat)
 		{
 			case DATETIME_FORMAT_SERVER:
-				Session session = ConsoleSharedData.getSession();
+				NXCSession session = ConsoleSharedData.getSession();
 				return new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat()); //$NON-NLS-1$
 			case DATETIME_FORMAT_CUSTOM:
 				try
@@ -88,7 +87,7 @@ public class RegionalSettings
 		switch(dateTimeFormat)
 		{
 			case DATETIME_FORMAT_SERVER:
-				Session session = ConsoleSharedData.getSession();
+				NXCSession session = ConsoleSharedData.getSession();
 				return new SimpleDateFormat(session.getDateFormat());
 			case DATETIME_FORMAT_CUSTOM:
 				try
@@ -114,7 +113,7 @@ public class RegionalSettings
       switch(dateTimeFormat)
       {
          case DATETIME_FORMAT_SERVER:
-            Session session = ConsoleSharedData.getSession();
+            NXCSession session = ConsoleSharedData.getSession();
             return new SimpleDateFormat(session.getTimeFormat());
          case DATETIME_FORMAT_CUSTOM:
             try

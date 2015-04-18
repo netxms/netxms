@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.shared;
 
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.api.client.Session;
+import org.netxms.client.NXCSession;
 
 /**
  * Compatibility class for RCP plugins
@@ -34,9 +34,9 @@ public class ConsoleSharedData
 	 * 
 	 * @return
 	 */
-	public static Session getSession()
+	public static NXCSession getSession()
 	{
-		return (Session)RWT.getUISession().getAttribute(ATTRIBUTE_SESSION);
+		return (NXCSession)RWT.getUISession().getAttribute(ATTRIBUTE_SESSION);
 	}
 
 	/**

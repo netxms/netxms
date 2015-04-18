@@ -29,10 +29,11 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.api.client.Session;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ProtocolVersion;
+import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
@@ -50,7 +51,7 @@ public class LoginJob implements IRunnableWithProgress
    private String loginName;
    private boolean encryptSession;
    private boolean ignoreProtocolVersion;
-   private int authMethod;
+   private AuthenticationType authMethod;
    private String password;
    private Certificate certificate;
    private Signature signature;
@@ -70,7 +71,7 @@ public class LoginJob implements IRunnableWithProgress
       this.loginName = loginName;
       this.encryptSession = encryptSession;
       this.ignoreProtocolVersion = ignoreProtocolVersion;
-      authMethod = NXCSession.AUTH_TYPE_PASSWORD;
+      authMethod = AuthenticationType.PASSWORD;
       clientAddress = RWT.getRequest().getRemoteAddr();
       language = RWT.getLocale().getLanguage();
    }
@@ -108,26 +109,15 @@ public class LoginJob implements IRunnableWithProgress
 
          NXCSession session = createSession(hostName, port);
          session.setClientLanguage(language);
-         
-         session.setAuthType(authMethod);
-         switch(authMethod)
-         {
-            case NXCSession.AUTH_TYPE_PASSWORD:
-            case NXCSession.AUTH_TYPE_SSO_TICKET:
-               session.setPassword(password);
-               break;
-            case NXCSession.AUTH_TYPE_CERTIFICATE:
-               session.setCertificate(certificate, signature);
-               break;
-         }
-         
-         session.setConnClientInfo("nxweb/" + NXCommon.VERSION); //$NON-NLS-1$
+                  
+         session.setClientInfo("nxweb/" + NXCommon.VERSION); //$NON-NLS-1$
          session.setIgnoreProtocolVersion(ignoreProtocolVersion);
          session.setClientType(NXCSession.WEB_CLIENT);
          session.setClientAddress(clientAddress);
          monitor.worked(10);
 
-         session.connect();
+         session.connect(new int[] { ProtocolVersion.INDEX_FULL });
+         session.login(authMethod, (loginName != null) ? loginName : "?", password, certificate, signature);
          monitor.worked(40);
 
          monitor.setTaskName(Messages.get(display).LoginJob_sync_objects);
@@ -219,14 +209,14 @@ public class LoginJob implements IRunnableWithProgress
          try
          {
             SessionProvider p = (SessionProvider)currentElement.createExecutableExtension("class"); //$NON-NLS-1$
-            return p.createSession(hostName, port, (loginName != null) ? loginName : "?", password, encryptSession);
+            return p.createSession(hostName, port, encryptSession);
          }
          catch(CoreException e)
          {
          }
       }
 
-      return new NXCSession(hostName, port, loginName, password, encryptSession);
+      return new NXCSession(hostName, port, encryptSession);
    }
 
    /**
@@ -248,8 +238,7 @@ public class LoginJob implements IRunnableWithProgress
          }
          catch(CoreException e)
          {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            Activator.logError("Exception in login listener", e);
          }
       }
    }
@@ -262,7 +251,7 @@ public class LoginJob implements IRunnableWithProgress
    public void setPassword(String password)
    {
       this.password = password;
-      authMethod = (loginName != null) ? NXCSession.AUTH_TYPE_PASSWORD : NXCSession.AUTH_TYPE_SSO_TICKET;
+      authMethod = (loginName != null) ? AuthenticationType.PASSWORD : AuthenticationType.SSO_TICKET;
    }
 
    /**
@@ -274,7 +263,7 @@ public class LoginJob implements IRunnableWithProgress
    {
       this.certificate = certificate;
       this.signature = signature;
-      authMethod = NXCSession.AUTH_TYPE_CERTIFICATE;
+      authMethod = AuthenticationType.CERTIFICATE;
    }
 
    /**
@@ -287,7 +276,7 @@ public class LoginJob implements IRunnableWithProgress
       {
          while(true)
          {
-            final Session session = (Session)RWT.getUISession(display).getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
+            final NXCSession session = (NXCSession)RWT.getUISession(display).getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
             if (session == null)
                break;
             try

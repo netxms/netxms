@@ -56,11 +56,11 @@ import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
@@ -88,7 +88,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private NXCSession session;
 	private boolean policyLocked = false;
 	private EventProcessingPolicy policy;
-	private NXCListener sessionListener;
+	private SessionListener sessionListener;
 	private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
 	private FilterText filterControl;
 	private String filterText = null;
@@ -217,7 +217,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       normalFont = JFaceResources.getDefaultFont();
       boldFont = JFaceResources.getFontRegistry().getBold(JFaceResources.DEFAULT_FONT);
 		
-		sessionListener = new NXCListener() {
+		sessionListener = new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{

@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.filemanager;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.model.IWorkbenchAdapter;
-import org.netxms.client.ServerFile;
+import org.netxms.client.server.ServerFile;
 
 /**
  * Adapter factory for ServerFile objects

@@ -26,7 +26,7 @@ import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.WorkbenchAdvisor;
-import org.netxms.api.client.Session;
+import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -61,7 +61,7 @@ public class Application implements IApplication
 		display.disposeExec(new Runnable() {
 			public void run()
 			{
-				Session session = ConsoleSharedData.getSession();
+				NXCSession session = ConsoleSharedData.getSession();
 				if (session != null)
 					session.disconnect();
 			}

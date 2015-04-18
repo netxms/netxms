@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.filemanager.widgets;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.client.ServerFile;
+import org.netxms.client.server.ServerFile;
 import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.dialogs.SelectServerFileDialog;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;

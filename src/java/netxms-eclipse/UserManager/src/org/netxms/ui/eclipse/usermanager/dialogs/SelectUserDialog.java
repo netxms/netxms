@@ -52,7 +52,7 @@ public class SelectUserDialog extends Dialog
 {
 	private TableViewer userList;
 	private NXCSession session;
-	Class<? extends AbstractUserObject> classFilter;
+	private Class<? extends AbstractUserObject> classFilter;
 	private boolean multiSelection = true;
 	private AbstractUserObject[] selection;
 	

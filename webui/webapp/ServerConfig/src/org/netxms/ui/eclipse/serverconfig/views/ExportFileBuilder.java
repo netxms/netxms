@@ -803,10 +803,6 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
                public void run()
                {
                   FileDialog dlg = new FileDialog(getSite().getShell(), SWT.SAVE);
-                  dlg.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-                  dlg.setFilterNames(new String[] { Messages.get().ConfigurationImportDialog_FileTypeXML, Messages.get().ConfigurationImportDialog_FileTypeAll });
-                  dlg.setOverwrite(true);
-                  dlg.setFileName(exportFileName);
                   final String fileName = dlg.open();
                   if (fileName != null)
                   {
@@ -816,27 +812,27 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
                         protected void runInternal(IProgressMonitor monitor) throws Exception
                         {
                            OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8"); //$NON-NLS-1$
-				try
-				{
-					out.write(xml);
-				}
-				finally
-				{
-					out.close();
-				}
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						modified = false;
-						firePropertyChange(PROP_DIRTY);
-					}
-				});
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
+               				try
+               				{
+               					out.write(xml);
+               				}
+               				finally
+               				{
+               					out.close();
+               				}
+               				runInUIThread(new Runnable() {
+               					@Override
+               					public void run()
+               					{
+               						modified = false;
+               						firePropertyChange(PROP_DIRTY);
+               					}
+               				});
+               			}
+               			
+               			@Override
+               			protected String getErrorMessage()
+               			{
                            return "Cannot save exported configuration to file";
                         }
                      }.start();

@@ -36,8 +36,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.api.client.scripts.Script;
-import org.netxms.api.client.scripts.ScriptLibraryManager;
+import org.netxms.client.NXCSession;
+import org.netxms.client.Script;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.nxsl.Messages;
@@ -120,7 +120,7 @@ public class SelectScriptDialog extends Dialog
       gd.widthHint = 400;
       viewer.getControl().setLayoutData(gd);
       
-		final ScriptLibraryManager session = (ScriptLibraryManager)ConsoleSharedData.getSession();
+		final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob(Messages.get().SelectScriptDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception

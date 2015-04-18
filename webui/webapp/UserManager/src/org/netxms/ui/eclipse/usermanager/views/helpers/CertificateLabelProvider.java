@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.usermanager.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.api.client.users.AuthCertificate;
+import org.netxms.client.users.AuthCertificate;
 import org.netxms.ui.eclipse.usermanager.Messages;
 import org.netxms.ui.eclipse.usermanager.views.CertificateView;
 

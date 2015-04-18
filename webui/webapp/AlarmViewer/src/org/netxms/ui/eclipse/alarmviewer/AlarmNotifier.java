@@ -29,10 +29,10 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCListener;
 import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.events.Alarm;
 import org.netxms.ui.eclipse.console.DownloadServiceHandler;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -45,7 +45,7 @@ public class AlarmNotifier
 {
    public static final String[] severityArray = { "NORMAL", "WARNING", "MINOR", "MAJOR", "CRITICAL" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    
-   private NXCListener listener = null;
+   private SessionListener listener = null;
    private Display display;
    private NXCSession session;
    private IPreferenceStore ps;
@@ -92,7 +92,7 @@ public class AlarmNotifier
          }
       });
       
-      listener = new NXCListener() {
+      listener = new SessionListener() {
          @Override
          public void notificationHandler(final SessionNotification n)
          {

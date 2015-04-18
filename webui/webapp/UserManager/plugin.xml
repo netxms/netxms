@@ -96,7 +96,7 @@
 	       class="org.netxms.ui.eclipse.usermanager.propertypages.General">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.api.client.users.AbstractUserObject">
+                  value="org.netxms.client.users.AbstractUserObject">
              </instanceof>
           </enabledWhen>
         </page>
@@ -106,7 +106,7 @@
 	       class="org.netxms.ui.eclipse.usermanager.propertypages.Authentication">
           <enabledWhen>
              <instanceof
-                  value="org.netxms.api.client.users.User">
+                  value="org.netxms.client.users.User">
              </instanceof>
           </enabledWhen>
         </page>
@@ -116,7 +116,7 @@
               name="%page.Members.name">
            <enabledWhen>
               <instanceof
-                    value="org.netxms.api.client.users.UserGroup">
+                    value="org.netxms.client.users.UserGroup">
               </instanceof>
            </enabledWhen>
         </page>
@@ -126,7 +126,7 @@
               name="%page.SystemRights.name">
            <enabledWhen>
               <instanceof
-                    value="org.netxms.api.client.users.AbstractUserObject">
+                    value="org.netxms.client.users.AbstractUserObject">
               </instanceof>
            </enabledWhen>
         </page>
@@ -136,7 +136,7 @@
               name="%page.GroupMembership.name">
            <enabledWhen>
               <instanceof
-                    value="org.netxms.api.client.users.User">
+                    value="org.netxms.client.users.User">
               </instanceof>
            </enabledWhen>
         </page>
@@ -146,12 +146,12 @@
      point="org.eclipse.core.runtime.adapters">
         <factory 
            class="org.netxms.ui.eclipse.usermanager.UserAdapterFactory" 
-           adaptableType="org.netxms.api.client.users.AbstractUserObject">
+           adaptableType="org.netxms.client.users.AbstractUserObject">
           <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
         </factory>
         <factory 
            class="org.netxms.ui.eclipse.usermanager.UserAdapterFactory" 
-           adaptableType="org.netxms.api.client.users.AbstractAccessListElement">
+           adaptableType="org.netxms.client.users.AbstractAccessListElement">
           <adapter type="org.eclipse.ui.model.IWorkbenchAdapter"/>
         </factory>
   </extension>
@@ -165,7 +165,7 @@
            state="true">
         <enablement>
            <objectClass
-                 name="org.netxms.api.client.users.AbstractUserObject">
+                 name="org.netxms.client.users.AbstractUserObject">
            </objectClass></enablement>
         <description>
            %decorator.AbstractUserObject.description
