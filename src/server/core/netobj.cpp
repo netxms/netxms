@@ -1712,6 +1712,25 @@ ObjectArray<NetObj> *NetObj::getParentList(int typeFilter)
 }
 
 /**
+ * FInd child object by name (with optional class filter)
+ */
+NetObj *NetObj::findChildObject(const TCHAR *name, int typeFilter)
+{
+   NetObj *object = NULL;
+	LockChildList(FALSE);
+	for(UINT32 i = 0; i < m_dwChildCount; i++)
+	{
+      if (((typeFilter == -1) || (typeFilter == m_pChildList[i]->getObjectClass())) && !_tcsicmp(name, m_pChildList[i]->getName()))
+      {
+         object = m_pChildList[i];
+         break;
+      }
+	}
+	UnlockChildList();
+	return object;
+}
+
+/**
  * Called by client session handler to check if threshold summary should
  * be shown for this object. Default implementation always returns false.
  */

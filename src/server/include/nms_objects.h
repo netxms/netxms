@@ -518,6 +518,8 @@ public:
 	ObjectArray<NetObj> *getChildList(int typeFilter);
 	ObjectArray<NetObj> *getFullChildList(bool eventSourceOnly, bool updateRefCount);
 
+   NetObj *findChildObject(const TCHAR *name, int typeFilter);
+
    int getChildCount() { return (int)m_dwChildCount; }
    int getParentCount() { return (int)m_dwParentCount; }
 
@@ -1625,7 +1627,7 @@ class NXCORE_EXPORTABLE TemplateGroup : public Container
 {
 public:
    TemplateGroup() : Container() { }
-   TemplateGroup(const TCHAR *pszName) : Container(pszName, 0) { }
+   TemplateGroup(const TCHAR *pszName) : Container(pszName, 0) { m_iStatus = STATUS_NORMAL; }
    virtual ~TemplateGroup() { }
 
    virtual int getObjectClass() { return OBJECT_TEMPLATEGROUP; }

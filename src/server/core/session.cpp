@@ -9583,7 +9583,7 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
          String str;
 			TCHAR *temp;
 
-         str = _T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>3</formatVersion>\n\t<description>");
+         str = _T("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration>\n\t<formatVersion>4</formatVersion>\n\t<description>");
 			temp = pRequest->getFieldAsString(VID_DESCRIPTION);
 			str.appendPreallocated(EscapeStringForXML(temp, -1));
 			free(temp);

@@ -334,6 +334,36 @@ static UINT32 ImportTrap(ConfigEntry *trap)
 }
 
 /**
+ * Find (and create as necessary) parent object for imported template
+ */
+NetObj *FindTemplateRoot(ConfigEntry *config)
+{
+	ConfigEntry *pathRoot = config->findEntry(_T("path"));
+	if (pathRoot == NULL)
+      return g_pTemplateRoot;  // path not specified in config
+
+   NetObj *parent = g_pTemplateRoot;
+	ObjectArray<ConfigEntry> *path = pathRoot->getSubEntries(_T("element#*"));
+	for(int i = 0; i < path->size(); i++)
+	{
+      const TCHAR *name = path->get(i)->getValue();
+      NetObj *o = parent->findChildObject(name, OBJECT_TEMPLATEGROUP);
+      if (o == NULL)
+      {
+         o = new TemplateGroup(name);
+         NetObjInsert(o, TRUE);
+         o->AddParent(parent);
+         parent->AddChild(o);
+         o->unhide();
+         o->calculateCompoundStatus();	// Force status change to NORMAL
+      }
+      parent = o;
+   }
+   delete path;
+   return parent;
+}
+
+/**
  * Import configuration
  */
 UINT32 ImportConfig(Config *config, UINT32 flags)
@@ -388,10 +418,11 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		templates = templatesRoot->getSubEntries(_T("template#*"));
 		for(i = 0; i < templates->size(); i++)
 		{
+         NetObj *parent = FindTemplateRoot(templates->get(i));
 			Template *object = new Template(templates->get(i));
 			NetObjInsert(object, TRUE);
-			object->AddParent(g_pTemplateRoot);
-			g_pTemplateRoot->AddChild(object);
+			object->AddParent(parent);
+			parent->AddChild(object);
 			object->unhide();
 		}
 		DbgPrintf(5, _T("ImportConfig(): templates imported"));
