@@ -368,8 +368,8 @@ NetObj *FindTemplateRoot(ConfigEntry *config)
  */
 UINT32 ImportConfig(Config *config, UINT32 flags)
 {
-	ObjectArray<ConfigEntry> *events = NULL, *traps = NULL, *templates = NULL, *rules = NULL;
-	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot, *rulesRoot;
+	ObjectArray<ConfigEntry> *events = NULL, *traps = NULL, *templates = NULL, *rules = NULL, *scripts = NULL;
+	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot, *rulesRoot, *scriptsRoot;
 	UINT32 rcc = RCC_SUCCESS;
 	int i;
 
@@ -441,11 +441,24 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		DbgPrintf(5, _T("ImportConfig(): event processing policy rules imported"));
 	}
 
+	// Import scripts
+	scriptsRoot = config->getEntry(_T("/scripts"));
+	if (scriptsRoot != NULL)
+	{
+		scripts = scriptsRoot->getSubEntries(_T("script#*"));
+		for(i = 0; i < scripts->size(); i++)
+		{
+         ImportScript(scripts->get(i));
+		}
+		DbgPrintf(5, _T("ImportConfig(): scripts imported"));
+	}
+
 stop_processing:
 	delete events;
 	delete traps;
 	delete templates;
    delete rules;
+   delete scripts;
 
 	DbgPrintf(4, _T("ImportConfig() finished, rcc = %d"), rcc);
 	return rcc;

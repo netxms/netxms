@@ -1114,7 +1114,10 @@ void ClientSession::processingThread()
 				sendDCIThresholds(pMsg);
 				break;
          case CMD_GET_DCI_EVENTS_LIST:
-            sendDCIEventList(pMsg);
+            getDCIEventList(pMsg);
+            break;
+         case CMD_GET_DCI_SCRIPT_LIST:
+            getDCIScriptList(pMsg);
             break;
 			case CMD_GET_PERFTAB_DCI_LIST:
 				sendPerfTabDCIList(pMsg);
@@ -9472,16 +9475,14 @@ void ClientSession::resetComponent(NXCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Send list of events used by template's or node's DCIs
-//
-
-void ClientSession::sendDCIEventList(NXCPMessage *request)
+/**
+ * Get list of events used by template's or node's DCIs
+ */
+void ClientSession::getDCIEventList(NXCPMessage *request)
 {
    NXCPMessage msg;
    NetObj *object;
-   UINT32 *pdwEventList, dwCount;
+   UINT32 *pdwEventList, count;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
@@ -9495,11 +9496,11 @@ void ClientSession::sendDCIEventList(NXCPMessage *request)
              (object->getObjectClass() == OBJECT_CLUSTER) ||
              (object->getObjectClass() == OBJECT_TEMPLATE))
          {
-            pdwEventList = ((Template *)object)->getDCIEventsList(&dwCount);
+            pdwEventList = ((Template *)object)->getDCIEventsList(&count);
             if (pdwEventList != NULL)
             {
-               msg.setField(VID_NUM_EVENTS, dwCount);
-               msg.setFieldFromInt32Array(VID_EVENT_LIST, dwCount, pdwEventList);
+               msg.setField(VID_NUM_EVENTS, count);
+               msg.setFieldFromInt32Array(VID_EVENT_LIST, count, pdwEventList);
                free(pdwEventList);
             }
             else
@@ -9527,12 +9528,78 @@ void ClientSession::sendDCIEventList(NXCPMessage *request)
 }
 
 /**
+ * Data for script names enumeration callback
+ */
+struct ScriptNamesCallbackData
+{
+   NXCPMessage *msg;
+   UINT32 fieldId;
+};
+
+/**
+ * Script names enumeration callback
+ */
+static bool ScriptNamesCallback(const TCHAR *name, void *arg)
+{
+   ScriptNamesCallbackData *data = (ScriptNamesCallbackData *)arg;
+   data->msg->setField(data->fieldId++, ResolveScriptName(name));
+   data->msg->setField(data->fieldId++, name);
+   return true;
+}
+
+/**
+ * Get list of scripts used by template's or node's DCIs
+ */
+void ClientSession::getDCIScriptList(NXCPMessage *request)
+{
+   NXCPMessage msg;
+
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         if ((object->getObjectClass() == OBJECT_NODE) ||
+             (object->getObjectClass() == OBJECT_CLUSTER) ||
+             (object->getObjectClass() == OBJECT_TEMPLATE))
+         {
+            StringSet *scripts = ((Template *)object)->getDCIScriptList();
+            msg.setField(VID_NUM_SCRIPTS, (INT32)scripts->size());
+            ScriptNamesCallbackData data;
+            data.msg = &msg;
+            data.fieldId = VID_SCRIPT_LIST_BASE;
+            scripts->forEach(ScriptNamesCallback, &data);
+            delete scripts;
+            msg.setField(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(&msg);
+}
+
+/**
  * Export server configuration (event, templates, etc.)
  */
 void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   UINT32 i, dwCount, dwNumTemplates;
+   UINT32 i, dwNumTemplates;
    UINT32 *pdwList, *pdwTemplateList;
    NetObj *object;
 
@@ -9591,10 +9658,10 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
          // Write events
          str += _T("\t<events>\n");
-         dwCount = pRequest->getFieldAsUInt32(VID_NUM_EVENTS);
-         pdwList = (UINT32 *)malloc(sizeof(UINT32) * dwCount);
-         pRequest->getFieldAsInt32Array(VID_EVENT_LIST, dwCount, pdwList);
-         for(i = 0; i < dwCount; i++)
+         UINT32 count = pRequest->getFieldAsUInt32(VID_NUM_EVENTS);
+         pdwList = (UINT32 *)malloc(sizeof(UINT32) * count);
+         pRequest->getFieldAsInt32Array(VID_EVENT_LIST, count, pdwList);
+         for(i = 0; i < count; i++)
             CreateNXMPEventRecord(str, pdwList[i]);
          safe_free(pdwList);
          str += _T("\t</events>\n");
@@ -9613,25 +9680,43 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
          // Write traps
          str += _T("\t<traps>\n");
-         dwCount = pRequest->getFieldAsUInt32(VID_NUM_TRAPS);
-         pdwList = (UINT32 *)malloc(sizeof(UINT32) * dwCount);
-         pRequest->getFieldAsInt32Array(VID_TRAP_LIST, dwCount, pdwList);
-         for(i = 0; i < dwCount; i++)
-            CreateNXMPTrapRecord(str, pdwList[i]);
+         count = pRequest->getFieldAsUInt32(VID_NUM_TRAPS);
+         pdwList = (UINT32 *)malloc(sizeof(UINT32) * count);
+         pRequest->getFieldAsInt32Array(VID_TRAP_LIST, count, pdwList);
+         for(i = 0; i < count; i++)
+            CreateTrapExportRecord(str, pdwList[i]);
          safe_free(pdwList);
          str += _T("\t</traps>\n");
 
          // Write rules
          str += _T("\t<rules>\n");
-         dwCount = pRequest->getFieldAsUInt32(VID_NUM_RULES);
+         count = pRequest->getFieldAsUInt32(VID_NUM_RULES);
          DWORD varId = VID_RULE_LIST_BASE;
          uuid_t guid;
-         for(i = 0; i < dwCount; i++)
+         for(i = 0; i < count; i++)
          {
             pRequest->getFieldAsBinary(varId++, guid, UUID_LENGTH);
             g_pEventPolicy->exportRule(str, guid);
          }
          str += _T("\t</rules>\n");
+
+         // Write scripts
+         str.append(_T("\t<scripts>\n"));
+         count = pRequest->getFieldAsUInt32(VID_NUM_SCRIPTS);
+         pdwList = (UINT32 *)malloc(sizeof(UINT32) * count);
+         pRequest->getFieldAsInt32Array(VID_SCRIPT_LIST, count, pdwList);
+         for(i = 0; i < count; i++)
+            CreateScriptExportRecord(str, pdwList[i]);
+         safe_free(pdwList);
+         str.append(_T("\t</scripts>\n"));
+
+         // Write object tools
+         str.append(_T("\t<objectTools>\n"));
+         str.append(_T("\t</objectTools>\n"));
+
+         // Write DCI summary tables
+         str.append(_T("\t<dciSummaryTables>\n"));
+         str.append(_T("\t</dciSummaryTables>\n"));
 
 			// Close document
 			str += _T("</configuration>\n");

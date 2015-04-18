@@ -51,8 +51,8 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.servermanager.ServerManager;
-import org.netxms.api.client.servermanager.ServerVariable;
+import org.netxms.client.NXCSession;
+import org.netxms.client.server.ServerVariable;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -78,7 +78,7 @@ public class ServerConfigurationEditor extends ViewPart
 	public static final String JOB_FAMILY = "ServerConfigJob"; //$NON-NLS-1$
 		
 	private SortableTableViewer viewer;
-	private ServerManager session;
+	private NXCSession session;
 	private Map<String, ServerVariable> varList;
 	private boolean filterEnabled = false;
    private Composite content;
@@ -179,7 +179,7 @@ public class ServerConfigurationEditor extends ViewPart
       else
          enableFilter(false); // Will hide filter area correctly
 		
-		session = (ServerManager)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		refresh();
 	}
 	

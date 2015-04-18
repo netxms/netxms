@@ -48,10 +48,10 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.Session;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.api.client.mt.MappingTableDescriptor;
+import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
+import org.netxms.client.mt.MappingTableDescriptor;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -78,7 +78,7 @@ public class MappingTables extends ViewPart
 	public static final int COLUMN_FLAGS = 2;
 	public static final int COLUMN_DESCRIPTION = 3;
 	
-	private Session session;
+	private NXCSession session;
 	private SessionListener listener;
 	private Map<Integer, MappingTableDescriptor> mappingTables = new HashMap<Integer, MappingTableDescriptor>();
 	private SortableTableViewer viewer;

@@ -602,7 +602,8 @@ private:
    void getAddrList(NXCPMessage *pRequest);
    void setAddrList(NXCPMessage *pRequest);
    void resetComponent(NXCPMessage *pRequest);
-   void sendDCIEventList(NXCPMessage *request);
+   void getDCIEventList(NXCPMessage *request);
+   void getDCIScriptList(NXCPMessage *request);
 	void SendDCIInfo(NXCPMessage *pRequest);
    void sendPerfTabDCIList(NXCPMessage *pRequest);
    void exportConfiguration(NXCPMessage *pRequest);
@@ -923,7 +924,7 @@ UINT32 CreateNewTrap(UINT32 *pdwTrapId);
 UINT32 CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap);
 UINT32 UpdateTrapFromMsg(NXCPMessage *pMsg);
 UINT32 DeleteTrap(UINT32 dwId);
-void CreateNXMPTrapRecord(String &str, UINT32 dwId);
+void CreateTrapExportRecord(String &xml, UINT32 id);
 
 BOOL IsTableTool(UINT32 dwToolId);
 BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId);

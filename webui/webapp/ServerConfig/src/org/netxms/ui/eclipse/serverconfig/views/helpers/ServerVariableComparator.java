@@ -3,7 +3,7 @@ package org.netxms.ui.eclipse.serverconfig.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.api.client.servermanager.ServerVariable;
+import org.netxms.client.server.ServerVariable;
 import org.netxms.ui.eclipse.serverconfig.views.ServerConfigurationEditor;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,15 +20,12 @@ package org.netxms.ui.eclipse.serverconfig.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
-import org.eclipse.swt.SWT;
-import org.netxms.client.mt.MappingTableEntry;
-import org.netxms.ui.eclipse.serverconfig.views.MappingTableEditor;
-import org.netxms.ui.eclipse.widgets.SortableTableViewer;
+import org.netxms.client.Script;
 
 /**
- * Comparator for mapping table elements
+ * Comparator for scripts - sort them alphabetically
  */
-public class MappingTableEntryComparator extends ViewerComparator
+public class ScriptComparator extends ViewerComparator
 {
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
@@ -36,25 +33,6 @@ public class MappingTableEntryComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		int result;
-		
-		MappingTableEntry me1 = (MappingTableEntry)e1;
-		MappingTableEntry me2 = (MappingTableEntry)e2;
-		switch((Integer)((SortableTableViewer)viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
-		{
-			case MappingTableEditor.COLUMN_KEY:
-				result = me1.getKey().compareToIgnoreCase(me2.getKey());
-				break;
-			case MappingTableEditor.COLUMN_VALUE:
-				result = me1.getValue().compareToIgnoreCase(me2.getValue());
-				break;
-			case MappingTableEditor.COLUMN_DESCRIPTION:
-				result = me1.getDescription().compareToIgnoreCase(me2.getDescription());
-				break;
-			default:
-				result = 0;
-				break;
-		}
-		return (((SortableTableViewer)viewer).getTable().getSortDirection() == SWT.UP) ? result : -result;
+		return ((Script)e1).getName().compareToIgnoreCase(((Script)e2).getName());
 	}
 }

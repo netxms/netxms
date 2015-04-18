@@ -150,8 +150,11 @@ public:
  * Functions
  */
 void LoadScripts();
-void ReloadScript(UINT32 dwScriptId);
-BOOL IsValidScriptId(UINT32 dwId);
+void ReloadScript(UINT32 scriptId);
+bool IsValidScriptId(UINT32 id);
+UINT32 ResolveScriptName(const TCHAR *name);
+void CreateScriptExportRecord(String &xml, UINT32 id);
+void ImportScript(ConfigEntry *config);
 NXSL_VM *FindHookScript(const TCHAR *hookName);
 
 /**

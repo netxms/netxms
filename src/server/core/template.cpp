@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -982,12 +982,44 @@ UINT32 *Template::getDCIEventsList(UINT32 *pdwCount)
 }
 
 /**
+ * Get list of scripts used by DCIs
+ */
+StringSet *Template::getDCIScriptList()
+{
+   StringSet *list = new StringSet;
+
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *o = m_dcObjects->get(i);
+      if (o->getDataSource() == DS_SCRIPT)
+      {
+         const TCHAR *name = o->getName();
+         const TCHAR *p = _tcschr(name, _T('('));
+         if (p != NULL)
+         {
+            TCHAR buffer[256];
+            nx_strncpy(buffer, name, p - name + 1);
+            list->add(buffer);
+         }
+         else
+         {
+            list->add(name);
+         }
+      }
+   }
+   unlockDciAccess();
+   return list;
+}
+
+/**
  * Create management pack record
  */
 void Template::createNXMPRecord(String &str)
 {
-   str.appendFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n"),
-	                       m_id, (const TCHAR *)EscapeStringForXML2(m_name), m_flags);
+   TCHAR guid[48];
+   str.appendFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<guid>%s</guid>\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n"),
+	                       m_id, uuid_to_string(m_guid, guid), (const TCHAR *)EscapeStringForXML2(m_name), m_flags);
 
    // Path in groups
    StringList path;

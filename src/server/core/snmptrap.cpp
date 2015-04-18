@@ -612,17 +612,17 @@ void SendTrapsToClient(ClientSession *pSession, UINT32 dwRqId)
  */
 void CreateTrapCfgMessage(NXCPMessage &msg)
 {
-   UINT32 i, dwId;
+   UINT32 i, id;
 
    MutexLock(m_mutexTrapCfgAccess);
 	msg.setField(VID_NUM_TRAPS, m_dwNumTraps);
-   for(i = 0, dwId = VID_TRAP_INFO_BASE; i < m_dwNumTraps; i++, dwId += 5)
+   for(i = 0, id = VID_TRAP_INFO_BASE; i < m_dwNumTraps; i++, id += 5)
    {
-      msg.setField(dwId++, m_pTrapCfg[i].dwId);
-      msg.setField(dwId++, m_pTrapCfg[i].dwOidLen);
-      msg.setFieldFromInt32Array(dwId++, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
-      msg.setField(dwId++, m_pTrapCfg[i].dwEventCode);
-      msg.setField(dwId++, m_pTrapCfg[i].szDescription);
+      msg.setField(id++, m_pTrapCfg[i].dwId);
+      msg.setField(id++, m_pTrapCfg[i].dwOidLen);
+      msg.setFieldFromInt32Array(id++, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
+      msg.setField(id++, m_pTrapCfg[i].dwEventCode);
+      msg.setField(id++, m_pTrapCfg[i].szDescription);
    }
    MutexUnlock(m_mutexTrapCfgAccess);
 }
@@ -659,7 +659,7 @@ static void NotifyOnTrapCfgDelete(UINT32 id)
 /**
  * Delete trap configuration record
  */
-UINT32 DeleteTrap(UINT32 dwId)
+UINT32 DeleteTrap(UINT32 id)
 {
    UINT32 i, j, dwResult = RCC_INVALID_TRAP_ID;
    TCHAR szQuery[256];
@@ -668,7 +668,7 @@ UINT32 DeleteTrap(UINT32 dwId)
 
    for(i = 0; i < m_dwNumTraps; i++)
    {
-      if (m_pTrapCfg[i].dwId == dwId)
+      if (m_pTrapCfg[i].dwId == id)
       {
          // Free allocated resources
          for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
@@ -681,13 +681,13 @@ UINT32 DeleteTrap(UINT32 dwId)
          memmove(&m_pTrapCfg[i], &m_pTrapCfg[i + 1], sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps - i));
 
          // Remove trap entry from database
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_cfg WHERE trap_id=%d"), dwId);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_cfg WHERE trap_id=%d"), id);
          QueueSQLRequest(szQuery);
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%d"), dwId);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%d"), id);
          QueueSQLRequest(szQuery);
          dwResult = RCC_SUCCESS;
 
-			NotifyOnTrapCfgDelete(dwId);
+			NotifyOnTrapCfgDelete(id);
          break;
       }
    }
@@ -925,7 +925,7 @@ UINT32 UpdateTrapFromMsg(NXCPMessage *pMsg)
 /**
  * Create trap record in NXMP file
  */
-void CreateNXMPTrapRecord(String &str, UINT32 dwId)
+void CreateTrapExportRecord(String &xml, UINT32 id)
 {
 	UINT32 i, j;
 	TCHAR szBuffer[1024];
@@ -933,12 +933,12 @@ void CreateNXMPTrapRecord(String &str, UINT32 dwId)
    MutexLock(m_mutexTrapCfgAccess);
    for(i = 0; i < m_dwNumTraps; i++)
    {
-      if (m_pTrapCfg[i].dwId == dwId)
+      if (m_pTrapCfg[i].dwId == id)
       {
-			str.appendFormattedString(_T("\t\t<trap id=\"%d\">\n")
+			xml.appendFormattedString(_T("\t\t<trap id=\"%d\">\n")
 			                       _T("\t\t\t<oid>%s</oid>\n")
 			                       _T("\t\t\t<description>%s</description>\n")
-			                       _T("\t\t\t<userTag>%s</userTag>\n"), dwId,
+			                       _T("\t\t\t<userTag>%s</userTag>\n"), id,
 			                       SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen,
 			                                            m_pTrapCfg[i].pdwObjectId,
 																	  szBuffer, 1024),
@@ -946,34 +946,34 @@ void CreateNXMPTrapRecord(String &str, UINT32 dwId)
 										  (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].szUserTag));
 
 		   EventNameFromCode(m_pTrapCfg[i].dwEventCode, szBuffer);
-			str.appendFormattedString(_T("\t\t\t<event>%s</event>\n"), (const TCHAR *)EscapeStringForXML2(szBuffer));
+			xml.appendFormattedString(_T("\t\t\t<event>%s</event>\n"), (const TCHAR *)EscapeStringForXML2(szBuffer));
 			if (m_pTrapCfg[i].dwNumMaps > 0)
 			{
-				str += _T("\t\t\t<parameters>\n");
+            xml.append(_T("\t\t\t<parameters>\n"));
 				for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
 				{
-					str.appendFormattedString(_T("\t\t\t\t<parameter id=\"%d\">\n")
+					xml.appendFormattedString(_T("\t\t\t\t<parameter id=\"%d\">\n")
 			                             _T("\t\t\t\t\t<flags>%d</flags>\n")
 					                       _T("\t\t\t\t\t<description>%s</description>\n"),
 												  j + 1, m_pTrapCfg[i].pMaps[j].dwFlags,
 												  (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].pMaps[j].szDescription));
                if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
 					{
-						str.appendFormattedString(_T("\t\t\t\t\t<oid>%s</oid>\n"),
+						xml.appendFormattedString(_T("\t\t\t\t\t<oid>%s</oid>\n"),
 						                       SNMPConvertOIDToText(m_pTrapCfg[i].pMaps[j].dwOidLen,
 													                       m_pTrapCfg[i].pMaps[j].pdwObjectId,
 																				  szBuffer, 1024));
 					}
 					else
 					{
-						str.appendFormattedString(_T("\t\t\t\t\t<position>%d</position>\n"),
+						xml.appendFormattedString(_T("\t\t\t\t\t<position>%d</position>\n"),
 						                       m_pTrapCfg[i].pMaps[j].dwOidLen & 0x7FFFFFFF);
 					}
-					str += _T("\t\t\t\t</parameter>\n");
+               xml.append(_T("\t\t\t\t</parameter>\n"));
 				}
-				str += _T("\t\t\t</parameters>\n");
+            xml.append(_T("\t\t\t</parameters>\n"));
 			}
-			str += _T("\t\t</trap>\n");
+         xml.append(_T("\t\t</trap>\n"));
 			break;
 		}
 	}

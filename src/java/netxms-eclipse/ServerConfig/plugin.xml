@@ -100,6 +100,10 @@
             id="org.netxms.ui.eclipse.serverconfig.commands.delete_rows"
             name="%command.name.DeleteRows">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.save_exported_config"
+            name="Save exported config">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -177,6 +181,11 @@
             name="Mapping Table Editor"
             parentId="org.eclipse.ui.contexts.window">
       </context>
+      <context
+            id="org.netxms.ui.eclipse.serverconfig.context.ExportFileBuilder"
+            name="Export File Builder"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -191,6 +200,12 @@
             contextId="org.netxms.ui.eclipse.serverconfig.context.MappingTableEditor"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="DEL">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.serverconfig.commands.save_exported_config"
+            contextId="org.netxms.ui.eclipse.serverconfig.context.ExportFileBuilder"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+S">
       </key>
    </extension>
 

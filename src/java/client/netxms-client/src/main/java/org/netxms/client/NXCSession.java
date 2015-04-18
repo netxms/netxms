@@ -5604,6 +5604,32 @@ public class NXCSession
    }
 
    /**
+    * Get names of all scripts used in data collection by given node, cluster, or template object.
+    *
+    * @param objectId node, cluster, or template object ID
+    * @return list of used library scripts
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<Script> getDataCollectionScripts(long objectId) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_DCI_SCRIPT_LIST);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_SCRIPTS);
+      List<Script> scripts = new ArrayList<Script>(count);
+      long fieldId = NXCPCodes.VID_SCRIPT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         long id = response.getFieldAsInt64(fieldId++);
+         String name = response.getFieldAsString(fieldId++);
+         scripts.add(new Script(id, name, null));
+      }
+      return scripts;
+   }
+
+   /**
     * Export server configuration. Returns requested configuration elements
     * exported into XML.
     *
@@ -5611,12 +5637,15 @@ public class NXCSession
     * @param events      List of event codes
     * @param traps       List of trap identifiers
     * @param templates   List of template object identifiers
+    * @param rules       List of event processing rule GUIDs
+    * @param scripts     List of library script identifiers
+    * @param objectTools List of object tool identifiers
     * @return resulting XML document
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public String exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules)
-      throws IOException, NXCException
+   public String exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules, 
+         long[] scripts, long[] objectTools) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_CONFIGURATION);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
@@ -5626,6 +5655,10 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_OBJECT_LIST, templates);
       msg.setFieldInt32(NXCPCodes.VID_NUM_TRAPS, traps.length);
       msg.setField(NXCPCodes.VID_TRAP_LIST, traps);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_SCRIPTS, scripts.length);
+      msg.setField(NXCPCodes.VID_SCRIPT_LIST, scripts);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_TOOLS, objectTools.length);
+      msg.setField(NXCPCodes.VID_TOOL_LIST, objectTools);
 
       msg.setFieldInt32(NXCPCodes.VID_NUM_RULES, rules.length);
       long varId = NXCPCodes.VID_RULE_LIST_BASE;

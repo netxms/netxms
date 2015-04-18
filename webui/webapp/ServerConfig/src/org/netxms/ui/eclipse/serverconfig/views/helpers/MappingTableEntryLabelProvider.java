@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.serverconfig.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.api.client.mt.MappingTableEntry;
+import org.netxms.client.mt.MappingTableEntry;
 import org.netxms.ui.eclipse.serverconfig.views.MappingTableEditor;
 
 /**

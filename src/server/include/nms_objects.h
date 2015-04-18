@@ -639,6 +639,7 @@ public:
    void sendItemsToClient(ClientSession *pSession, UINT32 dwRqId);
    BOOL isLockedBySession(int sessionId) { return m_dciLockStatus == sessionId; }
    UINT32 *getDCIEventsList(UINT32 *pdwCount);
+   StringSet *getDCIScriptList();
 
    BOOL applyToTarget(DataCollectionTarget *pNode);
 	bool isApplicable(Node *node);

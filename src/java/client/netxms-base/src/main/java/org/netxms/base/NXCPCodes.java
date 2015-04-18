@@ -329,6 +329,7 @@ public class NXCPCodes
    public static final int CMD_GRAPH_UPDATE = 0x0133;
    public static final int CMD_ENABLE_IPV6 = 0x0134;
    public static final int CMD_FORCE_DCI_POLL = 0x0135;
+   public static final int CMD_GET_DCI_SCRIPT_LIST = 0x0136;
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -839,6 +840,8 @@ public class NXCPCodes
    public static final long VID_ALIAS = 494;
    public static final long VID_AP_INDEX = 495;
    public static final long VID_PROTOCOL_VERSION_EX = 496;
+   public static final long VID_SCRIPT_LIST = 497;
+   public static final long VID_TOOL_LIST = 498;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

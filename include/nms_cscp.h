@@ -531,6 +531,7 @@ typedef struct
 #define CMD_GRAPH_UPDATE               0x0133
 #define CMD_ENABLE_IPV6                0x0134
 #define CMD_FORCE_DCI_POLL             0x0135
+#define CMD_GET_DCI_SCRIPT_LIST        0x0136
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1042,6 +1043,8 @@ typedef struct
 #define VID_ALIAS                   ((UINT32)494)
 #define VID_AP_INDEX                ((UINT32)495)
 #define VID_PROTOCOL_VERSION_EX     ((UINT32)496)
+#define VID_SCRIPT_LIST             ((UINT32)497)
+#define VID_TOOL_LIST               ((UINT32)498)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

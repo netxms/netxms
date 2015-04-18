@@ -4,11 +4,12 @@
 
 - MEGATEC protocol support in UPS subagent
 - Template hierarchy preserved during export/import
+- Script export/import
 - Fixed broken WoL functionality
 - Fixed broken PING subagent
 - Fixed database upgrade issues on MS SQL
 - IPv6 support in PING subagent
-- Fixed issues: #655
+- Fixed issues: #655, #657
 
 
 *
