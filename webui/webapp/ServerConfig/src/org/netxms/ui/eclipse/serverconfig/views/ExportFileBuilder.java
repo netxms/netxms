@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.serverconfig.views;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.util.HashMap;
@@ -37,11 +38,12 @@ import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.contexts.IContextService;
@@ -65,6 +67,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.snmp.SnmpTrap;
+import org.netxms.ui.eclipse.console.DownloadServiceHandler;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.epp.dialogs.RuleSelectionDialog;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
@@ -116,7 +119,6 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private boolean modified = false;
 	private List<SnmpTrap> snmpTrapCache = null;
 	private List<EventProcessingPolicyRule> rulesCache = null;
-	private String exportFileName = null;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -798,45 +800,41 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList);
+				final File file = File.createTempFile("export_config_" + ExportFileBuilder.this.hashCode(), "_" + System.currentTimeMillis()); 
+            OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(file), "UTF-8"); //$NON-NLS-1$
+            try
+            {
+               out.write(xml);
+            }
+            finally
+            {
+               out.close();
+            }
 				runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  FileDialog dlg = new FileDialog(getSite().getShell(), SWT.SAVE);
-                  final String fileName = dlg.open();
-                  if (fileName != null)
+						modified = false;
+						firePropertyChange(PROP_DIRTY);
+
+		            DownloadServiceHandler.addDownload(file.getName(), "export.xml", file, "application/xml");
+                  JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+                  if( executor != null ) 
                   {
-                     exportFileName = fileName;
-                     new ConsoleJob("Save exported configuration", ExportFileBuilder.this, Activator.PLUGIN_ID, null) {
-                        @Override
-                        protected void runInternal(IProgressMonitor monitor) throws Exception
-                        {
-                           OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8"); //$NON-NLS-1$
-               				try
-               				{
-               					out.write(xml);
-               				}
-               				finally
-               				{
-               					out.close();
-               				}
-               				runInUIThread(new Runnable() {
-               					@Override
-               					public void run()
-               					{
-               						modified = false;
-               						firePropertyChange(PROP_DIRTY);
-               					}
-               				});
-               			}
-               			
-               			@Override
-               			protected String getErrorMessage()
-               			{
-                           return "Cannot save exported configuration to file";
-                        }
-                     }.start();
-                  }
+                     StringBuilder js = new StringBuilder();
+                     js.append("var hiddenIFrameID = 'hiddenDownloader',");
+                     js.append("   iframe = document.getElementById(hiddenIFrameID);");
+                     js.append("if (iframe === null) {");
+                     js.append("   iframe = document.createElement('iframe');");
+                     js.append("   iframe.id = hiddenIFrameID;");
+                     js.append("   iframe.style.display = 'none';");
+                     js.append("   document.body.appendChild(iframe);");
+                     js.append("}");
+                     js.append("iframe.src = '");
+                     js.append(DownloadServiceHandler.createDownloadUrl(file.getName()));
+                     js.append("';");
+                     executor.execute(js.toString());
+                  }                 
                }
             });
 			}
