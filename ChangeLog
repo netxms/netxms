@@ -1,7 +1,13 @@
 *
 * 2.0-M4
 *
-
+- Android Agent:
+	- Added support for Lollipop MR1 (v5.1)
+	- Updated support library
+- Android Console:
+	- Changed order of overview items to match Java console (node browser)
+	- Added MTU field in interface details (node browser)
+	- Updated support library
 - MEGATEC protocol support in UPS subagent
 - Template hierarchy preserved during export/import
 - Script export/import

@@ -65,19 +65,19 @@ public class OverviewAdapter extends BaseAdapter
 			switch (obj.getObjectClass())
 			{
 				case AbstractObject.OBJECT_NODE:
-					addPair(r.getString(R.string.overview_primary_ip), ((Node)obj).getPrimaryIP().getHostAddress());
 					addPair(r.getString(R.string.overview_zone_id), Long.toString(((Node)obj).getZoneId()));
 					addPair(r.getString(R.string.overview_primary_hostname), ((Node)obj).getPrimaryName());
+					addPair(r.getString(R.string.overview_primary_ip), ((Node)obj).getPrimaryIP().getHostAddress());
 					if (((Node)obj).hasAgent())
 						addPair(r.getString(R.string.overview_netxms_agent_version), ((Node)obj).getAgentVersion());
 					addPair(r.getString(R.string.overview_system_description), ((Node)obj).getSystemDescription(), false);
 					addPair(r.getString(R.string.overview_platform_name), ((Node)obj).getPlatformName(), false);
-					addPair(r.getString(R.string.overview_boot_time), toString(((Node)obj).getBootTime()), false);
 					addPair(r.getString(R.string.overview_snmp_sysname), ((Node)obj).getSnmpSysName(), false);
 					addPair(r.getString(R.string.overview_snmp_oid), ((Node)obj).getSnmpOID(), false);
 					if ((((Node)obj).getFlags() & Node.NF_IS_BRIDGE) != 0)
 						addPair(r.getString(R.string.overview_bridge_base_address), toString(((Node)obj).getBridgeBaseAddress()));
 					addPair(r.getString(R.string.overview_driver), ((Node)obj).getDriverName(), false);
+					addPair(r.getString(R.string.overview_boot_time), toString(((Node)obj).getBootTime()), false);
 					break;
 				case AbstractObject.OBJECT_MOBILEDEVICE:
 					addPair(r.getString(R.string.overview_last_report), DateFormat.getDateTimeInstance().format(((MobileDevice)obj).getLastReportTime()));

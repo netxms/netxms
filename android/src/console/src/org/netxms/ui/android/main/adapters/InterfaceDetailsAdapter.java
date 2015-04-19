@@ -3,7 +3,6 @@
  */
 package org.netxms.ui.android.main.adapters;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,14 +53,15 @@ public class InterfaceDetailsAdapter extends BaseAdapter
 	{
 		addRow(r.getString(R.string.if_id), Long.toString(i.getObjectId()));
 		addRow(r.getString(R.string.if_name), i.getObjectName());
-    addRow(r.getString(R.string.if_alias), i.getAlias());
+		addRow(r.getString(R.string.if_alias), i.getAlias());
 		addRow(r.getString(R.string.if_type), Integer.toString(i.getIfType()));
 		addRow(r.getString(R.string.if_index), Integer.toString(i.getIfIndex()));
 		addRow(r.getString(R.string.if_slot), Integer.toString(i.getSlot()));
 		addRow(r.getString(R.string.if_port), Integer.toString(i.getPort()));
+		addRow(r.getString(R.string.if_mtu), Integer.toString(i.getMtu()));
 		addRow(r.getString(R.string.if_description), i.getDescription());
 		addRow(r.getString(R.string.if_mac_address), i.getMacAddress().toString());
-		for(InetAddressEx a : i.getIpAddressList())
+		for (InetAddressEx a : i.getIpAddressList())
 			addRow(r.getString(R.string.if_ip_address), a.toString());
 		addRow(r.getString(R.string.if_admin_state), i.getAdminStateAsText(), getAdminStateColor(i.getAdminState()));
 		addRow(r.getString(R.string.if_oper_state), i.getOperStateAsText(), getOperStateColor(i.getOperState()));
