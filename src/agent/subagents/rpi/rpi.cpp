@@ -108,6 +108,34 @@ static LONG H_SetPinState(const TCHAR *action, StringList *arguments, const TCHA
    return ERR_SUCCESS;
 }
 
+
+/**
+ * Parse coma separated lines from configuration
+ * and FREE input.
+ * NULL safe.
+ */
+static void ConfigureGPIO(TCHAR *str, uint8_t mode)
+{
+   if (str != NULL)
+   {
+      TCHAR *item, *end;
+      for(item = str; *item != 0; item = end + 1)
+      {
+         end = _tcschr(item, _T(','));
+         if (end != NULL)
+         {
+            *end = 0;
+         }
+         StrStrip(item);
+         uint8_t pin = (uint8_t)_tcstol(item, NULL, 10);
+         AgentWriteDebugLog(1, _T("RPI: configuring gpio%u as %s"), pin,
+               mode == BCM2835_GPIO_FSEL_INPT ? _T("INPUT") : _T("OUTPUT"));
+         bcm2835_gpio_fsel(pin, mode);
+      }
+      free(str);
+   }
+}
+
 /**
  * Startup handler
  */
@@ -123,40 +151,8 @@ static BOOL SubagentInit(Config *config)
 	bool success = config->parseTemplate(_T("RPI"), m_cfgTemplate);
 	if (success)
 	{
-		TCHAR *item, *end;
-
-		if (m_inputPins != NULL)
-		{
-			for(item = m_inputPins; *item != 0; item = end + 1)
-			{
-				end = _tcschr(item, _T(','));
-				if (end != NULL)
-            {
-					*end = 0;
-            }
-				StrStrip(item);
-            int pin = (int)_tcstol(item, NULL, 10);
-            AgentWriteDebugLog(1, _T("RPI: configuring pin %d as INPUT"), pin);
-            bcm2835_gpio_fsel((uint8_t)pin, BCM2835_GPIO_FSEL_INPT);
-			}
-			free(m_inputPins);
-		}
-		if (m_outputPins != NULL)
-		{
-			for(item = m_outputPins; *item != 0; item = end + 1)
-			{
-				end = _tcschr(item, _T(','));
-				if (end != NULL)
-            {
-					*end = 0;
-            }
-				StrStrip(item);
-            int pin = (int)_tcstol(item, NULL, 10);
-            AgentWriteDebugLog(1, _T("RPI: configuring pin %d as OUTPUT"), pin);
-            bcm2835_gpio_fsel((uint8_t)pin, BCM2835_GPIO_FSEL_OUTP);
-			}
-			free(m_outputPins);
-		}
+      ConfigureGPIO(m_inputPins, BCM2835_GPIO_FSEL_INPT);
+      ConfigureGPIO(m_outputPins, BCM2835_GPIO_FSEL_OUTP);
    }
 
 	BOOL ret = TRUE;
