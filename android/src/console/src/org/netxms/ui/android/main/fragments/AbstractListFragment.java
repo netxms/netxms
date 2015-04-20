@@ -43,6 +43,8 @@ public abstract class AbstractListFragment extends ListFragment
 	@Override
 	public boolean onContextItemSelected(MenuItem item)
 	{
+		if (!getUserVisibleHint())
+			return false;
 		if (defaultMenuAction(item))
 			return true;
 		return super.onContextItemSelected(item);

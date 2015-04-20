@@ -166,6 +166,8 @@ public class AlarmsFragment extends AbstractListFragment implements LoaderManage
 	@Override
 	public boolean onContextItemSelected(MenuItem item)
 	{
+		if (!getUserVisibleHint())
+			return false;
 		if (handleItemSelection(item))
 			return true;
 		return super.onContextItemSelected(item);
