@@ -141,7 +141,7 @@ static void ConfigureGPIO(TCHAR *str, uint8_t mode)
  */
 static BOOL SubagentInit(Config *config)
 {
-   if (!bcm2835_init()) 
+   if (bcm2835_init() != 1)
    {    
       AgentWriteLog(NXLOG_ERROR, _T("RPI: call to bcm2835_init failed"));
       return FALSE;
