@@ -100,8 +100,8 @@ static LONG H_SetPinState(const TCHAR *action, StringList *arguments, const TCHA
    {
       return ERR_INTERNAL_ERROR;
    }
-   long pin = _tcstol(pinStr, NULL, 10);
-   long state = _tcstol(pinStr, NULL, 10);
+   uint8_t pin = (uint8_t)_tcstol(pinStr, NULL, 10);
+   uint8_t state = (uint8_t)_tcstol(stateStr, NULL, 10);
 
    bcm2835_gpio_write(pin, state == 1 ? HIGH : LOW);
 
