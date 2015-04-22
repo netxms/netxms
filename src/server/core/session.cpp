@@ -4731,6 +4731,26 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 							   if (iClass == OBJECT_NODE)
 							   {
                   		   msg.setField(VID_RCC, RCC_ALREADY_EXIST);
+
+                  		   //Add to description IP of new created node and name of node with the same IP
+                  		   TCHAR value[512];
+                           TCHAR firstAddress[64];
+                           ipAddr.toString(firstAddress);
+                           Node *sameNode = FindNodeByIP(zoneId, ipAddr);
+                           Subnet *sameSubnet = FindSubnetByIP(zoneId, ipAddr);
+                  		   if(sameNode != NULL)
+                  		   {
+                              _sntprintf(value, 512, _T("%s, %s"), firstAddress, sameNode->getName());
+                  		   }
+                  		   else if (sameSubnet != NULL)
+                  		   {
+                              _sntprintf(value, 512, _T("%s, %s"), firstAddress, sameSubnet->getName());
+                  		   }
+                  		   else
+                  		   {
+                              _tcscpy(value, _T(""));
+                  		   }
+                  		   msg.setField(VID_VALUE, value);
 							   }
 							   else if (iClass == OBJECT_ZONE)
 							   {

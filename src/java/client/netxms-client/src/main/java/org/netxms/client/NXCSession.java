@@ -1511,6 +1511,10 @@ public class NXCSession
          {
             throw new NXCException(rcc, msg.getFieldAsString(NXCPCodes.VID_ERROR_TEXT));
          }
+         else if (msg.findField(NXCPCodes.VID_VALUE) != null)
+         {
+            throw new NXCException(rcc, msg.getFieldAsString(NXCPCodes.VID_VALUE));
+         }
          else
          {
             throw new NXCException(rcc);

@@ -26,6 +26,7 @@ import org.netxms.base.CommonRCC;
 public final class RCC extends CommonRCC
 {
 	public static final int INVALID_OBJECT_ID = 7;
+   public static final int CANT_CREATE_OBJECT = 8;
 	public static final int DUPLICATE_DCI = 13;
 	public static final int INVALID_DCI_ID = 14;
 	public static final int OBJECT_CREATION_FAILED = 18;
