@@ -842,6 +842,8 @@ public class NXCPCodes
    public static final long VID_PROTOCOL_VERSION_EX = 496;
    public static final long VID_SCRIPT_LIST = 497;
    public static final long VID_TOOL_LIST = 498;
+   public static final long VID_NUM_SUMMARY_TABLES = 499;
+   public static final long VID_SUMMARY_TABLE_LIST = 500;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

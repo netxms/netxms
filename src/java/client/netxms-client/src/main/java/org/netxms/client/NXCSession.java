@@ -5644,12 +5644,13 @@ public class NXCSession
     * @param rules       List of event processing rule GUIDs
     * @param scripts     List of library script identifiers
     * @param objectTools List of object tool identifiers
+    * @param dciSummaryTables List of DCI summary table identifiers
     * @return resulting XML document
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public String exportConfiguration(String description, long[] events, long[] traps, long[] templates, UUID[] rules, 
-         long[] scripts, long[] objectTools) throws IOException, NXCException
+         long[] scripts, long[] objectTools, long[] dciSummaryTables) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXPORT_CONFIGURATION);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
@@ -5663,6 +5664,8 @@ public class NXCSession
       msg.setField(NXCPCodes.VID_SCRIPT_LIST, scripts);
       msg.setFieldInt32(NXCPCodes.VID_NUM_TOOLS, objectTools.length);
       msg.setField(NXCPCodes.VID_TOOL_LIST, objectTools);
+      msg.setFieldInt32(NXCPCodes.VID_NUM_SUMMARY_TABLES, dciSummaryTables.length);
+      msg.setField(NXCPCodes.VID_SUMMARY_TABLE_LIST, dciSummaryTables);
 
       msg.setFieldInt32(NXCPCodes.VID_NUM_RULES, rules.length);
       long varId = NXCPCodes.VID_RULE_LIST_BASE;

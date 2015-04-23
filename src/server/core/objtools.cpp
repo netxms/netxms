@@ -783,3 +783,38 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
    NotifyClientSessions(NX_NOTIFY_OBJTOOLS_CHANGED, dwToolId);
    return RCC_SUCCESS;
 }
+
+/**
+ * Cerate export record for given object tool
+ */
+void CreateObjectToolExportRecord(String &xml, UINT32 id)
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,description,flags,tool_filter,confirmation_text,command_name,command_short_name,icon FROM object_tools WHERE tool_id=?"));
+   if (statment == NULL)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return;
+   }
+
+   DBBind(statment, 1, DB_SQLTYPE_INTEGER, id);
+   hResult = DBSelectPrepared(statment);
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         xml.append(_T("\t\t<objectTool id=\""));
+         xml.append(id);
+         xml.append(_T("\">\n\t\t\t<name>"));
+         xml.appendPreallocated(DBGetField(hResult, 0, 0, NULL, 0));
+         xml.append(_T("</name>\n\t\t\t<type>"));
+         xml.append(DBGetFieldLong(hResult, 0, 1));
+         xml.append(_T("</type>\n\t\t\t<data>"));
+      }
+      DBFreeResult(hResult);
+   }
+
+   DBFreeStatement(statement);
+   DBConnectionPoolReleaseConnection(hdb);
+}

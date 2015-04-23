@@ -791,13 +791,18 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
       for(ObjectTool t : tools.values())
          toolList[i++] = t.getId();
       
+      final long[] summaryTableList = new long[summaryTables.size()];
+      i = 0;
+      for(DciSummaryTableDescriptor t : summaryTables.values())
+         summaryTableList[i++] = t.getId();
+      
 		final String descriptionText = description.getText();
 		
 		new ConsoleJob(Messages.get().ExportFileBuilder_ExportJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList);
+				final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList);
 				runInUIThread(new Runnable() {
                @Override
                public void run()

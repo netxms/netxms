@@ -9732,6 +9732,12 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
          // Write object tools
          str.append(_T("\t<objectTools>\n"));
+         count = pRequest->getFieldAsUInt32(VID_NUM_TOOLS);
+         pdwList = (UINT32 *)malloc(sizeof(UINT32) * count);
+         pRequest->getFieldAsInt32Array(VID_TOOL_LIST, count, pdwList);
+         for(i = 0; i < count; i++)
+            CreateObjectToolExportRecord(str, pdwList[i]);
+         safe_free(pdwList);
          str.append(_T("\t</objectTools>\n"));
 
          // Write DCI summary tables

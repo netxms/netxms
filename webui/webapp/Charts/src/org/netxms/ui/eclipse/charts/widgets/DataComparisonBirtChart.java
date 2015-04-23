@@ -61,7 +61,7 @@ import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
  */
 public class DataComparisonBirtChart extends GenericBirtChart implements DataComparisonChart
 {
-	private static final String CHART_FONT_NAME = "Verdana"; //$NON-NLS-1$
+	private static final String CHART_FONT_NAME = "Arial"; //$NON-NLS-1$
 	private static final int CHART_FONT_SIZE_TITLE = 9;
 	private static final int CHART_FONT_SIZE_LEGEND = 8;
 	private static final int CHART_FONT_SIZE_AXIS = 8;

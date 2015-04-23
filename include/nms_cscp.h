@@ -1045,6 +1045,8 @@ typedef struct
 #define VID_PROTOCOL_VERSION_EX     ((UINT32)496)
 #define VID_SCRIPT_LIST             ((UINT32)497)
 #define VID_TOOL_LIST               ((UINT32)498)
+#define VID_NUM_SUMMARY_TABLES      ((UINT32)499)
+#define VID_SUMMARY_TABLE_LIST      ((UINT32)500)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
