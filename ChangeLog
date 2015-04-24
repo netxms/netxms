@@ -10,6 +10,8 @@
 - Fixed broken PING subagent
 - Fixed database upgrade issues on MS SQL
 - IPv6 support in PING subagent
+- Added default melodies for alarms
+- Added option to play sound on alarm sound preference page
 - Android Agent:
 	- Added support for Lollipop MR1 (v5.1)
 	- Updated support library

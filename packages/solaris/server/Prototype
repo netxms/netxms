@@ -13,6 +13,7 @@ d none /opt/netxms/share/netxms 0755 root other
 d none /opt/netxms/share/netxms/backgrounds 0755 root other
 d none /opt/netxms/share/netxms/images 0755 root other
 d none /opt/netxms/share/netxms/mibs 0755 root other
+d none /opt/netxms/share/netxms/files 0755 root other
 d none /opt/netxms/share/netxms/sql 0755 root other
 d none /opt/netxms/svc 0755 root other
 f none /opt/netxms/bin/netxmsd 0755 root other
@@ -493,6 +494,17 @@ f none /opt/netxms/share/netxms/mibs/WWW-MIB.txt 0644 root other
 f none /opt/netxms/share/netxms/mibs/XPPC-MIB.txt 0644 root other
 f none /opt/netxms/share/netxms/mibs/ZONE-DEFENSE-MGMT-MIB.txt 0644 root other
 f none /opt/netxms/share/netxms/mibs/netxms.mib 0644 root other
+f none /opt/netxms/share/netxms/files/Warning-A.wav 0644 root other
+f none /opt/netxms/share/netxms/files/Warning-B.wav 0644 root other
+f none /opt/netxms/share/netxms/files/Warning-C.wav 0644 root other
+f none /opt/netxms/share/netxms/files/Warning-D.wav 0644 root other
+f none /opt/netxms/share/netxms/files/Warning-E.wav 0644 root other
+f none /opt/netxms/share/netxms/files/Warning-F.wav 0644 root other
+f none /opt/netxms/share/netxms/files/Warning-Notification-A.wav 0644 root other
+f none /opt/netxms/share/netxms/files/Warning-Notification-B.wav 0644 root other
+f none /opt/netxms/share/netxms/files/Warning-Notification-C.wav 0644 root other
+f none /opt/netxms/share/netxms/files/Warning-Notification-D.wav 0644 root other
+f none /opt/netxms/share/netxms/files/Warning-Notification-F.wav 0644 root other
 f none /opt/netxms/share/netxms/sql/dbinit_db2.sql 0644 root other
 f none /opt/netxms/share/netxms/sql/dbinit_mssql.sql 0644 root other
 f none /opt/netxms/share/netxms/sql/dbinit_mysql.sql 0644 root other
