@@ -1,6 +1,15 @@
 *
 * 2.0-M4
 *
+
+- Script export/import
+- Object tools export/import
+- Template hierarchy preserved during export/import
+- MEGATEC protocol support in UPS subagent
+- Fixed broken WoL functionality
+- Fixed broken PING subagent
+- Fixed database upgrade issues on MS SQL
+- IPv6 support in PING subagent
 - Android Agent:
 	- Added support for Lollipop MR1 (v5.1)
 	- Updated support library
@@ -8,13 +17,6 @@
 	- Changed order of overview items to match Java console (node browser)
 	- Added MTU field in interface details (node browser)
 	- Updated support library
-- MEGATEC protocol support in UPS subagent
-- Template hierarchy preserved during export/import
-- Script export/import
-- Fixed broken WoL functionality
-- Fixed broken PING subagent
-- Fixed database upgrade issues on MS SQL
-- IPv6 support in PING subagent
 - Fixed issues: #655, #657, #696, #804
 
 
