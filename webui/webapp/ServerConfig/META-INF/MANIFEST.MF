@@ -5,16 +5,17 @@ Bundle-SymbolicName: org.netxms.ui.eclipse.serverconfig;singleton:=true
 Bundle-Version: 2.0.4
 Bundle-Activator: org.netxms.ui.eclipse.serverconfig.Activator
 Bundle-Vendor: netxms.org
-Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.10.0",
  org.eclipse.rap.ui;bundle-version="2.3.1",
  org.eclipse.rap.ui.forms;bundle-version="2.3.1",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="2.0.4",
  org.netxms.webui.core;bundle-version="2.0.4",
  org.netxms.ui.eclipse.filemanager;bundle-version="2.0.1",
  org.netxms.ui.eclipse.eventmanager;bundle-version="2.0.0",
- org.netxms.ui.eclipse.objectbrowser;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.objectbrowser;bundle-version="2.0.3",
  org.netxms.ui.eclipse.nxsl;bundle-version="2.0.0",
  org.netxms.ui.eclipse.epp;bundle-version="2.0.0",
- org.eclipse.rap.addons.filedialog;bundle-version="0.6.0"
+ org.eclipse.rap.addons.filedialog;bundle-version="0.6.0",
+ org.netxms.ui.eclipse.objecttools;bundle-version="2.0.4"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

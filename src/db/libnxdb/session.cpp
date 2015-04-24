@@ -553,6 +553,18 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, c
 }
 
 /**
+ * Get text field and escape it for XML document. Returned string
+ * always dynamically allocated and must be destroyed by caller.
+ */
+TCHAR LIBNXDB_EXPORTABLE *DBGetFieldForXML(DB_RESULT hResult, int row, int col)
+{
+   TCHAR *value = DBGetField(hResult, row, col, NULL, 0);
+   TCHAR *xmlString = EscapeStringForXML(value, -1);
+   safe_free(value);
+   return xmlString;
+}
+
+/**
  * Get field's value as unsigned long
  */
 UINT32 LIBNXDB_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn)

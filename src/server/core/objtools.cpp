@@ -791,15 +791,15 @@ void CreateObjectToolExportRecord(String &xml, UINT32 id)
 {
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,description,flags,tool_filter,confirmation_text,command_name,command_short_name,icon FROM object_tools WHERE tool_id=?"));
-   if (statment == NULL)
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,description,flags,tool_filter,confirmation_text,command_name,command_short_name,icon FROM object_tools WHERE tool_id=?"));
+   if (hStmt == NULL)
    {
       DBConnectionPoolReleaseConnection(hdb);
       return;
    }
 
-   DBBind(statment, 1, DB_SQLTYPE_INTEGER, id);
-   hResult = DBSelectPrepared(statment);
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -807,14 +807,30 @@ void CreateObjectToolExportRecord(String &xml, UINT32 id)
          xml.append(_T("\t\t<objectTool id=\""));
          xml.append(id);
          xml.append(_T("\">\n\t\t\t<name>"));
-         xml.appendPreallocated(DBGetField(hResult, 0, 0, NULL, 0));
+         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 0));
          xml.append(_T("</name>\n\t\t\t<type>"));
          xml.append(DBGetFieldLong(hResult, 0, 1));
          xml.append(_T("</type>\n\t\t\t<data>"));
+         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 2));
+         xml.append(_T("</data>\n\t\t\t<description>"));
+         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 3));
+         xml.append(_T("</description>\n\t\t\t<flags>"));
+         xml.append(DBGetFieldLong(hResult, 0, 4));
+         xml.append(_T("</flags>\n\t\t\t<filter>"));
+         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 5));
+         xml.append(_T("</filter>\n\t\t\t<confirmation>"));
+         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 6));
+         xml.append(_T("</confirmation>\n\t\t\t<commandName>"));
+         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 7));
+         xml.append(_T("</commandName>\n\t\t\t<commandShortName>"));
+         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 8));
+         xml.append(_T("</commandShortName>\n\t\t\t<icon>"));
+         xml.appendPreallocated(DBGetFieldForXML(hResult, 0, 9));
+         xml.append(_T("</icon>\n\t\t</objectTool>\n"));
       }
       DBFreeResult(hResult);
    }
 
-   DBFreeStatement(statement);
+   DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
 }

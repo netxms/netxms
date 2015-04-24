@@ -73,6 +73,7 @@ import org.netxms.ui.eclipse.nxsl.dialogs.SelectScriptDialog;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.Messages;
+import org.netxms.ui.eclipse.serverconfig.dialogs.ObjectToolSelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.SelectSnmpTrapDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.helpers.TrapListLabelProvider;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.RuleComparator;
@@ -606,6 +607,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
+            addObjectTools();
          }
       });
       
@@ -1099,6 +1101,21 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          Script s = dlg.getScript();
          scripts.put(s.getId(), s);
          scriptViewer.setInput(scripts.values().toArray());
+         setModified();
+      }
+   }
+   
+   /**
+    * Add oject tools to list
+    */
+   private void addObjectTools()
+   {
+      ObjectToolSelectionDialog dlg = new ObjectToolSelectionDialog(getSite().getShell());
+      if (dlg.open() == Window.OK)
+      {
+         for(ObjectTool t : dlg.getSelection())
+            tools.put(t.getId(), t);
+         toolsViewer.setInput(tools.values().toArray());
          setModified();
       }
    }
