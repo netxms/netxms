@@ -40,6 +40,7 @@ import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
@@ -115,6 +116,9 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
          newCombo.setEnabled(false);
          comboList.add(i, newCombo);
          button = new Button(dialogArea, SWT.PUSH);
+         GridData gridData = new GridData();
+         gridData.verticalAlignment = GridData.END;
+         button.setLayoutData(gridData);
          button.setImage(Activator.getImageDescriptor("icons/sound.png").createImage());
          final int index = i; 
          button.addMouseListener(new MouseListener() {
