@@ -991,11 +991,9 @@ CREATE TABLE snmp_trap_pmap
 	PRIMARY KEY(trap_id,parameter)
 ) TABLE_TYPE;
 
-
 /*
 ** Agent packages
 */
-
 CREATE TABLE agent_pkg
 (
 	pkg_id integer not null,
@@ -1013,6 +1011,7 @@ CREATE TABLE agent_pkg
 CREATE TABLE object_tools
 (
 	tool_id integer not null,
+   guid varchar(36) not null,
 	tool_name varchar(255) null,
 	tool_type integer not null,
 	tool_data SQL_TEXT null,

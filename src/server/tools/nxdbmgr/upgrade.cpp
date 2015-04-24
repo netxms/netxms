@@ -29,6 +29,36 @@
 BOOL MigrateMaps();
 
 /**
+ * Generate GUIDs
+ */
+static bool GenerateGUID(const TCHAR *table, const TCHAR *idColumn, const TCHAR *guidColumn)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT %s FROM %s"), idColumn, table);
+	DB_RESULT hResult = SQLSelect(query);
+	if (hResult == NULL)
+      return false;
+
+	int count = DBGetNumRows(hResult);
+	for(int i = 0; i < count; i++)
+	{
+		uuid_t guid;
+		TCHAR buffer[64];
+
+		uuid_generate(guid);
+		_sntprintf(query, 256, _T("UPDATE %s SET %s='%s' WHERE %s=%d"),
+		           table, guidColumn, uuid_to_string(guid, buffer), idColumn, DBGetFieldULong(hResult, i, 0));
+		if (!SQLQuery(query))
+      {
+      	DBFreeResult(hResult);
+         return false;
+      }
+	}
+	DBFreeResult(hResult);
+   return true;
+}
+
+/**
  * Create table
  */
 static BOOL CreateTable(const TCHAR *pszQuery)
@@ -434,6 +464,17 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
 
    DBFreeResult(hResult);
    return success;
+}
+
+/**
+ * Upgrade from V351 to V352
+ */
+static BOOL H_UpgradeFromV351(int currVersion, int newVersion)
+{
+	CHK_EXEC(SQLQuery(_T("ALTER TABLE object_tools ADD guid varchar(36)")));
+   CHK_EXEC(GenerateGUID(_T("object_tools"), _T("tool_id"), _T("guid")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='352' WHERE var_name='SchemaVersion'")));
+   return TRUE;
 }
 
 /**
@@ -1671,25 +1712,7 @@ static BOOL H_UpgradeFromV292(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV291(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy ADD rule_guid varchar(36)")));
-
-	// Generate GUIDs for all objects
-	DB_RESULT hResult = SQLSelect(_T("SELECT rule_id FROM event_policy"));
-	if (hResult != NULL)
-	{
-		int count = DBGetNumRows(hResult);
-		for(int i = 0; i < count; i++)
-		{
-			uuid_t guid;
-			TCHAR query[256], buffer[64];
-
-			uuid_generate(guid);
-			_sntprintf(query, 256, _T("UPDATE event_policy SET rule_guid='%s' WHERE rule_id=%d"),
-			           uuid_to_string(guid, buffer), DBGetFieldULong(hResult, i, 0));
-			CHK_EXEC(SQLQuery(query));
-		}
-		DBFreeResult(hResult);
-	}
-
+   CHK_EXEC(GenerateGUID(_T("event_policy"), _T("rule_id"), _T("rule_guid")));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='292' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -8539,6 +8562,7 @@ static struct
    { 348, 349, H_UpgradeFromV348 },
    { 349, 350, H_UpgradeFromV349 },
    { 350, 351, H_UpgradeFromV350 },
+   { 351, 352, H_UpgradeFromV351 },
    { 0, 0, NULL }
 };
 

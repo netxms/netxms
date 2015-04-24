@@ -2894,6 +2894,7 @@ AC_CONFIG_FILES([
 	src/tools/Makefile
 	src/tools/nxdevcfg/Makefile
 	src/tools/nxencpasswd/Makefile
+	src/tools/nxgenguid/Makefile
 	src/zlib/Makefile
 	sql/Makefile
 	tests/Makefile

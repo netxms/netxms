@@ -368,8 +368,8 @@ NetObj *FindTemplateRoot(ConfigEntry *config)
  */
 UINT32 ImportConfig(Config *config, UINT32 flags)
 {
-	ObjectArray<ConfigEntry> *events = NULL, *traps = NULL, *templates = NULL, *rules = NULL, *scripts = NULL;
-	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot, *rulesRoot, *scriptsRoot;
+	ObjectArray<ConfigEntry> *events = NULL, *traps = NULL, *templates = NULL, *rules = NULL, *scripts = NULL, *objectTools = NULL;
+	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot, *rulesRoot, *scriptsRoot, *objectToolsRoot;
 	UINT32 rcc = RCC_SUCCESS;
 	int i;
 
@@ -432,7 +432,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	rulesRoot = config->getEntry(_T("/rules"));
 	if (rulesRoot != NULL)
 	{
-		rules = rulesRoot->getSubEntries(_T("rule#*"));
+		rules = rulesRoot->getOrderedSubEntries(_T("rule#*"));
 		for(i = 0; i < rules->size(); i++)
 		{
          EPRule *rule = new EPRule(rules->get(i));
@@ -453,12 +453,25 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		DbgPrintf(5, _T("ImportConfig(): scripts imported"));
 	}
 
+	// Import object tools
+	objectToolsRoot = config->getEntry(_T("/objectTools"));
+	if (objectToolsRoot != NULL)
+	{
+		objectTools = objectToolsRoot->getSubEntries(_T("objectTool#*"));
+		for(i = 0; i < objectTools->size(); i++)
+		{
+         ImportObjectTool(objectTools->get(i));
+		}
+		DbgPrintf(5, _T("ImportConfig(): object tools imported"));
+	}
+
 stop_processing:
 	delete events;
 	delete traps;
 	delete templates;
    delete rules;
    delete scripts;
+   delete objectTools;
 
 	DbgPrintf(4, _T("ImportConfig() finished, rcc = %d"), rcc);
 	return rcc;
