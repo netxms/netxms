@@ -790,9 +790,22 @@ public class WidgetHelper
 	 */
 	public static int getTextWidth(Control control, String text)
 	{
-		GC gc = new GC(control);
-		int w = gc.textExtent(text).x;
-		gc.dispose();
-		return w;
+	   return getTextExtent(control, text).x;
 	}
+
+   /**
+    * Get width and height of given text in pixels using settings from given control
+    * 
+    * @param control
+    * @param text
+    * @return
+    */
+   public static Point getTextExtent(Control control, String text)
+   {
+      GC gc = new GC(control);
+      gc.setFont(control.getFont());
+      Point e = gc.textExtent(text);
+      gc.dispose();
+      return e;
+   }
 }
