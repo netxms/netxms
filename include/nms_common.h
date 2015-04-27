@@ -73,6 +73,10 @@
 
 #include <netxms-version.h>
 
+#if HAVE_WIDEC
+#include widec.h
+#endif // HAVE_WIDEC
+
 /**
  * Define __64BIT__ if compiling for 64bit platform with Visual C++
  */
