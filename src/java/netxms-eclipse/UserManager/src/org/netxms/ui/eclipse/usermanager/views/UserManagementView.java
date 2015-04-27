@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,8 +66,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class UserManagementView extends ViewPart
 {
-	public static final String ID = "org.netxms.ui.eclipse.session.view.user_manager"; //$NON-NLS-1$
-	public static final String JOB_FAMILY = "sessionJob"; //$NON-NLS-1$
+	public static final String ID = "org.netxms.ui.eclipse.usermanager.views.UserManagementView"; //$NON-NLS-1$
 
 	// Columns
 	public static final int COLUMN_NAME = 0;
@@ -436,7 +435,7 @@ public class UserManagementView extends ViewPart
 		final CreateObjectDialog dlg = new CreateObjectDialog(getViewSite().getShell(), true);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.get().UserManagementView_CreateUserJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+			new ConsoleJob(Messages.get().UserManagementView_CreateUserJobName, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -461,7 +460,7 @@ public class UserManagementView extends ViewPart
 		final CreateObjectDialog dlg = new CreateObjectDialog(getViewSite().getShell(), false);
 		if (dlg.open() == Window.OK)
 		{
-			new ConsoleJob(Messages.get().UserManagementView_CreateGroupJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+			new ConsoleJob(Messages.get().UserManagementView_CreateGroupJobName, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
@@ -492,7 +491,7 @@ public class UserManagementView extends ViewPart
 			return;
 		}
 
-		new ConsoleJob(Messages.get().UserManagementView_DeleteJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+		new ConsoleJob(Messages.get().UserManagementView_DeleteJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -517,7 +516,7 @@ public class UserManagementView extends ViewPart
    {
       final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 
-      new ConsoleJob(Messages.get().UserManagementView_DeleteJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+      new ConsoleJob(Messages.get().UserManagementView_DeleteJobName, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -543,7 +542,7 @@ public class UserManagementView extends ViewPart
    {
       final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 
-      new ConsoleJob(Messages.get().UserManagementView_DeleteJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+      new ConsoleJob(Messages.get().UserManagementView_DeleteJobName, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -569,7 +568,7 @@ public class UserManagementView extends ViewPart
    {
       final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 
-      new ConsoleJob(Messages.get().UserManagementView_DeleteJobName, this, Activator.PLUGIN_ID, UserManagementView.JOB_FAMILY) {
+      new ConsoleJob(Messages.get().UserManagementView_DeleteJobName, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {

@@ -69,7 +69,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class CertificateView extends ViewPart implements SessionListener
 {
-   public static final String ID = "org.netxms.ui.eclipse.usermanager.view.user_certificate"; //$NON-NLS-1$
+   public static final String ID = "org.netxms.ui.eclipse.usermanager.views.CertificateView"; //$NON-NLS-1$
    
    private static final String TABLE_CONFIG_PREFIX = "CertificatesEditor"; //$NON-NLS-1$
 
@@ -275,7 +275,7 @@ public class CertificateView extends ViewPart implements SessionListener
 	private void refreshCertificateList()
 	{
 	   final Display display = viewer.getControl().getDisplay();
-		new ConsoleJob(Messages.get(display).CertificateView_RefreshCertif, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID, display) {
+		new ConsoleJob(Messages.get(display).CertificateView_RefreshCertif, this, Activator.PLUGIN_ID, null, display) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

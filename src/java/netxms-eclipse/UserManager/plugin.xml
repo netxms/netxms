@@ -8,7 +8,7 @@
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.usermanager.views.UserManagementView"
             icon="icons/user_manager.png"
-            id="org.netxms.ui.eclipse.usermanager.view.user_manager"
+            id="org.netxms.ui.eclipse.usermanager.views.UserManagementView"
             name="%view.UserManager.name"
             restorable="true">
       </view>
@@ -16,7 +16,7 @@
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.usermanager.views.CertificateView"
             icon="icons/certificate.png"
-            id="org.netxms.ui.eclipse.usermanager.view.user_certificate"
+            id="org.netxms.ui.eclipse.usermanager.views.CertificateView"
             name="%view.CertificateManage.name"
             restorable="true">
       </view>
