@@ -38,14 +38,15 @@ UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId)
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    
+   bool isNew = !IsDatabaseRecordExist(hdb, _T("dci_summary_tables"), _T("id"), (UINT32)id);
    DB_STATEMENT hStmt;
-   if (IsDatabaseRecordExist(hdb, _T("dci_summary_tables"), _T("id"), (UINT32)id))
+   if (isNew)
    {
-      hStmt = DBPrepare(hdb, _T("UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=? WHERE id=?"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO dci_summary_tables (menu_path,title,node_filter,flags,columns,id,guid) VALUES (?,?,?,?,?,?,?)"));
    }
    else
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO dci_summary_tables (menu_path,title,node_filter,flags,columns,id) VALUES (?,?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=? WHERE id=?"));
    }
 
    UINT32 rcc;
@@ -57,6 +58,15 @@ UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId)
       DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, msg->getFieldAsUInt32(VID_FLAGS));
       DBBind(hStmt, 5, DB_SQLTYPE_TEXT, msg->getFieldAsString(VID_COLUMNS), DB_BIND_DYNAMIC);
       DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, id);
+
+      if (isNew)
+      {
+         uuid_t guid;
+         TCHAR guidText[64];
+         uuid_generate(guid);
+         uuid_to_string(guid, guidText);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, guidText, DB_BIND_TRANSIENT);
+      }
 
       rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
       if (rcc == RCC_SUCCESS)
@@ -106,6 +116,22 @@ SummaryTableColumn::SummaryTableColumn(NXCPMessage *msg, UINT32 baseId)
 }
 
 /**
+ * Create export record for column
+ */
+void SummaryTableColumn::createExportRecord(String &xml, int id)
+{
+   xml.append(_T("\t\t\t\t<column id=\""));
+   xml.append(id);
+   xml.append(_T("\">\n\t\t\t\t\t<name>"));
+   xml.appendPreallocated(EscapeStringForXML(m_name, -1));
+   xml.append(_T("</name>\n\t\t\t\t\t<dci>"));
+   xml.appendPreallocated(EscapeStringForXML(m_dciName, -1));
+   xml.append(_T("</dci>\n\t\t\t\t\t<flags>"));
+   xml.append(m_flags);
+   xml.append(_T("</flags>\n\t\t\t\t</column>\n"));
+}
+
+/**
  * Create column definition from configuration string
  */
 SummaryTableColumn::SummaryTableColumn(TCHAR *configStr)
@@ -137,19 +163,12 @@ SummaryTableColumn::SummaryTableColumn(TCHAR *configStr)
 }
 
 /**
- * Destructor
- */
-SummaryTable::~SummaryTable()
-{
-   delete m_columns;
-   delete m_filter;
-}
-
-/**
  * Create ad-hoc summary table definition from NXCP message
  */
 SummaryTable::SummaryTable(NXCPMessage *msg)
 {
+   m_id = 0;
+   uuid_generate(m_guid);
    m_title[0] = 0;
    m_flags = msg->getFieldAsUInt32(VID_FLAGS);
    m_filter = NULL;
@@ -171,24 +190,28 @@ SummaryTable::SummaryTable(NXCPMessage *msg)
 /**
  * Create summary table definition from DB data
  */
-SummaryTable::SummaryTable(DB_RESULT hResult)
+SummaryTable::SummaryTable(INT32 id, DB_RESULT hResult)
 {
+   m_id = id;
+
    DBGetField(hResult, 0, 0, m_title, MAX_DB_STRING);
    m_flags = DBGetFieldULong(hResult, 0, 1);
+   DBGetFieldGUID(hResult, 0, 2, m_guid);
+   DBGetField(hResult, 0, 3, m_menuPath, MAX_DB_STRING);
 
    m_aggregationFunction = DCI_AGG_LAST;
    m_periodStart = 0;
    m_periodEnd = 0;
 
    // Filter script
-   TCHAR *filterSource = DBGetField(hResult, 0, 2, NULL, 0);
-   if (filterSource != NULL)
+   m_filterSource = DBGetField(hResult, 0, 4, NULL, 0);
+   if (m_filterSource != NULL)
    {
-      StrStrip(filterSource);
-      if (*filterSource != 0)
+      StrStrip(m_filterSource);
+      if (*m_filterSource != 0)
       {
          TCHAR errorText[1024];
-         m_filter = NXSLCompileAndCreateVM(filterSource, errorText, 1024, new NXSL_ServerEnv);
+         m_filter = NXSLCompileAndCreateVM(m_filterSource, errorText, 1024, new NXSL_ServerEnv);
          if (m_filter == NULL)
          {
             DbgPrintf(4, _T("Error compiling filter script for DCI summary table: %s"), errorText);
@@ -198,7 +221,6 @@ SummaryTable::SummaryTable(DB_RESULT hResult)
       {
          m_filter = NULL;
       }
-      free(filterSource);
    }
    else
    {
@@ -207,7 +229,7 @@ SummaryTable::SummaryTable(DB_RESULT hResult)
 
    // Columns
    m_columns = new ObjectArray<SummaryTableColumn>(16, 16, true);
-   TCHAR *config = DBGetField(hResult, 0, 3, NULL, 0);
+   TCHAR *config = DBGetField(hResult, 0, 5, NULL, 0);
    if ((config != NULL) && (*config != 0))
    {
       TCHAR *curr = config;
@@ -229,12 +251,12 @@ SummaryTable::SummaryTable(DB_RESULT hResult)
 /**
  * Load summary table object from database
  */
-SummaryTable *SummaryTable::loadFromDB(LONG id, UINT32 *rcc)
+SummaryTable *SummaryTable::loadFromDB(INT32 id, UINT32 *rcc)
 {
    DbgPrintf(4, _T("Loading configuration for DCI summary table %d"), id);
    SummaryTable *table = NULL;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT title,flags,node_filter,columns FROM dci_summary_tables WHERE id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT title,flags,guid,menu_path,node_filter,columns FROM dci_summary_tables WHERE id=?"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
@@ -243,7 +265,7 @@ SummaryTable *SummaryTable::loadFromDB(LONG id, UINT32 *rcc)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            table = new SummaryTable(hResult);
+            table = new SummaryTable(id, hResult);
             *rcc = RCC_SUCCESS;
          }
          else
@@ -265,6 +287,16 @@ SummaryTable *SummaryTable::loadFromDB(LONG id, UINT32 *rcc)
    DBConnectionPoolReleaseConnection(hdb);
    DbgPrintf(4, _T("SummaryTable::loadFromDB(%d): object=%p, rcc=%d"), id, table, (int)*rcc);
    return table;
+}
+
+/**
+ * Destructor
+ */
+SummaryTable::~SummaryTable()
+{
+   delete m_columns;
+   delete m_filter;
+   safe_free(m_filterSource);
 }
 
 /**
@@ -310,6 +342,33 @@ Table *SummaryTable::createEmptyResultTable()
       result->addColumn(m_columns->get(i)->m_name, DCI_DT_STRING);
    }
    return result;
+}
+
+/**
+ * Create export record
+ */
+void SummaryTable::createExportRecord(String &xml)
+{
+   TCHAR buffer[64];
+
+   xml.append(_T("\t\t<table id=\""));
+   xml.append(m_id);
+   xml.append(_T("\">\n\t\t\t<guid>"));
+   xml.append(uuid_to_string(m_guid, buffer));
+   xml.append(_T("</guid>\n\t\t\t<title>"));
+   xml.appendPreallocated(EscapeStringForXML(m_title, -1));
+   xml.append(_T("</title>\n\t\t\t<flags>"));
+   xml.append(m_flags);
+   xml.append(_T("</flags>\n\t\t\t<path>"));
+   xml.appendPreallocated(EscapeStringForXML(m_menuPath, -1));
+   xml.append(_T("</path>\n\t\t\t<filter>"));
+   xml.appendPreallocated(EscapeStringForXML(m_filterSource, -1));
+   xml.append(_T("</filter>\n\t\t\t<columns>\n"));
+   for(int i = 0; i < m_columns->size(); i++)
+   {
+      m_columns->get(i)->createExportRecord(xml, i + 1);
+   }
+   xml.append(_T("\t\t\t</columns>\n\t\t</table>\n"));
 }
 
 /**
@@ -364,4 +423,18 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
    delete tableDefinition;
 
    return tableData;
+}
+
+/**
+ * Create export record for summary table
+ */
+bool CreateSummaryTableExportRecord(INT32 id, String &xml)
+{
+   UINT32 rcc;
+   SummaryTable *t = SummaryTable::loadFromDB(id, &rcc);
+   if (t == NULL)
+      return false;
+   t->createExportRecord(xml);
+   delete t;
+   return true;
 }

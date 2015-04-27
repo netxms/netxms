@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.AbstractSourceProvider;
 import org.eclipse.ui.ISources;
 import org.eclipse.ui.services.IServiceLocator;
+import org.netxms.ui.eclipse.datacollection.api.SummaryTablesCache;
 
 /**
  * Data collection source provider

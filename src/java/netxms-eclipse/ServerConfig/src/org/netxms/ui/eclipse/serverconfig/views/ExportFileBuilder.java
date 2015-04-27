@@ -75,6 +75,7 @@ import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.ObjectToolSelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.SelectSnmpTrapDialog;
+import org.netxms.ui.eclipse.serverconfig.dialogs.SummaryTableSelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.helpers.TrapListLabelProvider;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.RuleComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.RuleLabelProvider;
@@ -669,6 +670,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
+            addSummaryTables();
          }
       });
       
@@ -1116,6 +1118,21 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          for(ObjectTool t : dlg.getSelection())
             tools.put(t.getId(), t);
          toolsViewer.setInput(tools.values().toArray());
+         setModified();
+      }
+   }
+   
+   /**
+    * Add oject tools to list
+    */
+   private void addSummaryTables()
+   {
+      SummaryTableSelectionDialog dlg = new SummaryTableSelectionDialog(getSite().getShell());
+      if (dlg.open() == Window.OK)
+      {
+         for(DciSummaryTableDescriptor t : dlg.getSelection())
+            summaryTables.put(t.getId(), t);
+         summaryTableViewer.setInput(summaryTables.values().toArray());
          setModified();
       }
    }

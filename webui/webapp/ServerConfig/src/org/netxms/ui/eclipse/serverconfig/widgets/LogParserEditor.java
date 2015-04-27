@@ -209,7 +209,7 @@ public class LogParserEditor extends Composite
 	private void createTextEditor()
 	{
 		xmlEditor = new Text(tabFolder, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-		final Font font = new Font(getDisplay(), "Courier New", WidgetHelper.fontPixelsToPoints(getDisplay(), 16), SWT.NORMAL);
+		final Font font = new Font(getDisplay(), "Courier New", WidgetHelper.fontPixelsToPoints(getDisplay(), 14), SWT.NORMAL);
 		addDisposeListener(new DisposeListener() {
 			private static final long serialVersionUID = 1L;
 

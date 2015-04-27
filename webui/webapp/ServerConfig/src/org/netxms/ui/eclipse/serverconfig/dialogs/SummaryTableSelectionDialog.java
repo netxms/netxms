@@ -1,7 +1,7 @@
 /**
  * NetXMS - open source network management system
  * Copyright (C) 2003-2015 Victor Kirhenshtein
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -32,22 +32,22 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.objecttools.ObjectTool;
-import org.netxms.ui.eclipse.objecttools.api.ObjectToolsCache;
+import org.netxms.client.datacollection.DciSummaryTableDescriptor;
+import org.netxms.ui.eclipse.datacollection.api.SummaryTablesCache;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Object tool selection dialog
  */
-public class ObjectToolSelectionDialog extends Dialog
+public class SummaryTableSelectionDialog extends Dialog
 {
    private TableViewer viewer;
-   private List<ObjectTool> selection;
+   private List<DciSummaryTableDescriptor> selection;
    
    /**
     * @param parentShell
     */
-   public ObjectToolSelectionDialog(Shell parentShell)
+   public SummaryTableSelectionDialog(Shell parentShell)
    {
       super(parentShell);
    }
@@ -59,7 +59,7 @@ public class ObjectToolSelectionDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Select Object Tool");
+      newShell.setText("Select DCI Summary Table");
    }
 
    /* (non-Javadoc)
@@ -81,17 +81,19 @@ public class ObjectToolSelectionDialog extends Dialog
          @Override
          public String getText(Object element)
          {
-            return ((ObjectTool)element).getName();
+            return ((DciSummaryTableDescriptor)element).getTitle() + " (" + ((DciSummaryTableDescriptor)element).getMenuPath().replace("&", "") + ")";
          }
       });
       viewer.setComparator(new ViewerComparator() {
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
-            return ((ObjectTool)e1).getName().compareToIgnoreCase(((ObjectTool)e2).getName());
+            String n1 = ((DciSummaryTableDescriptor)e1).getTitle() + " (" + ((DciSummaryTableDescriptor)e1).getMenuPath().replace("&", "") + ")";
+            String n2 = ((DciSummaryTableDescriptor)e2).getTitle() + " (" + ((DciSummaryTableDescriptor)e2).getMenuPath().replace("&", "") + ")";
+            return n1.compareToIgnoreCase(n2);
          }
       });
-      viewer.setInput(ObjectToolsCache.getInstance().getTools());
+      viewer.setInput(SummaryTablesCache.getInstance().getTables());
       
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -118,7 +120,7 @@ public class ObjectToolSelectionDialog extends Dialog
    /**
     * @return the selection
     */
-   public List<ObjectTool> getSelection()
+   public List<DciSummaryTableDescriptor> getSelection()
    {
       return selection;
    }

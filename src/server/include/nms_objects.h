@@ -304,6 +304,8 @@ public:
 
    SummaryTableColumn(NXCPMessage *msg, UINT32 baseId);
    SummaryTableColumn(TCHAR *configStr);
+
+   void createExportRecord(String &xml, int id);
 };
 
 /**
@@ -312,18 +314,22 @@ public:
 class NXCORE_EXPORTABLE SummaryTable
 {
 private:
+   INT32 m_id;
+   uuid_t m_guid;
    TCHAR m_title[MAX_DB_STRING];
    UINT32 m_flags;
    ObjectArray<SummaryTableColumn> *m_columns;
+   TCHAR *m_filterSource;
    NXSL_VM *m_filter;
    AggregationFunction m_aggregationFunction;
    time_t m_periodStart;
    time_t m_periodEnd;
+   TCHAR m_menuPath[MAX_DB_STRING];
 
-   SummaryTable(DB_RESULT hResult);
+   SummaryTable(INT32 id, DB_RESULT hResult);
 
 public:
-   static SummaryTable *loadFromDB(LONG id, UINT32 *rcc);
+   static SummaryTable *loadFromDB(INT32 id, UINT32 *rcc);
 
    SummaryTable(NXCPMessage *msg);
    ~SummaryTable();
@@ -337,6 +343,8 @@ public:
    time_t getPeriodStart() { return m_periodStart; }
    time_t getPeriodEnd() { return m_periodEnd; }
    bool isMultiInstance() { return (m_flags & SUMMARY_TABLE_MULTI_INSTANCE) ? true : false; }
+
+   void createExportRecord(String &xml);
 };
 
 /**

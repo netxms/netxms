@@ -33,6 +33,8 @@ public class SummaryTablesComparator extends ViewerComparator
 	@Override
 	public int compare(Viewer viewer, Object e1, Object e2)
 	{
-		return ((DciSummaryTableDescriptor)e1).getTitle().compareToIgnoreCase(((DciSummaryTableDescriptor)e2).getTitle());
+	   String n1 = ((DciSummaryTableDescriptor)e1).getTitle() + " (" + ((DciSummaryTableDescriptor)e1).getMenuPath() + ")"; 
+      String n2 = ((DciSummaryTableDescriptor)e2).getTitle() + " (" + ((DciSummaryTableDescriptor)e2).getMenuPath() + ")"; 
+		return n1.compareToIgnoreCase(n2);
 	}
 }

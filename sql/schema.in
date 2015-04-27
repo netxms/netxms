@@ -1507,14 +1507,13 @@ CREATE TABLE mapping_data
 	PRIMARY KEY(table_id,md_key)
 ) TABLE_TYPE;
 
-
 /*
 ** DCI summary tables
 */
-
 CREATE TABLE dci_summary_tables
 (
 	id integer not null,
+   guid varchar(36) not null,
 	menu_path varchar(255) not null,
 	title varchar(127) null,
 	node_filter SQL_TEXT null,

@@ -185,7 +185,6 @@ public class SummaryTableWidget extends Composite
          }
       }.start();
    }
-  
    
    /**
     * Update viewer with fresh table data

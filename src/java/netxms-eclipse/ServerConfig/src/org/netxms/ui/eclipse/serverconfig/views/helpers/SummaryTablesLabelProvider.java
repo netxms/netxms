@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.serverconfig.views.helpers;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.client.Script;
+import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 
 /**
@@ -29,7 +29,7 @@ import org.netxms.ui.eclipse.serverconfig.Activator;
  */
 public class SummaryTablesLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   private Image image = Activator.getImageDescriptor("icons/script.png").createImage();
+   private Image image = Activator.getImageDescriptor("icons/summary_table.png").createImage();
    
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -57,7 +57,7 @@ public class SummaryTablesLabelProvider extends LabelProvider implements ITableL
    @Override
    public String getText(Object element)
    {
-      return ((Script)element).getName();
+      return ((DciSummaryTableDescriptor)element).getTitle() + " (" + ((DciSummaryTableDescriptor)element).getMenuPath() + ")";
    }
 
    /* (non-Javadoc)

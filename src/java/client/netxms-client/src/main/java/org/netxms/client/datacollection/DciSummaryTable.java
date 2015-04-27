@@ -20,6 +20,7 @@ package org.netxms.client.datacollection;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
@@ -29,6 +30,7 @@ import org.netxms.base.NXCPMessage;
 public class DciSummaryTable
 {
 	private int id;
+   private UUID guid;
 	private String menuPath;
 	private String title;
 	private int flags;
@@ -41,6 +43,7 @@ public class DciSummaryTable
 	public DciSummaryTable(String menuPath, String title)
 	{
 		id = 0;
+      guid = UUID.randomUUID();
 		this.menuPath = menuPath;
 		this.title = title;
 		flags = 0;
@@ -57,6 +60,7 @@ public class DciSummaryTable
 	public DciSummaryTable(NXCPMessage msg)
 	{
 		id = msg.getFieldAsInt32(NXCPCodes.VID_SUMMARY_TABLE_ID);
+		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
 		menuPath = msg.getFieldAsString(NXCPCodes.VID_MENU_PATH);
 		title = msg.getFieldAsString(NXCPCodes.VID_TITLE);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
@@ -103,6 +107,7 @@ public class DciSummaryTable
 	public void fillMessage(NXCPMessage msg)
 	{
 		msg.setFieldInt32(NXCPCodes.VID_SUMMARY_TABLE_ID, id);
+		msg.setField(NXCPCodes.VID_GUID, guid);
 		msg.setField(NXCPCodes.VID_MENU_PATH, menuPath);
 		msg.setField(NXCPCodes.VID_TITLE, title);
 		msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
@@ -130,13 +135,21 @@ public class DciSummaryTable
 		return id;
 	}
 
-	/**
+   /**
 	 * @param id the id to set
 	 */
 	public void setId(int id)
 	{
 		this.id = id;
 	}
+
+	/**
+    * @return the guid
+    */
+   public UUID getGuid()
+   {
+      return guid;
+   }
 
 	/**
 	 * @return the menuPath

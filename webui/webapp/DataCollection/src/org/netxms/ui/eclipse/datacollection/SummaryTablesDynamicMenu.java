@@ -48,6 +48,7 @@ import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
+import org.netxms.ui.eclipse.datacollection.api.SummaryTablesCache;
 import org.netxms.ui.eclipse.datacollection.views.SummaryTable;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;

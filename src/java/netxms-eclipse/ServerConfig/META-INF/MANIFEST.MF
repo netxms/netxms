@@ -15,6 +15,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.netxms.ui.eclipse.filemanager;bundle-version="2.0.1",
  org.netxms.ui.eclipse.nxsl;bundle-version="2.0.0",
  org.netxms.ui.eclipse.epp;bundle-version="2.0.0",
- org.netxms.ui.eclipse.objecttools;bundle-version="2.0.3"
+ org.netxms.ui.eclipse.objecttools;bundle-version="2.0.3",
+ org.netxms.ui.eclipse.datacollection;bundle-version="2.0.3"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

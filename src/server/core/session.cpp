@@ -9742,6 +9742,12 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 
          // Write DCI summary tables
          str.append(_T("\t<dciSummaryTables>\n"));
+         count = pRequest->getFieldAsUInt32(VID_NUM_SUMMARY_TABLES);
+         pdwList = (UINT32 *)malloc(sizeof(UINT32) * count);
+         pRequest->getFieldAsInt32Array(VID_SUMMARY_TABLE_LIST, count, pdwList);
+         for(i = 0; i < count; i++)
+            CreateSummaryTableExportRecord(pdwList[i], str);
+         safe_free(pdwList);
          str.append(_T("\t</dciSummaryTables>\n"));
 
 			// Close document
@@ -13077,7 +13083,7 @@ void ClientSession::getSummaryTables(UINT32 rqId)
    msg.setId(rqId);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,menu_path,title,flags FROM dci_summary_tables"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,menu_path,title,flags,guid FROM dci_summary_tables"));
    if (hResult != NULL)
    {
       TCHAR buffer[256];
@@ -13090,7 +13096,12 @@ void ClientSession::getSummaryTables(UINT32 rqId)
          msg.setField(varId++, DBGetField(hResult, i, 1, buffer, 256));
          msg.setField(varId++, DBGetField(hResult, i, 2, buffer, 256));
          msg.setField(varId++, (UINT32)DBGetFieldLong(hResult, i, 3));
-         varId += 6;
+
+         uuid_t guid;
+         DBGetFieldGUID(hResult, i, 4, guid);
+         msg.setField(varId++, guid, UUID_LENGTH);
+
+         varId += 5;
       }
       DBFreeResult(hResult);
    }
@@ -13119,7 +13130,7 @@ void ClientSession::getSummaryTableDetails(NXCPMessage *request)
 	{
       LONG id = (LONG)request->getFieldAsUInt32(VID_SUMMARY_TABLE_ID);
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT menu_path,title,node_filter,flags,columns FROM dci_summary_tables WHERE id=?"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT menu_path,title,node_filter,flags,columns,guid FROM dci_summary_tables WHERE id=?"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
@@ -13145,6 +13156,9 @@ void ClientSession::getSummaryTableDetails(NXCPMessage *request)
                   msg.setField(VID_COLUMNS, tmp);
                   free(tmp);
                }
+               uuid_t guid;
+               DBGetFieldGUID(hResult, 0, 5, guid);
+               msg.setField(VID_GUID, guid, UUID_LENGTH);
             }
             else
             {
