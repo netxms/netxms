@@ -391,7 +391,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		if (events->size() > 0)
 		{
 			ReloadEvents();
-			NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
+			NotifyClientSessions(NX_NOTIFY_RELOAD_EVENT_DB, 0);
 		}
 		DbgPrintf(5, _T("ImportConfig(): events imported"));
 	}

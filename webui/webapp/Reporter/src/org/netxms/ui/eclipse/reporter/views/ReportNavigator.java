@@ -16,7 +16,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -62,7 +61,7 @@ public class ReportNavigator extends ViewPart
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
-				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) && (n.getObject() instanceof DashboardRoot))
+				if ((n.getCode() == SessionNotification.OBJECT_CHANGED) && (n.getObject() instanceof DashboardRoot))
 				{
 					reportTree.getTree().getDisplay().asyncExec(new Runnable() {
 						@Override

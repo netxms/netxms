@@ -80,7 +80,7 @@ public class AlarmTest extends SessionTest
 			session.addListener(new SessionListener() {
 				public void notificationHandler(SessionNotification n)
 				{
-					assertEquals(NXCNotification.ALARM_TERMINATED, n.getCode());
+					assertEquals(SessionNotification.ALARM_TERMINATED, n.getCode());
 					assertEquals(alarmId.longValue(), ((Alarm)n.getObject()).getId());
 					success[0] = true;
 					s.release();

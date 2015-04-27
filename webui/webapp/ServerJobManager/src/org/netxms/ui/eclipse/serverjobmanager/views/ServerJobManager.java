@@ -43,7 +43,6 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -138,7 +137,7 @@ public class ServerJobManager extends ViewPart
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
-				if (n.getCode() != NXCNotification.JOB_CHANGE)
+				if (n.getCode() != SessionNotification.JOB_CHANGE)
 					return;
 				refreshJobList(false);
 			}

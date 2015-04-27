@@ -46,7 +46,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -182,7 +181,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 	{
 		switch(n.getCode())
 		{
-			case NXCNotification.EVENT_TEMPLATE_MODIFIED:
+			case SessionNotification.EVENT_TEMPLATE_MODIFIED:
 				viewer.getControl().getDisplay().asyncExec(new Runnable() {
 					@Override
 					public void run()
@@ -201,7 +200,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 					}
 				});
 				break;
-			case NXCNotification.EVENT_TEMPLATE_DELETED:
+			case SessionNotification.EVENT_TEMPLATE_DELETED:
 				viewer.getControl().getDisplay().asyncExec(new Runnable() {
 					@Override
 					public void run()

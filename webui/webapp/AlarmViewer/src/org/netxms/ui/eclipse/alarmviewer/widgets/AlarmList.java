@@ -54,7 +54,6 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -206,8 +205,8 @@ public class AlarmList extends CompositeWithMessageBar
          {
             switch(n.getCode())
             {
-               case NXCNotification.NEW_ALARM:
-               case NXCNotification.ALARM_CHANGED:
+               case SessionNotification.NEW_ALARM:
+               case SessionNotification.ALARM_CHANGED:
                   synchronized(alarmList)
                   {
                      alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
@@ -215,8 +214,8 @@ public class AlarmList extends CompositeWithMessageBar
                   }
                   refreshTimer.execute();
                   break;
-               case NXCNotification.ALARM_TERMINATED:
-               case NXCNotification.ALARM_DELETED:
+               case SessionNotification.ALARM_TERMINATED:
+               case SessionNotification.ALARM_DELETED:
                   synchronized(alarmList)
                   {
                      alarmList.remove(((Alarm)n.getObject()).getId());

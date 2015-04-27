@@ -27,7 +27,6 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.PlatformUI;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -161,7 +160,7 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 	@Override
 	public void notificationHandler(final SessionNotification n)
 	{
-		if (n.getCode() == NXCNotification.NEW_SYSLOG_RECORD)
+		if (n.getCode() == SessionNotification.NEW_SYSLOG_RECORD)
 		{
 			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 				@Override

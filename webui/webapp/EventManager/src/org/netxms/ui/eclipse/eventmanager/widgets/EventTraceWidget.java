@@ -26,7 +26,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewPart;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -161,7 +160,7 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	@Override
 	public void notificationHandler(final SessionNotification n)
 	{
-		if (n.getCode() == NXCNotification.NEW_EVENTLOG_RECORD)
+		if (n.getCode() == SessionNotification.NEW_EVENTLOG_RECORD)
 		{
 			runInUIThread(new Runnable() {
 				@Override

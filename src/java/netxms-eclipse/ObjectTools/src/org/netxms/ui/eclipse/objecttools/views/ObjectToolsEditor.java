@@ -52,7 +52,6 @@ import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.AccessListElement;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -557,10 +556,10 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	{
 		switch(n.getCode())
 		{
-			case NXCNotification.OBJECT_TOOLS_CHANGED:
+			case SessionNotification.OBJECT_TOOLS_CHANGED:
 				refreshToolList();
 				break;
-			case NXCNotification.OBJECT_TOOL_DELETED:
+			case SessionNotification.OBJECT_TOOL_DELETED:
 				new UIJob(getSite().getShell().getDisplay(), "Delete object tool from list") { //$NON-NLS-1$
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)

@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.datacollection.api;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -53,10 +52,10 @@ public class SummaryTablesCache
 			{
 				switch(n.getCode())
 				{
-					case NXCNotification.DCI_SUMMARY_TABLE_UPDATED:
+					case SessionNotification.DCI_SUMMARY_TABLE_UPDATED:
 						onTableChange((int)n.getSubCode());
 						break;
-					case NXCNotification.DCI_SUMMARY_TABLE_DELETED:
+					case SessionNotification.DCI_SUMMARY_TABLE_DELETED:
 						onTableDelete((int)n.getSubCode());
 						break;
 				}

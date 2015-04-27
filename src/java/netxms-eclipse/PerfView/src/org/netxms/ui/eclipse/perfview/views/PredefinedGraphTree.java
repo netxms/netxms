@@ -50,7 +50,6 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -453,7 +452,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
    {
       switch(n.getCode())
       {
-         case NXCNotification.PREDEFINED_GRAPHS_DELETED:
+         case SessionNotification.PREDEFINED_GRAPHS_DELETED:
             viewer.getControl().getDisplay().asyncExec(new Runnable() {
                @SuppressWarnings("unchecked")
                @Override
@@ -471,7 +470,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
                }
             });
             break;
-         case NXCNotification.PREDEFINED_GRAPHS_CHANGED:            
+         case SessionNotification.PREDEFINED_GRAPHS_CHANGED:            
             viewer.getControl().getDisplay().asyncExec(new Runnable() {
                @SuppressWarnings("unchecked")
                @Override

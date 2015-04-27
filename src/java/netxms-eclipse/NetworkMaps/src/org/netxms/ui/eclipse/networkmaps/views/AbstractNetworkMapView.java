@@ -84,7 +84,6 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -357,7 +356,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			@Override
 			public void notificationHandler(final SessionNotification n)
 			{
-				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
+				if (n.getCode() == SessionNotification.OBJECT_CHANGED)
 				{
 					viewer.getControl().getDisplay().asyncExec(new Runnable() {
 						@Override

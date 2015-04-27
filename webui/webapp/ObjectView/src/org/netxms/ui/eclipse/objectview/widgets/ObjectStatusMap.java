@@ -64,7 +64,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -113,9 +112,9 @@ public class ObjectStatusMap extends ScrolledComposite implements ISelectionProv
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
-				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
+				if (n.getCode() == SessionNotification.OBJECT_CHANGED)
 					onObjectChange((AbstractObject)n.getObject());
-				else if (n.getCode() == NXCNotification.OBJECT_DELETED)
+				else if (n.getCode() == SessionNotification.OBJECT_DELETED)
 					onObjectDelete(n.getSubCode());
 			}
 		};

@@ -41,7 +41,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -121,7 +120,7 @@ public class SummaryTableManager extends ViewPart
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
-				if (n.getCode() == NXCNotification.DCI_SUMMARY_TABLE_DELETED)
+				if (n.getCode() == SessionNotification.DCI_SUMMARY_TABLE_DELETED)
 				{
 					final int id = (int)n.getSubCode();
 					getSite().getShell().getDisplay().asyncExec(new Runnable() {
@@ -133,7 +132,7 @@ public class SummaryTableManager extends ViewPart
 						}
 					});
 				}
-				else if (n.getCode() == NXCNotification.DCI_SUMMARY_TABLE_UPDATED)
+				else if (n.getCode() == SessionNotification.DCI_SUMMARY_TABLE_UPDATED)
 				{
 					getSite().getShell().getDisplay().asyncExec(new Runnable() {
 						@Override

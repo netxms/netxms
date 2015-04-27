@@ -41,7 +41,6 @@ import org.eclipse.swt.widgets.TrayItem;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -99,11 +98,11 @@ public class AlarmNotifier
          @Override
          public void notificationHandler(SessionNotification n)
          {
-            if ((n.getCode() == NXCNotification.NEW_ALARM) || (n.getCode() == NXCNotification.ALARM_CHANGED))
+            if ((n.getCode() == SessionNotification.NEW_ALARM) || (n.getCode() == SessionNotification.ALARM_CHANGED))
             {
                processNewAlarm((Alarm)n.getObject());
             }
-            else if ((n.getCode() == NXCNotification.ALARM_TERMINATED) || (n.getCode() == NXCNotification.ALARM_DELETED))
+            else if ((n.getCode() == SessionNotification.ALARM_TERMINATED) || (n.getCode() == SessionNotification.ALARM_DELETED))
             {
                Integer state = alarmStates.get(((Alarm)n.getObject()).getId());
                if (state != null)

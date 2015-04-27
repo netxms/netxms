@@ -2022,7 +2022,6 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
                {
                   msg.setField(VID_RCC, RCC_SUCCESS);
                   ReloadEvents();
-                  NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
 
 					   NXCPMessage nmsg(pRequest);
 					   nmsg.setCode(CMD_EVENT_DB_UPDATE);
@@ -2083,7 +2082,6 @@ void ClientSession::deleteEventTemplate(NXCPMessage *pRequest)
       if (DBQuery(g_hCoreDB, szQuery))
       {
          DeleteEventTemplateFromList(dwEventCode);
-         NotifyClientSessions(NX_NOTIFY_EVENTDB_CHANGED, 0);
 
 			NXCPMessage nmsg;
 			nmsg.setCode(CMD_EVENT_DB_UPDATE);

@@ -23,7 +23,6 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -115,7 +114,7 @@ public class AvailabilityChartElement extends ElementWidget implements DisposeLi
 	@Override
 	public void notificationHandler(SessionNotification n)
 	{
-		if ((n.getCode() == NXCNotification.OBJECT_CHANGED) &&
+		if ((n.getCode() == SessionNotification.OBJECT_CHANGED) &&
 		    (n.getSubCode() == config.getObjectId()) &&
 		    !isDisposed())
 		{

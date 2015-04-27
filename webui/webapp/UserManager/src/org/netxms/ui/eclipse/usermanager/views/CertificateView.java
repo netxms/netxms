@@ -46,7 +46,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -410,7 +409,7 @@ public class CertificateView extends ViewPart implements SessionListener
 	@Override
 	public void notificationHandler(final SessionNotification n)
 	{
-	   if(n.getCode() == NXCNotification.DCI_CERTIFICATE_CHANGED)
+	   if(n.getCode() == SessionNotification.DCI_CERTIFICATE_CHANGED)
 	   {
 	      refreshCertificateList();
 	   }

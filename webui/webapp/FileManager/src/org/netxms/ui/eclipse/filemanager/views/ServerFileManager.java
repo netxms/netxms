@@ -47,7 +47,6 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
 import org.netxms.client.SessionListener;
@@ -430,7 +429,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
    @Override
    public void notificationHandler(final SessionNotification n)
    {
-      if (n.getCode() == NXCNotification.FILE_LIST_CHANGED)
+      if (n.getCode() == SessionNotification.FILE_LIST_CHANGED)
       {
          refreshFileList();
       }

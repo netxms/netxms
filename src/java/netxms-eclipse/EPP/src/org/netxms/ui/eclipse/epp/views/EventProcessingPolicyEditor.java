@@ -56,7 +56,6 @@ import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.SessionListener;
@@ -556,19 +555,19 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	{
 		switch(n.getCode())
 		{
-			case NXCNotification.ACTION_CREATED:
+			case SessionNotification.ACTION_CREATED:
 				synchronized(actions)
 				{
 					actions.put(n.getSubCode(), (ServerAction)n.getObject());
 				}
 				break;
-			case NXCNotification.ACTION_MODIFIED:
+			case SessionNotification.ACTION_MODIFIED:
 				synchronized(actions)
 				{
 					actions.put(n.getSubCode(), (ServerAction)n.getObject());
 				}
 				break;
-			case NXCNotification.ACTION_DELETED:
+			case SessionNotification.ACTION_DELETED:
 				synchronized(actions)
 				{
 					actions.remove(n.getSubCode());

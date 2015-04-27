@@ -404,7 +404,7 @@ public class NXCSession
                         }
                         if (msg.getMessageCode() == NXCPCodes.CMD_OBJECT_UPDATE)
                         {
-                           sendNotification(new NXCNotification(NXCNotification.OBJECT_CHANGED, obj.getObjectId(), obj));
+                           sendNotification(new SessionNotification(SessionNotification.OBJECT_CHANGED, obj.getObjectId(), obj));
                         }
                      }
                      else
@@ -414,7 +414,7 @@ public class NXCSession
                         {
                            objectList.remove(objectId);
                         }
-                        sendNotification(new NXCNotification(NXCNotification.OBJECT_DELETED, objectId));
+                        sendNotification(new SessionNotification(SessionNotification.OBJECT_DELETED, objectId));
                      }
                      break;
                   case NXCPCodes.CMD_OBJECT_LIST_END:
@@ -455,12 +455,12 @@ public class NXCSession
                      processUserDBUpdate(msg);
                      break;
                   case NXCPCodes.CMD_ALARM_UPDATE:
-                     sendNotification(new NXCNotification(
-                        msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE,
+                     sendNotification(new SessionNotification(
+                        msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE,
                         new Alarm(msg)));
                      break;
                   case NXCPCodes.CMD_JOB_CHANGE_NOTIFICATION:
-                     sendNotification(new NXCNotification(NXCNotification.JOB_CHANGE, new ServerJob(msg)));
+                     sendNotification(new SessionNotification(SessionNotification.JOB_CHANGE, new ServerJob(msg)));
                      break;
                   case NXCPCodes.CMD_FILE_DATA:
                      processFileData(msg);
@@ -506,7 +506,7 @@ public class NXCSession
                      break;
                   case NXCPCodes.CMD_GRAPH_UPDATE:
                      GraphSettings graph = new GraphSettings(msg, NXCPCodes.VID_GRAPH_LIST_BASE);
-                     sendNotification(new NXCNotification(NXCNotification.PREDEFINED_GRAPHS_CHANGED, graph.getId(), graph));
+                     sendNotification(new SessionNotification(SessionNotification.PREDEFINED_GRAPHS_CHANGED, graph.getId(), graph));
                      break;
                   default:
                      // Check subscriptions
@@ -529,7 +529,7 @@ public class NXCSession
                         if (msg.getMessageCode() >= 0x1000)
                         {
                            // Custom message
-                           sendNotification(new NXCNotification(NXCNotification.CUSTOM_MESSAGE, msg));
+                           sendNotification(new SessionNotification(SessionNotification.CUSTOM_MESSAGE, msg));
                         }
                         msgWaitQueue.putMessage(msg);
                      }
@@ -581,7 +581,7 @@ public class NXCSession
          for(int i = 0; i < count; i++)
          {
             Event event = new Event(msg, varId);
-            sendNotification(new NXCNotification(NXCNotification.NEW_EVENTLOG_RECORD, order, event));
+            sendNotification(new SessionNotification(SessionNotification.NEW_EVENTLOG_RECORD, order, event));
          }
       }
 
@@ -598,7 +598,7 @@ public class NXCSession
          for(int i = 0; i < count; i++)
          {
             SnmpTrapLogRecord trap = new SnmpTrapLogRecord(msg, varId);
-            sendNotification(new NXCNotification(NXCNotification.NEW_SNMP_TRAP, order, trap));
+            sendNotification(new SessionNotification(SessionNotification.NEW_SNMP_TRAP, order, trap));
          }
       }
 
@@ -615,7 +615,7 @@ public class NXCSession
          for(int i = 0; i < count; i++)
          {
             SyslogRecord record = new SyslogRecord(msg, varId);
-            sendNotification(new NXCNotification(NXCNotification.NEW_SYSLOG_RECORD, order, record));
+            sendNotification(new SessionNotification(SessionNotification.NEW_SYSLOG_RECORD, order, record));
          }
       }
 
@@ -628,13 +628,23 @@ public class NXCSession
       {
          int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE);
          if (shiftCode)
-            code += NXCNotification.NOTIFY_BASE;
+            code += SessionNotification.NOTIFY_BASE;
          long data = msg.getFieldAsInt64(NXCPCodes.VID_NOTIFICATION_DATA);
-         if(code == NXCNotification.ALARM_STATUS_FLOW_CHANGED)
+         
+         switch(code)
          {
-            strictAlarmStatusFlow = ((int)data != 0);
+            case SessionNotification.ALARM_STATUS_FLOW_CHANGED:
+               strictAlarmStatusFlow = ((int)data != 0);
+               break;
+            case SessionNotification.RELOAD_EVENT_DB:
+               if (eventTemplatesNeedSync)
+               {
+                  resyncEventTemplates();
+               }
+               break;
          }
-         sendNotification(new NXCNotification(code, data));
+         
+         sendNotification(new SessionNotification(code, data));
       }
       
       /**
@@ -718,15 +728,15 @@ public class NXCSession
          AbstractUserObject object = null;
          switch(code)
          {
-            case NXCNotification.USER_DB_OBJECT_CREATED:
-            case NXCNotification.USER_DB_OBJECT_MODIFIED:
+            case SessionNotification.USER_DB_OBJECT_CREATED:
+            case SessionNotification.USER_DB_OBJECT_MODIFIED:
                object = ((id & 0x80000000) != 0) ? new UserGroup(msg) : new User(msg);
                synchronized(userDB)
                {
                   userDB.put(id, object);
                }
                break;
-            case NXCNotification.USER_DB_OBJECT_DELETED:
+            case SessionNotification.USER_DB_OBJECT_DELETED:
                synchronized(userDB)
                {
                   object = userDB.get(id);
@@ -740,7 +750,7 @@ public class NXCSession
 
          // Send notification if changed object was found in local database copy
          // or added to it and notification code was known
-         if (object != null) sendNotification(new NXCNotification(NXCNotification.USER_DB_CHANGED, code, object));
+         if (object != null) sendNotification(new SessionNotification(SessionNotification.USER_DB_CHANGED, code, object));
       }
 
       /**
@@ -750,10 +760,10 @@ public class NXCSession
        */
       private void processTrapConfigChange(final NXCPMessage msg)
       {
-         int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
+         int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE;
          long id = msg.getFieldAsInt64(NXCPCodes.VID_TRAP_ID);
-         SnmpTrap trap = (code != NXCNotification.TRAP_CONFIGURATION_DELETED) ? new SnmpTrap(msg) : null;
-         sendNotification(new NXCNotification(code, id, trap));
+         SnmpTrap trap = (code != SessionNotification.TRAP_CONFIGURATION_DELETED) ? new SnmpTrap(msg) : null;
+         sendNotification(new SessionNotification(code, id, trap));
       }
 
       /**
@@ -763,9 +773,9 @@ public class NXCSession
        */
       private void processSituationChange(final NXCPMessage msg)
       {
-         int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.SITUATION_BASE;
+         int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.SITUATION_BASE;
          Situation s = new Situation(msg);
-         sendNotification(new NXCNotification(code, s.getId(), s));
+         sendNotification(new SessionNotification(code, s.getId(), s));
       }
 
       /**
@@ -775,10 +785,10 @@ public class NXCSession
        */
       private void processActionConfigChange(final NXCPMessage msg)
       {
-         int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
+         int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE;
          long id = msg.getFieldAsInt64(NXCPCodes.VID_ACTION_ID);
-         ServerAction action = (code != NXCNotification.ACTION_DELETED) ? new ServerAction(msg) : null;
-         sendNotification(new NXCNotification(code, id, action));
+         ServerAction action = (code != SessionNotification.ACTION_DELETED) ? new ServerAction(msg) : null;
+         sendNotification(new SessionNotification(code, id, action));
       }
 
       /**
@@ -788,14 +798,14 @@ public class NXCSession
        */
       private void processEventConfigChange(final NXCPMessage msg)
       {
-         int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + NXCNotification.NOTIFY_BASE;
+         int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE;
          long eventCode = msg.getFieldAsInt64(NXCPCodes.VID_EVENT_CODE);
-         EventTemplate et = (code != NXCNotification.EVENT_TEMPLATE_DELETED) ? new EventTemplate(msg) : null;
+         EventTemplate et = (code != SessionNotification.EVENT_TEMPLATE_DELETED) ? new EventTemplate(msg) : null;
          if (eventTemplatesNeedSync)
          {
             synchronized(eventTemplates)
             {
-               if (code == NXCNotification.EVENT_TEMPLATE_DELETED)
+               if (code == SessionNotification.EVENT_TEMPLATE_DELETED)
                {
                   eventTemplates.remove(eventCode);
                }
@@ -805,7 +815,7 @@ public class NXCSession
                }
             }
          }
-         sendNotification(new NXCNotification(code, eventCode, et));
+         sendNotification(new SessionNotification(code, eventCode, et));
       }
 
       /**
@@ -817,8 +827,8 @@ public class NXCSession
       {
          final UUID imageGuid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
          final int flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
-         sendNotification(new NXCNotification(NXCNotification.IMAGE_LIBRARY_CHANGED,
-            flags == 0 ? NXCNotification.IMAGE_UPDATED : NXCNotification.IMAGE_DELETED, imageGuid));
+         sendNotification(new SessionNotification(SessionNotification.IMAGE_LIBRARY_CHANGED,
+            flags == 0 ? SessionNotification.IMAGE_UPDATED : SessionNotification.IMAGE_DELETED, imageGuid));
       }
    }
 
@@ -932,10 +942,10 @@ public class NXCSession
                continue;
             }
             
-            if (n.getCode() == NXCNotification.STOP_PROCESSING_THREAD)
+            if (n.getCode() == SessionNotification.STOP_PROCESSING_THREAD)
                break;
             
-            if (n.getCode() == NXCNotification.UPDATE_LISTENER_LIST)
+            if (n.getCode() == SessionNotification.UPDATE_LISTENER_LIST)
             {
                synchronized(listeners)
                {
@@ -1232,7 +1242,7 @@ public class NXCSession
          changed = listeners.add(listener);
       }
       if (changed)
-         notificationQueue.offer(new NXCNotification(NXCNotification.UPDATE_LISTENER_LIST));
+         notificationQueue.offer(new SessionNotification(SessionNotification.UPDATE_LISTENER_LIST));
    }
 
    /**
@@ -1248,7 +1258,7 @@ public class NXCSession
          changed = listeners.remove(listener);
       }
       if (changed)
-         notificationQueue.offer(new NXCNotification(NXCNotification.UPDATE_LISTENER_LIST));
+         notificationQueue.offer(new SessionNotification(SessionNotification.UPDATE_LISTENER_LIST));
    }
 
    /**
@@ -1309,7 +1319,7 @@ public class NXCSession
     *
     * @param n Notification object
     */
-   protected void sendNotification(NXCNotification n)
+   protected void sendNotification(SessionNotification n)
    {
       if (!notificationQueue.offer(n))
       {
@@ -1911,7 +1921,7 @@ public class NXCSession
       
       // cause notification processing thread to stop
       notificationQueue.clear();
-      notificationQueue.offer(new NXCNotification(NXCNotification.STOP_PROCESSING_THREAD));
+      notificationQueue.offer(new SessionNotification(SessionNotification.STOP_PROCESSING_THREAD));
 
       if (recvThread != null)
       {
@@ -2228,7 +2238,7 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
       waitForSync(syncObjects, commandTimeout * 10);
       objectsSynchronized = true;
-      sendNotification(new NXCNotification(NXCNotification.OBJECT_SYNC_COMPLETED));
+      sendNotification(new SessionNotification(SessionNotification.OBJECT_SYNC_COMPLETED));
       subscribe(CHANNEL_OBJECTS);
    }
 
@@ -3941,7 +3951,7 @@ public class NXCSession
             removeOrphanedObjects(object);
          }
       }
-      sendNotification(new NXCNotification(NXCNotification.OBJECT_DELETED, objectId));
+      sendNotification(new SessionNotification(SessionNotification.OBJECT_DELETED, objectId));
    }
    
    /**
@@ -5164,6 +5174,27 @@ public class NXCSession
          }
          eventTemplatesNeedSync = true;
       }
+   }
+   
+   /**
+    * Re-synchronize event templaytes in background
+    */
+   private void resyncEventTemplates()
+   {
+      new Thread(new Runnable() {
+         @Override
+         public void run()
+         {
+            try
+            {
+               syncEventTemplates();
+            }
+            catch(Exception e)
+            {
+               Logger.error("NXCSession.resyncEventTemplates", "Exception in worker thread", e);
+            }
+         }
+      }).start();
    }
 
    /**
@@ -6447,7 +6478,7 @@ public class NXCSession
       }
       catch(Exception e)
       {
-         sendNotification(new NXCNotification(NXCNotification.CONNECTION_BROKEN));
+         sendNotification(new SessionNotification(SessionNotification.CONNECTION_BROKEN));
          return false;
       }
    }

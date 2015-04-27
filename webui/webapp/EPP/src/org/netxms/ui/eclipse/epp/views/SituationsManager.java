@@ -50,7 +50,6 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -422,9 +421,9 @@ public class SituationsManager extends ViewPart implements SessionListener
 	@Override
 	public void notificationHandler(final SessionNotification n)
 	{
-		if ((n.getCode() == NXCNotification.SITUATION_CREATED) ||
-		    (n.getCode() == NXCNotification.SITUATION_UPDATED) ||
-		    (n.getCode() == NXCNotification.SITUATION_DELETED))
+		if ((n.getCode() == SessionNotification.SITUATION_CREATED) ||
+		    (n.getCode() == SessionNotification.SITUATION_UPDATED) ||
+		    (n.getCode() == SessionNotification.SITUATION_DELETED))
 		{
 			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 				@Override
@@ -432,11 +431,11 @@ public class SituationsManager extends ViewPart implements SessionListener
 				{
 					switch(n.getCode())
 					{
-						case NXCNotification.SITUATION_CREATED:
-						case NXCNotification.SITUATION_UPDATED:
+						case SessionNotification.SITUATION_CREATED:
+						case SessionNotification.SITUATION_UPDATED:
 							situations.put(n.getSubCode(), (Situation)n.getObject());
 							break;
-						case NXCNotification.SITUATION_DELETED:
+						case SessionNotification.SITUATION_DELETED:
 							situations.remove(n.getSubCode());
 							break;
 					}

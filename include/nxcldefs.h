@@ -360,7 +360,7 @@ enum SessionState
  * Notification codes
  */
 #define NX_NOTIFY_SHUTDOWN                   1
-#define NX_NOTIFY_EVENTDB_CHANGED            2
+#define NX_NOTIFY_RELOAD_EVENT_DB            2
 #define NX_NOTIFY_ALARM_DELETED              3
 #define NX_NOTIFY_NEW_ALARM                  4
 #define NX_NOTIFY_ALARM_CHANGED              5
