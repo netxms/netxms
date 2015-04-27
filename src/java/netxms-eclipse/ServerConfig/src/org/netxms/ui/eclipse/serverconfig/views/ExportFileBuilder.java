@@ -546,7 +546,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          @Override
          public void linkActivated(HyperlinkEvent e)
          {
-            addScript();
+            addScripts();
          }
       });
       
@@ -1095,13 +1095,14 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
    /**
     * Add script to list
     */
-   private void addScript()
+   private void addScripts()
    {
       SelectScriptDialog dlg = new SelectScriptDialog(getSite().getShell());
+      dlg.setMultiSelection(true);
       if (dlg.open() == Window.OK)
       {
-         Script s = dlg.getScript();
-         scripts.put(s.getId(), s);
+         for(Script s : dlg.getSelection())
+            scripts.put(s.getId(), s);
          scriptViewer.setInput(scripts.values().toArray());
          setModified();
       }
