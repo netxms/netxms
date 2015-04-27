@@ -21,6 +21,7 @@ else
 nxagentd_LDFLAGS = -static
 endif
 endif
+BUILT_SOURCES = messages.h
 CLEANFILES = messages.c messages.h static_subagents.cpp
 
 messages.c: messages.h
