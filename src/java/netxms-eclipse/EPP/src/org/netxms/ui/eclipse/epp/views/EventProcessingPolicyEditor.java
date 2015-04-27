@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,6 +67,7 @@ import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.epp.Activator;
 import org.netxms.ui.eclipse.epp.Messages;
+import org.netxms.ui.eclipse.epp.views.helpers.RuleClipboard;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -100,7 +101,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private boolean modified = false;
 	private Set<RuleEditor> selection = new HashSet<RuleEditor>();
 	private int lastSelectedRule = -1;
-	private List<EventProcessingPolicyRule> clipboard = new ArrayList<EventProcessingPolicyRule>(0);
+	private RuleClipboard clipboard = new RuleClipboard();
 
 	private Font normalFont;
 	private Font boldFont;
@@ -1055,7 +1056,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
             }
       }
 		
-      for(EventProcessingPolicyRule rule : clipboard)
+      for(EventProcessingPolicyRule rule : clipboard.paste())
 		{
 			policy.insertRule(rule, position);
 
