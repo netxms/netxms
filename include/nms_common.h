@@ -73,7 +73,7 @@
 
 #include <netxms-version.h>
 
-#if HAVE_WIDEC
+#if HAVE_WIDEC_H
 #include <widec.h>
 #endif // HAVE_WIDEC
 

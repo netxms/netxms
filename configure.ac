@@ -1964,8 +1964,7 @@ fi
 # Check for UNICODE stuff
 #--------------------------------------------------------------------
 
-AC_CHECK_HEADERS([wchar.h wctype.h iconv.h])
-AC_CHECK_HEADER(widec.h,HAVE_WIDEC=yes,HAVE_WIDEC=no)
+AC_CHECK_HEADERS([wchar.h wctype.h iconv.h widec.h])
 AC_CHECK_TYPES([wchar_t, wint_t],,,[
 #if HAVE_WCHAR_H
 #include <wchar.h>
