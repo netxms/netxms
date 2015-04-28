@@ -4211,6 +4211,13 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
          return RCC_INVALID_IP_ADDR;
       }
 
+      //Check that there is no node with same IP as we try to change
+      if ((FindNodeByIP(m_zoneId, ipAddr) != NULL) ||
+       (FindSubnetByIP(m_zoneId, ipAddr) != NULL))
+      {
+         return RCC_ALREADY_EXIST;
+      }
+
       setPrimaryIPAddress(ipAddr);
 
 		// Update primary name if it is not set with the same message
@@ -4227,7 +4234,21 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    // Change primary host name
    if (pRequest->isFieldExist(VID_PRIMARY_NAME))
    {
-		pRequest->getFieldAsString(VID_PRIMARY_NAME, m_primaryName, MAX_DNS_NAME);
+      TCHAR primaryName[MAX_DNS_NAME];
+		pRequest->getFieldAsString(VID_PRIMARY_NAME, primaryName, MAX_DNS_NAME);
+
+      InetAddress ipAddr = InetAddress::resolveHostName(primaryName);
+      if(ipAddr.isValid())
+      {
+          //Check that there is no node with same IP as we try to change
+         if ((FindNodeByIP(m_zoneId, ipAddr) != NULL) ||
+          (FindSubnetByIP(m_zoneId, ipAddr) != NULL))
+         {
+            return RCC_ALREADY_EXIST;
+         }
+      }
+
+      _tcscpy(m_primaryName, primaryName);
 		m_dwDynamicFlags |= NDF_FORCE_CONFIGURATION_POLL | NDF_RECHECK_CAPABILITIES;
 	}
 
@@ -5729,12 +5750,12 @@ void Node::addHostConnections(LinkLayerNeighbors *nbs)
 		if (fdb->isSingleMacOnPort(ifLocal->getIfIndex(), macAddr))
 		{
          TCHAR buffer[64];
-         DbgPrintf(6, _T("Node::addHostConnections(%s [%d]): found single MAC %s on interface %s"), 
+         DbgPrintf(6, _T("Node::addHostConnections(%s [%d]): found single MAC %s on interface %s"),
             m_name, (int)m_id, MACToStr(macAddr, buffer), ifLocal->getName());
 			Interface *ifRemote = FindInterfaceByMAC(macAddr);
 			if (ifRemote != NULL)
 			{
-            DbgPrintf(6, _T("Node::addHostConnections(%s [%d]): found remote interface %s [%d]"), 
+            DbgPrintf(6, _T("Node::addHostConnections(%s [%d]): found remote interface %s [%d]"),
                m_name, (int)m_id, ifRemote->getName(), ifRemote->getId());
 				Node *peerNode = ifRemote->getParentNode();
 				if (peerNode != NULL)

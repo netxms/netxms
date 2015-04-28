@@ -2633,6 +2633,30 @@ void ClientSession::notify(UINT32 dwCode, UINT32 dwData)
    sendMessage(&msg);
 }
 
+static void SetNodesConflictString(NXCPMessage *msg, UINT32 zoneId, InetAddress ipAddr)
+{
+   if(ipAddr.isValid())
+   {
+      TCHAR value[512];
+
+      Node *sameNode = FindNodeByIP(zoneId, ipAddr);
+      Subnet *sameSubnet = FindSubnetByIP(zoneId, ipAddr);
+      if(sameNode != NULL)
+      {
+         _sntprintf(value, 512, _T("%s"), sameNode->getName());
+      }
+      else if (sameSubnet != NULL)
+      {
+         _sntprintf(value, 512, _T("%s"), sameSubnet->getName());
+      }
+      else
+      {
+         _tcscpy(value, _T(""));
+      }
+      msg->setField(VID_VALUE, value);
+   }
+}
+
 /**
  * Modify object
  */
@@ -2675,6 +2699,22 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
 				{
 					object->postModify();
 				}
+				else if (dwResult == RCC_ALREADY_EXIST)
+				{
+               //Add information about conflicting nodes
+               InetAddress ipAddr;
+
+               if (pRequest->isFieldExist(VID_IP_ADDRESS))
+               {
+                  ipAddr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
+               } else if (pRequest->isFieldExist(VID_PRIMARY_NAME))
+               {
+                  TCHAR primaryName[MAX_DNS_NAME];
+                  pRequest->getFieldAsString(VID_PRIMARY_NAME, primaryName, MAX_DNS_NAME);
+                  ipAddr = InetAddress::resolveHostName(primaryName);
+               }
+               SetNodesConflictString(&msg, ((Node*)object)->getZoneId(), ipAddr);
+            }
 			}
          msg.setField(VID_RCC, dwResult);
 
@@ -4729,26 +4769,8 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 							   if (iClass == OBJECT_NODE)
 							   {
                   		   msg.setField(VID_RCC, RCC_ALREADY_EXIST);
-
                   		   //Add to description IP of new created node and name of node with the same IP
-                  		   TCHAR value[512];
-                           TCHAR firstAddress[64];
-                           ipAddr.toString(firstAddress);
-                           Node *sameNode = FindNodeByIP(zoneId, ipAddr);
-                           Subnet *sameSubnet = FindSubnetByIP(zoneId, ipAddr);
-                  		   if(sameNode != NULL)
-                  		   {
-                              _sntprintf(value, 512, _T("%s, %s"), firstAddress, sameNode->getName());
-                  		   }
-                  		   else if (sameSubnet != NULL)
-                  		   {
-                              _sntprintf(value, 512, _T("%s, %s"), firstAddress, sameSubnet->getName());
-                  		   }
-                  		   else
-                  		   {
-                              _tcscpy(value, _T(""));
-                  		   }
-                  		   msg.setField(VID_VALUE, value);
+                           SetNodesConflictString(&msg, zoneId, ipAddr);
 							   }
 							   else if (iClass == OBJECT_ZONE)
 							   {
