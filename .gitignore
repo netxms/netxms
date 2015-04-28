@@ -197,6 +197,7 @@ target
 /src/tools/nxdevcfg/flags.cpp
 /src/tools/nxdevcfg/nxdevcfg
 /src/tools/nxencpasswd/nxencpasswd
+/src/tools/nxgenguid/nxgenguid
 /stamp-h1
 /status
 /tests/test-libnetxms/test-libnetxms
