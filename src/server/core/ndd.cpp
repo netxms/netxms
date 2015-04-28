@@ -174,6 +174,18 @@ NetworkDeviceDriver *FindDriverForNode(Node *node, SNMP_Transport *pTransport)
 		}
 	}
 
+   // Manual driver selection
+   const TCHAR *driverName = node->getCustomAttribute(_T("snmp.driver"));
+   if (driverName != NULL)
+   {
+      NetworkDeviceDriver *driver = FindDriverByName(driverName);
+      if (driver != NULL)
+      {
+         DbgPrintf(6, _T("FindDriverForNode(%s): device driver %s selected manually"), node->getName(), driver->getName());
+         return driver;
+      }
+   }
+
 	return s_defaultDriver;
 }
 
