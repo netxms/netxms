@@ -337,7 +337,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 	(
 		EVENT_INCORRECT_NETMASK, 'SYS_INCORRECT_NETMASK',
 		EVENT_SEVERITY_MINOR, 1,
-		'Invalid network mask %4 on interface "%3", should be %5',
+		'Invalid network mask /%4 on interface "%3", should be /%5',
 		'Generated when server detects invalid network mask on an interface.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
 		'   1) Interface object ID' CONCAT CRLF CONCAT
@@ -871,7 +871,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
       (
          EVENT_IF_MASK_CHANGED, 'SYS_IF_MASK_CHANGED',
          EVENT_SEVERITY_NORMAL, 1,
-         'Interface "%2" changed mask from %6 to %4 (IP Addr: %3/%4, IfIndex: %5)',
+         'Interface "%2" changed mask from /%6 to /%4 (IP Addr: %3/%4, IfIndex: %5)',
          'Generated when when network mask on interface is corrected.' CONCAT CRLF CONCAT
          'Parameters:' CONCAT CRLF CONCAT
          '   1) Interface object ID' CONCAT CRLF CONCAT
