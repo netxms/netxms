@@ -57,27 +57,35 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
 		'%m',6,'DB_CONN','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-	VALUES (13,'226de02d-9eb2-4ea1-a92c-2bdb1718f2ec',7944,'Show alarm when DCI status changes to DISABLED or UNSUPPORTED',
+	VALUES (13,'e3120a33-216e-e048-aa3b-4f1a9f3f10fc',7944,'Show alarm when NetXMS server network connection is lost',
+		'%m',4,'NET_CONN_LOST','',0,EVENT_ALARM_TIMEOUT,0,'');
+		
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+	VALUES (14,'bdc76d2e-967e-bf44-95a1-a229ef8b3ff4',7944,'Terminate NetXMS server network connection loss alarm when connection restored',
+		'%m',6,'NET_CONN_LOST','',0,EVENT_ALARM_TIMEOUT,0,'');
+		
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+	VALUES (15,'226de02d-9eb2-4ea1-a92c-2bdb1718f2ec',7944,'Show alarm when DCI status changes to DISABLED or UNSUPPORTED',
 		'%m',5,'DCI_STATUS_%i_%1','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-	VALUES (14,'02a21afe-c942-4953-8b5d-f463c597cff8',7944,'Terminate DCI status alarms when DCI status returns to ACTIVE',
+	VALUES (16,'02a21afe-c942-4953-8b5d-f463c597cff8',7944,'Terminate DCI status alarms when DCI status returns to ACTIVE',
 		'%m',6,'DCI_STATUS_%i_%1','',0,EVENT_ALARM_TIMEOUT,0,'');
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-	VALUES (15,'47fd5c32-b6c9-48b8-99fb-c389dde63bee',7944,'Generate alarm on threshold violation',
+	VALUES (17,'47fd5c32-b6c9-48b8-99fb-c389dde63bee',7944,'Generate alarm on threshold violation',
 		'%m',5,'DC_THRESHOLD_%i_%5','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-	VALUES (16,'dcdd6f93-2f9e-4c3e-97cb-95b6847f13ce',7944,'Terminate threshold violation alarms',
+	VALUES (18,'dcdd6f93-2f9e-4c3e-97cb-95b6847f13ce',7944,'Terminate threshold violation alarms',
 		'%m',6,'DC_THRESHOLD_%i_%3','',0,EVENT_ALARM_TIMEOUT,0,'');
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-	VALUES (17,'d3acabe8-717d-4ceb-bb7f-498d5af898f2',7944,'Generate alarm on table threshold violation',
+	VALUES (19,'d3acabe8-717d-4ceb-bb7f-498d5af898f2',7944,'Generate alarm on table threshold violation',
 		'%m',5,'DCTTHR_%i_%3_%5','',0,EVENT_ALARM_TIMEOUT,0,'');
 		
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-	VALUES (18,'8e26af4b-e478-44c9-9c12-0b049ccb6c3c',7944,'Terminate table threshold violation alarms',
+	VALUES (20,'8e26af4b-e478-44c9-9c12-0b049ccb6c3c',7944,'Terminate table threshold violation alarms',
 		'%m',6,'DCTTHR_%i_%3_%5','',0,EVENT_ALARM_TIMEOUT,0,'');
 
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
@@ -94,10 +102,12 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (9,EVENT_MAC_ADDR_CHAN
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (10,EVENT_SCRIPT_ERROR);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (11,EVENT_DB_CONNECTION_LOST);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (12,EVENT_DB_CONNECTION_RESTORED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (13,EVENT_DCI_DISABLED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (13,EVENT_DCI_UNSUPPORTED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (14,EVENT_DCI_ACTIVE);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (15,EVENT_THRESHOLD_REACHED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (16,EVENT_THRESHOLD_REARMED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (17,EVENT_TABLE_THRESHOLD_ACTIVATED);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (18,EVENT_TABLE_THRESHOLD_DEACTIVATED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (13,EVENT_NETWORK_CONNECTION_LOST);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (14,EVENT_NETWORK_CONNECTION_RESTORED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (15,EVENT_DCI_DISABLED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (15,EVENT_DCI_UNSUPPORTED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (16,EVENT_DCI_ACTIVE);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (17,EVENT_THRESHOLD_REACHED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (18,EVENT_THRESHOLD_REARMED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (19,EVENT_TABLE_THRESHOLD_ACTIVATED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (20,EVENT_TABLE_THRESHOLD_DEACTIVATED);

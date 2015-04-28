@@ -21,7 +21,7 @@
 	- Changed order of overview items to match Java console (node browser)
 	- Added MTU field in interface details (node browser)
 	- Updated support library
-- Fixed issues: #655, #657, #696, #701, #804, #811, #812, #813
+- Fixed issues: #655, #657, #696, #701, #724, #804, #811, #812, #813
 
 
 *
