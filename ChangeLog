@@ -4,6 +4,7 @@
 
 - Script export/import
 - Object tools export/import
+- DCI summary tables export/import
 - Template hierarchy preserved during export/import
 - MEGATEC protocol support in UPS subagent
 - Fixed broken WoL functionality
@@ -19,7 +20,7 @@
 	- Changed order of overview items to match Java console (node browser)
 	- Added MTU field in interface details (node browser)
 	- Updated support library
-- Fixed issues: #655, #657, #696, #804, #812, #813
+- Fixed issues: #655, #657, #696, #701, #804, #812, #813
 
 
 *

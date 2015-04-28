@@ -170,7 +170,9 @@ SummaryTable::SummaryTable(NXCPMessage *msg)
    m_id = 0;
    uuid_generate(m_guid);
    m_title[0] = 0;
+   m_menuPath[0] = 0;
    m_flags = msg->getFieldAsUInt32(VID_FLAGS);
+   m_filterSource = NULL;
    m_filter = NULL;
    m_aggregationFunction = (AggregationFunction)msg->getFieldAsInt16(VID_FUNCTION);
    m_periodStart = msg->getFieldAsTime(VID_TIME_FROM);
@@ -436,5 +438,126 @@ bool CreateSummaryTableExportRecord(INT32 id, String &xml)
       return false;
    t->createExportRecord(xml);
    delete t;
+   return true;
+}
+
+/**
+ * Build column list
+ */
+static TCHAR *BuildColumnList(ConfigEntry *root)
+{
+   if (root == NULL)
+      return _tcsdup(_T(""));
+
+   String s;
+   ObjectArray<ConfigEntry> *columns = root->getOrderedSubEntries(_T("column#*"));
+   for(int i = 0; i < columns->size(); i++)
+   {
+      if (i > 0)
+         s.append(_T("^~^"));
+
+      ConfigEntry *c = columns->get(i);
+      s.append(c->getSubEntryValue(_T("name")));
+      s.append(_T("^#^"));
+      s.append(c->getSubEntryValue(_T("dci")));
+      s.append(_T("^#^"));
+      s.append(c->getSubEntryValueAsUInt(_T("flags")));
+   }
+   delete columns;
+   return _tcsdup((const TCHAR *)s);
+}
+
+/**
+ * Import failure exit
+ */
+static bool ImportFailure(DB_HANDLE hdb, DB_STATEMENT hStmt)
+{
+   if (hStmt != NULL)
+      DBFreeStatement(hStmt);
+   DBRollback(hdb);
+   DBConnectionPoolReleaseConnection(hdb);
+   DbgPrintf(4, _T("ImportObjectTool: database failure"));
+   return false;
+}
+
+/**
+ * Import summary table
+ */
+bool ImportSummaryTable(ConfigEntry *config)
+{
+   const TCHAR *guid = config->getSubEntryValue(_T("guid"));
+   if (guid == NULL)
+   {
+      DbgPrintf(4, _T("ImportSummaryTable: missing GUID"));
+      return false;
+   }
+
+   uuid_t temp;
+   if (uuid_parse(guid, temp) == -1)
+   {
+      DbgPrintf(4, _T("ImportSummaryTable: GUID (%s) is invalid"), guid);
+      return false;
+   }
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   // Step 1: find existing tool ID by GUID
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id FROM dci_summary_tables WHERE guid=?"));
+   if (hStmt == NULL)
+   {
+      return ImportFailure(hdb, NULL);
+   }
+
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
+   DB_RESULT hResult = DBSelectPrepared(hStmt);
+   if (hResult == NULL)
+   {
+      return ImportFailure(hdb, hStmt);
+   }
+
+   UINT32 id;
+   if (DBGetNumRows(hResult) > 0)
+   {
+      id = DBGetFieldULong(hResult, 0, 0);
+   }
+   else
+   {
+      id = 0;
+   }
+   DBFreeResult(hResult);
+   DBFreeStatement(hStmt);
+
+   // Step 2: create or update summary table configuration record
+   if (id == 0)
+   {
+      id = CreateUniqueId(IDG_DCI_SUMMARY_TABLE);
+      hStmt = DBPrepare(hdb, _T("INSERT INTO dci_summary_tables (menu_path,title,node_filter,flags,columns,guid,id) VALUES (?,?,?,?,?,?,?)"));
+   }
+   else
+   {
+      hStmt = DBPrepare(hdb, _T("UPDATE dci_summary_tables SET menu_path=?,title=?,node_filter=?,flags=?,columns=?,guid=? WHERE id=?"));
+   }
+   if (hStmt == NULL)
+   {
+      return ImportFailure(hdb, NULL);
+   }
+
+   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("path")), DB_BIND_STATIC);
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("title")), DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, config->getSubEntryValue(_T("filter")), DB_BIND_STATIC);
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, config->getSubEntryValueAsUInt(_T("flags")));
+   DBBind(hStmt, 5, DB_SQLTYPE_TEXT, BuildColumnList(config->findEntry(_T("columns"))), DB_BIND_DYNAMIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, id);
+
+   if (!DBExecute(hStmt))
+   {
+      return ImportFailure(hdb, hStmt);
+   }
+
+   NotifyClientSessions(NX_NOTIFY_DCISUMTBL_CHANGED, (UINT32)id);
+
+   DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
    return true;
 }

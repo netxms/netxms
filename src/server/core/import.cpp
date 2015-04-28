@@ -368,8 +368,8 @@ NetObj *FindTemplateRoot(ConfigEntry *config)
  */
 UINT32 ImportConfig(Config *config, UINT32 flags)
 {
-	ObjectArray<ConfigEntry> *events = NULL, *traps = NULL, *templates = NULL, *rules = NULL, *scripts = NULL, *objectTools = NULL;
-	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot, *rulesRoot, *scriptsRoot, *objectToolsRoot;
+	ObjectArray<ConfigEntry> *events = NULL, *traps = NULL, *templates = NULL, *rules = NULL, *scripts = NULL, *objectTools = NULL, *summaryTables = NULL;
+	ConfigEntry *eventsRoot, *trapsRoot, *templatesRoot, *rulesRoot, *scriptsRoot, *objectToolsRoot, *summaryTablesRoot;
 	UINT32 rcc = RCC_SUCCESS;
 	int i;
 
@@ -465,6 +465,18 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		DbgPrintf(5, _T("ImportConfig(): object tools imported"));
 	}
 
+	// Import summary tables
+	summaryTablesRoot = config->getEntry(_T("/dciSummaryTables"));
+	if (summaryTablesRoot != NULL)
+	{
+		summaryTables = summaryTablesRoot->getSubEntries(_T("table#*"));
+		for(i = 0; i < summaryTables->size(); i++)
+		{
+         ImportSummaryTable(summaryTables->get(i));
+		}
+		DbgPrintf(5, _T("ImportConfig(): DCI summary tables imported"));
+	}
+
 stop_processing:
 	delete events;
 	delete traps;
@@ -472,6 +484,7 @@ stop_processing:
    delete rules;
    delete scripts;
    delete objectTools;
+   delete summaryTables;
 
 	DbgPrintf(4, _T("ImportConfig() finished, rcc = %d"), rcc);
 	return rcc;

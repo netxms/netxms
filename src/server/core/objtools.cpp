@@ -797,13 +797,13 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
 /**
  * Import failure exit
  */
-static bool ImportFailure(DB_HANDLE hdb, DB_STATEMENT hStmt, const TCHAR *error)
+static bool ImportFailure(DB_HANDLE hdb, DB_STATEMENT hStmt)
 {
    if (hStmt != NULL)
       DBFreeStatement(hStmt);
    DBRollback(hdb);
    DBConnectionPoolReleaseConnection(hdb);
-   DbgPrintf(4, _T("ImportObjectTool: %s"), error);
+   DbgPrintf(4, _T("ImportObjectTool: database failure"));
    return false;
 }
 
@@ -832,14 +832,14 @@ bool ImportObjectTool(ConfigEntry *config)
    DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT tool_id FROM object_tools WHERE guid=?"));
    if (hStmt == NULL)
    {
-      return ImportFailure(hdb, NULL, _T("DB failure"));
+      return ImportFailure(hdb, NULL);
    }
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid, DB_BIND_STATIC);
    DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult == NULL)
    {
-      return ImportFailure(hdb, hStmt, _T("DB failure"));
+      return ImportFailure(hdb, hStmt);
    }
 
    UINT32 toolId;
@@ -857,7 +857,7 @@ bool ImportObjectTool(ConfigEntry *config)
    // Step 2: create or update tool record
 	if (!DBBegin(hdb))
 	{
-      return ImportFailure(hdb, NULL, _T("DB failure"));
+      return ImportFailure(hdb, NULL);
 	}
 
    if (toolId != 0)
@@ -879,7 +879,7 @@ bool ImportObjectTool(ConfigEntry *config)
 
    if (hStmt == NULL)
 	{
-      return ImportFailure(hdb, NULL, _T("DB failure"));
+      return ImportFailure(hdb, NULL);
 	}
 
    DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, config->getSubEntryValue(_T("name")), DB_BIND_STATIC);
@@ -904,36 +904,36 @@ bool ImportObjectTool(ConfigEntry *config)
    }
 
    if (!DBExecute(hStmt))
-      return ImportFailure(hdb, hStmt, _T("DB failure"));
+      return ImportFailure(hdb, hStmt);
    DBFreeStatement(hStmt);
 
    // Update ACL
    hStmt = DBPrepare(hdb, _T("DELETE FROM object_tools_acl WHERE tool_id=?"));
    if (hStmt == NULL)
-      return ImportFailure(hdb, hStmt, _T("DB failure"));
+      return ImportFailure(hdb, hStmt);
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
    if (!DBExecute(hStmt))
-      return ImportFailure(hdb, hStmt, _T("DB failure"));
+      return ImportFailure(hdb, hStmt);
    DBFreeStatement(hStmt);
 
    // Default ACL for imported tools - accessible by everyone
    hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_acl (tool_id,user_id) VALUES (?,?)"));
    if (hStmt == NULL)
-      return ImportFailure(hdb, hStmt, _T("DB failure"));
+      return ImportFailure(hdb, hStmt);
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, GROUP_EVERYONE);
    if (!DBExecute(hStmt))
-      return ImportFailure(hdb, hStmt, _T("DB failure"));
+      return ImportFailure(hdb, hStmt);
    DBFreeStatement(hStmt);
 
    // Update columns configuration
    hStmt = DBPrepare(hdb, _T("DELETE FROM object_tools_table_columns WHERE tool_id=?"));
    if (hStmt == NULL)
-      return ImportFailure(hdb, hStmt, _T("DB failure"));
+      return ImportFailure(hdb, hStmt);
    DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
 
    if (!DBExecute(hStmt))
-      return ImportFailure(hdb, hStmt, _T("DB failure"));
+      return ImportFailure(hdb, hStmt);
    DBFreeStatement(hStmt);
 
    int toolType = config->getSubEntryValueAsInt(_T("type"));
@@ -950,7 +950,7 @@ bool ImportObjectTool(ConfigEntry *config)
                                    _T("col_number,col_name,col_oid,col_format,col_substr) ")
                                    _T("VALUES (?,?,?,?,?,?)"));
             if (hStmt == NULL)
-               return ImportFailure(hdb, hStmt, _T("DB failure"));
+               return ImportFailure(hdb, hStmt);
 
             for(int i = 0; i < columns->size(); i++)
             {
@@ -965,7 +965,7 @@ bool ImportObjectTool(ConfigEntry *config)
                if (!DBExecute(hStmt))
                {
                   delete columns;
-                  return ImportFailure(hdb, hStmt, _T("DB failure"));
+                  return ImportFailure(hdb, hStmt);
                }
             }
             DBFreeStatement(hStmt);
