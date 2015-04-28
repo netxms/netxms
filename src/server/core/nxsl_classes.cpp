@@ -837,6 +837,131 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 }
 
 /**
+ * Alarm::acknowledge() method
+ */
+NXSL_METHOD_DEFINITION(acknowledge)
+{
+   NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
+   *result = new NXSL_Value(AckAlarmById(alarm->dwAlarmId, NULL, false, 0));
+   return 0;
+}
+
+/**
+ * Alarm::resolve() method
+ */
+NXSL_METHOD_DEFINITION(resolve)
+{
+   NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
+   *result = new NXSL_Value(ResolveAlarmById(alarm->dwAlarmId, NULL, false));
+   return 0;
+}
+
+/**
+ * Alarm::terminate() method
+ */
+NXSL_METHOD_DEFINITION(terminate)
+{
+   NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
+   *result = new NXSL_Value(ResolveAlarmById(alarm->dwAlarmId, NULL, true));
+   return 0;
+}
+
+/**
+ * NXSL class Alarm: constructor
+ */
+NXSL_AlarmClass::NXSL_AlarmClass() : NXSL_Class()
+{
+   _tcscpy(m_name, _T("Alarm"));
+
+   NXSL_REGISTER_METHOD(acknowledge, 0);
+   NXSL_REGISTER_METHOD(resolve, 0);
+   NXSL_REGISTER_METHOD(terminate, 0);
+}
+
+/**
+ * NXSL object destructor
+ */
+void NXSL_AlarmClass::onObjectDelete(NXSL_Object *object)
+{
+   free(object->getData());
+}
+
+/**
+ * NXSL class Alarm: get attribute
+ */
+NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+{
+   NXSL_Value *value = NULL;
+   NXC_ALARM *alarm = (NXC_ALARM *)pObject->getData();
+
+   if (!_tcscmp(pszAttr, _T("ackBy")))
+   {
+      value = new NXSL_Value(alarm->dwAckByUser);
+   }
+   else if (!_tcscmp(pszAttr, _T("creationTime")))
+   {
+      value = new NXSL_Value(alarm->dwCreationTime);
+   }
+   else if (!_tcscmp(pszAttr, _T("eventCode")))
+   {
+      value = new NXSL_Value(alarm->dwSourceEventCode);
+   }
+   else if (!_tcscmp(pszAttr, _T("eventId")))
+   {
+      value = new NXSL_Value(alarm->qwSourceEventId);
+   }
+   else if (!_tcscmp(pszAttr, _T("helpdeskReference")))
+   {
+      value = new NXSL_Value(alarm->szHelpDeskRef);
+   }
+   else if (!_tcscmp(pszAttr, _T("helpdeskState")))
+   {
+      value = new NXSL_Value(alarm->nHelpDeskState);
+   }
+   else if (!_tcscmp(pszAttr, _T("id")))
+   {
+      value = new NXSL_Value(alarm->dwAlarmId);
+   }
+   else if (!_tcscmp(pszAttr, _T("key")))
+   {
+      value = new NXSL_Value(alarm->szKey);
+   }
+   else if (!_tcscmp(pszAttr, _T("lastChangeTime")))
+   {
+      value = new NXSL_Value(alarm->dwLastChangeTime);
+   }
+   else if (!_tcscmp(pszAttr, _T("message")))
+   {
+      value = new NXSL_Value(alarm->szMessage);
+   }
+   else if (!_tcscmp(pszAttr, _T("originalSeverity")))
+   {
+      value = new NXSL_Value(alarm->nOriginalSeverity);
+   }
+   else if (!_tcscmp(pszAttr, _T("repeatCount")))
+   {
+      value = new NXSL_Value(alarm->dwRepeatCount);
+   }
+   else if (!_tcscmp(pszAttr, _T("resolvedBy")))
+   {
+      value = new NXSL_Value(alarm->dwResolvedByUser);
+   }
+   else if (!_tcscmp(pszAttr, _T("severity")))
+   {
+      value = new NXSL_Value(alarm->nCurrentSeverity);
+   }
+   else if (!_tcscmp(pszAttr, _T("sourceObject")))
+   {
+      value = new NXSL_Value(alarm->dwSourceObject);
+   }
+   else if (!_tcscmp(pszAttr, _T("state")))
+   {
+      value = new NXSL_Value(alarm->nState);
+   }
+   return value;
+}
+
+/**
  * Implementation of "DCI" class: constructor
  */
 NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
@@ -996,6 +1121,7 @@ void NXSL_SNMPVarBindClass::onObjectDelete(NXSL_Object *object)
 /**
  * Class objects
  */
+NXSL_AlarmClass g_nxslAlarmClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_InterfaceClass g_nxslInterfaceClass;

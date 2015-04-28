@@ -387,16 +387,19 @@ static UINT32 DoAck(NXC_ALARM *alarm, ClientSession *session, bool sticky, UINT3
    if ((alarm->nState & ALARM_STATE_MASK) != ALARM_STATE_OUTSTANDING)
       return RCC_ALARM_NOT_OUTSTANDING;
 
-   WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), alarm->dwSourceObject,
-      _T("Acknowledged alarm %d (%s) on object %s"), alarm->dwAlarmId, alarm->szMessage,
-      GetObjectName(alarm->dwSourceObject, _T("")));
+   if (session != NULL)
+   {
+      WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), alarm->dwSourceObject,
+         _T("Acknowledged alarm %d (%s) on object %s"), alarm->dwAlarmId, alarm->szMessage,
+         GetObjectName(alarm->dwSourceObject, _T("")));
+   }
 
    UINT32 endTime = acknowledgmentActionTime != 0 ? (UINT32)time(NULL) + acknowledgmentActionTime : 0;
    alarm->ackTimeout = endTime;
    alarm->nState = ALARM_STATE_ACKNOWLEDGED;
 	if (sticky)
       alarm->nState |= ALARM_STATE_STICKY;
-   alarm->dwAckByUser = session->getUserId();
+   alarm->dwAckByUser = (session != NULL) ? session->getUserId() : 0;
    alarm->dwLastChangeTime = (UINT32)time(NULL);
    NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
    UpdateAlarmInDB(alarm);
@@ -1351,6 +1354,60 @@ ObjectArray<NXC_ALARM> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId)
    }
    MutexUnlock(m_mutex);
    return result;
+}
+
+/**
+ * NXSL extension: Find alarm by ID
+ */
+int F_FindAlarmById(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   UINT32 alarmId = argv[0]->getValueAsUInt32();
+   NXC_ALARM *alarm = NULL;
+
+   MutexLock(m_mutex);
+   for(int i = 0; i < m_alarmList->size(); i++)
+   {
+      NXC_ALARM *a = m_alarmList->get(i);
+      if (a->dwAlarmId == alarmId)
+      {
+         alarm = (NXC_ALARM *)nx_memdup(a, sizeof(NXC_ALARM));
+         break;
+      }
+   }
+   MutexUnlock(m_mutex);
+
+   *result = (alarm != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, alarm)) : new NXSL_Value();
+   return 0;
+}
+
+/**
+ * NXSL extension: Find alarm by key
+ */
+int F_FindAlarmByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   const TCHAR *key = argv[0]->getValueAsCString();
+   NXC_ALARM *alarm = NULL;
+
+   MutexLock(m_mutex);
+   for(int i = 0; i < m_alarmList->size(); i++)
+   {
+      NXC_ALARM *a = m_alarmList->get(i);
+      if (!_tcscmp(a->szKey, key))
+      {
+         alarm = (NXC_ALARM *)nx_memdup(a, sizeof(NXC_ALARM));
+         break;
+      }
+   }
+   MutexUnlock(m_mutex);
+
+   *result = (alarm != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslAlarmClass, alarm)) : new NXSL_Value();
+   return 0;
 }
 
 /**

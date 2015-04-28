@@ -31,6 +31,9 @@ extern NXSL_ExtFunction g_nxslSituationFunctions[];
 void RegisterDCIFunctions(NXSL_Environment *pEnv);
 int F_map(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 
+int F_FindAlarmById(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_FindAlarmByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+
 /**
  * Get node's custom attribute
  * First argument is a node object, and second is an attribute name
@@ -1339,6 +1342,8 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { _T("GetNodeTemplates"), F_GetNodeTemplates, 1 },
    { _T("GetObjectChildren"), F_GetObjectChildren, 1 },
    { _T("GetObjectParents"), F_GetObjectParents, 1 },
+	{ _T("FindAlarmById"), F_FindAlarmById, 1 },
+	{ _T("FindAlarmByKey"), F_FindAlarmByKey, 1 },
 	{ _T("FindNodeObject"), F_FindNodeObject, 2 },
 	{ _T("FindObject"), F_FindObject, -1 },
    { _T("ManageObject"), F_ManageObject, 1 },
