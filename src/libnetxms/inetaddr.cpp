@@ -174,7 +174,7 @@ InetAddress InetAddress::getSubnetAddress() const
    InetAddress addr(*this);
    if ((m_family == AF_INET) && (m_maskBits < 32))
    {
-      addr.m_addr.v4 = m_addr.v4 & (0xFFFFFFFF << (32 - m_maskBits));
+      addr.m_addr.v4 = (m_maskBits == 0) ? 0 : (m_addr.v4 & (0xFFFFFFFF << (32 - m_maskBits)));
    }
    else if ((m_family == AF_INET6) && (m_maskBits < 128))
    {

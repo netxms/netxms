@@ -5912,7 +5912,7 @@ void Node::checkSubnetBinding()
    DbgPrintf(5, _T("Checking subnet bindings for node %s [%d]"), m_name, m_id);
    for(int i = 0; i < addrList.size(); i++)
    {
-      const InetAddress& addr = addrList.get(i);
+      InetAddress addr = addrList.get(i);
       DbgPrintf(5, _T("Node::checkSubnetBinding(%s [%d]): checking address %s/%d"), m_name, m_id, addr.toString(buffer), addr.getMaskBits());
 
 	   Interface *iface = findInterfaceByIP(addr);
@@ -5935,7 +5935,7 @@ void Node::checkSubnetBinding()
 		   }
 		   else
 		   {
-            if (pSubnet->isSyntheticMask() && !iface->isSyntheticMask())
+            if (pSubnet->isSyntheticMask() && !iface->isSyntheticMask() && (addr.getMaskBits() > 0))
 			   {
 				   DbgPrintf(4, _T("Setting correct netmask for subnet %s [%d] from node %s [%d]"),
 							    pSubnet->getName(), pSubnet->getId(), m_name, m_id);
@@ -5971,7 +5971,16 @@ void Node::checkSubnetBinding()
 		   // Ignore mask 255.255.255.254 - it's invalid
          if (addr.getHostBits() >= 2)
          {
-            pSubnet = createSubnet(addr, false);
+            if (addr.getMaskBits() > 0)
+            {
+               pSubnet = createSubnet(addr, false);
+            }
+            else
+            {
+               DbgPrintf(6, _T("Zero subnet mask on interface %s [%d]"), iface->getName(), iface->getIfIndex());
+               addr.setMaskBits((addr.getFamily() == AF_INET) ? 24 : 64);
+               pSubnet = createSubnet(addr, true);
+            }
 			   pSubnet->addNode(this);
          }
          else
