@@ -10,7 +10,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = reconf configure netxms.sln README.HPUX
-SUBDIRS = m4 contrib src doc tools
+SUBDIRS = m4 contrib src doc tools debian
 SUBDIRS += @TOP_LEVEL_MODULES@
 
 install-exec-hook:

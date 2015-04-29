@@ -1,0 +1,18 @@
+netxms (2.0-M4-1) unstable; urgency=low
+
+  * MEGATEC protocol support in UPS subagent
+  * Template hierarchy preserved during export/import
+  * Script export/import
+  * Fixed broken WoL functionality
+  * Fixed broken PING subagent
+  * Fixed database upgrade issues on MS SQL
+  * IPv6 support in PING subagent
+  * Fixed issues: #655, #657, #804
+
+ -- Alex Kirhenshtein <alk@netxms.org>  Wed, 29 Apr 2015 16:12:46 +0300
+
+netxms (2.0-M3-1) unstable; urgency=low
+
+  * Initial release
+
+ -- Alex Kirhenshtein <alk@netxms.org>  Mon, 15 Apr 2015 02:43:51 +0300
