@@ -100,13 +100,15 @@ public class ConnectTask extends Thread
 					WindowManager wm = (WindowManager)service.getSystemService(Context.WINDOW_SERVICE);
 					wm.getDefaultDisplay().getMetrics(metrics);
 
-					session = new NXCSession(server, port, login, password, encrypt);
-					session.setConnClientInfo("nxmc-android/" + NXCommon.VERSION + "." + service.getString(R.string.build_number));
+					session = new NXCSession(server, port, encrypt);
+					session.setClientInfo("nxmc-android/" + NXCommon.VERSION + "." + service.getString(R.string.build_number));
 					session.setClientType((metrics.densityDpi >= DisplayMetrics.DENSITY_HIGH) ? NXCSession.TABLET_CLIENT : NXCSession.MOBILE_CLIENT);
 					try
 					{
 						Log.d(TAG, "calling session.connect()");
 						session.connect();
+						Log.d(TAG, "calling session.login()");
+						session.login(login, password);
 						Log.d(TAG, "calling session.subscribe()");
 						session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS);
 						service.onConnect(session, session.getAlarms());
