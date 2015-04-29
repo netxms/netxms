@@ -177,7 +177,6 @@ void CalculateItemValueDiff(ItemValue &result, int nDataType, ItemValue &value1,
          result = (double)value1 - (double)value2;
          break;
       case DCI_DT_STRING:
-_tprintf(_T("\n\n\n**** DIFF: \"%s\" == \"%s\"\n\n\n"), (const TCHAR *)value1, (const TCHAR *)value2);
          result = (INT32)((_tcscmp((const TCHAR *)value1, (const TCHAR *)value2) == 0) ? 0 : 1);
          break;
       default:
