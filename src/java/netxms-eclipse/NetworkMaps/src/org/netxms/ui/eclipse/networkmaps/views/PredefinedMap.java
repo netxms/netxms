@@ -563,6 +563,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 				final NetworkMapObject mapObject = new NetworkMapObject(mapPage.createElementId(), object.getObjectId());
 				if (location != null)
 					mapObject.setLocation(location.x, location.y);
+				else
+				   mapObject.setLocation(40, 40);
 				mapPage.addElement(mapObject);
 				added++;
 			}
