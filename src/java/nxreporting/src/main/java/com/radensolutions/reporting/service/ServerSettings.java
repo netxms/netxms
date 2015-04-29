@@ -54,7 +54,7 @@ public class ServerSettings {
         }
 
         String driver = netxmsConfig.getString("DBDriver");
-        String server = netxmsConfig.getString("DBServer");
+        String server = netxmsConfig.getString("DBServer", "");
         String name = netxmsConfig.getString("DBName");
         String login = netxmsConfig.getString("DBLogin");
         String password = netxmsConfig.getString("DBPassword");
@@ -270,6 +270,18 @@ public class ServerSettings {
 
         public String getQuartzDriverDelegate() {
             return quartzDriverDelegate;
+        }
+
+        @Override
+        public String toString() {
+            return "DataSourceConfig{" +
+                    "dialect='" + dialect + '\'' +
+                    ", driver='" + driver + '\'' +
+                    ", url='" + url + '\'' +
+                    ", username='" + username + '\'' +
+                    ", password='" + password + '\'' +
+                    ", quartzDriverDelegate='" + quartzDriverDelegate + '\'' +
+                    '}';
         }
     }
 }

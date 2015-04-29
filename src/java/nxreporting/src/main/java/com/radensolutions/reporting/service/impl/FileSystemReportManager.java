@@ -10,6 +10,7 @@ import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
 import net.sf.jasperreports.engine.export.JRXlsExporter;
 import net.sf.jasperreports.engine.export.JRXlsExporterParameter;
+import net.sf.jasperreports.engine.query.QueryExecuterFactory;
 import net.sf.jasperreports.engine.util.JRLoader;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.reporting.ReportRenderFormat;
@@ -321,6 +322,8 @@ public class FileSystemReportManager implements ReportManager
             String subrepoDirectory = reportDirectory.getPath() + File.separatorChar;
             localParameters.put(SUBREPORT_DIR_KEY, subrepoDirectory);
 
+            localParameters.put(JRParameter.REPORT_CLASS_LOADER, new URLClassLoader(new URL[]{}, getClass().getClassLoader()));
+
             prepareParameters(parameters, report, localParameters);
 
             ThreadLocalReportInfo.setReportLocation(subrepoDirectory);
@@ -328,8 +331,10 @@ public class FileSystemReportManager implements ReportManager
             final File outputDirectory = getOutputDirectory(reportId);
             final String outputFile = new File(outputDirectory, jobId.toString() + ".jrprint").getPath();
             try {
-                JasperFillManager.fillReportToFile(report, outputFile, localParameters, connection);
-//                JasperFillManager.fillReport(report, localParameters, connection);
+                DefaultJasperReportsContext reportsContext = DefaultJasperReportsContext.getInstance();
+                reportsContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "com.radensolutions.reporting.custom.NXCLQueryExecutorFactory");
+                JasperFillManager manager = JasperFillManager.getInstance(reportsContext);
+                manager.fillToFile(report, outputFile, localParameters, connection);
                 reportResultService.save(new ReportResult(new Date(), reportId, jobId, userId));
 
                 ret = true;

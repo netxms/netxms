@@ -1,6 +1,7 @@
 package com.radensolutions.reporting.custom;
 
 import com.radensolutions.reporting.service.ServerSettings;
+import com.radensolutions.reporting.service.impl.FileSystemReportManager;
 import net.sf.jasperreports.engine.JRDataset;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRValueParameter;
@@ -30,6 +31,8 @@ public class NXCLQueryExecutorFactory extends AbstractQueryExecuterFactory imple
 
     @Override
     public JRQueryExecuter createQueryExecuter(JasperReportsContext jasperReportsContext, JRDataset dataset, Map<String, ? extends JRValueParameter> parameters) throws JRException {
+        System.out.println(getClass().getClassLoader());
+        System.out.println("### " + parameters.get(FileSystemReportManager.SUBREPORT_DIR_KEY));
         NXCLQueryExecutor queryExecutor = new NXCLQueryExecutor(jasperReportsContext, dataset, parameters);
         queryExecutor.setSettings(applicationContext.getBean(ServerSettings.class));
         return queryExecutor;
