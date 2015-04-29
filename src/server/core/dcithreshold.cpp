@@ -229,6 +229,24 @@ BOOL Threshold::saveToDB(DB_HANDLE hdb, UINT32 dwIndex)
  */
 ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues, ItemValue &fvalue, NetObj *target, DCItem *dci)
 {
+   // check if there is enough cached data
+   switch(m_function)
+   {
+      case F_DIFF:
+         if (ppPrevValues[0]->getTimeStamp() == 1) // Timestamp 1 means placeholder value inserted by cache loader
+            return m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE;
+         break;
+      case F_AVERAGE:
+      case F_SUM:
+      case F_DEVIATION:
+         for(int i = 0; i < m_sampleCount - 1; i++)
+            if (ppPrevValues[i]->getTimeStamp() == 1) // Timestamp 1 means placeholder value inserted by cache loader
+               return m_isReached ? ALREADY_ACTIVE : ALREADY_INACTIVE;
+         break;
+      default:
+         break;
+   }
+
    BOOL bMatch = FALSE;
    int iDataType = m_dataType;
 
@@ -556,21 +574,15 @@ void Threshold::updateFromMessage(NXCPMessage *msg, UINT32 baseId)
 { \
    vtype var; \
    var = (vtype)lastValue; \
-   for(i = 1, nValueCount = 1; i < m_sampleCount; i++) \
+   for(int i = 1; i < m_sampleCount; i++) \
    { \
-      if (ppPrevValues[i - 1]->getTimeStamp() != 1) \
-      { \
-         var += (vtype)(*ppPrevValues[i - 1]); \
-         nValueCount++; \
-      } \
+      var += (vtype)(*ppPrevValues[i - 1]); \
    } \
-   *pResult = var / (vtype)nValueCount; \
+   *pResult = var / (vtype)m_sampleCount; \
 }
 
 void Threshold::calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
 {
-   int i, nValueCount;
-
    switch(m_dataType)
    {
       case DCI_DT_INT:
@@ -597,24 +609,24 @@ void Threshold::calculateAverageValue(ItemValue *pResult, ItemValue &lastValue, 
 }
 
 /**
- * Calculate sum value for parameter
+ * Calculate sum value for values of given type
  */
-void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
-{
 #define CALC_SUM_VALUE(vtype) \
 { \
    vtype var; \
    var = (vtype)lastValue; \
-   for(i = 1; i < m_sampleCount; i++) \
+   for(int i = 1; i < m_sampleCount; i++) \
    { \
-      if (ppPrevValues[i - 1]->getTimeStamp() != 1) \
-         var += (vtype)(*ppPrevValues[i - 1]); \
+      var += (vtype)(*ppPrevValues[i - 1]); \
    } \
    *pResult = var; \
 }
 
-   int i;
-
+/**
+ * Calculate sum value for parameter
+ */
+void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
+{
    switch(m_dataType)
    {
       case DCI_DT_INT:
@@ -640,39 +652,32 @@ void Threshold::calculateSumValue(ItemValue *pResult, ItemValue &lastValue, Item
    }
 }
 
-
-//
-// Calculate mean absolute deviation for parameter
-//
-
+/**
+ * Calculate mean absolute deviation for values of given type
+ */
 #define CALC_MD_VALUE(vtype) \
 { \
    vtype mean, dev; \
    mean = (vtype)lastValue; \
-   for(i = 1, nValueCount = 1; i < m_sampleCount; i++) \
+   for(i = 1; i < m_sampleCount; i++) \
    { \
-      if (ppPrevValues[i - 1]->getTimeStamp() != 1) \
-      { \
-         mean += (vtype)(*ppPrevValues[i - 1]); \
-         nValueCount++; \
-      } \
+      mean += (vtype)(*ppPrevValues[i - 1]); \
    } \
-   mean /= (vtype)nValueCount; \
+   mean /= (vtype)m_sampleCount; \
    dev = ABS((vtype)lastValue - mean); \
-   for(i = 1, nValueCount = 1; i < m_sampleCount; i++) \
+   for(i = 1; i < m_sampleCount; i++) \
    { \
-      if (ppPrevValues[i - 1]->getTimeStamp() != 1) \
-      { \
-         dev += ABS((vtype)(*ppPrevValues[i - 1]) - mean); \
-         nValueCount++; \
-      } \
+      dev += ABS((vtype)(*ppPrevValues[i - 1]) - mean); \
    } \
-   *pResult = dev / (vtype)nValueCount; \
+   *pResult = dev / (vtype)m_sampleCount; \
 }
 
+/**
+ * Calculate mean absolute deviation for parameter
+ */
 void Threshold::calculateMDValue(ItemValue *pResult, ItemValue &lastValue, ItemValue **ppPrevValues)
 {
-   int i, nValueCount;
+   int i;
 
    switch(m_dataType)
    {

@@ -12,6 +12,7 @@
 - Fixed broken PING subagent
 - Fixed database upgrade issues on MS SQL
 - IPv6 support in PING subagent
+- Network device driver can be manually selected for node by setting snmp.driver custom attribute
 - Added default melodies for alarms
 - Added option to play sound on alarm sound preference page
 - Android Agent:
@@ -21,7 +22,7 @@
 	- Changed order of overview items to match Java console (node browser)
 	- Added MTU field in interface details (node browser)
 	- Updated support library
-- Fixed issues: #655, #657, #696, #701, #724, #804, #811, #812, #813
+- Fixed issues: #655, #657, #696, #701, #724, #804, #805, #811, #812, #813
 
 
 *
