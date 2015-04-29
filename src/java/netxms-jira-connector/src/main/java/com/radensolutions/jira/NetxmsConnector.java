@@ -1,7 +1,7 @@
 package com.radensolutions.jira;
 
 import com.radensolutions.jira.actions.*;
-import org.netxms.api.client.NetXMSClientException;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.RCC;
 import org.slf4j.Logger;
@@ -52,11 +52,11 @@ public class NetxmsConnector {
             ConnectionDetails connectionDetails = new ConnectionDetails(server).parse();
             String connAddress = connectionDetails.getAddress();
             int connPort = connectionDetails.getPort();
-            NXCSession session = new NXCSession(connAddress, connPort, login, password);
+            NXCSession session = new NXCSession(connAddress, connPort, true);
             session.setIgnoreProtocolVersion(true);
-
             try {
                 session.connect();
+                session.login(login, password);
                 log.debug("Connected to " + server);
                 // do stuff
                 success = true;
@@ -64,11 +64,10 @@ public class NetxmsConnector {
                 log.debug("Action executed on " + server);
             } catch (IOException e) {
                 log.error("Connection failed", e);
-            } catch (NetXMSClientException e) {
+            } catch (NXCException e) {
                 if (e.getErrorCode() != RCC.INVALID_ALARM_ID) {
                     log.error("Connection failed", e);
-                }
-                else {
+                } else {
                     alarmNotFound = true;
                 }
             }
@@ -78,14 +77,16 @@ public class NetxmsConnector {
 
     public boolean testConnection(String server, String login, String password, StringBuffer errorMessage) {
         ConnectionDetails connectionDetails = new ConnectionDetails(server).parse();
-        NXCSession session = new NXCSession(connectionDetails.getAddress(), connectionDetails.getPort(), login, password);
+        NXCSession session = new NXCSession(connectionDetails.getAddress(), connectionDetails.getPort(), true);
+        session.setIgnoreProtocolVersion(true);
         boolean ret = false;
         try {
             session.connect();
+            session.login(login, password);
             ret = true;
         } catch (IOException e) {
             errorMessage.append(e.getMessage());
-        } catch (NetXMSClientException e) {
+        } catch (NXCException e) {
             errorMessage.append(e.getMessage());
         }
         return ret;
