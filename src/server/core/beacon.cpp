@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,27 +22,16 @@
 
 #include "nxcore.h"
 
-
-//
-// Constants
-//
-
-#define MAX_BEACON_HOSTS	32
-
-
-//
-// Beacon checking thread
-//
-
+/**
+ * Beacon hosts poller
+ */
 THREAD_RESULT THREAD_CALL BeaconPoller(void *arg)
 {
-	UINT32 i, interval, timeout, packetSize, hostCount, hostList[MAX_BEACON_HOSTS];
-	TCHAR *curr, *next, hosts[1024];
-
-	interval = ConfigReadULong(_T("BeaconPollingInterval"), 1000);
-	timeout = ConfigReadULong(_T("BeaconTimeout"), 1000);
-	packetSize = ConfigReadULong(_T("IcmpPingSize"), 46);
+	UINT32 interval = ConfigReadULong(_T("BeaconPollingInterval"), 1000);
+	UINT32 timeout = ConfigReadULong(_T("BeaconTimeout"), 1000);
+	UINT32 packetSize = ConfigReadULong(_T("IcmpPingSize"), 46);
 	
+	TCHAR hosts[1024];
 	ConfigReadStr(_T("BeaconHosts"), hosts, 1024, _T(""));
 	StrStrip(hosts);
 	if (hosts[0] == 0)	// Empty list
@@ -51,7 +40,8 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *arg)
 		return THREAD_OK;
 	}
 	
-	for(curr = hosts, hostCount = 0; (curr != NULL) && (hostCount < MAX_BEACON_HOSTS); curr = next)
+   InetAddressList hostList;
+	for(TCHAR *curr = hosts, *next = NULL; curr != NULL; curr = next)
 	{
 		next = _tcschr(curr, _T(','));
 		if (next != NULL)
@@ -60,18 +50,19 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *arg)
 			next++;
 		}
 		StrStrip(curr);
-		hostList[hostCount] = ResolveHostName(curr);
-		if ((hostList[hostCount] == INADDR_NONE) || (hostList[hostCount] == INADDR_ANY))
+      InetAddress addr = InetAddress::resolveHostName(curr);
+      if (addr.isValidUnicast())
+      {
+         hostList.add(addr);
+         DbgPrintf(4, _T("Beacon host %s added"), (const TCHAR *)addr.toString());
+      }
+      else
 		{
 			nxlog_write(MSG_INVALID_BEACON, EVENTLOG_WARNING_TYPE, "s", curr);
 		}
-		else
-		{
-			hostCount++;
-		}
 	}
 
-	if (hostCount == 0)
+   if (hostList.size() == 0)
 	{
 		DbgPrintf(1, _T("Beacon poller will not start because no valid host names was found in beacon list"));
 		return THREAD_OK;
@@ -80,21 +71,23 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *arg)
 	DbgPrintf(1, _T("Beacon poller thread started"));
 	while(!(g_flags & AF_SHUTDOWN))
 	{
-		for(i = 0; i < hostCount; i++)
+      int i;
+      for(i = 0; i < hostList.size(); i++)
 		{
-			if (IcmpPing(hostList[i], 1, timeout, NULL, packetSize) == ICMP_SUCCESS)
+         DbgPrintf(7, _T("Beacon poller: checking host %s"), hostList.get(i).toString(hosts));
+         if (IcmpPing(hostList.get(i), 1, timeout, NULL, packetSize) == ICMP_SUCCESS)
 				break;	// At least one beacon responds, no need to check others
 		}
-		if ((i == hostCount) && (!(g_flags & AF_NO_NETWORK_CONNECTIVITY)))
+      if ((i == hostList.size()) && (!(g_flags & AF_NO_NETWORK_CONNECTIVITY)))
 		{
 			// All beacons are lost, consider NetXMS server network conectivity loss
 			g_flags |= AF_NO_NETWORK_CONNECTIVITY;
-			PostEvent(EVENT_NETWORK_CONNECTION_LOST, g_dwMgmtNode, "d", hostCount);
+         PostEvent(EVENT_NETWORK_CONNECTION_LOST, g_dwMgmtNode, "d", hostList.size());
 		}
-		else if ((i < hostCount) && (g_flags & AF_NO_NETWORK_CONNECTIVITY))
+      else if ((i < hostList.size()) && (g_flags & AF_NO_NETWORK_CONNECTIVITY))
 		{
 			g_flags &= ~AF_NO_NETWORK_CONNECTIVITY;
-			PostEvent(EVENT_NETWORK_CONNECTION_RESTORED, g_dwMgmtNode, "d", hostCount);
+			PostEvent(EVENT_NETWORK_CONNECTION_RESTORED, g_dwMgmtNode, "d", hostList.size());
 		}
 		ThreadSleepMs(interval);
 	}

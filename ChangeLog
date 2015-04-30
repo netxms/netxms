@@ -5,6 +5,7 @@
 - Fixed bug in handling floating point Windows performance counters
 - Management console:
 	- Fixed broken VPN connectors configuration
+- Fixed issues: #817
 
 
 *
