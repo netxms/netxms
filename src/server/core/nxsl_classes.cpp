@@ -978,7 +978,11 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    NXSL_Value *value = NULL;
 
    dci = (DCObject *)object->getData();
-   if (!_tcscmp(attr, _T("dataType")) && (dci->getType() == DCO_TYPE_ITEM))
+   if (!_tcscmp(attr, _T("comments")))
+   {
+		value = new NXSL_Value(dci->getComments());
+   }
+   else if (!_tcscmp(attr, _T("dataType")) && (dci->getType() == DCO_TYPE_ITEM))
    {
 		value = new NXSL_Value((LONG)((DCItem *)dci)->getDataType());
    }

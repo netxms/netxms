@@ -268,6 +268,7 @@ public:
    int getAggregationFunction() { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
    Template *getNode() { return m_pNode; }
    int getRetentionTime() { return m_iRetentionTime; }
+   const TCHAR *getComments() { return m_comments; }
 
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
