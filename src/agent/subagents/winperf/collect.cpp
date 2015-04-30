@@ -269,7 +269,8 @@ int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName)
    }
 
    PdhCloseQuery(hQuery);
-   return (ci.dwType & PERF_SIZE_LARGE) ? COUNTER_TYPE_INT64 : COUNTER_TYPE_INT32;
+   return (ci.dwType & (PERF_COUNTER_RATE | PERF_COUNTER_FRACTION)) ? COUNTER_TYPE_FLOAT :
+      ((ci.dwType & PERF_SIZE_LARGE) ? COUNTER_TYPE_INT64 : COUNTER_TYPE_INT32);
 }
 
 /**

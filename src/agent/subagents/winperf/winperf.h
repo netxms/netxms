@@ -45,11 +45,9 @@
 #define COUNTER_TYPE_INT64    2
 #define COUNTER_TYPE_FLOAT    3
 
-
-//
-// Counter structure
-//
-
+/**
+ * Counter structure
+ */
 struct WINPERF_COUNTER
 {
    TCHAR *pszName;
