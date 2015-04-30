@@ -212,8 +212,8 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
          NetObj *pObject = FindObjectById(pEvent->getSourceId());
          if (pObject == NULL)
             pObject = g_pEntireNet;
-			DbgPrintf(5, _T("EVENT %d (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAG:\"%s\"%s) FROM %s: %s"), pEvent->getCode(), 
-                   pEvent->getId(), pEvent->getFlags(), pEvent->getSeverity(),
+			DbgPrintf(5, _T("EVENT %s [%d] (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAG:\"%s\"%s) FROM %s: %s"), 
+                   pEvent->getName(), pEvent->getCode(), pEvent->getId(), pEvent->getFlags(), pEvent->getSeverity(),
 						 CHECK_NULL_EX(pEvent->getUserTag()),
                    (pEvent->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
                    pObject->getName(), pEvent->getMessage());

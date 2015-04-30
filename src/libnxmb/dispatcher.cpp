@@ -23,22 +23,18 @@
 
 #include "libnxmb.h"
 
-
-//
-// Worker thread starter
-//
-
+/**
+ * Worker thread starter
+ */
 static THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *arg)
 {
 	((NXMBDispatcher *)arg)->workerThread();
 	return THREAD_OK;
 }
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 NXMBDispatcher::NXMBDispatcher()
 {
 	m_queue = new Queue;
@@ -47,13 +43,13 @@ NXMBDispatcher::NXMBDispatcher()
 	m_filters = NULL;
 	m_subscriberListAccess = MutexCreate();
 	m_workerThreadHandle = ThreadCreateEx(WorkerThreadStarter, 0, this);
+   m_callHandlers = new CallHandlerMap();
+   m_callHandlerAccess = MutexCreate();
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 NXMBDispatcher::~NXMBDispatcher()
 {
 	NXMBMessage *msg;
@@ -77,13 +73,14 @@ NXMBDispatcher::~NXMBDispatcher()
 	}
 	safe_free(m_subscribers);
 	safe_free(m_filters);
+
+   MutexDestroy(m_callHandlerAccess);
+   delete m_callHandlers;
 }
 
-
-//
-// Worker thread
-//
-
+/**
+ * Worker thread
+ */
 void NXMBDispatcher::workerThread()
 {
 	NXMBMessage *msg;
@@ -108,21 +105,17 @@ void NXMBDispatcher::workerThread()
 	}
 }
 
-
-//
-// Post message
-//
-
+/**
+ * Post message
+ */
 void NXMBDispatcher::postMessage(NXMBMessage *msg)
 {
 	m_queue->Put(msg);
 }
 
-
-//
-// Add subscriber
-//
-
+/**
+ * Add subscriber
+ */
 void NXMBDispatcher::addSubscriber(NXMBSubscriber *subscriber, NXMBFilter *filter)
 {
 	int i;
@@ -165,11 +158,9 @@ void NXMBDispatcher::addSubscriber(NXMBSubscriber *subscriber, NXMBFilter *filte
 	MutexUnlock(m_subscriberListAccess);
 }
 
-
-//
-// Remove subscriber
-//
-
+/**
+ * Remove subscriber
+ */
 void NXMBDispatcher::removeSubscriber(const TCHAR *id)
 {
 	int i;
@@ -194,16 +185,55 @@ void NXMBDispatcher::removeSubscriber(const TCHAR *id)
 	MutexUnlock(m_subscriberListAccess);
 }
 
+/**
+ * Add call handler
+ */
+void NXMBDispatcher::addCallHandler(const TCHAR *callName, NXMBCallHandler handler)
+{
+   MutexLock(m_callHandlerAccess);
+   m_callHandlers->set(callName, handler);
+   MutexUnlock(m_callHandlerAccess);
+}
 
-//
-// Get global dispatcher instance
-//
+/**
+ * Remove call handler
+ */
+void NXMBDispatcher::removeCallHandler(const TCHAR *callName)
+{
+   MutexLock(m_callHandlerAccess);
+   m_callHandlers->remove(callName);
+   MutexUnlock(m_callHandlerAccess);
+}
 
+/**
+ * Make a call
+ */
+bool NXMBDispatcher::call(const TCHAR *callName, const void *input, void *output)
+{
+   MutexLock(m_callHandlerAccess);
+   NXMBCallHandler handler = m_callHandlers->get(callName);
+   MutexUnlock(m_callHandlerAccess);
+   return (handler != NULL) ? handler(callName, input, output) : false;
+}
+
+/**
+ * Synchronization counter
+ */
+MUTEX NXMBDispatcher::m_instanceAccess = MutexCreate();
+
+/**
+ * Global dispatcher instance
+ */
 NXMBDispatcher *NXMBDispatcher::m_instance = NULL;
 
+/**
+ * Get global dispatcher instance
+ */
 NXMBDispatcher *NXMBDispatcher::getInstance()
 {
+   MutexLock(m_instanceAccess);
 	if (m_instance == NULL)
 		m_instance = new NXMBDispatcher();
+   MutexUnlock(m_instanceAccess);
 	return m_instance;
 }

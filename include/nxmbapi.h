@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Message Bus API
-** Copyright (C) 2009 Victor Kirhenshtein
+** Copyright (C) 2009-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,11 +39,9 @@
 #include <nms_threads.h>
 #include <nxqueue.h>
 
-
-//
-// Message class
-//
-
+/**
+ * Message class
+ */
 class LIBNXMB_EXPORTABLE NXMBMessage
 {
 protected:
@@ -59,11 +57,9 @@ public:
 	const TCHAR *getSenderId() const { return m_senderId; }
 };
 
-
-//
-// Subscriber class
-//
-
+/**
+ * Subscriber class
+ */
 class LIBNXMB_EXPORTABLE NXMBSubscriber
 {
 protected:
@@ -79,11 +75,9 @@ public:
 	virtual bool isOwnedByDispatcher();
 };
 
-
-//
-// Abstract message filter class
-//
-
+/**
+ * Abstract message filter class
+ */
 class LIBNXMB_EXPORTABLE NXMBFilter
 {
 public:
@@ -94,11 +88,9 @@ public:
 	virtual bool isOwnedByDispatcher();
 };
 
-
-//
-// Message filter which accept messages of specific type(s)
-//
-
+/**
+ * Message filter which accept messages of specific type(s)
+ */
 class LIBNXMB_EXPORTABLE NXMBTypeFilter : public NXMBFilter
 {
 protected:
@@ -114,16 +106,32 @@ public:
 	void removeMessageType(const TCHAR *type);
 };
 
+/**
+ * Call handler
+ */
+typedef bool (* NXMBCallHandler)(const TCHAR *, const void *, void *);
 
-//
-// Message dispatcher class
-//
+/**
+ * String map template for holding objects as values
+ */
+class CallHandlerMap : public StringMapBase
+{
+public:
+	CallHandlerMap() : StringMapBase(false) { }
 
+	void set(const TCHAR *name, NXMBCallHandler handler) { setObject((TCHAR *)name, (void *)handler, false); }
+	NXMBCallHandler get(const TCHAR *name) { return (NXMBCallHandler)getObject(name); }
+};
+
+/**
+ * Message dispatcher class
+ */
 class LIBNXMB_EXPORTABLE NXMBDispatcher
 {
 	friend THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *);
 
 private:
+   static MUTEX m_instanceAccess;
 	static NXMBDispatcher *m_instance;
 
 protected:
@@ -133,6 +141,8 @@ protected:
 	NXMBFilter **m_filters;
 	MUTEX m_subscriberListAccess;
 	THREAD m_workerThreadHandle;
+   CallHandlerMap *m_callHandlers;
+   MUTEX m_callHandlerAccess;
 
 	void workerThread();
 
@@ -141,9 +151,13 @@ public:
 	virtual ~NXMBDispatcher();
 
 	void postMessage(NXMBMessage *msg);
+   bool call(const TCHAR *callName, const void *input, void *output);
 	
 	void addSubscriber(NXMBSubscriber *subscriber, NXMBFilter *filter);
 	void removeSubscriber(const TCHAR *id);
+
+   void addCallHandler(const TCHAR *callName, NXMBCallHandler handler);
+   void removeCallHandler(const TCHAR *callName);
 
 	static NXMBDispatcher *getInstance();
 };
