@@ -173,8 +173,8 @@ public class NXCObjectModificationData
 	private int height;
 	private String filter;
 	private long peerGatewayId;
-	private List<IpAddressListElement> localNetworks;
-	private List<IpAddressListElement> remoteNetworks;
+	private List<InetAddressEx> localNetworks;
+	private List<InetAddressEx> remoteNetworks;
 	private PostalAddress postalAddress;
 	
 	/**
@@ -1391,7 +1391,7 @@ public class NXCObjectModificationData
    /**
     * @return the localNetworks
     */
-   public List<IpAddressListElement> getLocalNetworks()
+   public List<InetAddressEx> getLocalNetworks()
    {
       return localNetworks;
    }
@@ -1399,7 +1399,7 @@ public class NXCObjectModificationData
    /**
     * @return the remoteNetworks
     */
-   public List<IpAddressListElement> getRemoteNetworks()
+   public List<InetAddressEx> getRemoteNetworks()
    {
       return remoteNetworks;
    }
@@ -1407,7 +1407,7 @@ public class NXCObjectModificationData
    /**
     * @param remoteNetworks the remoteNetworks to set
     */
-   public void setVpnNetworks(List<IpAddressListElement> localNetworks, List<IpAddressListElement> remoteNetworks)
+   public void setVpnNetworks(List<InetAddressEx> localNetworks, List<InetAddressEx> remoteNetworks)
    {
       this.localNetworks = localNetworks;
       this.remoteNetworks = remoteNetworks;

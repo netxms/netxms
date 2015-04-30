@@ -27,25 +27,26 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.netxms.base.InetAddressEx;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Dialog for adding address list element
  */
-public class AddAddressListElementDialog extends Dialog
+public class AddSubnetDialog extends Dialog
 {
-	private LabeledText textAddr1;
-	private LabeledText textAddr2;
-	private InetAddress address1;
-	private InetAddress address2;
+	private LabeledText address;
+	private LabeledSpinner mask;
+	private InetAddressEx subnet;
 	
 	/**
 	 * @param parentShell
 	 */
-	public AddAddressListElementDialog(Shell parentShell)
+	public AddSubnetDialog(Shell parentShell)
 	{
 		super(parentShell);
 	}
@@ -57,7 +58,7 @@ public class AddAddressListElementDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(Messages.get().AddAddressListElementDialog_Title);
+		newShell.setText("Add Subnet");
 	}
 
 	/* (non-Javadoc)
@@ -72,25 +73,26 @@ public class AddAddressListElementDialog extends Dialog
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
+		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
 		
-		textAddr1 = new LabeledText(dialogArea, SWT.NONE);
-		textAddr1.setLabel(Messages.get().AddAddressListElementDialog_NetworkAddress);
-		textAddr1.setText("0.0.0.0"); //$NON-NLS-1$
+		address = new LabeledText(dialogArea, SWT.NONE);
+		address.setLabel(Messages.get().AddAddressListElementDialog_NetworkAddress);
+		address.setText("0.0.0.0"); //$NON-NLS-1$
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 300;
-		textAddr1.setLayoutData(gd);		
-		
-		textAddr2 = new LabeledText(dialogArea, SWT.NONE);
-		textAddr2.setLabel(Messages.get().AddAddressListElementDialog_NetworkMask);
-		textAddr2.setText("255.255.255.0"); //$NON-NLS-1$
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		textAddr2.setLayoutData(gd);
+		address.setLayoutData(gd);		
+
+		mask = new LabeledSpinner(dialogArea, SWT.NONE);
+		mask.setLabel(Messages.get().AddAddressListElementDialog_NetworkMask);
+		mask.getSpinnerControl().setMinimum(0);
+      mask.getSpinnerControl().setMaximum(128);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      mask.setLayoutData(gd);    
 		
 		return dialogArea;
 	}
@@ -103,8 +105,8 @@ public class AddAddressListElementDialog extends Dialog
 	{
 		try
 		{
-			address1 = InetAddress.getByName(textAddr1.getText());
-			address2 = InetAddress.getByName(textAddr2.getText());
+			InetAddress a = InetAddress.getByName(address.getText().trim());
+			subnet = new InetAddressEx(a, mask.getSelection());
 		}
 		catch(UnknownHostException e)
 		{
@@ -115,18 +117,10 @@ public class AddAddressListElementDialog extends Dialog
 	}
 
 	/**
-	 * @return the address1
+	 * @return subnet address
 	 */
-	public InetAddress getAddress1()
+	public InetAddressEx getSubnet()
 	{
-		return address1;
-	}
-
-	/**
-	 * @return the address2
-	 */
-	public InetAddress getAddress2()
-	{
-		return address2;
+		return subnet;
 	}
 }

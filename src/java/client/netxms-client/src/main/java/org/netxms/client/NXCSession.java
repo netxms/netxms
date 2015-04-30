@@ -4371,20 +4371,18 @@ public class NXCSession
 
       if ((flags & NXCObjectModificationData.MODIFY_VPN_NETWORKS) != 0)
       {
-         long varId = NXCPCodes.VID_VPN_NETWORK_BASE;         
+         long fieldId = NXCPCodes.VID_VPN_NETWORK_BASE;         
 
          msg.setFieldInt32(NXCPCodes.VID_NUM_LOCAL_NETS, data.getLocalNetworks().size());
-         for(IpAddressListElement e : data.getLocalNetworks())
+         for(InetAddressEx a : data.getLocalNetworks())
          {
-            msg.setField(varId++, e.getAddr1());
-            msg.setField(varId++, e.getAddr2());
+            msg.setField(fieldId++, a);
          }
 
          msg.setFieldInt32(NXCPCodes.VID_NUM_REMOTE_NETS, data.getRemoteNetworks().size());
-         for(IpAddressListElement e : data.getRemoteNetworks())
+         for(InetAddressEx a : data.getRemoteNetworks())
          {
-            msg.setField(varId++, e.getAddr1());
-            msg.setField(varId++, e.getAddr2());
+            msg.setField(fieldId++, a);
          }
       }
       

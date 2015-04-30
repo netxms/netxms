@@ -255,6 +255,7 @@ UINT32 VPNConnector::modifyFromMessageInternal(NXCPMessage *pRequest)
       for(i = 0; i < count; i++)
          m_localNetworks->add(new InetAddress(pRequest->getFieldAsInetAddress(fieldId++)));
 
+      m_remoteNetworks->clear();
       count = pRequest->getFieldAsInt32(VID_NUM_REMOTE_NETS);
       for(i = 0; i < count; i++)
          m_remoteNetworks->add(new InetAddress(pRequest->getFieldAsInetAddress(fieldId++)));
