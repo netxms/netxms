@@ -61,11 +61,14 @@ static NXCORE_LOG s_logs[] =
 	},
 	{ _T("EventLog"), _T("event_log"), _T("event_id"), _T("event_source"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
 		{
+         { _T("event_id"), _T("ID"), LC_INTEGER },
 			{ _T("event_timestamp"), _T("Time"), LC_TIMESTAMP },
 			{ _T("event_source"), _T("Source"), LC_OBJECT_ID },
 			{ _T("event_code"), _T("Event"), LC_EVENT_CODE },
 			{ _T("event_severity"), _T("Severity"), LC_SEVERITY },
 			{ _T("event_message"), _T("Message"), LC_TEXT },
+			{ _T("user_tag"), _T("User tag"), LC_TEXT },
+         { _T("root_event_id"), _T("Root ID"), LC_INTEGER },
 			{ NULL, NULL, 0 }
 		}
 	},
