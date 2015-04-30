@@ -181,8 +181,26 @@ public class Shell
       imp.load("site");
 
       console.exec("from org.netxms.client import *");
-      console.exec("from org.netxms.api.client import *");
+      console.exec("from org.netxms.client.constants import *");
+      console.exec("from org.netxms.client.dashboards import *");
+      console.exec("from org.netxms.client.datacollection import *");
+      console.exec("from org.netxms.client.events import *");
+      console.exec("from org.netxms.client.log import *");
+      console.exec("from org.netxms.client.maps import *");
+      console.exec("from org.netxms.client.maps.configs import *");
+      console.exec("from org.netxms.client.maps.elements import *");
+      console.exec("from org.netxms.client.mt import *");
       console.exec("from org.netxms.client.objects import *");
+      console.exec("from org.netxms.client.objecttools import *");
+      console.exec("from org.netxms.client.packages import *");
+      console.exec("from org.netxms.client.reporting import *");
+      console.exec("from org.netxms.client.server import *");
+      console.exec("from org.netxms.client.services import *");
+      console.exec("from org.netxms.client.situations import *");
+      console.exec("from org.netxms.client.snmp import *");
+      console.exec("from org.netxms.client.topology import *");
+      console.exec("from org.netxms.client.users import *");
+      console.exec("from org.netxms.client.xml import *");
 
       console.set("__name__", "__nxshell__");
 
