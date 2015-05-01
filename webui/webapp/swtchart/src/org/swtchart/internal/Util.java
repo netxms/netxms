@@ -6,14 +6,14 @@
  *******************************************************************************/
 package org.swtchart.internal;
 
-import org.eclipse.rap.rwt.graphics.Graphics;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Display;
 
 /**
  * A utility class providing generic methods.
  */
-@SuppressWarnings("deprecation")
 public final class Util
 {
 	/**
@@ -34,6 +34,10 @@ public final class Util
 			return new Point(0, 0);
 		}
 		
-		return Graphics.textExtent(font, text, 0);
+		GC gc = new GC(Display.getCurrent());
+		gc.setFont(font);
+		Point e = gc.textExtent(text);
+		gc.dispose();
+		return e;
 	}
 }

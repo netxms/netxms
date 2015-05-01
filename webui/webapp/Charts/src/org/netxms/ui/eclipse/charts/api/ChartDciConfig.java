@@ -27,7 +27,7 @@ import org.simpleframework.xml.Root;
 /**
  * DCI information for chart
  */
-@Root(name="dci")
+@Root(name="dci", strict=false)
 public class ChartDciConfig
 {
 	public static final String UNSET_COLOR = "UNSET"; //$NON-NLS-1$
