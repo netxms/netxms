@@ -152,6 +152,8 @@ public class LineChartElement extends ElementWidget
 						data[i] = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0);
 					else
 						data[i] = session.getCollectedTableData(currentDci.nodeId, currentDci.dciId, currentDci.instance, currentDci.column, from, to, 0);
+					if (currentDci.invertValues)
+					   data[i].invert();
 				}
 				runInUIThread(new Runnable() {
 					@Override

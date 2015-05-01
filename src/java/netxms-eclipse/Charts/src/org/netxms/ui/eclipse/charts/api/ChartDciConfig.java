@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import org.simpleframework.xml.Root;
 /**
  * DCI information for chart
  */
-@Root(name="dci")
+@Root(name="dci", strict=false)
 public class ChartDciConfig
 {
 	public static final String UNSET_COLOR = "UNSET"; //$NON-NLS-1$

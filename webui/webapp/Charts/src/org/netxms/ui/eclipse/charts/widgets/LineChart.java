@@ -381,7 +381,6 @@ public class LineChart extends Chart implements HistoricalDataChart
 		ILineSeries series = (ILineSeries)seriesSet.createSeries(SeriesType.LINE, Integer.toString(index), updateChart);
 
 		series.setName(description);
-		series.setAntialias(SWT.ON);
 		series.setSymbolType(PlotSymbolType.NONE);
 		series.setLineWidth(2);
 		series.setLineColor(getColorFromPreferences("Chart.Colors.Data." + index)); //$NON-NLS-1$

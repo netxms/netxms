@@ -418,6 +418,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                         currentItem.column, config.getTimeFrom(), config.getTimeTo(), 0);
                   thresholds[i] = null;
                }
+               if (currentItem.invertValues)
+                  data[i].invert();
                monitor.worked(1);
             }
 
