@@ -53,10 +53,10 @@
 #define DEFAULT_CONFIG_FILE   _T("C:\\netxmsd.conf")
 
 #define DEFAULT_SHELL         _T("cmd.exe")
-#define DEFAULT_LOG_FILE      _T("C:\\NetXMS.log")
+#define DEFAULT_LOG_FILE      _T("C:\\netxmsd.log")
 #define DEFAULT_DATA_DIR      _T("C:\\NetXMS\\var")
 #define DEFAULT_LIBDIR        _T("C:\\NetXMS\\lib")
-#define DEFAULT_DUMP_DIR      _T("C:\\")
+#define DEFAULT_DUMP_DIR      _T("C:\\NetXMS\\dump")
 
 #define LDIR_NDD              _T("\\ndd")
 #define LDIR_PDSDRV           _T("\\pdsdrv")
@@ -69,7 +69,6 @@
 #define DFILE_COMPILED_MIB    _T("\\mibs\\netxms.mib")
 #define DDIR_IMAGES           _T("\\images")
 #define DDIR_FILES            _T("\\files")
-#define DDIR_REPORTS          _T("\\reports")
 
 #else    /* _WIN32 */
 
@@ -78,7 +77,7 @@
 #define DEFAULT_SHELL         _T("/bin/sh")
 
 #ifndef DATADIR
-#define DATADIR              _T("/var/netxms")
+#define DATADIR              _T("/var/lib/netxms")
 #endif
 
 #ifndef LIBDIR
@@ -89,10 +88,10 @@
 #define PKGLIBDIR            _T("/usr/lib/netxms")
 #endif
 
-#define DEFAULT_LOG_FILE      DATADIR _T("/log/netxmsd.log")
+#define DEFAULT_LOG_FILE      _T("/var/log/netxmsd.log")
 #define DEFAULT_DATA_DIR      DATADIR
 #define DEFAULT_LIBDIR        PKGLIBDIR
-#define DEFAULT_DUMP_DIR      _T("/")
+#define DEFAULT_DUMP_DIR      _T("/var/tmp")
 
 #define LDIR_NDD              _T("/ndd")
 #define LDIR_PDSDRV           _T("/pdsdrv")
@@ -105,7 +104,6 @@
 #define DFILE_COMPILED_MIB    _T("/mibs/netxms.mib")
 #define DDIR_IMAGES           _T("/images")
 #define DDIR_FILES            _T("/files")
-#define DDIR_REPORTS          _T("/reports")
 
 #endif   /* _WIN32 */
 

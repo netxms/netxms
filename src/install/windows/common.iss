@@ -1,6 +1,7 @@
 [Dirs]
 Name: "{app}\etc"
 Name: "{app}\database"
+Name: "{app}\dump"
 Name: "{app}\var\backgrounds"
 Name: "{app}\var\images"
 Name: "{app}\var\packages"

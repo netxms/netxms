@@ -220,7 +220,7 @@ bool LogParser::monitorEventLogV6(CONDITION stopCondition)
 		   LogParserTrace(1, _T("LogWatch: reading old events between %I64d and %I64d"), (INT64)startTime, (INT64)now);
 
          WCHAR query[256];
-         _snwprintf(query, 256, L"*[System/TimeCreated[timediff(@SystemTime) < %I64d]]", (INT64)(time(NULL) - startTime) * 1000LL);
+         _snwprintf(query, 256, L"*[System/TimeCreated[timediff(@SystemTime) < %I64d]]", (INT64)(now - startTime) * 1000LL);
          EVT_HANDLE handle = _EvtQuery(NULL, &m_fileName[1], query, EvtQueryChannelPath | EvtQueryForwardDirection);
          if (handle != NULL)
          {
