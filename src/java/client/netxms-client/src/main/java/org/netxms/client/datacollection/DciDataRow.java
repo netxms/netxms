@@ -88,4 +88,15 @@ public class DciDataRow
 		
 		return 0;
 	}
+
+   /**
+    * Invert value
+    */
+   public void invert()
+   {
+      if (value instanceof Long)
+         value = -((Long)value);
+      else if (value instanceof Double)
+         value = -((Double)value);
+   }
 }

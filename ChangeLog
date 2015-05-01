@@ -6,7 +6,8 @@
 - Added "comments" attribute to NXSL "DCI" class
 - Management console:
 	- Fixed broken VPN connectors configuration
-- Fixed issues: #817
+	- "Inverted values" option on line charts
+- Fixed issues: #816, #817
 
 
 *

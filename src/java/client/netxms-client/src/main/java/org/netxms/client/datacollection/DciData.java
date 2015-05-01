@@ -98,4 +98,13 @@ public class DciData
 	{
 		this.dataType = dataType;
 	}
+	
+	/**
+	 * Invert values
+	 */
+	public void invert()
+	{
+	   for(DciDataRow r : values)
+	      r.invert();
+	}
 }

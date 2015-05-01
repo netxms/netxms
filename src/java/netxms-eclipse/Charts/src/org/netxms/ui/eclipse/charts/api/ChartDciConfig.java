@@ -59,6 +59,9 @@ public class ChartDciConfig
 	@Element(required=false)
 	public boolean showThresholds;
 
+   @Element(required=false)
+   public boolean invertValues;
+
 	@Element(required=false)
 	public String instance;
 	
@@ -77,6 +80,8 @@ public class ChartDciConfig
 		name = ""; //$NON-NLS-1$
 		lineWidth = 2;
 		area = false;
+		showThresholds = false;
+		invertValues = false;
 		instance = ""; //$NON-NLS-1$
 		column = ""; //$NON-NLS-1$
 	}
@@ -95,6 +100,8 @@ public class ChartDciConfig
 		this.name = src.name;
 		this.lineWidth = src.lineWidth;
 		this.area = src.area;
+		this.showThresholds = src.showThresholds;
+		this.invertValues = src.invertValues;
 		this.instance = src.instance;
 		this.column = src.column;
 	}
@@ -113,6 +120,8 @@ public class ChartDciConfig
 		color = UNSET_COLOR;
 		lineWidth = 2;
 		area = false;
+		showThresholds = false;
+		invertValues = false;
 		instance = ""; //$NON-NLS-1$
 		column = ""; //$NON-NLS-1$
 	}

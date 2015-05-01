@@ -50,6 +50,7 @@ public class DataSourceEditDlg extends Dialog
 	private ColorSelector colorSelector;
 	private Button checkAreaChart;
 	private Button checkShowThresholds;
+	private Button checkInvertValues;
 	private LabeledText instance;
 	private LabeledText dataColumn;
 	
@@ -213,6 +214,10 @@ public class DataSourceEditDlg extends Dialog
 		checkShowThresholds.setText(Messages.get().DataSourceEditDlg_ShowThresholds);
 		checkShowThresholds.setSelection(dci.showThresholds);
 		
+      checkInvertValues = new Button(optionsGroup, SWT.CHECK);
+      checkInvertValues.setText("Invert values");
+      checkInvertValues.setSelection(dci.invertValues);
+      
 		return dialogArea;
 	}
 
@@ -235,6 +240,7 @@ public class DataSourceEditDlg extends Dialog
 		}
 		dci.area = checkAreaChart.getSelection();
 		dci.showThresholds = checkShowThresholds.getSelection();
+		dci.invertValues = checkInvertValues.getSelection();
 		if (dci.type == ChartDciConfig.TABLE)
 		{
 			dci.column = dataColumn.getText().trim();
