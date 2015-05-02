@@ -436,18 +436,16 @@ Label[BORDER] {
 
 Label-SeparatorLine {
   background-image: none;
-  background-color: transparent;
-  border: 1px solid #a4a4a4;
+  background-color: #828790;
+  border: 0px;
   border-radius: 0px;
-  width: 2px;
+  width: 1px;
 }
 
 Label-SeparatorLine[SHADOW_IN] {  
-  border: 1px inset;
 }
 
 Label-SeparatorLine[SHADOW_OUT] {
-  border: 1px outset;
 }
 
 /* Link default theme */
