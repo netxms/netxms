@@ -23,7 +23,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.tools.FontTools;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -34,6 +34,8 @@ public class Activator extends AbstractUIPlugin
 	// The plug-in ID
 	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.charts"; //$NON-NLS-1$
 
+	private static final String[] CHART_FONTS = { "Segoe UI", "DejaVu Sans", "Lucida Sans", "Arial", "Helvetica" };
+	
 	// The shared instance
 	private static Activator plugin;
 	
@@ -95,7 +97,7 @@ public class Activator extends AbstractUIPlugin
 	public Font getChartTitleFont(Display display)
 	{
 		if (chartTitleFont == null)
-			chartTitleFont = new Font(display, "Verdana", WidgetHelper.fontPixelsToPoints(display, 16), SWT.BOLD);
+			chartTitleFont = FontTools.createFont(CHART_FONTS, 2, SWT.BOLD); 
 		return chartTitleFont;
 	}
 
@@ -105,7 +107,7 @@ public class Activator extends AbstractUIPlugin
 	public Font getChartFont(Display display)
 	{
 		if (chartFont == null)
-			chartFont = new Font(display, "Verdana", WidgetHelper.fontPixelsToPoints(display, 12), SWT.NORMAL);
+			chartFont = FontTools.createFont(CHART_FONTS, SWT.NORMAL);
 		return chartFont;
 	}
 }
