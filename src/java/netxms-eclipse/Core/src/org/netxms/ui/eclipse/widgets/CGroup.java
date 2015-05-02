@@ -77,7 +77,7 @@ public abstract class CGroup extends Canvas
 		borderColor = SharedColors.getColor(SharedColors.CGROUP_BORDER, getDisplay());
 		titleColor = SharedColors.getColor(SharedColors.CGROUP_TITLE, getDisplay());
 		
-		FontData fd = JFaceResources.getDialogFont().getFontData()[0];
+		FontData fd = JFaceResources.getDefaultFont().getFontData()[0];
 		fd.setStyle(SWT.BOLD);
 		titleFont = new Font(getDisplay(), fd);
 		setFont(titleFont);

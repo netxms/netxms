@@ -388,7 +388,14 @@ public class LineChart extends Chart implements HistoricalDataChart
 		series.setXDateSeries(xSeries);
 		series.setYSeries(ySeries);
 		
-	   series.enableStack(stacked, updateChart);
+		try
+		{
+		   series.enableStack(stacked, updateChart);
+		}
+		catch(IllegalStateException e)
+		{
+		   Activator.logError("Exception while addig chart series", e);
+		}
 		
 		return series;
 	}

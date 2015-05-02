@@ -389,7 +389,7 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
 		// Draw title
 		if (titleVisible && (title != null))
 		{
-			gc.setFont(Activator.getDefault().getChartTitleFont(getDisplay()));
+			gc.setFont(Activator.getDefault().getChartTitleFont());
 			gc.setForeground(getColorFromPreferences("Chart.Colors.Title")); //$NON-NLS-1$
 			Point ext = gc.textExtent(title);
 			int x = (ext.x < size.x) ? (size.x - ext.x) / 2 : 0;

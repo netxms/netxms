@@ -18,13 +18,14 @@
  */
 package org.netxms.ui.eclipse.charts;
 
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.progress.IProgressService;
+import org.netxms.ui.eclipse.tools.FontTools;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -35,6 +36,8 @@ public class Activator extends AbstractUIPlugin
 	// The plug-in ID
 	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.charts"; //$NON-NLS-1$
 
+	private static final String[] CHART_FONTS = { "Segoe UI", "DejaVu Sans", "Lucida Sans", "Arial", "Helvetica" };
+	
 	// The shared instance
 	private static Activator plugin;
 	
@@ -56,9 +59,6 @@ public class Activator extends AbstractUIPlugin
 		// Register icon for our jobs
 		IProgressService service = PlatformUI.getWorkbench().getProgressService();
 	   service.registerIconForFamily(getImageDescriptor("icons/graph.png"), Activator.PLUGIN_ID); //$NON-NLS-1$
-	   
-	   chartTitleFont = new Font(Display.getDefault(), "Verdana", 9, SWT.BOLD); //$NON-NLS-1$
-	   chartFont = new Font(Display.getDefault(), "Verdana", 8, SWT.NORMAL); //$NON-NLS-1$
 	}
 
 	/*
@@ -102,6 +102,8 @@ public class Activator extends AbstractUIPlugin
 	 */
 	public Font getChartTitleFont()
 	{
+		if (chartTitleFont == null)
+			chartTitleFont = FontTools.createFont(CHART_FONTS, 2, SWT.BOLD); 
 		return chartTitleFont;
 	}
 
@@ -110,6 +112,39 @@ public class Activator extends AbstractUIPlugin
 	 */
 	public Font getChartFont()
 	{
+		if (chartFont == null)
+			chartFont = FontTools.createFont(CHART_FONTS, SWT.NORMAL);
 		return chartFont;
 	}
+
+   /**
+    * Log via platform logging facilities
+    * 
+    * @param msg
+    */
+   public static void logInfo(String msg)
+   {
+      log(Status.INFO, msg, null);
+   }
+
+   /**
+    * Log via platform logging facilities
+    * 
+    * @param msg
+    */
+   public static void logError(String msg, Exception e)
+   {
+      log(Status.ERROR, msg, e);
+   }
+
+   /**
+    * Log via platform logging facilities
+    * 
+    * @param msg
+    * @param e
+    */
+   public static void log(int status, String msg, Exception e)
+   {
+      getDefault().getLog().log(new Status(status, PLUGIN_ID, Status.OK, msg, e));
+   }
 }
