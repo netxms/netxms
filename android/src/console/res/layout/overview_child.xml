@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/interface_view_child_layout"
+    android:layout_width="fill_parent"
+	android:layout_height="wrap_content">
+	<ListView 
+		android:id="@+id/overviewChild"
+	    android:layout_width="fill_parent"
+		android:layout_height="36dp"
+		android:paddingLeft="36dip"
+		android:paddingStart="36dip"
+		android:paddingRight="5dip"
+		android:paddingEnd="5dip"
+		android:gravity="center_vertical"
+		android:textColor="@color/text_color"
+		android:cacheColorHint="@color/item_body"
+		android:background="@drawable/explist_selection">
+	</ListView>
+</LinearLayout>

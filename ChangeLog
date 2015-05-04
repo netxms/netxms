@@ -2,6 +2,8 @@
 * 2.0-M5
 *
 
+- Android Console:
+	- Added "capabilities" in node overview (changed to expandable list view)
 - Fixed bug in handling floating point Windows performance counters
 - Added "comments" attribute to NXSL "DCI" class
 - Management console:
