@@ -14,6 +14,10 @@ CREATE TABLE metadata
 	PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(metadata, 'System meta data (DBMS type, schema version etc)')
+COMMENT_COLUMN(metadata.var_name, 'Variable name')
+COMMENT_COLUMN(metadata.var_value, 'Variable value')
+
 /*
 ** System configuration table
 */
@@ -31,6 +35,8 @@ CREATE TABLE config
 	PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(config, 'System configuration table')
+
 /*
 ** System configuration data (for large data)
 */
@@ -40,6 +46,8 @@ CREATE TABLE config_clob
 	var_value SQL_TEXT null,
 	PRIMARY KEY(var_name)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(config_clob, 'System configuration data for large data')
 
 /*
 ** Users
@@ -69,6 +77,7 @@ CREATE TABLE users
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(users, 'System users')
 
 /*
 ** User groups
@@ -86,6 +95,7 @@ CREATE TABLE user_groups
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(user_groups, 'System user groups')
 
 /*
 ** Users to groups mapping
@@ -98,6 +108,7 @@ CREATE TABLE user_group_members
 	PRIMARY KEY(group_id,user_id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(user_group_members, 'Users and group relationships')
 
 /*
 ** User profiles
@@ -111,6 +122,7 @@ CREATE TABLE user_profiles
 	PRIMARY KEY(user_id,var_name)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(user_profiles, 'User profiles')
 
 /*
 ** Custom attributes for user database objects

@@ -77,3 +77,17 @@
 #error Database type should be defined
 
 #endif
+
+#if defined(DB_POSTGRESQL) || defined(DB_ORACLE)
+# define COMMENT_TABLE(name, text) COMMENT ON TABLE name IS text;
+# define COMMENT_COLUMN(name, text) COMMENT ON COLUMN name IS text;
+#else
+# define COMMENT_TABLE(name, text)
+# define COMMENT_COLUMN(name, text)
+#endif
+
+#ifdef DB_POSTGRESQL
+# define COMMENT_INDEX(name, text) COMMENT ON INDEX name IS text;
+#else
+# define COMMENT_INDEX(name, text)
+#endif
