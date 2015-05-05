@@ -21,6 +21,8 @@ package org.netxms.ui.eclipse.console;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.netxms.base.Logger;
+import org.netxms.base.LoggingFacility;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -44,6 +46,30 @@ public class Activator extends AbstractUIPlugin
 		plugin = this;
 		BrandingManager.create();
       ColorManager.create();
+
+      Logger.setLoggingFacility(new LoggingFacility() {
+         @Override
+         public void writeLog(int level, String tag, String message, Throwable t)
+         {
+            int s;
+            switch(level)
+            {
+               case LoggingFacility.ERROR:
+                  s = Status.ERROR;
+                  break;
+               case LoggingFacility.WARNING:
+                  s = Status.WARNING;
+                  break;
+               case LoggingFacility.INFO:
+                  s = Status.INFO;
+                  break;
+               default:
+                  s = Status.OK;
+                  break;
+            }
+            log(s, tag + ": " + message, t);
+         }
+      });
 	}
 
 	/*
@@ -93,19 +119,19 @@ public class Activator extends AbstractUIPlugin
 	 * 
 	 * @param msg
 	 */
-	public static void logError(String msg, Exception e)
+	public static void logError(String msg, Throwable t)
 	{
-		log(Status.ERROR, msg, e);
+		log(Status.ERROR, msg, t);
 	}
 
 	/**
 	 * Log via platform logging facilities
 	 * 
 	 * @param msg
-	 * @param e
+	 * @param t
 	 */
-	public static void log(int status, String msg, Exception e)
+	public static void log(int status, String msg, Throwable t)
 	{
-		getDefault().getLog().log(new Status(status, PLUGIN_ID, Status.OK, msg, e));
+		getDefault().getLog().log(new Status(status, PLUGIN_ID, Status.OK, msg, t));
 	}
 }
