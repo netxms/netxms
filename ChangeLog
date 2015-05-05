@@ -9,6 +9,7 @@
 - Management console:
 	- Fixed broken VPN connectors configuration
 	- "Inverted values" option on line charts
+	- Filter in predefined graphs tree
 - Fixed issues: #816, #817
 
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IElementComparer;
@@ -40,7 +41,11 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
@@ -48,6 +53,8 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
@@ -62,9 +69,11 @@ import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphFolder;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeContentProvider;
+import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeFilter;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 
 /**
  * Navigation view for predefined graphs
@@ -75,11 +84,15 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 	public static final String ID = "org.netxms.ui.eclipse.perfview.views.PredefinedGraphTree"; //$NON-NLS-1$
 	
 	private TreeViewer viewer;
+   private FilterText filterText;
+   private boolean filterEnabled = true;
 	private NXCSession session;
 	private RefreshAction actionRefresh;
 	private Action actionOpen; 
 	private Action actionProperties; 
-	private Action actionDelete; 
+	private Action actionDelete;
+	private Action actionShowFilter;
+   private GraphTreeFilter filter; 
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -89,7 +102,24 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 	{
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
-		parent.setLayout(new FillLayout());
+		parent.setLayout(new FormLayout());
+		
+      // Create filter area
+      filterText = new FilterText(parent, SWT.NONE);
+      filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+      filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+         }
+      });
 		
 		viewer = new TreeViewer(parent, SWT.NONE);
 		viewer.setUseHashlookup(true);
@@ -148,13 +178,36 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 				actionProperties.setEnabled(enabled);
 			}
 		});
+		filter = new GraphTreeFilter();
+		viewer.addFilter(filter);
 
+      // Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(filterText);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      viewer.getTree().setLayoutData(fd);
+      
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
+		
+      activateContext();
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
 		
 		reloadGraphList();
       session.addListener(this);
+
+      // Set initial focus to filter input line
+      if (filterEnabled)
+         filterText.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
 	}
 
 	/* (non-Javadoc)
@@ -163,7 +216,10 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 	@Override
 	public void setFocus()
 	{
-		viewer.getTree().setFocus();
+	   if (filterEnabled)
+	      filterText.setFocus();
+	   else
+	      viewer.getTree().setFocus();
 	}
 
 	/**
@@ -171,6 +227,8 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 	 */
 	private void createActions()
 	{
+      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+      
 		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
@@ -213,7 +271,33 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 				editPredefinedGraph();
 			}
 		};
+
+      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            enableFilter(!filterEnabled);
+            actionShowFilter.setChecked(filterEnabled);
+         }
+      };
+      actionShowFilter.setId("org.netxms.ui.eclipse.perfview.actions.showFilter"); //$NON-NLS-1$
+      actionShowFilter.setChecked(filterEnabled);
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.perfview.commands.show_graph_filter"); //$NON-NLS-1$
+      final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
+      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
 	}
+	
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.perfview.context.PredefinedGraphTree"); //$NON-NLS-1$
+      }
+   }
 	
 	/**
 	 * Create pop-up menu for user list
@@ -274,11 +358,9 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
-		manager.add(actionOpen);
-		manager.add(actionDelete);
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		manager.add(new Separator());
-		manager.add(actionProperties);
+		manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -315,6 +397,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 					public void run()
 					{
 						viewer.setInput(list);
+						viewer.expandToLevel(2);
 					}
 				});
 			}
@@ -513,6 +596,52 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
                }
             });
             break;
+      }
+   }
+
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   private void enableFilter(boolean enable)
+   {
+      filterEnabled = enable;
+      filterText.setVisible(filterEnabled);
+      FormData fd = (FormData)viewer.getTree().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      filterText.getParent().layout(true, true);
+      if (enable)
+         filterText.setFocus();
+      else
+         setFilter(""); //$NON-NLS-1$
+   }
+
+   /**
+    * Set filter text
+    * 
+    * @param text New filter text
+    */
+   private void setFilter(final String text)
+   {
+      filterText.setText(text);
+      onFilterModify();
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   private void onFilterModify()
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      viewer.refresh(false);
+      
+      GraphSettings s = filter.getLastMatch();
+      if (s != null)
+      {
+         viewer.expandToLevel(s, 1);
+         viewer.setSelection(new StructuredSelection(s), true);
       }
    }
 }

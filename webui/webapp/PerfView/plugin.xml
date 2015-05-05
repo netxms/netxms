@@ -187,6 +187,10 @@
             id="org.netxms.ui.eclipse.perfview.commands.open_predef_graph_tree"
             name="%command.name.PredefGraphs">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.perfview.commands.show_graph_filter"
+            name="Show filter">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -226,6 +230,23 @@
             class="org.netxms.ui.eclipse.perfview.actions.ShowTableLastValues"
             priority="20">
       </handler>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.perfview.commands.show_graph_filter"
+            contextId="org.netxms.ui.eclipse.perfview.context.PredefinedGraphTree"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.perfview.context.PredefinedGraphTree"
+            name="Graphs"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
 
 </plugin>
