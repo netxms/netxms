@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.netxms.base.CompatTools;
 import org.netxms.base.GeoLocation;
+import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCommon;
@@ -273,6 +274,10 @@ public abstract class AbstractObject
 		      if (p != null)
 		      {
 		         moduleData.put(module, p.createModuleData(msg, id + 1));
+		      }
+		      else
+		      {
+		         Logger.error("AbstractObject", "Unable to find data provider for module " + module);
 		      }
 		   }
 		}

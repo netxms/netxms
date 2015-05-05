@@ -28,6 +28,7 @@ Export-Package: org.netxms.base,
  org.netxms.client.objects,
  org.netxms.client.objecttools,
  org.netxms.client.packages,
+ org.netxms.client.plugin,
  org.netxms.client.reporting,
  org.netxms.client.server,
  org.netxms.client.services,
@@ -44,3 +45,6 @@ Export-Package: org.netxms.base,
  org.simpleframework.xml.stream,
  org.simpleframework.xml.transform,
  org.simpleframework.xml.util
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0"
+Bundle-ActivationPolicy: lazy
+Bundle-Activator: org.netxms.client.plugin.Activator
