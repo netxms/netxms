@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.0-M4], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0-M5], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -3117,3 +3117,4 @@ echo "const TCHAR *g_cc = _T(\"${CC}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_cxx = _T(\"${CXX}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_ld = _T(\"${LD}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_perl = _T(\"${PERL}\");" >> $FLAGS_CPP
+echo "const TCHAR *g_serverLibs = _T(\"${SERVER_LIBS}\");" >> $FLAGS_CPP
