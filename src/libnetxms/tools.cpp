@@ -25,6 +25,8 @@
 #include <nms_agent.h>
 #include <nms_threads.h>
 #include <netxms-regex.h>
+#include <nxstat.h>
+
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -543,6 +545,53 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 
 	buffer[outpos] = 0;
 	return buffer;
+}
+
+/**
+ * Create folder
+ */
+BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory)
+{
+   NX_STAT_STRUCT st;
+   TCHAR *previous = _tcsdup(directory);
+   TCHAR *ptr = _tcsrchr(previous, FS_PATH_SEPARATOR_CHAR);
+   BOOL result = FALSE;
+   if (ptr != NULL)
+   {
+      *ptr = 0;
+      if (CALL_STAT(previous, &st) != 0)
+      {
+         result = CreateFolder(previous);
+         if (result)
+         {
+            result = (CALL_STAT(previous, &st) == 0);
+         }
+      }
+      else
+      {
+         if (S_ISDIR(st.st_mode))
+         {
+            result = TRUE;
+         }
+      }
+   }
+   else
+   {
+      result = true;
+      st.st_mode = 0700;
+   }
+   safe_free(previous);
+
+   if (result)
+   {
+#ifdef _WIN32
+      result = CreateDirectory(directory, NULL);
+#else
+      result = (_tmkdir(directory, st.st_mode) == 0);
+#endif /* _WIN32 */
+   }
+
+   return result;
 }
 
 /**
