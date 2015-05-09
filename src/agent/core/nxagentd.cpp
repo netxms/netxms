@@ -21,7 +21,7 @@
 **/
 
 #include "nxagentd.h"
-#include <nxdbapi.h>
+#include <shlobj.h>
 
 #if defined(_WIN32)
 #include <conio.h>
@@ -744,6 +744,7 @@ BOOL Initialize()
 	}
 
    DebugPrintf(INVALID_INDEX, 1, _T("Data directory: %s"), g_szDataDirectory);
+   CreateFolder(g_szDataDirectory);
 
 	// Initialize persistent storage
 	s_registry = new Config;
@@ -787,6 +788,9 @@ BOOL Initialize()
    SSL_load_error_strings();
 #endif
 
+	DBSetDebugPrintCallback(DebugPrintfCallback);
+	DBInit(MSG_DB_LIBRARY, MSG_SQL_ERROR);
+
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
 	   InitSessionList();
@@ -806,6 +810,11 @@ BOOL Initialize()
 		// Add built-in actions
 		AddAction(_T("Agent.Restart"), AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, _T("CORE"), _T("Restart agent"));
 
+      if (!OpenLocalDatabase())
+      {
+         nxlog_write(MSG_LOCAL_DB_OPEN_FAILED, NXLOG_ERROR, NULL);
+      }
+
 	   // Load platform subagents
 #if !defined(_WIN32)
 		InitStaticSubagents();
@@ -823,9 +832,6 @@ BOOL Initialize()
 		if (!WaitForProcess(s_processToWaitFor))
 	      nxlog_write(MSG_WAITFORPROCESS_FAILED, EVENTLOG_ERROR_TYPE, "s", s_processToWaitFor);
 	}
-
-	DBSetDebugPrintCallback(DebugPrintfCallback);
-	DBInit(MSG_DB_LIBRARY, MSG_SQL_ERROR);
 
 	// Load other subagents
    if (m_pszSubagentList != NULL)
@@ -1076,6 +1082,7 @@ void Shutdown()
 	}
 
    UnloadAllSubAgents();
+   CloseLocalDatabase();
    nxlog_write(MSG_AGENT_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
    nxlog_close();
 
@@ -1217,6 +1224,14 @@ static void InitConfig()
 {
 	g_config = new Config();
 	g_config->setTopLevelTag(_T("config"));
+
+   // Set default data directory on Windows
+#ifdef _WIN32
+   if (SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, g_szDataDirectory) == S_OK)
+   {
+      _tcscat(g_szDataDirectory, _T("\\nxagentd"));
+   }
+#endif
 }
 
 /**

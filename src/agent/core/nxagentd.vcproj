@@ -398,6 +398,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\localdb.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\master.cpp"
 				>
 			</File>

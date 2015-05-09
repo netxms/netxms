@@ -31,6 +31,7 @@
 #include <nxqueue.h>
 #include <nxlog.h>
 #include <nxcldefs.h>
+#include <nxdbapi.h>
 #include "messages.h"
 #include "nxsnmp.h"
 
@@ -514,6 +515,10 @@ SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName);
 
 UINT32 GenerateMessageId();
 
+bool OpenLocalDatabase();
+void CloseLocalDatabase();
+DB_HANDLE GetLocalDatabaseHandle();
+
 #ifdef _WIN32
 
 void InitService();
@@ -542,6 +547,7 @@ extern TCHAR g_szConfigServer[];
 extern TCHAR g_szRegistrar[];
 extern TCHAR g_szListenAddress[];
 extern TCHAR g_szConfigIncludeDir[];
+extern TCHAR g_szDataDirectory[];
 extern TCHAR g_masterAgent[];
 extern TCHAR g_szSNMPTrapListenAddress[];
 extern UINT16 g_wListenPort;
