@@ -9283,7 +9283,7 @@ void ClientSession::pushDCIData(NXCPMessage *pRequest)
             pRequest->getFieldAsString(dwId++, szName, 256);
 				if (szName[0] == _T('@'))
 				{
-					UINT32 ipAddr = ntohl(ResolveHostName(&szName[1]));
+               InetAddress ipAddr = InetAddress::resolveHostName(&szName[1]);
 					object = FindNodeByIP(0, ipAddr);
 				}
 				else

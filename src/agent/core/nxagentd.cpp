@@ -21,9 +21,9 @@
 **/
 
 #include "nxagentd.h"
-#include <shlobj.h>
 
 #if defined(_WIN32)
+#include <shlobj.h>
 #include <conio.h>
 #else
 #include <signal.h>
