@@ -6177,7 +6177,7 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_MIB_TIMESTAMP);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
-      return new Date(response.getFieldAsInt64(NXCPCodes.VID_TIMESTAMP) * 1000L);
+      return response.getFieldAsDate(NXCPCodes.VID_TIMESTAMP);
    }
 
    /**
@@ -7851,8 +7851,8 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)baseObjectId);
       msg.setFieldInt32(NXCPCodes.VID_NUM_COLUMNS, columns.size());
       msg.setFieldInt16(NXCPCodes.VID_FUNCTION, (function != null) ? function.getValue() : AggregationFunction.LAST.getValue());
-      msg.setFieldInt64(NXCPCodes.VID_TIME_FROM, (periodStart != null) ? periodStart.getTime() / 1000 : 0);
-      msg.setFieldInt64(NXCPCodes.VID_TIME_TO, (periodEnd != null) ? periodEnd.getTime() / 1000 : 0);
+      msg.setField(NXCPCodes.VID_TIME_FROM, periodStart);
+      msg.setField(NXCPCodes.VID_TIME_TO, periodEnd);
       msg.setFieldInt32(NXCPCodes.VID_FLAGS, multiInstance ? 1 : 0);  // FIXME: define flags properly
       long id = NXCPCodes.VID_COLUMN_INFO_BASE;
       for(DciSummaryTableColumn c : columns)
@@ -8238,12 +8238,9 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LOC_HISTORY);
 
-      int timeFrom = (from != null) ? (int) (from.getTime() / 1000) : 0;
-      int timeTo = (to != null) ? (int) (to.getTime() / 1000) : 0;
-      
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
-      msg.setFieldInt32(NXCPCodes.VID_TIME_FROM, (int)timeFrom);
-      msg.setFieldInt32(NXCPCodes.VID_TIME_TO, (int)timeTo);
+      msg.setField(NXCPCodes.VID_TIME_FROM, from);
+      msg.setField(NXCPCodes.VID_TIME_TO, to);
       sendMessage(msg);
       
       NXCPMessage response = waitForRCC(msg.getMessageId());

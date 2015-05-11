@@ -13801,8 +13801,8 @@ void ClientSession::getLocationHistory(NXCPMessage *request)
          DB_STATEMENT hStmt = DBPrepare(hdb, query);
          if (hStmt != NULL)
          {
-            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, request->getFieldAsUInt32(VID_TIME_TO));
-            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, request->getFieldAsUInt32(VID_TIME_FROM));
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT64)request->getFieldAsTime(VID_TIME_TO));
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT64)request->getFieldAsTime(VID_TIME_FROM));
             DB_RESULT hResult = DBSelectPrepared(hStmt);
             if (hResult != NULL)
             {
