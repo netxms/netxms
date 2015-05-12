@@ -564,12 +564,15 @@ BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, U
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, INT64 value);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, QWORD value);
 BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, double value);
+CONDITION LIBNETXMS_EXPORTABLE AgentGetShutdownCondition();
+bool LIBNETXMS_EXPORTABLE AgentSleepAndCheckForShutdown(UINT32 sleepTime);
 
 void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
                                           void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
                                           void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
 														bool (* enumerateSessions)(bool (*)(AbstractCommSession *, void *), void *),
                                           bool (* sendFile)(void *, UINT32, const TCHAR *, long),
-                                          bool (* pushData)(const TCHAR *, const TCHAR *, UINT32));
+                                          bool (* pushData)(const TCHAR *, const TCHAR *, UINT32),
+                                          CONDITION shutdownCondition);
 
 #endif   /* _nms_agent_h_ */

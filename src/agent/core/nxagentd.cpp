@@ -184,6 +184,7 @@ static TCHAR s_dailyLogFileSuffix[64] = _T("");
 static Config *s_registry = NULL;
 static TCHAR s_executableName[MAX_PATH];
 
+static CONDITION s_subAgentsStopCondition = INVALID_CONDITION_HANDLE;
 #if defined(_WIN32)
 static CONDITION s_shutdownCondition = INVALID_CONDITION_HANDLE;
 #endif
@@ -770,7 +771,8 @@ BOOL Initialize()
 #endif
 
    // Initialize API for subagents
-   InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, EnumerateSessionsBySubagent, SendFileToServer, PushData);
+   s_subAgentsStopCondition = ConditionCreate(TRUE);
+   InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, EnumerateSessionsBySubagent, SendFileToServer, PushData, s_subAgentsStopCondition);
    DebugPrintf(INVALID_INDEX, 1, _T("Subagent API initialized"));
 
    // Initialize cryptografy
@@ -1061,6 +1063,7 @@ void Shutdown()
 		StopWatchdog();
 
    g_dwFlags |= AF_SHUTDOWN;
+   ConditionSet(s_subAgentsStopCondition);
 
 	if (g_dwFlags & AF_SUBAGENT_LOADER)
 	{

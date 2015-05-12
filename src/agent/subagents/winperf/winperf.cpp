@@ -30,11 +30,6 @@
 #define WPF_ENABLE_DEFAULT_COUNTERS    0x0001
 
 /**
- * Shutdown condition
- */
-HANDLE g_hCondShutdown = NULL;
-
-/**
  * Static variables
  */
 static DWORD m_dwFlags = WPF_ENABLE_DEFAULT_COUNTERS;
@@ -393,8 +388,6 @@ static LONG H_FreeMemoryPct(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVa
  */
 static BOOL SubAgentInit(Config *config)
 {
-   // Create shutdown condition object
-   g_hCondShutdown = CreateEvent(NULL, TRUE, FALSE, NULL);
    StartCollectorThreads();
 	return TRUE;
 }
@@ -404,9 +397,7 @@ static BOOL SubAgentInit(Config *config)
  */
 static void SubAgentShutdown()
 {
-   if (g_hCondShutdown != NULL)
-      SetEvent(g_hCondShutdown);
-   Sleep(500);
+   JoinCollectorThreads();
 }
 
 /**

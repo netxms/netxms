@@ -42,6 +42,7 @@ WinPerfCounterSet::WinPerfCounterSet(DWORD interval, TCHAR cls)
 	m_interval = interval;
 	m_class = cls;
 	m_counters = new ObjectArray<WINPERF_COUNTER>(32, 32, true);
+   m_collectorThread = INVALID_THREAD_HANDLE;
 }
 
 /**
@@ -83,7 +84,7 @@ void WinPerfCounterSet::collectorThread()
 		AgentWriteDebugLog(2, _T("WINPERF: %s waiting for set change"), szFName);
 
 		HANDLE handles[2];
-		handles[0] = g_hCondShutdown;
+      handles[0] = AgentGetShutdownCondition();
 		handles[1] = m_changeCondition;
       DWORD waitStatus = WaitForMultipleObjects(2, handles, FALSE, INFINITE);
 		if (waitStatus == WAIT_OBJECT_0)
@@ -135,7 +136,7 @@ void WinPerfCounterSet::collectorThread()
 		while(1)
 		{
 			HANDLE handles[2];
-			handles[0] = g_hCondShutdown;
+         handles[0] = AgentGetShutdownCondition();
 			handles[1] = m_changeCondition;
 			waitStatus = WaitForMultipleObjects(2, handles, FALSE, m_interval);
 			if (waitStatus == WAIT_OBJECT_0)
@@ -211,7 +212,15 @@ THREAD_RESULT THREAD_CALL WinPerfCounterSet::collectorThreadStarter(void *arg)
  */
 void WinPerfCounterSet::startCollectorThread()
 {
-	ThreadCreate(collectorThreadStarter, 0, this);
+	m_collectorThread = ThreadCreateEx(collectorThreadStarter, 0, this);
+}
+
+/**
+ * Join collector thread
+ */
+void WinPerfCounterSet::joinCollectorThread()
+{
+   ThreadJoin(m_collectorThread);
 }
 
 /**
@@ -453,4 +462,13 @@ void StartCollectorThreads()
 {
    for(int i = 0; i < 3; i++)
 		m_cntSet[i]->startCollectorThread();
+}
+
+/**
+ * Join collector threads
+ */
+void JoinCollectorThreads()
+{
+   for(int i = 0; i < 3; i++)
+		m_cntSet[i]->joinCollectorThread();
 }

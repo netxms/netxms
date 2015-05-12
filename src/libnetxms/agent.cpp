@@ -33,6 +33,7 @@ static void (* s_fpSendTrap2)(UINT32, const TCHAR *, int, TCHAR **) = NULL;
 static bool (* s_fpEnumerateSessions)(bool (*)(AbstractCommSession *, void *), void *) = NULL;
 static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long) = NULL;
 static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32) = NULL;
+static CONDITION s_agentShutdownCondition = INVALID_CONDITION_HANDLE;
 
 /**
  * Initialize subagent API
@@ -42,7 +43,8 @@ void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHA
 														void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
 														bool (* enumerateSessions)(bool (*)(AbstractCommSession *, void *), void*),
 														bool (* sendFile)(void *, UINT32, const TCHAR *, long),
-														bool (* pushData)(const TCHAR *, const TCHAR *, UINT32))
+														bool (* pushData)(const TCHAR *, const TCHAR *, UINT32),
+                                          CONDITION shutdownCondition)
 {
    s_fpWriteLog = writeLog;
 	s_fpSendTrap1 = sendTrap1;
@@ -50,6 +52,7 @@ void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHA
 	s_fpEnumerateSessions = enumerateSessions;
 	s_fpSendFile = sendFile;
 	s_fpPushData = pushData;
+   s_agentShutdownCondition = shutdownCondition;
 }
 
 /**
@@ -324,4 +327,20 @@ BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, d
 
 	_sntprintf(buffer, sizeof(buffer), _T("%f"), value);
 	return AgentPushParameterData(parameter, buffer);
+}
+
+/**
+ * Get shutdown condition
+ */
+CONDITION LIBNETXMS_EXPORTABLE AgentGetShutdownCondition()
+{
+   return s_agentShutdownCondition;
+}
+
+/**
+ * Sleep and check for agent shutdown
+ */
+bool LIBNETXMS_EXPORTABLE AgentSleepAndCheckForShutdown(UINT32 sleepTime)
+{
+   return ConditionWait(s_agentShutdownCondition, sleepTime);
 }

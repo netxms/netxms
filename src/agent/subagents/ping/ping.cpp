@@ -25,7 +25,6 @@
 /**
  * Static data
  */
-static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
 #ifdef _NETWARE
 static CONDITION m_hCondTerminate = INVALID_CONDITION_HANDLE;
 #endif
@@ -116,7 +115,7 @@ retry:
 		dwElapsedTime = (UINT32)(GetCurrentTimeMs() - qwStartTime);
 		dwInterval = 60000 / m_dwPollsPerMinute;
 
-		if (ConditionWait(m_hCondShutdown, (dwInterval > dwElapsedTime + 1000) ? dwInterval - dwElapsedTime : 1000))
+		if (AgentSleepAndCheckForShutdown((dwInterval > dwElapsedTime + 1000) ? dwInterval - dwElapsedTime : 1000))
 			break;
 	}
 	return THREAD_OK;
@@ -241,11 +240,9 @@ static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 static void SubagentShutdown()
 {
 	m_bShutdown = TRUE;
-	if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
-		ConditionSet(m_hCondShutdown);
-
    for(int i = 0; i < s_targets.size(); i++)
       ThreadJoin(s_targets.get(i)->hThread);
+   AgentWriteDebugLog(2, _T("PING: all poller threads stopped"));
 
 #ifdef _NETWARE
 	// Notify main thread that NLM can exit
@@ -362,15 +359,14 @@ static BOOL SubagentInit(Config *config)
 					*pEnd = 0;
 				StrStrip(pItem);
 				if (!AddTargetFromConfig(pItem))
-					AgentWriteLog(EVENTLOG_WARNING_TYPE,
+					AgentWriteLog(NXLOG_WARNING,
 							_T("Unable to add ICMP ping target from configuration file. ")
 							_T("Original configuration record: %s"), pItem);
 			}
 			free(m_pszTargetList);
 		}
 
-		// Create shutdown condition and start poller threads
-		m_hCondShutdown = ConditionCreate(TRUE);
+		// Start poller threads
       for(int i = 0; i < s_targets.size(); i++)
       {
          PING_TARGET *t = s_targets.get(i);
