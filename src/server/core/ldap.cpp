@@ -674,7 +674,7 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
  {
    int ldap_error;
 
-   if(m_ldapConn != NULL)
+   if (m_ldapConn != NULL)
    {
 #ifdef _WIN32
       ldap_error = ldap_simple_bind_s(m_ldapConn, m_userDN, m_userPassword);

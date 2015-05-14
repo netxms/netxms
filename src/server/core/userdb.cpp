@@ -235,16 +235,16 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
          *pdwId = user->getId(); // always set user ID for caller so audit log will contain correct user ID on failures as well
 
 
-         if(user->isLDAPUser())
+         if (user->isLDAPUser())
          {
-            if(user->isDisabled() || user->hasSyncException())
+            if (user->isDisabled() || user->hasSyncException())
             {
                dwResult = RCC_ACCOUNT_DISABLED;
                goto result;
             }
             LDAPConnection conn;
             dwResult = conn.ldapUserLogin(user->getDn(), password);
-            if(dwResult == RCC_SUCCESS)
+            if (dwResult == RCC_SUCCESS)
                bPasswordValid = TRUE;
             goto result;
          }

@@ -23,6 +23,12 @@
 #include "nxcore.h"
 
 /**
+ * Event parameter names
+ */
+static const TCHAR *s_paramNamesReach[] = { _T("dciName"), _T("dciDescription"), _T("thresholdValue"), _T("currentValue"), _T("dciId"), _T("instance"), _T("isRepeatedEvent") };
+static const TCHAR *s_paramNamesRearm[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("instance"), _T("thresholdValue"), _T("currentValue") };
+
+/**
  * DCI cache loader queue
  */
 extern Queue g_dciCacheLoaderQueue;
@@ -433,54 +439,48 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
  */
 void DCItem::checkThresholds(ItemValue &value)
 {
-	static const TCHAR *paramNamesReach[] = { _T("dciName"), _T("dciDescription"), _T("thresholdValue"), _T("currentValue"), _T("dciId"), _T("instance"), _T("isRepeatedEvent") };
-	static const TCHAR *paramNamesRearm[] = { _T("dciName"), _T("dciDescription"), _T("dciId"), _T("instance"), _T("thresholdValue"), _T("currentValue") };
-
 	if (m_thresholds == NULL)
 		return;
-
-   UINT32 dwInterval;
-   ItemValue checkValue;
-	EVENT_TEMPLATE *evt;
-	time_t now = time(NULL);
 
    for(int i = 0; i < m_thresholds->size(); i++)
    {
 		Threshold *t = m_thresholds->get(i);
+      ItemValue checkValue;
       ThresholdCheckResult result = t->check(value, m_ppValueCache, checkValue, m_pNode, this);
       switch(result)
       {
          case ACTIVATED:
-            PostEventWithNames(t->getEventCode(), m_pNode->getId(), "ssssisd",
-					paramNamesReach, m_name, m_szDescription, t->getStringValue(),
-               (const TCHAR *)checkValue, m_id, m_instance, 0);
-				evt = FindEventTemplateByCode(t->getEventCode());
-				if (evt != NULL)
-					t->markLastEvent((int)evt->dwSeverity);
-            if (!(m_flags & DCF_ALL_THRESHOLDS))
-               i = m_thresholds->size();  // Stop processing
+            {
+               PostEventWithNames(t->getEventCode(), m_pNode->getId(), "ssssisd",
+					   s_paramNamesReach, m_name, m_szDescription, t->getStringValue(),
+                  (const TCHAR *)checkValue, m_id, m_instance, 0);
+				   EVENT_TEMPLATE *evt = FindEventTemplateByCode(t->getEventCode());
+				   if (evt != NULL)
+					   t->markLastEvent((int)evt->dwSeverity);
+               if (!(m_flags & DCF_ALL_THRESHOLDS))
+                  i = m_thresholds->size();  // Stop processing
+            }
             break;
          case DEACTIVATED:
             PostEventWithNames(t->getRearmEventCode(), m_pNode->getId(), "ssisss",
-					paramNamesRearm, m_name, m_szDescription, m_id, m_instance,
+					s_paramNamesRearm, m_name, m_szDescription, m_id, m_instance,
 					t->getStringValue(), (const TCHAR *)checkValue);
             break;
          case ALREADY_ACTIVE:
-				// Check if we need to re-sent threshold violation event
-				if (t->getRepeatInterval() == -1)
-					dwInterval = g_thresholdRepeatInterval;
-				else
-					dwInterval = (UINT32)t->getRepeatInterval();
-				if ((dwInterval != 0) && (t->getLastEventTimestamp() + (time_t)dwInterval < now))
-				{
-					PostEventWithNames(t->getEventCode(), m_pNode->getId(), "ssssisd",
-						paramNamesReach, m_name, m_szDescription, t->getStringValue(),
-						(const TCHAR *)checkValue, m_id, m_instance, 1);
-					evt = FindEventTemplateByCode(t->getEventCode());
-					if (evt != NULL)
-						t->markLastEvent((int)evt->dwSeverity);
-				}
-
+            {
+   				// Check if we need to re-sent threshold violation event
+	            time_t now = time(NULL);
+               UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();
+				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now))
+				   {
+					   PostEventWithNames(t->getEventCode(), m_pNode->getId(), "ssssisd",
+						   s_paramNamesReach, m_name, m_szDescription, t->getStringValue(),
+						   (const TCHAR *)checkValue, m_id, m_instance, 1);
+					   EVENT_TEMPLATE *evt = FindEventTemplateByCode(t->getEventCode());
+					   if (evt != NULL)
+						   t->markLastEvent((int)evt->dwSeverity);
+				   }
+            }
 				if (!(m_flags & DCF_ALL_THRESHOLDS))
 				{
 					i = m_thresholds->size();  // Threshold condition still true, stop processing
@@ -754,23 +754,47 @@ void DCItem::processNewError()
 
 	for(int i = 0; i < getThresholdCount(); i++)
    {
-		Threshold *thr = m_thresholds->get(i);
-      ThresholdCheckResult result = thr->checkError(m_dwErrorCount);
+		Threshold *t = m_thresholds->get(i);
+      ThresholdCheckResult result = t->checkError(m_dwErrorCount);
       switch(result)
       {
          case ACTIVATED:
-            PostEvent(thr->getEventCode(), m_pNode->getId(), "ssssis", m_name,
-                      m_szDescription, _T(""), _T(""), m_id, m_instance);
-            if (!(m_flags & DCF_ALL_THRESHOLDS))
-               i = m_thresholds->size();  // Stop processing
+            {
+               PostEventWithNames(t->getEventCode(), m_pNode->getId(), "ssssisd",
+					   s_paramNamesReach, m_name, m_szDescription, _T(""), _T(""),
+                  m_id, m_instance, 0);
+				   EVENT_TEMPLATE *evt = FindEventTemplateByCode(t->getEventCode());
+				   if (evt != NULL)
+					   t->markLastEvent((int)evt->dwSeverity);
+               if (!(m_flags & DCF_ALL_THRESHOLDS))
+               {
+                  i = m_thresholds->size();  // Stop processing
+               }
+            }
             break;
          case DEACTIVATED:
-            PostEvent(thr->getRearmEventCode(), m_pNode->getId(), "ssis", m_name,
-                      m_szDescription, m_id, m_instance);
+            PostEventWithNames(t->getRearmEventCode(), m_pNode->getId(), "ssisss",
+					s_paramNamesRearm, m_name, m_szDescription, m_id, m_instance, _T(""), _T(""));
             break;
          case ALREADY_ACTIVE:
-            if (!(m_flags & DCF_ALL_THRESHOLDS))
-               i = m_thresholds->size();  // Threshold condition still true, stop processing
+            {
+   				// Check if we need to re-sent threshold violation event
+            	time_t now = time(NULL);
+               UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();
+				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now))
+				   {
+					   PostEventWithNames(t->getEventCode(), m_pNode->getId(), "ssssisd",
+						   s_paramNamesReach, m_name, m_szDescription, _T(""), _T(""),
+						   m_id, m_instance, 1);
+					   EVENT_TEMPLATE *evt = FindEventTemplateByCode(t->getEventCode());
+					   if (evt != NULL)
+						   t->markLastEvent((int)evt->dwSeverity);
+				   }
+            }
+				if (!(m_flags & DCF_ALL_THRESHOLDS))
+				{
+					i = m_thresholds->size();  // Threshold condition still true, stop processing
+				}
             break;
          default:
             break;
