@@ -25,6 +25,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
+#include <string.h>
 #include <errno.h>
 
 #ifdef _WIN32
@@ -36,10 +37,21 @@
 
 #else /* _WIN32 */
 
+#include <unistd.h>
+#include <sys/time.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+
 #define SOCKET int
 #define closesocket(x) close(x)
+#define WSAGetLastError() (errno)
+#define WSAEWOULDBLOCK EWOULDBLOCK
 
 #define SELECT_NFDS(f) ((f) + 1)
+
+#ifndef SUN_LEN
+#define SUN_LEN(su) (sizeof(*(su)) - sizeof((su)->sun_path) + strlen((su)->sun_path))
+#endif
 
 #endif /* _WIN32 */
 
