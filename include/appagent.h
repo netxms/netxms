@@ -123,6 +123,29 @@ typedef struct __appagent_metric
 } APPAGENT_METRIC;
 
 /**
+ * Application agent list definition
+ */
+typedef struct __appagent_list
+{
+	const TCHAR *name;
+	const TCHAR *userArg;
+	int (*handler)(const TCHAR *, const TCHAR *, StringList *);
+	const TCHAR *description;
+} APPAGENT_LIST;
+
+/**
+ * Application agent table definition
+ */
+typedef struct __appagent_table
+{
+	const TCHAR *name;
+	const TCHAR *userArg;
+	int (*handler)(const TCHAR *, const TCHAR *, Table *);
+   const TCHAR *instanceColumns;
+	const TCHAR *description;
+} APPAGENT_TABLE;
+
+/**
  * Agent initialization structure
  */
 typedef struct __appagent_init
@@ -133,6 +156,10 @@ typedef struct __appagent_init
 	void (*logger)(int, const TCHAR *, va_list);
 	int numMetrics;
 	APPAGENT_METRIC *metrics;
+	int numLists;
+	APPAGENT_LIST *lists;
+	int numTables;
+	APPAGENT_LIST *tables;
 } APPAGENT_INIT;
 
 /**
@@ -141,6 +168,7 @@ typedef struct __appagent_init
 bool APPAGENT_EXPORTABLE AppAgentInit(APPAGENT_INIT *initData);
 void APPAGENT_EXPORTABLE AppAgentStart();
 void APPAGENT_EXPORTABLE AppAgentStop();
+void APPAGENT_EXPORTABLE AppAgentPostEvent(int code, const TCHAR *name, const char *format, ...);
 
 /**
  * Client-side API

@@ -726,7 +726,7 @@ void SyncGroupMembers(Group* group, Entry *obj)
  * Gets user object from it's ID
  * DB should be locked outside this function
  */
-UserDatabaseObject* GetUser(UINT32 userID)
+UserDatabaseObject *GetUser(UINT32 userID)
 {
    for(int i = 0; i < m_userCount; i++)
    {
@@ -740,7 +740,7 @@ UserDatabaseObject* GetUser(UINT32 userID)
  * Gets user object from it's ID
  * DB should be locked outside this function
  */
-UserDatabaseObject* GetUser(const TCHAR* dn)
+UserDatabaseObject *GetUser(const TCHAR* dn)
 {
    for(int i = 0; i < m_userCount; i++)
    {
@@ -751,9 +751,9 @@ UserDatabaseObject* GetUser(const TCHAR* dn)
 }
 
 /**
- * Acess to user DB must be loked when this function is called
+ * Access to user DB must be locked when this function is called
  */
-bool UserNameIsUnique(TCHAR* name, UINT32 id)
+bool UserNameIsUnique(const TCHAR *name, UINT32 id)
 {
    for(int i = 0; i < m_userCount; i++)
 		if (!(m_users[i]->getId() & GROUP_FLAG) && !_tcscmp(m_users[i]->getName(), name) && m_users[i]->getId() != id)
@@ -764,7 +764,7 @@ bool UserNameIsUnique(TCHAR* name, UINT32 id)
 /**
  * Acess to user DB must be loked when this function is called
  */
-bool GroupNameIsUnique(TCHAR* name, UINT32 id)
+bool GroupNameIsUnique(const TCHAR *name, UINT32 id)
 {
    for(int i = 0; i < m_userCount; i++)
 		if ((m_users[i]->getId() & GROUP_FLAG) && !_tcscmp(m_users[i]->getName(), name) && m_users[i]->getId() != id)

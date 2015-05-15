@@ -1232,6 +1232,7 @@ typedef struct _dir_struc_w
 #endif
 
 #ifdef __cplusplus
+
 inline TCHAR *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1400)
@@ -1261,6 +1262,8 @@ inline char *nx_strncpy_mb(char *pszDest, const char *pszSrc, size_t nLen)
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout);
 int LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex);
 int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout);
+bool LIBNETXMS_EXPORTABLE RecvAll(SOCKET s, void *buffer, size_t size, UINT32 timeout);
+
 #endif   /* __cplusplus */
 
 #ifdef __cplusplus

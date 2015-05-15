@@ -1099,6 +1099,24 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flag
 }
 
 /**
+ * Read exact number of bytes from socket
+ */
+bool RecvAll(SOCKET s, void *buffer, size_t size, UINT32 timeout)
+{
+   size_t bytes = 0;
+   char *pos = (char *)buffer;
+   while(bytes < size)
+   {
+      int b = RecvEx(s, pos, size - bytes, 0, timeout);
+      if (b <= 0)
+         return false;
+      bytes += b;
+      pos += b;
+   }
+   return true;
+}
+
+/**
  * Connect with given timeout
  * Sets socket to non-blocking mode
  */

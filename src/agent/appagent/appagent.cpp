@@ -171,7 +171,7 @@ static void ProcessRequest(HPIPE hPipe)
 }
 
 /**
- * Connector thread for external push command
+ * Connector thread for application agent
  */
 #ifdef _WIN32
 
@@ -420,4 +420,11 @@ void APPAGENT_EXPORTABLE AppAgentStop()
 		ThreadJoin(s_connectorThread);
 		s_connectorThread = INVALID_THREAD_HANDLE;
 	}
+}
+
+/**
+ * Post event
+ */
+void APPAGENT_EXPORTABLE AppAgentPostEvent(int code, const TCHAR *name, const char *format, ...)
+{
 }
