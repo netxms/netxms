@@ -6,6 +6,7 @@
 	- Added "capabilities" in node overview (changed to expandable list view)
 - Fixed bug in handling floating point Windows performance counters
 - Added "comments" attribute to NXSL "DCI" class
+- Fixed broken nxagent.sms SMS driver
 - Management console:
 	- Fixed broken VPN connectors configuration
 	- "Inverted values" option on line charts

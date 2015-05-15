@@ -1,6 +1,6 @@
 /* 
 ** SMS Driver for sending SMS via NetXMS agent
-** Copyright (C) 2007-2010 Victor Kirhenshtein
+** Copyright (C) 2007-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
 ** File: main.cpp
-**
 **/
 
 #include <nms_common.h>
@@ -29,22 +28,18 @@
 #define EXPORT
 #endif
 
+/**
+ * Configuration
+ */
+static TCHAR m_hostName[256] = _T("localhost");
+static UINT16 m_port = 4700;
+static TCHAR m_secret[256] = _T("");
+static UINT32 m_timeout = 30000;	// Default timeout is 30 seconds
 
-//
-// Static data
-//
-
-static TCHAR m_szHostName[256] = _T("localhost");
-static WORD m_wPort = 4700;
-static TCHAR m_szSecret[256] = _T("");
-static DWORD m_dwTimeout = 30000;	// Default timeout is 30 seconds
-
-
-//
-// Initialize driver
-// pszInitArgs format: hostname,port,timeout,secret
-//
-
+/**
+ * Initialize driver
+ * pszInitArgs format: hostname,port,timeout,secret
+ */
 extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 {
 	TCHAR *temp, *ptr, *eptr;
@@ -59,16 +54,16 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
       switch(field)
       {
          case 0:  // Host name
-				nx_strncpy(m_szHostName, ptr, 256);
+				nx_strncpy(m_hostName, ptr, 256);
             break;
          case 1:  // Port
-            m_wPort = (WORD)_tcstoul(ptr, NULL, 0);
+            m_port = (WORD)_tcstoul(ptr, NULL, 0);
             break;
          case 2:  // Timeout
-            m_dwTimeout = _tcstoul(ptr, NULL, 0) * 1000;
+            m_timeout = _tcstoul(ptr, NULL, 0) * 1000;
             break;
          case 3:  // Secret
-				nx_strncpy(m_szSecret, ptr, 256);
+				nx_strncpy(m_secret, ptr, 256);
             break;
          default:
             break;
@@ -78,19 +73,19 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 	return TRUE;
 }
 
+/**
+ * Send SMS
+ */
 extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
-	DWORD dwAddr;
 	BOOL bSuccess = FALSE;
 
-   dwAddr = ResolveHostName(m_szHostName);
-   if ((dwAddr != INADDR_ANY) && (dwAddr != INADDR_NONE))
+   InetAddress addr = InetAddress::resolveHostName(m_hostName);
+   if (addr.isValid())
 	{
-      AgentConnection conn(dwAddr, m_wPort, (m_szSecret[0] != 0) ? AUTH_SHA1_HASH : AUTH_NONE, m_szSecret);
+      AgentConnection conn(addr, m_port, (m_secret[0] != 0) ? AUTH_SHA1_HASH : AUTH_NONE, m_secret);
 
-		conn.setCommandTimeout(m_dwTimeout);
-		//conn.SetEncryptionPolicy(iEncryptionPolicy);
-
+		conn.setCommandTimeout(m_timeout);
       if (conn.connect())
       {
 			TCHAR *argv[2];
@@ -105,17 +100,18 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 	return bSuccess;
 }
 
+/**
+ * Unload driver
+ */
 extern "C" void EXPORT SMSDriverUnload()
 {
 }
 
-
-//
-// DLL Entry point
-//
-
 #ifdef _WIN32
 
+/**
+ * DLL Entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
