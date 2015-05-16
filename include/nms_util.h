@@ -917,6 +917,15 @@ union SockAddrBuffer
 #endif
 
 /**
+ * Get port number from SockAddrBuffer
+ */
+#ifdef WITH_IPV6
+#define SA_PORT(sa) ((((struct sockaddr *)sa)->sa_family == AF_INET) ? ((struct sockaddr_in *)sa)->sin_port : ((struct sockaddr_in6 *)sa)->sin6_port)
+#else
+#define SA_PORT(sa) (((struct sockaddr_in *)sa)->sin_port)
+#endif
+
+/**
  * Compare addresses in sockaddr
  */
 inline bool SocketAddressEquals(struct sockaddr *a1, struct sockaddr *a2)

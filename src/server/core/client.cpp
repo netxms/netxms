@@ -133,7 +133,7 @@ THREAD_RESULT THREAD_CALL ClientListener(void *arg)
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
-   servAddr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
+   servAddr.sin_addr.s_addr = !_tcscmp(g_szListenAddress, _T("*")) ? 0 : ResolveHostName(g_szListenAddress);
    servAddr.sin_port = htons(wListenPort);
 
    // Bind socket

@@ -2646,8 +2646,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
 
       // Find non-existing interfaces
       LockChildList(FALSE);
-      Interface **ppDeleteList = (Interface **)malloc(sizeof(Interface *) * m_dwChildCount);
-      int delCount = 0;
+      ObjectArray<Interface> deleteList(m_dwChildCount, 8, false);
       for(UINT32 i = 0; i < m_dwChildCount; i++)
       {
          if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
@@ -2665,7 +2664,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
 					if (j == pIfList->size())
 					{
 						// No such interface in current configuration, add it to delete list
-						ppDeleteList[delCount++] = pInterface;
+                  deleteList.add(pInterface);
 					}
 				}
          }
@@ -2673,18 +2672,18 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
       UnlockChildList();
 
       // Delete non-existent interfaces
-      if (delCount > 0)
+      if (deleteList.size() > 0)
       {
-         for(int j = 0; j < delCount; j++)
+         for(int j = 0; j < deleteList.size(); j++)
          {
-            sendPollerMsg(rqid, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), ppDeleteList[j]->getName());
-            const InetAddress& addr = ppDeleteList[j]->getFirstIpAddress();
-            PostEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", ppDeleteList[j]->getIfIndex(), ppDeleteList[j]->getName(), &addr, addr.getMaskBits());
-            deleteInterface(ppDeleteList[j]);
+            Interface *iface = deleteList.get(j);
+            sendPollerMsg(rqid, POLLER_WARNING _T("   Interface \"%s\" is no longer exist\r\n"), iface->getName());
+            const InetAddress& addr = iface->getFirstIpAddress();
+            PostEvent(EVENT_INTERFACE_DELETED, m_id, "dsAd", iface->getIfIndex(), iface->getName(), &addr, addr.getMaskBits());
+            deleteInterface(iface);
          }
          hasChanges = true;
       }
-      safe_free(ppDeleteList);
 
       // Add new interfaces and check configuration of existing
       for(int j = 0; j < pIfList->size(); j++)
@@ -2760,10 +2759,14 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                            PostEvent(EVENT_IF_MASK_CHANGED, m_id, "dsAddd", pInterface->getId(), pInterface->getName(),
                                      &addr, addr.getMaskBits(), pInterface->getIfIndex(), ifAddr.getMaskBits());
                            pInterface->setNetMask(addr);
+                           sendPollerMsg(rqid, POLLER_INFO _T("   IP network mask changed to /%d on interface \"%s\" address %s\r\n"), 
+                              addr.getMaskBits(), pInterface->getName(), (const TCHAR *)ifAddr.toString());
                         }
                      }
                      else
                      {
+                        sendPollerMsg(rqid, POLLER_WARNING _T("   IP address %s removed from interface \"%s\"\r\n"), 
+                           (const TCHAR *)ifAddr.toString(), pInterface->getName());
                         PostEvent(EVENT_IF_IPADDR_DELETED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
                                   &ifAddr, ifAddr.getMaskBits(), pInterface->getIfIndex());
                         pInterface->deleteIpAddress(ifAddr);
@@ -2779,6 +2782,8 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                         pInterface->addIpAddress(addr);
                         PostEvent(EVENT_IF_IPADDR_ADDED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
                                   &addr, addr.getMaskBits(), pInterface->getIfIndex());
+                        sendPollerMsg(rqid, POLLER_INFO _T("   IP address %s added to interface \"%s\"\r\n"), 
+                           (const TCHAR *)addr.toString(), pInterface->getName());
                      }
                   }
 

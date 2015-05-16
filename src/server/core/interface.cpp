@@ -1153,6 +1153,25 @@ void Interface::addIpAddress(const InetAddress& addr)
    m_ipAddressList.add(addr);
    setModified();
    unlockProperties();
+   if (!isExcludedFromTopology())
+   {
+		if (IsZoningEnabled())
+		{
+			Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+			if (zone != NULL)
+			{
+				zone->addToIndex(addr, this);
+			}
+			else
+			{
+				DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"), (int)m_zoneId, m_name, (int)m_id);
+			}
+		}
+		else
+		{
+         g_idxInterfaceByAddr.put(addr, this);
+      }
+   }
 }
 
 /**
@@ -1164,6 +1183,25 @@ void Interface::deleteIpAddress(InetAddress addr)
    m_ipAddressList.remove(addr);
    setModified();
    unlockProperties();
+   if (!isExcludedFromTopology())
+   {
+		if (IsZoningEnabled())
+		{
+			Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+			if (zone != NULL)
+			{
+            zone->removeFromInterfaceIndex(addr);
+			}
+			else
+			{
+				DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"), (int)m_zoneId, m_name, (int)m_id);
+			}
+		}
+		else
+		{
+         g_idxInterfaceByAddr.remove(addr);
+      }
+   }
 }
 
 /**

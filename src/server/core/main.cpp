@@ -127,7 +127,7 @@ UINT32 g_dwLogHistorySize = 4;
 TCHAR g_szDailyLogFileSuffix[64] = _T("");
 TCHAR NXCORE_EXPORTABLE g_szDumpDir[MAX_PATH] = DEFAULT_DUMP_DIR;
 char g_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
-TCHAR NXCORE_EXPORTABLE g_szListenAddress[MAX_PATH] = _T("0.0.0.0");
+TCHAR NXCORE_EXPORTABLE g_szListenAddress[MAX_PATH] = _T("*");
 #ifndef _WIN32
 TCHAR NXCORE_EXPORTABLE g_szPIDFile[MAX_PATH] = _T("/var/run/netxmsd.pid");
 #endif

@@ -1707,9 +1707,11 @@ public:
 
 	void addToIndex(Subnet *subnet) { m_idxSubnetByAddr->put(subnet->getIpAddress(), subnet); }
    void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->getIpAddressList(), iface); }
+   void addToIndex(const InetAddress& addr, Interface *iface) { m_idxInterfaceByAddr->put(addr, iface); }
 	void addToIndex(Node *node) { m_idxNodeByAddr->put(node->getIpAddress(), node); }
 	void removeFromIndex(Subnet *subnet) { m_idxSubnetByAddr->remove(subnet->getIpAddress()); }
 	void removeFromIndex(Interface *iface);
+   void removeFromInterfaceIndex(const InetAddress& addr) { m_idxInterfaceByAddr->remove(addr); }
 	void removeFromIndex(Node *node) { m_idxNodeByAddr->remove(node->getIpAddress()); }
 	void updateInterfaceIndex(const InetAddress& oldIp, const InetAddress& newIp, Interface *iface);
 	Subnet *getSubnetByAddr(const InetAddress& ipAddr) { return (Subnet *)m_idxSubnetByAddr->get(ipAddr); }

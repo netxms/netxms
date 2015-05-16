@@ -589,7 +589,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    // Fill in local address structure
    memset(&addr, 0, sizeof(struct sockaddr_in));
    addr.sin_family = AF_INET;
-   addr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
+   addr.sin_addr.s_addr = !_tcscmp(g_szListenAddress, _T("*")) ? 0 : ResolveHostName(g_szListenAddress);
    addr.sin_port = htons((WORD)nPort);
 
    // Bind socket
