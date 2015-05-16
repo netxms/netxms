@@ -204,13 +204,42 @@ public:
 };
 
 /**
+ * Hash types
+ */
+enum PasswordHashType
+{
+   PWD_HASH_SHA1 = 0,
+   PWD_HASH_SHA256 = 1
+};
+
+/**
+ * Password salt length
+ */
+#define PASSWORD_SALT_LENGTH  8
+
+/**
+ * Password hash size
+ */
+#define PWD_HASH_SIZE(t) ((t == PWD_HASH_SHA256) ? SHA256_DIGEST_SIZE : ((t == PWD_HASH_SHA1) ? SHA1_DIGEST_SIZE : 0))
+
+/**
+ * Hashed password
+ */
+struct PasswordHash
+{
+   PasswordHashType hashType;
+   BYTE hash[SHA256_DIGEST_SIZE];
+   BYTE salt[PASSWORD_SALT_LENGTH];
+};
+
+/**
  * User object
  */
 class NXCORE_EXPORTABLE User : public UserDatabaseObject
 {
 protected:
 	TCHAR m_fullName[MAX_USER_FULLNAME];
-   BYTE m_passwordHash[SHA1_DIGEST_SIZE];
+   PasswordHash m_password;
    int m_graceLogins;
    int m_authMethod;
 	int m_certMappingMethod;
@@ -248,7 +277,6 @@ public:
    const TCHAR *getXmppId() { return m_xmppId; }
 
 	bool validatePassword(const TCHAR *password);
-	bool validateHashedPassword(const BYTE *password);
 	void decreaseGraceLogins() { if (m_graceLogins > 0) m_graceLogins--; m_flags |= UF_MODIFIED; }
 	void setPassword(const TCHAR *password, bool clearChangePasswdFlag);
 	void increaseAuthFailures();

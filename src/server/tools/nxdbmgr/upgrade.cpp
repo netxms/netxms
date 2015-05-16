@@ -467,6 +467,16 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
 }
 
 /**
+ * Upgrade from V353 to V354
+ */
+static BOOL H_UpgradeFromV353(int currVersion, int newVersion)
+{
+   CHK_EXEC(ResizeColumn(_T("users"), _T("password"), 127, false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='354' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V352 to V353
  */
 static BOOL H_UpgradeFromV352(int currVersion, int newVersion)
@@ -8575,6 +8585,7 @@ static struct
    { 350, 351, H_UpgradeFromV350 },
    { 351, 352, H_UpgradeFromV351 },
    { 352, 353, H_UpgradeFromV352 },
+   { 353, 354, H_UpgradeFromV353 },
    { 0, 0, NULL }
 };
 

@@ -234,7 +234,6 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
 			User *user = (User *)m_users[i];
          *pdwId = user->getId(); // always set user ID for caller so audit log will contain correct user ID on failures as well
 
-
          if (user->isLDAPUser())
          {
             if (user->isDisabled() || user->hasSyncException())

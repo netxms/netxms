@@ -57,7 +57,7 @@ CREATE TABLE users
 	id integer not null,
 	guid varchar(36) not null,
 	name varchar(63) not null,
-	password varchar(48) not null,
+	password varchar(127) not null,
 	system_access SQL_INT64 not null,
 	flags integer not null,
 	full_name varchar(127) null,

@@ -21,6 +21,41 @@
 
 #include "nxcore.h"
 
+/**
+ * Generate hash for password
+ */
+static void CalculatePasswordHash(const TCHAR *password, PasswordHashType type, PasswordHash *ph, const BYTE *salt = NULL)
+{
+#ifdef UNICODE
+	char mbPassword[1024];
+	WideCharToMultiByte(CP_UTF8, 0, password, -1, mbPassword, 1024, NULL, NULL);
+	mbPassword[1023] = 0;
+#else
+   const char *mbPassword = password;
+#endif
+
+   BYTE buffer[1024];
+
+   memset(ph, 0, sizeof(PasswordHash));
+   ph->hashType = type;
+   switch(type)
+   {
+      case PWD_HASH_SHA1:
+      	CalculateSHA1Hash((BYTE *)mbPassword, strlen(mbPassword), ph->hash);
+         break;
+      case PWD_HASH_SHA256:
+         if (salt != NULL)
+            memcpy(buffer, salt, PASSWORD_SALT_LENGTH);
+         else
+            GenerateRandomBytes(buffer, PASSWORD_SALT_LENGTH);
+         strcpy((char *)&buffer[PASSWORD_SALT_LENGTH], mbPassword);
+      	CalculateSHA256Hash(buffer, strlen(mbPassword) + PASSWORD_SALT_LENGTH, ph->hash);
+         memcpy(ph->salt, buffer, PASSWORD_SALT_LENGTH);
+         break;
+      default:
+         break;
+   }
+}
 
 /*****************************************************************************
  **  UserDatabaseObject
@@ -308,12 +343,35 @@ User::User(DB_RESULT hResult, int row) : UserDatabaseObject(hResult, row)
 {
 	TCHAR buffer[256];
 
-	if (StrToBin(DBGetField(hResult, row, 7, buffer, 256), m_passwordHash, SHA1_DIGEST_SIZE) != SHA1_DIGEST_SIZE)
-	{
-		nxlog_write(MSG_INVALID_SHA1_HASH, EVENTLOG_WARNING_TYPE, "s", m_name);
-		CalculateSHA1Hash((BYTE *)"netxms", 6, m_passwordHash);
+   bool validHash = false;
+   DBGetField(hResult, row, 7, buffer, 256);
+   if (buffer[0] == _T('$'))
+   {
+      // new format - with hash type indicator
+      if (buffer[1] == 'A')
+      {
+         m_password.hashType = PWD_HASH_SHA256;
+         if (_tcslen(buffer) >= 82)
+         {
+            if ((StrToBin(&buffer[2], m_password.salt, PASSWORD_SALT_LENGTH) == PASSWORD_SALT_LENGTH) && 
+                (StrToBin(&buffer[18], m_password.hash, SHA256_DIGEST_SIZE) == SHA256_DIGEST_SIZE))
+               validHash = true;
+         }
+      }
+   }
+   else
+   {
+      // old format - SHA1 hash without salt
+      m_password.hashType = PWD_HASH_SHA1;
+      if (StrToBin(buffer, m_password.hash, SHA1_DIGEST_SIZE) == SHA1_DIGEST_SIZE)
+         validHash = true;
+   }
+   if (!validHash)
+   {
+	   nxlog_write(MSG_INVALID_PASSWORD_HASH, NXLOG_WARNING, "s", m_name);
+	   CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
       m_flags |= UF_MODIFIED | UF_CHANGE_PASSWORD;
-	}
+   }
 
 	DBGetField(hResult, row, 8, m_fullName, MAX_USER_FULLNAME);
 	m_graceLogins = DBGetFieldLong(hResult, row, 9);
@@ -345,7 +403,7 @@ User::User()
 	m_systemRights = SYSTEM_ACCESS_FULL;
 	m_fullName[0] = 0;
 	_tcscpy(m_description, _T("Built-in system administrator account"));
-	CalculateSHA1Hash((BYTE *)"netxms", 6, m_passwordHash);
+	CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
 	m_graceLogins = MAX_GRACE_LOGINS;
 	m_authMethod = AUTH_NETXMS_PASSWORD;
 	uuid_generate(m_guid);
@@ -370,7 +428,7 @@ User::User(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
 	m_authMethod = AUTH_NETXMS_PASSWORD;
 	m_certMappingMethod = USER_MAP_CERT_BY_CN;
 	m_certMappingData = NULL;
-	CalculateSHA1Hash((BYTE *)"", 0, m_passwordHash);
+	CalculatePasswordHash(_T(""), PWD_HASH_SHA256, &m_password);
 	m_authFailures = 0;
 	m_lastPasswordChange = 0;
 	m_minPasswordLength = -1;	// Use system-wide default
@@ -392,13 +450,26 @@ User::~User()
  */
 bool User::saveToDatabase(DB_HANDLE hdb)
 {
-	TCHAR password[SHA1_DIGEST_SIZE * 2 + 1], guidText[64];
+	TCHAR password[128], guidText[64];
 
    // Clear modification flag
    m_flags &= ~UF_MODIFIED;
 
    // Create or update record in database
-   BinToStr(m_passwordHash, SHA1_DIGEST_SIZE, password);
+   switch(m_password.hashType)
+   {
+      case PWD_HASH_SHA1:
+         BinToStr(m_password.hash, SHA1_DIGEST_SIZE, password);
+         break;
+      case PWD_HASH_SHA256:
+         _tcscpy(password, _T("$A"));
+         BinToStr(m_password.salt, PASSWORD_SALT_LENGTH, &password[2]);
+         BinToStr(m_password.hash, SHA256_DIGEST_SIZE, &password[18]);
+         break;
+      default:
+         _tcscpy(password, _T("$$"));
+         break;
+   }
    DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("users"), _T("id"), m_id))
    {
@@ -487,29 +558,19 @@ bool User::deleteFromDatabase(DB_HANDLE hdb)
 
 /**
  * Validate user's password
- * For non-UNICODE build, password must be UTF-8 encoded
  */
 bool User::validatePassword(const TCHAR *password)
 {
-   BYTE hash[SHA1_DIGEST_SIZE];
-
-#ifdef UNICODE
-	char mbPassword[1024];
-	WideCharToMultiByte(CP_UTF8, 0, password, -1, mbPassword, 1024, NULL, NULL);
-	mbPassword[1023] = 0;
-	CalculateSHA1Hash((BYTE *)mbPassword, strlen(mbPassword), hash);
-#else
-	CalculateSHA1Hash((BYTE *)password, strlen(password), hash);
-#endif
-	return !memcmp(hash, m_passwordHash, SHA1_DIGEST_SIZE);
-}
-
-/**
- * Validate user's password in hashed form
- */
-bool User::validateHashedPassword(const BYTE *password)
-{
-	return !memcmp(password, m_passwordHash, SHA1_DIGEST_SIZE);
+   PasswordHash ph;
+   CalculatePasswordHash(password, m_password.hashType, &ph, m_password.salt);
+   bool success = !memcmp(ph.hash, m_password.hash, PWD_HASH_SIZE(m_password.hashType));
+   if (success && m_password.hashType == PWD_HASH_SHA1)
+   {
+      // regenerate password hash if old format is used
+      CalculatePasswordHash(password, PWD_HASH_SHA256, &m_password);
+	   m_flags |= UF_MODIFIED;
+   }
+   return success;
 }
 
 /**
@@ -518,14 +579,7 @@ bool User::validateHashedPassword(const BYTE *password)
  */
 void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)
 {
-#ifdef UNICODE
-	char mbPassword[1024];
-	WideCharToMultiByte(CP_UTF8, 0, password, -1, mbPassword, 1024, NULL, NULL);
-	mbPassword[1023] = 0;
-	CalculateSHA1Hash((BYTE *)mbPassword, strlen(mbPassword), m_passwordHash);
-#else
-	CalculateSHA1Hash((BYTE *)password, strlen(password), m_passwordHash);
-#endif
+   CalculatePasswordHash(password, PWD_HASH_SHA256, &m_password);
 	m_graceLogins = MAX_GRACE_LOGINS;
 	m_flags |= UF_MODIFIED;
 	if (clearChangePasswdFlag)

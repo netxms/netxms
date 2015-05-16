@@ -804,3 +804,17 @@ bool NXCPEncryptionContext::decryptMessage(NXCP_ENCRYPTED_MESSAGE *msg, BYTE *de
    return false;
 #endif
 }
+
+/**
+ * Generate random bytes
+ */
+void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size)
+{
+#ifdef _WITH_ENCRYPTION
+   RAND_bytes(buffer, (int)size);
+#else
+   srand((unsigned int)time(NULL));
+   for(size_t i = 0; i < size; i++)
+      buffer[i] = (BYTE)(rand() % 256);
+#endif
+}
