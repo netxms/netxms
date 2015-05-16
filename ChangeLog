@@ -6,6 +6,7 @@
 	- Added "capabilities" in node overview (changed to expandable list view)
 - Fixed bug in handling floating point Windows performance counters
 - Added "comments" attribute to NXSL "DCI" class
+- New NXSL function sha256
 - Fixed broken nxagent.sms SMS driver
 - Added support for SNMP traps over IPv6
 - Management console:

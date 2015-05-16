@@ -470,6 +470,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sha2.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\StackWalker.cpp"
 				>
 			</File>
@@ -629,6 +633,10 @@
 			</File>
 			<File
 				RelativePath=".\sha1.h"
+				>
+			</File>
+			<File
+				RelativePath=".\sha2.h"
 				>
 			</File>
 			<File

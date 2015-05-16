@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -24,23 +24,20 @@
 #include "libnetxms.h"
 #include "md5.h"
 #include "sha1.h"
+#include "sha2.h"
 
 #if defined(_WIN32) && !defined(UNDER_CE)
 # include <io.h>
 #endif
 
-
-//
-// Constants
-//
-
+/**
+ * File block size (used for file hash calculation)
+ */
 #define FILE_BLOCK_SIZE    4096
 
-
-//
-// Table for CRC calculation
-//
-
+/**
+ * Table for CRC calculation
+ */
 static DWORD crctab[256]=
 {
 	0x00000000, 
@@ -153,11 +150,9 @@ void LIBNETXMS_EXPORTABLE MD5HashForPattern(const unsigned char *data, size_t pa
 	I_md5_finish(&state, (md5_byte_t *)hash);
 }
 
-
-//
-// Calculate SHA1 hash for array of bytes
-//
-
+/**
+ * Calculate SHA1 hash for array of bytes
+ */
 void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, BYTE *hash)
 {
    SHA1_CTX context;
@@ -167,11 +162,9 @@ void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, 
    I_SHA1Final(hash, &context);
 }
 
-
-//
-// Calculate SHA1 hash for repeated pattern in virtual buffer
-//
-
+/**
+ * Calculate SHA1 hash for repeated pattern in virtual buffer
+ */
 void LIBNETXMS_EXPORTABLE SHA1HashForPattern(unsigned char *data, size_t patternSize, size_t fullSize, BYTE *hash)
 {
    SHA1_CTX context;
@@ -198,11 +191,9 @@ void LIBNETXMS_EXPORTABLE SHA1HashForPattern(unsigned char *data, size_t pattern
    I_SHA1Final(hash, &context);
 }
 
-
-//
-// Calculate MD5 hash for given file
-//
-
+/**
+ * Calculate MD5 hash for given file
+ */
 BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *pszFileName, BYTE *pHash)
 {
 	size_t iSize;
@@ -232,10 +223,9 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *pszFileName, BYTE *p
    return bSuccess;
 }
 
-//
-// Calculate SHA1 hash for given file
-//
-
+/**
+ * Calculate SHA1 hash for given file
+ */
 BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *pHash)
 {
    size_t iSize;
@@ -265,10 +255,21 @@ BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *
    return bSuccess;
 }
 
-//
-// Calculate CRC32 for given file
-//
+/**
+ * Calculate SHA2-256 hash for array of bytes
+ */
+void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const unsigned char *data, size_t len, unsigned char *hash)
+{
+   sha256_ctx ctx;
 
+   I_sha256_init(&ctx);
+   I_sha256_update(&ctx, data, (unsigned int)len);
+   I_sha256_final(&ctx, hash);
+}
+
+/**
+ * Calculate CRC32 for given file
+ */
 BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *pszFileName, UINT32 *pResult)
 {
 	size_t iSize;

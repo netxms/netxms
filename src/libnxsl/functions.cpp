@@ -1197,6 +1197,30 @@ int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 }
 
 /**
+ * sha256() function implementation
+ */
+int F_sha256(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	if (!argv[0]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+   BYTE hash[SHA256_DIGEST_SIZE];
+#ifdef UNICODE
+   char *utf8Str = UTF8StringFromWideString(argv[0]->getValueAsCString());
+   CalculateSHA256Hash((BYTE *)utf8Str, strlen(utf8Str), hash);
+#else
+   const char *str = argv[0]->getValueAsCString();
+   CalculateSHA256Hash((BYTE *)str, strlen(str), hash);
+#endif
+
+   TCHAR text[SHA256_DIGEST_SIZE * 2 + 1];
+   BinToStr(hash, SHA256_DIGEST_SIZE, text);
+   *ppResult = new NXSL_Value(text);
+
+	return 0;
+}
+
+/**
  * Resolve IP address to host name
  */
 int F_gethostbyaddr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
