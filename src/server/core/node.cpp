@@ -4617,7 +4617,6 @@ AgentConnectionEx *Node::createAgentConnection()
        (m_dwDynamicFlags & NDF_UNREACHABLE))
       return NULL;
 
-   DbgPrintf(6, _T("Node::createAgentConnection(%s [%d])"), m_name, (int)m_id);
    conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(conn);
    if (!conn->connect(g_pServerKey))
