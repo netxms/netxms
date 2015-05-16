@@ -599,7 +599,7 @@ class LIBNXSRV_EXPORTABLE ISC
 {
 private:
 	UINT32 m_flags;
-   UINT32 m_addr;
+   InetAddress m_addr;
 	WORD m_port;
    SOCKET m_socket;
    int m_protocolVersion;
@@ -628,7 +628,7 @@ protected:
 
 public:
    ISC();
-   ISC(UINT32 addr, WORD port = NETXMS_ISC_PORT);
+   ISC(const InetAddress& addr, WORD port = NETXMS_ISC_PORT);
    virtual ~ISC();
 
    UINT32 connect(UINT32 service, RSA *serverKey = NULL, BOOL requireEncryption = FALSE);
