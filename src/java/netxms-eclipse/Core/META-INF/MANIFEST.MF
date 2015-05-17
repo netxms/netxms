@@ -12,7 +12,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.eclipse.ui.forms;bundle-version="3.5.200",
  org.eclipse.ui.console;bundle-version="3.5.100",
  org.eclipse.jface.text;bundle-version="3.8.2",
- org.netxms.ui.eclipse.clientlibrary;bundle-version="2.0.4"
+ org.netxms.ui.eclipse.clientlibrary;bundle-version="2.0.5"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .

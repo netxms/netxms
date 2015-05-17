@@ -64,7 +64,7 @@ public class DataCollectionTest extends SessionTest
 	{
 		final NXCSession session = connect();
 		
-		DciValue[] list = session.getLastValues(TestConstants.LOCAL_NODE_ID, true, false);
+		DciValue[] list = session.getLastValues(TestConstants.LOCAL_NODE_ID, true, false, false);
 		assertEquals(true, list.length > 0);
 		
 		boolean statusFound = false;

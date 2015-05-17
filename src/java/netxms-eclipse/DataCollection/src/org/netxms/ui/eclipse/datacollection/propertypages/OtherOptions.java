@@ -38,6 +38,7 @@ public class OtherOptions extends PropertyPage
 	private DataCollectionObjectEditor editor;
 	private DataCollectionItem dci;
 	private Button checkShowOnTooltip;
+	private Button checkShowInOverview;
    private Button checkCalculateStatus;
 
 	/* (non-Javadoc)
@@ -61,6 +62,10 @@ public class OtherOptions extends PropertyPage
       checkShowOnTooltip.setText(Messages.get().NetworkMaps_ShowInTooltips);
       checkShowOnTooltip.setSelection(dci.isShowOnObjectTooltip());
 
+      checkShowInOverview = new Button(dialogArea, SWT.CHECK);
+      checkShowInOverview.setText("Show last value in object overview");
+      checkShowInOverview.setSelection(dci.isShowInObjectOverview());
+
       checkCalculateStatus = new Button(dialogArea, SWT.CHECK);
       checkCalculateStatus.setText(Messages.get().OtherOptions_UseForStatusCalculation);
       checkCalculateStatus.setSelection(dci.isUsedForNodeStatusCalculation());
@@ -76,6 +81,7 @@ public class OtherOptions extends PropertyPage
 	protected void applyChanges(final boolean isApply)
 	{
 		dci.setShowOnObjectTooltip(checkShowOnTooltip.getSelection());
+		dci.setShowInObjectOverview(checkShowInOverview.getSelection());
       dci.setUsedForNodeStatusCalculation(checkCalculateStatus.getSelection());
 		editor.modify();
 	}

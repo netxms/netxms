@@ -29,7 +29,7 @@ import org.netxms.client.topology.RadioInterface;
 /**
  * Access point class
  */
-public class AccessPoint extends GenericObject
+public class AccessPoint extends DataCollectionTarget
 {
 	private long nodeId;
 	private int index;
@@ -59,11 +59,11 @@ public class AccessPoint extends GenericObject
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_RADIO_COUNT);
 		radios = new RadioInterface[count];
-		long varId = NXCPCodes.VID_RADIO_LIST_BASE;
+		long fieldId = NXCPCodes.VID_RADIO_LIST_BASE;
 		for(int i = 0; i < count; i++)
 		{
-			radios[i] = new RadioInterface(this, msg, varId);
-			varId += 10;
+			radios[i] = new RadioInterface(this, msg, fieldId);
+			fieldId += 10;
 		}
 	}
 

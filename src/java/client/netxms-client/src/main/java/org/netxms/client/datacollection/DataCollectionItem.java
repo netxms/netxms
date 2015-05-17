@@ -29,11 +29,12 @@ import org.netxms.base.NXCPMessage;
 public class DataCollectionItem extends DataCollectionObject
 {
 	// DCI specific flags
-	public static final int DCF_ALL_THRESHOLDS = 0x0002;
-	public static final int DCF_RAW_VALUE_OCTET_STRING = 0x0004;
-	public static final int DCF_SHOW_ON_OBJECT_TOOLTIP = 0x0008;
+	public static final int DCF_ALL_THRESHOLDS          = 0x0002;
+	public static final int DCF_RAW_VALUE_OCTET_STRING  = 0x0004;
+	public static final int DCF_SHOW_ON_OBJECT_TOOLTIP  = 0x0008;
 	public static final int DCF_AGGREGATE_FUNCTION_MASK = 0x0070;
-   public static final int DCF_CALCULATE_NODE_STATUSS = 0x0400;
+   public static final int DCF_CALCULATE_NODE_STATUS   = 0x0400;
+   public static final int DCF_SHOW_IN_OBJECT_OVERVIEW = 0x0800;
 	
 	// Aggregation functions
 	public static final int DCF_FUNCTION_SUM = 0;
@@ -236,7 +237,7 @@ public class DataCollectionItem extends DataCollectionObject
 	}
 
 	/**
-	 * @return the processAllThresholds
+	 * @return true of DCI should be shown on object tooltip
 	 */
 	public boolean isShowOnObjectTooltip()
 	{
@@ -244,7 +245,7 @@ public class DataCollectionItem extends DataCollectionObject
 	}
 
 	/**
-	 * @param processAllThresholds the processAllThresholds to set
+	 * @param show indicator if DCI should be shown on object tooltip
 	 */
 	public void setShowOnObjectTooltip(boolean show)
 	{
@@ -253,6 +254,25 @@ public class DataCollectionItem extends DataCollectionObject
 		else
 			flags &= ~DCF_SHOW_ON_OBJECT_TOOLTIP;
 	}
+
+   /**
+    * @return true of DCI should be shown in object overview
+    */
+   public boolean isShowInObjectOverview()
+   {
+      return (flags & DCF_SHOW_IN_OBJECT_OVERVIEW) != 0;
+   }
+
+   /**
+    * @param show indicator if DCI should be shown in object overview
+    */
+   public void setShowInObjectOverview(boolean show)
+   {
+      if (show)
+         flags |= DCF_SHOW_IN_OBJECT_OVERVIEW;
+      else
+         flags &= ~DCF_SHOW_IN_OBJECT_OVERVIEW;
+   }
 
 	/**
 	 * @return aggregation function
@@ -422,20 +442,24 @@ public class DataCollectionItem extends DataCollectionObject
 		this.sampleCount = sampleCount;
 	}
 	
-	  /**
-    * @return State of DCF_CALCULATE_NODE_STATUSS flag
+	/**
+    * @return State of DCF_CALCULATE_NODE_STATUS flag
     */
    public boolean isUsedForNodeStatusCalculation()
    {
-      return (flags & DCF_CALCULATE_NODE_STATUSS) != 0;
+      return (flags & DCF_CALCULATE_NODE_STATUS) != 0;
    }
    
+   /**
+    * Enable or disable usage of this DCI for node status calculation
+    * 
+    * @param enable
+    */
    public void setUsedForNodeStatusCalculation(boolean enable)
    {
       if(enable)
-         flags |= DCF_CALCULATE_NODE_STATUSS;
+         flags |= DCF_CALCULATE_NODE_STATUS;
       else
-         flags &= ~DCF_CALCULATE_NODE_STATUSS;
+         flags &= ~DCF_CALCULATE_NODE_STATUS;
    }
-
 }

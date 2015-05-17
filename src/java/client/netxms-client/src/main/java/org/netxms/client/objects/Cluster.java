@@ -28,7 +28,7 @@ import org.netxms.client.NXCSession;
 /**
  * Cluster object
  */
-public class Cluster extends GenericObject
+public class Cluster extends DataCollectionTarget
 {
 	private int clusterType;
 	private List<InetAddressEx> syncNetworks = new ArrayList<InetAddressEx>(1);

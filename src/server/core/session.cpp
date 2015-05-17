@@ -4110,6 +4110,7 @@ void ClientSession::getLastValues(NXCPMessage *pRequest)
             msg.setField(VID_RCC,
                ((Template *)object)->getLastValues(&msg,
                   pRequest->getFieldAsBoolean(VID_OBJECT_TOOLTIP_ONLY),
+                  pRequest->getFieldAsBoolean(VID_OVERVIEW_ONLY),
                   pRequest->getFieldAsBoolean(VID_INCLUDE_NOVALUE_OBJECTS)));
          }
          else

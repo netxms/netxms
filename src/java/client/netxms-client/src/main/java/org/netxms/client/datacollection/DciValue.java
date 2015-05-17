@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.IllegalFormatException;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.Severity;
 
 /**
  * DCI value
@@ -371,4 +372,14 @@ public abstract class DciValue
 	{
 		return templateDciId;
 	}
+
+   /**
+    * Get severity of active threshold
+    * 
+    * @return severity of active threshold or NORMAL if there are no active thresholds
+    */
+   public Severity getThresholdSeverity()
+   {
+      return (activeThreshold != null) ? activeThreshold.getCurrentSeverity() : Severity.NORMAL;
+   }
 }

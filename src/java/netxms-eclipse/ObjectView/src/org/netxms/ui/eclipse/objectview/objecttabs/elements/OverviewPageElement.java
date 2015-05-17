@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.widgets.CGroup;
 
 /**
@@ -36,15 +37,18 @@ public abstract class OverviewPageElement
 	private Composite parent;
 	private CGroup widget = null;
 	private OverviewPageElement anchor;
+	private ObjectTab objectTab;
 	
 	/**
 	 * @param parent
 	 * @param text
+	 * @param objectTab
 	 */
-	public OverviewPageElement(Composite parent, OverviewPageElement anchor)
+	public OverviewPageElement(Composite parent, OverviewPageElement anchor, ObjectTab objectTab)
 	{
 		this.parent = parent;
 		this.anchor = anchor;
+		this.objectTab = objectTab;
 	}
 	
 	/**
@@ -136,6 +140,14 @@ public abstract class OverviewPageElement
 	protected Display getDisplay()
 	{
 		return ((widget != null) && !widget.isDisposed()) ? widget.getDisplay() : Display.getCurrent();
+	}
+	
+	/**
+	 * @return
+	 */
+	protected ObjectTab getObjectTab()
+	{
+	   return objectTab;
 	}
 
 	/**

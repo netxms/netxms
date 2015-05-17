@@ -28,7 +28,7 @@ import org.netxms.client.NXCSession;
 /**
  * Abstract base class for node objects.
  */
-public abstract class AbstractNode extends GenericObject
+public abstract class AbstractNode extends DataCollectionTarget
 {
 	// SNMP versions
 	public static final int SNMP_VERSION_1 = 0;
@@ -119,7 +119,7 @@ public abstract class AbstractNode extends GenericObject
 	protected MacAddress bridgeBaseAddress;
 	protected int ifXTablePolicy;
 	protected Date bootTime;
-
+	
 	/**
 	 * Create new node object.
 	 * 

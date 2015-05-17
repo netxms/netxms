@@ -44,7 +44,7 @@ public class ViewRefreshController implements IPartListener
     * Create refresh controller attached to given view part.
     * 
     * @param part
-    * @param interval
+    * @param interval refresh interval in seconds
     * @param handler
     */
    public ViewRefreshController(final IViewPart part, int interval, Runnable handler)
@@ -56,7 +56,7 @@ public class ViewRefreshController implements IPartListener
     * Create refresh controller attached to given view part.
     * 
     * @param part
-    * @param interval
+    * @param interval refresh interval in seconds
     * @param handler
     * @param validator
     */

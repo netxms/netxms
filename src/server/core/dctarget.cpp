@@ -90,6 +90,23 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg)
 {
    Template::fillMessageInternal(msg);
+
+   // Sent all DCIs marked for display on overview page
+   UINT32 fieldId = VID_OVERVIEW_DCI_LIST_BASE;
+   UINT32 count = 0;
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+	{
+      DCObject *dci = m_dcObjects->get(i);
+      if ((dci->getType() == DCO_TYPE_ITEM) && dci->isShowInObjectOverview() && (dci->getStatus() == ITEM_STATUS_ACTIVE))
+		{
+         count++;
+         ((DCItem *)dci)->fillLastValueMessage(msg, fieldId);
+         fieldId += 50;
+		}
+	}
+   unlockDciAccess();
+   msg->setField(VID_OVERVIEW_DCI_COUNT, count);
 }
 
 /**

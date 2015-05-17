@@ -58,10 +58,10 @@ public abstract class DataCollectionObject
 	public static final int DT_NULL = 6;
 	
 	// common data collection flags
-	public static final int DCF_ADVANCED_SCHEDULE = 0x0001;
+	public static final int DCF_ADVANCED_SCHEDULE    = 0x0001;
 	public static final int DCF_AGGREGATE_ON_CLUSTER = 0x0080;
    public static final int DCF_TRANSFORM_AGGREGATED = 0x0100;
-   public static final int DCF_NO_STORAGE = 0x0200;
+   public static final int DCF_NO_STORAGE           = 0x0200;
 	
 	protected DataCollectionConfiguration owner;
 	protected long id;

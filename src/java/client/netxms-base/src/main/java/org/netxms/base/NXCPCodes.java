@@ -844,6 +844,8 @@ public class NXCPCodes
    public static final long VID_TOOL_LIST = 498;
    public static final long VID_NUM_SUMMARY_TABLES = 499;
    public static final long VID_SUMMARY_TABLE_LIST = 500;
+   public static final long VID_OVERVIEW_DCI_COUNT = 501;
+   public static final long VID_OVERVIEW_ONLY = 502;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -871,6 +873,7 @@ public class NXCPCodes
 	public static final long VID_CHILD_ID_LAST = 0xFFFFFFFEL;
 	public static final long VID_CUSTOM_ATTRIBUTES_BASE = 0x70000000L;
    public static final long VID_MODULE_DATA_BASE = 0x71000000L;
+   public static final long VID_OVERVIEW_DCI_LIST_BASE = 0x72000000L;
 	public static final long VID_RESOURCE_LIST_BASE = 0x20000000L;
 	public static final long VID_IP_ADDRESS_LIST_BASE = 0x7F000000L;
    public static final long VID_SYNC_SUBNETS_BASE = 0x28000000L;

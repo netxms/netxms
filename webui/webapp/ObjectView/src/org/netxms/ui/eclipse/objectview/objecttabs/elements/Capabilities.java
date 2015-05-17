@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectview.Messages;
+import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 
 /**
  * "Capabilities" element for object overview page
@@ -30,10 +31,12 @@ public class Capabilities extends TableElement
 {
 	/**
 	 * @param parent
+	 * @param anchor
+	 * @param objectTab
 	 */
-	public Capabilities(Composite parent, OverviewPageElement anchor)
+	public Capabilities(Composite parent, OverviewPageElement anchor, ObjectTab objectTab)
 	{
-		super(parent, anchor);
+		super(parent, anchor, objectTab);
 	}
 
 	/* (non-Javadoc)

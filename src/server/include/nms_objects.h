@@ -662,7 +662,7 @@ public:
 	bool enumDCObjects(bool (* pfCallback)(DCObject *, UINT32, void *), void *pArg);
 	void associateItems();
 
-   UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool includeNoValueObjects);
+   UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects);
 };
 
 class Cluster;

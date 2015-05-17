@@ -1047,6 +1047,8 @@ typedef struct
 #define VID_TOOL_LIST               ((UINT32)498)
 #define VID_NUM_SUMMARY_TABLES      ((UINT32)499)
 #define VID_SUMMARY_TABLE_LIST      ((UINT32)500)
+#define VID_OVERVIEW_DCI_COUNT      ((UINT32)501)
+#define VID_OVERVIEW_ONLY           ((UINT32)502)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1097,6 +1099,9 @@ typedef struct
 // Base value for custom attributes and module data
 #define VID_CUSTOM_ATTRIBUTES_BASE  ((UINT32)0x70000000)
 #define VID_MODULE_DATA_BASE        ((UINT32)0x71000000)
+
+// Base value for overview DCI list
+#define VID_OVERVIEW_DCI_LIST_BASE  ((UINT32)0x72000000)
 
 // IP address list base
 #define VID_IP_ADDRESS_LIST_BASE    ((UINT32)0x7F000000)

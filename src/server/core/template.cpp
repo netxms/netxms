@@ -621,9 +621,10 @@ BOOL Template::unlockDCIList(int sessionId)
    if (m_dciLockStatus == sessionId)
    {
       m_dciLockStatus = -1;
-      if (m_bDCIListModified && (getObjectClass() == OBJECT_TEMPLATE))
+      if (m_bDCIListModified)
       {
-         m_dwVersion++;
+         if (getObjectClass() == OBJECT_TEMPLATE)
+            m_dwVersion++;
          setModified();
       }
       m_bDCIListModified = FALSE;
@@ -1148,7 +1149,7 @@ bool Template::isApplicable(Node *node)
  * derived from DataCollectionTarget actual values will always be empty strings
  * with data type DCI_DT_NULL.
  */
-UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool includeNoValueObjects)
+UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects)
 {
    lockDciAccess(false);
 
@@ -1157,7 +1158,8 @@ UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool in
 	{
 		DCObject *object = m_dcObjects->get(i);
 		if ((object->hasValue() || includeNoValueObjects) &&
-          (!objectTooltipOnly || object->isShowOnObjectTooltip()))
+          (!objectTooltipOnly || object->isShowOnObjectTooltip()) &&
+          (!overviewOnly || object->isShowInObjectOverview()))
 		{
 			if (object->getType() == DCO_TYPE_ITEM)
 			{

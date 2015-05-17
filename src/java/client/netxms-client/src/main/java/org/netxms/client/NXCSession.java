@@ -3327,16 +3327,18 @@ public class NXCSession
     *
     * @param nodeId                ID of the node to get DCI values for
     * @param objectTooltipOnly     if set to true, only DCIs with DCF_SHOW_ON_OBJECT_TOOLTIP flag set are returned
+    * @param overviewOnly          if set to true, only DCIs with DCF_SHOW_IN_OBJECT_OVERVIEW flag set are returned
     * @param includeNoValueObjects if set to true, objects with no value (like instance discovery DCIs) will be returned as well
     * @return List of DCI values
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciValue[] getLastValues(final long nodeId, boolean objectTooltipOnly, boolean includeNoValueObjects) throws IOException, NXCException
+   public DciValue[] getLastValues(final long nodeId, boolean objectTooltipOnly, boolean overviewOnly, boolean includeNoValueObjects) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_LAST_VALUES);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setField(NXCPCodes.VID_OBJECT_TOOLTIP_ONLY, objectTooltipOnly);
+      msg.setField(NXCPCodes.VID_OVERVIEW_ONLY, overviewOnly);
       msg.setField(NXCPCodes.VID_INCLUDE_NOVALUE_OBJECTS, includeNoValueObjects);
       sendMessage(msg);
 
@@ -3363,7 +3365,7 @@ public class NXCSession
     */
    public DciValue[] getLastValues(final long nodeId) throws IOException, NXCException
    {
-      return getLastValues(nodeId, false, false);
+      return getLastValues(nodeId, false, false, false);
    }
    
    /**

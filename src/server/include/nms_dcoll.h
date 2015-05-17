@@ -263,8 +263,9 @@ public:
 	UINT32 getErrorCount() { return m_dwErrorCount; }
 	WORD getSnmpPort() { return m_snmpPort; }
    bool isShowOnObjectTooltip() { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
+   bool isShowInObjectOverview() { return (m_flags & DCF_SHOW_IN_OBJECT_OVERVIEW) ? true : false; }
    bool isAggregateOnCluster() { return (m_flags & DCF_AGGREGATE_ON_CLUSTER) ? true : false; }
-	bool isStatusDCO() {return (m_flags & DCF_CALCULATE_NODE_STATUSS) ? true : false; }
+	bool isStatusDCO() {return (m_flags & DCF_CALCULATE_NODE_STATUS) ? true : false; }
    int getAggregationFunction() { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
    Template *getNode() { return m_pNode; }
    int getRetentionTime() { return m_iRetentionTime; }

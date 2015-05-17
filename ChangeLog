@@ -14,7 +14,8 @@
 	- Fixed broken VPN connectors configuration
 	- "Inverted values" option on line charts
 	- Filter in predefined graphs tree
-- Fixed issues: #797, #816, #817
+	- Values of selected DCIs can be shown on object overview page
+- Fixed issues: #50, #797, #816, #817
 
 
 *

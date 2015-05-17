@@ -35,6 +35,7 @@ import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objectview.Messages;
+import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -44,10 +45,12 @@ public class GeneralInfo extends TableElement
 {
 	/**
 	 * @param parent
+	 * @param anchor
+	 * @param objectTab
 	 */
-	public GeneralInfo(Composite parent, OverviewPageElement anchor)
+	public GeneralInfo(Composite parent, OverviewPageElement anchor, ObjectTab objectTab)
 	{
-		super(parent, anchor);
+		super(parent, anchor, objectTab);
 	}
 
 	/* (non-Javadoc)
