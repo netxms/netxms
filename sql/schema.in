@@ -177,7 +177,6 @@ CREATE TABLE object_properties
 /*
 ** Object custom attributes
 */
-
 CREATE TABLE object_custom_attributes
 (
 	object_id integer not null,
@@ -188,11 +187,9 @@ CREATE TABLE object_custom_attributes
 
 CREATE INDEX idx_ocattr_oid ON object_custom_attributes(object_id);
 
-
 /*
 ** Zone objects
 */
-
 CREATE TABLE zones
 (
 	id integer not null,		// Zone object ID
@@ -285,6 +282,7 @@ CREATE TABLE nodes
 	rack_image varchar(36) null,
 	rack_position integer not null,
 	rack_id integer not null,
+   agent_cache_mode char(1) not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

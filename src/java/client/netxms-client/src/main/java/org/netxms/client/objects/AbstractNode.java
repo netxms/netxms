@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.MacAddress;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.AgentCacheMode;
 
 /**
  * Abstract base class for node objects.
@@ -98,6 +99,7 @@ public abstract class AbstractNode extends DataCollectionTarget
    protected long icmpProxyId;
 	protected int agentPort;
 	protected int agentAuthMethod;
+	protected AgentCacheMode agentCacheMode;
 	protected String agentSharedSecret;
 	protected String agentVersion;
 	protected String platformName;
@@ -154,6 +156,7 @@ public abstract class AbstractNode extends DataCollectionTarget
 		agentPort = msg.getFieldAsInt32(NXCPCodes.VID_AGENT_PORT);
 		agentAuthMethod = msg.getFieldAsInt32(NXCPCodes.VID_AUTH_METHOD);
 		agentSharedSecret = msg.getFieldAsString(NXCPCodes.VID_SHARED_SECRET);
+      agentCacheMode = AgentCacheMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_AGENT_CACHE_MODE));
 		agentVersion = msg.getFieldAsString(NXCPCodes.VID_AGENT_VERSION);
 		platformName = msg.getFieldAsString(NXCPCodes.VID_PLATFORM_NAME);
 		snmpAuthName = msg.getFieldAsString(NXCPCodes.VID_SNMP_AUTH_OBJECT);
@@ -268,6 +271,14 @@ public abstract class AbstractNode extends DataCollectionTarget
 	}
 
 	/**
+    * @return the agentCacheMode
+    */
+   public AgentCacheMode getAgentCacheMode()
+   {
+      return agentCacheMode;
+   }
+
+   /**
 	 * @return the agentVersion
 	 */
 	public String getAgentVersion()

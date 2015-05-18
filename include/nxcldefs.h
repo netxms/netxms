@@ -701,12 +701,27 @@ enum SessionState
 #define DCF_NO_STORAGE              ((UINT16)0x0200)
 #define DCF_CALCULATE_NODE_STATUS   ((UINT16)0x0400)
 #define DCF_SHOW_IN_OBJECT_OVERVIEW ((UINT16)0x0800)
+#define DCF_CACHE_MODE_MASK         ((UINT16)0x3000)
 
 /**
  * Get cluster aggregation function from DCI flags
  */
 #define DCF_GET_AGGREGATION_FUNCTION(flags) (((flags) & DCF_AGGREGATE_FUNCTION_MASK) >> 4)
+
+/**
+ * Set cluster aggregation function in DCI flags
+ */
 #define DCF_SET_AGGREGATION_FUNCTION(flags,func) (((flags) & ~DCF_AGGREGATE_FUNCTION_MASK) | (((func) & 0x07) << 4))
+
+/**
+ * Get cache mode from DCI flags
+ */
+#define DCF_GET_CACHE_MODE(flags) (((flags) & DCF_CACHE_MODE_MASK) >> 12)
+
+/**
+ * Set cache mode in DCI flags
+ */
+#define DCF_SET_CACHE_MODE(flags,mode) (((flags) & ~DCF_CACHE_MODE_MASK) | (((mode) & 0x03) << 12))
 
 /**
  * DCTable column flags
@@ -907,28 +922,29 @@ enum AggregationFunction
 #define NXC_CHANNEL_AUDIT_LOG    0x00000020
 #define NXC_CHANNEL_SITUATIONS   0x00000040
 
-
-//
-// Node creation flags
-//
-
+/**
+ * Node creation flags
+ */
 #define NXC_NCF_DISABLE_ICMP     0x0001
 #define NXC_NCF_DISABLE_NXCP     0x0002
 #define NXC_NCF_DISABLE_SNMP     0x0004
 #define NXC_NCF_CREATE_UNMANAGED 0x0008
 
+/**
+ * Agent data cache modes
+ */
+#define AGENT_CACHE_OFF          0
+#define AGENT_CACHE_ON           1
+#define AGENT_CACHE_DEFAULT      2
 
-//
-// Server components
-//
-
+/**
+ * Server components
+ */
 #define SRV_COMPONENT_DISCOVERY_MGR    1
 
-
-//
-// Configuration import flags
-//
-
+/**
+ * Configuration import flags
+ */
 #define CFG_IMPORT_REPLACE_EVENT_BY_CODE   0x0001
 #define CFG_IMPORT_REPLACE_EVENT_BY_NAME   0x0002
 

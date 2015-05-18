@@ -156,6 +156,7 @@ UINT32 g_thresholdRepeatInterval = 0;	// Disabled by default
 int g_requiredPolls = 1;
 DB_DRIVER g_dbDriver = NULL;
 ThreadPool *g_mainThreadPool = NULL;
+INT16 g_defaultAgentCacheMode = AGENT_CACHE_OFF;
 
 /**
  * Static data
@@ -299,6 +300,7 @@ static void LoadGlobalConfig()
 	g_dwTopologyPollingInterval = ConfigReadInt(_T("TopologyPollingInterval"), 1800);
 	g_dwConditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
 	g_slmPollingInterval = ConfigReadInt(_T("SlmPollingInterval"), 60);
+   g_defaultAgentCacheMode = (INT16)ConfigReadInt(_T("DefaultAgentCacheMode"), AGENT_CACHE_OFF);
 	if (ConfigReadInt(_T("DeleteEmptySubnets"), 1))
 		g_flags |= AF_DELETE_EMPTY_SUBNETS;
 	if (ConfigReadInt(_T("EnableSNMPTraps"), 1))

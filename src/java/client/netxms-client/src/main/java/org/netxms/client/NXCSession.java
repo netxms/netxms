@@ -4393,6 +4393,11 @@ public class NXCSession
          data.getPostalAddress().fillMessage(msg);
       }
       
+      if ((flags & NXCObjectModificationData.MODIFY_AGENT_CACHE_MODE) != 0)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_AGENT_CACHE_MODE, data.getAgentCacheMode().getValue());
+      }
+      
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);

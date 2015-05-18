@@ -385,7 +385,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
 	}
    if (pTransport != NULL)
    {
-	   int version;
+	   INT16 version;
       StringList oids;
       oids.add(_T(".1.3.6.1.2.1.1.2.0"));
       oids.add(_T(".1.3.6.1.2.1.1.1.0"));

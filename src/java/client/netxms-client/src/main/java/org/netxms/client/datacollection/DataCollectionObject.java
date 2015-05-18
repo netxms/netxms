@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.AgentCacheMode;
 
 /**
  * Abstract data collection object
@@ -62,6 +63,7 @@ public abstract class DataCollectionObject
 	public static final int DCF_AGGREGATE_ON_CLUSTER = 0x0080;
    public static final int DCF_TRANSFORM_AGGREGATED = 0x0100;
    public static final int DCF_NO_STORAGE           = 0x0200;
+   public static final int DCF_CACHE_MODE_MASK      = 0x3000;
 	
 	protected DataCollectionConfiguration owner;
 	protected long id;
@@ -543,5 +545,21 @@ public abstract class DataCollectionObject
    public void setComments(String comments)
    {
       this.comments = comments;
+   }
+
+   /**
+    * @return aggregation function
+    */
+   public AgentCacheMode getCacheMode()
+   {
+      return AgentCacheMode.getByValue((flags & DCF_CACHE_MODE_MASK) >> 12);
+   }
+
+   /**
+    * @param func
+    */
+   public void setCacheMode(AgentCacheMode mode)
+   {
+      flags = (flags & ~DCF_CACHE_MODE_MASK) | ((mode.getValue() & 0x03) << 12);
    }
 }

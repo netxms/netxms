@@ -48,6 +48,7 @@ extern UINT32 g_dwRoutingTableUpdateInterval;
 extern UINT32 g_dwTopologyPollingInterval;
 extern UINT32 g_dwConditionPollingInterval;
 extern UINT32 g_instancePollingInterval;
+extern INT16 g_defaultAgentCacheMode;
 
 /**
  * Utility functions used by inline methods
@@ -1065,12 +1066,13 @@ protected:
 	int m_iRequiredPollCount;
    UINT32 m_zoneId;
    UINT16 m_agentPort;
-   UINT16 m_agentAuthMethod;
+   INT16 m_agentAuthMethod;
+   INT16 m_agentCacheMode;
    TCHAR m_szSharedSecret[MAX_SECRET_LENGTH];
-   int m_iStatusPollType;
-   int m_snmpVersion;
-   WORD m_wSNMPPort;
-	WORD m_nUseIfXTable;
+   INT16 m_iStatusPollType;
+   INT16 m_snmpVersion;
+   UINT16 m_wSNMPPort;
+	UINT16 m_nUseIfXTable;
 	SNMP_SecurityContext *m_snmpSecurity;
    TCHAR m_szObjectId[MAX_OID_LEN * 4];
    TCHAR m_szAgentVersion[MAX_AGENT_VERSION_LEN];
@@ -1108,7 +1110,7 @@ protected:
    UINT32 m_agentProxy;      // Node used as proxy for agent connection
 	UINT32 m_snmpProxy;       // Node used as proxy for SNMP requests
    UINT32 m_icmpProxy;       // Node used as proxy for ICMP ping
-   QWORD m_qwLastEvents[MAX_LAST_EVENTS];
+   UINT64 m_qwLastEvents[MAX_LAST_EVENTS];
    ROUTING_TABLE *m_pRoutingTable;
 	ForwardingDatabase *m_fdb;
 	LinkLayerNeighbors *m_linkLayerNeighbors;
@@ -1223,8 +1225,9 @@ public:
 	const TCHAR *getLLDPNodeId() { return m_lldpNodeId; }
    const BYTE *getBridgeId() { return m_baseBridgeAddress; }
 	const TCHAR *getDriverName() { return (m_driver != NULL) ? m_driver->getName() : _T("GENERIC"); }
-	WORD getAgentPort() { return m_agentPort; }
-	WORD getAgentAuthMethod() { return m_agentAuthMethod; }
+	UINT16 getAgentPort() { return m_agentPort; }
+	INT16 getAgentAuthMethod() { return m_agentAuthMethod; }
+   INT16 getAgentCacheMode() { return (m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode; }
 	const TCHAR *getSharedSecret() { return m_szSharedSecret; }
 
    bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }

@@ -1049,6 +1049,7 @@ typedef struct
 #define VID_SUMMARY_TABLE_LIST      ((UINT32)500)
 #define VID_OVERVIEW_DCI_COUNT      ((UINT32)501)
 #define VID_OVERVIEW_ONLY           ((UINT32)502)
+#define VID_AGENT_CACHE_MODE        ((UINT32)503)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

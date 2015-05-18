@@ -467,6 +467,23 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
 }
 
 /**
+ * Upgrade from V354 to V355
+ */
+static BOOL H_UpgradeFromV354(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE nodes ADD agent_cache_mode char(1)\n")
+      _T("UPDATE nodes SET agent_cache_mode='2'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(CreateConfigParam(_T("DefaultAgentCacheMode"), _T("0"), 1, 1));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='355' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V353 to V354
  */
 static BOOL H_UpgradeFromV353(int currVersion, int newVersion)
@@ -8586,6 +8603,7 @@ static struct
    { 351, 352, H_UpgradeFromV351 },
    { 352, 353, H_UpgradeFromV352 },
    { 353, 354, H_UpgradeFromV353 },
+   { 354, 355, H_UpgradeFromV354 },
    { 0, 0, NULL }
 };
 

@@ -30,6 +30,7 @@ import java.util.UUID;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.PostalAddress;
+import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
@@ -100,6 +101,7 @@ public class NXCObjectModificationData
    public static final long MODIFY_PEER_GATEWAY       = 0x0020000000000000L;
    public static final long MODIFY_VPN_NETWORKS       = 0x0040000000000000L;
    public static final long MODIFY_POSTAL_ADDRESS     = 0x0080000000000000L;
+   public static final long MODIFY_AGENT_CACHE_MODE   = 0x0100000000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -176,6 +178,7 @@ public class NXCObjectModificationData
 	private List<InetAddressEx> localNetworks;
 	private List<InetAddressEx> remoteNetworks;
 	private PostalAddress postalAddress;
+	private AgentCacheMode agentCacheMode;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1429,5 +1432,22 @@ public class NXCObjectModificationData
    {
       this.postalAddress = postalAddress;
       flags |= MODIFY_POSTAL_ADDRESS;
+   }
+
+   /**
+    * @return the agentCacheMode
+    */
+   public AgentCacheMode getAgentCacheMode()
+   {
+      return agentCacheMode;
+   }
+
+   /**
+    * @param agentCacheMode the agentCacheMode to set
+    */
+   public void setAgentCacheMode(AgentCacheMode agentCacheMode)
+   {
+      this.agentCacheMode = agentCacheMode;
+      flags |= MODIFY_AGENT_CACHE_MODE;
    }
 }

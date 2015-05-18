@@ -44,6 +44,7 @@ Node::Node() : DataCollectionTarget()
    m_zoneId = 0;
    m_agentPort = AGENT_LISTEN_PORT;
    m_agentAuthMethod = AUTH_NONE;
+   m_agentCacheMode = AGENT_CACHE_DEFAULT;
    m_szSharedSecret[0] = 0;
    m_iStatusPollType = POLL_ICMP_PING;
    m_snmpVersion = SNMP_VERSION_1;
@@ -122,6 +123,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_zoneId = dwZone;
    m_agentPort = AGENT_LISTEN_PORT;
    m_agentAuthMethod = AUTH_NONE;
+   m_agentCacheMode = AGENT_CACHE_DEFAULT;
    m_szSharedSecret[0] = 0;
    m_iStatusPollType = POLL_ICMP_PING;
    m_snmpVersion = SNMP_VERSION_1;
@@ -251,7 +253,8 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
       _T("proxy_node,snmp_proxy,required_polls,uname,")
 		_T("use_ifxtable,snmp_port,community,usm_auth_password,")
 		_T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
-      _T("runtime_flags,down_since,boot_time,driver_name,icmp_proxy FROM nodes WHERE id=?"));
+      _T("runtime_flags,down_since,boot_time,driver_name,icmp_proxy,")
+      _T("agent_cache_mode FROM nodes WHERE id=?"));
 	if (hStmt == NULL)
 		return FALSE;
 
@@ -322,6 +325,9 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
 		m_driver = FindDriverByName(driverName);
 
    m_icmpProxy = DBGetFieldULong(hResult, 0, 29);
+   m_agentCacheMode = (INT16)DBGetFieldLong(hResult, 0, 30);
+   if ((m_agentCacheMode != AGENT_CACHE_ON) && (m_agentCacheMode != AGENT_CACHE_OFF))
+      m_agentCacheMode = AGENT_CACHE_DEFAULT;
 
    DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
@@ -411,7 +417,8 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
          _T("status_poll_type=?,agent_port=?,auth_method=?,secret=?,snmp_oid=?,uname=?,agent_version=?,")
 			_T("platform_name=?,poller_node_id=?,zone_guid=?,proxy_node=?,snmp_proxy=?,icmp_proxy=?,required_polls=?,")
 			_T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
-			_T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_id=?,boot_time=? WHERE id=?"));
+			_T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_id=?,boot_time=?,")
+         _T("agent_cache_mode=? WHERE id=?"));
 	}
    else
 	{
@@ -419,8 +426,9 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 		  _T("INSERT INTO nodes (primary_ip,primary_name,snmp_port,node_flags,snmp_version,community,status_poll_type,")
 		  _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
 		  _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
-		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_id,boot_time,id) ")
-		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_id,boot_time,")
+        _T("agent_cache_mode,id) ")
+		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -428,7 +436,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 		return FALSE;
 	}
 
-   TCHAR ipAddr[64], baseAddress[16];
+   TCHAR ipAddr[64], baseAddress[16], cacheMode[16];
 
 	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(ipAddr), DB_BIND_STATIC);
 	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_primaryName, DB_BIND_STATIC);
@@ -472,7 +480,8 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)0);	// rack position
 	DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, (LONG)0);	// rack ID
 	DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);	// rack ID
-	DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, _itot(m_agentCacheMode, cacheMode, 10), DB_BIND_STATIC);
+	DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -4112,6 +4121,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_RUNTIME_FLAGS, m_dwDynamicFlags);
    pMsg->setField(VID_AGENT_PORT, m_agentPort);
    pMsg->setField(VID_AUTH_METHOD, m_agentAuthMethod);
+   pMsg->setField(VID_AGENT_CACHE_MODE, m_agentCacheMode);
    pMsg->setField(VID_SHARED_SECRET, m_szSharedSecret);
 	pMsg->setFieldFromMBString(VID_SNMP_AUTH_OBJECT, m_snmpSecurity->getCommunity());
 	pMsg->setFieldFromMBString(VID_SNMP_AUTH_PASSWORD, m_snmpSecurity->getAuthPassword());
@@ -4287,7 +4297,11 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
 
    // Change authentication method of native agent
    if (pRequest->isFieldExist(VID_AUTH_METHOD))
-      m_agentAuthMethod = pRequest->getFieldAsUInt16(VID_AUTH_METHOD);
+      m_agentAuthMethod = pRequest->getFieldAsInt16(VID_AUTH_METHOD);
+
+   // Change cache mode for agent DCI
+   if (pRequest->isFieldExist(VID_AGENT_CACHE_MODE))
+      m_agentCacheMode = pRequest->getFieldAsInt16(VID_AGENT_CACHE_MODE);
 
    // Change shared secret of native agent
    if (pRequest->isFieldExist(VID_SHARED_SECRET))

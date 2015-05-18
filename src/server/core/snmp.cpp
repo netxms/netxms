@@ -214,7 +214,7 @@ stop_test:
  * On success, returns new security context object (dynamically created).
  * On failure, returns NULL
  */
-SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *version, SNMP_SecurityContext *originalContext, StringList *testOids)
+SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, INT16 *version, SNMP_SecurityContext *originalContext, StringList *testOids)
 {
 	int i, count, snmpVer = SNMP_VERSION_2C;
 	TCHAR buffer[1024];
