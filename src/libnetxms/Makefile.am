@@ -1,4 +1,4 @@
-SOURCES = agent.cpp array.cpp base64.cpp bytestream.cpp config.cpp \
+SOURCES = array.cpp base64.cpp bytestream.cpp config.cpp \
 	  crypto.cpp dirw_unix.c gen_uuid.c geolocation.cpp getopt.c \
 	  dload.cpp hash.cpp ice.c icmp.cpp icmp6.cpp iconv.cpp \
 	  inet_pton.c inetaddr.cpp log.cpp main.cpp md5.cpp message.cpp \
