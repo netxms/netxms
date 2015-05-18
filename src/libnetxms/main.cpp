@@ -123,14 +123,11 @@ void LIBNETXMS_EXPORTABLE __wcsupr(WCHAR *in)
 
 #endif
 
-
-//
-// DLL entry point
-//
-
 #ifdef _WIN32
 
-#ifndef UNDER_CE // FIXME
+/**
+ * DLL entry point
+ */
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
    if (dwReason == DLL_PROCESS_ATTACH)
@@ -140,25 +137,5 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 	}
    return TRUE;
 }
-#endif // UNDER_CE
 
 #endif   /* _WIN32 */
-
-
-//
-// NetWare library entry point
-//
-
-#ifdef _NETWARE
-
-int _init(void)
-{
-   return 0;
-}
-
-int _fini(void)
-{
-   return 0;
-}
-
-#endif

@@ -4,7 +4,7 @@ pkglib_LTLIBRARIES = filemgr.la
 filemgr_la_SOURCES = filemgr.cpp logmonitoring.cpp
 filemgr_la_CPPFLAGS=-I@top_srcdir@/include
 filemgr_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
-filemgr_la_LIBADD = ../../../libnetxms/libnetxms.la
+filemgr_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = filemgr.vcproj filemgr.h
 

@@ -23,6 +23,17 @@
 #ifndef _nms_agent_h_
 #define _nms_agent_h_
 
+#ifdef _WIN32
+#ifdef LIBNXAGENT_EXPORTS
+#define LIBNXAGENT_EXPORTABLE __declspec(dllexport)
+#else
+#define LIBNXAGENT_EXPORTABLE __declspec(dllimport)
+#endif
+#else    /* _WIN32 */
+#define LIBNXAGENT_EXPORTABLE
+#endif
+
+
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxconfig.h>
@@ -531,48 +542,50 @@ inline void ret_uint64(TCHAR *rbuf, QWORD value)
 #endif   /* _WIN32 */
 }
 
-//
-// API for subagents
-//
-BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, int maxSize);
-BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, WCHAR *arg, int maxSize);
+/**
+ * API for subagents
+ */
+bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, int maxSize);
+bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, WCHAR *arg, int maxSize);
 #ifdef UNICODE
 #define AgentGetParameterArg AgentGetParameterArgW
 #else
 #define AgentGetParameterArg AgentGetParameterArgA
 #endif
 
-void LIBNETXMS_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...)
+void LIBNXAGENT_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...)
 #if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
    __attribute__ ((format(printf, 2, 3)))
 #endif
 ;
-void LIBNETXMS_EXPORTABLE AgentWriteLog2(int logLevel, const TCHAR *format, va_list args);
-void LIBNETXMS_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ...)
+void LIBNXAGENT_EXPORTABLE AgentWriteLog2(int logLevel, const TCHAR *format, va_list args);
+void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ...)
 #if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
    __attribute__ ((format(printf, 2, 3)))
 #endif
 ;
-void LIBNETXMS_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va_list args);
-void LIBNETXMS_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, const char *pszFormat, ...);
-void LIBNETXMS_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList);
-bool LIBNETXMS_EXPORTABLE EnumerateSessions(bool (* callback)(AbstractCommSession *, void *), void *data);
-BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset);
-BOOL LIBNETXMS_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value);
-BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LONG value);
-BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, UINT32 value);
-BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, INT64 value);
-BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, QWORD value);
-BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, double value);
-CONDITION LIBNETXMS_EXPORTABLE AgentGetShutdownCondition();
-bool LIBNETXMS_EXPORTABLE AgentSleepAndCheckForShutdown(UINT32 sleepTime);
+void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va_list args);
 
-void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
-                                          void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
-                                          void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
-														bool (* enumerateSessions)(bool (*)(AbstractCommSession *, void *), void *),
-                                          bool (* sendFile)(void *, UINT32, const TCHAR *, long),
-                                          bool (* pushData)(const TCHAR *, const TCHAR *, UINT32),
-                                          CONDITION shutdownCondition);
+void LIBNXAGENT_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, const char *pszFormat, ...);
+void LIBNXAGENT_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList);
+
+bool LIBNXAGENT_EXPORTABLE EnumerateSessions(bool (* callback)(AbstractCommSession *, void *), void *data);
+
+bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset);
+
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value);
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LONG value);
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, UINT32 value);
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, INT64 value);
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, QWORD value);
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, double value);
+
+CONDITION LIBNXAGENT_EXPORTABLE AgentGetShutdownCondition();
+bool LIBNXAGENT_EXPORTABLE AgentSleepAndCheckForShutdown(UINT32 sleepTime);
+
+Config LIBNXAGENT_EXPORTABLE *AgentOpenRegistry();
+void LIBNXAGENT_EXPORTABLE AgentCloseRegistry(bool modified);
+
+const TCHAR LIBNXAGENT_EXPORTABLE *AgentGetDataDirectory();
 
 #endif   /* _nms_agent_h_ */

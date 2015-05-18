@@ -4,7 +4,7 @@ pkglib_LTLIBRARIES = freebsd.la
 freebsd_la_SOURCES = disk.cpp freebsd.cpp net.cpp proc.cpp system.cpp 
 freebsd_la_CPPFLAGS=-I@top_srcdir@/include
 freebsd_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
-freebsd_la_LIBADD = ../../../libnetxms/libnetxms.la -lkvm
+freebsd_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la -lkvm
 
 EXTRA_DIST = disk.h net.h system.h
 

@@ -4,7 +4,7 @@ pkglib_LTLIBRARIES = odbcquery.la
 odbcquery_la_SOURCES = odbcquery.cpp odbcsapi.cpp
 odbcquery_la_CPPFLAGS=-I@top_srcdir@/include
 odbcquery_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
-odbcquery_la_LIBADD = ../../../libnetxms/libnetxms.la @ODBC_LIBS@
+odbcquery_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la @ODBC_LIBS@
 
 EXTRA_DIST = odbcquery.vcproj odbcquery.h
 

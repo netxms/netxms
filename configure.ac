@@ -2723,7 +2723,7 @@ AC_SUBST(MONGODB_LIBS)
 #	only the first ever interface is implemented, so age can only be `0'. 
 #--------------------------------------------------------------------
 
-NETXMS_LIBRARY_VERSION=1:0:0
+NETXMS_LIBRARY_VERSION=2:0:0
 AC_SUBST(NETXMS_LIBRARY_VERSION)
 
 #--------------------------------------------------------------------
@@ -2762,6 +2762,7 @@ AC_CONFIG_FILES([
 	src/agent/appagent/Makefile
 	src/agent/core/Makefile
 	src/agent/install/Makefile
+	src/agent/libnxagent/Makefile
 	src/agent/libnxappc/Makefile
 	src/agent/libnxsd/Makefile
 	src/agent/subagents/Makefile

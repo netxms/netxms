@@ -499,9 +499,6 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat,
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, va_list args);
 void ForwardTrap(NXCPMessage *msg);
 
-Config *OpenRegistry();
-void CloseRegistry(bool modified);
-
 void StartPushConnector();
 bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId);
 

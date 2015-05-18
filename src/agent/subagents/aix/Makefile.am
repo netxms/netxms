@@ -4,7 +4,7 @@ pkglib_LTLIBRARIES = aix.la
 aix_la_SOURCES = cpu.cpp disk.cpp iostat.cpp main.cpp net.cpp proc.cpp system.cpp
 aix_la_CPPFLAGS=-I@top_srcdir@/include
 aix_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
-aix_la_LIBADD = -lperfstat ../../../libnetxms/libnetxms.la
+aix_la_LIBADD = -lperfstat ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = aix_subagent.h
 

@@ -40,7 +40,7 @@ static void RegisterPolicy(CommSession *session, UINT32 type, uuid_t guid)
 	_sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s/"), uuid_to_string(guid, buffer));
 	tail = (int)_tcslen(path);
 
-	Config *registry = OpenRegistry();
+	Config *registry = AgentOpenRegistry();
 
 	_tcscpy(&path[tail], _T("type"));
 	registry->setValue(path, type);
@@ -48,7 +48,7 @@ static void RegisterPolicy(CommSession *session, UINT32 type, uuid_t guid)
 	_tcscpy(&path[tail], _T("server"));
    registry->setValue(path, session->getServerAddress().toString(buffer));
 
-	CloseRegistry(true);
+	AgentCloseRegistry(true);
 }
 
 /**
@@ -59,9 +59,9 @@ static void UnregisterPolicy(uuid_t guid)
 	TCHAR path[256], buffer[64];
 
 	_sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s"), uuid_to_string(guid, buffer));
-	Config *registry = OpenRegistry();
+	Config *registry = AgentOpenRegistry();
 	registry->deleteEntry(path);
-	CloseRegistry(true);
+	AgentCloseRegistry(true);
 }
 
 /**
@@ -73,9 +73,9 @@ static int GetPolicyType(uuid_t guid)
 	int type;
 
 	_sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s/type"), uuid_to_string(guid, buffer));
-	Config *registry = OpenRegistry();
+	Config *registry = AgentOpenRegistry();
 	type = registry->getValueAsInt(path, -1);
-	CloseRegistry(false);
+	AgentCloseRegistry(false);
 	return type;
 }
 
@@ -252,7 +252,7 @@ UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request)
  */
 UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg)
 {
-	Config *registry = OpenRegistry();
+	Config *registry = AgentOpenRegistry();
 
 	ObjectArray<ConfigEntry> *list = registry->getSubEntries(_T("/policyRegistry"), NULL);
 	if (list != NULL)
@@ -279,6 +279,6 @@ UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg)
 		msg->setField(VID_NUM_ELEMENTS, (UINT32)0);
 	}
 	
-	CloseRegistry(false);
+	AgentCloseRegistry(false);
 	return RCC_SUCCESS;
 }

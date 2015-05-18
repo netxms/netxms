@@ -4,7 +4,7 @@ pkglib_LTLIBRARIES = mongodb.la
 mongodb_la_SOURCES = db.cpp main.cpp
 mongodb_la_CPPFLAGS=-I@top_srcdir@/include @MONGODB_CPPFLAGS@
 mongodb_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym @MONGODB_LDFLAGS@
-mongodb_la_LIBADD = ../../../libnetxms/libnetxms.la @MONGODB_LIBS@
+mongodb_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la @MONGODB_LIBS@
 
 EXTRA_DIST = mongodb_subagent.h
 

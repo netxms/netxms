@@ -59,10 +59,6 @@ void TakeScreenshot(NXCPMessage *response)
             rcc = ERR_SUCCESS;
             response->setFieldFromFile(VID_FILE_DATA, tempFile);
          }
-         else
-         {
-            AgentWriteDebugLog(4, _T("Cannot save bitmap as PNG"));
-         }
          DeleteObject(bitmap);
          DeleteFile(tempFile);
       }

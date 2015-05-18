@@ -8,4 +8,4 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = appagent libnxappc libnxsd subagents core install tools
+SUBDIRS = appagent libnxagent libnxappc libnxsd subagents core install tools
