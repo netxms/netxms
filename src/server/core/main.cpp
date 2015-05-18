@@ -389,6 +389,7 @@ static BOOL InitCryptografy()
 
    if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 0x7F), DbgPrintf2))
 		return FALSE;
+   DbgPrintf(4, _T("Supported ciphers: %s"), (const TCHAR *)NXCPGetSupportedCiphersAsText());
 
    SSL_library_init();
    SSL_load_error_strings();

@@ -7140,7 +7140,7 @@ void ClientSession::setupEncryption(NXCPMessage *request)
       m_condEncryptionSetup = ConditionCreate(FALSE);
 
    // Send request for session key
-	PrepareKeyRequestMsg(&msg, g_pServerKey, request->getFieldAsUInt16(VID_USE_X509_KEY_FORMAT) != 0);
+	PrepareKeyRequestMsg(&msg, g_pServerKey, request->getFieldAsBoolean(VID_USE_X509_KEY_FORMAT));
 	msg.setId(request->getId());
    sendMessage(&msg);
    msg.deleteAllFields();
