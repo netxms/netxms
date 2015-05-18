@@ -40,6 +40,7 @@ libnxcore_la_LIBADD = \
 	../../libnxlp/libnxlp.la \
 	../../db/libnxdb/libnxdb.la \
 	../../libnxsl/libnxsl.la \
+	../../agent/libnxagent/libnxagent.la \
 	../../libnetxms/libnetxms.la \
 	@SERVER_LIBS@
 if XMPP_SUPPORT

@@ -659,34 +659,6 @@ if test $? = 0; then
 	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/ipso/ipso.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
 fi
 
-check_substr "$COMPONENTS" "server"
-if test $? = 0; then
-	if test "x$DBDRIVER_SELECTED" != "xyes"; then
-		AC_MSG_ERROR(You must select at least one database driver when building server.)
-	fi
-	BUILD_SERVER="yes"
-	MODULES="$MODULES libnxmap libnxsl libnxlp db server nxscript"
-	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
-	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music"
-	if test "x$XMPP_SUPPORT" = "xyes"; then
-		MODULES="libstrophe $MODULES"
-		AC_DEFINE(XMPP_SUPPORTED, 1, Define to 1 if XMPP is supported)
-	fi
-fi
-
-check_substr "$COMPONENTS" "client"
-if test $? = 0; then
-	BUILD_CLIENT="yes"
-	NEED_ZLIB="yes"
-	MODULES="$MODULES client"
-	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxsms"
-fi
-
-check_substr "$COMPONENTS" "client-proxy"
-if test $? = 0; then
-	MODULES="$MODULES nxcproxy"
-fi
-
 check_substr "$COMPONENTS" "agent"
 if test $? = 0; then
 	BUILD_AGENT="yes"
@@ -721,6 +693,34 @@ if test $? = 0; then
 			# unknown
 			;;
 	esac
+fi
+
+check_substr "$COMPONENTS" "server"
+if test $? = 0; then
+	if test "x$DBDRIVER_SELECTED" != "xyes"; then
+		AC_MSG_ERROR(You must select at least one database driver when building server.)
+	fi
+	BUILD_SERVER="yes"
+	MODULES="$MODULES libnxmap libnxsl server nxscript"
+	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
+	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music"
+	if test "x$XMPP_SUPPORT" = "xyes"; then
+		MODULES="libstrophe $MODULES"
+		AC_DEFINE(XMPP_SUPPORTED, 1, Define to 1 if XMPP is supported)
+	fi
+fi
+
+check_substr "$COMPONENTS" "client"
+if test $? = 0; then
+	BUILD_CLIENT="yes"
+	NEED_ZLIB="yes"
+	MODULES="$MODULES client"
+	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxsms"
+fi
+
+check_substr "$COMPONENTS" "client-proxy"
+if test $? = 0; then
+	MODULES="$MODULES nxcproxy"
 fi
 
 check_substr "$COMPONENTS" "mysql"
