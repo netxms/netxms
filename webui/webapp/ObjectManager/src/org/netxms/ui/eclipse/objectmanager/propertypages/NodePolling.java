@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -47,9 +48,12 @@ public class NodePolling extends PropertyPage
 {
 	private AbstractNode object;
 	private ObjectSelector pollerNode;
-	private Button radioDefault;
-	private Button radioEnable;
-	private Button radioDisable;
+	private Button radioIfXTableDefault;
+	private Button radioIfXTableEnable;
+	private Button radioIfXTableDisable;
+	private Button radioAgentCacheDefault;
+   private Button radioAgentCacheOn;
+   private Button radioAgentCacheOff;
 	private List<Button> flagButtons = new ArrayList<Button>();
 	private List<Integer> flagValues = new ArrayList<Integer>();
 	
@@ -131,17 +135,42 @@ public class NodePolling extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		ifXTableGroup.setLayoutData(gd);
 		
-		radioDefault = new Button(ifXTableGroup, SWT.RADIO);
-		radioDefault.setText(Messages.get().NodePolling_Default);
-		radioDefault.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_DEFAULT);
+		radioIfXTableDefault = new Button(ifXTableGroup, SWT.RADIO);
+		radioIfXTableDefault.setText(Messages.get().NodePolling_Default);
+		radioIfXTableDefault.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_DEFAULT);
 
-		radioEnable = new Button(ifXTableGroup, SWT.RADIO);
-		radioEnable.setText(Messages.get().NodePolling_Enable);
-		radioEnable.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_ENABLED);
+		radioIfXTableEnable = new Button(ifXTableGroup, SWT.RADIO);
+		radioIfXTableEnable.setText(Messages.get().NodePolling_Enable);
+		radioIfXTableEnable.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_ENABLED);
 
-		radioDisable = new Button(ifXTableGroup, SWT.RADIO);
-		radioDisable.setText(Messages.get().NodePolling_Disable);
-		radioDisable.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_DISABLED);
+		radioIfXTableDisable = new Button(ifXTableGroup, SWT.RADIO);
+		radioIfXTableDisable.setText(Messages.get().NodePolling_Disable);
+		radioIfXTableDisable.setSelection(object.getIfXTablePolicy() == AbstractNode.IFXTABLE_DISABLED);
+
+      /* agent cache */
+      Group agentCacheGroup = new Group(dialogArea, SWT.NONE);
+      agentCacheGroup.setText("Agent cache mode");
+      layout = new GridLayout();
+      layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      layout.numColumns = 3;
+      layout.makeColumnsEqualWidth = true;
+      agentCacheGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      agentCacheGroup.setLayoutData(gd);
+      
+      radioAgentCacheDefault = new Button(agentCacheGroup, SWT.RADIO);
+      radioAgentCacheDefault.setText(Messages.get().NodePolling_Default);
+      radioAgentCacheDefault.setSelection(object.getAgentCacheMode() == AgentCacheMode.DEFAULT);
+
+      radioAgentCacheOn = new Button(agentCacheGroup, SWT.RADIO);
+      radioAgentCacheOn.setText("On");
+      radioAgentCacheOn.setSelection(object.getAgentCacheMode() == AgentCacheMode.ON);
+
+      radioAgentCacheOff = new Button(agentCacheGroup, SWT.RADIO);
+      radioAgentCacheOff.setText("Off");
+      radioAgentCacheOff.setSelection(object.getAgentCacheMode() == AgentCacheMode.OFF);
 
       return dialogArea;
 	}
@@ -190,12 +219,26 @@ public class NodePolling extends PropertyPage
 	 */
 	private int collectIfXTablePolicy()
 	{
-		if (radioEnable.getSelection())
+		if (radioIfXTableEnable.getSelection())
 			return AbstractNode.IFXTABLE_ENABLED;
-		if (radioDisable.getSelection())
+		if (radioIfXTableDisable.getSelection())
 			return AbstractNode.IFXTABLE_DISABLED;
 		return AbstractNode.IFXTABLE_DEFAULT;
 	}
+
+	/**
+    * Collect agent cache mode from radio buttons
+    * 
+    * @return
+    */
+   private AgentCacheMode collectAgentCacheMode()
+   {
+      if (radioAgentCacheOn.getSelection())
+         return AgentCacheMode.ON;
+      if (radioAgentCacheOff.getSelection())
+         return AgentCacheMode.OFF;
+      return AgentCacheMode.DEFAULT;
+   }
 
 	/**
 	 * Apply changes
@@ -209,6 +252,7 @@ public class NodePolling extends PropertyPage
 		md.setPollerNode(pollerNode.getObjectId());
 		md.setObjectFlags(collectNodeFlags());
 		md.setIfXTablePolicy(collectIfXTablePolicy());
+		md.setAgentCacheMode(collectAgentCacheMode());
 		
 		if (isApply)
 			setValid(false);
@@ -271,9 +315,9 @@ public class NodePolling extends PropertyPage
    {
       super.performDefaults();
       pollerNode.setObjectId(0);
-      radioDefault.setSelection(true);
-      radioDisable.setSelection(false);
-      radioEnable.setSelection(false);
+      radioIfXTableDefault.setSelection(true);
+      radioIfXTableDisable.setSelection(false);
+      radioIfXTableEnable.setSelection(false);
       for(Button b : flagButtons)
          b.setSelection(false);
    }

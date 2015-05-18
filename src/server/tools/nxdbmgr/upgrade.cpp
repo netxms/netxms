@@ -473,7 +473,7 @@ static BOOL H_UpgradeFromV354(int currVersion, int newVersion)
 {
    static TCHAR batch[] =
       _T("ALTER TABLE nodes ADD agent_cache_mode char(1)\n")
-      _T("UPDATE nodes SET agent_cache_mode='2'\n")
+      _T("UPDATE nodes SET agent_cache_mode='0'\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 

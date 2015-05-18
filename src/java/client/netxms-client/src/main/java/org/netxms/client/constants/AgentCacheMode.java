@@ -27,9 +27,9 @@ import org.netxms.base.Logger;
  */
 public enum AgentCacheMode
 {
-   OFF(0),
+   DEFAULT(0),
    ON(1),
-   DEFAULT(2);
+   OFF(2);
 
    private int value;
    private static Map<Integer, AgentCacheMode> lookupTable = new HashMap<Integer, AgentCacheMode>();

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.Node;
@@ -88,6 +89,7 @@ public class General extends PropertyPage
 	private Button checkUseCustomSnmpPort;
 	private Spinner customSnmpPort;
 	private ObjectSelector proxyNode;
+	private Combo agentCacheMode;
 	private Combo schedulingMode;
 	private Button checkNoStorage;
 	private LabeledSpinner pollingInterval;
@@ -305,14 +307,25 @@ public class General extends PropertyPage
       
       proxyNode = new ObjectSelector(groupData, SWT.NONE, true);
       proxyNode.setLabel(Messages.get().General_ProxyNode);
-      fd = new FormData();
-      fd.left = new FormAttachment(0, 0);
-      fd.top = new FormAttachment(sampleCount, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      fd.right = new FormAttachment(100, 0);
-      proxyNode.setLayoutData(fd);
       proxyNode.setObjectClass(Node.class);
       proxyNode.setObjectId(dci.getProxyNode());
       proxyNode.setEnabled(dci.getOrigin() != DataCollectionItem.PUSH);
+      
+      fd = new FormData();
+      fd.top = new FormAttachment(sampleCount, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      fd.right = new FormAttachment(100, 0);
+      agentCacheMode = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, "Agent cache mode", fd);
+      agentCacheMode.add("Default");
+      agentCacheMode.add("On");
+      agentCacheMode.add("Off");
+      agentCacheMode.select(dci.getCacheMode().getValue());
+      agentCacheMode.setEnabled(dci.getOrigin() == DataCollectionItem.AGENT);
+
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(sampleCount, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      fd.right = new FormAttachment(agentCacheMode.getParent(), -WidgetHelper.OUTER_SPACING, SWT.LEFT);
+      proxyNode.setLayoutData(fd);
       
       /** polling area **/
       Group groupPolling = new Group(dialogArea, SWT.NONE);
@@ -434,6 +447,7 @@ public class General extends PropertyPage
 		checkUseCustomSnmpPort.setEnabled(index == DataCollectionItem.SNMP);
 		customSnmpPort.setEnabled((index == DataCollectionItem.SNMP) && checkUseCustomSnmpPort.getSelection());
 		sampleCount.setEnabled(index == DataCollectionItem.WINPERF);
+		agentCacheMode.setEnabled(index == DataCollectionItem.AGENT);
 	}
 	
 	/**
@@ -497,6 +511,7 @@ public class General extends PropertyPage
 		dci.setDataType(dataType.getSelectionIndex());
 		dci.setSampleCount(sampleCount.getSelection());
 		dci.setProxyNode(proxyNode.getObjectId());
+		dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
 		dci.setUseAdvancedSchedule(schedulingMode.getSelectionIndex() == 1);
 		dci.setPollingInterval(pollingInterval.getSelection());
 		dci.setRetentionTime(retentionTime.getSelection());

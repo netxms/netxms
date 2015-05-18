@@ -933,9 +933,9 @@ enum AggregationFunction
 /**
  * Agent data cache modes
  */
-#define AGENT_CACHE_OFF          0
+#define AGENT_CACHE_DEFAULT      0
 #define AGENT_CACHE_ON           1
-#define AGENT_CACHE_DEFAULT      2
+#define AGENT_CACHE_OFF          2
 
 /**
  * Server components
