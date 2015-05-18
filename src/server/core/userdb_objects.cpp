@@ -508,21 +508,21 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 18, DB_SQLTYPE_TEXT, m_userDn, DB_BIND_STATIC);
    DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_id);
 
-   BOOL rc = DBBegin(hdb);
-	if (rc)
+   bool success = DBBegin(hdb);
+	if (success)
 	{
-		rc = DBExecute(hStmt);
-		if (rc)
+		success = DBExecute(hStmt);
+		if (success)
 		{
-			rc = saveCustomAttributes(hdb);
+			success = saveCustomAttributes(hdb);
 		}
-		if (rc)
+		if (success)
 			DBCommit(hdb);
 		else
 			DBRollback(hdb);
 	}
    DBFreeStatement(hStmt);
-	return rc ? true : false;
+	return success;
 }
 
 /**
@@ -531,29 +531,29 @@ bool User::saveToDatabase(DB_HANDLE hdb)
 bool User::deleteFromDatabase(DB_HANDLE hdb)
 {
 	TCHAR query[256];
-	BOOL rc;
+	bool success;
 
-	rc = DBBegin(hdb);
-	if (rc)
+	success = DBBegin(hdb);
+	if (success)
 	{
 		_sntprintf(query, 256, _T("DELETE FROM users WHERE id=%d"), m_id);
-		rc = DBQuery(hdb, query);
-		if (rc)
+		success = DBQuery(hdb, query);
+		if (success)
 		{
 			_sntprintf(query, 256, _T("DELETE FROM user_profiles WHERE user_id=%d"), m_id);
-			rc = DBQuery(hdb, query);
-			if (rc)
+			success = DBQuery(hdb, query);
+			if (success)
 			{
 				_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
-				rc = DBQuery(hdb, query);
+				success = DBQuery(hdb, query);
 			}
 		}
-		if (rc)
+		if (success)
 			DBCommit(hdb);
 		else
 			DBRollback(hdb);
 	}
-	return rc ? true : false;
+	return success;
 }
 
 /**
@@ -788,49 +788,49 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_userDn, DB_BIND_STATIC);
    DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_id);
 
-   BOOL rc = DBBegin(hdb);
-	if (rc)
+   bool success = DBBegin(hdb);
+	if (success)
 	{
-      rc = DBExecute(hStmt);
-		if (rc)
+      success = DBExecute(hStmt);
+		if (success)
 		{
          DBFreeStatement(hStmt);
          hStmt = DBPrepare(hdb, _T("DELETE FROM user_group_members WHERE group_id=?"));
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            rc = DBExecute(hStmt);
+            success = DBExecute(hStmt);
          }
          else
          {
-            rc = FALSE;
+            success = false;
          }
 
-			if (rc && (m_memberCount > 0))
+			if (success && (m_memberCount > 0))
 			{
             DBFreeStatement(hStmt);
             hStmt = DBPrepare(hdb, _T("INSERT INTO user_group_members (group_id,user_id) VALUES (?,?)"));
             if (hStmt != NULL)
             {
                DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-				   for(int i = 0; (i < m_memberCount) && rc; i++)
+				   for(int i = 0; (i < m_memberCount) && success; i++)
 				   {
                   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_members[i]);
-                  rc = DBExecute(hStmt);
+                  success = DBExecute(hStmt);
 				   }
             }
             else
             {
-               rc = FALSE;
+               success = false;
             }
 			}
 
-		   if (rc)
+		   if (success)
 		   {
-			   rc = saveCustomAttributes(hdb);
+			   success = saveCustomAttributes(hdb);
 		   }
 		}
-		if (rc)
+		if (success)
 			DBCommit(hdb);
 		else
 			DBRollback(hdb);
@@ -839,7 +839,7 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    if (hStmt != NULL)
       DBFreeStatement(hStmt);
 
-   return rc ? true : false;
+   return success;
 }
 
 /**
@@ -848,29 +848,29 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
 bool Group::deleteFromDatabase(DB_HANDLE hdb)
 {
 	TCHAR query[256];
-	BOOL rc;
+	bool success;
 
-	rc = DBBegin(hdb);
-	if (rc)
+	success = DBBegin(hdb);
+	if (success)
 	{
 		_sntprintf(query, 256, _T("DELETE FROM user_groups WHERE id=%d"), m_id);
-		rc = DBQuery(hdb, query);
-		if (rc)
+		success = DBQuery(hdb, query);
+		if (success)
 		{
 			_sntprintf(query, 256, _T("DELETE FROM user_group_members WHERE group_id=%d"), m_id);
-			rc = DBQuery(hdb, query);
-			if (rc)
+			success = DBQuery(hdb, query);
+			if (success)
 			{
 				_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
-				rc = DBQuery(hdb, query);
+				success = DBQuery(hdb, query);
 			}
 		}
-		if (rc)
+		if (success)
 			DBCommit(hdb);
 		else
 			DBRollback(hdb);
 	}
-	return rc ? true : false;
+	return success;
 }
 
 /**
