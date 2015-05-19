@@ -61,7 +61,7 @@ static bool ParseDrbdStatus()
 	char line[1024];
 	FILE *fp;
 	regex_t pregDevice, pregVersion;
-	regmatch_t pmatch[8];
+	regmatch_t pmatch[9];
 	DRBD_DEVICE device;
 	bool rc = false;
 
@@ -84,9 +84,9 @@ static bool ParseDrbdStatus()
 		{
 			if (fgets(line, 1024, fp) == NULL)
 				break;
-			if (regexec(&pregDevice, line, 8, pmatch, 0) == 0)
+			if (regexec(&pregDevice, line, 9, pmatch, 0) == 0)
 			{
-				for(int i = 1; i < 8; i++)
+				for(int i = 1; i < 9; i++)
 					line[pmatch[i].rm_eo] = 0;
 
 				memset(&device, 0, sizeof(DRBD_DEVICE));
@@ -103,7 +103,7 @@ static bool ParseDrbdStatus()
 					memcpy(&s_devices[device.id], &device, sizeof(DRBD_DEVICE));
 				}
 			}
-			else if (regexec(&pregVersion, line, 8, pmatch, 0) == 0)
+			else if (regexec(&pregVersion, line, 9, pmatch, 0) == 0)
 			{
 				for(int i = 1; i < 4; i++)
 					line[pmatch[i].rm_eo] = 0;
