@@ -16,7 +16,8 @@
 	- "Inverted values" option on line charts
 	- Filter in predefined graphs tree
 	- Values of selected DCIs can be shown on object overview page
-- Fixed issues: #50, #797, #816, #817
+	- "Stacked" option added to line charts on dashboards
+- Fixed issues: #50, #797, #816, #817, #824
 
 
 *
