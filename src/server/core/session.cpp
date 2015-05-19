@@ -9352,15 +9352,16 @@ void ClientSession::pushDCIData(NXCPMessage *pRequest)
       // If all items was checked OK, push data
       if (bOK)
       {
-         time_t t;
-
-         time(&t);
+         time_t t = pRequest->getFieldAsTime(VID_TIMESTAMP);
+         if (t == 0)
+            t = time(NULL);
          for(i = 0; i < dwNumItems; i++)
          {
 				if (_tcslen(ppValueList[i]) >= MAX_DCI_STRING_VALUE)
 					ppValueList[i][MAX_DCI_STRING_VALUE - 1] = 0;
 				dcTargetList[i]->processNewDCValue(ppItemList[i], t, ppValueList[i]);
-				ppItemList[i]->setLastPollTime(t);
+            if (t > ppItemList[i]->getLastPollTime())
+				   ppItemList[i]->setLastPollTime(t);
          }
          msg.setField(VID_RCC, RCC_SUCCESS);
       }
