@@ -59,7 +59,7 @@
 #include <nxappc_internal.h>
 
 static char s_name[128] = "";
-static SOCKET s_socket;
+static SOCKET s_socket = -1;
 
 #define CHECK_CONNECTION do { if ((s_socket == -1) && (s_name[0] != 0)) { if (nxappc_reconnect() == NXAPPC_FAIL) return NXAPPC_FAIL; } } while(0)
 
@@ -71,6 +71,9 @@ static int send_ex(void *data, int len)
 {
 	int nLeft = (int)len;
 	int nRet;
+
+   if (s_socket == -1)
+      return -1;
 
 	do
 	{
@@ -131,6 +134,8 @@ int LIBNXAPPC_EXPORTABLE nxappc_connect(void)
  */
 int LIBNXAPPC_EXPORTABLE nxappc_connect_ex(const char *name)
 {
+   if ((s_socket != -1) && strcmp(name, s_name))
+      return 0;  // already connected
    strncpy(s_name, name, 128);
    return nxappc_reconnect();
 }
