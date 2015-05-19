@@ -5,6 +5,9 @@ import com.radensolutions.reporting.service.ReportManager;
 import com.radensolutions.reporting.service.ServerSettings;
 import net.sf.jasperreports.engine.DefaultJasperReportsContext;
 import net.sf.jasperreports.engine.query.QueryExecuterFactory;
+import org.apache.commons.daemon.Daemon;
+import org.apache.commons.daemon.DaemonContext;
+import org.apache.commons.daemon.DaemonInitException;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,51 +18,17 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import java.io.IOException;
 import java.util.Set;
 
-public class Launcher {
+public class Launcher implements Daemon {
+
     private static final Logger log = LoggerFactory.getLogger(Launcher.class);
     private static final Object shutdownLatch = new Object();
+    private AnnotationConfigApplicationContext context;
 
-    public static void main(String[] args) {
-        try {
-            if (args.length > 0 && args[0].equalsIgnoreCase("start")) {
-                start();
-            } else if (args.length > 0 && args[0].equalsIgnoreCase("stop")) {
-                stop();
-            } else {
-                registerShutdownHook();
-                start();
-            }
-        } catch (IOException e) {
-            log.error("Application error", e);
-        }
-    }
-
-    public Launcher() {
-    }
-
-    private static void start() throws IOException {
-        log.info("Starting up");
-
-        log.debug("Creating context");
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-        context.register(AppContextConfig.class);
-        context.refresh();
-        context.registerShutdownHook();
-
-        registerReportingDataSources(context);
-
-        Connector connector = context.getBean(Connector.class);
-        connector.start();
-        log.info("Connector started");
-
-        DefaultJasperReportsContext jrContext = DefaultJasperReportsContext.getInstance();
-//        jrContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "com.radensolutions.reporting.custom.NXCLQueryExecutorFactory");
-        jrContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "com.radensolutions.reporting.custom.NXCLQueryExecutorFactoryDummy");
-
-        ReportManager reportManager = context.getBean(ReportManager.class);
-        reportManager.deploy();
-        log.info("All reports successful deployed");
-
+    public static void main(String[] args) throws Exception {
+        Launcher launcher = new Launcher();
+        registerShutdownHook();
+        launcher.init(null);
+        launcher.start();
         while (true) {
             synchronized (shutdownLatch) {
                 try {
@@ -70,10 +39,61 @@ public class Launcher {
                 }
             }
         }
+        launcher.stop();
+    }
 
+    @Override
+    public void init(DaemonContext daemonContext) throws DaemonInitException, Exception {
+        log.info("Initializing daemon");
+
+        context = new AnnotationConfigApplicationContext();
+        context.register(AppContextConfig.class);
+        context.refresh();
+        context.registerShutdownHook();
+
+        registerReportingDataSources(context);
+
+        DefaultJasperReportsContext jrContext = DefaultJasperReportsContext.getInstance();
+//        jrContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "com.radensolutions.reporting.custom.NXCLQueryExecutorFactory");
+        jrContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "com.radensolutions.reporting.custom.NXCLQueryExecutorFactoryDummy");
+
+        ReportManager reportManager = context.getBean(ReportManager.class);
+        log.info("Report deployment started");
+        reportManager.deploy();
+        log.info("All reports successful deployed");
+    }
+
+    @Override
+    public void start() throws IOException {
+        log.info("Starting up");
+
+        Connector connector = context.getBean(Connector.class);
+        connector.start();
+        log.info("Connector started");
+    }
+
+    @Override
+    public void stop() {
         log.info("Shutdown initiated");
+        Connector connector = context.getBean(Connector.class);
         connector.stop();
         log.info("Connector stopped");
+    }
+
+    @Override
+    public void destroy() {
+
+    }
+
+    private static void registerShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                synchronized (shutdownLatch) {
+                    shutdownLatch.notify();
+                }
+            }
+        });
     }
 
     private static void registerReportingDataSources(AnnotationConfigApplicationContext context) {
@@ -89,20 +109,4 @@ public class Launcher {
             context.registerBeanDefinition(name, definition);
         }
     }
-
-    private static void stop() {
-        synchronized (shutdownLatch) {
-            shutdownLatch.notify();
-        }
-    }
-
-    private static void registerShutdownHook() {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                Launcher.stop();
-            }
-        });
-    }
-
 }
