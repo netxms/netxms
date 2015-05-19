@@ -135,6 +135,8 @@ public class ServerSettings {
             return DatabaseType.MYSQL;
         } else if (lowerKey.contains("informix")) {
             return DatabaseType.INFORMIX;
+        } else if (lowerKey.contains("sqlite")) {
+            throw new RuntimeException("SQLite not supported");
         }
         return null;
     }
