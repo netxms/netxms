@@ -30,7 +30,7 @@ static void (* s_fpSendTrap1)(UINT32, const TCHAR *, const char *, va_list) = NU
 static void (* s_fpSendTrap2)(UINT32, const TCHAR *, int, TCHAR **) = NULL;
 static bool (* s_fpEnumerateSessions)(bool (*)(AbstractCommSession *, void *), void *) = NULL;
 static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long) = NULL;
-static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32) = NULL;
+static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32, time_t) = NULL;
 static CONDITION s_agentShutdownCondition = INVALID_CONDITION_HANDLE;
 static Config *s_registry = NULL;
 static void (* s_fpSaveRegistry)() = NULL;
@@ -44,7 +44,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
 														void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
 														bool (* enumerateSessions)(bool (*)(AbstractCommSession *, void *), void*),
 														bool (* sendFile)(void *, UINT32, const TCHAR *, long),
-														bool (* pushData)(const TCHAR *, const TCHAR *, UINT32),
+														bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
                                           CONDITION shutdownCondition, Config *registry,
                                           void (* saveRegistry)(), const TCHAR *dataDirectory)
 {
@@ -176,7 +176,7 @@ bool LIBNXAGENT_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const 
 {
 	if (s_fpPushData == NULL)
 		return FALSE;
-	return s_fpPushData(parameter, value, 0);
+	return s_fpPushData(parameter, value, 0, 0);
 }
 
 /**

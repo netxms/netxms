@@ -1724,6 +1724,14 @@ int LIBNETXMS_EXPORTABLE nx_inet_pton(int af, const char *src, void *dst);
 #endif
 
 int LIBNETXMS_EXPORTABLE GetSleepTime(int hour, int minute, int second);
+time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue);
+time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValue);
+
+#ifdef UNICODE
+#define ParseDateTime ParseDateTimeW
+#else
+#define ParseDateTime ParseDateTimeA
+#endif
 
 #ifdef __cplusplus
 }

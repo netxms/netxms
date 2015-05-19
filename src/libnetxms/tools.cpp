@@ -2338,3 +2338,68 @@ int LIBNETXMS_EXPORTABLE GetSleepTime(int hour, int minute, int second)
    int curr = localTime.tm_hour * 3600 + localTime.tm_min * 60 + localTime.tm_sec;
    return (target >= curr) ? target - curr : 86400 - (curr - target);
 }
+
+/**
+ * Parse timestamp (should be in form YYMMDDhhmmss or YYYYMMDDhhmmss), local time
+ * If timestamp string is invalid returns default value
+ */
+time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue)
+{
+	int len = (int)strlen(text);
+	if ((len != 12) && (len != 14))
+		return defaultValue;
+
+	struct tm t;
+	char buffer[16], *curr;
+
+	strncpy(buffer, text, 16);
+	curr = &buffer[len - 2];
+
+	memset(&t, 0, sizeof(struct tm));
+	t.tm_isdst = -1;
+	
+	t.tm_sec = strtol(curr, NULL, 10);
+	*curr = 0;
+	curr -= 2;
+
+	t.tm_min = strtol(curr, NULL, 10);
+	*curr = 0;
+	curr -= 2;
+
+	t.tm_hour = strtol(curr, NULL, 10);
+	*curr = 0;
+	curr -= 2;
+
+	t.tm_mday = strtol(curr, NULL, 10);
+	*curr = 0;
+	curr -= 2;
+
+	t.tm_mon = strtol(curr, NULL, 10) - 1;
+	*curr = 0;
+
+	if (len == 12)
+	{
+		curr -= 2;
+		t.tm_year = strtol(curr, NULL, 10) + 100;	// Assuming XXI century
+	}
+	else
+	{
+		curr -= 4;
+		t.tm_year = strtol(curr, NULL, 10) - 1900;
+	}
+
+	return mktime(&t);
+}
+
+/**
+ * Parse timestamp (should be in form YYMMDDhhmmss or YYYYMMDDhhmmss), local time
+ * If timestamp string is invalid returns default value
+ * (UNICODE version)
+ */
+time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValue)
+{
+   char buffer[16];
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, text, -1, buffer, 16, NULL, NULL);
+   buffer[15] = 0;
+   return ParseDateTimeA(buffer, defaultValue);
+}

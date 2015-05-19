@@ -500,7 +500,7 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat,
 void ForwardTrap(NXCPMessage *msg);
 
 void StartPushConnector();
-bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId);
+bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_t timestamp);
 
 void StartStorageDiscoveryConnector();
 

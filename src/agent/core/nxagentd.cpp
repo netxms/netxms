@@ -81,7 +81,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
 														void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
 														bool (* enumerateSessions)(bool (*)(AbstractCommSession *, void *), void*),
 														bool (* sendFile)(void *, UINT32, const TCHAR *, long),
-														bool (* pushData)(const TCHAR *, const TCHAR *, UINT32),
+														bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
                                           CONDITION shutdownCondition, Config *registry,
                                           void (* saveRegistry)(), const TCHAR *dataDirectory);
 

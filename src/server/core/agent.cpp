@@ -183,9 +183,12 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 		      if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getStatus() == ITEM_STATUS_ACTIVE))
 		      {
 			      DbgPrintf(5, _T("%s: agent data push: found DCI %d"), target->getName(), dci->getId());
-			      time_t t = time(NULL);
+               time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
+               if (t == 0)
+			         t = time(NULL);
 			      target->processNewDCValue(dci, t, value);
-			      dci->setLastPollTime(t);
+               if (t > dci->getLastPollTime())
+			         dci->setLastPollTime(t);
 		      }
 		      else
 		      {

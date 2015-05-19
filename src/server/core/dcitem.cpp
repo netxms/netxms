@@ -659,7 +659,7 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
  *
  * @return true on success
  */
-bool DCItem::processNewValue(time_t tmTimeStamp,const void *originalValue, bool *updateStatus)
+bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool *updateStatus)
 {
 	static int updateRawValueTypes[] = { DB_SQLTYPE_VARCHAR, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER };
 	static int updateValueTypes[] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
@@ -685,7 +685,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp,const void *originalValue, bool 
    // should not be used on aggregation
    if ((m_pNode->getObjectClass() != OBJECT_CLUSTER) || (m_flags & DCF_TRANSFORM_AGGREGATED))
    {
-      if (!transform(*pValue, tmTimeStamp - m_tPrevValueTimeStamp))
+      if (!transform(*pValue, (tmTimeStamp > m_tPrevValueTimeStamp) ? (tmTimeStamp - m_tPrevValueTimeStamp) : 0))
       {
          unlock();
          return false;
@@ -694,7 +694,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp,const void *originalValue, bool 
 
    m_dwErrorCount = 0;
 
-   if (isStatusDCO() && ((m_cacheSize == 0) || !m_bCacheLoaded || ((UINT32)*pValue != (UINT32)*m_ppValueCache[0])))
+   if (isStatusDCO() && (tmTimeStamp > m_tPrevValueTimeStamp) && ((m_cacheSize == 0) || !m_bCacheLoaded || ((UINT32)*pValue != (UINT32)*m_ppValueCache[0])))
    {
       *updateStatus = true;
    }
@@ -703,11 +703,14 @@ bool DCItem::processNewValue(time_t tmTimeStamp,const void *originalValue, bool 
       *updateStatus = false;
    }
 
-   m_prevRawValue = rawValue;
-   m_tPrevValueTimeStamp = tmTimeStamp;
+   if (tmTimeStamp > m_tPrevValueTimeStamp)
+   {
+      m_prevRawValue = rawValue;
+      m_tPrevValueTimeStamp = tmTimeStamp;
 
-   // Save raw value into database
-   QueueRawDciDataUpdate(tmTimeStamp, m_id, (const TCHAR *)originalValue, pValue->getString());
+      // Save raw value into database
+      QueueRawDciDataUpdate(tmTimeStamp, m_id, (const TCHAR *)originalValue, pValue->getString());
+   }
 
 	// Save transformed value to database
    if ((m_flags & DCF_NO_STORAGE) == 0)
@@ -716,12 +719,12 @@ bool DCItem::processNewValue(time_t tmTimeStamp,const void *originalValue, bool 
       PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
 
    // Check thresholds and add value to cache
-   if (m_bCacheLoaded)
+   if (m_bCacheLoaded && (tmTimeStamp > m_tPrevValueTimeStamp))
    {
       checkThresholds(*pValue);
    }
 
-   if (m_cacheSize > 0)
+   if ((m_cacheSize > 0) && (tmTimeStamp >= m_tPrevValueTimeStamp))
    {
       delete m_ppValueCache[m_cacheSize - 1];
       memmove(&m_ppValueCache[1], m_ppValueCache, sizeof(ItemValue *) * (m_cacheSize - 1));
@@ -1152,16 +1155,16 @@ void DCItem::fillLastValueMessage(NXCPMessage *pMsg, UINT32 dwId)
    pMsg->setField(dwId++, m_id);
    pMsg->setField(dwId++, m_name);
    pMsg->setField(dwId++, m_szDescription);
-   pMsg->setField(dwId++, (WORD)m_source);
+   pMsg->setField(dwId++, (UINT16)m_source);
    if (m_cacheSize > 0)
    {
-      pMsg->setField(dwId++, (WORD)m_dataType);
-      pMsg->setField(dwId++, (TCHAR *)m_ppValueCache[0]->getString());
+      pMsg->setField(dwId++, (UINT16)m_dataType);
+      pMsg->setField(dwId++, m_ppValueCache[0]->getString());
       pMsg->setField(dwId++, m_ppValueCache[0]->getTimeStamp());
    }
    else
    {
-      pMsg->setField(dwId++, (WORD)DCI_DT_NULL);
+      pMsg->setField(dwId++, (UINT16)DCI_DT_NULL);
       pMsg->setField(dwId++, _T(""));
       pMsg->setField(dwId++, (UINT32)0);
    }
