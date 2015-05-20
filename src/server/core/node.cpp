@@ -3319,6 +3319,7 @@ BOOL Node::connectToAgent(UINT32 *error, UINT32 *socketError)
 	{
 		m_pAgentConnection->setCommandTimeout(g_agentCommandTimeout);
       m_pAgentConnection->enableTraps();
+        CALL_ALL_MODULES(pfAgentConnectionRestoreHook, (this, m_pAgentConnection));
 	}
    return bRet;
 }

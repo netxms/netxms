@@ -259,6 +259,23 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
 }
 
 /**
+ * Ask modules if they can procress custom message
+ */
+bool AgentConnectionEx::processCustomMessage(NXCPMessage *msg)
+{
+    for(UINT32 i = 0; i < g_dwNumModules; i++)
+    {
+        if (g_pModuleList[i].pfOnAgentMessage != NULL)
+        {
+            if (g_pModuleList[i].pfOnAgentMessage(msg, m_nodeId))
+                return true;    // accepted by module
+        }
+    }
+
+   return false;
+}
+
+/**
  * Recieve trap sent throught proxy agent
  */
 void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)

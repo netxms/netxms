@@ -88,6 +88,8 @@ typedef struct
    UINT32 (* pfAdditionalLoginCheck)(UINT32 userId, NXCPMessage *request);
    void (* pfClientSessionClose)(ClientSession *session);
    void (* pfNXSLServerEnvConfig) (NXSL_Environment *env);
+   void (* pfAgentConnectionRestoreHook) (Node *node, AgentConnection *conn);
+   BOOL (* pfOnAgentMessage) (NXCPMessage *msg, UINT32 nodeId);
    NXCORE_LOG *logs;
    HMODULE hModule;
 } NXMODULE;

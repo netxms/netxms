@@ -295,6 +295,7 @@ protected:
    virtual void onDataPush(NXCPMessage *msg);
    virtual void onFileMonitoringData(NXCPMessage *msg);
 	virtual void onSnmpTrap(NXCPMessage *pMsg);
+    virtual bool processCustomMessage(NXCPMessage *msg);
 
 public:
    AgentConnectionEx(UINT32 nodeId, InetAddress ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
