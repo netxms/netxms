@@ -80,14 +80,17 @@ typedef struct t_ProcEnt
 /**
  * Interface info
  */
-struct LinuxInterfaceInfo
+class LinuxInterfaceInfo
 {
+public:
    int index;
    int type;
    int mtu;
    BYTE macAddr[8];
    char name[16];
    ObjectArray<InetAddress> addrList;
+
+   LinuxInterfaceInfo() : addrList(16, 16, true) { }
 };
 
 /**
