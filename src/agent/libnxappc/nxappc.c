@@ -134,8 +134,8 @@ int LIBNXAPPC_EXPORTABLE nxappc_connect(void)
  */
 int LIBNXAPPC_EXPORTABLE nxappc_connect_ex(const char *name)
 {
-   if ((s_socket != -1) && strcmp(name, s_name))
-      return 0;  // already connected
+   if ((s_socket != -1) && !strcmp(name, s_name))
+      return NXAPPC_SUCCESS;  // already connected
    strncpy(s_name, name, 128);
    return nxappc_reconnect();
 }
