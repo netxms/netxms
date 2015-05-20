@@ -142,7 +142,6 @@ NXSL_VM *NXSL_Library::createVM(const TCHAR *name, NXSL_Environment *env)
       if (!vm->load(p))
       {
          delete vm;
-         delete env;
          vm = NULL;
       }
    }

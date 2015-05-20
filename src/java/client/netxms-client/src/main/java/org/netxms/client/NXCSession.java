@@ -6952,8 +6952,8 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId()); // first confirmation - server job started
       final String id = response.getFieldAsString(NXCPCodes.VID_NAME);
       
-      waitForRCC(msg.getMessageId()); // second confirmation - file transfered from agent to console
       AgentFile file =  new AgentFile(id, waitForFile(msg.getMessageId(), 36000000));
+      waitForRCC(msg.getMessageId()); // second confirmation - file transfered from agent to console
       return file;
    }
    

@@ -26,7 +26,7 @@
 /**
  * Worker thread starter
  */
-THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *arg)
+THREAD_RESULT THREAD_CALL NXMBDispatcher::workerThreadStarter(void *arg)
 {
 	((NXMBDispatcher *)arg)->workerThread();
 	return THREAD_OK;
@@ -42,7 +42,7 @@ NXMBDispatcher::NXMBDispatcher()
 	m_subscribers = NULL;
 	m_filters = NULL;
 	m_subscriberListAccess = MutexCreate();
-	m_workerThreadHandle = ThreadCreateEx(WorkerThreadStarter, 0, this);
+	m_workerThreadHandle = ThreadCreateEx(NXMBDispatcher::workerThreadStarter, 0, this);
    m_callHandlers = new CallHandlerMap();
    m_callHandlerAccess = MutexCreate();
 }

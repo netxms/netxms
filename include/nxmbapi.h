@@ -128,11 +128,11 @@ public:
  */
 class LIBNXMB_EXPORTABLE NXMBDispatcher
 {
-	friend THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *);
-
 private:
    static MUTEX m_instanceAccess;
 	static NXMBDispatcher *m_instance;
+
+	static THREAD_RESULT THREAD_CALL workerThreadStarter(void *);
 
 protected:
 	Queue *m_queue;
