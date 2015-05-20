@@ -8083,50 +8083,60 @@ void ClientSession::sendScript(NXCPMessage *pRequest)
 void ClientSession::updateScript(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   TCHAR *pszCode, *pszQuery, szName[MAX_DB_STRING];
-   UINT32 dwScriptId;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      dwScriptId = pRequest->getFieldAsUInt32(VID_SCRIPT_ID);
-      pRequest->getFieldAsString(VID_NAME, szName, MAX_DB_STRING);
-      if (IsValidScriptName(szName))
+      TCHAR scriptName[MAX_DB_STRING];
+      pRequest->getFieldAsString(VID_NAME, scriptName, MAX_DB_STRING);
+      if (IsValidScriptName(scriptName))
       {
-         pszCode = pRequest->getFieldAsString(VID_SCRIPT_CODE);
-         if (pszCode != NULL)
+         TCHAR *scriptSource = pRequest->getFieldAsString(VID_SCRIPT_CODE);
+         if (scriptSource != NULL)
          {
-				/* TODO: change to binding variable */
-				String prepCode = DBPrepareString(g_hCoreDB, pszCode);
-            free(pszCode);
+            UINT32 scriptId = pRequest->getFieldAsUInt32(VID_SCRIPT_ID);
 
-				size_t qlen = prepCode.length() + MAX_DB_STRING + 256;
-            pszQuery = (TCHAR *)malloc(qlen * sizeof(TCHAR));
+            DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-            if (dwScriptId == 0)
+            DB_STATEMENT hStmt;
+            if (scriptId == 0)
             {
                // New script
-               dwScriptId = CreateUniqueId(IDG_SCRIPT);
-               _sntprintf(pszQuery, qlen, _T("INSERT INTO script_library (script_id,script_name,script_code) VALUES (%d,%s,%s)"),
-                         dwScriptId, (const TCHAR *)DBPrepareString(g_hCoreDB, szName), (const TCHAR *)prepCode);
+               scriptId = CreateUniqueId(IDG_SCRIPT);
+               hStmt = DBPrepare(hdb, _T("INSERT INTO script_library (script_name,script_code,script_id) VALUES (?,?,?)"));
             }
             else
             {
-               _sntprintf(pszQuery, qlen, _T("UPDATE script_library SET script_name=%s,script_code=%s WHERE script_id=%d"),
-                         (const TCHAR *)DBPrepareString(g_hCoreDB, szName), (const TCHAR *)prepCode, dwScriptId);
+               hStmt = DBPrepare(hdb, _T("UPDATE script_library SET script_name=?,script_code=? WHERE script_id=?"));
             }
-            if (DBQuery(g_hCoreDB, pszQuery))
+
+            if (hStmt != NULL)
             {
-               ReloadScript(dwScriptId);
-               msg.setField(VID_RCC, RCC_SUCCESS);
-               msg.setField(VID_SCRIPT_ID, dwScriptId);
+               DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, scriptName, DB_BIND_STATIC);
+               DBBind(hStmt, 2, DB_SQLTYPE_TEXT, scriptSource, DB_BIND_STATIC);
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, scriptId);
+
+               if (DBExecute(hStmt))
+               {
+                  ReloadScript(scriptId);
+                  msg.setField(VID_RCC, RCC_SUCCESS);
+                  msg.setField(VID_SCRIPT_ID, scriptId);
+               }
+               else
+               {
+                  msg.setField(VID_RCC, RCC_DB_FAILURE);
+               }
+
+               DBFreeStatement(hStmt);
             }
             else
             {
                msg.setField(VID_RCC, RCC_DB_FAILURE);
             }
-            free(pszQuery);
+
+            free(scriptSource);
+            DBConnectionPoolReleaseConnection(hdb);
          }
          else
          {
