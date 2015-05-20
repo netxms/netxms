@@ -501,7 +501,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap client nxscript nxcproxy nxlptest tools"
+	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp db server agent libnxmap client nxscript nxcproxy nxlptest tools"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2 tuxedo mongodb"
 	SMSDRV_DIRS="kannel websms"
    HDLINK_DIRS="jira"
@@ -701,7 +701,7 @@ if test $? = 0; then
 		AC_MSG_ERROR(You must select at least one database driver when building server.)
 	fi
 	BUILD_SERVER="yes"
-	MODULES="$MODULES libnxmap libnxsl server nxscript"
+	MODULES="$MODULES libnxmap libnxsl libnxmb server nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music"
 	if test "x$XMPP_SUPPORT" = "xyes"; then
@@ -784,7 +784,7 @@ fi
 
 check_substr "$COMPONENTS" "sdk"
 if test $? = 0; then
-	MODULES="$MODULES libnxmap client libnxsl libnxlp db nxscript"
+	MODULES="$MODULES libnxmap client libnxsl libnxmb libnxlp db nxscript"
 fi
 
 
@@ -2835,6 +2835,7 @@ AC_CONFIG_FILES([
 	src/libnxlp/Makefile
 	src/libnxmap/Makefile
 	src/libnxsl/Makefile
+	src/libnxmb/Makefile
 	src/libstrophe/Makefile
 	src/libtre/Makefile
 	src/libtre/win32/Makefile

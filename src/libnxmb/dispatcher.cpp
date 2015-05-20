@@ -26,7 +26,7 @@
 /**
  * Worker thread starter
  */
-static THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *arg)
+THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *arg)
 {
 	((NXMBDispatcher *)arg)->workerThread();
 	return THREAD_OK;
