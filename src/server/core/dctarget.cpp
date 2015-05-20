@@ -647,6 +647,10 @@ static bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args)
                args.add(new NXSL_Value(s));
                state = 0;
             }
+            else if (state == 3)
+            {
+               state = 0;
+            }
             else
             {
                state = -1; // error
