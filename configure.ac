@@ -701,7 +701,7 @@ if test $? = 0; then
 		AC_MSG_ERROR(You must select at least one database driver when building server.)
 	fi
 	BUILD_SERVER="yes"
-	MODULES="$MODULES libnxmap libnxsl libnxmb server nxscript"
+	MODULES="$MODULES libnxmap libnxsl server nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music"
 	if test "x$XMPP_SUPPORT" = "xyes"; then
@@ -2834,8 +2834,8 @@ AC_CONFIG_FILES([
 	src/libnetxms/Makefile
 	src/libnxlp/Makefile
 	src/libnxmap/Makefile
-	src/libnxsl/Makefile
 	src/libnxmb/Makefile
+	src/libnxsl/Makefile
 	src/libstrophe/Makefile
 	src/libtre/Makefile
 	src/libtre/win32/Makefile
