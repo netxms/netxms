@@ -453,7 +453,7 @@ private:
    time_t m_tLastCommandTime;
    SOCKET m_hSocket;
    UINT32 m_dwNumDataLines;
-   UINT32 m_dwRequestId;
+   VolatileCounter m_requestId;
    UINT32 m_dwCommandTimeout;
 	UINT32 m_connectionTimeout;
    UINT32 m_dwRecvTimeout;
@@ -527,6 +527,7 @@ public:
    UINT32 getTable(const TCHAR *pszParam, Table **table);
    UINT32 nop();
    UINT32 enableIPv6();
+   UINT32 setServerId(UINT64 serverId);
    UINT32 execAction(const TCHAR *pszAction, int argc, TCHAR **argv, bool withOutput = false, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = NULL, void *cbData = NULL);
    UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL);
    UINT32 startUpgrade(const TCHAR *pszPkgName);
@@ -540,7 +541,7 @@ public:
 	UINT32 uninstallPolicy(uuid_t guid);
    UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
 
-	UINT32 generateRequestId() { return m_dwRequestId++; }
+	UINT32 generateRequestId() { return (UINT32)InterlockedIncrement(&m_requestId); }
 	NXCPMessage *customRequest(NXCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false, void (*downloadProgressCallback)(size_t, void *) = NULL,
 	                           void (*fileResendCallback)(NXCP_MESSAGE*, void *) = NULL, void *cbArg = NULL);
 

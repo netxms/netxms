@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -3318,8 +3318,17 @@ BOOL Node::connectToAgent(UINT32 *error, UINT32 *socketError)
    if (bRet)
 	{
 		m_pAgentConnection->setCommandTimeout(g_agentCommandTimeout);
+      UINT32 rcc = m_pAgentConnection->setServerId(g_serverId);
+      if (rcc == ERR_SUCCESS)
+      {
+         syncDataCollectionWithAgent(m_pAgentConnection);
+      }
+      else
+      {
+         DbgPrintf(5, _T("Node::connectToAgent(%s [%d]): cannot set server ID on agent (%s)"), m_name, m_id, AgentErrorCodeToText(rcc));
+      }
       m_pAgentConnection->enableTraps();
-        CALL_ALL_MODULES(pfAgentConnectionRestoreHook, (this, m_pAgentConnection));
+      CALL_ALL_MODULES(pfOnConnectToAgent, (this, m_pAgentConnection));
 	}
    return bRet;
 }
@@ -6693,4 +6702,46 @@ AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmp
    if (m_driver == NULL)
       return AP_UNKNOWN;
    return m_driver->getAccessPointState(snmpTransport, &m_customAttributes, m_driverData, ap->getIndex(), ap->getMacAddr(), ap->getIpAddress());
+}
+
+/**
+ * Synchronize data collection settings with agent
+ */
+void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_DATA_COLLECTION_CONFIG);
+   msg.setId(conn->generateRequestId());
+
+   UINT32 count = 0;
+   UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *dco = m_dcObjects->get(i);
+      if (dco->getAgentCacheMode() == AGENT_CACHE_ON)
+      {
+         msg.setField(fieldId++, dco->getId());
+         msg.setField(fieldId++, (INT16)dco->getType());
+         msg.setField(fieldId++, dco->getName());
+         msg.setField(fieldId++, (INT32)dco->getPollingInterval());
+         fieldId += 6;
+         count++;
+      }
+   }
+   unlockDciAccess();
+   msg.setField(VID_NUM_ELEMENTS, count);
+
+   UINT32 rcc = ERR_CONNECTION_BROKEN;
+   NXCPMessage *response = conn->customRequest(&msg);
+   if (response != NULL)
+   {
+      rcc = response->getFieldAsUInt32(VID_RCC);
+      delete response;
+   }
+
+   if (rcc == ERR_SUCCESS)
+      DbgPrintf(4, _T("SyncDataCollection: node %s [%d] synchronized"), m_name, (int)m_id);
+   else
+      DbgPrintf(4, _T("SyncDataCollection: node %s [%d] not synchronized (%s)"), m_name, (int)m_id, AgentErrorCodeToText(rcc));
 }

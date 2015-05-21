@@ -1610,7 +1610,7 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
    // Fill message with server info
    msg.setField(VID_RCC, RCC_SUCCESS);
    msg.setField(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
-   msg.setField(VID_SERVER_ID, (BYTE *)&g_qwServerId, sizeof(QWORD));
+   msg.setField(VID_SERVER_ID, g_serverId);
    msg.setField(VID_SUPPORTED_ENCRYPTION, (UINT32)0);
    msg.setField(VID_PROTOCOL_VERSION, (UINT32)CLIENT_PROTOCOL_VERSION_BASE);
    msg.setFieldFromInt32Array(VID_PROTOCOL_VERSION_EX, sizeof(protocolVersions) / sizeof(UINT32), protocolVersions);

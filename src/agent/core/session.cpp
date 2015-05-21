@@ -96,6 +96,7 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_pMsgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
    m_hWriteThread = INVALID_THREAD_HANDLE;
    m_hProcessingThread = INVALID_THREAD_HANDLE;
+   m_serverId = 0;
    m_serverAddr = serverAddr;
    m_authenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? false : true;
    m_masterServer = masterServer;
@@ -546,6 +547,11 @@ void CommSession::processingThread()
 					break;
             case CMD_ENABLE_IPV6:
                m_ipv6Aware = pMsg->getFieldAsBoolean(VID_ENABLED);
+               msg.setField(VID_RCC, ERR_SUCCESS);
+               break;
+            case CMD_SET_SERVER_ID:
+               m_serverId = pMsg->getFieldAsUInt64(VID_SERVER_ID);
+               DebugPrintf(m_dwIndex, 1, _T("Server ID set to ") UINT64X_FMT(_T("016")), m_serverId);
                msg.setField(VID_RCC, ERR_SUCCESS);
                break;
             default:

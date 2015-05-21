@@ -147,7 +147,7 @@ TCHAR g_szDataDir[MAX_PATH] = _T("");
 TCHAR g_szLibDir[MAX_PATH] = _T("");
 int g_dbSyntax = DB_SYNTAX_UNKNOWN;
 UINT32 NXCORE_EXPORTABLE g_processAffinityMask = DEFAULT_AFFINITY_MASK;
-QWORD g_qwServerId;
+UINT64 g_serverId = 0;
 RSA *g_pServerKey = NULL;
 time_t g_serverStartTime = 0;
 UINT32 g_lockTimeout = 60000;   // Default timeout for acquiring mutex
@@ -301,6 +301,11 @@ static void LoadGlobalConfig()
 	g_dwConditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
 	g_slmPollingInterval = ConfigReadInt(_T("SlmPollingInterval"), 60);
    g_defaultAgentCacheMode = (INT16)ConfigReadInt(_T("DefaultAgentCacheMode"), AGENT_CACHE_OFF);
+   if ((g_defaultAgentCacheMode != AGENT_CACHE_ON) && (g_defaultAgentCacheMode != AGENT_CACHE_OFF))
+   {
+      DbgPrintf(1, _T("Invalid value %d of DefaultAgentCacheMode: reset to %d (OFF)"), g_defaultAgentCacheMode, AGENT_CACHE_OFF);
+      ConfigWriteInt(_T("DefaultAgentCacheMode"), AGENT_CACHE_OFF, true, true, true);
+   }
 	if (ConfigReadInt(_T("DeleteEmptySubnets"), 1))
 		g_flags |= AF_DELETE_EMPTY_SUBNETS;
 	if (ConfigReadInt(_T("EnableSNMPTraps"), 1))
@@ -716,19 +721,20 @@ BOOL NXCORE_EXPORTABLE Initialize()
       DBSetLongRunningThreshold(lrt);
 
 	// Read server ID
-	ConfigReadStr(_T("ServerID"), szInfo, 256, _T(""));
+	MetaDataReadStr(_T("ServerID"), szInfo, 256, _T(""));
 	StrStrip(szInfo);
 	if (szInfo[0] != 0)
 	{
-		StrToBin(szInfo, (BYTE *)&g_qwServerId, sizeof(QWORD));
+      g_serverId = _tcstoull(szInfo, NULL, 16);
 	}
 	else
 	{
 		// Generate new ID
-		g_qwServerId = (((QWORD)time(NULL)) << 32) | rand();
-		BinToStr((BYTE *)&g_qwServerId, sizeof(QWORD), szInfo);
-		ConfigWriteStr(_T("ServerID"), szInfo, TRUE);
+		g_serverId = ((UINT64)time(NULL) << 31) | (UINT64)((UINT32)rand() & 0x7FFFFFFF);
+      _sntprintf(szInfo, 256, UINT64X_FMT(_T("016")), g_serverId);
+		MetaDataWriteStr(_T("ServerID"), szInfo);
 	}
+   DbgPrintf(1, _T("Server ID ") UINT64X_FMT(_T("016")), g_serverId);
 
 	// Initialize locks
 retry_db_lock:

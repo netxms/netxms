@@ -87,9 +87,9 @@ typedef struct
 	UINT32 (* pfValidateObjectCreation)(int objectClass, const TCHAR *name, const InetAddress& ipAddr, UINT32 zoneId, NXCPMessage *request);
    UINT32 (* pfAdditionalLoginCheck)(UINT32 userId, NXCPMessage *request);
    void (* pfClientSessionClose)(ClientSession *session);
-   void (* pfNXSLServerEnvConfig) (NXSL_Environment *env);
-   void (* pfAgentConnectionRestoreHook) (Node *node, AgentConnection *conn);
-   BOOL (* pfOnAgentMessage) (NXCPMessage *msg, UINT32 nodeId);
+   void (* pfNXSLServerEnvConfig)(NXSL_Environment *env);
+   void (* pfOnConnectToAgent)(Node *node, AgentConnection *conn);
+   BOOL (* pfOnAgentMessage)(NXCPMessage *msg, UINT32 nodeId);
    NXCORE_LOG *logs;
    HMODULE hModule;
 } NXMODULE;

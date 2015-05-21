@@ -167,17 +167,6 @@ public:
 	void setValue(const TCHAR *value) { m_value = value; }
 };
 
-/**
- * Table threshold definition
- */
-class NXCORE_EXPORTABLE TableThreshold
-{
-private:
-
-public:
-
-};
-
 class Template;
 
 /**
@@ -192,7 +181,7 @@ protected:
 	TCHAR m_systemTag[MAX_DB_STRING];
    time_t m_tLastPoll;           // Last poll time
    int m_iPollingInterval;       // Polling interval in seconds
-   int m_iRetentionTime;         // Retention time in seconds
+   int m_iRetentionTime;         // Retention time in days
    BYTE m_source;                // origin: SNMP, agent, etc.
    BYTE m_status;                // Item status: active, disabled or not supported
    BYTE m_busy;                  // 1 when item is queued for polling, 0 if not
@@ -254,6 +243,7 @@ public:
    const TCHAR *getDescription() { return m_szDescription; }
 	const TCHAR *getSystemTag() { return m_systemTag; }
 	const TCHAR *getPerfTabSettings() { return m_pszPerfTabSettings; }
+   int getPollingInterval() { return m_iPollingInterval; }
    Template *getTarget() { return m_pNode; }
    UINT32 getTemplateId() { return m_dwTemplateId; }
    UINT32 getTemplateItemId() { return m_dwTemplateItemId; }
@@ -270,6 +260,7 @@ public:
    Template *getNode() { return m_pNode; }
    int getRetentionTime() { return m_iRetentionTime; }
    const TCHAR *getComments() { return m_comments; }
+   INT16 getAgentCacheMode();
 
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);

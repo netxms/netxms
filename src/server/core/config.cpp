@@ -206,6 +206,63 @@ INT32 NXCORE_EXPORTABLE MetaDataReadInt(const TCHAR *var, UINT32 defaultValue)
 }
 
 /**
+ * Write string value to metadata table
+ */
+bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *varName, const TCHAR *value)
+{
+   if (_tcslen(varName) > 63)
+      return false;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   // Check for variable existence
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM metadata WHERE var_name=?"));
+	if (hStmt == NULL)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+		return false;
+   }
+	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
+	DB_RESULT hResult = DBSelectPrepared(hStmt);
+   bool bVarExist = false;
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         bVarExist = true;
+      DBFreeResult(hResult);
+   }
+	DBFreeStatement(hStmt);
+
+   // Create or update variable value
+   if (bVarExist)
+	{
+		hStmt = DBPrepare(hdb, _T("UPDATE metadata SET var_value=? WHERE var_name=?"));
+		if (hStmt == NULL)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+			return false;
+      }
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
+	}
+   else
+	{
+		hStmt = DBPrepare(hdb, _T("INSERT INTO metadata (var_name,var_value) VALUES (?,?)"));
+		if (hStmt == NULL)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+			return false;
+      }
+		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
+		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+	}
+   bool success = DBExecute(hStmt);
+	DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+	return success;
+}
+
+/**
  * Config cache
  */
 static StringMap s_configCache;
@@ -462,7 +519,7 @@ bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *varName, const TCHAR *value, 
 		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(isVisible ? 1 : 0));
 		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)(needRestart ? 1 : 0));
 	}
-   bool success = DBExecute(hStmt) ? true : false;
+   bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
 	if (success)

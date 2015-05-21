@@ -532,6 +532,8 @@ typedef struct
 #define CMD_ENABLE_IPV6                0x0134
 #define CMD_FORCE_DCI_POLL             0x0135
 #define CMD_GET_DCI_SCRIPT_LIST        0x0136
+#define CMD_DATA_COLLECTION_CONFIG     0x0137
+#define CMD_SET_SERVER_ID              0x0138
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

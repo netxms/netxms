@@ -1165,6 +1165,8 @@ protected:
 	StringMap *getInstanceList(DCItem *dci);
 	void updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
 
+   void syncDataCollectionWithAgent(AgentConnectionEx *conn);
+
 	void updateContainerMembership();
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid); 

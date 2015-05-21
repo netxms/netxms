@@ -654,7 +654,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
    lock();
    if ((m_status != ITEM_STATUS_DISABLED) && (!m_busy) &&
        isCacheLoaded() && (m_source != DS_PUSH_AGENT) &&
-		 matchClusterResource() && hasValue())
+       matchClusterResource() && hasValue() && (getAgentCacheMode() == AGENT_CACHE_OFF))
    {
       if (m_flags & DCF_ADVANCED_SCHEDULE)
       {
@@ -963,4 +963,17 @@ void DCObject::setTransformationScript(const TCHAR *pszScript)
       m_transformationScriptSource = NULL;
       m_transformationScript = NULL;
    }
+}
+
+/**
+ * Get actual agent cache mode
+ */
+INT16 DCObject::getAgentCacheMode()
+{
+   if (m_pNode->getObjectClass() != OBJECT_NODE)
+      return AGENT_CACHE_OFF;
+   INT16 mode = DCF_GET_CACHE_MODE(m_flags);
+   if (mode != AGENT_CACHE_DEFAULT)
+      return mode;
+   return ((Node *)m_pNode)->getAgentCacheMode();
 }

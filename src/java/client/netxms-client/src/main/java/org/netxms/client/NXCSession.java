@@ -271,7 +271,7 @@ public class NXCSession
    // Server information
    private ProtocolVersion protocolVersion;
    private String serverVersion = "(unknown)";
-   private byte[] serverId = new byte[8];
+   private long serverId = 0;
    private String serverTimeZone;
    private byte[] serverChallenge = new byte[CLIENT_CHALLENGE_SIZE];
    private boolean zoningEnabled = false;
@@ -1722,7 +1722,7 @@ public class NXCSession
          }
 
          serverVersion = response.getFieldAsString(NXCPCodes.VID_SERVER_VERSION);
-         serverId = response.getFieldAsBinary(NXCPCodes.VID_SERVER_ID);
+         serverId = response.getFieldAsInt64(NXCPCodes.VID_SERVER_ID);
          serverTimeZone = response.getFieldAsString(NXCPCodes.VID_TIMEZONE);
          serverTime = response.getFieldAsInt64(NXCPCodes.VID_TIMESTAMP) * 1000;
          serverTimeRecvTime = System.currentTimeMillis();
@@ -2077,7 +2077,7 @@ public class NXCSession
     * 
     * @return Server UID
     */
-   public byte[] getServerId()
+   public long getServerId()
    {
       return serverId;
    }

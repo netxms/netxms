@@ -444,7 +444,7 @@ void MobileDeviceSession::sendServerInfo(UINT32 dwRqId)
    // Fill message with server info
    msg.setField(VID_RCC, RCC_SUCCESS);
    msg.setField(VID_SERVER_VERSION, NETXMS_VERSION_STRING);
-   msg.setField(VID_SERVER_ID, (BYTE *)&g_qwServerId, sizeof(QWORD));
+   msg.setField(VID_SERVER_ID, g_serverId);
    msg.setField(VID_PROTOCOL_VERSION, (UINT32)MOBILE_DEVICE_PROTOCOL_VERSION);
 	msg.setField(VID_CHALLENGE, m_challenge, CLIENT_CHALLENGE_SIZE);
 

@@ -293,6 +293,7 @@ private:
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
    THREAD m_hProxyReadThread;
+   UINT64 m_serverId;
    InetAddress m_serverAddr;        // IP address of connected host
    UINT32 m_dwIndex;
    bool m_authenticated;
@@ -343,6 +344,7 @@ public:
    virtual void sendRawMessage(NXCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->size))); }
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
 
+   virtual UINT64 getServerId() { return m_serverId; }
 	virtual const InetAddress& getServerAddress() { return m_serverAddr; }
 
    virtual bool isIPv6Aware() { return m_ipv6Aware; }

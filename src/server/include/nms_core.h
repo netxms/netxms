@@ -295,7 +295,7 @@ protected:
    virtual void onDataPush(NXCPMessage *msg);
    virtual void onFileMonitoringData(NXCPMessage *msg);
 	virtual void onSnmpTrap(NXCPMessage *pMsg);
-    virtual bool processCustomMessage(NXCPMessage *msg);
+   virtual bool processCustomMessage(NXCPMessage *msg);
 
 public:
    AgentConnectionEx(UINT32 nodeId, InetAddress ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
@@ -827,6 +827,7 @@ bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *name);
 
 bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
 INT32 NXCORE_EXPORTABLE MetaDataReadInt(const TCHAR *var, UINT32 defaultValue);
+bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *varName, const TCHAR *value);
 
 bool NXCORE_EXPORTABLE LoadConfig();
 
@@ -1034,7 +1035,7 @@ extern TCHAR NXCORE_EXPORTABLE g_szPIDFile[];
 extern TCHAR g_szDataDir[];
 extern TCHAR g_szLibDir[];
 extern UINT32 NXCORE_EXPORTABLE g_processAffinityMask;
-extern QWORD g_qwServerId;
+extern UINT64 g_serverId;
 extern RSA *g_pServerKey;
 extern UINT32 g_icmpPingSize;
 extern UINT32 g_icmpPingTimeout;

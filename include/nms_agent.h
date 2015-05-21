@@ -378,6 +378,7 @@ public:
    virtual bool isMasterServer() = 0;
    virtual bool isControlServer() = 0;
    virtual bool canAcceptTraps() = 0;
+   virtual UINT64 getServerId() = 0;
    virtual const InetAddress& getServerAddress() = 0;
 
    virtual bool isIPv6Aware() = 0;
