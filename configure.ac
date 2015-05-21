@@ -2556,12 +2556,31 @@ if test $? = 0; then
 		AC_CHECK_LIB(rt, nanosleep, [ TUXEDO_LIBS="$TUXEDO_LIBS -lrt" ])
 	fi
 
+	if test "$PLATFORM" = "AIX"; then
+		AC_MSG_CHECKING(for xa_switchp in libengine)
+		OLD_LIBS_LIBENGINE="$LIBS"
+		LIBS="$LIBS -lengine"
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[ extern char *xa_switchp; ]], [[ *xa_switchp = 0; ]])],
+			[ 
+				AC_MSG_RESULT(yes) 
+				TUXEDO_LIBS="$TUXEDO_LIBS -lengine"
+			],
+         		[ AC_MSG_RESULT(no) ])
+		LIBS="$OLD_LIBS_LIBENGINE"
+	fi
+
 	LIBS="$LIBS $TUXEDO_LIBS"
-	AC_CHECK_LIB(tux, tpinit, [], [AC_MSG_ERROR(libtux is required for Tuxedo support)])
+	AC_CHECK_LIB(tux, tpcall, [], [AC_MSG_ERROR(libtux is required for Tuxedo support)])
 
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
 	LIBS="$OLD_LIBS"
+
+	if test "x$PLATFORM" = "xAIX"; then
+		if test -e $TUXEDO_BASE/lib/tpinit.o; then
+			TUXEDO_LIBS="$TUXEDO_BASE/lib/tpinit.o $TUXEDO_LIBS"
+		fi
+	fi
 fi
 
 #--------------------------------------------------------------------
@@ -3099,6 +3118,9 @@ if test "x${TUXEDO_CPPFLAGS}" != "x"; then
 fi
 if test "x${TUXEDO_LDFLAGS}" != "x"; then
 	echo "Tuxedo LDFLAGS          : ${TUXEDO_LDFLAGS}"
+fi
+if test "x${TUXEDO_LIBS}" != "x"; then
+	echo "Tuxedo LIBS             : ${TUXEDO_LIBS}"
 fi
 
 if test "x${MONGODB_CPPFLAGS}" != "x"; then
