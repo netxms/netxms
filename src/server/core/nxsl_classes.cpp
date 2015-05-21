@@ -776,11 +776,61 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 }
 
 /**
+ * Event::setMessage() method
+ */
+NXSL_METHOD_DEFINITION(setMessage)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Event *event = (Event *)object->getData();
+   event->setMessage(argv[0]->getValueAsCString());
+   *result = new NXSL_Value();
+   return 0;
+}
+
+/**
+ * Event::setSeverity() method
+ */
+NXSL_METHOD_DEFINITION(setSeverity)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_STRING;
+
+   int s = argv[0]->getValueAsInt32();
+   if ((s >= SEVERITY_NORMAL) && (s <= SEVERITY_CRITICAL))
+   {
+      Event *event = (Event *)object->getData();
+      event->setSeverity(s);
+   }
+   *result = new NXSL_Value();
+   return 0;
+}
+
+/**
+ * Event::setUserTag() method
+ */
+NXSL_METHOD_DEFINITION(setUserTag)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Event *event = (Event *)object->getData();
+   event->setUserTag(argv[0]->getValueAsCString());
+   *result = new NXSL_Value();
+   return 0;
+}
+
+/**
  * NXSL class Event: constructor
  */
 NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
 {
    _tcscpy(m_name, _T("Event"));
+
+   NXSL_REGISTER_METHOD(setMessage, 1);
+   NXSL_REGISTER_METHOD(setSeverity, 1);
+   NXSL_REGISTER_METHOD(setUserTag, 1);
 }
 
 /**
@@ -788,10 +838,9 @@ NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
  */
 NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
-   Event *event;
    NXSL_Value *value = NULL;
 
-   event = (Event *)pObject->getData();
+   Event *event = (Event *)pObject->getData();
    if (!_tcscmp(pszAttr, _T("code")))
    {
       value = new NXSL_Value(event->getCode());

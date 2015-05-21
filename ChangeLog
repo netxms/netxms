@@ -11,6 +11,7 @@
 - Added support for SNMP traps over IPv6
 - Switched to SHA-256 for password hashing
 - Timestamp can be provided in nxpush and nxapush
+- New methods in NXSL class "Event": setMessage, setSeverity, setUserTag
 - Management console:
 	- Fixed broken VPN connectors configuration
 	- "Inverted values" option on line charts

@@ -44,7 +44,7 @@ Event::Event()
 	m_name[0] = 0;
    m_qwRootId = 0;
    m_dwCode = 0;
-   m_dwSeverity = 0;
+   m_severity = SEVERITY_NORMAL;
    m_dwSource = 0;
    m_dwFlags = 0;
    m_pszMessageText = NULL;
@@ -64,7 +64,7 @@ Event::Event(Event *src)
    _tcscpy(m_name, src->m_name);
    m_qwRootId = src->m_qwRootId;
    m_dwCode = src->m_dwCode;
-   m_dwSeverity = src->m_dwSeverity;
+   m_severity = src->m_severity;
    m_dwSource = src->m_dwSource;
    m_dwFlags = src->m_dwFlags;
    m_pszMessageText = _tcsdup_ex(src->m_pszMessageText);
@@ -90,7 +90,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, c
    m_qwId = CreateUniqueEventId();
    m_qwRootId = 0;
    m_dwCode = pTemplate->dwCode;
-   m_dwSeverity = pTemplate->dwSeverity;
+   m_severity = pTemplate->dwSeverity;
    m_dwFlags = pTemplate->dwFlags;
    m_dwSource = sourceId;
    m_pszMessageText = NULL;
@@ -336,14 +336,14 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 						{
 							dwSize += 3;
 							pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-							_sntprintf(&pText[dwPos], 4, _T("%d"), (int)event->m_dwSeverity);
+							_sntprintf(&pText[dwPos], 4, _T("%d"), (int)event->m_severity);
 							dwPos = (UINT32)_tcslen(pText);
 						}
                   break;
                case 'S':   // Severity text
 						if (event != NULL)
 						{
-                     const TCHAR *statusText = GetStatusAsText(event->m_dwSeverity, false);
+                     const TCHAR *statusText = GetStatusAsText(event->m_severity, false);
 							dwSize += (UINT32)_tcslen(statusText);
 							pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 							_tcscpy(&pText[dwPos], statusText);
@@ -659,7 +659,7 @@ void Event::prepareMessage(NXCPMessage *pMsg)
 	pMsg->setField(dwId++, m_dwCode);
 	pMsg->setField(dwId++, (UINT32)m_tTimeStamp);
 	pMsg->setField(dwId++, m_dwSource);
-	pMsg->setField(dwId++, (WORD)m_dwSeverity);
+	pMsg->setField(dwId++, (WORD)m_severity);
 	pMsg->setField(dwId++, CHECK_NULL(m_pszMessageText));
 	pMsg->setField(dwId++, CHECK_NULL(m_pszUserTag));
 	pMsg->setField(dwId++, (UINT32)m_parameters.size());
