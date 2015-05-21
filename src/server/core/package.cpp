@@ -80,7 +80,7 @@ BOOL IsPackageFileExist(const TCHAR *pszFileName)
 {
    TCHAR szFullPath[MAX_PATH];
 
-   _tcscpy(szFullPath, g_szDataDir);
+   _tcscpy(szFullPath, g_netxmsdDataDir);
    _tcscat(szFullPath, DDIR_PACKAGES);
    _tcscat(szFullPath, FS_PATH_SEPARATOR);
    _tcscat(szFullPath, pszFileName);
@@ -105,7 +105,7 @@ UINT32 UninstallPackage(UINT32 dwPkgId)
       if (DBGetNumRows(hResult) > 0)
       {
          // Delete file from directory
-         _tcscpy(szFileName, g_szDataDir);
+         _tcscpy(szFileName, g_netxmsdDataDir);
          _tcscat(szFileName, DDIR_PACKAGES);
          _tcscat(szFileName, FS_PATH_SEPARATOR);
          _tcscat(szFileName, CHECK_NULL_EX(DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING)));
@@ -211,7 +211,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                pStartup->pSession->sendMessage(&msg);
 
                // Upload package file to agent
-               _tcscpy(szBuffer, g_szDataDir);
+               _tcscpy(szBuffer, g_netxmsdDataDir);
                _tcscat(szBuffer, DDIR_PACKAGES);
                _tcscat(szBuffer, FS_PATH_SEPARATOR);
                _tcscat(szBuffer, pStartup->szPkgFile);

@@ -143,8 +143,8 @@ UINT32 g_icmpPingSize;
 UINT32 g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
 UINT32 g_auditFlags;
 UINT32 g_slmPollingInterval;
-TCHAR g_szDataDir[MAX_PATH] = _T("");
-TCHAR g_szLibDir[MAX_PATH] = _T("");
+TCHAR NXCORE_EXPORTABLE g_netxmsdDataDir[MAX_PATH] = _T("");
+TCHAR NXCORE_EXPORTABLE g_netxmsdLibDir[MAX_PATH] = _T("");
 int g_dbSyntax = DB_SYNTAX_UNKNOWN;
 UINT32 NXCORE_EXPORTABLE g_processAffinityMask = DEFAULT_AFFINITY_MASK;
 UINT64 g_serverId = 0;
@@ -204,9 +204,9 @@ static BOOL CheckDataDir()
 {
 	TCHAR szBuffer[MAX_PATH];
 
-	if (_tchdir(g_szDataDir) == -1)
+	if (_tchdir(g_netxmsdDataDir) == -1)
 	{
-		nxlog_write(MSG_INVALID_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", g_szDataDir);
+		nxlog_write(MSG_INVALID_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", g_netxmsdDataDir);
 		return FALSE;
 	}
 
@@ -217,7 +217,7 @@ static BOOL CheckDataDir()
 #endif
 
 	// Create directory for mib files if it doesn't exist
-	_tcscpy(szBuffer, g_szDataDir);
+	_tcscpy(szBuffer, g_netxmsdDataDir);
 	_tcscat(szBuffer, DDIR_MIBS);
 	if (MKDIR(szBuffer) == -1)
 		if (errno != EEXIST)
@@ -227,7 +227,7 @@ static BOOL CheckDataDir()
 		}
 
 	// Create directory for package files if it doesn't exist
-	_tcscpy(szBuffer, g_szDataDir);
+	_tcscpy(szBuffer, g_netxmsdDataDir);
 	_tcscat(szBuffer, DDIR_PACKAGES);
 	if (MKDIR(szBuffer) == -1)
 		if (errno != EEXIST)
@@ -237,7 +237,7 @@ static BOOL CheckDataDir()
 		}
 
 	// Create directory for map background images if it doesn't exist
-	_tcscpy(szBuffer, g_szDataDir);
+	_tcscpy(szBuffer, g_netxmsdDataDir);
 	_tcscat(szBuffer, DDIR_BACKGROUNDS);
 	if (MKDIR(szBuffer) == -1)
 		if (errno != EEXIST)
@@ -247,7 +247,7 @@ static BOOL CheckDataDir()
 		}
 
 	// Create directory for image library is if does't exists
-	_tcscpy(szBuffer, g_szDataDir);
+	_tcscpy(szBuffer, g_netxmsdDataDir);
 	_tcscat(szBuffer, DDIR_IMAGES);
 	if (MKDIR(szBuffer) == -1)
 	{
@@ -259,7 +259,7 @@ static BOOL CheckDataDir()
 	}
 
 	// Create directory for shared file store if does't exists
-	_tcscpy(szBuffer, g_szDataDir);
+	_tcscpy(szBuffer, g_netxmsdDataDir);
 	_tcscat(szBuffer, DDIR_SHARED_FILES);
 	if (MKDIR(szBuffer) == -1)
 	{
@@ -271,7 +271,7 @@ static BOOL CheckDataDir()
 	}
 
 	// Create directory for file store if does't exists
-	_tcscpy(szBuffer, g_szDataDir);
+	_tcscpy(szBuffer, g_netxmsdDataDir);
 	_tcscat(szBuffer, DDIR_FILES);
 	if (MKDIR(szBuffer) == -1)
 	{
@@ -353,24 +353,24 @@ static void LoadGlobalConfig()
    if (ConfigReadInt(_T("ResolveDNSToIPOnStatusPoll"), 0))
       g_flags |= AF_RESOLVE_IP_FOR_EACH_STATUS_POLL;
 
-   if (g_szDataDir[0] == 0)
+   if (g_netxmsdDataDir[0] == 0)
    {
       const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
       if (homeDir != NULL)
       {
          TCHAR path[MAX_PATH];
          _sntprintf(path, MAX_PATH, _T("%s/share/netxms"), homeDir);
-         ConfigReadStr(_T("DataDirectory"), g_szDataDir, MAX_PATH, path);
+         ConfigReadStr(_T("DataDirectory"), g_netxmsdDataDir, MAX_PATH, path);
       }
       else
       {
-         ConfigReadStr(_T("DataDirectory"), g_szDataDir, MAX_PATH, DEFAULT_DATA_DIR);
+         ConfigReadStr(_T("DataDirectory"), g_netxmsdDataDir, MAX_PATH, DEFAULT_DATA_DIR);
       }
-      DbgPrintf(1, _T("Data directory set to %s from server configuration variable"), g_szDataDir);
+      DbgPrintf(1, _T("Data directory set to %s from server configuration variable"), g_netxmsdDataDir);
    }
    else
    {
-      DbgPrintf(1, _T("Using data directory %s"), g_szDataDir);
+      DbgPrintf(1, _T("Using data directory %s"), g_netxmsdDataDir);
    }
 
    g_icmpPingTimeout = ConfigReadInt(_T("IcmpPingTimeout"), 1500);
@@ -401,7 +401,7 @@ static BOOL InitCryptografy()
    SSL_library_init();
    SSL_load_error_strings();
 
-	_tcscpy(szKeyFile, g_szDataDir);
+	_tcscpy(szKeyFile, g_netxmsdDataDir);
 	_tcscat(szKeyFile, DFILE_KEYS);
 	fd = _topen(szKeyFile, O_RDONLY | O_BINARY);
 	g_pServerKey = LoadRSAKeys(szKeyFile);
@@ -568,15 +568,15 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	g_serverStartTime = time(NULL);
 	srand((unsigned int)g_serverStartTime);
 
-   if (g_szLibDir[0] == 0)
+   if (g_netxmsdLibDir[0] == 0)
    {
       const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
       if (homeDir != NULL)
       {
 #ifdef _WIN32
-         _sntprintf(g_szLibDir, MAX_PATH, _T("%s\\lib"), homeDir);
+         _sntprintf(g_netxmsdLibDir, MAX_PATH, _T("%s\\lib"), homeDir);
 #else
-         _sntprintf(g_szLibDir, MAX_PATH, _T("%s/lib/netxms"), homeDir);
+         _sntprintf(g_netxmsdLibDir, MAX_PATH, _T("%s/lib/netxms"), homeDir);
 #endif
       }
       else
@@ -586,25 +586,25 @@ BOOL NXCORE_EXPORTABLE Initialize()
          if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
          {
             DWORD size = MAX_PATH * sizeof(TCHAR);
-            if (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, (BYTE *)g_szLibDir, &size) == ERROR_SUCCESS)
+            if (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, (BYTE *)g_netxmsdLibDir, &size) == ERROR_SUCCESS)
             {
-               _tcscat(g_szLibDir, _T("\\lib"));
+               _tcscat(g_netxmsdLibDir, _T("\\lib"));
             }
             else
             {
-               g_szLibDir[0] = 0;
+               g_netxmsdLibDir[0] = 0;
             }
             RegCloseKey(hKey);
          }
-         if (g_szLibDir[0] == 0)
+         if (g_netxmsdLibDir[0] == 0)
          {
-            _tcscpy(g_szLibDir, DEFAULT_LIBDIR);
+            _tcscpy(g_netxmsdLibDir, DEFAULT_LIBDIR);
          }
 #else
-         _tcscpy(g_szLibDir, DEFAULT_LIBDIR);
+         _tcscpy(g_netxmsdLibDir, DEFAULT_LIBDIR);
 #endif
       }
-      DbgPrintf(1, _T("Data directory set to %s from server configuration variable"), g_szDataDir);
+      DbgPrintf(1, _T("Data directory set to %s from server configuration variable"), g_netxmsdDataDir);
    }
 
 	if (!(g_flags & AF_USE_SYSLOG))
@@ -934,7 +934,7 @@ retry_db_lock:
 	// Start uptime calculator for SLM
 	ThreadCreate(UptimeCalculator, 0, NULL);
 
-	DbgPrintf(2, _T("LIBDIR: %s"), g_szLibDir);
+	DbgPrintf(2, _T("LIBDIR: %s"), g_netxmsdLibDir);
 
 	// Call startup functions for the modules
    CALL_ALL_MODULES(pfServerStarted, ());

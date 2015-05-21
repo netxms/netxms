@@ -1032,8 +1032,8 @@ extern TCHAR NXCORE_EXPORTABLE g_szListenAddress[];
 #ifndef _WIN32
 extern TCHAR NXCORE_EXPORTABLE g_szPIDFile[];
 #endif
-extern TCHAR g_szDataDir[];
-extern TCHAR g_szLibDir[];
+extern TCHAR NXCORE_EXPORTABLE g_netxmsdDataDir[];
+extern TCHAR NXCORE_EXPORTABLE g_netxmsdLibDir[];
 extern UINT32 NXCORE_EXPORTABLE g_processAffinityMask;
 extern UINT64 g_serverId;
 extern RSA *g_pServerKey;

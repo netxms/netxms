@@ -4435,7 +4435,7 @@ void ClientSession::sendMib(NXCPMessage *request)
    TCHAR szBuffer[MAX_PATH];
 
    // Send compiled MIB file
-   _tcscpy(szBuffer, g_szDataDir);
+   _tcscpy(szBuffer, g_netxmsdDataDir);
    _tcscat(szBuffer, DFILE_COMPILED_MIB);
 	sendFile(szBuffer, request->getId(), 0);
 }
@@ -4453,7 +4453,7 @@ void ClientSession::sendMIBTimestamp(UINT32 dwRqId)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(dwRqId);
 
-   _tcscpy(szBuffer, g_szDataDir);
+   _tcscpy(szBuffer, g_netxmsdDataDir);
    _tcscat(szBuffer, DFILE_COMPILED_MIB);
    dwResult = SNMPGetMIBTreeTimestamp(szBuffer, &dwTimeStamp);
    if (dwResult == SNMP_ERR_SUCCESS)
@@ -6392,7 +6392,7 @@ void ClientSession::InstallPackage(NXCPMessage *pRequest)
                   // Prepare for file receive
                   if (m_hCurrFile == -1)
                   {
-                     _tcscpy(m_szCurrFileName, g_szDataDir);
+                     _tcscpy(m_szCurrFileName, g_netxmsdDataDir);
                      _tcscat(m_szCurrFileName, DDIR_PACKAGES);
                      _tcscat(m_szCurrFileName, FS_PATH_SEPARATOR);
                      _tcscat(m_szCurrFileName, pszCleanFileName);
@@ -10955,7 +10955,7 @@ void ClientSession::getServerFile(NXCPMessage *pRequest)
 
 	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES) || musicFile)
 	{
-      _tcscpy(fname, g_szDataDir);
+      _tcscpy(fname, g_netxmsdDataDir);
       _tcscat(fname, DDIR_FILES);
       _tcscat(fname, FS_PATH_SEPARATOR);
       _tcscat(fname, GetCleanFileName(name));
@@ -11937,7 +11937,7 @@ void ClientSession::sendLibraryImage(NXCPMessage *request)
 
 				msg.setField(VID_IMAGE_PROTECTED, (WORD)DBGetFieldLong(result, 0, 3));
 
-				_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
+				_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
 				DbgPrintf(5, _T("sendLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
 
 #ifdef _WIN32
@@ -12094,7 +12094,7 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
 				if (DBQuery(hdb, query))
 				{
 					// DB up to date, update file)
-					_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_szDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
+					_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
 					DbgPrintf(5, _T("updateLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
 
 					if (m_hCurrFile == -1)
@@ -12366,7 +12366,7 @@ void ClientSession::uploadFileToAgent(NXCPMessage *request)
 					TCHAR fullPath[MAX_PATH];
 
 					// Create full path to the file store
-					_tcscpy(fullPath, g_szDataDir);
+					_tcscpy(fullPath, g_netxmsdDataDir);
 					_tcscat(fullPath, DDIR_FILES);
 					_tcscat(fullPath, FS_PATH_SEPARATOR);
 					nLen = (int)_tcslen(fullPath);
@@ -12445,7 +12445,7 @@ void ClientSession::listServerFileStore(NXCPMessage *request)
 
 	if (m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES || musicFiles)
 	{
-      _tcscpy(path, g_szDataDir);
+      _tcscpy(path, g_netxmsdDataDir);
       _tcscat(path, DDIR_FILES);
       _TDIR *dir = _topendir(path);
       if (dir != NULL)
@@ -12687,7 +12687,7 @@ void ClientSession::receiveFile(NXCPMessage *request)
       // Prepare for file receive
       if (m_hCurrFile == -1)
       {
-         _tcscpy(m_szCurrFileName, g_szDataDir);
+         _tcscpy(m_szCurrFileName, g_netxmsdDataDir);
 			_tcscat(m_szCurrFileName, DDIR_FILES);
          _tcscat(m_szCurrFileName, FS_PATH_SEPARATOR);
          _tcscat(m_szCurrFileName, cleanFileName);
@@ -12740,7 +12740,7 @@ void ClientSession::deleteFile(NXCPMessage *request)
       request->getFieldAsString(VID_FILE_NAME, fileName, MAX_PATH);
       const TCHAR *cleanFileName = GetCleanFileName(fileName);
 
-      _tcscpy(m_szCurrFileName, g_szDataDir);
+      _tcscpy(m_szCurrFileName, g_netxmsdDataDir);
       _tcscat(m_szCurrFileName, DDIR_FILES);
       _tcscat(m_szCurrFileName, FS_PATH_SEPARATOR);
       _tcscat(m_szCurrFileName, cleanFileName);

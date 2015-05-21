@@ -51,7 +51,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("CodePage"), CT_MB_STRING, 0, 0, 256, 0, g_szCodePage, NULL },
    { _T("CreateCrashDumps"), CT_BOOLEAN64, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_flags, NULL },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, g_szDailyLogFileSuffix, NULL },
-   { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDir, NULL },
+   { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdDataDir, NULL },
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver, NULL },
    { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, NULL },
    { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword, NULL },
@@ -63,7 +63,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel, &g_debugLevel },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, NULL },
    { _T("FullCrashDumps"), CT_BOOLEAN64, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, NULL },
-   { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLibDir, NULL },
+   { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdLibDir, NULL },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, NULL },
    { _T("LogFailedSQLQueries"), CT_BOOLEAN64, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_flags, NULL },
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, NULL },
@@ -121,10 +121,10 @@ stop_search:
    if ((homeDir != NULL) && (*homeDir != 0))
    {
 #ifdef _WIN32
-      _sntprintf(g_szLibDir, MAX_PATH, _T("%s%slib"), homeDir,
+      _sntprintf(g_netxmsdLibDir, MAX_PATH, _T("%s%slib"), homeDir,
          (homeDir[_tcslen(homeDir) - 1] != FS_PATH_SEPARATOR_CHAR) ? FS_PATH_SEPARATOR : _T(""));
 #else
-      _sntprintf(g_szLibDir, MAX_PATH, _T("%s/lib/netxms"), homeDir);
+      _sntprintf(g_netxmsdLibDir, MAX_PATH, _T("%s/lib/netxms"), homeDir);
 #endif
    }
 
