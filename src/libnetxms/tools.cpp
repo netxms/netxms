@@ -548,6 +548,29 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 }
 
 /**
+ * Formats file name usign given time
+ */
+const TCHAR LIBNETXMS_EXPORTABLE *ExpandFromTimestamp(const TCHAR *name, TCHAR *buffer, size_t bufSize, time_t time)
+{
+   TCHAR tmp[8192];
+#if HAVE_GMTIME_R
+   struct tm tmbuff;
+   struct tm *ltm = gmtime_r(&time, &tmbuff);
+#else
+   struct tm *ltm = gmtime(&time);
+#endif
+
+   if (_tcsftime(tmp, MAX_PATH, name, ltm) <= 0)
+   {
+      _tcsncpy(buffer, _T(""), bufSize);
+      return NULL;
+   }
+
+   _tcsncpy(buffer, tmp, bufSize);
+   return buffer;
+}
+
+/**
  * Create folder
  */
 BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory)

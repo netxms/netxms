@@ -1382,6 +1382,7 @@ BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool
 #endif
 
 const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommand);
+const TCHAR LIBNETXMS_EXPORTABLE *ExpandFromTimestamp(const TCHAR *name, TCHAR *buffer, size_t bufSize, time_t time);
 BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory);
 TCHAR LIBNETXMS_EXPORTABLE *Trim(TCHAR *str);
 bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bool matchCase);
