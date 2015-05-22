@@ -66,7 +66,7 @@ bool TuxedoConnect()
       }
       else
       {
-         AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%d)"), tperrno);
+         AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
          success = false;
       }
    }
