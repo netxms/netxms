@@ -46,6 +46,14 @@
 #include <openssl/ssl.h>
 #endif
 
+#if HAVE_GRP_H
+#include <grp.h>
+#endif
+
+#if HAVE_PWD_H
+#include <pwd.h>
+#endif
+
 /**
  * Externals
  */
@@ -99,7 +107,7 @@ extern const TCHAR *g_szMessages[];
 #if defined(_WIN32)
 #define VALID_OPTIONS   "c:CdD:e:EfhHiIKM:n:N:P:r:RsSUvX:W:Z:"
 #else
-#define VALID_OPTIONS   "c:CdD:fhKM:p:P:r:vX:W:Z:"
+#define VALID_OPTIONS   "c:CdD:fg:hKM:p:P:r:u:vX:W:Z:"
 #endif
 
 /**
@@ -277,6 +285,9 @@ static TCHAR m_szHelpText[] =
    _T("   -e <name>  : Windows event source name\n")
 #endif
 	_T("   -f         : Run in foreground\n")
+#if !defined(_WIN32)
+   _T("   -g <gid>   : Chhange group ID to <gid> after start\n")
+#endif
    _T("   -h         : Display help and exit\n")
 #ifdef _WIN32
    _T("   -H         : Hide agent's window when in standalone mode\n")
@@ -298,6 +309,9 @@ static TCHAR m_szHelpText[] =
    _T("   -R         : Remove Windows service\n")
    _T("   -s         : Start Windows servive\n")
    _T("   -S         : Stop Windows service\n")
+#endif
+#if !defined(_WIN32)
+   _T("   -u <uid>   : Chhange user ID to <uid> after start\n")
 #endif
    _T("   -v         : Display version and exit\n")
    _T("\n");
@@ -1242,6 +1256,58 @@ static void InitiateExtSubagentShutdown()
       _tprintf(_T("ERROR: Unable to send control message to master agent\n"));
 }
 
+#ifndef _WIN32
+
+/**
+ * Get user ID
+ */
+static int GetUserId(char *name)
+{
+   char *eptr;
+   int id = (int)strtol(name, &eptr, 10);
+   if (*eptr == 0)
+      return id;
+
+#if HAVE_GETPWNAM
+   struct passwd *p = getpwnam(name);
+   if (p == NULL)
+   {
+      _tprintf(_T("Invalid user ID \"%hs\"\n"), name);
+      return 0;
+   }
+   return p->pw_uid;
+#else
+   _tprintf(_T("Invalid user ID \"%hs\"\n"), name);
+   return 0;
+#endif
+}
+
+/**
+ * Get group ID
+ */
+static int GetGroupId(char *name)
+{
+   char *eptr;
+   int id = (int)strtol(name, &eptr, 10);
+   if (*eptr == 0)
+      return id;
+
+#if HAVE_GETGRNAM
+   struct group *g = getgrnam(name);
+   if (g == NULL)
+   {
+      _tprintf(_T("Invalid group ID \"%hs\"\n"), name);
+      return 0;
+   }
+   return g->gr_gid;
+#else
+   _tprintf(_T("Invalid group ID \"%hs\"\n"), name);
+   return 0;
+#endif
+}
+
+#endif
+
 /**
  * Application entry point
  */
@@ -1257,6 +1323,7 @@ int main(int argc, char *argv[])
    DWORD dwSize;
 #else
    TCHAR *pszEnv;
+	int uid = 0, gid = 0;
 #endif
 
 #ifdef _WIN32
@@ -1313,18 +1380,20 @@ int main(int argc, char *argv[])
    {
       switch(ch)
       {
-         case 'h':   // Display help and exit
-            iAction = ACTION_HELP;
+         case 'c':   // Configuration file
+#ifdef UNICODE
+				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigFile, MAX_PATH);
+				g_szConfigFile[MAX_PATH - 1] = 0;
+#else
+            nx_strncpy(g_szConfigFile, optarg, MAX_PATH);
+#endif
             break;
-         case 'K':   // Shutdown external sub-agents
-            iAction = ACTION_SHUTDOWN_EXT_AGENTS;
+         case 'C':   // Configuration check only
+            iAction = ACTION_CHECK_CONFIG;
             break;
          case 'd':   // Run as daemon
             g_dwFlags |= AF_DAEMON;
             break;
-			case 'f':	// Run in foreground
-            g_dwFlags &= ~AF_DAEMON;
-				break;
          case 'D':   // Turn on debug output
 				g_debugLevel = strtoul(optarg, &eptr, 0);
 				if ((*eptr != 0) || (g_debugLevel > 9))
@@ -1334,15 +1403,26 @@ int main(int argc, char *argv[])
 					iExitCode = 1;
 				}
             break;
-         case 'c':   // Configuration file
-#ifdef UNICODE
-				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szConfigFile, MAX_PATH);
-				g_szConfigFile[MAX_PATH - 1] = 0;
-#else
-            nx_strncpy(g_szConfigFile, optarg, MAX_PATH);
+			case 'f':	// Run in foreground
+            g_dwFlags &= ~AF_DAEMON;
+				break;
+#ifndef _WIN32
+			case 'g':	// set group ID
+				gid = GetGroupId(optarg);
+				break;
 #endif
+         case 'h':   // Display help and exit
+            iAction = ACTION_HELP;
             break;
-#if !defined(_WIN32)
+#ifdef _WIN32
+         case 'H':   // Hide window
+            g_dwFlags |= AF_HIDE_WINDOW;
+            break;
+#endif
+         case 'K':   // Shutdown external sub-agents
+            iAction = ACTION_SHUTDOWN_EXT_AGENTS;
+            break;
+#ifndef _WIN32
          case 'p':   // PID file
 #ifdef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, g_szPidFile, MAX_PATH);
@@ -1352,13 +1432,6 @@ int main(int argc, char *argv[])
 #endif
             break;
 #endif
-         case 'C':   // Configuration check only
-            iAction = ACTION_CHECK_CONFIG;
-            break;
-         case 'v':   // Print version and exit
-            _tprintf(_T("NetXMS Core Agent Version ") AGENT_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING IS_UNICODE_BUILD_STRING _T("\n"));
-            iAction = ACTION_NONE;
-            break;
          case 'M':
             g_dwFlags |= AF_CENTRAL_CONFIG;
 #ifdef UNICODE
@@ -1385,13 +1458,22 @@ int main(int argc, char *argv[])
             nx_strncpy(g_szPlatformSuffix, optarg, MAX_PSUFFIX_LENGTH);
 #endif
             break;
-         case 'X':   // Agent is being restarted
-            bRestart = TRUE;
-            dwOldPID = strtoul(optarg, NULL, 10);
+#ifndef _WIN32
+			case 'u':	// set user ID
+				uid = GetUserId(optarg);
+				break;
+#endif
+         case 'v':   // Print version and exit
+            _tprintf(_T("NetXMS Core Agent Version ") AGENT_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING IS_UNICODE_BUILD_STRING _T("\n"));
+            iAction = ACTION_NONE;
             break;
          case 'W':   // Watchdog process
             iAction = ACTION_RUN_WATCHDOG;
             dwMainPID = strtoul(optarg, NULL, 10);
+            break;
+         case 'X':   // Agent is being restarted
+            bRestart = TRUE;
+            dwOldPID = strtoul(optarg, NULL, 10);
             break;
          case 'Z':   // Create configuration file
             iAction = ACTION_CREATE_CONFIG;
@@ -1403,9 +1485,6 @@ int main(int argc, char *argv[])
 #endif
             break;
 #ifdef _WIN32
-         case 'H':   // Hide window
-            g_dwFlags |= AF_HIDE_WINDOW;
-            break;
          case 'i':
             g_dwFlags |= AF_INTERACTIVE_SERVICE;
             break;
@@ -1462,6 +1541,17 @@ int main(int argc, char *argv[])
    }
 
 #if !defined(_WIN32)
+   if (gid > 0)
+   {
+      if (setgid(gid) != 0)
+         _tprintf(_T("setgid(%d) call failed (%s)\n"), gid, _tcserror(errno));
+   }
+   if (uid > 0)
+   {
+      if (setuid(uid) != 0)
+         _tprintf(_T("setuid(%d) call failed (%s)\n"), uid, _tcserror(errno));
+   }
+
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
 	{
       TCHAR path[MAX_PATH] = _T("");

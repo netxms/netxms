@@ -12,6 +12,7 @@
 - Switched to SHA-256 for password hashing
 - Timestamp can be provided in nxpush and nxapush
 - New methods in NXSL class "Event": setMessage, setSeverity, setUserTag
+- Command line options for nxagentd to change effective user and group after start
 - Management console:
 	- Fixed broken VPN connectors configuration
 	- "Inverted values" option on line charts
