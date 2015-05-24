@@ -51,7 +51,7 @@ Display {
   rwt-warning-image: url( theme/resources/dialog/warning.png );
   rwt-working-image: url( theme/resources/dialog/information.png );
   
-  rwt-fontlist: 11px 'Segoe UI', 'DejaVu Sans', Verdana, Corbel, Calibri, Tahoma, 'Lucida Sans Unicode';
+  rwt-fontlist: 12px "Segoe UI", "DejaVu Sans", Verdana, "Lucida Sans", Arial, Helvetica, "Liberation Mono", "Courier New";
   
   background-image: url( theme/resources/display/browser_bg.png );
   font: 12px "Segoe UI", "DejaVu Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
