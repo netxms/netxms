@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,6 +66,7 @@ import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.Command;
 import org.netxms.ui.eclipse.tools.CommandBridge;
+import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
 
 /**
@@ -74,6 +75,8 @@ import org.netxms.ui.eclipse.tools.IntermediateSelectionProvider;
 public class TabbedObjectView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.objectview.view.tabbed_object_view"; //$NON-NLS-1$
+	
+	private static final String[] HEADER_FONTS = { "Verdana", "DejaVu Sans", "Liberation Sans", "Arial" };
 	
 	private CLabel header;
 	private CTabFolder tabFolder;
@@ -110,7 +113,7 @@ public class TabbedObjectView extends ViewPart
 		layout.verticalSpacing = 0;
 		parent.setLayout(layout);
 		
-		headerFont = new Font(parent.getDisplay(), "Verdana", 11, SWT.BOLD); //$NON-NLS-1$
+		headerFont = FontTools.createFont(HEADER_FONTS, +3, SWT.BOLD);
 		
 		header = new CLabel(parent, SWT.BORDER);
 		header.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
