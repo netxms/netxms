@@ -19,6 +19,7 @@
 	- Filter in predefined graphs tree
 	- Values of selected DCIs can be shown on object overview page
 	- "Stacked" option added to line charts on dashboards
+	- In-place file rename in file manager
 - Fixed issues: #50, #781, #797, #816, #817, #824
 
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Raden Solutions
+ * Copyright (C) 2003-2015 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,9 +36,16 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.ColumnViewerEditor;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
+import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TextCellEditor;
+import org.eclipse.jface.viewers.TreeViewerEditor;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -56,6 +63,7 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
@@ -64,6 +72,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.AgentFile;
@@ -76,7 +85,6 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.filemanager.Activator;
 import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.dialogs.CreateFolderDialog;
-import org.netxms.ui.eclipse.filemanager.dialogs.RenameFileDialog;
 import org.netxms.ui.eclipse.filemanager.dialogs.StartClientToAgentFolderUploadDialog;
 import org.netxms.ui.eclipse.filemanager.dialogs.StartClientToServerFileUploadDialog;
 import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileComparator;
@@ -198,6 +206,7 @@ public class AgentFileManager extends ViewPart
       });
       enableDragSupport();
       enableDropSupport();
+      enableInPlaceRename();
 
       // Setup layout
       FormData fd = new FormData();
@@ -216,6 +225,7 @@ public class AgentFileManager extends ViewPart
       createActions();
       contributeToActionBars();
       createPopupMenu();
+      activateContext();
 
       filterText.setCloseAction(actionShowFilter);
 
@@ -226,6 +236,18 @@ public class AgentFileManager extends ViewPart
          enableFilter(false); // Will hide filter area correctly
 
       refreshFileList();
+   }
+
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.filemanager.context.AgentFileManager"); //$NON-NLS-1$
+      }
    }
 
    /**
@@ -303,6 +325,89 @@ public class AgentFileManager extends ViewPart
          }
       });
    }
+   
+   /**
+    * Enable in-place renames
+    */
+   private void enableInPlaceRename()
+   {
+      TreeViewerEditor.create(viewer, new ColumnViewerEditorActivationStrategy(viewer) {
+         @Override
+         protected boolean isEditorActivationEvent(ColumnViewerEditorActivationEvent event)
+         {
+            return event.eventType == ColumnViewerEditorActivationEvent.PROGRAMMATIC;
+         }
+      }, ColumnViewerEditor.DEFAULT);
+      viewer.setCellEditors(new CellEditor[] { new TextCellEditor(viewer.getTree()) });
+      viewer.setColumnProperties(new String[] { "name" }); //$NON-NLS-1$
+      viewer.setCellModifier(new ICellModifier() {
+         @Override
+         public void modify(Object element, String property, Object value)
+         {
+            if (element instanceof Item)
+               element = ((Item)element).getData();
+
+            if (property.equals("name")) //$NON-NLS-1$
+            {
+               if (element instanceof ServerFile)
+               {
+                  doRename((ServerFile)element, value.toString());
+               }
+            }
+         }
+
+         @Override
+         public Object getValue(Object element, String property)
+         {
+            if (property.equals("name")) //$NON-NLS-1$
+            {
+               if (element instanceof ServerFile)
+               {
+                  return ((ServerFile)element).getName();
+               }
+            }
+            return null;
+         }
+
+         @Override
+         public boolean canModify(Object element, String property)
+         {
+            return property.equals("name"); //$NON-NLS-1$
+         }
+      });
+   }
+   
+   /**
+    * Do actual rename
+    * 
+    * @param serverFile
+    * @param newName
+    */
+   private void doRename(final ServerFile serverFile, final String newName)
+   {
+      new ConsoleJob(Messages.get().ViewServerFile_DeletFileFromServerJob, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().AgentFileManager_RenameError;
+         }
+
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            session.renameAgentFile(objectId, serverFile.getFullName(), serverFile.getParent().getFullName() + "/" + newName); //$NON-NLS-1$
+
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  serverFile.setName(newName);
+                  viewer.refresh(serverFile, true);
+               }
+            });
+         }
+      }.start();
+   }
 
    /**
     * Create actions
@@ -310,6 +415,7 @@ public class AgentFileManager extends ViewPart
    private void createActions()
    {
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+      
       actionRefreshDirectory = new Action(Messages.get().AgentFileManager_RefreshFolder, SharedIcons.REFRESH) {
          @Override
          public void run()
@@ -317,6 +423,8 @@ public class AgentFileManager extends ViewPart
             refreshFileOrDirectory();
          }
       };
+      actionRefreshDirectory.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.refreshFolder"); //$NON-NLS-1$
+      handlerService.activateHandler(actionRefreshDirectory.getActionDefinitionId(), new ActionHandler(actionRefreshDirectory));
 
       actionRefreshAll = new RefreshAction(this) {
          @Override
@@ -333,6 +441,8 @@ public class AgentFileManager extends ViewPart
             uploadFile();
          }
       };
+      actionUploadFile.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.uploadFile"); //$NON-NLS-1$
+      handlerService.activateHandler(actionUploadFile.getActionDefinitionId(), new ActionHandler(actionUploadFile));
       
       actionUploadFolder = new Action(Messages.get().AgentFileManager_UploadFolder) {
          @Override
@@ -349,6 +459,8 @@ public class AgentFileManager extends ViewPart
             deleteFile();
          }
       };
+      actionDelete.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.delete"); //$NON-NLS-1$
+      handlerService.activateHandler(actionDelete.getActionDefinitionId(), new ActionHandler(actionDelete));
 
       actionRename = new Action(Messages.get().AgentFileManager_Rename) {
          @Override
@@ -357,6 +469,8 @@ public class AgentFileManager extends ViewPart
             renameFile();
          }
       };
+      actionRename.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.rename"); //$NON-NLS-1$
+      handlerService.activateHandler(actionRename.getActionDefinitionId(), new ActionHandler(actionRename));
 
       actionShowFilter = new Action(Messages.get().ViewServerFile_ShowFilterAction, Action.AS_CHECK_BOX) {
          @Override
@@ -367,9 +481,8 @@ public class AgentFileManager extends ViewPart
          }
       };
       actionShowFilter.setChecked(filterEnabled);
-      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
-      final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
-      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.showFilter"); //$NON-NLS-1$
+      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 
       actionDownloadFile = new Action(Messages.get().AgentFileManager_Download) {
          @Override
@@ -378,6 +491,8 @@ public class AgentFileManager extends ViewPart
             startDownload();
          }
       };
+      actionDownloadFile.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.download"); //$NON-NLS-1$
+      handlerService.activateHandler(actionDownloadFile.getActionDefinitionId(), new ActionHandler(actionDownloadFile));
 
       actionTailFile = new Action(Messages.get().AgentFileManager_Show) {
          @Override
@@ -394,6 +509,8 @@ public class AgentFileManager extends ViewPart
             createFolder();
          }
       };
+      actionCreateDirectory.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.newFolder"); //$NON-NLS-1$
+      handlerService.activateHandler(actionCreateDirectory.getActionDefinitionId(), new ActionHandler(actionCreateDirectory));
    }
 
    /**
@@ -922,40 +1039,10 @@ public class AgentFileManager extends ViewPart
    private void renameFile()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      if (selection.isEmpty())
+      if (selection.size() != 1)
          return;
-
-      final Object[] objects = selection.toArray();
-
-      RenameFileDialog dlg = new RenameFileDialog(getSite().getShell(), ((ServerFile)objects[0]).getName());
-      if (dlg.open() != Window.OK)
-         return;
-
-      final String newName = dlg.getNewName();
-
-      new ConsoleJob(Messages.get().ViewServerFile_DeletFileFromServerJob, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
-         @Override
-         protected String getErrorMessage()
-         {
-            return Messages.get().AgentFileManager_RenameError;
-         }
-
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
-         {
-            final ServerFile sf = (ServerFile)objects[0];
-            session.renameAgentFile(objectId, sf.getFullName(), sf.getParent().getFullName() + "/" + newName); //$NON-NLS-1$
-
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  sf.setName(newName);
-                  viewer.refresh(sf, true);
-               }
-            });
-         }
-      }.start();
+      
+      viewer.editElement(selection.getFirstElement(), 0);
    }
 
    /**
