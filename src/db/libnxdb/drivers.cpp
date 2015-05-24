@@ -289,6 +289,9 @@ reuse_driver:
  */
 void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver)
 {
+   if (driver == NULL)
+      return;
+
 	MutexLock(s_driverListLock);
 
 	for(int i = 0; i < MAX_DB_DRIVERS; i++)
