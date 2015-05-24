@@ -1021,6 +1021,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(new Separator());
 		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
 		manager.add(new Separator());
+		manager.add(new GroupMarker(GroupMarkers.MB_ATM));
+      manager.add(new Separator());
 		manager.add(new GroupMarker(GroupMarkers.MB_NXVS));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));

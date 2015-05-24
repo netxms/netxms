@@ -506,7 +506,9 @@ public class ObjectBrowser extends ViewPart
 	{
 		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
 		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_NXVS));
+		manager.add(new GroupMarker(GroupMarkers.MB_ATM));
+      manager.add(new Separator());
+      manager.add(new GroupMarker(GroupMarkers.MB_NXVS));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
 		manager.add(new Separator());

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -167,6 +167,10 @@ public class Ports extends ObjectTab implements ISelectionProvider
 	private void fillContextMenu(IMenuManager manager)
 	{
 		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
+      manager.add(new Separator());
+      manager.add(new GroupMarker(GroupMarkers.MB_ATM));
+      manager.add(new Separator());
+      manager.add(new GroupMarker(GroupMarkers.MB_NXVS));
 		manager.add(new Separator());
 		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
 		manager.add(new Separator());
