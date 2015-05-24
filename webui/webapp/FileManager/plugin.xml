@@ -15,7 +15,7 @@
             allowMultiple="true"
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.filemanager.views.AgentFileManager"
-            icon="icons/folder.gif"
+            icon="icons/filemgr.png"
             id="org.netxms.ui.eclipse.filemanager.views.AgentFileManager"
             name="File Manager"
             restorable="true">
@@ -48,6 +48,7 @@
          <action
                class="org.netxms.ui.eclipse.filemanager.actions.OpenFileManager"
                enablesFor="1"
+               icon="icons/filemgr.png"
                id="org.netxms.ui.eclipse.filemanager.popupActions.FileManager_Node"
                label="&amp;File manager"
                menubarPath="objectmgmt"

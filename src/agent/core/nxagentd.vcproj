@@ -378,6 +378,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\datacoll.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\epp.cpp"
 				>
 			</File>

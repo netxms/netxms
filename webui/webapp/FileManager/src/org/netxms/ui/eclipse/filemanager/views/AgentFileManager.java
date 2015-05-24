@@ -119,7 +119,6 @@ public class AgentFileManager extends ViewPart
    private NXCSession session;
    private Action actionRefreshAll;
    private Action actionUploadFile;
-   private Action actionUploadFolder;
    private Action actionDelete;
    private Action actionRename;
    private Action actionRefreshDirectory;
