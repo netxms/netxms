@@ -268,7 +268,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport
             }
             else
             {
-               dwResult = SNMP_ERR_NO_OBJECT;
+               // Consider no object/no instance as end of walk signal instead of failure
                bRunning = FALSE;
             }
          }
