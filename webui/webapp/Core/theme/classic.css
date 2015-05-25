@@ -1038,6 +1038,12 @@ Text-Message {
   text-shadow: none;
 }
 
+/* Text with monospace font */
+
+Text.monospace {
+  font: 12px "Liberation Mono", "DejaVu Sans Mono", "Courier New";
+}
+
 /* ToolBar default theme */
 
 ToolBar {

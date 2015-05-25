@@ -32,7 +32,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.commands.ActionHandler;
-import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
@@ -115,7 +115,7 @@ public class FileViewer extends ViewPart
 	{
 		textViewer = new Text(parent, SWT.H_SCROLL | SWT.V_SCROLL);
 		textViewer.setEditable(false);
-		textViewer.setFont(JFaceResources.getTextFont());
+		textViewer.setData(RWT.CUSTOM_VARIANT, "monospace");
 		
       createActions();
       contributeToActionBars();

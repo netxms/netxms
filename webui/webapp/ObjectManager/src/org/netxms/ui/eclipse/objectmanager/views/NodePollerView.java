@@ -28,7 +28,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -112,7 +112,7 @@ public class NodePollerView extends ViewPart
 	{
 		textArea = new Text(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		textArea.setEditable(false);
-		textArea.setFont(JFaceResources.getTextFont());
+		textArea.setData(RWT.CUSTOM_VARIANT, "monospace");
 		
 		createActions();
 		contributeToActionBars();
