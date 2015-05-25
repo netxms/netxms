@@ -263,15 +263,18 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
  */
 bool AgentConnectionEx::processCustomMessage(NXCPMessage *msg)
 {
-    for(UINT32 i = 0; i < g_dwNumModules; i++)
-    {
-        if (g_pModuleList[i].pfOnAgentMessage != NULL)
-        {
-            if (g_pModuleList[i].pfOnAgentMessage(msg, m_nodeId))
-                return true;    // accepted by module
-        }
-    }
+   TCHAR buffer[128];
+   DbgPrintf(6, _T("AgentConnectionEx::processCustomMessage: processing message %s ID %d"), 
+      NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
 
+   for(UINT32 i = 0; i < g_dwNumModules; i++)
+   {
+      if (g_pModuleList[i].pfOnAgentMessage != NULL)
+      {
+         if (g_pModuleList[i].pfOnAgentMessage(msg, m_nodeId))
+            return true;    // accepted by module
+      }
+   }
    return false;
 }
 
@@ -286,7 +289,9 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
    static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
 	SNMP_Engine localEngine(engineId, 12);
 
-   DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): Received SNMP trap message from agent at %s, node ID %d"), getIpAddr().toString(ipStringBuffer), m_nodeId);
+   DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): Received SNMP trap message from agent at %s, node ID %d"), 
+      getIpAddr().toString(ipStringBuffer), m_nodeId);
+
 	if (m_nodeId != 0)
 		proxyNode = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
    if (proxyNode != NULL)

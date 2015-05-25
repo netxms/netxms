@@ -663,7 +663,7 @@ static bool EnumerateSessionsBySubagent(bool (* pHandler)(AbstractCommSession *,
    MutexLock(g_hSessionListAccess);
    for(UINT32 i = 0; i < g_dwMaxSessions; i++)
    {
-      if(!pHandler(g_pSessionList[i], data))
+      if (!pHandler(g_pSessionList[i], data))
       {
          ret = true;
          break;
