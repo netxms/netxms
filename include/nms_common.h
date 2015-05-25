@@ -1222,6 +1222,19 @@ typedef struct tagICMPHDR
 #define INVALID_PIPE_HANDLE (-1)
 #endif
 
+#ifdef __cplusplus
+
+/**
+ * Session enumeration callback return codes
+ */
+enum EnumerationCallbackResult
+{
+   _STOP = 0,
+   _CONTINUE = 1
+};
+
+#endif
+
 /**
  * Memory debug
  */

@@ -28,7 +28,7 @@
 static void (* s_fpWriteLog)(int, int, const TCHAR *) = NULL;
 static void (* s_fpSendTrap1)(UINT32, const TCHAR *, const char *, va_list) = NULL;
 static void (* s_fpSendTrap2)(UINT32, const TCHAR *, int, TCHAR **) = NULL;
-static bool (* s_fpEnumerateSessions)(bool (*)(AbstractCommSession *, void *), void *) = NULL;
+static bool (* s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = NULL;
 static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long) = NULL;
 static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32, time_t) = NULL;
 static CONDITION s_agentShutdownCondition = INVALID_CONDITION_HANDLE;
@@ -42,7 +42,7 @@ static const TCHAR *s_dataDirectory = NULL;
 void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
 														void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
 														void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
-														bool (* enumerateSessions)(bool (*)(AbstractCommSession *, void *), void*),
+														bool (* enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
 														bool (* sendFile)(void *, UINT32, const TCHAR *, long),
 														bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
                                           CONDITION shutdownCondition, Config *registry,
@@ -147,16 +147,14 @@ void LIBNXAGENT_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName
 }
 
 /**
- * Goes throught all sessions and executes
+ * Enumerates active agent sessions. Callback will be called for each valid session.
+ * Callback must return _STOP to stop enumeration or _CONTINUE to continue.
+ *
+ * @return true if enumeration was stopped by callback
  */
-bool LIBNXAGENT_EXPORTABLE EnumerateSessions(bool (* callback)(AbstractCommSession *, void *), void *data)
+bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void *), void *data)
 {
-   if (s_fpEnumerateSessions != NULL)
-   {
-      return s_fpEnumerateSessions(callback, data);
-   }
-   else
-      return false;
+   return (s_fpEnumerateSessions != NULL) ? s_fpEnumerateSessions(callback, data) : false;
 }
 
 /**

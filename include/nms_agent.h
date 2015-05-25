@@ -571,7 +571,7 @@ void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, v
 void LIBNXAGENT_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, const char *pszFormat, ...);
 void LIBNXAGENT_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList);
 
-bool LIBNXAGENT_EXPORTABLE EnumerateSessions(bool (* callback)(AbstractCommSession *, void *), void *data);
+bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void *), void *data);
 
 bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset);
 

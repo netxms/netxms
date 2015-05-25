@@ -518,6 +518,8 @@ bool OpenLocalDatabase();
 void CloseLocalDatabase();
 DB_HANDLE GetLocalDatabaseHandle();
 
+bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void* ), void *data);
+
 #ifdef _WIN32
 
 void InitService();

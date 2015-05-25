@@ -110,6 +110,31 @@ void UnregisterSession(UINT32 dwIndex)
 }
 
 /**
+ * Enumerates active agent sessions. Callback will be called for each valid session.
+ * Callback must return _STOP to stop enumeration or _CONTINUE to continue.
+ *
+ * @return true if enumeration was stopped by callback
+ */
+bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void *), void *data)
+{
+   bool result = false;
+   MutexLock(g_hSessionListAccess);
+   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   {
+      if (g_pSessionList[i] == NULL)
+         continue;
+
+      if (callback(g_pSessionList[i], data) == _STOP)
+      {
+         result = true;
+         break;
+      }
+   }
+   MutexUnlock(g_hSessionListAccess);
+   return result;
+}
+
+/**
  * TCP/IP Listener
  */ 
 THREAD_RESULT THREAD_CALL ListenerThread(void *)

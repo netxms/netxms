@@ -87,7 +87,7 @@ extern TCHAR g_windowsServiceDisplayName[];
 void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
 														 void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
 														 void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
-														 bool (* enumerateSessions)(bool (*)(AbstractCommSession *, void *), void*),
+														 bool (* enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
 														 bool (* sendFile)(void *, UINT32, const TCHAR *, long),
 														 bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
                                            CONDITION shutdownCondition, Config *registry,
@@ -655,25 +655,6 @@ static bool SendFileToServer(void *session, UINT32 requestId, const TCHAR *file,
 }
 
 /**
- * Goes throught sesion list and executs on each object handler while it returns true
- */
-static bool EnumerateSessionsBySubagent(bool (* pHandler)(AbstractCommSession *, void* ), void *data)
-{
-   bool ret = false;
-   MutexLock(g_hSessionListAccess);
-   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
-   {
-      if (!pHandler(g_pSessionList[i], data))
-      {
-         ret = true;
-         break;
-      }
-   }
-   MutexUnlock(g_hSessionListAccess);
-   return ret;
-}
-
-/**
  * Parser server list
  */
 static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
@@ -776,7 +757,7 @@ BOOL Initialize()
 
    // Initialize API for subagents
    s_subAgentsStopCondition = ConditionCreate(TRUE);
-   InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, EnumerateSessionsBySubagent, 
+   InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, EnumerateSessions, 
       SendFileToServer, PushData, s_subAgentsStopCondition, s_registry, SaveRegistry,
       g_szDataDirectory);
    DebugPrintf(INVALID_INDEX, 1, _T("Subagent API initialized"));

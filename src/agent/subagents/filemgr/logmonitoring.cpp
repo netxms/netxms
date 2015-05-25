@@ -123,7 +123,7 @@ void MonitoredFileList::Unlock()
 /**
  * Data for message sending callback
  */
-struct SendMessageData
+struct SendFileUpdateCallbackData
 {
    InetAddress ip;
    NXCPMessage *pMsg;
@@ -132,14 +132,14 @@ struct SendMessageData
 /**
  * Callback to send message to agent communication session's peer
  */
-static bool SendMessage(AbstractCommSession *session, void *data)
+static EnumerationCallbackResult SendFileUpdateCallback(AbstractCommSession *session, void *data)
 {
-   if (session != NULL && ((SendMessageData *)data)->ip.equals(session->getServerAddress()))
+   if (((SendFileUpdateCallbackData *)data)->ip.equals(session->getServerAddress()))
    {
-      session->sendMessage(((SendMessageData *)data)->pMsg);
-      return false;
+      session->sendMessage(((SendFileUpdateCallbackData *)data)->pMsg);
+      return _STOP;
    }
-   return true;
+   return _CONTINUE;
 };
 
 /**
@@ -200,11 +200,11 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
 #endif
             flData->setOffset(newOffset);
 
-            SendMessageData data;
+            SendFileUpdateCallbackData data;
             data.ip = flData->getServerAddress();
             data.pMsg = pMsg;
 
-            bool sent = EnumerateSessions(SendMessage, &data);
+            bool sent = AgentEnumerateSessions(SendFileUpdateCallback, &data);
 
             if (!sent)
             {
