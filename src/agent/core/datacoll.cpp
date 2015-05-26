@@ -292,7 +292,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *arg)
    DebugPrintf(INVALID_INDEX, 1, _T("Data collector thread started"));
 
    UINT32 sleepTime = DataCollectionRun();
-   while(!AgentSleepAndCheckForShutdown(sleepTime))
+   while(!AgentSleepAndCheckForShutdown(sleepTime * 1000))
    {
       sleepTime = DataCollectionRun();
       DebugPrintf(INVALID_INDEX, 7, _T("DataCollector: sleeping for %d seconds"), sleepTime);
