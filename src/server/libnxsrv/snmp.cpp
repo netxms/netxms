@@ -274,9 +274,8 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport
          }
          else
          {
-            if (pRespPDU->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME)
-               dwResult = SNMP_ERR_NO_OBJECT;
-            else
+            // Some SNMP agents sends NO_SUCH_NAME PDU error after last element in MIB
+            if (pRespPDU->getErrorCode() != SNMP_PDU_ERR_NO_SUCH_NAME)
                dwResult = SNMP_ERR_AGENT;
             bRunning = FALSE;
          }
