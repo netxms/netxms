@@ -6726,7 +6726,8 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
          msg.setField(fieldId++, (INT16)dco->getDataSource());
          msg.setField(fieldId++, dco->getName());
          msg.setField(fieldId++, (INT32)dco->getPollingInterval());
-         fieldId += 5;
+         msg.setFieldFromTime(fieldId++, dco->getLastPollTime());
+         fieldId += 4;
          count++;
       }
    }

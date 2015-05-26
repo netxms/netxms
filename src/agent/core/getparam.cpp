@@ -483,17 +483,17 @@ BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList) //to
 /**
  * Get parameter's value
  */
-UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue, AbstractCommSession *session)
+UINT32 GetParameterValue(UINT32 sessionId, const TCHAR *param, TCHAR *value, AbstractCommSession *session)
 {
    int i, rc;
    UINT32 dwErrorCode;
 
-   DebugPrintf(dwSessionId, 5, _T("Requesting parameter \"%s\""), pszParam);
+   DebugPrintf(sessionId, 5, _T("Requesting parameter \"%s\""), param);
    for(i = 0; i < m_iNumParams; i++)
 	{
-      if (MatchString(m_pParamList[i].name, pszParam, FALSE))
+      if (MatchString(m_pParamList[i].name, param, FALSE))
       {
-         rc = m_pParamList[i].handler(pszParam, m_pParamList[i].arg, pszValue, session);
+         rc = m_pParamList[i].handler(param, m_pParamList[i].arg, value, session);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
@@ -509,7 +509,7 @@ UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue, A
                m_dwUnsupportedRequests++;
                break;
             default:
-               nxlog_write(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, pszParam);
+               nxlog_write(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, param);
                dwErrorCode = ERR_INTERNAL_ERROR;
                m_dwFailedRequests++;
                break;
@@ -520,7 +520,7 @@ UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue, A
 
    if (i == m_iNumParams)
    {
-		rc = GetParameterValueFromExtProvider(pszParam, pszValue);
+		rc = GetParameterValueFromExtProvider(param, value);
 		if (rc == SYSINFO_RC_SUCCESS)
 		{
          dwErrorCode = ERR_SUCCESS;
@@ -534,7 +534,7 @@ UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue, A
 
    if ((dwErrorCode == ERR_UNKNOWN_PARAMETER) && (i == m_iNumParams))
    {
-		dwErrorCode = GetParameterValueFromAppAgent(pszParam, pszValue);
+		dwErrorCode = GetParameterValueFromAppAgent(param, value);
 		if (dwErrorCode == ERR_SUCCESS)
 		{
          m_dwProcessedRequests++;
@@ -547,7 +547,7 @@ UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue, A
 
    if ((dwErrorCode == ERR_UNKNOWN_PARAMETER) && (i == m_iNumParams))
    {
-		dwErrorCode = GetParameterValueFromExtSubagent(pszParam, pszValue);
+		dwErrorCode = GetParameterValueFromExtSubagent(param, value);
 		if (dwErrorCode == ERR_SUCCESS)
 		{
          m_dwProcessedRequests++;
@@ -562,7 +562,7 @@ UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue, A
 		}
    }
 
-	DebugPrintf(dwSessionId, 7, _T("GetParameterValue(): result is %d (%s)"), (int)dwErrorCode,
+	DebugPrintf(sessionId, 7, _T("GetParameterValue(): result is %d (%s)"), (int)dwErrorCode,
 		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : _T("INTERNAL_ERROR")));
    return dwErrorCode;
 }
@@ -570,17 +570,17 @@ UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue, A
 /**
  * Get list's value
  */
-UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue, AbstractCommSession *session)
+UINT32 GetListValue(UINT32 sessionId, const TCHAR *param, StringList *value, AbstractCommSession *session)
 {
    int i, rc;
    UINT32 dwErrorCode;
 
-   DebugPrintf(dwSessionId, 5, _T("Requesting list \"%s\""), pszParam);
+   DebugPrintf(sessionId, 5, _T("Requesting list \"%s\""), param);
    for(i = 0; i < m_iNumEnums; i++)
 	{
-      if (MatchString(m_pEnumList[i].name, pszParam, FALSE))
+      if (MatchString(m_pEnumList[i].name, param, FALSE))
       {
-         rc = m_pEnumList[i].handler(pszParam, m_pEnumList[i].arg, pValue, session);
+         rc = m_pEnumList[i].handler(param, m_pEnumList[i].arg, value, session);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
@@ -596,7 +596,7 @@ UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue, Abs
                m_dwUnsupportedRequests++;
                break;
             default:
-               nxlog_write(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, pszParam);
+               nxlog_write(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, param);
                dwErrorCode = ERR_INTERNAL_ERROR;
                m_dwFailedRequests++;
                break;
@@ -607,7 +607,7 @@ UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue, Abs
 
 	if (i == m_iNumEnums)
    {
-		dwErrorCode = GetListValueFromExtSubagent(pszParam, pValue);
+		dwErrorCode = GetListValueFromExtSubagent(param, value);
 		if (dwErrorCode == ERR_SUCCESS)
 		{
          m_dwProcessedRequests++;
@@ -622,7 +622,7 @@ UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue, Abs
 		}
    }
 
-	DebugPrintf(dwSessionId, 7, _T("GetListValue(): result is %d (%s)"), (int)dwErrorCode,
+	DebugPrintf(sessionId, 7, _T("GetListValue(): result is %d (%s)"), (int)dwErrorCode,
 		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : _T("INTERNAL_ERROR")));
    return dwErrorCode;
 }
@@ -630,17 +630,17 @@ UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue, Abs
 /**
  * Get table's value
  */
-UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue, AbstractCommSession *session)
+UINT32 GetTableValue(UINT32 sessionId, const TCHAR *param, Table *value, AbstractCommSession *session)
 {
    int i, rc;
    UINT32 dwErrorCode;
 
-   DebugPrintf(dwSessionId, 5, _T("Requesting table \"%s\""), pszParam);
+   DebugPrintf(sessionId, 5, _T("Requesting table \"%s\""), param);
    for(i = 0; i < m_iNumTables; i++)
 	{
-      if (MatchString(m_pTableList[i].name, pszParam, FALSE))
+      if (MatchString(m_pTableList[i].name, param, FALSE))
       {
-         rc = m_pTableList[i].handler(pszParam, m_pTableList[i].arg, pValue, session);
+         rc = m_pTableList[i].handler(param, m_pTableList[i].arg, value, session);
          switch(rc)
          {
             case SYSINFO_RC_SUCCESS:
@@ -656,7 +656,7 @@ UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue, Abstrac
                m_dwUnsupportedRequests++;
                break;
             default:
-               nxlog_write(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, pszParam);
+               nxlog_write(MSG_UNEXPECTED_IRC, EVENTLOG_ERROR_TYPE, "ds", rc, param);
                dwErrorCode = ERR_INTERNAL_ERROR;
                m_dwFailedRequests++;
                break;
@@ -667,7 +667,7 @@ UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue, Abstrac
 
 	if (i == m_iNumTables)
    {
-		dwErrorCode = GetTableValueFromExtSubagent(pszParam, pValue);
+		dwErrorCode = GetTableValueFromExtSubagent(param, value);
 		if (dwErrorCode == ERR_SUCCESS)
 		{
          m_dwProcessedRequests++;
@@ -682,7 +682,7 @@ UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue, Abstrac
 		}
    }
 
-	DebugPrintf(dwSessionId, 7, _T("GetTableValue(): result is %d (%s)"), (int)dwErrorCode,
+	DebugPrintf(sessionId, 7, _T("GetTableValue(): result is %d (%s)"), (int)dwErrorCode,
 		dwErrorCode == ERR_SUCCESS ? _T("SUCCESS") : (dwErrorCode == ERR_UNKNOWN_PARAMETER ? _T("UNKNOWN_PARAMETER") : _T("INTERNAL_ERROR")));
    return dwErrorCode;
 }

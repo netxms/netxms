@@ -67,6 +67,9 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *);
 void ShutdownTrapSender();
 void ShutdownSNMPTrapSender();
 
+void StartLocalDataCollector();
+void ShutdownLocalDataCollector();
+
 void StartWatchdog();
 void StopWatchdog();
 int WatchdogMain(DWORD pid);
@@ -984,7 +987,7 @@ BOOL Initialize()
 
 	s_eventSenderThread = ThreadCreateEx(TrapSender, 0, NULL);
 
-	//Start trap proxy threads(recieve and send), if trap proxy is enabled
+	// Start trap proxy threads(recieve and send), if trap proxy is enabled
 	if(g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
 	{
       s_snmpTrapSenderThread = ThreadCreateEx(SNMPTrapSender, 0, NULL);
@@ -998,6 +1001,7 @@ BOOL Initialize()
 	else
 	{
 		// Start network listener and session watchdog
+      StartLocalDataCollector();
 		s_listenerThread = ThreadCreateEx(ListenerThread, 0, NULL);
 		s_sessionWatchdogThread = ThreadCreateEx(SessionWatchdog, 0, NULL);
 		StartPushConnector();
@@ -1059,6 +1063,7 @@ void Shutdown()
 	}
 	else
 	{
+      ShutdownLocalDataCollector();
 		ShutdownTrapSender();
 		ThreadJoin(s_sessionWatchdogThread);
 		ThreadJoin(s_listenerThread);

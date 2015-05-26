@@ -554,6 +554,18 @@ void CommSession::processingThread()
                DebugPrintf(m_dwIndex, 1, _T("Server ID set to ") UINT64X_FMT(_T("016")), m_serverId);
                msg.setField(VID_RCC, ERR_SUCCESS);
                break;
+            case CMD_DATA_COLLECTION_CONFIG:
+               if (m_serverId != 0)
+               {
+                  ConfigureDataCollection(m_serverId, pMsg);
+                  msg.setField(VID_RCC, ERR_SUCCESS);
+               }
+               else
+               {
+                  DebugPrintf(m_dwIndex, 1, _T("Data collection configuration command received but server ID is not set"));
+                  msg.setField(VID_RCC, ERR_SERVER_ID_UNSET);
+               }
+               break;
             default:
                // Attempt to process unknown command by subagents
                if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg, this))

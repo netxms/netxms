@@ -104,6 +104,7 @@
 #define ERR_MEM_ALLOC_FAILED        ((UINT32)917)
 #define ERR_FILE_DELETE_FAILED      ((UINT32)918)
 #define ERR_NO_SESSION_AGENT        ((UINT32)919)
+#define ERR_SERVER_ID_UNSET         ((UINT32)920)
 
 /**
  * Parameter handler return codes
