@@ -891,9 +891,11 @@ void CommSession::updateConfig(NXCPMessage *pRequest, NXCPMessage *pMsg)
 							i--;
                   }
             }
-            write(hFile, pConfig, size);
+            if (write(hFile, pConfig, size) == size)
+               pMsg->setField(VID_RCC, ERR_SUCCESS);
+            else
+               pMsg->setField(VID_RCC, ERR_IO_FAILURE);
             close(hFile);
-            pMsg->setField(VID_RCC, ERR_SUCCESS);
          }
          else
          {

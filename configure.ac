@@ -532,6 +532,7 @@ AC_ARG_WITH(tests,
 # LD_RUN_PATH ignored by linker and some tests may fail
 #--------------------------------------------------------------------
 
+export LD_RUN_PATH
 if test "x$LD_RUN_PATH" != "x"; then
 	LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}${LD_RUN_PATH}"
 	export LD_LIBRARY_PATH
@@ -2329,9 +2330,6 @@ if test "x$ac_found_iconv" = "xyes"; then
     [Define as const if the declaration of iconv() needs const.])
 fi
 
-AC_MSG_CHECKING(if iconv descriptor cache is needed)
-
-
 if test "x$ac_cv_type_wchar_t" = "xyes"; then
 	if test $ac_cv_sizeof_wchar_t -eq 2; then
 		AC_DEFINE(UNICODE_UCS2, 1, Define to 1 if you have 2-byte wchar_t)
@@ -2471,9 +2469,12 @@ if test $? = 0; then
 	fi
 
 	AC_CHECK_HEADER(oci.h,,AC_MSG_ERROR([*** Cannot find oci.h - check your Oracle client installation ***]))
-	AC_CHECK_LIB(nnz11, nzstrcpy, [NNZ_LIB=-lnnz11],
+	AC_CHECK_LIB(nnz12, nzstrcpy, [NNZ_LIB=-lnnz12],
 		[
-			AC_CHECK_LIB(nnz10, nzstrcpy, [NNZ_LIB=-lnnz10], [], [-lclntsh])
+			AC_CHECK_LIB(nnz11, nzstrcpy, [NNZ_LIB=-lnnz11],
+				[
+					AC_CHECK_LIB(nnz10, nzstrcpy, [NNZ_LIB=-lnnz10], [], [-lclntsh])
+				], [-lclntsh])
 		], [-lclntsh])
 	AC_CHECK_LIB(clntsh, OCIHandleAlloc, [ORACLE_LIBS="-lclntsh $NNZ_LIB"],
 		[AC_MSG_ERROR(libclntsh is required for Oracle support)], [$NNZ_LIB])

@@ -71,7 +71,7 @@ static struct
    { ERR_MEM_ALLOC_FAILED, _T("Memory allocation failed") },
    { ERR_FILE_DELETE_FAILED, _T("File delete failed") },
    { ERR_NO_SESSION_AGENT, _T("Session agent not available") },
-   { ERR_SERVER_ID_UNSET _T("Server ID is not set") },
+   { ERR_SERVER_ID_UNSET, _T("Server ID is not set") },
    { -1, NULL }
 };
 
