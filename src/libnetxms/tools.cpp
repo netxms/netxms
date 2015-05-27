@@ -892,11 +892,9 @@ void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr,
    *pszDst = 0;
 }
 
-
-//
-// Get size of file in bytes
-//
-
+/**
+ * Get size of file in bytes
+ */
 QWORD LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName)
 {
 #ifdef _WIN32
@@ -921,6 +919,9 @@ QWORD LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName)
 #endif
 }
 
+/**
+ * Get size of file in bytes
+ */
 QWORD LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName)
 {
 #ifdef _WIN32
