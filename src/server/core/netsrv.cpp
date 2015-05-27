@@ -357,7 +357,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
       sendPollerMsg(rqId, _T("      Polling service from node %s [%s]\r\n"),
                     pNode->getName(), pNode->getIpAddress().toString(szBuffer));
       if (pNode->checkNetworkService(&dwStatus,
-                                     m_ipAddress.isValid() ? m_ipAddress : m_hostNode->getIpAddress(),
+                                     m_ipAddress.isValidUnicast() ? m_ipAddress : m_hostNode->getIpAddress(),
                                      m_serviceType, m_port, m_proto,
                                      m_request, m_response, &m_responseTime) == ERR_SUCCESS)
       {
