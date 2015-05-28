@@ -46,7 +46,7 @@ private:
 public:
    DataCollectionItem(UINT64 serverId, NXCPMessage *msg, UINT32 baseId);
    DataCollectionItem(DB_RESULT hResult, int row);
-   DataCollectionItem(DataCollectionItem *item);
+   DataCollectionItem(const DataCollectionItem *item);
    virtual ~DataCollectionItem();
 
    UINT32 getId() { return m_id; }
@@ -54,8 +54,8 @@ public:
    const TCHAR *getName() { return m_name; }
    int getType() { return (int)m_type; }
    int getOrigin() { return (int)m_origin; }
-   bool equals(DataCollectionItem *item);
-   void updateAndSave(DataCollectionItem *item);
+   bool equals(const DataCollectionItem *item);
+   void updateAndSave(const DataCollectionItem *item);
    void saveToDatabase(bool newObject);
    void deleteFromDatabase();
    void setLastPollTime(time_t time);
@@ -103,7 +103,7 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
 /**
  * Copy constructor
  */
- DataCollectionItem::DataCollectionItem(DataCollectionItem *item)
+ DataCollectionItem::DataCollectionItem(const DataCollectionItem *item)
  {
    m_serverId = item->m_serverId;
    m_id = item->m_id;
@@ -124,7 +124,7 @@ DataCollectionItem::~DataCollectionItem()
    safe_free(m_name);
 }
 
-bool DataCollectionItem::equals(DataCollectionItem *item)
+bool DataCollectionItem::equals(const DataCollectionItem *item)
 {
    if(m_serverId == item->m_serverId && m_id == item->m_id)
       return true;
@@ -135,11 +135,11 @@ bool DataCollectionItem::equals(DataCollectionItem *item)
  * Will check if object has changed. If at least one field is changed - all data will be updated and
  * saved to database.
  */
-void DataCollectionItem::updateAndSave(DataCollectionItem *item)
+void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
 {
    //if at leas one of fields changed - set all fields and save to DB
    if(m_type != item->m_type || m_origin != item->m_origin || _tcscmp(m_name, item->m_name) != 0 ||
-      m_pollingInterval != item->m_pollingInterval || uuid_compare(m_snmpTargetGuid, item->m_snmpTargetGuid)!= 0 ||
+      m_pollingInterval != item->m_pollingInterval || uuid_compare(m_snmpTargetGuid, (unsigned char*)item->m_snmpTargetGuid)!= 0 ||
       m_snmpPort != item->m_snmpPort)
    {
       m_type = item->m_type;
@@ -171,9 +171,9 @@ void DataCollectionItem::saveToDatabase(bool newObject)
    else
    {
       hStmt = DBPrepare(db,
-                    _T("UPDATE dc_config SET type=?,origin=?,name=?")
-                    _T("polling_interval=?,last_poll=?,snmp_port=?")
-                    _T("snmp_target_guid=? WHERE server_id=? dci_id=?"));
+                    _T("UPDATE dc_config SET type=?,origin=?,name=?,")
+                    _T("polling_interval=?,last_poll=?,snmp_port=?,")
+                    _T("snmp_target_guid=? WHERE server_id=? AND dci_id=?"));
    }
 
 	if (hStmt == NULL)
@@ -228,8 +228,14 @@ void DataCollectionItem::deleteFromDatabase()
 void DataCollectionItem::setLastPollTime(time_t time)
 {
    m_pollingInterval = time;
+   DB_HANDLE db = GetLocalDatabaseHandle();
    TCHAR query[256];
    _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=%d WHERE server_id=%ld AND dci_id=%d"), (int)m_lastPollTime, m_serverId, m_id);
+   if(!DBQuery(db, query))
+   {
+      DebugPrintf(INVALID_INDEX, 2, _T("DataCollectionItem::setLastPollTime: error wile updating object(serverId=%ld,dciId=%d) last poll time"),
+                  m_serverId, m_id);
+   }
 }
 
 /**
@@ -294,12 +300,74 @@ public:
    }
 
    time_t getTimestamp() { return m_timestamp; }
+   UINT64 getServerId() { return m_serverId; }
+   void saveToDatabase();
+   bool sendToServer();
 };
+
+/**
+ *
+ */
+void DataElement::saveToDatabase()
+{
+   /* TODO: implement */
+}
+
+bool DataElement::sendToServer()
+{
+   /* TODO: implement */
+   return true;
+}
+
+/**
+ * Information about
+ */
+class ServerQueueInfo
+{
+private:
+   UINT64 m_serverId;
+   bool m_saveToDatabase;
+
+public:
+   ServerQueueInfo(UINT64 serverId){ m_serverId = serverId; m_saveToDatabase = false; }
+   bool equals(const UINT64 serverId) {return serverId == m_serverId; }
+   bool saveToDatabase() { return m_saveToDatabase; }
+   void setSaveToDatabase(bool saveToDB) { m_saveToDatabase = saveToDB; }
+};
+
+/**
+ * Server queue information, mutex lock for info, resend que reference
+ */
+static ObjectArray<ServerQueueInfo> s_serversInfo(5, 5, false);
+static MUTEX s_serverInfoLock = INVALID_MUTEX_HANDLE;
+static THREAD s_dataReconnectThread = INVALID_THREAD_HANDLE;
 
 /**
  * Data sender queue
  */
 static Queue s_dataSenderQueue;
+
+/**
+ * This method will find info about session or create new object and add it to structure.
+ * s_serverInfoLock should be locked before this function execution.
+ */
+static ServerQueueInfo *FindServerInfo(UINT64 serverId)
+{
+   ServerQueueInfo *info = NULL;
+   for(int i=0; i < s_serversInfo.size(); i++)
+   {
+      if(s_serversInfo.get(i)->equals(serverId))
+      {
+         info = s_serversInfo.get(i);
+      }
+   }
+   if(info == NULL)
+   {
+      info = new ServerQueueInfo(serverId);
+      s_serversInfo.add(info);
+   }
+   return info;
+}
 
 /**
  * Data sender
@@ -312,6 +380,23 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
       DataElement *e = (DataElement *)s_dataSenderQueue.GetOrBlock();
       if (e == INVALID_POINTER_VALUE)
          break;
+
+      MutexLock(s_serverInfoLock);
+      ServerQueueInfo *info = FindServerInfo(e->getServerId());
+      if(!info->saveToDatabase())
+      {
+         if(!e->sendToServer())
+         {
+            e->saveToDatabase();
+            info->setSaveToDatabase(true);
+            /* TODO: start thread that will check if connection is restored */
+         }
+      }
+      else
+      {
+         e->saveToDatabase();
+      }
+      MutexUnlock(s_serverInfoLock);
 
       delete e;
    }
@@ -386,7 +471,7 @@ DataElement *CollectDataFromSNMP(DataCollectionItem *dci)
 /**
  * List of all data collection items
  */
-static ObjectArray<DataCollectionItem> s_items(64, 64, false);
+static ObjectArray<DataCollectionItem> s_items(64, 64, true);
 static MUTEX s_itemLock = INVALID_MUTEX_HANDLE;
 
 /**
@@ -499,6 +584,9 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    for(int i = 0; i < s_items.size(); i++)
    {
       DataCollectionItem *item = s_items.get(i);
+      //If item is from other server, then, do not search it in list of this server
+      if(item->getServerId() != serverId)
+         continue;
       bool exist = false;
       for(int j = 0; j < config.size(); j++)
       {
@@ -610,6 +698,7 @@ void StartLocalDataCollector()
    /* TODO: add reading form database snmp_targets table */
 
    s_itemLock = MutexCreate();
+   s_serverInfoLock = MutexCreate();
    s_dataCollectorThread = ThreadCreateEx(DataCollector, 0, NULL);
    s_dataSenderThread = ThreadCreateEx(DataSender, 0, NULL);
 }
@@ -626,5 +715,13 @@ void ShutdownLocalDataCollector()
    s_dataSenderQueue.Put(INVALID_POINTER_VALUE);
    ThreadJoin(s_dataSenderThread);
 
+
+   if(s_dataReconnectThread != INVALID_THREAD_HANDLE)
+   {
+      DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data sender resumption thread termination"));
+      ThreadJoin(s_dataReconnectThread);
+   }
+
    MutexDestroy(s_itemLock);
+   MutexDestroy(s_serverInfoLock);
 }
