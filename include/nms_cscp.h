@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -196,8 +196,10 @@ typedef struct
    } value;
 } DCI_DATA_ROW;
 
-#ifdef __HP_aCC
+#if defined(__HP_aCC)
 #pragma pack
+#elif defined(_AIX) && !defined(__GNUC__)
+#pragma pack(pop)
 #else
 #pragma pack()
 #endif
