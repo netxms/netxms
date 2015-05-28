@@ -22,7 +22,7 @@ EXTRA_DIST = \
 	TableColumn.h \
 	TableParameter.h
 
-SUBDIRS = java
+SUBDIRS = java sample
 
 if !STATIC_BUILD
 install-exec-hook:
