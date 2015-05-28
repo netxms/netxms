@@ -40,11 +40,11 @@ static DB_HANDLE s_db = NULL;
 /**
  * Read metadata
  */
-static TCHAR *ReadMetadata(const TCHAR *attr, TCHAR *buffer)
+TCHAR *ReadMetadata(const TCHAR *attr, TCHAR *buffer)
 {
    TCHAR query[256], *value = NULL;
    _sntprintf(query, 256, _T("SELECT value FROM metadata WHERE attribute='%s'"), attr);
-   
+
    DB_RESULT hResult = DBSelect(s_db, query);
    if (hResult != NULL)
    {
@@ -57,7 +57,7 @@ static TCHAR *ReadMetadata(const TCHAR *attr, TCHAR *buffer)
 /**
  * Read integer from metadata
  */
-static int ReadMetadataAsInt(const TCHAR *attr)
+int ReadMetadataAsInt(const TCHAR *attr)
 {
    TCHAR buffer[MAX_DB_STRING];
    if (ReadMetadata(attr, buffer) == NULL)

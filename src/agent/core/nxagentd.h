@@ -517,6 +517,9 @@ UINT32 GenerateMessageId();
 bool OpenLocalDatabase();
 void CloseLocalDatabase();
 DB_HANDLE GetLocalDatabaseHandle();
+int ReadMetadataAsInt(const TCHAR *attr);
+TCHAR *ReadMetadata(const TCHAR *attr, TCHAR *buffer);
+
 
 void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg);
 
