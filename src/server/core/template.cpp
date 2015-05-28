@@ -911,6 +911,8 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
    // Cleanup
    free(pdwItemList);
 
+   target->onDataCollectionChange();
+
    // Queue update if target is a cluster
    if (target->getObjectClass() == OBJECT_CLUSTER)
    {
