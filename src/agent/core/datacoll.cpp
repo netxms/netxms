@@ -188,8 +188,8 @@ void DataCollectionItem::saveToDatabase(bool newObject)
 	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_pollingInterval);
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_lastPollTime);
-   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, uuid_to_string(m_snmpTargetGuid, buffer), DB_BIND_STATIC);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_snmpPort);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_snmpPort);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, uuid_to_string(m_snmpTargetGuid, buffer), DB_BIND_STATIC);
 	DBBind(hStmt, 8, DB_SQLTYPE_BIGINT, (LONG)m_serverId);
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_id);
 
