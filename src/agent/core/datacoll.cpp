@@ -581,10 +581,18 @@ void StartLocalDataCollector()
    int dbVersion = ReadMetadataAsInt(_T("DatacollSchemaVersion"));
    while(DATACOLL_SCHEMA_VERSION > dbVersion)
    {
-      DBQuery(db, Update[dbVersion]);
+      bool result = DBQuery(db, Update[dbVersion]);
       TCHAR query[256];
       _sntprintf(query, 256, _T("INSERT INTO metadata (attribute, value) VALUES ('DatacollSchemaVersion', '%d')"), ++dbVersion);
-      DBQuery(db, query);
+      if(result)
+      {
+         DBQuery(db, query);
+      }
+      else
+      {
+         DebugPrintf(INVALID_INDEX, 5, _T("StartLocalDataCollector: Not possible to upgdate database for Data Collector. Collection not started."));
+         return;
+      }
    }
 
    LoadConfiguration();
