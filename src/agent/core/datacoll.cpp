@@ -58,6 +58,7 @@ public:
    void updateAndSave(DataCollectionItem *item);
    void saveToDatabase(bool newObject);
    void deleteFromDatabase();
+   void setLastPollTime(time_t time);
 
    UINT32 getTimeToNextPoll(time_t now)
    {
@@ -224,6 +225,13 @@ void DataCollectionItem::deleteFromDatabase()
    }
 }
 
+void DataCollectionItem::setLastPollTime(time_t time)
+{
+   m_pollingInterval = time;
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=%d WHERE server_id=%ld AND dci_id=%d"), (int)m_lastPollTime, m_serverId, m_id);
+}
+
 /**
  * Collected data
  */
@@ -284,6 +292,8 @@ public:
             break;
       }
    }
+
+   time_t getTimestamp() { return m_timestamp; }
 };
 
 /**
@@ -412,6 +422,7 @@ static UINT32 DataCollectionRun()
 
          if (e != NULL)
          {
+            dci->setLastPollTime(e->getTimestamp());
             s_dataSenderQueue.Put(e);
          }
          else
