@@ -190,10 +190,10 @@ void DataCollectionItem::saveToDatabase(bool newObject)
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_lastPollTime);
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_snmpPort);
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, uuid_to_string(m_snmpTargetGuid, buffer), DB_BIND_STATIC);
-	DBBind(hStmt, 8, DB_SQLTYPE_BIGINT, (LONG)m_serverId);
+	DBBind(hStmt, 8, DB_SQLTYPE_BIGINT, m_serverId);
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_id);
 
-   if( DBExecute(hStmt))
+   if(!DBExecute(hStmt))
    {
       DebugPrintf(INVALID_INDEX, 2, _T("DataCollectionItem::saveToDatabase: not possible to save %s object(serverId=%ld,dciId=%d) to database"),
                   newObject ? _T("new") : _T("existing"), m_serverId, m_id);
@@ -209,13 +209,13 @@ void DataCollectionItem::deleteFromDatabase()
    m_serverId, m_id);
    DB_HANDLE db = GetLocalDatabaseHandle();
    TCHAR query[256];
-   _sntprintf(query, 256, _T("DELETE FROM dc_config WHERE server_id=%ld, dci_id=%d"), m_serverId, m_id);
+   _sntprintf(query, 256, _T("DELETE FROM dc_config WHERE server_id=%ld AND dci_id=%d"), m_serverId, m_id);
    if(!DBQuery(db, query))
    {
       DebugPrintf(INVALID_INDEX, 2, _T("DataCollectionItem::deleteFromDatabase: error wile removing object(serverId=%ld,dciId=%d) from dc_config database table"),
                   m_serverId, m_id);
    }
-   _sntprintf(query, 256, _T("DELETE FROM dc_queue WHERE server_id=%ld, dci_id=%d"), m_serverId, m_id);
+   _sntprintf(query, 256, _T("DELETE FROM dc_queue WHERE server_id=%ld AND dci_id=%d"), m_serverId, m_id);
    if(!DBQuery(db, query))
    {
       DebugPrintf(INVALID_INDEX, 2, _T("DataCollectionItem::deleteFromDatabase: error wile removing object(serverId=%ld,dciId=%d) from dc_queue database table"),
