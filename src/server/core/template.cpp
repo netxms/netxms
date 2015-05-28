@@ -51,6 +51,7 @@ Template::Template() : NetObj()
 	m_applyFilterSource = NULL;
    m_iStatus = STATUS_NORMAL;
    m_dciAccessLock = RWLockCreate();
+   m_dciListModified = false;
 }
 
 /**
@@ -68,6 +69,7 @@ Template::Template(const TCHAR *pszName) : NetObj()
    m_iStatus = STATUS_NORMAL;
    m_isHidden = true;
    m_dciAccessLock = RWLockCreate();
+   m_dciListModified = false;
 }
 
 /**
@@ -79,6 +81,7 @@ Template::Template(ConfigEntry *config) : NetObj()
    m_dciLockStatus = -1;
    m_iStatus = STATUS_NORMAL;
    m_dciAccessLock = RWLockCreate();
+   m_dciListModified = false;
 
 	// Name and version
 	nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
@@ -588,50 +591,56 @@ bool Template::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus
 /**
  * Lock data collection items list
  */
-BOOL Template::lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner)
+bool Template::lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner)
 {
-   BOOL bSuccess;
+   bool success;
 
    lockProperties();
    if (m_dciLockStatus == -1)
    {
       m_dciLockStatus = sessionId;
-      m_bDCIListModified = FALSE;
+      m_dciListModified = false;
       nx_strncpy(m_szCurrDCIOwner, pszNewOwner, MAX_SESSION_NAME);
-      bSuccess = TRUE;
+      success = true;
    }
    else
    {
       if (pszCurrOwner != NULL)
          _tcscpy(pszCurrOwner, m_szCurrDCIOwner);
-      bSuccess = FALSE;
+      success = false;
    }
    unlockProperties();
-   return bSuccess;
+   return success;
 }
 
 /**
  * Unlock data collection items list
  */
-BOOL Template::unlockDCIList(int sessionId)
+bool Template::unlockDCIList(int sessionId)
 {
-   BOOL bSuccess = FALSE;
+   bool success = false;
+   bool callChangeHook = false;
 
    lockProperties();
    if (m_dciLockStatus == sessionId)
    {
       m_dciLockStatus = -1;
-      if (m_bDCIListModified)
+      if (m_dciListModified)
       {
          if (getObjectClass() == OBJECT_TEMPLATE)
             m_dwVersion++;
          setModified();
+         callChangeHook = true;
       }
-      m_bDCIListModified = FALSE;
-      bSuccess = TRUE;
+      m_dciListModified = false;
+      success = true;
    }
    unlockProperties();
-   return bSuccess;
+
+   if (callChangeHook)
+      onDataCollectionChange();
+
+   return success;
 }
 
 /**
@@ -1179,4 +1188,11 @@ UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool ov
 
    unlockDciAccess();
    return RCC_SUCCESS;
+}
+
+/**
+ * Called when data collection configuration changed
+ */
+void Template::onDataCollectionChange()
+{
 }

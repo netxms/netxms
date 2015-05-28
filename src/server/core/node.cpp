@@ -3287,9 +3287,9 @@ bool Node::connectToSMCLP()
 /**
  * Connect to native agent. Assumes that access to agent connection is already locked.
  */
-BOOL Node::connectToAgent(UINT32 *error, UINT32 *socketError)
+bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnection)
 {
-   BOOL bRet;
+   bool success;
 
    // Create new agent connection object if needed
    if (m_pAgentConnection == NULL)
@@ -3303,6 +3303,8 @@ BOOL Node::connectToAgent(UINT32 *error, UINT32 *socketError)
 		if (m_pAgentConnection->nop() == ERR_SUCCESS)
 		{
 			DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): already connected"), m_name, m_id);
+         if (newConnection != NULL)
+            *newConnection = false;
 			return TRUE;
 		}
 
@@ -3310,12 +3312,14 @@ BOOL Node::connectToAgent(UINT32 *error, UINT32 *socketError)
 		m_pAgentConnection->disconnect();
 		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): existing connection reset"), m_name, m_id);
 	}
+   if (newConnection != NULL)
+      *newConnection = true;
    m_pAgentConnection->setPort(m_agentPort);
    m_pAgentConnection->setAuthData(m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(m_pAgentConnection);
 	DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
-   bRet = m_pAgentConnection->connect(g_pServerKey, FALSE, error, socketError);
-   if (bRet)
+   success = m_pAgentConnection->connect(g_pServerKey, FALSE, error, socketError);
+   if (success)
 	{
 		m_pAgentConnection->setCommandTimeout(g_agentCommandTimeout);
       UINT32 rcc = m_pAgentConnection->setServerId(g_serverId);
@@ -3330,7 +3334,7 @@ BOOL Node::connectToAgent(UINT32 *error, UINT32 *socketError)
       m_pAgentConnection->enableTraps();
       CALL_ALL_MODULES(pfOnConnectToAgent, (this, m_pAgentConnection));
 	}
-   return bRet;
+   return success;
 }
 
 /**
@@ -6746,4 +6750,19 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
       DbgPrintf(4, _T("SyncDataCollection: node %s [%d] synchronized"), m_name, (int)m_id);
    else
       DbgPrintf(4, _T("SyncDataCollection: node %s [%d] not synchronized (%s)"), m_name, (int)m_id, AgentErrorCodeToText(rcc));
+}
+
+/**
+ * Called when data collection configuration changed
+ */
+void Node::onDataCollectionChange()
+{
+   DataCollectionTarget::onDataCollectionChange();
+
+   bool newConnection;
+   if (connectToAgent(NULL, NULL, &newConnection))
+   {
+      if (!newConnection)
+         syncDataCollectionWithAgent(m_pAgentConnection);
+   }
 }

@@ -593,7 +593,7 @@ protected:
    int m_dciLockStatus;
    UINT32 m_dwVersion;
 	UINT32 m_flags;
-   BOOL m_bDCIListModified;
+   bool m_dciListModified;
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 	TCHAR *m_applyFilterSource;
 	NXSL_VM *m_applyFilter;
@@ -603,6 +603,8 @@ protected:
 
    virtual void fillMessageInternal(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
+   virtual void onDataCollectionChange();
 
    void loadItemsFromDB();
    void destroyItems();
@@ -643,9 +645,9 @@ public:
    DCObject *getDCObjectByName(const TCHAR *name);
    DCObject *getDCObjectByDescription(const TCHAR *description);
    NXSL_Value *getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *description);
-   BOOL lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
-   BOOL unlockDCIList(int sessionId);
-   void setDCIModificationFlag() { m_bDCIListModified = TRUE; }
+   bool lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner);
+   bool unlockDCIList(int sessionId);
+   void setDCIModificationFlag() { m_dciListModified = true; }
    void sendItemsToClient(ClientSession *pSession, UINT32 dwRqId);
    BOOL isLockedBySession(int sessionId) { return m_dciLockStatus == sessionId; }
    UINT32 *getDCIEventsList(UINT32 *pdwCount);
@@ -1185,6 +1187,8 @@ protected:
 
    virtual void updatePingData();
 
+   virtual void onDataCollectionChange();
+
 public:
    Node();
    Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 dwZone);
@@ -1301,7 +1305,7 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   BOOL connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL);
+   bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL);
 	bool checkAgentTrapId(QWORD id);
 	bool checkSNMPTrapId(UINT32 id);
    bool checkAgentPushRequestId(QWORD id);

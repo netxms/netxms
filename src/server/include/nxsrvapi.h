@@ -459,7 +459,7 @@ private:
    UINT32 m_dwRecvTimeout;
    TCHAR **m_ppDataLines;
    MsgWaitQueue *m_pMsgWaitQueue;
-   BOOL m_bIsConnected;
+   bool m_isConnected;
    MUTEX m_mutexDataLock;
 	MUTEX m_mutexSocketWrite;
    THREAD m_hReceiverThread;
@@ -512,9 +512,9 @@ public:
    AgentConnection(InetAddress addr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
    virtual ~AgentConnection();
 
-   BOOL connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL);
+   bool connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL);
    void disconnect();
-   BOOL isConnected() { return m_bIsConnected; }
+   bool isConnected() { return m_isConnected; }
 	int getProtocolVersion() { return m_nProtocolVersion; }
 
 	SOCKET getSocket() { return m_hSocket; }
