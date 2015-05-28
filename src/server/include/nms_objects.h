@@ -438,6 +438,7 @@ protected:
    virtual void onObjectDelete(UINT32 dwObjectId);
    
    virtual void fillMessageInternal(NXCPMessage *msg);
+   virtual void fillMessageInternalStage2(NXCPMessage *msg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *msg);
 
    void addLocationToHistory();
@@ -867,6 +868,7 @@ protected:
    time_t m_pingLastTimeStamp;
 
 	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual void fillMessageInternalStage2(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 	virtual bool isDataCollectionDisabled();

@@ -909,6 +909,8 @@ static bool SendModuleDataCallback(const TCHAR *key, const void *value, void *da
 
 /**
  * Fill NXCP message with object's data
+ * Object's properties are locked when this method is called. Method should not do any other locks.
+ * Data required other locks should be filled in fillMessageInternalStage2().
  */
 void NetObj::fillMessageInternal(NXCPMessage *pMsg)
 {
@@ -966,13 +968,24 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
 }
 
 /**
+ * Fill NXCP message with object's data - stage 2
+ * Object's properties are not locked when this method is called. Should be
+ * used only to fill data where properties lock is not enough (like data 
+ * collection configuration).
+ */
+void NetObj::fillMessageInternalStage2(NXCPMessage *pMsg)
+{
+}
+
+/**
  * Fill NXCP message with object's data
  */
 void NetObj::fillMessage(NXCPMessage *msg)
 { 
    lockProperties(); 
-   fillMessageInternal(msg); 
+   fillMessageInternal(msg);
    unlockProperties(); 
+   fillMessageInternalStage2(msg);
 
    UINT32 i, dwId;
 

@@ -90,6 +90,14 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg)
 {
    Template::fillMessageInternal(msg);
+}
+
+/**
+ * Create NXCP message with object's data - stage 2
+ */
+void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg)
+{
+   Template::fillMessageInternalStage2(msg);
 
    // Sent all DCIs marked for display on overview page
    UINT32 fieldId = VID_OVERVIEW_DCI_LIST_BASE;
