@@ -9,5 +9,4 @@ EXTRA_DIST = \
 	PushParameter.java \
 	SubAgent.java \
 	TableColumn.java \
-	TableParameter.java \
-	TestPlugin.java
+	TableParameter.java

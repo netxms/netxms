@@ -2524,8 +2524,6 @@ fi
 check_substr "$COMPONENTS" "java"
 if test $? = 0; then
 	AC_CHECK_HEADER(jni.h,,AC_MSG_ERROR([*** Cannot find jni.h - check your JDK installation ***]))
-	AC_CHECK_LIB(jvm, JNI_CreateJavaVM, [JAVA_LIBS="-ljvm"],
-		[AC_MSG_ERROR(libjvm is required for Java support)])
 fi
 
 
