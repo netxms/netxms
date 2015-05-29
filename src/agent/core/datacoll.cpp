@@ -25,7 +25,7 @@
 /**
  * Database schema version
  */
-#define DATACOLL_SCHEMA_VERSION     1
+#define DATACOLL_SCHEMA_VERSION     3
 
 /**
  * Data collection item
@@ -221,21 +221,19 @@ void DataCollectionItem::deleteFromDatabase()
    {
       DebugPrintf(INVALID_INDEX, 2, _T("DataCollectionItem::deleteFromDatabase: error wile removing object(serverId=%ld,dciId=%d) from dc_queue database table"),
                   m_serverId, m_id);
-
    }
 }
 
+/**
+ * Set last poll time for item
+ */
 void DataCollectionItem::setLastPollTime(time_t time)
 {
-   m_pollingInterval = time;
-   DB_HANDLE db = GetLocalDatabaseHandle();
+   m_lastPollTime = time;
    TCHAR query[256];
-   _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=%d WHERE server_id=%ld AND dci_id=%d"), (int)m_lastPollTime, m_serverId, m_id);
-   if(!DBQuery(db, query))
-   {
-      DebugPrintf(INVALID_INDEX, 2, _T("DataCollectionItem::setLastPollTime: error wile updating object(serverId=%ld,dciId=%d) last poll time"),
-                  m_serverId, m_id);
-   }
+   _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"), 
+      (UINT64)m_lastPollTime, m_serverId, m_id);
+   DBQuery(GetLocalDatabaseHandle(), query);
 }
 
 /**
@@ -633,36 +631,38 @@ static void LoadConfiguration()
 /**
  * SQL script array
  */
-const static TCHAR *Update [] =
+static const TCHAR *s_upgradeQueries[] =
 {
    _T("CREATE TABLE dc_queue (")
-   _T("server_id number(20) not null,")
-   _T("dci_id integer not null,")
-   _T("timestamp integer not null,")
-   _T("value varchar not null,")
-   _T("PRIMARY KEY(server_id,dci_id,timestamp));")
+   _T("  server_id number(20) not null,")
+   _T("  dci_id integer not null,")
+   _T("  timestamp integer not null,")
+   _T("  value varchar not null,")
+   _T("  PRIMARY KEY(server_id,dci_id,timestamp))"),
+
    _T("CREATE TABLE dc_config (")
-   _T("server_id number(20) not null,")
-   _T("dci_id integer not null,")
-   _T("type integer not null,")
-   _T("origin integer not null,")
-   _T("name varchar(1023) null,")
-   _T("polling_interval integer not null,")
-   _T("last_poll integer not null,")
-   _T("snmp_port integer not null,")
-   _T("snmp_target_guid varchar(36) not null,")
-   _T("PRIMARY KEY(server_id,dci_id));")
-   _T("CREATE TABLE snmp_targets (")
-   _T("guid varchar(36) not null,")
-   _T("version integer not null,")
-   _T("ip_address varchar(48) not null,")
-   _T("port integer not null,")
-   _T("auth_type integer not null,")
-   _T("enc_type integer not null,")
-   _T("auth_pass varchar(255),")
-   _T("enc_pass varchar(255),")
-   _T("username varchar(255)")
-   _T("PRIMARY KEY(guid));")
+   _T("  server_id number(20) not null,")
+   _T("  dci_id integer not null,")
+   _T("  type integer not null,")
+   _T("  origin integer not null,")
+   _T("  name varchar(1023) null,")
+   _T("  polling_interval integer not null,")
+   _T("  last_poll integer not null,")
+   _T("  snmp_port integer not null,")
+   _T("  snmp_target_guid varchar(36) not null,")
+   _T("  PRIMARY KEY(server_id,dci_id))"),
+
+   _T("CREATE TABLE dc_snmp_targets (")
+   _T("  guid varchar(36) not null,")
+   _T("  version integer not null,")
+   _T("  ip_address varchar(48) not null,")
+   _T("  port integer not null,")
+   _T("  auth_type integer not null,")
+   _T("  enc_type integer not null,")
+   _T("  auth_pass varchar(255),")
+   _T("  enc_pass varchar(255),")
+   _T("  username varchar(255),")
+   _T("  PRIMARY KEY(guid))")
 };
 
 /**
@@ -672,26 +672,21 @@ void StartLocalDataCollector()
 {
    /* TODO: database init and configuration load */
    DB_HANDLE db = GetLocalDatabaseHandle();
-   if(db == NULL)
+   if (db == NULL)
    {
-      DebugPrintf(INVALID_INDEX, 5, _T("StartLocalDataCollector: Not possible to load Data Collector. Database not initialized."));
+      DebugPrintf(INVALID_INDEX, 5, _T("StartLocalDataCollector: local database unavailable"));
       return;
    }
-   int dbVersion = ReadMetadataAsInt(_T("DatacollSchemaVersion"));
-   while(DATACOLL_SCHEMA_VERSION > dbVersion)
+   INT32 dbVersion = ReadMetadataAsInt(_T("DataCollectionSchemaVersion"));
+   while(dbVersion < DATACOLL_SCHEMA_VERSION)
    {
-      bool result = DBQuery(db, Update[dbVersion]);
-      TCHAR query[256];
-      _sntprintf(query, 256, _T("INSERT INTO metadata (attribute, value) VALUES ('DatacollSchemaVersion', '%d')"), ++dbVersion);
-      if(result)
+      if (!DBQuery(db, s_upgradeQueries[dbVersion]))
       {
-         DBQuery(db, query);
-      }
-      else
-      {
-         DebugPrintf(INVALID_INDEX, 5, _T("StartLocalDataCollector: Not possible to upgdate database for Data Collector. Collection not started."));
+         nxlog_write(MSG_DC_DBSCHEMA_UPGRADE_FAILED, NXLOG_ERROR, NULL);
          return;
       }
+      dbVersion++;
+      WriteMetadata(_T("DataCollectionSchemaVersion"), dbVersion);
    }
 
    LoadConfiguration();

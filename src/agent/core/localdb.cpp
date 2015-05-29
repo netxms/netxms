@@ -57,12 +57,38 @@ TCHAR *ReadMetadata(const TCHAR *attr, TCHAR *buffer)
 /**
  * Read integer from metadata
  */
-int ReadMetadataAsInt(const TCHAR *attr)
+INT32 ReadMetadataAsInt(const TCHAR *attr)
 {
    TCHAR buffer[MAX_DB_STRING];
    if (ReadMetadata(attr, buffer) == NULL)
       return 0;
    return _tcstol(buffer, NULL, 0);
+}
+
+/**
+ * Set value in metadata
+ */
+bool WriteMetadata(const TCHAR *name, const TCHAR *value)
+{
+   String prepValue = DBPrepareString(s_db, value, 255);
+
+   TCHAR query[1024];
+   _sntprintf(query, 1024, _T("UPDATE OR IGNORE metadata SET value=%s WHERE attribute='%s'"), (const TCHAR *)prepValue, name);
+   if (!DBQuery(s_db, query))
+      return false;
+
+   _sntprintf(query, 1024, _T("INSERT OR IGNORE INTO metadata (attribute,value) VALUES ('%s',%s)"), name, (const TCHAR *)prepValue);
+   return DBQuery(s_db, query);
+}
+
+/**
+ * Set value in metadata from int
+ */
+bool WriteMetadata(const TCHAR *name, INT32 value)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, _T("%d"), value);
+   return WriteMetadata(name, buffer);
 }
 
 /**

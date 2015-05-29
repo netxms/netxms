@@ -2427,3 +2427,152 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValu
    buffer[15] = 0;
    return ParseDateTimeA(buffer, defaultValue);
 }
+
+/**
+ * Get NetXMS directory
+ */
+void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
+{
+   *dir = 0;
+
+   const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+   if (homeDir != NULL)
+   {
+#ifdef _WIN32
+      switch(type)
+      {
+         case nxDirBin:
+            _sntprintf(dir, MAX_PATH, _T("%s\\bin"), homeDir);
+            break;
+         case nxDirData:
+            _sntprintf(dir, MAX_PATH, _T("%s\\var"), homeDir);
+            break;
+         case nxDirEtc:
+            _sntprintf(dir, MAX_PATH, _T("%s\\etc"), homeDir);
+            break;
+         case nxDirLib:
+            _sntprintf(dir, MAX_PATH, _T("%s\\lib"), homeDir);
+            break;
+         default:
+            nx_strncpy(dir, homeDir, MAX_PATH);
+            break;
+      }
+#else
+      switch(type)
+      {
+         case nxDirBin:
+            _sntprintf(dir, MAX_PATH, _T("%s/bin"), homeDir);
+            break;
+         case nxDirData:
+            _sntprintf(dir, MAX_PATH, _T("%s/share/netxms"), homeDir);
+            break;
+         case nxDirEtc:
+            _sntprintf(dir, MAX_PATH, _T("%s/etc"), homeDir);
+            break;
+         case nxDirLib:
+            _sntprintf(dir, MAX_PATH, _T("%s/lib/netxms"), homeDir);
+            break;
+         default:
+            nx_strncpy(dir, homeDir, MAX_PATH);
+            break;
+      }
+#endif
+      return;
+   }
+
+#ifdef _WIN32
+   TCHAR installPath[MAX_PATH] = _T("");
+   HKEY hKey;
+   bool found = false;
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   {
+      DWORD size = MAX_PATH * sizeof(TCHAR);
+      found = (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, (BYTE *)installPath, &size) == ERROR_SUCCESS);
+      RegCloseKey(hKey);
+   }
+
+   if (!found)
+   {
+      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Agent"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+      {
+         DWORD size = MAX_PATH * sizeof(TCHAR);
+         found = (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, (BYTE *)installPath, &size) == ERROR_SUCCESS);
+         RegCloseKey(hKey);
+      }
+   }
+
+   if (!found && (GetModuleFileName(NULL, installPath, MAX_PATH) > 0))
+   {
+      TCHAR *p = _tcsrchr(installPath, _T('\\'));
+      if (p != NULL)
+      {
+         *p = 0;
+         p = _tcsrchr(installPath, _T('\\'));
+         if (p != NULL)
+         {
+            *p = 0;
+            found = true;
+         }
+      }
+   }
+
+   if (!found)
+   {
+      _tcscpy(installPath, _T("C:\\NetXMS"));
+   }
+
+   switch(type)
+   {
+      case nxDirBin:
+         _sntprintf(dir, MAX_PATH, _T("%s\\bin"), installPath);
+         break;
+      case nxDirData:
+         _sntprintf(dir, MAX_PATH, _T("%s\\var"), installPath);
+         break;
+      case nxDirEtc:
+         _sntprintf(dir, MAX_PATH, _T("%s\\etc"), installPath);
+         break;
+      case nxDirLib:
+         _sntprintf(dir, MAX_PATH, _T("%s\\lib"), installPath);
+         break;
+      default:
+         nx_strncpy(dir, installPath, MAX_PATH);
+         break;
+   }
+#else
+   switch(type)
+   {
+      case nxDirBin:
+#ifdef PREFIX
+         _tcscpy(dir, PREFIX _T("/bin"));
+#else
+         _tcscpy(dir, _T("/usr/bin"));
+#endif
+         break;
+      case nxDirData:
+#ifdef DATADIR
+         _tcscpy(dir, DATADIR);
+#else
+         _tcscpy(dir, _T("/var/lib/netxms"));
+#endif
+         break;
+      case nxDirEtc:
+#ifdef PREFIX
+         _tcscpy(dir, PREFIX _T("/etc"));
+#else
+         _tcscpy(dir, _T("/etc"));
+#endif
+         break;
+      case nxDirLib:
+#ifdef PKGLIBDIR
+         _tcscpy(dir, PKGLIBDIR);
+#else
+         _tcscpy(dir, _T("/usr/lib/netxms"));
+#endif
+         break;
+      default:
+         _tcscpy(dir, _T("/usr"));
+         break;
+   }
+#endif
+}

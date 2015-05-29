@@ -1745,6 +1745,16 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValu
 
 #ifdef __cplusplus
 
+enum nxDirectoryType
+{
+   nxDirBin = 0,
+   nxDirData = 1,
+   nxDirEtc = 2,
+   nxDirLib = 3
+};
+
+void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir);
+
 UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress& addr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize);
 
 TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length);

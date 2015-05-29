@@ -32,46 +32,60 @@
 using namespace org_netxms_agent;
 using namespace std;
 
-static JavaVM *pJvm = NULL;
+/**
+ * JVM instance
+ */
+static JavaVM *s_jvm = NULL;
+static HMODULE s_jvmModule = NULL;
+static JNIEnv *s_jniEnv = NULL;
 
-static HMODULE jvmModule = NULL;
-static JNIEnv *jniEnv = NULL;
+/**
+ * Java subagent instance
+ */
+static SubAgent *s_subAgent = NULL;
 
-static SubAgent *subAgent = NULL;
-
+/**
+ * Subagent initialization
+ */
 static BOOL SubAgentInit(Config *config)
 {
-   // initialize
-   subAgent->init(ConfigHelper::createInstance(jniEnv, config));
+   s_subAgent->init(ConfigHelper::createInstance(s_jniEnv, config));
    return TRUE;
 }
 
-
+/**
+ * Subagent shutdown
+ */
 static void SubAgentShutdown()
 {
    try
    {
-      subAgent->shutdown();
+      s_subAgent->shutdown();
    }
    catch(JNIException const& e)
    {
-      // not much to be done here
+      AgentWriteDebugLog(3, _T("JAVA: JNI exception in SubAgentShutdown(): %hs"), e.what());
    }
-   if (pJvm)
+
+   if (s_jvm != NULL)
    {
-      pJvm->DestroyJavaVM();
-      pJvm = NULL;
+      s_jvm->DestroyJavaVM();
+      s_jvm = NULL;
    }
-   if (jvmModule)
+
+   if (s_jvmModule != NULL)
    {
-      DLClose(jvmModule);
-      jvmModule = NULL;
+      DLClose(s_jvmModule);
+      s_jvmModule = NULL;
    }
-   AgentWriteLog(NXLOG_DEBUG, _T("SubAgentShutdown(void)"));
+
+   AgentWriteDebugLog(1, _T("JAVA: shutdown comple"));
 }
 
-
-static NETXMS_SUBAGENT_INFO g_subAgentInfo =
+/**
+ * Sabagent information
+ */
+static NETXMS_SUBAGENT_INFO s_subagentInfo =
 {
    NETXMS_SUBAGENT_INFO_MAGIC,
    _T("JAVA"),
@@ -89,60 +103,65 @@ static NETXMS_SUBAGENT_INFO g_subAgentInfo =
    NULL,                         // actions
    0,                            // numPushParameters
    NULL                          // pushParameters
-}
+};
 
-
-;
-
-LONG actionHandler(const TCHAR *pszAction, StringList *pArgList, const TCHAR *id, AbstractCommSession *session)
+/**
+ * Action handler
+ */
+static LONG ActionHandler(const TCHAR *action, StringList *pArgList, const TCHAR *id, AbstractCommSession *session)
 {
    LONG result = SYSINFO_RC_SUCCESS;
    // route the call to SubAgent
-   AgentWriteLog(NXLOG_DEBUG, _T("actionHandler(action=%s, id=%s)"), pszAction, id);
+   AgentWriteDebugLog(6, _T("JAVA: ActionHandler(action=%s, id=%s)"), action, id);
    int len = pArgList->size();
    TCHAR const** args = new TCHAR const* [len];
    for (int i=0; i < len; i++)
    {
-                                 // TODO should I use a copy?
       args[i] = pArgList->get(i);
    }
+
    try
    {
-      subAgent->actionHandler(pszAction, args, len, id);
+      s_subAgent->actionHandler(action, args, len, id);
    }
    catch (JNIException const& e)
    {
+      AgentWriteDebugLog(3, _T("JAVA: JNI exception in ActionHandler(%s): %hs"), action, e.what());
       result = SYSINFO_RC_ERROR;
    }
    free(args);
    return result;
 }
 
-
-LONG parameterHandler (const TCHAR *pszParam, const TCHAR *id, TCHAR *pValue, AbstractCommSession *session)
+/**
+ * Single value parameter handlers
+ */
+static LONG ParameterHandler(const TCHAR *param, const TCHAR *id, TCHAR *value, AbstractCommSession *session)
 {
    try
    {
-      // route the call to SubAgent
-      TCHAR *resultString = subAgent->parameterHandler(pszParam, id);
-      nx_strncpy(pValue, resultString, MAX_RESULT_LENGTH);
+      TCHAR *resultString = s_subAgent->parameterHandler(param, id);
+      nx_strncpy(value, resultString, MAX_RESULT_LENGTH);
       free(resultString);
       return SYSINFO_RC_SUCCESS;
    }
    catch (JNIException const& e)
    {
+      AgentWriteDebugLog(3, _T("JAVA: JNI exception in ParameterHandler(%s): %hs"), param, e.what());
       return SYSINFO_RC_ERROR;
    }
 }
 
-
-LONG listParameterHandler (const TCHAR *cmd, const TCHAR *id, StringList *value, AbstractCommSession *session)
+/**
+ * Handler for list parameters
+ */
+static LONG ListParameterHandler(const TCHAR *cmd, const TCHAR *id, StringList *value, AbstractCommSession *session)
 {
    try
    {
       // route the call to SubAgent
       int len = 0;
-      TCHAR **res = subAgent->listParameterHandler(cmd, id, &len);
+      TCHAR **res = s_subAgent->listParameterHandler(cmd, id, &len);
       for (int i=0; i<len; i++)
       {
          value->addPreallocated(res[i]);
@@ -151,19 +170,22 @@ LONG listParameterHandler (const TCHAR *cmd, const TCHAR *id, StringList *value,
    }
    catch (JNIException const& e)
    {
+      AgentWriteDebugLog(3, _T("JAVA: JNI exception in ListParameterHandler(%s): %hs"), cmd, e.what());
       return SYSINFO_RC_ERROR;
    }
 }
 
-
-LONG tableParameterHandler (const TCHAR *cmd, const TCHAR *id, Table *table, AbstractCommSession *session)
+/**
+ * Handler for table parameters
+ */
+static LONG TableParameterHandler(const TCHAR *cmd, const TCHAR *id, Table *table, AbstractCommSession *session)
 {
    try
    {
       // route the call to SubAgent
       // retrieve the TableColumn descriptors first and populate resulting table's columns
       int numTableColumns = 0;
-      TableColumn **tableColumns = subAgent->getTableParameter(id).getColumns(&numTableColumns);
+      TableColumn **tableColumns = s_subAgent->getTableParameter(id).getColumns(&numTableColumns);
       for (int i=0; i<numTableColumns; i++)
       {
          table->addColumn(tableColumns[i]->getName(), tableColumns[i]->getType().getValue(), NULL, tableColumns[i]->isInstance());
@@ -172,7 +194,7 @@ LONG tableParameterHandler (const TCHAR *cmd, const TCHAR *id, Table *table, Abs
       // retrieve actuall values and fill them into resulting table
       int numColumns = 0;
       int numRows = 0;
-      TCHAR ***res = subAgent->tableParameterHandler(cmd, id, &numRows, &numColumns);
+      TCHAR ***res = s_subAgent->tableParameterHandler(cmd, id, &numRows, &numColumns);
       // TODO assert that numTableColumns == numColumns
       for (int i=0; i<numRows; i++)
       {
@@ -186,6 +208,7 @@ LONG tableParameterHandler (const TCHAR *cmd, const TCHAR *id, Table *table, Abs
    }
    catch (JNIException const& e)
    {
+      AgentWriteDebugLog(3, _T("JAVA: JNI exception in TableParameterHandler(%s): %hs"), cmd, e.what());
       return SYSINFO_RC_ERROR;
    }
 }
@@ -195,7 +218,7 @@ LONG tableParameterHandler (const TCHAR *cmd, const TCHAR *id, Table *table, Abs
  * Method:    AgentGetParameterArg
  * Signature: (Ljava/lang/String;I)Ljava/lang/String;
  */
-jstring JNICALL Java_org_netxms_agent_SubAgent_AgentGetParameterArg(JNIEnv *jenv, jclass jcls, jstring jparam, jint jindex)
+static jstring JNICALL Java_org_netxms_agent_SubAgent_AgentGetParameterArg(JNIEnv *jenv, jclass jcls, jstring jparam, jint jindex)
 {
    jstring jresult = NULL;
    if (jparam)
@@ -216,7 +239,7 @@ jstring JNICALL Java_org_netxms_agent_SubAgent_AgentGetParameterArg(JNIEnv *jenv
  * Method:    AgentSendTrap
  * Signature: (ILjava/lang/String;[Ljava/lang/String;)V
  */
-void JNICALL Java_org_netxms_agent_SubAgent_AgentSendTrap(JNIEnv *jenv, jclass jcls, jint event, jstring jname, jobjectArray jargs)
+static void JNICALL Java_org_netxms_agent_SubAgent_AgentSendTrap(JNIEnv *jenv, jclass jcls, jint event, jstring jname, jobjectArray jargs)
 {
    if ((jname != NULL) && (jargs != NULL))
    {
@@ -243,7 +266,7 @@ void JNICALL Java_org_netxms_agent_SubAgent_AgentSendTrap(JNIEnv *jenv, jclass j
  * Method:    AgentPushParameterData
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
  */
-jboolean JNICALL Java_org_netxms_agent_SubAgent_AgentPushParameterData (JNIEnv *jenv, jclass jcls, jstring jname, jstring jvalue)
+static jboolean JNICALL Java_org_netxms_agent_SubAgent_AgentPushParameterData (JNIEnv *jenv, jclass jcls, jstring jname, jstring jvalue)
 {
    jboolean res = false;
    if ((jname != NULL) && (jvalue != NULL))
@@ -262,7 +285,7 @@ jboolean JNICALL Java_org_netxms_agent_SubAgent_AgentPushParameterData (JNIEnv *
  * Method:    AgentWriteLog
  * Signature: (ILjava/lang/String;)V
  */
-void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteLog (JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
+static void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteLog (JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
 {
    if (jmessage != NULL)
    {
@@ -277,7 +300,7 @@ void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteLog (JNIEnv *jenv, jclass 
  * Method:    AgentWriteDebugLog
  * Signature: (ILjava/lang/String;)V
  */
-void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteDebugLog (JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
+static void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteDebugLog (JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
 {
    if (jmessage != NULL)
    {
@@ -287,8 +310,10 @@ void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteDebugLog (JNIEnv *jenv, jc
    }
 }
 
-
-static JNINativeMethod jniNativeMethods[] =
+/**
+ * Native methods
+ */
+static JNINativeMethod s_jniNativeMethods[] =
 {
    { "AgentGetParameterArg", "(Ljava/lang/String;I)Ljava/lang/String;", (void *) Java_org_netxms_agent_SubAgent_AgentGetParameterArg },
    { "AgentPushParameterData", "(Ljava/lang/String;Ljava/lang/String;)Z", (void *) Java_org_netxms_agent_SubAgent_AgentPushParameterData },
@@ -296,18 +321,21 @@ static JNINativeMethod jniNativeMethods[] =
    { "AgentWriteDebugLog", "(ILjava/lang/String;)V", (void *) Java_org_netxms_agent_SubAgent_AgentWriteDebugLog }
 };
 
+/**
+ * Regsiter native methods
+ */
 static bool RegisterNatives(JNIEnv *curEnv)
 {
    // register native methods exposed by Agent (see SubAgent.java implemented in org_netxms_agent_SubAgent.cpp)
-   jclass clazz = curEnv->FindClass( SubAgent::className() );
-   if (clazz)
+   jclass clazz = curEnv->FindClass(SubAgent::className());
+   if (clazz != NULL)
    {
-      if (curEnv->RegisterNatives(clazz, jniNativeMethods, (jint) (sizeof (jniNativeMethods) / sizeof (jniNativeMethods[0])) ) == 0)
+      if (curEnv->RegisterNatives(clazz, s_jniNativeMethods, (jint)(sizeof(s_jniNativeMethods) / sizeof(JNINativeMethod))) == 0)
       {
       }
       else
       {
-         AgentWriteLog(NXLOG_ERROR, _T("Failed to register native methods"));
+         AgentWriteLog(NXLOG_ERROR, _T("JAVA: Failed to register native methods"));
          curEnv->DeleteLocalRef(clazz);
          return false;
       }
@@ -316,33 +344,51 @@ static bool RegisterNatives(JNIEnv *curEnv)
    }
    else
    {
-      AgentWriteLog(NXLOG_ERROR, _T("Failed to find main class %hs"), SubAgent::className());;
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Failed to find main class %hs"), SubAgent::className());
       return false;
    }
 }
 
-
+/**
+ * Prototype for JNI_CreateJavaVM
+ */
 typedef jint (JNICALL *T_JNI_CreateJavaVM)(JavaVM **, void **, void *);
 
-// input parameters NETXMS_SUBAGENT_INFO **ppInfo, Config *config
+/**
+ * JVM path
+ */
+#ifdef _WIN32
+static TCHAR s_jvmPath[MAX_PATH] = _T("jvm.dll");
+#else
+static TCHAR s_jvmPath[MAX_PATH] = _T("libjvm.so");
+#endif
+
+/**
+ * JVM options
+ */
+static TCHAR *s_jvmOptions = NULL;
+
+/**
+ * User classpath
+ */
+static TCHAR s_userClasspath[MAX_LONG_STR] = _T("");
+
+/**
+ * Configuration template
+ */
+static NX_CFG_TEMPLATE s_configTemplate[] =
+{
+   { _T("JVM"), CT_STRING, 0, 0, MAX_PATH, 0,  s_jvmPath },
+   { _T("JVMOptions"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &s_jvmOptions },
+   { _T("ClassPath"), CT_STRING, 0, 0, MAX_LONG_STR, 0, s_userClasspath },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+};
+
+/**
+ * Subagent entry point
+ */
 DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
 {
-#ifdef _WIN32
-   static TCHAR szJvm[MAX_PATH] = _T("jvm.dll");
-#else
-   static TCHAR szJvm[MAX_PATH] = _T("");
-#endif
-   static TCHAR *szJvmOptions = NULL;
-   static TCHAR szClasspath[MAX_LONG_STR] = _T("netxms-agent-") NETXMS_VERSION_STRING _T(".jar ");
-
-   static NX_CFG_TEMPLATE configTemplate[] =
-   {
-      { _T("Jvm"), CT_STRING, 0, 0, MAX_PATH, 0,  szJvm },
-      { _T("JvmOptions"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &szJvmOptions },
-      { _T("ClassPath"), CT_STRING, 0, 0, MAX_LONG_STR, 0,  szClasspath },
-      { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
-   };
-
    AgentWriteDebugLog(1, _T("Initializing Java subagent"));
 
    // Try to set default JVM
@@ -350,33 +396,50 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
    const TCHAR *javaHome = _tgetenv(_T("JAVA_HOME"));
    if ((javaHome != NULL) && (*javaHome != 0))
    {
-      _sntprintf(szJvm, MAX_PATH, _T("%s\\bin\\server\\jvm.dll"), javaHome);
-      if (_taccess(szJvm, 0) != 0)
+      _sntprintf(s_jvmPath, MAX_PATH, _T("%s\\bin\\server\\jvm.dll"), javaHome);
+      if (_taccess(s_jvmPath, 0) != 0)
       {
-         _sntprintf(szJvm, MAX_PATH, _T("%s\\jre\\bin\\server\\jvm.dll"), javaHome);
+         _sntprintf(s_jvmPath, MAX_PATH, _T("%s\\jre\\bin\\server\\jvm.dll"), javaHome);
       }
-      AgentWriteDebugLog(1, _T("JAVA: Default JVM set from JAVA_HOME: %s"), szJvm);
+      AgentWriteDebugLog(1, _T("JAVA: Default JVM set from JAVA_HOME: %s"), s_jvmPath);
    }
 #endif
 
-   if (config->parseTemplate(_T("Java"), configTemplate))
+   if (config->parseTemplate(_T("Java"), s_configTemplate))
    {
+      AgentWriteDebugLog(1, _T("JAVA: using JVM %s"), s_jvmPath);
+      
       BOOL initialized = FALSE;
 
       TCHAR szError[255];
-      jvmModule = DLOpen(szJvm, szError);
-      if (jvmModule != NULL)
+      s_jvmModule = DLOpen(s_jvmPath, szError);
+      if (s_jvmModule != NULL)
       {
          AgentWriteDebugLog(9, _T("JVM DLOpen success"));
 
          JavaVMInitArgs vmArgs;
          JavaVMOption vmOptions[1];
+         memset(vmOptions, 0, sizeof(vmOptions));
+
+         TCHAR libdir[MAX_PATH];
+         GetNetXMSDirectory(nxDirLib, libdir);
 
          String classpath = _T("-Djava.class.path=");
-         classpath += szClasspath;
+         classpath.append(libdir);
+         classpath.append(FS_PATH_SEPARATOR_CHAR);
+         classpath.append(_T("netxms-agent-") NETXMS_VERSION_STRING _T(".jar"));
+         if (s_userClasspath[0] != 0)
+         {
+#ifdef _WIN32
+            classpath.append(_T(';'));
+#else
+            classpath.append(_T(':'));
+#endif
+            classpath.append(s_userClasspath);
+         }
 
 #ifdef UNICODE
-         vmOptions[0].optionString = MBStringFromWideString(classpath);
+         vmOptions[0].optionString = classpath.getUTF8String();
 #else
          vmOptions[0].optionString = strdup(classpath);
 #endif
@@ -388,131 +451,134 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
          vmArgs.nOptions = 1;
          vmArgs.ignoreUnrecognized = JNI_TRUE;
 
-         T_JNI_CreateJavaVM CreateJavaVM = (T_JNI_CreateJavaVM)DLGetSymbolAddr(jvmModule, "JNI_CreateJavaVM", NULL);
+         AgentWriteDebugLog(6, _T("JVM options:"));
+         for(int i = 0; i < vmArgs.nOptions; i++)
+            AgentWriteDebugLog(6, _T("    %hs"), vmArgs.options[i].optionString);
+
+         T_JNI_CreateJavaVM CreateJavaVM = (T_JNI_CreateJavaVM)DLGetSymbolAddr(s_jvmModule, "JNI_CreateJavaVM", NULL);
          if (CreateJavaVM != NULL)
          {
-            AgentWriteDebugLog(9, _T("JNI_CreateJavaVM success"));
-            if (CreateJavaVM(&pJvm, (void **)&jniEnv, &vmArgs) == JNI_OK)
+            AgentWriteDebugLog(6, _T("Java VM created"));
+            if (CreateJavaVM(&s_jvm, (void **)&s_jniEnv, &vmArgs) == JNI_OK)
             {
                // register native functions into JVM
-               if (RegisterNatives(jniEnv))
+               if (RegisterNatives(s_jniEnv))
                {
                   try
                   {
                      // create an instance of org.netxms.agent.Config
-                     jobject jconfig = ConfigHelper::createInstance(jniEnv, config);
-                     if (jconfig)
+                     jobject jconfig = ConfigHelper::createInstance(s_jniEnv, config);
+                     if (jconfig != NULL)
                      {
-
                         // create an instance of org.netxms.agent.SubAgent
-                        subAgent = new SubAgent(pJvm , jconfig);
-                        if (subAgent)
+                        s_subAgent = new SubAgent(s_jvm , jconfig);
+                        if (s_subAgent != NULL)
                         {
 
                            AgentWriteDebugLog(7, _T("JAVA: Loading actions"));
                            // load all Actions
                            int numActions;
-                           TCHAR **actionIds = subAgent->getActionIds(&numActions);
+                           TCHAR **actionIds = s_subAgent->getActionIds(&numActions);
                            if (numActions > 0)
                            {
-                              g_subAgentInfo.numActions = numActions;
-                              g_subAgentInfo.actions = new NETXMS_SUBAGENT_ACTION[numActions];
+                              s_subagentInfo.numActions = numActions;
+                              s_subagentInfo.actions = new NETXMS_SUBAGENT_ACTION[numActions];
                            }
                            for (int i=0; i<numActions; i++)
                            {
-                              Action action = subAgent->getAction(actionIds[i]);
-                              nx_strncpy(g_subAgentInfo.actions[i].name, action.getName(), MAX_PARAM_NAME);
-                              g_subAgentInfo.actions[i].handler = actionHandler;
-                              g_subAgentInfo.actions[i].arg = actionIds[i];
-                              nx_strncpy(g_subAgentInfo.actions[i].description, action.getDescription(), MAX_DB_STRING);
+                              Action action = s_subAgent->getAction(actionIds[i]);
+                              nx_strncpy(s_subagentInfo.actions[i].name, action.getName(), MAX_PARAM_NAME);
+                              s_subagentInfo.actions[i].handler = ActionHandler;
+                              s_subagentInfo.actions[i].arg = actionIds[i];
+                              nx_strncpy(s_subagentInfo.actions[i].description, action.getDescription(), MAX_DB_STRING);
                               // TODO deallocate/destroy action
                            }
 
                            AgentWriteDebugLog(7, _T("JAVA: Loading parameters"));
                            // load all Parameters
                            int numParameters;
-                           TCHAR **parameterIds = subAgent->getParameterIds(&numParameters);
+                           TCHAR **parameterIds = s_subAgent->getParameterIds(&numParameters);
                            if (numParameters > 0)
                            {
-                              g_subAgentInfo.numParameters = numParameters;
-                              g_subAgentInfo.parameters = new NETXMS_SUBAGENT_PARAM[numParameters];
+                              s_subagentInfo.numParameters = numParameters;
+                              s_subagentInfo.parameters = new NETXMS_SUBAGENT_PARAM[numParameters];
                            }
                            for(int i = 0; i < numParameters; i++)
                            {
-                              Parameter *parameter = subAgent->getParameter(parameterIds[i]);
-                              nx_strncpy(g_subAgentInfo.parameters[i].name, parameter->getName(), MAX_PARAM_NAME);
-                              g_subAgentInfo.parameters[i].dataType = parameter->getType().getValue();
-                              g_subAgentInfo.parameters[i].handler = parameterHandler;
-                              g_subAgentInfo.parameters[i].arg = parameterIds[i];
-                              nx_strncpy(g_subAgentInfo.parameters[i].description, parameter->getDescription(), MAX_DB_STRING);
+                              Parameter *parameter = s_subAgent->getParameter(parameterIds[i]);
+                              nx_strncpy(s_subagentInfo.parameters[i].name, parameter->getName(), MAX_PARAM_NAME);
+                              s_subagentInfo.parameters[i].dataType = parameter->getType().getValue();
+                              s_subagentInfo.parameters[i].handler = ParameterHandler;
+                              s_subagentInfo.parameters[i].arg = parameterIds[i];
+                              nx_strncpy(s_subagentInfo.parameters[i].description, parameter->getDescription(), MAX_DB_STRING);
                               delete parameter;
                            }
 
                            AgentWriteDebugLog(7, _T("JAVA: Loading lists"));
                            // load all ListParameters
                            int numListParameters;
-                           TCHAR **listParameterIds = subAgent->getListParameterIds(&numListParameters);
+                           TCHAR **listParameterIds = s_subAgent->getListParameterIds(&numListParameters);
                            if (numListParameters > 0)
                            {
-                              g_subAgentInfo.numLists = numListParameters;
-                              g_subAgentInfo.lists = new NETXMS_SUBAGENT_LIST[numListParameters];
+                              s_subagentInfo.numLists = numListParameters;
+                              s_subagentInfo.lists = new NETXMS_SUBAGENT_LIST[numListParameters];
                            }
                            for (int i=0; i<numListParameters; i++)
                            {
-                              ListParameter listParameter = subAgent->getListParameter(listParameterIds[i]);
-                              nx_strncpy(g_subAgentInfo.lists[i].name, listParameter.getName(), MAX_PARAM_NAME);
-                              g_subAgentInfo.lists[i].handler = listParameterHandler;
-                              g_subAgentInfo.lists[i].arg = listParameterIds[i];
+                              ListParameter listParameter = s_subAgent->getListParameter(listParameterIds[i]);
+                              nx_strncpy(s_subagentInfo.lists[i].name, listParameter.getName(), MAX_PARAM_NAME);
+                              s_subagentInfo.lists[i].handler = ListParameterHandler;
+                              s_subagentInfo.lists[i].arg = listParameterIds[i];
                               // TODO deallocate/destroy listParameter
                            }
 
                            AgentWriteDebugLog(7, _T("JAVA: Loading push parameters"));
                            // load all PushParameters
                            int numPushParameters;
-                           TCHAR **pushParameterIds = subAgent->getPushParameterIds(&numPushParameters);
+                           TCHAR **pushParameterIds = s_subAgent->getPushParameterIds(&numPushParameters);
                            if (numPushParameters > 0)
                            {
-                              g_subAgentInfo.numPushParameters = numPushParameters;
-                              g_subAgentInfo.pushParameters = new NETXMS_SUBAGENT_PUSHPARAM[numPushParameters];
+                              s_subagentInfo.numPushParameters = numPushParameters;
+                              s_subagentInfo.pushParameters = new NETXMS_SUBAGENT_PUSHPARAM[numPushParameters];
                            }
                            for (int i=0; i<numPushParameters; i++)
                            {
-                              PushParameter pushParameter = subAgent->getPushParameter(pushParameterIds[i]);
-                              nx_strncpy(g_subAgentInfo.pushParameters[i].name, pushParameter.getName(), MAX_PARAM_NAME);
-                              g_subAgentInfo.pushParameters[i].dataType = pushParameter.getType().getValue();
-                              nx_strncpy(g_subAgentInfo.pushParameters[i].description, pushParameter.getDescription(), MAX_DB_STRING);
+                              PushParameter pushParameter = s_subAgent->getPushParameter(pushParameterIds[i]);
+                              nx_strncpy(s_subagentInfo.pushParameters[i].name, pushParameter.getName(), MAX_PARAM_NAME);
+                              s_subagentInfo.pushParameters[i].dataType = pushParameter.getType().getValue();
+                              nx_strncpy(s_subagentInfo.pushParameters[i].description, pushParameter.getDescription(), MAX_DB_STRING);
                               // TODO deallocate/destroy pushParameter
                            }
 
                            AgentWriteDebugLog(7, _T("JAVA: Loading tables"));
                            // load all TableParameters
                            int numTableParameters;
-                           TCHAR **tableParameterIds = subAgent->getTableParameterIds(&numTableParameters);
+                           TCHAR **tableParameterIds = s_subAgent->getTableParameterIds(&numTableParameters);
                            if (numTableParameters > 0)
                            {
-                              g_subAgentInfo.tables = new NETXMS_SUBAGENT_TABLE[numTableParameters];
-                              g_subAgentInfo.numTables = numTableParameters;
+                              s_subagentInfo.tables = new NETXMS_SUBAGENT_TABLE[numTableParameters];
+                              s_subagentInfo.numTables = numTableParameters;
                            }
                            for (int i=0; i<numTableParameters; i++)
                            {
-                              TableParameter tableParameter = subAgent->getTableParameter(tableParameterIds[i]);
-                              nx_strncpy(g_subAgentInfo.tables[i].name, tableParameter.getName(), MAX_PARAM_NAME);
-                              g_subAgentInfo.tables[i].handler = tableParameterHandler;
-                              g_subAgentInfo.tables[i].arg = tableParameterIds[i];
-                              nx_strncpy(g_subAgentInfo.tables[i].instanceColumns, _T(""), MAX_PARAM_NAME);
+                              TableParameter tableParameter = s_subAgent->getTableParameter(tableParameterIds[i]);
+                              nx_strncpy(s_subagentInfo.tables[i].name, tableParameter.getName(), MAX_PARAM_NAME);
+                              s_subagentInfo.tables[i].handler = TableParameterHandler;
+                              s_subagentInfo.tables[i].arg = tableParameterIds[i];
+                              nx_strncpy(s_subagentInfo.tables[i].instanceColumns, _T(""), MAX_PARAM_NAME);
                               int numTableColumns;
                               bool haveInstanceColumn = false;
                               TableColumn ** tableColumns = tableParameter.getColumns(&numTableColumns);
                               for (int j=0; j<numTableColumns; j++) {
                                  if (tableColumns[j]->isInstance()) {
                                     if (haveInstanceColumn) {
-                                       _tcsncat(g_subAgentInfo.tables[i].instanceColumns, _T("|"), MAX_PARAM_NAME);
+                                       _tcsncat(s_subagentInfo.tables[i].instanceColumns, _T("|"), MAX_PARAM_NAME);
                                     }
-                                    _tcsncat(g_subAgentInfo.tables[i].instanceColumns, tableColumns[j]->getName(), MAX_PARAM_NAME);
+                                    _tcsncat(s_subagentInfo.tables[i].instanceColumns, tableColumns[j]->getName(), MAX_PARAM_NAME);
                                     haveInstanceColumn = true;
                                  }      
                               }
-                              nx_strncpy(g_subAgentInfo.tables[i].description, tableParameter.getDescription(), MAX_DB_STRING);
+                              nx_strncpy(s_subagentInfo.tables[i].description, tableParameter.getDescription(), MAX_DB_STRING);
                               // TODO deallocate/destroy tableParameter
                            }
                            initialized = TRUE;
@@ -529,6 +595,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
                   }
                   catch (JNIException const& e)
                   {
+                     AgentWriteDebugLog(3, _T("JAVA: JNI exception: %hs"), e.what());
                      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Failed to intialize agent on JNI code"));
                   }
                }
@@ -550,10 +617,10 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
 
       if (!initialized)
       {
-         if (jvmModule)
+         if (s_jvmModule != NULL)
          {
-            DLClose(jvmModule);
-            jvmModule = NULL;
+            DLClose(s_jvmModule);
+            s_jvmModule = NULL;
          }
          *ppInfo = NULL;
          return FALSE;
@@ -561,9 +628,9 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
    }
    else
    {
-      AgentWriteLog(NXLOG_DEBUG, _T("Failed to parse template"));
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Failed to parse configuration"));
    }
 
-   *ppInfo = &g_subAgentInfo;
+   *ppInfo = &s_subagentInfo;
    return TRUE;
 }

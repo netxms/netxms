@@ -320,4 +320,10 @@ Language=English
 Local database corrupted and cannot be used
 .
 
+MessageId=
+SymbolicName=MSG_DC_DBSCHEMA_UPGRADE_FAILED
+Language=English
+Data collection database schema upgrade failed
+.
+
 ;#endif

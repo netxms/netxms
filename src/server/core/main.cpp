@@ -570,41 +570,8 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
    if (g_netxmsdLibDir[0] == 0)
    {
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if (homeDir != NULL)
-      {
-#ifdef _WIN32
-         _sntprintf(g_netxmsdLibDir, MAX_PATH, _T("%s\\lib"), homeDir);
-#else
-         _sntprintf(g_netxmsdLibDir, MAX_PATH, _T("%s/lib/netxms"), homeDir);
-#endif
-      }
-      else
-      {
-#ifdef _WIN32
-         HKEY hKey;
-         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-         {
-            DWORD size = MAX_PATH * sizeof(TCHAR);
-            if (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, (BYTE *)g_netxmsdLibDir, &size) == ERROR_SUCCESS)
-            {
-               _tcscat(g_netxmsdLibDir, _T("\\lib"));
-            }
-            else
-            {
-               g_netxmsdLibDir[0] = 0;
-            }
-            RegCloseKey(hKey);
-         }
-         if (g_netxmsdLibDir[0] == 0)
-         {
-            _tcscpy(g_netxmsdLibDir, DEFAULT_LIBDIR);
-         }
-#else
-         _tcscpy(g_netxmsdLibDir, DEFAULT_LIBDIR);
-#endif
-      }
-      DbgPrintf(1, _T("Data directory set to %s from server configuration variable"), g_netxmsdDataDir);
+      GetNetXMSDirectory(nxDirLib, g_netxmsdLibDir);
+      DbgPrintf(1, _T("Lib directory set to %s"), g_netxmsdLibDir);
    }
 
 	if (!(g_flags & AF_USE_SYSLOG))
