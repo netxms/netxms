@@ -18,6 +18,7 @@
  */
 package org.netxms.agent;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -50,8 +51,8 @@ public class SubAgent
    }
 
    private static final String JAR = ".jar";
-   public static final String PLUGIN_CLASSNAME_ATTRIBUTE_NAME = "NetXMS-Plugin-Classname";
-   public static final String MANIFEST_PATH = "META-INF/MANIFEST.MF";
+   private static final String PLUGIN_CLASSNAME_ATTRIBUTE_NAME = "NetXMS-Plugin-Classname";
+   private static final String MANIFEST_PATH = "META-INF/MANIFEST.MF";
 
    protected Map<String, Plugin> plugins;
    protected Map<String, Action> actions;
@@ -61,6 +62,45 @@ public class SubAgent
    protected Map<String, TableParameter> tableParameters;
 
    private Config config = null;
+
+   /**
+    * Private constructor. Will be invoked by native wrapper only.
+    * @param config
+    */
+   private SubAgent(Config config)
+   {
+      plugins = new HashMap<String, Plugin>();
+      actions = new HashMap<String, Action>();
+      parameters = new HashMap<String, Parameter>();
+      listParameters = new HashMap<String, ListParameter>();
+      pushParameters = new HashMap<String, PushParameter>();
+      tableParameters = new HashMap<String, TableParameter>();
+
+      this.config = config;
+      writeDebugLog(1, "Java SubAgent created");
+
+      // load all Plugins
+      ConfigEntry configEntry = config.getEntry("/Java/Plugin");
+      if (configEntry != null)
+      {
+         for(int i = 0; i < configEntry.getValueCount(); i++)
+         {
+            String entry = configEntry.getValue(i).trim();
+            try
+            {
+               loadPlugin(entry, config);
+            }
+            catch(Throwable e)
+            {
+               AgentWriteLog(LogLevel.ERROR, "JAVA: Exception in loadPlugin: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+            }
+         }
+      }
+      else
+      {
+         AgentWriteLog(LogLevel.WARNING, "No plugins defined in Java section");
+      }
+   }
 
    /**
     * @return
@@ -84,30 +124,25 @@ public class SubAgent
     * @param index argument index (first argument has index 1)
     * @return extracted argument on success, empty string if argument is missing, null if input is malformed
     */
-   public static native String AgentGetParameterArg(String param, int index);
+   public static native String getParameterArg(String param, int index);
 
-   public static native void AgentSendTrap(int event, String name, String[] args);
+   public static native void sendTrap(int event, String name, String[] args);
 
-   protected static native boolean AgentPushParameterData(String name, String value);
+   protected static native boolean pushParameterData(String name, String value);
 
-   public static boolean AgentPushParameterData(PushParameter pushParameter)
+   public static boolean pushParameterData(PushParameter pushParameter)
    {
-      return AgentPushParameterData(pushParameter.getName(), pushParameter.getValue());
+      return pushParameterData(pushParameter.getName(), pushParameter.getValue());
    }
 
-   protected static native void AgentWriteLog(int level, String message);
+   protected static native void writeLog(int level, String message);
 
    public static void AgentWriteLog(LogLevel level, String message)
    {
-      AgentWriteLog(level.getValue(), message);
+      writeLog(level.getValue(), message);
    }
 
-   public static native void AgentWriteDebugLog(int level, String message);
-
-   public static void AgentWriteDebugLog(LogLevel level, String message)
-   {
-      AgentWriteDebugLog(level.getValue(), message);
-   }
+   public static native void writeDebugLog(int level, String message);
    
    /*===== end of native methods exposed by agent =====*/
 
@@ -131,11 +166,19 @@ public class SubAgent
     */
    public void shutdown()
    {
-      AgentWriteDebugLog(2, "SubAgent.shutdown()");
+      writeDebugLog(2, "JAVA: subagent shutdown initiated");
       for(Map.Entry<String, Plugin> entry : plugins.entrySet())
       {
-         entry.getValue().shutdown();
+         try
+         {
+            entry.getValue().shutdown();
+         }
+         catch(Throwable e)
+         {
+            writeDebugLog(2, "JAVA: exception in plugin " + entry.getKey() + " shutdown handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         }
       }
+      writeDebugLog(2, "JAVA: subagent shutdown completed");
    }
 
    /**
@@ -147,55 +190,52 @@ public class SubAgent
     */
    protected boolean loadPlugin(String path, Config config)
    {
-      AgentWriteDebugLog(2, "SubAgent.loadPlugin(" + path + ")");
+      writeDebugLog(2, "SubAgent.loadPlugin(" + path + ")");
       Plugin plugin = null;
       try
       {
          plugin = path.toLowerCase().endsWith(JAR) ? createPluginWithJar(path, config) : createPluginWithClassname(path, config);
       }
-      catch(Exception ex)
+      catch(Throwable e)
       {
-         AgentWriteLog(LogLevel.WARNING, "Failed to load plugin " + path + " with error: " + ex);
+         AgentWriteLog(LogLevel.WARNING, "Failed to load plugin " + path + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
       }
-      finally
-      {
-         if (plugin != null)
-         {
-            plugins.put(plugin.getName(), plugin);
-            // register actions
-            Action[] _actions = plugin.getActions();
-            for(int i = 0; i < _actions.length; i++)
-               actions.put(getActionHash(plugin, _actions[i]), _actions[i]);
-
-            // register paramaters
-            Parameter[] _parameters = plugin.getParameters();
-            for(int i = 0; i < _parameters.length; i++)
-               parameters.put(getParameterHash(plugin, _parameters[i]), _parameters[i]);
-
-            // register list paramaters
-            ListParameter[] _listParameters = plugin.getListParameters();
-            for(int i = 0; i < _listParameters.length; i++)
-               listParameters.put(getListParameterHash(plugin, _listParameters[i]), _listParameters[i]);
-
-            // register push paramaters
-            PushParameter[] _pushParameters = plugin.getPushParameters();
-            for(int i = 0; i < _pushParameters.length; i++)
-               pushParameters.put(getPushParameterHash(plugin, _pushParameters[i]), _pushParameters[i]);
-
-            // register table paramaters
-            TableParameter[] _tableParameters = plugin.getTableParameters();
-            for(int i = 0; i < _tableParameters.length; i++)
-               tableParameters.put(getTableParameterHash(plugin, _tableParameters[i]), _tableParameters[i]);
-
-            AgentWriteDebugLog(6, "SubAgent.loadPlugin actions=" + actions);
-            AgentWriteDebugLog(6, "SubAgent.loadPlugin parameters=" + parameters);
-            AgentWriteDebugLog(6, "SubAgent.loadPlugin listParameters=" + listParameters);
-            AgentWriteDebugLog(6, "SubAgent.loadPlugin pushParameters=" + pushParameters);
-            AgentWriteDebugLog(6, "SubAgent.loadPlugin tableParameters=" + tableParameters);
-            return true;
-         }
-      }
-      return false;
+      
+      if (plugin == null)
+         return false;
+      
+      plugins.put(plugin.getName(), plugin);
+      // register actions
+      Action[] _actions = plugin.getActions();
+      for(int i = 0; i < _actions.length; i++)
+         actions.put(getActionHash(plugin, _actions[i]), _actions[i]);
+   
+      // register paramaters
+      Parameter[] _parameters = plugin.getParameters();
+      for(int i = 0; i < _parameters.length; i++)
+         parameters.put(getParameterHash(plugin, _parameters[i]), _parameters[i]);
+   
+      // register list paramaters
+      ListParameter[] _listParameters = plugin.getListParameters();
+      for(int i = 0; i < _listParameters.length; i++)
+         listParameters.put(getListParameterHash(plugin, _listParameters[i]), _listParameters[i]);
+   
+      // register push paramaters
+      PushParameter[] _pushParameters = plugin.getPushParameters();
+      for(int i = 0; i < _pushParameters.length; i++)
+         pushParameters.put(getPushParameterHash(plugin, _pushParameters[i]), _pushParameters[i]);
+   
+      // register table paramaters
+      TableParameter[] _tableParameters = plugin.getTableParameters();
+      for(int i = 0; i < _tableParameters.length; i++)
+         tableParameters.put(getTableParameterHash(plugin, _tableParameters[i]), _tableParameters[i]);
+   
+      writeDebugLog(6, "SubAgent.loadPlugin actions=" + actions);
+      writeDebugLog(6, "SubAgent.loadPlugin parameters=" + parameters);
+      writeDebugLog(6, "SubAgent.loadPlugin listParameters=" + listParameters);
+      writeDebugLog(6, "SubAgent.loadPlugin pushParameters=" + pushParameters);
+      writeDebugLog(6, "SubAgent.loadPlugin tableParameters=" + tableParameters);
+      return true;
    }
 
    /**
@@ -207,9 +247,9 @@ public class SubAgent
    protected Plugin createPluginWithClassname(String classname, Config config) throws Exception
    {
       Class<?> pluginClass = Class.forName(classname);
-      AgentWriteDebugLog(3, "SubAgent.createPluginWithClassname loaded class " + pluginClass);
+      writeDebugLog(3, "SubAgent.createPluginWithClassname loaded class " + pluginClass);
       Plugin plugin = instantiatePlugin(pluginClass.asSubclass(Plugin.class), config);
-      AgentWriteDebugLog(3, "SubAgent.createPluginWithClassname created instance " + plugin);
+      writeDebugLog(3, "SubAgent.createPluginWithClassname created instance " + plugin);
       return plugin;
    }
 
@@ -221,23 +261,19 @@ public class SubAgent
     */
    protected Plugin createPluginWithJar(String jarFile, Config config) throws Exception
    {
-      URLClassLoader classLoader = new URLClassLoader(new URL[] { new URL(jarFile) });
-      try
-      {
-         URL url = classLoader.findResource(MANIFEST_PATH);
-         Manifest manifest = new Manifest(url.openStream());
-         Attributes attributes = manifest.getMainAttributes();
-         String pluginClassName = attributes.getValue(PLUGIN_CLASSNAME_ATTRIBUTE_NAME);
-         if (pluginClassName == null)
-            throw new Exception("Failed to find " + PLUGIN_CLASSNAME_ATTRIBUTE_NAME + " attribute in manifest of " + jarFile);
-         Class<?> pluginClass = classLoader.loadClass(pluginClassName);
-         Plugin plugin = instantiatePlugin(pluginClass.asSubclass(Plugin.class), config);
-         return plugin;
-      }
-      finally
+      URLClassLoader classLoader = new URLClassLoader(new URL[] { new File(jarFile).toURI().toURL() }, Thread.currentThread().getContextClassLoader() );
+      URL url = classLoader.findResource(MANIFEST_PATH);
+      Manifest manifest = new Manifest(url.openStream());
+      Attributes attributes = manifest.getMainAttributes();
+      String pluginClassName = attributes.getValue(PLUGIN_CLASSNAME_ATTRIBUTE_NAME);
+      if (pluginClassName == null)
       {
          classLoader.close();
+         throw new Exception("Failed to find " + PLUGIN_CLASSNAME_ATTRIBUTE_NAME + " attribute in manifest of " + jarFile);
       }
+      Class<?> pluginClass = Class.forName(pluginClassName, false, classLoader);
+      Plugin plugin = instantiatePlugin(pluginClass.asSubclass(Plugin.class), config);
+      return plugin;
    }
 
    /**
@@ -309,11 +345,11 @@ public class SubAgent
    public String[][] tableParameterHandler(final String param, final String id)
    {
       // retrieve appropriate TableParameter from cache
-      AgentWriteDebugLog(7, "SubAgent.tableParameterHandler(param=" + param + ", id=" + id + ")");
+      writeDebugLog(7, "SubAgent.tableParameterHandler(param=" + param + ", id=" + id + ")");
       TableParameter tableParameter = getTableParameter(id);
       if (tableParameter != null)
       {
-         AgentWriteDebugLog(7, "SubAgent.tableParameterHandler(param=" + param + ", id=" + id + ") returning " + tableParameter.getValue(param));
+         writeDebugLog(7, "SubAgent.tableParameterHandler(param=" + param + ", id=" + id + ") returning " + tableParameter.getValue(param));
          return tableParameter.getValue(param);
       }
       return null;
@@ -469,37 +505,5 @@ public class SubAgent
    protected TableParameter getTableParameter(String id)
    {
       return tableParameters.get(id);
-   }
-
-   /**
-    * Private constructor. Will be invoked by native wrapper only.
-    * @param config
-    */
-   private SubAgent(Config config)
-   {
-      plugins = new HashMap<String, Plugin>();
-      actions = new HashMap<String, Action>();
-      parameters = new HashMap<String, Parameter>();
-      listParameters = new HashMap<String, ListParameter>();
-      pushParameters = new HashMap<String, PushParameter>();
-      tableParameters = new HashMap<String, TableParameter>();
-
-      this.config = config;
-      AgentWriteDebugLog(1, "Java SubAgent created");
-
-      // load all Plugins
-      ConfigEntry configEntry = config.getEntry("/Java/Plugin");
-      if (configEntry != null)
-      {
-         for(int i = 0; i < configEntry.getValueCount(); i++)
-         {
-            String entry = configEntry.getValue(i).trim();
-            loadPlugin(entry, config);
-         }
-      }
-      else
-      {
-         AgentWriteLog(LogLevel.WARNING, "No plugins defined in Java section");
-      }
    }
 }

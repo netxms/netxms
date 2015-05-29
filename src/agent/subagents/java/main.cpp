@@ -69,12 +69,14 @@ static void SubAgentShutdown()
 
    if (s_jvm != NULL)
    {
+      AgentWriteDebugLog(6, _T("JAVA: destroying Java VM"));
       s_jvm->DestroyJavaVM();
       s_jvm = NULL;
    }
 
    if (s_jvmModule != NULL)
    {
+      AgentWriteDebugLog(6, _T("JAVA: unloading JVM library"));
       DLClose(s_jvmModule);
       s_jvmModule = NULL;
    }
@@ -218,7 +220,7 @@ static LONG TableParameterHandler(const TCHAR *cmd, const TCHAR *id, Table *tabl
  * Method:    AgentGetParameterArg
  * Signature: (Ljava/lang/String;I)Ljava/lang/String;
  */
-static jstring JNICALL Java_org_netxms_agent_SubAgent_AgentGetParameterArg(JNIEnv *jenv, jclass jcls, jstring jparam, jint jindex)
+static jstring JNICALL Java_org_netxms_agent_SubAgent_getParameterArg(JNIEnv *jenv, jclass jcls, jstring jparam, jint jindex)
 {
    jstring jresult = NULL;
    if (jparam)
@@ -236,10 +238,10 @@ static jstring JNICALL Java_org_netxms_agent_SubAgent_AgentGetParameterArg(JNIEn
 
 /**
  * Class:     org_netxms_agent_SubAgent
- * Method:    AgentSendTrap
+ * Method:    sendTrap
  * Signature: (ILjava/lang/String;[Ljava/lang/String;)V
  */
-static void JNICALL Java_org_netxms_agent_SubAgent_AgentSendTrap(JNIEnv *jenv, jclass jcls, jint event, jstring jname, jobjectArray jargs)
+static void JNICALL Java_org_netxms_agent_SubAgent_sendTrap(JNIEnv *jenv, jclass jcls, jint event, jstring jname, jobjectArray jargs)
 {
    if ((jname != NULL) && (jargs != NULL))
    {
@@ -266,7 +268,7 @@ static void JNICALL Java_org_netxms_agent_SubAgent_AgentSendTrap(JNIEnv *jenv, j
  * Method:    AgentPushParameterData
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
  */
-static jboolean JNICALL Java_org_netxms_agent_SubAgent_AgentPushParameterData(JNIEnv *jenv, jclass jcls, jstring jname, jstring jvalue)
+static jboolean JNICALL Java_org_netxms_agent_SubAgent_pushParameterData(JNIEnv *jenv, jclass jcls, jstring jname, jstring jvalue)
 {
    jboolean res = false;
    if ((jname != NULL) && (jvalue != NULL))
@@ -285,7 +287,7 @@ static jboolean JNICALL Java_org_netxms_agent_SubAgent_AgentPushParameterData(JN
  * Method:    AgentWriteLog
  * Signature: (ILjava/lang/String;)V
  */
-static void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
+static void JNICALL Java_org_netxms_agent_SubAgent_writeLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
 {
    if (jmessage != NULL)
    {
@@ -300,7 +302,7 @@ static void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteLog(JNIEnv *jenv, j
  * Method:    AgentWriteDebugLog
  * Signature: (ILjava/lang/String;)V
  */
-static void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteDebugLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
+static void JNICALL Java_org_netxms_agent_SubAgent_writeDebugLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
 {
    if (jmessage != NULL)
    {
@@ -315,10 +317,11 @@ static void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteDebugLog(JNIEnv *je
  */
 static JNINativeMethod s_jniNativeMethods[] =
 {
-   { "AgentGetParameterArg", "(Ljava/lang/String;I)Ljava/lang/String;", (void *) Java_org_netxms_agent_SubAgent_AgentGetParameterArg },
-   { "AgentPushParameterData", "(Ljava/lang/String;Ljava/lang/String;)Z", (void *) Java_org_netxms_agent_SubAgent_AgentPushParameterData },
-   { "AgentWriteLog", "(ILjava/lang/String;)V", (void *) Java_org_netxms_agent_SubAgent_AgentWriteLog },
-   { "AgentWriteDebugLog", "(ILjava/lang/String;)V", (void *) Java_org_netxms_agent_SubAgent_AgentWriteDebugLog }
+   { "getParameterArg", "(Ljava/lang/String;I)Ljava/lang/String;", (void *)Java_org_netxms_agent_SubAgent_getParameterArg },
+   { "pushParameterData", "(Ljava/lang/String;Ljava/lang/String;)Z", (void *)Java_org_netxms_agent_SubAgent_pushParameterData },
+   { "sendTrap", "(ILjava/lang/String;[Ljava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_sendTrap },
+   { "writeDebugLog", "(ILjava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_writeDebugLog },
+   { "writeLog", "(ILjava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_writeLog }
 };
 
 /**
@@ -471,7 +474,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
                      if (jconfig != NULL)
                      {
                         // create an instance of org.netxms.agent.SubAgent
-                        s_subAgent = new SubAgent(s_jvm , jconfig);
+                        s_subAgent = new SubAgent(s_jvm, jconfig);
                         if (s_subAgent != NULL)
                         {
 

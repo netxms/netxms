@@ -52,7 +52,7 @@ namespace org_netxms_agent
          return NULL;
       }
       jlong result = env->GetLongField(obj, nativePointerFieldId);
-      return (Config *) result;
+      return (Config *)result;
    }
 
    // Retrieves pointer to native ConfigEntry from Java object

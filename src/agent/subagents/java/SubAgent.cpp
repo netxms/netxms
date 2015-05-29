@@ -184,7 +184,6 @@ namespace org_netxms_agent
 
    void SubAgent::shutdown ()
    {
-
       JNIEnv * curEnv = getCurrentEnv();
 
       if (voidshutdownID==NULL)  /* Use the cache */
@@ -224,7 +223,7 @@ namespace org_netxms_agent
          throw JNIException();
       }
 
-      jboolean res =  static_cast<jboolean>( curEnv->CallBooleanMethod( this->instance, jbooleanloadPluginjstringjava_lang_StringID ,path_));
+      jboolean res =  static_cast<jboolean>(curEnv->CallBooleanMethod( this->instance, jbooleanloadPluginjstringjava_lang_StringID ,path_));
       curEnv->DeleteLocalRef(path_);
 
       return (res == JNI_TRUE);
@@ -232,11 +231,10 @@ namespace org_netxms_agent
 
    TCHAR* SubAgent::parameterHandler (TCHAR const* param, TCHAR const* id)
    {
-
       JNIEnv * curEnv = getCurrentEnv();
 
       /* Use the cache */
-      if (jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID==NULL)
+      if (jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID == NULL)
       {
          jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID = curEnv->GetMethodID(this->instanceClass, "parameterHandler", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;" ) ;
          if (jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID == NULL)
@@ -250,21 +248,21 @@ namespace org_netxms_agent
       jstring param_ = JavaStringFromCString(curEnv, param);
       if (param != NULL && param_ == NULL)
       {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java  string, memory full."));
+         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java string, memory full."));
          throw JNIException();
       }
 
       jstring id_ = JavaStringFromCString(curEnv, id);
       if (id != NULL && id_ == NULL)
       {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java  string, memory full."));
+         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java string, memory full."));
          throw JNIException();
       }
 
-      jstring res =  static_cast<jstring>( curEnv->CallObjectMethod( this->instance, jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID ,param_, id_));
+      jstring res = static_cast<jstring>(curEnv->CallObjectMethod(this->instance, jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID ,param_, id_));
       if (curEnv->ExceptionCheck())
       {
-         curEnv->ExceptionDescribe() ;
+         curEnv->ExceptionDescribe();
       }
 
       curEnv->DeleteLocalRef(param_);
@@ -272,7 +270,7 @@ namespace org_netxms_agent
 
       if (res != NULL)
       {
-         TCHAR * myStringBuffer = CStringFromJavaString(curEnv, res);
+         TCHAR *myStringBuffer = CStringFromJavaString(curEnv, res);
          AgentWriteLog(NXLOG_DEBUG, _T("SubAgent::parameterHandler(param=%s, id=%s) returning %s"), param, id, myStringBuffer);
          curEnv->DeleteLocalRef(res);
          return myStringBuffer;

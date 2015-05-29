@@ -117,6 +117,9 @@ target
 /src/agent/subagents/java/java/.classpath
 /src/agent/subagents/java/java/.project
 /src/agent/subagents/java/java/.settings
+/src/agent/subagents/java/sample/.classpath
+/src/agent/subagents/java/sample/.project
+/src/agent/subagents/java/sample/.settings
 /src/agent/subagents/portCheck/x64
 /src/agent/tools/nxappget/nxappget
 /src/agent/tools/nxapush/nxapush

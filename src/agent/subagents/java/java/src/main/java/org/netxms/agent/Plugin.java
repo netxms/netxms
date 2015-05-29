@@ -53,6 +53,7 @@ public abstract class Plugin
     */
    public void init(Config config)
    {
+      SubAgent.writeDebugLog(6, "JAVA/" + getName() + ": initializing");
    }
 
    /**
@@ -60,6 +61,7 @@ public abstract class Plugin
     */
    public void shutdown()
    {
+      SubAgent.writeDebugLog(6, "JAVA/" + getName() + ": shutdown called");
    }
 
    /**
