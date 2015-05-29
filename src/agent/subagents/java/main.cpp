@@ -113,8 +113,8 @@ static NETXMS_SUBAGENT_INFO s_subagentInfo =
 static LONG ActionHandler(const TCHAR *action, StringList *pArgList, const TCHAR *id, AbstractCommSession *session)
 {
    LONG result = SYSINFO_RC_SUCCESS;
-   // route the call to SubAgent
    AgentWriteDebugLog(6, _T("JAVA: ActionHandler(action=%s, id=%s)"), action, id);
+
    int len = pArgList->size();
    TCHAR const** args = new TCHAR const* [len];
    for (int i=0; i < len; i++)
@@ -132,6 +132,8 @@ static LONG ActionHandler(const TCHAR *action, StringList *pArgList, const TCHAR
       result = SYSINFO_RC_ERROR;
    }
    free(args);
+
+   s_jvm->DetachCurrentThread();
    return result;
 }
 
@@ -140,18 +142,21 @@ static LONG ActionHandler(const TCHAR *action, StringList *pArgList, const TCHAR
  */
 static LONG ParameterHandler(const TCHAR *param, const TCHAR *id, TCHAR *value, AbstractCommSession *session)
 {
+   LONG result;
    try
    {
       TCHAR *resultString = s_subAgent->parameterHandler(param, id);
       nx_strncpy(value, resultString, MAX_RESULT_LENGTH);
       free(resultString);
-      return SYSINFO_RC_SUCCESS;
+      result = SYSINFO_RC_SUCCESS;
    }
    catch (JNIException const& e)
    {
       AgentWriteDebugLog(3, _T("JAVA: JNI exception in ParameterHandler(%s): %hs"), param, e.what());
-      return SYSINFO_RC_ERROR;
+      result = SYSINFO_RC_ERROR;
    }
+   s_jvm->DetachCurrentThread();
+   return result;
 }
 
 /**
@@ -159,6 +164,7 @@ static LONG ParameterHandler(const TCHAR *param, const TCHAR *id, TCHAR *value, 
  */
 static LONG ListParameterHandler(const TCHAR *cmd, const TCHAR *id, StringList *value, AbstractCommSession *session)
 {
+   LONG result;
    try
    {
       // route the call to SubAgent
@@ -168,13 +174,15 @@ static LONG ListParameterHandler(const TCHAR *cmd, const TCHAR *id, StringList *
       {
          value->addPreallocated(res[i]);
       }
-      return SYSINFO_RC_SUCCESS;
+      result = SYSINFO_RC_SUCCESS;
    }
    catch (JNIException const& e)
    {
       AgentWriteDebugLog(3, _T("JAVA: JNI exception in ListParameterHandler(%s): %hs"), cmd, e.what());
-      return SYSINFO_RC_ERROR;
+      result = SYSINFO_RC_ERROR;
    }
+   s_jvm->DetachCurrentThread();
+   return result;
 }
 
 /**
@@ -182,6 +190,7 @@ static LONG ListParameterHandler(const TCHAR *cmd, const TCHAR *id, StringList *
  */
 static LONG TableParameterHandler(const TCHAR *cmd, const TCHAR *id, Table *table, AbstractCommSession *session)
 {
+   LONG result;
    try
    {
       // route the call to SubAgent
@@ -206,13 +215,15 @@ static LONG TableParameterHandler(const TCHAR *cmd, const TCHAR *id, Table *tabl
             table->setPreallocatedAt(i, j, res[i][j]);
          }
       }
-      return SYSINFO_RC_SUCCESS;
+      result = SYSINFO_RC_SUCCESS;
    }
    catch (JNIException const& e)
    {
       AgentWriteDebugLog(3, _T("JAVA: JNI exception in TableParameterHandler(%s): %hs"), cmd, e.what());
-      return SYSINFO_RC_ERROR;
+      result = SYSINFO_RC_ERROR;
    }
+   s_jvm->DetachCurrentThread();
+   return result;
 }
 
 /**
