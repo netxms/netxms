@@ -266,7 +266,7 @@ static void JNICALL Java_org_netxms_agent_SubAgent_AgentSendTrap(JNIEnv *jenv, j
  * Method:    AgentPushParameterData
  * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
  */
-static jboolean JNICALL Java_org_netxms_agent_SubAgent_AgentPushParameterData (JNIEnv *jenv, jclass jcls, jstring jname, jstring jvalue)
+static jboolean JNICALL Java_org_netxms_agent_SubAgent_AgentPushParameterData(JNIEnv *jenv, jclass jcls, jstring jname, jstring jvalue)
 {
    jboolean res = false;
    if ((jname != NULL) && (jvalue != NULL))
@@ -285,7 +285,7 @@ static jboolean JNICALL Java_org_netxms_agent_SubAgent_AgentPushParameterData (J
  * Method:    AgentWriteLog
  * Signature: (ILjava/lang/String;)V
  */
-static void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteLog (JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
+static void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
 {
    if (jmessage != NULL)
    {
@@ -300,7 +300,7 @@ static void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteLog (JNIEnv *jenv, 
  * Method:    AgentWriteDebugLog
  * Signature: (ILjava/lang/String;)V
  */
-static void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteDebugLog (JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
+static void JNICALL Java_org_netxms_agent_SubAgent_AgentWriteDebugLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
 {
    if (jmessage != NULL)
    {
