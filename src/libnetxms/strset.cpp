@@ -165,6 +165,39 @@ void StringSet::forEach(bool (*cb)(const TCHAR *, void *), void *userData)
 }
 
 /**
+ * Split source string and add all elements
+ */
+void StringSet::splitAndAdd(const TCHAR *src, const TCHAR *separator)
+{
+   int slen = (int)_tcslen(separator);
+   if (slen == 0)
+   {
+      add(src);
+      return;
+   }
+
+   const TCHAR *curr = src;
+   while(curr != NULL)
+   {
+      const TCHAR *next = _tcsstr(curr, separator);
+      if (next != NULL)
+      {
+         int len = (int)(next - curr);
+         TCHAR *value = (TCHAR *)malloc((len + 1) * sizeof(TCHAR));
+         memcpy(value, curr, len * sizeof(TCHAR));
+         value[len] = 0;
+         addPreallocated(value);
+         next += slen;
+      }
+      else
+      {
+         add(curr);
+      }
+      curr = next;
+   }
+}
+
+/**
  * Add all entries from source set
  */
 void StringSet::addAll(StringSet *src)
@@ -247,7 +280,7 @@ void StringSet::addAllFromMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countI
  *
  * @parm separator optional separator, may be NULL
  */
-String StringSet::getAll(const TCHAR *separator)
+String StringSet::join(const TCHAR *separator)
 {
    String result;
    result.setAllocationStep(4096);

@@ -628,13 +628,14 @@ public:
 
    void addAll(StringSet *src);
    void addAll(TCHAR **strings, int count);
+   void splitAndAdd(const TCHAR *src, const TCHAR *separator);
    void addAllPreallocated(TCHAR **strings, int count);
    void forEach(bool (*cb)(const TCHAR *, void *), void *userData);
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId);
    void addAllFromMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
 
-   String getAll(const TCHAR *separator);
+   String join(const TCHAR *separator);
 };
 
 /**
