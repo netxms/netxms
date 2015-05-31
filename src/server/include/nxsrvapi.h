@@ -490,8 +490,9 @@ protected:
 	virtual void onDataPush(NXCPMessage *msg);
 	virtual void onFileMonitoringData(NXCPMessage *msg);
 	virtual void onSnmpTrap(NXCPMessage *pMsg);
-	virtual bool processCustomMessage(NXCPMessage *pMsg);
 	virtual void onFileDownload(BOOL success);
+	virtual void processCollectedData(NXCPMessage *msg);
+	virtual bool processCustomMessage(NXCPMessage *pMsg);
 
    void lock() { MutexLock(m_mutexDataLock); }
    void unlock() { MutexUnlock(m_mutexDataLock); }

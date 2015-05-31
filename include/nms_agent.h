@@ -373,7 +373,7 @@
 /**
  * API for CommSession
  */
-class AbstractCommSession
+class AbstractCommSession : public RefCountObject
 {
 public:
    virtual bool isMasterServer() = 0;
@@ -384,9 +384,11 @@ public:
 
    virtual bool isIPv6Aware() = 0;
 
-   virtual void sendMessage(NXCPMessage *pMsg) = 0;
-   virtual void sendRawMessage(NXCP_MESSAGE *pMsg) = 0;
+   virtual void sendMessage(NXCPMessage *msg) = 0;
+   virtual void sendRawMessage(NXCP_MESSAGE *msg) = 0;
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) = 0;
+   virtual bool doRequest(NXCPMessage *msg, UINT32 timeout) = 0;
+   virtual UINT32 generateRequestId() = 0;
    virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
 };
 
@@ -573,6 +575,7 @@ void LIBNXAGENT_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName,
 void LIBNXAGENT_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList);
 
 bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void *), void *data);
+AbstractCommSession LIBNXAGENT_EXPORTABLE *AgentFindServerSession(UINT64 serverId);
 
 bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset);
 

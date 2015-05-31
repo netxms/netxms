@@ -340,6 +340,10 @@ void AgentConnection::receiverThread()
 					onDataPush(pMsg);
 					delete pMsg;
 					break;
+				case CMD_DCI_DATA:
+					processCollectedData(pMsg);
+					delete pMsg;
+					break;
 				case CMD_REQUEST_COMPLETED:
 					m_pMsgWaitQueue->put(pMsg);
 					break;
@@ -1936,6 +1940,13 @@ NXCPEncryptionContext *AgentConnection::acquireEncryptionContext()
 		ctx->incRefCount();
 	unlock();
 	return ctx;
+}
+
+/**
+ * Process collected data information (for DCI with agent-side cache)
+ */
+void AgentConnection::processCollectedData(NXCPMessage *msg)
+{
 }
 
 /**

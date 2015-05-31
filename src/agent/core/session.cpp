@@ -52,7 +52,7 @@ THREAD_RESULT THREAD_CALL CommSession::readThreadStarter(void *pArg)
    // threads are already stopped, so we can safely destroy
    // session object
    UnregisterSession(((CommSession *)pArg)->getIndex());
-   delete (CommSession *)pArg;
+   ((CommSession *)pArg)->decRefCount();
    return THREAD_OK;
 }
 
@@ -88,8 +88,8 @@ THREAD_RESULT THREAD_CALL CommSession::proxyReadThreadStarter(void *pArg)
  */
 CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool masterServer, bool controlServer)
 {
-   m_pSendQueue = new Queue;
-   m_pMessageQueue = new Queue;
+   m_sendQueue = new Queue;
+   m_processingQueue = new Queue;
    m_hSocket = hSocket;
    m_hProxySocket = -1;
    m_dwIndex = INVALID_INDEX;
@@ -108,6 +108,8 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_pCtx = NULL;
    m_ts = time(NULL);
 	m_socketWriteMutex = MutexCreate();
+   m_responseQueue = new MsgWaitQueue();
+   m_requestId = 0;
 }
 
 /**
@@ -119,14 +121,15 @@ CommSession::~CommSession()
    closesocket(m_hSocket);
    if (m_hProxySocket != -1)
       closesocket(m_hProxySocket);
-   delete m_pSendQueue;
-   delete m_pMessageQueue;
+   delete m_sendQueue;
+   delete m_processingQueue;
    safe_free(m_pMsgBuffer);
    if (m_hCurrFile != -1)
       close(m_hCurrFile);
 	if ((m_pCtx != NULL) && (m_pCtx != PROXY_ENCRYPTION_CTX))
 		m_pCtx->decRefCount();
 	MutexDestroy(m_socketWriteMutex);
+   delete m_responseQueue;
 }
 
 /**
@@ -301,9 +304,13 @@ void CommSession::readThread()
                }
                delete pMsg;
             }
+            else if (pMsg->getCode() == CMD_REQUEST_COMPLETED)
+            {
+               m_responseQueue->put(pMsg);
+            }
             else
             {
-               m_pMessageQueue->Put(pMsg);
+               m_processingQueue->Put(pMsg);
             }
          }
       }
@@ -316,8 +323,8 @@ void CommSession::readThread()
 #endif
 
    // Notify other threads to exit
-   m_pSendQueue->Put(INVALID_POINTER_VALUE);
-   m_pMessageQueue->Put(INVALID_POINTER_VALUE);
+   m_sendQueue->Put(INVALID_POINTER_VALUE);
+   m_processingQueue->Put(INVALID_POINTER_VALUE);
    if (m_hProxySocket != -1)
       shutdown(m_hProxySocket, SHUT_RDWR);
 
@@ -373,14 +380,14 @@ void CommSession::writeThread()
 
    while(1)
    {
-      pMsg = (NXCP_MESSAGE *)m_pSendQueue->GetOrBlock();
+      pMsg = (NXCP_MESSAGE *)m_sendQueue->GetOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
       if (!sendRawMessage(pMsg, m_pCtx))
          break;
    }
-   m_pSendQueue->Clear();
+   m_sendQueue->Clear();
 }
 
 /**
@@ -395,7 +402,7 @@ void CommSession::processingThread()
 
    while(1)
    {
-      pMsg = (NXCPMessage *)m_pMessageQueue->GetOrBlock();
+      pMsg = (NXCPMessage *)m_processingQueue->GetOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
       dwCommand = pMsg->getCode();
@@ -698,9 +705,7 @@ void CommSession::getList(NXCPMessage *pRequest, NXCPMessage *pMsg)
    pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
-		pMsg->setField(VID_NUM_STRINGS, (UINT32)value.size());
-		for(int i = 0; i < value.size(); i++)
-			pMsg->setField(VID_ENUM_VALUE_BASE + i, value.get(i));
+      value.fillMessage(pMsg, VID_ENUM_VALUE_BASE, VID_NUM_STRINGS);
    }
 }
 
@@ -945,10 +950,10 @@ UINT32 CommSession::setupProxyConnection(NXCPMessage *pRequest)
             NXCP_MESSAGE *pRawMsg;
 
             // Stop writing thread
-            m_pSendQueue->Put(INVALID_POINTER_VALUE);
+            m_sendQueue->Put(INVALID_POINTER_VALUE);
 
             // Wait while all queued messages will be sent
-            while(m_pSendQueue->Size() > 0)
+            while(m_sendQueue->Size() > 0)
                ThreadSleepMs(100);
 
             // Finish proxy connection setup
@@ -1017,4 +1022,28 @@ void CommSession::proxyReadThread()
       }
    }
    disconnect();
+}
+
+/**
+ * Wait for request completion
+ */
+bool CommSession::doRequest(NXCPMessage *msg, UINT32 timeout)
+{
+   bool success = false;
+   sendMessage(msg);
+   NXCPMessage *response = m_responseQueue->waitForMessage(CMD_REQUEST_COMPLETED, msg->getId(), timeout);
+   if (response != NULL)
+   {
+      success = (response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS);
+      delete response;
+   }
+   return success;
+}
+
+/**
+ * Generate new request ID
+ */
+UINT32 CommSession::generateRequestId()
+{
+   return (UINT32)InterlockedIncrement(&m_requestId);
 }

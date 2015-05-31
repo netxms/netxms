@@ -295,6 +295,7 @@ protected:
    virtual void onDataPush(NXCPMessage *msg);
    virtual void onFileMonitoringData(NXCPMessage *msg);
 	virtual void onSnmpTrap(NXCPMessage *pMsg);
+	virtual void processCollectedData(NXCPMessage *msg);
    virtual bool processCustomMessage(NXCPMessage *msg);
 
 public:

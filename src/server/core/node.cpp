@@ -6441,7 +6441,7 @@ TCHAR *Node::expandText(const TCHAR *textTemplate)
 /**
  * Check and update last agent trap ID
  */
-bool Node::checkAgentTrapId(QWORD trapId)
+bool Node::checkAgentTrapId(UINT64 trapId)
 {
 	lockProperties();
 	bool valid = (trapId > m_lastAgentTrapId);
@@ -6467,7 +6467,7 @@ bool Node::checkSNMPTrapId(UINT32 trapId)
 /**
  * Check and update last agent data push request ID
  */
-bool Node::checkAgentPushRequestId(QWORD requestId)
+bool Node::checkAgentPushRequestId(UINT64 requestId)
 {
 	lockProperties();
 	bool valid = (requestId > m_lastAgentPushRequestId);

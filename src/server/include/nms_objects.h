@@ -1309,9 +1309,9 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL);
-	bool checkAgentTrapId(QWORD id);
+	bool checkAgentTrapId(UINT64 id);
 	bool checkSNMPTrapId(UINT32 id);
-   bool checkAgentPushRequestId(QWORD id);
+   bool checkAgentPushRequestId(UINT64 id);
 
    bool connectToSMCLP();
 

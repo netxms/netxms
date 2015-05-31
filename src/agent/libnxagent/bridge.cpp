@@ -28,6 +28,7 @@
 static void (* s_fpWriteLog)(int, int, const TCHAR *) = NULL;
 static void (* s_fpSendTrap1)(UINT32, const TCHAR *, const char *, va_list) = NULL;
 static void (* s_fpSendTrap2)(UINT32, const TCHAR *, int, TCHAR **) = NULL;
+static AbstractCommSession *(* s_fpFindServerSession)(UINT64) = NULL;
 static bool (* s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void *) = NULL;
 static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long) = NULL;
 static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32, time_t) = NULL;
@@ -40,23 +41,25 @@ static const TCHAR *s_dataDirectory = NULL;
  * Initialize subagent API
  */
 void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
-														void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
-														void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
-														bool (* enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
-														bool (* sendFile)(void *, UINT32, const TCHAR *, long),
-														bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
-                                          CONDITION shutdownCondition, Config *registry,
-                                          void (* saveRegistry)(), const TCHAR *dataDirectory)
+                                           void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
+                                           void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
+                                           bool (* enumerateSessions)(EnumerationCallbackResult (*)(AbstractCommSession *, void *), void*),
+                                           AbstractCommSession *(* findServerSession)(UINT64),
+                                           bool (* sendFile)(void *, UINT32, const TCHAR *, long),
+                                           bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
+                                           void (* saveRegistry)(),
+                                           CONDITION shutdownCondition, Config *registry, const TCHAR *dataDirectory)
 {
    s_fpWriteLog = writeLog;
 	s_fpSendTrap1 = sendTrap1;
 	s_fpSendTrap2 = sendTrap2;
 	s_fpEnumerateSessions = enumerateSessions;
+   s_fpFindServerSession = findServerSession;
 	s_fpSendFile = sendFile;
 	s_fpPushData = pushData;
+   s_fpSaveRegistry = saveRegistry;
    s_agentShutdownCondition = shutdownCondition;
    s_registry = registry;
-   s_fpSaveRegistry = saveRegistry;
    s_dataDirectory = dataDirectory;
 }
 
@@ -276,4 +279,15 @@ void LIBNXAGENT_EXPORTABLE AgentCloseRegistry(bool modified)
 const TCHAR LIBNXAGENT_EXPORTABLE *AgentGetDataDirectory()
 {
    return s_dataDirectory;
+}
+
+/**
+ * Find server session. Caller must call decRefCount() for session object when finished.
+ *
+ * @param serverId server ID
+ * @return server session object or NULL
+ */
+AbstractCommSession LIBNXAGENT_EXPORTABLE *AgentFindServerSession(UINT64 serverId)
+{
+   return (s_fpFindServerSession != NULL) ? s_fpFindServerSession(serverId) : NULL;
 }

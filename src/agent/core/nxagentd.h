@@ -281,14 +281,31 @@ public:
 };
 
 /**
+ * Pending request information
+ */
+struct PendingRequest
+{
+   UINT32 id;
+   INT64 expirationTime;
+   bool completed;
+
+   PendingRequest(NXCPMessage *msg, UINT32 timeout)
+   {
+      id = msg->getId();
+      expirationTime = GetCurrentTimeMs() + (INT64)timeout;
+      completed = false;
+   }
+};
+
+/**
  * Communication session
  */
 class CommSession : public AbstractCommSession
 {
 private:
    SOCKET m_hSocket;
-   Queue *m_pSendQueue;
-   Queue *m_pMessageQueue;
+   Queue *m_sendQueue;
+   Queue *m_processingQueue;
    NXCP_BUFFER *m_pMsgBuffer;
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
@@ -308,6 +325,8 @@ private:
    time_t m_ts;               // Last activity timestamp
    SOCKET m_hProxySocket;     // Socket for proxy connection
 	MUTEX m_socketWriteMutex;
+   VolatileCounter m_requestId;
+   MsgWaitQueue *m_responseQueue;
 
 	BOOL sendRawMessage(NXCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx);
    void authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg);
@@ -335,14 +354,16 @@ private:
 
 public:
    CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool masterServer, bool controlServer);
-   ~CommSession();
+   virtual ~CommSession();
 
    void run();
    void disconnect();
 
-   virtual void sendMessage(NXCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
-   virtual void sendRawMessage(NXCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->size))); }
+   virtual void sendMessage(NXCPMessage *msg) { m_sendQueue->Put(msg->createMessage()); }
+   virtual void sendRawMessage(NXCP_MESSAGE *msg) { m_sendQueue->Put(nx_memdup(msg, ntohl(msg->size))); }
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
+   virtual bool doRequest(NXCPMessage *msg, UINT32 timeout);
+   virtual UINT32 generateRequestId();
 
    virtual UINT64 getServerId() { return m_serverId; }
 	virtual const InetAddress& getServerAddress() { return m_serverAddr; }
@@ -555,6 +576,7 @@ bool WriteMetadata(const TCHAR *name, INT32 value);
 void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg);
 
 bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void* ), void *data);
+AbstractCommSession *FindServerSession(UINT64 serverId);
 
 #ifdef _WIN32
 

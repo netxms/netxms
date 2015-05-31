@@ -322,8 +322,32 @@ void DataElement::saveToDatabase()
  */
 bool DataElement::sendToServer()
 {
-   /* TODO: implement */
-   return true;
+   CommSession *session = (CommSession *)FindServerSession(m_serverId);
+   if (session == NULL)
+      return false;
+
+   NXCPMessage msg;
+   msg.setCode(CMD_DCI_DATA);
+   msg.setId(session->generateRequestId());
+   msg.setField(VID_DCI_ID, m_dciId);
+   msg.setField(VID_DCI_SOURCE_TYPE, (INT16)m_type);
+   msg.setFieldFromTime(VID_TIMESTAMP, m_timestamp);
+   switch(m_type)
+   {
+      case DCO_TYPE_ITEM:
+         msg.setField(VID_VALUE, m_value.item);
+         break;
+      case DCO_TYPE_LIST:
+         msg.setField(VID_NUM_ELEMENTS, m_value.list->size());
+         m_value.list->fillMessage(&msg, VID_ENUM_VALUE_BASE, VID_NUM_STRINGS);
+         break;
+      case DCO_TYPE_TABLE:
+         m_value.table->fillMessage(msg, 0, -1);
+         break;
+   }
+   bool success = session->doRequest(&msg, 2000);
+   session->decRefCount();
+   return success;
 }
 
 /**
@@ -403,12 +427,12 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
          if (!e->sendToServer())
          {
             e->saveToDatabase();
-            status->queueSize++;
          }
       }
       else
       {
          e->saveToDatabase();
+         status->queueSize++;
       }
       MutexUnlock(s_serverSyncStatusLock);
 
@@ -440,6 +464,8 @@ public:
    virtual void sendMessage(NXCPMessage *pMsg) { }
    virtual void sendRawMessage(NXCP_MESSAGE *pMsg) { }
    virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) { return false; }
+   virtual bool doRequest(NXCPMessage *msg, UINT32 timeout) { return false; }
+   virtual UINT32 generateRequestId() { return 0; }
    virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId) { return ERR_INTERNAL_ERROR; }
 };
 
@@ -627,7 +653,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
             exist = true;
          }
       }
-      if(!exist)
+      if (!exist)
       {
          item->deleteFromDatabase();
          s_items.remove(i);

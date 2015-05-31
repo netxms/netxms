@@ -135,6 +135,26 @@ bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSessio
 }
 
 /**
+ * Find server session. Caller must call decRefCount() for session object when finished.
+ */
+AbstractCommSession *FindServerSession(UINT64 serverId)
+{
+   AbstractCommSession *session = NULL;
+   MutexLock(g_hSessionListAccess);
+   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   {
+      if ((g_pSessionList[i] != NULL) && (g_pSessionList[i]->getServerId() == serverId) && g_pSessionList[i]->canAcceptTraps())
+      {
+         session = g_pSessionList[i];
+         session->incRefCount();
+         break;
+      }
+   }
+   MutexUnlock(g_hSessionListAccess);
+   return session;
+}
+
+/**
  * TCP/IP Listener
  */ 
 THREAD_RESULT THREAD_CALL ListenerThread(void *)

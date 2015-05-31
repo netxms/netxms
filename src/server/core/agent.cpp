@@ -129,7 +129,7 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 	if (m_nodeId != 0)
 		sender = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
    if (sender == NULL)
-      sender = FindNodeByIP(0, getIpAddr().getAddressV4());
+      sender = FindNodeByIP(0, getIpAddr());
 
 	if (sender != NULL)
 	{
@@ -454,4 +454,11 @@ UINT32 AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
 		rcc = ERR_INTERNAL_ERROR;
 	}
    return rcc;
+}
+
+/**
+ * Process collected data information (for DCI with agent-side cache)
+ */
+void AgentConnectionEx::processCollectedData(NXCPMessage *msg)
+{
 }
