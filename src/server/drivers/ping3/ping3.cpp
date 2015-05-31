@@ -98,7 +98,7 @@ InterfaceList *Ping3Driver::getInterfaces(SNMP_Transport *snmp, StringMap *attri
    request->bindVariable(new SNMP_Variable(_T(".1.3.6.1.4.1.35160.1.6.0")));  // MAC address
 
    SNMP_PDU *response;
-   UINT32 rcc = snmp->doRequest(request, &response, g_snmpTimeout, 3);
+   UINT32 rcc = snmp->doRequest(request, &response, SnmpGetDefaultTimeout(), 3);
 	delete request;
    if (rcc == SNMP_ERR_SUCCESS)
    {

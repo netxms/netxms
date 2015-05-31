@@ -370,7 +370,7 @@ static UINT32 TableHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport
       }
    }
 
-   dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
+   dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
    delete pRqPDU;
    if (dwResult == SNMP_ERR_SUCCESS)
    {

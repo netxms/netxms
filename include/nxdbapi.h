@@ -212,4 +212,7 @@ void LIBNXDB_EXPORTABLE DBSetLongRunningThreshold(UINT32 threshold);
 void LIBNXDB_EXPORTABLE DBSetDebugPrintCallback(void (*cb)(int, const TCHAR *, va_list));
 ObjectArray<PoolConnectionInfo> LIBNXDB_EXPORTABLE *DBConnectionPoolGetConnectionList();
 
+bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id);
+bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, const uuid_t id);
+
 #endif   /* _nxsrvapi_h_ */

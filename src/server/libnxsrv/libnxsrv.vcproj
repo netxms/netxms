@@ -381,10 +381,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\snmp.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\snmpproxy.cpp"
 				>
 			</File>

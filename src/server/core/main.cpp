@@ -376,10 +376,12 @@ static void LoadGlobalConfig()
    g_icmpPingTimeout = ConfigReadInt(_T("IcmpPingTimeout"), 1500);
 	g_icmpPingSize = ConfigReadInt(_T("IcmpPingSize"), 46);
 	g_lockTimeout = ConfigReadInt(_T("LockTimeout"), 60000);
-	g_snmpTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 2000);
 	g_agentCommandTimeout = ConfigReadInt(_T("AgentCommandTimeout"), 4000);
 	g_thresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
 	g_requiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
+
+	UINT32 snmpTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 2000);
+   SnmpSetDefaultTimeout(snmpTimeout);
 }
 
 /**
@@ -630,6 +632,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 #endif
 
 	InitLocalNetInfo();
+   SnmpSetMessageIds(MSG_OID_PARSE_ERROR, MSG_SNMP_UNKNOWN_TYPE, MSG_SNMP_GET_ERROR);
 
    Timer::globalInit();
 

@@ -263,7 +263,7 @@ static UINT32 HandlerIpAddressTable(UINT32 version, SNMP_Variable *var, SNMP_Tra
    oid[9] = 5; // ipAddressPrefix
    request.bindVariable(new SNMP_Variable(oid, oidLen));
    SNMP_PDU *response;
-   if (snmp->doRequest(&request, &response, g_snmpTimeout, 3) == SNMP_ERR_SUCCESS)
+   if (snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3) == SNMP_ERR_SUCCESS)
    {
       // check number of varbinds and address type (1 = unicast)
       if ((response->getNumVariables() == 2) && (response->getVariable(0)->getValueAsInt() == 1))

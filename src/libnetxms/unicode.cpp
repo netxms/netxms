@@ -393,11 +393,10 @@ UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr)
  */
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString)
 {
-   WCHAR *pwszOut;
-   int nLen;
-
-   nLen = (int) strlen(pszString) + 1;
-   pwszOut = (WCHAR *) malloc(nLen * sizeof(WCHAR));
+   if (pszString == NULL)
+      return NULL;
+   int nLen = (int) strlen(pszString) + 1;
+   WCHAR *pwszOut = (WCHAR *) malloc(nLen * sizeof(WCHAR));
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszString, -1, pwszOut, nLen);
    return pwszOut;
 }
@@ -407,11 +406,10 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString)
  */
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString)
 {
-   WCHAR *pwszOut;
-   int nLen;
-
-   nLen = (int) strlen(pszString) + 1;
-   pwszOut = (WCHAR *) malloc(nLen * sizeof(WCHAR));
+   if (pszString == NULL)
+      return NULL;
+   int nLen = (int)strlen(pszString) + 1;
+   WCHAR *pwszOut = (WCHAR *) malloc(nLen * sizeof(WCHAR));
    MultiByteToWideChar(CP_UTF8, 0, pszString, -1, pwszOut, nLen);
    return pwszOut;
 }
@@ -422,11 +420,10 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString)
  */
 char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString)
 {
-   char *pszOut;
-   int nLen;
-
-   nLen = (int)wcslen(pwszString) + 1;
-   pszOut = (char *)malloc(nLen);
+   if (pwszString == NULL)
+      return NULL;
+   int nLen = (int)wcslen(pwszString) + 1;
+   char *pszOut = (char *)malloc(nLen);
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pwszString, -1, pszOut, nLen, NULL, NULL);
    return pszOut;
 }

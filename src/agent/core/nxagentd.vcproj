@@ -382,6 +382,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\dcsnmp.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\epp.cpp"
 				>
 			</File>

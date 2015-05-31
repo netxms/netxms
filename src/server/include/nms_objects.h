@@ -1052,6 +1052,7 @@ public:
 };
 
 class Subnet;
+struct SnmpProxyInfo;
 
 /**
  * Node
@@ -1075,7 +1076,7 @@ protected:
    TCHAR m_szSharedSecret[MAX_SECRET_LENGTH];
    INT16 m_iStatusPollType;
    INT16 m_snmpVersion;
-   UINT16 m_wSNMPPort;
+   UINT16 m_snmpPort;
 	UINT16 m_nUseIfXTable;
 	SNMP_SecurityContext *m_snmpSecurity;
    TCHAR m_szObjectId[MAX_OID_LEN * 4];
@@ -1170,6 +1171,8 @@ protected:
 	void updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
 
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
+   void collectSnmpProxyInfo(SnmpProxyInfo *info);
+   static void collectSNMPProxyInfoCallback(NetObj *node, void *data);
 
 	void updateContainerMembership();
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
@@ -1248,7 +1251,7 @@ public:
 
 	void setPrimaryName(const TCHAR *name) { nx_strncpy(m_primaryName, name, MAX_DNS_NAME); }
 	void setAgentPort(WORD port) { m_agentPort = port; }
-	void setSnmpPort(WORD port) { m_wSNMPPort = port; }
+	void setSnmpPort(WORD port) { m_snmpPort = port; }
    void changeIPAddress(const InetAddress& ipAddr);
 	void changeZone(UINT32 newZone);
 

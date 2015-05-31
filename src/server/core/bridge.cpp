@@ -38,7 +38,7 @@ static UINT32 PortMapCallback(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 	pRqPDU->bindVariable(new SNMP_Variable(oid));
 
 	SNMP_PDU *pRespPDU;
-   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
+   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
 	delete pRqPDU;
 
 	if (rcc == SNMP_ERR_SUCCESS)

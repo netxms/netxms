@@ -48,7 +48,7 @@ Node::Node() : DataCollectionTarget()
    m_szSharedSecret[0] = 0;
    m_iStatusPollType = POLL_ICMP_PING;
    m_snmpVersion = SNMP_VERSION_1;
-   m_wSNMPPort = SNMP_DEFAULT_PORT;
+   m_snmpPort = SNMP_DEFAULT_PORT;
 	char community[MAX_COMMUNITY_LENGTH];
    ConfigReadStrA(_T("DefaultCommunityString"), community, MAX_COMMUNITY_LENGTH, "public");
 	m_snmpSecurity = new SNMP_SecurityContext(community);
@@ -127,7 +127,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_szSharedSecret[0] = 0;
    m_iStatusPollType = POLL_ICMP_PING;
    m_snmpVersion = SNMP_VERSION_1;
-   m_wSNMPPort = SNMP_DEFAULT_PORT;
+   m_snmpPort = SNMP_DEFAULT_PORT;
 	char community[MAX_COMMUNITY_LENGTH];
    ConfigReadStrA(_T("DefaultCommunityString"), community, MAX_COMMUNITY_LENGTH, "public");
 	m_snmpSecurity = new SNMP_SecurityContext(community);
@@ -292,7 +292,7 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
    m_iRequiredPollCount = DBGetFieldLong(hResult, 0, 15);
    m_sysDescription = DBGetField(hResult, 0, 16, NULL, 0);
    m_nUseIfXTable = (BYTE)DBGetFieldLong(hResult, 0, 17);
-	m_wSNMPPort = (WORD)DBGetFieldLong(hResult, 0, 18);
+	m_snmpPort = (WORD)DBGetFieldLong(hResult, 0, 18);
 
 	// SNMP authentication parameters
 	char snmpAuthObject[256], snmpAuthPassword[256], snmpPrivPassword[256];
@@ -440,7 +440,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 
 	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(ipAddr), DB_BIND_STATIC);
 	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_primaryName, DB_BIND_STATIC);
-	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_wSNMPPort);
+	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_snmpPort);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_dwFlags);
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_snmpVersion);
 #ifdef UNICODE
@@ -1427,7 +1427,7 @@ restart_agent_check:
          m_bootTime = time(NULL) - _tcstol(buffer, NULL, 0);
 			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from agent"), m_name, m_id, (UINT32)m_bootTime);
       }
-      else if (getItemFromSNMP(m_wSNMPPort, _T(".1.3.6.1.2.1.1.3.0"), MAX_RESULT_LENGTH, buffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
+      else if (getItemFromSNMP(m_snmpPort, _T(".1.3.6.1.2.1.1.3.0"), MAX_RESULT_LENGTH, buffer, SNMP_RAWTYPE_NONE) == DCE_SUCCESS)
       {
          m_bootTime = time(NULL) - _tcstol(buffer, NULL, 0) / 100;   // sysUpTime is in hundredths of a second
 			DbgPrintf(5, _T("StatusPoll(%s [%d]): boot time set to %u from SNMP"), m_name, m_id, (UINT32)m_bootTime);
@@ -3439,7 +3439,7 @@ static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, SNMP_ObjectId *rowOid, size
    }
 
    SNMP_PDU *response;
-   UINT32 rc = snmp->doRequest(&request, &response, g_snmpTimeout, 3);
+   UINT32 rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
    if (rc == SNMP_ERR_SUCCESS)
    {
       if (((int)response->getNumVariables() >= columns->size()) &&
@@ -4142,7 +4142,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
 	pMsg->setFieldFromMBString(VID_SNMP_PRIV_PASSWORD, m_snmpSecurity->getPrivPassword());
 	pMsg->setField(VID_SNMP_USM_METHODS, (WORD)((WORD)m_snmpSecurity->getAuthMethod() | ((WORD)m_snmpSecurity->getPrivMethod() << 8)));
    pMsg->setField(VID_SNMP_OID, m_szObjectId);
-   pMsg->setField(VID_SNMP_PORT, m_wSNMPPort);
+   pMsg->setField(VID_SNMP_PORT, m_snmpPort);
    pMsg->setField(VID_SNMP_VERSION, (WORD)m_snmpVersion);
    pMsg->setField(VID_AGENT_VERSION, m_szAgentVersion);
    pMsg->setField(VID_PLATFORM_NAME, m_szPlatformName);
@@ -4330,7 +4330,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
 
    // Change SNMP port
    if (pRequest->isFieldExist(VID_SNMP_PORT))
-		m_wSNMPPort = pRequest->getFieldAsUInt16(VID_SNMP_PORT);
+		m_snmpPort = pRequest->getFieldAsUInt16(VID_SNMP_PORT);
 
    // Change SNMP authentication data
    if (pRequest->isFieldExist(VID_SNMP_AUTH_OBJECT))
@@ -5200,7 +5200,7 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 	if (snmpProxy == 0)
 	{
 		pTransport = new SNMP_UDPTransport;
-		((SNMP_UDPTransport *)pTransport)->createUDPTransport(m_ipAddress, (port != 0) ? port : m_wSNMPPort);
+		((SNMP_UDPTransport *)pTransport)->createUDPTransport(m_ipAddress, (port != 0) ? port : m_snmpPort);
 	}
 	else
 	{
@@ -5213,7 +5213,7 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 			if (pConn != NULL)
 			{
             // Use loopback address if node is SNMP proxy for itself
-            pTransport = new SNMP_ProxyTransport(pConn, (snmpProxy == m_id) ? InetAddress::LOOPBACK : m_ipAddress, (port != 0) ? port : m_wSNMPPort);
+            pTransport = new SNMP_ProxyTransport(pConn, (snmpProxy == m_id) ? InetAddress::LOOPBACK : m_ipAddress, (port != 0) ? port : m_snmpPort);
 			}
 		}
 	}
@@ -6709,6 +6709,77 @@ AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmp
 }
 
 /**
+ * SNMP proxy information structure
+ */
+struct SnmpProxyInfo
+{
+   UINT32 proxyId;
+   NXCPMessage *msg;
+   UINT32 fieldId;
+   UINT32 count;
+   UINT32 nodeInfoFieldId;
+   UINT32 nodeInfoCount;
+};
+
+/**
+ * Collect info for SNMP proxy
+ */
+void Node::collectSnmpProxyInfo(SnmpProxyInfo *info)
+{
+   bool isTarget = false;
+
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *dco = m_dcObjects->get(i);
+      if ((dco->getDataSource() == DS_SNMP_AGENT) &&
+          (dco->getProxyNode() == info->proxyId) &&
+          (dco->getAgentCacheMode() == AGENT_CACHE_ON))
+      {
+         info->msg->setField(info->fieldId++, dco->getId());
+         info->msg->setField(info->fieldId++, (INT16)dco->getType());
+         info->msg->setField(info->fieldId++, (INT16)dco->getDataSource());
+         info->msg->setField(info->fieldId++, dco->getName());
+         info->msg->setField(info->fieldId++, (INT32)dco->getPollingInterval());
+         info->msg->setFieldFromTime(info->fieldId++, dco->getLastPollTime());
+         info->msg->setField(info->fieldId++, m_guid, UUID_LENGTH);
+         info->msg->setField(info->fieldId++, dco->getSnmpPort());
+         if (dco->getType() == DCO_TYPE_ITEM)
+            info->msg->setField(info->fieldId++, ((DCItem *)dco)->getSnmpRawValueType());
+         else
+            info->msg->setField(info->fieldId++, (INT16)0);
+         info->fieldId += 1;
+         info->count++;
+         isTarget = true;
+      }
+   }
+   unlockDciAccess();
+
+   if (isTarget)
+   {
+      info->msg->setField(info->nodeInfoFieldId++, m_guid, UUID_LENGTH);
+      info->msg->setField(info->nodeInfoFieldId++, m_ipAddress);
+      info->msg->setField(info->nodeInfoFieldId++, m_snmpVersion);
+      info->msg->setField(info->nodeInfoFieldId++, m_snmpPort);
+      info->msg->setField(info->nodeInfoFieldId++, (INT16)m_snmpSecurity->getAuthMethod());
+      info->msg->setField(info->nodeInfoFieldId++, (INT16)m_snmpSecurity->getPrivMethod());
+      info->msg->setFieldFromMBString(info->nodeInfoFieldId++, m_snmpSecurity->getUser());
+      info->msg->setFieldFromMBString(info->nodeInfoFieldId++, m_snmpSecurity->getAuthPassword());
+      info->msg->setFieldFromMBString(info->nodeInfoFieldId++, m_snmpSecurity->getPrivPassword());
+      info->nodeInfoFieldId += 41;
+      info->nodeInfoCount++;
+   }
+}
+
+/**
+ * Callback for colecting proxied SNMP DCIs
+ */
+void Node::collectSNMPProxyInfoCallback(NetObj *node, void *data)
+{
+   ((Node *)node)->collectSnmpProxyInfo((SnmpProxyInfo *)data);
+}
+
+/**
  * Synchronize data collection settings with agent
  */
 void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
@@ -6736,7 +6807,17 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
       }
    }
    unlockDciAccess();
-   msg.setField(VID_NUM_ELEMENTS, count);
+
+   SnmpProxyInfo data;
+   data.proxyId = m_id;
+   data.count = count;
+   data.msg = &msg;
+   data.fieldId = fieldId;
+   data.nodeInfoCount = 0;
+   data.nodeInfoFieldId = VID_NODE_INFO_LIST_BASE;
+   g_idxNodeById.forEach(Node::collectSNMPProxyInfoCallback, &data);
+   msg.setField(VID_NUM_ELEMENTS, data.count);
+   msg.setField(VID_NUM_NODES, data.nodeInfoCount);
 
    UINT32 rcc = ERR_CONNECTION_BROKEN;
    NXCPMessage *response = conn->customRequest(&msg);

@@ -861,8 +861,6 @@ void StopDBWriter();
 void PerfDataStorageRequest(DCItem *dci, time_t timestamp, const TCHAR *value);
 void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value);
 
-bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id);
-
 void DecodeSQLStringAndSetVariable(NXCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr);
 
 SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, INT16 *version, SNMP_SecurityContext *originalContext, StringList *customTestOids);

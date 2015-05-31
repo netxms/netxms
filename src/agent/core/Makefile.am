@@ -1,10 +1,10 @@
 AM_CPPFLAGS=-I@top_srcdir@/include
 bin_PROGRAMS = nxagentd
 nxagentd_SOURCES = messages.c actions.cpp appagent.cpp comm.cpp config.cpp \
-                   ctrl.cpp datacoll.cpp epp.cpp exec.cpp extagent.cpp \
-                   getparam.cpp localdb.cpp master.cpp nxagentd.cpp \
-                   policy.cpp push.cpp register.cpp sa.cpp sd.cpp \
-                   session.cpp snmpproxy.cpp snmptrapproxy.cpp \
+                   ctrl.cpp datacoll.cpp dcsnmp.cpp epp.cpp exec.cpp \
+                   extagent.cpp getparam.cpp localdb.cpp master.cpp \
+                   nxagentd.cpp policy.cpp push.cpp register.cpp sa.cpp \
+                   sd.cpp session.cpp snmpproxy.cpp snmptrapproxy.cpp \
                    static_subagents.cpp subagent.cpp sysinfo.cpp tools.cpp \
                    trap.cpp upgrade.cpp watchdog.cpp
 if USE_INTERNAL_EXPAT

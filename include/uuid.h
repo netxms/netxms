@@ -25,19 +25,11 @@ typedef unsigned char uuid_t[16];
 #define UUID_VARIANT_MICROSOFT   2
 #define UUID_VARIANT_OTHER       3
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void LIBNETXMS_EXPORTABLE uuid_clear(uuid_t uu);
-int LIBNETXMS_EXPORTABLE uuid_compare(uuid_t uu1, uuid_t uu2);
+int LIBNETXMS_EXPORTABLE uuid_compare(const uuid_t uu1, const uuid_t uu2);
 void LIBNETXMS_EXPORTABLE uuid_generate(uuid_t out);
-int LIBNETXMS_EXPORTABLE uuid_is_null(uuid_t uu);
+int LIBNETXMS_EXPORTABLE uuid_is_null(const uuid_t uu);
 int LIBNETXMS_EXPORTABLE uuid_parse(const TCHAR *in, uuid_t uu);
-TCHAR LIBNETXMS_EXPORTABLE *uuid_to_string(uuid_t uu, TCHAR *out);
-
-#ifdef __cplusplus
-}
-#endif
+TCHAR LIBNETXMS_EXPORTABLE *uuid_to_string(const uuid_t uu, TCHAR *out);
 
 #endif

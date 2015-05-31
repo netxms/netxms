@@ -639,6 +639,64 @@ public:
 };
 
 /**
+ * Opaque hash map entry structure
+ */
+struct HashMapEntry;
+
+/**
+ * Hash map base class (for fixed size non-pointer keys)
+ */
+class LIBNETXMS_EXPORTABLE HashMapBase
+{
+private:
+   HashMapEntry *m_data;
+	bool m_objectOwner;
+   unsigned int m_keylen;
+
+	HashMapEntry *find(const void *key);
+	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
+
+protected:
+	void (*m_objectDestructor)(void *);
+
+	HashMapBase(bool objectOwner, unsigned int keylen);
+
+	void *_get(const void *key);
+	void _set(const void *key, void *value);
+	void _remove(const void *key);
+
+   bool _contains(const void *key) { return find(key) != NULL; }
+
+public:
+   virtual ~HashMapBase();
+
+   void setOwner(bool owner) { m_objectOwner = owner; }
+	void clear();
+
+	int size();
+
+   bool forEach(bool (*cb)(const void *, const void *, void *), void *userData);
+   const void *findElement(bool (*comparator)(const void *, const void *, void *), void *userData);
+};
+
+/**
+ * Hash map template for holding objects as values
+ */
+template <class K, class V> class HashMap : public HashMapBase
+{
+private:
+	static void destructor(void *object) { delete (V*)object; }
+
+public:
+	HashMap(bool objectOwner = false) : HashMapBase(objectOwner, sizeof(K)) { m_objectDestructor = destructor; }
+
+	V *get(const K& key) { return (V*)_get(&key); }
+	void set(const K& key, V *value) { _set(&key, (void *)value); }
+   void remove(const K& key) { _remove(&key); }
+   bool contains(const K& key) { return _contains(&key); }
+};
+
+/**
  * Byte stream
  */
 class LIBNETXMS_EXPORTABLE ByteStream

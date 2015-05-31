@@ -374,10 +374,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\gen_uuid.c"
-				>
-			</File>
-			<File
 				RelativePath=".\geolocation.cpp"
 				>
 			</File>
@@ -387,6 +383,10 @@
 			</File>
 			<File
 				RelativePath=".\hash.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\hashmapbase.cpp"
 				>
 			</File>
 			<File
@@ -530,7 +530,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\uuid.c"
+				RelativePath=".\uuid.cpp"
 				>
 			</File>
 			<File
@@ -653,10 +653,6 @@
 			</File>
 			<File
 				RelativePath="..\..\include\uuid.h"
-				>
-			</File>
-			<File
-				RelativePath=".\uuidP.h"
 				>
 			</File>
 		</Filter>

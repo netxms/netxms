@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -412,6 +412,35 @@ public:
    SNMP_TrapProxyTransport(SOCKET hSocket);
 
    int readRawMessage(BYTE **rawData, UINT32 timeout, struct sockaddr *sender, socklen_t *addrSize);
+};
+
+/**
+ * SNMP target
+ */
+class SNMPTarget
+{
+private:
+   uuid_t m_guid;
+   UINT64 m_serverId;
+   InetAddress m_ipAddress;
+   UINT16 m_port;
+   BYTE m_snmpVersion;
+   BYTE m_authType;
+   BYTE m_encType;
+   char *m_authName;
+   char *m_authPassword;
+   char *m_encPassword;
+   SNMP_Transport *m_transport;
+
+public:
+   SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId);
+   SNMPTarget(DB_RESULT hResult, int row);
+   ~SNMPTarget();
+
+   const uuid_t& getGuid() const { return m_guid; }
+   SNMP_Transport *getTransport(UINT16 port);
+
+   bool saveToDatabase();
 };
 
 /**

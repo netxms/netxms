@@ -1810,3 +1810,55 @@ int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
 
 	return syntax;
 }
+
+/**
+ * Check if given record exists in database
+ */
+bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id)
+{
+	bool exist = false;
+
+	TCHAR query[256];
+	_sntprintf(query, 256, _T("SELECT %s FROM %s WHERE %s=?"), idColumn, table, idColumn);
+
+	DB_STATEMENT hStmt = DBPrepare(hdb, query);
+	if (hStmt != NULL)
+	{
+		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			exist = (DBGetNumRows(hResult) > 0);
+			DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
+	return exist;
+}
+
+/**
+ * Check if given record exists in database
+ */
+bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, const uuid_t id)
+{
+	bool exist = false;
+
+	TCHAR query[256];
+	_sntprintf(query, 256, _T("SELECT %s FROM %s WHERE %s=?"), idColumn, table, idColumn);
+
+	DB_STATEMENT hStmt = DBPrepare(hdb, query);
+	if (hStmt != NULL)
+	{
+      TCHAR guidText[64];
+      uuid_to_string(id, guidText);
+		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guidText, DB_BIND_STATIC);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		if (hResult != NULL)
+		{
+			exist = (DBGetNumRows(hResult) > 0);
+			DBFreeResult(hResult);
+		}
+		DBFreeStatement(hStmt);
+	}
+	return exist;
+}

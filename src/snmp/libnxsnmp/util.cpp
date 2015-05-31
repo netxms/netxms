@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,11 +16,11 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: snmp.cpp
+** File: util.cpp
 **
 **/
 
-#include "libnxsrv.h"
+#include "libnxsnmp.h"
 
 /**
  * Unique request ID
@@ -30,9 +30,47 @@ static VolatileCounter s_requestId = 1;
 /**
  * Generate new request ID
  */
-UINT32 LIBNXSRV_EXPORTABLE SnmpNewRequestId()
+UINT32 LIBNXSNMP_EXPORTABLE SnmpNewRequestId()
 {
    return (UINT32)InterlockedIncrement(&s_requestId);
+}
+
+/**
+ * Message codes
+ */
+static DWORD s_msgParseError = 0;
+static DWORD s_msgTypeError = 0;
+static DWORD s_msgGetError = 0;
+
+/**
+ * Configure SNMP utility function logging
+ */
+void LIBNXSNMP_EXPORTABLE SnmpSetMessageIds(DWORD msgParseError, DWORD msgTypeError, DWORD msgGetError)
+{
+   s_msgParseError = msgParseError;
+   s_msgTypeError = msgTypeError;
+   s_msgGetError = msgGetError;
+}
+
+/**
+ * Default timeout for utility finctions
+ */
+static UINT32 s_snmpTimeout = 2000;
+
+/**
+ * Set SNMP timeout
+ */
+void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(UINT32 timeout)
+{
+   s_snmpTimeout = timeout;
+}
+
+/**
+ * Get SNMP timeout
+ */
+UINT32 LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout()
+{
+   return s_snmpTimeout;
 }
 
 /**
@@ -41,15 +79,14 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpNewRequestId()
  * binary representation from oidBinary and dwOidLen
  * Note: buffer size is in bytes
  */
-UINT32 LIBNXSRV_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,
-                                   const TCHAR *szOidStr, const UINT32 *oidBinary, size_t dwOidLen, void *pValue,
-                                   size_t bufferSize, UINT32 dwFlags)
+UINT32 LIBNXSNMP_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,
+                                    const TCHAR *szOidStr, const UINT32 *oidBinary, size_t dwOidLen, void *pValue,
+                                    size_t bufferSize, UINT32 dwFlags)
 {
    if (version != transport->getSnmpVersion())
    {
       int v = transport->getSnmpVersion();
       transport->setSnmpVersion(version);
-      DbgPrintf(7, _T("SnmpGet: transport SNMP version %d changed to %d"), v, version);
       UINT32 rc = SnmpGetEx(transport, szOidStr, oidBinary, dwOidLen, pValue, bufferSize, dwFlags, NULL);
       transport->setSnmpVersion(v);
       return rc;
@@ -67,9 +104,9 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,
  * If SG_RAW_RESULT flag given and dataLen is not NULL actial data length will be stored there
  * Note: buffer size is in bytes
  */
-UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
-                                     const TCHAR *szOidStr, const UINT32 *oidBinary, size_t dwOidLen, void *pValue,
-                                     size_t bufferSize, UINT32 dwFlags, UINT32 *dataLen)
+UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
+                                      const TCHAR *szOidStr, const UINT32 *oidBinary, size_t dwOidLen, void *pValue,
+                                      size_t bufferSize, UINT32 dwFlags, UINT32 *dataLen)
 {
    SNMP_PDU *pRqPDU, *pRespPDU;
    UINT32 pdwVarName[MAX_OID_LEN], dwResult = SNMP_ERR_SUCCESS;
@@ -86,7 +123,8 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
       if (nameLength == 0)
       {
          InetAddress a = pTransport->getPeerIpAddress();
-         nxlog_write(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "ssA", szOidStr, _T("SnmpGet"), &a);
+         if (dwFlags & SG_VERBOSE)
+            nxlog_write(s_msgParseError, NXLOG_WARNING, "ssA", szOidStr, _T("SnmpGet"), &a);
          dwResult = SNMP_ERR_BAD_OID;
       }
    }
@@ -99,7 +137,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
    if (dwResult == SNMP_ERR_SUCCESS)   // Still no errors
    {
       pRqPDU->bindVariable(new SNMP_Variable(pdwVarName, nameLength));
-      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
+      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, s_snmpTimeout, 3);
 
       // Analyze response
       if (dwResult == SNMP_ERR_SUCCESS)
@@ -159,7 +197,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                         dwResult = SNMP_ERR_NO_OBJECT;
                         break;
                      default:
-                        nxlog_write(MSG_SNMP_UNKNOWN_TYPE, NXLOG_WARNING, "x", pVar->getType());
+                        nxlog_write(s_msgTypeError, NXLOG_WARNING, "x", pVar->getType());
                         dwResult = SNMP_ERR_BAD_TYPE;
                         break;
                   }
@@ -182,7 +220,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
       else
       {
          if (dwFlags & SG_VERBOSE)
-            nxlog_write(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", dwResult);
+            nxlog_write(s_msgGetError, EVENTLOG_ERROR_TYPE, "d", dwResult);
       }
    }
 
@@ -193,9 +231,9 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
 /**
  * Enumerate multiple values by walking through MIB, starting at given root
  */
-UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
-                                   UINT32 (* pHandler)(UINT32, SNMP_Variable *, SNMP_Transport *, void *),
-                                   void *pUserArg, BOOL bVerbose)
+UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
+                                     UINT32 (* pHandler)(UINT32, SNMP_Variable *, SNMP_Transport *, void *),
+                                     void *pUserArg, BOOL bVerbose)
 {
 	if (pTransport == NULL)
 		return SNMP_ERR_COMM;
@@ -206,7 +244,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport
    if (dwRootLen == 0)
    {
       InetAddress a = pTransport->getPeerIpAddress();
-      nxlog_write(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "ssA", szRootOid, _T("SnmpWalk"), &a);
+      nxlog_write(s_msgParseError, NXLOG_WARNING, "ssA", szRootOid, _T("SnmpWalk"), &a);
       return SNMP_ERR_BAD_OID;
    }
 
@@ -225,7 +263,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport
       SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, (UINT32)InterlockedIncrement(&s_requestId), dwVersion);
       pRqPDU->bindVariable(new SNMP_Variable(pdwName, nameLength));
 	   SNMP_PDU *pRespPDU;
-      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
+      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, s_snmpTimeout, 3);
 
       // Analyze response
       if (dwResult == SNMP_ERR_SUCCESS)
@@ -284,7 +322,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport
       else
       {
          if (bVerbose)
-            nxlog_write(MSG_SNMP_GET_ERROR, EVENTLOG_ERROR_TYPE, "d", dwResult);
+            nxlog_write(s_msgGetError, EVENTLOG_ERROR_TYPE, "d", dwResult);
          bRunning = FALSE;
       }
       delete pRqPDU;

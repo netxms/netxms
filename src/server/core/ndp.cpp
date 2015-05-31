@@ -39,7 +39,7 @@ static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, UINT32 snmpVer
 
 	WORD result = 0;
 	SNMP_PDU *pRespPDU = NULL;
-   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
+   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
 	delete pRqPDU;
 	if ((rcc == SNMP_ERR_SUCCESS) && (pRespPDU->getNumVariables() > 0) && (pRespPDU->getVariable(0)->getType() == ASN_OCTET_STRING))
    {

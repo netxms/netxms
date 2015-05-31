@@ -538,7 +538,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 	char *mbMsg;
 #endif
 
-	if (!(m_flags & NXLOG_IS_OPEN))
+	if (!(m_flags & NXLOG_IS_OPEN) || (msg == 0))
 		return;
 
    memset(strings, 0, sizeof(TCHAR *) * 16);

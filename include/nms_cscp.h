@@ -1063,6 +1063,9 @@ typedef struct
 #define VID_ELEMENT_LIST_BASE       ((UINT32)0x10000000)
 #define VID_LINK_LIST_BASE          ((UINT32)0x40000000)
 
+// Node info list base
+#define VID_NODE_INFO_LIST_BASE     ((UINT32)0x60000000)
+
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((UINT32)0x00001000)
 #define VID_ACL_USER_LAST           ((UINT32)0x00001FFF)
