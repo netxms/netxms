@@ -696,8 +696,7 @@ void CommSession::getParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
  */
 void CommSession::getList(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
-   TCHAR szParameter[MAX_PARAM_NAME];    //
-
+   TCHAR szParameter[MAX_PARAM_NAME];
    pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
 
    StringList value;

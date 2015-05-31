@@ -335,9 +335,9 @@ void StringList::splitAndAdd(const TCHAR *src, const TCHAR *separator)
  */
 void StringList::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId)
 {
-   msg->setField(baseId, (UINT32)m_count);
+   msg->setField(countId, (UINT32)m_count);
    UINT32 fieldId = baseId;
-   for(int i = 1; i < m_count; i++)
+   for(int i = 0; i < m_count; i++)
    {
       msg->setField(fieldId++, CHECK_NULL_EX(m_values[i]));
    }
