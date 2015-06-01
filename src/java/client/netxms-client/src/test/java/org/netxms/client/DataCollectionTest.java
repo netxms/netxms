@@ -40,7 +40,6 @@ import org.netxms.client.objects.Node;
  */
 public class DataCollectionTest extends SessionTest
 {
-	
 	public void testGetLastValues() throws Exception
 	{
 		final NXCSession session = connect();
