@@ -38,7 +38,7 @@ import org.netxms.client.objects.Node;
 /**
  * Test cases for data collection
  */
-public class DataCollectionTest extends SessionTest
+public class DataCollectionTest extends AbstractSessionTest
 {
 	public void testGetLastValues() throws Exception
 	{

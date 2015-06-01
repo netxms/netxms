@@ -10,7 +10,7 @@ import org.netxms.client.situations.SituationInstance;
 /**
  * Situations test
  */
-public class SituationsTest extends SessionTest
+public class SituationsTest extends AbstractSessionTest
 {
 	public void testGetSituations() throws Exception
 	{

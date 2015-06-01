@@ -30,7 +30,7 @@ import org.netxms.client.events.EventInfo;
 /**
  * Alarm management tests
  */
-public class AlarmTest extends SessionTest
+public class AlarmTest extends AbstractSessionTest
 {
 	public void testGetAlarms() throws Exception
 	{

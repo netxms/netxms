@@ -24,7 +24,7 @@ import org.netxms.client.objects.Node;
 /**
  * Test for sendEvent API
  */
-public class SendEventTest extends SessionTest
+public class SendEventTest extends AbstractSessionTest
 {
 	public void testSendEvent() throws Exception
 	{

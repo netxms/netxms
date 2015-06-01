@@ -25,7 +25,7 @@ import org.netxms.client.server.ServerFile;
 /**
  * Test functionality related to server file store
  */
-public class ServerFilesTest extends SessionTest
+public class ServerFilesTest extends AbstractSessionTest
 {
    public void testFileList() throws Exception
    {

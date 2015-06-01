@@ -21,7 +21,7 @@ package org.netxms.client;
 /**
  * Tests for agent-related functions
  */
-public class AgentTest extends SessionTest
+public class AgentTest extends AbstractSessionTest
 {
    public void testExecuteAction() throws Exception
    {

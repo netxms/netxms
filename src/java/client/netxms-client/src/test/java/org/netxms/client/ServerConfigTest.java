@@ -26,7 +26,7 @@ import org.netxms.client.server.ServerVariable;
  * Test functionality related to server configuration cariables
  *
  */
-public class ServerConfigTest extends SessionTest
+public class ServerConfigTest extends AbstractSessionTest
 {
 	public void testServerVariables() throws Exception
 	{

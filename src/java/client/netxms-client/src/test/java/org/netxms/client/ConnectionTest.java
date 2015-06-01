@@ -23,7 +23,7 @@ import java.util.Random;
 /**
  * Basic connection tests
  */
-public class ConnectionTest extends SessionTest
+public class ConnectionTest extends AbstractSessionTest
 {	
    public void testConnect() throws Exception
    {

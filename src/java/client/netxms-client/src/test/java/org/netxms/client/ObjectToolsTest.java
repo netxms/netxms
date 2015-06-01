@@ -28,7 +28,7 @@ import org.netxms.client.objecttools.ObjectToolDetails;
  * Test object tools functionality
  *
  */
-public class ObjectToolsTest extends SessionTest
+public class ObjectToolsTest extends AbstractSessionTest
 {
 	public void testGet() throws Exception
 	{

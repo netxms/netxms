@@ -24,7 +24,7 @@ import org.netxms.client.constants.RCC;
  * @author Victor
  *
  */
-public class UserTest extends SessionTest
+public class UserTest extends AbstractSessionTest
 {
 	public void testUserAttributes() throws Exception
 	{
