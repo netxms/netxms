@@ -98,9 +98,15 @@ bool SNMPTarget::saveToDatabase()
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_port);
    DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)m_authType);
    DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)m_encType);
+#ifdef UNICODE
    DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, WideStringFromUTF8String(m_authName), DB_BIND_DYNAMIC);
    DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, WideStringFromUTF8String(m_authPassword), DB_BIND_DYNAMIC);
    DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, WideStringFromUTF8String(m_encPassword), DB_BIND_DYNAMIC);
+#else
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_authName, DB_BIND_STATIC);
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_authPassword, DB_BIND_STATIC);
+   DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_encPassword, DB_BIND_STATIC);
+#endif
    TCHAR guidText[64];
    DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guidText), DB_BIND_STATIC);
 

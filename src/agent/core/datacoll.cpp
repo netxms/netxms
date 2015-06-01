@@ -211,21 +211,16 @@ void DataCollectionItem::saveToDatabase(bool newObject)
  */
 void DataCollectionItem::deleteFromDatabase()
 {
-   DebugPrintf(INVALID_INDEX, 6, _T("DataCollectionItem::deleteFromDatabase: object(serverId=%ld,dciId=%d) removed from database"),
-   m_serverId, m_id);
    DB_HANDLE db = GetLocalDatabaseHandle();
    TCHAR query[256];
-   _sntprintf(query, 256, _T("DELETE FROM dc_config WHERE server_id=%ld AND dci_id=%d"), m_serverId, m_id);
-   if(!DBQuery(db, query))
+   _sntprintf(query, 256, _T("DELETE FROM dc_config WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"), m_serverId, m_id);
+   if (DBQuery(db, query))
    {
-      DebugPrintf(INVALID_INDEX, 2, _T("DataCollectionItem::deleteFromDatabase: error wile removing object(serverId=%ld,dciId=%d) from dc_config database table"),
-                  m_serverId, m_id);
-   }
-   _sntprintf(query, 256, _T("DELETE FROM dc_queue WHERE server_id=%ld AND dci_id=%d"), m_serverId, m_id);
-   if(!DBQuery(db, query))
-   {
-      DebugPrintf(INVALID_INDEX, 2, _T("DataCollectionItem::deleteFromDatabase: error wile removing object(serverId=%ld,dciId=%d) from dc_queue database table"),
-                  m_serverId, m_id);
+      _sntprintf(query, 256, _T("DELETE FROM dc_queue WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"), m_serverId, m_id);
+      if (DBQuery(db, query))
+      {
+         DebugPrintf(INVALID_INDEX, 6, _T("DataCollectionItem::deleteFromDatabase: object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) removed from database"), m_serverId, m_id);
+      }
    }
 }
 
@@ -251,6 +246,7 @@ private:
    UINT32 m_dciId;
    time_t m_timestamp;
    int m_type;
+   uuid_t m_snmpNode;
    union
    {
       TCHAR *item;
@@ -265,6 +261,7 @@ public:
       m_dciId = dci->getId();
       m_timestamp = time(NULL);
       m_type = DCO_TYPE_ITEM;
+      memcpy(m_snmpNode, dci->getSnmpTargetGuid(), UUID_LENGTH);
       m_value.item = _tcsdup(value);
    }
 
@@ -274,6 +271,7 @@ public:
       m_dciId = dci->getId();
       m_timestamp = time(NULL);
       m_type = DCO_TYPE_LIST;
+      memcpy(m_snmpNode, dci->getSnmpTargetGuid(), UUID_LENGTH);
       m_value.list = value;
    }
 
@@ -283,6 +281,7 @@ public:
       m_dciId = dci->getId();
       m_timestamp = time(NULL);
       m_type = DCO_TYPE_TABLE;
+      memcpy(m_snmpNode, dci->getSnmpTargetGuid(), UUID_LENGTH);
       m_value.table = value;
    }
 
@@ -331,6 +330,7 @@ bool DataElement::sendToServer()
    msg.setId(session->generateRequestId());
    msg.setField(VID_DCI_ID, m_dciId);
    msg.setField(VID_DCI_SOURCE_TYPE, (INT16)m_type);
+   msg.setField(VID_NODE_ID, m_snmpNode, UUID_LENGTH);
    msg.setFieldFromTime(VID_TIMESTAMP, m_timestamp);
    switch(m_type)
    {
@@ -380,7 +380,7 @@ static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
    
    while(!AgentSleepAndCheckForShutdown(sleepTime))
    {
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,dci_type,timestamp,value FROM dc_queue ORDER BY timestamp DESC LIMIT 100"));
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,dci_type,snmp_target_guid,timestamp,value FROM dc_queue ORDER BY timestamp DESC LIMIT 100"));
       if (hResult == NULL)
          continue;
 
@@ -690,6 +690,7 @@ static const TCHAR *s_upgradeQueries[] =
    _T("  server_id number(20) not null,")
    _T("  dci_id integer not null,")
    _T("  dci_type integer not null,")
+   _T("  snmp_target_guid varchar(36) not null,")
    _T("  timestamp integer not null,")
    _T("  value varchar not null,")
    _T("  PRIMARY KEY(server_id,dci_id,timestamp))"),

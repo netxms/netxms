@@ -461,4 +461,5 @@ UINT32 AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
  */
 void AgentConnectionEx::processCollectedData(NXCPMessage *msg)
 {
+
 }
