@@ -27,7 +27,7 @@
 #include <getopt.h>
 #endif
 
-#define VALID_OPTIONS "bcCdDilLoOpPSX"
+#define VALID_OPTIONS "bcCdDilLoOpPSuX"
 
 /**
  * Externals
@@ -54,6 +54,7 @@ static void ShowHelp()
 	       "   -o, --cc           C compiler\n"
 	       "   -c, --cflags       C compiler flags\n"
 	       "   -C, --cppflags     C/C++ compiler flags\n"
+	       "   -u, --curl-libs    Linker flags for using cURL\n"
 	       "   -O, --cxx          C++ compiler\n"
 	       "   -X, --cxxflags     C++ compiler flags\n"
 	       "   -d, --datadir      Data directory\n"
@@ -79,6 +80,7 @@ static void ShowHelp()
 	       "   -p  Perl interpreter\n"
 	       "   -P  Installation prefix\n"
 	       "   -S  Linker flags for server binaries (only -l)\n"
+	       "   -u  Linker flags for using cURL\n"
 	       "   -X  C++ compiler flags\n"
 	      );
 #endif
@@ -111,6 +113,7 @@ int main(int argc, char *argv[])
 		{ (char *)"cc", 0, NULL, 'o' },
 		{ (char *)"cflags", 0, NULL, 'c' },
 		{ (char *)"cppflags", 0, NULL, 'C' },
+		{ (char *)"curl-libs", 0, NULL, 'u' },
 		{ (char *)"cxx", 0, NULL, 'O' },
 		{ (char *)"cxxflags", 0, NULL, 'X' },
 		{ (char *)"datadir", 0, NULL, 'd' },
@@ -179,6 +182,13 @@ int main(int argc, char *argv[])
 			case 'S':
 				_tprintf(_T("%s\n"), g_serverLibs);
 				return 0;
+         case 'u':
+#if HAVE_LIBCURL
+				_tprintf(_T("-lcurl\n"));
+#else
+				_tprintf(_T("\n"));
+#endif
+            return 0;
          case 'X':
             PrintFlags(g_cxxFlags);
             return 0;
