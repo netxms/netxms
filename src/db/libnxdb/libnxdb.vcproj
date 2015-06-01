@@ -353,6 +353,10 @@
 				RelativePath=".\session.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\util.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
