@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -80,6 +80,178 @@ Table::Table(Table *src) : RefCountObject()
    m_columns = new ObjectArray<TableColumnDefinition>(src->m_columns->size(), 8, true);
 	for(i = 0; i < src->m_columns->size(); i++)
       m_columns->add(new TableColumnDefinition(src->m_columns->get(i)));
+}
+
+TCHAR *Table::getTableAsXML()
+{
+   XML_Parser parser = XML_ParserCreate(NULL);
+   XML_PARSER_STATE state;
+
+}
+
+/**
+ * XML parser state for creating LogParser object from XML
+ */
+#define XML_STATE_INIT        -1
+#define XML_STATE_END         -2
+#define XML_STATE_ERROR       -255
+#define XML_STATE_PARSER      0
+#define XML_STATE_TD          1
+
+/**
+ * State information for XML parser
+ */
+typedef struct
+{
+   Table *table;
+	int state;
+	String buffer;
+	int colNum;
+} XML_PARSER_STATE;
+
+/**
+ * Element start handler for XML parser
+ */
+static void StartElement(void *userData, const char *name, const char **attrs)
+{
+   XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+
+	if (!strcmp(name, "table"))
+	{
+      ps->table->setExtendedFormat(XMLGetAttrBoolean(attrs, "extendedFormat", false));
+      ps->table->setSource(XMLGetAttrInt(attrs, "source", 0));
+      const char *title = XMLGetAttr(attrs, "name");
+		if (title != NULL)
+		{
+#ifdef UNICODE
+			WCHAR *wtitle = WideStringFromUTF8String(title);
+         ps->table->setTitle(wtitle);
+			free(wtitle);
+#else
+         ps->table->setTitle(title);
+#endif
+		}
+		ps->state = XML_STATE_PARSER;
+	}
+	else if (!strcmp(name, "columns"))
+	{
+		ps->state = XML_STATE_PARSER;
+	}
+	else if (!strcmp(name, "column"))
+	{
+      TCHAR *name;
+      TCHAR *displayName = NULL;
+#ifdef UNICODE
+      name = WideStringFromUTF8String(CHECK_NULL_A(XMLGetAttr(attrs, "name")));
+      char *tmp = XMLGetAttr(attrs, "displayName");
+      if(tmp != NULL)
+         displayName = WideStringFromUTF8String(tmp);
+#else
+      name = CHECK_NULL_A(XMLGetAttr(attrs, "name"));
+      displayName = XMLGetAttr(attrs, "displayName");
+#endif
+      ps->table->addColumn(name, XMLGetAttrInt(attrs, "dataType", 0), displayName, XMLGetAttrBoolean(attrs, "isInstance", false));
+		ps->state = XML_STATE_PARSER;
+#ifdef UNICODE
+      free(name);
+      safe_free(displayName);
+#endif
+	}
+	else if (!strcmp(name, "data"))
+	{
+		ps->state = XML_STATE_PARSER;
+	}
+	else if (!strcmp(name, "tr"))
+	{
+      ps->table->addRow();
+      ps->table->setObjectId(getNumRows() - 1, XMLGetAttrInt(attrs, "objectId", 0));
+      ps->colNum = 0;
+		ps->state = XML_STATE_PARSER;
+	}
+	else if (!strcmp(name, "td"))
+	{
+      ps->table->setStatus(ps->colNum, XMLGetAttrInt(attrs, "status", 0));
+      ps->state = XML_STATE_TD;
+	}
+	else
+	{
+		ps->state = XML_STATE_ERROR;
+	}
+}
+
+/**
+ * Element end handler for XML parser
+ */
+static void EndElement(void *userData, const char *name)
+{
+   XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+
+   if (!strcmp(name, "td"))
+	{
+      ps->table->set(ps->colNum, ps->buffer);
+      ps->colNum += 1;
+		ps->state = XML_STATE_PARSER;
+	}
+	else if (!strcmp(name, "tr"))
+	{
+      ps->colNum = -1;
+	}
+}
+
+/**
+ * Data handler for XML parser
+ */
+static void CharData(void *userData, const XML_Char *s, int len)
+{
+   XML_PARSER_STATE *ps = (XML_PARSER_STATE *) userData;
+
+   if(ps->state == XML_STATE_TD)
+   {
+      ps->buffer.appendMBString(s, len, CP_UTF8);
+   }
+}
+
+
+bool Table::updateFromXML(TCHAR *xml)
+{
+   XML_PARSER_STATE state;
+
+   XML_Parser parser = XML_ParserCreate(NULL);
+   XML_SetUserData(parser, &state);
+   XML_SetElementHandler(parser, StartElement, EndElement);
+   XML_SetCharacterDataHandler(parser, CharData);
+
+   state.table = this;
+   state.state = XML_STATE_INIT;
+   state.colNum= -1;
+
+   bool success = (XML_Parse(parser, xml, xmlSize, TRUE) != XML_STATUS_ERROR);
+   if (!success)
+   {
+      error(_T("%hs at line %d"), XML_ErrorString(XML_GetErrorCode(parser)), XML_GetCurrentLineNumber(parser));
+   }
+   XML_ParserFree(parser);
+   return success;
+}
+
+static Table *Table::createTableFromXML(TCHAR *xml)
+{
+   Table t = new Table();
+   if(t.updateFromXML(xml))
+   {
+      return t;
+   }
+   else
+   {
+      delete t;
+      return NULL;
+   }
+}
+
+TCHAR* Table::getAsXML()
+{
+   /* TODO: implement */
+   return _tcsdup(_T(""));
 }
 
 /**
@@ -202,7 +374,7 @@ int Table::fillMessage(NXCPMessage &msg, int offset, int rowLimit)
 			msg.setField(id++, r->getObjectId());
          id += 9;
       }
-		for(int col = 0; col < m_columns->size(); col++) 
+		for(int col = 0; col < m_columns->size(); col++)
 		{
 			const TCHAR *tmp = r->getValue(col);
 			msg.setField(id++, CHECK_NULL_EX(tmp));

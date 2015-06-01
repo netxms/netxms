@@ -954,6 +954,10 @@ public:
 
    UINT32 getObjectId(int row) { TableRow *r = m_data->get(row); return (r != NULL) ? r->getObjectId() : 0; }
    void setObjectId(int row, UINT32 id) { TableRow *r = m_data->get(row); if (r != NULL) r->setObjectId(id); }
+
+   bool updateFromXML(TCHAR *xml);
+   static Table *createTableFromXML(TCHAR *xml);
+   TCHAR* getAsXML();
 };
 
 /**

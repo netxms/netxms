@@ -231,7 +231,7 @@ void DataCollectionItem::setLastPollTime(time_t time)
 {
    m_lastPollTime = time;
    TCHAR query[256];
-   _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"), 
+   _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"),
       (UINT64)m_lastPollTime, m_serverId, m_id);
    DBQuery(GetLocalDatabaseHandle(), query);
 }
@@ -303,7 +303,7 @@ public:
 
    time_t getTimestamp() { return m_timestamp; }
    UINT64 getServerId() { return m_serverId; }
-   
+
    void saveToDatabase();
    bool sendToServer();
 };
@@ -313,7 +313,42 @@ public:
  */
 void DataElement::saveToDatabase()
 {
-   /* TODO: implement */
+    DB_HANDLE db = GetLocalDatabaseHandle();
+    DB_STATEMENT hStmt;
+    hStmt = DBPrepare(db, _T("INSERT INTO dc_config (server_id,dci_id,timestamp,")
+                          _T("type,value) VALUES (?,?,?,?,?)"));
+    TCHAR *buffer;
+    if(hStmt != NULL)
+    {
+      DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, m_serverId);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_id);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
+      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_type);
+      switch(m_type)
+      {
+         case DCO_TYPE_ITEM:
+            DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_value.item, DB_BIND_STATIC);
+            break;
+         case DCO_TYPE_LIST:
+            buffer = m_value.list.join("\n\r");
+            DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_STATIC);
+         case DCO_TYPE_TABLE:
+            buffer = m_value.table->getAsXML();
+            DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_STATIC);
+         break;
+      }
+      if(!DBExecute(hStmt))
+      {
+         DebugPrintf(INVALID_INDEX, 2, _T("DataCollectionItem::saveToDatabase: not possible to save %s object(serverId=%ld,dciId=%d) to database"),
+                     m_serverId, m_id);
+      }
+   }
+    else
+   {
+      DebugPrintf(INVALID_INDEX, 2, _T("DataElement::saveToDatabase: not possible to prepare save value quary for %s object(serverId=%ld,dciId=%d) value"),
+                    m_serverId, m_id);
+   }
+   safe_free(buffer);
 }
 
 /**
@@ -377,7 +412,7 @@ static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
    DB_HANDLE hdb = GetLocalDatabaseHandle();
    UINT32 sleepTime = 60000;
    DebugPrintf(INVALID_INDEX, 1, _T("Data reconcillation thread started"));
-   
+
    while(!AgentSleepAndCheckForShutdown(sleepTime))
    {
       DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,dci_type,snmp_target_guid,timestamp,value FROM dc_queue ORDER BY timestamp DESC LIMIT 100"));
@@ -392,7 +427,7 @@ static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
 
       sleepTime = (count == 100) ? 1000 : 60000;
    }
-   
+
    DebugPrintf(INVALID_INDEX, 1, _T("Data reconcillation thread stopped"));
    return THREAD_OK;
 }
@@ -427,6 +462,7 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
          if (!e->sendToServer())
          {
             e->saveToDatabase();
+            status->queueSize++;
          }
       }
       else
@@ -616,7 +652,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    DebugPrintf(INVALID_INDEX, 4, _T("%d data collection elements received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
    MutexLock(s_itemLock);
-   
+
    // Update and add new
    for(int j = 0; j < config.size(); j++)
    {
@@ -637,7 +673,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
          newItem->saveToDatabase(true);
       }
    }
-   
+
    // Remove not existing configuration and data for it
    for(int i = 0; i < s_items.size(); i++)
    {
