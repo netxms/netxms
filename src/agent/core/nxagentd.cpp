@@ -163,7 +163,7 @@ UINT16 g_sessionAgentPort = 28180;
 #else
 UINT16 g_sessionAgentPort = 0;
 #endif
-Config *g_config;
+Config *g_config = NULL;
 #ifdef _WIN32
 UINT32 g_dwIdleTimeout = 60;   // Session idle timeout
 #else
@@ -1040,7 +1040,6 @@ BOOL Initialize()
    registry->deleteEntry(_T("/upgrade/file"));
    AgentCloseRegistry(true);
 
-	delete g_config;
    return TRUE;
 }
 
@@ -1080,6 +1079,8 @@ void Shutdown()
    CloseLocalDatabase();
    nxlog_write(MSG_AGENT_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
    nxlog_close();
+
+   delete g_config;
 
    // Notify main thread about shutdown
 #ifdef _WIN32
