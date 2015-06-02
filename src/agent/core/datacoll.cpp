@@ -245,6 +245,7 @@ private:
    UINT64 m_serverId;
    UINT32 m_dciId;
    time_t m_timestamp;
+   int m_origin;
    int m_type;
    uuid_t m_snmpNode;
    union
@@ -260,6 +261,7 @@ public:
       m_serverId = dci->getServerId();
       m_dciId = dci->getId();
       m_timestamp = time(NULL);
+      m_origin = dci->getOrigin();
       m_type = DCO_TYPE_ITEM;
       memcpy(m_snmpNode, dci->getSnmpTargetGuid(), UUID_LENGTH);
       m_value.item = _tcsdup(value);
@@ -270,6 +272,7 @@ public:
       m_serverId = dci->getServerId();
       m_dciId = dci->getId();
       m_timestamp = time(NULL);
+      m_origin = dci->getOrigin();
       m_type = DCO_TYPE_LIST;
       memcpy(m_snmpNode, dci->getSnmpTargetGuid(), UUID_LENGTH);
       m_value.list = value;
@@ -280,6 +283,7 @@ public:
       m_serverId = dci->getServerId();
       m_dciId = dci->getId();
       m_timestamp = time(NULL);
+      m_origin = dci->getOrigin();
       m_type = DCO_TYPE_TABLE;
       memcpy(m_snmpNode, dci->getSnmpTargetGuid(), UUID_LENGTH);
       m_value.table = value;
@@ -363,7 +367,8 @@ bool DataElement::sendToServer()
    msg.setCode(CMD_DCI_DATA);
    msg.setId(session->generateRequestId());
    msg.setField(VID_DCI_ID, m_dciId);
-   msg.setField(VID_DCI_SOURCE_TYPE, (INT16)m_type);
+   msg.setField(VID_DCI_SOURCE_TYPE, (INT16)m_origin);
+   msg.setField(VID_DCOBJECT_TYPE, (INT16)m_type);
    msg.setField(VID_NODE_ID, m_snmpNode, UUID_LENGTH);
    msg.setFieldFromTime(VID_TIMESTAMP, m_timestamp);
    switch(m_type)

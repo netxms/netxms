@@ -459,7 +459,88 @@ UINT32 AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
 /**
  * Process collected data information (for DCI with agent-side cache)
  */
-void AgentConnectionEx::processCollectedData(NXCPMessage *msg)
+UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
 {
+   if (m_nodeId == 0)
+   {
+      DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: node ID is 0 for agent session"));
+      return ERR_INTERNAL_ERROR;
+   }
 
+	Node *node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
+   if (node == NULL)
+   {
+      DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find node object (node ID = %d)"), m_nodeId);
+      return ERR_INTERNAL_ERROR;
+   }
+
+   int origin = msg->getFieldAsInt16(VID_DCI_SOURCE_TYPE);
+   if ((origin != DS_NATIVE_AGENT) && (origin != DS_SNMP_AGENT))
+   {
+      DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: unsupported data source type %d"), origin);
+      return ERR_INTERNAL_ERROR;
+   }
+
+   if (origin == DS_SNMP_AGENT)
+   {
+      uuid_t nodeId;
+      msg->getFieldAsBinary(VID_NODE_ID, nodeId, UUID_LENGTH);
+      Node *snmpNode = (Node *)FindObjectByGUID(nodeId, OBJECT_NODE);
+      if (snmpNode == NULL)
+      {
+         TCHAR buffer[64];
+         DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find SNMP node with GUID %s"), uuid_to_string(nodeId, buffer));
+         return ERR_INTERNAL_ERROR;
+      }
+      node = snmpNode;
+   }
+
+   UINT32 dciId = msg->getFieldAsUInt32(VID_DCI_ID);
+   DCObject *dcObject = node->getDCObjectById(dciId);
+   if (dcObject == NULL)
+   {
+      DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find DCI with ID %d on node %s [%d]"), dciId, node->getName(), node->getId());
+      return ERR_INTERNAL_ERROR;
+   }
+
+   int type = msg->getFieldAsInt16(VID_DCOBJECT_TYPE);
+   if ((dcObject->getType() != type) || (dcObject->getDataSource() != origin) || (dcObject->getAgentCacheMode() != AGENT_CACHE_ON))
+   {
+      DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: DCI %s [%d] on node %s [%d] configuration mismatch"), dcObject->getName(), dciId, node->getName(), node->getId());
+      return ERR_INTERNAL_ERROR;
+   }
+
+   void *value;
+   switch(type)
+   {
+      case DCO_TYPE_ITEM:
+         value = msg->getFieldAsString(VID_VALUE);
+         break;
+      case DCO_TYPE_LIST:
+         value = new StringList();
+         break;
+      case DCO_TYPE_TABLE:
+         value = new Table(msg);
+         break;
+      default:
+         DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%d] on node %s [%d]"), type, dcObject->getName(), dciId, node->getName(), node->getId());
+         return ERR_INTERNAL_ERROR;
+   }
+
+   bool success = node->processNewDCValue(dcObject, msg->getFieldAsTime(VID_TIMESTAMP), value);
+
+   switch(type)
+   {
+      case DCO_TYPE_ITEM:
+         free(value);
+         break;
+      case DCO_TYPE_LIST:
+         delete (StringList *)value;
+         break;
+      case DCO_TYPE_TABLE:
+         delete (Table *)value;
+         break;
+   }
+
+   return success ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 }

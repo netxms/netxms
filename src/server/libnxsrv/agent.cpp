@@ -341,7 +341,14 @@ void AgentConnection::receiverThread()
 					delete pMsg;
 					break;
 				case CMD_DCI_DATA:
-					processCollectedData(pMsg);
+               {
+					   UINT32 rcc = processCollectedData(pMsg);
+                  NXCPMessage response;
+                  response.setCode(CMD_REQUEST_COMPLETED);
+                  response.setId(pMsg->getId());
+                  response.setField(VID_RCC, rcc);
+                  sendMessage(&response);
+               }
 					delete pMsg;
 					break;
 				case CMD_REQUEST_COMPLETED:
@@ -1945,8 +1952,9 @@ NXCPEncryptionContext *AgentConnection::acquireEncryptionContext()
 /**
  * Process collected data information (for DCI with agent-side cache)
  */
-void AgentConnection::processCollectedData(NXCPMessage *msg)
+UINT32 AgentConnection::processCollectedData(NXCPMessage *msg)
 {
+   return ERR_NOT_IMPLEMENTED;
 }
 
 /**
