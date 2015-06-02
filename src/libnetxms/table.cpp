@@ -295,11 +295,14 @@ Table *Table::createFromXML(const char *xml)
 TCHAR *Table::createXML()
 {
    String xml;
-   xml.appendFormattedString(_T("<table extendedFormat=\"%s\" source=\"%d\"  name=\"%s\">\r\n"), m_extendedFormat ? _T("true") : _T("false"), m_source, m_title);
+   xml.appendFormattedString(_T("<table extendedFormat=\"%s\" source=\"%d\"  name=\"%s\">\r\n"), m_extendedFormat ? _T("true") : _T("false"), m_source,
+                              (const TCHAR *)EscapeStringForXML2(m_title, _tcslen(m_title)));
    xml.append(_T("<columns>\r\n"));
    for(int i = 0; i < m_columns->size(); i++)
       xml.appendFormattedString(_T("<column name=\"%s\" displayName=\"%s\" isInstance=\"%s\" dataType=\"%d\">\r\n"),
-                  m_columns->get(i)->getName(), m_columns->get(i)->getDisplayName(), m_columns->get(i)->isInstanceColumn()? _T("true") : _T("false"), m_columns->get(i)->getDataType());
+                  (const TCHAR *)EscapeStringForXML2(m_columns->get(i)->getName(), _tcslen(m_columns->get(i)->getName())),
+                  (const TCHAR *)EscapeStringForXML2(m_columns->get(i)->getDisplayName(), _tcslen(m_columns->get(i)->getDisplayName())),
+                  m_columns->get(i)->isInstanceColumn()? _T("true") : _T("false"), m_columns->get(i)->getDataType());
    xml.append(_T("</columns>\r\n"));
    xml.append(_T("<data>\r\n"));
    for(int i = 0; i < m_data->size(); i++)
@@ -307,8 +310,8 @@ TCHAR *Table::createXML()
       xml.appendFormattedString(_T("<tr objectId=\"%d\">\r\n"), m_data->get(i)->getObjectId());
       for(int j = 0; j < m_columns->size(); i++)
       {
-         xml.appendFormattedString(_T("<td status==\"%s\">%s</td>\r\n"), m_data->get(i)->getStatus(j), m_data->get(i)->getValue(j));
-
+         xml.appendFormattedString(_T("<td status=\"%d\">%s</td>\r\n"), m_data->get(i)->getStatus(j),
+                                    (const TCHAR *)EscapeStringForXML2(m_data->get(i)->getValue(j), _tcslen(m_data->get(i)->getValue(j))));
       }
       xml.append(_T("</tr>\r\n"));
    }
