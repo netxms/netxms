@@ -848,6 +848,7 @@ public class NXCPCodes
    public static final long VID_OVERVIEW_ONLY = 502;
    public static final long VID_AGENT_CACHE_MODE = 503;
    public static final long VID_DATE = 504;
+   public static final long VID_RECONCILLATION = 505;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

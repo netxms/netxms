@@ -387,7 +387,7 @@ public:
    virtual void sendMessage(NXCPMessage *msg) = 0;
    virtual void sendRawMessage(NXCP_MESSAGE *msg) = 0;
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) = 0;
-   virtual bool doRequest(NXCPMessage *msg, UINT32 timeout) = 0;
+   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) = 0;
    virtual UINT32 generateRequestId() = 0;
    virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
 };

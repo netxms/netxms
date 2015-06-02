@@ -881,6 +881,7 @@ private:
 
 	void createFromMessage(NXCPMessage *msg);
 	void destroy();
+   bool parseXML(const char *xml);
 
 public:
    Table();
@@ -955,9 +956,8 @@ public:
    UINT32 getObjectId(int row) { TableRow *r = m_data->get(row); return (r != NULL) ? r->getObjectId() : 0; }
    void setObjectId(int row, UINT32 id) { TableRow *r = m_data->get(row); if (r != NULL) r->setObjectId(id); }
 
-   bool updateFromXML(const TCHAR *xml, int xmlLen);
-   static Table *createTableFromXML(const TCHAR *xml, int xmlLen);
-   TCHAR *getTableAsXML();
+   static Table *createFromXML(const char *xml);
+   TCHAR *createXML();
 };
 
 /**

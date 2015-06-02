@@ -64,6 +64,7 @@ public:
    const uuid_t& getSnmpTargetGuid() const { return m_snmpTargetGuid; }
    UINT16 getSnmpPort() const { return m_snmpPort; }
    int getSnmpRawValueType() const { return (int)m_snmpRawValueType; }
+   UINT32 getPollingInterval() { return (UINT32)m_pollingInterval; }
 
    bool equals(const DataCollectionItem *item) const { return (m_serverId == item->m_serverId) && (m_id == item->m_id); }
 
@@ -290,6 +291,51 @@ public:
       m_value.table = value;
    }
 
+   /**
+    * Create data element from database record
+    * Expected field order: server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value
+    */
+   DataElement(DB_RESULT hResult, int row)
+   {
+      m_serverId = DBGetFieldUInt64(hResult, row, 0);
+      m_dciId = DBGetFieldULong(hResult, row, 1);
+      m_timestamp = (time_t)DBGetFieldInt64(hResult, row, 5);
+      m_origin = DBGetFieldLong(hResult, row, 3);
+      m_type = DBGetFieldLong(hResult, row, 2);
+      DBGetFieldGUID(hResult, row, 4, m_snmpNode);
+      switch(m_type)
+      {
+         case DCO_TYPE_ITEM:
+            m_value.item = DBGetField(hResult, row, 6, NULL, 0);
+            break;
+         case DCO_TYPE_LIST:
+            {
+               m_value.list = new StringList();
+               TCHAR *text = DBGetField(hResult, row, 6, NULL, 0);
+               if (text != NULL)
+               {
+                  m_value.list->splitAndAdd(text, _T("\n"));
+                  free(text);
+               }
+            }
+            break;
+         case DCO_TYPE_TABLE:
+            {
+               char *xml = DBGetFieldUTF8(hResult, row, 6, NULL, 0);
+               if (xml != NULL)
+               {
+                  m_value.table = Table::createFromXML(xml);
+                  free(xml);
+               }
+            }
+            break;
+         default:
+            m_type = DCO_TYPE_ITEM;
+            m_value.item = _tcsdup(_T(""));
+            break;
+      }
+   }
+
    ~DataElement()
    {
       switch(m_type)
@@ -308,9 +354,10 @@ public:
 
    time_t getTimestamp() { return m_timestamp; }
    UINT64 getServerId() { return m_serverId; }
+   UINT32 getDciId() { return m_dciId; }
 
    void saveToDatabase();
-   bool sendToServer();
+   bool sendToServer(bool reconcillation);
 };
 
 /**
@@ -319,7 +366,7 @@ public:
 void DataElement::saveToDatabase()
 {
     DB_HANDLE db = GetLocalDatabaseHandle();
-    DB_STATEMENT hStmt= DBPrepare(db, _T("INSERT INTO dc_queue (server_id,dci_id,dci_type,dci_origin,timestamp,value) VALUES (?,?,?,?,?,?)"));
+    DB_STATEMENT hStmt= DBPrepare(db, _T("INSERT INTO dc_queue (server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value) VALUES (?,?,?,?,?,?,?)"));
     if (hStmt == NULL)
        return;
 
@@ -327,17 +374,19 @@ void DataElement::saveToDatabase()
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_dciId);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_type);
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_origin);
-   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
+   TCHAR buffer[64];
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, uuid_to_string(m_snmpNode, buffer), DB_BIND_STATIC);
+   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
    switch(m_type)
    {
       case DCO_TYPE_ITEM:
-         DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_value.item, DB_BIND_STATIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_value.item, DB_BIND_STATIC);
          break;
       case DCO_TYPE_LIST:
-         DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_value.list->join(_T("\n")), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_value.list->join(_T("\n")), DB_BIND_DYNAMIC);
          break;
       case DCO_TYPE_TABLE:
-         DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_value.table->getTableAsXML(), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_value.table->createXML(), DB_BIND_DYNAMIC);
          break;
    }
    DBExecute(hStmt);
@@ -347,7 +396,7 @@ void DataElement::saveToDatabase()
 /**
  * Send collected data to server
  */
-bool DataElement::sendToServer()
+bool DataElement::sendToServer(bool reconcillation)
 {
    CommSession *session = (CommSession *)FindServerSession(m_serverId);
    if (session == NULL)
@@ -361,6 +410,7 @@ bool DataElement::sendToServer()
    msg.setField(VID_DCOBJECT_TYPE, (INT16)m_type);
    msg.setField(VID_NODE_ID, m_snmpNode, UUID_LENGTH);
    msg.setFieldFromTime(VID_TIMESTAMP, m_timestamp);
+   msg.setField(VID_RECONCILLATION, (INT16)(reconcillation ? 1 : 0));
    switch(m_type)
    {
       case DCO_TYPE_ITEM:
@@ -373,9 +423,12 @@ bool DataElement::sendToServer()
          m_value.table->fillMessage(msg, 0, -1);
          break;
    }
-   bool success = session->doRequest(&msg, 2000);
+   UINT32 rcc = session->doRequest(&msg, 2000);
    session->decRefCount();
-   return success;
+
+   // consider internal error as success because it means that server
+   // cannot accept data for some reason and retry is not feasible
+   return (rcc == ERR_SUCCESS) || (rcc == ERR_INTERNAL_ERROR);
 }
 
 /**
@@ -408,13 +461,37 @@ static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
 
    while(!AgentSleepAndCheckForShutdown(sleepTime))
    {
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value FROM dc_queue ORDER BY timestamp DESC LIMIT 100"));
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value FROM dc_queue ORDER BY timestamp LIMIT 100"));
       if (hResult == NULL)
          continue;
 
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
+         DataElement e(hResult, i);
+         bool sent = false;
+         MutexLock(s_serverSyncStatusLock);
+         ServerSyncStatus *status = s_serverSyncStatus.get(e.getServerId());
+         if (status != NULL)
+         {
+            sent = e.sendToServer(true);
+         }
+         else
+         {
+            DebugPrintf(INVALID_INDEX, 5, _T("INTERNAL ERROR: cached DCI value without server sync status object"));
+         }
+
+         if (sent)
+         {
+            TCHAR query[256];
+            _sntprintf(query, 256, _T("DELETE FROM dc_queue WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d AND timestamp=") INT64_FMT,
+               e.getServerId(), e.getDciId(), (INT64)e.getTimestamp());
+            if (DBQuery(hdb, query))
+            {
+               status->queueSize--;
+            }
+         }
+         MutexUnlock(s_serverSyncStatusLock);
       }
       DBFreeResult(hResult);
 
@@ -452,7 +529,7 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
 
       if (status->queueSize == 0)
       {
-         if (!e->sendToServer())
+         if (!e->sendToServer(false))
          {
             e->saveToDatabase();
             status->queueSize++;
@@ -493,7 +570,7 @@ public:
    virtual void sendMessage(NXCPMessage *pMsg) { }
    virtual void sendRawMessage(NXCP_MESSAGE *pMsg) { }
    virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) { return false; }
-   virtual bool doRequest(NXCPMessage *msg, UINT32 timeout) { return false; }
+   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) { return RCC_NOT_IMPLEMENTED; }
    virtual UINT32 generateRequestId() { return 0; }
    virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId) { return ERR_INTERNAL_ERROR; }
 };
@@ -582,19 +659,19 @@ static UINT32 DataCollectionRun()
 
          if (e != NULL)
          {
-            dci->setLastPollTime(e->getTimestamp());
             s_dataSenderQueue.Put(e);
          }
          else
          {
             DebugPrintf(INVALID_INDEX, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
          }
+
+         dci->setLastPollTime(e->getTimestamp());
+         timeToPoll = dci->getPollingInterval();
       }
-      else
-      {
-         if (sleepTime > timeToPoll)
-            sleepTime = timeToPoll;
-      }
+
+      if (sleepTime > timeToPoll)
+         sleepTime = timeToPoll;
    }
    MutexUnlock(s_itemLock);
    return sleepTime;
@@ -694,17 +771,45 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
 }
 
 /**
- * Loads configuration to for DCI
+ * Load saved state of local data collection
  */
-static void LoadConfiguration()
+static void LoadState()
 {
-   DB_HANDLE db = GetLocalDatabaseHandle();
-   DB_RESULT hResult = DBSelect(db, _T("SELECT server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type FROM dc_config"));
+   DB_HANDLE hdb = GetLocalDatabaseHandle();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,type,origin,name,polling_interval,last_poll,snmp_port,snmp_target_guid,snmp_raw_type FROM dc_config"));
    if (hResult != NULL)
    {
-      for(int i = 0; i < DBGetNumRows(hResult); i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
          s_items.add(new DataCollectionItem(hResult, i));
+      }
+      DBFreeResult(hResult);
+   }
+
+   hResult = DBSelect(hdb, _T("SELECT guid,server_id,ip_address,snmp_version,port,auth_type,enc_type,auth_name,auth_pass,enc_pass FROM dc_snmp_targets"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         SNMPTarget *t = new SNMPTarget(hResult, i);
+         UpdateSnmpTarget(t);
+      }
+      DBFreeResult(hResult);
+   }
+
+   hResult = DBSelect(hdb, _T("SELECT server_id,count(*) FROM dc_queue GROUP BY server_id"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         ServerSyncStatus *s = new ServerSyncStatus;
+         s->queueSize = DBGetFieldLong(hResult, i, 1);
+         UINT64 serverId = DBGetFieldUInt64(hResult, i, 0);
+         s_serverSyncStatus.set(serverId, s);
+         DebugPrintf(INVALID_INDEX, 2, _T("%d elements in queue for server ID ") UINT64X_FMT(_T("016")), s->queueSize, serverId);
       }
       DBFreeResult(hResult);
    }
@@ -783,11 +888,11 @@ void StartLocalDataCollector()
       WriteMetadata(_T("DataCollectionSchemaVersion"), dbVersion);
    }
 
-   LoadConfiguration();
-   /* TODO: add reading form database snmp_targets table */
-
    s_itemLock = MutexCreate();
    s_serverSyncStatusLock = MutexCreate();
+
+   LoadState();
+
    s_dataCollectorThread = ThreadCreateEx(DataCollector, 0, NULL);
    s_dataSenderThread = ThreadCreateEx(DataSender, 0, NULL);
    s_reconcillationThread = ThreadCreateEx(ReconcillationThread, 0, NULL);

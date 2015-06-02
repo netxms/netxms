@@ -306,6 +306,7 @@ void CommSession::readThread()
             }
             else if (pMsg->getCode() == CMD_REQUEST_COMPLETED)
             {
+               DebugPrintf(m_dwIndex, 6, _T("Received message %s"), NXCPMessageCodeName(pMsg->getCode(), szBuffer));
                m_responseQueue->put(pMsg);
             }
             else
@@ -1026,17 +1027,21 @@ void CommSession::proxyReadThread()
 /**
  * Wait for request completion
  */
-bool CommSession::doRequest(NXCPMessage *msg, UINT32 timeout)
+UINT32 CommSession::doRequest(NXCPMessage *msg, UINT32 timeout)
 {
-   bool success = false;
    sendMessage(msg);
    NXCPMessage *response = m_responseQueue->waitForMessage(CMD_REQUEST_COMPLETED, msg->getId(), timeout);
+   UINT32 rcc;
    if (response != NULL)
    {
-      success = (response->getFieldAsUInt32(VID_RCC) == ERR_SUCCESS);
+      rcc = response->getFieldAsUInt32(VID_RCC);
       delete response;
    }
-   return success;
+   else
+   {
+      rcc = ERR_REQUEST_TIMEOUT;
+   }
+   return rcc;
 }
 
 /**

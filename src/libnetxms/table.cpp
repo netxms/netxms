@@ -89,8 +89,12 @@ Table::Table(Table *src) : RefCountObject()
 #define XML_STATE_INIT        -1
 #define XML_STATE_END         -2
 #define XML_STATE_ERROR       -255
-#define XML_STATE_PARSER      0
-#define XML_STATE_TD          1
+#define XML_STATE_TABLE       0
+#define XML_STATE_COLUMNS     1
+#define XML_STATE_COLUMN      2
+#define XML_STATE_DATA        3
+#define XML_STATE_ROW         4
+#define XML_STATE_CELL        5
 
 /**
  * State information for XML parser
@@ -100,7 +104,7 @@ typedef struct
    Table *table;
 	int state;
 	String buffer;
-	int colNum;
+	int column;
 } XML_PARSER_STATE;
 
 /**
@@ -112,58 +116,85 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 
 	if (!strcmp(name, "table"))
 	{
-      ps->table->setExtendedFormat(XMLGetAttrBoolean(attrs, "extendedFormat", false));
-      ps->table->setSource(XMLGetAttrInt(attrs, "source", 0));
-      const char *title = XMLGetAttr(attrs, "name");
-		if (title != NULL)
-		{
+      if (ps->state == XML_STATE_INIT)
+      {
+         ps->table->setExtendedFormat(XMLGetAttrBoolean(attrs, "extendedFormat", false));
+         ps->table->setSource(XMLGetAttrInt(attrs, "source", 0));
+         const char *title = XMLGetAttr(attrs, "name");
+		   if (title != NULL)
+		   {
 #ifdef UNICODE
-			WCHAR *wtitle = WideStringFromUTF8String(title);
-         ps->table->setTitle(wtitle);
-			free(wtitle);
+			   WCHAR *wtitle = WideStringFromUTF8String(title);
+            ps->table->setTitle(wtitle);
+			   free(wtitle);
 #else
-         ps->table->setTitle(title);
+            ps->table->setTitle(title);
 #endif
-		}
-		ps->state = XML_STATE_PARSER;
+		   }
+		   ps->state = XML_STATE_TABLE;
+      }
+      else
+      {
+		   ps->state = XML_STATE_ERROR;
+      }
 	}
 	else if (!strcmp(name, "columns"))
 	{
-		ps->state = XML_STATE_PARSER;
+      ps->state = (ps->state = XML_STATE_TABLE) ? XML_STATE_COLUMNS : XML_STATE_ERROR;
 	}
 	else if (!strcmp(name, "column"))
 	{
-
+      if (ps->state = XML_STATE_COLUMNS)
+      {
 #ifdef UNICODE
-      wchar_t *name = WideStringFromUTF8String(CHECK_NULL_A(XMLGetAttr(attrs, "name")));
-      const char *tmp = XMLGetAttr(attrs, "displayName");
-      wchar_t *displayName = (tmp != NULL) ? WideStringFromUTF8String(tmp) : NULL;
+         wchar_t *name = WideStringFromUTF8String(CHECK_NULL_A(XMLGetAttr(attrs, "name")));
+         const char *tmp = XMLGetAttr(attrs, "displayName");
+         wchar_t *displayName = (tmp != NULL) ? WideStringFromUTF8String(tmp) : NULL;
 #else
-      const char *name = CHECK_NULL_A(XMLGetAttr(attrs, "name"));
-      const char *displayName = XMLGetAttr(attrs, "displayName");
+         const char *name = CHECK_NULL_A(XMLGetAttr(attrs, "name"));
+         const char *displayName = XMLGetAttr(attrs, "displayName");
 #endif
-      ps->table->addColumn(name, XMLGetAttrInt(attrs, "dataType", 0), displayName, XMLGetAttrBoolean(attrs, "isInstance", false));
-		ps->state = XML_STATE_PARSER;
+         ps->table->addColumn(name, XMLGetAttrInt(attrs, "dataType", 0), displayName, XMLGetAttrBoolean(attrs, "isInstance", false));
+		   ps->state = XML_STATE_COLUMN;
 #ifdef UNICODE
-      safe_free(name);
-      safe_free(displayName);
+         safe_free(name);
+         safe_free(displayName);
 #endif
+      }
+      else
+      {
+		   ps->state = XML_STATE_ERROR;
+      }
 	}
 	else if (!strcmp(name, "data"))
 	{
-		ps->state = XML_STATE_PARSER;
+      ps->state = (ps->state = XML_STATE_TABLE) ? XML_STATE_DATA : XML_STATE_ERROR;
 	}
 	else if (!strcmp(name, "tr"))
 	{
-      ps->table->addRow();
-      ps->table->setObjectId(ps->table->getNumRows() - 1, XMLGetAttrInt(attrs, "objectId", 0));
-      ps->colNum = 0;
-		ps->state = XML_STATE_PARSER;
+      if (ps->state == XML_STATE_DATA)
+      {
+         ps->table->addRow();
+         ps->table->setObjectId(ps->table->getNumRows() - 1, XMLGetAttrInt(attrs, "objectId", 0));
+         ps->column = 0;
+		   ps->state = XML_STATE_ROW;
+      }
+      else
+      {
+		   ps->state = XML_STATE_ERROR;
+      }
 	}
 	else if (!strcmp(name, "td"))
 	{
-      ps->table->setStatus(ps->colNum, XMLGetAttrInt(attrs, "status", 0));
-      ps->state = XML_STATE_TD;
+      if (ps->state == XML_STATE_DATA)
+      {
+         ps->table->setStatus(ps->column, XMLGetAttrInt(attrs, "status", 0));
+         ps->state = XML_STATE_CELL;
+      }
+      else
+      {
+		   ps->state = XML_STATE_ERROR;
+      }
 	}
 	else
 	{
@@ -177,16 +208,27 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 static void EndElement(void *userData, const char *name)
 {
    XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+   if (ps->state == XML_STATE_ERROR)
+      return;
 
    if (!strcmp(name, "td"))
 	{
-      ps->table->set(ps->colNum, ps->buffer);
-      ps->colNum += 1;
-		ps->state = XML_STATE_PARSER;
+      ps->table->set(ps->column, ps->buffer);
+      ps->column++;
+		ps->state = XML_STATE_ROW;
 	}
 	else if (!strcmp(name, "tr"))
 	{
-      ps->colNum = -1;
+      ps->column = -1;
+      ps->state = XML_STATE_DATA;
+	}
+	else if (!strcmp(name, "column"))
+	{
+      ps->state = XML_STATE_COLUMNS;
+	}
+	else if (!strcmp(name, "columns") || !strcmp(name, "data"))
+	{
+      ps->state = XML_STATE_TABLE;
 	}
 }
 
@@ -195,16 +237,18 @@ static void EndElement(void *userData, const char *name)
  */
 static void CharData(void *userData, const XML_Char *s, int len)
 {
-   XML_PARSER_STATE *ps = (XML_PARSER_STATE *) userData;
+   XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
 
-   if(ps->state == XML_STATE_TD)
+   if (ps->state == XML_STATE_CELL)
    {
       ps->buffer.appendMBString(s, len, CP_UTF8);
    }
 }
 
-
-bool Table::updateFromXML(const TCHAR *xml, int xmlLen)
+/**
+ * Parse XML document with table data
+ */
+bool Table::parseXML(const char *xml)
 {
    XML_PARSER_STATE state;
 
@@ -215,43 +259,40 @@ bool Table::updateFromXML(const TCHAR *xml, int xmlLen)
 
    state.table = this;
    state.state = XML_STATE_INIT;
-   state.colNum= -1;
+   state.column = -1;
 
-#ifdef UNICODE
-   char *tmp = UTF8StringFromWideString(xml);
-#else
-   const char *tmp = xml;
-#endif
-
-   bool success = (XML_Parse(parser, tmp, (xmlLen == -1) ? (int)strlen(tmp) : xmlLen, TRUE) != XML_STATUS_ERROR);
+   bool success = (XML_Parse(parser, xml, (int)strlen(xml), TRUE) != XML_STATUS_ERROR);
+   if (success)
+      success = (state.state != XML_STATE_ERROR);
+#if 0
    if (!success)
    {
-      printf("Table::updateFromXML: %s at line %d", XML_ErrorString(XML_GetErrorCode(parser)), (int)XML_GetCurrentLineNumber(parser));
+      printf("Table::parseXML: %s at line %d", XML_ErrorString(XML_GetErrorCode(parser)), (int)XML_GetCurrentLineNumber(parser));
    }
-
-#ifdef UNICODE
-   safe_free(tmp);
 #endif
 
    XML_ParserFree(parser);
    return success;
 }
 
-Table *Table::createTableFromXML(const TCHAR *xml, int xmlLen)
+/**
+ * Create table from XML document
+ */
+Table *Table::createFromXML(const char *xml)
 {
    Table *table = new Table();
-   if(table->updateFromXML(xml, xmlLen))
+   if (table->parseXML(xml))
    {
       return table;
    }
-   else
-   {
-      delete table;
-      return NULL;
-   }
+   delete table;
+   return NULL;
 }
 
-TCHAR* Table::getTableAsXML()
+/**
+ * Create XML document from table
+ */
+TCHAR *Table::createXML()
 {
    /* TODO: implement */
    return _tcsdup(_T(""));
