@@ -319,7 +319,7 @@ public class General extends PropertyPage
       agentCacheMode.add("On");
       agentCacheMode.add("Off");
       agentCacheMode.select(dci.getCacheMode().getValue());
-      agentCacheMode.setEnabled(dci.getOrigin() == DataCollectionItem.AGENT);
+      agentCacheMode.setEnabled((dci.getOrigin() == DataCollectionItem.AGENT) || (dci.getOrigin() == DataCollectionItem.SNMP));
 
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -447,7 +447,7 @@ public class General extends PropertyPage
 		checkUseCustomSnmpPort.setEnabled(index == DataCollectionItem.SNMP);
 		customSnmpPort.setEnabled((index == DataCollectionItem.SNMP) && checkUseCustomSnmpPort.getSelection());
 		sampleCount.setEnabled(index == DataCollectionItem.WINPERF);
-		agentCacheMode.setEnabled(index == DataCollectionItem.AGENT);
+		agentCacheMode.setEnabled((index == DataCollectionItem.AGENT) || (index == DataCollectionItem.SNMP));
 	}
 	
 	/**
