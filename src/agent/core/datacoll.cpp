@@ -327,6 +327,10 @@ public:
                   m_value.table = Table::createFromXML(xml);
                   free(xml);
                }
+               else
+               {
+                  m_value.table = NULL;
+               }
             }
             break;
          default:
@@ -398,6 +402,11 @@ void DataElement::saveToDatabase()
  */
 bool DataElement::sendToServer(bool reconcillation)
 {
+   // If data in database was invalid table may not be parsed correctly
+   // Consider sending a success in that case so data element can be dropped
+   if ((m_type == DCO_TYPE_TABLE) && (m_value.table == NULL))
+      return true;
+
    CommSession *session = (CommSession *)FindServerSession(m_serverId);
    if (session == NULL)
       return false;
@@ -456,7 +465,7 @@ static MUTEX s_serverSyncStatusLock = INVALID_MUTEX_HANDLE;
 static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
-   UINT32 sleepTime = 60000;
+   UINT32 sleepTime = 30000;
    DebugPrintf(INVALID_INDEX, 1, _T("Data reconcillation thread started"));
 
    while(!AgentSleepAndCheckForShutdown(sleepTime))
@@ -466,36 +475,54 @@ static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
          continue;
 
       int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
+      if (count > 0)
       {
-         DataElement e(hResult, i);
-         bool sent = false;
-         MutexLock(s_serverSyncStatusLock);
-         ServerSyncStatus *status = s_serverSyncStatus.get(e.getServerId());
-         if (status != NULL)
+         ObjectArray<DataElement> deleteList(count, 10, true);
+         for(int i = 0; i < count; i++)
          {
-            sent = e.sendToServer(true);
-         }
-         else
-         {
-            DebugPrintf(INVALID_INDEX, 5, _T("INTERNAL ERROR: cached DCI value without server sync status object"));
-         }
+            DataElement *e = new DataElement(hResult, i);
+            bool sent = false;
+            MutexLock(s_serverSyncStatusLock);
+            ServerSyncStatus *status = s_serverSyncStatus.get(e->getServerId());
+            if (status != NULL)
+            {
+               sent = e->sendToServer(true);
+            }
+            else
+            {
+               DebugPrintf(INVALID_INDEX, 5, _T("INTERNAL ERROR: cached DCI value without server sync status object"));
+            }
 
-         if (sent)
-         {
-            TCHAR query[256];
-            _sntprintf(query, 256, _T("DELETE FROM dc_queue WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d AND timestamp=") INT64_FMT,
-               e.getServerId(), e.getDciId(), (INT64)e.getTimestamp());
-            if (DBQuery(hdb, query))
+            if (sent)
             {
                status->queueSize--;
+               deleteList.add(e);
             }
+            else
+            {
+               delete e;
+            }
+            MutexUnlock(s_serverSyncStatusLock);
          }
-         MutexUnlock(s_serverSyncStatusLock);
+
+         if (deleteList.size() > 0)
+         {
+            TCHAR query[256];
+
+            DBBegin(hdb);
+            for(int i = 0; i < deleteList.size(); i++)
+            {
+               DataElement *e = deleteList.get(i);
+               _sntprintf(query, 256, _T("DELETE FROM dc_queue WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d AND timestamp=") INT64_FMT,
+                  e->getServerId(), e->getDciId(), (INT64)e->getTimestamp());
+               DBQuery(hdb, query);
+            }
+            DBCommit(hdb);
+         }
       }
       DBFreeResult(hResult);
 
-      sleepTime = (count == 100) ? 1000 : 60000;
+      sleepTime = (count == 100) ? 100 : 30000;
    }
 
    DebugPrintf(INVALID_INDEX, 1, _T("Data reconcillation thread stopped"));
