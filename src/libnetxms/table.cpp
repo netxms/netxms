@@ -265,12 +265,12 @@ bool Table::parseXML(const char *xml)
    if (success)
       success = (state.state != XML_STATE_ERROR);
 #if 0
+   _tprintf(_T("\n!!!!!Table::parseXML: trying to parse!!!!\n"));
    if (!success)
    {
-      printf("Table::parseXML: %s at line %d", XML_ErrorString(XML_GetErrorCode(parser)), (int)XML_GetCurrentLineNumber(parser));
+      _tprintf(_T("!!!!!Table::parseXML: %s at line %d"), WideStringFromUTF8String(XML_ErrorString(XML_GetErrorCode(parser))), (int)XML_GetCurrentLineNumber(parser));
    }
 #endif
-
    XML_ParserFree(parser);
    return success;
 }
@@ -299,7 +299,7 @@ TCHAR *Table::createXML()
                               (const TCHAR *)EscapeStringForXML2(m_title, -1));
    xml.append(_T("<columns>\r\n"));
    for(int i = 0; i < m_columns->size(); i++)
-      xml.appendFormattedString(_T("<column name=\"%s\" displayName=\"%s\" isInstance=\"%s\" dataType=\"%d\">\r\n"),
+      xml.appendFormattedString(_T("<column name=\"%s\" displayName=\"%s\" isInstance=\"%s\" dataType=\"%d\"/>\r\n"),
                   (const TCHAR *)EscapeStringForXML2(m_columns->get(i)->getName(), -1),
                   (const TCHAR *)EscapeStringForXML2(m_columns->get(i)->getDisplayName(), -1),
                   m_columns->get(i)->isInstanceColumn()? _T("true") : _T("false"), m_columns->get(i)->getDataType());
