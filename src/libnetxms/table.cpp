@@ -308,7 +308,7 @@ TCHAR *Table::createXML()
    for(int i = 0; i < m_data->size(); i++)
    {
       xml.appendFormattedString(_T("<tr objectId=\"%d\">\r\n"), m_data->get(i)->getObjectId());
-      for(int j = 0; j < m_columns->size(); i++)
+      for(int j = 0; j < m_columns->size(); j++)
       {
          xml.appendFormattedString(_T("<td status=\"%d\">%s</td>\r\n"), m_data->get(i)->getStatus(j),
                                     (const TCHAR *)EscapeStringForXML2(m_data->get(i)->getValue(j), -1));
