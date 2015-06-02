@@ -220,7 +220,7 @@ bool Table::updateFromXML(const TCHAR *xml, int xmlLen)
 #ifdef UNICODE
    char *tmp = UTF8StringFromWideString(xml);
 #else
-   char *tmp = xml;
+   const char *tmp = xml;
 #endif
 
    bool success = (XML_Parse(parser, tmp, (xmlLen == -1) ? (int)strlen(tmp) : xmlLen, TRUE) != XML_STATUS_ERROR);
