@@ -91,6 +91,7 @@ DataCollectionItem::DataCollectionItem(UINT64 serverId, NXCPMessage *msg, UINT32
    m_name = msg->getFieldAsString(baseId + 3);
    m_pollingInterval = msg->getFieldAsInt32(baseId + 4);
    m_lastPollTime = msg->getFieldAsTime(baseId + 5);
+   memset(m_snmpTargetGuid, 0, UUID_LENGTH);
    msg->getFieldAsBinary(baseId + 6, m_snmpTargetGuid, UUID_LENGTH);
    m_snmpPort = msg->getFieldAsUInt16(baseId + 7);
    m_snmpRawValueType = (BYTE)msg->getFieldAsUInt16(baseId + 8);
@@ -105,8 +106,7 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_id = DBGetFieldULong(hResult, row, 1);
    m_type = (BYTE)DBGetFieldULong(hResult, row, 2);
    m_origin = (BYTE)DBGetFieldULong(hResult, row, 3);
-   m_name = (TCHAR *)malloc(sizeof(TCHAR) * 1025);
-   DBGetField(hResult, row, 4, m_name, 1025);
+   m_name = DBGetField(hResult, row, 4, NULL, 0);
    m_pollingInterval = DBGetFieldULong(hResult, row, 5);
    m_lastPollTime = (time_t)DBGetFieldULong(hResult, row, 6);
    DBGetFieldGUID(hResult, row, 7, m_snmpTargetGuid);
@@ -148,13 +148,14 @@ void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
    //if at leas one of fields changed - set all fields and save to DB
    if ((m_type != item->m_type) || (m_origin != item->m_origin) || _tcscmp(m_name, item->m_name) ||
        (m_pollingInterval != item->m_pollingInterval) || uuid_compare(m_snmpTargetGuid, item->m_snmpTargetGuid) ||
-       (m_snmpPort != item->m_snmpPort) || (m_snmpRawValueType != item->m_snmpRawValueType))
+       (m_snmpPort != item->m_snmpPort) || (m_snmpRawValueType != item->m_snmpRawValueType) || (m_lastPollTime < item->m_lastPollTime))
    {
       m_type = item->m_type;
       m_origin = item->m_origin;
       m_name = _tcsdup(item->m_name);
       m_pollingInterval = item->m_pollingInterval;
-      m_lastPollTime = item->m_lastPollTime;
+      if (m_lastPollTime < item->m_lastPollTime)
+         m_lastPollTime = item->m_lastPollTime;
       memcpy(m_snmpTargetGuid, item->m_snmpTargetGuid, UUID_LENGTH);
       m_snmpPort = item->m_snmpPort;
       m_snmpRawValueType = item->m_snmpRawValueType;
@@ -652,7 +653,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       bool exist = false;
       for(int i = 0; i < s_items.size(); i++)
       {
-         if(item->equals(s_items.get(i)))
+         if (item->equals(s_items.get(i)))
          {
             s_items.get(i)->updateAndSave(item);
             exist = true;
