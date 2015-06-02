@@ -631,13 +631,13 @@ static MUTEX s_itemLock = INVALID_MUTEX_HANDLE;
  */
 static UINT32 DataCollectionRun()
 {
-   time_t now = time(NULL);
    UINT32 sleepTime = 60;
 
    MutexLock(s_itemLock);
    for(int i = 0; i < s_items.size(); i++)
    {
       DataCollectionItem *dci = s_items.get(i);
+      time_t now = time(NULL);
       UINT32 timeToPoll = dci->getTimeToNextPoll(now);
       if (timeToPoll == 0)
       {
@@ -666,7 +666,7 @@ static UINT32 DataCollectionRun()
             DebugPrintf(INVALID_INDEX, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
          }
 
-         dci->setLastPollTime(e->getTimestamp());
+         dci->setLastPollTime(now);
          timeToPoll = dci->getPollingInterval();
       }
 

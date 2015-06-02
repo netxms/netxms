@@ -118,7 +118,7 @@ AC_ARG_WITH(runtime-prefix,
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
-	COMPONENTS="$COMPONENTS sqlite snmp server agent"
+	COMPONENTS="$COMPONENTS sqlite snmp server agent sqlite_drv"
 ])
 
 AC_ARG_WITH(snmp,
@@ -142,13 +142,13 @@ AC_ARG_WITH(client-proxy,
 AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
 [
-	COMPONENTS="$COMPONENTS sqlite snmp agent"
+	COMPONENTS="$COMPONENTS sqlite snmp agent sqlite_drv"
 ])
 
 AC_ARG_WITH(static-agent,
 [AS_HELP_STRING(--with-static-agent,build statically linked agent)],
 [
-	COMPONENTS="$COMPONENTS sqlite snmp static-agent"
+	COMPONENTS="$COMPONENTS sqlite snmp static-agent sqlite_drv"
 	FORCE_INTERNAL_EXPAT="yes"
 	FORCE_INTERNAL_LIBTRE="yes"
 	FORCE_INTERNAL_JANSSON="yes"
