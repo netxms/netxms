@@ -321,7 +321,7 @@ void DataElement::saveToDatabase()
     if(hStmt != NULL)
     {
       DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, m_serverId);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_id);
+      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_dciId);
       DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
       DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_type);
       switch(m_type)
@@ -330,25 +330,24 @@ void DataElement::saveToDatabase()
             DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_value.item, DB_BIND_STATIC);
             break;
          case DCO_TYPE_LIST:
-            buffer = m_value.list.join("\n\r");
-            DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_STATIC);
+            buffer = m_value.list->join(_T("\n\r"));
+            DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_DYNAMIC);
          case DCO_TYPE_TABLE:
-            buffer = m_value.table->getAsXML();
-            DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_STATIC);
+            buffer = m_value.table->getTableAsXML();
+            DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_DYNAMIC);
          break;
       }
       if(!DBExecute(hStmt))
       {
          DebugPrintf(INVALID_INDEX, 2, _T("DataCollectionItem::saveToDatabase: not possible to save %s object(serverId=%ld,dciId=%d) to database"),
-                     m_serverId, m_id);
+                     m_serverId, m_dciId);
       }
    }
     else
    {
       DebugPrintf(INVALID_INDEX, 2, _T("DataElement::saveToDatabase: not possible to prepare save value quary for %s object(serverId=%ld,dciId=%d) value"),
-                    m_serverId, m_id);
+                    m_serverId, m_dciId);
    }
-   safe_free(buffer);
 }
 
 /**

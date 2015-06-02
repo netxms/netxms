@@ -21,6 +21,7 @@
 **/
 
 #include "libnetxms.h"
+#include <expat.h>
 
 /**
  * Create empty table row
@@ -82,13 +83,6 @@ Table::Table(Table *src) : RefCountObject()
       m_columns->add(new TableColumnDefinition(src->m_columns->get(i)));
 }
 
-TCHAR *Table::getTableAsXML()
-{
-   XML_Parser parser = XML_ParserCreate(NULL);
-   XML_PARSER_STATE state;
-
-}
-
 /**
  * XML parser state for creating LogParser object from XML
  */
@@ -139,21 +133,19 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	}
 	else if (!strcmp(name, "column"))
 	{
-      TCHAR *name;
-      TCHAR *displayName = NULL;
+
 #ifdef UNICODE
-      name = WideStringFromUTF8String(CHECK_NULL_A(XMLGetAttr(attrs, "name")));
-      char *tmp = XMLGetAttr(attrs, "displayName");
-      if(tmp != NULL)
-         displayName = WideStringFromUTF8String(tmp);
+      wchar_t *name = WideStringFromUTF8String(CHECK_NULL_A(XMLGetAttr(attrs, "name")));
+      const char *tmp = XMLGetAttr(attrs, "displayName");
+      wchar_t *displayName = (tmp != NULL) ? WideStringFromUTF8String(tmp) : NULL;
 #else
-      name = CHECK_NULL_A(XMLGetAttr(attrs, "name"));
-      displayName = XMLGetAttr(attrs, "displayName");
+      const char *name = CHECK_NULL_A(XMLGetAttr(attrs, "name"));
+      const char *displayName = XMLGetAttr(attrs, "displayName");
 #endif
       ps->table->addColumn(name, XMLGetAttrInt(attrs, "dataType", 0), displayName, XMLGetAttrBoolean(attrs, "isInstance", false));
 		ps->state = XML_STATE_PARSER;
 #ifdef UNICODE
-      free(name);
+      safe_free(name);
       safe_free(displayName);
 #endif
 	}
@@ -164,7 +156,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	else if (!strcmp(name, "tr"))
 	{
       ps->table->addRow();
-      ps->table->setObjectId(getNumRows() - 1, XMLGetAttrInt(attrs, "objectId", 0));
+      ps->table->setObjectId(ps->table->getNumRows() - 1, XMLGetAttrInt(attrs, "objectId", 0));
       ps->colNum = 0;
 		ps->state = XML_STATE_PARSER;
 	}
@@ -212,7 +204,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
 }
 
 
-bool Table::updateFromXML(TCHAR *xml)
+bool Table::updateFromXML(const TCHAR *xml, int xmlLen)
 {
    XML_PARSER_STATE state;
 
@@ -225,30 +217,41 @@ bool Table::updateFromXML(TCHAR *xml)
    state.state = XML_STATE_INIT;
    state.colNum= -1;
 
-   bool success = (XML_Parse(parser, xml, xmlSize, TRUE) != XML_STATUS_ERROR);
+#ifdef UNICODE
+   char *tmp = UTF8StringFromWideString(xml);
+#else
+   char *tmp = xml;
+#endif
+
+   bool success = (XML_Parse(parser, tmp, (xmlLen == -1) ? (int)strlen(tmp) : xmlLen, TRUE) != XML_STATUS_ERROR);
    if (!success)
    {
-      error(_T("%hs at line %d"), XML_ErrorString(XML_GetErrorCode(parser)), XML_GetCurrentLineNumber(parser));
+      printf("Table::updateFromXML: %s at line %d", XML_ErrorString(XML_GetErrorCode(parser)), (int)XML_GetCurrentLineNumber(parser));
    }
+
+#ifdef UNICODE
+   safe_free(tmp);
+#endif
+
    XML_ParserFree(parser);
    return success;
 }
 
-static Table *Table::createTableFromXML(TCHAR *xml)
+Table *Table::createTableFromXML(const TCHAR *xml, int xmlLen)
 {
-   Table t = new Table();
-   if(t.updateFromXML(xml))
+   Table *table = new Table();
+   if(table->updateFromXML(xml, xmlLen))
    {
-      return t;
+      return table;
    }
    else
    {
-      delete t;
+      delete table;
       return NULL;
    }
 }
 
-TCHAR* Table::getAsXML()
+TCHAR* Table::getTableAsXML()
 {
    /* TODO: implement */
    return _tcsdup(_T(""));
