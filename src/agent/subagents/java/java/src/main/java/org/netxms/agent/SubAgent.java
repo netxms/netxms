@@ -171,6 +171,7 @@ public class SubAgent
       {
          try
          {
+            writeDebugLog(5, "JAVA: calling shutdown() method for plugin " + entry.getKey());
             entry.getValue().shutdown();
          }
          catch(Throwable e)
