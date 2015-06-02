@@ -318,40 +318,29 @@ public:
 void DataElement::saveToDatabase()
 {
     DB_HANDLE db = GetLocalDatabaseHandle();
-    DB_STATEMENT hStmt;
-    hStmt = DBPrepare(db, _T("INSERT INTO dc_config (server_id,dci_id,timestamp,")
-                          _T("type,value) VALUES (?,?,?,?,?)"));
-    TCHAR *buffer;
-    if(hStmt != NULL)
-    {
-      DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, m_serverId);
-      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_dciId);
-      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
-      DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_type);
-      switch(m_type)
-      {
-         case DCO_TYPE_ITEM:
-            DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_value.item, DB_BIND_STATIC);
-            break;
-         case DCO_TYPE_LIST:
-            buffer = m_value.list->join(_T("\n\r"));
-            DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_DYNAMIC);
-         case DCO_TYPE_TABLE:
-            buffer = m_value.table->getTableAsXML();
-            DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_DYNAMIC);
-         break;
-      }
-      if(!DBExecute(hStmt))
-      {
-         DebugPrintf(INVALID_INDEX, 2, _T("DataCollectionItem::saveToDatabase: not possible to save %s object(serverId=%ld,dciId=%d) to database"),
-                     m_serverId, m_dciId);
-      }
-   }
-    else
+    DB_STATEMENT hStmt= DBPrepare(db, _T("INSERT INTO dc_queue (server_id,dci_id,dci_type,dci_origin,timestamp,value) VALUES (?,?,?,?,?,?)"));
+    if (hStmt == NULL)
+       return;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, m_serverId);
+   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_dciId);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_type);
+   DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_origin);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
+   switch(m_type)
    {
-      DebugPrintf(INVALID_INDEX, 2, _T("DataElement::saveToDatabase: not possible to prepare save value quary for %s object(serverId=%ld,dciId=%d) value"),
-                    m_serverId, m_dciId);
+      case DCO_TYPE_ITEM:
+         DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_value.item, DB_BIND_STATIC);
+         break;
+      case DCO_TYPE_LIST:
+         DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_value.list->join(_T("\n")), DB_BIND_DYNAMIC);
+         break;
+      case DCO_TYPE_TABLE:
+         DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_value.table->getTableAsXML(), DB_BIND_DYNAMIC);
+         break;
    }
+   DBExecute(hStmt);
+   DBFreeStatement(hStmt);
 }
 
 /**
@@ -377,7 +366,6 @@ bool DataElement::sendToServer()
          msg.setField(VID_VALUE, m_value.item);
          break;
       case DCO_TYPE_LIST:
-         msg.setField(VID_NUM_ELEMENTS, m_value.list->size());
          m_value.list->fillMessage(&msg, VID_ENUM_VALUE_BASE, VID_NUM_STRINGS);
          break;
       case DCO_TYPE_TABLE:
@@ -419,7 +407,7 @@ static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
 
    while(!AgentSleepAndCheckForShutdown(sleepTime))
    {
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,dci_type,snmp_target_guid,timestamp,value FROM dc_queue ORDER BY timestamp DESC LIMIT 100"));
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value FROM dc_queue ORDER BY timestamp DESC LIMIT 100"));
       if (hResult == NULL)
          continue;
 
@@ -730,6 +718,7 @@ static const TCHAR *s_upgradeQueries[] =
    _T("  server_id number(20) not null,")
    _T("  dci_id integer not null,")
    _T("  dci_type integer not null,")
+   _T("  dci_origin integer not null,")
    _T("  snmp_target_guid varchar(36) not null,")
    _T("  timestamp integer not null,")
    _T("  value varchar not null,")
