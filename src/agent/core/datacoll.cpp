@@ -792,7 +792,6 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
          item->deleteFromDatabase();
          s_items.remove(i);
          i--;
-         delete item;
       }
    }
    MutexUnlock(s_itemLock);
